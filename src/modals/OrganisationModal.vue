@@ -181,6 +181,9 @@ export default {
 		isCopyMode() {
 			return this.mode === 'copy'
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 */
 		modalTitle() {
 			if (this.isEditMode) {
 				return this.t('softwarecatalog', 'Edit Organisation')
@@ -195,12 +198,18 @@ export default {
 	},
 	watch: {
 		organisation: {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+			 */
 			handler() {
 				this.loadOrganisationData()
 			},
 			immediate: true,
 		},
 		show: {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+			 */
 			handler(newVal) {
 				if (newVal) {
 					this.resetForm()
@@ -210,6 +219,9 @@ export default {
 			immediate: true,
 		},
 	},
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+	 */
 	beforeUnmount() {
 		// Clean up countdown interval
 		if (this.countdownInterval) {
@@ -217,6 +229,9 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 */
 		resetForm() {
 			this.formData = {
 				naam: '',
@@ -241,6 +256,9 @@ export default {
 				this.countdownInterval = null
 			}
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 */
 		loadOrganisationData() {
 			if (!this.organisation) return
 
@@ -264,16 +282,23 @@ export default {
 				this.selectedType = this.organisationTypes.find(type => type.value === this.formData.type)
 			}
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 */
 		handleTypeChange(selectedOption) {
 			console.info('Type changed:', selectedOption)
 			this.formData.type = selectedOption ? selectedOption.value : ''
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 */
 		closeModal() {
 			this.$emit('close')
 		},
 		/**
 		 * Get only the changed properties between original and current form data
 		 * @return {object} Object containing only the changed properties
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
 		 */
 		getChangedProperties() {
 			if (!this.isEditMode) {
@@ -305,6 +330,9 @@ export default {
 			return changes
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 */
 		async saveOrganisation() {
 			if (!this.isFormValid) {
 				showError(this.t('softwarecatalog', 'Please fill in all required fields'))

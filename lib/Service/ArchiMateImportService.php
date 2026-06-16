@@ -6,11 +6,14 @@
  * Handles the business logic for importing ArchiMate XML files with round-trip fidelity.
  * This service contains all the import-specific logic that was previously in ArchiMateService.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team <info@conduction.nl>
- * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    SoftwareCatalog Team <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
+ * @link      https://github.com/nextcloud/softwarecatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
  */
 
 declare(strict_types=1);
@@ -20,6 +23,7 @@ namespace OCA\SoftwareCatalog\Service;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCP\App\IAppManager;
+use OCP\IDBConnection;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use OCP\Files\IRootFolder;
@@ -37,11 +41,12 @@ use SimpleXMLElement;
  * 4. Convert to OpenRegister objects with proper @self structure
  * 5. Save objects using ObjectService::saveObjects
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team <info@conduction.nl>
- * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    SoftwareCatalog Team <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
+ * @link      https://github.com/nextcloud/softwarecatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -161,6 +166,7 @@ class ArchiMateImportService
      * @param LoggerInterface     $logger              Logger service
      * @param SettingsService     $settingsService     Settings service for AMEF configuration.
      * @param OrganisationService $organisationService Organisation service.
+     * @param IDBConnection       $dbConnection        Database connection interface.
      */
     public function __construct(
         private readonly IAppConfig $config,
@@ -170,9 +176,44 @@ class ArchiMateImportService
         private readonly ContainerInterface $container,
         private readonly LoggerInterface $logger,
         private readonly SettingsService $settingsService,
-        private readonly OrganisationService $organisationService
+        private readonly OrganisationService $organisationService,
+        private readonly IDBConnection $dbConnection
     ) {
     }//end __construct()
+
+    /**
+     * Validates the import-options array and returns the resolved file path.
+     *
+     * Accepts both `filePath` (camelCase) and `file_path` (snake_case) keys so
+     * callers don't have to harmonise the convention. Throws an
+     * `InvalidArgumentException` when the key is missing/empty or when the
+     * resolved path does not point at an existing file.
+     *
+     * Extracted from {@see importArchiMateFileFromPath()} +
+     * {@see importArchiMateFileFromPathOptimized()} as part of task 4.2 so the
+     * two entry points share a single guard clause.
+     *
+     * @param array<string, mixed> $options Import options.
+     *
+     * @return string The validated file path.
+     *
+     * @throws \InvalidArgumentException When the file path is missing or invalid.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-4
+     */
+    private function validateArchiMateFile(array $options): string
+    {
+        $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
+        if (empty($filePath) === true) {
+            throw new \InvalidArgumentException('File path is required for import');
+        }
+
+        if (file_exists($filePath) === false) {
+            throw new \InvalidArgumentException("File not found: {$filePath}");
+        }
+
+        return (string) $filePath;
+    }//end validateArchiMateFile()
 
     /**
      * Convert a SimpleXMLElement into a normalized associative array.
@@ -189,6 +230,7 @@ class ArchiMateImportService
      * @param \SimpleXMLElement $xml The XML element to convert.
      *
      * @return array The normalized associative array.
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function xmlToArray(\SimpleXMLElement $xml): array
     {
@@ -202,9 +244,11 @@ class ArchiMateImportService
             foreach ($attributes as $attrName => $attrValue) {
                 $name  = (string) $attrName;
                 $value = (string) $attrValue;
-                // OPTIMIZATION: Only create underscored key if needed (skip str_replace for simple names).
+                // OPTIMIZATION: Only apply str_replace for namespaced names (e.g. xsi:type -> _xsi_type).
+                if (strpos($name, ':') !== false) {
+                    $underscoredKey = '_'.str_replace(':', '_', $name);
+                } else {
                     $underscoredKey = '_'.$name;
-                if ((strpos($name, ':') !== false)) {
                 }
 
                 $result[$underscoredKey] = $value;
@@ -301,6 +345,7 @@ class ArchiMateImportService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function importArchiMateFileFromPathOptimized(array $options=[]): array
     {
@@ -319,10 +364,7 @@ class ArchiMateImportService
 
             // Cache initialization completed.
             // STEP 1: Parse XML to array (same as before).
-            $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
-            if (empty($filePath) === true || file_exists($filePath) === false) {
-                throw new \InvalidArgumentException("File not found: {$filePath}");
-            }
+            $filePath = $this->validateArchiMateFile($options);
 
             $parseStartTime = microtime(true);
             $xmlData        = $this->parseArchiMateXml(filePath: $filePath);
@@ -435,6 +477,8 @@ class ArchiMateImportService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function importArchiMateFileFromPath(array $options=[]): array
     {
@@ -449,15 +493,7 @@ class ArchiMateImportService
         try {
             // STEP 1: Parse XML to array using the specialized import service.
             // This captures ALL possible XML values including attributes, text content, and nested elements.
-            $filePath = $options['filePath'] ?? $options['file_path'] ?? '';
-
-            if (empty($filePath) === true) {
-                throw new \InvalidArgumentException('File path is required for import');
-            }
-
-            if (file_exists($filePath) === false) {
-                throw new \InvalidArgumentException("File not found: {$filePath}");
-            }
+            $filePath = $this->validateArchiMateFile($options);
 
             $this->logger->info('Step 1: Parsing XML to array for complete data capture', ['filePath' => $filePath]);
             $parseStartTime = microtime(true);
@@ -498,14 +534,16 @@ class ArchiMateImportService
             $peakMemory = memory_get_peak_usage(true);
 
             // Count objects by type for detailed statistics.
-            $statistics = $this->calculateObjectStatistics(normalizedData: $normalizedData, savedObjects: $savedObjects);
+            $statistics = $this->calculateObjectStatistics(normalizedData: $normalizedData);
 
             // Calculate performance metrics.
-            $created            = $statistics['summary']['total_objects_created'];
-            $updated            = $statistics['summary']['total_objects_updated'];
-            $totalObjects       = $created + $updated;
-                $itemsPerSecond = 0;
+            $created      = $statistics['summary']['total_objects_created'];
+            $updated      = $statistics['summary']['total_objects_updated'];
+            $totalObjects = $created + $updated;
             if ($totalObjects > 0) {
+                $itemsPerSecond = round($totalObjects / max($totalTime, 0.001), 2);
+            } else {
+                $itemsPerSecond = 0;
             }
 
             // Extract detailed error information from statistics.
@@ -590,6 +628,8 @@ class ArchiMateImportService
      * @param string $filePath Path to XML file
      *
      * @return array Parsed XML data
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     private function parseArchiMateXml(string $filePath): array
     {
@@ -1083,8 +1123,7 @@ class ArchiMateImportService
                     $objects[] = $this->createSectionObject(
                         section: $section,
                         identifier: $identifier,
-                        data: $data,
-                        modelIdentifier: $modelIdentifier
+                        data: $data
                     );
                 }
             } else {
@@ -1186,14 +1225,13 @@ class ArchiMateImportService
     /**
      * Create section object with @self structure and flattened XML data
      *
-     * @param string $section         Section name
-     * @param string $identifier      Item identifier
-     * @param array  $data            Item data (already contains XML data at root level)
-     * @param string $modelIdentifier Model identifier for linking
+     * @param string $section    Section name
+     * @param string $identifier Item identifier
+     * @param array  $data       Item data (already contains XML data at root level)
      *
      * @return array Section object with @self structure
      */
-    private function createSectionObject(string $section, string $identifier, array $data, string $modelIdentifier): array
+    private function createSectionObject(string $section, string $identifier, array $data): array
     {
         // OPTIMIZATION: Use cached configuration values.
         $registerId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException(
@@ -1266,14 +1304,10 @@ class ArchiMateImportService
 
         // DEBUG: Log basic object info before sending to ObjectService.
         // Find first element with gemmaType for debugging.
-        $gemmaElements       = array_filter(
+        $gemmaElements = array_filter(
             $objects,
             fn($o) => ($o['section'] ?? '') === 'element' && empty($o['gemmaType']) === false
         );
-            $sampleGemmaElem = null;
-        if (empty($gemmaElements) === false) {
-        }
-
         $this->logger->debug(
                 'Objects before save',
                 [
@@ -1337,8 +1371,10 @@ class ArchiMateImportService
             try {
                 // Save this schema group with the specific schema ID.
                 // PERFORMANCE: Disabled validation and events for bulk import (like CSV import pattern).
-                    $schemaValue = null;
                 if ($schemaId !== 'unknown') {
+                    $schemaValue = $schemaId;
+                } else {
+                    $schemaValue = null;
                 }
 
                 $saveResult = $objectService->saveObjects(
@@ -1410,12 +1446,14 @@ class ArchiMateImportService
         // Database save completed.
         // Store timing breakdown for performance metrics.
         // FIX: Use aggregatedStats counts instead of $result which may be empty from bulk operations.
-        $savedCount            = count($aggregatedStats['saved'] ?? []);
-        $updatedCount          = count($aggregatedStats['updated'] ?? []);
-        $unchangedCount        = count($aggregatedStats['unchanged'] ?? []);
-        $totalSavedCount       = $savedCount + $updatedCount + $unchangedCount;
-            $objectsSavedValue = count($objects);
+        $savedCount      = count($aggregatedStats['saved'] ?? []);
+        $updatedCount    = count($aggregatedStats['updated'] ?? []);
+        $unchangedCount  = count($aggregatedStats['unchanged'] ?? []);
+        $totalSavedCount = $savedCount + $updatedCount + $unchangedCount;
         if ($totalSavedCount > 0) {
+            $objectsSavedValue = $totalSavedCount;
+        } else {
+            $objectsSavedValue = count($objects);
         }
 
         $this->lastSaveTiming = [
@@ -1452,7 +1490,7 @@ class ArchiMateImportService
             }
 
             // Get database connection.
-            $connection = \OC::$server->getDatabaseConnection();
+            $connection = $this->dbConnection;
             $tableName  = 'oc_openregister_table_'.$registerId.'_'.$elementSchemaId;
 
             // Step 1: Build a mapping from ArchiMate identifier to database UUID for Standaarden.
@@ -1553,8 +1591,10 @@ class ArchiMateImportService
             $allInvalid   = [];
 
             foreach ($schemaGroups as $schemaId => $schemaObjects) {
-                    $schemaValue = null;
                 if ($schemaId !== 'unknown') {
+                    $schemaValue = $schemaId;
+                } else {
+                    $schemaValue = null;
                 }
 
                 $saveResult = $objectService->saveObjects(
@@ -1659,8 +1699,11 @@ class ArchiMateImportService
             $chunkInputCount = count($chunk);
 
             try {
-                    $_rbacValue = true;
+                // Disable RBAC for bulk import when the performance optimisation flag is set.
                 if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
+                    $_rbacValue = false;
+                } else {
+                    $_rbacValue = true;
                 }
 
                 $saveResult = $objectService->saveObjects(
@@ -1749,8 +1792,11 @@ class ArchiMateImportService
     private function saveObjectsInSingleBatch(array $objects, ObjectService $objectService, int $registerId): array
     {
         // Using single batch processing.
-            $_rbacValue = true;
+        // Disable RBAC for bulk import when the performance optimisation flag is set.
         if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
+            $_rbacValue = false;
+        } else {
+            $_rbacValue = true;
         }
 
         $saveResult = $objectService->saveObjects(
@@ -1911,6 +1957,7 @@ class ArchiMateImportService
      * Get AMEF configuration from app config
      *
      * @return array AMEF configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function getAmefConfig(): array
     {
@@ -1998,8 +2045,9 @@ class ArchiMateImportService
 
         // Fallback to legacy individual app config keys if not present in JSON.
         if ($rawRegisterId === null || $rawRegisterId === '') {
-                $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
+            $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
             if ($this->config->getValueString('softwarecatalog', 'amef_register', '') !== '') {
+                $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register', '');
             }
         }
 
@@ -2007,9 +2055,8 @@ class ArchiMateImportService
         if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string) $rawRegisterId) === true) {
             $registerId = (int) $rawRegisterId;
             if ($registerId > 0) {
+                return $registerId;
             }
-
-                return null;
         }
 
         return null;
@@ -2071,8 +2118,9 @@ class ArchiMateImportService
 
         // Fallback to legacy individual app config keys if not present in JSON.
         foreach ($candidates as $key) {
-                $raw = $this->config->getValueString('softwarecatalog', $key, '');
+            $raw = $this->config->getValueString('softwarecatalog', $key, '');
             if ($this->config->getValueString('softwarecatalog', 'amef_'.$key, '') !== '') {
+                $raw = $this->config->getValueString('softwarecatalog', 'amef_'.$key, '');
             }
 
             if ($raw !== '' && is_numeric((string) $raw) === true) {
@@ -2185,6 +2233,7 @@ class ArchiMateImportService
      * @param array $propDefMap The original property definition map
      *
      * @return array Mapping of original names to camelCase names
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
      */
     public function getPropertyNameMapping(array $propDefMap): array
     {
@@ -2350,11 +2399,11 @@ class ArchiMateImportService
     /**
      * Calculate optimized statistics for performance reporting
      *
-     * @param array $savedObjects Saved objects from ObjectService::saveObjects
+     * Reads the persisted save outcome from {@see self::$lastSaveResult}.
      *
      * @return array Statistics array
      */
-    private function calculateOptimizedStatistics(array $savedObjects): array
+    private function calculateOptimizedStatistics(): array
     {
         // Initialize statistics structure for detailed error extraction.
         $statistics = [
@@ -2665,11 +2714,13 @@ class ArchiMateImportService
         switch ($type) {
             case 'direct':
                 if (is_string($current) === true) {
+                    return $current;
                 }
                 return null;
 
             case 'value':
                 if (is_array($current) === true && isset($current['_value']) === true) {
+                    return $current['_value'];
                 }
                 return null;
 
@@ -2880,21 +2931,10 @@ class ArchiMateImportService
             }
 
             // Create viewNode with standardized structure.
-                $xValue = 0;
-            if (isset($node['_attributes']['x']) === true) {
-            }
-
-                $yValue = 0;
-            if (isset($node['_attributes']['y']) === true) {
-            }
-
-                $widthValue = 100;
-            if (isset($node['_attributes']['w']) === true) {
-            }
-
-                $heightValue = 50;
-            if (isset($node['_attributes']['h']) === true) {
-            }
+            $xValue      = (int) ($node['_attributes']['x'] ?? 0);
+            $yValue      = (int) ($node['_attributes']['y'] ?? 0);
+            $widthValue  = (int) ($node['_attributes']['w'] ?? 100);
+            $heightValue = (int) ($node['_attributes']['h'] ?? 50);
 
             $viewNode = [
                 'modelNodeId' => $elementRef,
@@ -3085,20 +3125,24 @@ class ArchiMateImportService
 
         foreach ($nodeData as $node) {
             if (isset($node['_attributes']) === true) {
-                    $xValue = null;
+                $xValue = null;
+                $yValue = null;
+                $wValue = null;
+                $hValue = null;
                 if (isset($node['_attributes']['x']) === true) {
+                    $xValue = (int) $node['_attributes']['x'];
                 }
 
-                    $yValue = null;
                 if (isset($node['_attributes']['y']) === true) {
+                    $yValue = (int) $node['_attributes']['y'];
                 }
 
-                    $wValue = null;
                 if (isset($node['_attributes']['w']) === true) {
+                    $wValue = (int) $node['_attributes']['w'];
                 }
 
-                    $hValue = null;
                 if (isset($node['_attributes']['h']) === true) {
+                    $hValue = (int) $node['_attributes']['h'];
                 }
 
                 $processedNode = [
@@ -3290,17 +3334,9 @@ class ArchiMateImportService
         // Extract fillColor.
         if (isset($style['fillColor']['_attributes']) === true) {
             $fillColor = $style['fillColor']['_attributes'];
-                $r     = 255;
-            if (isset($fillColor['r']) === true) {
-            }
-
-                $g = 255;
-            if (isset($fillColor['g']) === true) {
-            }
-
-                $b = 255;
-            if (isset($fillColor['b']) === true) {
-            }
+            $r         = (int) ($fillColor['r'] ?? 255);
+            $g         = (int) ($fillColor['g'] ?? 255);
+            $b         = (int) ($fillColor['b'] ?? 255);
 
             $viewNode['color'] = "rgb($r, $g, $b)";
         }//end if
@@ -3308,21 +3344,10 @@ class ArchiMateImportService
         // Extract lineColor (including alpha for border visibility).
         if (isset($style['lineColor']['_attributes']) === true) {
             $lineColor = $style['lineColor']['_attributes'];
-                $r     = 0;
-            if (isset($lineColor['r']) === true) {
-            }
-
-                $g = 0;
-            if (isset($lineColor['g']) === true) {
-            }
-
-                $b = 0;
-            if (isset($lineColor['b']) === true) {
-            }
-
-                $a = 100;
-            if (isset($lineColor['a']) === true) {
-            }
+            $r         = (int) ($lineColor['r'] ?? 0);
+            $g         = (int) ($lineColor['g'] ?? 0);
+            $b         = (int) ($lineColor['b'] ?? 0);
+            $a         = (int) ($lineColor['a'] ?? 100);
 
             if ($a < 100) {
                 $viewNode['borderColor'] = "rgba($r, $g, $b, ".round($a / 100, 2).")";
@@ -3347,18 +3372,9 @@ class ArchiMateImportService
 
             if (isset($style['font']['color']['_attributes']) === true) {
                 $fontColor = $style['font']['color']['_attributes'];
-                    $r     = 0;
-                if (isset($fontColor['r']) === true) {
-                }
-
-                    $g = 0;
-                if (isset($fontColor['g']) === true) {
-                }
-
-                    $b = 0;
-                if (isset($fontColor['b']) === true) {
-                }
-
+                $r         = (int) ($fontColor['r'] ?? 0);
+                $g         = (int) ($fontColor['g'] ?? 0);
+                $b         = (int) ($fontColor['b'] ?? 0);
                 $font['color'] = "rgb($r, $g, $b)";
             }//end if
 
@@ -3422,19 +3438,17 @@ class ArchiMateImportService
 
             // Extract bend points if present.
             if (isset($connection['bendpoint']) === true) {
-                    $bendpoints = [$connection['bendpoint']];
+                // Normalise to indexed array: single bendpoint is a plain assoc array.
                 if (isset($connection['bendpoint'][0]) === true) {
+                    $bendpoints = $connection['bendpoint'];
+                } else {
+                    $bendpoints = [$connection['bendpoint']];
                 }
 
                 foreach ($bendpoints as $bendpoint) {
                     if (isset($bendpoint['_attributes']) === true) {
-                            $xValue = 0;
-                        if (isset($bendpoint['_attributes']['x']) === true) {
-                        }
-
-                            $yValue = 0;
-                        if (isset($bendpoint['_attributes']['y']) === true) {
-                        }
+                        $xValue = (int) ($bendpoint['_attributes']['x'] ?? 0);
+                        $yValue = (int) ($bendpoint['_attributes']['y'] ?? 0);
 
                         $viewRelationship['bendpoints'][] = [
                             'x' => $xValue,
@@ -3500,21 +3514,10 @@ class ArchiMateImportService
 
             if (isset($style['font']['color']['_attributes']) === true) {
                 $fontColor = $style['font']['color']['_attributes'];
-                    $r     = 0;
-                if (isset($fontColor['r']) === true) {
-                }
-
-                    $g = 0;
-                if (isset($fontColor['g']) === true) {
-                }
-
-                    $b = 0;
-                if (isset($fontColor['b']) === true) {
-                }
-
-                    $a = 1;
-                if (isset($fontColor['a']) === true) {
-                }
+                $r         = (int) ($fontColor['r'] ?? 0);
+                $g         = (int) ($fontColor['g'] ?? 0);
+                $b         = (int) ($fontColor['b'] ?? 0);
+                $a         = (int) ($fontColor['a'] ?? 1);
 
                 // Convert percentage to decimal.
                 $markup['style']['fontColor'] = "rgba($r, $g, $b, $a)";
@@ -3539,16 +3542,19 @@ class ArchiMateImportService
 
             // Handle different xsi:type formats.
             if ($xsiType === 'Label') {
+                return 'label';
             }
 
             if ($xsiType === 'Element') {
+                return 'element';
             }
 
             if (str_contains($xsiType, ':') === true) {
                 // Handle namespaced types like "archimate:BusinessService".
+                return strtolower(substr($xsiType, (int) strpos($xsiType, ':') + 1));
             }
 
-                return strtolower($xsiType);
+            return strtolower($xsiType);
         }
 
         // Priority 2: Check if this is a Label node (has label content).
@@ -3586,14 +3592,16 @@ class ArchiMateImportService
                 // Remove namespace.
                 $type = preg_replace('/relationship$/i', '', $type);
                 // Remove "Relationship" suffix.
+                return strtolower((string) $type);
             }
 
             if (str_contains($xsiType, ':') === true) {
                 // Handle other namespaced types.
+                return strtolower(substr($xsiType, (int) strpos($xsiType, ':') + 1));
             }
 
-                return strtolower($xsiType);
-        }
+            return strtolower($xsiType);
+        }//end if
 
         // Priority 2: Check if this has a relationshipRef (use that to determine type if possible).
         if (isset($connection['_attributes']['relationshipRef']) === true) {
@@ -3619,55 +3627,23 @@ class ArchiMateImportService
 
         // Extract fillColor.
         if (isset($style['fillColor']['_attributes']) === true) {
-            $fillColor  = $style['fillColor']['_attributes'];
-                $rValue = 255;
-            if (isset($fillColor['r']) === true) {
-            }
-
-                $gValue = 255;
-            if (isset($fillColor['g']) === true) {
-            }
-
-                $bValue = 255;
-            if (isset($fillColor['b']) === true) {
-            }
-
-                $aValue = 100;
-            if (isset($fillColor['a']) === true) {
-            }
-
+            $fillColor = $style['fillColor']['_attributes'];
             $processedStyle['fillColor'] = [
-                'r' => $rValue,
-                'g' => $gValue,
-                'b' => $bValue,
-                'a' => $aValue,
+                'r' => (int) ($fillColor['r'] ?? 255),
+                'g' => (int) ($fillColor['g'] ?? 255),
+                'b' => (int) ($fillColor['b'] ?? 255),
+                'a' => (int) ($fillColor['a'] ?? 100),
             ];
         }//end if
 
         // Extract lineColor.
         if (isset($style['lineColor']['_attributes']) === true) {
-            $lineColor  = $style['lineColor']['_attributes'];
-                $rValue = 0;
-            if (isset($lineColor['r']) === true) {
-            }
-
-                $gValue = 0;
-            if (isset($lineColor['g']) === true) {
-            }
-
-                $bValue = 0;
-            if (isset($lineColor['b']) === true) {
-            }
-
-                $aValue = 100;
-            if (isset($lineColor['a']) === true) {
-            }
-
+            $lineColor = $style['lineColor']['_attributes'];
             $processedStyle['lineColor'] = [
-                'r' => $rValue,
-                'g' => $gValue,
-                'b' => $bValue,
-                'a' => $aValue,
+                'r' => (int) ($lineColor['r'] ?? 0),
+                'g' => (int) ($lineColor['g'] ?? 0),
+                'b' => (int) ($lineColor['b'] ?? 0),
+                'a' => (int) ($lineColor['a'] ?? 100),
             ];
         }//end if
 
@@ -3684,23 +3660,11 @@ class ArchiMateImportService
             }
 
             if (isset($style['font']['color']['_attributes']) === true) {
-                $fontColor  = $style['font']['color']['_attributes'];
-                    $rValue = 0;
-                if (isset($fontColor['r']) === true) {
-                }
-
-                    $gValue = 0;
-                if (isset($fontColor['g']) === true) {
-                }
-
-                    $bValue = 0;
-                if (isset($fontColor['b']) === true) {
-                }
-
+                $fontColor     = $style['font']['color']['_attributes'];
                 $font['color'] = [
-                    'r' => $rValue,
-                    'g' => $gValue,
-                    'b' => $bValue,
+                    'r' => (int) ($fontColor['r'] ?? 0),
+                    'g' => (int) ($fontColor['g'] ?? 0),
+                    'b' => (int) ($fontColor['b'] ?? 0),
                 ];
             }//end if
 
@@ -3725,23 +3689,11 @@ class ArchiMateImportService
 
         // Extract lineColor.
         if (isset($style['lineColor']['_attributes']) === true) {
-            $lineColor  = $style['lineColor']['_attributes'];
-                $rValue = 0;
-            if (isset($lineColor['r']) === true) {
-            }
-
-                $gValue = 0;
-            if (isset($lineColor['g']) === true) {
-            }
-
-                $bValue = 0;
-            if (isset($lineColor['b']) === true) {
-            }
-
+            $lineColor = $style['lineColor']['_attributes'];
             $processedStyle['lineColor'] = [
-                'r' => $rValue,
-                'g' => $gValue,
-                'b' => $bValue,
+                'r' => (int) ($lineColor['r'] ?? 0),
+                'g' => (int) ($lineColor['g'] ?? 0),
+                'b' => (int) ($lineColor['b'] ?? 0),
             ];
         }//end if
 
@@ -3758,23 +3710,11 @@ class ArchiMateImportService
             }
 
             if (isset($style['font']['color']['_attributes']) === true) {
-                $fontColor  = $style['font']['color']['_attributes'];
-                    $rValue = 0;
-                if (isset($fontColor['r']) === true) {
-                }
-
-                    $gValue = 0;
-                if (isset($fontColor['g']) === true) {
-                }
-
-                    $bValue = 0;
-                if (isset($fontColor['b']) === true) {
-                }
-
+                $fontColor     = $style['font']['color']['_attributes'];
                 $font['color'] = [
-                    'r' => $rValue,
-                    'g' => $gValue,
-                    'b' => $bValue,
+                    'r' => (int) ($fontColor['r'] ?? 0),
+                    'g' => (int) ($fontColor['g'] ?? 0),
+                    'b' => (int) ($fontColor['b'] ?? 0),
                 ];
             }//end if
 
@@ -3824,8 +3764,9 @@ class ArchiMateImportService
             if (isset($object[$propertyName]) === true && empty($object[$propertyName]) === false) {
                 $rawValue = $object[$propertyName];
                 // Handle case where value might be an array (e.g., from XML parsing with _value key).
-                    $value = (string) $rawValue;
+                $value = (string) $rawValue;
                 if (is_array($rawValue) === true) {
+                    $value = (string) ($rawValue['_value'] ?? $rawValue[0] ?? '');
                 }
 
                 // Log the first successful match for debugging.
@@ -4228,11 +4169,13 @@ class ArchiMateImportService
 
             // Handle different XML structures.
             if (is_string($endpointData) === true) {
+                return $endpointData;
             }
 
             if (is_array($endpointData) === true) {
                 // Try _attributes.href or _value.
                 if (isset($endpointData['_attributes']['href']) === true) {
+                    return $endpointData['_attributes']['href'];
                 }
 
                 if (isset($endpointData['_value']) === true) {
@@ -4245,6 +4188,7 @@ class ArchiMateImportService
         if (isset($relationship['xml']['_attributes']) === true) {
             $attr = $relationship['xml']['_attributes'];
             if ($endpoint === 'source' && isset($attr['source']) === true) {
+                return $attr['source'];
             }
 
             if ($endpoint === 'target' && isset($attr['target']) === true) {
@@ -4649,8 +4593,9 @@ class ArchiMateImportService
 
             // Fast properties flattening (only essential properties for splicing).
             if (isset($rawItem['properties']['property']) === true && empty($propDefMap) === false) {
-                    $props = [$rawItem['properties']['property']];
+                $props = [$rawItem['properties']['property']];
                 if (isset($rawItem['properties']['property'][0]) === true) {
+                    $props = $rawItem['properties']['property'];
                 }
 
                 foreach ($props as $prop) {
@@ -4844,8 +4789,9 @@ class ArchiMateImportService
             ];
 
             // Debug: Log XML data extraction.
-                $propsStructVal = null;
+            $propsStructVal = null;
             if (isset($item['properties']) === true) {
+                $propsStructVal = array_keys($item['properties']);
             }
 
             $this->logger->debug(
@@ -4931,20 +4877,24 @@ class ArchiMateImportService
             }
 
             // DEBUG: Log final object structure before adding to array.
-                $xmlKeysValue = null;
+            $xmlKeysValue = null;
             if (isset($object['xml']) === true) {
+                $xmlKeysValue = array_keys($object['xml']);
             }
 
-                $propMapCountVal = 0;
+            $propMapCountVal = 0;
             if (isset($object['_propertyMapping']) === true) {
+                $propMapCountVal = count($object['_propertyMapping']);
             }
 
-                $viewNodesCountValue = 0;
+            $viewNodesCountValue = 0;
             if (isset($object['viewNodes']) === true) {
+                $viewNodesCountValue = count($object['viewNodes']);
             }
 
-                $viewRelCountVal = 0;
+            $viewRelCountVal = 0;
             if (isset($object['viewRelationships']) === true) {
+                $viewRelCountVal = count($object['viewRelationships']);
             }
 
             $this->logger->debug(
@@ -5001,9 +4951,10 @@ class ArchiMateImportService
         if ($sectionType === 'view' && isset($sectionData['diagrams']['view']) === true) {
             $viewData = $sectionData['diagrams']['view'];
             if (isset($viewData[0]) === true) {
+                return $viewData;
             }
 
-                return [$viewData];
+            return [$viewData];
         }
 
         // Try common patterns: Singular, plural, item, propertyDefinition.
@@ -5018,9 +4969,10 @@ class ArchiMateImportService
             if (isset($sectionData[$pattern]) === true) {
                 $data = $sectionData[$pattern];
                 if (is_array($data) === true && isset($data[0]) === true) {
+                    return $data;
                 }
 
-                    return [$data];
+                return [$data];
             }
         }
 
@@ -5039,8 +4991,9 @@ class ArchiMateImportService
      */
     private function flattenPropertiesBatch(array &$object, array $properties, array $propDefMap): void
     {
-            $props = [$properties];
+        $props = [$properties];
         if (isset($properties[0]) === true) {
+            $props = $properties;
         }
 
         $processedProperties = [];
@@ -5737,11 +5690,10 @@ class ArchiMateImportService
      * Calculate detailed object statistics for import operations
      *
      * @param array $normalizedData Normalized ArchiMate data
-     * @param array $savedObjects   Objects that were saved to database
      *
      * @return array Comprehensive statistics
      */
-    private function calculateObjectStatistics(array $normalizedData, array $savedObjects): array
+    private function calculateObjectStatistics(array $normalizedData): array
     {
         // Initialize statistics structure.
         $statistics = [
@@ -5878,8 +5830,13 @@ class ArchiMateImportService
                             );
 
                     if (empty($errorInfo) === false) {
-                        $statistics[$sectionKey]['errors'][]
-                            = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
+                        $firstError   = array_values($errorInfo)[0];
+                        $errorMessage = 'Unknown validation error';
+                        if (is_array($firstError) === true && isset($firstError['error']) === true) {
+                            $errorMessage = $firstError['error'];
+                        }
+
+                        $statistics[$sectionKey]['errors'][] = $errorMessage;
                     }
                 } else {
                     // This shouldn't happen, but leave as fallback.
@@ -5966,8 +5923,9 @@ class ArchiMateImportService
                 // Group errors by type/message for better presentation.
                 $errorGroups = [];
                 foreach ($sectionErrors as $error) {
-                        $errorMessage = ($error['message'] ?? 'Unknown error');
+                    $errorMessage = ($error['message'] ?? 'Unknown error');
                     if (is_string($error) === true) {
+                        $errorMessage = $error;
                     }
 
                     $errorType = $this->categorizeError(errorMessage: $errorMessage);

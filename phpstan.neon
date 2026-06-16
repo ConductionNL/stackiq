@@ -1,59 +1,59 @@
+includes:
+    # Per-app tracked lint debt lives here (auto-generated via `phpstan --generate-baseline`).
+    # Apps without debt ship an empty baseline file; canonical includes are otherwise byte-identical
+    # across the fleet.
+    - phpstan-baseline.neon
+
 parameters:
     level: 5
     paths:
         - lib
     bootstrapFiles:
-        - vendor/autoload.php
+        - phpstan-bootstrap.php
     excludePaths:
-        analyseAndScan:
-            - vendor-bin
-        analyse:
-            - vendor
+        - vendor
+        - vendor-bin
+        # Apps that ship a verbatim template snapshot under lib/Resources/template/ (e.g. openbuild).
+        - lib/Resources/template
     scanDirectories:
         - vendor/nextcloud/ocp
-        - ../openregister/lib
-    treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
-        # Nextcloud internal classes that PHPStan might not recognize
+        # Nextcloud server internals (\OC, OC_App, OC\) not stubbed in nextcloud/ocp
         - '#Call to an undefined method OC::#'
         - '#Class OC not found#'
-        - '#Access to static property .* on an unknown class OC#'
+        - '#Access to static property \$server on an unknown class OC#'
         - '#unknown class OC\\#'
-        - '#Class OC_App not found#'
         - '#Caught class OC\\#'
-        # Doctrine DBAL platform class (varies by version)
-        - '#Doctrine\\DBAL\\Platforms#'
-        # JSONResponse status code union type - common Nextcloud pattern
-        -
-            message: '#statusCode of class OCP\\AppFramework\\Http\\JSONResponse#'
-            path: lib/*
-        # SimpleXMLElement addChild returns SimpleXMLElement|null but accepts string values
-        - '#\(SimpleXMLElement\|null\) does not accept string#'
-        - '#SimpleXMLElement does not accept string#'
-        # SimpleXMLElement array access creates false type inference for method calls
-        - '#Cannot call method addAttribute\(\) on array<int, string>#'
-        # Defensive null/false checks that PHPStan considers redundant
-        - '#Strict comparison using === between .* and (null|false|true) will always evaluate to (false|true)#'
-        - '#Negated boolean expression is always false#'
-        # Defensive ?? and empty()/isset() checks on always-existing values
-        - '#on left side of \?\? always exists and is not nullable#'
-        - '#in empty\(\) always exists and is (always falsy|not falsy)#'
-        - '#in isset\(\) always exists and is not nullable#'
-        - '#Variable .* on left side of \?\? always exists and is not nullable#'
-        # Unreachable branches from defensive coding
-        - '#Else branch is unreachable because previous condition is always true#'
-        - '#Result of \&\& is always false#'
-        - '#Result of \|\| is always true#'
-        - '#Expression in empty\(\) is always falsy#'
-        # Offset access on typed arrays that PHPStan considers always existing
-        - '#Offset .* on left side of \?\? (always exists|does not exist)#'
-        - '#Offset .* in isset\(\) always exists#'
-        # Comparison operation errors from mixed arithmetic
-        - '#Comparison operation .* results in an error#'
-        # Properties injected for future use or subclass access
-        - '#is never read, only written#'
-        # Methods kept for API compatibility or future use
-        - '#is unused#'
-        # is_array() checks on typed objects (defensive against runtime type changes)
-        - '#Call to function is_array\(\) with .* will always evaluate to false#'
+        - '#unknown class OC_App#'
+        - '#Class OC_App not found#'
+        # OCA\DAV is server-internal and not in nextcloud/ocp stubs
+        - '#unknown class OCA\\DAV\\#'
+        - '#Class OCA\\DAV\\#'
+        # OCA classes from other apps (OpenRegister) not available during static analysis
+        - '#unknown class OCA\\OpenRegister\\#'
+        - '#OCA\\OpenRegister\\[a-zA-Z\\]+.*not found#'
+        - '#on an unknown class OCA\\OpenRegister\\#'
+        - '#has invalid return type OCA\\OpenRegister\\#'
+        - '#has invalid type OCA\\OpenRegister\\#'
+        - '#implements unknown interface OCA\\OpenRegister\\#'
+        # GuzzleHttp is available at runtime via Nextcloud but not in composer require
+        - '#unknown class GuzzleHttp\\#'
+        - '#GuzzleHttp\\[a-zA-Z\\]+.*not found#'
+        - '#on an unknown class GuzzleHttp\\#'
+        - '#invalid type GuzzleHttp\\#'
+        - '#Caught class GuzzleHttp\\#'
+        # Doctrine\DBAL is shipped by Nextcloud server but not stubbed in nextcloud/ocp
+        - '#unknown class Doctrine\\DBAL\\#'
+        - '#Doctrine\\DBAL\\[a-zA-Z\\]+.*not found#'
+        - '#on an unknown class Doctrine\\DBAL\\#'
+        # Dynamic HTTP status codes from business rule validation results
+        # (matches both `Parameter $statusCode` and `Parameter #N $statusCode` forms emitted by phpstan)
+        - '#Parameter (\#\d+ )?\$statusCode of class OCP\\AppFramework\\Http\\JSONResponse constructor expects#'
+        # registerRepairStep exists on server; not yet in nextcloud/ocp stub used for analysis
+        - '#Call to an undefined method OCP\\AppFramework\\Bootstrap\\IRegistrationContext::registerRepairStep#'
+        # OCP stub gaps for methods that exist at runtime
+        - '#Call to an undefined method OCP\\IRequest::getContent\(\)#'
+        - '#Call to an undefined method OCP\\IRequest::setParameter\(\)#'
+        - '#Call to an undefined method OCP\\Mail\\IMessage::attachFile\(\)#'
+        - '#Call to an undefined method OCP\\AppFramework\\Db\\Entity::jsonSerialize#'

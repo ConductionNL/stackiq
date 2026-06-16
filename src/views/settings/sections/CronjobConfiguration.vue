@@ -61,17 +61,6 @@
 					<div class="cronjob-config">
 						<div class="config-row">
 							<div class="config-field">
-								<label :for="'user-' + job.id">Run as User</label>
-								<NcSelect
-									:id="'user-' + job.id"
-									v-model="job.selectedUser"
-									:options="userOptions"
-									:loading="loadingUsers"
-									:disabled="!job.enabled || savingJob === job.id"
-									input-label="Select a user" />
-							</div>
-
-							<div class="config-field">
 								<label :for="'org-' + job.id">Run in Organisation</label>
 								<NcSelect
 									:id="'org-' + job.id"
@@ -98,7 +87,7 @@
 
 							<NcButton
 								type="secondary"
-								:disabled="!job.userId || !job.organisationUuid || runningJob === job.id"
+								:disabled="!job.organisationUuid || runningJob === job.id"
 								@click="runJob(job)">
 								<template #icon>
 									<NcLoadingIcon v-if="runningJob === job.id" :size="20" />
@@ -108,8 +97,8 @@
 							</NcButton>
 
 							<!-- Status indicator -->
-							<div :class="['config-status', job.userId && job.organisationUuid ? 'success' : 'warning']">
-								<template v-if="job.userId && job.organisationUuid">
+							<div :class="['config-status', job.organisationUuid ? 'success' : 'warning']">
+								<template v-if="job.organisationUuid">
 									<Check :size="16" class="status-icon success" />
 									<span class="status-text">Configured - Job will run with proper authorization</span>
 								</template>
@@ -194,33 +183,20 @@ export default {
 	data() {
 		return {
 			loading: true,
-			loadingUsers: false,
 			loadingOrganisations: false,
 			savingJob: null,
 			runningJob: null,
 			cronjobs: [],
-			users: [],
 			organisations: [],
 		}
 	},
 
 	computed: {
 		/**
-		 * Format users for NcSelect
-		 *
-		 * @return {Array} User options for select
-		 */
-		userOptions() {
-			return this.users.map(user => ({
-				value: user.id,
-				label: user.displayName + (user.email ? ` (${user.email})` : ''),
-			}))
-		},
-
-		/**
 		 * Format organisations for NcSelect
 		 *
 		 * @return {Array} Organisation options for select
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		organisationOptions() {
 			return this.organisations.map(org => ({
@@ -239,13 +215,13 @@ export default {
 		 * Load all configuration data
 		 *
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		async loadConfig() {
 			this.loading = true
 			try {
 				await Promise.all([
 					this.loadCronjobs(),
-					this.loadUsers(),
 					this.loadOrganisations(),
 				])
 			} catch (error) {
@@ -260,6 +236,7 @@ export default {
 		 * Load cronjob configurations
 		 *
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		async loadCronjobs() {
 			try {
@@ -269,7 +246,6 @@ export default {
 					// Labels will be updated when users and organisations are loaded.
 					this.cronjobs = Object.values(response.data.cronjobs).map(job => ({
 						...job,
-						selectedUser: job.userId ? { value: job.userId, label: job.userId } : null,
 						selectedOrganisation: job.organisationUuid
 							? { value: job.organisationUuid, label: job.organisationUuid }
 							: null,
@@ -277,8 +253,6 @@ export default {
 
 					// Update labels if organisations are already loaded.
 					this.updateOrganisationLabels()
-					// Update labels if users are already loaded.
-					this.updateUserLabels()
 				}
 			} catch (error) {
 				console.error('Failed to load cronjobs:', error)
@@ -290,6 +264,7 @@ export default {
 		 * Update organisation labels in cronjobs from loaded organisations
 		 *
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		updateOrganisationLabels() {
 			if (this.organisations.length === 0) return
@@ -308,54 +283,13 @@ export default {
 		},
 
 		/**
-		 * Update user labels in cronjobs from loaded users
-		 *
-		 * @return {void}
-		 */
-		updateUserLabels() {
-			if (this.users.length === 0) return
-
-			this.cronjobs.forEach(job => {
-				if (job.userId) {
-					const user = this.users.find(u => u.id === job.userId)
-					if (user) {
-						job.selectedUser = {
-							value: user.id,
-							label: user.displayName + (user.email ? ` (${user.email})` : ''),
-						}
-					}
-				}
-			})
-		},
-
-		/**
-		 * Load available users
-		 *
-		 * @return {Promise<void>}
-		 */
-		async loadUsers() {
-			this.loadingUsers = true
-			try {
-				const response = await axios.get(generateUrl('/apps/softwarecatalog/api/settings/cronjobs/users'))
-				if (response.data.success) {
-					this.users = response.data.users
-					// Update labels in cronjobs.
-					this.updateUserLabels()
-				}
-			} catch (error) {
-				console.error('Failed to load users:', error)
-			} finally {
-				this.loadingUsers = false
-			}
-		},
-
-		/**
 		 * Load available organisations from OpenRegister API
 		 *
 		 * Since the user is logged in on the settings page, we can call
 		 * the OpenRegister organisations endpoint directly.
 		 *
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		async loadOrganisations() {
 			this.loadingOrganisations = true
@@ -382,13 +316,14 @@ export default {
 		},
 
 		/**
-		 * Check if a job can be saved (has both user and organisation selected)
+		 * Check if a job can be saved (has an organisation selected)
 		 *
 		 * @param {object} job The job to check
 		 * @return {boolean} True if the job can be saved
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		canSaveJob(job) {
-			return job.selectedUser?.value && job.selectedOrganisation?.value
+			return !!job.selectedOrganisation?.value
 		},
 
 		/**
@@ -397,6 +332,7 @@ export default {
 		 * @param {string} jobId The job ID
 		 * @param {boolean} enabled Whether the job is enabled
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		async updateJobEnabled(jobId, enabled) {
 			const job = this.cronjobs.find(j => j.id === jobId)
@@ -411,6 +347,7 @@ export default {
 		 *
 		 * @param {object} job The job to save
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		async saveJobConfig(job) {
 			this.savingJob = job.id
@@ -419,7 +356,6 @@ export default {
 					generateUrl('/apps/softwarecatalog/api/settings/cronjobs'),
 					{
 						jobId: job.id,
-						userId: job.selectedUser?.value || null,
 						organisationUuid: job.selectedOrganisation?.value || null,
 						enabled: job.enabled,
 					},
@@ -427,7 +363,6 @@ export default {
 
 				if (response.data.success) {
 					// Update local state.
-					job.userId = job.selectedUser?.value || null
 					job.organisationUuid = job.selectedOrganisation?.value || null
 					showSuccess('Cronjob configuration saved')
 				} else {
@@ -446,10 +381,11 @@ export default {
 		 *
 		 * @param {object} job The job to run
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		async runJob(job) {
-			if (!job.userId || !job.organisationUuid) {
-				showError('Please configure and save user and organisation first')
+			if (!job.organisationUuid) {
+				showError('Please configure and save an organisation first')
 				return
 			}
 
@@ -476,6 +412,7 @@ export default {
 		 *
 		 * @param {number} seconds Interval in seconds
 		 * @return {string} Formatted interval
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		formatInterval(seconds) {
 			if (seconds < 60) {
@@ -495,6 +432,7 @@ export default {
 		 * @param {string} app App name
 		 * @param {string} text Text to translate
 		 * @return {string} Translated text
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		t(app, text) {
 			return text

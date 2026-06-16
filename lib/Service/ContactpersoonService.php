@@ -11,7 +11,9 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-7
  */
 
 declare(strict_types=1);
@@ -37,7 +39,7 @@ use OCP\IAppConfig;
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -50,9 +52,6 @@ use OCP\IAppConfig;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -106,6 +105,10 @@ class ContactpersoonService
      * @return bool True if processing was successful.
      *
      * @throws \Exception If processing fails.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-7
      */
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
@@ -138,24 +141,7 @@ class ContactpersoonService
             // Check if contactpersoon has required data.
             // Schema uses 'e-mailadres' but some data may use 'email'.
             $email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-            if (empty($email) === true) {
-                $this->logger->warning(
-                    'ContactpersoonService: Contactpersoon has no email, skipping processing',
-                    ['contactId' => $contactId]
-                );
-                return false;
-            }
-
-            // Validate email format before attempting user creation.
-            // Imported contacts may have invalid emails that would cause Nextcloud user creation to fail.
-            if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-                $this->logger->warning(
-                    'ContactpersoonService: Contactpersoon has invalid email, skipping user creation',
-                    [
-                        'contactId' => $contactId,
-                        'email'     => $email,
-                    ]
-                );
+            if ($this->isContactpersoonEmailUsable(email: $email, contactId: (string) $contactId) === false) {
                 return false;
             }
 
@@ -163,7 +149,7 @@ class ContactpersoonService
             $username = $email;
 
             // Check if user already exists.
-            $userManager = \OC::$server->get('OCP\IUserManager');
+            $userManager = $this->container->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
             if ($user === null) {
@@ -174,7 +160,7 @@ class ContactpersoonService
                     // Look up organization entity, creating backup if missing.
                     $organisationEntity = null;
                     try {
-                        $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
+                        $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
                         $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
                     } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                         // Org entity missing — try backup creation from org object.
@@ -186,8 +172,8 @@ class ContactpersoonService
                             ]
                         );
                         try {
-                            $objectService       = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-                            $settingsService     = \OC::$server->get('OCA\SoftwareCatalog\Service\SettingsService');
+                            $objectService       = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+                            $settingsService     = $this->container->get('OCA\SoftwareCatalog\Service\SettingsService');
                             $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
                             $orgObject           = $objectService->find(
                                 id: $organizationUuid,
@@ -201,7 +187,7 @@ class ContactpersoonService
                                 $orgStatus = strtolower(($orgData['status'] ?? ''));
                                 if (in_array(needle: $orgStatus, haystack: ['actief', 'active']) === true) {
                                     $syncServiceClass        = 'OCA\SoftwareCatalog\Service\OrganizationSyncService';
-                                    $organizationSyncService = \OC::$server->get($syncServiceClass);
+                                    $organizationSyncService = $this->container->get($syncServiceClass);
                                     $backupStats        = [
                                         'entitiesCreated' => 0,
                                         'entitiesUpdated' => 0,
@@ -282,8 +268,9 @@ class ContactpersoonService
                         }//end if
 
                         if ($organisationEntity === null || $organisationEntity->getActive() !== true) {
-                                $orgActive = false;
+                            $orgActive = false;
                             if ($organisationEntity !== null) {
+                                $orgActive = $organisationEntity->getActive() === true;
                             }
 
                             $this->logger->info(
@@ -383,11 +370,12 @@ class ContactpersoonService
      * @param string $username             The username to update groups for
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-1
      */
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
         // Use the new organization type-based logic instead of old role-based logic.
-        $userManager = \OC::$server->get('OCP\IUserManager');
+        $userManager = $this->container->get('OCP\IUserManager');
         $user        = $userManager->get($username);
         if ($user === null) {
             $this->logger->warning('User not found for group update', ['username' => $username]);
@@ -409,6 +397,7 @@ class ContactpersoonService
      * @param string $username             The username being processed
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-1
      */
     public function ensureOrganizationBeheerder(object $contactpersoonObject, string $username): void
     {
@@ -481,7 +470,7 @@ class ContactpersoonService
             // To avoid validation errors on the organisatie field (stored as UUID string but.
             // Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
             // That could interfere with the ongoing org activation process.
-            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+            $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($contactpersoonObject);
 
             $this->logger->info(
@@ -511,6 +500,8 @@ class ContactpersoonService
      * @param object|null $oldContactpersoonObject The previous contactpersoon object
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-7
      */
     public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject=null): void
     {
@@ -573,9 +564,10 @@ class ContactpersoonService
      */
     private function syncNameFieldsToUser(object $contactpersoonObject, ?object $oldContactpersoonObject): void
     {
-        $newData     = $contactpersoonObject->getObject();
-            $oldData = [];
+        $newData = $contactpersoonObject->getObject();
+        $oldData = [];
         if ($oldContactpersoonObject !== null) {
+            $oldData = $oldContactpersoonObject->getObject();
         }
 
         // Check if any name/functie fields have changed.
@@ -605,7 +597,7 @@ class ContactpersoonService
             return;
         }
 
-        $userManager = \OC::$server->get('OCP\IUserManager');
+        $userManager = $this->container->get('OCP\IUserManager');
         $user        = $userManager->get($username);
 
         if ($user === null) {
@@ -701,6 +693,7 @@ class ContactpersoonService
      * @param object $contactObject The contact object being deleted
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-1
      */
     public function handleContactDeletion(object $contactObject): void
     {
@@ -727,7 +720,7 @@ class ContactpersoonService
             );
 
             // Get user manager to disable the user.
-            $userManager = \OC::$server->get('OCP\IUserManager');
+            $userManager = $this->container->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
             if ($user === null) {
@@ -770,6 +763,7 @@ class ContactpersoonService
      * @param string $organizationUuid The organization UUID
      *
      * @return array Array of contact person objects
+     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-2
      */
     public function getContactPersonsForOrganization(string $organizationUuid): array
     {
@@ -829,6 +823,7 @@ class ContactpersoonService
      * @return array Array of contact person objects with user details spliced in
      *
      * @throws \Exception If contact person retrieval fails
+     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-2
      */
     public function getContactPersonsWithUserDetailsForOrganization(string $organizationUuid): array
     {
@@ -858,7 +853,7 @@ class ContactpersoonService
             );
 
             // Get user manager to fetch user details.
-            $userManager            = \OC::$server->get('OCP\IUserManager');
+            $userManager            = $this->container->get('OCP\IUserManager');
             $enhancedContactPersons = [];
 
             // Loop through each contact person and fetch user details.
@@ -984,6 +979,7 @@ class ContactpersoonService
      * @return array Array of user information keyed by contact person ID
      *
      * @throws \Exception If bulk user info retrieval fails
+     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-2
      */
     public function getBulkUserInfo(array $contactpersoonIds): array
     {
@@ -996,7 +992,7 @@ class ContactpersoonService
             );
 
             $bulkUserInfo = [];
-            $userManager  = \OC::$server->get('OCP\IUserManager');
+            $userManager  = $this->container->get('OCP\IUserManager');
 
             // Get contact person register and schema from settings.
             $contactRegister = null;
@@ -1034,9 +1030,7 @@ class ContactpersoonService
                         _extend: [],
                         files: false,
                         register: $contactRegister,
-                        schema: $contactSchema,
-                        _rbac: false,
-                        _multitenancy: false
+                        schema: $contactSchema
                     );
 
                     if ($contactObject === null) {
@@ -1075,7 +1069,7 @@ class ContactpersoonService
                         }
 
                         if ($user !== null) {
-                            $groupManager        = \OC::$server->get('OCP\IGroupManager');
+                            $groupManager        = $this->container->get('OCP\IGroupManager');
                             $userGroups          = $groupManager->getUserGroups($user);
                             $userInfo['groups']  = array_keys($userGroups);
                             $userInfo['enabled'] = $user->isEnabled();
@@ -1222,7 +1216,7 @@ class ContactpersoonService
             // FIX #434: Use MagicMapper directly instead of ObjectService::saveObject().
             // To avoid validation errors on the organisatie field (stored as UUID string but.
             // Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
-            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+            $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($contactObject);
 
             $this->logger->info(
@@ -1257,6 +1251,7 @@ class ContactpersoonService
      * @return void
      *
      * @throws \Exception If enabling fails.
+     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-2
      */
     public function enableUserForContactpersoon(string $contactpersoonId): void
     {
@@ -1289,7 +1284,7 @@ class ContactpersoonService
                 throw new \Exception('No username found for contactpersoon');
             }
 
-            $userManager = \OC::$server->get('OCP\IUserManager');
+            $userManager = $this->container->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
             if ($user === null) {
@@ -1328,6 +1323,7 @@ class ContactpersoonService
      * @return void
      *
      * @throws \Exception If disabling fails.
+     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-2
      */
     public function disableUserForContactpersoon(string $contactpersoonId): void
     {
@@ -1360,7 +1356,7 @@ class ContactpersoonService
                 throw new \Exception('No username found for contactpersoon');
             }
 
-            $userManager = \OC::$server->get('OCP\IUserManager');
+            $userManager = $this->container->get('OCP\IUserManager');
             $user        = $userManager->get($username);
 
             if ($user === null) {
@@ -1390,4 +1386,42 @@ class ContactpersoonService
         }//end try
 
     }//end disableUserForContactpersoon()
+
+    /**
+     * Returns true when the contactpersoon email is non-empty AND passes
+     * `filter_var(FILTER_VALIDATE_EMAIL)`. Emits a warning log + returns false
+     * otherwise so the caller can early-return.
+     *
+     * Extracted from {@see processContactpersoon()} as part of task 7.2.
+     *
+     * @param string $email     The candidate email address.
+     * @param string $contactId The contact id (for the log context).
+     *
+     * @return bool
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function isContactpersoonEmailUsable(string $email, string $contactId): bool
+    {
+        if (empty($email) === true) {
+            $this->logger->warning(
+                'ContactpersoonService: Contactpersoon has no email, skipping processing',
+                ['contactId' => $contactId]
+            );
+            return false;
+        }
+
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            $this->logger->warning(
+                'ContactpersoonService: Contactpersoon has invalid email, skipping user creation',
+                [
+                    'contactId' => $contactId,
+                    'email'     => $email,
+                ]
+            );
+            return false;
+        }
+
+        return true;
+    }//end isContactpersoonEmailUsable()
 }//end class

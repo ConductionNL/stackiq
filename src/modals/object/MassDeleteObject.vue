@@ -100,6 +100,7 @@ export default {
 		/**
 		 * Get the objects to operate on from selected objects
 		 * @return {Array<object>} Array of objects to delete
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
 		 */
 		objectsToDelete() {
 			return objectStore.selectedObjects || []
@@ -108,6 +109,7 @@ export default {
 		/**
 		 * Get the dialog title based on number of objects
 		 * @return {string} Dialog title
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
 		 */
 		dialogTitle() {
 			const count = objectStore.selectedObjects?.length || 0
@@ -122,10 +124,16 @@ export default {
 		this.initializeSelection()
 	},
 	methods: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 */
 		initializeSelection() {
 			// Store the original count for success message
 			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 */
 		closeDialog() {
 			// Clear any pending timeout that might reopen the dialog
 			if (this.closeModalTimeout) {
@@ -134,12 +142,18 @@ export default {
 			}
 			navigationStore.setDialog(false)
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 */
 		navigateToDeleted() {
 			// Close the dialog first
 			this.closeDialog()
 			// Navigate to the deleted objects section
 			navigationStore.setSelected('deleted')
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 */
 		async deleteObject() {
 			this.loading = true
 
@@ -174,6 +188,9 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 */
 		handleDialogClose(isOpen) {
 			if (!isOpen) {
 				this.closeDialog()

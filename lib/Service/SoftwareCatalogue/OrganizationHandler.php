@@ -6,12 +6,15 @@
  * This handler manages organization-specific operations including group creation,
  * organization processing, and hierarchy management.
  *
- * @category Handler
- * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Handler
+ * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -29,12 +32,13 @@ use Psr\Log\LoggerInterface;
 /**
  * Handler for organization-related operations.
  *
- * @category Handler
- * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Handler
+ * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
@@ -45,9 +49,6 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -96,6 +97,8 @@ class OrganizationHandler
      * @return bool True if processing was successful
      *
      * @throws \Exception If processing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function processOrganization(object $organizationObject): bool
     {
@@ -159,6 +162,7 @@ class OrganizationHandler
      * @param array  $objectData         The organization data
      *
      * @return string|null The group ID or null if failed
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function ensureOrganizationGroup(object $organizationObject, array &$objectData): ?string
     {
@@ -252,6 +256,7 @@ class OrganizationHandler
      * @param string $groupName The group name to create
      *
      * @return IGroup|null The created or existing group
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function createGroupIfNotExists(string $groupName): ?IGroup
     {
@@ -287,6 +292,7 @@ class OrganizationHandler
      * @param string $name The name to sanitize
      *
      * @return string The sanitized group name
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function sanitizeGroupName(string $name): string
     {
@@ -310,6 +316,8 @@ class OrganizationHandler
      * @param object $organizationObject The organization object
      *
      * @return array Array of created or updated contactgegevens objects
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function processContactpersonen(object $organizationObject): array
     {
@@ -356,10 +364,12 @@ class OrganizationHandler
 
                         $logMessage = 'Creating new contactgegevens object';
                     if ($existingContactgegevens !== null) {
+                        $logMessage = 'Updating existing contactgegevens object';
                     }
 
                         $existingId = null;
                     if ($existingContactgegevens !== null) {
+                        $existingId = $existingContactgegevens->getId();
                     }
 
                     $this->_logger->info(
@@ -373,18 +383,7 @@ class OrganizationHandler
                         ]
                     );
 
-                    // Generate title from name components.
-                    $titleParts = array_filter(
-                            [
-                                $contactpersoon['voornaam'] ?? '',
-                                $contactpersoon['tussenvoegsel'] ?? '',
-                                $contactpersoon['achternaam'] ?? '',
-                            ]
-                            );
-
-                        $title = $contactpersoon['email'] ?? 'Contact Person';
-                    if (empty($titleParts) === false) {
-                    }
+                    $title = $this->buildContactpersoonTitle($contactpersoon);
 
                     // Create contactgegevens object with proper schema.
                     $contactFunctie      = $contactpersoon['functie'] ?? '';
@@ -415,13 +414,6 @@ class OrganizationHandler
                     }
 
                     // Create or update the contactgegevens object via ObjectService.
-                    // Create new contactgegevens object.
-                    $contactgegevensObject = $objectService->saveObject(
-                        object: $contactgegevensData,
-                        extend: [],
-                        register: $registerId,
-                        schema: $contactgegevensSchemaId
-                    );
                     if ($existingContactgegevens !== null) {
                         // Update existing contactgegevens object.
                         $contactgegevensObject = $objectService->saveObject(
@@ -430,6 +422,14 @@ class OrganizationHandler
                             register: $registerId,
                             schema: $contactgegevensSchemaId,
                             uuid: $existingContactgegevens->getUuid()
+                        );
+                    } else {
+                        // Create new contactgegevens object.
+                        $contactgegevensObject = $objectService->saveObject(
+                            object: $contactgegevensData,
+                            extend: [],
+                            register: $registerId,
+                            schema: $contactgegevensSchemaId
                         );
                     }
 
@@ -570,6 +570,8 @@ class OrganizationHandler
      * @param bool   $isFirstContact Whether this is the first contact in the organization
      *
      * @return array Array of roles
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isFirstContact is a simple role-assignment toggle
      */
     private function mapFunctieToRoles(string $functie, bool $isFirstContact=false): array
     {
@@ -611,6 +613,7 @@ class OrganizationHandler
      * @param object $organizationObject The organization object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function handleNewOrganization(object $organizationObject): void
     {
@@ -659,6 +662,7 @@ class OrganizationHandler
      * @param string $organizationUuid The organization UUID
      *
      * @return array Array of usernames who are beheerders in this organization
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function getOrganizationBeheerders(string $organizationUuid): array
     {
@@ -692,6 +696,7 @@ class OrganizationHandler
                         if ($userA !== null) {
                             $lastLoginA = $userA->getLastLogin();
                             if ($lastLoginA !== 0 && $lastLoginA !== null && $lastLoginA !== false) {
+                                $timeA = (int) $lastLoginA;
                             }
                         }
 
@@ -699,6 +704,7 @@ class OrganizationHandler
                         if ($userB !== null) {
                             $lastLoginB = $userB->getLastLogin();
                             if ($lastLoginB !== 0 && $lastLoginB !== null && $lastLoginB !== false) {
+                                $timeB = (int) $lastLoginB;
                             }
                         }
 
@@ -734,6 +740,7 @@ class OrganizationHandler
      * @param string $organizationUuid The organization UUID
      *
      * @return bool True if user belongs to organization
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-4
      */
     public function userBelongsToOrganization(IUser $user, string $organizationUuid): bool
     {
@@ -767,4 +774,35 @@ class OrganizationHandler
             return false;
         }//end try
     }//end userBelongsToOrganization()
+
+    /**
+     * Builds a human-readable title for a contactpersoon row.
+     *
+     * Prefers `voornaam + tussenvoegsel + achternaam` (joined with single
+     * spaces); falls back to the email address; final fallback is the literal
+     * "Contact Person". Extracted from {@see processContactpersonen()} as part
+     * of task 8.1.
+     *
+     * @param array<string, mixed> $contactpersoon The raw contactpersoon payload.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-8
+     */
+    private function buildContactpersoonTitle(array $contactpersoon): string
+    {
+        $parts = array_filter(
+            [
+                $contactpersoon['voornaam'] ?? '',
+                $contactpersoon['tussenvoegsel'] ?? '',
+                $contactpersoon['achternaam'] ?? '',
+            ]
+        );
+
+        if (empty($parts) === false) {
+            return implode(' ', $parts);
+        }
+
+        return $contactpersoon['email'] ?? 'Contact Person';
+    }//end buildContactpersoonTitle()
 }//end class

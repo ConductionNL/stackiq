@@ -8,7 +8,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 namespace OCA\SoftwareCatalog\Dashboard;
@@ -90,12 +90,18 @@ class ConceptOrganisatiesWidget implements IWidget
      * @return void
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-concept-organizations-widget/tasks.md#task-1
      */
     public function load(): void
     {
-        $appId      = Application::APP_ID;
-        $scriptName = $appId.'-conceptOrganisatiesWidget';
-        Util::addScript(application: $appId, file: $scriptName);
+        $appId = Application::APP_ID;
+        // Shared chunks emitted by webpack splitChunks + runtimeChunk (see webpack.config.js).
+        // Order: runtime → vendor → nc-vue → widget.
+        Util::addScript(application: $appId, file: $appId.'-runtime');
+        Util::addScript(application: $appId, file: $appId.'-shared-vendor');
+        Util::addScript(application: $appId, file: $appId.'-shared-nc-vue');
+        Util::addScript(application: $appId, file: $appId.'-conceptOrganisatiesWidget');
         Util::addStyle(application: $appId, file: 'dashboardWidgets');
     }//end load()
 }//end class

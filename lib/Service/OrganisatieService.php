@@ -11,7 +11,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use OCP\IAppConfig;
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
  */
@@ -70,6 +70,8 @@ class OrganisatieService
      * @param array $objectData The organization object data
      *
      * @return object|null The created organisation entity or null on failure
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-1
      */
     public function createOrganisationInOpenRegister(array $objectData): ?object
     {
@@ -135,6 +137,8 @@ class OrganisatieService
      * @param array  $objectData       The organization object data
      *
      * @return bool True if update was successful
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-2
      */
     public function updateOrganizationStatus(string $organizationUuid, array $objectData): bool
     {
@@ -204,6 +208,8 @@ class OrganisatieService
      * @param array $objectData The organization object data.
      *
      * @return array The mapped data for OpenRegister.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-3
      */
     private function mapOrganizationDataForOpenRegister(array $objectData): array
     {
@@ -232,6 +238,8 @@ class OrganisatieService
      * @param string $status The status from Software Catalog
      *
      * @return bool The mapped active status for OpenRegister
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-2
      */
     private function mapStatus(string $status): bool
     {
@@ -258,6 +266,8 @@ class OrganisatieService
      * @param string                                        $organizationUuid    The organization UUID
      *
      * @return \OCA\OpenRegister\Db\Organisation The created organisation entity
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-1
      */
     private function createOrganisationEntityInternal(
         \OCA\OpenRegister\Service\OrganisationService $organisationService,
@@ -307,6 +317,8 @@ class OrganisatieService
      * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The organisation service
      *
      * @return string|null The active organisation UUID or null if not set
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-1
      */
     private function getActiveOrganisationUuid(
         \OCA\OpenRegister\Service\OrganisationService $organisationService
@@ -336,6 +348,8 @@ class OrganisatieService
      * @param array  $usernames        Array of usernames to add
      *
      * @return bool True if successful
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-4
      */
     public function addUsersToOrganization(string $organizationUuid, array $usernames): bool
     {
@@ -409,6 +423,8 @@ class OrganisatieService
      * Gets admin group usernames.
      *
      * @return array Array of admin usernames
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-5
      */
     public function getAdminGroupUsernames(): array
     {

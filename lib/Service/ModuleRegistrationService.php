@@ -11,7 +11,9 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -28,10 +30,6 @@ use Psr\Log\LoggerInterface;
  *
  * @category Service
  * @package  OCA\SoftwareCatalog\Service
- *
- * @SuppressWarnings(PHPMD.CyclomaticComplexity)
- * @SuppressWarnings(PHPMD.NPathComplexity)
- * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
  */
 class ModuleRegistrationService
 {
@@ -66,6 +64,8 @@ class ModuleRegistrationService
      * @param object $moduleObject The module object to process
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function handleModuleRegistration(object $moduleObject): void
     {
@@ -91,121 +91,17 @@ class ModuleRegistrationService
                 );
 
         try {
-            $objectService = $this->getObjectService();
-            if ($objectService === null) {
-                $this->logger->error('ModuleRegistrationService: ObjectService not available');
+            $orgType = $this->resolveOrganisationType($moduleId, $organisationUuid);
+            if ($orgType === null) {
                 return;
             }
 
-            // Look up the organisatie object whose UUID matches the module's _organisation.
-            $organisatieSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
-            $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-            $registerId          = $voorzieningenConfig['register'] ?? null;
-
-            if ($organisatieSchemaId === null || $registerId === null) {
-                $this->logger->warning(
-                        'ModuleRegistrationService: Organisatie schema or register not configured',
-                        [
-                            'organisatieSchemaId' => $organisatieSchemaId,
-                            'registerId'          => $registerId,
-                        ]
-                        );
-                return;
-            }
-
-            // Search for the organisatie by its organisation UUID.
-            // Organisation objects share their UUID with the OpenRegister Organisation entity.
-            try {
-                $organisatieObject = $objectService->find(
-                    id: $organisationUuid,
-                    register: (int) $registerId,
-                    schema: (int) $organisatieSchemaId
-                );
-            } catch (\Exception $e) {
-                $this->logger->debug(
-                        'ModuleRegistrationService: Organisatie not found for organisation UUID',
-                        [
-                            'moduleId'         => $moduleId,
-                            'organisationUuid' => $organisationUuid,
-                        ]
-                        );
-                return;
-            }
-
-            if ($organisatieObject === null) {
-                $this->logger->debug(
-                        'ModuleRegistrationService: Organisatie not found for organisation UUID',
-                        [
-                            'moduleId'         => $moduleId,
-                            'organisationUuid' => $organisationUuid,
-                        ]
-                        );
-                return;
-            }
-
-            $organisatieData = $organisatieObject->getObject();
-            $orgType         = $organisatieData['type'] ?? null;
-
-            if (empty($orgType) === true) {
-                $this->logger->debug(
-                        'ModuleRegistrationService: Organisatie has no type, skipping',
-                        [
-                            'moduleId'         => $moduleId,
-                            'organisationUuid' => $organisationUuid,
-                        ]
-                        );
-                return;
-            }
-
-            // Map the org type to geregistreerdDoor value.
-            $geregistreerdDoor = self::TYPE_MAP[$orgType] ?? null;
-
+            $geregistreerdDoor = $this->mapOrgTypeToRegisteredBy($moduleId, $orgType);
             if ($geregistreerdDoor === null) {
-                $this->logger->warning(
-                        'ModuleRegistrationService: Unknown org type, cannot map geregistreerdDoor',
-                        [
-                            'moduleId' => $moduleId,
-                            'orgType'  => $orgType,
-                        ]
-                        );
                 return;
             }
 
-            // Check if already set correctly.
-            $moduleData   = $moduleObject->getObject();
-            $currentValue = $moduleData['geregistreerdDoor'] ?? null;
-
-            if ($currentValue === $geregistreerdDoor) {
-                $this->logger->debug(
-                        'ModuleRegistrationService: geregistreerdDoor already correct',
-                        [
-                            'moduleId'          => $moduleId,
-                            'geregistreerdDoor' => $geregistreerdDoor,
-                        ]
-                        );
-                return;
-            }
-
-            // Update the module with the correct geregistreerdDoor.
-            $moduleData['geregistreerdDoor'] = $geregistreerdDoor;
-
-            $objectService->saveObject(
-                object: $moduleData,
-                register: $moduleObject->getRegister(),
-                schema: $moduleObject->getSchema(),
-                uuid: $moduleObject->getUuid(),
-                _rbac: false,
-                _multitenancy: false
-            );
-
-            $this->logger->info(
-                    'ModuleRegistrationService: Set geregistreerdDoor on module',
-                    [
-                        'moduleId'          => $moduleId,
-                        'orgType'           => $orgType,
-                        'geregistreerdDoor' => $geregistreerdDoor,
-                    ]
-                    );
+            $this->updateModuleRegisteredBy($moduleObject, $geregistreerdDoor, $orgType);
         } catch (\Exception $e) {
             $this->logger->error(
                     'ModuleRegistrationService: Failed to set geregistreerdDoor',
@@ -218,6 +114,168 @@ class ModuleRegistrationService
                     );
         }//end try
     }//end handleModuleRegistration()
+
+
+    /**
+     * Resolve the organisation type for the given organisation UUID.
+     *
+     * Returns null when any prerequisite is missing (object service unavailable,
+     * register/schema unconfigured, organisatie not found, or organisatie has
+     * no type) — all of which represent legitimate skip-paths, logged at the
+     * appropriate level.
+     *
+     * @param mixed  $moduleId         The module identifier (for logging)
+     * @param string $organisationUuid The organisation UUID to look up
+     *
+     * @return string|null The organisation type, or null when not resolvable
+     */
+    private function resolveOrganisationType($moduleId, string $organisationUuid): ?string
+    {
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            $this->logger->error('ModuleRegistrationService: ObjectService not available');
+            return null;
+        }
+
+        $organisatieSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
+        $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+        $registerId          = $voorzieningenConfig['register'] ?? null;
+
+        if ($organisatieSchemaId === null || $registerId === null) {
+            $this->logger->warning(
+                    'ModuleRegistrationService: Organisatie schema or register not configured',
+                    [
+                        'organisatieSchemaId' => $organisatieSchemaId,
+                        'registerId'          => $registerId,
+                    ]
+                    );
+            return null;
+        }
+
+        try {
+            $organisatieObject = $objectService->find(
+                id: $organisationUuid,
+                register: (int) $registerId,
+                schema: (int) $organisatieSchemaId
+            );
+        } catch (\Exception $e) {
+            $this->logger->debug(
+                    'ModuleRegistrationService: Organisatie not found for organisation UUID',
+                    [
+                        'moduleId'         => $moduleId,
+                        'organisationUuid' => $organisationUuid,
+                    ]
+                    );
+            return null;
+        }
+
+        if ($organisatieObject === null) {
+            $this->logger->debug(
+                    'ModuleRegistrationService: Organisatie not found for organisation UUID',
+                    [
+                        'moduleId'         => $moduleId,
+                        'organisationUuid' => $organisationUuid,
+                    ]
+                    );
+            return null;
+        }
+
+        $organisatieData = $organisatieObject->getObject();
+        $orgType         = $organisatieData['type'] ?? null;
+
+        if (empty($orgType) === true) {
+            $this->logger->debug(
+                    'ModuleRegistrationService: Organisatie has no type, skipping',
+                    [
+                        'moduleId'         => $moduleId,
+                        'organisationUuid' => $organisationUuid,
+                    ]
+                    );
+            return null;
+        }
+
+        return (string) $orgType;
+    }//end resolveOrganisationType()
+
+
+    /**
+     * Map an organisation type to the geregistreerdDoor enum value.
+     *
+     * @param mixed  $moduleId The module identifier (for logging)
+     * @param string $orgType  The organisation type
+     *
+     * @return string|null The geregistreerdDoor value, or null when unknown
+     */
+    private function mapOrgTypeToRegisteredBy($moduleId, string $orgType): ?string
+    {
+        $geregistreerdDoor = self::TYPE_MAP[$orgType] ?? null;
+
+        if ($geregistreerdDoor === null) {
+            $this->logger->warning(
+                    'ModuleRegistrationService: Unknown org type, cannot map geregistreerdDoor',
+                    [
+                        'moduleId' => $moduleId,
+                        'orgType'  => $orgType,
+                    ]
+                    );
+            return null;
+        }
+
+        return $geregistreerdDoor;
+    }//end mapOrgTypeToRegisteredBy()
+
+
+    /**
+     * Persist geregistreerdDoor on the module object if not already correct.
+     *
+     * @param object $moduleObject      The module entity to update
+     * @param string $geregistreerdDoor The resolved geregistreerdDoor value
+     * @param string $orgType           The originating organisation type
+     *
+     * @return void
+     */
+    private function updateModuleRegisteredBy(object $moduleObject, string $geregistreerdDoor, string $orgType): void
+    {
+        $moduleId     = $moduleObject->getId();
+        $moduleData   = $moduleObject->getObject();
+        $currentValue = $moduleData['geregistreerdDoor'] ?? null;
+
+        if ($currentValue === $geregistreerdDoor) {
+            $this->logger->debug(
+                    'ModuleRegistrationService: geregistreerdDoor already correct',
+                    [
+                        'moduleId'          => $moduleId,
+                        'geregistreerdDoor' => $geregistreerdDoor,
+                    ]
+                    );
+            return;
+        }
+
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            return;
+        }
+
+        $moduleData['geregistreerdDoor'] = $geregistreerdDoor;
+
+        $objectService->saveObject(
+            object: $moduleData,
+            register: $moduleObject->getRegister(),
+            schema: $moduleObject->getSchema(),
+            uuid: $moduleObject->getUuid(),
+            _rbac: false,
+            _multitenancy: false
+        );
+
+        $this->logger->info(
+                'ModuleRegistrationService: Set geregistreerdDoor on module',
+                [
+                    'moduleId'          => $moduleId,
+                    'orgType'           => $orgType,
+                    'geregistreerdDoor' => $geregistreerdDoor,
+                ]
+                );
+    }//end updateModuleRegisteredBy()
 
     /**
      * Get the object service from the DI container.

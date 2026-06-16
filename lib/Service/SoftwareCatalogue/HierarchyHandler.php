@@ -6,12 +6,15 @@
  * This handler manages organizational hierarchy, beheerder assignments,
  * and manager relationships within organizations.
  *
- * @category Handler
- * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Handler
+ * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -20,17 +23,20 @@ namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
 
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
+use OCP\IGroupManager;
+use OCP\IUserManager;
 use Psr\Log\LoggerInterface;
 
 /**
  * Handler for organizational hierarchy management
  *
- * @category Handler
- * @package  OCA\SoftwareCatalog\Service\SoftwareCatalogue
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: <git_id>
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Handler
+ * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: <git_id>
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.NPathComplexity)
@@ -40,9 +46,6 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -55,11 +58,15 @@ class HierarchyHandler
      * @param OrganizationHandler  $_organizationHandler  Organization handler
      * @param ContactPersonHandler $_contactPersonHandler Contact person handler
      * @param LoggerInterface      $_logger               Logger interface
+     * @param IUserManager         $_userManager          User manager interface
+     * @param IGroupManager        $_groupManager         Group manager interface
      */
     public function __construct(
         private readonly OrganizationHandler $_organizationHandler,
         private readonly ContactPersonHandler $_contactPersonHandler,
         private readonly LoggerInterface $_logger,
+        private readonly IUserManager $_userManager,
+        private readonly IGroupManager $_groupManager,
     ) {
     }//end __construct()
 
@@ -70,6 +77,7 @@ class HierarchyHandler
      * @param string $username              The username being processed
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
      */
     public function ensureOrganizationBeheerder(object $contactgegevensObject, string $username): void
     {
@@ -121,6 +129,7 @@ class HierarchyHandler
      * @param string $organizationUuid       The organization UUID
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
      */
     public function setupManagerRelationships(
         string $username,
@@ -132,22 +141,9 @@ class HierarchyHandler
                 return;
             }
 
-            // The oldest beheerder becomes the manager.
-            $primaryManager = $organizationBeheerders[0];
-
-            // If current user is not a beheerder, set their manager.
-            if (in_array(needle: $username, haystack: $organizationBeheerders) === false) {
-                $this->_contactPersonHandler->setUserManager(username: $username, managerUsername: $primaryManager);
-            }
-
-            // If there are multiple beheerders, set the primary as manager for others.
-            if (count($organizationBeheerders) > 1) {
-                foreach ($organizationBeheerders as $beheerder) {
-                    if ($beheerder !== $primaryManager) {
-                        $this->_contactPersonHandler->setUserManager(username: $beheerder, managerUsername: $primaryManager);
-                    }
-                }
-            }
+            $primaryManager = $this->resolvePrimaryManager($organizationBeheerders);
+            $this->assignManagerForCurrentUser($username, $organizationBeheerders, $primaryManager);
+            $this->assignManagerForOtherBeheerders($organizationBeheerders, $primaryManager);
 
             $this->_logger->info(
                 'Set up manager relationships',
@@ -170,12 +166,76 @@ class HierarchyHandler
         }//end try
     }//end setupManagerRelationships()
 
+
+    /**
+     * Pick the primary manager from the list of beheerders.
+     *
+     * The oldest beheerder (first element) becomes the manager.
+     *
+     * @param array<int,string> $organizationBeheerders Beheerder usernames
+     *
+     * @return string The primary manager's username
+     */
+    private function resolvePrimaryManager(array $organizationBeheerders): string
+    {
+        return $organizationBeheerders[0];
+
+    }//end resolvePrimaryManager()
+
+
+    /**
+     * Set the primary beheerder as the current user's manager when they
+     * are not themselves a beheerder.
+     *
+     * @param string            $username               The current username
+     * @param array<int,string> $organizationBeheerders Beheerder usernames
+     * @param string            $primaryManager         The primary manager
+     *
+     * @return void
+     */
+    private function assignManagerForCurrentUser(string $username, array $organizationBeheerders, string $primaryManager): void
+    {
+        if (in_array(needle: $username, haystack: $organizationBeheerders) === true) {
+            return;
+        }
+
+        $this->_contactPersonHandler->setUserManager(username: $username, managerUsername: $primaryManager);
+
+    }//end assignManagerForCurrentUser()
+
+
+    /**
+     * Point all secondary beheerders at the primary manager.
+     *
+     * @param array<int,string> $organizationBeheerders Beheerder usernames
+     * @param string            $primaryManager         The primary manager
+     *
+     * @return void
+     */
+    private function assignManagerForOtherBeheerders(array $organizationBeheerders, string $primaryManager): void
+    {
+        if (count($organizationBeheerders) <= 1) {
+            return;
+        }
+
+        foreach ($organizationBeheerders as $beheerder) {
+            if ($beheerder === $primaryManager) {
+                continue;
+            }
+
+            $this->_contactPersonHandler->setUserManager(username: $beheerder, managerUsername: $primaryManager);
+        }
+
+    }//end assignManagerForOtherBeheerders()
+
     /**
      * Gets organizational hierarchy information for a user
      *
      * @param string $username The username to get hierarchy for
      *
      * @return array Array containing hierarchy information
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function getUserHierarchy(string $username): array
     {
@@ -232,7 +292,7 @@ class HierarchyHandler
 
         try {
             // Get all users and check their managers.
-            $userManager = \OC::$server->getUserManager();
+            $userManager = $this->_userManager;
             $users       = $userManager->search('');
 
             foreach ($users as $user) {
@@ -266,14 +326,14 @@ class HierarchyHandler
     private function isUserBeheerder(string $username): bool
     {
         try {
-            $groupManager   = \OC::$server->getGroupManager();
+            $groupManager   = $this->_groupManager;
             $beheerderGroup = $groupManager->get('beheerder');
 
             if ($beheerderGroup === null) {
                 return false;
             }
 
-            $userManager = \OC::$server->getUserManager();
+            $userManager = $this->_userManager;
             $user        = $userManager->get($username);
 
             if ($user === null) {
@@ -299,6 +359,8 @@ class HierarchyHandler
      * @param string $organizationUuid The organization UUID
      *
      * @return array Array containing organizational structure
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function getOrganizationStructure(string $organizationUuid): array
     {

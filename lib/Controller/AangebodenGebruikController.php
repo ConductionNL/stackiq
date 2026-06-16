@@ -13,7 +13,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -21,7 +21,9 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCA\SoftwareCatalog\Service\AangebodenGebruikService;
@@ -40,7 +42,7 @@ use Psr\Log\LoggerInterface;
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -50,18 +52,20 @@ class AangebodenGebruikController extends Controller
     /**
      * Constructor for AangebodenGebruikController.
      *
-     * @param string                   $appName     The name of the app
-     * @param IRequest                 $request     The HTTP request object
-     * @param IUserSession             $userSession The user session service for getting the current user
-     * @param AangebodenGebruikService $gebruikSvc  The business logic service
-     * @param LoggerInterface          $logger      The logger service for debugging and error reporting
+     * @param string                   $appName      The name of the app
+     * @param IRequest                 $request      The HTTP request object
+     * @param IUserSession             $userSession  The user session service for getting the current user
+     * @param AangebodenGebruikService $gebruikSvc   The business logic service
+     * @param LoggerInterface          $logger       The logger service for debugging and error reporting
+     * @param IGroupManager            $groupManager The group manager for group membership checks
      */
     public function __construct(
         string $appName,
         IRequest $request,
         private readonly IUserSession $userSession,
         private readonly AangebodenGebruikService $gebruikSvc,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IGroupManager $groupManager
     ) {
         parent::__construct(appName: $appName, request: $request);
     }//end __construct()
@@ -81,10 +85,9 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with gebruiks array where org is afnemer
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     * @PublicPage
+     * @spec           openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getGebruiksWhereAfnemer(): JSONResponse
     {
@@ -157,9 +160,9 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse Koppelingen and gebruiks objects for the specified UUID
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     * @spec           openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse
     {
@@ -247,9 +250,9 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse All gebruiks objects in standard searchObjectsPaginated format
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     * @spec           openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getAllGebruiksForAmbtenaar(): JSONResponse
     {
@@ -268,9 +271,10 @@ class AangebodenGebruikController extends Controller
             $isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
             if ($isAdmin === false && $isAmbtenaar === false) {
                 // Get user ID for logging (may be null if not authenticated).
-                $user       = $this->userSession->getUser();
-                    $userId = 'null';
+                $user   = $this->userSession->getUser();
+                $userId = 'null';
                 if ($user !== null) {
+                    $userId = $user->getUID();
                 }
 
                 $this->logger->info(
@@ -303,8 +307,9 @@ class AangebodenGebruikController extends Controller
             $result = $this->gebruikSvc->getAllGebruiksForAmbtenaar($options);
 
             // Determine HTTP status code based on whether there's an error.
-                $statusCode = 200;
+            $statusCode = 200;
             if (isset($result['error']) === true) {
+                $statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
             }
 
             $this->logger->info(
@@ -351,12 +356,11 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse Single gebruik object in standard searchObjectsPaginated format
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      * @PublicPage
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec                                          openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getSingleGebruikForAmbtenaar(string $gebruikId): JSONResponse
     {
@@ -376,9 +380,10 @@ class AangebodenGebruikController extends Controller
             $isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
             if ($isAdmin === false && $isAmbtenaar === false) {
                 // Get user ID for logging (may be null if not authenticated).
-                $user       = $this->userSession->getUser();
-                    $userId = 'null';
+                $user   = $this->userSession->getUser();
+                $userId = 'null';
                 if ($user !== null) {
+                    $userId = $user->getUID();
                 }
 
                 $this->logger->info(
@@ -415,8 +420,9 @@ class AangebodenGebruikController extends Controller
             );
 
             // Determine HTTP status code based on whether there's an error.
-                $statusCode = 200;
+            $statusCode = 200;
             if (isset($result['error']) === true) {
+                $statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
             }
 
             $this->logger->info(
@@ -477,10 +483,9 @@ class AangebodenGebruikController extends Controller
                 return false;
             }
 
-            $userId       = $user->getUID();
-            $groupManager = \OC::$server->getGroupManager();
+            $userId = $user->getUID();
 
-            $group = $groupManager->get($groupName);
+            $group = $this->groupManager->get($groupName);
             if ($group === null) {
                 $this->logger->warning('Group does not exist', ['group' => $groupName]);
                 return false;
@@ -525,10 +530,9 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with gebruiks array where org is in deelnemers
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
-     * @PublicPage
+     * @spec           openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-1
      */
     public function getGebruiksWhereDeelnemers(): JSONResponse
     {
@@ -605,11 +609,14 @@ class AangebodenGebruikController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
-     * @PublicPage
+     * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function setGebruikSelfToActiveOrg(string $gebruikId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Setting gebruik @self property to active org',
                 [
@@ -712,11 +719,14 @@ class AangebodenGebruikController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
-     * @PublicPage
+     * @spec            openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-2
      */
     public function deleteGebruikAsAfnemer(string $gebruikId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Deleting gebruik object as afnemer',
                 [
@@ -808,12 +818,11 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with API documentation
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      * @PublicPage
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec                                          openspec/changes/retrofit-2026-05-26-aangeboden-gebruik-api/tasks.md#task-3
      */
     public function getApiDocumentation(): JSONResponse
     {

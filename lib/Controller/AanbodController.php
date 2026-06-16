@@ -12,7 +12,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -39,7 +40,7 @@ use Psr\Log\LoggerInterface;
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 class AanbodController extends Controller
 {
@@ -79,9 +80,10 @@ class AanbodController extends Controller
      *
      * @return JSONResponse JSON response with aanbod objects array
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-aanbod-listings/tasks.md#task-1
      */
     public function getAanbod(): JSONResponse
     {
@@ -156,10 +158,15 @@ class AanbodController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-aanbod-listings/tasks.md#task-2
      */
     public function acceptAanbod(string $uuid): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Accepting aanbod object',
                 [
@@ -255,10 +262,15 @@ class AanbodController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-aanbod-listings/tasks.md#task-3
      */
     public function denyAanbod(string $uuid): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Denying aanbod object',
                 [
@@ -344,6 +356,8 @@ class AanbodController extends Controller
      * Parse query parameters into options array.
      *
      * @return array Parsed options array
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-aanbod-listings/tasks.md#task-1
      */
     private function parseQueryOptions(): array
     {

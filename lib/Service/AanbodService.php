@@ -13,7 +13,9 @@
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -41,7 +43,7 @@ use Exception;
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
@@ -52,9 +54,6 @@ use Exception;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -94,6 +93,8 @@ class AanbodService
      * @return array Array with success status, aanbod objects data, and metadata
      *
      * @throws Exception When OpenRegister service is not available
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function getAanbod(array $options=[]): array
     {
@@ -228,15 +229,17 @@ class AanbodService
             $requestedLimit = $options['_limit'] ?? $options['limit'] ?? 20;
             $requestedPage  = $options['_page'] ?? 1;
 
-                $requestedOffset = (($requestedPage - 1) * $requestedLimit);
+            $requestedOffset = (($requestedPage - 1) * $requestedLimit);
             if (isset($options['_offset']) === true) {
+                $requestedOffset = (int) $options['_offset'];
             }
 
             $totalFiltered    = count($allResults);
             $paginatedResults = array_slice($allResults, $requestedOffset, $requestedLimit);
 
-                $totalPages = 1;
+            $totalPages = 1;
             if ($requestedLimit > 0) {
+                $totalPages = (int) ceil($totalFiltered / $requestedLimit);
             }
 
             return [
@@ -281,6 +284,8 @@ class AanbodService
      * @return array Result with success status and updated object data
      *
      * @throws Exception When OpenRegister service is not available or operation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function acceptAanbod(string $aanbodId, array $options=[]): array
     {
@@ -333,26 +338,10 @@ class AanbodService
             $aanbodData    = $existingAanbod->getObject();
             $afnemerInfo   = $aanbodData['afnemer'] ?? null;
             $aanbiederInfo = $aanbodData['aanbieder'] ?? null;
-
-            // Check various ways the afnemer might be stored.
-            $afnemerId = null;
-            if (is_array($afnemerInfo) === true && isset($afnemerInfo['id']) === true) {
-                $afnemerId = $afnemerInfo['id'];
-            } else if (is_string($afnemerInfo) === true) {
-                $afnemerId = $afnemerInfo;
-            }
-
-            // Check various ways the aanbieder might be stored.
-            $aanbiederId = null;
-            if (is_array($aanbiederInfo) === true && isset($aanbiederInfo['id']) === true) {
-                $aanbiederId = $aanbiederInfo['id'];
-            } else if (is_string($aanbiederInfo) === true) {
-                $aanbiederId = $aanbiederInfo;
-            }
-
-            // Allow operation if current org is either afnemer or aanbieder.
-            $isAfnemer   = ($afnemerId !== null && $afnemerId === $currentOrg);
-            $isAanbieder = ($aanbiederId !== null && $aanbiederId === $currentOrg);
+            $afnemerId     = $this->resolvePartyId($afnemerInfo);
+            $aanbiederId   = $this->resolvePartyId($aanbiederInfo);
+            $isAfnemer     = ($afnemerId !== null && $afnemerId === $currentOrg);
+            $isAanbieder   = ($aanbiederId !== null && $aanbiederId === $currentOrg);
 
             if ($isAfnemer === false && $isAanbieder === false) {
                 return [
@@ -442,6 +431,8 @@ class AanbodService
      * @param array  $options  Additional options for the operation
      *
      * @return array Result array with success status and details
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function denyAanbod(string $aanbodId, array $options=[]): array
     {
@@ -495,26 +486,10 @@ class AanbodService
             // SECURITY CHECK: Verify that the active organization is either afnemer or aanbieder.
             $afnemerInfo   = $aanbodData['afnemer'] ?? null;
             $aanbiederInfo = $aanbodData['aanbieder'] ?? null;
-
-            // Check various ways the afnemer might be stored.
-            $afnemerId = null;
-            if (is_array($afnemerInfo) === true && isset($afnemerInfo['id']) === true) {
-                $afnemerId = $afnemerInfo['id'];
-            } else if (is_string($afnemerInfo) === true) {
-                $afnemerId = $afnemerInfo;
-            }
-
-            // Check various ways the aanbieder might be stored.
-            $aanbiederId = null;
-            if (is_array($aanbiederInfo) === true && isset($aanbiederInfo['id']) === true) {
-                $aanbiederId = $aanbiederInfo['id'];
-            } else if (is_string($aanbiederInfo) === true) {
-                $aanbiederId = $aanbiederInfo;
-            }
-
-            // Allow operation if current org is either afnemer or aanbieder.
-            $isAfnemer   = ($afnemerId !== null && $afnemerId === $currentOrg);
-            $isAanbieder = ($aanbiederId !== null && $aanbiederId === $currentOrg);
+            $afnemerId     = $this->resolvePartyId($afnemerInfo);
+            $aanbiederId   = $this->resolvePartyId($aanbiederInfo);
+            $isAfnemer     = ($afnemerId !== null && $afnemerId === $currentOrg);
+            $isAanbieder   = ($aanbiederId !== null && $aanbiederId === $currentOrg);
 
             if ($isAfnemer === false && $isAanbieder === false) {
                 $this->logger->warning(
@@ -587,6 +562,32 @@ class AanbodService
             ];
         }//end try
     }//end denyAanbod()
+
+    /**
+     * Resolve an afnemer / aanbieder party id from its polymorphic shape.
+     *
+     * Aanbod payloads store party references either as a `['id' => '…']`
+     * tuple (relation expansion) or as the raw UUID string. Returns null
+     * for any other shape.
+     *
+     * @param mixed $partyInfo The raw party value from the aanbod payload
+     *
+     * @return string|null The resolved party id, or null when not present
+     */
+    private function resolvePartyId(mixed $partyInfo): ?string
+    {
+        if (is_array($partyInfo) === true && isset($partyInfo['id']) === true) {
+            return (string) $partyInfo['id'];
+        }
+
+        if (is_string($partyInfo) === true && $partyInfo !== '') {
+            return $partyInfo;
+        }
+
+        return null;
+
+    }//end resolvePartyId()
+
 
     /**
      * Find an aanbod object by UUID across all possible schemas.

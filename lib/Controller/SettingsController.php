@@ -14,12 +14,18 @@
  * @version GIT: <git_id>
  *
  * @link https://www.OpenCatalogi.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\IAppConfig;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
@@ -49,6 +55,8 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.LongVariable)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+ *
+ * @spec openspec/changes/method-decomposition/tasks.md#task-3
  */
 class SettingsController extends Controller
 {
@@ -101,6 +109,7 @@ class SettingsController extends Controller
      *
      * @return ObjectService|null The OpenRegister service if available, null otherwise.
      * @throws RuntimeException If the service is not available.
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-1
      */
     public function getObjectService(): ?ObjectService
     {
@@ -118,6 +127,7 @@ class SettingsController extends Controller
      *
      * @return ConfigurationService|null The Configuration service if available, null otherwise.
      * @throws RuntimeException If the service is not available.
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-1
      */
     public function getConfigurationService(): ?ConfigurationService
     {
@@ -134,15 +144,92 @@ class SettingsController extends Controller
     }//end getConfigurationService()
 
     /**
+     * Return request params with known credential fields redacted.
+     *
+     * Prevents SMTP passwords, API keys and similar secrets from appearing
+     * in application logs when an error occurs during a settings-update request.
+     *
+     * @return array<string,mixed> Sanitised copy of the request parameters.
+     */
+    private function getRedactedParams(): array
+    {
+        $sensitiveKeys = [
+            'smtpPassword',
+            'sendgridApiKey',
+            'mailgunApiKey',
+            'postmarkApiKey',
+            'sesSecretKey',
+            'mailjetSecretKey',
+            'apiKey',
+            'password',
+            'secret',
+        ];
+
+        $params = $this->request->getParams();
+        foreach ($sensitiveKeys as $key) {
+            if (isset($params[$key]) === true) {
+                $params[$key] = '***';
+            }
+        }
+
+        return $params;
+    }//end getRedactedParams()
+
+    /**
+     * Builds the canonical "config endpoint failed" JSONResponse.
+     *
+     * Centralises the error-log emission + the
+     * `{success: false, message: "Failed to <op>: <exception>"}` shape that
+     * the per-section get/update endpoints repeat. Extracted from
+     * `updateGeneralConfig()`, `getSyncConfig()`, `updateSyncConfig()`, and
+     * `getGeneralConfig()` as part of task 3.X.
+     *
+     * @param string     $operationLabel "update sync config" / "get general config" / …
+     * @param \Exception $exception      The caught exception.
+     * @param bool       $includeParams  Attach the redacted request params to the
+     *                                   log payload (the "update" endpoints want this).
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function buildConfigErrorResponse(
+        string $operationLabel,
+        \Exception $exception,
+        bool $includeParams = false
+    ): JSONResponse {
+        $context = ['exception' => $exception->getMessage()];
+        if ($includeParams === true) {
+            $context['requestData'] = $this->getRedactedParams();
+        }
+
+        $this->logger->error('Failed to '.$operationLabel, $context);
+
+        return new JSONResponse(
+            [
+                'success' => false,
+                'message' => 'Failed to '.$operationLabel.': '.$exception->getMessage(),
+            ],
+            500
+        );
+    }//end buildConfigErrorResponse()
+
+    /**
      * Retrieve the current settings.
      *
      * @return JSONResponse JSON response containing the current settings.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function index(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $user    = $this->userSession->getUser();
             $isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
@@ -172,110 +259,126 @@ class SettingsController extends Controller
      *
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function create(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
-
-            // Handle different types of settings updates.
+            $data   = $this->request->getParams();
             $result = [];
 
-            // Update schema/register configuration.
-            if (isset($data['configuration']) === true || isset($data['selectedRegister']) === true) {
-                $configData = array_filter(
-                        $data,
-                        function ($key) {
-                            return in_array(needle: $key, haystack: ['userGroups', 'emailSettings']) === false;
-                        },
-                        ARRAY_FILTER_USE_KEY
-                        );
+            $this->updateConfigSettings(data: $data, result: $result);
 
-                if (empty($configData) === false) {
-                    $result['configuration'] = $this->settingsService->updateSettings($configData);
-                }
+            $groupError = $this->updateUserGroupSettings(data: $data, result: $result);
+            if ($groupError !== null) {
+                return $groupError;
             }
 
-            // Update user groups.
-            if (isset($data['userGroups']) === true) {
-                $userGroups = $data['userGroups'];
+            $this->applyEmailSettingsUpdate(data: $data, result: $result);
 
-                if (isset($userGroups['generic']) === true) {
-                    $validation = $this->settingsService->validateGroups($userGroups['generic']);
-                    if (empty($validation['invalid']) === false) {
-                        return new JSONResponse(
-                                [
-                                    'error'      => 'Invalid generic group names provided',
-                                    'validation' => $validation,
-                                ],
-                                400
-                                );
-                    }
-
-                    $this->settingsService->setGenericUserGroups($validation['valid']);
-                    $result['userGroups']['generic'] = $validation['valid'];
-                }
-
-                if (isset($userGroups['organizationAdmin']) === true) {
-                    $validation = $this->settingsService->validateGroups($userGroups['organizationAdmin']);
-                    if (empty($validation['invalid']) === false) {
-                        return new JSONResponse(
-                                [
-                                    'error'      => 'Invalid organization admin group names provided',
-                                    'validation' => $validation,
-                                ],
-                                400
-                                );
-                    }
-
-                    $this->settingsService->setOrganizationAdminGroups($validation['valid']);
-                    $result['userGroups']['organizationAdmin'] = $validation['valid'];
-                }
-
-                if (isset($userGroups['superUser']) === true) {
-                    $validation = $this->settingsService->validateGroups($userGroups['superUser']);
-                    if (empty($validation['invalid']) === false) {
-                        return new JSONResponse(
-                                [
-                                    'error'      => 'Invalid super user group names provided',
-                                    'validation' => $validation,
-                                ],
-                                400
-                                );
-                    }
-
-                    $this->settingsService->setSuperUserGroups($validation['valid']);
-                    $result['userGroups']['superUser'] = $validation['valid'];
-                }
-            }//end if
-
-            // Update email settings.
-            if (isset($data['emailSettings']) === true) {
-                $result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
-            }
-
-            return new JSONResponse(
-                    [
-                        'success' => true,
-                        'data'    => $result,
-                        'message' => 'Settings updated successfully',
-                    ]
-                    );
+            return new JSONResponse(['success' => true, 'data' => $result, 'message' => 'Settings updated successfully']);
         } catch (\Exception $e) {
             $this->logger->error(
-                    'Failed to update settings',
-                    [
-                        'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
-                    ]
-                    );
+                'Failed to update settings',
+                ['exception' => $e->getMessage(), 'requestData' => $this->getRedactedParams()]
+            );
             return new JSONResponse(['error' => $e->getMessage()], 500);
         }//end try
 
     }//end create()
+
+    /**
+     * Update schema/register configuration settings from request data.
+     *
+     * @param array<string,mixed> $data   The raw request params.
+     * @param array<string,mixed> $result The result accumulator (passed by reference).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function updateConfigSettings(array $data, array &$result): void
+    {
+        if (isset($data['configuration']) === false && isset($data['selectedRegister']) === false) {
+            return;
+        }
+
+        $configData = array_filter(
+            $data,
+            static fn ($key) => in_array(needle: $key, haystack: ['userGroups', 'emailSettings']) === false,
+            ARRAY_FILTER_USE_KEY
+        );
+
+        if (empty($configData) === false) {
+            $result['configuration'] = $this->settingsService->updateSettings($configData);
+        }
+
+    }//end updateConfigSettings()
+
+    /**
+     * Update user group settings from request data.
+     *
+     * @param array<string,mixed> $data   The raw request params.
+     * @param array<string,mixed> $result The result accumulator (passed by reference).
+     *
+     * @return JSONResponse|null Validation error response, or null when successful.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function updateUserGroupSettings(array $data, array &$result): ?JSONResponse
+    {
+        if (isset($data['userGroups']) === false) {
+            return null;
+        }
+
+        $userGroups = $data['userGroups'];
+
+        $groupConfigs = [
+            'generic'           => ['setter' => 'setGenericUserGroups', 'label' => 'generic'],
+            'organizationAdmin' => ['setter' => 'setOrganizationAdminGroups', 'label' => 'organization admin'],
+            'superUser'         => ['setter' => 'setSuperUserGroups', 'label' => 'super user'],
+        ];
+
+        foreach ($groupConfigs as $key => $cfg) {
+            if (isset($userGroups[$key]) === false) {
+                continue;
+            }
+
+            $validation = $this->settingsService->validateGroups($userGroups[$key]);
+            if (empty($validation['invalid']) === false) {
+                return new JSONResponse(
+                    ['error' => 'Invalid '.$cfg['label'].' group names provided', 'validation' => $validation],
+                    400
+                );
+            }
+
+            $this->settingsService->{$cfg['setter']}($validation['valid']);
+            $result['userGroups'][$key] = $validation['valid'];
+        }
+
+        return null;
+
+    }//end updateUserGroupSettings()
+
+    /**
+     * Apply email-settings update from request data into the result accumulator.
+     *
+     * @param array<string,mixed> $data   The raw request params.
+     * @param array<string,mixed> $result The result accumulator (passed by reference).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function applyEmailSettingsUpdate(array $data, array &$result): void
+    {
+        if (isset($data['emailSettings']) === false) {
+            return;
+        }
+
+        $result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
+
+    }//end applyEmailSettingsUpdate()
 
     /**
      * Get general configuration settings
@@ -283,6 +386,8 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse General configuration
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function getGeneralConfig(): JSONResponse
     {
@@ -298,19 +403,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to get general config',
-                    [
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to get general config: '.$e->getMessage(),
-                    ],
-                    500
-                    );
+            return $this->buildConfigErrorResponse('get general config', $e, false);
         }//end try
     }//end getGeneralConfig()
 
@@ -320,6 +413,8 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function updateGeneralConfig(): JSONResponse
     {
@@ -331,29 +426,16 @@ class SettingsController extends Controller
             }
 
             return new JSONResponse(
-                    [
-                        'success' => true,
-                        'message' => 'General configuration updated successfully',
-                        'config'  => [
-                            'catalogLocation' => $this->settingsService->getCatalogLocation(),
-                        ],
-                    ]
-                    );
-        } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to update general config',
-                    [
-                        'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to update general config: '.$e->getMessage(),
+                [
+                    'success' => true,
+                    'message' => 'General configuration updated successfully',
+                    'config'  => [
+                        'catalogLocation' => $this->settingsService->getCatalogLocation(),
                     ],
-                    500
-                    );
+                ]
+            );
+        } catch (\Exception $e) {
+            return $this->buildConfigErrorResponse('update general config', $e, true);
         }//end try
     }//end updateGeneralConfig()
 
@@ -363,6 +445,8 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Sync configuration
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function getSyncConfig(): JSONResponse
     {
@@ -378,19 +462,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to get sync config',
-                    [
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to get sync config: '.$e->getMessage(),
-                    ],
-                    500
-                    );
+            return $this->buildConfigErrorResponse('get sync config', $e, false);
         }//end try
     }//end getSyncConfig()
 
@@ -400,6 +472,8 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-1
      */
     public function updateSyncConfig(): JSONResponse
     {
@@ -420,20 +494,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to update sync config',
-                    [
-                        'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to update sync config: '.$e->getMessage(),
-                    ],
-                    500
-                    );
+            return $this->buildConfigErrorResponse('update sync config', $e, true);
         }//end try
     }//end updateSyncConfig()
 
@@ -443,6 +504,8 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing the settings.
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-2
      */
     public function load(): JSONResponse
     {
@@ -461,6 +524,8 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing the initialization results
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-2
      */
     public function initialize(): JSONResponse
     {
@@ -485,9 +550,15 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-2
      */
     public function status(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->logger->debug('SettingsController: Getting configuration status');
 
@@ -541,6 +612,7 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing the auto-configuration results
      *
      * @NoCSRFRequired
+     * @spec           openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
      */
     public function autoConfigure(): JSONResponse
     {
@@ -580,9 +652,15 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-4
      */
     public function stats(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $statistics = $this->settingsService->getObjectCountsStatistics();
             return new JSONResponse(
@@ -609,15 +687,24 @@ class SettingsController extends Controller
     }//end stats()
 
     /**
-     * Get debug information for settings
+     * Get debug information for settings (admin-only)
      *
      * @return JSONResponse JSON response containing debug information
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-4
      */
     public function debug(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($this->userSession->getUser()->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $debugInfo = $this->settingsService->getDebugInfo();
             return new JSONResponse($debugInfo);
@@ -638,6 +725,7 @@ class SettingsController extends Controller
      * @return JSONResponse
      *
      * @NoCSRFRequired
+     * @spec           openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function sendTestEmail(): JSONResponse
     {
@@ -664,7 +752,7 @@ class SettingsController extends Controller
                     [
                         'exception_class'   => get_class($e),
                         'exception_message' => $e->getMessage(),
-                        'requestData'       => $this->request->getParams(),
+                        'requestData'       => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -686,9 +774,15 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-3
      */
     public function getSyncStatus(int $minutesBack=10): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $status = $this->orgSyncSvc->getSyncStatusWithErrorHandling($minutesBack);
         return new JSONResponse($status);
     }//end getSyncStatus()
@@ -701,6 +795,8 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing sync results
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-3
      */
     public function performSync(int $minutesBack=0): JSONResponse
     {
@@ -727,10 +823,12 @@ class SettingsController extends Controller
             // For incremental sync, use the original method.
             $result = $this->orgSyncSvc->performManualSync($minutesBack);
 
+            $statusCode = 500;
             if ($result['success'] === true) {
+                $statusCode = 200;
             }
 
-            return new JSONResponse($result, 500);
+            return new JSONResponse($result, $statusCode);
         } catch (\Exception $e) {
             $this->logger->error(
                     'Manual sync failed',
@@ -761,9 +859,15 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-4
      */
     public function heartbeat(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $timestamp = $this->request->getParam('timestamp', time() * 1000);
 
@@ -809,9 +913,15 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-2
      */
     public function getVersionInfo(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->logger->info('SettingsController: Getting version information');
             $data = $this->settingsService->getVersionInfo();
@@ -851,6 +961,7 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing reset results.
      *
      * @NoCSRFRequired
+     * @spec           openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
      */
     public function resetAutoConfig(): JSONResponse
     {
@@ -858,12 +969,13 @@ class SettingsController extends Controller
             $params = $this->request->getParams();
             $resetConfiguration = isset($params['resetConfiguration']) === true && $params['resetConfiguration'] === true;
 
-            $result = $this->settingsService->resetAutoConfiguration($resetConfiguration);
-
+            $result     = $this->settingsService->resetAutoConfiguration($resetConfiguration);
+            $statusCode = 400;
             if ($result['success'] === true) {
+                $statusCode = 200;
             }
 
-                return new JSONResponse($result, 400);
+            return new JSONResponse($result, $statusCode);
         } catch (\Exception $e) {
             return new JSONResponse(
                     [
@@ -882,6 +994,8 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing cache clear results.
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-4
      */
     public function clearCache(): JSONResponse
     {
@@ -921,6 +1035,7 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing import results.
      *
      * @NoCSRFRequired
+     * @spec           openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
      */
     public function manualImport(): JSONResponse
     {
@@ -948,10 +1063,12 @@ class SettingsController extends Controller
             // Add timestamp for cache busting.
             $result['timestamp'] = time();
 
+            $importStatusCode = 400;
             if ($result['success'] === true) {
+                $importStatusCode = 200;
             }
 
-                return new JSONResponse($result, 400);
+            return new JSONResponse($result, $importStatusCode);
         } catch (\Exception $e) {
             $this->logger->error(
                     'SettingsController: Manual import failed',
@@ -978,6 +1095,7 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing force update results.
      *
      * @NoCSRFRequired
+     * @spec           openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
      */
     public function forceUpdate(): JSONResponse
     {
@@ -1050,6 +1168,7 @@ class SettingsController extends Controller
      * @return JSONResponse JSON response containing consolidated results
      *
      * @NoCSRFRequired
+     * @spec           openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
      */
     public function consolidatedAutoConfigure(): JSONResponse
     {
@@ -1066,6 +1185,7 @@ class SettingsController extends Controller
                 // Multi-status or Server Error.
                 $httpStatus = 500;
                 if (empty($results['errors']) === false) {
+                    $httpStatus = Http::STATUS_MULTI_STATUS;
                 }
             }
 
@@ -1099,13 +1219,32 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-5
      */
     public function getProgress(string $operationId): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $progress = $this->progressTracker->getProgress($operationId);
 
             if ($progress === null) {
+                return new JSONResponse(
+                        [
+                            'success' => false,
+                            'message' => 'Operation not found',
+                            'error'   => 'OPERATION_NOT_FOUND',
+                        ],
+                        404
+                        );
+            }
+
+            // Verify the caller owns this operation.
+            if (isset($progress['owner_uid']) === true && $progress['owner_uid'] !== $currentUser->getUID()) {
                 return new JSONResponse(
                         [
                             'success' => false,
@@ -1152,11 +1291,22 @@ class SettingsController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength) framework-required: SSE loop in anonymous Response subclass
+     * @spec                                          openspec/changes/retrofit-2026-05-24-method-decomposition/tasks.md#task-5
      */
     public function streamProgress(string $operationId): Response
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        // Verify the caller owns this operation before streaming.
+        $progress = $this->progressTracker->getProgress($operationId);
+        if ($progress !== null && isset($progress['owner_uid']) === true && $progress['owner_uid'] !== $currentUser->getUID()) {
+            return new JSONResponse(['message' => 'Operation not found', 'error' => 'OPERATION_NOT_FOUND'], 404);
+        }
+
         // Set headers for Server-Sent Events.
         $response = new class($operationId, $this->progressTracker, $this->logger) extends Response {
             /**
@@ -1175,7 +1325,6 @@ class SettingsController extends Controller
                 $this->addHeader(name: 'Content-Type', value: 'text/event-stream');
                 $this->addHeader(name: 'Cache-Control', value: 'no-cache');
                 $this->addHeader(name: 'Connection', value: 'keep-alive');
-                $this->addHeader(name: 'Access-Control-Allow-Origin', value: '*');
                 $this->addHeader(name: 'Access-Control-Allow-Headers', value: 'Cache-Control');
             }//end __construct()
 
@@ -1183,6 +1332,8 @@ class SettingsController extends Controller
              * Render the SSE stream.
              *
              * @return string Empty string (output is streamed directly).
+             *
+             * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-2
              */
             public function render(): string
             {
@@ -1263,182 +1414,134 @@ class SettingsController extends Controller
     /**
      * Import ArchiMate file.
      *
+     * Only accepts multipart file uploads — the `file_path` JSON body parameter is
+     * rejected to prevent local filesystem read (path traversal / SSRF).
+     * The `ini_set('memory_limit')` call has been removed; configure PHP memory via
+     * php.ini / pool config instead.
+     *
      * @return JSONResponse Result of the import operation with progress tracking.
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @SuppressWarnings(PHPMD.Superglobals)
+     * @spec                                 openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function importArchiMate(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
-            // Increase memory limit for large imports.
-            ini_set('memory_limit', '4096M');
-            $this->logger->info(
-                    'Memory limit increased for import',
-                    [
-                        'old_limit' => ini_get('memory_limit'),
-                        'new_limit' => '4096M',
-                    ]
-                    );
-            // Get JSON data from request body.
             $rawInput = file_get_contents('php://input');
             $data     = json_decode($rawInput, true);
 
-            $contentType = $this->request->getHeader('Content-Type');
-            $isMultipart = strpos(haystack: $contentType, needle: 'multipart/form-data') !== false;
-
-            // Enhanced debug logging.
-            $this->logger->info(
-                    'ArchiMate import request received',
-                    [
-                        'rawInput'       => $rawInput,
-                        'decodedData'    => $data,
-                        'jsonError'      => json_last_error_msg(),
-                        'contentType'    => $contentType,
-                        'isMultipart'    => $isMultipart,
-                        'requestMethod'  => $this->request->getMethod(),
-                        'userAgent'      => $this->request->getHeader('User-Agent'),
-                        'xRequestedWith' => $this->request->getHeader('X-Requested-With'),
-                        '_FILES'         => $_FILES,
-                        '_POST'          => $_POST,
-                        'requestParams'  => $this->request->getParams(),
-                    ]
-                    );
-
-            // Check if a file was uploaded (traditional file upload).
-            $uploadedFiles = $this->request->getUploadedFile('archiMateFile');
-
-            // Also check $_FILES directly as fallback.
-            $filesArray = $_FILES['archiMateFile'] ?? null;
-
-            $hasUploadedFiles = empty($uploadedFiles) === false;
-            $hasFilesArray    = empty($filesArray) === false;
-
-            $this->logger->info(
-                    'File upload detection detailed',
-                    [
-                        'uploadedFiles'     => $uploadedFiles,
-                        'filesArray'        => $filesArray,
-                        'requestMethod'     => $this->request->getMethod(),
-                        'contentType'       => $contentType,
-                        'hasUploadedFiles'  => $hasUploadedFiles,
-                        'hasFilesArray'     => $hasFilesArray,
-                        'uploadedFilesType' => gettype($uploadedFiles),
-                        'filesArrayType'    => gettype($filesArray),
-                        'allFilesKeys'      => array_keys($_FILES ?? []),
-                    ]
-                    );
-
-            if ($hasUploadedFiles === true || $hasFilesArray === true) {
-                // Use $_FILES as fallback if getUploadedFile doesn't work.
-                    $fileData = $filesArray;
-                if ($uploadedFiles !== null) {
-                }
-
-                // Handle file upload.
-                $options = [
-                    'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
-                    'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
-                    'preserveIds'    => $this->request->getParam('preserveIds', 'true') === 'true',
-                    'processingMode' => $this->request->getParam('processingMode', 'speed'),
-                    'filePath'       => $fileData['tmp_name'],
-                    'fileName'       => $fileData['name'],
-                    'fileSize'       => $fileData['size'] ?? filesize($fileData['tmp_name']),
-                    'mimeType'       => $fileData['type'] ?? 'text/xml',
-                ];
-
-                $this->logger->info('File upload detected.', ['options' => $options]);
-            } else if ($data !== null && isset($data['file_path']) === true) {
-                // Handle file path from JSON payload.
-                    $fileSize = 0;
-                if (file_exists($data['file_path']) === true) {
-                }
-
-                $options = [
-                    'updateExisting' => $data['updateExisting'] ?? true,
-                    'deleteOrphaned' => $data['deleteOrphaned'] ?? false,
-                    'preserveIds'    => $data['preserveIds'] ?? true,
-                    'processingMode' => $data['processingMode'] ?? 'speed',
-                    'filePath'       => $data['file_path'],
-                    'fileName'       => $data['fileName'] ?? basename($data['file_path']),
-                    'fileSize'       => $data['fileSize'] ?? $fileSize,
-                    'mimeType'       => $data['mimeType'] ?? 'text/xml',
-                ];
-
-                $this->logger->info('JSON payload detected.', ['options' => $options]);
-            }//end if
-
-            if (isset($options) === false) {
-                $this->logger->error(
-                        'No file uploaded or file path provided — DETAILED DEBUG',
-                        [
-                            'uploadedFiles'  => $uploadedFiles,
-                            'filesArray'     => $filesArray,
-                            'data'           => $data,
-                            'rawInput'       => $rawInput,
-                            'contentType'    => $contentType,
-                            'isMultipart'    => $isMultipart,
-                            'requestMethod'  => $this->request->getMethod(),
-                            '_FILES_DEBUG'   => $_FILES,
-                            '_POST_DEBUG'    => $_POST,
-                            'requestParams'  => $this->request->getParams(),
-                            'userAgent'      => $this->request->getHeader('User-Agent'),
-                            'xRequestedWith' => $this->request->getHeader('X-Requested-With'),
-                        ]
-                        );
-
+            if ($data !== null && isset($data['file_path']) === true) {
                 return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => 'No ArchiMate file uploaded or file path provided',
-                            'error'   => 'NO_FILE_UPLOADED_OR_PATH',
-                            'debug'   => [
-                                'contentType' => $contentType,
-                                'isMultipart' => $isMultipart,
-                                'filesKeys'   => array_keys($_FILES ?? []),
-                            ],
-                        ],
-                        400
-                        );
-            }//end if
-
-            // OPTIMIZATION: Use optimized method if available or if explicitly requested.
-            $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
-            $hasOptimized = method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized');
-            $this->logger->info('Using STANDARD ArchiMate import method.');
-            $result = $this->archiMateService->importArchiMateFileFromPath($options);
-            if ($useOptimized === true && $hasOptimized === true) {
-                $this->logger->info('Using OPTIMIZED ArchiMate import method.');
-                $result = $this->archiMateService->importArchiMateFileFromPathOptimized($options);
+                    [
+                        'success' => false,
+                        'message' => 'The file_path parameter is not accepted. Please upload a file via multipart/form-data.',
+                        'error'   => 'FILE_PATH_NOT_ALLOWED',
+                    ],
+                    400
+                );
             }
+
+            $options = $this->parseArchiMateFileUpload();
+            if ($options === null) {
+                $contentType = $this->request->getHeader('Content-Type');
+                $isMultipart = strpos(haystack: $contentType, needle: 'multipart/form-data') !== false;
+                return new JSONResponse(
+                    [
+                        'success' => false,
+                        'message' => 'No ArchiMate file uploaded or file path provided',
+                        'error'   => 'NO_FILE_UPLOADED_OR_PATH',
+                        'debug'   => [
+                            'contentType' => $contentType,
+                            'isMultipart' => $isMultipart,
+                            'filesKeys'   => array_keys($_FILES ?? []),
+                        ],
+                    ],
+                    400
+                );
+            }
+
+            $result = $this->resolveArchiMateMethod(options: $options);
 
             return new JSONResponse($result);
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'ArchiMate import failed',
-                    [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]
-                    );
-
-            // Determine appropriate HTTP status code based on error type.
+            $this->logger->error('ArchiMate import failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $statusCode = $this->getHttpStatusForException(e: $e);
-
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Import failed: '.$e->getMessage(),
-                        'error'   => $e->getMessage(),
-                    ],
-                    $statusCode
-                    );
+            return new JSONResponse(['success' => false, 'message' => 'Import failed: '.$e->getMessage(), 'error' => $e->getMessage()], $statusCode);
         }//end try
     }//end importArchiMate()
+
+    /**
+     * Parse the uploaded ArchiMate file from the multipart request.
+     *
+     * Inspects both the NC request wrapper and $_FILES superglobal as a fallback.
+     * Returns null when no file was uploaded.
+     *
+     * @return array<string,mixed>|null Import options array, or null when no file present.
+     *
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @spec                                 openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function parseArchiMateFileUpload(): ?array
+    {
+        $uploadedFiles = $this->request->getUploadedFile('archiMateFile');
+        $filesArray    = $_FILES['archiMateFile'] ?? null;
+
+        if (empty($uploadedFiles) === true && empty($filesArray) === true) {
+            return null;
+        }
+
+        $fileData = $filesArray;
+        if ($uploadedFiles !== null) {
+            $fileData = $uploadedFiles;
+        }
+
+        return [
+            'updateExisting' => $this->request->getParam('updateExisting', 'true') === 'true',
+            'deleteOrphaned' => $this->request->getParam('deleteOrphaned', 'false') === 'true',
+            'preserveIds'    => $this->request->getParam('preserveIds', 'true') === 'true',
+            'processingMode' => $this->request->getParam('processingMode', 'speed'),
+            'filePath'       => $fileData['tmp_name'],
+            'fileName'       => $fileData['name'],
+            'fileSize'       => $fileData['size'] ?? filesize($fileData['tmp_name']),
+            'mimeType'       => $fileData['type'] ?? 'text/xml',
+        ];
+
+    }//end parseArchiMateFileUpload()
+
+    /**
+     * Call the appropriate ArchiMate import service method (optimised when available).
+     *
+     * @param array<string,mixed> $options Import options.
+     *
+     * @return array<string,mixed> Import result.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function resolveArchiMateMethod(array $options): array
+    {
+        $useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
+        $hasOptimized = method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized');
+
+        if ($useOptimized === true && $hasOptimized === true) {
+            $this->logger->info('Using OPTIMIZED ArchiMate import method.');
+            return $this->archiMateService->importArchiMateFileFromPathOptimized($options);
+        }
+
+        $this->logger->info('Using STANDARD ArchiMate import method.');
+        return $this->archiMateService->importArchiMateFileFromPath($options);
+
+    }//end resolveArchiMateMethod()
 
     /**
      * Export to ArchiMate format - returns file directly for download.
@@ -1448,112 +1551,53 @@ class SettingsController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @spec openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function exportArchiMate(): Response
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
-            // Get JSON data from request parameters or body.
             $rawInput = file_get_contents('php://input');
             $data     = json_decode($rawInput, true);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                // Fallback to request parameters if JSON decode fails.
-                $data = [
-                    'organization' => $this->request->getParam('organization', null),
-                ];
+            $organization = $this->request->getParam('organization', null);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $organization = $data['organization'] ?? null;
             }
 
-            // Simple organization filter - only parameter we support.
-            $organization = $data['organization'] ?? null;
-
-            // Call export service with simplified parameters.
             $result = $this->archiMateService->exportToArchiMate($organization);
 
-            // Check if export was successful.
             if ($result['success'] === false) {
-                // Determine appropriate status code based on error message.
                 $statusCode = $this->getHttpStatusForErrorMessage(message: $result['error'] ?? 'Export failed');
-
                 return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => $result['error'] ?? 'Export failed',
-                            'error'   => $result['error'] ?? 'EXPORT_FAILED',
-                        ],
-                        $statusCode
-                        );
+                    ['success' => false, 'message' => $result['error'] ?? 'Export failed', 'error' => $result['error'] ?? 'EXPORT_FAILED'],
+                    $statusCode
+                );
             }
 
-            // Return the XML file directly for download.
             $fileName   = $result['file_name'] ?? 'archimate_export_'.date('Y-m-d_H-i-s').'.xml';
             $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
 
-            // Always return XML format.
-            $contentType = 'application/xml';
-
-            // Create direct download response.
-            $response = new class($xmlContent) extends Response {
-                /**
-                 * Constructor for the download response.
-                 *
-                 * @param string $content The XML content to return.
-                 *
-                 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-                 */
-                public function __construct(private string $content)
-                {
-                                        parent::__construct();
-                }//end __construct()
-
-                /**
-                 * Render the response content.
-                 *
-                 * @return string The response content.
-                 */
-                public function render(): string
-                {
-                    return $this->content;
-                }//end render()
-            };
-
-            $response->setStatus(200);
-            $response->addHeader('Content-Type', $contentType);
-            $response->addHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"');
-            $response->addHeader('Content-Length', (string) strlen($xmlContent));
-            $response->addHeader('Cache-Control', 'no-cache');
-
             $this->logger->info(
-                    'ArchiMate export completed',
-                    [
-                        'fileName'         => $fileName,
-                        'size'             => strlen($xmlContent),
-                        'objects_exported' => $result['statistics']['objects_exported'] ?? 0,
-                    ]
-                    );
+                'ArchiMate export completed',
+                [
+                    'fileName'         => $fileName,
+                    'size'             => strlen($xmlContent),
+                    'objects_exported' => $result['statistics']['objects_exported'] ?? 0,
+                ]
+            );
 
-            return $response;
+            return $this->buildXmlDownloadResponse(xmlContent: $xmlContent, fileName: $fileName);
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'ArchiMate export failed',
-                    [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]
-                    );
-
-            // Determine appropriate HTTP status code based on error type.
+            $this->logger->error('ArchiMate export failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $statusCode = $this->getHttpStatusForException(e: $e);
-
             return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Export failed: '.$e->getMessage(),
-                        'error'   => $e->getMessage(),
-                    ],
-                    $statusCode
-                    );
+                ['success' => false, 'message' => 'Export failed: '.$e->getMessage(), 'error' => $e->getMessage()],
+                $statusCode
+            );
         }//end try
     }//end exportArchiMate()
 
@@ -1566,25 +1610,28 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec            openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function exportOrgArchiMate(string $organizationUuid): Response
     {
-        try {
-            // Read boolean query parameters.
-            $modules   = $this->request->getParam('modules', 'true') === 'true';
-            $deelnames = $this->request->getParam('deelnames', 'false') === 'true';
-            $gebruik   = $this->request->getParam('gebruik', 'false') === 'true';
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
 
+        $permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser);
+        if ($permissionError !== null) {
+            return $permissionError;
+        }
+
+        try {
             $options = [
-                'modules'   => $modules,
-                'deelnames' => $deelnames,
-                'gebruik'   => $gebruik,
+                'modules'   => $this->request->getParam('modules', 'true') === 'true',
+                'deelnames' => $this->request->getParam('deelnames', 'false') === 'true',
+                'gebruik'   => $this->request->getParam('gebruik', 'false') === 'true',
             ];
 
-            $result = $this->archiMateService->exportOrgArchiMate(
-                organizationUuid: $organizationUuid,
-                options: $options
-            );
+            $result = $this->archiMateService->exportOrgArchiMate(organizationUuid: $organizationUuid, options: $options);
 
             if ($result['success'] === false) {
                 $statusCode = 500;
@@ -1593,70 +1640,96 @@ class SettingsController extends Controller
                 }
 
                 return new JSONResponse(
-                        [
-                            'success' => false,
-                            'message' => $result['error'] ?? 'Export failed',
-                            'error'   => $result['error'] ?? 'EXPORT_FAILED',
-                        ],
-                        $statusCode
-                        );
+                    ['success' => false, 'message' => $result['error'] ?? 'Export failed', 'error' => $result['error'] ?? 'EXPORT_FAILED'],
+                    $statusCode
+                );
             }
 
             $fileName   = $result['file_name'] ?? 'archimate_org_export_'.date('Y-m-d_H-i-s').'.xml';
             $xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
 
-            $response = new class($xmlContent) extends Response {
-                /**
-                 * Constructor for the org download response.
-                 *
-                 * @param string $content The XML content to return.
-                 *
-                 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-                 */
-                public function __construct(private string $content)
-                {
-                                        parent::__construct();
-                }//end __construct()
-
-                /**
-                 * Render the response content.
-                 *
-                 * @return string The response content.
-                 */
-                public function render(): string
-                {
-                    return $this->content;
-                }//end render()
-            };
-
-            $response->setStatus(200);
-            $response->addHeader('Content-Type', 'application/xml');
-            $response->addHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"');
-            $response->addHeader('Content-Length', (string) strlen($xmlContent));
-            $response->addHeader('Cache-Control', 'no-cache');
-
-            return $response;
+            return $this->buildXmlDownloadResponse(xmlContent: $xmlContent, fileName: $fileName);
         } catch (\Exception $e) {
-            $this->logger->error(
-                    'Organization ArchiMate export failed',
-                    [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]
-                    );
-
+            $this->logger->error('Organization ArchiMate export failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $statusCode = $this->getHttpStatusForException(e: $e);
-
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Export failed: '.$e->getMessage(),
-                        'error'   => $e->getMessage(),
-                    ],
-                    $statusCode
-                    );
+            return new JSONResponse(['success' => false, 'message' => 'Export failed: '.$e->getMessage(), 'error' => $e->getMessage()], $statusCode);
         }//end try
     }//end exportOrgArchiMate()
+
+    /**
+     * Verify that the current user has permission to export organisation ArchiMate files.
+     *
+     * @param \OCP\IUser $currentUser The currently authenticated user.
+     *
+     * @return JSONResponse|null Forbidden response, or null when permitted.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function verifyOrgExportPermission(\OCP\IUser $currentUser): ?JSONResponse
+    {
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === true) {
+            return null;
+        }
+
+        $orgAdminGroups = $this->settingsService->getOrganizationAdminGroups();
+        foreach ($orgAdminGroups as $groupName) {
+            if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
+                return null;
+            }
+        }
+
+        return new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
+
+    }//end verifyOrgExportPermission()
+
+    /**
+     * Build an XML file download Response from content and filename.
+     *
+     * @param string $xmlContent The XML string to serve.
+     * @param string $fileName   The attachment filename for the Content-Disposition header.
+     *
+     * @return Response The download response.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function buildXmlDownloadResponse(string $xmlContent, string $fileName): Response
+    {
+        $response = new class($xmlContent) extends Response {
+            /**
+             * XML content download response constructor.
+             *
+             * @param string $content The XML content to return.
+             */
+            public function __construct(private string $content)
+            {
+                parent::__construct();
+            }//end __construct()
+
+            /**
+             * Render the XML content for download.
+             *
+             * @return string
+             *
+             * @spec exclude framework passthrough — inline DataDownloadResponse subclass returning prebuilt content unchanged
+             */
+            public function render(): string
+            {
+                return $this->content;
+            }//end render()
+        };
+
+        $response->setStatus(200);
+        $response->addHeader('Content-Type', 'application/xml');
+        $response->addHeader(
+            'Content-Disposition',
+            'attachment; filename="'.addslashes($fileName).'"; filename*=UTF-8\'\''.rawurlencode($fileName)
+        );
+        $response->addHeader('Content-Length', (string) strlen($xmlContent));
+        $response->addHeader('Cache-Control', 'no-cache');
+
+        return $response;
+
+    }//end buildXmlDownloadResponse()
 
     /**
      * Download ArchiMate file.
@@ -1667,9 +1740,14 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec            openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function downloadArchiMate(string $fileName): Response
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Security: validate filename to prevent path traversal.
             if (strpos(haystack: $fileName, needle: '..') !== false
@@ -1726,7 +1804,10 @@ class SettingsController extends Controller
             // Create download response.
             $response = new StreamResponse($file->fopen('r'));
             $response->addHeader('Content-Type', $contentType);
-            $response->addHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"');
+            $response->addHeader(
+                'Content-Disposition',
+                'attachment; filename="'.addslashes($fileName).'"; filename*=UTF-8\'\''.rawurlencode($fileName)
+            );
             $response->addHeader('Content-Length', (string) $file->getSize());
 
             return $response;
@@ -1761,9 +1842,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Test connection result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function testEmailConnection(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info('SoftwareCatalog: Email connection test endpoint called');
 
         try {
@@ -1802,7 +1888,7 @@ class SettingsController extends Controller
                     [
                         'exception_class'   => get_class($e),
                         'exception_message' => $e->getMessage(),
-                        'requestData'       => $this->request->getParams(),
+                        'requestData'       => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -1818,15 +1904,38 @@ class SettingsController extends Controller
     /**
      * Get email settings
      *
-     * @NoAdminRequired
+     * Secret fields (passwords / API keys) are redacted in the response; only
+     * a boolean presence indicator is returned for each secret.
+     *
      * @NoCSRFRequired
      *
-     * @return JSONResponse Current email settings
+     * @return JSONResponse Current email settings (secrets redacted)
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailSettings(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $emailSettings = $this->settingsService->getEmailSettings();
+
+            // Redact secret values — return only a masked placeholder when set.
+            $secretFields = ['smtpPassword', 'sendgridApiKey', 'mailgunApiKey', 'postmarkApiKey', 'sesSecretKey', 'mailjetSecretKey'];
+            foreach ($secretFields as $field) {
+                $maskedValue = '';
+                if (empty($emailSettings[$field]) === false) {
+                    $maskedValue = '••••••••';
+                }
+
+                $emailSettings[$field] = $maskedValue;
+            }
 
             return new JSONResponse(
                     [
@@ -1854,24 +1963,33 @@ class SettingsController extends Controller
     /**
      * Update email settings
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function updateEmailSettings(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $data          = $this->request->getParams();
             $emailSettings = $data['emailSettings'] ?? $data;
 
-            $result = $this->settingsService->updateEmailSettings($emailSettings);
+            $updatedSettings = $this->settingsService->updateEmailSettings($emailSettings);
 
             return new JSONResponse(
                     [
-                        'success'       => $result['success'],
-                        'message'       => $result['message'] ?? 'Email settings updated successfully',
-                        'emailSettings' => $result['emailSettings'] ?? null,
+                        'success'       => true,
+                        'message'       => 'Email settings updated successfully',
+                        'emailSettings' => $updatedSettings,
                     ]
                     );
         } catch (\Exception $e) {
@@ -1879,7 +1997,7 @@ class SettingsController extends Controller
                     'Failed to update email settings',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -1903,9 +2021,14 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec            openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailTemplates(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             // Delegate all business logic to service.
             $templates = $this->settingsService->getAllEmailTemplates();
@@ -1942,9 +2065,14 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec            openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailTemplate(string $templateName): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $template = $this->settingsService->getEmailTemplate($templateName);
 
@@ -1981,9 +2109,14 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec            openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function updateEmailTemplate(string $templateName): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $data            = $this->request->getParams();
             $templateContent = $data['template'] ?? $data['content'] ?? '';
@@ -2003,22 +2136,18 @@ class SettingsController extends Controller
                 templateContent: $templateContent
             );
 
-                $updateMsg = "Failed to update template {$templateName}";
+            $updateMsg = "Failed to update template {$templateName}";
             if ($success === true) {
+                $updateMsg = "Template {$templateName} updated successfully";
             }
 
-            return new JSONResponse(
-                    [
-                        'success' => $success,
-                        'message' => $updateMsg,
-                    ]
-                    );
+            return new JSONResponse(['success' => $success, 'message' => $updateMsg]);
         } catch (\Exception $e) {
             $this->logger->error(
                     "Failed to update email template {$templateName}",
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -2040,9 +2169,14 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec            openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailTemplateDefault(string $templateName): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $defaultTemplate = $this->settingsService->getDefaultEmailTemplate($templateName);
 
@@ -2079,9 +2213,14 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec            openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailTemplateVariables(string $templateName): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $variables = $this->settingsService->getEmailTemplateVariables($templateName);
 
@@ -2120,9 +2259,19 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Generic user groups
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getGenericUserGroups(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $groups = $this->settingsService->getGenericUserGroups();
 
@@ -2152,13 +2301,22 @@ class SettingsController extends Controller
     /**
      * Set generic user groups
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function setGenericUserGroups(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
@@ -2178,7 +2336,7 @@ class SettingsController extends Controller
                     'Failed to set generic user groups',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -2198,9 +2356,19 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Organization admin groups
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getOrganizationAdminGroups(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $groups = $this->settingsService->getOrganizationAdminGroups();
 
@@ -2230,13 +2398,22 @@ class SettingsController extends Controller
     /**
      * Set organization admin groups
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function setOrganizationAdminGroups(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
@@ -2256,7 +2433,7 @@ class SettingsController extends Controller
                     'Failed to set organization admin groups',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -2276,9 +2453,19 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Super user groups
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getSuperUserGroups(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $groups = $this->settingsService->getSuperUserGroups();
 
@@ -2308,13 +2495,22 @@ class SettingsController extends Controller
     /**
      * Set super user groups
      *
-     * @NoAdminRequired
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function setSuperUserGroups(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $data   = $this->request->getParams();
             $groups = $data['groups'] ?? [];
@@ -2334,7 +2530,7 @@ class SettingsController extends Controller
                     'Failed to set super user groups',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -2354,9 +2550,19 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse All user groups
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getAllGroups(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $allGroups = $this->settingsService->getAllGroups();
 
@@ -2394,9 +2600,19 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Clear result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function clearArchiMateImportStatus(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $result = $this->settingsService->clearArchiMateImportStatus();
 
@@ -2433,9 +2649,19 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     * @spec            openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function killArchiMateImport(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $result = $this->settingsService->killArchiMateImport();
 
@@ -2471,23 +2697,27 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Cancellation result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function cancelArchiMateImport(): JSONResponse
     {
-        try {
-            $result = $this->settingsService->cancelArchiMateImport();
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
 
-                $message = 'ArchiMate import cancellation failed';
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
+        try {
+            $result  = $this->settingsService->cancelArchiMateImport();
+            $message = 'ArchiMate import cancellation failed';
             if ($result['cancelled'] === true) {
+                $message = 'ArchiMate import cancellation succeeded';
             }
 
-            return new JSONResponse(
-                    [
-                        'success' => $result['cancelled'],
-                        'message' => $message,
-                        'details' => $result,
-                    ]
-                    );
+            return new JSONResponse(['success' => $result['cancelled'], 'message' => $message, 'details' => $result]);
         } catch (\Exception $e) {
             $this->logger->error(
                     'Failed to cancel ArchiMate import',
@@ -2512,9 +2742,19 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Clear result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function clearArchiMateExportStatus(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $this->settingsService->clearArchiMateExportStatus();
 
@@ -2552,9 +2792,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Round-trip test result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function testArchiMateRoundTrip(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->logger->info('SoftwareCatalog: ArchiMate round-trip test started');
 
@@ -2602,9 +2847,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse ArchiMate settings and status
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getArchiMateSettings(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $archimateStatus = $this->settingsService->getArchiMateStatus();
 
@@ -2639,9 +2889,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Object counts for all registers
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-3
      */
     public function getObjectCounts(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $objectCounts = $this->settingsService->getObjectCountsStatistics();
 
@@ -2679,9 +2934,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse ArchiMate configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getArchiMateConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getArchiMateConfig();
 
@@ -2709,6 +2969,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function updateArchiMateConfig(): JSONResponse
     {
@@ -2741,9 +3002,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Email configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getEmailConfigFocused();
 
@@ -2771,6 +3037,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function updateEmailConfig(): JSONResponse
     {
@@ -2803,9 +3070,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse AMEF configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getAmefConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getAmefConfigFocused();
 
@@ -2833,6 +3105,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function updateAmefConfig(): JSONResponse
     {
@@ -2865,9 +3138,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Voorzieningen configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-1
      */
     public function getVoorzieningenConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getVoorzieningenConfigFocused();
 
@@ -2895,6 +3173,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-1
      */
     public function updateVoorzieningenConfig(): JSONResponse
     {
@@ -2927,9 +3206,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Object counts
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-3
      */
     public function getObjectsCounts(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $counts = $this->settingsService->getObjectsCounts();
 
@@ -2958,9 +3242,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Object statistics
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-3
      */
     public function getObjectsStatistics(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $statistics = $this->settingsService->getObjectsStatistics();
 
@@ -2989,9 +3278,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse User groups configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getUserGroupsConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getUserGroupsConfig();
 
@@ -3019,6 +3313,7 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function updateUserGroupsConfig(): JSONResponse
     {
@@ -3116,9 +3411,15 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse The sync results
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-1
      */
     public function syncOrganisations(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->logger->info('SettingsController: Starting organisation sync via API');
 
@@ -3134,8 +3435,9 @@ class SettingsController extends Controller
             // Call the settings service method.
             $result = $this->settingsService->syncOrganisationsToVoorzieningenOptimized($options);
 
-                $statusCode = 500;
+            $statusCode = 500;
             if ($result['success'] === true) {
+                $statusCode = 200;
             }
 
             $this->logger->info(
@@ -3173,9 +3475,19 @@ class SettingsController extends Controller
      * @return JSONResponse Response containing sync results.
      *
      * @NoCSRFRequired
+     * @spec           openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-3
      */
     public function bulkSyncStandards(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $this->logger->info('SettingsController: Starting bulk sync of module standards.');
 
@@ -3234,9 +3546,14 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Cronjob configurations
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getCronjobConfig(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $config = $this->settingsService->getCronjobConfig();
             return new JSONResponse($config);
@@ -3265,15 +3582,16 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse Update result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function updateCronjobConfig(): JSONResponse
     {
         try {
-            $data   = $this->request->getParams();
-            $result = $this->settingsService->updateCronjobConfig($data);
-
-                $statusCode = 400;
+            $data       = $this->request->getParams();
+            $result     = $this->settingsService->updateCronjobConfig($data);
+            $statusCode = 400;
             if ($result['success'] === true) {
+                $statusCode = 200;
             }
 
             return new JSONResponse($result, $statusCode);
@@ -3282,7 +3600,7 @@ class SettingsController extends Controller
                     'Failed to update cronjob config',
                     [
                         'exception'   => $e->getMessage(),
-                        'requestData' => $this->request->getParams(),
+                        'requestData' => $this->getRedactedParams(),
                     ]
                     );
             return new JSONResponse(
@@ -3304,60 +3622,46 @@ class SettingsController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse List of available users
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getCronjobUsers(): JSONResponse
     {
-        try {
-            $result = $this->settingsService->getAvailableUsersForCronjobs();
-            return new JSONResponse($result);
-        } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to get cronjob users',
-                    [
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success' => false,
-                        'message' => 'Failed to get cronjob users: '.$e->getMessage(),
-                        'users'   => [],
-                    ],
-                    500
-                    );
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
+
+        return new JSONResponse(
+            [
+                'success' => false,
+                'message' => 'This endpoint is deprecated and has been removed. Cronjob user context is no longer required.',
+            ],
+            Http::STATUS_GONE
+        );
     }//end getCronjobUsers()
 
     /**
      * Get available organisations for cronjob configuration
      *
-     * @deprecated Cronjob context is no longer needed. Will be removed in a future version.
+     * @deprecated Removed — cronjob context is no longer needed.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @return JSONResponse List of available organisations
+     * @return JSONResponse 410 Gone
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-5
      */
     public function getCronjobOrganisations(): JSONResponse
     {
-        try {
-            $result = $this->settingsService->getAvailableOrganisationsForCronjobs();
-            return new JSONResponse($result);
-        } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to get cronjob organisations',
-                    [
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
-            return new JSONResponse(
-                    [
-                        'success'       => false,
-                        'message'       => 'Failed to get cronjob organisations: '.$e->getMessage(),
-                        'organisations' => [],
-                    ],
-                    500
-                    );
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
         }
+
+        return new JSONResponse(
+            [
+                'success' => false,
+                'message' => 'This endpoint is deprecated and has been removed. Cronjob organisation context is no longer required.',
+            ],
+            Http::STATUS_GONE
+        );
     }//end getCronjobOrganisations()
 }//end class

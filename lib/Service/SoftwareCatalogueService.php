@@ -6,11 +6,14 @@
  * Service for handling software catalog specific operations including
  * user management, contact processing, and object lifecycle management.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-3
  */
 
 declare(strict_types=1);
@@ -25,6 +28,9 @@ use OCA\SoftwareCatalog\Service\SymfonyEmailService;
 use Psr\Log\LoggerInterface;
 use Psr\Container\ContainerInterface;
 use OCP\App\IAppManager;
+use OCP\IGroupManager;
+use OCP\IUserManager;
+use OCP\IUserSession;
 
 /**
  * Service for handling software catalog operations.
@@ -32,11 +38,12 @@ use OCP\App\IAppManager;
  * Provides functionality for user management, contact processing,
  * email notifications, and object lifecycle management.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -52,8 +59,6 @@ use OCP\App\IAppManager;
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -81,6 +86,9 @@ class SoftwareCatalogueService
      * @param LoggerInterface      $_logger               Logger interface.
      * @param ContainerInterface   $_container            Container interface.
      * @param IAppManager          $_appManager           App manager interface.
+     * @param IUserSession         $_userSession          User session interface.
+     * @param IUserManager         $_userManager          User manager interface.
+     * @param IGroupManager        $_groupManager         Group manager interface.
      */
     public function __construct(
         private readonly OrganizationHandler $_organizationHandler,
@@ -91,6 +99,9 @@ class SoftwareCatalogueService
         private readonly LoggerInterface $_logger,
         private readonly ContainerInterface $_container,
         private readonly IAppManager $_appManager,
+        private readonly IUserSession $_userSession,
+        private readonly IUserManager $_userManager,
+        private readonly IGroupManager $_groupManager,
     ) {
         $this->appName = 'softwarecatalog';
     }//end __construct()
@@ -144,6 +155,10 @@ class SoftwareCatalogueService
      *
      * @return bool True if processing was successful
      * @throws \Exception If processing fails
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-3
      */
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
@@ -359,6 +374,8 @@ class SoftwareCatalogueService
      * @throws \Exception If processing fails.
      *
      * @deprecated This method is disabled to prevent organization duplication.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-3
      */
     public function processOrganization(object $organizationObject): bool
     {
@@ -382,6 +399,7 @@ class SoftwareCatalogueService
      * @param string $username             The username to update groups for
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
@@ -402,6 +420,7 @@ class SoftwareCatalogueService
      * @param string $username             The username being processed
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function ensureOrganizationBeheerder(object $contactpersoonObject, string $username): void
     {
@@ -415,6 +434,7 @@ class SoftwareCatalogueService
      * @param string $username The username
      *
      * @return string|null The manager's username or null if not set
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function getUserManager(string $username): ?string
     {
@@ -428,6 +448,7 @@ class SoftwareCatalogueService
      * @param object $organizationObject The new organization object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function handleNewOrganization(object $organizationObject): void
     {
@@ -615,6 +636,7 @@ class SoftwareCatalogueService
      * @param object $oldOrganizationObject The previous organization object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function handleOrganizationUpdate(object $organizationObject, object $oldOrganizationObject): void
     {
@@ -660,8 +682,9 @@ class SoftwareCatalogueService
             if ($newBeoordeling === 'actief') {
                 $becameActive = ($oldBeoordeling !== 'actief');
 
-                    $activeMessage = 'Organization is active';
+                $activeMessage = 'Organization is active';
                 if ($becameActive === true) {
+                    $activeMessage = 'Organization became active';
                 }
 
                 $this->_logger->info(
@@ -718,8 +741,9 @@ class SoftwareCatalogueService
             if ($newBeoordeling === 'inactief' || $newBeoordeling === 'deactief') {
                 $becameInactive = ($oldBeoordeling === 'actief');
 
-                    $inactiveMessage = 'Organization is inactive';
+                $inactiveMessage = 'Organization is inactive';
                 if ($becameInactive === true) {
+                    $inactiveMessage = 'Organization became inactive';
                 }
 
                 $this->_logger->info(
@@ -784,6 +808,7 @@ class SoftwareCatalogueService
      * @return void
      *
      * @deprecated This method is disabled to prevent organization duplication.
+     * @spec       openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function sendOrganizationWelcomeEmail(object $organizationObject): void
     {
@@ -806,6 +831,7 @@ class SoftwareCatalogueService
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function handleNewContact(object $contactObject): void
     {
@@ -819,6 +845,7 @@ class SoftwareCatalogueService
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function createUserForContactIfNotExists(object $contactObject): void
     {
@@ -837,6 +864,7 @@ class SoftwareCatalogueService
      * @param object $gebruikerObject The gebruiker object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function handleNewGebruiker(object $gebruikerObject): void
     {
@@ -855,6 +883,7 @@ class SoftwareCatalogueService
      * @param object $gebruikerObject The gebruiker object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function sendGebruikerWelcomeEmail(object $gebruikerObject): void
     {
@@ -873,6 +902,7 @@ class SoftwareCatalogueService
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function handleContactUpdate(object $contactObject): void
     {
@@ -887,6 +917,7 @@ class SoftwareCatalogueService
      * @param object $oldGebruikerObject The old gebruiker object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function handleGebruikerUpdate(object $gebruikerObject, object $oldGebruikerObject): void
     {
@@ -905,6 +936,7 @@ class SoftwareCatalogueService
      * @param object $contactObject The contact object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function handleContactDeletion(object $contactObject): void
     {
@@ -918,6 +950,7 @@ class SoftwareCatalogueService
      * @param object $gebruikerObject The gebruiker object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function blockUserForGebruiker(object $gebruikerObject): void
     {
@@ -936,6 +969,7 @@ class SoftwareCatalogueService
      * @param object $gebruikerObject The gebruiker object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function temporarilyBlockUserForGebruiker(object $gebruikerObject): void
     {
@@ -954,6 +988,7 @@ class SoftwareCatalogueService
      * @param object $gebruikerObject The gebruiker object
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function restoreUserAccessForGebruiker(object $gebruikerObject): void
     {
@@ -973,6 +1008,7 @@ class SoftwareCatalogueService
      * @param mixed  $revertPoint   The revert point
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function syncUserWithRevertedContact(object $contactObject, mixed $revertPoint): void
     {
@@ -992,6 +1028,7 @@ class SoftwareCatalogueService
      * @param mixed  $revertPoint     The revert point
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-3
      */
     public function updateUserFromRevertedGebruiker(object $gebruikerObject, mixed $revertPoint): void
     {
@@ -1030,6 +1067,7 @@ class SoftwareCatalogueService
      * Ensures all generic user groups exist
      *
      * @return array Array of created/existing groups
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-4
      */
     public function ensureGenericUserGroupsExist(): array
     {
@@ -1067,6 +1105,7 @@ class SoftwareCatalogueService
      * @param object $oldContactpersoonObject The previous contactpersoon object (optional)
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject=null): void
     {
@@ -1084,9 +1123,10 @@ class SoftwareCatalogueService
                     );
 
             // Get current and old data for comparison.
-            $newData     = $contactpersoonObject->getObject();
-                $oldData = [];
+            $newData = $contactpersoonObject->getObject();
+            $oldData = [];
             if ($oldContactpersoonObject !== null) {
+                $oldData = $oldContactpersoonObject->getObject();
             }
 
             $newRoles = $newData['roles'] ?? [];
@@ -1234,6 +1274,7 @@ class SoftwareCatalogueService
      * @param object $organizationObject The organization object being deleted
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function handleOrganizationDeletion(object $organizationObject): void
     {
@@ -1278,6 +1319,7 @@ class SoftwareCatalogueService
      * @param object $organizationObject The organization object to sync
      *
      * @return bool True if sync was successful
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function syncOrganizationWithOpenRegister(object $organizationObject): bool
     {
@@ -1423,6 +1465,7 @@ class SoftwareCatalogueService
      * @param array $objectData The organization object data
      *
      * @return object|null The created organisation entity or null on failure
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-2
      */
     public function createOrganisationInOpenRegister(array $objectData): ?object
     {
@@ -1507,11 +1550,12 @@ class SoftwareCatalogueService
                 );
 
         // Check if we're in an anonymous context (no logged-in user).
-        $userSession = \OC::$server->getUserSession();
+        $userSession = $this->_userSession;
         $currentUser = $userSession->getUser();
 
-            $currentUserValue = 'null';
+        $currentUserValue = 'null';
         if ($currentUser !== null) {
+            $currentUserValue = $currentUser->getUID();
         }
 
         $this->_logger->info(
@@ -2035,14 +2079,13 @@ class SoftwareCatalogueService
             }
 
             // Get all contactpersonen for this organization.
-            $settingsService = $this->_container->get(SettingsService::class);
-            $registerId      = $settingsService->getVoorzieningenRegisterId();
-            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
-
-            if ($registerId === null || $contactpersoonSchemaId === false) {
-                $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for contactpersonen');
+            $ctx = $this->resolveVoorzieningenContext('contactpersoon', 'contactpersonen');
+            if ($ctx === null) {
                 return;
             }
+
+            $registerId             = $ctx['registerId'];
+            $contactpersoonSchemaId = $ctx['schemaId'];
 
             $contactpersonen = $objectService->findAll(
                 ['organisation' => $organizationUuid],
@@ -2120,14 +2163,13 @@ class SoftwareCatalogueService
             }
 
             // Get all contactpersonen for this organization.
-            $settingsService = $this->_container->get(SettingsService::class);
-            $registerId      = $settingsService->getVoorzieningenRegisterId();
-            $contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
-
-            if ($registerId === null || $contactpersoonSchemaId === false) {
-                $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for contactpersonen');
+            $ctx = $this->resolveVoorzieningenContext('contactpersoon', 'contactpersonen');
+            if ($ctx === null) {
                 return;
             }
+
+            $registerId             = $ctx['registerId'];
+            $contactpersoonSchemaId = $ctx['schemaId'];
 
             $contactpersonen = $objectService->findAll(
                 ['organisation' => $organizationUuid],
@@ -2222,7 +2264,7 @@ class SoftwareCatalogueService
                     );
 
             // Get the user manager.
-            $userManager    = \OC::$server->getUserManager();
+            $userManager    = $this->_userManager;
             $activatedUsers = [];
             $failedUsers    = [];
 
@@ -2331,7 +2373,7 @@ class SoftwareCatalogueService
                     );
 
             // Get the user manager.
-            $userManager      = \OC::$server->getUserManager();
+            $userManager      = $this->_userManager;
             $deactivatedUsers = [];
             $failedUsers      = [];
 
@@ -2495,7 +2537,7 @@ class SoftwareCatalogueService
     private function getAdminGroupUsernames(): array
     {
         try {
-            $groupManager = \OC::$server->getGroupManager();
+            $groupManager = $this->_groupManager;
             $adminGroup   = $groupManager->get('admin');
 
             if ($adminGroup === null) {
@@ -2548,7 +2590,7 @@ class SoftwareCatalogueService
                     );
 
             // Get the group manager to access admin group users.
-            $groupManager = \OC::$server->getGroupManager();
+            $groupManager = $this->_groupManager;
             $adminGroup   = $groupManager->get('admin');
 
             if ($adminGroup === null) {
@@ -2699,6 +2741,7 @@ class SoftwareCatalogueService
      * @param object $contactpersoonObject The contactpersoon object
      *
      * @return bool True if the user should be added to the organization
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function shouldAddContactpersoonToOrganization(object $contactpersoonObject): bool
     {
@@ -2717,13 +2760,13 @@ class SoftwareCatalogueService
             }
 
             // Get the organization object.
-            $settingsService     = $this->_container->get(SettingsService::class);
-            $registerId          = $settingsService->getVoorzieningenRegisterId();
-            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
-
-            if ($registerId === null || $organisatieSchemaId === false) {
+            $ctx = $this->resolveVoorzieningenContext('organisatie', 'organisatie');
+            if ($ctx === null) {
                 return false;
             }
+
+            $registerId          = $ctx['registerId'];
+            $organisatieSchemaId = $ctx['schemaId'];
 
             try {
                 $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
@@ -2774,6 +2817,7 @@ class SoftwareCatalogueService
      * @param object $contactpersoonObject The contactpersoon object
      *
      * @return bool True if the user was successfully added
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function addContactpersoonToOrganization(object $contactpersoonObject): bool
     {
@@ -2800,14 +2844,13 @@ class SoftwareCatalogueService
             }
 
             // Get the organization object.
-            $settingsService     = $this->_container->get(SettingsService::class);
-            $registerId          = $settingsService->getVoorzieningenRegisterId();
-            $organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
-
-            if ($registerId === null || $organisatieSchemaId === false) {
-                $this->_logger->error('SoftwareCatalogueService: Register or schema not configured for organisatie');
+            $ctx = $this->resolveVoorzieningenContext('organisatie', 'organisatie');
+            if ($ctx === null) {
                 return false;
             }
+
+            $registerId          = $ctx['registerId'];
+            $organisatieSchemaId = $ctx['schemaId'];
 
             try {
                 $organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
@@ -3144,6 +3187,7 @@ class SoftwareCatalogueService
      * @param string $organizationUuid The UUID of the organization
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-softwarecatalogue-orchestration/tasks.md#task-1
      */
     public function syncContactPersonUsernamesWithOrganization(string $organizationUuid): void
     {
@@ -3279,14 +3323,17 @@ class SoftwareCatalogueService
     }//end syncContactPersonUsernamesWithOrganization()
 
     /**
-     * Ensures a contact person's username is in their organization's users array
-     * This method is called when a contact person is created or updated
+     * Ensures a contact person's username is in their organization's users array.
+     * NOTE: Dead method — retained only as implementation reference until the sync
+     * pipeline invocation point is wired; not called from any live code path.
      *
      * @param object $contactPersonObject The contact person object
      *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     *
      * @return void
      */
-    public function ensureContactPersonInOrganization(object $contactPersonObject): void
+    private function ensureContactPersonInOrganization(object $contactPersonObject): void
     {
         $contactData = $contactPersonObject->getObject();
         $email       = $contactData['email'] ?? null;
@@ -3541,4 +3588,56 @@ class SoftwareCatalogueService
             );
         }//end try
     }//end updateOrganizationReferences()
+
+
+    /**
+     * Resolves the voorzieningen register id + a schema id for a given
+     * object-type slug.
+     *
+     * Extracted from the repeated four-line "fetch SettingsService +
+     * getVoorzieningenRegisterId + getSchemaIdForObjectType + null/false
+     * guard" block that appeared in `activateUsersForOrganization()`,
+     * `deactivateUsersForOrganization()`,
+     * `shouldAddContactpersoonToOrganization()`,
+     * `addContactpersoonToOrganization()`, and
+     * `updateOrganizationReferences()`. Centralises the "missing config"
+     * log line so the per-method bodies no longer carry that boilerplate.
+     *
+     * W31 method-decomposition 2.6 — companion helper for the
+     * SoftwareCatalogue subservice wiring.
+     *
+     * @param string $schemaSlug Object-type slug as understood by
+     *                           `SettingsService::getSchemaIdForObjectType()`
+     *                           (e.g. `contactpersoon`, `organisatie`).
+     * @param string $logContext Short human label for the missing-config
+     *                           log line (e.g. `contactpersonen`).
+     *
+     * @return array{registerId:int, schemaId:int}|null Null when either
+     *                           the voorzieningen register or the schema
+     *                           is unconfigured; the matched (registerId,
+     *                           schemaId) pair otherwise.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-2-6
+     */
+    private function resolveVoorzieningenContext(string $schemaSlug, string $logContext): ?array
+    {
+        $settingsService = $this->_container->get(SettingsService::class);
+        $registerId      = $settingsService->getVoorzieningenRegisterId();
+        $schemaId        = $settingsService->getSchemaIdForObjectType($schemaSlug);
+
+        if ($registerId === null || $schemaId === null || $schemaId === false) {
+            $this->_logger->error(
+                'SoftwareCatalogueService: Register or schema not configured for '.$logContext
+            );
+            return null;
+        }
+
+        return [
+            'registerId' => $registerId,
+            'schemaId'   => $schemaId,
+        ];
+
+    }//end resolveVoorzieningenContext()
+
+
 }//end class

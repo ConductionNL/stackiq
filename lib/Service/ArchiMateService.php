@@ -7,11 +7,14 @@
  * Stores complete XML data as JSON blobs in the database and reconstructs
  * exact XML output during export.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team <info@conduction.nl>
- * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    SoftwareCatalog Team <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
+ * @link      https://github.com/nextcloud/softwarecatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
  */
 
 declare(strict_types=1);
@@ -36,11 +39,12 @@ use SimpleXMLElement;
  * 2. Storage: Use ObjectService::saveObjects with proper @self structure
  * 3. Export: Reconstruct exact XML from stored JSON blobs
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   SoftwareCatalog Team <info@conduction.nl>
- * @license  AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    SoftwareCatalog Team <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
+ * @link      https://github.com/nextcloud/softwarecatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -55,8 +59,6 @@ use SimpleXMLElement;
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -192,6 +194,7 @@ class ArchiMateService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function importArchiMateFileFromPathOptimized(array $options=[]): array
     {
@@ -212,6 +215,8 @@ class ArchiMateService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function importArchiMateFileFromPath(array $options=[]): array
     {
@@ -225,6 +230,8 @@ class ArchiMateService
      * @param string|null $organization Organization filter (currently not implemented)
      *
      * @return array Export results
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function exportToArchiMate(?string $organization=null): array
     {
@@ -295,6 +302,7 @@ class ArchiMateService
      * @param array  $options          Optional export options.
      *
      * @return array Export results with 'success', 'xml', 'file_name'
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function exportOrgArchiMate(string $organizationUuid, array $options=[]): array
     {
@@ -313,22 +321,9 @@ class ArchiMateService
             }
 
             // Look up the organization from Voorzieningen register.
-            $voorzConfig       = $this->settingsService->getVoorzieningenConfig();
-                $orgRegisterId = null;
-            if (empty($voorzConfig['register']) === false) {
-            }
-
-                $orgSchemaId = null;
-            if (empty($voorzConfig['organisatie_schema']) === false) {
-            }
-
-            if ($orgRegisterId === null || $orgSchemaId === false) {
-                // Fallback to generic lookup.
-                $orgRegisterId = $this->settingsService->getVoorzieningenRegisterId();
-                $orgSchemaId   = $this->settingsService->getSchemaIdForObjectType('organisatie');
-            }
-
-            if ($orgRegisterId === null || $orgSchemaId === false) {
+            $voorzConfig = $this->settingsService->getVoorzieningenConfig();
+            [$orgRegisterId, $orgSchemaId] = $this->resolveOrgRegisterAndSchema($voorzConfig);
+            if ($orgRegisterId === null || $orgSchemaId === null) {
                 throw new \RuntimeException('Organization register/schema not configured');
             }
 
@@ -364,8 +359,10 @@ class ArchiMateService
             $schemaIdMap = $this->createSchemaIdMap();
 
             // Query organization's gebruik and modules from Voorzieningen register.
-                $gebruikSchemaId = null;
             if (empty($voorzConfig['gebruik_schema']) === false) {
+                $gebruikSchemaId = $voorzConfig['gebruik_schema'];
+            } else {
+                $gebruikSchemaId = null;
             }
 
             $gebruikData = [];
@@ -381,8 +378,10 @@ class ArchiMateService
                 $gebruikData  = $objectService->searchObjects(query: $gebruikQuery, _rbac: false, _multitenancy: false);
             }
 
-                $moduleSchemaId = null;
             if (empty($voorzConfig['module_schema']) === false) {
+                $moduleSchemaId = $voorzConfig['module_schema'];
+            } else {
+                $moduleSchemaId = null;
             }
 
             $modulesData = [];
@@ -441,8 +440,10 @@ class ArchiMateService
                         // Merge into modulesData, deduplicating by ID.
                         $existingIds = [];
                         foreach ($modulesData as $m) {
-                                $mid = null;
                             if (is_array($m) === true) {
+                                $mid = $m['id'] ?? $m['@self']['id'] ?? null;
+                            } else {
+                                $mid = null;
                             }
 
                             if (empty($mid) === false) {
@@ -451,8 +452,10 @@ class ArchiMateService
                         }
 
                         foreach ($allModules as $mod) {
+                            if (is_object($mod) === true && method_exists($mod, 'jsonSerialize') === true) {
+                                $modArr = $mod->jsonSerialize();
+                            } else {
                                 $modArr = $mod;
-                            if ((is_object($mod) === true && method_exists($mod, 'jsonSerialize') === true)) {
                             }
 
                             $modId = $modArr['id'] ?? $modArr['@self']['id'] ?? null;
@@ -501,6 +504,38 @@ class ArchiMateService
             ];
         }//end try
     }//end exportOrgArchiMate()
+
+    /**
+     * Resolves the organisation register + schema id pair for an org-scoped export.
+     *
+     * First tries the dedicated keys on the voorzieningen config; falls back to
+     * the generic settings lookups when either key is empty. Returns a pair where
+     * either element can be null if no resolution succeeded — caller is expected
+     * to early-throw in that case.
+     *
+     * Extracted from {@see exportOrgArchiMate()} as part of task 4.4 to replace
+     * the 4-branch if/else block with a single helper.
+     *
+     * @param array<string, mixed> $voorzConfig Settings → voorzieningen block.
+     *
+     * @return array{0: int|string|null, 1: int|string|null}
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-4
+     */
+    private function resolveOrgRegisterAndSchema(array $voorzConfig): array
+    {
+        $register = empty($voorzConfig['register']) === false ? $voorzConfig['register'] : null;
+        $schema   = empty($voorzConfig['organisatie_schema']) === false
+            ? $voorzConfig['organisatie_schema']
+            : null;
+
+        if (empty($register) === true || empty($schema) === true) {
+            $register = $this->settingsService->getVoorzieningenRegisterId();
+            $schema   = $this->settingsService->getSchemaIdForObjectType('organisatie');
+        }
+
+        return [$register, $schema];
+    }//end resolveOrgRegisterAndSchema()
 
     /**
      * Create schema ID mapping for export service
@@ -761,11 +796,13 @@ class ArchiMateService
         switch ($type) {
             case 'direct':
                 if (is_string($current) === true) {
+                    return $current;
                 }
                 return null;
 
             case 'value':
                 if (is_array($current) === true && isset($current['_value']) === true) {
+                    return $current['_value'];
                 }
                 return null;
 
@@ -862,8 +899,7 @@ class ArchiMateService
                     $objects[] = $this->createSectionObject(
                         section: $section,
                         identifier: $identifier,
-                        data: $data,
-                        modelIdentifier: $modelIdentifier
+                        data: $data
                     );
                 }
             } else {
@@ -920,14 +956,13 @@ class ArchiMateService
     /**
      * Create section object with @self structure and flattened XML data
      *
-     * @param string $section         Section name
-     * @param string $identifier      Item identifier
-     * @param array  $data            Item data (already contains XML data at root level)
-     * @param string $modelIdentifier Model identifier for linking
+     * @param string $section    Section name
+     * @param string $identifier Item identifier
+     * @param array  $data       Item data (already contains XML data at root level)
      *
      * @return array Section object with @self structure
      */
-    private function createSectionObject(string $section, string $identifier, array $data, string $modelIdentifier): array
+    private function createSectionObject(string $section, string $identifier, array $data): array
     {
         // OPTIMIZATION: Use cached configuration values.
         $registerId = $this->cachedConfig['registerId'];
@@ -1097,8 +1132,10 @@ class ArchiMateService
         foreach ($chunks as $chunkIndex => $chunk) {
             // OPTIMIZATION: Removed debug logging from chunk processing loop.
             try {
-                    $rbacValue = true;
                 if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
+                    $rbacValue = false;
+                } else {
+                    $rbacValue = true;
                 }
 
                 $saveResult = $objectService->saveObjects(
@@ -1189,8 +1226,10 @@ class ArchiMateService
                 ]
                 );
 
-            $rbacValue = true;
         if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
+            $rbacValue = false;
+        } else {
+            $rbacValue = true;
         }
 
         $saveResult = $objectService->saveObjects(
@@ -1477,6 +1516,7 @@ class ArchiMateService
      * Test round-trip functionality
      *
      * @return array Test results
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function testRoundTrip(): array
     {
@@ -1580,6 +1620,7 @@ class ArchiMateService
      * Get AMEF configuration from app config
      *
      * @return array AMEF configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function getAmefConfig(): array
     {
@@ -1682,6 +1723,7 @@ class ArchiMateService
      * Get the current status of ArchiMate operations
      *
      * @return array Status information including import/export status and object counts
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function getArchiMateStatus(): array
     {
@@ -1754,8 +1796,10 @@ class ArchiMateService
 
         // Fallback to legacy individual app config keys if not present in JSON.
         if ($rawRegisterId === null || $rawRegisterId === '') {
-                $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
+            $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
             if ($this->config->getValueString('softwarecatalog', 'amef_register', '') !== '') {
+                // If only the plain register key is configured, use it as the ID.
+                $rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register', '');
             }
         }
 
@@ -1763,9 +1807,8 @@ class ArchiMateService
         if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string) $rawRegisterId) === true) {
             $registerId = (int) $rawRegisterId;
             if ($registerId > 0) {
+                return $registerId;
             }
-
-                return null;
         }
 
         return null;
@@ -1902,15 +1945,17 @@ class ArchiMateService
             $isAmefType      = in_array($schemaType, $amefObjectTypes, true) === true;
 
             // Use AMEF register ID for AMEF types, otherwise use per-type register ID.
-                $registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
+            $registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
             if ($isAmefType === true) {
+                $registerId = $this->getAmefRegisterId();
             }
 
             $schemaId = $this->settingsService->getSchemaIdForObjectType($schemaType);
 
-            if ($registerId === null || $schemaId === false) {
-                    $errorMessage = "ArchiMateService: Register or {$schemaType} schema not configured";
+            if ($registerId === null || $schemaId === null) {
+                $errorMessage = "ArchiMateService: Register or {$schemaType} schema not configured";
                 if ($isAmefType === true) {
+                    $errorMessage = "ArchiMateService: AMEF register or {$schemaType} schema not configured";
                 }
 
                 $this->logger->error(
@@ -1953,8 +1998,9 @@ class ArchiMateService
                 ];
             }
 
-                $paginationValue = 'disabled';
+            $paginationValue = 'disabled';
             if ($usePagination === true) {
+                $paginationValue = 'enabled';
             }
 
             $this->logger->debug(
@@ -1970,8 +2016,9 @@ class ArchiMateService
             // Use searchObjects method for filtering.
             $objects = $objectService->searchObjects($finalQuery);
 
-                $paginationValue = 'disabled';
+            $paginationValue = 'disabled';
             if ($usePagination === true) {
+                $paginationValue = 'enabled';
             }
 
             $this->logger->debug(
@@ -2002,6 +2049,7 @@ class ArchiMateService
      * Check if import is in progress
      *
      * @return bool True if import is in progress
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function isImportInProgress(): bool
     {
@@ -2013,6 +2061,7 @@ class ArchiMateService
      * Check if export is in progress
      *
      * @return bool True if export is in progress
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function isExportInProgress(): bool
     {
@@ -2025,7 +2074,7 @@ class ArchiMateService
      *
      * @return bool True if any operation is in progress
      */
-    public function isOperationInProgress(): bool
+    private function isOperationInProgress(): bool
     {
         return $this->isImportInProgress() || $this->isExportInProgress();
     }//end isOperationInProgress()
@@ -2205,11 +2254,10 @@ class ArchiMateService
      * Calculate detailed object statistics for import operations
      *
      * @param array $normalizedData Normalized ArchiMate data
-     * @param array $savedObjects   Objects that were saved to database
      *
      * @return array Comprehensive statistics
      */
-    private function calculateObjectStatistics(array $normalizedData, array $savedObjects): array
+    private function calculateObjectStatistics(array $normalizedData): array
     {
         // Initialize statistics structure.
         $statistics = [
@@ -2306,8 +2354,13 @@ class ArchiMateService
                             );
 
                     if (empty($errorInfo) === false) {
-                        $statistics[$sectionKey]['errors'][]
-                            = array_values($errorInfo)[0]['error'] ?? 'Unknown validation error';
+                        $firstError   = array_values($errorInfo)[0];
+                        $errorMessage = 'Unknown validation error';
+                        if (is_array($firstError) === true && isset($firstError['error']) === true) {
+                            $errorMessage = $firstError['error'];
+                        }
+
+                        $statistics[$sectionKey]['errors'][] = $errorMessage;
                     }
                 } else {
                     // This shouldn't happen, but leave as fallback.
@@ -2616,9 +2669,10 @@ class ArchiMateService
         if ($sectionType === 'view' && isset($sectionData['diagrams']['view']) === true) {
             $viewData = $sectionData['diagrams']['view'];
             if (isset($viewData[0]) === true) {
+                return $viewData;
             }
 
-                return [$viewData];
+            return [$viewData];
         }
 
         // Try common patterns.
@@ -2637,9 +2691,10 @@ class ArchiMateService
             if (isset($sectionData[$pattern]) === true) {
                 $data = $sectionData[$pattern];
                 if (is_array($data) === true && isset($data[0]) === true) {
+                    return $data;
                 }
 
-                    return [$data];
+                return [$data];
             }
         }
 
@@ -2658,8 +2713,9 @@ class ArchiMateService
      */
     private function flattenPropertiesBatch(array &$object, array $properties, array $propDefMap): void
     {
-            $props = [$properties];
+        $props = [$properties];
         if (isset($properties[0]) === true) {
+            $props = $properties;
         }
 
         $processedProperties = [];
@@ -2754,6 +2810,7 @@ class ArchiMateService
      * @param array $propDefMap The original property definition map
      *
      * @return array Mapping of original names to camelCase names
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
      */
     public function getPropertyNameMapping(array $propDefMap): array
     {
@@ -2769,11 +2826,11 @@ class ArchiMateService
     /**
      * Calculate optimized statistics for performance reporting
      *
-     * @param array $savedObjects Saved objects from ObjectService::saveObjects
+     * Reads the persisted save outcome from {@see self::$lastSaveResult}.
      *
      * @return array Statistics array
      */
-    private function calculateOptimizedStatistics(array $savedObjects): array
+    private function calculateOptimizedStatistics(): array
     {
         $statistics = [
             'summary' => [
@@ -3098,11 +3155,13 @@ class ArchiMateService
 
             // Handle different XML structures.
             if (is_string($endpointData) === true) {
+                return $endpointData;
             }
 
             if (is_array($endpointData) === true) {
                 // Try _attributes.href or _value.
                 if (isset($endpointData['_attributes']['href']) === true) {
+                    return $endpointData['_attributes']['href'];
                 }
 
                 if (isset($endpointData['_value']) === true) {
@@ -3115,6 +3174,7 @@ class ArchiMateService
         if (isset($relationship['xml']['_attributes']) === true) {
             $attr = $relationship['xml']['_attributes'];
             if ($endpoint === 'source' && isset($attr['source']) === true) {
+                return $attr['source'];
             }
 
             if ($endpoint === 'target' && isset($attr['target']) === true) {

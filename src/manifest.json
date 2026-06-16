@@ -1,0 +1,468 @@
+{
+	"$schema": "https://codeberg.org/Conduction/nextcloud-vue/raw/branch/main/src/schemas/app-manifest.schema.json",
+	"version": "1.0.0",
+	"dependencies": [
+		"openregister"
+	],
+	"menu": [
+		{
+			"id": "Dashboard",
+			"label": "Dashboard",
+			"icon": "icon-category-dashboard",
+			"route": "Dashboard",
+			"order": 10
+		},
+		{
+			"id": "Contracten",
+			"label": "Contracts",
+			"icon": "icon-file",
+			"route": "Contracten",
+			"order": 40
+		},
+		{
+			"id": "Standaarden",
+			"label": "Standards",
+			"icon": "icon-checkmark",
+			"route": "Standaarden",
+			"order": 50
+		},
+		{
+			"id": "Reviews",
+			"label": "Reviews",
+			"icon": "icon-comment",
+			"route": "Reviews",
+			"order": 60
+		},
+		{
+			"id": "Komplianties",
+			"label": "Compliance",
+			"icon": "icon-checkmark",
+			"route": "Komplianties",
+			"order": 70
+		},
+		{
+			"id": "ComplianceMatrix",
+			"label": "Compliance matrix",
+			"icon": "icon-category-monitoring",
+			"route": "ComplianceMatrix",
+			"order": 75
+		},
+		{
+			"id": "Moduleversies",
+			"label": "Module versions",
+			"icon": "icon-files",
+			"route": "Moduleversies",
+			"order": 80
+		},
+		{
+			"id": "LifecycleRoadmap",
+			"label": "Portfolio roadmap",
+			"icon": "icon-category-organization",
+			"route": "LifecycleRoadmap",
+			"order": 85
+		},
+		{
+			"id": "Documentation",
+			"label": "Documentation",
+			"icon": "icon-info",
+			"href": "https://softwarecatalog.conduction.nl",
+			"section": "footer",
+			"order": 90
+		},
+		{
+			"id": "FeaturesRoadmapMenu",
+			"label": "Features & roadmap",
+			"icon": "icon-toggle",
+			"route": "FeaturesRoadmap",
+			"section": "footer",
+			"order": 95
+		},
+		{
+			"id": "SettingsMenu",
+			"label": "Settings",
+			"icon": "icon-settings",
+			"route": "Settings",
+			"section": "settings",
+			"order": 99
+		}
+	],
+	"pages": [
+		{
+			"id": "Dashboard",
+			"route": "/",
+			"type": "custom",
+			"title": "Dashboard",
+			"component": "DashboardCustomView"
+		},
+		{
+			"id": "Organisaties",
+			"route": "/organisaties",
+			"type": "custom",
+			"title": "Organisation relationships",
+			"component": "OrganisatieIndexView"
+		},
+		{
+			"id": "Contactpersonen",
+			"route": "/contactpersonen",
+			"type": "index",
+			"title": "Contact roles",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "contactpersoon",
+				"columns": [
+					"contactsUid",
+					"functie",
+					"rollen",
+					"organisatie"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "ContactpersoonDetail",
+			"route": "/contactpersonen/:id",
+			"type": "detail",
+			"title": "Contact role",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "contactpersoon",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "Contracten",
+			"route": "/contracten",
+			"type": "index",
+			"title": "Contracts",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "contract",
+				"columns": [
+					"contractNummer",
+					"contractType",
+					"startDatum",
+					"eindDatum",
+					"kosten",
+					"status"
+				],
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "Active", "filter": { "status": "Actief" }, "icon": "CheckCircle" },
+					{ "label": "Expiring / expired", "filter": { "status": "Verlopen" }, "icon": "AlertCircle" },
+					{ "label": "In negotiation", "filter": { "status": "In onderhandeling" }, "icon": "Handshake" }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "ContractDetail",
+			"route": "/contracten/:id",
+			"type": "detail",
+			"title": "Contract",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "contract",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "approval",
+						"label": "Approval",
+						"icon": "icon-checkmark",
+						"component": "ContractApprovalPanel"
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "Standaarden",
+			"route": "/standaarden",
+			"type": "index",
+			"title": "Standards",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "standaard",
+				"columns": [
+					"naam",
+					"versie",
+					"categorie",
+					"status"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "StandaardDetail",
+			"route": "/standaarden/:id",
+			"type": "detail",
+			"title": "Standard",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "standaard",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "Reviews",
+			"route": "/reviews",
+			"type": "index",
+			"title": "Reviews",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "beoordeeling",
+				"columns": [
+					"titel",
+					"auteur",
+					"score",
+					"datum"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "ReviewDetail",
+			"route": "/reviews/:id",
+			"type": "detail",
+			"title": "Review",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "beoordeeling",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "Komplianties",
+			"route": "/komplianties",
+			"type": "index",
+			"title": "Compliance",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "compliancy",
+				"columns": [
+					"module",
+					"standaardversie",
+					"standaardGemma",
+					"url"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "KompliantieDetail",
+			"route": "/komplianties/:id",
+			"type": "detail",
+			"title": "Compliance",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "compliancy",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "ComplianceMatrix",
+			"route": "/compliance-matrix",
+			"type": "custom",
+			"title": "Compliance matrix",
+			"component": "ComplianceMatrixView"
+		},
+		{
+			"id": "Moduleversies",
+			"route": "/moduleversies",
+			"type": "index",
+			"title": "Module versions",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "moduleVersie",
+				"columns": [
+					"versie",
+					"module",
+					"releaseDatum",
+					"status"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "ModuleversieDetail",
+			"route": "/moduleversies/:id",
+			"type": "detail",
+			"title": "Module version",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "moduleVersie",
+				"sidebarTabs": [
+					{
+						"id": "overview",
+						"label": "Overview",
+						"icon": "icon-info",
+						"widgets": [
+							{ "type": "data" },
+							{ "type": "metadata" }
+						]
+					},
+					{
+						"id": "audit",
+						"label": "Audit trail",
+						"icon": "icon-history",
+						"widgets": [
+							{ "type": "audit-trail" }
+						]
+					}
+				],
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "LifecycleRoadmap",
+			"route": "/portfolio-roadmap",
+			"type": "custom",
+			"title": "Portfolio roadmap",
+			"component": "LifecycleRoadmapView"
+		},
+		{
+			"id": "FeaturesRoadmap",
+			"route": "/features-roadmap",
+			"type": "roadmap",
+			"title": "Features & roadmap",
+			"config": {
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "Settings",
+			"route": "/settings",
+			"type": "settings",
+			"title": "Settings",
+			"config": {
+				"saveEndpoint": "/index.php/apps/softwarecatalog/api/settings",
+				"sections": [
+					{
+						"title": "Algemeen",
+						"widgets": [
+							{
+								"type": "component",
+								"componentName": "SoftwareCatalogSettingsPage"
+							}
+						]
+					}
+				]
+			}
+		}
+	]
+}

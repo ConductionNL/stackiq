@@ -1,0 +1,8 @@
+{
+  "spec_slug": "method-decomposition",
+  "title": "Method Decomposition -- SoftwareCatalog",
+  "app": "softwarecatalog",
+  "repo": "https://codeberg.org/Conduction/softwarecatalog",
+  "depends_on": [],
+  "issue": "https://codeberg.org/Conduction/softwarecatalog/issues/274"
+}

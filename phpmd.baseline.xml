@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<phpmd-baseline>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ArchiMateExportService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ArchiMateImportService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ArchiMateService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/OrganizationSyncService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/SettingsService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/SoftwareCatalogue/OrganizationHandler.php"/>
+  <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Service/SoftwareCatalogueService.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/SoftwareCatalogueService.php"/>
+</phpmd-baseline>

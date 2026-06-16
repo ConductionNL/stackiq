@@ -34,7 +34,9 @@ module.exports = defineConfig([
 		settings: {
 			'import/resolver': {
 				alias: {
-					map: [['@', './src']],
+					map: [
+						['@', './src'],
+					],
 					extensions: ['.js', '.ts', '.vue', '.json'],
 				},
 			},
@@ -52,11 +54,37 @@ module.exports = defineConfig([
 
 		rules: {
 			'jsdoc/require-jsdoc': 'off',
+			// Allow @spec tag used for OpenSpec traceability links
+			'jsdoc/check-tag-names': ['warn', { definedTags: ['spec'] }],
 			'vue/first-attribute-linebreak': 'off',
 			'vue/enforce-style-attribute': ['error', { allow: ['scoped'] }],
 			'@typescript-eslint/no-explicit-any': 'off',
 			'n/no-missing-import': 'off',
+			'n/no-missing-require': 'off',
+			'n/no-extraneous-require': 'off',
+			'n/no-process-exit': 'off',
+			'n/shebang': 'off',
+			'no-console': 'off',
 			'import/no-unresolved': ['error', { ignore: ['^@conduction/nextcloud-vue'] }],
+			// `import/named` cannot statically resolve barrel re-exports through
+			// the npm package's frozen ESM module records (CnAppRoot,
+			// CnPageRenderer, defaultPageTypes are re-exported from internal
+			// modules). Disabled here; webpack + runtime catches real issues.
+			'import/named': 'off',
+			// Library re-exports CnAppRoot/CnPageRenderer/etc as part of v1.x —
+			// the static analyser can't introspect frozen/aliased exports cleanly.
+			// CI and runtime catch real issues.
+			'import/namespace': 'off',
+			'import/default': 'off',
+			'import/no-named-as-default': 'off',
+			'import/no-named-as-default-member': 'off',
+		},
+	},
+	{
+		// validate-manifest.js is a Node script — relax browser-oriented rules.
+		files: ['tests/validate-manifest.js'],
+		rules: {
+			'import/named': 'off',
 		},
 	},
 ])

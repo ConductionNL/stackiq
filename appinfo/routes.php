@@ -12,13 +12,25 @@ declare(strict_types=1);
  * @version  1.0.0
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 return [
     'routes' => [
-        // Dashboard route
+        // Dashboard routes
         ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
+        ['name' => 'dashboard#index', 'url' => '/api/dashboard', 'verb' => 'GET'],
+
+        // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog).
+        ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+        ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+
+        // Contract approval delegation to decidesk (in-process IEventDispatcher; fail-closed).
+        // Outcome is projected by DecisionConcludedListener, not an HTTP callback.
+        // @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+        ['name' => 'contractApproval#config', 'url' => '/api/contracts/approval/config', 'verb' => 'GET'],
+        ['name' => 'contractApproval#submit', 'url' => '/api/contracts/{contractUuid}/approval/submit', 'verb' => 'POST'],
+        ['name' => 'contractApproval#submitRenewal', 'url' => '/api/contracts/{contractUuid}/approval/renewal', 'verb' => 'POST'],
 
         // Core Settings API routes (minimal, for basic app functionality)
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
@@ -26,7 +38,9 @@ return [
         ['name' => 'settings#load', 'url' => '/api/settings/load', 'verb' => 'GET'],
         ['name' => 'settings#initialize', 'url' => '/api/settings/initialize', 'verb' => 'POST'],
         ['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
-        ['name' => 'settings#auto_configure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
+        ['name' => 'settings#stats', 'url' => '/api/settings/stats', 'verb' => 'GET'],
+        ['name' => 'settings#autoConfigure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
+        ['name' => 'settings#consolidatedAutoConfigure', 'url' => '/api/settings/consolidated-auto-configure', 'verb' => 'POST'],
         ['name' => 'settings#debug', 'url' => '/api/settings/debug', 'verb' => 'GET'],
 
         // Separate endpoints for performance optimization
@@ -47,26 +61,22 @@ return [
         ['name' => 'settings#resetAutoConfig', 'url' => '/api/settings/reset-auto-config', 'verb' => 'POST'],
 
         // Email management routes
-        ['name' => 'settings#send_test_email', 'url' => '/api/email/test', 'verb' => 'POST'],
-        ['name' => 'settings#test_email_connection', 'url' => '/api/email/test-connection', 'verb' => 'POST'],
-        ['name' => 'settings#get_email_settings', 'url' => '/api/settings/email', 'verb' => 'GET'],
-        ['name' => 'settings#update_email_settings', 'url' => '/api/settings/email', 'verb' => 'POST'],
+        ['name' => 'settings#sendTestEmail', 'url' => '/api/email/test', 'verb' => 'POST'],
+        ['name' => 'settings#testEmailConnection', 'url' => '/api/email/test-connection', 'verb' => 'POST'],
+        ['name' => 'settings#getEmailSettings', 'url' => '/api/settings/email', 'verb' => 'GET'],
+        ['name' => 'settings#updateEmailSettings', 'url' => '/api/settings/email', 'verb' => 'POST'],
 
         // Email template management routes
-        ['name' => 'settings#get_email_templates', 'url' => '/api/email/templates', 'verb' => 'GET'],
-        ['name' => 'settings#get_email_template', 'url' => '/api/email/templates/{templateName}', 'verb' => 'GET'],
-        ['name' => 'settings#update_email_template', 'url' => '/api/email/templates/{templateName}', 'verb' => 'POST'],
-        ['name' => 'settings#get_email_template_default', 'url' => '/api/email/templates/{templateName}/default', 'verb' => 'GET'],
-        ['name' => 'settings#get_email_template_variables', 'url' => '/api/email/templates/{templateName}/variables', 'verb' => 'GET'],
+        ['name' => 'settings#getEmailTemplates', 'url' => '/api/email/templates', 'verb' => 'GET'],
+        ['name' => 'settings#getEmailTemplate', 'url' => '/api/email/templates/{templateName}', 'verb' => 'GET'],
+        ['name' => 'settings#updateEmailTemplate', 'url' => '/api/email/templates/{templateName}', 'verb' => 'POST'],
+        ['name' => 'settings#getEmailTemplateDefault', 'url' => '/api/email/templates/{templateName}/default', 'verb' => 'GET'],
+        ['name' => 'settings#getEmailTemplateVariables', 'url' => '/api/email/templates/{templateName}/variables', 'verb' => 'GET'],
 
-        // Health check endpoint
-        ['name' => 'settings#health_check', 'url' => '/api/health', 'verb' => 'GET'],
+        // Note: /api/health is served by settings#status above
 
         // Configuration cache management
-        ['name' => 'settings#clear_cache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
-
-        // Force re-initialization endpoint
-        ['name' => 'settings#force_reinit', 'url' => '/api/settings/force-reinit', 'verb' => 'POST'],
+        ['name' => 'settings#clearCache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
 
         // ArchiMate import/export routes
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
@@ -80,16 +90,16 @@ return [
         ['name' => 'settings#killArchiMateImport', 'url' => '/api/archimate/import/kill', 'verb' => 'POST'], // deprecated
         ['name' => 'settings#clearArchiMateExportStatus', 'url' => '/api/archimate/status/export/clear', 'verb' => 'POST'],
 
-        ['name' => 'settings#test_archimate_round_trip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
+        ['name' => 'settings#testArchiMateRoundTrip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
 
         // User Groups management routes
-        ['name' => 'settings#get_generic_user_groups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],
-        ['name' => 'settings#set_generic_user_groups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'POST'],
-        ['name' => 'settings#get_organization_admin_groups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'GET'],
-        ['name' => 'settings#set_organization_admin_groups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'POST'],
-        ['name' => 'settings#get_super_user_groups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'GET'],
-        ['name' => 'settings#set_super_user_groups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'POST'],
-        ['name' => 'settings#get_all_groups', 'url' => '/api/settings/user-groups/all', 'verb' => 'GET'],
+        ['name' => 'settings#getGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],
+        ['name' => 'settings#setGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'POST'],
+        ['name' => 'settings#getOrganizationAdminGroups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'GET'],
+        ['name' => 'settings#setOrganizationAdminGroups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'POST'],
+        ['name' => 'settings#getSuperUserGroups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'GET'],
+        ['name' => 'settings#setSuperUserGroups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'POST'],
+        ['name' => 'settings#getAllGroups', 'url' => '/api/settings/user-groups/all', 'verb' => 'GET'],
 
         // Progress streaming routes
         ['name' => 'settings#getProgress', 'url' => '/api/progress/{operationId}', 'verb' => 'GET'],
@@ -143,7 +153,6 @@ return [
         ['name' => 'contactpersonen#changePassword', 'url' => '/api/contactpersonen/change-password', 'verb' => 'POST'],
         ['name' => 'contactpersonen#updateUserGroups', 'url' => '/api/contactpersonen/update-groups', 'verb' => 'POST'],
         ['name' => 'contactpersonen#getUserInfo', 'url' => '/api/contactpersonen/{contactpersoonId}/user-info', 'verb' => 'GET'],
-        ['name' => 'contactpersonen#testBulkUserInfo', 'url' => '/api/contactpersonen/test-bulk-user-info', 'verb' => 'GET'],
         ['name' => 'contactpersonen#getBulkUserInfo', 'url' => '/api/contactpersonen/bulk-user-info', 'verb' => 'POST'],
         ['name' => 'contactpersonen#getAvailableGroups', 'url' => '/api/contactpersonen/available-groups', 'verb' => 'GET'],
         ['name' => 'contactpersonen#disableUser', 'url' => '/api/contactpersonen/{contactpersoonId}/disable', 'verb' => 'POST'],
@@ -167,12 +176,35 @@ return [
         ['name' => 'aanbod#acceptAanbod', 'url' => '/api/aanbod/{uuid}/accept', 'verb' => 'PUT'],
         ['name' => 'aanbod#denyAanbod', 'url' => '/api/aanbod/{uuid}/deny', 'verb' => 'DELETE'],
 
+        // OPEN-DATA PUBLISH ENDPOINTS — set/clear publicatiedatum (the live OR
+        // RBAC publish gate). Authenticated + per-object ownership guard (IDOR-safe).
+        ['name' => 'publication#publish', 'url' => '/api/publication/{objectType}/{uuid}/publish', 'verb' => 'PUT'],
+        ['name' => 'publication#depublish', 'url' => '/api/publication/{objectType}/{uuid}/depublish', 'verb' => 'DELETE'],
+
+        // ANONYMOUS REGISTRATION INTAKE — public, write-only to the moderation
+        // queue (lands as registratiestatus=pending, no publicatiedatum → invisible
+        // until an admin approves). Anti-spam rate-limited.
+        ['name' => 'intake#submit', 'url' => '/api/intake/register', 'verb' => 'POST'],
+
+        // REGISTRATION MODERATION / APPROVAL QUEUE — admin-gated (isAdmin guard).
+        ['name' => 'moderation#pending', 'url' => '/api/moderation/pending', 'verb' => 'GET'],
+        ['name' => 'moderation#approve', 'url' => '/api/moderation/{uuid}/approve', 'verb' => 'POST'],
+        ['name' => 'moderation#reject', 'url' => '/api/moderation/{uuid}/reject', 'verb' => 'POST'],
+
+        // FEDERATION SETTINGS / MANUAL PULL — admin-gated (AuthorizedAdminSetting).
+        ['name' => 'federation#status', 'url' => '/api/federation/status', 'verb' => 'GET'],
+        ['name' => 'federation#addPeer', 'url' => '/api/federation/peers', 'verb' => 'POST'],
+        ['name' => 'federation#removePeer', 'url' => '/api/federation/peers', 'verb' => 'DELETE'],
+        ['name' => 'federation#pull', 'url' => '/api/federation/pull', 'verb' => 'POST'],
+
         // ========================================================================
         // AANGEBODEN GEBRUIK API ENDPOINTS - Custom Objects API for Gebruiks (Legacy)
         // ========================================================================
 
         // AangebodenGebruik API endpoints for filtering gebruiks by organization involvement
         ['name' => 'aangebodenGebruik#getGebruiksWhereAfnemer', 'url' => '/api/aangeboden-gebruik/afnemer', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#getAllGebruiksForAmbtenaar', 'url' => '/api/aangeboden-gebruik/ambtenaar', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#getSingleGebruikForAmbtenaar', 'url' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}', 'verb' => 'GET'],
         ['name' => 'aangebodenGebruik#getGebruiksWhereDeelnemers', 'url' => '/api/aangeboden-gebruik/deelnemers', 'verb' => 'GET'],
         ['name' => 'aangebodenGebruik#setGebruikSelfToActiveOrg', 'url' => '/api/aangeboden-gebruik/{gebruikId}/set-self', 'verb' => 'PUT'],
         ['name' => 'aangebodenGebruik#deleteGebruikAsAfnemer', 'url' => '/api/aangeboden-gebruik/{gebruikId}/deny', 'verb' => 'DELETE'],

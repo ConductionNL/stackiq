@@ -10,7 +10,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 namespace OCA\SoftwareCatalog\Service;
@@ -48,6 +48,8 @@ class GebruikService
      * @return array The resulting configuration parameters.
      *
      * @throws Exception When configuration cannot be retrieved.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-gebruik-services/tasks.md#task-1
      */
     private function getGebruiksConfiguration(): array
     {
@@ -125,6 +127,8 @@ class GebruikService
      * @return array The result set of gebruiken.
      *
      * @throws \OCP\DB\Exception When database query fails.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-gebruik-services/tasks.md#task-1
      */
     public function getGebruiken(array $options): array
     {
@@ -174,6 +178,8 @@ class GebruikService
      * @return array The resulting ids.
      *
      * @throws \OCP\DB\Exception When database query fails.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-gebruik-services/tasks.md#task-2
      */
     public function getApplicationIds(array $options): array
     {
@@ -194,10 +200,9 @@ class GebruikService
                         // Use jsonSerialize to get full object with @self metadata.
                         if (method_exists($object, 'jsonSerialize') === true) {
                             $object = $object->jsonSerialize();
-                        } else if (method_exists($object, 'getId') === true) {
-                        }
-
+                        } else if (method_exists($object, 'getObject') === true) {
                             $object = $object->getObject();
+                        }
                     }
 
                     return $object['@self']['id'] ?? $object['id'] ?? null;

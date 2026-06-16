@@ -17,6 +17,8 @@
  * @version GIT: <git_id>
  *
  * @link https://SoftwareCatalog.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -100,6 +102,8 @@ class OpenRegisterEventsDebugListener implements IEventListener
      * @return void
      *
      * @phpstan-param T $event
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function handle(Event $event): void
     {
@@ -177,8 +181,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
      * @phpstan-return array<string, mixed>
      * @psalm-return   array<string, mixed>
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     private function extractEventData(Event $event): array
     {
@@ -186,188 +188,226 @@ class OpenRegisterEventsDebugListener implements IEventListener
             'eventClass' => get_class($event),
         ];
 
-        // Handle Object events.
-        if ($event instanceof ObjectCreatedEvent) {
-            $object = $event->getObject();
-            $data   = array_merge(
-                    $data,
-                    [
-                        'eventType'  => 'ObjectCreated',
-                        'objectId'   => $object->getId(),
-                        'objectUuid' => $object->getUuid(),
-                        'registerId' => $object->getRegister(),
-                        'schemaId'   => $object->getSchema(),
-                        'owner'      => $object->getOwner(),
-                        'created'    => $object->getCreated()?->format('Y-m-d H:i:s'),
-                        'objectData' => $this->getSafeObjectData(objectData: $object->getObject()),
-                    ]
-                    );
-        } else if ($event instanceof ObjectUpdatedEvent) {
-            $newObject = $event->getNewObject();
-            $oldObject = $event->getOldObject();
+        $specific = $this->extractObjectEventData($event)
+            ?? $this->extractRegisterEventData($event)
+            ?? $this->extractSchemaEventData($event)
+            ?? $this->extractOrganisationEventData($event);
 
-                $oldObjectData = null;
-            if ($oldObject !== null) {
-            }
-
-            $data = array_merge(
-                    $data,
-                    [
-                        'eventType'     => 'ObjectUpdated',
-                        'newObjectId'   => $newObject->getId(),
-                        'newObjectUuid' => $newObject->getUuid(),
-                        'oldObjectId'   => $oldObject?->getId(),
-                        'oldObjectUuid' => $oldObject?->getUuid(),
-                        'registerId'    => $newObject->getRegister(),
-                        'schemaId'      => $newObject->getSchema(),
-                        'owner'         => $newObject->getOwner(),
-                        'updated'       => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
-                        'newObjectData' => $this->getSafeObjectData(objectData: $newObject->getObject()),
-                        'oldObjectData' => $oldObjectData,
-                    ]
-                    );
-        } else if ($event instanceof ObjectDeletedEvent) {
-            $object = $event->getObject();
-            $data   = array_merge(
-                    $data,
-                    [
-                        'eventType'  => 'ObjectDeleted',
-                        'objectId'   => $object->getId(),
-                        'objectUuid' => $object->getUuid(),
-                        'registerId' => $object->getRegister(),
-                        'schemaId'   => $object->getSchema(),
-                        'owner'      => $object->getOwner(),
-                        'objectData' => $this->getSafeObjectData(objectData: $object->getObject()),
-                    ]
-                    );
-        } else if ($event instanceof ObjectLockedEvent) {
-            $object = $event->getObject();
-            $data   = array_merge(
-                    $data,
-                    [
-                        'eventType'  => 'ObjectLocked',
-                        'objectId'   => $object->getId(),
-                        'objectUuid' => $object->getUuid(),
-                        'registerId' => $object->getRegister(),
-                        'schemaId'   => $object->getSchema(),
-                        'lockedBy'   => $object->getLockedBy(),
-                        'lockedAt'   => null,
-                    ]
-                    );
-        } else if ($event instanceof ObjectUnlockedEvent) {
-            $object = $event->getObject();
-            $data   = array_merge(
-                    $data,
-                    [
-                        'eventType'  => 'ObjectUnlocked',
-                        'objectId'   => $object->getId(),
-                        'objectUuid' => $object->getUuid(),
-                        'registerId' => $object->getRegister(),
-                        'schemaId'   => $object->getSchema(),
-                    ]
-                    );
-        } else if ($event instanceof ObjectRevertedEvent) {
-            $object = $event->getObject();
-            $data   = array_merge(
-                    $data,
-                    [
-                        'eventType'  => 'ObjectReverted',
-                        'objectId'   => $object->getId(),
-                        'objectUuid' => $object->getUuid(),
-                        'registerId' => $object->getRegister(),
-                        'schemaId'   => $object->getSchema(),
-                        'revertedTo' => $event->getRevertPoint(),
-                    ]
-                    );
-            // Handle Register events.
-        } else if ($event instanceof RegisterCreatedEvent) {
-            $register = $event->getRegister();
-            $data     = array_merge(
-                    $data,
-                    [
-                        'eventType'     => 'RegisterCreated',
-                        'registerId'    => $register->getId(),
-                        'registerTitle' => $register->getTitle(),
-                        'registerSlug'  => $register->getSlug(),
-                    ]
-                    );
-        } else if ($event instanceof RegisterUpdatedEvent) {
-            $register = $event->getNewRegister();
-            $data     = array_merge(
-                    $data,
-                    [
-                        'eventType'     => 'RegisterUpdated',
-                        'registerId'    => $register->getId(),
-                        'registerTitle' => $register->getTitle(),
-                        'registerSlug'  => $register->getSlug(),
-                    ]
-                    );
-        } else if ($event instanceof RegisterDeletedEvent) {
-            $register = $event->getRegister();
-            $data     = array_merge(
-                    $data,
-                    [
-                        'eventType'     => 'RegisterDeleted',
-                        'registerId'    => $register->getId(),
-                        'registerTitle' => $register->getTitle(),
-                        'registerSlug'  => $register->getSlug(),
-                    ]
-                    );
-            // Handle Schema events.
-        } else if ($event instanceof SchemaCreatedEvent) {
-            $schema = $event->getSchema();
-            $data   = array_merge(
-                    $data,
-                    [
-                        'eventType'     => 'SchemaCreated',
-                        'schemaId'      => $schema->getId(),
-                        'schemaTitle'   => $schema->getTitle(),
-                        'schemaVersion' => $schema->getVersion(),
-                    ]
-                    );
-        } else if ($event instanceof SchemaUpdatedEvent) {
-            $schema = $event->getNewSchema();
-            $data   = array_merge(
-                    $data,
-                    [
-                        'eventType'     => 'SchemaUpdated',
-                        'schemaId'      => $schema->getId(),
-                        'schemaTitle'   => $schema->getTitle(),
-                        'schemaVersion' => $schema->getVersion(),
-                    ]
-                    );
-        } else if ($event instanceof SchemaDeletedEvent) {
-            $schema = $event->getSchema();
-            $data   = array_merge(
-                    $data,
-                    [
-                        'eventType'     => 'SchemaDeleted',
-                        'schemaId'      => $schema->getId(),
-                        'schemaTitle'   => $schema->getTitle(),
-                        'schemaVersion' => $schema->getVersion(),
-                    ]
-                    );
-            // Handle Organisation events.
-        } else if ($event instanceof OrganisationCreatedEvent) {
-            $organisation = $event->getOrganisation();
-            $data         = array_merge(
-                    $data,
-                    [
-                        'eventType'         => 'OrganisationCreated',
-                        'organisationId'    => $organisation->getId(),
-                        'organisationTitle' => $organisation->getName(),
-                    ]
-                    );
-        }//end if
-
-        if (isset($data['eventType']) === false) {
-            $data['eventType'] = 'Unknown';
-            $data['note']      = 'Event type not specifically handled by SoftwareCatalog debug listener';
+        if ($specific !== null) {
+            return array_merge($data, $specific);
         }
 
+        $data['eventType'] = 'Unknown';
+        $data['note']      = 'Event type not specifically handled by SoftwareCatalog debug listener';
         return $data;
 
     }//end extractEventData()
+
+
+    /**
+     * Project Object* events into a debug payload.
+     *
+     * @param Event $event The dispatched event
+     *
+     * @return array|null Payload, or null when the event is not an Object* event
+     */
+    private function extractObjectEventData(Event $event): ?array
+    {
+        if ($event instanceof ObjectCreatedEvent) {
+            $object = $event->getObject();
+            return [
+                'eventType'  => 'ObjectCreated',
+                'objectId'   => $object->getId(),
+                'objectUuid' => $object->getUuid(),
+                'registerId' => $object->getRegister(),
+                'schemaId'   => $object->getSchema(),
+                'owner'      => $object->getOwner(),
+                'created'    => $object->getCreated()?->format('Y-m-d H:i:s'),
+                'objectData' => $this->getSafeObjectData(objectData: $object->getObject()),
+            ];
+        }
+
+        if ($event instanceof ObjectUpdatedEvent) {
+            $newObject = $event->getNewObject();
+            $oldObject = $event->getOldObject();
+            return [
+                'eventType'     => 'ObjectUpdated',
+                'newObjectId'   => $newObject->getId(),
+                'newObjectUuid' => $newObject->getUuid(),
+                'oldObjectId'   => $oldObject?->getId(),
+                'oldObjectUuid' => $oldObject?->getUuid(),
+                'registerId'    => $newObject->getRegister(),
+                'schemaId'      => $newObject->getSchema(),
+                'owner'         => $newObject->getOwner(),
+                'updated'       => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
+                'newObjectData' => $this->getSafeObjectData(objectData: $newObject->getObject()),
+                'oldObjectData' => $oldObject !== null ? $oldObject->getObject() : null,
+            ];
+        }
+
+        if ($event instanceof ObjectDeletedEvent) {
+            $object = $event->getObject();
+            return [
+                'eventType'  => 'ObjectDeleted',
+                'objectId'   => $object->getId(),
+                'objectUuid' => $object->getUuid(),
+                'registerId' => $object->getRegister(),
+                'schemaId'   => $object->getSchema(),
+                'owner'      => $object->getOwner(),
+                'objectData' => $this->getSafeObjectData(objectData: $object->getObject()),
+            ];
+        }
+
+        if ($event instanceof ObjectLockedEvent) {
+            $object = $event->getObject();
+            return [
+                'eventType'  => 'ObjectLocked',
+                'objectId'   => $object->getId(),
+                'objectUuid' => $object->getUuid(),
+                'registerId' => $object->getRegister(),
+                'schemaId'   => $object->getSchema(),
+                'lockedBy'   => $object->getLockedBy(),
+                'lockedAt'   => null,
+            ];
+        }
+
+        if ($event instanceof ObjectUnlockedEvent) {
+            $object = $event->getObject();
+            return [
+                'eventType'  => 'ObjectUnlocked',
+                'objectId'   => $object->getId(),
+                'objectUuid' => $object->getUuid(),
+                'registerId' => $object->getRegister(),
+                'schemaId'   => $object->getSchema(),
+            ];
+        }
+
+        if ($event instanceof ObjectRevertedEvent) {
+            $object = $event->getObject();
+            return [
+                'eventType'  => 'ObjectReverted',
+                'objectId'   => $object->getId(),
+                'objectUuid' => $object->getUuid(),
+                'registerId' => $object->getRegister(),
+                'schemaId'   => $object->getSchema(),
+                'revertedTo' => $event->getRevertPoint(),
+            ];
+        }
+
+        return null;
+
+    }//end extractObjectEventData()
+
+
+    /**
+     * Project Register* events into a debug payload.
+     *
+     * @param Event $event The dispatched event
+     *
+     * @return array|null Payload, or null when not a Register* event
+     */
+    private function extractRegisterEventData(Event $event): ?array
+    {
+        if ($event instanceof RegisterCreatedEvent) {
+            $register = $event->getRegister();
+            return [
+                'eventType'     => 'RegisterCreated',
+                'registerId'    => $register->getId(),
+                'registerTitle' => $register->getTitle(),
+                'registerSlug'  => $register->getSlug(),
+            ];
+        }
+
+        if ($event instanceof RegisterUpdatedEvent) {
+            $register = $event->getNewRegister();
+            return [
+                'eventType'     => 'RegisterUpdated',
+                'registerId'    => $register->getId(),
+                'registerTitle' => $register->getTitle(),
+                'registerSlug'  => $register->getSlug(),
+            ];
+        }
+
+        if ($event instanceof RegisterDeletedEvent) {
+            $register = $event->getRegister();
+            return [
+                'eventType'     => 'RegisterDeleted',
+                'registerId'    => $register->getId(),
+                'registerTitle' => $register->getTitle(),
+                'registerSlug'  => $register->getSlug(),
+            ];
+        }
+
+        return null;
+
+    }//end extractRegisterEventData()
+
+
+    /**
+     * Project Schema* events into a debug payload.
+     *
+     * @param Event $event The dispatched event
+     *
+     * @return array|null Payload, or null when not a Schema* event
+     */
+    private function extractSchemaEventData(Event $event): ?array
+    {
+        if ($event instanceof SchemaCreatedEvent) {
+            $schema = $event->getSchema();
+            return [
+                'eventType'     => 'SchemaCreated',
+                'schemaId'      => $schema->getId(),
+                'schemaTitle'   => $schema->getTitle(),
+                'schemaVersion' => $schema->getVersion(),
+            ];
+        }
+
+        if ($event instanceof SchemaUpdatedEvent) {
+            $schema = $event->getNewSchema();
+            return [
+                'eventType'     => 'SchemaUpdated',
+                'schemaId'      => $schema->getId(),
+                'schemaTitle'   => $schema->getTitle(),
+                'schemaVersion' => $schema->getVersion(),
+            ];
+        }
+
+        if ($event instanceof SchemaDeletedEvent) {
+            $schema = $event->getSchema();
+            return [
+                'eventType'     => 'SchemaDeleted',
+                'schemaId'      => $schema->getId(),
+                'schemaTitle'   => $schema->getTitle(),
+                'schemaVersion' => $schema->getVersion(),
+            ];
+        }
+
+        return null;
+
+    }//end extractSchemaEventData()
+
+
+    /**
+     * Project Organisation* events into a debug payload.
+     *
+     * @param Event $event The dispatched event
+     *
+     * @return array|null Payload, or null when not an Organisation* event
+     */
+    private function extractOrganisationEventData(Event $event): ?array
+    {
+        if ($event instanceof OrganisationCreatedEvent) {
+            $organisation = $event->getOrganisation();
+            return [
+                'eventType'         => 'OrganisationCreated',
+                'organisationId'    => $organisation->getId(),
+                'organisationTitle' => $organisation->getName(),
+            ];
+        }
+
+        return null;
+
+    }//end extractOrganisationEventData()
 
     /**
      * Get safe object data for logging (truncated if too large)

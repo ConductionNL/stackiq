@@ -3,12 +3,15 @@
 /**
  * Service for handling settings-related operations in the SoftwareCatalog.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: 1.0.0
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: 1.0.0
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -16,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -33,12 +37,13 @@ use Symfony\Component\Mime\Address;
  * Provides functionality for retrieving, saving, and loading settings,
  * as well as managing configuration for different object types.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: 1.0.0
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: 1.0.0
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -54,9 +59,7 @@ use Symfony\Component\Mime\Address;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
+ * @SuppressWarnings(PHPMD.StaticAccess)             — Transport::fromDsn is Symfony Mailer's static factory pattern
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -102,18 +105,20 @@ class SettingsService
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig         $config     App configuration interface
-     * @param IRequest           $request    Request interface
-     * @param ContainerInterface $container  Container for dependency injection
-     * @param IAppManager        $appManager App manager interface
-     * @param LoggerInterface    $logger     Logger interface
+     * @param IAppConfig         $config       App configuration interface
+     * @param IRequest           $request      Request interface
+     * @param ContainerInterface $container    Container for dependency injection
+     * @param IAppManager        $appManager   App manager interface
+     * @param LoggerInterface    $logger       Logger interface
+     * @param IGroupManager      $groupManager Group manager interface
      */
     public function __construct(
         private readonly IAppConfig $config,
         private readonly IRequest $request,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IGroupManager $groupManager
     ) {
         $this->appName = 'softwarecatalog';
     }//end __construct()
@@ -124,6 +129,7 @@ class SettingsService
      * @param string|null $minVersion Minimum required version
      *
      * @return bool True if OpenRegister is installed and meets version requirements
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-1
      */
     public function isOpenRegisterInstalled(?string $minVersion=self::MIN_OPENREGISTER_VERSION): bool
     {
@@ -155,6 +161,7 @@ class SettingsService
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available
      *
      * @throws \RuntimeException If the service is not available
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-1
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -169,6 +176,7 @@ class SettingsService
      * Get the OpenRegister RegisterService.
      *
      * @return \OCA\OpenRegister\Service\RegisterService|null The RegisterService instance or null if not available.
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-1
      */
     public function getRegisterService(): ?\OCA\OpenRegister\Service\RegisterService
     {
@@ -185,6 +193,7 @@ class SettingsService
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available
      *
      * @throws \RuntimeException If the service is not available
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-1
      */
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
@@ -196,11 +205,46 @@ class SettingsService
     }//end getConfigurationService()
 
     /**
+     * Attempts to retrieve the RegisterResolverService from the container.
+     *
+     * The resolver centralises `<context>_register` / `<context>_schema` / `<context>_property`
+     * config-key reads so per-install admin overrides (and request-scoped caching + tenant
+     * awareness) behave identically across consumer apps. Returns `null` when OpenRegister
+     * is not installed, or when the OR version pre-dates the resolver class (graceful
+     * fallback — callers must consult their existing `getValueString` path in that case).
+     *
+     * @return \OCA\OpenRegister\Service\RegisterResolverService|null The resolver or null.
+     *
+     * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
+     */
+    public function getRegisterResolverService(): ?\OCA\OpenRegister\Service\RegisterResolverService
+    {
+        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
+            return null;
+        }
+
+        if (class_exists('\OCA\OpenRegister\Service\RegisterResolverService') === false) {
+            // OR is installed but pre-dates the resolver (shipped on OR development 2026-06-12,
+            // commit 50a6a0afc). Caller falls back to the legacy IAppConfig path.
+            return null;
+        }
+
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\RegisterResolverService');
+        } catch (\Throwable $e) {
+            // Container resolution may fail in test contexts where OR services are not wired.
+            return null;
+        }
+    }//end getRegisterResolverService()
+
+    /**
      * Retrieve the current settings
      *
      * @return array The current settings configuration
      *
      * @throws \RuntimeException If settings retrieval fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-4
      */
     public function getSettings(): array
     {
@@ -261,9 +305,10 @@ class SettingsService
                     $rawRegisters = array_map(
                             function ($register) {
                                 if (is_object($register) === true && method_exists($register, 'jsonSerialize') === true) {
+                                    return $register->jsonSerialize();
                                 }
 
-                                    return (array) $register;
+                                return (array) $register;
                             },
                             $rawRegisters
                             );
@@ -421,6 +466,8 @@ class SettingsService
      * @return array The updated settings configuration
      *
      * @throws \RuntimeException If settings update fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-4
      */
     public function updateSettings(array $data): array
     {
@@ -483,6 +530,10 @@ class SettingsService
      * @return array The auto-configuration results.
      *
      * @throws \RuntimeException If auto-configuration fails
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $force is a simple re-import toggle
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-4
      */
     public function autoConfigure(bool $force=false): array
     {
@@ -498,6 +549,7 @@ class SettingsService
      * @return array The updated configuration
      *
      * @throws \RuntimeException If auto-configuration fails
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function autoConfigureAfterImport(): array
     {
@@ -604,6 +656,7 @@ class SettingsService
      * schema and register IDs for pages, menus, and themes from the publication register.
      *
      * @return array Configuration result with success status and configured settings
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function configureOpenCatalogi(): array
     {
@@ -743,6 +796,7 @@ class SettingsService
      * @param string $objectType The object type (organization, contact, gebruiker, contactpersoon)
      *
      * @return int|null The schema ID or null if not configured
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-1
      */
     public function getSchemaIdForObjectType(string $objectType): ?int
     {
@@ -858,8 +912,32 @@ class SettingsService
         }
 
         // Fall back to generic configuration for backward compatibility.
+        // Prefer the OR RegisterResolverService when available so per-install admin
+        // overrides go through the same `<context>_schema` resolution pipeline used by
+        // every other Conduction app (request-scoped caching + tenant-aware). Falls back
+        // to the bare IAppConfig read when OR is absent or the resolver pre-dates W21-B.
+        // @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
         if ($result === null) {
-            $schemaId = $this->config->getValueString($this->appName, "{$objectType}_schema", '');
+            $resolver = $this->getRegisterResolverService();
+            $schemaId = '';
+
+            if ($resolver !== null) {
+                try {
+                    $schemaId = $resolver->resolveSchemaId(
+                        appId: $this->appName,
+                        configKey: "{$objectType}_schema",
+                        default: '',
+                    );
+                } catch (\Throwable $e) {
+                    // MissingConfigException or transient resolver failure — fall through to legacy read.
+                    $schemaId = '';
+                }
+            }
+
+            if ($schemaId === '') {
+                $schemaId = $this->config->getValueString($this->appName, "{$objectType}_schema", '');
+            }
+
             if (empty($schemaId) === false) {
                 $result = (int) $schemaId;
             }
@@ -900,6 +978,7 @@ class SettingsService
      * @param string $objectType The object type (organization, contact, gebruiker)
      *
      * @return int|null The register ID or null if not configured
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-1
      */
     public function getRegisterIdForObjectType(string $objectType): ?int
     {
@@ -936,11 +1015,36 @@ class SettingsService
             }
         }
 
-        // Fallback to legacy per-object-type register config.
+        // Fallback to legacy per-object-type register config — route through the OR
+        // RegisterResolverService when available so per-install admin overrides flow
+        // through the same `<context>_register` resolution pipeline used by every
+        // other Conduction app (request-scoped caching + tenant-aware). Falls back
+        // to the bare IAppConfig read when OR is absent or the resolver pre-dates W21-B.
+        // @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
         if ($result === null) {
-            $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
-                $result = null;
+            $resolver   = $this->getRegisterResolverService();
+            $registerId = '';
+
+            if ($resolver !== null) {
+                try {
+                    $registerId = $resolver->resolveRegisterId(
+                        appId: $this->appName,
+                        configKey: "{$objectType}_register",
+                        default: '',
+                    );
+                } catch (\Throwable $e) {
+                    // MissingConfigException or transient resolver failure — fall through to legacy read.
+                    $registerId = '';
+                }
+            }
+
+            if ($registerId === '') {
+                $registerId = $this->config->getValueString($this->appName, "{$objectType}_register", '');
+            }
+
+            $result = null;
             if (empty($registerId) === false) {
+                $result = (int) $registerId;
             }
         }
 
@@ -966,6 +1070,7 @@ class SettingsService
      * cached values don't become stale.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function clearConfigurationCache(): void
     {
@@ -987,6 +1092,7 @@ class SettingsService
      * Gets the configured register ID for the voorzieningen register
      *
      * @return int|null The register ID or null if not configured
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-1
      */
     public function getVoorzieningenRegisterId(): ?int
     {
@@ -1101,6 +1207,7 @@ class SettingsService
      * Checks if all required object types are configured
      *
      * @return bool True if all object types have schemas configured
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function isFullyConfigured(): bool
     {
@@ -1121,33 +1228,42 @@ class SettingsService
      * Gets configuration status for each object type
      *
      * @return array Configuration status information
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function getConfigurationStatus(): array
     {
-        // Use the correct object type names that match the schema configuration.
-        $objectTypes = ['organization', 'organisatie', 'contact', 'contactpersoon'];
-        $status      = [];
-
-        // Check organization (can be in AMEF as 'organization' or Voorzieningen as 'organisatie').
-        $orgSchemaId            = $this->getSchemaIdForObjectType(objectType: 'organization');
-        $orgRegisterId          = $this->getRegisterIdForObjectType(objectType: 'organization');
-        $status['organization'] = [
-            'configured' => empty($orgSchemaId) === false && empty($orgRegisterId) === false,
-            'schemaId'   => $orgSchemaId,
-            'registerId' => $orgRegisterId,
+        return [
+            'organization' => $this->buildObjectTypeStatusEntry(objectType: 'organization'),
+            'contact'      => $this->buildObjectTypeStatusEntry(objectType: 'contactpersoon'),
         ];
-
-        // Check contact (stored as 'contactpersoon' in Voorzieningen).
-        $contactSchemaId   = $this->getSchemaIdForObjectType(objectType: 'contactpersoon');
-        $contactRegisterId = $this->getRegisterIdForObjectType(objectType: 'contactpersoon');
-        $status['contact'] = [
-            'configured' => empty($contactSchemaId) === false && empty($contactRegisterId) === false,
-            'schemaId'   => $contactSchemaId,
-            'registerId' => $contactRegisterId,
-        ];
-
-        return $status;
     }//end getConfigurationStatus()
+
+
+    /**
+     * Builds a single object-type status entry (configured/schemaId/registerId).
+     *
+     * Extracted from getConfigurationStatus() (W31 method-decomposition 1.5) —
+     * collapses the duplicated three-line "lookup + array literal" block that
+     * was repeated per object type.
+     *
+     * @param string $objectType Schema object type slug ('organization',
+     *                           'contactpersoon', etc.)
+     *
+     * @return array{configured: bool, schemaId: ?int, registerId: ?int}
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-1-5
+     */
+    private function buildObjectTypeStatusEntry(string $objectType): array
+    {
+        $schemaId   = $this->getSchemaIdForObjectType(objectType: $objectType);
+        $registerId = $this->getRegisterIdForObjectType(objectType: $objectType);
+
+        return [
+            'configured' => (empty($schemaId) === false && empty($registerId) === false),
+            'schemaId'   => $schemaId,
+            'registerId' => $registerId,
+        ];
+    }//end buildObjectTypeStatusEntry()
 
     /**
      * Initializes the app with all required components
@@ -1155,6 +1271,7 @@ class SettingsService
      * @param string|null $minOpenRegisterVersion Minimum required OpenRegister version
      *
      * @return array The initialization results
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function initialize(?string $minOpenRegisterVersion=self::MIN_OPENREGISTER_VERSION): array
     {
@@ -1337,6 +1454,9 @@ class SettingsService
      * @return array The loaded settings configuration
      *
      * @throws \RuntimeException If settings loading fails
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $force is a simple re-import toggle
+     * @spec                                        openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function loadSettings(bool $force=false): array
     {
@@ -1350,6 +1470,36 @@ class SettingsService
                 $softwareCatalogSettings = json_decode($softwareCatalogContent, true);
 
                 if (json_last_error() === JSON_ERROR_NONE) {
+                    // ADR-037: merge modular register fragments from Settings/register.d/*.json.
+                    // Each OpenSpec change drops its own fragment file instead of editing this
+                    // monolith, so concurrent builds touch disjoint files (no merge conflicts).
+                    // OpenAPI `components.schemas` / `paths` are keyed objects, so disjoint
+                    // fragments union cleanly by key.
+                    $fragmentDir = __DIR__.'/../Settings/register.d';
+                    $fragmentSig = '';
+                    if (is_dir($fragmentDir) === true) {
+                        $fragmentFiles = glob($fragmentDir.'/*.json');
+                        sort($fragmentFiles);
+                        foreach ($fragmentFiles as $fragmentFile) {
+                            $fragmentContent = file_get_contents($fragmentFile);
+                            if ($fragmentContent === false) {
+                                continue;
+                            }
+
+                            $fragmentData = json_decode($fragmentContent, true);
+                            if (json_last_error() !== JSON_ERROR_NONE) {
+                                $this->logger->warning(
+                                    'SettingsService: skipping malformed register fragment '.basename($fragmentFile)
+                                    .': '.json_last_error_msg()
+                                );
+                                continue;
+                            }
+
+                            $softwareCatalogSettings = self::deepMergeConfig(base: $softwareCatalogSettings, overlay: $fragmentData);
+                            $fragmentSig            .= basename($fragmentFile).':'.md5($fragmentContent).';';
+                        }
+                    }//end if
+
                     $results['softwarecatalog'] = $softwareCatalogSettings;
 
                     // Import via configuration service if available with version checking.
@@ -1359,6 +1509,12 @@ class SettingsService
                         // Use the configuration file's own version (from info.version) for change detection.
                         // This ensures changes to the JSON file trigger re-import even if app version is unchanged.
                         $configVersion = $softwareCatalogSettings['info']['version'] ?? '0.0.0';
+
+                        // Fold the fragment signature into the version so OpenRegister's
+                        // version-gated importFromApp re-imports whenever fragments change.
+                        if ($fragmentSig !== '') {
+                            $configVersion .= '+frag.'.substr(md5($fragmentSig), 0, 8);
+                        }
 
                         // Log the import attempt for debugging.
                         $this->logger->info(
@@ -1422,6 +1578,7 @@ class SettingsService
      * Gets the list of generic user groups from configuration
      *
      * @return array Array of generic user groups
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getGenericUserGroups(): array
     {
@@ -1437,9 +1594,10 @@ class SettingsService
 
         $groups = json_decode($groupsJson, true);
         if (is_array($groups) === true) {
+            return $groups;
         }
 
-            return [];
+        return [];
     }//end getGenericUserGroups()
 
     /**
@@ -1448,6 +1606,7 @@ class SettingsService
      * @param array $groups Array of generic user groups
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function setGenericUserGroups(array $groups): void
     {
@@ -1466,6 +1625,7 @@ class SettingsService
      * Gets the list of organization admin groups from configuration
      *
      * @return array Array of organization admin groups
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getOrganizationAdminGroups(): array
     {
@@ -1481,6 +1641,7 @@ class SettingsService
      * @param array $groups Array of organization admin groups
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function setOrganizationAdminGroups(array $groups): void
     {
@@ -1499,6 +1660,7 @@ class SettingsService
      * Gets the list of super user groups from configuration
      *
      * @return array Array of super user groups
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getSuperUserGroups(): array
     {
@@ -1514,9 +1676,10 @@ class SettingsService
 
         $groups = json_decode($groupsJson, true);
         if (is_array($groups) === true) {
+            return $groups;
         }
 
-            return [];
+        return [];
     }//end getSuperUserGroups()
 
     /**
@@ -1525,6 +1688,7 @@ class SettingsService
      * @param array $groups Array of super user groups
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function setSuperUserGroups(array $groups): void
     {
@@ -1545,6 +1709,7 @@ class SettingsService
      * @param array $groups Array of group names to validate
      *
      * @return array Array with validation results
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function validateGroups(array $groups): array
     {
@@ -1580,6 +1745,7 @@ class SettingsService
      * This is the public method that creates user groups and returns status information.
      *
      * @return array Results of user group creation and configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function createAndConfigureUserGroups(): array
     {
@@ -1595,7 +1761,7 @@ class SettingsService
             ];
 
             // Get the group manager.
-            $groupManager = \OC::$server->getGroupManager();
+            $groupManager = $this->groupManager;
 
             // Define the required groups (matching role-based system).
             $requiredGroups = [
@@ -1630,7 +1796,7 @@ class SettingsService
 
                 // Create the group.
                 $group = $groupManager->createGroup($groupId);
-                if ($group !== false) {
+                if ($group !== null) {
                     $result['created'][] = $groupId;
                     $this->logger->info("SettingsService: Created user group: {$groupId}");
                 } else {
@@ -1716,7 +1882,7 @@ class SettingsService
             $this->logger->info('Starting creation of required user groups');
 
             // Get the group manager.
-            $groupManager = \OC::$server->getGroupManager();
+            $groupManager = $this->groupManager;
 
             // Define the required groups (matching role-based system).
             $requiredGroups = [
@@ -1754,7 +1920,7 @@ class SettingsService
 
                 // Create the group.
                 $group = $groupManager->createGroup($groupId);
-                if ($group !== false) {
+                if ($group !== null) {
                     $createdGroups[] = $groupId;
                     $this->logger->info("Created user group: {$groupId}");
                 } else {
@@ -1804,6 +1970,7 @@ class SettingsService
      * Gets all available groups with their information
      *
      * @return array Array of group information
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getAllGroups(): array
     {
@@ -1812,7 +1979,7 @@ class SettingsService
         // Get group manager if possible.
         if ($this->appManager->isInstalled('user_management') === true) {
             try {
-                $groupManager = \OC::$server->getGroupManager();
+                $groupManager = $this->groupManager;
                 $allGroups    = $groupManager->search('');
 
                 foreach ($allGroups as $group) {
@@ -1835,6 +2002,7 @@ class SettingsService
      * Gets email configuration settings
      *
      * @return array Email settings configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function getEmailSettings(): array
     {
@@ -1875,11 +2043,6 @@ class SettingsService
             'userCreationEnabled'             => $this->config->getValueString(
                 $app,
                     'email_user_creation_enabled',
-                    'true'
-            ) === 'true',
-            'userPasswordEnabled'             => $this->config->getValueString(
-                $app,
-                    'email_user_password_enabled',
                     'true'
             ) === 'true',
             'userOrganisationEnabled'         => $this->config->getValueString(
@@ -1982,7 +2145,6 @@ class SettingsService
                 'organization_registration' => $this->getEmailTemplate(templateName: 'organization_registration'),
                 'organization_activation'   => $this->getEmailTemplate(templateName: 'organization_activation'),
                 'user_creation'             => $this->getEmailTemplate(templateName: 'user_creation'),
-                'user_password'             => $this->getEmailTemplate(templateName: 'user_password'),
             ],
         ];
 
@@ -2009,6 +2171,7 @@ class SettingsService
      * @param array $emailSettings Email settings to update
      *
      * @return array Updated email settings
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function updateEmailSettings(array $emailSettings): array
     {
@@ -2020,7 +2183,6 @@ class SettingsService
             'organizationRegistrationEnabled' => 'email_org_registration_enabled',
             'organizationActivationEnabled'   => 'email_org_activation_enabled',
             'userCreationEnabled'             => 'email_user_creation_enabled',
-            'userPasswordEnabled'             => 'email_user_password_enabled',
             'userOrganisationEnabled'         => 'email_user_organisation_enabled',
 
             // Symfony Mailer transport configuration.
@@ -2052,23 +2214,32 @@ class SettingsService
             'mailjetApiKey'                   => 'email_mailjet_api_key',
             'mailjetSecretKey'                => 'email_mailjet_secret_key',
         ];
+        // Secret fields that are masked in GET responses — skip any value that is the mask placeholder.
+        $secretFields    = ['smtpPassword', 'sendgridApiKey', 'mailgunApiKey', 'postmarkApiKey', 'sesSecretKey', 'mailjetSecretKey'];
         $updatedSettings = [];
 
         foreach ($allowedSettings as $settingKey => $configKey) {
             if (array_key_exists($settingKey, $emailSettings) === true) {
                 $value = $emailSettings[$settingKey];
 
+                // Skip masked placeholder — the client is echoing back the redacted value; preserve the real stored secret.
+                if (in_array($settingKey, $secretFields, true) === true && $value === '••••••••') {
+                    continue;
+                }
+
                 // Convert boolean values to strings.
                 if (is_bool($value) === true) {
-                        $value = 'false';
                     if ($value === true) {
+                        $value = 'true';
+                    } else {
+                        $value = 'false';
                     }
                 }
 
                 $this->config->setValueString($this->appName, $configKey, (string) $value);
                 $updatedSettings[$settingKey] = $this->config->getValueString($this->appName, $configKey);
             }
-        }
+        }//end foreach
 
         $this->logger->info(
             'Email settings updated successfully',
@@ -2086,6 +2257,7 @@ class SettingsService
      * @param string $templateName The template name (organization_registration, organization_activation, user_creation)
      *
      * @return string The template content
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function getEmailTemplate(string $templateName): string
     {
@@ -2102,6 +2274,7 @@ class SettingsService
      * @param string $templateContent The template content
      *
      * @return bool True if update was successful
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function updateEmailTemplate(string $templateName, string $templateContent): bool
     {
@@ -2134,6 +2307,7 @@ class SettingsService
      * @param string $templateName The template name
      *
      * @return string Default template content
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function getDefaultEmailTemplate(string $templateName): string
     {
@@ -2180,20 +2354,6 @@ class SettingsService
 <p>Heeft u vragen over uw account? Neem dan contact met ons op.</p>
 <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
             ',
-            'user_password'             => '
-<h1>Uw wachtwoord voor de Software Catalogus</h1>
-<p>Beste {{ user.name }},</p>
-<p>Uw wachtwoord voor de Software Catalogus is aangepast.</p>
-<p>Uw logingegevens:</p>
-<ul>
-    <li>E-mailadres: {{ user.email }}</li>
-    <li>Gebruikersnaam: {{ user.username }}</li>
-    <li>Nieuw wachtwoord: {{ user.password }}</li>
-</ul>
-<p>U kunt nu inloggen met uw nieuwe wachtwoord.</p>
-<p>We raden u aan om uw wachtwoord te wijzigen na het eerste inloggen.</p>
-<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
-            ',
         ];
 
         return $templates[$templateName] ?? '';
@@ -2205,6 +2365,7 @@ class SettingsService
      * @param string $templateName The template name
      *
      * @return array Available template variables
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function getEmailTemplateVariables(string $templateName): array
     {
@@ -2227,13 +2388,6 @@ class SettingsService
                 'user.username'          => 'Username',
                 'user.organization.name' => 'Organization name (if applicable)',
             ],
-            'user_password'             => [
-                'user.name'              => 'User display name',
-                'user.email'             => 'User email address',
-                'user.username'          => 'Username',
-                'user.password'          => 'Auto-generated password',
-                'user.organization.name' => 'Organization name (if applicable)',
-            ],
         ];
 
         return $variables[$templateName] ?? [];
@@ -2243,6 +2397,7 @@ class SettingsService
      * Gets debug information for settings
      *
      * @return array Debug information
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getDebugInfo(): array
     {
@@ -2326,6 +2481,7 @@ class SettingsService
      * @param array  $emailSettings The email settings to use
      *
      * @return array Result of the test email
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function sendTestEmail(string $email, array $emailSettings=[]): array
     {
@@ -2472,6 +2628,7 @@ class SettingsService
      * @param array $emailSettings The email settings to test
      *
      * @return array Result of the connection test
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function testEmailConnection(array $emailSettings=[]): array
     {
@@ -2612,8 +2769,10 @@ class SettingsService
 
         switch ($transportType) {
             case 'smtp':
-                    $usernameValue = 'none';
                 if (empty($emailSettings['smtpUsername']) === false) {
+                    $usernameValue = 'configured';
+                } else {
+                    $usernameValue = 'none';
                 }
                 return [
                     'type'       => 'SMTP',
@@ -2789,8 +2948,8 @@ class SettingsService
 
         $dsn = sprintf(
             'smtp://%s:%s@%s:%d',
-            urlencode($username),
-            urlencode($password),
+            rawurlencode($username),
+            rawurlencode($password),
             $host,
             $port
         );
@@ -2799,8 +2958,10 @@ class SettingsService
             $dsn .= '?encryption='.$encryption;
         }
 
-            $encSuffix = '';
         if (empty($encryption) === false && $encryption !== 'none') {
+            $encSuffix = '?encryption='.$encryption;
+        } else {
+            $encSuffix = '';
         }
 
         $dsnPattern = sprintf('smtp://***:***@%s:%d%s', $host, $port, $encSuffix);
@@ -2909,6 +3070,7 @@ class SettingsService
      *
      * @return array Version information with app and configuration versions.
      * @throws \RuntimeException If version retrieval fails.
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getVersionInfo(): array
     {
@@ -2951,8 +3113,10 @@ class SettingsService
             $openRegisterInstalled = $this->isOpenRegisterInstalled();
             $openRegisterEnabled   = $openRegisterInstalled && $this->isOpenRegisterEnabled();
 
-                $versionComparisonValue = null;
             if ($storedConfigVersion !== null) {
+                $versionComparisonValue = version_compare($currentAppVersion, $storedConfigVersion);
+            } else {
+                $versionComparisonValue = null;
             }
 
             $versionInfo = [
@@ -2993,6 +3157,7 @@ class SettingsService
      * flags and configurations, then performs import and auto-configuration.
      *
      * @return array The force update results
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function forceUpdate(): array
     {
@@ -3034,8 +3199,10 @@ class SettingsService
                     );
 
             // Return concise response to avoid serialization issues with large nested structures.
-                $messageValue = 'Force update completed but configuration needs attention';
             if ($success === true) {
+                $messageValue = 'Force update completed successfully';
+            } else {
+                $messageValue = 'Force update completed but configuration needs attention';
             }
 
             return [
@@ -3077,6 +3244,9 @@ class SettingsService
      * @param bool $resetConfiguration Whether to also clear schema/register settings
      *
      * @return array The reset results
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $resetConfiguration is a simple scope toggle
+     * @spec                                        openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function resetAutoConfiguration(bool $resetConfiguration=false): array
     {
@@ -3148,6 +3318,9 @@ class SettingsService
      * @param bool $forceImport Whether to force import regardless of version.
      *
      * @return array The import results with success/error information.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $forceImport is a simple re-import toggle
+     * @spec                                        openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function manualImport(bool $forceImport=false): array
     {
@@ -3180,8 +3353,10 @@ class SettingsService
             // If force import is requested or auto-config not completed, reset auto-configuration flag.
             if ($forceImport === true || $versionInfo['autoConfigCompleted'] === false) {
                 $this->config->setValueString($this->appName, 'auto_config_completed', 'false');
-                    $reasonValue = 'auto_config_not_completed';
                 if ($forceImport === true) {
+                    $reasonValue = 'force_import_requested';
+                } else {
+                    $reasonValue = 'auto_config_not_completed';
                 }
 
                 $this->logger->info(
@@ -3284,6 +3459,9 @@ class SettingsService
      * @param bool $force Whether to force configuration loading.
      *
      * @return array Consolidated configuration results
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $force is a simple re-import toggle
+     * @spec                                        openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function performConsolidatedAutoConfiguration(bool $force=false): array
     {
@@ -3683,9 +3861,10 @@ class SettingsService
             $registers = array_map(
                     function ($register) {
                         if (($register instanceof \OCA\OpenRegister\Db\Register)) {
+                            return $register->jsonSerialize();
                         }
 
-                            return (array) $register;
+                        return (array) $register;
                     },
                     $registers
                     );
@@ -3750,8 +3929,9 @@ class SettingsService
                 }
             }//end foreach
 
-                $targetRegister = $candidate;
+            $targetRegister = $candidate;
             if (isset($best) === true) {
+                $targetRegister = $best;
             }
 
             if ($targetRegister === null) {
@@ -3777,8 +3957,9 @@ class SettingsService
                 $allowed = ['organization','element','relation','view','model','property-definition'];
                 if (in_array($slug, $allowed, true) === true) {
                     // Handle property-definition schema with underscore in config key.
-                        $configKey = $slug.'_schema';
+                    $configKey = $slug.'_schema';
                     if ($slug === 'property-definition') {
+                        $configKey = 'property_definition_schema';
                     }
 
                     $config[$configKey] = (string) $schema['id'];
@@ -3858,6 +4039,7 @@ class SettingsService
      * Get consolidated configuration as JSON objects
      *
      * @return array The consolidated configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function getConsolidatedConfiguration(): array
     {
@@ -3867,7 +4049,6 @@ class SettingsService
             'organization_registration' => $this->getEmailTemplate(templateName: 'organization_registration'),
             'organization_activation'   => $this->getEmailTemplate(templateName: 'organization_activation'),
             'user_creation'             => $this->getEmailTemplate(templateName: 'user_creation'),
-            'user_password'             => $this->getEmailTemplate(templateName: 'user_password'),
         ];
 
         // Get Voorzieningen and AMEF configs (without object counts for performance).
@@ -3891,6 +4072,7 @@ class SettingsService
      * Get Voorzieningen configuration as JSON object
      *
      * @return array The voorzieningen configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function getVoorzieningenConfig(): array
     {
@@ -3929,6 +4111,7 @@ class SettingsService
      * @param array $config The voorzieningen configuration.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function setVoorzieningenConfig(array $config): void
     {
@@ -4003,6 +4186,7 @@ class SettingsService
      * to ensure consistency and avoid code duplication.
      *
      * @return array The AMEF configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function getAmefConfig(): array
     {
@@ -4011,9 +4195,10 @@ class SettingsService
             $archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
 
             // Use reflection to access the private getAmefConfig method.
+            // setAccessible() is unnecessary on PHP 8.1+ — private methods are
+            // already invokable via reflection without it.
             $reflection = new \ReflectionClass($archiMateService);
             $method     = $reflection->getMethod('getAmefConfig');
-            $method->setAccessible(true);
 
             return $method->invoke($archiMateService);
         } catch (\Exception $e) {
@@ -4075,6 +4260,7 @@ class SettingsService
      * @param array $config The AMEF configuration.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function setAmefConfig(array $config): void
     {
@@ -4097,6 +4283,7 @@ class SettingsService
      * Get Email configuration as JSON object
      *
      * @return array The email configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function getEmailConfig(): array
     {
@@ -4129,6 +4316,7 @@ class SettingsService
      * @param array $config The email configuration.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function setEmailConfig(array $config): void
     {
@@ -4146,6 +4334,7 @@ class SettingsService
      * and ensure consistency in ArchiMate status management.
      *
      * @return array The ArchiMate status with object counts
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getArchiMateStatus(): array
     {
@@ -4383,6 +4572,7 @@ class SettingsService
      * @param array $status The import status.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function setArchiMateImportStatus(array $status): void
     {
@@ -4415,6 +4605,7 @@ class SettingsService
      * @param array $status The export status.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function setArchiMateExportStatus(array $status): void
     {
@@ -4445,6 +4636,7 @@ class SettingsService
      * and ensure consistency in ArchiMate status management.
      *
      * @return array Clear operation result
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function clearArchiMateImportStatus(): array
     {
@@ -4483,6 +4675,7 @@ class SettingsService
      *
      * @return     array Kill operation result
      * @deprecated Use cancelArchiMateImport() instead
+     * @spec       openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function killArchiMateImport(): array
     {
@@ -4521,6 +4714,7 @@ class SettingsService
      * import cancellation. It delegates to ArchiMateService for the actual work.
      *
      * @return array Cancellation result with detailed status
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function cancelArchiMateImport(): array
     {
@@ -4560,6 +4754,7 @@ class SettingsService
      * and ensure consistency in ArchiMate status management.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function clearArchiMateExportStatus(): void
     {
@@ -4587,6 +4782,7 @@ class SettingsService
      * This method reorganizes all the scattered config values into organized JSON objects
      *
      * @return array Compaction results
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function compactToJsonConfiguration(): array
     {
@@ -4815,11 +5011,6 @@ class SettingsService
                         'email_user_creation_enabled',
                         'true'
                 ) === 'true',
-                'user_password_enabled'    => $this->config->getValueString(
-                    $an,
-                        'email_user_password_enabled',
-                        'true'
-                ) === 'true',
                 'test_receiver_override'   => $this->config->getValueString(
                     $an,
                         'test_receiver_override',
@@ -4856,6 +5047,7 @@ class SettingsService
      * This method removes the old scattered config values after successful compaction
      *
      * @return array Cleanup results
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-3
      */
     public function cleanupOldConfiguration(): array
     {
@@ -4941,7 +5133,6 @@ class SettingsService
                 'email_org_registration_enabled',
                 'email_org_activation_enabled',
                 'email_user_creation_enabled',
-                'email_user_password_enabled',
                 'test_receiver_override',
             ];
 
@@ -4984,6 +5175,7 @@ class SettingsService
      * This aggregates all settings data for the main settings endpoint
      *
      * @return array Complete settings data
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function getAllSettings(): array
     {
@@ -5038,6 +5230,7 @@ class SettingsService
      * Get object counts statistics for all configured registers
      *
      * @return array Statistics for all registers with object counts
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getObjectCountsStatistics(): array
     {
@@ -5134,6 +5327,7 @@ class SettingsService
      * This handles template iteration and individual failures
      *
      * @return array All email templates
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function getAllEmailTemplates(): array
     {
@@ -5141,7 +5335,6 @@ class SettingsService
             'organization_registration',
             'organization_activation',
             'user_creation',
-            'user_password',
             'user_organisation',
         ];
         $templates     = [];
@@ -5164,6 +5357,7 @@ class SettingsService
      * @param array $groups Groups to set.
      *
      * @return array Update result with validation.
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function updateGenericUserGroups(array $groups): array
     {
@@ -5205,6 +5399,7 @@ class SettingsService
      * @param array $groups Groups to set.
      *
      * @return array Update result with validation.
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function updateOrganizationAdminGroups(array $groups): array
     {
@@ -5246,6 +5441,7 @@ class SettingsService
      * @param array $groups Groups to set.
      *
      * @return array Update result with validation.
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function updateSuperUserGroups(array $groups): array
     {
@@ -5289,6 +5485,7 @@ class SettingsService
      * Get ArchiMate configuration only
      *
      * @return array ArchiMate configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function getArchiMateConfig(): array
     {
@@ -5322,6 +5519,7 @@ class SettingsService
      * @param array $config ArchiMate configuration data
      *
      * @return array Result of the update operation
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function updateArchiMateConfig(array $config): array
     {
@@ -5352,6 +5550,7 @@ class SettingsService
      * Get email configuration only
      *
      * @return array Email configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function getEmailConfigFocused(): array
     {
@@ -5385,6 +5584,7 @@ class SettingsService
      * @param array $config Email configuration data
      *
      * @return array Result of the update operation
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
      */
     public function updateEmailConfig(array $config): array
     {
@@ -5420,6 +5620,7 @@ class SettingsService
      * Get AMEF configuration only
      *
      * @return array AMEF configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function getAmefConfigFocused(): array
     {
@@ -5451,6 +5652,7 @@ class SettingsService
      * @param array $config AMEF configuration data
      *
      * @return array Result of the update operation
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function updateAmefConfig(array $config): array
     {
@@ -5468,8 +5670,9 @@ class SettingsService
             if (isset($config['register']) === true) {
                 $targetRegisterId = (string) $config['register'];
             } else {
-                    $targetRegisterId = '';
+                $targetRegisterId = '';
                 if (isset($existing['register']) === true) {
+                    $targetRegisterId = (string) $existing['register'];
                 }
             }
 
@@ -5583,6 +5786,7 @@ class SettingsService
      * Get Voorzieningen configuration only
      *
      * @return array Voorzieningen configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function getVoorzieningenConfigFocused(): array
     {
@@ -5614,6 +5818,7 @@ class SettingsService
      * @param array $config Voorzieningen configuration data
      *
      * @return array Result of the update operation
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-2
      */
     public function updateVoorzieningenConfig(array $config): array
     {
@@ -5644,6 +5849,7 @@ class SettingsService
      * Get object counts only (lightweight)
      *
      * @return array Object counts for all registers
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getObjectsCounts(): array
     {
@@ -5676,6 +5882,7 @@ class SettingsService
      * Get object statistics (full statistics with configuration)
      *
      * @return array Full object statistics
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getObjectsStatistics(): array
     {
@@ -5704,6 +5911,7 @@ class SettingsService
      * Get user groups configuration only
      *
      * @return array User groups configuration
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getUserGroupsConfig(): array
     {
@@ -5740,6 +5948,7 @@ class SettingsService
      * @param array $config User groups configuration data
      *
      * @return array Result of the update operation
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function updateUserGroupsConfig(array $config): array
     {
@@ -5827,6 +6036,7 @@ class SettingsService
      *                       - dry_run: Only check what would be created (default: false)
      *
      * @return array Sync results with performance metrics
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function syncOrganisationsToVoorzieningenOptimized(array $options=[]): array
     {
@@ -5945,8 +6155,9 @@ class SettingsService
                 }
 
                 // Prepare organisatie data with forced UUID.
-                    $statusValue = 'Inactief';
+                $statusValue = 'Inactief';
                 if ($organisation->getActive() === true) {
+                    $statusValue = 'Actief';
                 }
 
                 $organisationsToCreate[] = [
@@ -6070,13 +6281,15 @@ class SettingsService
                 }//end try
             }//end foreach
 
-            $totalTime = microtime(true) - $startTime;
-                $overallPerformance = 0;
+            $totalTime          = microtime(true) - $startTime;
+            $overallPerformance = 0;
             if ($results['created_count'] > 0) {
+                $overallPerformance = (int) round($results['created_count'] / max($totalTime, 0.001));
             }
 
-                $estimatedImprovementValue = 'baseline';
+            $estimatedImprovementValue = 'baseline';
             if ($overallPerformance > 10) {
+                $estimatedImprovementValue = 'high';
             }
 
             $createdCount  = $results['created_count'];
@@ -6124,9 +6337,11 @@ class SettingsService
         $name = strtolower($organisation->getName());
 
         if (strpos($name, 'gemeente') !== false) {
+            return 'Gemeente';
         }
 
         if (strpos($name, 'provincie') !== false) {
+            return 'Provincie';
         }
 
         if (strpos($name, 'ministerie') !== false) {
@@ -6148,6 +6363,7 @@ class SettingsService
      *             Will be removed in a future version.
      *
      * @return array The cronjob configurations indexed by job name
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getCronjobConfig(): array
     {
@@ -6225,6 +6441,7 @@ class SettingsService
      *
      * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
      *             Will be removed in a future version.
+     * @spec       openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function updateCronjobConfig(array $data): array
     {
@@ -6306,6 +6523,7 @@ class SettingsService
      *
      * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
      *             Will be removed in a future version.
+     * @spec       openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getCronjobContext(string $jobId): ?array
     {
@@ -6348,6 +6566,7 @@ class SettingsService
      *             Will be removed in a future version.
      *
      * @return array List of users with id and display name
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getAvailableUsersForCronjobs(): array
     {
@@ -6414,6 +6633,7 @@ class SettingsService
      *             Will be removed in a future version.
      *
      * @return array List of organisations with uuid and name
+     * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-5
      */
     public function getAvailableOrganisationsForCronjobs(): array
     {
@@ -6458,4 +6678,39 @@ class SettingsService
             ];
         }//end try
     }//end getAvailableOrganisationsForCronjobs()
+
+    /**
+     * Deep-merge a register fragment onto the base config (ADR-037).
+     *
+     * Associative arrays (OpenAPI objects like `components.schemas`, `paths`) are
+     * merged by key union (recursing on shared keys); list arrays are concatenated;
+     * scalars in the fragment overwrite the base. Disjoint fragments never collide.
+     *
+     * @param array<mixed> $base    The accumulated config.
+     * @param array<mixed> $overlay The fragment to merge in.
+     *
+     * @return array<mixed> The merged config.
+     */
+    private static function deepMergeConfig(array $base, array $overlay): array
+    {
+        foreach ($overlay as $key => $value) {
+            if (is_array($value) === true
+                && isset($base[$key]) === true
+                && is_array($base[$key]) === true
+            ) {
+                $baseIsList    = ($base[$key] === [] || array_keys($base[$key]) === range(0, (count($base[$key]) - 1)));
+                $overlayIsList = ($value === [] || array_keys($value) === range(0, (count($value) - 1)));
+                if ($baseIsList === true && $overlayIsList === true) {
+                    $base[$key] = array_merge($base[$key], $value);
+                } else {
+                    $base[$key] = self::deepMergeConfig(base: $base[$key], overlay: $value);
+                }
+            } else {
+                $base[$key] = $value;
+            }
+        }
+
+        return $base;
+
+    }//end deepMergeConfig()
 }//end class

@@ -11,6 +11,8 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -21,6 +23,7 @@ use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -30,7 +33,9 @@ use Psr\Log\LoggerInterface;
  * the matching contactpersoon (by username field) and updates the relevant
  * fields: voornaam, tussenvoegsel, achternaam, functie, e-mailadres.
  *
- * @implements IEventListener<UserProfileUpdatedEvent>
+ * @template T of Event
+ *
+ * @implements IEventListener<T>
  */
 class UserProfileUpdatedEventListener implements IEventListener
 {
@@ -47,9 +52,12 @@ class UserProfileUpdatedEventListener implements IEventListener
 
     /**
      * Constructor for UserProfileUpdatedEventListener.
+     *
+     * @param ContainerInterface $container DI container for lazy service resolution.
      */
-    public function __construct()
-    {
+    public function __construct(
+        private readonly ContainerInterface $container
+    ) {
     }//end __construct()
 
     /**
@@ -58,6 +66,8 @@ class UserProfileUpdatedEventListener implements IEventListener
      * @param Event $event The dispatched event.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     public function handle(Event $event): void
     {
@@ -66,7 +76,7 @@ class UserProfileUpdatedEventListener implements IEventListener
         }
 
         try {
-            $logger  = \OC::$server->get(LoggerInterface::class);
+            $logger  = $this->container->get(LoggerInterface::class);
             $changes = $event->getChanges();
 
             // Check if any of the mapped fields were changed.
@@ -93,7 +103,7 @@ class UserProfileUpdatedEventListener implements IEventListener
             $this->syncToContactpersoon(event: $event, logger: $logger);
         } catch (\Exception $e) {
             try {
-                $logger = \OC::$server->get(LoggerInterface::class);
+                $logger = $this->container->get(LoggerInterface::class);
                 $logger->error(
                         '[UserProfileUpdatedEventListener] Error syncing profile to contactpersoon',
                         [
@@ -117,18 +127,15 @@ class UserProfileUpdatedEventListener implements IEventListener
      *
      * @return void
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
      */
     private function syncToContactpersoon(UserProfileUpdatedEvent $event, LoggerInterface $logger): void
     {
-        $objectService   = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
-        $settingsService = \OC::$server->get(SettingsService::class);
+        $objectService   = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        $settingsService = $this->container->get(SettingsService::class);
 
-        // Get the voorzieningen config for register and schema.
-        $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
-        $register            = $voorzieningenConfig['register'] ?? '';
+        $voorzieningenConfig  = $settingsService->getVoorzieningenConfig();
+        $register             = $voorzieningenConfig['register'] ?? '';
         $contactpersoonSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
 
         if (empty($register) === true || empty($contactpersoonSchema) === true) {
@@ -165,31 +172,13 @@ class UserProfileUpdatedEventListener implements IEventListener
         }
 
         $contactData = $contactpersoon->getObject();
-        $newData     = $event->getNewData();
-        $changes     = $event->getChanges();
-
-        // Build the patch with only changed fields.
-        $patch = [];
-        foreach (self::FIELD_MAP as $userField => $contactField) {
-            if (in_array($userField, $changes, true) === false) {
-                continue;
-            }
-
-            $newValue = $newData[$userField] ?? null;
-            $patch[$contactField] = $newValue ?? '';
-        }
-
-        // Backfill the username field if it was missing (found via email fallback).
-        if (empty($contactData['username']) === true) {
-            $patch['username'] = $userId;
-            $logger->info(
-                    '[UserProfileUpdatedEventListener] Backfilling username on contactpersoon',
-                    [
-                        'userId'           => $userId,
-                        'contactpersoonId' => $contactpersoon->getUuid(),
-                    ]
-                    );
-        }
+        $patch       = $this->buildContactPatch(
+            event:       $event,
+            userId:      $userId,
+            contactData: $contactData,
+            contactpersoonId: $contactpersoon->getUuid(),
+            logger:      $logger
+        );
 
         if (empty($patch) === true) {
             $logger->debug(
@@ -215,26 +204,100 @@ class UserProfileUpdatedEventListener implements IEventListener
         $mergedObject = array_merge($contactData, $patch);
         $contactpersoon->setObject($mergedObject);
 
-        // Regenerate _name metadata from the schema's objectNameField template.
-        // (e.g. "{{ voornaam }} {{ tussenvoegsel }} {{ achternaam }}").
-        // Without this, _name stays stale after field updates because we bypass the full saveObject flow.
-        $schemaMapper         = \OC::$server->get('OCA\OpenRegister\Db\SchemaMapper');
-        $registerMapper       = \OC::$server->get('OCA\OpenRegister\Db\RegisterMapper');
-        $metaHydrationHandler = \OC::$server->get('OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler');
+        $this->persistContactpersoonPatch(
+            contactpersoon: $contactpersoon,
+            register:       (int) $register,
+            schema:         (int) $contactpersoonSchema,
+            logger:         $logger
+        );
+
+        $logger->info(
+                '[UserProfileUpdatedEventListener] Successfully synced user profile to contactpersoon',
+                [
+                    'userId'           => $userId,
+                    'contactpersoonId' => $contactpersoon->getUuid(),
+                    'patchedFields'    => array_keys($patch),
+                ]
+                );
+    }//end syncToContactpersoon()
+
+
+    /**
+     * Build the contactpersoon patch from a profile-updated event.
+     *
+     * Includes only fields that changed (via FIELD_MAP) and a username
+     * backfill when the contactpersoon was found via the email fallback.
+     *
+     * @param UserProfileUpdatedEvent $event            The dispatched event.
+     * @param string                  $userId           The Nextcloud user id.
+     * @param array                   $contactData      The current contactpersoon data.
+     * @param string                  $contactpersoonId The contactpersoon UUID (for logging).
+     * @param LoggerInterface         $logger           Logger for the backfill notice.
+     *
+     * @return array<string,mixed> The patch (may be empty).
+     */
+    private function buildContactPatch(
+        UserProfileUpdatedEvent $event,
+        string $userId,
+        array $contactData,
+        string $contactpersoonId,
+        LoggerInterface $logger
+    ): array {
+        $newData = $event->getNewData();
+        $changes = $event->getChanges();
+
+        $patch = [];
+        foreach (self::FIELD_MAP as $userField => $contactField) {
+            if (in_array($userField, $changes, true) === false) {
+                continue;
+            }
+
+            $newValue             = $newData[$userField] ?? null;
+            $patch[$contactField] = $newValue ?? '';
+        }
+
+        if (empty($contactData['username']) === true) {
+            $patch['username'] = $userId;
+            $logger->info(
+                    '[UserProfileUpdatedEventListener] Backfilling username on contactpersoon',
+                    [
+                        'userId'           => $userId,
+                        'contactpersoonId' => $contactpersoonId,
+                    ]
+                    );
+        }
+
+        return $patch;
+
+    }//end buildContactPatch()
+
+
+    /**
+     * Persist the patched contactpersoon entity, regenerating `_name`
+     * metadata first when the schema is loadable.
+     *
+     * @param object          $contactpersoon The contactpersoon entity.
+     * @param int             $register       The voorzieningen register id.
+     * @param int             $schema         The contactpersoon schema id.
+     * @param LoggerInterface $logger         Logger for hydration warnings.
+     *
+     * @return void
+     */
+    private function persistContactpersoonPatch(
+        object $contactpersoon,
+        int $register,
+        int $schema,
+        LoggerInterface $logger
+    ): void {
+        $schemaMapper         = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+        $registerMapper       = $this->container->get('OCA\OpenRegister\Db\RegisterMapper');
+        $metaHydrationHandler = $this->container->get('OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler');
 
         $schemaEntity   = null;
         $registerEntity = null;
         try {
-            $schemaEntity   = $schemaMapper->find(
-                id: (int) $contactpersoonSchema,
-                _rbac: false,
-                _multitenancy: false
-            );
-            $registerEntity = $registerMapper->find(
-                id: (int) $register,
-                _rbac: false,
-                _multitenancy: false
-            );
+            $schemaEntity   = $schemaMapper->find(id: $schema, _rbac: false, _multitenancy: false);
+            $registerEntity = $registerMapper->find(id: $register, _rbac: false, _multitenancy: false);
         } catch (\Exception $e) {
             $logger->warning(
                     '[UserProfileUpdatedEventListener] Could not load schema/register entities for _name hydration',
@@ -254,20 +317,12 @@ class UserProfileUpdatedEventListener implements IEventListener
                     );
         }
 
-        // Pass register and schema so the magic mapper route is triggered and the.
-        // Per-schema magic table is updated (not just the blob table).
-        $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+        // Pass register and schema so the magic mapper route is triggered and the
+        // per-schema magic table is updated (not just the blob table).
+        $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
         $objectMapper->update(entity: $contactpersoon, register: $registerEntity, schema: $schemaEntity);
 
-        $logger->info(
-                '[UserProfileUpdatedEventListener] Successfully synced user profile to contactpersoon',
-                [
-                    'userId'           => $userId,
-                    'contactpersoonId' => $contactpersoon->getUuid(),
-                    'patchedFields'    => array_keys($patch),
-                ]
-                );
-    }//end syncToContactpersoon()
+    }//end persistContactpersoonPatch()
 
     /**
      * Find a contactpersoon by username, falling back to a case-insensitive email search.

@@ -238,6 +238,7 @@ export default defineComponent({
 	methods: {
 		/**
 		 * Handle save button click
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-4
 		 */
 		handleSave() {
 			this.$emit('save')
@@ -245,6 +246,7 @@ export default defineComponent({
 
 		/**
 		 * Handle refresh button click
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-4
 		 */
 		handleRefresh() {
 			this.$emit('refresh')
@@ -254,68 +256,68 @@ export default defineComponent({
 </script>
 
 <style scoped>
-	.section-title-with-buttons {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		width: 100%;
-	}
-
-.header-buttons {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+.section-title-with-buttons {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
 }
 
-	.title-save-button {
-		margin-left: auto;
-	}
+.header-buttons {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
 
-	.title-refresh-button {
-		margin-left: 8px;
-	}
+.title-save-button {
+	margin-left: auto;
+}
 
-	.always-visible-section {
-		width: 100%;
-	}
+.title-refresh-button {
+	margin-left: 8px;
+}
+
+.always-visible-section {
+	width: 100%;
+}
 
 /* Place header actions container in the top-right corner of the section */
 .section-header-actions {
-    position: absolute;
-    top: 6px; /* align with title baseline */
-    right: 0;
-    z-index: 1;
+	position: absolute;
+	top: 6px; /* align with title baseline */
+	right: 0;
+	z-index: 1;
 }
 
 /* Ensure the parent has relative context */
 .settings-section {
-    position: relative;
+	position: relative;
 }
 
-	.section-content {
-		margin-top: 1rem;
-	}
+.section-content {
+	margin-top: 1rem;
+}
 
-	.loading-icon {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		padding: 2rem;
-	}
+.loading-icon {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 2rem;
+}
 
-	.loading-text {
-		text-align: center;
-		margin-top: -8px;
-		color: var(--color-text-lighter);
-	}
+.loading-text {
+	text-align: center;
+	margin-top: -8px;
+	color: var(--color-text-lighter);
+}
 
-	.info-content {
-		max-width: 600px;
-		line-height: 1.6;
-	}
+.info-content {
+	max-width: 600px;
+	line-height: 1.6;
+}
 
-	/* Responsive */
-	@media (max-width: 768px) {
-		.title-buttons { width: 100%; justify-content: flex-end; }
-	}
+/* Responsive */
+@media (max-width: 768px) {
+	.title-buttons { width: 100%; justify-content: flex-end; }
+}
 </style>

@@ -97,134 +97,12 @@
 		</div>
 
 		<!-- Bulk Sync Dialog -->
-		<NcModal v-if="showSyncDialog" @close="closeBulkSyncDialog">
-			<div class="bulk-sync-dialog">
-				<div class="modal-header">
-					<h2>Bulk Sync Module Standards</h2>
-				</div>
-
-				<div class="modal-content">
-					<!-- Preview Section -->
-					<div v-if="!syncCompleted" class="preview-section">
-						<h3>What will happen:</h3>
-						<ul class="preview-list">
-							<li>Scan all {{ complianceCount }} compliance objects</li>
-							<li>Extract standaardversie references from each compliance object</li>
-							<li>Find the corresponding module for each compliance object</li>
-							<li>Update module standaarden arrays with extracted standaardversie IDs</li>
-							<li>Save modules only if changes are needed</li>
-						</ul>
-
-						<div v-if="bulkSyncLoading" class="loading-section">
-							<NcLoadingIcon :size="24" />
-							<p>Processing compliance objects...</p>
-							<div class="progress-info">
-								<p>Processed: {{ syncProgress.processed }} / {{ syncProgress.total }}</p>
-								<p>Modules updated: {{ syncProgress.modulesUpdated }}</p>
-							</div>
-						</div>
-					</div>
-
-					<!-- Results Section -->
-					<div v-if="syncCompleted" class="results-section">
-						<h3>Sync Results:</h3>
-						<div class="results-stats">
-							<div class="stat-item">
-								<span class="stat-label">Compliance objects processed:</span>
-								<span class="stat-value">{{ syncResults.totalProcessed }}</span>
-							</div>
-							<div class="stat-item">
-								<span class="stat-label">Modules found:</span>
-								<span class="stat-value">{{ syncResults.modulesFound }}</span>
-							</div>
-							<div class="stat-item">
-								<span class="stat-label">Modules updated:</span>
-								<span class="stat-value success-value">{{ syncResults.modulesUpdated }}</span>
-							</div>
-							<div class="stat-item">
-								<span class="stat-label">Modules already up-to-date:</span>
-								<span class="stat-value">{{ syncResults.modulesAlreadyUpToDate || 0 }}</span>
-							</div>
-							<div class="stat-item">
-								<span class="stat-label">Modules with no standards:</span>
-								<span class="stat-value warning-value">{{ syncResults.modulesWithNoStandards || 0 }}</span>
-							</div>
-							<div class="stat-item">
-								<span class="stat-label">Standards added:</span>
-								<span class="stat-value">{{ syncResults.standardsAdded }}</span>
-							</div>
-						</div>
-
-						<!-- Modules Table -->
-						<div v-if="syncResults.modules && syncResults.modules.length > 0" class="modules-table-section">
-							<h4>Processed Modules ({{ syncResults.modules.length }}):</h4>
-							<div class="modules-table-container">
-								<table class="modules-table">
-									<thead>
-										<tr>
-											<th>Module Name</th>
-											<th>Status</th>
-											<th>Reason</th>
-											<th>Compliance Count</th>
-											<th>Standards Count</th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr
-											v-for="module in syncResults.modules"
-											:key="module.uuid"
-											:class="'status-' + module.status">
-											<td class="module-name">
-												{{ module.name }}
-												<span class="module-uuid">{{ module.uuid }}</span>
-											</td>
-											<td class="module-status">
-												<span
-													class="status-badge"
-													:class="'badge-' + module.status">
-													{{ module.status }}
-												</span>
-											</td>
-											<td class="module-reason">
-												{{ module.reason }}
-											</td>
-											<td class="module-count">
-												{{ module.complianceCount }}
-											</td>
-											<td class="module-count">
-												{{ module.standardsCount }}
-											</td>
-										</tr>
-									</tbody>
-								</table>
-							</div>
-						</div>
-
-						<div v-if="syncResults.errors.length > 0" class="errors-section">
-							<h4>Errors:</h4>
-							<ul class="error-list">
-								<li v-for="errorMsg in syncResults.errors" :key="errorMsg">
-									{{ errorMsg }}
-								</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-
-				<div class="modal-actions">
-					<NcButton
-						v-if="!syncCompleted"
-						:disabled="bulkSyncLoading"
-						type="primary"
-						@click="startBulkSync">
-						{{ bulkSyncLoading ? 'Syncing...' : 'Start Sync' }}
-					</NcButton>
-					<NcButton @click="closeBulkSyncDialog">
-						{{ syncCompleted ? 'Close' : 'Cancel' }}
-					</NcButton>
-				</div>
-			</div>
-		</NcModal>
+		<BulkSyncDialog
+			:open="showSyncDialog"
+			:compliance-count="complianceCount"
+			@update:open="showSyncDialog = $event"
+			@loading-change="bulkSyncLoading = $event"
+			@synced="refreshStatistics" />
 	</NcSettingsSection>
 </template>
 
@@ -236,9 +114,9 @@ import {
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
-	NcModal,
 } from '@nextcloud/vue'
 import { useSettingsStore } from '../../../store/modules/settings.js'
+import BulkSyncDialog from '../../../modals/BulkSyncDialog.vue'
 import RefreshIcon from 'vue-material-design-icons/Refresh.vue'
 import ChartLineIcon from 'vue-material-design-icons/ChartLine.vue'
 import SyncIcon from 'vue-material-design-icons/Sync.vue'
@@ -260,12 +138,15 @@ export default defineComponent({
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
-		NcModal,
+		BulkSyncDialog,
 		RefreshIcon,
 		ChartLineIcon,
 		SyncIcon,
 	},
 
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+	 */
 	setup() {
 		const settingsStore = useSettingsStore()
 
@@ -279,50 +160,51 @@ export default defineComponent({
 			// Bulk sync dialog state
 			showSyncDialog: false,
 			bulkSyncLoading: false,
-			syncCompleted: false,
-
-			// Sync progress tracking
-			syncProgress: {
-				processed: 0,
-				total: 0,
-				modulesUpdated: 0,
-			},
-
-			// Sync results
-			syncResults: {
-				totalProcessed: 0,
-				modulesFound: 0,
-				modulesUpdated: 0,
-				standardsAdded: 0,
-				errors: [],
-			},
 		}
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		statistics() {
 			return this.settingsStore.statistics
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		formattedStatistics() {
 			return this.settingsStore.formattedStatistics
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		loadingStats() {
 			return this.settingsStore.loadingStatistics
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		error() {
 			return this.settingsStore.error
 		},
 
 		// Get compliance count for the dialog
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 */
 		complianceCount() {
 			const complianceStat = this.formattedStatistics.find(stat => stat.type === 'Compliancy')
 			return complianceStat ? complianceStat.count : 0
 		},
 	},
 
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+	 */
 	async mounted() {
 		// Load statistics when component mounts
 		await this.refreshStatistics()
@@ -331,6 +213,7 @@ export default defineComponent({
 	methods: {
 		/**
 		 * Refresh statistics data
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		async refreshStatistics() {
 			await this.settingsStore.loadStatistics()
@@ -340,6 +223,7 @@ export default defineComponent({
 		 * Format number with thousand separators
 		 * @param {number} num - Number to format
 		 * @return {string} Formatted number
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		formatNumber(num) {
 			if (num === 0) return '0'
@@ -350,6 +234,7 @@ export default defineComponent({
 		 * Format timestamp for display
 		 * @param {number} timestamp - Unix timestamp
 		 * @return {string} Formatted date/time
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		formatTimestamp(timestamp) {
 			if (!timestamp) return 'Unknown'
@@ -359,87 +244,10 @@ export default defineComponent({
 
 		/**
 		 * Show the bulk sync dialog
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		showBulkSyncDialog() {
 			this.showSyncDialog = true
-			this.syncCompleted = false
-			this.resetSyncState()
-		},
-
-		/**
-		 * Close the bulk sync dialog
-		 */
-		closeBulkSyncDialog() {
-			this.showSyncDialog = false
-			this.syncCompleted = false
-			this.bulkSyncLoading = false
-			this.resetSyncState()
-		},
-
-		/**
-		 * Reset sync state
-		 */
-		resetSyncState() {
-			this.syncProgress = {
-				processed: 0,
-				total: 0,
-				modulesUpdated: 0,
-			}
-			this.syncResults = {
-				totalProcessed: 0,
-				modulesFound: 0,
-				modulesUpdated: 0,
-				standardsAdded: 0,
-				errors: [],
-			}
-		},
-
-		/**
-		 * Start the bulk sync process
-		 */
-		async startBulkSync() {
-			this.bulkSyncLoading = true
-			this.syncProgress.total = this.complianceCount
-
-			try {
-				// Call the backend API to perform bulk sync
-				const response = await this.performBulkSync()
-
-				// Update results
-				this.syncResults = response.data
-				this.syncCompleted = true
-
-				// Refresh statistics to show updated counts
-				await this.refreshStatistics()
-
-			} catch (error) {
-				console.error('Bulk sync failed:', error)
-				this.syncResults.errors.push(`Sync failed: ${error.message}`)
-				this.syncCompleted = true
-			} finally {
-				this.bulkSyncLoading = false
-			}
-		},
-
-		/**
-		 * Perform the bulk sync API call
-		 * @return {Promise} API response
-		 */
-		async performBulkSync() {
-			const response = await fetch('/index.php/apps/softwarecatalog/api/bulk-sync-standards', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-Requested-With': 'XMLHttpRequest',
-				},
-				body: JSON.stringify({}),
-			})
-
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`)
-			}
-
-			return await response.json()
 		},
 	},
 })

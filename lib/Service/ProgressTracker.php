@@ -5,12 +5,13 @@
  * Tracks and reports progress for long-running operations like ArchiMate import/export.
  * Supports real-time streaming via Server-Sent Events.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: 1.0.0
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: 1.0.0
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -24,12 +25,13 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for tracking and reporting progress of long-running operations
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @version  GIT: 1.0.0
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @version   GIT: 1.0.0
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 class ProgressTracker
 {
@@ -87,18 +89,22 @@ class ProgressTracker
     /**
      * Start tracking a new operation
      *
-     * @param string $operationType Type of operation (import, export)
-     * @param array  $options       Operation options and metadata
+     * @param string      $operationType Type of operation (import, export)
+     * @param array       $options       Operation options and metadata
+     * @param string|null $ownerUid      UID of the user who owns this operation
      *
      * @return string Unique operation ID
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-1
      */
-    public function startOperation(string $operationType, array $options=[]): string
+    public function startOperation(string $operationType, array $options=[], ?string $ownerUid=null): string
     {
         $operationId = uniqid(prefix: $operationType.'_', more_entropy: true);
 
         $this->progress = [
             'operation_id'         => $operationId,
             'operation_type'       => $operationType,
+            'owner_uid'            => $ownerUid,
             'phase'                => 'initializing',
             'phase_description'    => self::PHASES['initializing']['description'],
             'total_items'          => $options['total_items'] ?? 0,
@@ -134,6 +140,8 @@ class ProgressTracker
      * @param array  $data  Additional phase data
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-2
      */
     public function setPhase(string $phase, array $data=[]): void
     {
@@ -175,6 +183,8 @@ class ProgressTracker
      * @param string $itemType       Type of current item
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-2
      */
     public function updateProgress(int $processedItems=null, string $currentItem=null, string $itemType=null): void
     {
@@ -206,6 +216,8 @@ class ProgressTracker
      * @param string $itemType    Type of current item
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-2
      */
     public function incrementProgress(string $currentItem=null, string $itemType=null): void
     {
@@ -223,6 +235,8 @@ class ProgressTracker
      * @param array  $context Error context
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-3
      */
     public function addError(string $message, array $context=[]): void
     {
@@ -251,6 +265,8 @@ class ProgressTracker
      * @param array  $context Warning context
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-3
      */
     public function addWarning(string $message, array $context=[]): void
     {
@@ -269,6 +285,8 @@ class ProgressTracker
      * @param array $statistics Statistics to merge
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-2
      */
     public function updateStatistics(array $statistics): void
     {
@@ -282,6 +300,8 @@ class ProgressTracker
      * @param array $finalStatistics Final operation statistics
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-4
      */
     public function completeOperation(array $finalStatistics=[]): void
     {
@@ -315,6 +335,8 @@ class ProgressTracker
      * @param string $operationId Operation ID to get progress for
      *
      * @return array|null Progress data or null if not found
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-5
      */
     public function getProgress(string $operationId=null): ?array
     {
@@ -369,11 +391,12 @@ class ProgressTracker
         }
 
         $overallProgress = $completedWeight + $currentPhaseProgress;
-            $percentage  = 0;
+        $percentage      = 0;
         if ($totalWeight > 0) {
+            $percentage = ($overallProgress / $totalWeight) * 100;
         }
 
-        return min(100, max(0, $percentage));
+        return min(100, max(0, (int) $percentage));
     }//end calculateOverallPercentage()
 
     /**
@@ -412,6 +435,7 @@ class ProgressTracker
      * @param int $maxAge Maximum age in seconds (default: 1 hour)
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-progress-tracking-2/tasks.md#task-1
      */
     public function cleanupOldProgress(int $maxAge=3600): void
     {

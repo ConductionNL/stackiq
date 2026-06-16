@@ -9,9 +9,13 @@
  * @author Ruben Linde
  * @copyright 2024
  * @license AGPL-3.0-or-later
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-13
  */
 
 import { buildHeaders, buildQueryString } from '@conduction/nextcloud-vue'
+
+import { withLanguageParam, buildWriteHeaders } from '../../composables/orClient.js'
 
 /**
  * Extract an ID from a value that can be either a primitive or an object.
@@ -28,11 +32,17 @@ function extractId(value) {
 /**
  * Build an API URL for an object using its @self metadata.
  *
+ * Read-side callers (GET) pass `withLang: true` so the user's preferred
+ * language variant is served (ADR-025 i18n negotiation). Write/action callers
+ * leave it false because the language target is communicated via the
+ * `X-Translation-Target-Language` header instead.
+ *
  * @param {object} objectItem Object with @self metadata
- * @param {string} [action=null] Optional action endpoint (publish, lock, etc.)
+ * @param {string} [action] Optional action endpoint (publish, lock, etc.). Defaults to null.
+ * @param {boolean} [withLang] Whether to append the `_lang` query param. Defaults false.
  * @return {string} The constructed URL
  */
-function buildObjectUrl(objectItem, action = null) {
+function buildObjectUrl(objectItem, action = null, withLang = false) {
 	const objectId = objectItem.id || objectItem['@self']?.id
 	const register = objectItem['@self']?.register || objectItem.register
 	const schema = objectItem['@self']?.schema || objectItem.schema
@@ -48,7 +58,7 @@ function buildObjectUrl(objectItem, action = null) {
 	if (action) {
 		url += action === 'logs' ? '/audit-trails' : `/${action}`
 	}
-	return url
+	return withLang ? withLanguageParam(url) : url
 }
 
 /**
@@ -71,6 +81,7 @@ function separateResults(results) {
  * Softwarecatalog plugin factory.
  *
  * @return {object} Plugin definition for createObjectStore
+ * @spec exclude Pinia plugin installer factory — store bootstrap plumbing
  */
 export function softwarecatalogPlugin() {
 	return {
@@ -235,6 +246,7 @@ export function softwarecatalogPlugin() {
 			 * Fetch app settings from the softwarecatalog API.
 			 *
 			 * @return {Promise<void>}
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async fetchSettings() {
 				try {
@@ -274,6 +286,7 @@ export function softwarecatalogPlugin() {
 			 * Registers each schema from the voorzieningen register.
 			 *
 			 * @return {Promise<void>}
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async initializeVoorzieningenObjectTypes() {
 				try {
@@ -303,6 +316,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {string} objectType Type of object
 			 * @return {{source: string, schema: string, register: string}} Schema config
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			getSchemaConfig(objectType) {
 				// Check registered types first
@@ -320,15 +334,39 @@ export function softwarecatalogPlugin() {
 					throw new Error('Settings not loaded')
 				}
 
-				// Check for voorzieningen-specific configuration
-				if (objectType === 'organisatie') {
-					const voorzieningenConfig = this.settings.voorzieningen || {}
-					if (voorzieningenConfig.register && voorzieningenConfig.organisatie_schema) {
-						return {
-							source: 'openregister',
-							schema: voorzieningenConfig.organisatie_schema,
-							register: voorzieningenConfig.register,
-						}
+				// Check for voorzieningen-specific configuration. The settings
+				// endpoint returns the blob under `voorzieningenConfig`; the
+				// secondary `/api/voorzieningen/config` fetch (when it resolves)
+				// stores it under `voorzieningen`. Accept either so the lookup
+				// works whichever populated first.
+				//
+				// The blob carries a single `register` plus a `<type>_schema` key
+				// per object type (organisatie_schema, module_schema,
+				// compliancy_schema, …). Resolve ANY configured type from it — not
+				// just `organisatie` — so the dashboard/settings/compliance
+				// surfaces register their stores even when the settings
+				// `availableRegisters` list does not include the voorzieningen
+				// register (the slug-based auto-registration then finds nothing).
+				const voorzieningenConfig = this.settings.voorzieningen || this.settings.voorzieningenConfig || {}
+				if (voorzieningenConfig.register && voorzieningenConfig[`${objectType}_schema`]) {
+					return {
+						source: 'openregister',
+						schema: voorzieningenConfig[`${objectType}_schema`],
+						register: voorzieningenConfig.register,
+					}
+				}
+
+				// AMEF / ArchiMate types (element, relation, view, model,
+				// property_definition, organization) live in their own register
+				// with a `<type>_schema` key under `amefConfig`. The compliance
+				// matrix and ArchiMate surfaces fetch `element`, which is not part
+				// of the voorzieningen blob.
+				const amefConfig = this.settings.amef || this.settings.amefConfig || {}
+				if (amefConfig.register && amefConfig[`${objectType}_schema`]) {
+					return {
+						source: 'openregister',
+						schema: amefConfig[`${objectType}_schema`],
+						register: amefConfig.register,
 					}
 				}
 
@@ -355,6 +393,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string} type Object type
 			 * @param {object} object Object to set as active
 			 * @return {Promise<void>}
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async setActiveObject(type, object) {
 				this.activeObjects = { ...this.activeObjects, [type]: object }
@@ -390,6 +429,7 @@ export function softwarecatalogPlugin() {
 			 * Clear active object for type.
 			 *
 			 * @param {string} type Object type
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			clearActiveObject(type) {
 				this.activeObjects = { ...this.activeObjects, [type]: null }
@@ -413,12 +453,13 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {object} objectItem Object with @self metadata
 			 * @return {Promise<{ok: boolean}>} Response-like object for backward compat
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async downloadObject(objectItem) {
 				const objectId = objectItem.id || objectItem['@self']?.id
 				if (!objectId) throw new Error('Object ID is required for download')
 
-				const endpoint = buildObjectUrl(objectItem)
+				const endpoint = buildObjectUrl(objectItem, null, true)
 				const response = await fetch(endpoint, {
 					headers: buildHeaders(),
 				})
@@ -446,6 +487,7 @@ export function softwarecatalogPlugin() {
 			 * @param {object} params Query parameters
 			 * @param {object|null} organisatieData Optional org-specific config
 			 * @return {Promise<void>}
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async fetchRelatedData(type, id, dataType, params = {}, organisatieData = null) {
 				const loadingKey = `${type}_${id}_${dataType}`
@@ -471,7 +513,7 @@ export function softwarecatalogPlugin() {
 						queryParams._extend = params._extend || '@self.schema'
 					}
 
-					const url = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}/${actionPath}${buildQueryString(queryParams)}`
+					const url = withLanguageParam(`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}/${actionPath}${buildQueryString(queryParams)}`)
 
 					const response = await fetch(url, { headers: buildHeaders() })
 					if (!response.ok) throw new Error(`Failed to fetch ${dataType} for ${type}`)
@@ -525,6 +567,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string|object} typeOrObject Type slug or object item
 			 * @param {object} dataOrConfig Object data or { register, schema } config
 			 * @return {Promise<object>} Saved object
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async saveObject(typeOrObject, dataOrConfig) {
 				if (typeof typeOrObject === 'string') {
@@ -599,6 +642,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string|object} typeOrObject Type slug or full object
 			 * @param {string} [id] Object ID (only for new signature)
 			 * @return {Promise<boolean>} Success
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async deleteObject(typeOrObject, id) {
 				if (typeof typeOrObject === 'string' && id) {
@@ -650,12 +694,19 @@ export function softwarecatalogPlugin() {
 			/**
 			 * Patch existing object (partial update).
 			 *
+			 * When the caller is editing a specific (non-default) language
+			 * variant of a translatable property, it passes `targetLang` so the
+			 * request carries `X-Translation-Target-Language` and OpenRegister
+			 * writes into the correct language slot (ADR-025).
+			 *
 			 * @param {string} type Object type
 			 * @param {string} id Object ID
 			 * @param {object} changes Object with changed properties
+			 * @param {string|null} [targetLang] Target translation language. Defaults to null.
 			 * @return {Promise<object>} Updated object
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
-			async patchObject(type, id, changes) {
+			async patchObject(type, id, changes, targetLang = null) {
 				this.loading = { ...this.loading, [`${type}_${id}`]: true }
 
 				try {
@@ -669,7 +720,7 @@ export function softwarecatalogPlugin() {
 						`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}`,
 						{
 							method: 'PATCH',
-							headers: buildHeaders(),
+							headers: buildWriteHeaders(buildHeaders(), { targetLang }),
 							body: JSON.stringify(changes),
 						},
 					)
@@ -703,6 +754,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string} type Object type
 			 * @param {string} id Object ID to copy
 			 * @return {Promise<object>} The newly created copy
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async copyObject(type, id) {
 				const originalObject = this.objects?.[type]?.[id]
@@ -724,6 +776,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {object} objectItem Object to publish
 			 * @return {Promise<object>} Updated object
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async publishObject(objectItem) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -751,6 +804,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {object} objectItem Object to depublish
 			 * @return {Promise<object>} Updated object
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async depublishObject(objectItem) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -777,9 +831,10 @@ export function softwarecatalogPlugin() {
 			 * Lock an object.
 			 *
 			 * @param {object} objectItem Object to lock
-			 * @param {string} [process=null] Process name
-			 * @param {number} [duration=null] Duration in seconds
+			 * @param {string} [process] Process name. Defaults to null.
+			 * @param {number} [duration] Duration in seconds. Defaults to null.
 			 * @return {Promise<object>} Updated object
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async lockObject(objectItem, process = null, duration = null) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -813,6 +868,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {object} objectItem Object to unlock
 			 * @return {Promise<object>} Updated object
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async unlockObject(objectItem) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -840,6 +896,7 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {object} objectItem Object to validate
 			 * @return {Promise<object>} Validated object
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async validateObject(objectItem) {
 				const objectId = objectItem.id || objectItem['@self']?.id
@@ -869,8 +926,9 @@ export function softwarecatalogPlugin() {
 			 *
 			 * @param {Array<object>} objects Objects to process
 			 * @param {Function} operation Per-object operation function
-			 * @param {Function} [onProgress=null] Progress callback
+			 * @param {Function} [onProgress] Progress callback. Defaults to null.
 			 * @return {Promise<{successful: Array, failed: Array}>} Results
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async _runMassOperation(objects, operation, onProgress = null) {
 				this.clearAllObjectErrors()
@@ -906,26 +964,44 @@ export function softwarecatalogPlugin() {
 				return { successful, failed }
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massPublishObjects(objects, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.publishObject(obj), onProgress)
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massDepublishObjects(objects, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.depublishObject(obj), onProgress)
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massDeleteObjects(objects, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.deleteObject(obj), onProgress)
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massLockObjects(objects, process = null, duration = null, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.lockObject(obj, process, duration), onProgress)
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massUnlockObjects(objects, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.unlockObject(obj), onProgress)
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			async massValidateObjects(objects, onProgress = null) {
 				return this._runMassOperation(objects, (obj) => this.validateObject(obj), onProgress)
 			},
@@ -938,6 +1014,9 @@ export function softwarecatalogPlugin() {
 				this.selectedObjects = objects
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			toggleSelectAllObjects() {
 				const organisatieCollection = this.collections?.organisatie
 				const results = Array.isArray(organisatieCollection) ? organisatieCollection : organisatieCollection?.results
@@ -958,11 +1037,17 @@ export function softwarecatalogPlugin() {
 				this.objectErrors = { ...this.objectErrors, [objectId]: error }
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			clearObjectError(objectId) {
 				const { [objectId]: _, ...rest } = this.objectErrors
 				this.objectErrors = rest
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			clearAllObjectErrors() {
 				this.objectErrors = {}
 			},
@@ -975,6 +1060,9 @@ export function softwarecatalogPlugin() {
 			// Column Management
 			// ==========================================
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			updateColumnFilter(id, enabled) {
 				this.columnFilters = { ...this.columnFilters, [id]: enabled }
 
@@ -991,6 +1079,9 @@ export function softwarecatalogPlugin() {
 				}
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			initializeProperties(schema) {
 				if (!schema?.properties) {
 					this.properties = {}
@@ -1009,6 +1100,9 @@ export function softwarecatalogPlugin() {
 				this.properties = properties
 			},
 
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
+			 */
 			initializeColumnFilters() {
 				const filters = {}
 				Object.keys(this.metadata).forEach((key) => {
@@ -1036,6 +1130,7 @@ export function softwarecatalogPlugin() {
 			 * @param {string} params.fileAction What to do with files
 			 * @param {string} params.relationAction What to do with relations
 			 * @return {Promise<object>} Merge result
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async mergeObjects({ register, schema, sourceObjectId, target, object, fileAction, relationAction }) {
 				const response = await fetch(
@@ -1055,6 +1150,7 @@ export function softwarecatalogPlugin() {
 			 * Fetch available mappings from the OpenRegister API.
 			 *
 			 * @return {Promise<{data: Array}>} Mappings result
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			async getMappings() {
 				const response = await fetch(
@@ -1067,6 +1163,7 @@ export function softwarecatalogPlugin() {
 
 			/**
 			 * Refresh the current object list by refetching all registered types.
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			refreshObjectList() {
 				const registeredTypes = Object.keys(this.objectTypeRegistry || {})
@@ -1079,6 +1176,9 @@ export function softwarecatalogPlugin() {
 			// State Management
 			// ==========================================
 
+			/**
+			 * @spec exclude generic Pinia $patch passthrough — store bootstrap plumbing
+			 */
 			setState(type, { success, error }) {
 				if (success !== undefined) {
 					this.success = { ...this.success, [type]: success }
@@ -1090,6 +1190,7 @@ export function softwarecatalogPlugin() {
 
 			/**
 			 * Clear the softwarecatalog sub-resources (called by base clearAllSubResources).
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-5
 			 */
 			clearSoftwarecatalog() {
 				this.objectItem = null

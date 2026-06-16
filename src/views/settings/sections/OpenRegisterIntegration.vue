@@ -197,6 +197,7 @@ export default {
 	 * Provides access to the settings store
 	 *
 	 * @return {object} Setup object with store reference
+	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
 	 */
 	setup() {
 		return {
@@ -218,27 +219,63 @@ export default {
 
 	computed: {
 		// Store-connected computed properties
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		loading() {
 			return this.store.loadingOpenRegisterConfig
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		loadingRegisters() {
 			return this.store.isLoadingRegisters
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		loadingVoorzieningenSchemas() {
 			return this.store.isLoadingVoorzieningenSchemas
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		loadingAmefSchemas() {
 			return this.store.isLoadingAmefSchemas
 		},
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		versionInfo() { return this.store.versionInfo },
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		configuration() { return this.store.configuration },
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		registerOptions() { return this.store.registerOptions },
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		voorzieningenSchemaOptions() { return this.store.voorzieningenSchemaOptions },
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		amefSchemaOptions() { return this.store.amefSchemaOptions },
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		voorzieningenSchemas() { return this.store.voorzieningenSchemas },
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		amefSchemas() { return this.store.amefSchemas },
 
 		// Dynamic list of all voorzieningen schema config entries
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		voorzieningenItems() {
 			return [
 				{ key: 'voorzieningen_organisatie_schema', title: 'Organisatie Schema', description: 'Schema for organizations' },
@@ -258,6 +295,9 @@ export default {
 		},
 
 		// Dynamic list of all AMEF schema config entries
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 */
 		amefItems() {
 			return [
 				{ key: 'amef_element_schema', title: 'Element Schema', description: 'Schema for ArchiMate elements' },
@@ -272,11 +312,23 @@ export default {
 
 		// Two-way computed properties for register selections
 		voorzieningenRegister: {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 */
 			get() { return this.store.voorzieningenRegister },
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 */
 			set(value) { this.store.voorzieningenRegister = value },
 		},
 		amefRegister: {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 */
 			get() { return this.store.amefRegister },
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 */
 			set(value) { this.store.amefRegister = value },
 		},
 
@@ -284,6 +336,7 @@ export default {
 		 * Determines if configuration can be saved
 		 *
 		 * @return {boolean} True if configuration is valid and can be saved
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		canSave() {
 			// Check if any register is selected
@@ -302,6 +355,7 @@ export default {
 	/**
 	 * Component lifecycle - load initial data
 	 * Only loads essential data needed for register/schema dropdowns
+	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
 	 */
 	async mounted() {
 		// Load only essential data for OpenRegister configuration dropdowns
@@ -320,6 +374,7 @@ export default {
 		 *
 		 * @param {object} register Selected register object
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		handleVoorzieningenRegisterChange(register) {
 			this.store.handleVoorzieningenRegisterChange(register)
@@ -331,6 +386,7 @@ export default {
 		 *
 		 * @param {object} register Selected register object
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		handleAmefRegisterChange(register) {
 			this.store.handleAmefRegisterChange(register)
@@ -341,6 +397,7 @@ export default {
 		 * Triggers validation in the store
 		 *
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		validateConfiguration() {
 			this.store.validateConfiguration()
@@ -351,6 +408,7 @@ export default {
 		 * Compares current configuration with original values
 		 *
 		 * @return {boolean} True if AMEF configuration has changed
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		hasAmefConfigChanges() {
 			if (!this.amefRegister) return false
@@ -376,6 +434,7 @@ export default {
 		 * Compares current configuration with original values
 		 *
 		 * @return {boolean} True if Voorzieningen configuration has changed
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		hasVoorzieningenConfigChanges() {
 			if (!this.voorzieningenRegister) return false
@@ -407,6 +466,7 @@ export default {
 		 * Saves the current configuration to the backend
 		 *
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		async saveConfiguration() {
 			this.saving = true
@@ -426,6 +486,7 @@ export default {
 		 * Reloads only essential data needed for the dropdowns
 		 *
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
 		async refreshSettings() {
 			try {

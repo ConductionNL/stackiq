@@ -8,18 +8,19 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 namespace OCA\SoftwareCatalog\Settings;
 
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\IAppConfig;
 use OCP\IL10N;
-use OCP\Settings\ISettings;
+use OCP\Settings\IDelegatedSettings;
 
-class SoftwareCatalogAdmin implements ISettings
+class SoftwareCatalogAdmin implements IDelegatedSettings
 {
 
     /**
@@ -44,17 +45,26 @@ class SoftwareCatalogAdmin implements ISettings
     private IAppManager $appManager;
 
     /**
+     * The initial state service.
+     *
+     * @var IInitialState
+     */
+    private IInitialState $initialState;
+
+    /**
      * Constructor for SoftwareCatalogAdmin settings.
      *
-     * @param IAppConfig  $config     The application configuration service
-     * @param IL10N       $l10n       The localization service
-     * @param IAppManager $appManager The app manager service
+     * @param IAppConfig    $config       The application configuration service
+     * @param IL10N         $l10n         The localization service
+     * @param IAppManager   $appManager   The app manager service
+     * @param IInitialState $initialState The initial state service
      */
-    public function __construct(IAppConfig $config, IL10N $l10n, IAppManager $appManager)
+    public function __construct(IAppConfig $config, IL10N $l10n, IAppManager $appManager, IInitialState $initialState)
     {
-        $this->config     = $config;
-        $this->l10n       = $l10n;
-        $this->appManager = $appManager;
+        $this->config       = $config;
+        $this->l10n         = $l10n;
+        $this->appManager   = $appManager;
+        $this->initialState = $initialState;
     }//end __construct()
 
     /**
@@ -64,12 +74,9 @@ class SoftwareCatalogAdmin implements ISettings
      */
     public function getForm(): TemplateResponse
     {
-        $parameters = [
-            'mySetting' => $this->config->getValueString('softwarecatalog', 'software_catalog_setting', 'true') === 'true',
-            'version'   => $this->appManager->getAppVersion('softwarecatalog'),
-        ];
+        $this->initialState->provideInitialState('version', $this->appManager->getAppVersion('softwarecatalog'));
 
-        return new TemplateResponse('softwarecatalog', 'settings/admin', $parameters);
+        return new TemplateResponse('softwarecatalog', 'settings/admin', []);
     }//end getForm()
 
     /**
@@ -96,4 +103,19 @@ class SoftwareCatalogAdmin implements ISettings
     {
         return 10;
     }//end getPriority()
+
+    /**
+     * The human-readable name of this delegated settings section.
+     *
+     * Required by IDelegatedSettings so an admin can authorize a non-admin group
+     * to manage this section (and so `#[AuthorizedAdminSetting]` can gate the
+     * moderation REST endpoints against it). Returns null to inherit the section
+     * label.
+     *
+     * @return string|null The settings name, or null to use the section name.
+     */
+    public function getName(): ?string
+    {
+        return null;
+    }//end getName()
 }//end class

@@ -6,19 +6,24 @@
  * Handles HTTP requests for view-related operations including querying views
  * with enrichment options for products and usage data.
  *
- * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/nextcloud/softwarecatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
  */
 
 namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 use OCA\SoftwareCatalog\Service\ViewService;
 use Psr\Log\LoggerInterface;
 
@@ -28,12 +33,13 @@ use Psr\Log\LoggerInterface;
  * This controller provides REST API endpoints for querying and managing ArchiMate views
  * with optional enrichment capabilities for products, usage data (gebruik), and related information.
  *
- * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://github.com/nextcloud/softwarecatalog
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/nextcloud/softwarecatalog
  */
 class ViewController extends Controller
 {
@@ -44,12 +50,14 @@ class ViewController extends Controller
      * @param IRequest        $request     The request object
      * @param ViewService     $viewService The view service for business logic
      * @param LoggerInterface $logger      The logger service
+     * @param IUserSession    $userSession The user session service
      */
     public function __construct(
         string $appName,
         IRequest $request,
         private readonly ViewService $viewService,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IUserSession $userSession
     ) {
         parent::__construct(appName: $appName, request: $request);
     }//end __construct()
@@ -67,12 +75,17 @@ class ViewController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      *
      * @return JSONResponse JSON response with views array
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
      */
     public function getAllViews(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Getting all views',
                 [
@@ -89,11 +102,7 @@ class ViewController extends Controller
             // Get views from service with enrichments.
             $result = $this->viewService->getAllViews($options);
 
-            // Return appropriate HTTP status code.
-            $statusCode = 200;
-            if ($result['success'] !== true) {
-                $statusCode = 500;
-            }
+            $statusCode = $this->determineListStatusCode($result);
 
             $this->logger->info(
                     'API: All views request completed',
@@ -115,16 +124,79 @@ class ViewController extends Controller
                     );
 
             return new JSONResponse(
-                    [
-                        'success' => false,
-                        'error'   => 'Internal server error: '.$e->getMessage(),
-                        'views'   => [],
-                        'count'   => 0,
-                    ],
-                    500
-                    );
+                $this->buildListErrorPayload($e),
+                500
+            );
         }//end try
     }//end getAllViews()
+
+    /**
+     * Pick the HTTP status for a list-of-views service result.
+     *
+     * Extracted from `getAllViews()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.6.
+     *
+     * @param array $result The service result envelope.
+     *
+     * @return int 200 on success, 500 otherwise.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-6
+     */
+    private function determineListStatusCode(array $result): int
+    {
+        return ($result['success'] === true) ? 200 : 500;
+
+    }//end determineListStatusCode()
+
+    /**
+     * Build the standard list-error JSON payload.
+     *
+     * Extracted from `getAllViews()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.6.
+     *
+     * @param \Throwable $exception The caught throwable.
+     *
+     * @return array<string,mixed>
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-6
+     */
+    private function buildListErrorPayload(\Throwable $exception): array
+    {
+        return [
+            'success' => false,
+            'error'   => 'Internal server error: '.$exception->getMessage(),
+            'views'   => [],
+            'count'   => 0,
+        ];
+
+    }//end buildListErrorPayload()
+
+    /**
+     * Pick the HTTP status for a single-view service result.
+     *
+     * Extracted from `getView()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 9.6.
+     *
+     * @param array $result The service result envelope — expects 'success'
+     *                      bool and 'view' (null on not-found).
+     *
+     * @return int 200 on success, 404 when the view is missing, 500 otherwise.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-9-6
+     */
+    private function determineViewStatusCode(array $result): int
+    {
+        if ($result['success'] === true) {
+            return 200;
+        }
+
+        if ($result['view'] === null) {
+            return 404;
+        }
+
+        return 500;
+
+    }//end determineViewStatusCode()
 
     /**
      * Get a specific view by ID with optional enrichment
@@ -141,12 +213,17 @@ class ViewController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      *
      * @return JSONResponse JSON response with view object
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
      */
     public function getView(string $viewId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $this->logger->info(
                 'API: Getting specific view',
                 [
@@ -179,13 +256,7 @@ class ViewController extends Controller
                 options: $options
             );
 
-            // Return appropriate HTTP status code.
-            $statusCode = 500;
-            if ($result['success'] === true) {
-                $statusCode = 200;
-            } else if ($result['view'] === null) {
-                $statusCode = 404;
-            }
+            $statusCode = $this->determineViewStatusCode($result);
 
             $this->logger->info(
                     'API: Specific view request completed',
@@ -299,14 +370,18 @@ class ViewController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     * @PublicPage
      *
      * @return JSONResponse JSON response with API documentation
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+     * @spec                                          openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-2
      */
     public function getApiDocumentation(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         $documentation = [
             'api_version'               => '1.0.0',
             'description'               => 'SoftwareCatalog View API - Query and enrich ArchiMate views',

@@ -195,6 +195,7 @@ export default {
 		/**
 		 * Widget definitions for CnDashboardPage
 		 * @return {Array} Widget definition array
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		widgetDefs() {
 			return [
@@ -207,6 +208,7 @@ export default {
 		/**
 		 * Get object statistics for the table display
 		 * @return {Array} Array of object statistics
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		objectStatistics() {
 			const stats = []
@@ -246,6 +248,7 @@ export default {
 		/**
 		 * Get first half of statistics for first table
 		 * @return {Array} First half of statistics
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		firstTableStats() {
 			const stats = this.objectStatistics
@@ -256,6 +259,7 @@ export default {
 		/**
 		 * Get second half of statistics for second table
 		 * @return {Array} Second half of statistics
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		secondTableStats() {
 			const stats = this.objectStatistics
@@ -273,6 +277,7 @@ export default {
 		/**
 		 * Load dashboard data
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		async loadDashboardData() {
 			this.loading = true
@@ -304,6 +309,7 @@ export default {
 		 * Get schema configuration for object type
 		 * @param {string} objectType - Object type slug
 		 * @return {object | null} Schema configuration
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		getSchemaConfig(objectType) {
 			if (!objectStore.settings?.schemaConfigurations) {
@@ -325,6 +331,7 @@ export default {
 		 * Get icon component for specific object type
 		 * @param {string} objectType - Object type slug
 		 * @return {object} Vue icon component
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		getIconForObjectType(objectType) {
 			const iconMap = {
@@ -348,6 +355,7 @@ export default {
 		 * Navigate to object type management page
 		 * @param {string} objectType - Object type slug to navigate to
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		navigateToObjectType(objectType) {
 			// Handle special cases for plural routing
@@ -365,6 +373,7 @@ export default {
 		/**
 		 * Navigate to organizations page
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		navigateToOrganizations() {
 			navigationStore.setSelected('organisaties')
@@ -374,6 +383,7 @@ export default {
 		 * Navigate to configuration page - opens admin settings in new tab
 		 * @param {string} route - Route to navigate to (legacy parameter)
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		navigateToConfiguration(route) {
 			const settingsUrl = `${window.location.protocol}//${window.location.host}/index.php/settings/admin/softwarecatalog`
@@ -384,6 +394,7 @@ export default {
 		 * Format object type name for display
 		 * @param {string} objectType - The object type slug
 		 * @return {string} Formatted object type name
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		formatObjectTypeName(objectType) {
 			// Convert camelCase/kebab-case to proper case
@@ -399,6 +410,7 @@ export default {
 		 * Format date for display
 		 * @param {Date} date - Date to format
 		 * @return {string} Formatted date string
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		formatDate(date) {
 			return date.toLocaleDateString('en-GB', {
@@ -413,6 +425,7 @@ export default {
 		/**
 		 * Refresh all data - force reload settings and all collections
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
 		 */
 		async refreshAllData() {
 			console.info('Dashboard: Refreshing all data...')

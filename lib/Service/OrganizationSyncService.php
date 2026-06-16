@@ -10,7 +10,9 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
  */
 
 declare(strict_types=1);
@@ -26,6 +28,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\SoftwareCatalog\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -53,9 +56,6 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -106,6 +106,13 @@ class OrganizationSyncService
     private LoggerInterface $logger;
 
     /**
+     * Container instance for lazy service resolution.
+     *
+     * @var ContainerInterface
+     */
+    private ContainerInterface $container;
+
+    /**
      * Constructor for OrganizationSyncService
      *
      * @param OrganisatieService    $organisatieService    The organization service.
@@ -116,6 +123,7 @@ class OrganizationSyncService
      * @param SettingsService       $settingsService       The settings service.
      * @param IDBConnection         $db                    The database connection.
      * @param ContactPersonHandler  $contactpersonHandler  The contact person handler.
+     * @param ContainerInterface    $container             The DI container.
      */
     public function __construct(
         OrganisatieService $organisatieService,
@@ -126,6 +134,7 @@ class OrganizationSyncService
         SettingsService $settingsService,
         private IDBConnection $db,
         private readonly ContactPersonHandler $contactpersonHandler,
+        ContainerInterface $container,
     ) {
         $this->organisatieService    = $organisatieService;
         $this->contactpersoonService = $contactpersoonService;
@@ -133,8 +142,118 @@ class OrganizationSyncService
         $this->config          = $config;
         $this->logger          = $logger;
         $this->settingsService = $settingsService;
+        $this->container       = $container;
 
     }//end __construct()
+
+    /**
+     * Centralised sync error handler.
+     *
+     * Records the error against the per-operation stats array and emits a
+     * uniformly-structured log line. Extracted from the half-dozen ad-hoc
+     * catch blocks scattered through `performOrganizationsSync()`,
+     * `performContactSync()`, and `performFullSync()` per
+     * `openspec/changes/method-decomposition/tasks.md` task 7.1.
+     *
+     * @param string     $operation  Short operation label (e.g. "OrganizationSync").
+     * @param string     $identifier Object identifier (UUID / username) the
+     *                               failure was tied to.
+     * @param \Throwable $exception  The caught throwable.
+     * @param array      $stats      Stats array (by reference) — receives an
+     *                               entry in `errors[]`.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7-1
+     */
+    private function handleSyncError(
+        string $operation,
+        string $identifier,
+        \Throwable $exception,
+        array &$stats
+    ): void {
+        $error = $identifier.': '.$exception->getMessage();
+        if (isset($stats['errors']) === true && is_array($stats['errors']) === true) {
+            $stats['errors'][] = $error;
+        }
+
+        $this->logger->error(
+            $operation.': failed to process '.$identifier,
+            [
+                'error' => $exception->getMessage(),
+            ]
+        );
+
+    }//end handleSyncError()
+
+    /**
+     * Builds the per-run stats accumulator shared by the organisation /
+     * contactpersoon sync flows.
+     *
+     * Extracted from {@see performOrganizationsSync()} as part of task 7.1.
+     *
+     * @param int $batchSize           Configured batch size.
+     * @param int $maxExecutionSeconds Configured time budget.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function buildInitialSyncStats(int $batchSize, int $maxExecutionSeconds): array
+    {
+        return [
+            'organizationsProcessed' => 0,
+            'entitiesCreated'        => 0,
+            'entitiesUpdated'        => 0,
+            'errors'                 => [],
+            'batchSize'              => $batchSize,
+            'maxExecutionSeconds'    => $maxExecutionSeconds,
+            'timeoutReached'         => false,
+            'totalRemaining'         => 0,
+            'startTime'              => date('Y-m-d H:i:s'),
+            'endTime'                => null,
+            'duration'               => null,
+        ];
+    }//end buildInitialSyncStats()
+
+    /**
+     * Validates the voorzieningen register + organisatie_schema id pair as
+     * positive integers suitable for table-name interpolation.
+     *
+     * Returns a `[null, null]` pair (with the appropriate warning log) when
+     * either side is unset or non-positive — caller is expected to short-circuit
+     * the sync. Extracted from {@see performOrganizationsSync()} as part of
+     * task 7.1.
+     *
+     * @param mixed $register           Raw register id from voorzieningen config.
+     * @param mixed $organizationSchema Raw schema id from voorzieningen config.
+     *
+     * @return array{0: int|null, 1: int|null}
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-7
+     */
+    private function validateOrgSyncConfig($register, $organizationSchema): array
+    {
+        if (empty($register) === true || empty($organizationSchema) === true) {
+            $this->logger->warning('OrganizationSync: voorzieningen config missing register or organisatie_schema');
+            return [null, null];
+        }
+
+        $registerIdOrg = (int) $register;
+        $schemaIdOrg   = (int) $organizationSchema;
+        if ($registerIdOrg <= 0 || $schemaIdOrg <= 0) {
+            $this->logger->warning(
+                'OrganizationSync: register or organisatie_schema is not a valid positive integer',
+                [
+                    'register'           => $register,
+                    'organizationSchema' => $organizationSchema,
+                ]
+            );
+            return [null, null];
+        }
+
+        return [$registerIdOrg, $schemaIdOrg];
+    }//end validateOrgSyncConfig()
 
     /**
      * Create a database-agnostic JSON extraction expression
@@ -164,8 +283,10 @@ class OrganizationSyncService
         }
 
         // MySQL/MariaDB: Use json_unquote(json_extract()).
-            $jsonPath = '$.'.$path;
         if (str_starts_with($path, '$.') === true) {
+            $jsonPath = $path;
+        } else {
+            $jsonPath = '$.'.$path;
         }
 
         return "json_unquote(json_extract({$column}, '{$jsonPath}'))";
@@ -206,6 +327,8 @@ class OrganizationSyncService
      * @param int $maxExecutionSeconds The maximum execution time in seconds.
      *
      * @return array The sync statistics.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
      */
     public function performOrganizationsSync(int $batchSize=50, int $maxExecutionSeconds=45): array
     {
@@ -215,28 +338,19 @@ class OrganizationSyncService
         $organizationSchema  = ($voorzieningenConfig['organisatie_schema'] ?? '');
 
         $startTime = time();
-        $stats     = [
-            'organizationsProcessed' => 0,
-            'entitiesCreated'        => 0,
-            'entitiesUpdated'        => 0,
-            'errors'                 => [],
-            'batchSize'              => $batchSize,
-            'maxExecutionSeconds'    => $maxExecutionSeconds,
-            'timeoutReached'         => false,
-            'totalRemaining'         => 0,
-            'startTime'              => date('Y-m-d H:i:s'),
-            'endTime'                => null,
-            'duration'               => null,
-        ];
+        $stats     = $this->buildInitialSyncStats($batchSize, $maxExecutionSeconds);
 
-        if (empty($register) === true || empty($organizationSchema) === true) {
-            $this->logger->warning('OrganizationSync: voorzieningen config missing register or organisatie_schema');
+        [$registerIdOrg, $schemaIdOrg] = $this->validateOrgSyncConfig(
+            $register,
+            $organizationSchema
+        );
+        if ($registerIdOrg === null || $schemaIdOrg === null) {
             return $stats;
         }
 
         // Build table name dynamically from config (environment-agnostic).
         // Objects live in per-schema MagicMapper tables, NOT in openregister_objects.
-        $magicTableName = 'openregister_table_'.$register.'_'.$organizationSchema;
+        $magicTableName = 'openregister_table_'.$registerIdOrg.'_'.$schemaIdOrg;
 
         // Count total remaining orgs without entities for progress logging.
         $countQb        = $this->db->getQueryBuilder();
@@ -278,7 +392,7 @@ class OrganizationSyncService
 
         $rows = $qb->execute()->fetchAll();
 
-        $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+        $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
         if ($objectService instanceof ObjectService === false) {
             $this->logger->error('OrganizationSync: could not resolve ObjectService');
             return $stats;
@@ -309,13 +423,7 @@ class OrganizationSyncService
                 $this->ensureOrganisationEntity(organisatieObject: $object, stats: $stats, sendEmails: false);
                 $stats['organizationsProcessed']++;
             } catch (\Exception $e) {
-                $stats['errors'][] = $row['uuid'].': '.$e->getMessage();
-                $this->logger->error(
-                    'OrganizationSync: failed to process org '.$row['uuid'],
-                    [
-                        'error' => $e->getMessage(),
-                    ]
-                );
+                $this->handleSyncError('OrganizationSync', (string) $row['uuid'], $e, $stats);
             }
         }//end foreach
 
@@ -343,6 +451,7 @@ class OrganizationSyncService
      * @param int $maxExecutionSeconds The maximum execution time in seconds.
      *
      * @return array The sync statistics.
+     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-1
      */
     public function performContactSync(int $batchSize=100, int $maxExecutionSeconds=30): array
     {
@@ -369,8 +478,22 @@ class OrganizationSyncService
             return $stats;
         }
 
+        // Cast config values to integers before using in a table name to prevent injection.
+        $registerIdContact = (int) $register;
+        $schemaIdContact   = (int) $contactSchema;
+        if ($registerIdContact <= 0 || $schemaIdContact <= 0) {
+            $this->logger->warning(
+                    'ContactSync: register or contactpersoon_schema is not a valid positive integer',
+                    [
+                        'register'      => $register,
+                        'contactSchema' => $contactSchema,
+                    ]
+                    );
+            return $stats;
+        }
+
         // Query per-schema magic table directly (NOT the empty openregister_objects blob table).
-        $contactTableName = 'openregister_table_'.$register.'_'.$contactSchema;
+        $contactTableName = 'openregister_table_'.$registerIdContact.'_'.$schemaIdContact;
 
         // Find contacts without a username that DO have a matching Nextcloud account (by email).
         $qb = $this->db->getQueryBuilder();
@@ -396,7 +519,7 @@ class OrganizationSyncService
 
         $this->logger->info('ContactSync: processing '.count($contacts).' contacts with existing NC accounts');
 
-        $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+        $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
         if ($objectService instanceof ObjectService === false) {
             $this->logger->error('ContactSync: could not resolve ObjectService');
             return $stats;
@@ -424,11 +547,9 @@ class OrganizationSyncService
                 $contactEntityObject = $contactEntity->getObject();
                 $contactEntityObject['username'] = $contact['uid'];
 
-                // Temporarily remove organisatie field to avoid validation error.
-                // (schema expects object type but field stores a UUID string).
-                $savedOrganisatie = $contactEntityObject['organisatie'] ?? null;
-                unset($contactEntityObject['organisatie']);
-
+                // Keep organisatie in the object so it is never temporarily absent from the
+                // persisted record. The schema validation warning for a UUID-string value is
+                // benign compared to a data-corruption window where the field is missing.
                 $contactEntity->setObject($contactEntityObject);
                 $objectService->saveObject(
                     object: $contactEntity,
@@ -438,24 +559,9 @@ class OrganizationSyncService
                     _multitenancy: false
                 );
 
-                // Restore the organisatie field so the link is preserved.
-                if ($savedOrganisatie !== null) {
-                    $restoredData = $contactEntity->getObject();
-                    $restoredData['organisatie'] = $savedOrganisatie;
-                    $contactEntity->setObject($restoredData);
-                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
-                    $objectMapper->update($contactEntity);
-                }
-
                 $stats['contactPersonsProcessed']++;
             } catch (\Exception $e) {
-                $stats['errors'][] = $contact['uuid'].': '.$e->getMessage();
-                $this->logger->error(
-                    'ContactSync: failed to sync contact '.$contact['uuid'],
-                    [
-                        'error' => $e->getMessage(),
-                    ]
-                );
+                $this->handleSyncError('ContactSync', (string) $contact['uuid'], $e, $stats);
             }//end try
         }//end foreach
 
@@ -471,6 +577,7 @@ class OrganizationSyncService
      * @return array The sync statistics.
      *
      * @psalm-suppress UndefinedClass
+     * @spec           openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-1
      */
     public function performUserSync(): array
     {
@@ -483,15 +590,31 @@ class OrganizationSyncService
             return [];
         }
 
+        // Cast to int and validate before using in a table name to prevent injection.
+        $registerId = (int) $register;
+        $schemaId   = (int) $contactSchema;
+        if ($registerId <= 0 || $schemaId <= 0) {
+            $this->logger->warning(
+                    'UserSync: register or contactpersoon_schema is not a valid positive integer',
+                    [
+                        'register'      => $register,
+                        'contactSchema' => $contactSchema,
+                    ]
+                    );
+            return [];
+        }
+
         // Query per-schema magic table directly (NOT the empty openregister_objects blob table).
-        $contactTableName = 'openregister_table_'.$register.'_'.$contactSchema;
+        $contactTableName = 'openregister_table_'.$registerId.'_'.$schemaId;
 
         // Build JSON contains check - platform-specific.
         $platform   = $this->db->getDatabasePlatform();
         $isPostgres = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
-            $jsonContainsCheck = "JSON_CONTAINS(oo.users, CONCAT('\"', o.username, '\"')) = 0";
         if ($isPostgres === true) {
+            $jsonContainsCheck = "NOT (oo.users::jsonb @> to_jsonb(o.username::text))";
+        } else {
+            $jsonContainsCheck = "JSON_CONTAINS(oo.users, CONCAT('\"', o.username, '\"')) = 0";
         }
 
         // Find contacts with a username whose username is NOT in their org's users array.
@@ -500,7 +623,7 @@ class OrganizationSyncService
             ->from($contactTableName, 'o')
             ->leftJoin('o', 'openregister_organisations', 'oo', 'oo.uuid = o.organisatie')
             ->where($qb->createFunction('o.username IS NOT NULL'))
-            ->andWhere($qb->createFunction('o.username !== '.$qb->createNamedParameter('')))
+            ->andWhere($qb->createFunction('o.username <> '.$qb->createNamedParameter('')))
             ->andWhere($qb->createFunction('o.organisatie IS NOT NULL'))
             ->andWhere($qb->createFunction($jsonContainsCheck));
 
@@ -536,11 +659,15 @@ class OrganizationSyncService
      * @param int $minutesBack Number of minutes to look back for changes (0 = all objects)
      *
      * @return array Synchronization results and statistics
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
      */
     public function performFullSync(int $minutesBack=10): array
     {
-            $syncModeValue = 'incremental';
         if ($minutesBack === 0) {
+            $syncModeValue = 'full';
+        } else {
+            $syncModeValue = 'incremental';
         }
 
         $this->logger->info(
@@ -584,8 +711,9 @@ class OrganizationSyncService
                 organizationSchema: $organizationSchema,
                 minutesBack: $minutesBack
             );
-                $syncModeValue  = 'incremental';
+            $syncModeValue      = 'incremental';
             if ($minutesBack === 0) {
+                $syncModeValue = 'full';
             }
 
             $this->logger->info(
@@ -653,7 +781,7 @@ class OrganizationSyncService
     private function getOrganisatieObjectsByTimeWindow(string $register, string $organizationSchema, int $minutesBack): array
     {
         try {
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
             // Build base query for register and schema.
             $query = [
@@ -738,6 +866,8 @@ class OrganizationSyncService
      * @param array  $stats             Statistics array (passed by reference)
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
      */
     private function processOrganisatieObject(
         object $organisatieObject,
@@ -804,6 +934,9 @@ class OrganizationSyncService
      * @param bool   $sendEmails        Whether to send registration/activation emails.
      *
      * @return object|null The organisation entity or null on failure.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $sendEmails is a simple notification toggle
+     * @spec                                        openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-2
      */
     public function ensureOrganisationEntityPublic(object $organisatieObject, array &$stats, bool $sendEmails=true): ?object
     {
@@ -823,6 +956,8 @@ class OrganizationSyncService
      * @param bool   $sendEmails        Whether to send emails.
      *
      * @return object|null The organisation entity or null on failure.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $sendEmails is a simple notification toggle
      */
     private function ensureOrganisationEntity(object $organisatieObject, array &$stats, bool $sendEmails=true): ?object
     {
@@ -832,7 +967,7 @@ class OrganizationSyncService
 
             // Fetch the complete object from the database to ensure we have all data.
             try {
-                $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
                 $fullObject    = $objectService->find(
                     id: $organisatieId,
                     register: $organisatieObject->getRegister(),
@@ -871,7 +1006,7 @@ class OrganizationSyncService
             $organizationSchema  = ($voorzieningenConfig['organisatie_schema'] ?? '');
 
             // Try to find existing organisation entity.
-            $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
+            $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
 
             try {
                 $organisationEntity = $organisationMapper->findByUuid($organisatieId);
@@ -1127,7 +1262,7 @@ class OrganizationSyncService
         }
 
         try {
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
             // Use searchObjects for more efficient filtering on-demand.
             $query = [
@@ -1193,9 +1328,12 @@ class OrganizationSyncService
             }
 
             // Check if user already exists.
-            $userManager  = \OC::$server->get('OCP\IUserManager');
-                $username = $email;
+            $userManager = $this->container->get('OCP\IUserManager');
+            // Use the stored username when available, otherwise fall back to email as username.
             if (empty($existingUsername) === false) {
+                $username = $existingUsername;
+            } else {
+                $username = $email;
             }
 
             $user = $userManager->get($username);
@@ -1221,8 +1359,7 @@ class OrganizationSyncService
                             'username'  => $username,
                         ]
                     );
-                }
-
+                } else {
                     $this->logger->error(
                         'OrganizationSyncService: Failed to create user account',
                         [
@@ -1230,9 +1367,10 @@ class OrganizationSyncService
                             'username'  => $username,
                         ]
                     );
+                }
             }//end if
 
-                // User exists, update username in contact if needed.
+            // Contact exists without a stored username — record the resolved username for future syncs.
             if (empty($existingUsername) === true) {
                 $this->logger->debug(
                     'OrganizationSyncService: Updating contact person with username',
@@ -1244,7 +1382,7 @@ class OrganizationSyncService
                 $stats['usersUpdated']++;
             }
 
-                return $username;
+            return $username;
         } catch (\Exception $e) {
             $this->logger->error(
                 'OrganizationSyncService: Failed to process contact person',
@@ -1296,7 +1434,7 @@ class OrganizationSyncService
 
                 $organisationEntity->setUsers($allUsernames);
 
-                $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
+                $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
                 $organisationMapper->save($organisationEntity);
 
                 $stats['entitiesUpdated']++;
@@ -1339,7 +1477,7 @@ class OrganizationSyncService
     private function getAdminUsers(): array
     {
         try {
-            $groupManager = \OC::$server->get('OCP\IGroupManager');
+            $groupManager = $this->container->get('OCP\IGroupManager');
             $adminGroup   = $groupManager->get('admin');
 
             if (empty($adminGroup) === false) {
@@ -1369,6 +1507,7 @@ class OrganizationSyncService
      * @param int $minutesBack Number of minutes to look back for prediction (default: 10 for scheduled sync)
      *
      * @return array Status information about sync requirements including processing predictions
+     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-3
      */
     public function getSyncStatus(int $minutesBack=10): array
     {
@@ -1401,7 +1540,7 @@ class OrganizationSyncService
             );
 
             // Get organization entities count.
-            $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
+            $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
             $entitiesCount      = 0;
             try {
                 $entities      = $organisationMapper->findAllWithUserCount();
@@ -1432,8 +1571,10 @@ class OrganizationSyncService
                 $efficiencyImprovement = round(((1 - $ratio) * 100), 1);
             }
 
-                $syncModeValue = 'incremental';
             if ($minutesBack === 0) {
+                $syncModeValue = 'full';
+            } else {
+                $syncModeValue = 'incremental';
             }
 
             $messageValue = 'No organizations to process in the current time window';
@@ -1444,8 +1585,10 @@ class OrganizationSyncService
                 $messageValue = "Ready to process {$orgCount} organizations and {$contactCount} contact persons";
             }
 
-                $nextScheduledSyncValue = 'Will process all organizations (full sync)';
             if ($minutesBack > 0) {
+                $nextScheduledSyncValue = "Will process organizations modified in the last {$minutesBack} minutes (incremental sync)";
+            } else {
+                $nextScheduledSyncValue = 'Will process all organizations (full sync)';
             }
 
             return [
@@ -1532,6 +1675,7 @@ class OrganizationSyncService
      * Records the last sync time
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-3
      */
     public function recordSyncTime(): void
     {
@@ -1548,6 +1692,7 @@ class OrganizationSyncService
      * @param \OCA\OpenRegister\Db\ObjectEntity $organizationObject The organization object to process
      *
      * @return array Processing results
+     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-2
      */
     public function processSpecificOrganization($organizationObject): array
     {
@@ -1742,7 +1887,7 @@ class OrganizationSyncService
                         );
 
                         // Fetch the contact person object using the UUID.
-                        $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                        $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
                         $contactObject = $objectService->find(
                             id: $contactData,
                             register: $register,
@@ -1765,6 +1910,7 @@ class OrganizationSyncService
                         // Get the object data as array.
                         $contactData = [];
                         if (is_array($contactObject) === true) {
+                            $contactData = $contactObject;
                         }
 
                         if ($contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity) {
@@ -1829,6 +1975,8 @@ class OrganizationSyncService
      * @param array                             $stats              The statistics array to update.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $organizationObject reserved for future contact person enrichment
      */
     private function processRelatedContactPersons(string $organizationUuid, $organizationObject, array &$stats): void
     {
@@ -1859,7 +2007,7 @@ class OrganizationSyncService
             }
 
             // Find all contactpersoon objects that have this organization in their organisation property.
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
             // Search for contactpersoon objects with this organization reference.
             // Try both 'organisatie' and 'organisation' field names.
@@ -1924,6 +2072,7 @@ class OrganizationSyncService
 
                         $rawOrgData = [];
                     if ($rawOrgObject !== null) {
+                        $rawOrgData = $rawOrgObject->getObject();
                     }
 
                     $contactUuids = ($rawOrgData['contactpersonen'] ?? []);
@@ -2041,7 +2190,7 @@ class OrganizationSyncService
                     if (empty($contactData['organisatie']) === true) {
                         $contactData['organisatie'] = $organizationUuid;
                         $contactObject->setObject($contactData);
-                        $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+                        $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
                         $objectMapper->update($contactObject);
                         $this->logger->info(
                             '[FLOW] Set missing organisatie field on related contact',
@@ -2122,7 +2271,7 @@ class OrganizationSyncService
         array &$stats
     ): void {
         try {
-            $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
             $email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
             if (empty($email) === true) {
@@ -2204,7 +2353,7 @@ class OrganizationSyncService
                     $restoredData = $contactObject->getObject();
                     $restoredData['organisatie'] = $savedOrganisatie;
                     $contactObject->setObject($restoredData);
-                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+                    $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
                     $objectMapper->update($contactObject);
                 }
             }//end if
@@ -2218,7 +2367,7 @@ class OrganizationSyncService
                     $contactObjectData['organisatie'] = $organizationUuid;
                     $contactObject->setObject($contactObjectData);
                     $contactObject->setOrganisation($organizationUuid);
-                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+                    $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
                     $objectMapper->update($contactObject);
                     $this->logger->info(
                         '[FLOW] Set missing organisatie field on contact person',
@@ -2245,7 +2394,7 @@ class OrganizationSyncService
                     // Check if organization exists in organisation entity table.
                     $organisationEntity = null;
                     try {
-                        $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
+                        $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
                         $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
                     } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                         // Backup: org entity missing — create it now so user creation can proceed.
@@ -2337,7 +2486,7 @@ class OrganizationSyncService
                                 );
 
                                 try {
-                                    $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+                                    $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
                                     $objectMapper->update($contactObject);
                                     $this->logger->info(
                                         'Contact saved with username',
@@ -2399,8 +2548,10 @@ class OrganizationSyncService
                         }//end if
 
                         if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
-                                $organizationActiveValue = false;
                             if ($organisationEntity !== null) {
+                                $organizationActiveValue = $organisationEntity->getActive();
+                            } else {
+                                $organizationActiveValue = false;
                             }
 
                             $this->logger->info(
@@ -2452,6 +2603,7 @@ class OrganizationSyncService
      * @param \OCA\OpenRegister\Db\ObjectEntity $contactObject The contact person object to process
      *
      * @return array Processing results
+     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-2
      */
     public function processSpecificContactPerson($contactObject): array
     {
@@ -2476,6 +2628,10 @@ class OrganizationSyncService
                 ]
             );
 
+            /*
+             * @var array<string, mixed> $contactEntityObject
+             */
+
             $contactEntityObject = $contactObject->getObject();
 
             // Skip if no organization reference.
@@ -2495,7 +2651,7 @@ class OrganizationSyncService
                 // Check if organization exists in organisation entity table.
                 $organisationEntity = null;
                 try {
-                    $organisationMapper = \OC::$server->get('OCA\OpenRegister\Db\OrganisationMapper');
+                    $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
                     $organisationEntity = $organisationMapper->findByUuid($organizationUuid);
                 } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
                     // Backup: org entity missing — create it now so user creation can proceed.
@@ -2508,7 +2664,7 @@ class OrganizationSyncService
                     );
                     try {
                         $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-                        $objectService       = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                        $objectService       = $this->container->get('OCA\OpenRegister\Service\ObjectService');
                         $orgObject           = $objectService->find(
                             id: $organizationUuid,
                             register: ($voorzieningenConfig['register'] ?? ''),
@@ -2572,7 +2728,7 @@ class OrganizationSyncService
                             // that may fail — but the user was already created successfully above.
                             try {
                                 $contactObject->setObject($contactEntityObject);
-                                $objectService = \OC::$server->get('OCA\OpenRegister\Service\ObjectService');
+                                $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
                                 $objectService->saveObject(
                                     object: $contactObject,
                                     register: $register,
@@ -2622,8 +2778,10 @@ class OrganizationSyncService
                     }//end if
 
                     if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
-                            $organizationActiveValue = false;
                         if ($organisationEntity !== null) {
+                            $organizationActiveValue = $organisationEntity->getActive();
+                        } else {
+                            $organizationActiveValue = false;
                         }
 
                         $skipEmail = ($contactEntityObject['email'] ?? $contactEntityObject['e-mailadres'] ?? 'unknown');
@@ -2690,6 +2848,7 @@ class OrganizationSyncService
      * @param int $batchSize Number of items to process per batch (default: 100)
      *
      * @return array Comprehensive synchronization results
+     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-1
      */
     public function performOptimizedManualSync(int $maxRounds=10, int $batchSize=100): array
     {
@@ -2759,10 +2918,8 @@ class OrganizationSyncService
 
             $allResults['totalRounds'] = $round;
 
-            // Small pause between rounds to prevent resource exhaustion.
-            if ($round < $maxRounds) {
-                sleep(1);
-            }
+            // No sleep between rounds — this runs in an HTTP worker;
+            // blocking the worker for up to 10 s degrades concurrency.
         }//end for
 
         // Final user sync.
@@ -2788,11 +2945,14 @@ class OrganizationSyncService
      * @param int $minutesBack Number of minutes to look back for changes (default: 0 = full sync)
      *
      * @return array Synchronization results with detailed logging information
+     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-1
      */
     public function performScheduledSync(int $minutesBack=0): array
     {
-            $syncModeValue = 'incremental';
         if ($minutesBack === 0) {
+            $syncModeValue = 'full';
+        } else {
+            $syncModeValue = 'incremental';
         }
 
         $this->logger->info(
@@ -2885,11 +3045,14 @@ class OrganizationSyncService
      * @param int $minutesBack Number of minutes to look back for changes (default: 0 for full sync)
      *
      * @return array Synchronization results formatted for API response
+     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-1
      */
     public function performManualSync(int $minutesBack=0): array
     {
-            $syncModeValue = 'incremental';
         if ($minutesBack === 0) {
+            $syncModeValue = 'full';
+        } else {
+            $syncModeValue = 'incremental';
         }
 
         $this->logger->info(
@@ -2954,6 +3117,7 @@ class OrganizationSyncService
      * @param int $minutesBack The number of minutes to look back.
      *
      * @return array Status information with error handling.
+     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-3
      */
     public function getSyncStatusWithErrorHandling(int $minutesBack=10): array
     {
@@ -2969,8 +3133,10 @@ class OrganizationSyncService
                 ]
             );
 
-                $syncModeValue = 'incremental';
             if ($minutesBack === 0) {
+                $syncModeValue = 'full';
+            } else {
+                $syncModeValue = 'incremental';
             }
 
             return [
@@ -3053,7 +3219,7 @@ class OrganizationSyncService
             $organisatieObject->setOrganisation($organisationEntityUuid);
 
             // Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
-            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+            $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($organisatieObject);
 
             $this->logger->info(
@@ -3127,18 +3293,10 @@ class OrganizationSyncService
             $organizationUuid = ($organizationUuidOverride ?? $orgUuid);
             if (empty($organizationUuid) === false) {
                 $selfMetadata['organisation'] = $organizationUuid;
-                    $sourceValue = 'object';
-                if (empty($organizationUuidOverride) === true) {
-                    $this->logger->warning(
-                    'OrganizationSyncService: No organization UUID found for contact person',
-                    [
-                        'contactId'   => $contactId,
-                        'contactData' => $currentObject,
-                    ]
-                    );
-                }
-
                 if (empty($organizationUuidOverride) === false) {
+                    $sourceValue = 'override';
+                } else {
+                    $sourceValue = 'object';
                 }
 
                 $this->logger->info(
@@ -3176,7 +3334,7 @@ class OrganizationSyncService
             }
 
             // Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
-            $objectMapper = \OC::$server->get('OCA\OpenRegister\Db\MagicMapper');
+            $objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
             $objectMapper->update($contactObject);
 
             $this->logger->info(

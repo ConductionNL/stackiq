@@ -8,15 +8,17 @@
  * @copyright 2024 Conduction B.V.
  * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 namespace OCA\SoftwareCatalog\Controller;
 
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 
 class DashboardController extends Controller
@@ -24,11 +26,15 @@ class DashboardController extends Controller
     /**
      * Constructor for DashboardController.
      *
-     * @param string   $appName The app name
-     * @param IRequest $request The request object
+     * @param string       $appName     The app name
+     * @param IRequest     $request     The request object
+     * @param IUserSession $userSession The user session
      */
-    public function __construct($appName, IRequest $request)
-    {
+    public function __construct(
+        $appName,
+        IRequest $request,
+        private readonly IUserSession $userSession,
+    ) {
         parent::__construct(appName: $appName, request: $request);
     }//end __construct()
 
@@ -43,6 +49,7 @@ class DashboardController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @spec                                          openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-1
      */
     public function page(?string $getParameter): TemplateResponse
     {
@@ -75,9 +82,14 @@ class DashboardController extends Controller
      * @NoCSRFRequired
      *
      * @return JSONResponse The JSON response with empty results
+     * @spec   openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-1
      */
     public function index(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $results = ['results' => []];
             return new JSONResponse($results);

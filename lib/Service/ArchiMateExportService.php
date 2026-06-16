@@ -2,21 +2,25 @@
 /**
  * ArchiMate Export Service.
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://conduction.nl
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://conduction.nl
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
  */
 
 /**
  * ArchiMate Export Service for the SoftwareCatalog app
  *
- * @category Service
- * @package  OCA\SoftwareCatalog\Service
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @category  Service
+ * @package   OCA\SoftwareCatalog\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V. <info@conduction.nl>
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
 
 declare(strict_types=1);
@@ -45,8 +49,6 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
- * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
- * @SuppressWarnings(PHPMD.StaticAccess)
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -78,6 +80,7 @@ class ArchiMateExportService
      * @param \SimpleXMLElement $xml  The XML element to populate.
      *
      * @return \SimpleXMLElement The populated XML element.
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function arrayToXml(array $data, \SimpleXMLElement $xml): \SimpleXMLElement
     {
@@ -343,8 +346,11 @@ class ArchiMateExportService
             return $wellKnown[$prefix];
         }
 
+        $docNamespaces = $xml->getDocNamespaces(true);
+        if ($docNamespaces !== false) {
+            $namespaces = $docNamespaces;
+        } else {
             $namespaces = [];
-        if ($xml->getDocNamespaces(true) !== false) {
         }
 
         return $namespaces[$prefix] ?? '';
@@ -356,6 +362,8 @@ class ArchiMateExportService
      * @param array $modelMetadata Model metadata from the database.
      *
      * @return \SimpleXMLElement Root XML element ready for population.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function createCleanArchiMateXml(array $modelMetadata): \SimpleXMLElement
     {
@@ -394,6 +402,7 @@ XML;
      * @param string            $childTagName Tag name for child elements.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function addObjectsToXml(
         \SimpleXMLElement $xml,
@@ -407,15 +416,47 @@ XML;
             return;
         }
 
-        $folder = $xml->addChild('folder');
-        $folder->addAttribute('name', $folderName);
-        $folder->addAttribute('id', $folderId);
-        $folder->addAttribute('type', $folderType);
+        $folder = $this->createFolderNode(
+            parent: $xml,
+            name: $folderName,
+            id: $folderId,
+            type: $folderType
+        );
 
         foreach ($objects as $object) {
             $this->addObjectToFolder(folder: $folder, object: $object, childTagName: $childTagName);
         }
     }//end addObjectsToXml()
+
+    /**
+     * Builds a `<folder>` child node with the standard ArchiMate attributes.
+     *
+     * Extracted as part of task 4.3 — the repeated four-line pattern
+     * (`addChild('folder')` + three `addAttribute` calls) appeared in both
+     * {@see addObjectsToXml()} and {@see addViewsToXml()}.
+     *
+     * @param \SimpleXMLElement $parent The parent XML element.
+     * @param string            $name   Folder name (e.g. "Application").
+     * @param string            $id     Folder id (e.g. "folder-elements").
+     * @param string            $type   Folder type (e.g. "application").
+     *
+     * @return \SimpleXMLElement The newly-added folder node.
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-4
+     */
+    private function createFolderNode(
+        \SimpleXMLElement $parent,
+        string $name,
+        string $id,
+        string $type
+    ): \SimpleXMLElement {
+        $folder = $parent->addChild('folder');
+        $folder->addAttribute('name', $name);
+        $folder->addAttribute('id', $id);
+        $folder->addAttribute('type', $type);
+
+        return $folder;
+    }//end createFolderNode()
 
     /**
      * Convenience method for elements.
@@ -424,6 +465,8 @@ XML;
      * @param array             $elements The elements to add.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
      */
     public function addElementsToXml(\SimpleXMLElement $xml, array $elements): void
     {
@@ -444,6 +487,7 @@ XML;
      * @param array             $relationships The relationships to add.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function addRelationshipsToXml(\SimpleXMLElement $xml, array $relationships): void
     {
@@ -464,6 +508,7 @@ XML;
      * @param array             $views The views to add.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function addViewsToXml(\SimpleXMLElement $xml, array $views): void
     {
@@ -480,10 +525,12 @@ XML;
             return;
         }
 
-        $folder = $xml->addChild('folder');
-        $folder->addAttribute('name', 'Views');
-        $folder->addAttribute('id', 'folder-views');
-        $folder->addAttribute('type', 'diagrams');
+        $folder = $this->createFolderNode(
+            parent: $xml,
+            name: 'Views',
+            id: 'folder-views',
+            type: 'diagrams'
+        );
 
         foreach ($views as $view) {
             $this->addViewToFolder(folder: $folder, view: $view);
@@ -497,6 +544,7 @@ XML;
      * @param array             $organizations The organizations to add.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function addOrganizationsToXml(\SimpleXMLElement $xml, array $organizations): void
     {
@@ -539,12 +587,14 @@ XML;
         // DEBUG: Check if this is our target view with nodes.
         $targetId = 'id-1c197dc3-71e5-40dc-8f5d-a96e983b41af';
         if (isset($viewData['_identifier']) === true && $viewData['_identifier'] === $targetId) {
-                $nodeCountValue = 0;
+            $nodeCountValue = 0;
             if (is_array($viewData['node'] ?? null) === true) {
+                $nodeCountValue = count($viewData['node']);
             }
 
-                $nodeSampleValue = 'NO FIRST NODE';
+            $nodeSampleValue = 'NO FIRST NODE';
             if (isset($viewData['node'][0]) === true) {
+                $nodeSampleValue = $viewData['node'][0];
             }
 
             $this->logger->debug(
@@ -562,12 +612,14 @@ XML;
                     );
         }//end if
 
-            $nodeCountValue = 0;
+        $nodeCountValue = 0;
         if (is_array($viewData['node'] ?? null) === true) {
+            $nodeCountValue = count($viewData['node']);
         }
 
-            $connectionCountValue = 0;
+        $connectionCountValue = 0;
         if (is_array($viewData['connection'] ?? null) === true) {
+            $connectionCountValue = count($viewData['connection']);
         }
 
         $this->logger->debug(
@@ -605,26 +657,30 @@ XML;
     {
         // Format 1: OpenRegister object format with properties.xml_data.
         if (isset($view['properties']['xml_data']) === true) {
-                $xmlData = $view['properties']['xml_data'];
+            $xmlData = $view['properties']['xml_data'];
             if (is_string($view['properties']['xml_data']) === true) {
+                $xmlData = json_decode($view['properties']['xml_data'], true) ?? [];
             }
 
             if (is_array($xmlData) === true) {
+                return $xmlData;
             }
 
-                return null;
+            return null;
         }
 
         // Format 2: Object with xml_data field (from database).
         if (isset($view['xml_data']) === true) {
-                $xmlData = $view['xml_data'];
+            $xmlData = $view['xml_data'];
             if (is_string($view['xml_data']) === true) {
+                $xmlData = json_decode($view['xml_data'], true) ?? [];
             }
 
             if (is_array($xmlData) === true) {
+                return $xmlData;
             }
 
-                return null;
+            return null;
         }
 
         // Format 3: Direct XML data (from convertFromOpenRegisterObjects).
@@ -724,8 +780,9 @@ XML;
         // 3. Raw object data as fallback.
         if (isset($object['properties']['xml_data']) === true) {
             // Format 1: OpenRegister object format.
-                $xmlData = $object['properties']['xml_data'];
+            $xmlData = $object['properties']['xml_data'];
             if (is_string($object['properties']['xml_data']) === true) {
+                $xmlData = json_decode($object['properties']['xml_data'], true) ?? [];
             }
 
             if (is_array($xmlData) === true) {
@@ -733,8 +790,9 @@ XML;
             }
         } else if (isset($object['xml_data']) === true) {
             // Format 2: Object with xml_data field (from database).
-                $xmlData = $object['xml_data'];
+            $xmlData = $object['xml_data'];
             if (is_string($object['xml_data']) === true) {
+                $xmlData = json_decode($object['xml_data'], true) ?? [];
             }
 
             if (is_array($xmlData) === true) {
@@ -761,6 +819,7 @@ XML;
      * @return array Array of objects from all schemas in the register.
      *
      * @throws \RuntimeException If retrieval fails.
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function getObjectsFromDatabase(
         \OCA\OpenRegister\Service\ObjectService $objectService,
@@ -875,6 +934,7 @@ XML;
      * @param array             $propertyDefinitions The property definitions.
      *
      * @return void
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function addPropertyDefinitionsToXml(\SimpleXMLElement $xml, array $propertyDefinitions): void
     {
@@ -903,6 +963,7 @@ XML;
      * @param string|null                             $organization  Organization filter.
      *
      * @return string Generated XML.
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function exportArchiMateXml(
         \OCA\OpenRegister\Service\ObjectService $objectService,
@@ -929,10 +990,10 @@ XML;
         $dbTime  = microtime(true) - $startTime;
 
         // Step 2: Process and generate XML in single optimized pass (no schema mapping needed).
-        $xml = $this->generateXmlDirectly(objects: $objects, schemaIdMap: []);
+        $xml = $this->generateXmlDirectly(objects: $objects);
 
         // Step 3: Run Quality Assurance checks on generated XML.
-        $this->runQualityAssuranceChecks(xmlString: $xml, sourceData: $objects);
+        $this->runQualityAssuranceChecks(xmlString: $xml);
 
         $totalTime = microtime(true) - $startTime;
 
@@ -958,12 +1019,11 @@ XML;
      * - Direct XML generation per section
      * - No unnecessary loops or checks
      *
-     * @param array $objects     Raw objects from database.
-     * @param array $schemaIdMap Schema ID to type mapping.
+     * @param array $objects Raw objects from database.
      *
      * @return string Generated XML.
      */
-    private function generateXmlDirectly(array $objects, array $schemaIdMap): string
+    private function generateXmlDirectly(array $objects): string
     {
         $this->logger->info(
                 'Starting section-based XML generation from objects',
@@ -1944,6 +2004,7 @@ XML;
      * @param array $schemaIdMap Mapping of schema IDs to schema types.
      *
      * @return array ArchiMate data structure.
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-1
      */
     public function convertFromOpenRegisterObjects(array $objects, array $schemaIdMap): array
     {
@@ -2106,14 +2167,13 @@ XML;
     /**
      * Run comprehensive Quality Assurance checks on exported XML
      *
-     * @param string $xmlString  The generated XML string.
-     * @param array  $sourceData The original source data for reference.
+     * @param string $xmlString The generated XML string.
      *
      * @return void
      *
      * @throws \InvalidArgumentException If any QA check fails.
      */
-    private function runQualityAssuranceChecks(string $xmlString, array $sourceData): void
+    private function runQualityAssuranceChecks(string $xmlString): void
     {
         $this->logger->info('Running Quality Assurance checks on exported XML');
 
@@ -2374,6 +2434,7 @@ XML;
      * @param array                                   $options       Export options.
      *
      * @return string Generated XML.
+     * @spec   openspec/changes/retrofit-2026-05-26-archimate-export/tasks.md#task-2
      */
     public function exportOrganizationArchiMateXml(
         \OCA\OpenRegister\Service\ObjectService $objectService,
@@ -2545,8 +2606,9 @@ XML;
             }
 
             foreach ($refComps as $refComp) {
-                    $refCompUuid = ($refComp['id'] ?? $refComp['uuid'] ?? null);
+                $refCompUuid = ($refComp['id'] ?? $refComp['uuid'] ?? null);
                 if (is_string($refComp) === true) {
+                    $refCompUuid = $refComp;
                 }
 
                 if ($refCompUuid === null) {
@@ -2628,9 +2690,10 @@ XML;
         string $bronPropDefId,
         string $prefix=''
     ): array {
-        $elements     = [];
-            $idPrefix = 'id-swc-app-';
+        $elements = [];
+        $idPrefix = 'id-swc-app-';
         if ($prefix !== '') {
+            $idPrefix = $prefix.'-app-';
         }
 
         foreach ($moduleRefMap as $moduleId => $refCompIds) {
@@ -2664,13 +2727,15 @@ XML;
         string $bronPropDefId,
         string $prefix=''
     ): array {
-        $relationships   = [];
-            $appIdPrefix = 'id-swc-app-';
+        $relationships = [];
+        $appIdPrefix   = 'id-swc-app-';
         if ($prefix !== '') {
+            $appIdPrefix = $prefix.'-app-';
         }
 
-            $relIdPrefix = 'id-swc-rel-';
+        $relIdPrefix = 'id-swc-rel-';
         if ($prefix !== '') {
+            $relIdPrefix = $prefix.'-rel-';
         }
 
         foreach ($moduleRefMap as $moduleId => $refCompIds) {
@@ -2825,9 +2890,10 @@ XML;
             $propName = $prop['_name'] ?? $prop['name'] ?? '';
             if (is_string($propName) === true && stripos($propName, 'Titel view SWC') !== false && $value !== null) {
                 if (is_string($value) === true) {
+                    return $value;
                 }
 
-                    return null;
+                return null;
             }
         }
 

@@ -86,6 +86,12 @@
 		<!-- Email Configuration Section -->
 		<EmailConfiguration />
 
+		<!-- Registration Moderation Queue Section -->
+		<ModerationQueue />
+
+		<!-- Catalog Federation Section -->
+		<FederationSettings />
+
 		<!-- Background Jobs Configuration Section -->
 		<CronjobConfiguration />
 	</div>
@@ -93,6 +99,7 @@
 
 <script>
 import { defineComponent } from 'vue'
+import { loadState } from '@nextcloud/initial-state'
 import {
 	NcSettingsSection,
 	NcTextField,
@@ -108,6 +115,8 @@ import OrganizationSynchronization from './sections/OrganizationSynchronization.
 import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
 import EmailConfiguration from './sections/EmailConfiguration.vue'
 import CronjobConfiguration from './sections/CronjobConfiguration.vue'
+import ModerationQueue from './sections/ModerationQueue.vue'
+import FederationSettings from './sections/FederationSettings.vue'
 import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
 
 /**
@@ -131,10 +140,15 @@ export default defineComponent({
 		ArchiMateImportExport,
 		EmailConfiguration,
 		CronjobConfiguration,
+		ModerationQueue,
+		FederationSettings,
 		AlwaysVisibleSection,
 		Web,
 	},
 
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+	 */
 	setup() {
 		// Use the settings store
 		return {
@@ -149,7 +163,7 @@ export default defineComponent({
 	 */
 	data() {
 		return {
-			appVersion: document.getElementById('settings')?.dataset?.version || 'Unknown',
+			appVersion: loadState('softwarecatalog', 'version', 'Unknown'),
 			savingCatalogLocation: false,
 			catalogLocation: '',
 		}
@@ -160,6 +174,7 @@ export default defineComponent({
 		 * Check if catalog location has changed
 		 *
 		 * @return {boolean} True if catalog location has changed
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		catalogLocationChanged() {
 			return this.catalogLocation !== (this.store.settings.catalogLocation || '')
@@ -171,6 +186,9 @@ export default defineComponent({
 	 */
 	watch: {
 		'store.settings.catalogLocation': {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+			 */
 			handler(newValue) {
 				if (newValue !== undefined && newValue !== null) {
 					this.catalogLocation = newValue
@@ -179,6 +197,9 @@ export default defineComponent({
 			immediate: true,
 		},
 		'store.loadingGeneralSettings': {
+			/**
+			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+			 */
 			handler(newValue, oldValue) {
 				// When loading finishes, update the catalog location
 				if (oldValue === true && newValue === false) {
@@ -190,6 +211,7 @@ export default defineComponent({
 
 	/**
 	 * Load settings data when component is created
+	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 	 */
 	async created() {
 		await this.store.loadSettings()
@@ -203,6 +225,7 @@ export default defineComponent({
 		 *
 		 * @param {string} value - New catalog location value
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		onCatalogLocationChange(value) {
 			this.catalogLocation = value
@@ -213,6 +236,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async saveGeneralSettings() {
 			this.savingCatalogLocation = true
@@ -234,6 +258,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
 		async refreshGeneralSettings() {
 			try {

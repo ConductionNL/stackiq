@@ -394,10 +394,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		organisatieStore() {
 			return useOrganisatieStore()
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		contactpersonen() {
 			// Use contactpersonen from organisation data if available, otherwise fall back to store
 			if (
@@ -411,19 +417,31 @@ export default {
 			return this.organisatieStore.getContactpersonen
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		loading() {
 			return this.organisatieStore.isLoading
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		error() {
 			return this.organisatieStore.getError
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		availableGroups() {
 			return this.organisatieStore.getAvailableGroups
 		},
 
 		// Password validation computed properties
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		passwordValidation() {
 			return {
 				minLength: this.newPassword.length >= 10,
@@ -437,6 +455,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		isPasswordValid() {
 			return Object.values(this.passwordValidation).every(
 				(requirement) => requirement,
@@ -445,6 +466,9 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		newPassword(newVal) {
 			// Clear existing timeout
 			if (this.pwnedCheckTimeout) {
@@ -466,12 +490,18 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+	 */
 	async mounted() {
 		await this.loadData()
 		// Load user info and groups to get status information
 		await this.loadUserInfoAndGroups()
 	},
 
+	/**
+	 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+	 */
 	beforeDestroy() {
 		// Clean up timeouts to prevent memory leaks
 		if (this.userStatusRefreshTimeout) {
@@ -490,6 +520,7 @@ export default {
 		 * Compute SHA-1 hash of a string
 		 * @param {string} str - String to hash
 		 * @return {Promise<string>} SHA-1 hash in hexadecimal format (uppercase)
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		async sha1(str) {
 			// Simple SHA-1 implementation
@@ -590,6 +621,7 @@ export default {
 		 * @param {number} value - Value to rotate
 		 * @param {number} amount - Amount to rotate
 		 * @return {number} Rotated value
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		rotl(value, amount) {
 			return ((value << amount) | (value >>> (32 - amount))) >>> 0
@@ -598,6 +630,7 @@ export default {
 		/**
 		 * Check if password is in Have I Been Pwned database
 		 * @param {string} password - Password to check
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		async checkPasswordPwned(password) {
 			if (!password || password.length < 10) {
@@ -659,6 +692,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		async loadData() {
 			try {
 				// Only fetch available groups, contactpersonen come from organisation data
@@ -677,6 +713,7 @@ export default {
 		 * Process contactpersonen data from organisation object to match expected format.
 		 * @param {Array} rawContactpersonen - Raw contactpersonen data from organisation.
 		 * @return {Array} Processed contactpersonen with user information.
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		processContactpersonen(rawContactpersonen) {
 			return rawContactpersonen.map((contactpersoon) => {
@@ -716,6 +753,7 @@ export default {
 
 		/**
 		 * Load user info and available groups in parallel
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		async loadUserInfoAndGroups() {
 			// Prevent multiple simultaneous calls
@@ -790,6 +828,7 @@ export default {
 		 * Update contactpersonen with bulk user info.
 		 * @param {object} bulkUserInfo - User info object keyed by contactpersoon ID.
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		updateContactpersonenWithUserInfo(bulkUserInfo) {
 			if (!this.organisationData.contactpersonen) return
@@ -837,6 +876,7 @@ export default {
 		/**
 		 * Refresh user statuses from Nextcloud for all contact persons
 		 * @deprecated Use loadUserInfoAndGroups() instead for better performance
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		async refreshUserStatuses() {
 			console.info(
@@ -847,6 +887,7 @@ export default {
 
 		/**
 		 * Public method to refresh user statuses - can be called from parent component
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		async refreshUserData() {
 			console.info('Public refreshUserData called')
@@ -857,6 +898,7 @@ export default {
 		 * Get contactperson name.
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {string} The contact person's name.
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		getContactpersoonName(contactpersoon) {
 			const data = contactpersoon.data
@@ -874,6 +916,7 @@ export default {
 		 * Filter groups to only show those available in the modal.
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {Array} Filtered array of group IDs.
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		getFilteredGroups(contactpersoon) {
 			if (!contactpersoon.user.groups || contactpersoon.user.groups.length === 0) {
@@ -893,6 +936,7 @@ export default {
 		 * Format group name.
 		 * @param {string} groupId - The group ID.
 		 * @return {string} Formatted group name.
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		formatGroupName(groupId) {
 			const groupMap = {
@@ -903,6 +947,9 @@ export default {
 			return groupMap[groupId] || groupId
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		async convertToUser(contactpersoon) {
 			console.info('convertToUser called with:', contactpersoon)
 			console.info(
@@ -1004,6 +1051,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		openPasswordDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
 			this.newPassword = ''
@@ -1016,6 +1066,9 @@ export default {
 			this.showPasswordDialog = true
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		closePasswordDialog() {
 			this.showPasswordDialog = false
 			this.selectedContactpersoon = null
@@ -1029,6 +1082,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		async savePassword() {
 			if (!this.newPassword || this.newPassword.length < 10) {
 				showError(
@@ -1083,6 +1139,7 @@ export default {
 		 * Open groups management dialog.
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		async openGroupsDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
@@ -1106,6 +1163,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		closeGroupsDialog() {
 			this.showGroupsDialog = false
 			this.selectedContactpersoon = null
@@ -1113,6 +1173,9 @@ export default {
 			this.groupsLoading = false
 		},
 
+		/**
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 */
 		toggleGroup(groupId, checked) {
 			if (checked) {
 				if (!this.selectedGroups.includes(groupId)) {
@@ -1129,6 +1192,7 @@ export default {
 		/**
 		 * Save user groups.
 		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		async saveGroups() {
 			if (!this.selectedContactpersoon) return
@@ -1162,6 +1226,7 @@ export default {
 		/**
 		 * Disable a user account
 		 * @param {object} contactpersoon - The contact person object
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		async disableUser(contactpersoon) {
 			try {
@@ -1182,6 +1247,7 @@ export default {
 		/**
 		 * Enable a user account
 		 * @param {object} contactpersoon - The contact person object
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		async enableUser(contactpersoon) {
 			try {
@@ -1204,6 +1270,7 @@ export default {
 		 * @param {string} contactpersoonId - The ID of the contact person.
 		 * @param {boolean} disabled - Whether the user is disabled.
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		updateContactpersoonStatus(contactpersoonId, disabled) {
 		// Find and update the contactpersoon in the organisation data.
@@ -1242,6 +1309,7 @@ export default {
 		 * @param {string} contactpersoonId - The ID of the contact person.
 		 * @param {Array} groups - Array of group IDs.
 		 * @return {void}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
 		 */
 		updateContactpersoonGroups(contactpersoonId, groups) {
 		// Find and update the contactpersoon in the organisation data.
@@ -1279,219 +1347,219 @@ export default {
 
 <style scoped>
 .contactpersonen-list {
-  padding: 8px;
+	padding: 8px;
 }
 
 .loading,
 .error {
-  padding: 16px;
-  text-align: center;
+	padding: 16px;
+	text-align: center;
 }
 
 .contactpersonen-table {
-  margin-top: 8px;
+	margin-top: 8px;
 }
 
 .compact-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
 }
 
 .compact-table th,
 .compact-table td {
-  padding: 8px;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border);
+	padding: 8px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
 }
 
 .compact-table th {
-  font-weight: bold;
-  background-color: var(--color-background-hover);
-  font-size: 13px;
+	font-weight: bold;
+	background-color: var(--color-background-hover);
+	font-size: 13px;
 }
 
 .name-cell {
-  font-weight: 500;
-  max-width: 150px;
+	font-weight: 500;
+	max-width: 150px;
 }
 
 .email-cell {
-  max-width: 200px;
-  word-break: break-all;
+	max-width: 200px;
+	word-break: break-all;
 }
 
 .status-cell {
-  width: 80px;
+	width: 80px;
 }
 
 .groups-cell {
-  max-width: 150px;
+	max-width: 150px;
 }
 
 .actions-cell {
-  width: 60px;
+	width: 60px;
 }
 
 .groups {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2px;
 }
 
 .no-groups {
-  color: var(--color-text-lighter);
-  font-size: 12px;
+	color: var(--color-text-lighter);
+	font-size: 12px;
 }
 
 .status-chip {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-  text-align: center;
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 500;
+	text-align: center;
 }
 
 .status-success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+	background-color: #d4edda;
+	color: #155724;
+	border: 1px solid #c3e6cb;
 }
 
 .status-tertiary {
-  background-color: #f8f9fa;
-  color: #6c757d;
-  border: 1px solid #dee2e6;
+	background-color: #f8f9fa;
+	color: #6c757d;
+	border: 1px solid #dee2e6;
 }
 
 .status-warning {
-  background-color: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeaa7;
+	background-color: #fff3cd;
+	color: #856404;
+	border: 1px solid #ffeaa7;
 }
 
 .group-chip {
-  display: inline-block;
-  padding: 4px 8px;
-  margin: 2px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-  background-color: #e3f2fd;
-  color: #1565c0;
-  border: 1px solid #90caf9;
-  white-space: nowrap;
+	display: inline-block;
+	padding: 4px 8px;
+	margin: 2px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 500;
+	background-color: #e3f2fd;
+	color: #1565c0;
+	border: 1px solid #90caf9;
+	white-space: nowrap;
 }
 
 .password-dialog {
-  padding: 12px;
-  min-width: 320px;
-  max-width: 400px;
+	padding: 12px;
+	min-width: 320px;
+	max-width: 400px;
 }
 
 .groups-dialog {
-  padding: 12px;
-  min-width: 350px;
-  max-width: 450px;
+	padding: 12px;
+	min-width: 350px;
+	max-width: 450px;
 }
 
 .dialog-description {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: var(--color-text-lighter);
+	margin: 0 0 12px 0;
+	font-size: 14px;
+	color: var(--color-text-lighter);
 }
 
 .password-input {
-  margin: 12px 0;
+	margin: 12px 0;
 }
 
 .groups-selection {
-  margin: 12px 0;
-  max-height: 200px;
-  overflow-y: auto;
+	margin: 12px 0;
+	max-height: 200px;
+	overflow-y: auto;
 }
 
 .groups-selection .checkbox-radio-switch {
-  margin-bottom: 6px;
+	margin-bottom: 6px;
 }
 
 .compact-checkbox {
-  padding: 4px 0;
+	padding: 4px 0;
 }
 
 .compact-input {
-  margin: 8px 0;
+	margin: 8px 0;
 }
 
 .dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 8px;
-  border-top: 1px solid var(--color-border);
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 12px;
+	padding-top: 8px;
+	border-top: 1px solid var(--color-border);
 }
 
 /* Make NcTextField more compact */
 .compact-input :deep(.input-field) {
-  margin-bottom: 8px;
+	margin-bottom: 8px;
 }
 
 .compact-input :deep(.input-field__main-wrapper) {
-  min-height: 36px;
+	min-height: 36px;
 }
 
 .compact-input :deep(.input-field__input) {
-  padding: 8px 12px;
-  font-size: 14px;
+	padding: 8px 12px;
+	font-size: 14px;
 }
 
 /* Password Requirements Styles */
 .password-requirements {
-  margin: 16px 0;
-  padding: 12px;
-  background: var(--color-background-dark);
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
+	margin: 16px 0;
+	padding: 12px;
+	background: var(--color-background-dark);
+	border-radius: 6px;
+	border: 1px solid var(--color-border);
 }
 
 .password-requirements h4 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text-dark);
+	margin: 0 0 8px 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--color-text-dark);
 }
 
 .requirements-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+	list-style: none;
+	padding: 0;
+	margin: 0;
 }
 
 .requirements-list li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  font-size: 13px;
-  color: var(--color-text-lighter);
-  transition: color 0.2s ease;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 0;
+	font-size: 13px;
+	color: var(--color-text-lighter);
+	transition: color 0.2s ease;
 }
 
 .requirements-list li.requirement-met {
-  color: var(--color-success);
+	color: var(--color-success);
 }
 
 .check-icon {
-  color: var(--color-success);
+	color: var(--color-success);
 }
 
 .close-icon {
-  color: var(--color-error);
+	color: var(--color-error);
 }
 
 .loading-icon {
-  color: var(--color-text-lighter);
+	color: var(--color-text-lighter);
 }
 </style>
