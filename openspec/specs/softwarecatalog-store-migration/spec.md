@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # softwarecatalog-store-migration Specification
 
 ## Purpose
-TBD - created by archiving change softwarecatalog-store-migration. Update Purpose after archive.
+Migrates SoftwareCatalog's Pinia stores so every OpenRegister-CRUD entity store is built via the shared createObjectStore factory with the lib plugins and composables, instead of vanilla defineStore. App-specific extensions are expressed as createObjectStore plugins reusing the lib helpers and preserving legacy CRUD signatures, while non-CRUD UI-shell, settings, and non-OpenRegister-endpoint stores stay on vanilla defineStore.
 ## Requirements
 ### Requirement: createObjectStore for OpenRegister-CRUD stores
 

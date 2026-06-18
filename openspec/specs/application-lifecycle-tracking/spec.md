@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # application-lifecycle-tracking Specification
 
 ## Purpose
-TBD - created by archiving change application-lifecycle-tracking. Update Purpose after archive.
+Tracks the lifecycle of applications in use by deriving each usage's lifecycle phase from its existing phase-start dates (computed at query time, never stored) and surfacing end-of-support and end-of-life warnings from the linked module version. Provides a per-organisation portfolio roadmap grouping usages by phase and urgency, records planned replacements per usage, and declares scheduled notifications for approaching end-of-support and phase-out.
 ## Requirements
 ### Requirement: Lifecycle phase is derived from existing gebruik dates
 

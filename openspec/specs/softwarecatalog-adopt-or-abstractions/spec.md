@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # softwarecatalog-adopt-or-abstractions Specification
 
 ## Purpose
-TBD - created by archiving change softwarecatalog-adopt-or-abstractions. Update Purpose after archive.
+Aligns SoftwareCatalog with the shared OpenRegister and nc-vue abstractions: it ships an architectural manifest, resolves register and schema ids through RegisterResolverService instead of raw app-config, and stamps locale, translation-target, and tenant-organisation headers on OR fetches and writes. It also surfaces a translated-from badge in list views, adopts the tenant-context composable, and keeps all PHP code passing composer check:strict with container-run PHPUnit tests.
 ## Requirements
 ### Requirement: SoftwareCatalog MUST ship an architectural manifest at `src/manifest.json`
 

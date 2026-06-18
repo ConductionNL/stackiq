@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # settings-admin-controller Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-settings-admin-controller. Update Purpose after archive.
+Exposes the REST endpoints for administering the app's configuration: paired get/update endpoints for each configuration domain (general, sync, voorzieningen, AMEF, email, ArchiMate, user-groups, cronjob) plus configuration status, auto-configuration, import, synchronisation, heartbeat, statistics, and email-template management. Each endpoint delegates to SettingsService and returns the current or updated state as JSON, with exports returned as downloadable responses and progress streamed over SSE.
 
 @e2e exclude PHP SettingsController REST endpoints (load/save/test config, auto-configure) — HTTP contract; covered by Newman REST collections and PHPUnit controller tests. The settings UI render is covered by the manifest settings-page test under fe-settings-ui.
 

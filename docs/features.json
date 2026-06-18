@@ -1,8 +1,230 @@
 [
   {
-    "slug": "org-archimate-export",
-    "title": "Organization-Specific ArchiMate Export",
-    "summary": "Defines how the softwarecatalog app exports an organization-enriched ArchiMate (AMEFF) XML file that includes the base GEMMA model plus the organization's applications plotted on referentiecomponenten, with proper folder structure, naming, and metadata. Supports toggling data layers (modules, deelnames, gebruik) via query parameters and organises output into typed folders. The exported file is designed to import cleanly into Archi (the open-source ArchiMate modelling tool) and other AMEFF-compatible tools.",
-    "docsUrl": "openspec/specs/org-archimate-export/spec.md"
+    "slug": "aanbod-listings",
+    "title": "aanbod-listings",
+    "summary": "Provides the offering (aanbod) listing API that shows an organisation the modules, services, and connections it offers plus the usages it consumes. Lets an organisation accept an offer (claiming ownership when it is the rightful provider or consumer) or deny it by deletion, with role-based authorisation and consistent paginated, error-mapped HTTP responses.",
+    "docsUrl": "openspec/specs/aanbod-listings/spec.md"
+  },
+  {
+    "slug": "aangeboden-gebruik-api",
+    "title": "aangeboden-gebruik-api",
+    "summary": "Provides a REST API for offered-usage (gebruik) records, listing them scoped to the caller's role — as consumer (afnemer), as civil servant (ambtenaar), or as participant — and exposing single records with their links (koppelingen). Lets the caller assign a usage to their active organisation or remove their consumer link, and publishes machine-readable API documentation for these endpoints.",
+    "docsUrl": "openspec/specs/aangeboden-gebruik-api/spec.md"
+  },
+  {
+    "slug": "application-lifecycle-tracking",
+    "title": "application-lifecycle-tracking",
+    "summary": "Tracks the lifecycle of applications in use by deriving each usage's lifecycle phase from its existing phase-start dates (computed at query time, never stored) and surfacing end-of-support and end-of-life warnings from the linked module version. Provides a per-organisation portfolio roadmap grouping usages by phase and urgency, records planned replacements per usage, and declares scheduled notifications for approaching end-of-support and phase-out.",
+    "docsUrl": "openspec/specs/application-lifecycle-tracking/spec.md"
+  },
+  {
+    "slug": "archimate-export",
+    "title": "archimate-export",
+    "summary": "Exports catalog objects as a well-formed ArchiMate AMEF XML document (Open Group Exchange format), serialising elements, relationships, views, organisations, and property definitions. Supports both a full-catalog export and an export scoped to a single organisation.",
+    "docsUrl": "openspec/specs/archimate-export/spec.md"
+  },
+  {
+    "slug": "archimate-import",
+    "title": "archimate-import",
+    "summary": "Imports ArchiMate AMEF XML files into the catalog, parsing elements, relationships, views, and organisations and persisting them as OpenRegister objects with a result summary. Exposes a facade for import, export, round-trip fidelity testing, and operation-status reporting, plus typed query helpers for retrieving each kind of catalog object.",
+    "docsUrl": "openspec/specs/archimate-import/spec.md"
+  },
+  {
+    "slug": "concept-organizations-widget",
+    "title": "concept-organizations-widget",
+    "summary": "Registers the Concept Organisations dashboard widget, loading its frontend assets (runtime, vendor, nc-vue, and widget chunks plus stylesheet) in correct dependency order through the Nextcloud asset framework under the softwarecatalog application namespace.",
+    "docsUrl": "openspec/specs/concept-organizations-widget/spec.md"
+  },
+  {
+    "slug": "contactpersonen-api",
+    "title": "contactpersonen-api",
+    "summary": "Provides a REST API for an organisation's contact persons, listing them with their linked Nextcloud user account details and exposing the current user's own profile. Lets administrators convert a contact into a Nextcloud user and manage that account's lifecycle — password reset, group membership, and enabling or disabling.",
+    "docsUrl": "openspec/specs/contactpersonen-api/spec.md"
+  },
+  {
+    "slug": "contactpersoon-sync",
+    "title": "contactpersoon-sync",
+    "summary": "Synchronises contact-person records into managed Nextcloud user accounts, creating, updating, and removing the linked user as contacts change and assigning group membership and the organisation beheerder role. Also lists and looks up contacts' account details (individually and in bulk) and toggles their linked accounts' enabled state.",
+    "docsUrl": "openspec/specs/contactpersoon-sync/spec.md"
+  },
+  {
+    "slug": "contract-administration",
+    "title": "contract-administration",
+    "summary": "Manages software contracts against the existing contract schema through the OpenRegister object store, surfaced by manifest index and detail pages and visible in application context. Surfaces expiring contracts via a configurable window filter, transitions active contracts to expired automatically when their end date passes, enables contract-expiry notifications, derives and totals annualised cost, and links contract documents as Nextcloud Files references.",
+    "docsUrl": "openspec/specs/contract-administration/spec.md"
+  },
+  {
+    "slug": "cronjob-context",
+    "title": "cronjob-context",
+    "summary": "Runs the organisation and contact synchronisation pipeline as a scheduled Nextcloud background job, operating with a system-level (non-RBAC) context on its timed interval.",
+    "docsUrl": "openspec/specs/cronjob-context/spec.md"
+  },
+  {
+    "slug": "dashboard-views-api",
+    "title": "dashboard-views-api",
+    "summary": "Serves the app shell page and the dashboard's aggregate data feed, exposes saved views (list and single) over the API, and stores and retrieves generic per-user preferences by key. Provides the backend data behind the catalog dashboard and saved-view features.",
+    "docsUrl": "openspec/specs/dashboard-views-api/spec.md"
+  },
+  {
+    "slug": "deelnames-gebruik",
+    "title": "deelnames-gebruik",
+    "summary": "Surfaces shared (deelnames) usage on GEMMA views by retrieving, alongside an organisation's owned usage, the gebruiksobjecten in which it appears as a participant (deelnemer) — querying these with RBAC and multitenancy disabled and merging the two sets without duplicates. Renders shared usage as distinct module overlay nodes that carry the owning organisation's name for attribution, exposes an independent frontend toggle to include them, and handles deelnames query failures gracefully without blocking the view.",
+    "docsUrl": "openspec/specs/deelnames-gebruik/spec.md"
+  },
+  {
+    "slug": "email-delivery",
+    "title": "email-delivery",
+    "summary": "Sends the app's transactional notification emails — organisation registration and activation, user creation and update, and test messages — rendering each template and dispatching it via the configured transport, skipping any disabled notification type. Exposes and persists the mail transport, sender, and per-notification configuration and reports whether the email system is fully configured.",
+    "docsUrl": "openspec/specs/email-delivery/spec.md"
+  },
+  {
+    "slug": "fe-object-modals",
+    "title": "fe-object-modals",
+    "summary": "Provides the frontend object modals for working with OpenRegister objects: viewing detail, creating and editing, merging, migrating between register/schema, uploading and downloading files, deleting and locking, bulk operations over a selection, and managing the selected-objects list. Each modal validates input and dispatches the matching Pinia store action, reporting success or failure.",
+    "docsUrl": "openspec/specs/fe-object-modals/spec.md"
+  },
+  {
+    "slug": "fe-organizations",
+    "title": "fe-organizations",
+    "summary": "Provides the organisation-management frontend: creating and editing organisations, changing their lifecycle status, displaying organisation cards with contextual actions, and a dashboard widget listing organisations still in concept. Also manages an organisation's contact persons and their linked Nextcloud user accounts (add, convert to user, change password, enable/disable, update groups).",
+    "docsUrl": "openspec/specs/fe-organizations/spec.md"
+  },
+  {
+    "slug": "fe-settings-ui",
+    "title": "fe-settings-ui",
+    "summary": "Provides the app's settings interface — a sectioned shell that surfaces overall configuration status and lets admins configure OpenRegister integration, user-group role mapping, email delivery, scheduled jobs, and organisation synchronisation. Also offers ArchiMate import/export, a statistics overview, version information, and a navigation-configuration panel.",
+    "docsUrl": "openspec/specs/fe-settings-ui/spec.md"
+  },
+  {
+    "slug": "fe-shell-navigation",
+    "title": "fe-shell-navigation",
+    "summary": "Provides the catalog's frontend shell: the dashboard overview, the directory and search sidebars, the pagination control, and reusable presentational components such as collapsible sections and the published-status icon. The dashboard displays overview counts, recent items and widgets and routes the user into object and organisation detail, while the sidebars browse and filter the active object list.",
+    "docsUrl": "openspec/specs/fe-shell-navigation/spec.md"
+  },
+  {
+    "slug": "fe-stores",
+    "title": "fe-stores",
+    "summary": "Provides the catalog's frontend state layer: Pinia stores and supporting services for settings, organisations and contact persons, UI navigation, and catalog data, plus an object-operations store plugin for shared CRUD and lifecycle actions. It also includes a theme service that detects the active Nextcloud light/dark theme and a heartbeat client that keeps the backend session alive during long operations.",
+    "docsUrl": "openspec/specs/fe-stores/spec.md"
+  },
+  {
+    "slug": "federated-catalog-sync",
+    "title": "federated-catalog-sync",
+    "summary": "Federates the software catalog with other instances through an OpenCatalogi directory: it announces the local catalog, discovers and subscribes to peer catalogs, and merges peer entries read-only with source attribution. Only published entries are exposed to the federation, a scheduled background job refreshes subscribed peers and marks unreachable ones stale rather than deleting them, and all outbound requests pass the SSRF guard with a config-gated local allowlist.",
+    "docsUrl": "openspec/specs/federated-catalog-sync/spec.md"
+  },
+  {
+    "slug": "gebruik-services",
+    "title": "gebruik-services",
+    "summary": "Provides the backend service that returns usage (gebruik) records for the active voorzieningen register and gebruik schema, resolving configuration through SettingsService and querying OpenRegister with pagination. It normalises the extend options, strips internal annotations from results, and exposes a helper that returns the application UUIDs scoped to the active register.",
+    "docsUrl": "openspec/specs/gebruik-services/spec.md"
+  },
+  {
+    "slug": "method-decomposition",
+    "title": "method-decomposition",
+    "summary": "Defines the structural decomposition of the app's oversized controllers, services, and event listeners into thin action methods, focused handler classes, and guard-clause-gated helpers that pass PHPMD complexity thresholds without suppressions. It also fixes the resulting SettingsController endpoint contracts for settings CRUD, configuration bootstrap, sync orchestration, diagnostics, and progress streaming, preserving behaviour as pure refactoring.",
+    "docsUrl": "openspec/specs/method-decomposition/spec.md"
+  },
+  {
+    "slug": "module-compliance-assessment",
+    "title": "module-compliance-assessment",
+    "summary": "Manages module compliance against GEMMA standard versions: compliancy records link a module to a standaardversie with optional evidence, a subscriber pipeline derives each module's standards set from those records, and a filter-first compliance matrix distinguishes verified from claimed support. It also lets the catalog be filtered by supported standard, reports an organisation's coverage across its in-use applications, and links new evidence via NC Files while keeping legacy base64 evidence readable.",
+    "docsUrl": "openspec/specs/module-compliance-assessment/spec.md"
+  },
+  {
+    "slug": "module-overlay-rendering",
+    "title": "module-overlay-rendering",
+    "summary": "Renders organisation-specific module overlay nodes nested inside their parent referentiecomponenten on GEMMA architecture views, styling them visually distinct from standard GEMMA elements and from shared (deelnames) modules. It handles topological sorting, stacking of multiple modules within a component, freeze-based rendering performance, click-to-detail interaction, a legend, and WCAG AA accessibility for the overlay nodes.",
+    "docsUrl": "openspec/specs/module-overlay-rendering/spec.md"
+  },
+  {
+    "slug": "open-data-publishing",
+    "title": "open-data-publishing",
+    "summary": "Lets catalogue maintainers publish and depublish software entries and organisation profiles as open data by setting the OpenRegister publicatiedatum, with anonymous visibility governed by the public RBAC read rule and the published representation sanitized of PII and internal fields while carrying reuse metadata such as license and publisher. Published entries are served through the existing OpenCatalogi public read surface, and an anonymous organisation self-registration flow is validated, throttled, and moderated through an admin approval queue.",
+    "docsUrl": "openspec/specs/open-data-publishing/spec.md"
+  },
+  {
+    "slug": "organisatie-service",
+    "title": "organisatie-service",
+    "summary": "Provides the backend service that maps SoftwareCatalog organisation data into OpenRegister organisation entities and keeps them in sync: it creates entities, updates their active flag from a SoftwareCatalog status, and maps the payload shape with name fallbacks. It also assigns Nextcloud users to an organisation with per-user notification emails and resolves the members of the admin group, failing safe by logging and returning null/false rather than propagating exceptions.",
+    "docsUrl": "openspec/specs/organisatie-service/spec.md"
+  },
+  {
+    "slug": "organization-sync",
+    "title": "organization-sync",
+    "summary": "Runs batched synchronisation of organisations, contact persons, and users from SoftwareCatalog into OpenRegister, with an execution-time budget and scheduled, manual, and multi-round optimised orchestration modes. It processes individual records, ensures each organisation has a matching OpenRegister entity, reports sync status, and records the last-sync timestamp used to scope incremental runs.",
+    "docsUrl": "openspec/specs/organization-sync/spec.md"
+  },
+  {
+    "slug": "progress-tracking",
+    "title": "progress-tracking",
+    "summary": "Tracks the progress of long-running sync and import operations: it starts a tracked operation with a unique id, updates phase, processed items and statistics, and persists each snapshot to the session. It collects errors and warnings without aborting, finalises an operation at 100 percent, exposes snapshots for the active or a referenced operation, and cleans up stale progress records.",
+    "docsUrl": "openspec/specs/progress-tracking/spec.md"
+  },
+  {
+    "slug": "repair-init",
+    "title": "repair-init",
+    "summary": "Provides the install-time repair step that initialises the app's default settings on install and upgrade, seeding the configuration so the catalog is ready to run. It exposes a human-readable step name shown while the repair framework runs.",
+    "docsUrl": "openspec/specs/repair-init/spec.md"
+  },
+  {
+    "slug": "sc-handlers",
+    "title": "sc-handlers",
+    "summary": "Provides the object-lifecycle handlers that react to OpenRegister save, update, and delete events for contact persons and organisations. They provision and maintain a contact person's Nextcloud account, create and reconcile user groups from roles, organisation, and gemeente, maintain the user-manager hierarchy, and provision an organisation's group while managing its beheerders and membership.",
+    "docsUrl": "openspec/specs/sc-handlers/spec.md"
+  },
+  {
+    "slug": "settings-admin-controller",
+    "title": "settings-admin-controller",
+    "summary": "Exposes the REST endpoints for administering the app's configuration: paired get/update endpoints for each configuration domain (general, sync, voorzieningen, AMEF, email, ArchiMate, user-groups, cronjob) plus configuration status, auto-configuration, import, synchronisation, heartbeat, statistics, and email-template management. Each endpoint delegates to SettingsService and returns the current or updated state as JSON, with exports returned as downloadable responses and progress streamed over SSE.",
+    "docsUrl": "openspec/specs/settings-admin-controller/spec.md"
+  },
+  {
+    "slug": "settings-service",
+    "title": "settings-service",
+    "summary": "Provides the backend service that detects OpenRegister availability and resolves its service handles and register-schema ids, then reads and persists every configuration domain (voorzieningen, AMEF, email, ArchiMate, user-groups, cronjob, catalog location). It runs auto-configuration, seed import, and configuration maintenance, manages email settings, templates, and connectivity tests, and handles user groups, ArchiMate operation status, statistics, and organisation sync.",
+    "docsUrl": "openspec/specs/settings-service/spec.md"
+  },
+  {
+    "slug": "softwarecatalog-adopt-or-abstractions",
+    "title": "softwarecatalog-adopt-or-abstractions",
+    "summary": "Aligns SoftwareCatalog with the shared OpenRegister and nc-vue abstractions: it ships an architectural manifest, resolves register and schema ids through RegisterResolverService instead of raw app-config, and stamps locale, translation-target, and tenant-organisation headers on OR fetches and writes. It also surfaces a translated-from badge in list views, adopts the tenant-context composable, and keeps all PHP code passing composer check:strict with container-run PHPUnit tests.",
+    "docsUrl": "openspec/specs/softwarecatalog-adopt-or-abstractions/spec.md"
+  },
+  {
+    "slug": "softwarecatalog-contacts-to-nc",
+    "title": "softwarecatalog-contacts-to-nc",
+    "summary": "Moves person and organisation identity out of app-local schemas and into the Nextcloud addressbook as the source of record, reducing the contactpersoon and organisatie schemas to catalog-specific relationship records keyed by a required contactsUid. A ContactSyncService bridges to Nextcloud Contacts via IManager, an idempotent fail-safe repair step migrates existing identity, and the top-level Organisations and Contacts navigation is removed while their pages stay routable for deep links.",
+    "docsUrl": "openspec/specs/softwarecatalog-contacts-to-nc/spec.md"
+  },
+  {
+    "slug": "softwarecatalog-manifest-v1",
+    "title": "softwarecatalog-manifest-v1",
+    "summary": "Defines the version 1.0.0 architectural manifest that drives SoftwareCatalog's UI declaratively: schema-backed list pages become type \"index\", single-object pages become type \"detail\" with sidebar tabs, the settings page becomes type \"settings\", and only two custom-fallback pages remain. Register slugs are driven by the @resolve:voorzieningen_register sentinel for per-tenant configurability, the manifest validates against the nc-vue schema, and bootstrap mounts CnAppRoot with shallow-cloned registries.",
+    "docsUrl": "openspec/specs/softwarecatalog-manifest-v1/spec.md"
+  },
+  {
+    "slug": "softwarecatalog-notifications",
+    "title": "softwarecatalog-notifications",
+    "summary": "Declares x-openregister-notifications rules on the kwetsbaarheid, contract, moduleVersie, and beoordeeling schemas so the OpenRegister notification engine dispatches alerts on reported vulnerabilities, approaching contract expiry, newly published module versions, and submitted reviews. Each rule uses a working trigger type, targets admins, record manage-ACL holders, or a named group, and provides both Dutch and English subject strings.",
+    "docsUrl": "openspec/specs/softwarecatalog-notifications/spec.md"
+  },
+  {
+    "slug": "softwarecatalog-store-migration",
+    "title": "softwarecatalog-store-migration",
+    "summary": "Migrates SoftwareCatalog's Pinia stores so every OpenRegister-CRUD entity store is built via the shared createObjectStore factory with the lib plugins and composables, instead of vanilla defineStore. App-specific extensions are expressed as createObjectStore plugins reusing the lib helpers and preserving legacy CRUD signatures, while non-CRUD UI-shell, settings, and non-OpenRegister-endpoint stores stay on vanilla defineStore.",
+    "docsUrl": "openspec/specs/softwarecatalog-store-migration/spec.md"
+  },
+  {
+    "slug": "softwarecatalogue-orchestration",
+    "title": "softwarecatalogue-orchestration",
+    "summary": "Coordinates the cross-service reactions to contact-person, organisation, and gebruiker lifecycle events: provisioning and linking Nextcloud user accounts, maintaining group membership and beheerder roles, mirroring organisations into OpenRegister, and sending welcome emails. It also blocks, restores, and reverts account access for gebruikers and exposes helpers for generic user groups, the user-manager hierarchy, and organisation structure.",
+    "docsUrl": "openspec/specs/softwarecatalogue-orchestration/spec.md"
+  },
+  {
+    "slug": "view-enrichment-api",
+    "title": "view-enrichment-api",
+    "summary": "Provides the softwarecatalog view enrichment API that augments base GEMMA architecture views with organisation-specific module and deelnames overlay nodes, computed server-side and returned in the standard viewNode format so the frontend rendering pipeline is unchanged. Frontend filter toggles map to enrichment query parameters, enrichment is scoped to an active or specified organisation, and the API supports caching, input validation, concurrent requests, synthetic relationships, and node-count metadata.",
+    "docsUrl": "openspec/specs/view-enrichment-api/spec.md"
   }
 ]

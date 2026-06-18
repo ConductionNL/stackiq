@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # softwarecatalog-manifest-v1 Specification
 
 ## Purpose
-TBD - created by archiving change softwarecatalog-manifest-v1. Update Purpose after archive.
+Defines the version 1.0.0 architectural manifest that drives SoftwareCatalog's UI declaratively: schema-backed list pages become type "index", single-object pages become type "detail" with sidebar tabs, the settings page becomes type "settings", and only two custom-fallback pages remain. Register slugs are driven by the @resolve:voorzieningen_register sentinel for per-tenant configurability, the manifest validates against the nc-vue schema, and bootstrap mounts CnAppRoot with shallow-cloned registries.
 ## Requirements
 ### Requirement: REQ-SCMV1-1 SoftwareCatalog MUST ship `src/manifest.json`
 

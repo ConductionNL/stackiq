@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # fe-organizations Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-fe-organizations. Update Purpose after archive.
+Provides the organisation-management frontend: creating and editing organisations, changing their lifecycle status, displaying organisation cards with contextual actions, and a dashboard widget listing organisations still in concept. Also manages an organisation's contact persons and their linked Nextcloud user accounts (add, convert to user, change password, enable/disable, update groups).
 ## Requirements
 ### Requirement: Add contact person (REQ-FE-201)
 

@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # fe-shell-navigation Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-fe-shell-navigation. Update Purpose after archive.
+Provides the catalog's frontend shell: the dashboard overview, the directory and search sidebars, the pagination control, and reusable presentational components such as collapsible sections and the published-status icon. The dashboard displays overview counts, recent items and widgets and routes the user into object and organisation detail, while the sidebars browse and filter the active object list.
 ## Requirements
 ### Requirement: Dashboard view (REQ-FE-401)
 

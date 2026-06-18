@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # settings-service Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-settings-service. Update Purpose after archive.
+Provides the backend service that detects OpenRegister availability and resolves its service handles and register-schema ids, then reads and persists every configuration domain (voorzieningen, AMEF, email, ArchiMate, user-groups, cronjob, catalog location). It runs auto-configuration, seed import, and configuration maintenance, manages email settings, templates, and connectivity tests, and handles user groups, ArchiMate operation status, statistics, and organisation sync.
 
 @e2e exclude PHP SettingsService backend (config persistence, validation, OpenRegister/email/group resolution) — no UI surface; covered by PHPUnit service tests and Newman REST collections.
 

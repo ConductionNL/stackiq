@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # deelnames-gebruik Specification
 
 ## Purpose
-TBD - created by archiving change deelnames-gebruik. Update Purpose after archive.
+Surfaces shared (deelnames) usage on GEMMA views by retrieving, alongside an organisation's owned usage, the gebruiksobjecten in which it appears as a participant (deelnemer) — querying these with RBAC and multitenancy disabled and merging the two sets without duplicates. Renders shared usage as distinct module overlay nodes that carry the owning organisation's name for attribution, exposes an independent frontend toggle to include them, and handles deelnames query failures gracefully without blocking the view.
 ## Requirements
 ### Requirement: ViewService MUST retrieve deelnames gebruik separately from regular gebruik
 The ViewService MUST perform a two-phase retrieval: regular gebruik filtered by RBAC, then deelnames gebruik with RBAC disabled filtering by the `deelnemers` field.

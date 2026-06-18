@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # repair-init Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-repair-init. Update Purpose after archive.
+Provides the install-time repair step that initialises the app's default settings on install and upgrade, seeding the configuration so the catalog is ready to run. It exposes a human-readable step name shown while the repair framework runs.
 
 @e2e exclude PHP repair-step backend (InitializeRegister: register/schema import on app enable) — install-time plumbing with no UI surface; covered by PHPUnit repair-step tests.
 

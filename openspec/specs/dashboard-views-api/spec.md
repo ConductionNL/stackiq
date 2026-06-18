@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # dashboard-views-api Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-dashboard-views-api. Update Purpose after archive.
+Serves the app shell page and the dashboard's aggregate data feed, exposes saved views (list and single) over the API, and stores and retrieves generic per-user preferences by key. Provides the backend data behind the catalog dashboard and saved-view features.
 
 @e2e exclude PHP dashboard-views REST endpoints (aggregate counts/recent-items data feed) — HTTP contract; covered by Newman REST collections and PHPUnit controller tests. The dashboard render that consumes this feed is covered by the manifest dashboard-page test.
 

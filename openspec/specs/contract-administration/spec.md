@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # contract-administration Specification
 
 ## Purpose
-TBD - created by archiving change contract-administration. Update Purpose after archive.
+Manages software contracts against the existing contract schema through the OpenRegister object store, surfaced by manifest index and detail pages and visible in application context. Surfaces expiring contracts via a configurable window filter, transitions active contracts to expired automatically when their end date passes, enables contract-expiry notifications, derives and totals annualised cost, and links contract documents as Nextcloud Files references.
 ## Requirements
 ### Requirement: Contracts are managed on the existing schema via the manifest renderer
 
