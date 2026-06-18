@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # archimate-import Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-archimate-import. Update Purpose after archive.
+Imports ArchiMate AMEF XML files into the catalog, parsing elements, relationships, views, and organisations and persisting them as OpenRegister objects with a result summary. Exposes a facade for import, export, round-trip fidelity testing, and operation-status reporting, plus typed query helpers for retrieving each kind of catalog object.
 
 @e2e exclude PHP ArchiMate import backend (XML parse, element mapping, upsert into OpenRegister) — XML-processing logic with no UI surface; covered by PHPUnit service tests and Newman. The import-trigger UI is covered under fe-settings-ui's settings page.
 

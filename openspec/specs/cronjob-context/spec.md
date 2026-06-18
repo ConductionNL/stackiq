@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # cronjob-context Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-cronjob-context. Update Purpose after archive.
+Runs the organisation and contact synchronisation pipeline as a scheduled Nextcloud background job, operating with a system-level (non-RBAC) context on its timed interval.
 
 @e2e exclude PHP background-job context backend (system-user/session context setup for scheduled jobs) — runtime plumbing with no UI surface; covered by PHPUnit tests.
 

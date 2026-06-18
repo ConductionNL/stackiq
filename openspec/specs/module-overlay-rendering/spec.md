@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # module-overlay-rendering Specification
 
 ## Purpose
-TBD - created by archiving change module-overlay-rendering. Update Purpose after archive.
+Renders organisation-specific module overlay nodes nested inside their parent referentiecomponenten on GEMMA architecture views, styling them visually distinct from standard GEMMA elements and from shared (deelnames) modules. It handles topological sorting, stacking of multiple modules within a component, freeze-based rendering performance, click-to-detail interaction, a legend, and WCAG AA accessibility for the overlay nodes.
 ## Requirements
 ### Requirement: Module nodes MUST render as children of referentiecomponenten
 Module overlay nodes returned by the enrichment API MUST be rendered inside their parent referentiecomponent using the existing JointJS parent-child hierarchy.

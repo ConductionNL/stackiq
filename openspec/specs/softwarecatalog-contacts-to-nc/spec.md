@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # softwarecatalog-contacts-to-nc Specification
 
 ## Purpose
-TBD - created by archiving change softwarecatalog-contacts-to-nc. Update Purpose after archive.
+Moves person and organisation identity out of app-local schemas and into the Nextcloud addressbook as the source of record, reducing the contactpersoon and organisatie schemas to catalog-specific relationship records keyed by a required contactsUid. A ContactSyncService bridges to Nextcloud Contacts via IManager, an idempotent fail-safe repair step migrates existing identity, and the top-level Organisations and Contacts navigation is removed while their pages stay routable for deep links.
 ## Requirements
 ### Requirement: REQ-SCNC-001 — The system SHALL store person and organisation identity in the Nextcloud addressbook, not in app-local schemas
 

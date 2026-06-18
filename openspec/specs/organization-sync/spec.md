@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # organization-sync Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-organization-sync. Update Purpose after archive.
+Runs batched synchronisation of organisations, contact persons, and users from SoftwareCatalog into OpenRegister, with an execution-time budget and scheduled, manual, and multi-round optimised orchestration modes. It processes individual records, ensures each organisation has a matching OpenRegister entity, reports sync status, and records the last-sync timestamp used to scope incremental runs.
 
 @e2e exclude PHP organisation synchronisation backend (external source fetch, mapping, upsert into OpenRegister) — no UI surface; covered by PHPUnit service tests. The sync trigger UI is covered under fe-settings-ui's settings page.
 

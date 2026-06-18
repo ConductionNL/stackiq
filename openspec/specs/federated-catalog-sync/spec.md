@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # federated-catalog-sync Specification
 
 ## Purpose
-TBD - created by archiving change federated-catalog-sync. Update Purpose after archive.
+Federates the software catalog with other instances through an OpenCatalogi directory: it announces the local catalog, discovers and subscribes to peer catalogs, and merges peer entries read-only with source attribution. Only published entries are exposed to the federation, a scheduled background job refreshes subscribed peers and marks unreachable ones stale rather than deleting them, and all outbound requests pass the SSRF guard with a config-gated local allowlist.
 ## Requirements
 ### Requirement: Instance registers with an OpenCatalogi directory
 

@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # method-decomposition Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-24-method-decomposition. Update Purpose after archive.
+Defines the structural decomposition of the app's oversized controllers, services, and event listeners into thin action methods, focused handler classes, and guard-clause-gated helpers that pass PHPMD complexity thresholds without suppressions. It also fixes the resulting SettingsController endpoint contracts for settings CRUD, configuration bootstrap, sync orchestration, diagnostics, and progress streaming, preserving behaviour as pure refactoring.
 
 @e2e exclude PHP internal refactor (controller/service method decomposition into helpers) — pure backend structure with no observable UI behaviour; covered by PHPUnit unit tests.
 ## Requirements

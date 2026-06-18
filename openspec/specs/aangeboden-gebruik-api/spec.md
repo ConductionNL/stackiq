@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # aangeboden-gebruik-api Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-aangeboden-gebruik-api. Update Purpose after archive.
+Provides a REST API for offered-usage (gebruik) records, listing them scoped to the caller's role — as consumer (afnemer), as civil servant (ambtenaar), or as participant — and exposing single records with their links (koppelingen). Lets the caller assign a usage to their active organisation or remove their consumer link, and publishes machine-readable API documentation for these endpoints.
 
 @e2e exclude PHP aangeboden-gebruik (offered-usage) REST endpoints — HTTP contract; covered by Newman REST collections and PHPUnit controller tests.
 

@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # concept-organizations-widget Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-24-concept-organizations-widget. Update Purpose after archive.
+Registers the Concept Organisations dashboard widget, loading its frontend assets (runtime, vendor, nc-vue, and widget chunks plus stylesheet) in correct dependency order through the Nextcloud asset framework under the softwarecatalog application namespace.
 
 @e2e exclude PHP ConceptOrganisatiesWidget::load() asset-registration backend (Util::addScript/addStyle ordering with Application::APP_ID namespace) — server-side dashboard-widget registration with no driveable UI surface; asserted by PHPUnit (mocked Util). The rendered widget's data behaviour is specified under fe-organizations REQ-FE-206 and covered by the manifest dashboard-page test.
 

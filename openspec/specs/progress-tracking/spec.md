@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # progress-tracking Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-24-progress-tracking. Update Purpose after archive.
+Tracks the progress of long-running sync and import operations: it starts a tracked operation with a unique id, updates phase, processed items and statistics, and persists each snapshot to the session. It collects errors and warnings without aborting, finalises an operation at 100 percent, exposes snapshots for the active or a referenced operation, and cleans up stale progress records.
 
 @e2e exclude PHP sync/import progress-tracking backend (job progress state, percentage/counter updates) — no UI surface; covered by PHPUnit service tests.
 

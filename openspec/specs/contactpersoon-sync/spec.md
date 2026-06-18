@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # contactpersoon-sync Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-contactpersoon-sync. Update Purpose after archive.
+Synchronises contact-person records into managed Nextcloud user accounts, creating, updating, and removing the linked user as contacts change and assigning group membership and the organisation beheerder role. Also lists and looks up contacts' account details (individually and in bulk) and toggles their linked accounts' enabled state.
 
 @e2e exclude PHP contactpersoon (contact-person) synchronisation backend (Nextcloud-user linking, mapping, upsert) — no UI surface; covered by PHPUnit service tests.
 

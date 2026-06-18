@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # sc-handlers Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-sc-handlers. Update Purpose after archive.
+Provides the object-lifecycle handlers that react to OpenRegister save, update, and delete events for contact persons and organisations. They provision and maintain a contact person's Nextcloud account, create and reconcile user groups from roles, organisation, and gemeente, maintain the user-manager hierarchy, and provision an organisation's group while managing its beheerders and membership.
 
 @e2e exclude PHP object-lifecycle handlers (OpenRegister save/update/delete event handlers) — backend event plumbing with no UI surface; covered by PHPUnit handler tests.
 

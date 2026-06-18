@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # archimate-export Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-archimate-export. Update Purpose after archive.
+Exports catalog objects as a well-formed ArchiMate AMEF XML document (Open Group Exchange format), serialising elements, relationships, views, organisations, and property definitions. Supports both a full-catalog export and an export scoped to a single organisation.
 
 @e2e exclude PHP ArchiMate export backend (Open Group Exchange XML generation, element/relationship serialisation) — XML-generation logic with no UI surface; covered by PHPUnit service tests and Newman. The export-trigger UI is covered by org-archimate-export and the fe-settings-ui settings page.
 

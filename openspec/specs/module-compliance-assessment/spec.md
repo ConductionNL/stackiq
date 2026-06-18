@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # module-compliance-assessment Specification
 
 ## Purpose
-TBD - created by archiving change module-compliance-assessment. Update Purpose after archive.
+Manages module compliance against GEMMA standard versions: compliancy records link a module to a standaardversie with optional evidence, a subscriber pipeline derives each module's standards set from those records, and a filter-first compliance matrix distinguishes verified from claimed support. It also lets the catalog be filtered by supported standard, reports an organisation's coverage across its in-use applications, and links new evidence via NC Files while keeping legacy base64 evidence readable.
 ## Requirements
 ### Requirement: Compliance records link modules to standard versions with evidence
 

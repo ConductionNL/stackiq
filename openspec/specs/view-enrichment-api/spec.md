@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # view-enrichment-api Specification
 
 ## Purpose
-TBD - created by archiving change view-enrichment-api. Update Purpose after archive.
+Provides the softwarecatalog view enrichment API that augments base GEMMA architecture views with organisation-specific module and deelnames overlay nodes, computed server-side and returned in the standard viewNode format so the frontend rendering pipeline is unchanged. Frontend filter toggles map to enrichment query parameters, enrichment is scoped to an active or specified organisation, and the API supports caching, input validation, concurrent requests, synthetic relationships, and node-count metadata.
 ## Requirements
 ### Requirement: Frontend MUST call enrichment API for views
 The frontend MUST use the softwarecatalog enrichment API (`/softwarecatalog/api/views/{viewId}`) instead of the OpenRegister direct API (`/openregister/api/objects/vng-gemma/view/{id}`) for all view rendering.

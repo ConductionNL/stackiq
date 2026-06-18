@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # open-data-publishing Specification
 
 ## Purpose
-TBD - created by archiving change open-data-publishing. Update Purpose after archive.
+Lets catalogue maintainers publish and depublish software entries and organisation profiles as open data by setting the OpenRegister publicatiedatum, with anonymous visibility governed by the public RBAC read rule and the published representation sanitized of PII and internal fields while carrying reuse metadata such as license and publisher. Published entries are served through the existing OpenCatalogi public read surface, and an anonymous organisation self-registration flow is validated, throttled, and moderated through an admin approval queue.
 ## Requirements
 ### Requirement: Catalog entries can be marked as published open data
 
