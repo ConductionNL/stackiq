@@ -98,10 +98,18 @@
 		{
 			"id": "Organisaties",
 			"route": "/organisaties",
-			"type": "custom",
+			"type": "index",
 			"title": "Organisation relationships",
-			"component": "OrganisatieIndexView",
-			"_note": "Card-grid index of organisations using the bespoke OrganisatieCard (inline contactpersoon toggle and multi-view orchestration). Cannot be a standard type:index until CnIndexPage exposes a cardComponent config field (tracked as Open Question 2 in the manifest v1 design doc)."
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "organisatie",
+				"viewMode": "cards",
+				"cardComponent": "OrganisatieCard",
+				"columns": ["naam", "type", "status", "website"],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			},
+			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs."
 		},
 		{
 			"id": "Contactpersonen",
