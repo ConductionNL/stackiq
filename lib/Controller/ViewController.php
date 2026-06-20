@@ -102,7 +102,7 @@ class ViewController extends Controller
             // Get views from service with enrichments.
             $result = $this->viewService->getAllViews($options);
 
-            $statusCode = $this->determineListStatusCode($result);
+            $statusCode = $this->determineListStatusCode(result: $result);
 
             $this->logger->info(
                     'API: All views request completed',
@@ -124,7 +124,7 @@ class ViewController extends Controller
                     );
 
             return new JSONResponse(
-                $this->buildListErrorPayload($e),
+                $this->buildListErrorPayload(exception: $e),
                 500
             );
         }//end try
@@ -144,7 +144,11 @@ class ViewController extends Controller
      */
     private function determineListStatusCode(array $result): int
     {
-        return ($result['success'] === true) ? 200 : 500;
+        if ($result['success'] === true) {
+            return 200;
+        }
+
+        return 500;
 
     }//end determineListStatusCode()
 
@@ -256,7 +260,7 @@ class ViewController extends Controller
                 options: $options
             );
 
-            $statusCode = $this->determineViewStatusCode($result);
+            $statusCode = $this->determineViewStatusCode(result: $result);
 
             $this->logger->info(
                     'API: Specific view request completed',

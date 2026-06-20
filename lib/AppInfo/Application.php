@@ -125,14 +125,14 @@ class Application extends App implements IBootstrap
     {
         include_once __DIR__.'/../../vendor/autoload.php';
 
-        $this->registerHandlerServices($context);
+        $this->registerHandlerServices(context: $context);
 
         // Wire up event-listener bindings — extracted to a single
         // single-responsibility helper per
         // `openspec/changes/method-decomposition/tasks.md` task 9.1.
-        $this->registerEventListeners($context);
+        $this->registerEventListeners(context: $context);
 
-        $this->registerDomainServices($context);
+        $this->registerDomainServices(context: $context);
     }//end register()
 
     /**

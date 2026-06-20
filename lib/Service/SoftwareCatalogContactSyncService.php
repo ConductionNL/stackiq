@@ -98,10 +98,10 @@ class SoftwareCatalogContactSyncService
 
             $contacts[] = [
                 'uid'            => $uid,
-                'name'           => $this->firstValue(($result['FN'] ?? '')),
-                'email'          => $this->firstValue(($result['EMAIL'] ?? '')),
-                'phone'          => $this->firstValue(($result['TEL'] ?? '')),
-                'org'            => $this->firstValue(($result['ORG'] ?? '')),
+                'name'           => $this->firstValue(value: ($result['FN'] ?? '')),
+                'email'          => $this->firstValue(value: ($result['EMAIL'] ?? '')),
+                'phone'          => $this->firstValue(value: ($result['TEL'] ?? '')),
+                'org'            => $this->firstValue(value: ($result['ORG'] ?? '')),
                 'addressBookKey' => ($result['addressbook-key'] ?? ''),
             ];
         }
@@ -132,7 +132,7 @@ class SoftwareCatalogContactSyncService
             throw new RuntimeException('Nextcloud Contacts is not available');
         }
 
-        $contact = $this->findContactByUid($uid);
+        $contact = $this->findContactByUid(uid: $uid);
         if ($contact === null) {
             throw new RuntimeException('Contact not found in any accessible addressbook');
         }
@@ -164,18 +164,18 @@ class SoftwareCatalogContactSyncService
 
         // Already linked — idempotent no-op.
         $existingUid = (string) ($record['contactsUid'] ?? '');
-        if ($existingUid !== '' && $this->findContactByUid($existingUid) !== null) {
+        if ($existingUid !== '' && $this->findContactByUid(uid: $existingUid) !== null) {
             return $existingUid;
         }
 
         // Resolve by e-mail (and cbsCode for organisations).
-        $matched = $this->findContactForRecord($objectType, $record);
+        $matched = $this->findContactForRecord(objectType: $objectType, record: $record);
         if ($matched !== null) {
             return (string) ($matched['UID'] ?? '');
         }
 
         // Create a fresh Contact from the identity fields.
-        return $this->createContactForRecord($objectType, $record);
+        return $this->createContactForRecord(objectType: $objectType, record: $record);
     }//end syncToContacts()
 
     /**
@@ -224,7 +224,7 @@ class SoftwareCatalogContactSyncService
         if ($email !== '') {
             $results = $this->contactsManager->search($email, ['EMAIL'], ['limit' => 25]);
             foreach ($results as $result) {
-                if ($this->valueMatches(($result['EMAIL'] ?? ''), $email) === true) {
+                if ($this->valueMatches(value: ($result['EMAIL'] ?? ''), needle: $email) === true) {
                     return $result;
                 }
             }
@@ -236,8 +236,8 @@ class SoftwareCatalogContactSyncService
             if ($cbsCode !== '') {
                 $results = $this->contactsManager->search($cbsCode, ['ORG', 'X-KVK', 'NICKNAME'], ['limit' => 25]);
                 foreach ($results as $result) {
-                    if ($this->valueMatches(($result['X-KVK'] ?? ''), $cbsCode) === true
-                        || $this->valueMatches(($result['NICKNAME'] ?? ''), $cbsCode) === true
+                    if ($this->valueMatches(value: ($result['X-KVK'] ?? ''), needle: $cbsCode) === true
+                        || $this->valueMatches(value: ($result['NICKNAME'] ?? ''), needle: $cbsCode) === true
                     ) {
                         return $result;
                     }
@@ -275,7 +275,7 @@ class SoftwareCatalogContactSyncService
             return null;
         }
 
-        $properties = $this->recordToVCard($objectType, $record);
+        $properties = $this->recordToVCard(objectType: $objectType, record: $record);
         if (($properties['FN'] ?? '') === '') {
             $this->logger->warning('[SoftwareCatalogContactSync] Record has no identity to create a contact from', ['objectType' => $objectType]);
             return null;

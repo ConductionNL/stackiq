@@ -173,7 +173,13 @@ class OrganizationContactSyncJob extends TimedJob
                 ->findAll([], false, false);
 
             foreach ($objects as $object) {
-                $this->refreshOne($objectService, $object, $registerId, $schemaId, $objectType);
+                $this->refreshOne(
+                    objectService: $objectService,
+                    object: $object,
+                    registerId: $registerId,
+                    schemaId: $schemaId,
+                    objectType: $objectType
+                );
             }
         }
     }//end refreshContactsUidLinks()
@@ -219,7 +225,13 @@ class OrganizationContactSyncJob extends TimedJob
             }
 
             $data['contactsUid'] = $resolved;
-            $objectService->saveObject($data, [], $registerId, $schemaId, ($uuid !== '' ? $uuid : null), false, false);
+            if ($uuid !== '') {
+                $uuidArg = $uuid;
+            } else {
+                $uuidArg = null;
+            }
+
+            $objectService->saveObject($data, [], $registerId, $schemaId, $uuidArg, false, false);
         } catch (\Throwable $e) {
             $this->logger->warning(
                 '[OrganizationContactSyncJob] Could not refresh contactsUid link — record left intact',

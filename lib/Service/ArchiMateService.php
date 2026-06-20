@@ -322,7 +322,7 @@ class ArchiMateService
 
             // Look up the organization from Voorzieningen register.
             $voorzConfig = $this->settingsService->getVoorzieningenConfig();
-            [$orgRegisterId, $orgSchemaId] = $this->resolveOrgRegisterAndSchema($voorzConfig);
+            [$orgRegisterId, $orgSchemaId] = $this->resolveOrgRegisterAndSchema(voorzConfig: $voorzConfig);
             if ($orgRegisterId === null || $orgSchemaId === null) {
                 throw new \RuntimeException('Organization register/schema not configured');
             }
@@ -524,8 +524,15 @@ class ArchiMateService
      */
     private function resolveOrgRegisterAndSchema(array $voorzConfig): array
     {
-        $register = empty($voorzConfig['register']) === false ? $voorzConfig['register'] : null;
-        $schema   = empty($voorzConfig['organisatie_schema']) === false ? $voorzConfig['organisatie_schema'] : null;
+        $register = null;
+        if (empty($voorzConfig['register']) === false) {
+            $register = $voorzConfig['register'];
+        }
+
+        $schema = null;
+        if (empty($voorzConfig['organisatie_schema']) === false) {
+            $schema = $voorzConfig['organisatie_schema'];
+        }
 
         if (empty($register) === true || empty($schema) === true) {
             $register = $this->settingsService->getVoorzieningenRegisterId();

@@ -147,7 +147,7 @@ class ContractStatusService
         $transitioned = 0;
         foreach ($contracts as $contract) {
             $data = $contract->getObject();
-            if ($this->shouldExpire($data, $now) === false) {
+            if ($this->shouldExpire(contractData: $data, now: $now) === false) {
                 continue;
             }
 

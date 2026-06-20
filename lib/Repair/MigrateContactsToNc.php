@@ -118,7 +118,7 @@ class MigrateContactsToNc implements IRepairStep
         }
 
         foreach (['contactpersoon', 'organisatie'] as $objectType) {
-            $stats = $this->migrateType($output, $registerId, $objectType);
+            $stats = $this->migrateType(output: $output, registerId: $registerId, objectType: $objectType);
             $output->info(
                 sprintf(
                     'Contacts migration [%s]: %d linked, %d created, %d already-linked, %d skipped',
@@ -179,7 +179,14 @@ class MigrateContactsToNc implements IRepairStep
         }
 
         foreach ($objects as $object) {
-            $this->migrateOne($objectService, $object, $registerId, $schemaId, $objectType, $stats);
+            $this->migrateOne(
+                objectService: $objectService,
+                object: $object,
+                registerId: $registerId,
+                schemaId: $schemaId,
+                objectType: $objectType,
+                stats: $stats
+            );
         }
 
         return $stats;
@@ -207,8 +214,8 @@ class MigrateContactsToNc implements IRepairStep
         array &$stats
     ): void {
         try {
-            $data = $this->extractData($object);
-            $uuid = $this->extractUuid($object, $data);
+            $data = $this->extractData(object: $object);
+            $uuid = $this->extractUuid(object: $object, data: $data);
 
             // Idempotent: already linked to an existing Contact → no-op.
             $existingUid = trim((string) ($data['contactsUid'] ?? ''));

@@ -482,7 +482,7 @@ class SoftwareCatalogEventListener implements IEventListener
                     ]
                     );
 
-            $this->runOrganizationSync($object, 'creation', $logger);
+            $this->runOrganizationSync(object: $object, phase: 'creation', logger: $logger);
             return;
         }//end if
 
@@ -503,7 +503,7 @@ class SoftwareCatalogEventListener implements IEventListener
         // Check if this is a gebruik object.
         if ($gebruikSchemaId !== null && $objectSchemaIdInt === (int) $gebruikSchemaId) {
             $logger->info('SoftwareCatalog: Processing gebruik creation', ['objectId' => $objectId]);
-            $this->runGebruikSync($object, 'creation', $logger);
+            $this->runGebruikSync(object: $object, phase: 'creation', logger: $logger);
             return;
         }//end if
 
@@ -638,7 +638,7 @@ class SoftwareCatalogEventListener implements IEventListener
                     logger: $logger
                 );
                 if ($orgWithContacts !== null) {
-                    $this->runOrganizationSync($orgWithContacts, 'update', $logger);
+                    $this->runOrganizationSync(object: $orgWithContacts, phase: 'update', logger: $logger);
                 }
             }//end if
 
@@ -757,7 +757,7 @@ class SoftwareCatalogEventListener implements IEventListener
                 ]
             );
 
-            $this->runGebruikSync($object, 'update', $logger);
+            $this->runGebruikSync(object: $object, phase: 'update', logger: $logger);
             return;
         }//end if
 
@@ -829,7 +829,7 @@ class SoftwareCatalogEventListener implements IEventListener
 
         if ($organisatieSchemaId !== null && $objectSchemaIdInt === $orgSchemaIdInt) {
             $logger->info('SoftwareCatalog: Processing organization deletion', ['objectId' => $objectId]);
-            $this->runOrganizationSync($object, 'deletion', $logger);
+            $this->runOrganizationSync(object: $object, phase: 'deletion', logger: $logger);
             return;
         }//end if
 

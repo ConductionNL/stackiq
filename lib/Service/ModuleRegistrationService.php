@@ -91,17 +91,17 @@ class ModuleRegistrationService
                 );
 
         try {
-            $orgType = $this->resolveOrganisationType($moduleId, $organisationUuid);
+            $orgType = $this->resolveOrganisationType(moduleId: $moduleId, organisationUuid: $organisationUuid);
             if ($orgType === null) {
                 return;
             }
 
-            $geregistreerdDoor = $this->mapOrgTypeToRegisteredBy($moduleId, $orgType);
+            $geregistreerdDoor = $this->mapOrgTypeToRegisteredBy(moduleId: $moduleId, orgType: $orgType);
             if ($geregistreerdDoor === null) {
                 return;
             }
 
-            $this->updateModuleRegisteredBy($moduleObject, $geregistreerdDoor, $orgType);
+            $this->updateModuleRegisteredBy(moduleObject: $moduleObject, geregistreerdDoor: $geregistreerdDoor, orgType: $orgType);
         } catch (\Exception $e) {
             $this->logger->error(
                     'ModuleRegistrationService: Failed to set geregistreerdDoor',

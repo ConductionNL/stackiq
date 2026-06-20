@@ -356,7 +356,7 @@ class GroupHandler
         }
 
         try {
-            $orgData = $this->resolveOrganisationData($organizationUuid);
+            $orgData = $this->resolveOrganisationData(organisationUuid: $organizationUuid);
             if ($orgData === null) {
                 return;
             }
@@ -374,7 +374,7 @@ class GroupHandler
                 ]
             );
 
-            $this->assignOrganizationGroup($user, $groupId, $actualUuid);
+            $this->assignOrganizationGroup(user: $user, groupId: $groupId, actualUuid: $actualUuid);
         } catch (\Exception $e) {
             $this->_logger->error(
                 'Failed to process organization group: '.$e->getMessage(),
@@ -469,7 +469,7 @@ class GroupHandler
         }
 
         try {
-            $orgData = $this->resolveOrganisationData($organizationUuid);
+            $orgData = $this->resolveOrganisationData(organisationUuid: $organizationUuid);
             if ($orgData === null) {
                 return;
             }

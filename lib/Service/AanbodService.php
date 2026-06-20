@@ -338,8 +338,8 @@ class AanbodService
             $aanbodData    = $existingAanbod->getObject();
             $afnemerInfo   = $aanbodData['afnemer'] ?? null;
             $aanbiederInfo = $aanbodData['aanbieder'] ?? null;
-            $afnemerId     = $this->resolvePartyId($afnemerInfo);
-            $aanbiederId   = $this->resolvePartyId($aanbiederInfo);
+            $afnemerId     = $this->resolvePartyId(partyInfo: $afnemerInfo);
+            $aanbiederId   = $this->resolvePartyId(partyInfo: $aanbiederInfo);
             $isAfnemer     = ($afnemerId !== null && $afnemerId === $currentOrg);
             $isAanbieder   = ($aanbiederId !== null && $aanbiederId === $currentOrg);
 
@@ -486,8 +486,8 @@ class AanbodService
             // SECURITY CHECK: Verify that the active organization is either afnemer or aanbieder.
             $afnemerInfo   = $aanbodData['afnemer'] ?? null;
             $aanbiederInfo = $aanbodData['aanbieder'] ?? null;
-            $afnemerId     = $this->resolvePartyId($afnemerInfo);
-            $aanbiederId   = $this->resolvePartyId($aanbiederInfo);
+            $afnemerId     = $this->resolvePartyId(partyInfo: $afnemerInfo);
+            $aanbiederId   = $this->resolvePartyId(partyInfo: $aanbiederInfo);
             $isAfnemer     = ($afnemerId !== null && $afnemerId === $currentOrg);
             $isAanbieder   = ($aanbiederId !== null && $aanbiederId === $currentOrg);
 

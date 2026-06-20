@@ -388,7 +388,7 @@ class ContactpersonenController extends Controller
             // Update the contactpersoon object with the username.
             $contactData['username'] = $user->getUID();
 
-            $contactData = $this->normaliseContactDataForPersist($contactData);
+            $contactData = $this->normaliseContactDataForPersist(contactData: $contactData);
 
             $contactpersoonObject->setObject($contactData);
 
@@ -423,7 +423,7 @@ class ContactpersonenController extends Controller
                     ]
                     );
 
-            $userGroupNames = $this->projectCatalogGroupsForUser($user);
+            $userGroupNames = $this->projectCatalogGroupsForUser(user: $user);
 
             // Add groups to the contactpersoon data for frontend.
             $updatedContactData           = $contactpersoonObject->getObject();

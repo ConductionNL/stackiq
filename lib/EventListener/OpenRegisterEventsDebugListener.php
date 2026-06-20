@@ -187,7 +187,10 @@ class OpenRegisterEventsDebugListener implements IEventListener
             'eventClass' => get_class($event),
         ];
 
-        $specific = $this->extractObjectEventData(event: $event) ?? $this->extractRegisterEventData(event: $event) ?? $this->extractSchemaEventData(event: $event) ?? $this->extractOrganisationEventData(event: $event);
+        $specific   = $this->extractObjectEventData(event: $event);
+        $specific ??= $this->extractRegisterEventData(event: $event);
+        $specific ??= $this->extractSchemaEventData(event: $event);
+        $specific ??= $this->extractOrganisationEventData(event: $event);
 
         if ($specific !== null) {
             return array_merge($data, $specific);
@@ -225,6 +228,12 @@ class OpenRegisterEventsDebugListener implements IEventListener
         if ($event instanceof ObjectUpdatedEvent) {
             $newObject = $event->getNewObject();
             $oldObject = $event->getOldObject();
+            if ($oldObject !== null) {
+                $oldObjectData = $oldObject->getObject();
+            } else {
+                $oldObjectData = null;
+            }
+
             return [
                 'eventType'     => 'ObjectUpdated',
                 'newObjectId'   => $newObject->getId(),
@@ -236,9 +245,9 @@ class OpenRegisterEventsDebugListener implements IEventListener
                 'owner'         => $newObject->getOwner(),
                 'updated'       => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
                 'newObjectData' => $this->getSafeObjectData(objectData: $newObject->getObject()),
-                'oldObjectData' => $oldObject !== null ? $oldObject->getObject() : null,
+                'oldObjectData' => $oldObjectData,
             ];
-        }
+        }//end if
 
         if ($event instanceof ObjectDeletedEvent) {
             $object = $event->getObject();

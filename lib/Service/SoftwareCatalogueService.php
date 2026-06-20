@@ -2079,7 +2079,7 @@ class SoftwareCatalogueService
             }
 
             // Get all contactpersonen for this organization.
-            $ctx = $this->resolveVoorzieningenContext('contactpersoon', 'contactpersonen');
+            $ctx = $this->resolveVoorzieningenContext(schemaSlug: 'contactpersoon', logContext: 'contactpersonen');
             if ($ctx === null) {
                 return;
             }
@@ -2163,7 +2163,7 @@ class SoftwareCatalogueService
             }
 
             // Get all contactpersonen for this organization.
-            $ctx = $this->resolveVoorzieningenContext('contactpersoon', 'contactpersonen');
+            $ctx = $this->resolveVoorzieningenContext(schemaSlug: 'contactpersoon', logContext: 'contactpersonen');
             if ($ctx === null) {
                 return;
             }
@@ -2760,7 +2760,7 @@ class SoftwareCatalogueService
             }
 
             // Get the organization object.
-            $ctx = $this->resolveVoorzieningenContext('organisatie', 'organisatie');
+            $ctx = $this->resolveVoorzieningenContext(schemaSlug: 'organisatie', logContext: 'organisatie');
             if ($ctx === null) {
                 return false;
             }
@@ -2844,7 +2844,7 @@ class SoftwareCatalogueService
             }
 
             // Get the organization object.
-            $ctx = $this->resolveVoorzieningenContext('organisatie', 'organisatie');
+            $ctx = $this->resolveVoorzieningenContext(schemaSlug: 'organisatie', logContext: 'organisatie');
             if ($ctx === null) {
                 return false;
             }

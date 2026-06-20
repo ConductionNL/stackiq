@@ -389,7 +389,7 @@ class GebruikSyncService
             $gebruikData   = $gebruikObject->getObject();
             $gebruikUuid   = $gebruikObject->getUuid();
             $currentStatus = $gebruikData['status'] ?? '';
-            $statusDates   = $this->extractStatusDateMap($gebruikData);
+            $statusDates   = $this->extractStatusDateMap(gebruikData: $gebruikData);
 
             $this->logger->info(
                     'CHECKING STATUS DATES',
@@ -401,7 +401,7 @@ class GebruikSyncService
                     ]
                     );
 
-            [$targetStatus, $targetDate] = $this->resolveLatestEligibleStatus($statusDates, $gebruikUuid);
+            [$targetStatus, $targetDate] = $this->resolveLatestEligibleStatus(statusDates: $statusDates, gebruikUuid: $gebruikUuid);
 
             if ($targetStatus !== null && $targetStatus !== $currentStatus) {
                 $gebruikData['status'] = $targetStatus;

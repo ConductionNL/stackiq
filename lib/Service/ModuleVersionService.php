@@ -77,12 +77,12 @@ class ModuleVersionService
         );
 
         try {
-            $context = $this->fetchVersionData($moduleObject);
+            $context = $this->fetchVersionData(moduleObject: $moduleObject);
             if ($context === null) {
                 return;
             }
 
-            if ($this->compareVersions($context) === true) {
+            if ($this->compareVersions(context: $context) === true) {
                 $this->logger->info(
                     'ModuleVersionService: Module already has versions, skipping',
                     [
@@ -93,7 +93,7 @@ class ModuleVersionService
                 return;
             }
 
-            $this->updateVersionRecord($context);
+            $this->updateVersionRecord(context: $context);
         } catch (\Exception $e) {
             $this->logger->error(
                 'ModuleVersionService: Failed to ensure default version',
@@ -160,9 +160,11 @@ class ModuleVersionService
             _multitenancy: false
         );
 
-        $versionCount = 0;
+        $versionCount        = 0;
+        $existingVersionList = [];
         if (is_array($existingVersions) === true) {
-            $versionCount = count($existingVersions);
+            $versionCount        = count($existingVersions);
+            $existingVersionList = $existingVersions;
         }
 
         return [
@@ -170,7 +172,7 @@ class ModuleVersionService
             'moduleData'       => $moduleObject->getObject(),
             'registerId'       => (int) $registerId,
             'schemaId'         => (int) $moduleVersieSchemaId,
-            'existingVersions' => is_array($existingVersions) === true ? $existingVersions : [],
+            'existingVersions' => $existingVersionList,
             'versionCount'     => $versionCount,
             'objectService'    => $objectService,
         ];

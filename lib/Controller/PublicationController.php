@@ -86,7 +86,7 @@ class PublicationController extends Controller
     #[NoAdminRequired]
     public function publish(string $objectType, string $uuid, ?string $when=null): JSONResponse
     {
-        $guard = $this->authorizeEntry($objectType, $uuid);
+        $guard = $this->authorizeEntry(objectType: $objectType, uuid: $uuid);
         if ($guard instanceof JSONResponse) {
             return $guard;
         }
@@ -113,7 +113,7 @@ class PublicationController extends Controller
     #[NoAdminRequired]
     public function depublish(string $objectType, string $uuid): JSONResponse
     {
-        $guard = $this->authorizeEntry($objectType, $uuid);
+        $guard = $this->authorizeEntry(objectType: $objectType, uuid: $uuid);
         if ($guard instanceof JSONResponse) {
             return $guard;
         }
@@ -184,7 +184,7 @@ class PublicationController extends Controller
 
         // Non-admins must be an aanbod-beheerder that owns the entry.
         if (in_array('aanbod-beheerder', $groupNames, true) === false) {
-            return $this->forbidden($objectType, $uuid, $user->getUID());
+            return $this->forbidden(objectType: $objectType, uuid: $uuid, uid: $user->getUID());
         }
 
         $orgUuid = (string) $this->config->getUserValue(
@@ -195,7 +195,7 @@ class PublicationController extends Controller
 
         $ownerOrg = (string) ($data['_organisation'] ?? $data['aanbieder'] ?? '');
         if ($orgUuid === '' || $ownerOrg === '' || $orgUuid !== $ownerOrg) {
-            return $this->forbidden($objectType, $uuid, $user->getUID());
+            return $this->forbidden(objectType: $objectType, uuid: $uuid, uid: $user->getUID());
         }
 
         return null;

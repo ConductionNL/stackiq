@@ -77,17 +77,17 @@ class ModuleComplianceSubscriber implements IEventListener
                 ]
                 );
 
-        $object = $this->extractObjectFromEvent($event);
+        $object = $this->extractObjectFromEvent(event: $event);
         if ($object === null) {
             return;
         }
 
-        if ($this->isModuleObject($object, $logger) === false) {
+        if ($this->isModuleObject(object: $object, logger: $logger) === false) {
             return;
         }
 
-        $this->dispatchComplianceUpdate($object, $logger);
-        $this->dispatchEnsureDefaultVersion($object, $logger);
+        $this->dispatchComplianceUpdate(object: $object, logger: $logger);
+        $this->dispatchEnsureDefaultVersion(object: $object, logger: $logger);
     }//end handle()
 
     /**

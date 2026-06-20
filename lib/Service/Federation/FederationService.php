@@ -93,7 +93,9 @@ class FederationService
      * stale threshold, and whether its host passes the SSRF allowlist guard. The
      * top-level `staleAfter` is the threshold those streaks are compared against.
      *
-     * @return array{available:bool, enabled:bool, directoryUrl:string, peers:array<int,array{url:string, failures:int, stale:bool, allowed:bool}>, staleAfter:int, message:string}
+     * @return array{available:bool, enabled:bool, directoryUrl:string,
+     *               peers:array<int,array{url:string, failures:int, stale:bool,
+     *               allowed:bool}>, staleAfter:int, message:string}
      *
      * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
      */
@@ -108,8 +110,14 @@ class FederationService
                 'url'      => $peerUrl,
                 'failures' => $failures,
                 'stale'    => ($failures >= $staleAfter),
-                'allowed'  => $this->isPeerHostAllowed($peerUrl),
+                'allowed'  => $this->isPeerHostAllowed(url: $peerUrl),
             ];
+        }
+
+        if ($available === true) {
+            $message = 'Federation available';
+        } else {
+            $message = 'Federation unavailable — requires OpenCatalogi';
         }
 
         return [
@@ -118,7 +126,7 @@ class FederationService
             'staleAfter'   => $staleAfter,
             'directoryUrl' => $this->config->getDirectoryUrl(),
             'peers'        => $peers,
-            'message'      => $available === true ? 'Federation available' : 'Federation unavailable — requires OpenCatalogi',
+            'message'      => $message,
         ];
     }//end getStatus()
 
@@ -141,7 +149,7 @@ class FederationService
             return ['ok' => false, 'reason' => 'peer url is required'];
         }
 
-        if ($this->isPeerHostAllowed($peerUrl) === false) {
+        if ($this->isPeerHostAllowed(url: $peerUrl) === false) {
             return ['ok' => false, 'reason' => 'peer host blocked by SSRF guard'];
         }
 
@@ -312,7 +320,7 @@ class FederationService
 
         $results = [];
         foreach ($this->config->getPeers() as $peerUrl) {
-            $results[] = ['peer' => $peerUrl] + $this->pullPeer($peerUrl);
+            $results[] = ['peer' => $peerUrl] + $this->pullPeer(peerUrl: $peerUrl);
         }
 
         return ['ok' => true, 'reason' => 'ok', 'peers' => $results];
@@ -340,13 +348,13 @@ class FederationService
     {
         $empty = ['created' => 0, 'updated' => 0, 'withdrawn' => 0, 'stale' => false];
 
-        if ($this->isPeerHostAllowed($peerUrl) === false) {
+        if ($this->isPeerHostAllowed(url: $peerUrl) === false) {
             return ['ok' => false, 'reason' => 'peer host blocked by SSRF guard'] + $empty;
         }
 
-        $fetch = $this->fetchPeerCatalog($peerUrl);
+        $fetch = $this->fetchPeerCatalog(peerUrl: $peerUrl);
         if ($fetch['ok'] === false) {
-            return $this->recordPullFailure($peerUrl, $fetch['reason']) + ['ok' => false, 'reason' => $fetch['reason']];
+            return $this->recordPullFailure(peerUrl: $peerUrl, reason: $fetch['reason']) + ['ok' => false, 'reason' => $fetch['reason']];
         }
 
         $target = $this->resolveMirrorTarget();
@@ -359,7 +367,7 @@ class FederationService
             return ['ok' => false, 'reason' => 'ObjectService unavailable'] + $empty;
         }
 
-        $localMirrors = $this->loadPeerMirrors($peerUrl, $target);
+        $localMirrors = $this->loadPeerMirrors(peerUrl: $peerUrl, target: $target);
         $plan         = $this->merger->plan(
             $peerUrl,
             (string) ($fetch['organisation'] ?? $peerUrl),
@@ -368,13 +376,28 @@ class FederationService
             $this->now()
         );
 
-        $created   = $this->applyMirrors($objectService, $target, $plan['create'], null);
-        $updated   = $this->applyMirrors($objectService, $target, $plan['update'], 'id');
-        $withdrawn = $this->applyMirrors($objectService, $target, $plan['withdraw'], 'id');
+        $created   = $this->applyMirrors(
+            objectService: $objectService,
+            target: $target,
+            mirrors: $plan['create'],
+            uuidKey: null
+        );
+        $updated   = $this->applyMirrors(
+            objectService: $objectService,
+            target: $target,
+            mirrors: $plan['update'],
+            uuidKey: 'id'
+        );
+        $withdrawn = $this->applyMirrors(
+            objectService: $objectService,
+            target: $target,
+            mirrors: $plan['withdraw'],
+            uuidKey: 'id'
+        );
 
         // Successful pull clears the failure streak and un-stales surviving mirrors.
         $this->config->setPeerFailures($peerUrl, 0);
-        $this->clearStaleMirrors($objectService, $target, $peerUrl);
+        $this->clearStaleMirrors(objectService: $objectService, target: $target, peerUrl: $peerUrl);
 
         return [
             'ok'        => true,
@@ -444,7 +467,7 @@ class FederationService
             $target        = $this->resolveMirrorTarget();
             $objectService = $this->getObjectService();
             if ($target !== null && $objectService !== null) {
-                $this->staleMirrors($objectService, $target, $peerUrl);
+                $this->staleMirrors(objectService: $objectService, target: $target, peerUrl: $peerUrl);
             }
 
             $this->logger->warning(
@@ -485,10 +508,18 @@ class FederationService
             return [];
         }
 
+        if (is_array($objects) === true) {
+            $items = $objects;
+        } else {
+            $items = [];
+        }
+
         $mirrors = [];
-        foreach ((is_array($objects) ? $objects : []) as $object) {
-            $data = $this->toDataBag($object);
-            if ($this->isPeerSourced($data) === true && (string) ($data['_source']['instance'] ?? '') === $peerUrl) {
+        foreach ($items as $object) {
+            $data = $this->toDataBag(object: $object);
+            if ($this->isPeerSourced(objectData: $data) === true
+                && (string) ($data['_source']['instance'] ?? '') === $peerUrl
+            ) {
                 $mirrors[] = $data;
             }
         }
@@ -510,7 +541,12 @@ class FederationService
     {
         $count = 0;
         foreach ($mirrors as $mirror) {
-            $uuid = ($uuidKey !== null) ? (string) ($mirror[$uuidKey] ?? '') : '';
+            if ($uuidKey !== null) {
+                $uuid = (string) ($mirror[$uuidKey] ?? '');
+            } else {
+                $uuid = '';
+            }
+
             try {
                 $objectService->saveObject(
                     object: $mirror,
@@ -538,9 +574,14 @@ class FederationService
      */
     private function staleMirrors(object $objectService, array $target, string $peerUrl): void
     {
-        foreach ($this->loadPeerMirrors($peerUrl, $target) as $mirror) {
-            $staled = $this->merger->applyStale($mirror, true);
-            $this->applyMirrors($objectService, $target, [$staled], 'id');
+        foreach ($this->loadPeerMirrors(peerUrl: $peerUrl, target: $target) as $mirror) {
+            $staled = $this->merger->applyStale(mirror: $mirror, stale: true);
+            $this->applyMirrors(
+                objectService: $objectService,
+                target: $target,
+                mirrors: [$staled],
+                uuidKey: 'id'
+            );
         }
     }//end staleMirrors()
 
@@ -555,7 +596,7 @@ class FederationService
      */
     private function clearStaleMirrors(object $objectService, array $target, string $peerUrl): void
     {
-        foreach ($this->loadPeerMirrors($peerUrl, $target) as $mirror) {
+        foreach ($this->loadPeerMirrors(peerUrl: $peerUrl, target: $target) as $mirror) {
             if (($mirror['_source']['stale'] ?? false) !== true) {
                 continue;
             }
@@ -565,8 +606,13 @@ class FederationService
                 continue;
             }
 
-            $fresh = $this->merger->applyStale($mirror, false);
-            $this->applyMirrors($objectService, $target, [$fresh], 'id');
+            $fresh = $this->merger->applyStale(mirror: $mirror, stale: false);
+            $this->applyMirrors(
+                objectService: $objectService,
+                target: $target,
+                mirrors: [$fresh],
+                uuidKey: 'id'
+            );
         }
     }//end clearStaleMirrors()
 
@@ -609,7 +655,11 @@ class FederationService
                 $data['id'] = $object->getUuid();
             }
 
-            return is_array($data) ? $data : [];
+            if (is_array($data) === true) {
+                return $data;
+            }
+
+            return [];
         }
 
         return [];

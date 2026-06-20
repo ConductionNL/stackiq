@@ -94,14 +94,14 @@ class GebruikController extends Controller
             return new JSONResponse($this->getEmptyResult());
         }
 
-        $roles = $this->resolveUserRoles($user);
+        $roles = $this->resolveUserRoles(user: $user);
         if ($roles['hasAccess'] === false) {
             return new JSONResponse($this->getEmptyResult());
         }
 
         $options = $this->request->getParams();
 
-        $scoped = $this->applyAanbodScopeToOptions($roles, $options);
+        $scoped = $this->applyAanbodScopeToOptions(roles: $roles, options: $options);
         if ($scoped === null) {
             return new JSONResponse($this->getEmptyResult());
         }

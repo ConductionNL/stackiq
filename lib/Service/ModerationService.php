@@ -132,15 +132,15 @@ class ModerationService
     public function approve(string $uuid): array
     {
         return $this->decide(
-            $uuid,
-            static function (array $data): array {
+            uuid: $uuid,
+            mutator: static function (array $data): array {
                 $data['registratiestatus'] = self::STATUS_ACTIVE;
                 $data['publicatiedatum']   = gmdate('Y-m-d\TH:i:sP');
                 $data['depublicatiedatum'] = null;
                 return $data;
             },
-            self::STATUS_ACTIVE,
-            'approved'
+            status: self::STATUS_ACTIVE,
+            action: 'approved'
         );
     }//end approve()
 
@@ -157,14 +157,14 @@ class ModerationService
     public function reject(string $uuid): array
     {
         return $this->decide(
-            $uuid,
-            static function (array $data): array {
+            uuid: $uuid,
+            mutator: static function (array $data): array {
                 $data['registratiestatus'] = self::STATUS_REJECTED;
                 $data['publicatiedatum']   = null;
                 return $data;
             },
-            self::STATUS_REJECTED,
-            'rejected'
+            status: self::STATUS_REJECTED,
+            action: 'rejected'
         );
     }//end reject()
 
@@ -210,7 +210,7 @@ class ModerationService
             return ['ok' => false, 'reason' => 'registration not found', 'status' => null];
         }
 
-        $data = $this->toDataBag($entity);
+        $data = $this->toDataBag(object: $entity);
 
         // A peer-sourced (federated) mirror is never moderated locally.
         if (is_array($data['_source'] ?? null) === true && trim((string) ($data['_source']['instance'] ?? '')) !== '') {
