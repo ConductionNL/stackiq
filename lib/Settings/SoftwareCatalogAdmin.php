@@ -118,4 +118,20 @@ class SoftwareCatalogAdmin implements IDelegatedSettings
     {
         return null;
     }//end getName()
+
+    /**
+     * App config keys an authorized (delegated) admin may manage.
+     *
+     * Returned as a map of appId => list of allowed config keys. SoftwareCatalog
+     * exposes no delegatable sub-keys, so this is intentionally empty; the
+     * `#[AuthorizedAdminSetting]` attribute still scopes the endpoints to full
+     * admins (fail-closed). Required by IDelegatedSettings — its absence is a
+     * fatal class-loading error that blanks every Nextcloud settings page.
+     *
+     * @return array<string, string[]> Map of appId to allowed config keys.
+     */
+    public function getAuthorizedAppConfig(): array
+    {
+        return [];
+    }//end getAuthorizedAppConfig()
 }//end class
