@@ -166,8 +166,8 @@ class FederationService
      */
     public function removePeer(string $peerUrl): array
     {
-        $peerUrl = trim($peerUrl);
-        $peers   = $this->config->getPeers();
+        $peerUrl  = trim($peerUrl);
+        $peers    = $this->config->getPeers();
         $filtered = array_values(array_filter($peers, static fn (string $p): bool => $p !== $peerUrl));
         if (count($filtered) === count($peers)) {
             return ['ok' => false, 'reason' => 'peer not found'];
@@ -275,7 +275,13 @@ class FederationService
         try {
             $directory = $this->container->get('OCA\\OpenCatalogi\\Service\\DirectoryService');
             $listing   = $directory->getDirectory([]);
-            $peers     = is_array($listing['results'] ?? null) ? $listing['results'] : (is_array($listing) ? $listing : []);
+            $peers     = [];
+            if (is_array($listing['results'] ?? null) === true) {
+                $peers = $listing['results'];
+            } else if (is_array($listing) === true) {
+                $peers = $listing;
+            }
+
             return ['ok' => true, 'reason' => 'ok', 'peers' => $peers];
         } catch (\Throwable $e) {
             $this->logger->error('[Federation] discoverPeers failed', ['error' => $e->getMessage()]);
@@ -411,7 +417,10 @@ class FederationService
             $entries = $listing;
         }
 
-        $organisation = is_string($listing['organisation'] ?? null) ? $listing['organisation'] : null;
+        $organisation = null;
+        if (is_string($listing['organisation'] ?? null) === true) {
+            $organisation = $listing['organisation'];
+        }
 
         return ['ok' => true, 'reason' => 'ok', 'organisation' => $organisation, 'entries' => array_values($entries)];
     }//end fetchPeerCatalog()

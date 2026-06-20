@@ -525,9 +525,7 @@ class ArchiMateService
     private function resolveOrgRegisterAndSchema(array $voorzConfig): array
     {
         $register = empty($voorzConfig['register']) === false ? $voorzConfig['register'] : null;
-        $schema   = empty($voorzConfig['organisatie_schema']) === false
-            ? $voorzConfig['organisatie_schema']
-            : null;
+        $schema   = empty($voorzConfig['organisatie_schema']) === false ? $voorzConfig['organisatie_schema'] : null;
 
         if (empty($register) === true || empty($schema) === true) {
             $register = $this->settingsService->getVoorzieningenRegisterId();

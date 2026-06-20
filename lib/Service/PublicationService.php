@@ -155,7 +155,7 @@ class PublicationService
      *
      * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
      */
-    public function publish(string $objectType, string $uuid, ?string $when = null): array
+    public function publish(string $objectType, string $uuid, ?string $when=null): array
     {
         $entry = $this->resolveEntry($objectType, $uuid);
         if ($entry === null) {
@@ -200,12 +200,12 @@ class PublicationService
     /**
      * Persist the mutated data bag via the OpenRegister ObjectService.
      *
-     * @param string                              $objectType      The object type (logging).
-     * @param string                              $uuid            The entry uuid.
-     * @param array{register:int,schema:int,data:array<string,mixed>} $entry The resolved entry.
-     * @param array<string,mixed>                 $data            The mutated data bag.
-     * @param string|null                         $publicatiedatum The resulting publicatiedatum.
-     * @param string                              $action          'published'|'depublished' (logging).
+     * @param string                                                  $objectType      The object type (logging).
+     * @param string                                                  $uuid            The entry uuid.
+     * @param array{register:int,schema:int,data:array<string,mixed>} $entry           The resolved entry.
+     * @param array<string,mixed>                                     $data            The mutated data bag.
+     * @param string|null                                             $publicatiedatum The resulting publicatiedatum.
+     * @param string                                                  $action          'published'|'depublished' (logging).
      *
      * @return array{ok:bool, reason:string, publicatiedatum:?string} Result.
      */
@@ -258,10 +258,12 @@ class PublicationService
         if ($when === null || trim($when) === '') {
             return null;
         }
+
         $ts = strtotime($when);
         if ($ts === false) {
             return null;
         }
+
         return gmdate('Y-m-d\TH:i:sP', $ts);
     }//end normaliseDate()
 

@@ -180,7 +180,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
      *
      * @phpstan-return array<string, mixed>
      * @psalm-return   array<string, mixed>
-     *
      */
     private function extractEventData(Event $event): array
     {
@@ -188,10 +187,7 @@ class OpenRegisterEventsDebugListener implements IEventListener
             'eventClass' => get_class($event),
         ];
 
-        $specific = $this->extractObjectEventData($event)
-            ?? $this->extractRegisterEventData($event)
-            ?? $this->extractSchemaEventData($event)
-            ?? $this->extractOrganisationEventData($event);
+        $specific = $this->extractObjectEventData(event: $event) ?? $this->extractRegisterEventData(event: $event) ?? $this->extractSchemaEventData(event: $event) ?? $this->extractOrganisationEventData(event: $event);
 
         if ($specific !== null) {
             return array_merge($data, $specific);
@@ -202,7 +198,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
         return $data;
 
     }//end extractEventData()
-
 
     /**
      * Project Object* events into a debug payload.
@@ -298,7 +293,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
 
     }//end extractObjectEventData()
 
-
     /**
      * Project Register* events into a debug payload.
      *
@@ -342,7 +336,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
 
     }//end extractRegisterEventData()
 
-
     /**
      * Project Schema* events into a debug payload.
      *
@@ -385,7 +378,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
         return null;
 
     }//end extractSchemaEventData()
-
 
     /**
      * Project Organisation* events into a debug payload.

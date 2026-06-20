@@ -66,7 +66,7 @@ class ContractStatusService
      * (other status, missing/blank/unparseable end date, future end date)
      * returns false — the transition is never applied.
      *
-     * @param array             $contractData The contract object data bag.
+     * @param array              $contractData The contract object data bag.
      * @param \DateTimeImmutable $now          Logical "now".
      *
      * @return bool True when the contract must be expired.
@@ -111,7 +111,7 @@ class ContractStatusService
      *
      * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
      */
-    public function expirePastContracts(?\DateTimeImmutable $now = null): int
+    public function expirePastContracts(?\DateTimeImmutable $now=null): int
     {
         $now = ($now ?? new \DateTimeImmutable());
 
@@ -171,7 +171,7 @@ class ContractStatusService
                     ['uuid' => $contract->getUuid(), 'error' => $e->getMessage()]
                 );
             }
-        }
+        }//end foreach
 
         return $transitioned;
     }//end expirePastContracts()
@@ -193,6 +193,7 @@ class ContractStatusService
         } catch (\Throwable $e) {
             $this->logger->debug('ContractStatusService: ObjectService not resolvable', ['error' => $e->getMessage()]);
         }
+
         return null;
     }//end getObjectService()
 }//end class

@@ -588,7 +588,6 @@ class AanbodService
 
     }//end resolvePartyId()
 
-
     /**
      * Find an aanbod object by UUID across all possible schemas.
      *

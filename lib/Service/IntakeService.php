@@ -276,12 +276,20 @@ class IntakeService
     {
         if (is_object($entity) === true && method_exists($entity, 'getUuid') === true) {
             $uuid = $entity->getUuid();
-            return is_string($uuid) ? $uuid : null;
+            if (is_string($uuid) === true) {
+                return $uuid;
+            }
+
+            return null;
         }
 
         if (is_array($entity) === true) {
             $uuid = $entity['id'] ?? $entity['uuid'] ?? null;
-            return is_string($uuid) ? $uuid : null;
+            if (is_string($uuid) === true) {
+                return $uuid;
+            }
+
+            return null;
         }
 
         return null;

@@ -1630,6 +1630,6 @@ class ContactpersonenController extends Controller
                     'error'  => $e->getMessage(),
                 ]
             );
-        }
+        }//end try
     }//end enrichMeWithContactpersoonData()
 }//end class

@@ -439,7 +439,6 @@ class GebruikSyncService
         }//end try
     }//end updateStatusBasedOnDates()
 
-
     /**
      * Build the status → start-date map from a gebruik payload.
      *
@@ -458,7 +457,6 @@ class GebruikSyncService
         ];
 
     }//end extractStatusDateMap()
-
 
     /**
      * Pick the status whose start-date is the latest non-future one.
@@ -505,7 +503,7 @@ class GebruikSyncService
                 $targetDate   = $date;
                 $targetStatus = $status;
             }
-        }
+        }//end foreach
 
         return [$targetStatus, $targetDate];
 

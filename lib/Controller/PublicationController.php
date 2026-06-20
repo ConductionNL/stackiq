@@ -15,12 +15,12 @@
  * authenticated user could publish arbitrary entries by uuid (IDOR / OWASP
  * A01:2021), so the guard is enforced server-side on every call.
  *
- * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
- * @author   Conduction b.v. <info@conduction.nl>
+ * @category  Controller
+ * @package   OCA\SoftwareCatalog\Controller
+ * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
  *
@@ -84,7 +84,7 @@ class PublicationController extends Controller
      * @spec            openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
      */
     #[NoAdminRequired]
-    public function publish(string $objectType, string $uuid, ?string $when = null): JSONResponse
+    public function publish(string $objectType, string $uuid, ?string $when=null): JSONResponse
     {
         $guard = $this->authorizeEntry($objectType, $uuid);
         if ($guard instanceof JSONResponse) {

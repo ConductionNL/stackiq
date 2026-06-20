@@ -135,7 +135,6 @@ class Application extends App implements IBootstrap
         $this->registerDomainServices($context);
     }//end register()
 
-
     /**
      * Wire the four SoftwareCatalogue handler services as DI bindings.
      *
@@ -208,7 +207,6 @@ class Application extends App implements IBootstrap
                 );
 
     }//end registerHandlerServices()
-
 
     /**
      * Wire all domain-level services (sync/email/settings/ArchiMate/etc.).

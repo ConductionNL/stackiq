@@ -115,7 +115,6 @@ class ModuleRegistrationService
         }//end try
     }//end handleModuleRegistration()
 
-
     /**
      * Resolve the organisation type for the given organisation UUID.
      *
@@ -197,7 +196,6 @@ class ModuleRegistrationService
         return (string) $orgType;
     }//end resolveOrganisationType()
 
-
     /**
      * Map an organisation type to the geregistreerdDoor enum value.
      *
@@ -223,7 +221,6 @@ class ModuleRegistrationService
 
         return $geregistreerdDoor;
     }//end mapOrgTypeToRegisteredBy()
-
 
     /**
      * Persist geregistreerdDoor on the module object if not already correct.

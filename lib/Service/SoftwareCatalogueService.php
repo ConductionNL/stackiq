@@ -2084,7 +2084,7 @@ class SoftwareCatalogueService
                 return;
             }
 
-            $registerId             = $ctx['registerId'];
+            $registerId = $ctx['registerId'];
             $contactpersoonSchemaId = $ctx['schemaId'];
 
             $contactpersonen = $objectService->findAll(
@@ -2168,7 +2168,7 @@ class SoftwareCatalogueService
                 return;
             }
 
-            $registerId             = $ctx['registerId'];
+            $registerId = $ctx['registerId'];
             $contactpersoonSchemaId = $ctx['schemaId'];
 
             $contactpersonen = $objectService->findAll(
@@ -3589,7 +3589,6 @@ class SoftwareCatalogueService
         }//end try
     }//end updateOrganizationReferences()
 
-
     /**
      * Resolves the voorzieningen register id + a schema id for a given
      * object-type slug.
@@ -3638,6 +3637,4 @@ class SoftwareCatalogueService
         ];
 
     }//end resolveVoorzieningenContext()
-
-
 }//end class

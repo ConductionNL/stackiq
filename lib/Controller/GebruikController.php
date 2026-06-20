@@ -169,7 +169,7 @@ class GebruikController extends Controller
      * `openspec/changes/method-decomposition/tasks.md` task 9.3.
      *
      * @param array{isAdmin:bool,isBeheerder:bool,isAanbod:bool,orgUuid:string} $roles   Role flags.
-     * @param array<string,mixed>                                                $options Current request params.
+     * @param array<string,mixed>                                               $options Current request params.
      *
      * @return array<string,mixed>|null
      *

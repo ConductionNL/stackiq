@@ -250,9 +250,9 @@ class SoftwareCatalogEventListener implements IEventListener
      * organisation-sync invocation no longer ships three near-identical try/catch
      * blocks.
      *
-     * @param \OCA\OpenRegister\Db\ObjectEntity $object   The organisation object.
-     * @param string                            $phase    "creation"/"update"/"deletion".
-     * @param LoggerInterface                   $logger   The logger.
+     * @param \OCA\OpenRegister\Db\ObjectEntity $object The organisation object.
+     * @param string                            $phase  "creation"/"update"/"deletion".
+     * @param LoggerInterface                   $logger The logger.
      *
      * @return void
      *
@@ -284,7 +284,7 @@ class SoftwareCatalogEventListener implements IEventListener
                     'line'      => $e->getLine(),
                 ]
             );
-        }
+        }//end try
     }//end runOrganizationSync()
 
     /**
@@ -311,7 +311,7 @@ class SoftwareCatalogEventListener implements IEventListener
         $objectId = $object->getUuid();
         try {
             $gebruikSyncService = $this->container->get(GebruikSyncService::class);
-            $result             = $gebruikSyncService->processSpecificGebruik($object);
+            $result = $gebruikSyncService->processSpecificGebruik($object);
             $logger->info(
                 'SoftwareCatalog: Successfully processed gebruik '.$phase,
                 [
@@ -329,7 +329,7 @@ class SoftwareCatalogEventListener implements IEventListener
                     'line'      => $e->getLine(),
                 ]
             );
-        }
+        }//end try
     }//end runGebruikSync()
 
     /**
@@ -391,7 +391,7 @@ class SoftwareCatalogEventListener implements IEventListener
                 ]
             );
             return null;
-        }
+        }//end try
     }//end refetchOrganizationWithContactpersonen()
 
     /**

@@ -133,7 +133,6 @@ class OrganizationContactSyncJob extends TimedJob
         }//end try
     }//end run()
 
-
     /**
      * Refresh the `contactsUid` link on every contactpersoon/organisatie record.
      *
@@ -179,7 +178,6 @@ class OrganizationContactSyncJob extends TimedJob
         }
     }//end refreshContactsUidLinks()
 
-
     /**
      * Refresh the contactsUid link for a single record.
      *
@@ -199,10 +197,15 @@ class OrganizationContactSyncJob extends TimedJob
         string $objectType
     ): void {
         try {
-            $data = (is_object($object) === true && method_exists($object, 'getObject') === true)
-                ? (array) $object->getObject() : (array) $object;
-            $uuid = (is_object($object) === true && method_exists($object, 'getUuid') === true)
-                ? (string) $object->getUuid() : (string) ($data['id'] ?? '');
+            $data = (array) $object;
+            if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+                $data = (array) $object->getObject();
+            }
+
+            $uuid = (string) ($data['id'] ?? '');
+            if (is_object($object) === true && method_exists($object, 'getUuid') === true) {
+                $uuid = (string) $object->getUuid();
+            }
 
             $current = trim((string) ($data['contactsUid'] ?? ''));
             if ($current !== '' && $this->contactSync->findContactByUid($current) !== null) {

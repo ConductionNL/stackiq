@@ -196,7 +196,7 @@ class SettingsController extends Controller
     private function buildConfigErrorResponse(
         string $operationLabel,
         \Exception $exception,
-        bool $includeParams = false
+        bool $includeParams=false
     ): JSONResponse {
         $context = ['exception' => $exception->getMessage()];
         if ($includeParams === true) {

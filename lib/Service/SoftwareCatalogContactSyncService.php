@@ -57,7 +57,6 @@ class SoftwareCatalogContactSyncService
     ) {
     }//end __construct()
 
-
     /**
      * Whether the Nextcloud Contacts integration is available.
      *
@@ -67,7 +66,6 @@ class SoftwareCatalogContactSyncService
     {
         return $this->contactsManager->isEnabled() === true;
     }//end isAvailable()
-
 
     /**
      * Search the user's accessible Nextcloud addressbooks for contacts
@@ -111,7 +109,6 @@ class SoftwareCatalogContactSyncService
         return $contacts;
     }//end searchContacts()
 
-
     /**
      * Import (resolve) a Nextcloud contact UID into a catalog relationship
      * record's `contactsUid`. Idempotent: an already-known UID is returned
@@ -142,7 +139,6 @@ class SoftwareCatalogContactSyncService
 
         return $uid;
     }//end importContact()
-
 
     /**
      * Resolve (or create) the Nextcloud Contact for a catalog relationship
@@ -182,7 +178,6 @@ class SoftwareCatalogContactSyncService
         return $this->createContactForRecord($objectType, $record);
     }//end syncToContacts()
 
-
     /**
      * Find a Nextcloud contact by its exact UID.
      *
@@ -207,7 +202,6 @@ class SoftwareCatalogContactSyncService
 
         return null;
     }//end findContactByUid()
-
 
     /**
      * Find a Nextcloud contact matching a relationship record's identity, by
@@ -254,7 +248,6 @@ class SoftwareCatalogContactSyncService
         return null;
     }//end findContactForRecord()
 
-
     /**
      * Create a Nextcloud contact from a relationship record's legacy identity
      * fields, returning the new UID.
@@ -275,7 +268,10 @@ class SoftwareCatalogContactSyncService
 
         $addressBookKey = $this->firstWritableAddressBookKey();
         if ($addressBookKey === null) {
-            $this->logger->warning('[SoftwareCatalogContactSync] No writable addressbook available; cannot create contact', ['objectType' => $objectType]);
+            $this->logger->warning(
+                '[SoftwareCatalogContactSync] No writable addressbook available; cannot create contact',
+                ['objectType' => $objectType]
+            );
             return null;
         }
 
@@ -292,7 +288,6 @@ class SoftwareCatalogContactSyncService
 
         return (string) ($created['UID'] ?? ($properties['UID'] ?? ''));
     }//end createContactForRecord()
-
 
     /**
      * Map a relationship record's legacy identity fields to vCard properties.
@@ -351,7 +346,6 @@ class SoftwareCatalogContactSyncService
         return $properties;
     }//end recordToVCard()
 
-
     /**
      * Return the key of the first writable addressbook, or null when none is
      * available.
@@ -370,7 +364,6 @@ class SoftwareCatalogContactSyncService
 
         return null;
     }//end firstWritableAddressBookKey()
-
 
     /**
      * Whether a (possibly multi-valued) vCard property contains the given
@@ -404,7 +397,6 @@ class SoftwareCatalogContactSyncService
 
         return strtolower(trim((string) $value)) === $needle;
     }//end valueMatches()
-
 
     /**
      * Extract the first scalar value from a vCard property that may be an

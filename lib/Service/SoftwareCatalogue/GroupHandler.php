@@ -386,7 +386,6 @@ class GroupHandler
         }//end try
     }//end updateOrganizationGroups()
 
-
     /**
      * Resolves the organisation object data for a given organisation UUID.
      *
@@ -418,7 +417,6 @@ class GroupHandler
         return $organizationObject->getObject();
 
     }//end resolveOrganisationData()
-
 
     /**
      * Adds a user to the organisation's Nextcloud group when they are not

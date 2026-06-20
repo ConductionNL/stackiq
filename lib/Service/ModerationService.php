@@ -106,9 +106,14 @@ class ModerationService
             return ['ok' => false, 'reason' => 'query failed', 'items' => []];
         }
 
-        $items = [];
-        foreach ((is_array($objects) ? $objects : []) as $object) {
-            $items[] = $this->toDataBag($object);
+        $items      = [];
+        $objectList = [];
+        if (is_array($objects) === true) {
+            $objectList = $objects;
+        }
+
+        foreach ($objectList as $object) {
+            $items[] = $this->toDataBag(object: $object);
         }
 
         return ['ok' => true, 'reason' => 'ok', 'items' => $items];
@@ -270,7 +275,11 @@ class ModerationService
                 $data['id'] = $object->getUuid();
             }
 
-            return is_array($data) ? $data : [];
+            if (is_array($data) === true) {
+                return $data;
+            }
+
+            return [];
         }
 
         return [];
