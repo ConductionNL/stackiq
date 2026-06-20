@@ -57,7 +57,6 @@ class SoftwareCatalogContactSyncService
     ) {
     }//end __construct()
 
-
     /**
      * Whether the Nextcloud Contacts integration is available.
      *
@@ -67,7 +66,6 @@ class SoftwareCatalogContactSyncService
     {
         return $this->contactsManager->isEnabled() === true;
     }//end isAvailable()
-
 
     /**
      * Search the user's accessible Nextcloud addressbooks for contacts
@@ -100,17 +98,16 @@ class SoftwareCatalogContactSyncService
 
             $contacts[] = [
                 'uid'            => $uid,
-                'name'           => $this->firstValue(($result['FN'] ?? '')),
-                'email'          => $this->firstValue(($result['EMAIL'] ?? '')),
-                'phone'          => $this->firstValue(($result['TEL'] ?? '')),
-                'org'            => $this->firstValue(($result['ORG'] ?? '')),
+                'name'           => $this->firstValue(value: ($result['FN'] ?? '')),
+                'email'          => $this->firstValue(value: ($result['EMAIL'] ?? '')),
+                'phone'          => $this->firstValue(value: ($result['TEL'] ?? '')),
+                'org'            => $this->firstValue(value: ($result['ORG'] ?? '')),
                 'addressBookKey' => ($result['addressbook-key'] ?? ''),
             ];
         }
 
         return $contacts;
     }//end searchContacts()
-
 
     /**
      * Import (resolve) a Nextcloud contact UID into a catalog relationship
@@ -135,14 +132,13 @@ class SoftwareCatalogContactSyncService
             throw new RuntimeException('Nextcloud Contacts is not available');
         }
 
-        $contact = $this->findContactByUid($uid);
+        $contact = $this->findContactByUid(uid: $uid);
         if ($contact === null) {
             throw new RuntimeException('Contact not found in any accessible addressbook');
         }
 
         return $uid;
     }//end importContact()
-
 
     /**
      * Resolve (or create) the Nextcloud Contact for a catalog relationship
@@ -168,20 +164,19 @@ class SoftwareCatalogContactSyncService
 
         // Already linked — idempotent no-op.
         $existingUid = (string) ($record['contactsUid'] ?? '');
-        if ($existingUid !== '' && $this->findContactByUid($existingUid) !== null) {
+        if ($existingUid !== '' && $this->findContactByUid(uid: $existingUid) !== null) {
             return $existingUid;
         }
 
         // Resolve by e-mail (and cbsCode for organisations).
-        $matched = $this->findContactForRecord($objectType, $record);
+        $matched = $this->findContactForRecord(objectType: $objectType, record: $record);
         if ($matched !== null) {
             return (string) ($matched['UID'] ?? '');
         }
 
         // Create a fresh Contact from the identity fields.
-        return $this->createContactForRecord($objectType, $record);
+        return $this->createContactForRecord(objectType: $objectType, record: $record);
     }//end syncToContacts()
-
 
     /**
      * Find a Nextcloud contact by its exact UID.
@@ -208,7 +203,6 @@ class SoftwareCatalogContactSyncService
         return null;
     }//end findContactByUid()
 
-
     /**
      * Find a Nextcloud contact matching a relationship record's identity, by
      * e-mail first and — for organisations — by CBS/KvK code as a fallback.
@@ -230,7 +224,7 @@ class SoftwareCatalogContactSyncService
         if ($email !== '') {
             $results = $this->contactsManager->search($email, ['EMAIL'], ['limit' => 25]);
             foreach ($results as $result) {
-                if ($this->valueMatches(($result['EMAIL'] ?? ''), $email) === true) {
+                if ($this->valueMatches(value: ($result['EMAIL'] ?? ''), needle: $email) === true) {
                     return $result;
                 }
             }
@@ -242,8 +236,8 @@ class SoftwareCatalogContactSyncService
             if ($cbsCode !== '') {
                 $results = $this->contactsManager->search($cbsCode, ['ORG', 'X-KVK', 'NICKNAME'], ['limit' => 25]);
                 foreach ($results as $result) {
-                    if ($this->valueMatches(($result['X-KVK'] ?? ''), $cbsCode) === true
-                        || $this->valueMatches(($result['NICKNAME'] ?? ''), $cbsCode) === true
+                    if ($this->valueMatches(value: ($result['X-KVK'] ?? ''), needle: $cbsCode) === true
+                        || $this->valueMatches(value: ($result['NICKNAME'] ?? ''), needle: $cbsCode) === true
                     ) {
                         return $result;
                     }
@@ -253,7 +247,6 @@ class SoftwareCatalogContactSyncService
 
         return null;
     }//end findContactForRecord()
-
 
     /**
      * Create a Nextcloud contact from a relationship record's legacy identity
@@ -275,11 +268,14 @@ class SoftwareCatalogContactSyncService
 
         $addressBookKey = $this->firstWritableAddressBookKey();
         if ($addressBookKey === null) {
-            $this->logger->warning('[SoftwareCatalogContactSync] No writable addressbook available; cannot create contact', ['objectType' => $objectType]);
+            $this->logger->warning(
+                '[SoftwareCatalogContactSync] No writable addressbook available; cannot create contact',
+                ['objectType' => $objectType]
+            );
             return null;
         }
 
-        $properties = $this->recordToVCard($objectType, $record);
+        $properties = $this->recordToVCard(objectType: $objectType, record: $record);
         if (($properties['FN'] ?? '') === '') {
             $this->logger->warning('[SoftwareCatalogContactSync] Record has no identity to create a contact from', ['objectType' => $objectType]);
             return null;
@@ -292,7 +288,6 @@ class SoftwareCatalogContactSyncService
 
         return (string) ($created['UID'] ?? ($properties['UID'] ?? ''));
     }//end createContactForRecord()
-
 
     /**
      * Map a relationship record's legacy identity fields to vCard properties.
@@ -351,7 +346,6 @@ class SoftwareCatalogContactSyncService
         return $properties;
     }//end recordToVCard()
 
-
     /**
      * Return the key of the first writable addressbook, or null when none is
      * available.
@@ -370,7 +364,6 @@ class SoftwareCatalogContactSyncService
 
         return null;
     }//end firstWritableAddressBookKey()
-
 
     /**
      * Whether a (possibly multi-valued) vCard property contains the given
@@ -404,7 +397,6 @@ class SoftwareCatalogContactSyncService
 
         return strtolower(trim((string) $value)) === $needle;
     }//end valueMatches()
-
 
     /**
      * Extract the first scalar value from a vCard property that may be an

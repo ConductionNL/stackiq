@@ -383,7 +383,7 @@ class OrganizationHandler
                         ]
                     );
 
-                    $title = $this->buildContactpersoonTitle($contactpersoon);
+                    $title = $this->buildContactpersoonTitle(contactpersoon: $contactpersoon);
 
                     // Create contactgegevens object with proper schema.
                     $contactFunctie      = $contactpersoon['functie'] ?? '';

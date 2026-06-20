@@ -84,12 +84,12 @@ class FederationMerger
         // Index the local mirrors of THIS peer by their stable peer-entry id.
         $localByPeerId = [];
         foreach ($localMirrors as $mirror) {
-            if ($this->isOwnedByPeer($mirror, $peerUrl) === false) {
+            if ($this->isOwnedByPeer(mirror: $mirror, peerUrl: $peerUrl) === false) {
                 // Defensive: never reconcile an entry that is not this peer's mirror.
                 continue;
             }
 
-            $peerId = $this->peerEntryId($mirror);
+            $peerId = $this->peerEntryId(mirror: $mirror);
             if ($peerId !== null) {
                 $localByPeerId[$peerId] = $mirror;
             }
@@ -97,7 +97,7 @@ class FederationMerger
 
         $seenPeerIds = [];
         foreach ($peerEntries as $entry) {
-            $peerId = $this->stableId($entry);
+            $peerId = $this->stableId(entry: $entry);
             if ($peerId === null) {
                 // Skip entries without a stable id — cannot be merged idempotently.
                 continue;
@@ -105,7 +105,13 @@ class FederationMerger
 
             $seenPeerIds[$peerId] = true;
 
-            $mirror = $this->buildMirror($entry, $peerUrl, $peerOrg, $peerId, $syncedAt);
+            $mirror = $this->buildMirror(
+                entry: $entry,
+                peerUrl: $peerUrl,
+                peerOrg: $peerOrg,
+                peerId: $peerId,
+                syncedAt: $syncedAt
+            );
 
             if (isset($localByPeerId[$peerId]) === false) {
                 $create[] = $mirror;
@@ -118,7 +124,7 @@ class FederationMerger
                 $mirror['id'] = $existing['id'];
             }
 
-            if ($this->isUnchanged($existing, $mirror) === false) {
+            if ($this->isUnchanged(existing: $existing, fresh: $mirror) === false) {
                 $update[] = $mirror;
             }
         }//end foreach
@@ -129,7 +135,7 @@ class FederationMerger
                 continue;
             }
 
-            $withdraw[] = $this->markWithdrawn($mirror, $syncedAt);
+            $withdraw[] = $this->markWithdrawn(mirror: $mirror, syncedAt: $syncedAt);
         }
 
         return ['create' => $create, 'update' => $update, 'withdraw' => $withdraw];
@@ -151,7 +157,12 @@ class FederationMerger
      */
     public function isStale(int $consecutiveFailures, ?int $threshold=null): bool
     {
-        $limit = ($threshold !== null && $threshold > 0) ? $threshold : self::DEFAULT_STALE_AFTER_FAILURES;
+        if ($threshold !== null && $threshold > 0) {
+            $limit = $threshold;
+        } else {
+            $limit = self::DEFAULT_STALE_AFTER_FAILURES;
+        }
+
         return $consecutiveFailures >= $limit;
     }//end isStale()
 
@@ -167,7 +178,12 @@ class FederationMerger
      */
     public function applyStale(array $mirror, bool $stale): array
     {
-        $source            = (is_array($mirror['_source'] ?? null) === true) ? $mirror['_source'] : [];
+        if (is_array($mirror['_source'] ?? null) === true) {
+            $source = $mirror['_source'];
+        } else {
+            $source = [];
+        }
+
         $source['stale']   = $stale;
         $mirror['_source'] = $source;
         return $mirror;
@@ -234,7 +250,12 @@ class FederationMerger
      */
     private function markWithdrawn(array $mirror, string $syncedAt): array
     {
-        $source = (is_array($mirror['_source'] ?? null) === true) ? $mirror['_source'] : [];
+        if (is_array($mirror['_source'] ?? null) === true) {
+            $source = $mirror['_source'];
+        } else {
+            $source = [];
+        }
+
         $source['withdrawn']   = true;
         $source['stale']       = true;
         $source['withdrawnAt'] = $syncedAt;
@@ -280,7 +301,11 @@ class FederationMerger
         }
 
         $value = $source['peerEntryId'] ?? null;
-        return (is_string($value) === true && trim($value) !== '') ? $value : null;
+        if (is_string($value) === true && trim($value) !== '') {
+            return $value;
+        }
+
+        return null;
     }//end peerEntryId()
 
     /**
@@ -294,7 +319,7 @@ class FederationMerger
      */
     private function isUnchanged(array $existing, array $fresh): bool
     {
-        return $this->normalise($existing) === $this->normalise($fresh);
+        return $this->normalise(mirror: $existing) === $this->normalise(mirror: $fresh);
     }//end isUnchanged()
 
     /**
@@ -312,7 +337,7 @@ class FederationMerger
             unset($mirror['_source']['syncedAt'], $mirror['_source']['withdrawnAt']);
         }
 
-        return $this->ksortRecursive($mirror);
+        return $this->ksortRecursive(value: $mirror);
     }//end normalise()
 
     /**
@@ -327,7 +352,7 @@ class FederationMerger
         ksort($value);
         foreach ($value as $key => $item) {
             if (is_array($item) === true) {
-                $value[$key] = $this->ksortRecursive($item);
+                $value[$key] = $this->ksortRecursive(value: $item);
             }
         }
 

@@ -66,7 +66,11 @@ class FederationConfig
     public function getDirectoryUrl(): string
     {
         $url = trim($this->appConfig->getValueString(Application::APP_ID, 'federation_directory_url', ''));
-        return $url !== '' ? $url : self::DEFAULT_DIRECTORY_URL;
+        if ($url !== '') {
+            return $url;
+        }
+
+        return self::DEFAULT_DIRECTORY_URL;
     }//end getDirectoryUrl()
 
     /**
@@ -112,7 +116,11 @@ class FederationConfig
     public function getSyncInterval(): int
     {
         $value = $this->appConfig->getValueInt(Application::APP_ID, 'federation_sync_interval', 3600);
-        return $value > 0 ? $value : 3600;
+        if ($value > 0) {
+            return $value;
+        }
+
+        return 3600;
     }//end getSyncInterval()
 
     /**
@@ -126,7 +134,11 @@ class FederationConfig
     public function getStaleAfterFailures(): int
     {
         $value = $this->appConfig->getValueInt(Application::APP_ID, 'federation_stale_after_failures', 3);
-        return $value > 0 ? $value : 3;
+        if ($value > 0) {
+            return $value;
+        }
+
+        return 3;
     }//end getStaleAfterFailures()
 
     /**
@@ -140,7 +152,11 @@ class FederationConfig
     public function getPeerTimeout(): int
     {
         $value = $this->appConfig->getValueInt(Application::APP_ID, 'federation_peer_timeout', 15);
-        return $value > 0 ? $value : 15;
+        if ($value > 0) {
+            return $value;
+        }
+
+        return 15;
     }//end getPeerTimeout()
 
     /**

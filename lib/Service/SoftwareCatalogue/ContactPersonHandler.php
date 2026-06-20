@@ -127,7 +127,7 @@ class ContactPersonHandler
         }
 
         // Strategies 2 and 3: name-based candidates.
-        [$cleanVoornaam, $cleanAchternaam] = $this->cleanNameParts($voornaam, $achternaam);
+        [$cleanVoornaam, $cleanAchternaam] = $this->cleanNameParts(voornaam: $voornaam, achternaam: $achternaam);
         if ($cleanVoornaam !== '' && $cleanAchternaam !== '') {
             // Strategy 2: firstname.lastname.
             $candidate = $cleanVoornaam.'.'.$cleanAchternaam;

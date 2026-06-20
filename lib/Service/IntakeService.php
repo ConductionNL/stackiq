@@ -116,12 +116,12 @@ class IntakeService
      */
     public function submit(array $payload): array
     {
-        $validation = $this->validate($payload);
+        $validation = $this->validate(payload: $payload);
         if ($validation !== null) {
             return ['ok' => false, 'reason' => $validation, 'uuid' => null, 'status' => null];
         }
 
-        $clean = $this->sanitise($payload);
+        $clean = $this->sanitise(payload: $payload);
 
         $target = $this->resolveTarget();
         if ($target === null) {
@@ -133,7 +133,7 @@ class IntakeService
             return ['ok' => false, 'reason' => 'ObjectService unavailable', 'uuid' => null, 'status' => null];
         }
 
-        if ($this->hasPendingDuplicate($objectService, $target, (string) $clean['naam']) === true) {
+        if ($this->hasPendingDuplicate(objectService: $objectService, target: $target, naam: (string) $clean['naam']) === true) {
             return [
                 'ok'     => false,
                 'reason' => 'a pending registration for this organisation already exists',
@@ -158,7 +158,7 @@ class IntakeService
             return ['ok' => false, 'reason' => 'could not store registration', 'uuid' => null, 'status' => null];
         }
 
-        $uuid = $this->entityUuid($entity);
+        $uuid = $this->entityUuid(entity: $entity);
         $this->logger->info(
             'IntakeService: anonymous registration queued (pending)',
             ['uuid' => $uuid, 'naam' => $clean['naam']]
@@ -276,12 +276,20 @@ class IntakeService
     {
         if (is_object($entity) === true && method_exists($entity, 'getUuid') === true) {
             $uuid = $entity->getUuid();
-            return is_string($uuid) ? $uuid : null;
+            if (is_string($uuid) === true) {
+                return $uuid;
+            }
+
+            return null;
         }
 
         if (is_array($entity) === true) {
             $uuid = $entity['id'] ?? $entity['uuid'] ?? null;
-            return is_string($uuid) ? $uuid : null;
+            if (is_string($uuid) === true) {
+                return $uuid;
+            }
+
+            return null;
         }
 
         return null;

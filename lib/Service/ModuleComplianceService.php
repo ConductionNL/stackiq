@@ -126,7 +126,7 @@ class ModuleComplianceService
                 moduleObject: $moduleObject,
                 moduleId: (string) $moduleId,
                 moduleUuid: $moduleUuid,
-                currentStandaarden: $this->normaliseCurrentStandaarden($moduleData['standaardVersies'] ?? [])
+                currentStandaarden: $this->normaliseCurrentStandaarden(rawStandaarden: $moduleData['standaardVersies'] ?? [])
             );
 
             $endTime       = microtime(true);

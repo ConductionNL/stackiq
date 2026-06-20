@@ -912,11 +912,11 @@ class SettingsService
         }
 
         // Fall back to generic configuration for backward compatibility.
+        // @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
         // Prefer the OR RegisterResolverService when available so per-install admin
         // overrides go through the same `<context>_schema` resolution pipeline used by
         // every other Conduction app (request-scoped caching + tenant-aware). Falls back
         // to the bare IAppConfig read when OR is absent or the resolver pre-dates W21-B.
-        // @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
         if ($result === null) {
             $resolver = $this->getRegisterResolverService();
             $schemaId = '';
@@ -941,7 +941,7 @@ class SettingsService
             if (empty($schemaId) === false) {
                 $result = (int) $schemaId;
             }
-        }
+        }//end if
 
         // Cache the result (even if null) to avoid repeated lookups.
         $this->schemaIdCache[$objectType] = $result;
@@ -1015,12 +1015,12 @@ class SettingsService
             }
         }
 
+        // @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
         // Fallback to legacy per-object-type register config — route through the OR
         // RegisterResolverService when available so per-install admin overrides flow
         // through the same `<context>_register` resolution pipeline used by every
         // other Conduction app (request-scoped caching + tenant-aware). Falls back
         // to the bare IAppConfig read when OR is absent or the resolver pre-dates W21-B.
-        // @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
         if ($result === null) {
             $resolver   = $this->getRegisterResolverService();
             $registerId = '';
@@ -1046,7 +1046,7 @@ class SettingsService
             if (empty($registerId) === false) {
                 $result = (int) $registerId;
             }
-        }
+        }//end if
 
         // Cache the result (even if null) to avoid repeated lookups.
         $this->registerIdCache[$objectType] = $result;
@@ -1237,7 +1237,6 @@ class SettingsService
             'contact'      => $this->buildObjectTypeStatusEntry(objectType: 'contactpersoon'),
         ];
     }//end getConfigurationStatus()
-
 
     /**
      * Builds a single object-type status entry (configured/schemaId/registerId).

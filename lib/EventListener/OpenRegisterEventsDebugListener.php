@@ -180,7 +180,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
      *
      * @phpstan-return array<string, mixed>
      * @psalm-return   array<string, mixed>
-     *
      */
     private function extractEventData(Event $event): array
     {
@@ -188,10 +187,10 @@ class OpenRegisterEventsDebugListener implements IEventListener
             'eventClass' => get_class($event),
         ];
 
-        $specific = $this->extractObjectEventData($event)
-            ?? $this->extractRegisterEventData($event)
-            ?? $this->extractSchemaEventData($event)
-            ?? $this->extractOrganisationEventData($event);
+        $specific   = $this->extractObjectEventData(event: $event);
+        $specific ??= $this->extractRegisterEventData(event: $event);
+        $specific ??= $this->extractSchemaEventData(event: $event);
+        $specific ??= $this->extractOrganisationEventData(event: $event);
 
         if ($specific !== null) {
             return array_merge($data, $specific);
@@ -202,7 +201,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
         return $data;
 
     }//end extractEventData()
-
 
     /**
      * Project Object* events into a debug payload.
@@ -230,6 +228,12 @@ class OpenRegisterEventsDebugListener implements IEventListener
         if ($event instanceof ObjectUpdatedEvent) {
             $newObject = $event->getNewObject();
             $oldObject = $event->getOldObject();
+            if ($oldObject !== null) {
+                $oldObjectData = $oldObject->getObject();
+            } else {
+                $oldObjectData = null;
+            }
+
             return [
                 'eventType'     => 'ObjectUpdated',
                 'newObjectId'   => $newObject->getId(),
@@ -241,9 +245,9 @@ class OpenRegisterEventsDebugListener implements IEventListener
                 'owner'         => $newObject->getOwner(),
                 'updated'       => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
                 'newObjectData' => $this->getSafeObjectData(objectData: $newObject->getObject()),
-                'oldObjectData' => $oldObject !== null ? $oldObject->getObject() : null,
+                'oldObjectData' => $oldObjectData,
             ];
-        }
+        }//end if
 
         if ($event instanceof ObjectDeletedEvent) {
             $object = $event->getObject();
@@ -298,7 +302,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
 
     }//end extractObjectEventData()
 
-
     /**
      * Project Register* events into a debug payload.
      *
@@ -342,7 +345,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
 
     }//end extractRegisterEventData()
 
-
     /**
      * Project Schema* events into a debug payload.
      *
@@ -385,7 +387,6 @@ class OpenRegisterEventsDebugListener implements IEventListener
         return null;
 
     }//end extractSchemaEventData()
-
 
     /**
      * Project Organisation* events into a debug payload.

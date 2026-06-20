@@ -94,14 +94,14 @@ class GebruikController extends Controller
             return new JSONResponse($this->getEmptyResult());
         }
 
-        $roles = $this->resolveUserRoles($user);
+        $roles = $this->resolveUserRoles(user: $user);
         if ($roles['hasAccess'] === false) {
             return new JSONResponse($this->getEmptyResult());
         }
 
         $options = $this->request->getParams();
 
-        $scoped = $this->applyAanbodScopeToOptions($roles, $options);
+        $scoped = $this->applyAanbodScopeToOptions(roles: $roles, options: $options);
         if ($scoped === null) {
             return new JSONResponse($this->getEmptyResult());
         }
@@ -169,7 +169,7 @@ class GebruikController extends Controller
      * `openspec/changes/method-decomposition/tasks.md` task 9.3.
      *
      * @param array{isAdmin:bool,isBeheerder:bool,isAanbod:bool,orgUuid:string} $roles   Role flags.
-     * @param array<string,mixed>                                                $options Current request params.
+     * @param array<string,mixed>                                               $options Current request params.
      *
      * @return array<string,mixed>|null
      *

@@ -141,9 +141,9 @@ class HierarchyHandler
                 return;
             }
 
-            $primaryManager = $this->resolvePrimaryManager($organizationBeheerders);
-            $this->assignManagerForCurrentUser($username, $organizationBeheerders, $primaryManager);
-            $this->assignManagerForOtherBeheerders($organizationBeheerders, $primaryManager);
+            $primaryManager = $this->resolvePrimaryManager(organizationBeheerders: $organizationBeheerders);
+            $this->assignManagerForCurrentUser(username: $username, organizationBeheerders: $organizationBeheerders, primaryManager: $primaryManager);
+            $this->assignManagerForOtherBeheerders(organizationBeheerders: $organizationBeheerders, primaryManager: $primaryManager);
 
             $this->_logger->info(
                 'Set up manager relationships',
@@ -166,7 +166,6 @@ class HierarchyHandler
         }//end try
     }//end setupManagerRelationships()
 
-
     /**
      * Pick the primary manager from the list of beheerders.
      *
@@ -181,7 +180,6 @@ class HierarchyHandler
         return $organizationBeheerders[0];
 
     }//end resolvePrimaryManager()
-
 
     /**
      * Set the primary beheerder as the current user's manager when they
@@ -202,7 +200,6 @@ class HierarchyHandler
         $this->_contactPersonHandler->setUserManager(username: $username, managerUsername: $primaryManager);
 
     }//end assignManagerForCurrentUser()
-
 
     /**
      * Point all secondary beheerders at the primary manager.

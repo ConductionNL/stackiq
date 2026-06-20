@@ -356,7 +356,7 @@ class GroupHandler
         }
 
         try {
-            $orgData = $this->resolveOrganisationData($organizationUuid);
+            $orgData = $this->resolveOrganisationData(organisationUuid: $organizationUuid);
             if ($orgData === null) {
                 return;
             }
@@ -374,7 +374,7 @@ class GroupHandler
                 ]
             );
 
-            $this->assignOrganizationGroup($user, $groupId, $actualUuid);
+            $this->assignOrganizationGroup(user: $user, groupId: $groupId, actualUuid: $actualUuid);
         } catch (\Exception $e) {
             $this->_logger->error(
                 'Failed to process organization group: '.$e->getMessage(),
@@ -385,7 +385,6 @@ class GroupHandler
             );
         }//end try
     }//end updateOrganizationGroups()
-
 
     /**
      * Resolves the organisation object data for a given organisation UUID.
@@ -418,7 +417,6 @@ class GroupHandler
         return $organizationObject->getObject();
 
     }//end resolveOrganisationData()
-
 
     /**
      * Adds a user to the organisation's Nextcloud group when they are not
@@ -471,7 +469,7 @@ class GroupHandler
         }
 
         try {
-            $orgData = $this->resolveOrganisationData($organizationUuid);
+            $orgData = $this->resolveOrganisationData(organisationUuid: $organizationUuid);
             if ($orgData === null) {
                 return;
             }
