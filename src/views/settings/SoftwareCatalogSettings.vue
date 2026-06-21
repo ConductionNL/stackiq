@@ -1,35 +1,36 @@
 <template>
-	<div>
-		<!-- Version Information Card -->
-		<CnVersionInfoCard
-			:app-name="'Software Catalogus'"
-			:app-version="appVersion"
-			:is-up-to-date="true"
-			:show-update-button="true"
-			:title="t('softwarecatalog', 'Version Information')"
-			:description="t('softwarecatalog', 'Information about the current Software Catalogus installation')">
-			<template #footer>
-				<div class="cn-support-info">
-					<h4>{{ t('softwarecatalog', 'Support') }}</h4>
-					<p>
-						{{ t('softwarecatalog', 'For support, contact us at') }}
-						<a href="mailto:support@conduction.nl">support@conduction.nl</a>
-					</p>
-					<p>
-						{{ t('softwarecatalog', 'For a Service Level Agreement (SLA), contact') }}
-						<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
-					</p>
-				</div>
-			</template>
-		</CnVersionInfoCard>
-
-		<NcSettingsSection
-			name="Software Catalog Configuration"
-			description="Configure OpenRegister schema mappings for Software Catalog objects"
-			doc-url="https://docs.opencatalogi.nl" />
-
-		<!-- Version Information Section -->
-		<VersionInformation />
+	<CnAdminSettingsShell
+		app-id="softwarecatalog"
+		app-name="Software Catalogus"
+		:app-version="versionInfo.appVersion || appVersion"
+		:configured-version="versionInfo.configuredVersion || ''"
+		:is-up-to-date="versionInfo.versionsMatch !== false"
+		:show-reimport="false">
+		<!-- Version-card maintenance actions (moved from the old VersionInformation section) -->
+		<template #actions>
+			<NcButton
+				v-if="versionInfo.autoConfigCompleted === false"
+				type="secondary"
+				:disabled="autoConfiguring"
+				@click="consolidatedAutoConfigure">
+				Auto Configure
+			</NcButton>
+			<NcButton
+				class="ml-8"
+				type="error"
+				:disabled="autoConfiguring"
+				@click="handleForceUpdate">
+				Force Update
+			</NcButton>
+			<NcButton
+				v-if="versionInfo.autoConfigCompleted === true"
+				class="ml-8"
+				type="tertiary"
+				:disabled="autoConfiguring"
+				@click="handleResetAutoConfig">
+				Reset Auto-Config
+			</NcButton>
+		</template>
 
 		<!-- Statistics Overview Section -->
 		<StatisticsOverview />
@@ -94,21 +95,21 @@
 
 		<!-- Background Jobs Configuration Section -->
 		<CronjobConfiguration />
-	</div>
+	</CnAdminSettingsShell>
 </template>
 
 <script>
 import { defineComponent } from 'vue'
 import { loadState } from '@nextcloud/initial-state'
+import { showSuccess, showError } from '@nextcloud/dialogs'
 import {
-	NcSettingsSection,
+	NcButton,
 	NcTextField,
 } from '@nextcloud/vue'
-import { CnVersionInfoCard } from '@conduction/nextcloud-vue'
+import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
 import { settingsStore } from '../../store/store.js'
 import Web from 'vue-material-design-icons/Web.vue'
 import OpenRegisterIntegration from './sections/OpenRegisterIntegration.vue'
-import VersionInformation from './sections/VersionInformation.vue'
 import StatisticsOverview from './sections/StatisticsOverview.vue'
 import UserGroupsConfiguration from './sections/UserGroupsConfiguration.vue'
 import OrganizationSynchronization from './sections/OrganizationSynchronization.vue'
@@ -129,11 +130,10 @@ import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
 export default defineComponent({
 	name: 'SoftwareCatalogSettings',
 	components: {
-		CnVersionInfoCard,
-		NcSettingsSection,
+		CnAdminSettingsShell,
+		NcButton,
 		NcTextField,
 		OpenRegisterIntegration,
-		VersionInformation,
 		StatisticsOverview,
 		UserGroupsConfiguration,
 		OrganizationSynchronization,
@@ -166,10 +166,22 @@ export default defineComponent({
 			appVersion: loadState('softwarecatalog', 'version', 'Unknown'),
 			savingCatalogLocation: false,
 			catalogLocation: '',
+			autoConfiguring: false,
 		}
 	},
 
 	computed: {
+		/**
+		 * Version info from the settings store, used to drive the shell's version card
+		 * (configured version + up-to-date badge) and the maintenance action buttons.
+		 *
+		 * @return {object} Version information
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 */
+		versionInfo() {
+			return this.store.versionInfo || {}
+		},
+
 		/**
 		 * Check if catalog location has changed
 		 *
@@ -269,6 +281,73 @@ export default defineComponent({
 				console.error('Failed to refresh general settings:', error)
 			}
 		},
+
+		/**
+		 * Perform consolidated auto-configuration using the settings store.
+		 * Feedback is surfaced via toast notifications.
+		 *
+		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 */
+		async consolidatedAutoConfigure() {
+			this.autoConfiguring = true
+			try {
+				const result = await this.store.consolidatedAutoConfigure()
+				if (result && result.success) {
+					showSuccess('Auto configuration completed successfully')
+				} else if (result && result.message) {
+					showError('Auto configuration failed: ' + result.message)
+				}
+				await this.store.loadVersionInfo()
+			} catch (error) {
+				console.error('Failed to perform auto-configuration:', error)
+				showError('Failed to perform auto-configuration: ' + error.message)
+			} finally {
+				this.autoConfiguring = false
+			}
+		},
+
+		/**
+		 * Force a full re-import and version sync via the settings store.
+		 *
+		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 */
+		async handleForceUpdate() {
+			this.autoConfiguring = true
+			try {
+				const result = await this.store.forceUpdate()
+				await this.store.loadVersionInfo()
+				if (result && result.success) {
+					showSuccess(result.message || 'Force update completed successfully')
+				} else if (result) {
+					showError(result.message || 'Force update failed')
+				}
+			} finally {
+				this.autoConfiguring = false
+			}
+		},
+
+		/**
+		 * Reset the auto-config completed flag via the settings store.
+		 *
+		 * @return {Promise<void>}
+		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 */
+		async handleResetAutoConfig() {
+			this.autoConfiguring = true
+			try {
+				const result = await this.store.resetAutoConfig()
+				await this.store.loadVersionInfo()
+				if (result && result.success) {
+					showSuccess(result.message || 'Auto-config reset successfully')
+				} else if (result) {
+					showError(result.message || 'Failed to reset auto-config')
+				}
+			} finally {
+				this.autoConfiguring = false
+			}
+		},
 	},
 })
 </script>
@@ -295,5 +374,9 @@ export default defineComponent({
 	color: var(--color-text-lighter);
 	margin-top: 1rem;
 	font-size: 14px;
+}
+
+.ml-8 {
+	margin-left: 8px;
 }
 </style>
