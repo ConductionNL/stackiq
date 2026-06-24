@@ -10,6 +10,9 @@
   "scripts": {
     "test:l10n": "node tests/l10n/check-l10n.js",
     "test:l10n:write": "node tests/l10n/check-l10n.js --write",
+    "prebuild": "vue-demi-switch 2.7",
+    "predev": "vue-demi-switch 2.7",
+    "prewatch": "vue-demi-switch 2.7",
     "build": "NODE_ENV=production webpack --config webpack.config.js --progress",
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
     "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
