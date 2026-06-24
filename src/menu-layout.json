@@ -1,0 +1,10 @@
+{
+	"_meta": {
+		"description": "settings-foldout layout"
+	},
+	"relocations": {},
+	"removals": [],
+	"settingsSection": [
+		"SettingsMenu"
+	]
+}

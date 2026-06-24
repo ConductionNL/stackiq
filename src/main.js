@@ -21,11 +21,13 @@ import {
 	registerTranslations,
 	useAppManifest,
 	resolveManifestSentinels,
+	buildManifest,
 } from '@conduction/nextcloud-vue'
 import Tooltip from '@nextcloud/vue/dist/Directives/Tooltip.js'
 import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
+import menuLayout from './menu-layout.json'
 import customComponents from './customComponents.js'
 import registry from './registry.js'
 import { routesFromManifest } from './router.js'
@@ -71,33 +73,9 @@ function tryLoadTranslations() {
 	}
 }
 
-/**
- * ADR-037: merge modular manifest fragments from src/manifest.d/*.json onto the
- * bundled base manifest. Each OpenSpec change drops its own fragment (pages/menu)
- * instead of editing the monolith src/manifest.json, so concurrent builds touch
- * disjoint files. `pages` and `menu` arrays are concatenated.
- *
- * @param {object} base The bundled base manifest.
- * @return {object} The manifest with all fragment pages/menu appended.
- */
-function mergeManifestFragments(base) {
-	const merged = { ...base, pages: [...(base.pages || [])], menu: [...(base.menu || [])] }
-	// require.context is resolved at build time; src/manifest.d/ must exist (it
-	// ships with a _placeholder.json). It is a no-op when no real fragments exist.
-	const ctx = require.context('./manifest.d/', false, /\.json$/)
-	ctx.keys().sort().forEach((key) => {
-		const frag = ctx(key)
-		if (Array.isArray(frag.pages)) {
-			merged.pages.push(...frag.pages)
-		}
-		if (Array.isArray(frag.menu)) {
-			merged.menu.push(...frag.menu)
-		}
-	})
-	return merged
-}
-
-const mergedManifest = mergeManifestFragments(bundledManifest)
+const fragmentCtx = require.context('./manifest.d/', false, /\.json$/)
+const fragments = fragmentCtx.keys().sort().map((key) => fragmentCtx(key))
+const mergedManifest = buildManifest(bundledManifest, fragments, menuLayout)
 
 tryLoadTranslations()
 
