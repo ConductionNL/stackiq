@@ -3,7 +3,11 @@
 // Copyright (C) 2026 Conduction B.V.
 //
 // validate-manifest.js — schema-validates src/manifest.json against the
-// @conduction/nextcloud-vue v1.x app-manifest schema using Ajv.
+// @conduction/nextcloud-vue v2.x app-manifest schema using Ajv.
+//
+// The manifest declares the v2 schema ($schema → app-manifest-v2.schema.json),
+// which adds the top-level `setup` and `walkthrough` blocks (onboarding +
+// guided tour) that the v1 schema rejects under additionalProperties:false.
 //
 // Usage:
 //   node tests/validate-manifest.js
@@ -14,9 +18,9 @@
 //
 // Schema lookup order (first hit wins):
 //   1. Env var APP_MANIFEST_SCHEMA — explicit absolute path to a schema JSON
-//   2. node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest.schema.json
-//   3. ../nextcloud-vue/src/schemas/app-manifest.schema.json (sibling worktree)
-//   4. ../decidesk/node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest.schema.json
+//   2. node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest-v2.schema.json
+//   3. ../nextcloud-vue/src/schemas/app-manifest-v2.schema.json (sibling worktree)
+//   4. ../decidesk/node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest-v2.schema.json
 //      (sibling app's installed copy — fallback when softwarecatalog has not yet npm-installed)
 
 'use strict'
@@ -30,9 +34,9 @@ const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'manifest.json')
 
 const SCHEMA_CANDIDATES = [
 	process.env.APP_MANIFEST_SCHEMA,
-	path.join(REPO_ROOT, 'node_modules', '@conduction', 'nextcloud-vue', 'src', 'schemas', 'app-manifest.schema.json'),
-	path.join(REPO_ROOT, '..', 'nextcloud-vue', 'src', 'schemas', 'app-manifest.schema.json'),
-	path.join(REPO_ROOT, '..', 'decidesk', 'node_modules', '@conduction', 'nextcloud-vue', 'src', 'schemas', 'app-manifest.schema.json'),
+	path.join(REPO_ROOT, 'node_modules', '@conduction', 'nextcloud-vue', 'src', 'schemas', 'app-manifest-v2.schema.json'),
+	path.join(REPO_ROOT, '..', 'nextcloud-vue', 'src', 'schemas', 'app-manifest-v2.schema.json'),
+	path.join(REPO_ROOT, '..', 'decidesk', 'node_modules', '@conduction', 'nextcloud-vue', 'src', 'schemas', 'app-manifest-v2.schema.json'),
 ].filter(Boolean)
 
 function findSchemaPath() {

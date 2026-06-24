@@ -1,9 +1,28 @@
 {
-	"$schema": "https://codeberg.org/Conduction/nextcloud-vue/raw/branch/main/src/schemas/app-manifest.schema.json",
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"version": "1.0.0",
 	"dependencies": [
 		"openregister"
 	],
+	"walkthrough": {
+		"enabled": true,
+		"version": 1,
+		"completionConfigKey": "walkthrough_completed_version",
+		"tours": [
+			{
+				"id": "softwarecatalog:getting-started",
+				"title": "Getting started",
+				"trigger": "first-visit",
+				"minAppVersion": "0.2.11",
+				"steps": [
+					{ "id": "welcome", "sinceVersion": "0.2.11", "placement": "center", "title": "Welcome to Software Catalog", "body": "Let's take a quick spin through your software catalogue — we'll register an organisation together so you can see how the pieces fit. You'll add the record yourself.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } },
+					{ "id": "go-organisaties", "sinceVersion": "0.2.11", "placement": "right", "body": "Organisations are the heart of your catalogue — they own the contracts, modules and compliance records you track. Open Organisations from the menu to get started.", "task": "Click Organisations in the menu", "target": { "kind": "nav-item", "ref": "Organisaties" }, "advanceOn": { "type": "route-match", "route": "Organisaties" } },
+					{ "id": "create-organisatie", "sinceVersion": "0.2.11", "placement": "bottom", "allowManualNext": true, "body": "Add your first organisation — give it a name and save. You can attach contracts, modules and compliance records to it afterwards.", "task": "Click New and save an organisation", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "voorzieningen", "schema": "organisatie", "capture": { "organisatieId": ":id" } } },
+					{ "id": "done", "sinceVersion": "0.2.11", "placement": "center", "title": "You're all set", "body": "Nicely done — your catalogue has its first organisation. Head back to the Dashboard to watch it grow, and reopen this tour anytime from the … menu.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } }
+				]
+			}
+		]
+	},
 	"menu": [
 		{
 			"id": "Dashboard",
@@ -11,6 +30,13 @@
 			"icon": "icon-category-dashboard",
 			"route": "Dashboard",
 			"order": 10
+		},
+		{
+			"id": "Organisaties",
+			"label": "Organisations",
+			"icon": "icon-category-organization",
+			"route": "Organisaties",
+			"order": 20
 		},
 		{
 			"id": "Contracten",
