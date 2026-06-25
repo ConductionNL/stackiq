@@ -566,7 +566,7 @@ Writes that edit a specific (non-default) language variant pass `targetLang`
 through `patchObject(type, id, changes, targetLang)`, which stamps
 `X-Translation-Target-Language` so OR writes into the correct language slot.
 
-`src/utils/translationBadge.js` computes a "(translated from {language})"
+`src/utils/translationBadge.js` computes a `(translated from {language})`
 badge descriptor for index rows where the served language differs from the
 object's `sourceLanguage` metadata. The badge label is i18n-keyed
 (`(translated from {language})`, present in all l10n files).
