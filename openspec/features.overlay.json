@@ -1,0 +1,181 @@
+[
+  {
+    "slug": "software-landscape-register",
+    "title": "Software landscape register",
+    "title_nl": "Softwarelandschap-register",
+    "summary": "Record every application, module and integration in one authoritative place.",
+    "summary_nl": "Leg al je applicaties, modules en koppelingen vast op een plek.",
+    "status": "stable",
+    "providedBy": "openregister",
+    "docsUrl": "openspec/specs/view-enrichment-api/spec.md"
+  },
+  {
+    "slug": "gemma-alignment",
+    "title": "GEMMA alignment",
+    "title_nl": "GEMMA-uitlijning",
+    "summary": "Map your applications onto GEMMA reference components and join the national architecture.",
+    "summary_nl": "Plot je applicaties op GEMMA-referentiecomponenten en praat mee in de landelijke architectuur.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/module-overlay-rendering/spec.md"
+  },
+  {
+    "slug": "archimate-import-and-export",
+    "title": "ArchiMate import and export",
+    "title_nl": "ArchiMate-import en -export",
+    "summary": "Open your catalogue straight in Archi and keep your EA models in sync.",
+    "summary_nl": "Open je catalogus rechtstreeks in Archi en houd je EA-modellen synchroon.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/archimate-export/spec.md"
+  },
+  {
+    "slug": "contract-administration",
+    "title": "Contract administration",
+    "title_nl": "Contractadministratie",
+    "summary": "See expiring contracts and yearly costs before a renewal surprises you.",
+    "summary_nl": "Zie aflopende contracten en jaarkosten voordat een verlenging je verrast.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/contract-administration/spec.md"
+  },
+  {
+    "slug": "contract-renewal-approval",
+    "title": "Contract renewal with approval",
+    "title_nl": "Contractverlenging met goedkeuring",
+    "summary": "A contract only goes live after a recorded decision.",
+    "summary_nl": "Laat een contract pas actief worden na een vastgelegde beslissing.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/contract-decision-delegation/spec.md"
+  },
+  {
+    "slug": "standards-compliance",
+    "title": "Standards compliance",
+    "title_nl": "Standaardencompliance",
+    "summary": "Show with evidence which module supports which standard.",
+    "summary_nl": "Toon met bewijs welke module welke standaard ondersteunt.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/module-compliance-assessment/spec.md"
+  },
+  {
+    "slug": "lifecycle-and-end-of-support",
+    "title": "Lifecycle and end of support",
+    "title_nl": "Levenscyclus en einde-support",
+    "summary": "Get a warning in time before software falls out of support.",
+    "summary_nl": "Krijg op tijd een waarschuwing voordat software uit support loopt.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/application-lifecycle-tracking/spec.md"
+  },
+  {
+    "slug": "portfolio-roadmap",
+    "title": "Portfolio roadmap",
+    "title_nl": "Portfolio-roadmap",
+    "summary": "See per organisation which applications are replaced when.",
+    "summary_nl": "Bekijk per organisatie welke applicaties wanneer vervangen worden.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/application-lifecycle-tracking/spec.md"
+  },
+  {
+    "slug": "open-data-publishing",
+    "title": "Publish as open data",
+    "title_nl": "Open data publiceren",
+    "summary": "Publish your software choices as open data, without privacy details.",
+    "summary_nl": "Publiceer je softwarekeuzes als open data, zonder privacygegevens.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/open-data-publishing/spec.md"
+  },
+  {
+    "slug": "self-registration-with-moderation",
+    "title": "Self-registration with moderation",
+    "title_nl": "Zelfregistratie met moderatie",
+    "summary": "Let organisations sign up themselves and approve them in a controlled queue.",
+    "summary_nl": "Laat organisaties zichzelf aanmelden en keur ze gecontroleerd goed.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/open-data-publishing/spec.md"
+  },
+  {
+    "slug": "offering-and-usage-listings",
+    "title": "Offering and usage listings",
+    "title_nl": "Aanbod- en gebruikslijsten",
+    "summary": "Offer modules and claim what your organisation uses.",
+    "summary_nl": "Bied modules aan en claim wat je organisatie gebruikt.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/aanbod-listings/spec.md"
+  },
+  {
+    "slug": "shared-usage-on-gemma-views",
+    "title": "Shared usage on GEMMA views",
+    "title_nl": "Gedeeld gebruik op GEMMA-views",
+    "summary": "See which modules you run together with other organisations.",
+    "summary_nl": "Zie welke modules je samen met andere organisaties inzet.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/deelnames-gebruik/spec.md"
+  },
+  {
+    "slug": "automatic-user-provisioning",
+    "title": "Automatic user provisioning",
+    "title_nl": "Automatische gebruikersinrichting",
+    "summary": "Contacts become Nextcloud accounts with the right role.",
+    "summary_nl": "Contactpersonen worden Nextcloud-accounts met de juiste rol.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/softwarecatalog-contacts-to-nc/spec.md"
+  },
+  {
+    "slug": "notifications",
+    "title": "Notifications",
+    "title_nl": "Meldingen",
+    "summary": "Get alerted about expiring contracts, vulnerabilities and new versions.",
+    "summary_nl": "Word gewaarschuwd bij aflopende contracten, kwetsbaarheden en nieuwe versies.",
+    "status": "stable",
+    "providedBy": "openregister",
+    "docsUrl": "openspec/specs/softwarecatalog-notifications/spec.md"
+  },
+  {
+    "slug": "federation-between-catalogues",
+    "title": "Federation between catalogues",
+    "title_nl": "Federatie tussen catalogi",
+    "summary": "Share and discover catalogues across organisations via OpenCatalogi.",
+    "summary_nl": "Deel en ontdek catalogi tussen organisaties via OpenCatalogi.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/federated-catalog-sync/spec.md"
+  },
+  {
+    "slug": "reviews",
+    "title": "Reviews",
+    "title_nl": "Reviews",
+    "summary": "Record reviews of modules right at the source.",
+    "summary_nl": "Leg beoordelingen van modules vast bij de bron.",
+    "status": "beta",
+    "providedBy": "openregister"
+  },
+  {
+    "slug": "license-and-seat-tracking",
+    "title": "License and seat tracking",
+    "title_nl": "Licentie- en seatregistratie",
+    "summary": "Track license models and seats next to your contracts.",
+    "summary_nl": "Houd licentiemodellen en seats bij naast je contracten.",
+    "status": "soon"
+  },
+  {
+    "slug": "maintenance-and-supplier-roadmap",
+    "title": "Maintenance and supplier roadmap",
+    "title_nl": "Onderhoud en leveranciersroadmap",
+    "summary": "Follow planned maintenance and what your suppliers ship next.",
+    "summary_nl": "Volg gepland onderhoud en wat je leveranciers straks uitbrengen.",
+    "status": "soon"
+  },
+  {
+    "slug": "portfolio-reporting",
+    "title": "Configurable portfolio reporting",
+    "title_nl": "Instelbare portfoliorapportage",
+    "summary": "Build and export your own reports over the whole portfolio.",
+    "summary_nl": "Bouw en exporteer je eigen rapportages over de hele portfolio.",
+    "status": "soon"
+  },
+  {
+    "slug": "audit-trail-view",
+    "title": "Audit trail view",
+    "title_nl": "Auditspoor-overzicht",
+    "summary": "Look back at who changed what in the catalogue, and when.",
+    "summary_nl": "Kijk terug wie wat in de catalogus wijzigde, en wanneer.",
+    "status": "soon",
+    "providedBy": "openregister"
+  }
+]
