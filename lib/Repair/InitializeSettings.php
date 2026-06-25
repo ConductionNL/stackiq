@@ -87,28 +87,30 @@ class InitializeSettings implements IRepairStep
             $output->info('Initializing settings for version '.$currentAppVersion);
             $this->logger->info('SoftwareCatalog repair: Starting initialization for version '.$currentAppVersion);
 
+            // @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
             // Seed window defaults only when the admin has not set them, so
             // upgrades never clobber an operator's chosen window.
-            // @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
             if ($this->config->hasKey(Application::APP_ID, 'contract_expiry_window_days') === false) {
                 $this->config->setValueInt(Application::APP_ID, 'contract_expiry_window_days', 90);
             }
 
+            // @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
             // Seed the EOL warning window default only when unset, so an
             // operator's chosen window survives upgrades.
-            // @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
             if ($this->config->hasKey(Application::APP_ID, 'eol_warning_window_days') === false) {
                 $this->config->setValueInt(Application::APP_ID, 'eol_warning_window_days', 180);
             }
 
-            // Seed federation defaults only when unset (admin overrides survive).
             // @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+            // Seed federation defaults only when unset (admin overrides survive).
             if ($this->config->hasKey(Application::APP_ID, 'federation_enabled') === false) {
                 $this->config->setValueBool(Application::APP_ID, 'federation_enabled', false);
             }
+
             if ($this->config->hasKey(Application::APP_ID, 'federation_directory_url') === false) {
                 $this->config->setValueString(Application::APP_ID, 'federation_directory_url', 'https://directory.opencatalogi.nl');
             }
+
             if ($this->config->hasKey(Application::APP_ID, 'federation_sync_interval') === false) {
                 $this->config->setValueInt(Application::APP_ID, 'federation_sync_interval', 3600);
             }

@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # softwarecatalog-notifications Specification
 
 ## Purpose
-TBD - created by archiving change softwarecatalog-notifications. Update Purpose after archive.
+Declares x-openregister-notifications rules on the kwetsbaarheid, contract, moduleVersie, and beoordeeling schemas so the OpenRegister notification engine dispatches alerts on reported vulnerabilities, approaching contract expiry, newly published module versions, and submitted reviews. Each rule uses a working trigger type, targets admins, record manage-ACL holders, or a named group, and provides both Dutch and English subject strings.
 ## Requirements
 ### Requirement: Catalogue schemas declare notification rules
 

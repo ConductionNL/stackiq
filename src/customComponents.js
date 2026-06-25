@@ -17,7 +17,7 @@
 //   - openspec/changes/softwarecatalog-manifest-v1/design.md
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
-import OrganisatieIndexView from './views/organisaties/OrganisatieIndex.vue'
+import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 import DashboardCustomView from './views/Dashboard.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
@@ -25,13 +25,10 @@ import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 
 export default {
-	// --- Lib gap: bespoke card view + contactpersoon add flow. ---
-	// OrganisatieIndex ships a custom OrganisatieCard (inline contactpersoon
-	// toggle, multi-view orchestration) that does not fit CnIndexPage's
-	// built-in form-dialog pattern yet. Stays type='custom' until the lib
-	// grows a `cardComponent` config field on type='index'. Tracked as
-	// Open Question 2 in the manifest v1 design doc.
-	OrganisatieIndexView,
+	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
+	// the `cardComponent` of the now-decomposed Organisaties type='index' page
+	// (Phase 8). CnIndexPage's cardComponent config closed the prior lib gap.
+	OrganisatieCard,
 
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual

@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # fe-object-modals Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-fe-object-modals. Update Purpose after archive.
+Provides the frontend object modals for working with OpenRegister objects: viewing detail, creating and editing, merging, migrating between register/schema, uploading and downloading files, deleting and locking, bulk operations over a selection, and managing the selected-objects list. Each modal validates input and dispatches the matching Pinia store action, reporting success or failure.
 
 @e2e exclude Vue object-modal components (view/create/edit/merge/migrate/upload/download/delete/lock/mass-ops/selection) — every scenario drives a modal over live OpenRegister object data and dispatches a Pinia store action (save/merge/migrate/upload/mass-op/selection mutation). These are exercised by the Vue component + store unit tests (vitest) with mocked stores; they are interaction flows over seeded data, not navigable manifest-page renders, so they are not Playwright UI-smoke surfaces. The pages that host these modals are covered by the manifest index/detail render tests.
 

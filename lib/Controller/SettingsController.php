@@ -196,7 +196,7 @@ class SettingsController extends Controller
     private function buildConfigErrorResponse(
         string $operationLabel,
         \Exception $exception,
-        bool $includeParams = false
+        bool $includeParams=false
     ): JSONResponse {
         $context = ['exception' => $exception->getMessage()];
         if ($includeParams === true) {
@@ -403,7 +403,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse('get general config', $e, false);
+            return $this->buildConfigErrorResponse(operationLabel: 'get general config', exception: $e, includeParams: false);
         }//end try
     }//end getGeneralConfig()
 
@@ -435,7 +435,7 @@ class SettingsController extends Controller
                 ]
             );
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse('update general config', $e, true);
+            return $this->buildConfigErrorResponse(operationLabel: 'update general config', exception: $e, includeParams: true);
         }//end try
     }//end updateGeneralConfig()
 
@@ -462,7 +462,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse('get sync config', $e, false);
+            return $this->buildConfigErrorResponse(operationLabel: 'get sync config', exception: $e, includeParams: false);
         }//end try
     }//end getSyncConfig()
 
@@ -494,7 +494,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse('update sync config', $e, true);
+            return $this->buildConfigErrorResponse(operationLabel: 'update sync config', exception: $e, includeParams: true);
         }//end try
     }//end updateSyncConfig()
 

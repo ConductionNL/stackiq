@@ -364,7 +364,7 @@ class ArchiMateImportService
 
             // Cache initialization completed.
             // STEP 1: Parse XML to array (same as before).
-            $filePath = $this->validateArchiMateFile($options);
+            $filePath = $this->validateArchiMateFile(options: $options);
 
             $parseStartTime = microtime(true);
             $xmlData        = $this->parseArchiMateXml(filePath: $filePath);
@@ -493,7 +493,7 @@ class ArchiMateImportService
         try {
             // STEP 1: Parse XML to array using the specialized import service.
             // This captures ALL possible XML values including attributes, text content, and nested elements.
-            $filePath = $this->validateArchiMateFile($options);
+            $filePath = $this->validateArchiMateFile(options: $options);
 
             $this->logger->info('Step 1: Parsing XML to array for complete data capture', ['filePath' => $filePath]);
             $parseStartTime = microtime(true);

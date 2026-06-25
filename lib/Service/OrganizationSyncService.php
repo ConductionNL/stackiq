@@ -338,11 +338,11 @@ class OrganizationSyncService
         $organizationSchema  = ($voorzieningenConfig['organisatie_schema'] ?? '');
 
         $startTime = time();
-        $stats     = $this->buildInitialSyncStats($batchSize, $maxExecutionSeconds);
+        $stats     = $this->buildInitialSyncStats(batchSize: $batchSize, maxExecutionSeconds: $maxExecutionSeconds);
 
         [$registerIdOrg, $schemaIdOrg] = $this->validateOrgSyncConfig(
-            $register,
-            $organizationSchema
+            register: $register,
+            organizationSchema: $organizationSchema
         );
         if ($registerIdOrg === null || $schemaIdOrg === null) {
             return $stats;
@@ -423,7 +423,7 @@ class OrganizationSyncService
                 $this->ensureOrganisationEntity(organisatieObject: $object, stats: $stats, sendEmails: false);
                 $stats['organizationsProcessed']++;
             } catch (\Exception $e) {
-                $this->handleSyncError('OrganizationSync', (string) $row['uuid'], $e, $stats);
+                $this->handleSyncError(operation: 'OrganizationSync', identifier: (string) $row['uuid'], exception: $e, stats: $stats);
             }
         }//end foreach
 
@@ -561,7 +561,7 @@ class OrganizationSyncService
 
                 $stats['contactPersonsProcessed']++;
             } catch (\Exception $e) {
-                $this->handleSyncError('ContactSync', (string) $contact['uuid'], $e, $stats);
+                $this->handleSyncError(operation: 'ContactSync', identifier: (string) $contact['uuid'], exception: $e, stats: $stats);
             }//end try
         }//end foreach
 

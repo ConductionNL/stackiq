@@ -77,19 +77,18 @@ class ModuleComplianceSubscriber implements IEventListener
                 ]
                 );
 
-        $object = $this->extractObjectFromEvent($event);
+        $object = $this->extractObjectFromEvent(event: $event);
         if ($object === null) {
             return;
         }
 
-        if ($this->isModuleObject($object, $logger) === false) {
+        if ($this->isModuleObject(object: $object, logger: $logger) === false) {
             return;
         }
 
-        $this->dispatchComplianceUpdate($object, $logger);
-        $this->dispatchEnsureDefaultVersion($object, $logger);
+        $this->dispatchComplianceUpdate(object: $object, logger: $logger);
+        $this->dispatchEnsureDefaultVersion(object: $object, logger: $logger);
     }//end handle()
-
 
     /**
      * Extract the object payload from a supported event type.
@@ -114,7 +113,6 @@ class ModuleComplianceSubscriber implements IEventListener
 
         return null;
     }//end extractObjectFromEvent()
-
 
     /**
      * Decide whether the given object is a module — i.e. its schema id
@@ -143,7 +141,6 @@ class ModuleComplianceSubscriber implements IEventListener
 
         return ((int) $object->getSchema()) === ((int) $moduleSchemaId);
     }//end isModuleObject()
-
 
     /**
      * Dispatch the compliance-update flow with consistent error handling.
@@ -177,9 +174,8 @@ class ModuleComplianceSubscriber implements IEventListener
                         'trace'     => $e->getTraceAsString(),
                     ]
                     );
-        }
+        }//end try
     }//end dispatchComplianceUpdate()
-
 
     /**
      * Ensure the module has at least one (default 1.0.0) version.

@@ -1,0 +1,13 @@
+{
+	"_meta": {
+		"description": "settings-foldout layout"
+	},
+	"relocations": {
+		"Komplianties": "ReportsCompliance",
+		"ComplianceMatrix": "ReportsCompliance"
+	},
+	"removals": [],
+	"settingsSection": [
+		"SettingsMenu"
+	]
+}

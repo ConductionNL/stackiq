@@ -134,8 +134,8 @@ class UserProfileUpdatedEventListener implements IEventListener
         $objectService   = $this->container->get('OCA\OpenRegister\Service\ObjectService');
         $settingsService = $this->container->get(SettingsService::class);
 
-        $voorzieningenConfig  = $settingsService->getVoorzieningenConfig();
-        $register             = $voorzieningenConfig['register'] ?? '';
+        $voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+        $register            = $voorzieningenConfig['register'] ?? '';
         $contactpersoonSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
 
         if (empty($register) === true || empty($contactpersoonSchema) === true) {
@@ -221,7 +221,6 @@ class UserProfileUpdatedEventListener implements IEventListener
                 );
     }//end syncToContactpersoon()
 
-
     /**
      * Build the contactpersoon patch from a profile-updated event.
      *
@@ -252,7 +251,7 @@ class UserProfileUpdatedEventListener implements IEventListener
                 continue;
             }
 
-            $newValue             = $newData[$userField] ?? null;
+            $newValue = $newData[$userField] ?? null;
             $patch[$contactField] = $newValue ?? '';
         }
 
@@ -270,7 +269,6 @@ class UserProfileUpdatedEventListener implements IEventListener
         return $patch;
 
     }//end buildContactPatch()
-
 
     /**
      * Persist the patched contactpersoon entity, regenerating `_name`

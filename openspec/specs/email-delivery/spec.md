@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # email-delivery Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-email-delivery. Update Purpose after archive.
+Sends the app's transactional notification emails — organisation registration and activation, user creation and update, and test messages — rendering each template and dispatching it via the configured transport, skipping any disabled notification type. Exposes and persists the mail transport, sender, and per-notification configuration and reports whether the email system is fully configured.
 
 @e2e exclude PHP email-delivery backend (IMailer message build/send, template rendering, connection test) — no UI surface; covered by PHPUnit service tests. The email-config UI is covered under fe-settings-ui's settings page.
 

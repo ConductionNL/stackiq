@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # aanbod-listings Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-24-aanbod-listings. Update Purpose after archive.
+Provides the offering (aanbod) listing API that shows an organisation the modules, services, and connections it offers plus the usages it consumes. Lets an organisation accept an offer (claiming ownership when it is the rightful provider or consumer) or deny it by deletion, with role-based authorisation and consistent paginated, error-mapped HTTP responses.
 
 @e2e exclude PHP aanbod (offering) listing service/REST backend — HTTP contract and data assembly; covered by Newman REST collections and PHPUnit service tests.
 

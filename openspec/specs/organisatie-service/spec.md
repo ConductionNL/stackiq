@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # organisatie-service Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-24-organisatie-service. Update Purpose after archive.
+Provides the backend service that maps SoftwareCatalog organisation data into OpenRegister organisation entities and keeps them in sync: it creates entities, updates their active flag from a SoftwareCatalog status, and maps the payload shape with name fallbacks. It also assigns Nextcloud users to an organisation with per-user notification emails and resolves the members of the admin group, failing safe by logging and returning null/false rather than propagating exceptions.
 
 @e2e exclude PHP OrganisatieService backend (OpenRegister entity create/update/map/sync) — no UI surface; covered by PHPUnit service tests and Newman REST collections.
 

@@ -56,10 +56,10 @@ class MigrateContactsToNc implements IRepairStep
      * Constructor.
      *
      * @param IAppManager                       $appManager      The app manager.
-     * @param ContainerInterface                $container        The DI container.
-     * @param SettingsService                   $settingsService  The settings service (register/schema id resolution).
-     * @param SoftwareCatalogContactSyncService $contactSync      The contacts bridge.
-     * @param LoggerInterface                   $logger           The logger.
+     * @param ContainerInterface                $container       The DI container.
+     * @param SettingsService                   $settingsService The settings service (register/schema id resolution).
+     * @param SoftwareCatalogContactSyncService $contactSync     The contacts bridge.
+     * @param LoggerInterface                   $logger          The logger.
      */
     public function __construct(
         private readonly IAppManager $appManager,
@@ -70,7 +70,6 @@ class MigrateContactsToNc implements IRepairStep
     ) {
     }//end __construct()
 
-
     /**
      * Returns the name of this repair step.
      *
@@ -80,7 +79,6 @@ class MigrateContactsToNc implements IRepairStep
     {
         return 'Migrate SoftwareCatalog contacts/organisations to the Nextcloud addressbook';
     }//end getName()
-
 
     /**
      * Run the migration.
@@ -120,7 +118,7 @@ class MigrateContactsToNc implements IRepairStep
         }
 
         foreach (['contactpersoon', 'organisatie'] as $objectType) {
-            $stats = $this->migrateType($output, $registerId, $objectType);
+            $stats = $this->migrateType(output: $output, registerId: $registerId, objectType: $objectType);
             $output->info(
                 sprintf(
                     'Contacts migration [%s]: %d linked, %d created, %d already-linked, %d skipped',
@@ -136,7 +134,6 @@ class MigrateContactsToNc implements IRepairStep
 
         $output->finishProgress();
     }//end run()
-
 
     /**
      * Migrate every object of one type.
@@ -182,23 +179,29 @@ class MigrateContactsToNc implements IRepairStep
         }
 
         foreach ($objects as $object) {
-            $this->migrateOne($objectService, $object, $registerId, $schemaId, $objectType, $stats);
+            $this->migrateOne(
+                objectService: $objectService,
+                object: $object,
+                registerId: $registerId,
+                schemaId: $schemaId,
+                objectType: $objectType,
+                stats: $stats
+            );
         }
 
         return $stats;
     }//end migrateType()
 
-
     /**
      * Migrate a single object: resolve/create its NC Contact and persist the
      * `contactsUid` BEFORE any identity field is cleared (fail-safe).
      *
-     * @param object               $objectService The OpenRegister ObjectService.
-     * @param mixed                $object        The OpenRegister object entity.
-     * @param integer              $registerId    The register id.
-     * @param integer              $schemaId      The schema id.
-     * @param string               $objectType    The object type.
-     * @param array<string,int>    $stats         The per-type counters (mutated by reference).
+     * @param object            $objectService The OpenRegister ObjectService.
+     * @param mixed             $object        The OpenRegister object entity.
+     * @param integer           $registerId    The register id.
+     * @param integer           $schemaId      The schema id.
+     * @param string            $objectType    The object type.
+     * @param array<string,int> $stats         The per-type counters (mutated by reference).
      *
      * @return void
      */
@@ -211,8 +214,8 @@ class MigrateContactsToNc implements IRepairStep
         array &$stats
     ): void {
         try {
-            $data = $this->extractData($object);
-            $uuid = $this->extractUuid($object, $data);
+            $data = $this->extractData(object: $object);
+            $uuid = $this->extractUuid(object: $object, data: $data);
 
             // Idempotent: already linked to an existing Contact → no-op.
             $existingUid = trim((string) ($data['contactsUid'] ?? ''));
@@ -266,7 +269,6 @@ class MigrateContactsToNc implements IRepairStep
         }//end try
     }//end migrateOne()
 
-
     /**
      * Extract the object data array from an OpenRegister entity or array.
      *
@@ -286,7 +288,6 @@ class MigrateContactsToNc implements IRepairStep
 
         return (array) $object;
     }//end extractData()
-
 
     /**
      * Extract the object UUID from an OpenRegister entity or its data.

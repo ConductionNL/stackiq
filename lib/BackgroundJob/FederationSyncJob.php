@@ -61,7 +61,7 @@ class FederationSyncJob extends TimedJob
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec                                          openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
      */
     protected function run($argument): void
     {

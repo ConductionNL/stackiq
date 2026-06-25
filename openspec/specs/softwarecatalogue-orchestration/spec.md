@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # softwarecatalogue-orchestration Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-softwarecatalogue-orchestration. Update Purpose after archive.
+Coordinates the cross-service reactions to contact-person, organisation, and gebruiker lifecycle events: provisioning and linking Nextcloud user accounts, maintaining group membership and beheerder roles, mirroring organisations into OpenRegister, and sending welcome emails. It also blocks, restores, and reverts account access for gebruikers and exposes helpers for generic user groups, the user-manager hierarchy, and organisation structure.
 
 @e2e exclude PHP orchestration service backend (cross-service coordination of sync/import/export flows) — no UI surface; covered by PHPUnit service tests.
 

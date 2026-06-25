@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # fe-stores Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-fe-stores. Update Purpose after archive.
+Provides the catalog's frontend state layer: Pinia stores and supporting services for settings, organisations and contact persons, UI navigation, and catalog data, plus an object-operations store plugin for shared CRUD and lifecycle actions. It also includes a theme service that detects the active Nextcloud light/dark theme and a heartbeat client that keeps the backend session alive during long operations.
 
 @e2e exclude Pinia stores and FE services (settings/organisatie/navigation/catalog stores, object-operations plugin, theme service, heartbeat client) — every scenario asserts store-action / service behaviour (load/save/fetch/reset/saveObject/massOp/setModal/isDarkTheme/start-stop heartbeat). These are pure JS state/logic units tested by vitest with mocked fetch; they have no navigable UI surface of their own. The UI that consumes these stores is covered by the manifest dashboard/settings/index render tests.
 

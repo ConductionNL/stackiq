@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # fe-settings-ui Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-fe-settings-ui. Update Purpose after archive.
+Provides the app's settings interface — a sectioned shell that surfaces overall configuration status and lets admins configure OpenRegister integration, user-group role mapping, email delivery, scheduled jobs, and organisation synchronisation. Also offers ArchiMate import/export, a statistics overview, version information, and a navigation-configuration panel.
 ## Requirements
 ### Requirement: Settings shell & navigation (REQ-FE-301)
 

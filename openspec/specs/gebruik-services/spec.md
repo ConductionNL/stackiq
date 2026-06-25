@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # gebruik-services Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-24-gebruik-services. Update Purpose after archive.
+Provides the backend service that returns usage (gebruik) records for the active voorzieningen register and gebruik schema, resolving configuration through SettingsService and querying OpenRegister with pagination. It normalises the extend options, strips internal annotations from results, and exposes a helper that returns the application UUIDs scoped to the active register.
 
 @e2e exclude PHP gebruik (usage) service backend (usage record assembly/mapping into OpenRegister) — no UI surface; covered by PHPUnit service tests.
 

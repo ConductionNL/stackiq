@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # contactpersonen-api Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-contactpersonen-api. Update Purpose after archive.
+Provides a REST API for an organisation's contact persons, listing them with their linked Nextcloud user account details and exposing the current user's own profile. Lets administrators convert a contact into a Nextcloud user and manage that account's lifecycle — password reset, group membership, and enabling or disabling.
 
 @e2e exclude PHP contactpersonen (contact-persons) REST endpoints incl. linked-user management — HTTP contract; covered by Newman REST collections and PHPUnit controller tests. The contacts list UI is covered by the manifest contactpersonen-page test.
 
