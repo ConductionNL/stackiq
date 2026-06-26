@@ -74,6 +74,12 @@
 			"order": 75
 		},
 		{
+			"id": "ReportsCompliance",
+			"label": "Reports & Compliance",
+			"icon": "icon-category-monitoring",
+			"order": 78
+		},
+		{
 			"id": "Moduleversies",
 			"label": "Module versions",
 			"icon": "icon-files",
