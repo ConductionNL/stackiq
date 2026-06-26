@@ -3081,10 +3081,14 @@
             "type": "object",
             "properties": {
               "naam": {
-                "type": "string"
+                "type": "string",
+                "title": "Name",
+                "description": "Full name of the supplier contact person."
               },
               "email": {
-                "type": "string"
+                "type": "string",
+                "title": "Email Address",
+                "description": "Email address of the supplier contact person."
               }
             },
             "description": "De contactpersoon bij de aanbieder",
@@ -3099,10 +3103,14 @@
             "type": "object",
             "properties": {
               "naam": {
-                "type": "string"
+                "type": "string",
+                "title": "Name",
+                "description": "Full name of the user organisation contact person."
               },
               "email": {
-                "type": "string"
+                "type": "string",
+                "title": "Email Address",
+                "description": "Email address of the user organisation contact person."
               }
             },
             "description": "De contactpersoon bij de gebruiker",
