@@ -59,7 +59,11 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="stat in firstTableStats" :key="stat.objectType">
+						<tr
+							v-for="stat in firstTableStats"
+							:key="stat.objectType"
+							style="cursor: pointer"
+							@click="navigateToSchema(stat.slug)">
 							<td>{{ stat.objectType }}</td>
 							<td class="countCell">
 								{{ stat.count.toLocaleString() }}
@@ -69,7 +73,7 @@
 									v-if="stat.slug === 'organisatie'"
 									size="small"
 									type="tertiary"
-									@click="navigateToObjectType(stat.slug)">
+									@click.stop="navigateToObjectType(stat.slug)">
 									<template #icon>
 										<component :is="getIconForObjectType(stat.slug)" :size="16" />
 									</template>
@@ -106,7 +110,11 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="stat in secondTableStats" :key="stat.objectType">
+						<tr
+							v-for="stat in secondTableStats"
+							:key="stat.objectType"
+							style="cursor: pointer"
+							@click="navigateToSchema(stat.slug)">
 							<td>{{ stat.objectType }}</td>
 							<td class="countCell">
 								{{ stat.count.toLocaleString() }}
@@ -116,7 +124,7 @@
 									v-if="stat.slug === 'organisatie'"
 									size="small"
 									type="tertiary"
-									@click="navigateToObjectType(stat.slug)">
+									@click.stop="navigateToObjectType(stat.slug)">
 									<template #icon>
 										<component :is="getIconForObjectType(stat.slug)" :size="16" />
 									</template>
@@ -377,6 +385,28 @@ export default {
 		 */
 		navigateToOrganizations() {
 			navigationStore.setSelected('organisaties')
+		},
+
+		/**
+		 * Navigate to the index page that corresponds to an OR schema slug.
+		 * Covers all voorzieningen schemas so every count row is clickable.
+		 *
+		 * @param {string} slug - OR schema slug (e.g. 'organisatie', 'standaard').
+		 * @return {void}
+		 */
+		navigateToSchema(slug) {
+			const slugToSelected = {
+				organisatie: 'organisaties',
+				contactpersoon: 'contactpersonen',
+				contract: 'contracten',
+				standaard: 'standaarden',
+				compliancy: 'komplianties',
+				moduleversie: 'moduleversies',
+			}
+			const selected = slugToSelected[slug]
+			if (selected) {
+				navigationStore.setSelected(selected)
+			}
 		},
 
 		/**
