@@ -5798,6 +5798,7 @@
       "organization": {
         "uri": null,
         "slug": "organization",
+        "x-schema-org": "schema:Organization",
         "title": "Organization",
         "description": "Organizations represent entities that publish or manage catalogs. They can be government agencies, companies, or other institutions. Each organization can have multiple catalogs and is identified by various standardized identifiers like OIN, RSIN, and PKI certificates.",
         "version": "0.0.5",
@@ -5939,7 +5940,11 @@
           "objectNameField": "name",
           "objectSummaryField": "summary",
           "objectDescriptionField": "description",
-          "autoPublish": true
+          "autoPublish": true,
+          "implements": [
+            "https://openregister.app/ns#Organization",
+            "https://schema.org/Organization"
+          ]
         }
       },
       "property-definition": {
