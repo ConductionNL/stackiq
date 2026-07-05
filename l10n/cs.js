@@ -220,7 +220,22 @@ OC.L10N.register(
     "At least 10 characters" : "Alespoň 10 znaků",
     "For a Service Level Agreement (SLA), contact" : "Pro dohodu o úrovni služeb (SLA) kontaktujte",
     "Loading contactpersonen..." : "Načítání kontaktních osob...",
-    "Select a register" : "Vyberte registr"
+    "Select a register" : "Vyberte registr",
+    "Loading approval state" : "Loading approval state",
+    "Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it." : "Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it.",
+    "Approval state" : "Approval state",
+    "Decision reference" : "Decision reference",
+    "Submit for approval" : "Submit for approval",
+    "Submit renewal" : "Submit renewal",
+    "Refresh outcome" : "Refresh outcome",
+    "Not submitted" : "Not submitted",
+    "Pending decision" : "Pending decision",
+    "Approved" : "Approved",
+    "Rejected" : "Rejected",
+    "Could not load the approval state." : "Could not load the approval state.",
+    "Contract submitted to decidesk for a decision." : "Contract submitted to decidesk for a decision.",
+    "Submitting the contract failed; it remains in negotiation." : "Submitting the contract failed; it remains in negotiation.",
+    "Could not refresh the outcome." : "Could not refresh the outcome."
 },
 "nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;"
 );
