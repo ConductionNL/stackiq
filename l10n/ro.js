@@ -220,7 +220,22 @@ OC.L10N.register(
     "At least 10 characters" : "Cel puțin 10 caractere",
     "For a Service Level Agreement (SLA), contact" : "Pentru un acord privind nivelul serviciilor (SLA), contactați",
     "Loading contactpersonen..." : "Se încarcă persoanele de contact...",
-    "Select a register" : "Selectați un registru"
+    "Select a register" : "Selectați un registru",
+    "Loading approval state" : "Loading approval state",
+    "Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it." : "Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it.",
+    "Approval state" : "Approval state",
+    "Decision reference" : "Decision reference",
+    "Submit for approval" : "Submit for approval",
+    "Submit renewal" : "Submit renewal",
+    "Refresh outcome" : "Refresh outcome",
+    "Not submitted" : "Not submitted",
+    "Pending decision" : "Pending decision",
+    "Approved" : "Approved",
+    "Rejected" : "Rejected",
+    "Could not load the approval state." : "Could not load the approval state.",
+    "Contract submitted to decidesk for a decision." : "Contract submitted to decidesk for a decision.",
+    "Submitting the contract failed; it remains in negotiation." : "Submitting the contract failed; it remains in negotiation.",
+    "Could not refresh the outcome." : "Could not refresh the outcome."
 },
 "nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100>0 && n%100<20)) ? 1 : 2);"
 );

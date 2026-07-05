@@ -220,7 +220,22 @@ OC.L10N.register(
     "At least 10 characters" : "10 gcarachtar ar a laghad",
     "For a Service Level Agreement (SLA), contact" : "Le haghaidh Comhaontú Leibhéal Seirbhíse (SLA), déan teagmháil le",
     "Loading contactpersonen..." : "Teagmhálaithe á luchtú...",
-    "Select a register" : "Roghnaigh clár"
+    "Select a register" : "Roghnaigh clár",
+    "Loading approval state" : "Loading approval state",
+    "Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it." : "Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it.",
+    "Approval state" : "Approval state",
+    "Decision reference" : "Decision reference",
+    "Submit for approval" : "Submit for approval",
+    "Submit renewal" : "Submit renewal",
+    "Refresh outcome" : "Refresh outcome",
+    "Not submitted" : "Not submitted",
+    "Pending decision" : "Pending decision",
+    "Approved" : "Approved",
+    "Rejected" : "Rejected",
+    "Could not load the approval state." : "Could not load the approval state.",
+    "Contract submitted to decidesk for a decision." : "Contract submitted to decidesk for a decision.",
+    "Submitting the contract failed; it remains in negotiation." : "Submitting the contract failed; it remains in negotiation.",
+    "Could not refresh the outcome." : "Could not refresh the outcome."
 },
 "nplurals=5; plural=(n==1 ? 0 : n==2 ? 1 : n<7 ? 2 : n<11 ? 3 : 4);"
 );
