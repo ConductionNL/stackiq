@@ -1087,6 +1087,7 @@
       "suite": {
         "uri": null,
         "slug": "suite",
+        "x-schema-org": "schema:SoftwareApplication",
         "title": "Suite",
         "description": "Een suite is een verzameling van applicaties die samen een product vormen",
         "version": "0.1.3",
@@ -1272,6 +1273,7 @@
       "dienst": {
         "uri": null,
         "slug": "dienst",
+        "x-schema-org": "schema:Service",
         "title": "Dienst",
         "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
         "version": "0.2.0",
@@ -1727,6 +1729,7 @@
       "contactpersoon": {
         "uri": null,
         "slug": "contactpersoon",
+        "x-schema-org": "schema:Person",
         "title": "Contactpersoon",
         "description": "Contactgegevens van een persoon",
         "version": "0.0.27",
@@ -1960,6 +1963,7 @@
       "organisatie": {
         "uri": null,
         "slug": "organisatie",
+        "x-schema-org": "schema:Organization",
         "title": "Organisatie",
         "description": "Een organisatie die voorzieningen aanbiedt",
         "version": "0.5.0",
@@ -6598,6 +6602,7 @@
       "module": {
         "uri": null,
         "slug": "module",
+        "x-schema-org": "schema:SoftwareApplication",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
         "version": "0.3.0",
