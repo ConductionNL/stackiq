@@ -1,0 +1,39 @@
+schema: conduction
+
+context: |
+  Project: Software Catalog
+  Repo: ConductionNL/SoftwareCatalog
+  Type: Nextcloud App (PHP backend + Vue 2.7 frontend)
+  Description: VNG Software Catalog — AMEF/GEMMA + Voorzieningen registry of municipal
+    software (organisaties, diensten, modules, gebruik, contracten, compliancy,
+    kwetsbaarheden) built on OpenRegister.
+  Key components: Dashboard, Settings, Aanbod (offers), Aangeboden gebruik, Contactpersonen
+  Database: PostgreSQL (via OpenRegister's ObjectService)
+  Mount path: /var/www/html/custom_apps/softwarecatalog
+
+  Architecture:
+    Pattern: Thin client — Software Catalog owns no domain tables
+    Data layer: OpenRegister (JSON object storage with schema validation)
+    Registers: voorzieningen (Voorzieningen) + vng-gemma (AMEF)
+    Frontend: Vue 2.7 + Pinia stores querying OpenRegister API directly
+    Backend: SettingsController + register import + aanbod/gebruik services
+
+  Shared specs: See ../openspec/specs/ for cross-project conventions
+  Project guidelines: See ../project.md for workspace-wide standards
+
+rules:
+  proposal:
+    - Reference hydra ADR-046 (portaliq) for external-portal contributions
+    - Consider impact on other Conduction apps
+  specs:
+    - Use Schema.org type annotations for all entities
+    - Specify which Nextcloud OCP interfaces are used for integration features
+  design:
+    - Uses OpenRegister API directly from frontend (no own backend CRUD)
+    - Register config in lib/Settings/softwarecatalogus_register.json (OpenAPI 3.0.0 format)
+    - Imported via ConfigurationService::importFromApp() in repair step
+  tasks:
+    - Test with OpenRegister to verify schema validation works
+  review:
+    - Cross-reference shared specs and ADRs
+    - Flag spec deviations with WARNING and justification
