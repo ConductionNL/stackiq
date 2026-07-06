@@ -14,58 +14,66 @@ import { objectStore } from '../../store/store.js'
 				</template>
 			</NcButton>
 		</div>
-		<NcDashboardWidget :items="items"
-			:loading="loading">
-			<template #default="{ item }">
-				<NcDashboardWidgetItem :id="item.id"
-					:main-text="item.mainText"
-					:sub-text="item.subText"
-					:avatar-url="item.avatarUrl"
-					:avatar-is-no-user="true">
-					<template #actions>
-						<NcLoadingIcon v-if="processingIds.includes(item.id)"
-							:size="20" />
-						<NcActionButton v-else
-							icon="icon-checkmark"
-							:close-after-click="true"
-							@click="onAccept(item)">
-							{{ t('softwarecatalog', 'Accept') }}
-						</NcActionButton>
-					</template>
-				</NcDashboardWidgetItem>
+		<CnDataTable :rows="items"
+			:columns="columns"
+			:loading="loading"
+			row-icon="Domain"
+			hide-header
+			borderless
+			:empty-text="t('softwarecatalog', 'No concept organisations found')">
+			<template #row-actions="{ row }">
+				<NcLoadingIcon v-if="processingIds.includes(row.id)"
+					:size="20" />
+				<NcActions v-else>
+					<NcActionButton :close-after-click="true"
+						@click="onAccept(row)">
+						<template #icon>
+							<CheckIcon :size="20" />
+						</template>
+						{{ t('softwarecatalog', 'Accept') }}
+					</NcActionButton>
+				</NcActions>
 			</template>
-			<template #empty-content>
-				<NcEmptyContent :title="t('softwarecatalog', 'No concept organisations found')">
-					<template #icon>
-						<DomainIcon />
-					</template>
-				</NcEmptyContent>
-			</template>
-		</NcDashboardWidget>
+		</CnDataTable>
 	</div>
 </template>
 
 <script>
 // Components
-import { NcDashboardWidget, NcDashboardWidgetItem, NcEmptyContent, NcButton, NcActionButton, NcLoadingIcon } from '@nextcloud/vue'
+import { CnDataTable, registerIcons } from '@conduction/nextcloud-vue'
+import { NcButton, NcActions, NcActionButton, NcLoadingIcon } from '@nextcloud/vue'
 
 // Icons
 import DomainIcon from 'vue-material-design-icons/Domain.vue'
 import RefreshIcon from 'vue-material-design-icons/Refresh.vue'
+import CheckIcon from 'vue-material-design-icons/Check.vue'
 
-import { getTheme } from '../../services/getTheme.js'
+// The widget ships as its own dashboard bundle (conceptOrganisatiesWidget.js),
+// so main.js' registerIcons() never runs there. Register the leading row icon
+// here — registerIcons() is an idempotent module-registry merge, so this is
+// safe when the widget also renders inside the app (ADR-049).
+registerIcons({ Domain: DomainIcon })
+
+/**
+ * Columns for the universal headerless list look (ADR-049): a bold name and a
+ * muted, right-aligned trailing detail. The `cn-cell--*` utilities live in
+ * nextcloud-vue's table.css.
+ */
+const COLUMNS = [
+	{ key: 'mainText', cellClass: 'cn-cell--strong' },
+	{ key: 'subText', cellClass: 'cn-cell--muted cn-cell--end' },
+]
 
 export default {
 	name: 'ConceptOrganisatiesWidget',
 	components: {
-		NcDashboardWidget,
-		NcDashboardWidgetItem,
-		NcEmptyContent,
+		CnDataTable,
 		NcButton,
+		NcActions,
 		NcActionButton,
 		NcLoadingIcon,
-		DomainIcon,
 		RefreshIcon,
+		CheckIcon,
 	},
 	props: {
 		title: {
@@ -77,6 +85,7 @@ export default {
 		return {
 			loading: false,
 			processingIds: [],
+			columns: COLUMNS,
 		}
 	},
 	computed: {
@@ -90,7 +99,6 @@ export default {
 					id: item.id,
 					mainText: item.naam || item.name || item.title || t('softwarecatalog', 'Unknown organisation'),
 					subText: item.website || item.type || '',
-					avatarUrl: getTheme() === 'light' ? '/apps-extra/softwarecatalog/img/app-dark.svg' : '/apps-extra/softwarecatalog/img/app.svg',
 				}))
 		},
 	},
@@ -102,7 +110,7 @@ export default {
 		 * Handle accepting an organisatie (change status to actief)
 		 * @param {object} item - The organisatie item to accept
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-6
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-6
 		 */
 		async onAccept(item) {
 			this.processingIds.push(item.id)
@@ -118,7 +126,7 @@ export default {
 		/**
 		 * Fetch the organisatie data
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-6
+		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-6
 		 */
 		async fetchData() {
 			this.loading = true
