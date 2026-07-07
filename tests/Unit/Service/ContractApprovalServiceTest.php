@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\ContractApprovalService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -142,4 +144,97 @@ class ContractApprovalServiceTest extends TestCase
         $this->container->method('get')->willThrowException(new \RuntimeException('no OR'));
         $this->assertFalse($this->makeService()->projectOutcome('unknown-uuid', 'approved'));
     }//end testProjectOutcomeUnknownContractIsNoop()
+
+    /**
+     * authorizeSubmit: an admin is always authorized, regardless of contract
+     * ownership (the contract is never even looked up for an admin).
+     *
+     * @return void
+     */
+    public function testAuthorizeSubmitAdminAlwaysAuthorized(): void
+    {
+        $this->container->expects($this->never())->method('get');
+        $this->assertTrue($this->makeService()->authorizeSubmit('contract-uuid', ['admin'], ''));
+    }//end testAuthorizeSubmitAdminAlwaysAuthorized()
+
+    /**
+     * authorizeSubmit: a caller with neither `admin` nor `aanbod-beheerder`
+     * is refused without ever looking up the contract (fail-closed, cheap path).
+     *
+     * @return void
+     */
+    public function testAuthorizeSubmitRefusesCallerWithNeitherRole(): void
+    {
+        $this->container->expects($this->never())->method('get');
+        $this->assertFalse($this->makeService()->authorizeSubmit('contract-uuid', ['some-other-group'], 'org-a'));
+    }//end testAuthorizeSubmitRefusesCallerWithNeitherRole()
+
+    /**
+     * authorizeSubmit: an aanbod-beheerder is refused (fail-closed) when the
+     * contract cannot be loaded (e.g. OpenRegister unavailable) — the ownership
+     * check has no data to compare against.
+     *
+     * @return void
+     */
+    public function testAuthorizeSubmitRefusesWhenContractCannotBeLoaded(): void
+    {
+        $this->container->method('get')->willThrowException(new \RuntimeException('no OR'));
+        $this->assertFalse($this->makeService()->authorizeSubmit('contract-uuid', ['aanbod-beheerder'], 'org-a'));
+    }//end testAuthorizeSubmitRefusesWhenContractCannotBeLoaded()
+
+    /**
+     * authorizeSubmit: an aanbod-beheerder is refused (fail-closed) when the
+     * caller's active organisation is blank — never treat "no active org" as a
+     * match against a blank owning-organisation field.
+     *
+     * @return void
+     */
+    public function testAuthorizeSubmitRefusesBlankActiveOrganisation(): void
+    {
+        $this->container->method('get')->willThrowException(new \RuntimeException('no OR'));
+        $this->assertFalse($this->makeService()->authorizeSubmit('contract-uuid', ['aanbod-beheerder'], ''));
+    }//end testAuthorizeSubmitRefusesBlankActiveOrganisation()
+
+    /**
+     * authorizeSubmit: an aanbod-beheerder whose active organisation matches the
+     * contract's owning `_organisation` field is authorized.
+     *
+     * @return void
+     */
+    public function testAuthorizeSubmitOwningAanbodBeheerderIsAuthorized(): void
+    {
+        $this->settingsService->method('getSchemaIdForObjectType')->willReturn(3);
+        $this->settingsService->method('getRegisterIdForObjectType')->willReturn(1);
+
+        $objectService = $this->createMock(ObjectService::class);
+        $entity        = $this->createMock(ObjectEntity::class);
+        $entity->method('getObject')->willReturn(['_organisation' => 'org-a']);
+        $objectService->method('find')->willReturn($entity);
+
+        $this->container->method('get')->willReturn($objectService);
+
+        $this->assertTrue($this->makeService()->authorizeSubmit('contract-uuid', ['aanbod-beheerder'], 'org-a'));
+    }//end testAuthorizeSubmitOwningAanbodBeheerderIsAuthorized()
+
+    /**
+     * authorizeSubmit: an aanbod-beheerder whose active organisation does NOT
+     * match the contract's owning `_organisation` field is refused — the exact
+     * IDOR shape this guard closes.
+     *
+     * @return void
+     */
+    public function testAuthorizeSubmitNonOwningAanbodBeheerderIsRefused(): void
+    {
+        $this->settingsService->method('getSchemaIdForObjectType')->willReturn(3);
+        $this->settingsService->method('getRegisterIdForObjectType')->willReturn(1);
+
+        $objectService = $this->createMock(ObjectService::class);
+        $entity        = $this->createMock(ObjectEntity::class);
+        $entity->method('getObject')->willReturn(['_organisation' => 'org-a']);
+        $objectService->method('find')->willReturn($entity);
+
+        $this->container->method('get')->willReturn($objectService);
+
+        $this->assertFalse($this->makeService()->authorizeSubmit('contract-uuid', ['aanbod-beheerder'], 'org-b'));
+    }//end testAuthorizeSubmitNonOwningAanbodBeheerderIsRefused()
 }//end class

@@ -28,18 +28,22 @@ abstract class ObjectService
     /**
      * Find a single object.
      *
-     * @param string|int $id          Object id or uuid.
-     * @param string     $register    Register slug or id.
-     * @param string     $schema      Schema slug or id.
-     * @param bool       $_rbac       Apply RBAC.
+     * @param string|int $id            Object id or uuid.
+     * @param array|null $_extend       Optional extend directives.
+     * @param bool       $files         Include files.
+     * @param string|int|null $register Register slug or id.
+     * @param string|int|null $schema   Schema slug or id.
+     * @param bool       $_rbac         Apply RBAC.
      * @param bool       $_multitenancy Apply multitenancy.
      *
      * @return ObjectEntity|null
      */
     abstract public function find(
         string|int $id,
-        string $register='',
-        string $schema='',
+        ?array $_extend=[],
+        bool $files=false,
+        string|int|null $register=null,
+        string|int|null $schema=null,
         bool $_rbac=true,
         bool $_multitenancy=true
     ): ?ObjectEntity;
