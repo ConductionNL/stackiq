@@ -1267,7 +1267,10 @@
             "DPIA",
             "Handleiding"
           ],
-          "autoPublish": true
+          "autoPublish": true,
+          "jsonld": {
+            "type": "https://schema.org/SoftwareApplication"
+          }
         }
       },
       "dienst": {
@@ -1380,6 +1383,7 @@
             }
           },
           "aanbieder": {
+            "referenceSemanticType": "https://openregister.app/ns#Vendor",
             "description": "De leverende partij die deze dienst beschikbaar stelt",
             "type": "object",
             "required": true,
@@ -2388,6 +2392,49 @@
             "Aanbestedingsdocumentatie"
           ],
           "autoPublish": true,
+          "jsonld": {
+            "type": "https://schema.org/Organization"
+          },
+          "implements": [
+            "https://schema.org/Organization",
+            "https://openregister.app/ns#Vendor"
+          ],
+          "x-openregister-dedup": {
+            "blockingKeys": [],
+            "matchRules": [
+              {
+                "field": "contactsUid",
+                "method": "exact",
+                "weight": 1
+              }
+            ],
+            "threshold": 0.7
+          },
+          "x-openregister-quality": {
+            "field": "qualityScore",
+            "statusField": "qualityStatus",
+            "rules": [
+              {
+                "type": "required",
+                "field": "contactsUid",
+                "weight": 3
+              },
+              {
+                "type": "required",
+                "field": "type",
+                "weight": 1
+              },
+              {
+                "type": "required",
+                "field": "status",
+                "weight": 1
+              }
+            ],
+            "thresholds": {
+              "good": 0.8,
+              "fair": 0.5
+            }
+          },
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "Concept",
@@ -3453,6 +3500,7 @@
             "inversedBy": "koppeling"
           },
           "aanbieder": {
+            "referenceSemanticType": "https://openregister.app/ns#Vendor",
             "description": "De aanbieder van deze koppeling",
             "type": "object",
             "visible": false,
@@ -6728,6 +6776,7 @@
             "example": "Bijvoorbeeld: NL"
           },
           "aanbieder": {
+            "referenceSemanticType": "https://openregister.app/ns#Vendor",
             "description": "De aanbieder van de applicatie",
             "type": "object",
             "visible": true,
@@ -7064,7 +7113,66 @@
             "Handleiding",
             "Technische specificatie"
           ],
-          "autoPublish": true
+          "autoPublish": true,
+          "jsonld": {
+            "type": "https://schema.org/SoftwareApplication"
+          },
+          "x-openregister-dedup": {
+            "blockingKeys": [],
+            "matchRules": [
+              {
+                "field": "naam",
+                "method": "normalized",
+                "weight": 0.4
+              },
+              {
+                "field": "naam",
+                "method": "levenshtein",
+                "weight": 0.2
+              },
+              {
+                "field": "aanbieder",
+                "method": "exact",
+                "weight": 0.3
+              },
+              {
+                "field": "website",
+                "method": "normalized",
+                "weight": 0.1
+              }
+            ],
+            "threshold": 0.7
+          },
+          "x-openregister-quality": {
+            "field": "qualityScore",
+            "statusField": "qualityStatus",
+            "rules": [
+              {
+                "type": "required",
+                "field": "naam",
+                "weight": 2
+              },
+              {
+                "type": "required",
+                "field": "aanbieder",
+                "weight": 2
+              },
+              {
+                "type": "required",
+                "field": "licentie",
+                "weight": 1
+              },
+              {
+                "type": "required",
+                "field": "beschrijvingLang",
+                "weight": 1
+              }
+            ],
+            "thresholds": {
+              "good": 0.8,
+              "fair": 0.5
+            }
+          }
         }
       },
       "compliancy": {
