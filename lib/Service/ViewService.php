@@ -572,15 +572,87 @@ class ViewService
     }//end getAppliedEnrichments()
 
     /**
-     * Get products data for enrichment (placeholder implementation).
+     * Get products data for enrichment based on elementRef linkage.
      *
-     * @return array Products data.
+     * "Products" are the catalog's `dienst` (service/product) schema records
+     * — the existing voorzieningen-register schema this catalog domain uses
+     * for services/products (ADR-022 reuse; see this change's design.md for
+     * the full rationale). Retrieves all dienst data from OpenRegister,
+     * filtered by current organisation, indexed by elementRef for O(1) node
+     * matching (mirroring getModulesData()'s established pattern).
+     *
+     * @return array Products data indexed by elementRef.
+     *
+     * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md
      */
     private function getProductsData(): array
     {
-        // TODO: Implement actual products data retrieval.
         $this->logger->debug('Getting products data for enrichment');
-        return [];
+
+        try {
+            $objectService = $this->getObjectService();
+            if ($objectService === null) {
+                return [];
+            }
+
+            // Use voorzieningen config for the correct dienst register and schema.
+            $voorzConfig    = $this->settingsService->getVoorzieningenConfig();
+            $registerId     = $voorzConfig['register'] ?? null;
+            $dienstSchemaId = $voorzConfig['dienst_schema'] ?? null;
+
+            if ($registerId === null || $dienstSchemaId === null || $dienstSchemaId === '') {
+                $this->logger->warning(message: 'Voorzieningen register or dienst schema not configured for products');
+                return [];
+            }
+
+            $currentOrg = $this->getCurrentOrganisation();
+
+            $query = [
+                '@self'  => [
+                    'register' => $registerId,
+                    'schema'   => $dienstSchemaId,
+                ],
+                '_limit' => 500,
+            ];
+
+            // Add organisation filter if current organisation is available.
+            if ($currentOrg !== null) {
+                $query['@self']['organisation'] = $currentOrg;
+            }
+
+            $products = $objectService->searchObjects($query);
+
+            $allProducts = [];
+            foreach ($products as $product) {
+                // Additional check for organisation in metadata if not caught by query.
+                $productOrg     = $product['@self']['organisation'] ?? null;
+                $hasOrgMismatch = $currentOrg !== null
+                    && isset($product['@self']['organisation']) === true
+                    && $productOrg !== $currentOrg;
+                if ($hasOrgMismatch === true) {
+                    continue;
+                }
+
+                // Index by elementRef or identifier for quick lookup.
+                $elementRef = $product['elementRef'] ?? $product['identifier'] ?? null;
+                if ($elementRef !== null) {
+                    $allProducts[$elementRef] = $product;
+                }
+            }
+
+            $this->logger->debug(
+                'Total products retrieved for enrichment',
+                ['total_products' => count($allProducts)]
+            );
+
+            return $allProducts;
+        } catch (\Exception $e) {
+            $this->logger->error(
+                'Failed to get products data',
+                ['error' => $e->getMessage()]
+            );
+            return [];
+        }//end try
     }//end getProductsData()
 
     /**
@@ -1202,18 +1274,17 @@ class ViewService
     }//end getDeelnamesGebruikData()
 
     /**
-     * Get products for a specific node (placeholder implementation).
+     * Get products for a specific node based on elementRef linkage.
      *
-     * @param string $modelNodeId  The model node identifier.
-     * @param array  $productsData Products data to search in.
+     * @param string $modelNodeId  The model node identifier (elementRef).
+     * @param array  $productsData Products data indexed by elementRef.
      *
      * @return array Products related to the node.
      *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $productsData reserved for future node products matching
+     * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md
      */
     private function getNodeProducts(string $modelNodeId, array $productsData): array
     {
-        // TODO: Implement actual node products matching logic against $productsData.
         $this->logger->debug(
             'Getting products for node',
             [
@@ -1221,6 +1292,25 @@ class ViewService
                 'available_products_count' => count($productsData),
             ]
         );
+
+        // Direct lookup by elementRef.
+        if (isset($productsData[$modelNodeId]) === true) {
+            $product = $productsData[$modelNodeId];
+
+            $this->logger->debug(
+                'Found product for node',
+                [
+                    'model_node_id' => $modelNodeId,
+                    'product_id'    => $product['id'] ?? $product['identifier'] ?? 'unknown',
+                    'product_name'  => $product['naam'] ?? $product['name'] ?? 'unnamed',
+                ]
+            );
+
+            // Return as array for consistency.
+            return [$product];
+        }
+
+        // No product found for this node.
         return [];
     }//end getNodeProducts()
 

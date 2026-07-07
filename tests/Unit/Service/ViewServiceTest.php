@@ -522,4 +522,101 @@ class ViewServiceTest extends TestCase
         $this->assertSame(expected: $deelnamesData, actual: $deduplicated);
     }//end testDeduplicationKeepsAllDeelnamesWhenNoOwnedGebruik()
 
+    // ----------------------------------------------------------------
+    // getProductsData / getNodeProducts tests
+    // (openspec/changes/view-products-enrichment)
+    // ----------------------------------------------------------------
+
+    /**
+     * getProductsData() returns [] gracefully (not fatal) when the dienst
+     * schema is not configured in the voorzieningen config.
+     *
+     * @return void
+     */
+    public function testGetProductsDataReturnsEmptyWhenSchemaNotConfigured(): void
+    {
+        $this->settingsService->method('getVoorzieningenConfig')->willReturn(
+            ['register' => 1, 'dienst_schema' => null]
+        );
+
+        $result = $this->callPrivateMethod(methodName: 'getProductsData');
+
+        $this->assertSame([], $result);
+    }//end testGetProductsDataReturnsEmptyWhenSchemaNotConfigured()
+
+    /**
+     * getProductsData() queries the dienst schema (organisation-scoped) and
+     * indexes real product entries by elementRef when the register/schema
+     * resolve and products exist — NOT an unconditional [] stub.
+     *
+     * @return void
+     */
+    public function testGetProductsDataReturnsOrganisationScopedProducts(): void
+    {
+        $this->settingsService->method('getVoorzieningenConfig')->willReturn(
+            ['register' => 1, 'dienst_schema' => 3]
+        );
+
+        $this->userSession->method('getUser')->willReturn(null);
+
+        $objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $objectService->method('searchObjects')->willReturn(
+            [
+                ['elementRef' => 'node-1', 'naam' => 'Zaaksysteem'],
+                ['identifier' => 'node-2', 'naam' => 'Formulieren'],
+            ]
+        );
+        $this->container->method('get')->willReturn($objectService);
+
+        $result = $this->callPrivateMethod(methodName: 'getProductsData');
+
+        $this->assertArrayHasKey('node-1', $result);
+        $this->assertSame('Zaaksysteem', $result['node-1']['naam']);
+        $this->assertArrayHasKey('node-2', $result);
+        $this->assertSame('Formulieren', $result['node-2']['naam']);
+    }//end testGetProductsDataReturnsOrganisationScopedProducts()
+
+    /**
+     * getNodeProducts() matches a product linked to a given node by
+     * elementRef and excludes unrelated products.
+     *
+     * @return void
+     */
+    public function testGetNodeProductsMatchesLinkedProductAndExcludesOthers(): void
+    {
+        $productsData = [
+            'node-1' => ['naam' => 'Zaaksysteem'],
+            'node-2' => ['naam' => 'Formulieren'],
+        ];
+
+        $matched = $this->callPrivateMethod(
+            methodName: 'getNodeProducts',
+            args: ['node-1', $productsData]
+        );
+
+        $this->assertCount(1, $matched);
+        $this->assertSame('Zaaksysteem', $matched[0]['naam']);
+    }//end testGetNodeProductsMatchesLinkedProductAndExcludesOthers()
+
+    /**
+     * getNodeProducts() returns [] (not the full $productsData count) when no
+     * product is linked to the given node — available_products_count in the
+     * caller's context must reflect the matched count, not the total.
+     *
+     * @return void
+     */
+    public function testGetNodeProductsReturnsEmptyWhenNoProductLinkedToNode(): void
+    {
+        $productsData = [
+            'node-1' => ['naam' => 'Zaaksysteem'],
+        ];
+
+        $matched = $this->callPrivateMethod(
+            methodName: 'getNodeProducts',
+            args: ['node-unlinked', $productsData]
+        );
+
+        $this->assertSame([], $matched);
+    }//end testGetNodeProductsReturnsEmptyWhenNoProductLinkedToNode()
+
 }//end class

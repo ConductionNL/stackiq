@@ -1,10 +1,11 @@
 /**
  * Pinia store for GEMMA view enrichment state.
  *
- * Manages the include_gebruik and include_deelnames_gebruik toggle state
- * and fetches enriched views from the backend API.
+ * Manages the include_gebruik, include_deelnames_gebruik and include_products
+ * toggle state and fetches enriched views from the backend API.
  *
  * @spec openspec/changes/deelnames-gebruik/tasks.md#task-5
+ * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md
  */
 
 import { defineStore } from 'pinia'
@@ -13,9 +14,10 @@ import { generateUrl } from '@nextcloud/router'
 
 export const useViewStore = defineStore('view', {
 	state: () => ({
-		// Enrichment toggles — both disabled by default per spec.
+		// Enrichment toggles — all disabled by default per spec.
 		includeGebruik: false,
 		includeDeelnamesGebruik: false,
+		includeProducts: false,
 
 		// Fetched views data.
 		views: [],
@@ -48,6 +50,18 @@ export const useViewStore = defineStore('view', {
 		},
 
 		/**
+		 * Set the products toggle state.
+		 *
+		 * Independent from the gebruik/deelnames toggles per spec.
+		 *
+		 * @param {boolean} value - New state for the products toggle.
+		 * @return {void}
+		 */
+		setIncludeProducts(value) {
+			this.includeProducts = value
+		},
+
+		/**
 		 * Fetch all views with current enrichment flags from the backend.
 		 *
 		 * @return {Promise<void>}
@@ -65,6 +79,10 @@ export const useViewStore = defineStore('view', {
 
 				if (this.includeDeelnamesGebruik) {
 					params.include_deelnames_gebruik = true
+				}
+
+				if (this.includeProducts) {
+					params.include_products = true
 				}
 
 				const url = generateUrl('/apps/softwarecatalog/api/views')
@@ -98,6 +116,10 @@ export const useViewStore = defineStore('view', {
 
 				if (this.includeDeelnamesGebruik) {
 					params.include_deelnames_gebruik = true
+				}
+
+				if (this.includeProducts) {
+					params.include_products = true
 				}
 
 				const url = generateUrl('/apps/softwarecatalog/api/views/' + encodeURIComponent(viewId))
