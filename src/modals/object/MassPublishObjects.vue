@@ -20,16 +20,16 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="publish-step">
 			<NcNoteCard type="info">
-				Objects will be published with the current date and time. If any objects have a depublication date set, it will be removed to make them fully published.
+				{{ t('softwarecatalog', 'Objects will be published with the current date and time. If any objects have a depublication date set, it will be removed to make them fully published.') }}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? 'Publication to Publish' : 'Selected Publications'"
+				:title="(objectStore.selectedObjects?.length || 0) === 1 ? t('softwarecatalog', 'Publication to Publish') : t('softwarecatalog', 'Selected Publications')"
 				:show-remove="true" />
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Object{{ originalSelectedCount > 1 ? 's' : '' }} successfully published</p>
+			<p>{{ originalSelectedCount > 1 ? t('softwarecatalog', 'Objects successfully published') : t('softwarecatalog', 'Object successfully published') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -40,7 +40,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Cancel' : 'Close' }}
+				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
 			</NcButton>
 			<NcButton v-if="success === null"
 				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
@@ -50,7 +50,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Publish v-if="!loading" :size="20" />
 				</template>
-				Publish
+				{{ t('softwarecatalog', 'Publish') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -114,9 +114,9 @@ export default {
 		dialogTitle() {
 			const count = objectStore.selectedObjects?.length || 0
 			if (count === 1) {
-				return 'Publish publication'
+				return this.t('softwarecatalog', 'Publish publication')
 			}
-			return `Publish ${count} publication${count !== 1 ? 's' : ''}`
+			return this.t('softwarecatalog', 'Publish {count} publications', { count })
 		},
 	},
 	mounted() {
@@ -176,12 +176,12 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = `Failed to publish ${failed.length} object${failed.length > 1 ? 's' : ''}`
+					this.error = this.t('softwarecatalog', 'Failed to publish {count} objects', { count: failed.length })
 				}
 
 			} catch (error) {
 				this.success = false
-				this.error = error.message || 'An error occurred while publishing objects'
+				this.error = error.message || this.t('softwarecatalog', 'An error occurred while publishing objects')
 			} finally {
 				this.loading = false
 			}

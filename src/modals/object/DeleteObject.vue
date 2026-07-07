@@ -4,15 +4,15 @@ import { objectStore, navigationStore } from '../../store/store.js'
 
 <template>
 	<NcDialog v-if="navigationStore.dialog === 'deleteObject'"
-		:name="'Delete ' + (objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id || 'Publication')"
+		:name="t('softwarecatalog', 'Delete {name}', { name: (objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id || t('softwarecatalog', 'Publication')) })"
 		size="normal"
 		:can-close="false">
 		<p v-if="success === null">
-			Do you want to permanently delete <b>{{ objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id }}</b>? This action cannot be undone.
+			{{ t('softwarecatalog', 'Do you want to permanently delete') }} <b>{{ objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id }}</b>{{ t('softwarecatalog', '? This action cannot be undone.') }}
 		</p>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Publication successfully deleted</p>
+			<p>{{ t('softwarecatalog', 'Publication successfully deleted') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -23,7 +23,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Cancel' : 'Close' }}
+				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
 			</NcButton>
 			<NcButton
 				v-if="success === null"
@@ -34,7 +34,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<TrashCanOutline v-if="!loading" :size="20" />
 				</template>
-				Delete
+				{{ t('softwarecatalog', 'Delete') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -94,7 +94,7 @@ export default {
 				this.closeModalTimeout = setTimeout(this.closeDialog, 2000)
 			} catch (error) {
 				this.success = false
-				this.error = error.message || 'An error occurred while deleting the publication'
+				this.error = error.message || this.t('softwarecatalog', 'An error occurred while deleting the publication')
 			} finally {
 				this.loading = false
 			}

@@ -16,22 +16,22 @@ import { objectStore, navigationStore } from '../../store/store.js'
 
 <template>
 	<NcDialog v-if="navigationStore.dialog === 'changeOrganisatieStatus'"
-		:name="navigationStore.dialogProperties?.dialogTitle || 'Status Wijzigen'"
+		:name="navigationStore.dialogProperties?.dialogTitle || t('softwarecatalog', 'Change status')"
 		size="normal"
 		:can-close="false">
 		<p v-if="success === null">
-			Weet je zeker dat je de status van <b>{{ getOrganisatieName() }}</b> wilt wijzigen naar <b>{{ navigationStore.dialogProperties?.newStatus }}</b>?
+			{{ t('softwarecatalog', 'Are you sure you want to change the status of') }} <b>{{ getOrganisatieName() }}</b> {{ t('softwarecatalog', 'to') }} <b>{{ navigationStore.dialogProperties?.newStatus }}</b>?
 			<br>
 			<span v-if="navigationStore.dialogProperties?.action === 'activeren'" class="status-change-info">
-				Deze organisatie wordt geactiveerd en zal zichtbaar zijn voor gebruikers.
+				{{ t('softwarecatalog', 'This organisation will be activated and will be visible to users.') }}
 			</span>
 			<span v-else-if="navigationStore.dialogProperties?.action === 'deactiveren'" class="status-change-info">
-				Deze organisatie wordt gedeactiveerd en zal niet meer zichtbaar zijn voor gebruikers.
+				{{ t('softwarecatalog', 'This organisation will be deactivated and will no longer be visible to users.') }}
 			</span>
 		</p>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Status succesvol gewijzigd naar {{ navigationStore.dialogProperties?.newStatus }}</p>
+			<p>{{ t('softwarecatalog', 'Status successfully changed to {status}', { status: navigationStore.dialogProperties?.newStatus }) }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -42,7 +42,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Annuleren' : 'Sluiten' }}
+				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
 			</NcButton>
 			<NcButton
 				v-if="success === null"
@@ -54,7 +54,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 					<CheckCircle v-if="!loading && navigationStore.dialogProperties?.action === 'activeren'" :size="20" />
 					<CloseCircle v-if="!loading && navigationStore.dialogProperties?.action === 'deactiveren'" :size="20" />
 				</template>
-				{{ navigationStore.dialogProperties?.action === 'activeren' ? 'Activeren' : 'Deactiveren' }}
+				{{ navigationStore.dialogProperties?.action === 'activeren' ? t('softwarecatalog', 'Activate') : t('softwarecatalog', 'Deactivate') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -98,7 +98,7 @@ export default {
 		 */
 		getOrganisatieName() {
 			const organisatie = objectStore.getActiveObject('organisatie')
-			return organisatie?.naam || organisatie?.name || organisatie?.['@self']?.name || 'Onbekende organisatie'
+			return organisatie?.naam || organisatie?.name || organisatie?.['@self']?.name || this.t('softwarecatalog', 'Unknown organisation')
 		},
 
 		/**
@@ -127,7 +127,7 @@ export default {
 				const newStatus = navigationStore.dialogProperties?.newStatus
 
 				if (!organisatie || !organisatie.id || !newStatus) {
-					throw new Error('Organisatie of nieuwe status ontbreekt')
+					throw new Error(this.t('softwarecatalog', 'Organisation or new status is missing'))
 				}
 
 				// Prepare the patch data - only include the status property.
@@ -167,7 +167,7 @@ export default {
 
 			} catch (error) {
 				console.error('Error changing organisation status:', error)
-				this.error = error.message || 'Er is een fout opgetreden bij het wijzigen van de status'
+				this.error = error.message || this.t('softwarecatalog', 'An error occurred while changing the status')
 			} finally {
 				this.loading = false
 			}

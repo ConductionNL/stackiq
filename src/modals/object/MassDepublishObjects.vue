@@ -20,16 +20,16 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="depublish-step">
 			<NcNoteCard type="warning">
-				Objects will be depublished with the current date and time. This will make them unavailable to the public while keeping their published date intact.
+				{{ t('softwarecatalog', 'Objects will be depublished with the current date and time. This will make them unavailable to the public while keeping their published date intact.') }}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? 'Publication to Depublish' : 'Selected Publications'"
+				:title="(objectStore.selectedObjects?.length || 0) === 1 ? t('softwarecatalog', 'Publication to Depublish') : t('softwarecatalog', 'Selected Publications')"
 				:show-remove="true" />
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Object{{ originalSelectedCount > 1 ? 's' : '' }} successfully depublished</p>
+			<p>{{ originalSelectedCount > 1 ? t('softwarecatalog', 'Objects successfully depublished') : t('softwarecatalog', 'Object successfully depublished') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -40,7 +40,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Cancel' : 'Close' }}
+				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
 			</NcButton>
 			<NcButton v-if="success === null"
 				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
@@ -50,7 +50,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<PublishOff v-if="!loading" :size="20" />
 				</template>
-				Depublish
+				{{ t('softwarecatalog', 'Depublish') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -114,9 +114,9 @@ export default {
 		dialogTitle() {
 			const count = this.objectsToDepublish.length
 			if (count === 1) {
-				return 'Depublish publication'
+				return this.t('softwarecatalog', 'Depublish publication')
 			}
-			return `Depublish ${count} publication${count !== 1 ? 's' : ''}`
+			return this.t('softwarecatalog', 'Depublish {count} publications', { count })
 		},
 	},
 	mounted() {
@@ -176,12 +176,12 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = `Failed to depublish ${failed.length} object${failed.length > 1 ? 's' : ''}`
+					this.error = this.t('softwarecatalog', 'Failed to depublish {count} objects', { count: failed.length })
 				}
 
 			} catch (error) {
 				this.success = false
-				this.error = error.message || 'An error occurred while depublishing objects'
+				this.error = error.message || this.t('softwarecatalog', 'An error occurred while depublishing objects')
 			} finally {
 				this.loading = false
 			}
