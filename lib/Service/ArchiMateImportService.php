@@ -10,7 +10,7 @@
  * @package   OCA\SoftwareCatalog\Service
  * @author    SoftwareCatalog Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license   AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/nextcloud/softwarecatalog
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
@@ -45,7 +45,7 @@ use SimpleXMLElement;
  * @package   OCA\SoftwareCatalog\Service
  * @author    SoftwareCatalog Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license   AGPL-3.0 https://www.gnu.org/licenses/agpl-3.0.en.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/nextcloud/softwarecatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
