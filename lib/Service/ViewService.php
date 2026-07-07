@@ -259,12 +259,15 @@ class ViewService
             throw new \RuntimeException(message: 'AMEF configuration not found for views');
         }
 
-        // Query for all view objects.
+        // Query for all view objects. Bounded — an unset `_limit` means
+        // Doctrine's setMaxResults(null), i.e. no LIMIT clause at all
+        // (full-table scan). 500 is a safe ceiling for the view index load.
         $query = [
-            '@self' => [
+            '@self'  => [
                 'register' => $registerId,
                 'schema'   => $viewSchemaId,
             ],
+            '_limit' => 500,
         ];
 
         $viewEntities = $objectService->searchObjects($query);
@@ -651,11 +654,15 @@ class ViewService
                 }
 
                 try {
+                    // Builds a lookup index (O(1) node matching), so this
+                    // intentionally fetches "all matching" — bounded at a
+                    // documented safe ceiling rather than left unbounded.
                     $query = [
-                        '@self' => [
+                        '@self'  => [
                             'register' => $registerId,
                             'schema'   => $schemaId,
                         ],
+                        '_limit' => 1000,
                     ];
 
                     // Add organisation filter if current organisation is available.
@@ -757,10 +764,11 @@ class ViewService
 
             try {
                 $query = [
-                    '@self' => [
+                    '@self'  => [
                         'register' => $registerId,
                         'schema'   => $gebruikSchemaId,
                     ],
+                    '_limit' => 500,
                 ];
 
                 // Filter by organisation so only owned gebruik is returned.
@@ -1146,6 +1154,7 @@ class ViewService
                     ],
                     // Match objects where this org appears as a deelnemer.
                     'deelnemers' => $currentOrg,
+                    '_limit'     => 500,
                 ];
 
                 // Both _rbac and _multitenancy must be false to find objects owned by other organisations.

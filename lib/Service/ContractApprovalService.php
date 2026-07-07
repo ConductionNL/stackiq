@@ -449,6 +449,7 @@ class ContractApprovalService
             'register'           => $registerId,
             'schema'             => $schemaId,
             'approvalDecisionId' => $decisionId,
+            '_limit'             => 50,
         ];
 
         try {

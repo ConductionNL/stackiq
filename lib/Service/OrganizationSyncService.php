@@ -783,12 +783,15 @@ class OrganizationSyncService
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
-            // Build base query for register and schema.
+            // Build base query for register and schema. A sync tick may
+            // genuinely need "all objects" (minutesBack <= 0) — bounded at a
+            // documented safe ceiling rather than left unbounded.
             $query = [
-                '@self' => [
+                '@self'  => [
                     'register' => (int) $register,
                     'schema'   => (int) $organizationSchema,
                 ],
+                '_limit' => 5000,
             ];
 
             // Add time-based filtering if minutesBack > 0.
@@ -1271,6 +1274,7 @@ class OrganizationSyncService
                     'schema'   => (int) $contactSchema,
                 ],
                 'organisatie' => $organisatieId,
+                '_limit'      => 500,
             ];
 
             $contactPersons = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
@@ -2017,6 +2021,7 @@ class OrganizationSyncService
                     'schema'   => (int) $contactSchema,
                 ],
                 'organisatie' => $organizationUuid,
+                '_limit'      => 500,
             ];
 
             $this->logger->info(

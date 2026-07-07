@@ -801,7 +801,10 @@ class AangebodenGebruikService
                 }
 
                 try {
-                    // Build query for deelnemers filtering.
+                    // Build query for deelnemers filtering. Default-bounded —
+                    // addQueryFilters() below only sets `_limit` when the
+                    // caller's $options carries one; without a caller-supplied
+                    // limit this was previously unbounded.
                     $query = [
                         '@self'      => [
                             'register' => $gebruiksConfig['register_id'],
@@ -809,9 +812,10 @@ class AangebodenGebruikService
                         ],
                         'deelnemers' => $currentOrg,
                         // Search where current org is in deelnemers.
+                        '_limit'     => 500,
                     ];
 
-                    // Add additional filters from options.
+                    // Add additional filters from options (may override the default limit above).
                     $query = $this->addQueryFilters(baseQuery: $query, options: $options);
 
                     // Execute search with RBAC disabled to find deelnemers.
@@ -1331,6 +1335,7 @@ class AangebodenGebruikService
                         'organisation' => $organisationUuid,
                     ],
                     '_source' => 'database',
+                    '_limit'  => 500,
                 ];
 
                 $suites = $objectService->searchObjects(
@@ -1357,6 +1362,7 @@ class AangebodenGebruikService
                         'organisation' => $organisationUuid,
                     ],
                     '_source' => 'database',
+                    '_limit'  => 500,
                 ];
 
                 $modules = $objectService->searchObjects(

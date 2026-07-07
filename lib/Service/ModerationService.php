@@ -97,6 +97,7 @@ class ModerationService
                 query: [
                     '@self'             => ['register' => $target['register'], 'schema' => $target['schema']],
                     'registratiestatus' => self::STATUS_PENDING,
+                    '_limit'            => 500,
                 ],
                 _rbac: false,
                 _multitenancy: false

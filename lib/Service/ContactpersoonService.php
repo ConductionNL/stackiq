@@ -796,6 +796,7 @@ class ContactpersoonService
                     'schema'   => (int) $contactSchema,
                 ],
                 'organisation' => $organizationUuid,
+                '_limit'       => 500,
             ];
 
             return $objectService->searchObjects($query);

@@ -237,6 +237,7 @@ class IntakeService
                     '@self'             => ['register' => $target['register'], 'schema' => $target['schema']],
                     'naam'              => $naam,
                     'registratiestatus' => self::STATUS_PENDING,
+                    '_limit'            => 1,
                 ],
                 _rbac: false,
                 _multitenancy: false

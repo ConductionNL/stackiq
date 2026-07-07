@@ -303,6 +303,7 @@ class ModuleComplianceService
                     'register' => (int) $registerId,
                 ],
                 'module' => $moduleUuid,
+                '_limit' => 500,
             ];
             $complianceObjects = $objectService->searchObjects($query);
 
@@ -579,11 +580,14 @@ class ModuleComplianceService
             }
 
             // Get all compliance objects (both schema AND register are required).
+            // Bulk sync structurally needs "all matching" — bounded at a
+            // documented safe ceiling rather than left unbounded.
             $query = [
-                '@self' => [
+                '@self'  => [
                     'schema'   => (int) $complianceSchemaId,
                     'register' => (int) $registerId,
                 ],
+                '_limit' => 1000,
             ];
             $complianceObjects = $objectService->searchObjects($query);
 

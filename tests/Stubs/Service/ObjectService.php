@@ -85,6 +85,25 @@ abstract class ObjectService
     ): array|int;
 
     /**
+     * Count objects matching a query (true SQL COUNT, no hydration).
+     *
+     * @param array       $query         Search query.
+     * @param bool        $_rbac         Apply RBAC.
+     * @param bool        $_multitenancy Apply multitenancy.
+     * @param array|null  $ids           Optional id filter.
+     * @param string|null $uses          Optional uses filter.
+     *
+     * @return int
+     */
+    abstract public function countSearchObjects(
+        array $query=[],
+        bool $_rbac=true,
+        bool $_multitenancy=true,
+        ?array $ids=null,
+        ?string $uses=null
+    ): int;
+
+    /**
      * Persist an object.
      *
      * @param array      $object        The object data bag.

@@ -499,6 +499,7 @@ class FederationService
                 query: [
                     '@self'            => ['register' => $target['register'], 'schema' => $target['schema']],
                     '_source.instance' => $peerUrl,
+                    '_limit'           => 1000,
                 ],
                 _rbac: false,
                 _multitenancy: false

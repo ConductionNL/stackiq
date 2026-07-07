@@ -335,11 +335,13 @@ class GebruikSyncService
             try {
                 // Try to search by ID.
                 $query = [
-                    '@self' => [
+                    '@self'  => [
                         'register' => (int) $register,
                         'schema'   => (int) $schema,
                     ],
-                    'id'    => $id,
+                    'id'     => $id,
+                    // Looking up a single id — bound to a small safe ceiling.
+                    '_limit' => 5,
                 ];
 
                 $elements      = $objectService->searchObjects($query);

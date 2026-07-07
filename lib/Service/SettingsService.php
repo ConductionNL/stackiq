@@ -4453,19 +4453,23 @@ class SettingsService
 
                 if ($registerId !== false && $schemaId === true) {
                     try {
-                        $query   = [
+                        $query = [
                             '@self' => [
                                 'register' => (int) $registerId,
                                 'schema'   => (int) $schemaId,
                             ],
                         ];
-                        $objects = $objectService->searchObjects($query);
-                        $counts[$countKey] = count($objects);
+                        // A true SQL COUNT via OpenRegister's countSearchObjects()
+                        // — NOT count(searchObjects()), which would either
+                        // hydrate the entire register into memory (unbounded)
+                        // or, if bounded with `_limit`, silently under-report
+                        // the total for a register larger than the limit.
+                        $counts[$countKey] = $objectService->countSearchObjects($query);
                     } catch (\Exception $e) {
                         $this->logger->warning("Failed to get {$configKey} count", ['error' => $e->getMessage()]);
                     }
                 }
-            }
+            }//end foreach
 
             $this->logger->debug('SettingsService: Retrieved Voorzieningen object counts', $counts);
 
