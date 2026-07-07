@@ -101,6 +101,13 @@
 			"order": 85
 		},
 		{
+			"id": "LicensePosture",
+			"label": "License posture",
+			"icon": "icon-category-monitoring",
+			"route": "LicensePosture",
+			"order": 86
+		},
+		{
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "icon-info",
@@ -508,6 +515,14 @@
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
+		},
+		{
+			"id": "LicensePosture",
+			"route": "/license-posture",
+			"type": "custom",
+			"title": "License posture",
+			"component": "LicensePostureView",
+			"_note": "Portfolio software-license posture (SAM overview): open-source vs closed-source share of the IN-PRODUCTION portfolio (weighted by deployment, not catalogue rows), a per-vendor rollup (deployments + licence mix + annualised cost CONSUMED from contract-administration's totalAnnualisedCost, never re-derived), and a per-organisation open-source-first report. All derived at query time via the licensePosture util — no stored posture, no app-local aggregation engine. No built-in index/detail type expresses a multi-axis read-only aggregation dashboard."
 		},
 		{
 			"id": "LifecycleRoadmap",

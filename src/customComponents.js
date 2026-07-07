@@ -25,6 +25,7 @@ import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
+import LicensePostureView from './views/LicensePostureView.vue'
 
 export default {
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
@@ -82,4 +83,13 @@ export default {
 	// computed on demand and never stored. No built-in detail widget expresses a
 	// cross-schema relational join, so it stays a custom tab component.
 	VulnerabilityExposurePanel,
+
+	// --- Portfolio license posture (SAM overview). ---
+	// Open-source vs closed-source share of the in-production portfolio +
+	// per-vendor rollup (deployments + licence mix + cost CONSUMED from
+	// contract-administration) + per-organisation open-source-first report — all
+	// derived at query time, weighted by in-production deployment. A read-only
+	// aggregation dashboard no built-in index/detail type expresses; stays custom
+	// until the lib grows a declarative aggregation/rollup widget.
+	LicensePostureView,
 }
