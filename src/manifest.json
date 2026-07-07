@@ -185,7 +185,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [ { "type": "audit-trail" } ] }
+						{ "id": "audit", "label": "History", "component": "CnAuditTrailTab" }
 					]
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
@@ -228,7 +228,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "contract",
-				"_note": "Document / agreement archetype. The reader of a contract needs terms and money up front, then the paperwork. Body: contract data (number, type, start/end dates, cost + period, status, both nested contact persons, documentReferentie, remarks) spans 8-wide top-left; a Documents (files) panel spans 4-wide full-height on the right because the signed contract, addenda and evidence are the primary attachments. Below the data, a Related panel links the contract's service (dienst) and usage (gebruik). Two KPI stats surface the contract value and remaining term at a glance. The contract schema declares NO email/calendar linkedType, so per the comms hard-rule NO Emails/Meetings widgets appear on the body (circulation happens via the linked Nextcloud contacts, not the catalogue record). The existing ContractApprovalPanel (approval workflow) and audit trail stay as sidebar tabs — they are per-record actions, not primary reading.",
+				"_note": "Document / agreement archetype. The reader of a contract needs terms and money up front, then the paperwork. Body: contract data (number, type, start/end dates, cost + period, status, both nested contact persons, documentReferentie, remarks) spans 8-wide top-left; a Documents (files) panel spans 4-wide full-height on the right because the signed contract, addenda and evidence are the primary attachments. Below the data, a Related panel links the contract's service (dienst) and usage (gebruik). A KPI stat surfaces the contract value at a glance. The contract schema declares NO email/calendar linkedType, so per the comms hard-rule NO Emails/Meetings widgets appear on the body (circulation happens via the linked Nextcloud contacts, not the catalogue record). Per the sidebar hard rule, the ContractApprovalPanel (decidesk-delegated approval workflow — a per-record action, not primary reading) moved OUT of the sidebar into a declarative body section (config.bodyWidgets, placed after the related row) so the sidebar stays audit-only.",
 				"widgets": [
 					{ "id": "ct-value", "type": "stat", "title": "Contract value", "content": { "label": "Contract value", "format": "currency", "source": { "register": "@resolve:voorzieningen_register", "schema": "contract", "metric": "sum", "field": "kosten", "filter": { "id": "@objectId" } } } },
 					{ "id": "ct-data", "type": "data", "title": "Contract details", "content": { "columns": 2 } },
@@ -241,12 +241,14 @@
 					{ "id": "3", "widgetId": "ct-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 7 },
 					{ "id": "4", "widgetId": "ct-related", "gridX": 0, "gridY": 7, "gridWidth": 12, "gridHeight": 3 }
 				],
+				"bodyWidgets": [
+					{ "id": "ct-approval", "component": "ContractApprovalPanel", "title": "Approval", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "approval", "label": "Approval", "icon": "icon-checkmark", "component": "ContractApprovalPanel" },
-						{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [ { "type": "audit-trail" } ] }
+						{ "id": "audit", "label": "History", "component": "CnAuditTrailTab" }
 					]
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
@@ -259,19 +261,21 @@
 			"title": "Standards",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "standaard",
+				"schema": "element",
+				"filter": { "gemmaType": "standaard" },
 				"columns": [
-					"naam",
-					"versie",
-					"categorie",
-					"status"
+					"name",
+					"gemmaThema",
+					"gemmaStatus",
+					"url"
 				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
-			}
+			},
+			"_note": "The register has NO dedicated 'standaard' schema — GEMMA standards are `element` objects (the generic ArchiMate/GEMMA model-element schema, shared with referentiecomponenten, applications, capabilities, …) discriminated by `gemmaType`. Fixed a pre-existing bug: this page previously pointed at a non-existent `schema: \"standaard\"`, which would 404 on every fetch. Scoped with `filter.gemmaType: \"standaard\"` (see lib/Service/ArchiMateImportService.php's `extractGemmaType` comparisons and its `?gemmaType=referentiecomponent` query comment) so only standard-typed elements list here."
 		},
 		{
 			"id": "StandaardDetail",
@@ -280,13 +284,13 @@
 			"title": "Standard",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "standaard",
-				"_note": "Catalog archetype (a normative standard). What matters about a standard is (a) its definition, (b) the specification documents, and (c) the ecosystem around it: which modules implement it and what compliance records claim it. Body: standard data 8-wide top-left; a Specification documents (files) panel 4-wide top-right for the published spec/PDFs. Below, a Related panel links referencing records, then a compliancy object-list shows every compliance claim naming this standard (standaardGemma matched to the standard's name) so a reader sees adoption at a glance. A standard does not communicate, so per the comms hard-rule NO Emails/Meetings/Talk widgets appear. Audit trail stays a sidebar tab.",
+				"schema": "element",
+				"_note": "Catalog archetype (a normative GEMMA standard). What matters about a standard is (a) its definition, (b) the specification documents, and (c) the ecosystem around it: which modules implement it and what compliance records claim it. Body: standard data 8-wide top-left (name, gemmaThema, gemmaStatus, documentation, url, versieaanduiding, beschikbaarheid — the `element` schema's GEMMA-standard fields); a Specification documents (files) panel 4-wide top-right for the published spec/PDFs. Below, a Related panel surfaces the element's own FK web (standaardVersies, aanbevolenVoorReferentiecomponent, verplichteVoorReferentiecomponent, gekoppeldeStandaardVersies — all self-references into other `element` objects), then a compliancy object-list shows every compliance claim naming this standard (compliancy.standaardGemma matched to the standard's own `name`) so a reader sees adoption at a glance. FIX: the register has no dedicated 'standaard' schema — this page previously pointed at a non-existent `schema: \"standaard\"` (guaranteed fetch failure); corrected to `element` (the shared GEMMA/ArchiMate element schema, discriminated by `gemmaType`). A standard does not communicate, so per the comms hard-rule NO Emails/Meetings/Talk widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
 					{ "id": "st-data", "type": "data", "title": "Standard", "content": { "columns": 2 } },
 					{ "id": "st-files", "type": "integration", "integrationId": "files", "title": "Specification documents" },
 					{ "id": "st-related", "type": "related", "title": "Related" },
-					{ "id": "st-compliance", "type": "object-list", "title": "Compliance claims for this standard", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "standaardGemma": "@object.naam" }, "columns": [ { "key": "module", "label": "Module" }, { "key": "standaardversie", "label": "Standard version" }, { "key": "url", "label": "Evidence URL" } ], "limit": 50, "rowRoute": "KompliantieDetail" } }
+					{ "id": "st-compliance", "type": "object-list", "title": "Compliance claims for this standard", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "standaardGemma": "@object.name" }, "columns": [ { "key": "module", "label": "Module" }, { "key": "standaardversie", "label": "Standard version" }, { "key": "url", "label": "Evidence URL" } ], "limit": 50, "rowRoute": "KompliantieDetail" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "st-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
@@ -298,7 +302,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [ { "type": "audit-trail" } ] }
+						{ "id": "audit", "label": "History", "component": "CnAuditTrailTab" }
 					]
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
@@ -350,7 +354,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [ { "type": "audit-trail" } ] }
+						{ "id": "audit", "label": "History", "component": "CnAuditTrailTab" }
 					]
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
@@ -400,7 +404,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [ { "type": "audit-trail" } ] }
+						{ "id": "audit", "label": "History", "component": "CnAuditTrailTab" }
 					]
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
@@ -425,7 +429,7 @@
 				"columns": [
 					"versie",
 					"module",
-					"releaseDatum",
+					"datumInGebruik",
 					"status"
 				],
 				"sidebar": {
@@ -433,7 +437,8 @@
 					"showMetadata": true
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
-			}
+			},
+			"_note": "Fixed a pre-existing bug: `releaseDatum` is not a moduleVersie property (see lib/Settings/softwarecatalogus_register.json) — replaced with the real lifecycle field `datumInGebruik` (date the version went live), the closest analog to a release date."
 		},
 		{
 			"id": "ModuleversieDetail",
@@ -460,7 +465,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [ { "type": "audit-trail" } ] }
+						{ "id": "audit", "label": "History", "component": "CnAuditTrailTab" }
 					]
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
