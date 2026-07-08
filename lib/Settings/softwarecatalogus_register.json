@@ -1365,7 +1365,8 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/contactpersoon"
+            "$ref": "#/components/schemas/contactpersoon",
+            "x-relation-filter": { "organisatie": "@object.aanbieder" }
           },
           "modules": {
             "description": "Zoek de applicaties op waar deze dienst van toepassing is.",
@@ -1374,6 +1375,8 @@
             "order": 2,
             "facetable": false,
             "title": "Applicatie",
+            "$ref": "#/components/schemas/module",
+            "x-relation-filter": { "aanbieder": "@object.aanbieder" },
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -1452,6 +1455,8 @@
             "order": 8,
             "facetable": false,
             "title": "Koppelingen",
+            "$ref": "#/components/schemas/koppeling",
+            "x-relation-filter": { "dienst": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -2002,7 +2007,8 @@
             "minItems": null,
             "maxItems": null,
             "inversedBy": "",
-            "$ref": "",
+            "$ref": "#/components/schemas/contactpersoon",
+            "x-relation-filter": { "organisatie": "@objectId" },
             "items": {
               "cascadeDelete": false,
               "$ref": "#/components/schemas/contactpersoon",
@@ -2044,7 +2050,7 @@
             "minItems": null,
             "maxItems": null,
             "inversedBy": "",
-            "$ref": "",
+            "$ref": "#/components/schemas/organisatie",
             "items": {
               "cascadeDelete": false,
               "$ref": "#/components/schemas/organisatie",
@@ -2080,7 +2086,7 @@
             "minItems": null,
             "maxItems": null,
             "inversedBy": "",
-            "$ref": "",
+            "$ref": "#/components/schemas/organisatie",
             "items": {
               "cascadeDelete": false,
               "$ref": "#/components/schemas/organisatie",
@@ -2790,6 +2796,7 @@
             },
             "$ref": "#/components/schemas/moduleVersie",
             "inversedBy": "gebruik",
+            "x-relation-filter": { "module": "@object.module" },
             "table": {
               "default": true
             }
@@ -6721,7 +6728,8 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/contactpersoon"
+            "$ref": "#/components/schemas/contactpersoon",
+            "x-relation-filter": { "organisatie": "@object.aanbieder" }
           },
           "cloudDienstverleningsmodel": {
             "description": "Kies één of meerdere hosting typen waarmee de applicatie wordt aangeboden.",
@@ -6947,6 +6955,8 @@
             "facetable": false,
             "title": "Compliance",
             "hideOnForm": true,
+            "$ref": "#/components/schemas/compliancy",
+            "x-relation-filter": { "module": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -7008,6 +7018,8 @@
             "facetable": false,
             "title": "Applicatieversies",
             "hideOnForm": true,
+            "$ref": "#/components/schemas/moduleVersie",
+            "x-relation-filter": { "module": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -7025,6 +7037,8 @@
             "facetable": false,
             "title": "Gebruik",
             "hideOnForm": true,
+            "$ref": "#/components/schemas/gebruik",
+            "x-relation-filter": { "module": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -7407,6 +7421,8 @@
             "order": 18,
             "facetable": false,
             "title": "Gebruik",
+            "$ref": "#/components/schemas/gebruik",
+            "x-relation-filter": { "moduleVersie": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {

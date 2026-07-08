@@ -11,13 +11,13 @@
  */
 
 <template>
-	<div class="organisatieCard">
+	<div class="organisatieCard" @click="handleCardClick">
 		<div class="cardHeader">
 			<h2 v-tooltip.bottom="getOrganisatieSummary(item)">
 				<component :is="cardIcon" :size="20" />
 				{{ getOrganisatieTitle(item) }}
 			</h2>
-			<div class="cardHeaderActions">
+			<div class="cardHeaderActions" @click.stop>
 				<!-- Object Actions -->
 				<NcActions :primary="true" menu-name="Actions">
 					<template #icon>
@@ -95,7 +95,7 @@
 						<AccountMultiple :size="16" />
 						<span>{{ getContactpersonenCount() }} contactpersonen</span>
 					</div>
-					<div class="viewToggleContainer">
+					<div class="viewToggleContainer" @click.stop>
 						<NcButton
 							:type="currentView === 'contactpersonen' ? 'primary' : 'secondary'"
 							size="small"
@@ -110,7 +110,7 @@
 			</div>
 
 			<!-- Contactpersonen View -->
-			<div v-else-if="currentView === 'contactpersonen'" class="contactpersonenView">
+			<div v-else-if="currentView === 'contactpersonen'" class="contactpersonenView" @click.stop>
 				<ContactpersonenList
 					ref="contactpersonenList"
 					:organisation-id="item.id || item.uuid"
@@ -221,6 +221,19 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Emit the `click` event CnCardGrid/CnIndexPage listen on for
+		 * navigation (CnPageRenderer.onRowOpen resolves the matching
+		 * type:"detail" page by register+schema and pushes to it). The
+		 * default CnObjectCard wires this via CnCardGrid's cardListeners;
+		 * a custom cardComponent like this one must emit it explicitly —
+		 * without it, clicking an organisation card was a no-op.
+		 * @return {void}
+		 */
+		handleCardClick() {
+			this.$emit('click', this.item)
+		},
+
 		/**
 		 * Get the display title for the organisation
 		 * @param {object} item - The organisation object
