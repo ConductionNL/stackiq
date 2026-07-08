@@ -9,7 +9,7 @@
  * @package   OCA\SoftwareCatalog\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: 1.0.0
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */
@@ -29,7 +29,7 @@ use Psr\Log\LoggerInterface;
  * @package   OCA\SoftwareCatalog\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: 1.0.0
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  */

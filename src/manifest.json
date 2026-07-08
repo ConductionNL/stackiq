@@ -87,11 +87,25 @@
 			"order": 80
 		},
 		{
+			"id": "Kwetsbaarheden",
+			"label": "Vulnerabilities",
+			"icon": "icon-category-security",
+			"route": "Kwetsbaarheden",
+			"order": 82
+		},
+		{
 			"id": "LifecycleRoadmap",
 			"label": "Portfolio roadmap",
 			"icon": "icon-category-organization",
 			"route": "LifecycleRoadmap",
 			"order": 85
+		},
+		{
+			"id": "LicensePosture",
+			"label": "License posture",
+			"icon": "icon-category-monitoring",
+			"route": "LicensePosture",
+			"order": 86
 		},
 		{
 			"id": "Documentation",
@@ -503,6 +517,50 @@
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
+		},
+		{
+			"id": "Kwetsbaarheden",
+			"route": "/kwetsbaarheden",
+			"type": "custom",
+			"title": "Vulnerabilities",
+			"component": "KwetsbaarhedenView",
+			"_note": "Custom vulnerability index over the kwetsbaarheid schema: a CVSS-derived severity band, affected-application count and exposed-in-production-usage count, plus severity-band quick-filter tabs — none of which a built-in type='index' (schema columns + exact-match quick filters) expresses. Create/edit/delete reuse the app's generic ObjectModal (kwetsbaarheid is already a generic modal type); reporting a vulnerability here is what makes the shipped vulnerability-reported notification reachable. Severity is derived from cvssScore, never stored."
+		},
+		{
+			"id": "KwetsbaarheidDetail",
+			"route": "/kwetsbaarheden/:id",
+			"type": "detail",
+			"title": "Vulnerability",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "kwetsbaarheid",
+				"_note": "Vulnerability detail. Body: the vulnerability data (naam, cveCode, cvssScore, short + long description) 8-wide with a Related panel 4-wide surfacing the affected applications (kwetsbaarheid.modules). An Exposure sidebar tab renders VulnerabilityExposurePanel — the read-time join to the in-production usages exposed to this CVE, each with its consuming organisation (afnemer) and deployed version (computed on demand, never stored). A vulnerability does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"widgets": [
+					{ "id": "kw-data", "type": "data", "title": "Vulnerability", "content": { "columns": 2 } },
+					{ "id": "kw-related", "type": "related", "title": "Affected applications" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "kw-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "2", "widgetId": "kw-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "exposure", "label": "Exposure", "icon": "icon-category-security", "component": "VulnerabilityExposurePanel" },
+						{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [ { "type": "audit-trail" } ] }
+					]
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "LicensePosture",
+			"route": "/license-posture",
+			"type": "custom",
+			"title": "License posture",
+			"component": "LicensePostureView",
+			"_note": "Portfolio software-license posture (SAM overview): open-source vs closed-source share of the IN-PRODUCTION portfolio (weighted by deployment, not catalogue rows), a per-vendor rollup (deployments + licence mix + annualised cost CONSUMED from contract-administration's totalAnnualisedCost, never re-derived), and a per-organisation open-source-first report. All derived at query time via the licensePosture util — no stored posture, no app-local aggregation engine. No built-in index/detail type expresses a multi-axis read-only aggregation dashboard."
 		},
 		{
 			"id": "LifecycleRoadmap",

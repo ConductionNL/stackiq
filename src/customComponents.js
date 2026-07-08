@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
 // Custom-component registry for softwarecatalog's manifest-driven app shell.
@@ -23,6 +23,9 @@ import DashboardCustomView from './views/Dashboard.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
+import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
+import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
+import LicensePostureView from './views/LicensePostureView.vue'
 
 export default {
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
@@ -64,4 +67,29 @@ export default {
 	// owns no approval workflow. Stays a custom tab component because it surfaces
 	// a cross-app outcome no built-in detail widget expresses.
 	ContractApprovalPanel,
+
+	// --- Lib gap: CVSS-derived severity index + severity-band quick filters. ---
+	// The Vulnerabilities index shows a DERIVED severity band (from cvssScore),
+	// an affected-application count and an exposed-in-production-usage count, and
+	// filters by severity band — none of which a built-in type='index' (schema
+	// columns + exact-match quick filters) can express. Create/edit/delete reuse
+	// the app's generic ObjectModal. Stays custom until the lib grows derived
+	// columns + computed-range filters.
+	KwetsbaarhedenView,
+
+	// --- Read-time exposure join rendered as a KwetsbaarheidDetail sidebar tab. ---
+	// "Which in-production usages are exposed to this CVE" is the join
+	// kwetsbaarheid.modules → module ← gebruik → afnemer (in-production only),
+	// computed on demand and never stored. No built-in detail widget expresses a
+	// cross-schema relational join, so it stays a custom tab component.
+	VulnerabilityExposurePanel,
+
+	// --- Portfolio license posture (SAM overview). ---
+	// Open-source vs closed-source share of the in-production portfolio +
+	// per-vendor rollup (deployments + licence mix + cost CONSUMED from
+	// contract-administration) + per-organisation open-source-first report — all
+	// derived at query time, weighted by in-production deployment. A read-only
+	// aggregation dashboard no built-in index/detail type expresses; stays custom
+	// until the lib grows a declarative aggregation/rollup widget.
+	LicensePostureView,
 }
