@@ -1372,13 +1372,14 @@
             "order": 2,
             "facetable": false,
             "title": "Applicatie",
+            "$ref": "#/components/schemas/module",
+            "x-relation-filter": { "aanbieder": "@object.aanbieder" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/module",
-              "x-relation-filter": { "aanbieder": "@object.aanbieder" }
+              "$ref": "#/components/schemas/module"
             }
           },
           "aanbieder": {
@@ -1450,14 +1451,15 @@
             "order": 8,
             "facetable": false,
             "title": "Koppelingen",
+            "$ref": "#/components/schemas/koppeling",
+            "x-relation-filter": { "dienst": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/koppeling",
-              "inversedBy": "dienst",
-              "x-relation-filter": { "dienst": "@objectId" }
+              "inversedBy": "dienst"
             }
           },
           "publicatiedatum": {
@@ -2001,7 +2003,8 @@
             "minItems": null,
             "maxItems": null,
             "inversedBy": "",
-            "$ref": "",
+            "$ref": "#/components/schemas/contactpersoon",
+            "x-relation-filter": { "organisatie": "@objectId" },
             "items": {
               "cascadeDelete": false,
               "$ref": "#/components/schemas/contactpersoon",
@@ -2009,8 +2012,7 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "inversedBy": "organisatie",
-              "x-relation-filter": { "organisatie": "@objectId" }
+              "inversedBy": "organisatie"
             },
             "objectConfiguration": {
               "handling": null,
@@ -2044,7 +2046,7 @@
             "minItems": null,
             "maxItems": null,
             "inversedBy": "",
-            "$ref": "",
+            "$ref": "#/components/schemas/organisatie",
             "items": {
               "cascadeDelete": false,
               "$ref": "#/components/schemas/organisatie",
@@ -2080,7 +2082,7 @@
             "minItems": null,
             "maxItems": null,
             "inversedBy": "",
-            "$ref": "",
+            "$ref": "#/components/schemas/organisatie",
             "items": {
               "cascadeDelete": false,
               "$ref": "#/components/schemas/organisatie",
@@ -6904,14 +6906,15 @@
             "facetable": false,
             "title": "Compliance",
             "hideOnForm": true,
+            "$ref": "#/components/schemas/compliancy",
+            "x-relation-filter": { "module": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/compliancy",
-              "inversedBy": "module",
-              "x-relation-filter": { "module": "@objectId" }
+              "inversedBy": "module"
             }
           },
           "standaarden": {
@@ -6966,14 +6969,15 @@
             "facetable": false,
             "title": "Applicatieversies",
             "hideOnForm": true,
+            "$ref": "#/components/schemas/moduleVersie",
+            "x-relation-filter": { "module": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/moduleVersie",
-              "inversedBy": "module",
-              "x-relation-filter": { "module": "@objectId" }
+              "inversedBy": "module"
             }
           },
           "gebruiken": {
@@ -6984,13 +6988,14 @@
             "facetable": false,
             "title": "Gebruik",
             "hideOnForm": true,
+            "$ref": "#/components/schemas/gebruik",
+            "x-relation-filter": { "module": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/gebruik",
-              "x-relation-filter": { "module": "@objectId" }
+              "$ref": "#/components/schemas/gebruik"
             }
           },
           "geregistreerdDoor": {
@@ -7308,13 +7313,14 @@
             "order": 18,
             "facetable": false,
             "title": "Gebruik",
+            "$ref": "#/components/schemas/gebruik",
+            "x-relation-filter": { "moduleVersie": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/gebruik",
-              "x-relation-filter": { "moduleVersie": "@objectId" }
+              "$ref": "#/components/schemas/gebruik"
             }
           },
           "geregistreerdDoor": {
