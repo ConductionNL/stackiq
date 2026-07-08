@@ -1362,7 +1362,8 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/contactpersoon"
+            "$ref": "#/components/schemas/contactpersoon",
+            "x-relation-filter": { "organisatie": "@object.aanbieder" }
           },
           "modules": {
             "description": "Zoek de applicaties op waar deze dienst van toepassing is.",
@@ -1376,7 +1377,8 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/module"
+              "$ref": "#/components/schemas/module",
+              "x-relation-filter": { "aanbieder": "@object.aanbieder" }
             }
           },
           "aanbieder": {
@@ -1454,7 +1456,8 @@
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/koppeling",
-              "inversedBy": "dienst"
+              "inversedBy": "dienst",
+              "x-relation-filter": { "dienst": "@objectId" }
             }
           },
           "publicatiedatum": {
@@ -2006,7 +2009,8 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "inversedBy": "organisatie"
+              "inversedBy": "organisatie",
+              "x-relation-filter": { "organisatie": "@objectId" }
             },
             "objectConfiguration": {
               "handling": null,
@@ -2743,6 +2747,7 @@
             },
             "$ref": "#/components/schemas/moduleVersie",
             "inversedBy": "gebruik",
+            "x-relation-filter": { "module": "@object.module" },
             "table": {
               "default": true
             }
@@ -6673,7 +6678,8 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/contactpersoon"
+            "$ref": "#/components/schemas/contactpersoon",
+            "x-relation-filter": { "organisatie": "@object.aanbieder" }
           },
           "cloudDienstverleningsmodel": {
             "description": "Kies één of meerdere hosting typen waarmee de applicatie wordt aangeboden.",
@@ -6904,7 +6910,8 @@
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/compliancy",
-              "inversedBy": "module"
+              "inversedBy": "module",
+              "x-relation-filter": { "module": "@objectId" }
             }
           },
           "standaarden": {
@@ -6965,7 +6972,8 @@
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/moduleVersie",
-              "inversedBy": "module"
+              "inversedBy": "module",
+              "x-relation-filter": { "module": "@objectId" }
             }
           },
           "gebruiken": {
@@ -6981,7 +6989,8 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/gebruik"
+              "$ref": "#/components/schemas/gebruik",
+              "x-relation-filter": { "module": "@objectId" }
             }
           },
           "geregistreerdDoor": {
@@ -7304,7 +7313,8 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/gebruik"
+              "$ref": "#/components/schemas/gebruik",
+              "x-relation-filter": { "moduleVersie": "@objectId" }
             }
           },
           "geregistreerdDoor": {
