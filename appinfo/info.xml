@@ -11,12 +11,14 @@
 **Key Features**
 
 - **Application management** — Register and maintain your organization's software landscape
-- **Module tracking** — Break applications into modules and track their relationships
+- **Module tracking** — Break applications into modules, module versions, and track their relationships
 - **Connection mapping** — Visualize how applications and modules connect to each other
-- **Federated synchronization** — Share and sync catalog data with other organizations
+- **Contract & license administration** — Track contracts with an approval workflow, renewal status, and expiry alerts
+- **GEMMA/ArchiMate standards & compliance** — Maintain a standards register, record compliance claims with evidence, cross-check modules against standards in a compliance matrix, and import/export ArchiMate models
+- **Portfolio roadmap** — See applications in use grouped by lifecycle phase, with end-of-support and phase-out warnings
+- **Federated synchronization** — Share and sync catalog data with other Software Catalogus instances via OpenCatalogi's directory network (optional; degrades gracefully if OpenCatalogi is not installed)
 - **Automatic user provisioning** — Sync contacts and organizations from your register into Nextcloud accounts and groups
-- **Open data publishing** — Automatically publish your software catalog for transparency and reuse
-- **GEMMA compliant** — Aligned with Dutch government software catalog standards
+- **Open data publishing** — Publish selected catalog entries for transparency and reuse, with anonymous self-registration and moderation for new organizations
 
 **Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
@@ -29,12 +31,14 @@ Free and open source under the EUPL license.
 **Belangrijkste functies**
 
 - **Applicatiebeheer** — Registreer en onderhoud het softwarelandschap van je organisatie
-- **Modulebeheer** — Splits applicaties op in modules en volg hun onderlinge relaties
+- **Modulebeheer** — Splits applicaties op in modules en moduleversies en volg hun onderlinge relaties
 - **Koppelingenoverzicht** — Visualiseer hoe applicaties en modules met elkaar verbonden zijn
-- **Gefedereerde synchronisatie** — Deel en synchroniseer catalogusdata met andere organisaties
+- **Contract- en licentiebeheer** — Volg contracten met een goedkeuringsworkflow, verlengingsstatus en verloopmeldingen
+- **GEMMA/ArchiMate-standaarden & compliance** — Beheer een standaardenregister, leg compliance-claims met bewijs vast, toets modules tegen standaarden in een compliance-matrix en importeer/exporteer ArchiMate-modellen
+- **Portfolioroadmap** — Zie applicaties in gebruik gegroepeerd op levenscyclusfase, met waarschuwingen voor einde ondersteuning en uitfasering
+- **Gefedereerde synchronisatie** — Deel en synchroniseer catalogusdata met andere Software Catalogus-instanties via het directorynetwerk van OpenCatalogi (optioneel; werkt zonder OpenCatalogi met beperkte functionaliteit)
 - **Automatische gebruikersaanmaak** — Synchroniseer contacten en organisaties vanuit je register naar Nextcloud-accounts en -groepen
-- **Open data publicatie** — Publiceer je softwarecatalogus automatisch voor transparantie en hergebruik
-- **GEMMA-compliant** — Aansluitend op de Nederlandse standaarden voor softwarecatalogi
+- **Open data publicatie** — Publiceer geselecteerde catalogusitems voor transparantie en hergebruik, met anonieme zelfregistratie en moderatie voor nieuwe organisaties
 
 **Vereist:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (installeer via de [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
@@ -42,8 +46,8 @@ Vrij en open source onder de EUPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.2.13</version>
-    <licence>agpl</licence>
+    <version>0.2.14</version>
+    <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>SoftwareCatalog</namespace>
     <documentation>
