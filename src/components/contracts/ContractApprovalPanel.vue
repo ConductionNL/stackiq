@@ -3,60 +3,69 @@
   - SPDX-License-Identifier: AGPL-3.0-or-later
   -->
 <template>
-	<div class="contract-approval-panel">
-		<NcLoadingIcon v-if="loading" :size="32" :name="t('softwarecatalog', 'Loading approval state')" />
-
-		<template v-else>
-			<!-- Delegation not configured: read-only notice, NO submit action. -->
-			<NcNoteCard v-if="!configured" type="warning">
-				{{ t('softwarecatalog', 'Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it.') }}
-			</NcNoteCard>
-
-			<!-- Read-only projected approval state. -->
-			<div class="contract-approval-panel__state">
-				<span class="contract-approval-panel__label">{{ t('softwarecatalog', 'Approval state') }}</span>
-				<CnStatusBadge :status="approvalStateLabel" :variant="approvalStateVariant" />
-			</div>
-
-			<p v-if="decisionId" class="contract-approval-panel__decision">
-				{{ t('softwarecatalog', 'Decision reference') }}: <code>{{ decisionId }}</code>
-			</p>
-
-			<NcNoteCard v-if="error" type="error">
-				{{ error }}
-			</NcNoteCard>
-
-			<!-- Actions (hidden entirely when delegation is not configured). -->
-			<div v-if="configured" class="contract-approval-panel__actions">
-				<NcButton
-					v-if="canSubmitApproval"
-					type="primary"
-					:disabled="busy"
-					@click="submit(false)">
-					<template #icon>
-						<Check :size="20" />
-					</template>
-					{{ t('softwarecatalog', 'Submit for approval') }}
-				</NcButton>
-
-				<NcButton
-					v-if="canSubmitRenewal"
-					type="primary"
-					:disabled="busy"
-					@click="submit(true)">
-					<template #icon>
-						<Autorenew :size="20" />
-					</template>
-					{{ t('softwarecatalog', 'Submit renewal') }}
-				</NcButton>
-			</div>
+	<CnWidgetWrapper
+		:title="t('softwarecatalog', 'Approval')"
+		title-icon-position="left"
+		:show-refresh="false"
+		:show-request-feature="false">
+		<template #title-icon>
+			<CnIcon name="CheckCircleOutline" :size="20" />
 		</template>
-	</div>
+		<div class="contract-approval-panel">
+			<NcLoadingIcon v-if="loading" :size="32" :name="t('softwarecatalog', 'Loading approval state')" />
+
+			<template v-else>
+				<!-- Delegation not configured: read-only notice, NO submit action. -->
+				<NcNoteCard v-if="!configured" type="warning">
+					{{ t('softwarecatalog', 'Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it.') }}
+				</NcNoteCard>
+
+				<!-- Read-only projected approval state. -->
+				<div class="contract-approval-panel__state">
+					<span class="contract-approval-panel__label">{{ t('softwarecatalog', 'Approval state') }}</span>
+					<CnStatusBadge :status="approvalStateLabel" :variant="approvalStateVariant" />
+				</div>
+
+				<p v-if="decisionId" class="contract-approval-panel__decision">
+					{{ t('softwarecatalog', 'Decision reference') }}: <code>{{ decisionId }}</code>
+				</p>
+
+				<NcNoteCard v-if="error" type="error">
+					{{ error }}
+				</NcNoteCard>
+
+				<!-- Actions (hidden entirely when delegation is not configured). -->
+				<div v-if="configured" class="contract-approval-panel__actions">
+					<NcButton
+						v-if="canSubmitApproval"
+						type="primary"
+						:disabled="busy"
+						@click="submit(false)">
+						<template #icon>
+							<Check :size="20" />
+						</template>
+						{{ t('softwarecatalog', 'Submit for approval') }}
+					</NcButton>
+
+					<NcButton
+						v-if="canSubmitRenewal"
+						type="primary"
+						:disabled="busy"
+						@click="submit(true)">
+						<template #icon>
+							<Autorenew :size="20" />
+						</template>
+						{{ t('softwarecatalog', 'Submit renewal') }}
+					</NcButton>
+				</div>
+			</template>
+		</div>
+	</CnWidgetWrapper>
 </template>
 
 <script>
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnStatusBadge, CnWidgetWrapper, CnIcon } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -88,6 +97,8 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 		CnStatusBadge,
+		CnWidgetWrapper,
+		CnIcon,
 		Check,
 		Autorenew,
 	},
@@ -265,7 +276,7 @@ export default {
 
 <style scoped>
 .contract-approval-panel {
-	padding: 12px;
+	/* No own padding — CnWidgetWrapper's content area already supplies it. */
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
