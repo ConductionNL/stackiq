@@ -548,7 +548,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "exposure", "label": "Exposure", "icon": "icon-category-security", "component": "VulnerabilityExposurePanel" },
-						{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [ { "type": "audit-trail" } ] }
+						{ "id": "audit", "label": "Audit trail", "icon": "icon-history", "widgets": [ { "type": "audit" } ] }
 					]
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
