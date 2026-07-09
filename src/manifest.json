@@ -384,18 +384,18 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "beoordeeling",
-				"_note": "Review / assessment archetype (beoordeeling). A review is read for its verdict then its subject: body leads with a prominent score stat (waardering) so the rating is the first thing seen, the review data (name, short + long markdown description, score) 8-wide beneath it, and a Related panel 4-wide surfacing the reviewed subjects — the beoordeeling links modules[], diensten[] and koppelingen[] (the things assessed) plus its gebruik context. A supporting-evidence Files panel sits below for screenshots / test reports backing the verdict. A review does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"_note": "Review / assessment archetype (beoordeeling). A review is read for its verdict then its subject: body leads with the review data (name, short + long markdown description, score) 8-wide left, a prominent score stat (waardering) top-right, and a Related panel + supporting-evidence Files panel stacked beneath it surfacing the reviewed subjects — the beoordeeling links modules[], diensten[] and koppelingen[] (the things assessed) plus its gebruik context. A review does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. FIX (softwarecatalog audit): rv-data (Review) now anchors gridX0/gridY0 so the left column starts flush with the right column instead of a whitespace hole opening up beside the score stat; rv-score/rv-related/rv-files were re-stacked in the right column to match rv-data's height. rv-related's title shortened from 'Reviewed modules & services' (truncated to 'Reviewed modules & s…' in the widget header) to 'Reviewed modules'.",
 				"widgets": [
 					{ "id": "rv-score", "type": "stat", "title": "Rating", "icon": "Star", "content": { "label": "Rating", "icon": "Star", "source": { "register": "@resolve:voorzieningen_register", "schema": "beoordeeling", "metric": "avg", "field": "waardering", "filter": { "id": "@objectId" } } } },
 					{ "id": "rv-data", "type": "data", "title": "Review", "icon": "NoteTextOutline", "content": { "columns": 2 } },
-					{ "id": "rv-related", "type": "related", "title": "Reviewed modules & services", "icon": "LinkVariant" },
+					{ "id": "rv-related", "type": "related", "title": "Reviewed modules", "icon": "LinkVariant" },
 					{ "id": "rv-files", "type": "integration", "integrationId": "files", "title": "Supporting evidence", "icon": "FolderOutline" }
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "rv-score", "gridX": 0, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "2", "widgetId": "rv-data", "gridX": 0, "gridY": 2, "gridWidth": 8, "gridHeight": 5 },
-					{ "id": "3", "widgetId": "rv-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "4", "widgetId": "rv-files", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 3 }
+					{ "id": "1", "widgetId": "rv-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "2", "widgetId": "rv-score", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "3", "widgetId": "rv-related", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "4", "widgetId": "rv-files", "gridX": 8, "gridY": 5, "gridWidth": 4, "gridHeight": 3 }
 				],
 				"sidebar": {
 					"enabled": true,
