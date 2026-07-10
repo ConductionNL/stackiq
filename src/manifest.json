@@ -284,13 +284,15 @@
 					{ "id": "ct-value", "type": "stat", "title": "Contract value", "icon": "CurrencyEur", "content": { "label": "Contract value", "format": "currency", "source": { "register": "@resolve:voorzieningen_register", "schema": "contract", "metric": "sum", "field": "kosten", "filter": { "id": "@objectId" } } } },
 					{ "id": "ct-data", "type": "data", "title": "Contract details", "icon": "FileSign", "content": { "columns": 2 } },
 					{ "id": "ct-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
-					{ "id": "ct-related", "type": "related", "title": "Service & usage", "icon": "LinkVariant" }
+					{ "id": "ct-related", "type": "related", "title": "Service & usage", "icon": "LinkVariant" },
+					{ "id": "ct-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "ct-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 7 },
 					{ "id": "2", "widgetId": "ct-value", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
 					{ "id": "3", "widgetId": "ct-files", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 5 },
-					{ "id": "4", "widgetId": "ct-related", "gridX": 0, "gridY": 7, "gridWidth": 12, "gridHeight": 3 }
+					{ "id": "4", "widgetId": "ct-related", "gridX": 0, "gridY": 7, "gridWidth": 12, "gridHeight": 3 },
+					{ "id": "5", "widgetId": "ct-decisions", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
 					{ "id": "ct-approval", "component": "ContractApprovalPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
