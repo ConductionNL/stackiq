@@ -2003,6 +2003,17 @@ class ArchiMateService
                 ];
             }
 
+            // Always bound the actual query: OpenRegister's searchObjects()
+            // only reads the top-level `_limit`/`_offset` keys (see
+            // MagicMapper/MagicSearchHandler) — `@pagination` above is not
+            // read by the query layer, so this call was unbounded regardless
+            // of the `usePagination` toggle. `$limit` already defaults to
+            // 1000 above, so this is a straight bound, not a behavior change.
+            $finalQuery['_limit'] = (int) $limit;
+            if ($usePagination !== false) {
+                $finalQuery['_offset'] = (int) $offset;
+            }
+
             $paginationValue = 'disabled';
             if ($usePagination === true) {
                 $paginationValue = 'enabled';

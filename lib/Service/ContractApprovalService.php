@@ -235,6 +235,50 @@ class ContractApprovalService
     }//end submitForApproval()
 
     /**
+     * Per-object ownership guard (IDOR guard) for the submit / submitRenewal seam.
+     *
+     * Mirrors `PublicationController::authorizeEntry()`: an admin may always
+     * submit; a non-admin MUST be an `aanbod-beheerder` whose active organisation
+     * matches the contract's owning organisation (the OR-stamped `_organisation`
+     * multitenancy field, falling back to a schema-declared `aanbieder` field if
+     * ever present). Returns false (fail-closed) when the contract cannot be
+     * loaded, when the owning organisation cannot be resolved, or on any mismatch.
+     *
+     * @param string $contractUuid  The contract OR object uuid.
+     * @param array  $groupNames    The caller's NC group ids.
+     * @param string $activeOrgUuid The caller's active organisation uuid (may be empty).
+     *
+     * @return bool True when the caller may submit/submitRenewal this contract.
+     *
+     * @spec openspec/changes/contract-approval-ownership-guard/specs/contract-decision-delegation/spec.md
+     */
+    public function authorizeSubmit(string $contractUuid, array $groupNames, string $activeOrgUuid): bool
+    {
+        if (in_array('admin', $groupNames, true) === true) {
+            return true;
+        }
+
+        if (in_array('aanbod-beheerder', $groupNames, true) === false) {
+            return false;
+        }
+
+        $contract = $this->loadContract(contractUuid: $contractUuid);
+        if ($contract === null) {
+            return false;
+        }
+
+        $data     = $contract->getObject();
+        $ownerOrg = (string) ($data['_organisation'] ?? $data['aanbieder'] ?? '');
+
+        if ($activeOrgUuid === '' || $ownerOrg === '' || $activeOrgUuid !== $ownerOrg) {
+            return false;
+        }
+
+        return true;
+
+    }//end authorizeSubmit()
+
+    /**
      * IDOR guard: whether the given decision id is the one this contract carries.
      *
      * Used when projecting an outcome so a caller cannot project an arbitrary
@@ -405,6 +449,7 @@ class ContractApprovalService
             'register'           => $registerId,
             'schema'             => $schemaId,
             'approvalDecisionId' => $decisionId,
+            '_limit'             => 50,
         ];
 
         try {

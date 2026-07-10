@@ -20,16 +20,16 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="unlock-step">
 			<NcNoteCard type="warning">
-				Objects will be unlocked and made available for editing by other users. Only objects that are currently locked can be unlocked.
+				{{ t('softwarecatalog', 'Objects will be unlocked and made available for editing by other users. Only objects that are currently locked can be unlocked.') }}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? 'Publication to Unlock' : 'Selected Publications'"
+				:title="(objectStore.selectedObjects?.length || 0) === 1 ? t('softwarecatalog', 'Publication to Unlock') : t('softwarecatalog', 'Selected Publications')"
 				:show-remove="true" />
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Publication{{ originalSelectedCount > 1 ? 's' : '' }} successfully unlocked</p>
+			<p>{{ originalSelectedCount > 1 ? t('softwarecatalog', 'Publications successfully unlocked') : t('softwarecatalog', 'Publication successfully unlocked') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -40,7 +40,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Cancel' : 'Close' }}
+				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
 			</NcButton>
 			<NcButton v-if="success === null"
 				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
@@ -50,7 +50,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<LockOpenOutline v-if="!loading" :size="20" />
 				</template>
-				Unlock
+				{{ t('softwarecatalog', 'Unlock') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -114,9 +114,9 @@ export default {
 		dialogTitle() {
 			const count = this.objectsToUnlock.length
 			if (count === 1) {
-				return 'Unlock publication'
+				return this.t('softwarecatalog', 'Unlock publication')
 			}
-			return `Unlock ${count} publication${count !== 1 ? 's' : ''}`
+			return this.t('softwarecatalog', 'Unlock {count} publications', { count })
 		},
 	},
 	mounted() {
@@ -176,12 +176,12 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = `Failed to unlock ${failed.length} object${failed.length > 1 ? 's' : ''}`
+					this.error = this.t('softwarecatalog', 'Failed to unlock {count} objects', { count: failed.length })
 				}
 
 			} catch (error) {
 				this.success = false
-				this.error = error.message || 'An error occurred while unlocking objects'
+				this.error = error.message || this.t('softwarecatalog', 'An error occurred while unlocking objects')
 			} finally {
 				this.loading = false
 			}

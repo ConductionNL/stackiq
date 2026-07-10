@@ -223,7 +223,7 @@ import { getTheme } from '../../services/getTheme.js'
 import { json, jsonParseLinter } from '@codemirror/lang-json'
 
 import CodeMirror from 'vue-codemirror6'
-import _ from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
 
 // Icons
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
@@ -464,7 +464,7 @@ export default {
 			if (!this.isNewObject) { // is edit modal
 				// Initialize form with existing object data
 
-				this.formData = _.cloneDeep(activeObject)
+				this.formData = cloneDeep(activeObject)
 				this.jsonData = JSON.stringify(activeObject, null, 2)
 
 				// Set register and schema from existing object

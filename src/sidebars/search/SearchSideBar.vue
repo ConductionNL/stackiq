@@ -49,7 +49,7 @@ import { NcAppSidebar, NcAppSidebarTab, NcTextField, NcNoteCard, NcCheckboxRadio
 import Magnify from 'vue-material-design-icons/Magnify.vue'
 import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
 import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 
 // Temporary placeholder stores until they are properly implemented
 const searchStore = reactive({

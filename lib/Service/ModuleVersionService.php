@@ -152,6 +152,7 @@ class ModuleVersionService
                 'register' => (int) $registerId,
             ],
             'module' => $moduleUuid,
+            '_limit' => 200,
         ];
 
         $existingVersions = $objectService->searchObjects(

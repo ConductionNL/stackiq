@@ -128,10 +128,14 @@ class ContractStatusService
             return 0;
         }
 
+        // This is a cron-driven scan that structurally needs "all active
+        // contracts" (to find every one eligible for expiry) — bounded at a
+        // documented safe ceiling rather than left unbounded.
         $query = [
             'register' => $registerId,
             'schema'   => $schemaId,
             'status'   => self::STATUS_ACTIVE,
+            '_limit'   => 5000,
         ];
 
         try {

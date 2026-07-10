@@ -29,6 +29,14 @@
 					@update:checked="onDeelnamesToggle">
 					{{ t('softwarecatalog', 'Deelnames') }}
 				</NcCheckboxRadioSwitch>
+
+				<!-- Product toggle is independent from the other toggles -->
+				<NcCheckboxRadioSwitch
+					:checked="viewStore.includeProducts"
+					type="switch"
+					@update:checked="onProductsToggle">
+					{{ t('softwarecatalog', 'Products') }}
+				</NcCheckboxRadioSwitch>
 			</div>
 		</div>
 
@@ -75,6 +83,15 @@
 					class="gemma-view-index__deelnames-notice">
 					<span class="gemma-view-index__deelnames-badge">
 						{{ t('softwarecatalog', 'Includes deelnames') }}
+					</span>
+				</div>
+
+				<!-- Products summary per node when product data is present -->
+				<div
+					v-if="viewStore.includeProducts && hasProductsData(view)"
+					class="gemma-view-index__products-notice">
+					<span class="gemma-view-index__products-badge">
+						{{ t('softwarecatalog', 'Includes products') }}
 					</span>
 				</div>
 			</div>
@@ -134,6 +151,19 @@ export default {
 		},
 
 		/**
+		 * Handle products toggle change.
+		 *
+		 * Independent from the other toggles — enabling/disabling it does not affect them.
+		 *
+		 * @param {boolean} value - New toggle state.
+		 * @return {void}
+		 */
+		onProductsToggle(value) {
+			this.viewStore.setIncludeProducts(value)
+			this.viewStore.fetchViews()
+		},
+
+		/**
 		 * Check whether any node in the view has deelnames gebruik data.
 		 *
 		 * @param {object} view - View object from the API.
@@ -142,6 +172,17 @@ export default {
 		hasDeelnamesData(view) {
 			const nodes = view.viewNodes ?? []
 			return nodes.some(node => Array.isArray(node.deelnamesGebruik) && node.deelnamesGebruik.length > 0)
+		},
+
+		/**
+		 * Check whether any node in the view has linked product data.
+		 *
+		 * @param {object} view - View object from the API.
+		 * @return {boolean} True when at least one node has products.
+		 */
+		hasProductsData(view) {
+			const nodes = view.viewNodes ?? []
+			return nodes.some(node => Array.isArray(node.products) && node.products.length > 0)
 		},
 	},
 }
@@ -206,6 +247,19 @@ export default {
 }
 
 .gemma-view-index__deelnames-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: var(--border-radius-pill);
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-text);
+	font-size: var(--font-size-small);
+}
+
+.gemma-view-index__products-notice {
+	margin-top: var(--default-grid-baseline, 8px);
+}
+
+.gemma-view-index__products-badge {
 	display: inline-block;
 	padding: 2px 8px;
 	border-radius: var(--border-radius-pill);

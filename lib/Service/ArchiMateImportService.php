@@ -774,6 +774,8 @@ class ArchiMateImportService
                     'schema'   => $schemaId,
                 ],
                 'archimate_id' => $modelIdentifier,
+                // Existence check by a specific identifier — 1 is enough.
+                '_limit'       => 1,
             ];
 
             $existingModels = $objectService->searchObjects($query);

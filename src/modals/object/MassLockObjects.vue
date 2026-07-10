@@ -20,28 +20,28 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="lock-step">
 			<NcNoteCard type="info">
-				Locking objects prevents other users from modifying them until they are unlocked. You can specify an optional process name to indicate why they're locked and a duration after which they will automatically unlock. Only the user who locked the objects or an administrator can unlock them before the duration expires.
+				{{ t('softwarecatalog', 'Locking objects prevents other users from modifying them until they are unlocked. You can specify an optional process name to indicate why they\'re locked and a duration after which they will automatically unlock. Only the user who locked the objects or an administrator can unlock them before the duration expires.') }}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? 'Publication to Lock' : 'Selected Publications'"
+				:title="(objectStore.selectedObjects?.length || 0) === 1 ? t('softwarecatalog', 'Publication to Lock') : t('softwarecatalog', 'Selected Publications')"
 				:show-remove="true" />
 
 			<div v-if="!success" class="formContainer">
 				<NcTextField
 					v-model="process"
-					label="Process Name (optional)"
+					:label="t('softwarecatalog', 'Process Name (optional)')"
 					:disabled="loading" />
 				<NcTextField
 					v-model="duration"
 					type="number"
-					label="Duration in seconds (optional)"
+					:label="t('softwarecatalog', 'Duration in seconds (optional)')"
 					:disabled="loading" />
 			</div>
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Publication{{ originalSelectedCount > 1 ? 's' : '' }} successfully locked</p>
+			<p>{{ originalSelectedCount > 1 ? t('softwarecatalog', 'Publications successfully locked') : t('softwarecatalog', 'Publication successfully locked') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -52,7 +52,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Cancel' : 'Close' }}
+				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
 			</NcButton>
 			<NcButton v-if="success === null"
 				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
@@ -62,7 +62,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<LockOutline v-if="!loading" :size="20" />
 				</template>
-				Lock
+				{{ t('softwarecatalog', 'Lock') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -130,9 +130,9 @@ export default {
 		dialogTitle() {
 			const count = this.objectsToLock.length
 			if (count === 1) {
-				return 'Lock publication'
+				return this.t('softwarecatalog', 'Lock publication')
 			}
-			return `Lock ${count} publication${count !== 1 ? 's' : ''}`
+			return this.t('softwarecatalog', 'Lock {count} publications', { count })
 		},
 	},
 	mounted() {
@@ -196,12 +196,12 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = `Failed to lock ${failed.length} object${failed.length > 1 ? 's' : ''}`
+					this.error = this.t('softwarecatalog', 'Failed to lock {count} objects', { count: failed.length })
 				}
 
 			} catch (error) {
 				this.success = false
-				this.error = error.message || 'An error occurred while locking objects'
+				this.error = error.message || this.t('softwarecatalog', 'An error occurred while locking objects')
 			} finally {
 				this.loading = false
 			}

@@ -256,10 +256,22 @@ class OrganisatieService
     /**
      * Internal method to create organization entity.
      *
-     * HOTFIX: Parent organisation setting has been disabled due to RBAC issues.
-     * Previously, new organisations were automatically set as children of the active organisation,
-     * but this caused permission problems where users could not access newly created organisations.
-     * TODO: Re-enable parent organisation setting after fixing RBAC logic.
+     * Restores parent-child organisation hierarchy (VNG domain: gemeente →
+     * samenwerkingsverband, moederorganisatie → deelnemende partij) that a
+     * prior hotfix disabled. The hotfix disabled parent assignment because a
+     * child organisation created with a parent became inaccessible to its
+     * creator. Root cause (see openspec/changes/
+     * organisation-parent-hierarchy-rbac-fix/design.md): OpenRegister's
+     * multitenancy resource filter (`OrganisationService::
+     * getUserActiveOrganisations()`) scopes reads to the active organisation
+     * plus its PARENT chain — children can read up the hierarchy, but a
+     * parent-active user cannot read down into a newly created child's
+     * resources (documented invariant on the OR `Organisation` entity:
+     * "parents cannot view child resources"). Setting `parent` at OR's
+     * `createOrganisation()` seam is not possible either way (that method
+     * exposes no `parent` argument), so the parent is applied in a second
+     * step (create-then-link) via the OrganisationMapper — the same mapper
+     * this service already uses in `addUsersToOrganization()`.
      *
      * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The organisation service
      * @param array                                         $mappedData          The mapped data
@@ -267,25 +279,24 @@ class OrganisatieService
      *
      * @return \OCA\OpenRegister\Db\Organisation The created organisation entity
      *
-     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-1
+     * @spec openspec/changes/organisation-parent-hierarchy-rbac-fix/specs/organisatie-service/spec.md
      */
     private function createOrganisationEntityInternal(
         \OCA\OpenRegister\Service\OrganisationService $organisationService,
         array $mappedData,
         string $organizationUuid
     ): \OCA\OpenRegister\Db\Organisation {
-        // HOTFIX: Commented out automatic parent organisation setting due to RBAC issues.
-        // When child organisations are created, the parent relationship causes permission problems.
-        // Where users cannot access the newly created organisations due to hierarchical RBAC filtering.
-        // TODO: Investigate and fix RBAC logic to properly handle parent-child organisation relationships.
-        // Disabled: $parentOrganisationUuid = $this->getActiveOrganisationUuid(organisationService: $organisationService).
+        // Resolve the active organisation as the parent for the new (child)
+        // organisation, restoring the hierarchy the hotfix disabled.
+        $parentOrganisationUuid = $this->getActiveOrganisationUuid(organisationService: $organisationService);
+
         $this->logger->info(
                 'OrganisatieService: Creating organisation entity',
                 [
-                    'uuid'   => $organizationUuid,
-                    'name'   => $mappedData['naam'],
-                    'active' => $mappedData['active'],
-                    // 'parentOrganisation' => $parentOrganisationUuid // HOTFIX: Commented out.
+                    'uuid'               => $organizationUuid,
+                    'name'               => $mappedData['naam'],
+                    'active'             => $mappedData['active'],
+                    'parentOrganisation' => $parentOrganisationUuid,
                 ]
                 );
 
@@ -297,6 +308,22 @@ class OrganisatieService
             addCurrentUser: false,
             uuid: $organizationUuid
         );
+
+        // Create-then-link: apply the parent AFTER the organisation exists and
+        // is accessible, never self-parent, and only when an active parent was
+        // resolved. Persist via the OrganisationMapper (the seam this service
+        // already uses in addUsersToOrganization()); a link failure is logged
+        // and swallowed so the organisation is still returned (flat) rather
+        // than lost — matching the pre-hotfix "org always created" guarantee.
+        if ($parentOrganisationUuid !== null
+            && $parentOrganisationUuid !== ''
+            && $parentOrganisationUuid !== $organisationEntity->getUuid()
+        ) {
+            $organisationEntity = $this->linkParentOrganisation(
+                organisationEntity: $organisationEntity,
+                parentOrganisationUuid: $parentOrganisationUuid
+            );
+        }
 
         $this->logger->info(
                 'OrganisatieService: Organisation entity created successfully',
@@ -310,6 +337,55 @@ class OrganisatieService
 
         return $organisationEntity;
     }//end createOrganisationEntityInternal()
+
+    /**
+     * Set the parent organisation on an already-created organisation entity.
+     *
+     * Second step of the create-then-link sequence. Persists via the
+     * OrganisationMapper — the same seam this service already uses in
+     * addUsersToOrganization(). On any failure the original (parentless)
+     * entity is returned unchanged so organisation creation never fails
+     * outright over a hierarchy link.
+     *
+     * @param \OCA\OpenRegister\Db\Organisation $organisationEntity     The created organisation entity.
+     * @param string                            $parentOrganisationUuid The parent organisation UUID to link.
+     *
+     * @return \OCA\OpenRegister\Db\Organisation The entity with the parent set (or the original on failure).
+     *
+     * @spec openspec/changes/organisation-parent-hierarchy-rbac-fix/specs/organisatie-service/spec.md
+     */
+    private function linkParentOrganisation(
+        \OCA\OpenRegister\Db\Organisation $organisationEntity,
+        string $parentOrganisationUuid
+    ): \OCA\OpenRegister\Db\Organisation {
+        try {
+            $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
+
+            $organisationEntity->setParent($parentOrganisationUuid);
+            $saved = $organisationMapper->save($organisationEntity);
+
+            $this->logger->info(
+                    'OrganisatieService: Linked organisation to parent',
+                    [
+                        'uuid'   => $organisationEntity->getUuid(),
+                        'parent' => $parentOrganisationUuid,
+                    ]
+                    );
+
+            return $saved;
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                    'OrganisatieService: Failed to link organisation to parent, leaving it flat',
+                    [
+                        'uuid'   => $organisationEntity->getUuid(),
+                        'parent' => $parentOrganisationUuid,
+                        'error'  => $e->getMessage(),
+                    ]
+                    );
+
+            return $organisationEntity;
+        }//end try
+    }//end linkParentOrganisation()
 
     /**
      * Get the currently active organisation UUID from the user session.
