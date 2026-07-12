@@ -3,19 +3,14 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.3.1"
+    "version": "2.3.2"
   },
   "x-openregister": {
     "type": "application",
     "app": "softwarecatalog",
-    "sourceType": "github",
-    "sourceUrl": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/softwarecatalog/lib/Settings/softwarecatalogus_register_magic.json",
+    "sourceType": "local",
+    "sourceUrl": "lib/Settings/softwarecatalogus_register.json",
     "openregister": "^v0.2.10",
-    "github": {
-      "repo": "ConductionNL/opencatalogi",
-      "branch": "master",
-      "path": "apps-extra/softwarecatalog/lib/Settings/softwarecatalogus_register_magic.json"
-    },
     "description": "Magic Mapper version - Uses dedicated SQL tables for high-performance schema storage",
     "dependencies": [
       {
@@ -988,7 +983,7 @@
         "slug": "sector",
         "title": "Sector",
         "description": "Schema voor sectoren binnen de softwarecatalogus",
-        "version": "0.0.9",
+        "version": "0.0.10",
         "summary": "",
         "icon": "Domain",
         "required": [
@@ -1090,7 +1085,7 @@
         "x-schema-org": "schema:SoftwareApplication",
         "title": "Suite",
         "description": "Een suite is een verzameling van applicaties die samen een product vormen",
-        "version": "0.1.3",
+        "version": "0.1.4",
         "summary": "",
         "icon": "PackageVariant",
         "required": [
@@ -1279,7 +1274,7 @@
         "x-schema-org": "schema:Service",
         "title": "Dienst",
         "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
-        "version": "0.2.0",
+        "version": "0.2.1",
         "summary": "",
         "icon": "Handshake",
         "required": [
@@ -1588,7 +1583,7 @@
         },
         "title": "Kwetsbaarheid",
         "description": "Schema voor kwetsbaarheden. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
-        "version": "1.0.19",
+        "version": "1.0.20",
         "summary": "",
         "icon": "ShieldAlert",
         "required": [
@@ -3734,7 +3729,7 @@
         },
         "title": "Beoordeeling",
         "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
-        "version": "0.1.2",
+        "version": "0.1.3",
         "summary": "",
         "icon": "Star",
         "required": [
@@ -6676,7 +6671,7 @@
         "x-schema-org": "schema:SoftwareApplication",
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.3.0",
+        "version": "0.3.1",
         "summary": "",
         "icon": "Package",
         "required": [
