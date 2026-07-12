@@ -35,6 +35,7 @@ use OCA\SoftwareCatalog\AppInfo\Application;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogContactSyncService;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -49,9 +50,22 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-005
  */
 class MigrateContactsToNc implements IRepairStep
 {
+    /**
+     * App-config key marking that the migration has fully converged.
+     *
+     * Set after a run in which every readable object was migrated without a
+     * single failure; subsequent runs (this step re-runs on every upgrade as a
+     * post-migration repair step) skip quietly instead of re-scanning.
+     *
+     * @var string
+     */
+    private const CONVERGED_CONFIG_KEY = 'contacts_migration_done';
+
     /**
      * Constructor.
      *
@@ -59,13 +73,17 @@ class MigrateContactsToNc implements IRepairStep
      * @param ContainerInterface                $container       The DI container.
      * @param SettingsService                   $settingsService The settings service (register/schema id resolution).
      * @param SoftwareCatalogContactSyncService $contactSync     The contacts bridge.
+     * @param IAppConfig                        $appConfig       The app config (convergence marker).
      * @param LoggerInterface                   $logger          The logger.
+     *
+     * @spec exclude system-context adoption
      */
     public function __construct(
         private readonly IAppManager $appManager,
         private readonly ContainerInterface $container,
         private readonly SettingsService $settingsService,
         private readonly SoftwareCatalogContactSyncService $contactSync,
+        private readonly IAppConfig $appConfig,
         private readonly LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -74,6 +92,8 @@ class MigrateContactsToNc implements IRepairStep
      * Returns the name of this repair step.
      *
      * @return string The repair step name.
+     *
+     * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-005
      */
     public function getName(): string
     {
@@ -92,6 +112,16 @@ class MigrateContactsToNc implements IRepairStep
     public function run(IOutput $output): void
     {
         $output->startProgress(2);
+
+        // Converged on a previous run — skip quietly. This step is registered
+        // as a post-migration repair step and therefore re-runs on every
+        // upgrade; once every object migrated cleanly there is nothing left
+        // to do.
+        if ($this->appConfig->getValueString(Application::APP_ID, self::CONVERGED_CONFIG_KEY, '') === '1') {
+            $output->advance(2);
+            $output->finishProgress();
+            return;
+        }
 
         // OpenRegister must be present to read the objects.
         if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
@@ -117,8 +147,13 @@ class MigrateContactsToNc implements IRepairStep
             return;
         }
 
+        $totalFailed     = 0;
+        $totalReadFailed = 0;
+
         foreach (['contactpersoon', 'organisatie'] as $objectType) {
-            $stats = $this->migrateType(output: $output, registerId: $registerId, objectType: $objectType);
+            $stats            = $this->migrateType(output: $output, registerId: $registerId, objectType: $objectType);
+            $totalFailed     += $stats['failed'];
+            $totalReadFailed += $stats['readFailed'];
             $output->info(
                 sprintf(
                     'Contacts migration [%s]: %d linked, %d created, %d already-linked, %d skipped',
@@ -132,6 +167,13 @@ class MigrateContactsToNc implements IRepairStep
             $output->advance(1);
         }
 
+        // Converge: when both types were read successfully and no per-object
+        // migration failed, mark the step done so future upgrades skip it.
+        if ($totalFailed === 0 && $totalReadFailed === 0) {
+            $this->appConfig->setValueString(Application::APP_ID, self::CONVERGED_CONFIG_KEY, '1');
+            $output->info('Contacts migration converged — future runs will skip.');
+        }
+
         $output->finishProgress();
     }//end run()
 
@@ -142,15 +184,18 @@ class MigrateContactsToNc implements IRepairStep
      * @param integer $registerId The voorzieningen register id.
      * @param string  $objectType The object type ('contactpersoon'|'organisatie').
      *
-     * @return array{linked:int,created:int,skipped:int,failed:int} The per-type counters.
+     * @return array{linked:int,created:int,skipped:int,failed:int,readFailed:int} The per-type counters.
+     *
+     * @spec exclude system-context adoption
      */
     private function migrateType(IOutput $output, int $registerId, string $objectType): array
     {
         $stats = [
-            'linked'  => 0,
-            'created' => 0,
-            'skipped' => 0,
-            'failed'  => 0,
+            'linked'     => 0,
+            'created'    => 0,
+            'skipped'    => 0,
+            'failed'     => 0,
+            'readFailed' => 0,
         ];
 
         $schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
@@ -166,17 +211,29 @@ class MigrateContactsToNc implements IRepairStep
         }
 
         try {
-            $objects = $objectService->setRegister($registerId)
-                ->setSchema($schemaId)
-                ->findAll([], false, false);
+            // Repair steps run user-less; without elevation OpenRegister RBAC
+            // denies the read as 'Anonymous'. The guard keeps compatibility
+            // with released OR versions that do not ship runAsSystem() yet.
+            $readObjects = function () use ($objectService, $registerId, $schemaId) {
+                return $objectService->setRegister($registerId)
+                    ->setSchema($schemaId)
+                    ->findAll([], false, false);
+            };
+
+            if (method_exists($objectService, 'runAsSystem') === true) {
+                $objects = $objectService->runAsSystem($readObjects);
+            } else {
+                $objects = $readObjects();
+            }
         } catch (\Throwable $e) {
             $output->warning(sprintf('Could not read "%s" objects: %s', $objectType, $e->getMessage()));
             $this->logger->error(
                 '[MigrateContactsToNc] Failed to read objects',
                 ['objectType' => $objectType, 'error' => $e->getMessage()]
             );
+            $stats['readFailed'] = 1;
             return $stats;
-        }
+        }//end try
 
         foreach ($objects as $object) {
             $this->migrateOne(
@@ -204,6 +261,8 @@ class MigrateContactsToNc implements IRepairStep
      * @param array<string,int> $stats         The per-type counters (mutated by reference).
      *
      * @return void
+     *
+     * @spec exclude system-context adoption
      */
     private function migrateOne(
         object $objectService,
@@ -244,15 +303,26 @@ class MigrateContactsToNc implements IRepairStep
             // them before the link is set would risk data loss.
             $data['contactsUid'] = $contactsUid;
 
-            $objectService->saveObject(
-                $data,
-                [],
-                $registerId,
-                $schemaId,
-                $uuid,
-                false,
-                false
-            );
+            // Repair steps run user-less; without elevation OpenRegister RBAC
+            // denies the write as 'Anonymous'. The guard keeps compatibility
+            // with released OR versions that do not ship runAsSystem() yet.
+            $saveObject = function () use ($objectService, $data, $registerId, $schemaId, $uuid) {
+                return $objectService->saveObject(
+                    $data,
+                    [],
+                    $registerId,
+                    $schemaId,
+                    $uuid,
+                    false,
+                    false
+                );
+            };
+
+            if (method_exists($objectService, 'runAsSystem') === true) {
+                $objectService->runAsSystem($saveObject);
+            } else {
+                $saveObject();
+            }
 
             if ($alreadyExisted === true) {
                 $stats['linked']++;
