@@ -1924,18 +1924,12 @@ class SettingsController extends Controller
         }
 
         try {
-            $emailSettings = $this->settingsService->getEmailSettings();
-
-            // Redact secret values — return only a masked placeholder when set.
-            $secretFields = ['smtpPassword', 'sendgridApiKey', 'mailgunApiKey', 'postmarkApiKey', 'sesSecretKey', 'mailjetSecretKey'];
-            foreach ($secretFields as $field) {
-                $maskedValue = '';
-                if (empty($emailSettings[$field]) === false) {
-                    $maskedValue = '••••••••';
-                }
-
-                $emailSettings[$field] = $maskedValue;
-            }
+            // Redaction lives in SettingsService so this route and /api/email/config share
+            // one secret list — they had drifted, and the other one was returning the
+            // secrets in the clear.
+            $emailSettings = $this->settingsService->redactEmailSecrets(
+                $this->settingsService->getEmailSettings()
+            );
 
             return new JSONResponse(
                     [
@@ -2998,16 +2992,29 @@ class SettingsController extends Controller
     /**
      * Get email configuration only
      *
-     * @NoAdminRequired
+     * Admin-only, and the secrets are redacted before they leave the process.
+     *
+     * This endpoint used to be @NoAdminRequired and returned getEmailSettings() verbatim,
+     * so ANY authenticated user could read the SMTP password and the SendGrid / Mailgun /
+     * Postmark / SES / Mailjet API keys in plaintext. Its sibling getEmailSettings()
+     * (/api/settings/email) had always done both checks correctly — this one was added
+     * later and inherited neither. The redaction is now in SettingsService so the two
+     * cannot drift apart again.
+     *
      * @NoCSRFRequired
      *
-     * @return JSONResponse Email configuration
+     * @return JSONResponse Email configuration (secrets redacted)
      * @spec   openspec/changes/retrofit-2026-05-26-settings-admin-controller/tasks.md#task-4
      */
     public function getEmailConfig(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
