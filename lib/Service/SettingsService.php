@@ -1998,7 +1998,68 @@ class SettingsService
     }//end getAllGroups()
 
     /**
+     * The email settings that carry a secret value.
+     *
+     * Single source of truth for three call sites that must agree, and previously
+     * did not: the two GET responses redact these, and updateEmailSettings() skips
+     * a value that comes back as the mask so a save cannot overwrite the real
+     * secret with the placeholder. Adding a provider means adding its secret here
+     * — not to a fourth private list.
+     *
+     * @var array<int, string>
+     */
+    public const SECRET_EMAIL_FIELDS = [
+        'smtpPassword',
+        'sendgridApiKey',
+        'mailgunApiKey',
+        'postmarkApiKey',
+        'sesSecretKey',
+        'mailjetSecretKey',
+    ];
+
+    /**
+     * The placeholder a redacted secret is rendered as.
+     *
+     * @var string
+     */
+    public const SECRET_MASK = '••••••••';
+
+    /**
+     * Redact every secret in an email-settings array for an HTTP response.
+     *
+     * `getEmailSettings()` itself must keep returning the REAL values — SymfonyEmailService
+     * reads it to actually send mail — so redaction belongs at the response boundary, not
+     * in the getter. A set secret becomes the mask; an unset one stays empty, so the UI can
+     * still tell "configured" from "not configured" without ever receiving the value.
+     *
+     * @param array<string, mixed> $settings Raw settings from getEmailSettings().
+     *
+     * @return array<string, mixed> The settings, safe to return over HTTP.
+     */
+    public function redactEmailSecrets(array $settings): array
+    {
+        foreach (self::SECRET_EMAIL_FIELDS as $field) {
+            if (array_key_exists($field, $settings) === false) {
+                continue;
+            }
+
+            $masked = '';
+            if (empty($settings[$field]) === false) {
+                $masked = self::SECRET_MASK;
+            }
+
+            $settings[$field] = $masked;
+        }
+
+        return $settings;
+    }//end redactEmailSecrets()
+
+    /**
      * Gets email configuration settings
+     *
+     * WARNING: returns REAL secret values — it is what SymfonyEmailService uses to send
+     * mail. Never hand the result straight to an HTTP response; run it through
+     * redactEmailSecrets() first.
      *
      * @return array Email settings configuration
      * @spec   openspec/changes/retrofit-2026-05-26-settings-service/tasks.md#task-4
@@ -2213,16 +2274,16 @@ class SettingsService
             'mailjetApiKey'                   => 'email_mailjet_api_key',
             'mailjetSecretKey'                => 'email_mailjet_secret_key',
         ];
-        // Secret fields that are masked in GET responses — skip any value that is the mask placeholder.
-        $secretFields    = ['smtpPassword', 'sendgridApiKey', 'mailgunApiKey', 'postmarkApiKey', 'sesSecretKey', 'mailjetSecretKey'];
         $updatedSettings = [];
 
         foreach ($allowedSettings as $settingKey => $configKey) {
             if (array_key_exists($settingKey, $emailSettings) === true) {
                 $value = $emailSettings[$settingKey];
 
-                // Skip masked placeholder — the client is echoing back the redacted value; preserve the real stored secret.
-                if (in_array($settingKey, $secretFields, true) === true && $value === '••••••••') {
+                // Skip the masked placeholder — the client is echoing back the redacted value;
+                // preserve the real stored secret. Keyed off the same constant the GET responses
+                // redact with, so a new provider cannot be masked on read but clobbered on write.
+                if (in_array($settingKey, self::SECRET_EMAIL_FIELDS, true) === true && $value === self::SECRET_MASK) {
                     continue;
                 }
 
@@ -2237,7 +2298,7 @@ class SettingsService
 
                 $this->config->setValueString($this->appName, $configKey, (string) $value);
                 $updatedSettings[$settingKey] = $this->config->getValueString($this->appName, $configKey);
-            }
+            }//end if
         }//end foreach
 
         $this->logger->info(
@@ -5558,7 +5619,11 @@ class SettingsService
     public function getEmailConfigFocused(): array
     {
         try {
-            $emailSettings  = $this->getEmailSettings();
+            // Redact before this leaves the process. getEmailSettings() returns the real
+            // secrets (SymfonyEmailService needs them to send); this method's result goes
+            // straight into an HTTP response, so the SMTP password and the SendGrid /
+            // Mailgun / Postmark / SES / Mailjet keys must never ride along.
+            $emailSettings  = $this->redactEmailSecrets(settings: $this->getEmailSettings());
             $emailTemplates = $this->getAllEmailTemplates();
 
             return [
@@ -5608,8 +5673,10 @@ class SettingsService
             $this->logger->error(
                     'Failed to update email config',
                     [
-                        'exception' => $e->getMessage(),
-                        'config'    => $config,
+                        // Only the KEYS. The payload carries the SMTP password and the provider
+                        // API keys, so logging $config verbatim wrote them to nextcloud.log.
+                        'exception'  => $e->getMessage(),
+                        'configKeys' => array_keys($config),
                     ]
                     );
             return [
