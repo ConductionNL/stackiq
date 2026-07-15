@@ -111,6 +111,7 @@
 import { NcButton, NcLoadingIcon, NcSelect, NcEmptyContent, NcNoteCard } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
 import { objectStore, navigationStore } from '../store/store.js'
+import { useLiveCollections } from '../composables/useLiveCollections.js'
 import { buildComplianceMatrix, resolveUuid, standardLabel } from '../utils/complianceMatrix.js'
 
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -146,6 +147,21 @@ export default {
 		MinusCircle,
 		TableLarge,
 		CheckboxMarkedCircleOutline,
+	},
+	/**
+	 * Live updates (nc-vue liveUpdatesPlugin, default-on since beta.212):
+	 * subscribe to the collection scope of every type this view renders.
+	 * Events are refetch hints — the plugin re-runs fetchCollection into
+	 * the same getCollection() state the computeds read, so the view
+	 * re-renders without extra bridging. Subscriptions are gated on the
+	 * lazy type registration in loadData() and released on unmount.
+	 *
+	 * @return {object} Empty — the subscriptions are side-effect only
+	 * @spec openspec/specs/realtime-updates-ui/spec.md
+	 */
+	setup() {
+		useLiveCollections(objectStore, ['module', 'compliancy', 'element'])
+		return {}
 	},
 
 	data() {

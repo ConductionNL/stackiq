@@ -74,6 +74,7 @@ import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import OrganisatieCard from '../../components/cards/OrganisatieCard.vue'
 import { navigationStore, objectStore } from '../../store/store.js'
+import { useLiveCollections } from '../../composables/useLiveCollections.js'
 
 export default {
 	name: 'OrganisatieIndex',
@@ -85,6 +86,21 @@ export default {
 		OfficeBuildingOutline,
 		Plus,
 		OrganisatieCard,
+	},
+	/**
+	 * Live updates (nc-vue liveUpdatesPlugin, default-on since beta.212):
+	 * subscribe to the collection scope of every type this view renders.
+	 * Events are refetch hints — the plugin re-runs fetchCollection into
+	 * the same getCollection() state the computeds read, so the view
+	 * re-renders without extra bridging. Subscriptions are gated on the
+	 * lazy type registration in loadData() and released on unmount.
+	 *
+	 * @return {object} Empty — the subscriptions are side-effect only
+	 * @spec openspec/specs/realtime-updates-ui/spec.md
+	 */
+	setup() {
+		useLiveCollections(objectStore, ['organisatie'])
+		return {}
 	},
 
 	data() {
