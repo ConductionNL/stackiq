@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/conduction/nextcloud-software-catalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -102,7 +102,7 @@ class GebruikSyncService
      *
      * @return array Processing statistics.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function processSpecificGebruik(ObjectEntity $gebruikObject): array
     {

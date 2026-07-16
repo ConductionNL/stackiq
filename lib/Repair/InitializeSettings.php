@@ -66,7 +66,7 @@ class InitializeSettings implements IRepairStep
      * @param IOutput $output The output interface for progress reporting
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-repair-init/tasks.md#task-1
+     * @spec   openspec/specs/repair-init/spec.md
      */
     public function run(IOutput $output): void
     {
@@ -87,21 +87,21 @@ class InitializeSettings implements IRepairStep
             $output->info('Initializing settings for version '.$currentAppVersion);
             $this->logger->info('SoftwareCatalog repair: Starting initialization for version '.$currentAppVersion);
 
-            // @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+            // @spec openspec/specs/contract-administration/spec.md
             // Seed window defaults only when the admin has not set them, so
             // upgrades never clobber an operator's chosen window.
             if ($this->config->hasKey(Application::APP_ID, 'contract_expiry_window_days') === false) {
                 $this->config->setValueInt(Application::APP_ID, 'contract_expiry_window_days', 90);
             }
 
-            // @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+            // @spec openspec/specs/application-lifecycle-tracking/spec.md
             // Seed the EOL warning window default only when unset, so an
             // operator's chosen window survives upgrades.
             if ($this->config->hasKey(Application::APP_ID, 'eol_warning_window_days') === false) {
                 $this->config->setValueInt(Application::APP_ID, 'eol_warning_window_days', 180);
             }
 
-            // @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+            // @spec openspec/specs/federated-catalog-sync/spec.md
             // Seed federation defaults only when unset (admin overrides survive).
             if ($this->config->hasKey(Application::APP_ID, 'federation_enabled') === false) {
                 $this->config->setValueBool(Application::APP_ID, 'federation_enabled', false);

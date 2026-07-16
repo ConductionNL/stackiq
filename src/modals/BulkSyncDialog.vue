@@ -202,7 +202,7 @@ export default defineComponent({
 		/**
 		 * Watch the open prop to reset sync state when dialog opens
 		 *
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		open(value) {
 			if (value === true) {
@@ -216,7 +216,7 @@ export default defineComponent({
 		/**
 		 * Close the bulk sync dialog
 		 *
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		closeBulkSyncDialog() {
 			this.syncCompleted = false
@@ -229,7 +229,7 @@ export default defineComponent({
 		/**
 		 * Reset sync state
 		 *
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		resetSyncState() {
 			this.syncProgress = {
@@ -249,7 +249,7 @@ export default defineComponent({
 		/**
 		 * Start the bulk sync process
 		 *
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async startBulkSync() {
 			this.bulkSyncLoading = true
@@ -281,7 +281,7 @@ export default defineComponent({
 		 * Perform the bulk sync API call
 		 *
 		 * @return {Promise} API response
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async performBulkSync() {
 			const response = await fetch('/index.php/apps/softwarecatalog/api/bulk-sync-standards', {

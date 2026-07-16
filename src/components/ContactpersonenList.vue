@@ -395,14 +395,14 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		organisatieStore() {
 			return useOrganisatieStore()
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		contactpersonen() {
 			// Use contactpersonen from organisation data if available, otherwise fall back to store
@@ -418,21 +418,21 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		loading() {
 			return this.organisatieStore.isLoading
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		error() {
 			return this.organisatieStore.getError
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		availableGroups() {
 			return this.organisatieStore.getAvailableGroups
@@ -440,7 +440,7 @@ export default {
 
 		// Password validation computed properties
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		passwordValidation() {
 			return {
@@ -456,7 +456,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		isPasswordValid() {
 			return Object.values(this.passwordValidation).every(
@@ -467,7 +467,7 @@ export default {
 
 	watch: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		newPassword(newVal) {
 			// Clear existing timeout
@@ -491,7 +491,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+	 * @spec openspec/specs/fe-organizations/spec.md
 	 */
 	async mounted() {
 		await this.loadData()
@@ -500,7 +500,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+	 * @spec openspec/specs/fe-organizations/spec.md
 	 */
 	beforeDestroy() {
 		// Clean up timeouts to prevent memory leaks
@@ -520,7 +520,7 @@ export default {
 		 * Compute SHA-1 hash of a string
 		 * @param {string} str - String to hash
 		 * @return {Promise<string>} SHA-1 hash in hexadecimal format (uppercase)
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async sha1(str) {
 			// Simple SHA-1 implementation
@@ -621,7 +621,7 @@ export default {
 		 * @param {number} value - Value to rotate
 		 * @param {number} amount - Amount to rotate
 		 * @return {number} Rotated value
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		rotl(value, amount) {
 			return ((value << amount) | (value >>> (32 - amount))) >>> 0
@@ -630,7 +630,7 @@ export default {
 		/**
 		 * Check if password is in Have I Been Pwned database
 		 * @param {string} password - Password to check
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async checkPasswordPwned(password) {
 			if (!password || password.length < 10) {
@@ -693,7 +693,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async loadData() {
 			try {
@@ -713,7 +713,7 @@ export default {
 		 * Process contactpersonen data from organisation object to match expected format.
 		 * @param {Array} rawContactpersonen - Raw contactpersonen data from organisation.
 		 * @return {Array} Processed contactpersonen with user information.
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		processContactpersonen(rawContactpersonen) {
 			return rawContactpersonen.map((contactpersoon) => {
@@ -753,7 +753,7 @@ export default {
 
 		/**
 		 * Load user info and available groups in parallel
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async loadUserInfoAndGroups() {
 			// Prevent multiple simultaneous calls
@@ -828,7 +828,7 @@ export default {
 		 * Update contactpersonen with bulk user info.
 		 * @param {object} bulkUserInfo - User info object keyed by contactpersoon ID.
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		updateContactpersonenWithUserInfo(bulkUserInfo) {
 			if (!this.organisationData.contactpersonen) return
@@ -876,7 +876,7 @@ export default {
 		/**
 		 * Refresh user statuses from Nextcloud for all contact persons
 		 * @deprecated Use loadUserInfoAndGroups() instead for better performance
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async refreshUserStatuses() {
 			console.info(
@@ -887,7 +887,7 @@ export default {
 
 		/**
 		 * Public method to refresh user statuses - can be called from parent component
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async refreshUserData() {
 			console.info('Public refreshUserData called')
@@ -898,7 +898,7 @@ export default {
 		 * Get contactperson name.
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {string} The contact person's name.
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getContactpersoonName(contactpersoon) {
 			const data = contactpersoon.data
@@ -916,7 +916,7 @@ export default {
 		 * Filter groups to only show those available in the modal.
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {Array} Filtered array of group IDs.
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getFilteredGroups(contactpersoon) {
 			if (!contactpersoon.user.groups || contactpersoon.user.groups.length === 0) {
@@ -936,7 +936,7 @@ export default {
 		 * Format group name.
 		 * @param {string} groupId - The group ID.
 		 * @return {string} Formatted group name.
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		formatGroupName(groupId) {
 			const groupMap = {
@@ -948,7 +948,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async convertToUser(contactpersoon) {
 			console.info('convertToUser called with:', contactpersoon)
@@ -1052,7 +1052,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		openPasswordDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
@@ -1067,7 +1067,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closePasswordDialog() {
 			this.showPasswordDialog = false
@@ -1083,7 +1083,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async savePassword() {
 			if (!this.newPassword || this.newPassword.length < 10) {
@@ -1139,7 +1139,7 @@ export default {
 		 * Open groups management dialog.
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async openGroupsDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
@@ -1164,7 +1164,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closeGroupsDialog() {
 			this.showGroupsDialog = false
@@ -1174,7 +1174,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		toggleGroup(groupId, checked) {
 			if (checked) {
@@ -1192,7 +1192,7 @@ export default {
 		/**
 		 * Save user groups.
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async saveGroups() {
 			if (!this.selectedContactpersoon) return
@@ -1226,7 +1226,7 @@ export default {
 		/**
 		 * Disable a user account
 		 * @param {object} contactpersoon - The contact person object
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async disableUser(contactpersoon) {
 			try {
@@ -1247,7 +1247,7 @@ export default {
 		/**
 		 * Enable a user account
 		 * @param {object} contactpersoon - The contact person object
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async enableUser(contactpersoon) {
 			try {
@@ -1270,7 +1270,7 @@ export default {
 		 * @param {string} contactpersoonId - The ID of the contact person.
 		 * @param {boolean} disabled - Whether the user is disabled.
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		updateContactpersoonStatus(contactpersoonId, disabled) {
 		// Find and update the contactpersoon in the organisation data.
@@ -1309,7 +1309,7 @@ export default {
 		 * @param {string} contactpersoonId - The ID of the contact person.
 		 * @param {Array} groups - Array of group IDs.
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		updateContactpersoonGroups(contactpersoonId, groups) {
 		// Find and update the contactpersoon in the organisation data.

@@ -12,7 +12,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -328,7 +328,7 @@ class OrganizationSyncService
      *
      * @return array The sync statistics.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function performOrganizationsSync(int $batchSize=50, int $maxExecutionSeconds=45): array
     {
@@ -451,7 +451,7 @@ class OrganizationSyncService
      * @param int $maxExecutionSeconds The maximum execution time in seconds.
      *
      * @return array The sync statistics.
-     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-1
+     * @spec   openspec/specs/organization-sync/spec.md
      */
     public function performContactSync(int $batchSize=100, int $maxExecutionSeconds=30): array
     {
@@ -577,7 +577,7 @@ class OrganizationSyncService
      * @return array The sync statistics.
      *
      * @psalm-suppress UndefinedClass
-     * @spec           openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-1
+     * @spec           openspec/specs/organization-sync/spec.md
      */
     public function performUserSync(): array
     {
@@ -660,7 +660,7 @@ class OrganizationSyncService
      *
      * @return array Synchronization results and statistics
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function performFullSync(int $minutesBack=10): array
     {
@@ -870,7 +870,7 @@ class OrganizationSyncService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-6
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     private function processOrganisatieObject(
         object $organisatieObject,
@@ -939,7 +939,7 @@ class OrganizationSyncService
      * @return object|null The organisation entity or null on failure.
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $sendEmails is a simple notification toggle
-     * @spec                                        openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-2
+     * @spec                                        openspec/specs/organization-sync/spec.md
      */
     public function ensureOrganisationEntityPublic(object $organisatieObject, array &$stats, bool $sendEmails=true): ?object
     {
@@ -1511,7 +1511,7 @@ class OrganizationSyncService
      * @param int $minutesBack Number of minutes to look back for prediction (default: 10 for scheduled sync)
      *
      * @return array Status information about sync requirements including processing predictions
-     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-3
+     * @spec   openspec/specs/organization-sync/spec.md
      */
     public function getSyncStatus(int $minutesBack=10): array
     {
@@ -1679,7 +1679,7 @@ class OrganizationSyncService
      * Records the last sync time
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-3
+     * @spec   openspec/specs/organization-sync/spec.md
      */
     public function recordSyncTime(): void
     {
@@ -1696,7 +1696,7 @@ class OrganizationSyncService
      * @param \OCA\OpenRegister\Db\ObjectEntity $organizationObject The organization object to process
      *
      * @return array Processing results
-     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-2
+     * @spec   openspec/specs/organization-sync/spec.md
      */
     public function processSpecificOrganization($organizationObject): array
     {
@@ -2608,7 +2608,7 @@ class OrganizationSyncService
      * @param \OCA\OpenRegister\Db\ObjectEntity $contactObject The contact person object to process
      *
      * @return array Processing results
-     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-2
+     * @spec   openspec/specs/organization-sync/spec.md
      */
     public function processSpecificContactPerson($contactObject): array
     {
@@ -2853,7 +2853,7 @@ class OrganizationSyncService
      * @param int $batchSize Number of items to process per batch (default: 100)
      *
      * @return array Comprehensive synchronization results
-     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-1
+     * @spec   openspec/specs/organization-sync/spec.md
      */
     public function performOptimizedManualSync(int $maxRounds=10, int $batchSize=100): array
     {
@@ -2950,7 +2950,7 @@ class OrganizationSyncService
      * @param int $minutesBack Number of minutes to look back for changes (default: 0 = full sync)
      *
      * @return array Synchronization results with detailed logging information
-     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-1
+     * @spec   openspec/specs/organization-sync/spec.md
      */
     public function performScheduledSync(int $minutesBack=0): array
     {
@@ -3050,7 +3050,7 @@ class OrganizationSyncService
      * @param int $minutesBack Number of minutes to look back for changes (default: 0 for full sync)
      *
      * @return array Synchronization results formatted for API response
-     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-1
+     * @spec   openspec/specs/organization-sync/spec.md
      */
     public function performManualSync(int $minutesBack=0): array
     {
@@ -3122,7 +3122,7 @@ class OrganizationSyncService
      * @param int $minutesBack The number of minutes to look back.
      *
      * @return array Status information with error handling.
-     * @spec   openspec/changes/retrofit-2026-05-26-organization-sync/tasks.md#task-3
+     * @spec   openspec/specs/organization-sync/spec.md
      */
     public function getSyncStatusWithErrorHandling(int $minutesBack=10): array
     {

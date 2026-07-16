@@ -182,7 +182,7 @@ export default {
 			return this.mode === 'copy'
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		modalTitle() {
 			if (this.isEditMode) {
@@ -199,7 +199,7 @@ export default {
 	watch: {
 		organisation: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+			 * @spec openspec/specs/fe-organizations/spec.md
 			 */
 			handler() {
 				this.loadOrganisationData()
@@ -208,7 +208,7 @@ export default {
 		},
 		show: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+			 * @spec openspec/specs/fe-organizations/spec.md
 			 */
 			handler(newVal) {
 				if (newVal) {
@@ -220,7 +220,7 @@ export default {
 		},
 	},
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+	 * @spec openspec/specs/fe-organizations/spec.md
 	 */
 	beforeUnmount() {
 		// Clean up countdown interval
@@ -230,7 +230,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		resetForm() {
 			this.formData = {
@@ -257,7 +257,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		loadOrganisationData() {
 			if (!this.organisation) return
@@ -283,14 +283,14 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		handleTypeChange(selectedOption) {
 			console.info('Type changed:', selectedOption)
 			this.formData.type = selectedOption ? selectedOption.value : ''
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closeModal() {
 			this.$emit('close')
@@ -298,7 +298,7 @@ export default {
 		/**
 		 * Get only the changed properties between original and current form data
 		 * @return {object} Object containing only the changed properties
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getChangedProperties() {
 			if (!this.isEditMode) {
@@ -331,7 +331,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-3
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async saveOrganisation() {
 			if (!this.isFormValid) {

@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/nextcloud/softwarecatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 namespace OCA\SoftwareCatalog\Controller;
@@ -78,7 +78,7 @@ class ViewController extends Controller
      *
      * @return JSONResponse JSON response with views array
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function getAllViews(): JSONResponse
     {
@@ -220,7 +220,7 @@ class ViewController extends Controller
      *
      * @return JSONResponse JSON response with view object
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function getView(string $viewId): JSONResponse
     {
@@ -378,7 +378,7 @@ class ViewController extends Controller
      * @return JSONResponse JSON response with API documentation
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     * @spec                                          openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-2
+     * @spec                                          openspec/specs/dashboard-views-api/spec.md
      */
     public function getApiDocumentation(): JSONResponse
     {

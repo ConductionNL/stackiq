@@ -113,7 +113,7 @@ const EOL_WINDOW_DAYS = 180
  * group by nearest urgency date, with end-of-support badges and planned
  * replacements. The rationalisation overview.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export default {
 	name: 'LifecycleRoadmapView',
@@ -155,7 +155,7 @@ export default {
 		/**
 		 * All gebruik records in the store.
 		 * @return {Array} Gebruik records.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		gebruiken() {
 			return objectStore.getCollection('gebruik')?.results || []
@@ -164,7 +164,7 @@ export default {
 		/**
 		 * All moduleVersie records, indexed by uuid for EOL lookups.
 		 * @return {object} UUID → moduleVersie.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		moduleVersieIndex() {
 			const index = {}
@@ -180,7 +180,7 @@ export default {
 		/**
 		 * Module records indexed by uuid for successor labels.
 		 * @return {object} UUID → module.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		moduleIndex() {
 			const index = {}
@@ -196,7 +196,7 @@ export default {
 		/**
 		 * Organisation options for the selector.
 		 * @return {Array<{uuid: string, label: string}>} Options.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		organisationOptions() {
 			return (objectStore.getCollection('organisatie')?.results || []).map((org) => ({
@@ -208,7 +208,7 @@ export default {
 		/**
 		 * The phase order rendered top-to-bottom (Onbekend first).
 		 * @return {Array<string>} Ordered phases.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		orderedPhases() {
 			return [PHASE.UNKNOWN, PHASE.ACQUISITION, PHASE.PLANNED, PHASE.PRODUCTION, PHASE.PHASING_OUT, PHASE.PHASED_OUT]
@@ -218,7 +218,7 @@ export default {
 		 * The selected organisation's gebruiken, grouped by derived phase and
 		 * ordered within group by nearest urgency date.
 		 * @return {Array<{phase: string, entries: Array}>} Grouped entries.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		phaseGroups() {
 			if (!this.selectedOrg) {
@@ -253,7 +253,7 @@ export default {
 		/**
 		 * Load the collections the roadmap depends on.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		async loadData() {
 			this.loading = true
@@ -278,7 +278,7 @@ export default {
 		 * Fetch one object type collection if the store exposes the action.
 		 * @param {string} type Object type slug.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		async fetchType(type) {
 			// Register the object type from the resolved config before fetching —
@@ -311,7 +311,7 @@ export default {
 		 * @param {object} gebruik A gebruik record.
 		 * @param {Date}   now     Reference moment.
 		 * @return {object} The roadmap entry view-model.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		buildEntry(gebruik, now) {
 			const data = gebruik.object || gebruik
@@ -339,7 +339,7 @@ export default {
 		 * Nearest urgency timestamp for ordering (min of EOL, phase-out, replacement).
 		 * @param {object} entry A roadmap entry.
 		 * @return {number} A sortable timestamp (Infinity when no dates).
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		urgency(entry) {
 			const dates = [entry.eol.endDate, entry.phaseOutDate, entry.replacementDate]
@@ -353,7 +353,7 @@ export default {
 		 * Translate a phase to a human label (Dutch domain terms preserved).
 		 * @param {string} phase A PHASE.* value.
 		 * @return {string} Display label.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		phaseLabel(phase) {
 			const map = {
@@ -370,7 +370,7 @@ export default {
 		/**
 		 * Persist nothing; just record the org selection (kept for symmetry).
 		 * @return {void}
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		onOrgChange() {
 			// Selection is reactive via v-model; no extra fetch needed.
@@ -380,7 +380,7 @@ export default {
 		 * Navigate to a successor module's detail.
 		 * @param {string} uuid The module uuid.
 		 * @return {void}
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		openModule(uuid) {
 			if (uuid && typeof navigationStore.setSelected === 'function') {

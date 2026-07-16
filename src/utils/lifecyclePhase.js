@@ -21,7 +21,7 @@
  * @copyright 2026 Conduction B.V.
  * @license AGPL-3.0-or-later
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 
 /**
@@ -75,7 +75,7 @@ function dataOf(gebruik) {
  * @param {*} value A date string.
  * @return {Date|null} The parsed date, or null.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function parseDate(value) {
 	if (typeof value !== 'string' || value.trim() === '') {
@@ -96,7 +96,7 @@ export function parseDate(value) {
  * @param {Date}   [now]   Reference moment (defaults to now).
  * @return {string} The derived phase (one of PHASE.*).
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function derivePhase(gebruik, now = new Date()) {
 	const data = dataOf(gebruik)
@@ -115,7 +115,7 @@ export function derivePhase(gebruik, now = new Date()) {
  * @param {*} value A relation value.
  * @return {string} The resolved UUID, or ''.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function resolveUuid(value) {
 	if (typeof value === 'string') {
@@ -140,7 +140,7 @@ export function resolveUuid(value) {
  * @param {Date}   [now]        Reference moment.
  * @return {{passed: boolean, withdrawn: boolean, endDate: (string|null), withdrawnDate: (string|null)}} EOL state.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function endOfSupportState(moduleVersie, now = new Date()) {
 	const data = dataOf(moduleVersie)
@@ -169,7 +169,7 @@ export function endOfSupportState(moduleVersie, now = new Date()) {
  * @param {Date}   [now]        Reference moment.
  * @return {boolean} True when end-of-support is within the window.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function isEolApproaching(moduleVersie, windowDays, now = new Date()) {
 	const end = parseDate(dataOf(moduleVersie).datumEindeOndersteuning)
@@ -186,7 +186,7 @@ export function isEolApproaching(moduleVersie, windowDays, now = new Date()) {
  * @param {string} phase A PHASE.* value.
  * @return {number} A sortable index (0 = unknown, then phase order).
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function phaseOrder(phase) {
 	if (phase === PHASE.UNKNOWN) {

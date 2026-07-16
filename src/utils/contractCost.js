@@ -18,7 +18,7 @@
  * @copyright 2026 Conduction B.V.
  * @license AGPL-3.0-or-later
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  */
 
 /**
@@ -54,7 +54,7 @@ function dataOf(contract) {
  * @param {*} value A raw `kosten` value (number or numeric string).
  * @return {number|null} The numeric amount, or null.
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  */
 export function parseAmount(value) {
 	if (typeof value === 'number' && Number.isFinite(value)) {
@@ -78,7 +78,7 @@ export function parseAmount(value) {
  * @param {object} contract A contract record (OR object or data bag).
  * @return {{annual: number, oneOff: number}} The split cost.
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  */
 export function annualisedCost(contract) {
 	const data = dataOf(contract)
@@ -106,7 +106,7 @@ export function annualisedCost(contract) {
  * @param {Array<object>} contracts Contract records.
  * @return {{annual: number, oneOff: number}} Summed split cost.
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  */
 export function totalAnnualisedCost(contracts) {
 	return (contracts || []).reduce((acc, contract) => {
@@ -121,7 +121,7 @@ export function totalAnnualisedCost(contracts) {
  * @param {object} contract A contract record.
  * @return {boolean} True when the contract's period is Eenmalig.
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  */
 export function isOneOff(contract) {
 	return dataOf(contract).kostenPeriode === PERIOD.ONEOFF

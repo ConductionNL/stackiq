@@ -15,7 +15,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -71,7 +71,7 @@ class ContractStatusService
      *
      * @return bool True when the contract must be expired.
      *
-     * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+     * @spec openspec/specs/contract-administration/spec.md
      */
     public function shouldExpire(array $contractData, \DateTimeImmutable $now): bool
     {
@@ -109,7 +109,7 @@ class ContractStatusService
      *
      * @return int The number of contracts transitioned to Verlopen.
      *
-     * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+     * @spec openspec/specs/contract-administration/spec.md
      */
     public function expirePastContracts(?\DateTimeImmutable $now=null): int
     {
@@ -185,7 +185,7 @@ class ContractStatusService
      *
      * @return ObjectService|null The service, or null when OpenRegister is absent.
      *
-     * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+     * @spec openspec/specs/contract-administration/spec.md
      */
     private function getObjectService(): ?ObjectService
     {

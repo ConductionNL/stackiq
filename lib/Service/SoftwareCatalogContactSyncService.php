@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md
+ * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
  */
 
 declare(strict_types=1);
@@ -75,7 +75,7 @@ class SoftwareCatalogContactSyncService
      *
      * @return array<int, array<string, mixed>> The matching contacts.
      *
-     * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-003
+     * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
      */
     public function searchContacts(string $query): array
     {
@@ -124,7 +124,7 @@ class SoftwareCatalogContactSyncService
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $addressBookKey kept for canonical-signature parity.
      *
-     * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-003
+     * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
      */
     public function importContact(string $uid, ?string $addressBookKey=null): string
     {
@@ -153,7 +153,7 @@ class SoftwareCatalogContactSyncService
      *
      * @return ?string The contacts UID, or null when it could not be resolved or created.
      *
-     * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-003
+     * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
      */
     public function syncToContacts(string $objectType, array $record): ?string
     {
@@ -185,7 +185,7 @@ class SoftwareCatalogContactSyncService
      *
      * @return ?array<string, mixed> The contact, or null when not found.
      *
-     * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-001
+     * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
      */
     public function findContactByUid(string $uid): ?array
     {
@@ -212,7 +212,7 @@ class SoftwareCatalogContactSyncService
      *
      * @return ?array<string, mixed> The matched contact, or null.
      *
-     * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-005
+     * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
      */
     public function findContactForRecord(string $objectType, array $record): ?array
     {
@@ -258,7 +258,7 @@ class SoftwareCatalogContactSyncService
      * @return ?string The new contacts UID, or null when no writable addressbook
      *                 is available or the record has no usable identity.
      *
-     * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-005
+     * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
      */
     public function createContactForRecord(string $objectType, array $record): ?string
     {

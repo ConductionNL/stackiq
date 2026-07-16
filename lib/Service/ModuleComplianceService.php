@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -76,8 +76,8 @@ class ModuleComplianceService
      *
      * @throws \Exception If the update fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
-     * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+     * @spec openspec/specs/method-decomposition/spec.md
+     * @spec openspec/specs/module-compliance-assessment/spec.md
      */
     public function handleModuleComplianceUpdate(object $moduleObject): void
     {
@@ -521,7 +521,7 @@ class ModuleComplianceService
      *
      * @throws \Exception If the bulk sync fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function bulkSyncModuleStandards(): array
     {

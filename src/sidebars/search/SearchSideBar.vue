@@ -99,7 +99,7 @@ export default {
 		search: 'debouncedSearch',
 		metadata: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+			 * @spec openspec/specs/fe-shell-navigation/spec.md
 			 */
 			handler() {
 				this.debouncedSearch()
@@ -108,7 +108,7 @@ export default {
 		},
 		catalogi: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+			 * @spec openspec/specs/fe-shell-navigation/spec.md
 			 */
 			handler() {
 				this.debouncedSearch()
@@ -117,7 +117,7 @@ export default {
 		},
 	},
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+	 * @spec openspec/specs/fe-shell-navigation/spec.md
 	 */
 	mounted() {
 		metadataStore.refreshMetaDataList()

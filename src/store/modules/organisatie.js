@@ -61,7 +61,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * Fetch contactpersonen for an organisation
 		 * @param {string} organisationId - The organisation ID
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async fetchContactpersonen(organisationId) {
 			this.loading = true
@@ -104,7 +104,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * Convert a contactpersoon to a user account
 		 * @param {string} contactpersoonId - The contactpersoon ID
 		 * @return {Promise<object>} Result of conversion
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async convertToUser(contactpersoonId) {
 			// Don't set global loading state for individual contactpersoon actions
@@ -147,7 +147,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * @param {string} username - The username
 		 * @param {string} newPassword - The new password
 		 * @return {Promise<object>} Result of password change
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async changePassword(username, newPassword) {
 			// Don't set global loading state for individual contactpersoon actions
@@ -193,7 +193,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * @param {string} username - The username
 		 * @param {Array} groups - Array of group names
 		 * @return {Promise<object>} Result of group update
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async updateUserGroups(username, groups) {
 			// Don't set global loading state for individual contactpersoon actions
@@ -243,7 +243,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * Fetch user info and available groups for a specific contactpersoon
 		 * @param {string} contactpersoonId - The contactpersoon ID
 		 * @return {Promise<object>} User info and available groups
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async fetchUserInfo(contactpersoonId) {
 			try {
@@ -283,7 +283,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * Fetch contact persons with user details for an organization
 		 * @param {string} organizationUuid - The organization UUID
 		 * @return {Promise<Array>} Array of contact persons with user details
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async fetchContactPersonsWithUserDetails(organizationUuid) {
 			try {
@@ -319,7 +319,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		/**
 		 * Fetch available groups for user assignment (fallback method)
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async fetchAvailableGroups() {
 			try {
@@ -353,7 +353,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Clear error state
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		clearError() {
 			this.error = null
@@ -361,7 +361,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Clear contactpersonen data
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		clearContactpersonen() {
 			this.contactpersonen = []
@@ -371,7 +371,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * Disable a user account
 		 * @param {string} contactpersoonId - The contactpersoon UUID to disable
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async disableUser(contactpersoonId) {
 			try {
@@ -396,7 +396,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * Enable a user account
 		 * @param {string} contactpersoonId - The contactpersoon UUID to enable
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async enableUser(contactpersoonId) {
 			try {
@@ -421,7 +421,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * Get user info for multiple contactpersonen in one request
 		 * @param {Array<string>} contactpersoonIds - Array of contactpersoon UUIDs
 		 * @return {Promise<object>} Bulk user info object keyed by contactpersoon ID
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-2
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async getBulkUserInfo(contactpersoonIds) {
 			try {

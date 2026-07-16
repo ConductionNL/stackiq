@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -472,7 +472,7 @@ class SymfonyEmailService
      *
      * @throws \Exception If email sending fails.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function sendOrganizationRegistrationEmail(array $organization): bool
     {
@@ -560,7 +560,7 @@ class SymfonyEmailService
      * @return bool True if email was sent successfully, false otherwise.
      *
      * @throws \Exception If email sending fails.
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-1
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function sendOrganizationActivationEmail(array $organization): bool
     {
@@ -649,7 +649,7 @@ class SymfonyEmailService
      * @return bool True if email was sent successfully, false otherwise.
      *
      * @throws \Exception If email sending fails.
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-1
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function sendUserCreationEmail(array $user, array $organization=[]): bool
     {
@@ -745,7 +745,7 @@ class SymfonyEmailService
      * @return bool True if email was sent successfully, false otherwise.
      *
      * @throws \Exception If email sending fails.
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-1
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function sendUserUpdateEmail(array $user, array $organization=[]): bool
     {
@@ -845,7 +845,7 @@ class SymfonyEmailService
      *
      * @throws \Exception If email sending fails.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     private function sendTemplatedEmail(
         string $recipientEmail,
@@ -1116,7 +1116,7 @@ class SymfonyEmailService
      * Gets the configured sender email address.
      *
      * @return string The sender email address.
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-2
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function getSenderEmail(): string
     {
@@ -1128,7 +1128,7 @@ class SymfonyEmailService
      * Gets the configured sender name.
      *
      * @return string The sender name.
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-2
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function getSenderName(): string
     {
@@ -1140,7 +1140,7 @@ class SymfonyEmailService
      * Gets all email settings including transport configuration.
      *
      * @return array The email settings.
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-2
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function getEmailSettings(): array
     {
@@ -1169,7 +1169,7 @@ class SymfonyEmailService
      * @param string $email The sender email address.
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-2
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function setSenderEmail(string $email): void
     {
@@ -1188,7 +1188,7 @@ class SymfonyEmailService
      * @param string $name The sender name.
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-2
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function setSenderName(string $name): void
     {
@@ -1204,7 +1204,7 @@ class SymfonyEmailService
      * @param array  $transportConfig Transport-specific configuration.
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-2
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function setTransportConfiguration(string $transportType, array $transportConfig=[]): void
     {
@@ -1224,7 +1224,7 @@ class SymfonyEmailService
      * @param string $testEmail The email address to send test email to.
      *
      * @return bool True if test email was sent successfully.
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-1
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function sendTestEmail(string $testEmail): bool
     {
@@ -1292,7 +1292,7 @@ class SymfonyEmailService
      * @param string $email The test receiver override email address.
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-2
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function setTestReceiverOverride(string $email): void
     {
@@ -1343,7 +1343,7 @@ class SymfonyEmailService
      * Checks if the email system is fully configured with credentials and templates.
      *
      * @return array Configuration status with details.
-     * @spec   openspec/changes/retrofit-2026-05-26-email-delivery/tasks.md#task-2
+     * @spec   openspec/specs/email-delivery/spec.md
      */
     public function isEmailSystemConfigured(): array
     {

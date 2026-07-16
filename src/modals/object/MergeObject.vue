@@ -452,13 +452,13 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		sourceObject() {
 			return objectStore.objectItem
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		mergeableProperties() {
 			if (!this.sourceObject || !this.selectedTargetObject) {
@@ -471,7 +471,7 @@ export default {
 			return [...new Set([...sourceProps, ...targetProps])]
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		canMerge() {
 			return Object.keys(this.mergedData).length > 0
@@ -482,7 +482,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeMerge() {
 			if (!this.sourceObject) {
@@ -493,7 +493,7 @@ export default {
 			this.searchObjects()
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async searchObjects() {
 			                    if (!catalogStore.catalogiItem || !catalogStore.schemaItem) {
@@ -515,13 +515,13 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		selectTargetObject(obj) {
 			this.selectedTargetObject = obj
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		nextStep() {
 			if (this.step === 1 && this.selectedTargetObject) {
@@ -530,7 +530,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		previousStep() {
 			if (this.step === 2) {
@@ -538,7 +538,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeMergeData() {
 			// Initialize merge data with default values
@@ -583,7 +583,7 @@ export default {
 			console.log('Initial propertySelections after setup:', this.propertySelections)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getMergeOptions(property) {
 			const options = []
@@ -612,7 +612,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		onPropertySelectionChange(property, selectedOption) {
 			// eslint-disable-next-line no-console
@@ -631,7 +631,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		displayValue(value, maxLength = 100) {
 			if (value === null || value === undefined) {
@@ -653,7 +653,7 @@ export default {
 			return displayText
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		truncateText(text, maxLength) {
 			if (!text) return ''
@@ -661,7 +661,7 @@ export default {
 			return text.substring(0, maxLength) + '...'
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async performMerge() {
 			if (!this.canMerge) {
@@ -725,7 +725,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		viewMergedObject() {
 			// Navigate to the merged object in view mode
@@ -735,19 +735,19 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		toggleFileList() {
 			this.showFileList = !this.showFileList
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		toggleRelationList() {
 			this.showRelationList = !this.showRelationList
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatFileSize(bytes) {
 			if (!bytes) return 'N/A'
@@ -756,7 +756,7 @@ export default {
 			return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i]
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getFileType(filename) {
 			if (!filename) return 'Unknown'
@@ -780,7 +780,7 @@ export default {
 			return types[ext] || ext?.toUpperCase() || 'Unknown'
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async loadSourceData() {
 			// Load files and relations for the source object
@@ -805,7 +805,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-3
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeModal() {
 			navigationStore.setModal(false)

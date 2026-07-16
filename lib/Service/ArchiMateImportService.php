@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/nextcloud/softwarecatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -230,7 +230,7 @@ class ArchiMateImportService
      * @param \SimpleXMLElement $xml The XML element to convert.
      *
      * @return array The normalized associative array.
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function xmlToArray(\SimpleXMLElement $xml): array
     {
@@ -345,7 +345,7 @@ class ArchiMateImportService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function importArchiMateFileFromPathOptimized(array $options=[]): array
     {
@@ -478,7 +478,7 @@ class ArchiMateImportService
      *
      * @return array Import results with detailed status
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function importArchiMateFileFromPath(array $options=[]): array
     {
@@ -629,7 +629,7 @@ class ArchiMateImportService
      *
      * @return array Parsed XML data
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     private function parseArchiMateXml(string $filePath): array
     {
@@ -1959,7 +1959,7 @@ class ArchiMateImportService
      * Get AMEF configuration from app config
      *
      * @return array AMEF configuration
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function getAmefConfig(): array
     {
@@ -2235,7 +2235,7 @@ class ArchiMateImportService
      * @param array $propDefMap The original property definition map
      *
      * @return array Mapping of original names to camelCase names
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-1
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function getPropertyNameMapping(array $propDefMap): array
     {

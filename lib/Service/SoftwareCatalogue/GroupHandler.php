@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -94,7 +94,7 @@ class GroupHandler
      * Gets the list of generic user groups from configuration
      *
      * @return array Array of generic user groups
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-2
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function getGenericUserGroups(): array
     {
@@ -122,7 +122,7 @@ class GroupHandler
      * @param array $groups Array of generic user groups
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-2
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function setGenericUserGroups(array $groups): void
     {
@@ -141,7 +141,7 @@ class GroupHandler
      * Ensures that all generic user groups exist in the system
      *
      * @return array Array of groups that were created
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-2
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function ensureGenericUserGroupsExist(): array
     {
@@ -197,7 +197,7 @@ class GroupHandler
      * @param string $groupName The group name to create
      *
      * @return IGroup|null The created or existing group
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-2
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function createGroupIfNotExists(string $groupName): ?IGroup
     {
@@ -235,7 +235,7 @@ class GroupHandler
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
@@ -282,7 +282,7 @@ class GroupHandler
      * @param array $objectData The contactpersoon data
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-2
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function updateRoleBasedGroups(IUser $user, array $objectData): void
     {
@@ -345,7 +345,7 @@ class GroupHandler
      * @param array $objectData The contactpersoon data
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-2
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function updateOrganizationGroups(IUser $user, array $objectData): void
     {
@@ -458,7 +458,7 @@ class GroupHandler
      * @param array $objectData The contactpersoon data
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-2
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function updateGemeenteGroups(IUser $user, array $objectData): void
     {
@@ -504,7 +504,7 @@ class GroupHandler
      * Gets all available groups with their information
      *
      * @return array Array of group information
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-2
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function getAllGroups(): array
     {
@@ -529,7 +529,7 @@ class GroupHandler
      * @param array $groups Array of group names to validate
      *
      * @return array Array with validation results
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-2
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function validateGroups(array $groups): array
     {

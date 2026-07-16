@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -77,7 +77,7 @@ class HierarchyHandler
      * @param string $username              The username being processed
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function ensureOrganizationBeheerder(object $contactgegevensObject, string $username): void
     {
@@ -129,7 +129,7 @@ class HierarchyHandler
      * @param string $organizationUuid       The organization UUID
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-sc-handlers/tasks.md#task-3
+     * @spec   openspec/specs/sc-handlers/spec.md
      */
     public function setupManagerRelationships(
         string $username,
@@ -232,7 +232,7 @@ class HierarchyHandler
      *
      * @return array Array containing hierarchy information
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function getUserHierarchy(string $username): array
     {
@@ -357,7 +357,7 @@ class HierarchyHandler
      *
      * @return array Array containing organizational structure
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function getOrganizationStructure(string $organizationUuid): array
     {

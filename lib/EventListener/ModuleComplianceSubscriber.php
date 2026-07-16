@@ -64,7 +64,7 @@ class ModuleComplianceSubscriber implements IEventListener
      *
      * @return void
      *
-     * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+     * @spec openspec/specs/module-compliance-assessment/spec.md
      */
     public function handle(Event $event): void
     {

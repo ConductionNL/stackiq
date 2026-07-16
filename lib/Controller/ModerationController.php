@@ -22,7 +22,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -65,7 +65,7 @@ class ModerationController extends Controller
      * @return JSONResponse `{ok, items}` or a 400.
      *
      * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
-     * @spec                                                                               openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @spec                                                                               openspec/specs/open-data-publishing/spec.md
      */
     #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
     public function pending(): JSONResponse
@@ -86,7 +86,7 @@ class ModerationController extends Controller
      * @return JSONResponse `{ok, status}` or a 400.
      *
      * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
-     * @spec                                                                               openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @spec                                                                               openspec/specs/open-data-publishing/spec.md
      */
     #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
     public function approve(string $uuid): JSONResponse
@@ -107,7 +107,7 @@ class ModerationController extends Controller
      * @return JSONResponse `{ok, status}` or a 400.
      *
      * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
-     * @spec                                                                               openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @spec                                                                               openspec/specs/open-data-publishing/spec.md
      */
     #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
     public function reject(string $uuid): JSONResponse

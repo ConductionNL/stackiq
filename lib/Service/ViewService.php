@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -104,7 +104,7 @@ class ViewService
      *
      * @return array Array of view objects with optional enrichments.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function getAllViews(array $options=[]): array
     {
@@ -163,7 +163,7 @@ class ViewService
      * @param array  $options Query options including enrichment flags.
      *
      * @return array View object with optional enrichments or error response.
-     * @spec   openspec/changes/retrofit-2026-05-26-dashboard-views-api/tasks.md#task-2
+     * @spec   openspec/specs/dashboard-views-api/spec.md
      */
     public function getView(string $viewId, array $options=[]): array
     {
@@ -394,7 +394,7 @@ class ViewService
      *
      * @return array Enriched view object.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-8
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     private function enrichView(array $view, array $options): array
     {

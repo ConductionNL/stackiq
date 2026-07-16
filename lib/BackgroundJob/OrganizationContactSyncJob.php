@@ -95,7 +95,7 @@ class OrganizationContactSyncJob extends TimedJob
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @spec                                          openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-003
+     * @spec                                          openspec/specs/softwarecatalog-contacts-to-nc/spec.md
      */
     protected function run($argument): void
     {

@@ -109,7 +109,7 @@ export default {
 		/**
 		 * Get objects to display (either from props or from store)
 		 * @return {Array<object>} Array of publication objects
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-8
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		selectedObjects() {
 			return this.objects || objectStore.selectedObjects || []
@@ -119,7 +119,7 @@ export default {
 		/**
 		 * Remove object from selected objects in the store
 		 * @param {string} objectId - The object ID to remove
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-8
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		removeObject(objectId) {
 			// Always remove from store - the store is the source of truth
@@ -137,7 +137,7 @@ export default {
 		 * Get display name for an object
 		 * @param {object} obj - The object to get name for
 		 * @return {string} The display name
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-8
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getObjectName(obj) {
 			return obj['@self']?.name
@@ -151,7 +151,7 @@ export default {
 		 * Get schema name for an object
 		 * @param {object} obj - The object to get schema for
 		 * @return {string} The schema name or fallback text
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-8
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getObjectSchema(obj) {
 			// Try to get schema name from various possible locations
@@ -170,7 +170,7 @@ export default {
 		 * Get error message for an object
 		 * @param {object} obj - The object to get error for
 		 * @return {string|null} The error message or null if no error
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-8
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getObjectError(obj) {
 			const objectId = obj.id || obj['@self']?.id

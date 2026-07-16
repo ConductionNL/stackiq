@@ -94,7 +94,7 @@ export default {
 		/**
 		 * Get the organisation name for display
 		 * @return {string} The organisation name
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-5
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieName() {
 			const organisatie = objectStore.getActiveObject('organisatie')
@@ -104,7 +104,7 @@ export default {
 		/**
 		 * Close the dialog
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-5
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closeDialog() {
 			this.success = null
@@ -116,7 +116,7 @@ export default {
 		/**
 		 * Change the organisation status.
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-5
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async changeStatus() {
 			this.loading = true

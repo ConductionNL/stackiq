@@ -34,7 +34,7 @@
  *
  * @link https://codeberg.org/Conduction/softwarecatalog
  *
- * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -60,7 +60,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Controller for the contract approval-delegation seam.
  *
- * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  */
 class ContractApprovalController extends Controller
 {
@@ -96,7 +96,7 @@ class ContractApprovalController extends Controller
      * @return JSONResponse `{configured: bool}`.
      *
      * @NoAdminRequired
-     * @spec            openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec            openspec/specs/contract-decision-delegation/spec.md
      */
     #[NoAdminRequired]
     public function config(): JSONResponse
@@ -117,7 +117,7 @@ class ContractApprovalController extends Controller
      * @return JSONResponse `{decisionId, approvalState}` on success, error otherwise.
      *
      * @NoAdminRequired
-     * @spec            openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec            openspec/specs/contract-decision-delegation/spec.md
      */
     #[NoAdminRequired]
     public function submit(string $contractUuid): JSONResponse
@@ -139,7 +139,7 @@ class ContractApprovalController extends Controller
      * @return JSONResponse `{decisionId, approvalState}` on success, error otherwise.
      *
      * @NoAdminRequired
-     * @spec            openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec            openspec/specs/contract-decision-delegation/spec.md
      */
     #[NoAdminRequired]
     public function submitRenewal(string $contractUuid): JSONResponse

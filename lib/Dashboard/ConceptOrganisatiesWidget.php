@@ -91,7 +91,7 @@ class ConceptOrganisatiesWidget implements IWidget
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-concept-organizations-widget/tasks.md#task-1
+     * @spec openspec/specs/concept-organizations-widget/spec.md
      */
     public function load(): void
     {

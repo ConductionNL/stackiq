@@ -14,7 +14,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/nextcloud/softwarecatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -194,7 +194,7 @@ class ArchiMateService
      * @param array $options Import options including file_path, fileName, etc.
      *
      * @return array Import results with detailed status
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function importArchiMateFileFromPathOptimized(array $options=[]): array
     {
@@ -216,7 +216,7 @@ class ArchiMateService
      *
      * @return array Import results with detailed status
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function importArchiMateFileFromPath(array $options=[]): array
     {
@@ -231,7 +231,7 @@ class ArchiMateService
      *
      * @return array Export results
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-5
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function exportToArchiMate(?string $organization=null): array
     {
@@ -302,7 +302,7 @@ class ArchiMateService
      * @param array  $options          Optional export options.
      *
      * @return array Export results with 'success', 'xml', 'file_name'
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function exportOrgArchiMate(string $organizationUuid, array $options=[]): array
     {
@@ -1521,7 +1521,7 @@ class ArchiMateService
      * Test round-trip functionality
      *
      * @return array Test results
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function testRoundTrip(): array
     {
@@ -1625,7 +1625,7 @@ class ArchiMateService
      * Get AMEF configuration from app config
      *
      * @return array AMEF configuration
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function getAmefConfig(): array
     {
@@ -1728,7 +1728,7 @@ class ArchiMateService
      * Get the current status of ArchiMate operations
      *
      * @return array Status information including import/export status and object counts
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function getArchiMateStatus(): array
     {
@@ -2065,7 +2065,7 @@ class ArchiMateService
      * Check if import is in progress
      *
      * @return bool True if import is in progress
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function isImportInProgress(): bool
     {
@@ -2077,7 +2077,7 @@ class ArchiMateService
      * Check if export is in progress
      *
      * @return bool True if export is in progress
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function isExportInProgress(): bool
     {
@@ -2826,7 +2826,7 @@ class ArchiMateService
      * @param array $propDefMap The original property definition map
      *
      * @return array Mapping of original names to camelCase names
-     * @spec   openspec/changes/retrofit-2026-05-26-archimate-import/tasks.md#task-2
+     * @spec   openspec/specs/archimate-import/spec.md
      */
     public function getPropertyNameMapping(array $propDefMap): array
     {

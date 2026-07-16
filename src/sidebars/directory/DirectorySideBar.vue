@@ -163,7 +163,7 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		listingItem() {
 			return directoryStore.listingItem
@@ -172,7 +172,7 @@ export default {
 	watch: {
 		checkedMetadata: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+			 * @spec openspec/specs/fe-shell-navigation/spec.md
 			 */
 			handler(newValue, oldValue) {
 				const metadataUrl = Object.entries(newValue)[0][0]
@@ -187,7 +187,7 @@ export default {
 		},
 		listingItem: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+			 * @spec openspec/specs/fe-shell-navigation/spec.md
 			 */
 			handler(newValue, oldValue) {
 				if (newValue !== false && metadataStore?.metaDataList) {
@@ -200,7 +200,7 @@ export default {
 		},
 	},
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+	 * @spec openspec/specs/fe-shell-navigation/spec.md
 	 */
 	created() {
 		metadataStore.refreshMetaDataList()
@@ -208,13 +208,13 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		openLink(url, type = '') {
 			window.open(url, type)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		getMetadataId(metadataUrl) {
 			let metadataId
@@ -226,7 +226,7 @@ export default {
 			return metadataId
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		checkMetadataSwitches() {
 			if (Array.isArray(directoryStore?.listingItem?.metadata)) {
@@ -240,7 +240,7 @@ export default {
 			this.loading = false
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		copyMetadata(metadataUrl) {
 			this.loading = true
@@ -264,7 +264,7 @@ export default {
 				})
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		createMetadata(data) {
 			this.loading = true
@@ -296,7 +296,7 @@ export default {
 				})
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		deleteMetadata(metadataUrl) {
 			this.loading = true
@@ -320,7 +320,7 @@ export default {
 				})
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		synDirectroy() {
 			this.syncLoading = true

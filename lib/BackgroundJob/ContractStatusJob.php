@@ -17,7 +17,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -64,7 +64,7 @@ class ContractStatusJob extends TimedJob
      *
      * @return void
      *
-     * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+     * @spec openspec/specs/contract-administration/spec.md
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */

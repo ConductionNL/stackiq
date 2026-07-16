@@ -155,7 +155,7 @@ export default {
 		}
 	},
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+	 * @spec openspec/specs/fe-object-modals/spec.md
 	 */
 	mounted() {
 		this.initializeMappings()
@@ -164,7 +164,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeMappings() {
 			this.mappingsLoading = true
@@ -186,7 +186,7 @@ export default {
 				})
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeSchemas() {
 			this.schemasLoading = true
@@ -208,7 +208,7 @@ export default {
 				})
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeRegisters() {
 			this.registersLoading = true
@@ -230,7 +230,7 @@ export default {
 				})
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeModal() {
 			navigationStore.setModal(false)
@@ -244,7 +244,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async uploadObject() {
 			this.loading = true
@@ -270,13 +270,13 @@ export default {
 				})
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		prettifyJson() {
 			this.object = JSON.stringify(JSON.parse(this.object), null, 2)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		validateJson(json) {
 			try {

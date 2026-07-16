@@ -20,7 +20,7 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-4
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		defaultTooltip() {
 			return this.isPublished ? 'Published' : 'Not Published'

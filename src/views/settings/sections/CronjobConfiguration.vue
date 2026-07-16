@@ -196,7 +196,7 @@ export default {
 		 * Format organisations for NcSelect
 		 *
 		 * @return {Array} Organisation options for select
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		organisationOptions() {
 			return this.organisations.map(org => ({
@@ -215,7 +215,7 @@ export default {
 		 * Load all configuration data
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadConfig() {
 			this.loading = true
@@ -236,7 +236,7 @@ export default {
 		 * Load cronjob configurations
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadCronjobs() {
 			try {
@@ -264,7 +264,7 @@ export default {
 		 * Update organisation labels in cronjobs from loaded organisations
 		 *
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateOrganisationLabels() {
 			if (this.organisations.length === 0) return
@@ -289,7 +289,7 @@ export default {
 		 * the OpenRegister organisations endpoint directly.
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadOrganisations() {
 			this.loadingOrganisations = true
@@ -320,7 +320,7 @@ export default {
 		 *
 		 * @param {object} job The job to check
 		 * @return {boolean} True if the job can be saved
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		canSaveJob(job) {
 			return !!job.selectedOrganisation?.value
@@ -332,7 +332,7 @@ export default {
 		 * @param {string} jobId The job ID
 		 * @param {boolean} enabled Whether the job is enabled
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async updateJobEnabled(jobId, enabled) {
 			const job = this.cronjobs.find(j => j.id === jobId)
@@ -347,7 +347,7 @@ export default {
 		 *
 		 * @param {object} job The job to save
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveJobConfig(job) {
 			this.savingJob = job.id
@@ -381,7 +381,7 @@ export default {
 		 *
 		 * @param {object} job The job to run
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async runJob(job) {
 			if (!job.organisationUuid) {
@@ -412,7 +412,7 @@ export default {
 		 *
 		 * @param {number} seconds Interval in seconds
 		 * @return {string} Formatted interval
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatInterval(seconds) {
 			if (seconds < 60) {
@@ -432,7 +432,7 @@ export default {
 		 * @param {string} app App name
 		 * @param {string} text Text to translate
 		 * @return {string} Translated text
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-5
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		t(app, text) {
 			return text

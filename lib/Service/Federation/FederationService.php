@@ -16,7 +16,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -74,7 +74,7 @@ class FederationService
      *
      * @return bool True when federation can run.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function isAvailable(): bool
     {
@@ -97,7 +97,7 @@ class FederationService
      *               peers:array<int,array{url:string, failures:int, stale:bool,
      *               allowed:bool}>, staleAfter:int, message:string}
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function getStatus(): array
     {
@@ -140,7 +140,7 @@ class FederationService
      *
      * @return array{ok:bool, reason:string} Result for the settings UI.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function addPeer(string $peerUrl): array
     {
@@ -170,7 +170,7 @@ class FederationService
      *
      * @return array{ok:bool, reason:string} Result for the settings UI.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function removePeer(string $peerUrl): array
     {
@@ -194,7 +194,7 @@ class FederationService
      *
      * @return array{ok:bool, reason:string}
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function announce(): array
     {
@@ -235,7 +235,7 @@ class FederationService
      *
      * @return array{ok:bool, reason:string} Result.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function publishEntryForFederation(string $objectType, string $uuid): array
     {
@@ -272,7 +272,7 @@ class FederationService
      *
      * @return array{ok:bool, reason:string, peers:array<int,array<string,mixed>>}
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function discoverPeers(): array
     {
@@ -306,7 +306,7 @@ class FederationService
      *
      * @return array{ok:bool, reason:string, peers:array<int,array<string,mixed>>}
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function pullAllPeers(): array
     {
@@ -342,7 +342,7 @@ class FederationService
      *
      * @return array{ok:bool, reason:string, created:int, updated:int, withdrawn:int, stale:bool}
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function pullPeer(string $peerUrl): array
     {
@@ -700,7 +700,7 @@ class FederationService
      *
      * @return bool True when the object is peer-sourced (read-only).
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function isPeerSourced(array $objectData): bool
     {
@@ -724,7 +724,7 @@ class FederationService
      *
      * @return bool True when the host is allowed.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function isPeerHostAllowed(string $url): bool
     {

@@ -197,7 +197,7 @@ export default {
 	 * Provides access to the settings store
 	 *
 	 * @return {object} Setup object with store reference
-	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+	  * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	setup() {
 		return {
@@ -220,61 +220,61 @@ export default {
 	computed: {
 		// Store-connected computed properties
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loading() {
 			return this.store.loadingOpenRegisterConfig
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingRegisters() {
 			return this.store.isLoadingRegisters
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingVoorzieningenSchemas() {
 			return this.store.isLoadingVoorzieningenSchemas
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingAmefSchemas() {
 			return this.store.isLoadingAmefSchemas
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		versionInfo() { return this.store.versionInfo },
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		configuration() { return this.store.configuration },
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		registerOptions() { return this.store.registerOptions },
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		voorzieningenSchemaOptions() { return this.store.voorzieningenSchemaOptions },
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		amefSchemaOptions() { return this.store.amefSchemaOptions },
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		voorzieningenSchemas() { return this.store.voorzieningenSchemas },
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		amefSchemas() { return this.store.amefSchemas },
 
 		// Dynamic list of all voorzieningen schema config entries
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		voorzieningenItems() {
 			return [
@@ -296,7 +296,7 @@ export default {
 
 		// Dynamic list of all AMEF schema config entries
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		amefItems() {
 			return [
@@ -313,21 +313,21 @@ export default {
 		// Two-way computed properties for register selections
 		voorzieningenRegister: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			get() { return this.store.voorzieningenRegister },
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) { this.store.voorzieningenRegister = value },
 		},
 		amefRegister: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			get() { return this.store.amefRegister },
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) { this.store.amefRegister = value },
 		},
@@ -336,7 +336,7 @@ export default {
 		 * Determines if configuration can be saved
 		 *
 		 * @return {boolean} True if configuration is valid and can be saved
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		canSave() {
 			// Check if any register is selected
@@ -355,7 +355,7 @@ export default {
 	/**
 	 * Component lifecycle - load initial data
 	 * Only loads essential data needed for register/schema dropdowns
-	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+	  * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	async mounted() {
 		// Load only essential data for OpenRegister configuration dropdowns
@@ -374,7 +374,7 @@ export default {
 		 *
 		 * @param {object} register Selected register object
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		handleVoorzieningenRegisterChange(register) {
 			this.store.handleVoorzieningenRegisterChange(register)
@@ -386,7 +386,7 @@ export default {
 		 *
 		 * @param {object} register Selected register object
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		handleAmefRegisterChange(register) {
 			this.store.handleAmefRegisterChange(register)
@@ -397,7 +397,7 @@ export default {
 		 * Triggers validation in the store
 		 *
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		validateConfiguration() {
 			this.store.validateConfiguration()
@@ -408,7 +408,7 @@ export default {
 		 * Compares current configuration with original values
 		 *
 		 * @return {boolean} True if AMEF configuration has changed
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		hasAmefConfigChanges() {
 			if (!this.amefRegister) return false
@@ -434,7 +434,7 @@ export default {
 		 * Compares current configuration with original values
 		 *
 		 * @return {boolean} True if Voorzieningen configuration has changed
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		hasVoorzieningenConfigChanges() {
 			if (!this.voorzieningenRegister) return false
@@ -466,7 +466,7 @@ export default {
 		 * Saves the current configuration to the backend
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveConfiguration() {
 			this.saving = true
@@ -486,7 +486,7 @@ export default {
 		 * Reloads only essential data needed for the dropdowns
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async refreshSettings() {
 			try {

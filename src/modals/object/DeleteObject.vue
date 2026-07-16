@@ -72,7 +72,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-6
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeDialog() {
 			navigationStore.setDialog(false)
@@ -82,7 +82,7 @@ export default {
 			this.error = false
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-6
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteObject() {
 			this.loading = true

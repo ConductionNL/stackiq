@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/OpenConnector
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-2
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -74,7 +74,7 @@ class SoftwareCatalogEventListener implements IEventListener
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-2
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function handle(Event $event): void
     {
@@ -408,7 +408,7 @@ class SoftwareCatalogEventListener implements IEventListener
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-2
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     private function handleObjectCreated(
         ObjectCreatedEvent $event,
@@ -538,7 +538,7 @@ class SoftwareCatalogEventListener implements IEventListener
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-2
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     private function handleObjectUpdated(
         ObjectUpdatedEvent $event,
@@ -794,7 +794,7 @@ class SoftwareCatalogEventListener implements IEventListener
      * @SuppressWarnings(PHPMD.NPathComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-2
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     private function handleObjectDeleted(
         ObjectDeletedEvent $event,
