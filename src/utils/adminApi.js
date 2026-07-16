@@ -9,8 +9,8 @@
  * `#[AuthorizedAdminSetting(SoftwareCatalogAdmin::class)]`; these helpers add
  * no client-side gate (a client gate would be security theatre).
  *
- * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
- * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -23,7 +23,7 @@ const API_BASE = '/index.php/apps/softwarecatalog/api'
  *
  * @param {string} path - Path under the app API root (leading slash optional).
  * @return {string} The absolute API URL.
- * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md
  */
 export function apiUrl(path) {
 	const clean = String(path || '').replace(/^\/+/, '')
@@ -41,8 +41,8 @@ export function apiUrl(path) {
  * @param {object} [options.body]   - JSON body (serialised when present).
  * @param {Function} [fetchImpl]    - Injected fetch (defaults to global fetch; for tests).
  * @return {Promise<object>} The parsed JSON response body.
- * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
- * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
  */
 export async function apiRequest(path, options = {}, fetchImpl = undefined) {
 	const doFetch = fetchImpl || (typeof fetch !== 'undefined' ? fetch : null)
@@ -84,7 +84,7 @@ export async function apiRequest(path, options = {}, fetchImpl = undefined) {
  *
  * @param {object} status - The raw `/api/federation/status` response.
  * @return {{available: boolean, enabled: boolean, directoryUrl: string, staleAfter: number, peers: Array<{url: string, failures: number, stale: boolean, allowed: boolean}>, message: string}} Normalised status.
- * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md
  */
 export function normaliseFederationStatus(status) {
 	const raw = status || {}

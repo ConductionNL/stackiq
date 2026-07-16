@@ -12,7 +12,7 @@
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -67,7 +67,7 @@ class UserProfileUpdatedEventListener implements IEventListener
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function handle(Event $event): void
     {
@@ -127,7 +127,7 @@ class UserProfileUpdatedEventListener implements IEventListener
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     private function syncToContactpersoon(UserProfileUpdatedEvent $event, LoggerInterface $logger): void
     {

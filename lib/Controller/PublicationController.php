@@ -22,7 +22,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -81,7 +81,7 @@ class PublicationController extends Controller
      * @return JSONResponse `{ok, publicatiedatum}` or an error/403.
      *
      * @NoAdminRequired
-     * @spec            openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @spec            openspec/specs/open-data-publishing/spec.md
      */
     #[NoAdminRequired]
     public function publish(string $objectType, string $uuid, ?string $when=null): JSONResponse
@@ -108,7 +108,7 @@ class PublicationController extends Controller
      * @return JSONResponse `{ok, publicatiedatum}` or an error/403.
      *
      * @NoAdminRequired
-     * @spec            openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @spec            openspec/specs/open-data-publishing/spec.md
      */
     #[NoAdminRequired]
     public function depublish(string $objectType, string $uuid): JSONResponse
@@ -139,7 +139,7 @@ class PublicationController extends Controller
      *
      * @return JSONResponse|null Error response, or null when authorized.
      *
-     * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @spec openspec/specs/open-data-publishing/spec.md
      */
     private function authorizeEntry(string $objectType, string $uuid): ?JSONResponse
     {

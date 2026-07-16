@@ -346,7 +346,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Clear error
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		clearError() {
 			this.error = null
@@ -355,7 +355,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Load statistics from the objects/counts endpoint
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadStatistics() {
 			this.loadingStatistics = true
@@ -395,7 +395,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load all settings from the API
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadSettings() {
 			// Prevent multiple simultaneous calls
@@ -460,7 +460,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Load essential data for OpenRegister configuration dropdowns
 		 * Only loads the data needed for register/schema selection
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadOpenRegisterEssentials() {
 			this.clearError()
@@ -502,7 +502,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load Voorzieningen configuration with focused loading state
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadVoorzieningenConfigFocused() {
 			this.loadingVoorzieningenSchemas = true
@@ -524,7 +524,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load AMEF configuration with focused loading state
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadAmefConfigFocused() {
 			this.loadingAmefSchemas = true
@@ -549,7 +549,7 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {string} catalogLocation - The new catalog location URL
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async updateCatalogLocation(catalogLocation) {
 			try {
@@ -565,7 +565,7 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {number} syncTimeWindow - The new sync time window value
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async updateSyncTimeWindow(syncTimeWindow) {
 			try {
@@ -580,7 +580,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load general configuration from focused endpoint
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadGeneralConfig() {
 			this.loadingGeneralSettings = true
@@ -610,7 +610,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load organization synchronization configuration from focused endpoint
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadSyncConfig() {
 			this.loadingSyncSettings = true
@@ -638,7 +638,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load version information from focused endpoint
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadVersionInfo() {
 			this.loadingVersionInfo = true
@@ -660,7 +660,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load ArchiMate status from focused endpoint
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadArchiMateStatus() {
 			this.loadingArchiMateStatus = true
@@ -687,7 +687,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load object counts from focused endpoint
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadObjectCounts() {
 			this.loadingObjectCounts = true
@@ -715,7 +715,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load email configuration from focused endpoint
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadEmailConfig() {
 			this.loadingEmailConfig = true
@@ -738,7 +738,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load user groups configuration from focused endpoint
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadUserGroupsConfig() {
 			this.loadingUserGroups = true
@@ -769,7 +769,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load only user groups configuration (for individual component refresh)
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadUserGroupsOnly() {
 			const response = await fetch('/index.php/apps/softwarecatalog/api/user-groups/config')
@@ -794,7 +794,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Load AMEF configuration from focused endpoint
 		 * Used in full settings load - doesn't interfere with focused loading states
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadAmefConfig() {
 			try {
@@ -815,7 +815,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Load Voorzieningen configuration from focused endpoint
 		 * Used in full settings load - doesn't interfere with focused loading states
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadVoorzieningenConfig() {
 			try {
@@ -835,7 +835,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Initialize configuration object
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		initializeConfiguration() {
 			// Initialize register-specific configuration
@@ -867,7 +867,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Populate register selections using the focused endpoint configs
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		populateRegisterSelectionsFromFocused() {
 			// Voorzieningen register
@@ -898,7 +898,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Populate schema selections using the focused endpoint configs
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		populateSchemaSelectionsFromFocused() {
 			const findOption = (schemaId, options) => {
@@ -966,7 +966,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Import ArchiMate file with proper error handling (async approach)
 		 * @param {('speed'|'memory')} processingMode Processing strategy
 		 * @return {void}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		importArchiMateFile(processingMode = 'speed') {
 			if (!this.selectedFile) {
@@ -1034,7 +1034,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Start status polling with more frequent initial polls
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		startStatusPolling() {
 			if (this.statusPollingInterval) {
@@ -1050,7 +1050,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Stop status polling
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		stopStatusPolling() {
 			if (this.statusPollingInterval) {
@@ -1066,7 +1066,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Prevents concurrent calls to avoid stacking requests
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async refreshArchiMateStatus() {
 			if (this.isStatusPolling) {
@@ -1097,7 +1097,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Clear ArchiMate import status
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async clearImportStatus() {
 			try {
@@ -1138,7 +1138,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Clear ArchiMate export status
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async clearExportStatus() {
 			try {
@@ -1182,7 +1182,7 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {object} register Selected register object
 		 * @return {void}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		handleVoorzieningenRegisterChange(register) {
 			if (register) {
@@ -1201,7 +1201,7 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {object} register Selected register object
 		 * @return {void}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		handleAmefRegisterChange(register) {
 			if (register) {
@@ -1219,7 +1219,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * This method can be expanded to add validation logic
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		validateConfiguration() {
 			// Configuration validation logic can be added here
@@ -1229,7 +1229,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Save configuration to backend using focused endpoints
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async saveConfiguration() {
 			try {
@@ -1431,7 +1431,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Sets up the entire application configuration in one operation
 		 *
 		 * @return {Promise<object>} Configuration result
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async consolidatedAutoConfigure() {
 			try {
@@ -1474,7 +1474,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Reset auto-configuration flag and optionally schema/register keys
 		 * Calls POST /api/settings/reset-auto-config
 		 * @return {Promise<object>} Result
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async resetAutoConfig() {
 			try {
@@ -1502,7 +1502,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Force update: forced import + version sync
 		 * Calls POST /api/settings/force-update
 		 * @return {Promise<object>} Result
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async forceUpdate() {
 			try {
@@ -1529,7 +1529,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Save email settings
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async saveEmailSettings() {
 			try {
@@ -1545,7 +1545,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Test email connection
 		 *
 		 * @return {Promise<object>} Test result
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async testEmailConnection() {
 			try {
@@ -1590,7 +1590,7 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {string} testEmail Test email address
 		 * @return {Promise<object>} Test result
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async sendTestEmail(testEmail = '') {
 			try {
@@ -1636,7 +1636,7 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {string} format Export format
 		 * @return {void}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async exportToArchiMate(format = 'xml') {
 			this.exporting = true
@@ -1697,7 +1697,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Test ArchiMate round-trip functionality
 		 *
 		 * @return {Promise<object>} Test result
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async testRoundTrip() {
 			try {
@@ -1735,7 +1735,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Cleanup method to stop polling when store is destroyed
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		cleanup() {
 			this.stopStatusPolling()
@@ -1744,7 +1744,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Reset store state
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-stores/tasks.md#task-1
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		reset() {
 			this.stopStatusPolling()

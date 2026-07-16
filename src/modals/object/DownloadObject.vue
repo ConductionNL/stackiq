@@ -76,7 +76,7 @@ export default {
 		}
 	},
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+	 * @spec openspec/specs/fe-object-modals/spec.md
 	 */
 	mounted() {
 		if (objectStore.objectItem?.id) {
@@ -88,7 +88,7 @@ export default {
 		jsonParseLinter,
 		getTheme,
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeModal() {
 			navigationStore.setModal(false)
@@ -98,7 +98,7 @@ export default {
 			this.error = false
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-5
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async downloadObject() {
 			this.loading = true

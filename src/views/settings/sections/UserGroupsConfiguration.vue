@@ -318,7 +318,7 @@ export default {
 	 * Provides access to the settings store
 	 *
 	 * @return {object} Setup object with store reference
-	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+	  * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	setup() {
 		return {
@@ -347,43 +347,43 @@ export default {
 	computed: {
 		// Store-connected computed properties
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loading() { return this.store.loading },
 		genericUserGroups: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			get() { return this.store.genericUserGroups || [] },
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) { this.store.genericUserGroups = value },
 		},
 		organizationAdminGroups: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			get() { return this.store.organizationAdminGroups || [] },
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) { this.store.organizationAdminGroups = value },
 		},
 		superUserGroups: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			get() { return this.store.superUserGroups || [] },
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) { this.store.superUserGroups = value },
 		},
 
 		/**
 		 * Check if there are any unsaved changes
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		hasChanges() {
 			// This would ideally check if the current values differ from the saved values
@@ -395,7 +395,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	mounted() {
 		// ensure we fetch latest user groups when opening the section
@@ -408,7 +408,7 @@ export default {
 		 *
 		 * @param {string} group Group name
 		 * @return {string} Group description
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getGroupDescription(group) {
 			const descriptions = {
@@ -426,7 +426,7 @@ export default {
 		 * Add a new generic user group
 		 *
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		addGroup() {
 			this.genericUserGroups.push('')
@@ -437,7 +437,7 @@ export default {
 		 *
 		 * @param {number} index Index of the group to remove
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		removeGroup(index) {
 			this.genericUserGroups.splice(index, 1)
@@ -449,7 +449,7 @@ export default {
 		 * @param {number} index Index of the group to update
 		 * @param {string} value New group name
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateGroupName(index, value) {
 			this.genericUserGroups[index] = value
@@ -460,7 +460,7 @@ export default {
 		 * Add a new organization admin group
 		 *
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		addOrganizationAdminGroup() {
 			this.organizationAdminGroups.push('')
@@ -471,7 +471,7 @@ export default {
 		 *
 		 * @param {number} index Index of the group to remove
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		removeOrganizationAdminGroup(index) {
 			this.organizationAdminGroups.splice(index, 1)
@@ -483,7 +483,7 @@ export default {
 		 * @param {number} index Index of the group to update
 		 * @param {string} value New group name
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateOrganizationAdminGroupName(index, value) {
 			this.organizationAdminGroups[index] = value
@@ -494,7 +494,7 @@ export default {
 		 * Add a new super user group
 		 *
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		addSuperUserGroup() {
 			this.superUserGroups.push('')
@@ -505,7 +505,7 @@ export default {
 		 *
 		 * @param {number} index Index of the group to remove
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		removeSuperUserGroup(index) {
 			this.superUserGroups.splice(index, 1)
@@ -517,7 +517,7 @@ export default {
 		 * @param {number} index Index of the group to update
 		 * @param {string} value New group name
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateSuperUserGroupName(index, value) {
 			this.superUserGroups[index] = value
@@ -525,7 +525,7 @@ export default {
 
 		/**
 		 * Save all groups using the centralized settings store
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveAllGroups() {
 			try {
@@ -540,7 +540,7 @@ export default {
 
 		/**
 		 * Load all groups from the store
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-3
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadAllGroups() {
 			try {

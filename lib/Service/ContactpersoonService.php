@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-7
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -108,7 +108,7 @@ class ContactpersoonService
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-7
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function processContactpersoon(object $contactpersoonObject, bool $isUpdate=false): bool
     {
@@ -370,7 +370,7 @@ class ContactpersoonService
      * @param string $username             The username to update groups for
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-1
+     * @spec   openspec/specs/contactpersoon-sync/spec.md
      */
     public function updateUserGroups(object $contactpersoonObject, string $username): void
     {
@@ -397,7 +397,7 @@ class ContactpersoonService
      * @param string $username             The username being processed
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-1
+     * @spec   openspec/specs/contactpersoon-sync/spec.md
      */
     public function ensureOrganizationBeheerder(object $contactpersoonObject, string $username): void
     {
@@ -501,7 +501,7 @@ class ContactpersoonService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-7
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject=null): void
     {
@@ -693,7 +693,7 @@ class ContactpersoonService
      * @param object $contactObject The contact object being deleted
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-1
+     * @spec   openspec/specs/contactpersoon-sync/spec.md
      */
     public function handleContactDeletion(object $contactObject): void
     {
@@ -763,7 +763,7 @@ class ContactpersoonService
      * @param string $organizationUuid The organization UUID
      *
      * @return array Array of contact person objects
-     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-2
+     * @spec   openspec/specs/contactpersoon-sync/spec.md
      */
     public function getContactPersonsForOrganization(string $organizationUuid): array
     {
@@ -824,7 +824,7 @@ class ContactpersoonService
      * @return array Array of contact person objects with user details spliced in
      *
      * @throws \Exception If contact person retrieval fails
-     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-2
+     * @spec   openspec/specs/contactpersoon-sync/spec.md
      */
     public function getContactPersonsWithUserDetailsForOrganization(string $organizationUuid): array
     {
@@ -980,7 +980,7 @@ class ContactpersoonService
      * @return array Array of user information keyed by contact person ID
      *
      * @throws \Exception If bulk user info retrieval fails
-     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-2
+     * @spec   openspec/specs/contactpersoon-sync/spec.md
      */
     public function getBulkUserInfo(array $contactpersoonIds): array
     {
@@ -1252,7 +1252,7 @@ class ContactpersoonService
      * @return void
      *
      * @throws \Exception If enabling fails.
-     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-2
+     * @spec   openspec/specs/contactpersoon-sync/spec.md
      */
     public function enableUserForContactpersoon(string $contactpersoonId): void
     {
@@ -1324,7 +1324,7 @@ class ContactpersoonService
      * @return void
      *
      * @throws \Exception If disabling fails.
-     * @spec   openspec/changes/retrofit-2026-05-26-contactpersoon-sync/tasks.md#task-2
+     * @spec   openspec/specs/contactpersoon-sync/spec.md
      */
     public function disableUserForContactpersoon(string $contactpersoonId): void
     {

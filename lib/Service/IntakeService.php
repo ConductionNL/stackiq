@@ -22,7 +22,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -112,7 +112,7 @@ class IntakeService
      *
      * @return array{ok:bool, reason:string, uuid:?string, status:?string} Result.
      *
-     * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @spec openspec/specs/open-data-publishing/spec.md
      */
     public function submit(array $payload): array
     {
@@ -176,7 +176,7 @@ class IntakeService
      *
      * @return string|null The rejection reason, or null when valid.
      *
-     * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @spec openspec/specs/open-data-publishing/spec.md
      */
     public function validate(array $payload): ?string
     {

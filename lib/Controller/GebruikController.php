@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/nextcloud/softwarecatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 namespace OCA\SoftwareCatalog\Controller;
@@ -81,8 +81,8 @@ class GebruikController extends Controller
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
-     * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+     * @spec openspec/specs/method-decomposition/spec.md
+     * @spec openspec/specs/open-data-publishing/spec.md
      */
     public function getGebruiken(): JSONResponse
     {
@@ -209,7 +209,7 @@ class GebruikController extends Controller
      *
      * @return JSONResponse
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function getGebruikenForDeelnemer(): JSONResponse
     {

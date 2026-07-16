@@ -24,7 +24,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-005
+ * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use Psr\Log\LoggerInterface;
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-005
+ * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
  */
 class MigrateContactsToNc implements IRepairStep
 {
@@ -93,7 +93,7 @@ class MigrateContactsToNc implements IRepairStep
      *
      * @return string The repair step name.
      *
-     * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-005
+     * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
      */
     public function getName(): string
     {
@@ -107,7 +107,7 @@ class MigrateContactsToNc implements IRepairStep
      *
      * @return void
      *
-     * @spec openspec/changes/softwarecatalog-contacts-to-nc/specs/softwarecatalog-contacts-to-nc/spec.md#REQ-SCNC-005
+     * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
      */
     public function run(IOutput $output): void
     {

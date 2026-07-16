@@ -14,7 +14,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -61,7 +61,7 @@ class FederationConfig
      *
      * @return string The directory URL.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function getDirectoryUrl(): string
     {
@@ -78,7 +78,7 @@ class FederationConfig
      *
      * @return array<int,string> The peer URLs.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function getPeers(): array
     {
@@ -98,7 +98,7 @@ class FederationConfig
      *
      * @return void
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function setPeers(array $peers): void
     {
@@ -111,7 +111,7 @@ class FederationConfig
      *
      * @return int The interval.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function getSyncInterval(): int
     {
@@ -129,7 +129,7 @@ class FederationConfig
      *
      * @return int The threshold.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function getStaleAfterFailures(): int
     {
@@ -147,7 +147,7 @@ class FederationConfig
      *
      * @return int The timeout in seconds.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function getPeerTimeout(): int
     {
@@ -166,7 +166,7 @@ class FederationConfig
      *
      * @return int The consecutive-failure count.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function getPeerFailures(string $peerUrl): int
     {
@@ -187,7 +187,7 @@ class FederationConfig
      *
      * @return void
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function setPeerFailures(string $peerUrl, int $failures): void
     {
@@ -214,7 +214,7 @@ class FederationConfig
      *
      * @return array<int,string> The allowlisted hosts.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function getLocalFederationHosts(): array
     {

@@ -95,7 +95,7 @@ class ProgressTracker
      *
      * @return string Unique operation ID
      *
-     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-1
+     * @spec openspec/specs/progress-tracking/spec.md
      */
     public function startOperation(string $operationType, array $options=[], ?string $ownerUid=null): string
     {
@@ -141,7 +141,7 @@ class ProgressTracker
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-2
+     * @spec openspec/specs/progress-tracking/spec.md
      */
     public function setPhase(string $phase, array $data=[]): void
     {
@@ -184,7 +184,7 @@ class ProgressTracker
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-2
+     * @spec openspec/specs/progress-tracking/spec.md
      */
     public function updateProgress(int $processedItems=null, string $currentItem=null, string $itemType=null): void
     {
@@ -217,7 +217,7 @@ class ProgressTracker
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-2
+     * @spec openspec/specs/progress-tracking/spec.md
      */
     public function incrementProgress(string $currentItem=null, string $itemType=null): void
     {
@@ -236,7 +236,7 @@ class ProgressTracker
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-3
+     * @spec openspec/specs/progress-tracking/spec.md
      */
     public function addError(string $message, array $context=[]): void
     {
@@ -266,7 +266,7 @@ class ProgressTracker
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-3
+     * @spec openspec/specs/progress-tracking/spec.md
      */
     public function addWarning(string $message, array $context=[]): void
     {
@@ -286,7 +286,7 @@ class ProgressTracker
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-2
+     * @spec openspec/specs/progress-tracking/spec.md
      */
     public function updateStatistics(array $statistics): void
     {
@@ -301,7 +301,7 @@ class ProgressTracker
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-4
+     * @spec openspec/specs/progress-tracking/spec.md
      */
     public function completeOperation(array $finalStatistics=[]): void
     {
@@ -336,7 +336,7 @@ class ProgressTracker
      *
      * @return array|null Progress data or null if not found
      *
-     * @spec openspec/changes/retrofit-2026-05-24-progress-tracking/tasks.md#task-5
+     * @spec openspec/specs/progress-tracking/spec.md
      */
     public function getProgress(string $operationId=null): ?array
     {
@@ -435,7 +435,7 @@ class ProgressTracker
      * @param int $maxAge Maximum age in seconds (default: 1 hour)
      *
      * @return void
-     * @spec   openspec/changes/retrofit-2026-05-26-progress-tracking-2/tasks.md#task-1
+     * @spec   openspec/specs/progress-tracking/spec.md
      */
     public function cleanupOldProgress(int $maxAge=3600): void
     {

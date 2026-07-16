@@ -118,7 +118,7 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		isFormValid() {
 			return this.formData.voornaam.trim()
@@ -130,7 +130,7 @@ export default {
 
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closeModal() {
 			this.resetForm()
@@ -138,7 +138,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		resetForm() {
 			this.formData = {
@@ -150,7 +150,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		isValidEmail(email) {
 			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -158,7 +158,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async saveContactpersoon() {
 			if (!this.isFormValid) {
@@ -213,7 +213,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		generateUuid() {
 			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

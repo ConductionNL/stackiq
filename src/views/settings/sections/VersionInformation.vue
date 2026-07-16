@@ -249,7 +249,7 @@ export default {
 	 * Provides access to the settings store
 	 *
 	 * @return {object} Setup object with store reference
-	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+	  * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	setup() {
 		return {
@@ -273,11 +273,11 @@ export default {
 	computed: {
 		// Store-connected computed properties
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingVersionInfo() { return this.store.loadingVersionInfo },
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		versionInfo() { return this.store.versionInfo },
 	},
@@ -287,7 +287,7 @@ export default {
 		 * Perform consolidated auto-configuration using the settings store
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async consolidatedAutoConfigure() {
 			this.autoConfiguring = true
@@ -314,7 +314,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleResetAutoConfig() {
 			this.autoConfiguring = true
@@ -333,7 +333,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleForceUpdate() {
 			this.autoConfiguring = true

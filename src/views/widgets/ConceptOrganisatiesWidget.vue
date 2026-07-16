@@ -90,7 +90,7 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-6
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		items() {
 			return objectStore.getCollection('organisatie').results
@@ -110,7 +110,7 @@ export default {
 		 * Handle accepting an organisatie (change status to actief)
 		 * @param {object} item - The organisatie item to accept
 		 * @return {void}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-6
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async onAccept(item) {
 			this.processingIds.push(item.id)
@@ -126,7 +126,7 @@ export default {
 		/**
 		 * Fetch the organisatie data
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-6
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async fetchData() {
 			this.loading = true

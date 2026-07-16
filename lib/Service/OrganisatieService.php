@@ -71,7 +71,7 @@ class OrganisatieService
      *
      * @return object|null The created organisation entity or null on failure
      *
-     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-1
+     * @spec openspec/specs/organisatie-service/spec.md
      */
     public function createOrganisationInOpenRegister(array $objectData): ?object
     {
@@ -138,7 +138,7 @@ class OrganisatieService
      *
      * @return bool True if update was successful
      *
-     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-2
+     * @spec openspec/specs/organisatie-service/spec.md
      */
     public function updateOrganizationStatus(string $organizationUuid, array $objectData): bool
     {
@@ -209,7 +209,7 @@ class OrganisatieService
      *
      * @return array The mapped data for OpenRegister.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-3
+     * @spec openspec/specs/organisatie-service/spec.md
      */
     private function mapOrganizationDataForOpenRegister(array $objectData): array
     {
@@ -239,7 +239,7 @@ class OrganisatieService
      *
      * @return bool The mapped active status for OpenRegister
      *
-     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-2
+     * @spec openspec/specs/organisatie-service/spec.md
      */
     private function mapStatus(string $status): bool
     {
@@ -394,7 +394,7 @@ class OrganisatieService
      *
      * @return string|null The active organisation UUID or null if not set
      *
-     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-1
+     * @spec openspec/specs/organisatie-service/spec.md
      */
     private function getActiveOrganisationUuid(
         \OCA\OpenRegister\Service\OrganisationService $organisationService
@@ -425,7 +425,7 @@ class OrganisatieService
      *
      * @return bool True if successful
      *
-     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-4
+     * @spec openspec/specs/organisatie-service/spec.md
      */
     public function addUsersToOrganization(string $organizationUuid, array $usernames): bool
     {
@@ -500,7 +500,7 @@ class OrganisatieService
      *
      * @return array Array of admin usernames
      *
-     * @spec openspec/changes/retrofit-2026-05-24-organisatie-service/tasks.md#task-5
+     * @spec openspec/specs/organisatie-service/spec.md
      */
     public function getAdminGroupUsernames(): array
     {

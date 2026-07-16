@@ -25,7 +25,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,7 +45,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Idempotent, fail-safe backfill of contract.approvalState = none.
  *
- * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  */
 class BackfillContractApprovalState implements IRepairStep
 {
@@ -68,7 +68,7 @@ class BackfillContractApprovalState implements IRepairStep
      *
      * @return string The repair step name.
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     public function getName(): string
     {
@@ -82,7 +82,7 @@ class BackfillContractApprovalState implements IRepairStep
      *
      * @return void
      *
-     * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     public function run(IOutput $output): void
     {

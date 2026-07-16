@@ -148,7 +148,7 @@ import { apiRequest, normaliseFederationStatus } from '../../../utils/adminApi.j
 /**
  * Federation settings admin section.
  *
- * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md
  */
 export default defineComponent({
 	name: 'FederationSettings',
@@ -190,7 +190,7 @@ export default defineComponent({
 	/**
 	 * Load the federation status on mount.
 	 *
-	 * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 */
 	async created() {
 		await this.loadStatus()
@@ -204,7 +204,7 @@ export default defineComponent({
 		 * Load federation status from the admin endpoint.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+		 * @spec openspec/specs/federated-catalog-sync/spec.md
 		 */
 		async loadStatus() {
 			this.loading = true
@@ -222,7 +222,7 @@ export default defineComponent({
 		 * Add the entered peer URL to the federation allowlist.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+		 * @spec openspec/specs/federated-catalog-sync/spec.md
 		 */
 		async addPeer() {
 			const url = this.newPeerUrl.trim()
@@ -247,7 +247,7 @@ export default defineComponent({
 		 *
 		 * @param {string} url - The peer base URL to remove.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+		 * @spec openspec/specs/federated-catalog-sync/spec.md
 		 */
 		async removePeer(url) {
 			this.removingUrl = url
@@ -266,7 +266,7 @@ export default defineComponent({
 		 * Trigger a manual pull of all configured peers.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+		 * @spec openspec/specs/federated-catalog-sync/spec.md
 		 */
 		async triggerPull() {
 			this.pulling = true

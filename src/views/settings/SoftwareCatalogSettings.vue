@@ -147,7 +147,7 @@ export default defineComponent({
 	},
 
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	setup() {
 		// Use the settings store
@@ -176,7 +176,7 @@ export default defineComponent({
 		 * (configured version + up-to-date badge) and the maintenance action buttons.
 		 *
 		 * @return {object} Version information
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		versionInfo() {
 			return this.store.versionInfo || {}
@@ -186,7 +186,7 @@ export default defineComponent({
 		 * Check if catalog location has changed
 		 *
 		 * @return {boolean} True if catalog location has changed
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		catalogLocationChanged() {
 			return this.catalogLocation !== (this.store.settings.catalogLocation || '')
@@ -199,7 +199,7 @@ export default defineComponent({
 	watch: {
 		'store.settings.catalogLocation': {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			handler(newValue) {
 				if (newValue !== undefined && newValue !== null) {
@@ -210,7 +210,7 @@ export default defineComponent({
 		},
 		'store.loadingGeneralSettings': {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			handler(newValue, oldValue) {
 				// When loading finishes, update the catalog location
@@ -223,7 +223,7 @@ export default defineComponent({
 
 	/**
 	 * Load settings data when component is created
-	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+	  * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	async created() {
 		await this.store.loadSettings()
@@ -237,7 +237,7 @@ export default defineComponent({
 		 *
 		 * @param {string} value - New catalog location value
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		onCatalogLocationChange(value) {
 			this.catalogLocation = value
@@ -248,7 +248,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveGeneralSettings() {
 			this.savingCatalogLocation = true
@@ -270,7 +270,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async refreshGeneralSettings() {
 			try {
@@ -287,7 +287,7 @@ export default defineComponent({
 		 * Feedback is surfaced via toast notifications.
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async consolidatedAutoConfigure() {
 			this.autoConfiguring = true
@@ -311,7 +311,7 @@ export default defineComponent({
 		 * Force a full re-import and version sync via the settings store.
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleForceUpdate() {
 			this.autoConfiguring = true
@@ -332,7 +332,7 @@ export default defineComponent({
 		 * Reset the auto-config completed flag via the settings store.
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		  * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleResetAutoConfig() {
 			this.autoConfiguring = true

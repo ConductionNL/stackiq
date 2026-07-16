@@ -198,7 +198,7 @@ export default {
 		 */
 		currentView: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-4
+			 * @spec openspec/specs/fe-organizations/spec.md
 			 */
 			async handler(newView, oldView) {
 				// Only trigger when actually switching TO contactpersonen view from a different view
@@ -247,7 +247,7 @@ export default {
 		 * Get the summary/tooltip text for the organisation
 		 * @param {object} item - The organisation object
 		 * @return {string} The summary text
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-4
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieSummary(item) {
 			if (item?.beschrijvingKort) return item.beschrijvingKort
@@ -261,7 +261,7 @@ export default {
 		 * Execute an object action
 		 * @param {object} action - The action to execute
 		 * @param {object} item - The item to execute the action on
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-4
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		executeObjectAction(action, item) {
 			if (action.handler) {
@@ -273,7 +273,7 @@ export default {
 		 * Format website URL to ensure it has protocol
 		 * @param {string} url - The website URL
 		 * @return {string} Formatted URL with protocol
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-4
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		formatWebsiteUrl(url) {
 			if (!url) return '#'
@@ -288,7 +288,7 @@ export default {
 		 * @param {string} text - Text to truncate
 		 * @param {number} maxLength - Maximum length
 		 * @return {string} Truncated text
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-4
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		truncateText(text, maxLength = 150) {
 			if (!text || text.length <= maxLength) return text
@@ -297,7 +297,7 @@ export default {
 
 		/**
 		 * Toggle between organisation and contactpersonen views
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-4
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async toggleView() {
 			const newView = this.currentView === 'organisatie' ? 'contactpersonen' : 'organisatie'
@@ -318,7 +318,7 @@ export default {
 		/**
 		 * Get the organisation address
 		 * @return {string} The organisation's address
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-4
+		  * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieAdres() {
 			const adres = this.item?.adres

@@ -238,7 +238,7 @@ export default defineComponent({
 	methods: {
 		/**
 		 * Handle save button click
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-4
+		  * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleSave() {
 			this.$emit('save')
@@ -246,7 +246,7 @@ export default defineComponent({
 
 		/**
 		 * Handle refresh button click
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-4
+		  * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleRefresh() {
 			this.$emit('refresh')

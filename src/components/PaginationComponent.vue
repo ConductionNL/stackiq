@@ -155,7 +155,7 @@ export default {
 		/**
 		 * Get current page size option object
 		 * @return {object} Current page size option object
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-3
+		  * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		currentPageSizeOption() {
 			return this.pageSizeOptions.find(option => option.value === this.currentPageSize) || this.pageSizeOptions[1]
@@ -163,7 +163,7 @@ export default {
 		/**
 		 * Calculate visible page numbers for pagination
 		 * @return {Array} Array of page numbers and ellipsis
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-3
+		  * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		visiblePages() {
 			const current = this.currentPage
@@ -211,7 +211,7 @@ export default {
 		 * Change to a specific page
 		 * @param {number} page - The page number to change to
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-3
+		  * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		changePage(page) {
 			if (page !== this.currentPage && page >= 1 && page <= this.totalPages) {
@@ -227,7 +227,7 @@ export default {
 		 * Change page size
 		 * @param {object} option - Selected page size option
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-3
+		  * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		changePageSize(option) {
 			if (option.value !== this.currentPageSize) {

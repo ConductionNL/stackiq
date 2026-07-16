@@ -7,7 +7,7 @@
  * Mounts CnAppRoot with the bundled manifest, registers icons/translations,
  * and primes the router from the manifest pages.
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-11
+ * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
  */
 
 import Vue from 'vue'

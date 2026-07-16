@@ -101,7 +101,7 @@ export default {
 		/**
 		 * Get the objects to operate on from selected objects
 		 * @return {Array<object>} Array of objects to delete
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		objectsToDelete() {
 			return objectStore.selectedObjects || []
@@ -110,7 +110,7 @@ export default {
 		/**
 		 * Get the dialog title based on number of objects
 		 * @return {string} Dialog title
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dialogTitle() {
 			const count = objectStore.selectedObjects?.length || 0
@@ -126,14 +126,14 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeSelection() {
 			// Store the original count for success message
 			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeDialog() {
 			// Clear any pending timeout that might reopen the dialog
@@ -144,7 +144,7 @@ export default {
 			navigationStore.setDialog(false)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		navigateToDeleted() {
 			// Close the dialog first
@@ -153,7 +153,7 @@ export default {
 			navigationStore.setSelected('deleted')
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteObject() {
 			this.loading = true
@@ -190,7 +190,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleDialogClose(isOpen) {
 			if (!isOpen) {

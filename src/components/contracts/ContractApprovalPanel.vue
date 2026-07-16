@@ -88,7 +88,7 @@ import Autorenew from 'vue-material-design-icons/Autorenew.vue'
  * `In onderhandeling -> Actief` transition is NEVER performed here — it is a
  * projection of an approved decidesk outcome, applied server-side.
  *
- * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  */
 export default {
 	name: 'ContractApprovalPanel',
@@ -147,7 +147,7 @@ export default {
 		 * Whether the contract may be submitted for first approval.
 		 *
 		 * @return {boolean} True for an In onderhandeling contract not already pending.
-		 * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		canSubmitApproval() {
 			return this.status === 'In onderhandeling'
@@ -157,7 +157,7 @@ export default {
 		 * Whether the contract may be submitted for renewal.
 		 *
 		 * @return {boolean} True for an expiring/Verlopen contract not already pending.
-		 * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		canSubmitRenewal() {
 			return this.status === 'Verlopen'
@@ -167,7 +167,7 @@ export default {
 		 * Human-readable label for the projected approval state.
 		 *
 		 * @return {string} The translated approvalState label.
-		 * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		approvalStateLabel() {
 			const map = {
@@ -182,7 +182,7 @@ export default {
 		 * Badge variant for the projected approval state.
 		 *
 		 * @return {string} The CnStatusBadge variant for the approvalState.
-		 * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		approvalStateVariant() {
 			const map = {
@@ -203,7 +203,7 @@ export default {
 		 * Load delegation config + the contract's projected approval fields.
 		 *
 		 * @return {Promise<void>} Resolves once config + contract are loaded.
-		 * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		async load() {
 			this.loading = true
@@ -223,7 +223,7 @@ export default {
 		 * Read the contract object to pull status + projected approval fields.
 		 *
 		 * @return {Promise<void>} Resolves once the contract fields are read.
-		 * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		async loadContract() {
 			if (!this.objectId) {
@@ -245,7 +245,7 @@ export default {
 		 *
 		 * @param {boolean} isRenewal Whether to submit a renewal decision.
 		 * @return {Promise<void>} Resolves once the submit completes or fails closed.
-		 * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		async submit(isRenewal) {
 			this.busy = true

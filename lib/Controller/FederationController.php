@@ -22,7 +22,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -65,7 +65,7 @@ class FederationController extends Controller
      * @return JSONResponse `{available, enabled, directoryUrl, peers, staleAfter, message}`.
      *
      * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
-     * @spec                                                                               openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md
      */
     #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
     public function status(): JSONResponse
@@ -81,7 +81,7 @@ class FederationController extends Controller
      * @return JSONResponse `{ok, reason}` or a 400 when the peer is rejected.
      *
      * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
-     * @spec                                                                               openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md
      */
     #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
     public function addPeer(string $peerUrl=''): JSONResponse
@@ -102,7 +102,7 @@ class FederationController extends Controller
      * @return JSONResponse `{ok, reason}` or a 400 when the peer is unknown.
      *
      * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
-     * @spec                                                                               openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md
      */
     #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
     public function removePeer(string $peerUrl=''): JSONResponse
@@ -121,7 +121,7 @@ class FederationController extends Controller
      * @return JSONResponse `{ok, reason, peers}` or a 400 when federation is off/unavailable.
      *
      * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
-     * @spec                                                                               openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md
      */
     #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
     public function pull(): JSONResponse

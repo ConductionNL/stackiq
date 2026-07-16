@@ -31,7 +31,7 @@
  * @copyright 2026 Conduction B.V.
  * @license AGPL-3.0-or-later
  *
- * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/module-compliance-assessment/spec.md
  */
 
 /**
@@ -57,7 +57,7 @@ export const CELL = Object.freeze({
  * @param {*} value A relation value (string UUID, object, or null).
  * @return {string} The resolved UUID, or '' when none.
  *
- * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/module-compliance-assessment/spec.md
  */
 export function resolveUuid(value) {
 	if (typeof value === 'string') {
@@ -79,7 +79,7 @@ export function resolveUuid(value) {
  * @param {object} record A compliancy object's data.
  * @return {boolean} True when the record is evidenced.
  *
- * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/module-compliance-assessment/spec.md
  */
 export function hasEvidence(record) {
 	if (!record || typeof record !== 'object') {
@@ -128,7 +128,7 @@ function dataOf(record) {
  * @param {Array<object>} records Compliancy records (OR objects or data bags).
  * @return {{resolved: Array<{moduleUuid: string, standaardversieUuid: string, evidenced: boolean, record: object}>, unresolved: Array<{moduleUuid: string, standaardGemma: string, evidenced: boolean, record: object}>}}
  *
- * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/module-compliance-assessment/spec.md
  */
 export function partitionCompliancy(records) {
 	const resolved = []
@@ -188,7 +188,7 @@ function strongest(a, b) {
  * @param {Array<object>} params.compliancy       Compliancy records (OR objects or data bags).
  * @return {{rows: Array<{module: object, moduleUuid: string, cells: {[key: string]: {state: CellState, record: (object|null)}}}>, columns: Array<{uuid: string, label: string}>, unresolved: Array<object>}}
  *
- * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/module-compliance-assessment/spec.md
  */
 export function buildComplianceMatrix({ modules = [], standaardversies = [], compliancy = [] } = {}) {
 	const { resolved, unresolved } = partitionCompliancy(compliancy)
@@ -236,7 +236,7 @@ export function buildComplianceMatrix({ modules = [], standaardversies = [], com
  * @param {object} standard A standaardversie object.
  * @return {string} A display label.
  *
- * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/module-compliance-assessment/spec.md
  */
 export function standardLabel(standard) {
 	if (!standard || typeof standard !== 'object') {
@@ -262,7 +262,7 @@ export function standardLabel(standard) {
  * @param {{[key: string]: object}} [params.moduleIndex] Optional UUID→module lookup for labels.
  * @return {Array<{gebruik: object, moduleUuid: string, module: (object|null), state: CellState}>}
  *
- * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/module-compliance-assessment/spec.md
  */
 export function buildOrganisationCoverage({ gebruiken = [], standaardversieUuid = '', compliancy = [], moduleIndex = {} } = {}) {
 	const { resolved } = partitionCompliancy(compliancy)

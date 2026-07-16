@@ -85,7 +85,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-6
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeModal() {
 			navigationStore.setModal(false)
@@ -97,7 +97,7 @@ export default {
 			this.duration = 3600
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-6
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async lockObject() {
 			this.loading = true

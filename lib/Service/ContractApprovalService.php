@@ -26,7 +26,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Raises and projects contract approval decisions delegated to decidesk.
  *
- * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+ * @spec openspec/specs/contract-decision-delegation/spec.md
  */
 class ContractApprovalService
 {
@@ -139,7 +139,7 @@ class ContractApprovalService
      *
      * @return bool True when decidesk's event contract is present.
      *
-     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     public function isDelegationConfigured(): bool
     {
@@ -165,7 +165,7 @@ class ContractApprovalService
      *
      * @throws \RuntimeException When delegation is not available or the listener did not handle it.
      *
-     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     public function submitForApproval(string $contractUuid, bool $isRenewal=false): string
     {
@@ -290,7 +290,7 @@ class ContractApprovalService
      *
      * @return bool True when the decision id matches the contract's stored id.
      *
-     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     public function isDecisionForContract(string $contractUuid, string $decisionId): bool
     {
@@ -322,7 +322,7 @@ class ContractApprovalService
      *
      * @return bool True when the contract was changed.
      *
-     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     public function projectOutcome(string $contractUuid, string $outcomeStatus): bool
     {
@@ -397,7 +397,7 @@ class ContractApprovalService
      *
      * @return string|null The matched contract uuid, or null when none matches.
      *
-     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     public function resolveContractForOutcome(string $subjectId, string $externalReference, string $decisionId): ?string
     {
@@ -426,7 +426,7 @@ class ContractApprovalService
      *
      * @return string|null The matched contract uuid, or null.
      *
-     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     private function findContractByExternalReference(string $externalReference, string $decisionId): ?string
     {
@@ -480,7 +480,7 @@ class ContractApprovalService
      *
      * @return string The subject label.
      *
-     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     private function buildSubjectLabel(array $data): string
     {
@@ -505,7 +505,7 @@ class ContractApprovalService
      *
      * @return \OCA\OpenRegister\Db\ObjectEntity|null The object, or null.
      *
-     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     private function loadContract(string $contractUuid)
     {
@@ -548,7 +548,7 @@ class ContractApprovalService
      *
      * @return void
      *
-     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     private function persistContract($contract, array $data): void
     {
@@ -572,7 +572,7 @@ class ContractApprovalService
      *
      * @return ObjectService|null The service, or null when OpenRegister is absent.
      *
-     * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+     * @spec openspec/specs/contract-decision-delegation/spec.md
      */
     private function getObjectService(): ?ObjectService
     {

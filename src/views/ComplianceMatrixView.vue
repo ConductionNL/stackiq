@@ -131,7 +131,7 @@ import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarke
  * verified / claimed / none cell states. The buyer-facing answer to "does this
  * application support standard X, and is that a claim or a fact?".
  *
- * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/module-compliance-assessment/spec.md
  */
 export default {
 	name: 'ComplianceMatrixView',
@@ -175,7 +175,7 @@ export default {
 		/**
 		 * All compliancy records currently in the store.
 		 * @return {Array} Compliancy records.
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		compliancy() {
 			return objectStore.getCollection('compliancy')?.results || []
@@ -184,7 +184,7 @@ export default {
 		/**
 		 * All module records currently in the store.
 		 * @return {Array} Module records.
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		modules() {
 			return objectStore.getCollection('module')?.results || []
@@ -193,7 +193,7 @@ export default {
 		/**
 		 * All standaardversie elements (GEMMA elements with gemmaType=standaardversie).
 		 * @return {Array} Standard version records.
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		standaardversies() {
 			const elements = objectStore.getCollection('element')?.results || []
@@ -203,7 +203,7 @@ export default {
 		/**
 		 * Whether no standards are available to pick.
 		 * @return {boolean} True when no standaardversie elements exist.
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		noStandardsImported() {
 			return this.standaardversies.length === 0
@@ -212,7 +212,7 @@ export default {
 		/**
 		 * NcSelect options for the standards picker.
 		 * @return {Array<{uuid: string, label: string}>} Options.
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		standardOptions() {
 			return this.standaardversies.map((standard) => ({
@@ -225,7 +225,7 @@ export default {
 		/**
 		 * The computed matrix for the current selection.
 		 * @return {object} { rows, columns, unresolved }.
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		matrix() {
 			const selected = this.selectedStandards.map((option) => option.raw || option)
@@ -240,7 +240,7 @@ export default {
 	/**
 	 * Load data and restore any shared selection on mount.
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+	 * @spec openspec/specs/module-compliance-assessment/spec.md
 	 */
 	async mounted() {
 		await this.loadData()
@@ -253,7 +253,7 @@ export default {
 		/**
 		 * Fetch the collections the matrix depends on.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		async loadData() {
 			this.loading = true
@@ -277,7 +277,7 @@ export default {
 		 * Fetch a single object type collection if the store exposes the action.
 		 * @param {string} type Object type slug.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		async fetchType(type) {
 			// Register the object type from the resolved config before fetching —
@@ -316,7 +316,7 @@ export default {
 		/**
 		 * Encode the standard selection in the URL so the comparison is shareable.
 		 * @return {void}
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		onSelectionChange() {
 			const uuids = this.selectedStandards.map((option) => option.uuid).filter(Boolean)
@@ -332,7 +332,7 @@ export default {
 		/**
 		 * Restore the selection from the URL `standards` query parameter.
 		 * @return {void}
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		restoreSelectionFromUrl() {
 			const url = new URL(window.location.href)
@@ -348,7 +348,7 @@ export default {
 		 * Open the compliancy record behind a cell (detail navigation).
 		 * @param {object} record The compliancy OR object.
 		 * @return {void}
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		openRecord(record) {
 			const id = record?.['@self']?.id || record?.id || resolveUuid(record)
@@ -361,7 +361,7 @@ export default {
 		 * Human label for a module row header.
 		 * @param {object} module Module object.
 		 * @return {string} Display label.
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		moduleLabel(module) {
 			return module?.naam || module?.object?.naam || resolveUuid(module?.uuid ?? module?.id ?? module)
@@ -371,7 +371,7 @@ export default {
 		 * Translated label for a cell state.
 		 * @param {string} state Cell state.
 		 * @return {string} Label.
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		stateLabel(state) {
 			if (state === 'verified') {
@@ -388,7 +388,7 @@ export default {
 		 * @param {object} row    Matrix row.
 		 * @param {object} column Matrix column.
 		 * @return {string} Aria label.
-		 * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		cellAriaLabel(row, column) {
 			return this.moduleLabel(row.module) + ' — ' + column.label + ': ' + this.stateLabel(row.cells[column.uuid].state)

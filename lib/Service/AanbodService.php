@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
@@ -94,7 +94,7 @@ class AanbodService
      *
      * @throws Exception When OpenRegister service is not available
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function getAanbod(array $options=[]): array
     {
@@ -285,7 +285,7 @@ class AanbodService
      *
      * @throws Exception When OpenRegister service is not available or operation fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function acceptAanbod(string $aanbodId, array $options=[]): array
     {
@@ -432,7 +432,7 @@ class AanbodService
      *
      * @return array Result array with success status and details
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-9
+     * @spec openspec/specs/method-decomposition/spec.md
      */
     public function denyAanbod(string $aanbodId, array $options=[]): array
     {

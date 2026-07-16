@@ -14,7 +14,7 @@
  * @version   GIT: 1.0.0
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-softwarecatalog/tasks.md#task-10
+ * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);

@@ -84,7 +84,7 @@ import { moderationItemTitle, moderationItemSubtitle } from '../../../utils/mode
 /**
  * Registration moderation queue admin section.
  *
- * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
  */
 export default defineComponent({
 	name: 'ModerationQueue',
@@ -113,7 +113,7 @@ export default defineComponent({
 	/**
 	 * Load the pending queue on mount.
 	 *
-	 * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+	 * @spec openspec/specs/open-data-publishing/spec.md
 	 */
 	async created() {
 		await this.loadPending()
@@ -128,7 +128,7 @@ export default defineComponent({
 		 * Load the pending registrations from the admin endpoint.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
 		async loadPending() {
 			this.loading = true
@@ -147,7 +147,7 @@ export default defineComponent({
 		 *
 		 * @param {object} item - The registration data bag (carries `id`).
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
 		async approve(item) {
 			await this.decide(item, 'approve', t('softwarecatalog', 'Registration approved and published'))
@@ -158,7 +158,7 @@ export default defineComponent({
 		 *
 		 * @param {object} item - The registration data bag (carries `id`).
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
 		async reject(item) {
 			await this.decide(item, 'reject', t('softwarecatalog', 'Registration rejected'))
@@ -171,7 +171,7 @@ export default defineComponent({
 		 * @param {string} action     - 'approve' or 'reject'.
 		 * @param {string} successMsg - Success toast message.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
 		async decide(item, action, successMsg) {
 			const uuid = item.id || item.uuid

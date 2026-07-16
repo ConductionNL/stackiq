@@ -273,7 +273,7 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		catalogOptions() {
 			return objectStore.getCollection('catalog').results.map(catalog => ({
@@ -282,7 +282,7 @@ export default {
 			}))
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		registerOptions() {
 			if (!this.selectedCatalogus) {
@@ -300,7 +300,7 @@ export default {
 				}))
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		schemaOptions() {
 			if (!this.selectedRegister || !this.selectedCatalogus) {
@@ -324,19 +324,19 @@ export default {
 				}))
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		fullSelectedSchema() {
 			return objectStore.availableSchemas.find(schema => schema.id === this.selectedSchema?.id)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		schemaProperties() {
 			return this.fullSelectedSchema?.properties || {}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dialogTitle() {
 			const typeName = this.objectTypeKey.charAt(0).toUpperCase() + this.objectTypeKey.slice(1)
@@ -346,7 +346,7 @@ export default {
 	watch: {
 		objectStore: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
 				if (newValue) {
@@ -357,7 +357,7 @@ export default {
 		},
 		'navigationStore.modal': {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
 				if (newValue === 'objectModal') {
@@ -373,7 +373,7 @@ export default {
 		},
 		jsonData: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
 				if (this.activeTab === 1 && this.isValidJson(newValue)) {
@@ -383,7 +383,7 @@ export default {
 		},
 		formData: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
 				if (this.activeTab === 0) {
@@ -401,7 +401,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeData() {
 			const activeCatalog = objectStore.getActiveObject('catalog')
@@ -503,7 +503,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async saveObject() {
 			if (!this.selectedRegister || !this.selectedSchema) {
@@ -602,7 +602,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		updateFormFromJson() {
 			try {
@@ -614,7 +614,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		updateJsonFromForm() {
 			try {
@@ -625,7 +625,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidJson(str) {
 			if (!str || !str.trim()) {
@@ -640,7 +640,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatJSON() {
 			try {
@@ -654,7 +654,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeModal() {
 			navigationStore.setModal(false)
@@ -677,7 +677,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		setFieldValue(key, value) {
 			if (this.formData[key] === value) return
@@ -685,7 +685,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-2
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		openUploadFilesModal() {
 			// Set the navigationStore modal to 'uploadFiles' to show the UploadFiles modal

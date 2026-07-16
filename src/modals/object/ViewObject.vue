@@ -961,21 +961,21 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		currentObject() {
 			return objectStore.getActiveObject('publication')
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isNewObject() {
 			const obj = objectStore.getActiveObject('publication')
 			return !obj || !obj?.['@self']?.id
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		objectProperties() {
 			// Return array of [key, value] pairs, excluding '@self' and 'id'
@@ -1090,7 +1090,7 @@ export default {
 		/**
 		 * Filter out constant and immutable properties based on showConstantProperties state
 		 * @return {Array} Filtered properties array
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		filteredObjectProperties() {
 			if (this.showConstantProperties) {
@@ -1113,7 +1113,7 @@ export default {
 		/**
 		 * Check if there are any constant or immutable properties
 		 * @return {boolean} True if there are constant/immutable properties
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		hasConstantOrImmutableProperties() {
 			return this.objectProperties.some(([key, value]) => {
@@ -1121,7 +1121,7 @@ export default {
 			})
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		metadataProperties() {
 			// Return array of [key, value] for metadata display
@@ -1222,7 +1222,7 @@ export default {
 		},
 		// Files tab computed properties
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		paginatedFiles() {
 			const filesData = objectStore.getRelatedData('publication', 'files')
@@ -1235,40 +1235,40 @@ export default {
 			return files
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		filesTotalPages() {
 			const filesPagination = objectStore.getPagination('publication_files')
 			return filesPagination.pages
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		filesTotalItems() {
 			const filesPagination = objectStore.getPagination('publication_files')
 			return filesPagination.total
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		filesCurrentPageSize() {
 			const filesPagination = objectStore.getPagination('publication_files')
 			return filesPagination.limit
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		allFilesSelected() {
 			return this.paginatedFiles.length > 0 && this.paginatedFiles.every(file => this.selectedAttachments.includes(file.id))
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		someFilesSelected() {
 			return this.selectedAttachments.length > 0 && !this.allFilesSelected
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		catalogOptions() {
 			return objectStore.getCollection('catalog').results.map(catalog => ({
@@ -1277,7 +1277,7 @@ export default {
 			}))
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		registerOptions() {
 			if (!this.selectedCatalog) {
@@ -1299,7 +1299,7 @@ export default {
 				}))
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		schemaOptions() {
 			if (!this.selectedRegister || !this.selectedCatalog) {
@@ -1330,20 +1330,20 @@ export default {
 			return this.selectedSchema !== null && this.showProperties
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		allSelectionsComplete() {
 			return this.selectedCatalog && this.selectedRegister && this.selectedSchema
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		shouldShowPublishedIcon() {
 			return this.currentObject && this.currentObject['@self']
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		themeOptions() {
 			const themes = objectStore.getCollection('theme').results || []
@@ -1355,7 +1355,7 @@ export default {
 		// Replace the existing themeFormData with this new version
 		themeFormData: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			get() {
 				if (!this.formData.themes || !Array.isArray(this.formData.themes)) {
@@ -1369,7 +1369,7 @@ export default {
 				})
 			},
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			set(selectedThemes) {
 				// Extract just the IDs from the selected theme objects
@@ -1381,7 +1381,7 @@ export default {
 	watch: {
 		currentObject: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
 				if (newValue) {
@@ -1392,7 +1392,7 @@ export default {
 		},
 		jsonData: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
 				if (this.isValidJson(newValue)) {
@@ -1404,7 +1404,7 @@ export default {
 			deep: true,
 			immediate: true,
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(obj) {
 				// Create a clean copy of the form data
@@ -1417,7 +1417,7 @@ export default {
 		},
 		selectedCatalog: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newCatalog) {
 				// Auto-select register if there's only one
@@ -1432,7 +1432,7 @@ export default {
 		},
 		selectedRegister: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newRegister) {
 				// Auto-select schema if there's only one
@@ -1446,7 +1446,7 @@ export default {
 		},
 		selectedSchema: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newSchema) {
 				if (!newSchema) {
@@ -1459,7 +1459,7 @@ export default {
 		},
 	},
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+	 * @spec openspec/specs/fe-object-modals/spec.md
 	 */
 	mounted() {
 		this.initializeData()
@@ -1470,7 +1470,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getModalTitle() {
 			// For new objects, show "Create Publication"
@@ -1510,7 +1510,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeModal() {
 			// Clear state first
@@ -1541,7 +1541,7 @@ export default {
 			navigationStore.setModal(null)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleDialogClose(isOpen) {
 			if (!isOpen) {
@@ -1549,13 +1549,13 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		proceedToProperties() {
 			this.showProperties = true
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeData() {
 			if (!this.currentObject) {
@@ -1631,7 +1631,7 @@ export default {
 			this.jsonData = JSON.stringify(filtered, null, 2)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async saveObject() {
 			this.isSaving = true
@@ -1714,7 +1714,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		updateFormFromJson() {
 			try {
@@ -1725,7 +1725,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidJson(str) {
 			if (!str || !str.trim()) {
@@ -1739,7 +1739,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatJSON() {
 			try {
@@ -1752,7 +1752,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidDate(value) {
 			if (!value || typeof value !== 'string') return false
@@ -1775,7 +1775,7 @@ export default {
 			return date instanceof Date && !isNaN(date) && date.getFullYear() > 1900
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isDateTimeProperty(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -1783,7 +1783,7 @@ export default {
 			return schemaProperty && schemaProperty.type === 'string' && ['date', 'time', 'date-time'].includes(schemaProperty.format)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDateTimePropertyFormat(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -1791,7 +1791,7 @@ export default {
 			return schemaProperty?.format || 'unknown'
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatDateTimeValue(key, value) {
 			if (!value) return ''
@@ -1825,14 +1825,14 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatValue(val) {
 			return JSON.stringify(val, null, 2)
 		},
 		getTheme,
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async copyToClipboard(text) {
 			try {
@@ -1845,7 +1845,7 @@ export default {
 		},
 		// Property validation and editing methods
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyValidationClass(key, value) {
 			// Skip @self as it's metadata
@@ -1881,7 +1881,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyErrorMessage(key, value) {
 			const schemaProperties = this.getSchemaProperties()
@@ -1924,7 +1924,7 @@ export default {
 			return `Property '${key}' is defined in the schema but doesn't have a value yet. Click to add a value.`
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isPropertyEditable(key, value) {
 			const schemaProperties = this.getSchemaProperties()
@@ -1946,7 +1946,7 @@ export default {
 			return true
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getEditabilityWarning(key, value) {
 			const schemaProperties = this.getSchemaProperties()
@@ -1963,7 +1963,7 @@ export default {
 			return null
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleRowClick(key, event) {
 			// Don't select if clicking on an input or button
@@ -1985,7 +1985,7 @@ export default {
 			this.selectProperty(key)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		selectProperty(key) {
 			this.selectedProperty = key
@@ -2002,7 +2002,7 @@ export default {
 			})
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		updatePropertyValue(key, newValue) {
 			// Ensure formData is an object before updating
@@ -2026,7 +2026,7 @@ export default {
 		},
 		// Test method to verify Vue methods are working
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		testVueMethod(message) {
 			if (process.env.NODE_ENV === 'development') {
@@ -2034,7 +2034,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleDateTimeUpdate(key, newValue) {
 			// Ensure formData is an object before updating
@@ -2087,7 +2087,7 @@ export default {
 
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		processDateTimeValue(key, value) {
 			// Get schema information to determine if this is a date/time field
@@ -2166,7 +2166,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyInputType(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -2196,7 +2196,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyInputComponent(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -2232,7 +2232,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyDisplayName(key) {
 			// Ensure we always have a valid key
@@ -2253,7 +2253,7 @@ export default {
 			return key
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyTooltip(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -2272,7 +2272,7 @@ export default {
 			return `Property: ${key}`
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyMinimum(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -2280,7 +2280,7 @@ export default {
 			return schemaProperty?.minimum
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyMaximum(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -2288,7 +2288,7 @@ export default {
 			return schemaProperty?.maximum
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyStep(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -2302,7 +2302,7 @@ export default {
 			return undefined
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getMarkdownEditorOptions(key) {
 			return {
@@ -2340,7 +2340,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		removeBordersFromEditor(editor) {
 			try {
@@ -2371,7 +2371,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		updateMarkdownValue(key, editorInstance) {
 			// Get the current content from the editor as MARKDOWN
@@ -2397,7 +2397,7 @@ export default {
 			this.updatePropertyValue(key, content)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDisplayValue(key, value) {
 			if (key === 'themes') {
@@ -2470,7 +2470,7 @@ export default {
 			return value
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDateTimeValue(key, value) {
 			// Get the current value (either from formData or original value)
@@ -2510,7 +2510,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDateTimePickerValue(key, value) {
 			// Get the current value (either from formData or original value)
@@ -2561,7 +2561,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDateTimePickerType(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -2598,7 +2598,7 @@ export default {
 		},
 		// Publish/Depublish methods
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		openPublishModal() {
 			if (this.currentObject['@self']?.published) {
@@ -2609,7 +2609,7 @@ export default {
 			this.showPublishModal = true
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		openDepublishModal() {
 			if (this.currentObject['@self']?.depublished) {
@@ -2620,7 +2620,7 @@ export default {
 			this.showDepublishModal = true
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closePublishModal() {
 			this.showPublishModal = false
@@ -2628,7 +2628,7 @@ export default {
 			this.isPublishing = false
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeDepublishModal() {
 			this.showDepublishModal = false
@@ -2636,7 +2636,7 @@ export default {
 			this.isDepublishing = false
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishObject() {
 			this.isPublishing = true
@@ -2708,7 +2708,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async depublishObject() {
 			this.isDepublishing = true
@@ -2783,7 +2783,7 @@ export default {
 		/**
 		 * Open a file in the Nextcloud Files app
 		 * @param {object} file - The file object to open
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		openFile(file) {
 			const dirPath = file.path.substring(0, file.path.lastIndexOf('/'))
@@ -2795,7 +2795,7 @@ export default {
 		 * Format file size for display
 		 * @param {number} bytes - The file size in bytes
 		 * @return {string} The formatted file size
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatFileSize(bytes) {
 			const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
@@ -2806,7 +2806,7 @@ export default {
 			return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i]
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		toggleSelectAllFiles(checked) {
 			if (checked) {
@@ -2823,7 +2823,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		toggleFileSelection(fileId, checked) {
 			if (checked) {
@@ -2835,7 +2835,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async onFilesPageChanged(page) {
 			if (!this.currentObject) return
@@ -2854,7 +2854,7 @@ export default {
 			}, publicationData)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async onFilesPageSizeChanged(pageSize) {
 			if (!this.currentObject) return
@@ -2873,7 +2873,7 @@ export default {
 			}, publicationData)
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishSelectedFiles() {
 			if (this.selectedAttachments.length === 0) return
@@ -2921,7 +2921,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async depublishSelectedFiles() {
 			if (this.selectedAttachments.length === 0) return
@@ -2969,7 +2969,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteSelectedFiles() {
 			if (this.selectedAttachments.length === 0) return
@@ -3016,7 +3016,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishFile(file) {
 			try {
@@ -3048,7 +3048,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async depublishFile(file) {
 			try {
@@ -3080,7 +3080,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteFile(file) {
 			try {
@@ -3112,21 +3112,21 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		editFileLabels(file) {
 			this.editingTags = file.id
 			this.editedTags = file.labels || []
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		cancelFileLabelEditing() {
 			this.editingTags = null
 			this.editedTags = []
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async getAllTags() {
 			this.tagsLoading = true
@@ -3149,7 +3149,7 @@ export default {
 			}
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async saveTags(file, editedTags) {
 			try {
@@ -3199,7 +3199,7 @@ export default {
 		},
 		// Utility method to get register and schema IDs from publication object
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getRegisterSchemaIds(publication) {
 			const registerId = typeof publication['@self'].register === 'object'
@@ -3212,28 +3212,28 @@ export default {
 		},
 		// Action button methods
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		uploadFiles() {
 			// Open the upload files modal (same as in PublicationDetail.vue)
 			navigationStore.setDialog('uploadFiles')
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		shouldShowPublishAction(object) {
 			if (!object || !object['@self']) return false
 			return object['@self'].published === null || object['@self'].published === undefined
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		shouldShowDepublishAction(object) {
 			if (!object || !object['@self']) return false
 			return object['@self'].published !== null && object['@self'].published !== undefined
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		singlePublishObject() {
 			if (!this.currentObject) return
@@ -3249,7 +3249,7 @@ export default {
 			navigationStore.setDialog('massPublishObjects')
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		singleDepublishObject() {
 			if (!this.currentObject) return
@@ -3265,7 +3265,7 @@ export default {
 			navigationStore.setDialog('massDepublishObjects')
 		},
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		singleDeleteObject() {
 			if (!this.currentObject) return
@@ -3282,7 +3282,7 @@ export default {
 		},
 		// Schema handling methods
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getSchemaProperties() {
 			let properties = {}
@@ -3318,7 +3318,7 @@ export default {
 		},
 		// Helper method to rebuild object with schema properties after API operations
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		rebuildObjectWithSchemaProperties(apiResult) {
 			// Start with the API result merged with current object
@@ -3369,7 +3369,7 @@ export default {
 		/**
 		 * Clean formData to ensure it's a proper object with correct property keys
 		 * @return {object} Cleaned form data object
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		cleanFormData() {
 			const cleaned = {}
@@ -3402,7 +3402,7 @@ export default {
 		/**
 		 * Build complete object data including all schema properties
 		 * @return {object} Complete object with all properties from schema and current object
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		buildCompleteObjectData() {
 			const schemaProperties = this.getSchemaProperties()
@@ -3479,7 +3479,7 @@ export default {
 
 		// Property dropping methods
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		canDropProperty(key, value) {
 			// Don't show drop button for metadata properties
@@ -3504,7 +3504,7 @@ export default {
 		 * Check if a property is constant or immutable
 		 * @param {string} key - Property key
 		 * @return {boolean} True if property is constant or immutable
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		  * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isConstantOrImmutable(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -3538,7 +3538,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDropPropertyTooltip(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -3552,7 +3552,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dropProperty(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -3607,7 +3607,7 @@ export default {
 
 		// Enhanced property validation and editing methods (from openregister version)
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-1
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidPropertyValue(key, value, schemaProperty) {
 			// Handle null/undefined values

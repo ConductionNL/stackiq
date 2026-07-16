@@ -21,7 +21,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -68,7 +68,7 @@ class FederationMerger
      *               mirror data bag (with `_source`); each withdraw item is the
      *               existing local mirror data bag, marked withdrawn + stale.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function plan(
         string $peerUrl,
@@ -153,7 +153,7 @@ class FederationMerger
      *
      * @return bool True when the peer's mirrors should be marked stale.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function isStale(int $consecutiveFailures, ?int $threshold=null): bool
     {
@@ -174,7 +174,7 @@ class FederationMerger
      *
      * @return array<string,mixed> The mirror with `_source.stale` set.
      *
-     * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+     * @spec openspec/specs/federated-catalog-sync/spec.md
      */
     public function applyStale(array $mirror, bool $stale): array
     {
