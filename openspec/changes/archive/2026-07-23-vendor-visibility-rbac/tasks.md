@@ -8,8 +8,8 @@
 - **acceptance_criteria**:
   - GIVEN no authenticated user session WHEN `GET /api/aangeboden-gebruik/afnemer` is called THEN the controller explicitly rejects the call (empty envelope or 401) before `AangebodenGebruikService::getGebruiksWhereAfnemer()` is invoked
   - GIVEN an authenticated user with no active organisation WHEN the same endpoint is called THEN the documented empty envelope is returned
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 2: Scope `gebruik-beheerder` reads to the caller's own organisation
 - **spec_ref**: `openspec/changes/vendor-visibility-rbac/specs/vendor-visibility-rbac/spec.md#req-003`
@@ -18,8 +18,8 @@
   - GIVEN a `gebruik-beheerder` user whose active organisation is A, and municipality B owns unrelated gebruik records WHEN the user calls `GET /api/gebruik` THEN no record owned by B is returned
   - GIVEN the same user WHEN A owns 12 gebruik records THEN all 12 are still returned unchanged
   - GIVEN an `ambtenaar` (with or without `gebruik-beheerder`) WHEN the same endpoint is called THEN the existing unrestricted read is preserved
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 3: Lock in vendor (`aanbod-beheerder`) scoping with negative regression tests
 - **spec_ref**: `openspec/changes/vendor-visibility-rbac/specs/vendor-visibility-rbac/spec.md#req-002`
@@ -28,8 +28,8 @@
   - GIVEN a vendor V offering module M WHEN V requests `GET /api/gebruik` THEN only V's own module's gebruik records are returned
   - GIVEN vendor V and unrelated municipality G WHEN V requests koppelingen/gebruik for a UUID identifying G via `GET /api/koppelingen-gebruik/{uuid}` THEN the empty envelope is returned and no data belonging to G is present
   - GIVEN a vendor offering zero applications WHEN it requests `GET /api/gebruik` THEN the empty envelope is returned without an unscoped OpenRegister search
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 4: Lock in afnemer/deelnemer relationship reads with regression tests
 - **spec_ref**: `openspec/changes/vendor-visibility-rbac/specs/vendor-visibility-rbac/spec.md#req-005`
@@ -37,18 +37,18 @@
 - **acceptance_criteria**:
   - GIVEN an organisation A that is afnemer on 3 offered gebruik records WHEN A calls `GET /api/aangeboden-gebruik/afnemer` THEN all 3 are returned unchanged from current behaviour
   - GIVEN organisation A appears as deelnemer in 2 gebruiksobjecten owned by other organisations WHEN A calls `GET /api/aangeboden-gebruik/deelnemers` THEN both are returned unchanged from current behaviour
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 5: Verify (and if needed fix) the contract schema RBAC read rule
 - **spec_ref**: `openspec/changes/vendor-visibility-rbac/specs/vendor-visibility-rbac/spec.md#req-006`
-- **files**: `lib/Settings/softwarecatalogus_register.json`, `tests/Integration/ContractRbacTest.php`
+- **files**: `lib/Settings/softwarecatalogus_register.json`, `tests/Unit/Settings/ContractRbacTest.php`
 - **acceptance_criteria**:
   - GIVEN a contract owned by municipality A WHEN a vendor V that is not a counterparty attempts to read it via the OpenRegister object API THEN the read is denied
   - GIVEN the same contract WHEN A, its counterparty, `admin`, or `ambtenaar` reads it THEN the read succeeds
   - IF the deployed schema RBAC rule does not already deny the first case THEN the rule in `softwarecatalogus_register.json` is corrected as part of this task
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test — verification found the "public" + unscoped "aanbod-beheerder" gap live; fixed the schema config. Note: `tests/Integration/` (Guzzle, live-instance HTTP) is not runnable in this sandboxed environment — the verification test lives in `tests/Unit/Settings/` instead, asserting directly on the deployed config's rule shape (see file for rationale).
 
 ### Task 6: Leak-path audit of gebruik/koppeling/contract routes
 - **spec_ref**: `openspec/changes/vendor-visibility-rbac/specs/vendor-visibility-rbac/spec.md#req-007`
@@ -56,8 +56,8 @@
 - **acceptance_criteria**:
   - GIVEN `appinfo/routes.php` WHEN every route whose controller method reads a gebruik, koppeling, or contract object is enumerated THEN each appears in an audit table with its authorization posture and the test(s) that cover it
   - GIVEN the audit table WHEN cross-checked against Tasks 1-5 THEN every route's posture matches an implemented guard or an explicit, justified exception (e.g. OR schema RBAC)
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test — audit is a documentation deliverable (`docs/security/vendor-visibility-rbac.md`); "test" here is the cross-check against Tasks 1-5's implemented guards + the negative tests in Tasks 1/2/3/4/5, per the spec's own Scenario ("code review checklist item")
 
 ### Task 7: Deny-before-grant ordering guard on every RBAC-bypassing read path
 - **spec_ref**: `openspec/changes/vendor-visibility-rbac/specs/vendor-visibility-rbac/spec.md#req-001`
@@ -65,16 +65,16 @@
 - **acceptance_criteria**:
   - GIVEN a caller who fails the visibility-matrix resolution for a target object WHEN the request is processed THEN the deny branch returns before any `_rbac: false` query is built
   - GIVEN role/relationship resolution throws (e.g. `OrganisationService` unavailable) WHEN a gebruik/koppeling/contract read is requested THEN the response is the empty envelope or a 5xx, never another organisation's data
-- [ ] Implement
-- [ ] Test
+- [x] Implement — deny-before-grant ordering confirmed/enforced in every touched method (see per-method docblocks); `GebruikController::getGebruiken()`'s role-resolution runs outside the try/catch so an unexpected resolution exception surfaces as an uncaught 5xx (never a leaked cross-org query) rather than being swallowed into a default-open path; `AangebodenGebruikService`'s methods already wrap resolution + query in try/catch returning the empty envelope on any exception (pre-existing, confirmed).
+- [x] Test — `testGetGebruiksWhereAfnemerWithNoCurrentOrgNeverSearches`, `testGetKoppelingenGebruikByUuidDeniesNonOwner` assert `searchObjectsPaginated` is never invoked on the deny path (mock call-count = 0, per TC-1's test command).
 
 ### Task 8: i18n strings for new/changed authorization responses
 - **spec_ref**: `openspec/changes/vendor-visibility-rbac/specs/vendor-visibility-rbac/spec.md#non-functional-requirements`
 - **files**: `l10n/nl.json`, `l10n/en.json` (or the app's existing translation source files)
 - **acceptance_criteria**:
   - GIVEN the explicit auth-guard rejection and any new denied-access user-facing text introduced by Tasks 1-2 WHEN the UI renders them THEN both Dutch (`nl_NL`) and English (`en_US`) strings are present
-- [ ] Implement
-- [ ] Test
+- [x] Implement — verified no NEW user-facing string was introduced: Task 1's `'Not authenticated'` message reuses the exact, already-established string used identically by 13+ other endpoints across this codebase (`GebruikController::getGebruikenForDeelnemer`, `AanbodController`, `ViewController`, `SettingsController`, the pre-existing `AangebodenGebruikController::setGebruikSelfToActiveOrg`/`deleteGebruikAsAfnemer`, etc.) — none of these raw API JSON `message` fields are routed through Nextcloud's `t()`/l10n system in this codebase (confirmed: string absent from `l10n/nl.json` and `l10n/en.json` for every existing occurrence too), so there is no new i18n surface to add. Task 2's gebruik-beheerder scoping returns the pre-existing, already-translated-if-applicable empty-result envelope shape — no new copy.
+- [x] Test — N/A (no new string to test); rationale documented above and in the final task report.
 
 ## Quality checklist
 
