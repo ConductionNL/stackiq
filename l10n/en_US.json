@@ -385,6 +385,23 @@
         "SPDX (JSON)": "SPDX (JSON)",
         "SBOM import failed": "SBOM import failed",
         "Imported {count} components.": "Imported {count} components.",
-        "Last imported {date} from {file} ({format})": "Last imported {date} from {file} ({format})"
+        "Last imported {date} from {file} ({format})": "Last imported {date} from {file} ({format})",
+        "All applications": "All applications",
+        "BBN level": "BBN level",
+        "BIO measures": "BIO measures",
+        "Compliance matrix scope": "Compliance matrix scope",
+        "DPIA status": "DPIA status",
+        "Executed": "Executed",
+        "No BIO measures seeded": "No BIO measures seeded",
+        "Not required": "Not required",
+        "Not set": "Not set",
+        "Organisation (scope to in-use applications)": "Organisation (scope to in-use applications)",
+        "Pick one or more columns above to render the compliance matrix.": "Pick one or more columns above to render the compliance matrix.",
+        "Required": "Required",
+        "Select BIO measures to compare": "Select BIO measures to compare",
+        "Select one or more BIO measures": "Select one or more BIO measures",
+        "Some compliancy records reference both a standard and a BIO measure — a data-quality issue. They are excluded from both matrices until corrected.": "Some compliancy records reference both a standard and a BIO measure — a data-quality issue. They are excluded from both matrices until corrected.",
+        "The BIO measures catalog is seeded on install/upgrade. Refresh, or check the BIO measures catalog.": "The BIO measures catalog is seeded on install/upgrade. Refresh, or check the BIO measures catalog.",
+        "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.": "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence."
     }
 }

@@ -528,6 +528,24 @@
         "SPDX (JSON)": "SPDX (JSON)",
         "SBOM import failed": "SBOM-import mislukt",
         "Imported {count} components.": "{count} componenten geïmporteerd.",
-        "Last imported {date} from {file} ({format})": "Laatst geïmporteerd op {date} vanuit {file} ({format})"
+        "Last imported {date} from {file} ({format})": "Laatst geïmporteerd op {date} vanuit {file} ({format})",
+        "Approval": "Goedkeuring",
+        "All applications": "Alle applicaties",
+        "BBN level": "BBN-niveau",
+        "BIO measures": "BIO-maatregelen",
+        "Compliance matrix scope": "Bereik compliance-matrix",
+        "DPIA status": "DPIA-status",
+        "Executed": "Uitgevoerd",
+        "No BIO measures seeded": "Geen BIO-maatregelen geladen",
+        "Not required": "Niet vereist",
+        "Not set": "Niet ingesteld",
+        "Organisation (scope to in-use applications)": "Organisatie (beperk tot applicaties in gebruik)",
+        "Pick one or more columns above to render the compliance matrix.": "Kies hierboven een of meer kolommen om de compliance-matrix te tonen.",
+        "Required": "Vereist",
+        "Select BIO measures to compare": "Selecteer BIO-maatregelen om te vergelijken",
+        "Select one or more BIO measures": "Selecteer een of meer BIO-maatregelen",
+        "Some compliancy records reference both a standard and a BIO measure — a data-quality issue. They are excluded from both matrices until corrected.": "Sommige compliance-records verwijzen zowel naar een standaard als naar een BIO-maatregel — een datakwaliteitsprobleem. Deze worden uitgesloten van beide matrices totdat dit is gecorrigeerd.",
+        "The BIO measures catalog is seeded on install/upgrade. Refresh, or check the BIO measures catalog.": "De BIO-maatregelencatalogus wordt gevuld bij installatie/upgrade. Ververs de pagina, of controleer de BIO-maatregelencatalogus.",
+        "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.": "Welke applicaties voldoen aan welke BIO 2.0-maatregelen, plus het BBN-niveau en de DPIA-status van elke applicatie. Een geverifieerde cel verwijst naar bewijs; een geclaimde cel is een leveranciersverklaring zonder bewijs."
     }
 }
