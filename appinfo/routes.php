@@ -249,6 +249,15 @@ return [
         ['name' => 'settings#getCronjobUsers', 'url' => '/api/settings/cronjobs/users', 'verb' => 'GET'],
         ['name' => 'settings#getCronjobOrganisations', 'url' => '/api/settings/cronjobs/organisations', 'verb' => 'GET'],
 
+        // ========================================================================
+        // EOL FEED SYNC API ENDPOINTS (eol-feed-integration)
+        // ========================================================================
+
+        ['name' => 'settings#getEolSyncConfig', 'url' => '/api/eol-sync/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateEolSyncConfig', 'url' => '/api/eol-sync/config', 'verb' => 'POST'],
+        ['name' => 'settings#triggerEolSync', 'url' => '/api/eol-sync/trigger', 'verb' => 'POST'],
+        ['name' => 'settings#getEolSyncStatus', 'url' => '/api/eol-sync/status', 'verb' => 'GET'],
+
         // Gebruik by group
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],
         ['name' => 'gebruik#getGebruikenForDeelnemer', 'url' => '/api/gebruik/deelnemer', 'verb' => 'GET'],

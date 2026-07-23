@@ -27,6 +27,9 @@ use OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob;
 use OCA\SoftwareCatalog\Service\Federation\FederationConfig;
 use OCA\SoftwareCatalog\Service\Federation\FederationMerger;
 use OCA\SoftwareCatalog\Service\Federation\FederationService;
+use OCA\SoftwareCatalog\BackgroundJob\EolSyncJob;
+use OCA\SoftwareCatalog\Service\EolMatcherService;
+use OCA\SoftwareCatalog\Service\EolSyncService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Dashboard\ConceptOrganisatiesWidget;
 use OCA\SoftwareCatalog\EventListener\DecisionConcludedListener;
@@ -607,6 +610,37 @@ class Application extends App implements IBootstrap
                     timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
                     federation: $container->get(FederationService::class),
                     config: $container->get(FederationConfig::class),
+                    logger: $container->get(LoggerInterface::class)
+                    );
+                }
+                );
+
+        // Register the EOL matcher + sync orchestration + scheduled job
+        // (eol-feed-integration). EolMatcherService has zero OCP dependencies
+        // by design (design.md "Nextcloud Integration" — pure matching logic).
+        $context->registerService(
+                EolMatcherService::class,
+                function ($container) {
+                    return new EolMatcherService();
+                }
+                );
+        $context->registerService(
+                EolSyncService::class,
+                function ($container) {
+                    return new EolSyncService(
+                    settingsService: $container->get(SettingsService::class),
+                    matcher: $container->get(EolMatcherService::class),
+                    timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
+                    logger: $container->get(LoggerInterface::class)
+                    );
+                }
+                );
+        $context->registerService(
+                EolSyncJob::class,
+                function ($container) {
+                    return new EolSyncJob(
+                    timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
+                    eolSyncService: $container->get(EolSyncService::class),
                     logger: $container->get(LoggerInterface::class)
                     );
                 }

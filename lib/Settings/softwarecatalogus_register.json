@@ -7101,6 +7101,14 @@
             "order": 51,
             "facetable": false,
             "title": "Depublicatiedatum"
+          },
+          "eolProductSlug": {
+            "description": "De product-identifier op endoflife.date die bij deze applicatie hoort (bijv. \"postgresql\"). Optioneel; alleen gezet wanneer een beheerder deze applicatie koppelt aan een endoflife.date-product voor automatische einde-ondersteuning-matching. Zonder deze waarde slaat de EOL-matcher deze applicatie volledig over (geen lees- of schrijfactie).",
+            "type": "string",
+            "order": 52,
+            "facetable": false,
+            "title": "Endoflife.date product-slug",
+            "example": "postgresql"
           }
         },
         "archive": [],
@@ -7467,6 +7475,22 @@
               "Samenwerking",
               "Leverancier"
             ]
+          },
+          "eolBron": {
+            "description": "Herkomst van de gestempelde einde-ondersteuning-datum (bijv. \"endoflife.date\"). Alleen gezet door de EOL-matcher; afwezig bij een handmatig ingevoerde datumEindeOndersteuning.",
+            "type": "string",
+            "order": 20,
+            "facetable": false,
+            "title": "EOL bron",
+            "example": "endoflife.date"
+          },
+          "eolBijgewerktOp": {
+            "description": "Tijdstip waarop de EOL-matcher deze versie voor het laatst heeft bijgewerkt vanuit de bron. Alleen gezet door de EOL-matcher; afwezig bij een handmatig ingevoerde datumEindeOndersteuning.",
+            "type": "string",
+            "format": "date-time",
+            "order": 21,
+            "facetable": false,
+            "title": "EOL bijgewerkt op"
           }
         },
         "archive": [],
