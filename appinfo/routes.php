@@ -262,6 +262,10 @@ return [
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],
         ['name' => 'gebruik#getGebruikenForDeelnemer', 'url' => '/api/gebruik/deelnemer', 'verb' => 'GET'],
 
+        // Portfolio rationalization report (TIME quadrants + EOL + cloud + cost), JSON or CSV (?format=csv).
+        // @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
+        ['name' => 'portfolioReport#index', 'url' => '/api/portfolio-report', 'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode routing)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],

@@ -122,6 +122,13 @@
 			"order": 86
 		},
 		{
+			"id": "PortfolioReport",
+			"label": "Portfolio rationalization",
+			"icon": "icon-category-monitoring",
+			"route": "PortfolioReport",
+			"order": 87
+		},
+		{
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "icon-info",
@@ -632,6 +639,14 @@
 			"title": "Portfolio roadmap",
 			"component": "LifecycleRoadmapView",
 			"_note": "Per-organisation roadmap: the selected organisation's applications-in-use grouped into derived lifecycle-phase swimlanes (Onbekend first) and ordered within each lane by nearest urgency (end-of-support / phase-out / planned replacement). No standard index/roadmap type derives and groups by computed lifecycle phase."
+		},
+		{
+			"id": "PortfolioReport",
+			"route": "/portfolio-report",
+			"type": "custom",
+			"title": "Portfolio rationalization",
+			"component": "PortfolioReportView",
+			"_note": "Gartner TIME rationalization report (openspec/changes/portfolio-rationalization-time): a per-organisation, RBAC-scoped, bounded server-side aggregate (GET /api/portfolio-report) combining TIME quadrant counts (Tolerate/Invest/Migrate/Eliminate + Unclassified) with EOL exposure (application-lifecycle-tracking derivation), cloud-transition share (cloudDienstverleningsmodel), and annualised cost overlay (contract-administration derivation) per quadrant, plus a CSV export of the underlying rows. Unlike LifecycleRoadmap/LicensePosture (which derive client-side over full collections), this report reads a single composed backend endpoint so aggregation stays bounded and organisation-scoped server-side per design.md Decision 3/4 — no built-in index/detail/dashboard type expresses a fetched, pre-aggregated multi-metric report with a CSV export variant."
 		},
 		{
 			"id": "FeaturesRoadmap",
