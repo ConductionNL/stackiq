@@ -29,6 +29,7 @@ import VulnerabilityExposurePanel from './components/vulnerabilities/Vulnerabili
 import LicensePostureView from './views/LicensePostureView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
+import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 
 export default {
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
@@ -125,4 +126,11 @@ export default {
 	// fetched, pre-aggregated multi-metric report with a CSV export button.
 	// @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
 	PortfolioReportView,
+	// --- SBOM (Software Bill of Materials) import — Components tab. ---
+	// ModuleversieDetail sidebar tab: the imported sbomComponent list
+	// (name/version/purl/licenses), summary counts, an upload control, and a
+	// render-time vulnerability-match join (sbomVulnerabilityMatch.js) vs the
+	// kwetsbaarheid register. No built-in detail widget expresses an upload
+	// flow + cross-schema read-time match, so it stays a custom tab component.
+	SbomComponentsPanel,
 }

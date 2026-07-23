@@ -582,6 +582,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
+						{ "id": "components", "label": "Components", "icon": "Package", "component": "SbomComponentsPanel" },
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
