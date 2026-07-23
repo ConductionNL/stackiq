@@ -2181,8 +2181,20 @@
             "enum": [
               "Concept",
               "Actief",
-              "Deactief"
+              "Deactief",
+              "samengevoegd"
             ]
+          },
+          "mergedInto": {
+            "description": "Organisation-merge tombstone: the target organisation UUID this organisation was merged into. Set only when status equals 'samengevoegd'; absent/null on every organisation that has never been a merge source.",
+            "title": "Samengevoegd met",
+            "type": "string",
+            "visible": false,
+            "hideOnCollection": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 52,
+            "maxLength": 255
           },
           "registratiestatus": {
             "description": "Moderatiestatus van een (anoniem) zelf-geregistreerde organisatie. 'pending' tot een beheerder de registratie goedkeurt; pas daarna 'active'. Anoniem geregistreerde organisaties zijn 'pending' en niet zichtbaar in de open-data/federatie-laag tot goedkeuring.",
