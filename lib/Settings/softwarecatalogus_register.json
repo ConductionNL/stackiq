@@ -2485,7 +2485,7 @@
         "slug": "gebruik",
         "title": "Gebruik",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.3.0",
+        "version": "1.4.0",
         "summary": "",
         "icon": "Usage",
         "x-openregister-notifications": {
@@ -2908,6 +2908,40 @@
             "order": 31,
             "facetable": false,
             "title": "Geplande vervangingsdatum",
+            "example": "Bijvoorbeeld: 2027-01-01"
+          },
+          "timeClassification": {
+            "description": "Gartner TIME-classificatie van dit gebruik: Tolerate (gedogen), Invest (investeren), Migrate (migreren) of Eliminate (uitfaseren). Wordt per gebruik vastgelegd, niet op de module zelf.",
+            "type": "string",
+            "visible": true,
+            "order": 32,
+            "facetable": true,
+            "title": "TIME-classificatie",
+            "enum": [
+              "Tolerate",
+              "Invest",
+              "Migrate",
+              "Eliminate"
+            ],
+            "example": "Bijvoorbeeld: Migrate"
+          },
+          "timeRationale": {
+            "description": "Onderbouwing van de TIME-classificatie voor dit gebruik.",
+            "type": "string",
+            "visible": true,
+            "order": 33,
+            "facetable": false,
+            "title": "TIME-onderbouwing",
+            "example": "Bijvoorbeeld: Verouderd platform, opvolger reeds gepland"
+          },
+          "timeReviewDate": {
+            "description": "Datum waarop de TIME-classificatie van dit gebruik opnieuw beoordeeld moet worden.",
+            "type": "string",
+            "format": "date",
+            "visible": true,
+            "order": 34,
+            "facetable": false,
+            "title": "TIME-herbeoordelingsdatum",
             "example": "Bijvoorbeeld: 2027-01-01"
           }
         },

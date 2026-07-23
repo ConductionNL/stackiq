@@ -31,6 +31,8 @@ use OCA\SoftwareCatalog\Service\SettingsService;
  *
  * @category Repair
  * @package  OCA\SoftwareCatalog\Repair
+ *
+ * @spec openspec/specs/repair-init/spec.md
  */
 class InitializeSettings implements IRepairStep
 {
@@ -54,6 +56,8 @@ class InitializeSettings implements IRepairStep
      * Returns the name of this repair step.
      *
      * @return string The repair step name
+     *
+     * @spec openspec/specs/repair-init/spec.md
      */
     public function getName(): string
     {
@@ -99,6 +103,13 @@ class InitializeSettings implements IRepairStep
             // operator's chosen window survives upgrades.
             if ($this->config->hasKey(Application::APP_ID, 'eol_warning_window_days') === false) {
                 $this->config->setValueInt(Application::APP_ID, 'eol_warning_window_days', 180);
+            }
+
+            // @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-report-aggregation-queries-are-bounded
+            // Seed the portfolio-report page-size ceiling default only when
+            // unset, so an operator's chosen bound survives upgrades.
+            if ($this->config->hasKey(Application::APP_ID, 'portfolio_report_page_size_ceiling') === false) {
+                $this->config->setValueInt(Application::APP_ID, 'portfolio_report_page_size_ceiling', 500);
             }
 
             // @spec openspec/specs/federated-catalog-sync/spec.md
