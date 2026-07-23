@@ -78,6 +78,12 @@ return [
         // Configuration cache management
         ['name' => 'settings#clearCache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
 
+        // SBOM (Software Bill of Materials) import routes — CycloneDX/SPDX
+        // upload scoped to a single moduleVersie, and its status.
+        // @spec openspec/specs/sbom-import/spec.md
+        ['name' => 'sbom#importSbom', 'url' => '/api/moduleversies/{moduleVersieUuid}/sbom', 'verb' => 'POST'],
+        ['name' => 'sbom#getSbomImportStatus', 'url' => '/api/moduleversies/{moduleVersieUuid}/sbom', 'verb' => 'GET'],
+
         // ArchiMate import/export routes
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],

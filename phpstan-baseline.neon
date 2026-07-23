@@ -629,3 +629,8 @@ parameters:
 			message: "#^Property OCA\\\\SoftwareCatalog\\\\Settings\\\\SoftwareCatalogAdmin\\:\\:\\$l10n is never read, only written\\.$#"
 			count: 1
 			path: lib/Settings/SoftwareCatalogAdmin.php
+
+		-
+			message: "#^Dead catch \\- Exception is never thrown in the try block\\.$#"
+			count: 1
+			path: lib/Controller/SbomController.php

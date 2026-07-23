@@ -254,17 +254,17 @@ unset.
 
 ## Acceptance Criteria
 
-- [ ] A valid CycloneDX 1.5 or 1.6 JSON file uploaded against a `moduleVersie`
+- [x] A valid CycloneDX 1.5 or 1.6 JSON file uploaded against a `moduleVersie`
   produces one `sbomComponent` object per parsed component, linked to that
   version.
-- [ ] Re-importing for the same `moduleVersie` replaces the previous
+- [x] Re-importing for the same `moduleVersie` replaces the previous
   component set, leaving no duplicate or stale live components.
-- [ ] The Components tab shows the component list, license list, and summary
+- [x] The Components tab shows the component list, license list, and summary
   counts for a version with an imported SBOM.
-- [ ] Confirmed (CVE-id) and possible (name/purl) vulnerability matches are
+- [x] Confirmed (CVE-id) and possible (name/purl) vulnerability matches are
   visually distinguished and computed without persisting a match reference.
-- [ ] No import, parse, or match code path makes an outbound HTTP request.
-- [ ] Oversized or non-JSON uploads are rejected before parsing.
+- [x] No import, parse, or match code path makes an outbound HTTP request.
+- [x] Oversized or non-JSON uploads are rejected before parsing.
 
 ## Notes
 
