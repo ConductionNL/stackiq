@@ -93,10 +93,20 @@ Once every relation type has completed, the source organisation is updated
 - `mergedInto = "<target uuid>"`
 
 The source is **never deleted**. It disappears from the default
-Organisaties index listing (`config.filter: {"status": {"$ne": "samengevoegd"}}`
+Organisaties index listing (`config.filter: {"status": ["Concept", "Actief", "Deactief"]}`
 in `src/manifest.json`), but stays resolvable by direct UUID lookup — its
 detail page renders a read-only notice with a link to the organisation it
 was merged into.
+
+<!-- Fixed by bio-compliance-assessment: the filter previously read
+     `{"status": {"$ne": "samengevoegd"}}`, an operator shape that
+     useObjectStore's buildQueryString JSON.stringifies into a single
+     query-string value on GET — OpenRegister's MagicSearchHandler never
+     json_decodes it back into an array, so the exclusion silently never
+     applied (merged organisations stayed listed). Bare-array filter
+     values ARE correctly bracket-encoded (`field[]=`) and parsed by PHP
+     as a real array, so the fix enumerates the three non-merged status
+     values as an IN-list instead of the unsupported operator object. -->
 
 `OrganisatieService::mapStatus('samengevoegd')` also returns `false`, so the
 linked OpenRegister core `Organisation` entity's `active` flag is kept in
