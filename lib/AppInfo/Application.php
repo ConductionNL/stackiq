@@ -51,6 +51,8 @@ use OCA\SoftwareCatalog\Service\ModuleVersionService;
 use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCA\SoftwareCatalog\Service\ProgressTracker;
+use OCA\SoftwareCatalog\Service\SbomImportService;
+use OCA\SoftwareCatalog\Service\SbomParserService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogContactSyncService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
@@ -429,6 +431,29 @@ class Application extends App implements IBootstrap
                     return new ModuleVersionService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
+                    logger: $container->get('Psr\Log\LoggerInterface')
+                    );
+                }
+                );
+
+        // Register the pure SBOM parser (no OR/HTTP dependency — ADR-008).
+        $context->registerService(
+                SbomParserService::class,
+                function ($container) {
+                    return new SbomParserService();
+                }
+                );
+
+        // Register the SBOM import orchestrator (parse → replace previous
+        // component set → bulk-save new set → record provenance).
+        $context->registerService(
+                SbomImportService::class,
+                function ($container) {
+                    return new SbomImportService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    parser: $container->get(SbomParserService::class),
+                    progressTracker: $container->get(ProgressTracker::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
                     );
                 }

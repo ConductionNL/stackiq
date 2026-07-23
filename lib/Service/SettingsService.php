@@ -277,6 +277,7 @@ class SettingsService
                     'module',
                     'compliancy',
                     'moduleVersie',
+                    'sbomComponent',
                 ],
             ],
         ];
@@ -867,9 +868,10 @@ class SettingsService
         }//end if
 
         $voorzieningenKeyMap = [
-            'module'       => 'module_schema',
-            'compliancy'   => 'compliancy_schema',
-            'moduleVersie' => 'moduleVersie_schema',
+            'module'        => 'module_schema',
+            'compliancy'    => 'compliancy_schema',
+            'moduleVersie'  => 'moduleVersie_schema',
+            'sbomComponent' => 'sbomComponent_schema',
         ];
 
         // Only check voorzieningen config if object type exists in the key map.
@@ -3783,6 +3785,7 @@ class SettingsService
             // Handle both moduleversie and moduleVersie.
                 'moduleVersie'   => 'moduleVersie_schema',
                 'sector'         => 'sector_schema',
+                'sbomComponent'  => 'sbomComponent_schema',
             ];
 
             $config = [ 'register' => (string) ($targetRegister['id'] ?? '') ];
@@ -4220,6 +4223,7 @@ class SettingsService
             'compliancy_schema',
             'moduleVersie_schema',
             'sector_schema',
+            'sbomComponent_schema',
         ];
 
         // Copy any present schema keys; ignore sources/registers.

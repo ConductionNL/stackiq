@@ -1,0 +1,28 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:9c6e7a3a-6a5f-4d0e-9d1a-2f7b8e3c4d5e",
+  "version": 1,
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "pkg:npm/express@4.19.2",
+      "name": "express",
+      "version": "4.19.2",
+      "purl": "pkg:npm/express@4.19.2",
+      "licenses": [
+        { "license": { "name": "MIT License" } }
+      ]
+    },
+    {
+      "type": "framework",
+      "bom-ref": "pkg:npm/vue@2.7.16",
+      "name": "vue",
+      "version": "2.7.16",
+      "purl": "pkg:npm/vue@2.7.16",
+      "licenses": [
+        { "license": { "id": "MIT" } }
+      ]
+    }
+  ]
+}
