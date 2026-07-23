@@ -168,6 +168,14 @@ return [
         ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
 
         // ========================================================================
+        // FACET API ENDPOINTS - GEMMA-dimension facet aggregation for the
+        // module/dienst index pages (gemma-faceted-search)
+        // ========================================================================
+
+        // @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
+        ['name' => 'facet#getFacets', 'url' => '/api/facets/{schema}', 'verb' => 'GET'],
+
+        // ========================================================================
         // AANBOD API ENDPOINTS - Unified API for all aanbod types
         // ========================================================================
 
