@@ -28,6 +28,7 @@ import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import LicensePostureView from './views/LicensePostureView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
+import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
 
 export default {
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
@@ -114,4 +115,14 @@ export default {
 	// the lib grows a facet-sidebar mode whose counts/narrowing are computed by
 	// an external, non-schema-field aggregation (see FacetedCatalogIndexView.vue).
 	FacetedCatalogIndexView,
+	// --- Lib gap: composed backend-aggregate rationalization report. ---
+	// GET /api/portfolio-report (PortfolioReportService) reads TIME quadrant
+	// counts + EOL exposure + cloud-transition share + annualised cost as a
+	// SINGLE bounded, organisation-scoped, RBAC-checked JSON payload plus a
+	// CSV variant. Unlike LicensePostureView/LifecycleRoadmapView (client-side
+	// derivation over full collections) this page is a thin renderer over
+	// that endpoint — no built-in index/detail/dashboard type expresses a
+	// fetched, pre-aggregated multi-metric report with a CSV export button.
+	// @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
+	PortfolioReportView,
 }
