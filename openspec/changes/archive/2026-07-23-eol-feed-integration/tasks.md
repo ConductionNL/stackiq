@@ -8,8 +8,8 @@
 - **acceptance_criteria**:
   - GIVEN the current `module` and `moduleVersie` schemas WHEN the register definition is updated THEN `module.eolProductSlug` and `moduleVersie.eolBron`/`eolBijgewerktOp` exist as optional fields
   - GIVEN existing `module`/`moduleVersie` objects WHEN the updated register is imported via the repair step THEN they load and save unchanged (no new required field, no default value change)
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 2: EolMatcherService — conservative version-prefix matching
 - **spec_ref**: `openspec/changes/eol-feed-integration/specs/eol-feed-integration/spec.md#requirement-version-matching-is-conservative-and-unambiguous-only`
@@ -17,8 +17,8 @@
 - **acceptance_criteria**:
   - GIVEN one `eolCycle` candidate at the most-specific matching level WHEN the matcher runs THEN that `moduleVersie` is selected for stamping
   - GIVEN two `eolCycle` candidates tied at the most-specific level, or zero candidates, WHEN the matcher runs THEN the `moduleVersie` is skipped and unchanged
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 3: PUT-semantic stamping with provenance
 - **spec_ref**: `openspec/changes/eol-feed-integration/specs/eol-feed-integration/spec.md#requirement-stamping-preserves-every-other-field-and-records-provenance`
@@ -26,8 +26,8 @@
 - **acceptance_criteria**:
   - GIVEN a `moduleVersie` with an existing `beschrijvingKort` value WHEN it is matched and stamped THEN `datumEindeOndersteuning`, `eolBron`, `eolBijgewerktOp` are set AND `beschrijvingKort` and every other previously-set field remain unchanged on the saved object
   - GIVEN a hand-entered `datumEindeOndersteuning` with no `eolBron` WHEN it is inspected THEN `eolBron`/`eolBijgewerktOp` remain absent (never fabricated for manual entries)
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 4: EolSyncService — orchestration, status, graceful degradation
 - **spec_ref**: `openspec/changes/eol-feed-integration/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable`
@@ -35,8 +35,8 @@
 - **acceptance_criteria**:
   - GIVEN the configured EOL register/schema cannot be resolved WHEN a sync runs THEN no `moduleVersie` is modified, no error is raised, and status reports the feed unavailable with a reason
   - GIVEN a successful run WHEN status is queried THEN it reports matched count, skipped count, and last-run timestamp
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 5: EolSyncJob — scheduled background job
 - **spec_ref**: `openspec/changes/eol-feed-integration/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger`
@@ -44,8 +44,8 @@
 - **acceptance_criteria**:
   - GIVEN the EOL job's configured interval elapses WHEN it runs THEN `EolSyncService` executes in system (non-RBAC) context per the `cronjob-context` pattern
   - GIVEN the job is registered WHEN `appinfo/info.xml` is inspected THEN it lists the job under background-jobs following NC 34 registration conventions
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 6: SettingsController/SettingsService — EOL sync config, manual trigger, status
 - **spec_ref**: `openspec/changes/eol-feed-integration/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger`
@@ -53,8 +53,8 @@
 - **acceptance_criteria**:
   - GIVEN an admin calls `getEolSyncConfig()`/`updateEolSyncConfig()` WHEN invoked THEN the register/schema names and enabled toggle are read/persisted via `SettingsService`
   - GIVEN an admin calls the manual sync-trigger endpoint WHEN invoked THEN `EolSyncService` runs immediately and the resulting status is returned as JSON
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 7: Frontend — module mapping field + EOL sync settings panel
 - **spec_ref**: `openspec/changes/eol-feed-integration/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflifedate-via-per-module-config`
@@ -62,24 +62,24 @@
 - **acceptance_criteria**:
   - GIVEN a user edits a `module` WHEN they set `eolProductSlug` THEN the value persists via the existing OpenRegister object save path (no app-local controller)
   - GIVEN an admin opens the EOL sync settings panel WHEN the feed is unavailable THEN the panel shows "unavailable" status instead of an error, using `@conduction/nextcloud-vue` form components
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 8: i18n — NL/EN strings for settings and status
 - **spec_ref**: `openspec/changes/eol-feed-integration/specs/eol-feed-integration/spec.md#non-functional-requirements`
 - **files**: `l10n/en.js`, `l10n/en.json`, `l10n/nl.js`, `l10n/nl.json`
 - **acceptance_criteria**:
   - GIVEN the new settings panel and status labels WHEN the app locale is `nl_NL` or `en_US` THEN every new user-facing string renders translated (English i18n keys per project convention)
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 9: Docs — feature page with screenshots
 - **spec_ref**: `openspec/changes/eol-feed-integration/specs/eol-feed-integration/spec.md#purpose`
 - **files**: `docs/features/eol-feed-integration.md`, `docs/images/eol-feed-integration/*`
 - **acceptance_criteria**:
   - GIVEN the feature is implemented WHEN `docs/features/eol-feed-integration.md` is published THEN it documents the mapping field, sync settings, manual trigger, and the degraded/unavailable state, with Playwright-captured screenshots (ADR-010)
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ## Quality checklist
 
