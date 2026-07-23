@@ -507,6 +507,27 @@
         "TIME quadrant counts": "TIME-kwadrantaantallen",
         "Tolerate": "Tolereren",
         "Unclassified": "Ongeclassificeerd",
-        "Approval": "Goedkeuring"
+        "Approval": "Goedkeuring",
+        "Loading components": "Componenten laden",
+        "Components": "Componenten",
+        "Distinct licenses": "Unieke licenties",
+        "Matched vulnerabilities": "Overeenkomende kwetsbaarheden",
+        "SBOM format": "SBOM-formaat",
+        "Choose an SBOM JSON file": "Kies een SBOM JSON-bestand",
+        "Import SBOM": "SBOM importeren",
+        "No components imported yet": "Nog geen componenten geïmporteerd",
+        "Import a CycloneDX or SPDX SBOM to see this version's components, licenses and any matching known vulnerabilities.": "Importeer een CycloneDX- of SPDX-SBOM om de componenten, licenties en eventuele overeenkomende bekende kwetsbaarheden van deze versie te zien.",
+        "Confirmed match": "Bevestigde overeenkomst",
+        "Possible match": "Mogelijke overeenkomst",
+        "Name": "Naam",
+        "Version": "Versie",
+        "Package URL": "Package-URL",
+        "Licenses": "Licenties",
+        "Vulnerability match": "Kwetsbaarheid-overeenkomst",
+        "CycloneDX (JSON)": "CycloneDX (JSON)",
+        "SPDX (JSON)": "SPDX (JSON)",
+        "SBOM import failed": "SBOM-import mislukt",
+        "Imported {count} components.": "{count} componenten geïmporteerd.",
+        "Last imported {date} from {file} ({format})": "Laatst geïmporteerd op {date} vanuit {file} ({format})"
     }
 }
