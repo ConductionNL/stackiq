@@ -51,16 +51,20 @@ abstract class ObjectService
     /**
      * Search objects with pagination.
      *
-     * @param array $query          Search query.
-     * @param bool  $_rbac          Apply RBAC.
-     * @param bool  $_multitenancy  Apply multitenancy.
+     * @param array       $query         Search query.
+     * @param bool        $_rbac         Apply RBAC.
+     * @param bool        $_multitenancy Apply multitenancy.
+     * @param bool|null   $deleted       Include/exclude deleted objects.
+     * @param string|null $uses          Optional uses (relations) filter.
      *
      * @return array
      */
     abstract public function searchObjectsPaginated(
         array $query=[],
         bool $_rbac=true,
-        bool $_multitenancy=true
+        bool $_multitenancy=true,
+        ?bool $deleted=null,
+        ?string $uses=null
     ): array;
 
     /**
@@ -123,5 +127,47 @@ abstract class ObjectService
         bool $_rbac=true,
         bool $_multitenancy=true
     ): ObjectEntity;
+
+    /**
+     * Build a base search query from request-shaped options.
+     *
+     * @param array $options Request-shaped options (limit, offset, extend, etc.).
+     *
+     * @return array
+     */
+    abstract public function buildSearchQuery(array $options=[]): array;
+
+    /**
+     * Delete an object.
+     *
+     * @param string $uuid          Object uuid.
+     * @param bool   $_rbac         Apply RBAC.
+     * @param bool   $_multitenancy Apply multitenancy.
+     *
+     * @return bool
+     */
+    abstract public function deleteObject(
+        string $uuid,
+        bool $_rbac=true,
+        bool $_multitenancy=true
+    ): bool;
+
+    /**
+     * Set the active register context.
+     *
+     * @param mixed $register Register slug or id.
+     *
+     * @return void
+     */
+    abstract public function setRegister($register): void;
+
+    /**
+     * Set the active schema context.
+     *
+     * @param mixed $schema Schema slug or id.
+     *
+     * @return void
+     */
+    abstract public function setSchema($schema): void;
 
 }//end class

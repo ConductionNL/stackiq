@@ -46,6 +46,8 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ *
+ * @spec openspec/changes/vendor-visibility-rbac/tasks.md#task-1
  */
 class AangebodenGebruikController extends Controller
 {
@@ -88,9 +90,39 @@ class AangebodenGebruikController extends Controller
      * @NoCSRFRequired
      * @PublicPage
      * @spec           openspec/specs/aangeboden-gebruik-api/spec.md
+     * @spec           openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-offered-usage-afnemer-endpoint-must-require-authentication-explicitly-not-implicitly-req-004
      */
     public function getGebruiksWhereAfnemer(): JSONResponse
     {
+        // REQ-004: explicit authentication guard. Do NOT rely on
+        // AangebodenGebruikService::getCurrentOrganisation() resolving to
+        // null for an anonymous session as the sole safeguard — that is an
+        // implicit, unstated invariant of a downstream helper, not an
+        // explicit guard at the entry point. Reject before the service is
+        // ever invoked (deny-before-grant, REQ-001).
+        if ($this->userSession->getUser() === null) {
+            $this->logger->info(
+                    'API: Rejecting unauthenticated afnemer gebruiks request',
+                    [
+                        'endpoint' => '/api/aangeboden-gebruik/afnemer',
+                        'method'   => 'GET',
+                    ]
+                    );
+
+            return new JSONResponse(
+                    [
+                        'results' => [],
+                        'total'   => 0,
+                        'page'    => 1,
+                        'pages'   => 0,
+                        'limit'   => 20,
+                        'offset'  => 0,
+                        'message' => 'Not authenticated',
+                    ],
+                    Http::STATUS_UNAUTHORIZED
+                    );
+        }//end if
+
         $this->logger->info(
                 'API: Getting gebruiks where active org is afnemer',
                 [
