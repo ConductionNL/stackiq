@@ -343,7 +343,11 @@ OC.L10N.register(
     "SPDX (JSON)" : "SPDX (JSON)",
     "SBOM import failed" : "SBOM import failed",
     "Imported {count} components." : "Imported {count} components.",
-    "Last imported {date} from {file} ({format})" : "Last imported {date} from {file} ({format})"
+    "Last imported {date} from {file} ({format})" : "Last imported {date} from {file} ({format})",
+    "BBN1" : "BBN1",
+    "BBN2" : "BBN2",
+    "BBN3" : "BBN3",
+    "Without DPIA (BBN2+)" : "Without DPIA (BBN2+)"
 },
 "nplurals=2; plural=(n != 1);"
 );

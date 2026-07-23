@@ -3,21 +3,25 @@
  *
  * Covers the three cell states (verified / claimed / none), evidence
  * detection across all three evidence carriers, unresolved-relation
- * partitioning, deduplication of multiple records for one pair, and the
- * organisation-coverage join.
+ * partitioning, deduplication of multiple records for one pair, the
+ * organisation-coverage join, the BIO-measure column source
+ * (bio-compliance-assessment), and the both-relations-set conflict flag.
  *
- * @spec openspec/changes/module-compliance-assessment/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/bio-compliance-assessment/spec.md
  */
 
 import { describe, it, expect } from 'vitest'
 import {
 	CELL,
+	COLUMN_SOURCE,
 	resolveUuid,
 	hasEvidence,
 	partitionCompliancy,
 	buildComplianceMatrix,
 	buildOrganisationCoverage,
 	standardLabel,
+	columnLabel,
 } from '../../src/utils/complianceMatrix.js'
 
 describe('complianceMatrix.resolveUuid', () => {
@@ -162,5 +166,94 @@ describe('complianceMatrix.buildOrganisationCoverage', () => {
 			compliancy: [{ module: 'mA', standaardversie: 's2', url: 'https://e' }],
 		})
 		expect(coverage[0].state).toBe(CELL.NONE)
+	})
+})
+
+describe('complianceMatrix — bioMaatregel column source (bio-compliance-assessment)', () => {
+	const modules = [
+		{ uuid: 'mA', naam: 'App A' },
+		{ uuid: 'mB', naam: 'App B' },
+	]
+	const bioMaatregelen = [
+		{ uuid: 'b1', naam: 'Toegangsbeveiligingsbeleid' },
+		{ uuid: 'b2', naam: 'Cryptografisch beleid' },
+	]
+
+	it('partitions bioMaatregel-linked records as resolved under the bioMaatregel column source', () => {
+		const { resolved, unresolved } = partitionCompliancy([
+			{ module: 'mA', bioMaatregel: 'b1', url: 'https://e' },
+			{ module: 'mA', standaardversie: 's1' },
+		], COLUMN_SOURCE.BIO_MAATREGEL)
+		expect(resolved).toHaveLength(1)
+		expect(resolved[0].columnUuid).toBe('b1')
+		expect(resolved[0].evidenced).toBe(true)
+		// standaardversie-only records are not applicable to the BIO matrix and
+		// have no string fallback, so they are dropped rather than unresolved.
+		expect(unresolved).toHaveLength(0)
+	})
+
+	it('renders the three cell states for a BIO-measure matrix, same as the standards matrix', () => {
+		const compliancy = [
+			{ module: 'mA', bioMaatregel: 'b1', url: 'https://proof' },
+			{ module: 'mA', bioMaatregel: 'b2' },
+			{ module: 'mB', bioMaatregel: 'b1' },
+		]
+		const { rows, columns } = buildComplianceMatrix({
+			modules,
+			columns: bioMaatregelen,
+			compliancy,
+			columnSource: COLUMN_SOURCE.BIO_MAATREGEL,
+		})
+		expect(columns.map((c) => c.label)).toEqual(['Toegangsbeveiligingsbeleid', 'Cryptografisch beleid'])
+		expect(rows[0].cells.b1.state).toBe(CELL.VERIFIED)
+		expect(rows[0].cells.b2.state).toBe(CELL.CLAIMED)
+		expect(rows[1].cells.b1.state).toBe(CELL.CLAIMED)
+		expect(rows[1].cells.b2.state).toBe(CELL.NONE)
+	})
+
+	it('flags a record with both standaardversie and bioMaatregel set as conflicted, matched to neither column', () => {
+		const compliancy = [
+			{ module: 'mA', standaardversie: 's1', bioMaatregel: 'b1', url: 'https://e' },
+		]
+		const standardsMatrix = buildComplianceMatrix({
+			modules,
+			columns: [{ uuid: 's1', naam: 'ZGW API' }],
+			compliancy,
+			columnSource: COLUMN_SOURCE.STANDAARDVERSIE,
+		})
+		const bioMatrix = buildComplianceMatrix({
+			modules,
+			columns: bioMaatregelen,
+			compliancy,
+			columnSource: COLUMN_SOURCE.BIO_MAATREGEL,
+		})
+		expect(standardsMatrix.rows[0].cells.s1.state).toBe(CELL.NONE)
+		expect(standardsMatrix.conflicted).toHaveLength(1)
+		expect(bioMatrix.rows[0].cells.b1.state).toBe(CELL.NONE)
+		expect(bioMatrix.conflicted).toHaveLength(1)
+	})
+
+	it('computes organisation coverage for a bioMaatregel column identically to the standards path', () => {
+		const gebruiken = [{ module: 'mA' }, { module: 'mB' }, { module: 'mC' }]
+		const compliancy = [
+			{ module: 'mA', bioMaatregel: 'b1', url: 'https://e' },
+			{ module: 'mB', bioMaatregel: 'b1' },
+		]
+		const coverage = buildOrganisationCoverage({
+			gebruiken,
+			columnUuid: 'b1',
+			compliancy,
+			columnSource: COLUMN_SOURCE.BIO_MAATREGEL,
+		})
+		expect(coverage[0].state).toBe(CELL.VERIFIED)
+		expect(coverage[1].state).toBe(CELL.CLAIMED)
+		expect(coverage[2].state).toBe(CELL.NONE)
+	})
+})
+
+describe('complianceMatrix.columnLabel', () => {
+	it('falls back through name fields (alias of standardLabel)', () => {
+		expect(columnLabel({ naam: 'A' })).toBe('A')
+		expect(standardLabel({ naam: 'A' })).toBe(columnLabel({ naam: 'A' }))
 	})
 })

@@ -34,6 +34,7 @@ generic route-query-to-filter passthrough never sees it (see the
 @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-sidebar-ui-on-the-module-and-dienst-index-pages
 @spec openspec/specs/gemma-faceted-search/spec.md#requirement-filter-state-is-url-encoded-and-deep-linkable
 @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
+@spec openspec/specs/bio-compliance-assessment/spec.md#requirement-catalog-can-be-filtered-by-bbn-level-and-dpia-status
 -->
 
 <template>
@@ -108,7 +109,10 @@ generic route-query-to-filter passthrough never sees it (see the
 					:register="register"
 					:schema="schema"
 					:columns="columns"
-					:filter="listFilter" />
+					:filter="listFilter"
+					:quick-filters="quickFilters"
+					:quick-filter-mode="quickFilterMode"
+					:quick-filter-multiple="quickFilterMultiple" />
 			</div>
 		</div>
 
@@ -188,6 +192,34 @@ export default {
 		columns: {
 			type: Array,
 			default: () => [],
+		},
+		/**
+		 * Clickable filter-tab strip, forwarded to `CnIndexPage` (manifest
+		 * `config.quickFilters`) — e.g. the BIO BBN-level / DPIA-status quick
+		 * filters on the Modules page (bio-compliance-assessment). Composes
+		 * with the GEMMA facet narrowing below: `CnIndexPage`'s self-fetch
+		 * merges `{ ...base(filter prop), ...activeTab.filter }` (see
+		 * `useSelfFetchList.js#fixedFilters`), and this view's own `filter`
+		 * prop only ever carries the single `id` key
+		 * (`{ id: matchedObjectIds }`, see `listFilter` below). A quick
+		 * filter's keys (`bbnLevel`, `dpiaStatus`, …) never collide with
+		 * `id`, so the merge is additive — both the facet-matched id set AND
+		 * the active quick filter's field constraints apply together
+		 * (logical AND), never clobbering one another.
+		 */
+		quickFilters: {
+			type: Array,
+			default: null,
+		},
+		/** Quick-filter render mode, forwarded to `CnIndexPage` (manifest `config.quickFilterMode`). */
+		quickFilterMode: {
+			type: String,
+			default: 'chips',
+		},
+		/** Allow several quick filters active at once, forwarded to `CnIndexPage` (manifest `config.quickFilterMultiple`). */
+		quickFilterMultiple: {
+			type: Boolean,
+			default: false,
 		},
 	},
 

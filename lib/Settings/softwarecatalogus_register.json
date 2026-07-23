@@ -3,7 +3,7 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.3.2"
+    "version": "2.4.0"
   },
   "x-openregister": {
     "type": "application",
@@ -760,6 +760,53 @@
               "version": "0.0.1"
             }
           }
+        ],
+        "bioMaatregel": [
+          {
+            "slug": "bio-5-1-1",
+            "code": "5.1.1",
+            "naam": "Toegangsbeveiligingsbeleid",
+            "thema": "Toegangsbeveiliging",
+            "bioVersie": "BIO 2.0",
+            "bbnNiveau": ["BBN1", "BBN2", "BBN3"],
+            "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
+          },
+          {
+            "slug": "bio-9-2-1",
+            "code": "9.2.1",
+            "naam": "Beheer van gebruikerstoegang",
+            "thema": "Toegangsbeveiliging",
+            "bioVersie": "BIO 2.0",
+            "bbnNiveau": ["BBN2", "BBN3"],
+            "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
+          },
+          {
+            "slug": "bio-10-1-1",
+            "code": "10.1.1",
+            "naam": "Cryptografisch beleid",
+            "thema": "Cryptografie",
+            "bioVersie": "BIO 2.0",
+            "bbnNiveau": ["BBN2", "BBN3"],
+            "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
+          },
+          {
+            "slug": "bio-12-1-1",
+            "code": "12.1.1",
+            "naam": "Netwerkbeveiligingsbeheer",
+            "thema": "Communicatiebeveiliging",
+            "bioVersie": "BIO 2.0",
+            "bbnNiveau": ["BBN1", "BBN2", "BBN3"],
+            "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
+          },
+          {
+            "slug": "bio-13-2-1",
+            "code": "13.2.1",
+            "naam": "Gegevensoverdrachtbeleid",
+            "thema": "Communicatiebeveiliging",
+            "bioVersie": "BIO 2.0",
+            "bbnNiveau": ["BBN2", "BBN3"],
+            "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
+          }
         ]
       }
     }
@@ -769,7 +816,7 @@
       "voorzieningen": {
         "slug": "voorzieningen",
         "title": "Voorzieningen",
-        "version": "2.0.3",
+        "version": "2.1.0",
         "description": "Register voor voorzieningen uit de softwarecatalogus",
         "published": "2025-01-01T00:00:00+00:00",
         "schemas": [
@@ -786,7 +833,8 @@
           "beoordeeling",
           "compliancy",
           "moduleVersie",
-          "sbomComponent"
+          "sbomComponent",
+          "bioMaatregel"
         ],
         "source": "internal",
         "tablePrefix": "",
@@ -854,6 +902,10 @@
               "autoCreateTable": true
             },
             "sbomComponent": {
+              "magicMapping": true,
+              "autoCreateTable": true
+            },
+            "bioMaatregel": {
               "magicMapping": true,
               "autoCreateTable": true
             }
@@ -6770,9 +6822,24 @@
         "uri": null,
         "slug": "module",
         "x-schema-org": "schema:SoftwareApplication",
+        "x-openregister-notifications": {
+          "dpia-review-overdue": {
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"dpiaStatus": {"operator": "equals", "value": "executed"}, "dpiaVolgendeBeoordeling": {"operator": "withinNext", "value": "P0D"}}},
+            "enabled": true,
+            "channels": ["nc-notification", "email"],
+            "recipients": [
+              {"kind": "groups", "groups": ["software-catalog-admins"]},
+              {"kind": "object-acl", "permission": "manage"}
+            ],
+            "subject": {
+              "nl": "DPIA-beoordeling verlopen: {{naam}} (uiterlijk {{dpiaVolgendeBeoordeling}})",
+              "en": "DPIA review overdue: {{naam}} (due {{dpiaVolgendeBeoordeling}})"
+            }
+          }
+        },
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.3.1",
+        "version": "0.3.2",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -7199,6 +7266,76 @@
             "facetable": false,
             "title": "Endoflife.date product-slug",
             "example": "postgresql"
+          },
+          "bbnLevel": {
+            "description": "Het BBN-niveau (Baseline Informatiebeveiliging Overheid) waarop deze applicatie is geclassificeerd.",
+            "type": "string",
+            "visible": true,
+            "order": 53,
+            "enum": [
+              "BBN1",
+              "BBN2",
+              "BBN3"
+            ],
+            "facetable": true,
+            "title": "BBN-niveau",
+            "table": {
+              "default": true
+            },
+            "example": "Bijvoorbeeld: BBN2"
+          },
+          "dpiaStatus": {
+            "description": "De status van de Data Protection Impact Assessment (DPIA) voor deze applicatie.",
+            "type": "string",
+            "visible": true,
+            "order": 54,
+            "enum": [
+              "not required",
+              "required",
+              "executed"
+            ],
+            "facetable": true,
+            "title": "DPIA-status",
+            "table": {
+              "default": true
+            },
+            "example": "Bijvoorbeeld: executed"
+          },
+          "dpiaDate": {
+            "description": "De datum waarop de DPIA is uitgevoerd. Alleen betekenisvol wanneer dpiaStatus 'executed' is; dit wordt niet afgedwongen bij het opslaan.",
+            "type": "string",
+            "format": "date",
+            "visible": true,
+            "order": 55,
+            "facetable": false,
+            "title": "DPIA-datum",
+            "example": "Bijvoorbeeld: 2026-03-01"
+          },
+          "dpiaVolgendeBeoordeling": {
+            "description": "De datum waarop de DPIA opnieuw beoordeeld moet worden.",
+            "type": "string",
+            "format": "date",
+            "visible": true,
+            "order": 56,
+            "facetable": false,
+            "title": "Datum volgende DPIA-beoordeling",
+            "example": "Bijvoorbeeld: 2027-03-01"
+          },
+          "dpiaDocumentRef": {
+            "description": "Nextcloud Files-verwijzing naar het DPIA-document (link, niet opslaan), naar analogie van compliancy.bewijsReferentie.",
+            "type": "string",
+            "visible": true,
+            "order": 57,
+            "facetable": false,
+            "title": "DPIA-document (Nextcloud Files)"
+          },
+          "verwerkingsregisterRef": {
+            "description": "Verwijzing (URL of identifier) naar de vermelding van deze applicatie in het register van verwerkingen van de organisatie. Dit veld slaat alleen de verwijzing op; het register zelf wordt niet gemodelleerd.",
+            "type": "string",
+            "visible": true,
+            "order": 58,
+            "facetable": false,
+            "title": "Verwerkingsregister-referentie"
           }
         },
         "archive": [],
@@ -7314,7 +7451,7 @@
         "slug": "compliancy",
         "title": "Compliancy",
         "description": "Schema voor compliancy en standaard ondersteuning",
-        "version": "0.0.11",
+        "version": "0.0.12",
         "summary": "",
         "icon": "CheckCircle",
         "required": [],
@@ -7339,6 +7476,18 @@
             "title": "Standaard Gemaa",
             "visible": true,
             "facetable": false
+          },
+          "bioMaatregel": {
+            "description": "BIO-maatregel die door deze compliance wordt ondersteund. Een compliancy record koppelt aan precies een van standaardversie of bioMaatregel, nooit beide.",
+            "type": "object",
+            "order": 2,
+            "title": "BIO-maatregel",
+            "visible": true,
+            "facetable": false,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/bioMaatregel"
           },
           "module": {
             "description": "De applicatie waarvan de compliance wordt geregistreerd",
@@ -7413,6 +7562,132 @@
           "allowedTags": [
             "testraport"
           ],
+          "autoPublish": true
+        }
+      },
+      "bioMaatregel": {
+        "uri": null,
+        "slug": "bioMaatregel",
+        "title": "BIO-maatregel",
+        "description": "Een BIO 2.0 (Baseline Informatiebeveiliging Overheid) maatregel uit de gepubliceerde maatregelenlijst. Wordt gebruikt als selectiebron voor compliance-registraties (compliancy.bioMaatregel) en het BIO-dekkingsrapport.",
+        "version": "0.0.1",
+        "summary": "",
+        "icon": "ShieldLockOutline",
+        "required": [
+          "code",
+          "naam"
+        ],
+        "properties": {
+          "code": {
+            "description": "De BIO-maatregelcode (bijvoorbeeld 5.1.1)",
+            "type": "string",
+            "order": 1,
+            "facetable": true,
+            "required": true,
+            "title": "Code",
+            "maxLength": 20,
+            "table": {
+              "default": true
+            },
+            "example": "Bijvoorbeeld: 5.1.1"
+          },
+          "naam": {
+            "description": "De naam van de BIO-maatregel",
+            "type": "string",
+            "order": 2,
+            "facetable": false,
+            "required": true,
+            "title": "Naam",
+            "maxLength": 255,
+            "table": {
+              "default": true
+            },
+            "example": "Bijvoorbeeld: Toegangsbeveiligingsbeleid"
+          },
+          "omschrijving": {
+            "description": "Een uitgebreide omschrijving van de maatregel",
+            "type": "string",
+            "order": 3,
+            "facetable": false,
+            "format": "markdown",
+            "title": "Omschrijving",
+            "maxLength": 5000,
+            "example": "Bijvoorbeeld: De organisatie stelt een toegangsbeveiligingsbeleid vast en onderhoudt dit periodiek."
+          },
+          "thema": {
+            "description": "Het BIO-thema waartoe de maatregel behoort",
+            "type": "string",
+            "order": 4,
+            "facetable": true,
+            "title": "Thema",
+            "table": {
+              "default": true
+            },
+            "maxLength": 200,
+            "example": "Bijvoorbeeld: Toegangsbeveiliging"
+          },
+          "bioVersie": {
+            "description": "De BIO-versie waarin deze maatregel is gepubliceerd",
+            "type": "string",
+            "order": 5,
+            "facetable": true,
+            "title": "BIO-versie",
+            "default": "BIO 2.0",
+            "maxLength": 50,
+            "example": "Bijvoorbeeld: BIO 2.0"
+          },
+          "bbnNiveau": {
+            "description": "De BBN-niveaus (Baseline Informatiebeveiliging Overheid) waarop deze maatregel van toepassing is",
+            "type": "array",
+            "order": 6,
+            "facetable": true,
+            "title": "BBN-niveau",
+            "table": {
+              "default": true
+            },
+            "items": {
+              "type": "string",
+              "enum": [
+                "BBN1",
+                "BBN2",
+                "BBN3"
+              ]
+            },
+            "example": [
+              "BBN2",
+              "BBN3"
+            ]
+          },
+          "bron": {
+            "description": "Verwijzing naar de gepubliceerde maatregel (baselineinformatiebeveiligingoverheid.nl)",
+            "type": "string",
+            "format": "url",
+            "order": 7,
+            "facetable": false,
+            "title": "Bron",
+            "maxLength": 500,
+            "example": "Bijvoorbeeld: https://www.baselineinformatiebeveiligingoverheid.nl"
+          }
+        },
+        "archive": [],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "searchable": true,
+        "maxDepth": 0,
+        "owner": "system",
+        "application": null,
+        "organisation": null,
+        "groups": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
+        "configuration": {
+          "objectNameField": "naam",
+          "objectSummaryField": "thema",
+          "objectDescriptionField": "omschrijving",
           "autoPublish": true
         }
       },
