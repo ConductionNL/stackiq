@@ -3751,76 +3751,6 @@
             "order": 51,
             "facetable": false,
             "title": "Depublicatiedatum"
-          },
-          "bbnLevel": {
-            "description": "Het BBN-niveau (Baseline Informatiebeveiliging Overheid) waarop deze applicatie is geclassificeerd.",
-            "type": "string",
-            "visible": true,
-            "order": 52,
-            "enum": [
-              "BBN1",
-              "BBN2",
-              "BBN3"
-            ],
-            "facetable": true,
-            "title": "BBN-niveau",
-            "table": {
-              "default": true
-            },
-            "example": "Bijvoorbeeld: BBN2"
-          },
-          "dpiaStatus": {
-            "description": "De status van de Data Protection Impact Assessment (DPIA) voor deze applicatie.",
-            "type": "string",
-            "visible": true,
-            "order": 53,
-            "enum": [
-              "not required",
-              "required",
-              "executed"
-            ],
-            "facetable": true,
-            "title": "DPIA-status",
-            "table": {
-              "default": true
-            },
-            "example": "Bijvoorbeeld: executed"
-          },
-          "dpiaDate": {
-            "description": "De datum waarop de DPIA is uitgevoerd. Alleen betekenisvol wanneer dpiaStatus 'executed' is; dit wordt niet afgedwongen bij het opslaan.",
-            "type": "string",
-            "format": "date",
-            "visible": true,
-            "order": 54,
-            "facetable": false,
-            "title": "DPIA-datum",
-            "example": "Bijvoorbeeld: 2026-03-01"
-          },
-          "dpiaVolgendeBeoordeling": {
-            "description": "De datum waarop de DPIA opnieuw beoordeeld moet worden.",
-            "type": "string",
-            "format": "date",
-            "visible": true,
-            "order": 55,
-            "facetable": false,
-            "title": "Datum volgende DPIA-beoordeling",
-            "example": "Bijvoorbeeld: 2027-03-01"
-          },
-          "dpiaDocumentRef": {
-            "description": "Nextcloud Files-verwijzing naar het DPIA-document (link, niet opslaan), naar analogie van compliancy.bewijsReferentie.",
-            "type": "string",
-            "visible": true,
-            "order": 56,
-            "facetable": false,
-            "title": "DPIA-document (Nextcloud Files)"
-          },
-          "verwerkingsregisterRef": {
-            "description": "Verwijzing (URL of identifier) naar de vermelding van deze applicatie in het register van verwerkingen van de organisatie. Dit veld slaat alleen de verwijzing op; het register zelf wordt niet gemodelleerd.",
-            "type": "string",
-            "visible": true,
-            "order": 57,
-            "facetable": false,
-            "title": "Verwerkingsregister-referentie"
           }
         },
         "archive": [],
@@ -7336,6 +7266,76 @@
             "facetable": false,
             "title": "Endoflife.date product-slug",
             "example": "postgresql"
+          },
+          "bbnLevel": {
+            "description": "Het BBN-niveau (Baseline Informatiebeveiliging Overheid) waarop deze applicatie is geclassificeerd.",
+            "type": "string",
+            "visible": true,
+            "order": 53,
+            "enum": [
+              "BBN1",
+              "BBN2",
+              "BBN3"
+            ],
+            "facetable": true,
+            "title": "BBN-niveau",
+            "table": {
+              "default": true
+            },
+            "example": "Bijvoorbeeld: BBN2"
+          },
+          "dpiaStatus": {
+            "description": "De status van de Data Protection Impact Assessment (DPIA) voor deze applicatie.",
+            "type": "string",
+            "visible": true,
+            "order": 54,
+            "enum": [
+              "not required",
+              "required",
+              "executed"
+            ],
+            "facetable": true,
+            "title": "DPIA-status",
+            "table": {
+              "default": true
+            },
+            "example": "Bijvoorbeeld: executed"
+          },
+          "dpiaDate": {
+            "description": "De datum waarop de DPIA is uitgevoerd. Alleen betekenisvol wanneer dpiaStatus 'executed' is; dit wordt niet afgedwongen bij het opslaan.",
+            "type": "string",
+            "format": "date",
+            "visible": true,
+            "order": 55,
+            "facetable": false,
+            "title": "DPIA-datum",
+            "example": "Bijvoorbeeld: 2026-03-01"
+          },
+          "dpiaVolgendeBeoordeling": {
+            "description": "De datum waarop de DPIA opnieuw beoordeeld moet worden.",
+            "type": "string",
+            "format": "date",
+            "visible": true,
+            "order": 56,
+            "facetable": false,
+            "title": "Datum volgende DPIA-beoordeling",
+            "example": "Bijvoorbeeld: 2027-03-01"
+          },
+          "dpiaDocumentRef": {
+            "description": "Nextcloud Files-verwijzing naar het DPIA-document (link, niet opslaan), naar analogie van compliancy.bewijsReferentie.",
+            "type": "string",
+            "visible": true,
+            "order": 57,
+            "facetable": false,
+            "title": "DPIA-document (Nextcloud Files)"
+          },
+          "verwerkingsregisterRef": {
+            "description": "Verwijzing (URL of identifier) naar de vermelding van deze applicatie in het register van verwerkingen van de organisatie. Dit veld slaat alleen de verwijzing op; het register zelf wordt niet gemodelleerd.",
+            "type": "string",
+            "visible": true,
+            "order": 58,
+            "facetable": false,
+            "title": "Verwerkingsregister-referentie"
           }
         },
         "archive": [],

@@ -560,6 +560,10 @@
         "This organisation has been merged and is no longer active.": "This organisation has been merged and is no longer active.",
         "This will permanently fold {source} into {target}.": "This will permanently fold {source} into {target}.",
         "Usage records": "Usage records",
-        "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.": "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence."
+        "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.": "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.",
+        "BBN1": "BBN1",
+        "BBN2": "BBN2",
+        "BBN3": "BBN3",
+        "Without DPIA (BBN2+)": "Without DPIA (BBN2+)"
     }
 }

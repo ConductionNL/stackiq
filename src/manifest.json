@@ -378,7 +378,7 @@
 			"type": "custom",
 			"title": "Applications",
 			"component": "FacetedCatalogIndexView",
-			"_note": "Faceted index page (gemma-faceted-search): CnFacetSidebar (live GEMMA-dimension counts from FacetService) + a standalone CnIndexPage narrowed via { id: matchedObjectIds }. Stays custom rather than type:index — see customComponents.js's FacetedCatalogIndexView entry for why CnIndexPage's own embedded facet sidebar cannot drive this narrowing.",
+			"_note": "Faceted index page (gemma-faceted-search): CnFacetSidebar (live GEMMA-dimension counts from FacetService) + a standalone CnIndexPage narrowed via { id: matchedObjectIds }. Stays custom rather than type:index — see customComponents.js's FacetedCatalogIndexView entry for why CnIndexPage's own embedded facet sidebar cannot drive this narrowing. bio-compliance-assessment: bbnLevel/dpiaStatus columns + BBN/DPIA quickFilters reconciled onto this page after gemma-faceted-search (#382) merged — see FacetedCatalogIndexView.vue's quickFilters prop docblock for how the quick filter's field constraints compose with the facet { id: ... } narrowing (disjoint keys, additive AND, no clobber).",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "module",
@@ -388,7 +388,42 @@
 					"aanbieder",
 					"type",
 					"licentietype",
-					"publicatiedatum"
+					"publicatiedatum",
+					"bbnLevel",
+					"dpiaStatus"
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "BBN1",
+						"filter": {
+							"bbnLevel": "BBN1"
+						}
+					},
+					{
+						"label": "BBN2",
+						"filter": {
+							"bbnLevel": "BBN2"
+						}
+					},
+					{
+						"label": "BBN3",
+						"filter": {
+							"bbnLevel": "BBN3"
+						}
+					},
+					{
+						"label": "Without DPIA (BBN2+)",
+						"filter": {
+							"bbnLevel": ["BBN2", "BBN3"],
+							"dpiaStatus": ["not required", "required"]
+						},
+						"icon": "AlertCircle"
+					}
 				]
 			}
 		},

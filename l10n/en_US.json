@@ -402,6 +402,10 @@
         "Select one or more BIO measures": "Select one or more BIO measures",
         "Some compliancy records reference both a standard and a BIO measure — a data-quality issue. They are excluded from both matrices until corrected.": "Some compliancy records reference both a standard and a BIO measure — a data-quality issue. They are excluded from both matrices until corrected.",
         "The BIO measures catalog is seeded on install/upgrade. Refresh, or check the BIO measures catalog.": "The BIO measures catalog is seeded on install/upgrade. Refresh, or check the BIO measures catalog.",
-        "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.": "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence."
+        "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.": "Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.",
+        "BBN1": "BBN1",
+        "BBN2": "BBN2",
+        "BBN3": "BBN3",
+        "Without DPIA (BBN2+)": "Without DPIA (BBN2+)"
     }
 }
