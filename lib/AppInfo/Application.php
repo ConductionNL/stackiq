@@ -39,6 +39,7 @@ use OCA\SoftwareCatalog\Service\ArchiMateExportService;
 use OCA\SoftwareCatalog\Service\ArchiMateImportService;
 use OCA\SoftwareCatalog\Service\ArchiMateService;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
+use OCA\SoftwareCatalog\Service\FacetService;
 use OCA\SoftwareCatalog\Service\GebruikSyncService;
 use OCA\SoftwareCatalog\Service\ModuleComplianceService;
 use OCA\SoftwareCatalog\Service\ModuleRegistrationService;
@@ -54,6 +55,7 @@ use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
 use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCA\SoftwareCatalog\Service\ViewQueryBuilder;
 use OCA\SoftwareCatalog\Service\ViewService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -486,6 +488,23 @@ class Application extends App implements IBootstrap
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     settingsService: $container->get(SettingsService::class),
                     userSession: $container->get('OCP\IUserSession'),
+                    cacheFactory: $container->get(ICacheFactory::class)
+                    );
+                }
+                );
+
+        // Register Facet service for GEMMA-dimension facet aggregation
+        // (gemma-faceted-search) — mirrors ViewService's cache-factory wiring.
+        $context->registerService(
+                FacetService::class,
+                function ($container) {
+                    return new FacetService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    archiMateService: $container->get(ArchiMateService::class),
+                    queryBuilder: $container->get(ViewQueryBuilder::class),
+                    userSession: $container->get('OCP\IUserSession'),
+                    logger: $container->get('Psr\Log\LoggerInterface'),
                     cacheFactory: $container->get(ICacheFactory::class)
                     );
                 }

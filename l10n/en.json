@@ -402,6 +402,25 @@
         "This organisation will be deactivated and will no longer be visible to users.": "This organisation will be deactivated and will no longer be visible to users.",
         "Status successfully changed to {status}": "Status successfully changed to {status}",
         "Organisation or new status is missing": "Organisation or new status is missing",
-        "An error occurred while changing the status": "An error occurred while changing the status"
+        "An error occurred while changing the status": "An error occurred while changing the status",
+        "Search": "Search",
+        "Search applications and services…": "Search applications and services…",
+        "Clear search": "Clear search",
+        "Saved views": "Saved views",
+        "Save current filters as view": "Save current filters as view",
+        "GEMMA filters": "GEMMA filters",
+        "Clear all": "Clear all",
+        "Reference component": "Reference component",
+        "Standard": "Standard",
+        "Application service": "Application service",
+        "Domain": "Domain",
+        "View \"{name}\" saved": "View \"{name}\" saved",
+        "Failed to save view: {message}": "Failed to save view: {message}",
+        "Save as view": "Save as view",
+        "Save the current filter selection so it can be reopened later.": "Save the current filter selection so it can be reopened later.",
+        "View name": "View name",
+        "e.g. Zaakregistratie modules": "e.g. Zaakregistratie modules",
+        "Save view": "Save view",
+        "Approval": "Approval"
     }
 }

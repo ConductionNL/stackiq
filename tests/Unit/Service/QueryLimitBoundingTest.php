@@ -27,8 +27,11 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\SoftwareCatalog\Service\ArchiMateService;
+use OCA\SoftwareCatalog\Service\FacetService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\SoftwareCatalog\Service\ViewQueryBuilder;
 use OCA\SoftwareCatalog\Service\ViewService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -138,4 +141,64 @@ class QueryLimitBoundingTest extends TestCase
         $this->assertArrayHasKey('_limit', $capturedQuery);
         $this->assertGreaterThan(0, $capturedQuery['_limit']);
     }//end testOrganizationSyncServiceTimeWindowQueryCarriesLimit()
+
+    /**
+     * FacetService::getFacets() (gemma-faceted-search) pages the base
+     * module/dienst object set via `searchObjectsPaginated()` with an
+     * explicit `_limit` on every page request — never an unbounded
+     * `searchObjects()` scan.
+     *
+     * @spec openspec/changes/gemma-faceted-search/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-queries-must-be-bounded
+     *
+     * @return void
+     */
+    public function testFacetServiceBaseObjectQueryCarriesLimit(): void
+    {
+        $capturedQuery = null;
+
+        $objectService = $this->createMock(ObjectService::class);
+        $objectService->method('searchObjectsPaginated')->willReturnCallback(
+            function (array $query) use (&$capturedQuery): array {
+                $capturedQuery = $query;
+                return ['results' => [], 'total' => 0, 'page' => 1, 'pages' => 1];
+            }
+        );
+
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturnCallback(
+            function (string $id) use ($objectService) {
+                return $id === ObjectService::class ? $objectService : null;
+            }
+        );
+
+        $settingsService = $this->createMock(SettingsService::class);
+        $settingsService->method('getVoorzieningenConfig')->willReturn(
+            ['register' => '1', 'module_schema' => '2', 'dienst_schema' => '3']
+        );
+
+        $archiMateService = $this->createMock(ArchiMateService::class);
+        $archiMateService->method('getElementObjects')->willReturn([]);
+        $archiMateService->method('getRelationshipObjects')->willReturn([]);
+
+        $cache = $this->createMock(ICache::class);
+        $cache->method('get')->willReturn(null);
+        $cacheFactory = $this->createMock(ICacheFactory::class);
+        $cacheFactory->method('createDistributed')->willReturn($cache);
+
+        $service = new FacetService(
+            container: $container,
+            settingsService: $settingsService,
+            archiMateService: $archiMateService,
+            queryBuilder: new ViewQueryBuilder(),
+            userSession: $this->createMock(IUserSession::class),
+            logger: $this->createMock(LoggerInterface::class),
+            cacheFactory: $cacheFactory
+        );
+
+        $service->getFacets('module');
+
+        $this->assertIsArray($capturedQuery);
+        $this->assertArrayHasKey('_limit', $capturedQuery);
+        $this->assertGreaterThan(0, $capturedQuery['_limit']);
+    }//end testFacetServiceBaseObjectQueryCarriesLimit()
 }//end class

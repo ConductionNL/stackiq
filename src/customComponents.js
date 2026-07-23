@@ -27,6 +27,7 @@ import OrganisationMergePanel from './components/organisations/OrganisationMerge
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import LicensePostureView from './views/LicensePostureView.vue'
+import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 
 export default {
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
@@ -100,4 +101,17 @@ export default {
 	// aggregation dashboard no built-in index/detail type expresses; stays custom
 	// until the lib grows a declarative aggregation/rollup widget.
 	LicensePostureView,
+
+	// --- Lib gap: live GEMMA-dimension facet counts on the module/dienst index pages. ---
+	// CnIndexPage's own embedded `sidebar.enabled` facet machinery treats every
+	// active-filter key as a directly-filterable schema field and applies it
+	// verbatim to the self-fetch object-list query. `domein`/`applicatieservice`
+	// are not module/dienst fields at all (they live on the linked `element`
+	// object) and `referentiecomponent`/`standaard` are exposed here by display
+	// NAME, not the identifiers the schema stores — feeding them through that
+	// path would break the list. Stays a custom page (wrapping `CnFacetSidebar`
+	// + a standalone `CnIndexPage` narrowed via `{ id: matchedObjectIds }`) until
+	// the lib grows a facet-sidebar mode whose counts/narrowing are computed by
+	// an external, non-schema-field aggregation (see FacetedCatalogIndexView.vue).
+	FacetedCatalogIndexView,
 }

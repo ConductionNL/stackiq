@@ -425,6 +425,25 @@
         "Offerings": "Aanbiedingen",
         "Compliance records": "Compliance-records",
         "Group members": "Groepsleden",
-        "Merge organisations": "Organisaties samenvoegen"
+        "Merge organisations": "Organisaties samenvoegen",
+        "Search": "Zoeken",
+        "Search applications and services…": "Zoek applicaties en diensten…",
+        "Clear search": "Zoekopdracht wissen",
+        "Saved views": "Opgeslagen weergaven",
+        "Save current filters as view": "Huidige filters opslaan als weergave",
+        "GEMMA filters": "GEMMA-filters",
+        "Clear all": "Alles wissen",
+        "Reference component": "Referentiecomponent",
+        "Standard": "Standaard",
+        "Application service": "Applicatieservice",
+        "Domain": "Domein",
+        "View \"{name}\" saved": "Weergave \"{name}\" opgeslagen",
+        "Failed to save view: {message}": "Weergave opslaan mislukt: {message}",
+        "Save as view": "Opslaan als weergave",
+        "Save the current filter selection so it can be reopened later.": "Sla de huidige filterselectie op zodat u deze later opnieuw kunt openen.",
+        "View name": "Naam van de weergave",
+        "e.g. Zaakregistratie modules": "bijv. Zaakregistratie modules",
+        "Save view": "Weergave opslaan",
+        "Approval": "Goedkeuring"
     }
 }
