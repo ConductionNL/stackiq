@@ -9,8 +9,8 @@
   - GIVEN the register file WHEN a new `bioMaatregel` schema is added (code, naam, omschrijving, thema, bioVersie, bbnNiveau, bron; `authorization.read: ["public"]`) THEN it validates as OpenAPI 3.0.0 and imports cleanly
   - GIVEN the `compliancy` schema WHEN an optional `bioMaatregel` relation is added (parallel to `standaardversie`, `objectConfiguration.handling: related-object`) THEN existing `compliancy` objects remain valid (no new `required` fields)
   - Diff the edit against the current merge base before committing — a naive JSON union-merge can silently drop unrelated prior modifications to this file
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 2: Register schema — module BBN/DPIA/verwerkingsregister fields + overdue-DPIA notification rule
 - **spec_ref**: `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-each-application-records-a-bbn-level`, `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-each-application-tracks-dpia-status-and-review-dates`, `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-application-references-its-register-van-verwerkingen-entry`, `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-overdue-dpia-reviews-trigger-a-notification`
@@ -19,8 +19,8 @@
   - GIVEN the `module` schema WHEN `bbnLevel` (enum BBN1/BBN2/BBN3, `facetable: true`), `dpiaStatus`, `dpiaDate`, `dpiaVolgendeBeoordeling`, `dpiaDocumentRef`, `verwerkingsregisterRef` are added THEN all six are optional and existing `module` objects remain valid
   - GIVEN the `module` schema WHEN the `dpia-review-overdue` `x-openregister-notifications` rule is added (`scheduled` trigger, filter `dpiaStatus: executed` + `dpiaVolgendeBeoordeling: {operator: withinNext, value: "P0D"}`, channels `nc-notification`+`email`, recipients `softwarecatalog-admins` group + object-acl manage, nl/en subjects) THEN it passes `hydra-gate-notification-dialect`
   - Diff against the current merge base before committing (same union-merge trap as Task 1)
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 3: Seed the BIO measure catalog
 - **spec_ref**: `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog`
@@ -28,16 +28,16 @@
 - **acceptance_criteria**:
   - GIVEN a fresh install WHEN the repair step runs THEN the `bioMaatregel` catalog contains the seeded BIO 2.0 measures (see design.md Seed Data)
   - GIVEN an upgrade on an existing install WHEN the repair step re-runs THEN seeding is idempotent (no duplicate entries)
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 4: Frontend — BBN/DPIA/verwerkingsregister fields on the module form
 - **spec_ref**: `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-each-application-records-a-bbn-level`, `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-each-application-tracks-dpia-status-and-review-dates`, `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-application-references-its-register-van-verwerkingen-entry`
 - **files**: `src/manifest.json` (ModuleDetail data widget `include` list)
 - **acceptance_criteria**:
   - GIVEN a vendor editing an application WHEN they set `bbnLevel`, `dpiaStatus`, `dpiaDate`, `dpiaVolgendeBeoordeling`, a `dpiaDocumentRef` via NC Files, and `verwerkingsregisterRef` THEN all six persist and render on the application's detail view
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 5: Frontend — BIO measures catalog pages + BIO measure compliance on compliancy form
 - **spec_ref**: `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog`, `openspec/changes/bio-compliance-assessment/specs/module-compliance-assessment/spec.md#requirement-compliance-records-link-modules-to-standard-versions-with-evidence`
@@ -45,8 +45,8 @@
 - **acceptance_criteria**:
   - GIVEN a user opens the BIO measures catalog THEN each entry shows code, title, theme, BIO version, applicable BBN level(s), and its linked compliance claims
   - GIVEN a user creates or edits a compliancy record THEN they can link it to a `bioMaatregel` instead of a `standaardversie`, with the same evidence fields
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 6: Frontend — BIO coverage report (extends ComplianceMatrixView)
 - **spec_ref**: `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable`, `openspec/changes/bio-compliance-assessment/specs/module-compliance-assessment/spec.md#requirement-compliance-matrix-distinguishes-verified-from-claimed`
@@ -55,8 +55,8 @@
   - GIVEN a user selects a BIO column source and an organisation scope in the matrix THEN each in-use application row shows its BBN level, DPIA status, and verified/claimed/none for each selected BIO measure
   - GIVEN an in-use application has no BBN level, DPIA data, or BIO measure compliance THEN it is listed with an explicit "none" state, never omitted
   - GIVEN a matrix URL with an encoded BIO selection THEN opening it renders the same selection without re-picking filters
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 7: Frontend — catalog filter for BBN level / DPIA status
 - **spec_ref**: `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md#requirement-catalog-can-be-filtered-by-bbn-level-and-dpia-status`
@@ -64,16 +64,16 @@
 - **acceptance_criteria**:
   - GIVEN a user applies the "without DPIA at BBN2+" filter THEN only modules with `bbnLevel` BBN2/BBN3 and `dpiaStatus` not executed are listed
   - GIVEN a user filters by `bbnLevel` alone THEN only modules with that level are listed
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 8: i18n — Dutch and English strings
 - **spec_ref**: `openspec/changes/bio-compliance-assessment/specs/bio-compliance-assessment/spec.md` (all requirements — new labels), `openspec/changes/bio-compliance-assessment/specs/module-compliance-assessment/spec.md`
 - **files**: `l10n/nl.json`, `l10n/en.json` (or the app's existing i18n resource files)
 - **acceptance_criteria**:
   - GIVEN the new field labels, filter labels, BIO measures catalog page, coverage report labels, and the `dpia-review-overdue` subject strings THEN both `nl_NL` and `en_US` translations exist and no new user-facing string is hardcoded
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 9: Tests and documentation
 - **spec_ref**: all requirements in both delta specs
@@ -84,8 +84,8 @@
   - GIVEN the notification rule WHEN validated against `hydra-gate-notification-dialect` THEN it passes
   - GIVEN the feature docs WHEN published THEN they include Playwright MCP screenshots of the module BBN/DPIA fields, the BIO measures catalog, the BIO coverage report, and the DPIA filter
   - New/changed business logic reaches ≥75% coverage (ADR-009)
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ## Quality checklist
 

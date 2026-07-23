@@ -32,10 +32,14 @@ source for `compliancy` records and the BIO coverage report.
 
 #### Scenario: Catalog is seeded with BIO measures
 
+@e2e exclude Install/upgrade seed-data existence, not a UI event; covered by BioComplianceRegisterShapeTest::testBioMaatregelSeedDataExists (PHPUnit register-shape test).
+
 - **WHEN** the app is installed or upgraded
 - **THEN** the `bioMaatregel` catalog contains the seeded BIO 2.0 measure entries with code, title, theme, and applicable BBN level(s)
 
 #### Scenario: Measure catalog entry is browsable
+
+@e2e exclude No live Nextcloud instance available in this implementing session to drive Playwright without touching the shared dev environment (see docs/features/bio-compliance-assessment.md); BioMaatregelen/BioMaatregelDetail are declarative manifest pages reusing the proven Standaarden/StandaardDetail index+detail pattern verbatim.
 
 - **WHEN** a user opens the BIO measures catalog
 - **THEN** each entry shows its code, title, theme, BIO version, and applicable BBN level(s)
@@ -49,6 +53,8 @@ Overheid basic security levels), facetable so it can drive catalog
 filters and the BIO coverage report.
 
 #### Scenario: Vendor sets the BBN level for an application
+
+@e2e exclude No live Nextcloud instance available in this implementing session to drive Playwright without touching the shared dev environment (see docs/features/bio-compliance-assessment.md); `bbnLevel` is a manifest-declared field on the existing ModuleDetail data widget's `include` list, no bespoke Vue code.
 
 - **WHEN** a vendor edits an application and selects a BBN level
 - **THEN** the module's `bbnLevel` is stored
@@ -67,11 +73,15 @@ fields SHALL be optional and independently settable; `dpiaDate` and
 
 #### Scenario: Vendor records a completed DPIA with document evidence
 
+@e2e exclude No live Nextcloud instance available in this implementing session to drive Playwright without touching the shared dev environment (see docs/features/bio-compliance-assessment.md); the four DPIA fields are manifest-declared on the existing ModuleDetail data widget's `include` list, no bespoke Vue code.
+
 - **WHEN** a vendor sets `dpiaStatus` to executed, fills in `dpiaDate`, `dpiaVolgendeBeoordeling`, and links a DPIA document via NC Files
 - **THEN** all four fields are stored on the module
 - **AND** the application's detail view shows the DPIA status, dates, and a link to open the linked document via Nextcloud Files
 
 #### Scenario: Application has a required but not yet executed DPIA
+
+@e2e exclude No live Nextcloud instance available in this implementing session to drive Playwright without touching the shared dev environment (see docs/features/bio-compliance-assessment.md); same manifest-declared field, no bespoke Vue code.
 
 - **WHEN** a vendor sets `dpiaStatus` to required without filling in `dpiaDate`
 - **THEN** the application's detail view and catalog listing show the DPIA as required-but-not-executed
@@ -86,6 +96,8 @@ itself.
 
 #### Scenario: Vendor links the register van verwerkingen entry
 
+@e2e exclude No live Nextcloud instance available in this implementing session to drive Playwright without touching the shared dev environment (see docs/features/bio-compliance-assessment.md); `verwerkingsregisterRef` is a manifest-declared field on the existing ModuleDetail data widget's `include` list, no bespoke Vue code.
+
 - **WHEN** a vendor sets `verwerkingsregisterRef` on an application
 - **THEN** the reference is stored on the module
 - **AND** the application's detail view shows the reference as a link when it resolves to a URL
@@ -99,10 +111,14 @@ a DPIA at BBN2 or higher" (i.e. `bbnLevel` in `[BBN2, BBN3]` AND
 
 #### Scenario: Buyer filters modules lacking DPIA at BBN2 or higher
 
+@e2e exclude No live Nextcloud instance available in this implementing session to drive Playwright without touching the shared dev environment (see docs/features/bio-compliance-assessment.md); the quick filter is a manifest-declared `config.quickFilters` entry on the Modules index page, verified against OpenRegister's MagicSearchHandler operator dialect by static code review (see docs/features/bio-compliance-assessment.md's filter-shape note), not bespoke Vue code.
+
 - **WHEN** a user applies the "without DPIA at BBN2+" filter to the catalog
 - **THEN** only modules with `bbnLevel` of BBN2 or BBN3 and a `dpiaStatus` other than executed are listed
 
 #### Scenario: Buyer filters modules by BBN level alone
+
+@e2e exclude No live Nextcloud instance available in this implementing session to drive Playwright without touching the shared dev environment (see docs/features/bio-compliance-assessment.md); same manifest-declared quick filter, no bespoke Vue code.
 
 - **WHEN** a user filters the module catalog on a selected BBN level
 - **THEN** only modules with that `bbnLevel` are listed
@@ -139,11 +155,15 @@ the due date.
 
 #### Scenario: Overdue DPIA review notifies admins and record managers
 
+@e2e exclude Declarative background scheduled-sweep notification (x-openregister-notifications), not a UI event; the rule's dialect shape is covered by BioComplianceRegisterShapeTest::testModuleDeclaresDpiaOverdueRule (PHPUnit) and dispatch mechanics belong to OpenRegister's own notification engine.
+
 - **WHEN** a module has `dpiaStatus` executed and `dpiaVolgendeBeoordeling` on or before today, and the scheduled sweep runs
 - **THEN** the engine dispatches `nc-notification` + `email` to the `softwarecatalog-admins` group and the module's manage-ACL holders
 - **AND** the subject includes the application name and the review-due date in the recipient's locale (nl/en)
 
 #### Scenario: DPIA with a future review date does not notify
+
+@e2e exclude Declarative background scheduled-sweep notification, not a UI event; the `withinNext P0D` filter shape is covered by BioComplianceRegisterShapeTest::testModuleDeclaresDpiaOverdueRule (PHPUnit) and the engine's own filter-evaluation tests own the negative case.
 
 - **WHEN** a module has `dpiaStatus` executed and `dpiaVolgendeBeoordeling` set to a date after today
 - **THEN** the scheduled sweep does not dispatch the `dpia-review-overdue` notification for that module

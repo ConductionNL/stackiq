@@ -30,6 +30,8 @@ flagged rather than matched to either column.
 
 #### Scenario: Supplier records compliance with evidence
 
+@e2e exclude Pre-existing functionality unchanged by bio-compliance-assessment; no live Nextcloud instance available in this implementing session to add e2e coverage retroactively (see docs/features/bio-compliance-assessment.md).
+
 - **WHEN** a user creates a compliancy record linking a module to a standard version and attaches evidence via an NC Files reference
 - **THEN** the record is stored in the register with the module and standaardversie relations and the evidence link
 - **AND** the module's detail view lists the standard as supported with the evidence accessible
@@ -43,11 +45,15 @@ flagged rather than matched to either column.
 
 #### Scenario: Supplier records BIO measure compliance with evidence
 
+@e2e exclude No live Nextcloud instance available in this implementing session to drive Playwright without touching the shared dev environment (see docs/features/bio-compliance-assessment.md); the `bioMaatregel` relation renders through KompliantieDetail's existing generic data widget (no `include` list — every compliancy property renders, same as the pre-existing `standaardversie` field), no bespoke Vue code.
+
 - **WHEN** a user creates a compliancy record linking a module to a `bioMaatregel` and attaches evidence via an NC Files reference or URL
 - **THEN** the record is stored in the register with the module and `bioMaatregel` relations and the evidence link
 - **AND** the module's detail view lists the BIO measure as supported with the evidence accessible
 
 #### Scenario: A record with both relations set is flagged, not matched
+
+@e2e exclude Data-transform logic (partitionCompliancy's conflicted-record branch), not a UI event; covered by unit tests on the matrix data mapper (tests/vitest/complianceMatrix.spec.js — "flags a record with both standaardversie and bioMaatregel set as conflicted"), matching the existing "Unresolved standard reference is flagged" scenario's exclusion in this same spec.
 
 - **WHEN** a compliancy record has both a `standaardversie` and a `bioMaatregel` relation populated
 - **THEN** compliance views flag the record as a data-quality issue
@@ -74,6 +80,8 @@ is shareable.
 - **THEN** the corresponding cells render as verified, claimed, and none respectively, with verified and claimed visually distinct
 
 #### Scenario: Cell opens the evidence
+
+@e2e exclude Pre-existing functionality unchanged by bio-compliance-assessment; no live Nextcloud instance available in this implementing session to add e2e coverage retroactively (see docs/features/bio-compliance-assessment.md).
 
 - **WHEN** a user activates a verified cell
 - **THEN** the underlying compliancy record is shown with its evidence link or file
