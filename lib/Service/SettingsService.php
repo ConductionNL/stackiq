@@ -6749,6 +6749,167 @@ class SettingsService
         }//end try
     }//end getAvailableOrganisationsForCronjobs()
 
+    // ===.
+    // EOL SYNC CONFIGURATION (eol-feed-integration).
+    // ===.
+
+    /**
+     * The IAppConfig key backing the EOL sync configuration blob.
+     *
+     * @var string
+     */
+    private const EOL_SYNC_CONFIG_KEY = 'eol_sync_config';
+
+    /**
+     * The IAppConfig key backing the EOL sync last-run status blob.
+     *
+     * @var string
+     */
+    private const EOL_SYNC_STATUS_KEY = 'eol_sync_status';
+
+    /**
+     * The register slug the sibling openconnector `endoflife-date-source`
+     * change provisions `eolProduct`/`eolCycle` into, used as the default
+     * when no admin override is configured.
+     *
+     * @var string
+     */
+    private const EOL_DEFAULT_REGISTER = 'openconnector';
+
+    /**
+     * The default `eolProduct` schema slug (design.md Decision 5).
+     *
+     * @var string
+     */
+    private const EOL_DEFAULT_PRODUCT_SCHEMA = 'eolProduct';
+
+    /**
+     * The default `eolCycle` schema slug (design.md Decision 5).
+     *
+     * @var string
+     */
+    private const EOL_DEFAULT_CYCLE_SCHEMA = 'eolCycle';
+
+    /**
+     * The default scheduled-sync interval in seconds (24 hours).
+     *
+     * @var integer
+     */
+    private const EOL_DEFAULT_INTERVAL_SECONDS = 86400;
+
+    /**
+     * Get the EOL sync configuration: whether the feature is enabled, the
+     * register/schema slugs to read `eolProduct`/`eolCycle` from, and the
+     * scheduled-sync interval. Defaults match what the sibling openconnector
+     * `endoflife-date-source` change provisions (design.md Decision 5) —
+     * the feature is disabled by default until an admin opts in.
+     *
+     * @return array{enabled: bool, register: string, productSchema: string, cycleSchema: string, intervalSeconds: int}
+     *
+     * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
+     */
+    public function getEolSyncConfig(): array
+    {
+        $configJson = $this->config->getValueString($this->appName, self::EOL_SYNC_CONFIG_KEY, '{}');
+        $decoded    = json_decode($configJson, true);
+        if (is_array($decoded) === false) {
+            $decoded = [];
+        }
+
+        return [
+            'enabled'         => ($decoded['enabled'] ?? false) === true,
+            'register'        => (string) ($decoded['register'] ?? self::EOL_DEFAULT_REGISTER),
+            'productSchema'   => (string) ($decoded['productSchema'] ?? self::EOL_DEFAULT_PRODUCT_SCHEMA),
+            'cycleSchema'     => (string) ($decoded['cycleSchema'] ?? self::EOL_DEFAULT_CYCLE_SCHEMA),
+            'intervalSeconds' => (int) ($decoded['intervalSeconds'] ?? self::EOL_DEFAULT_INTERVAL_SECONDS),
+        ];
+    }//end getEolSyncConfig()
+
+    /**
+     * Persist the EOL sync configuration. Unknown keys are ignored; missing
+     * keys keep their current value (partial updates are supported, unlike
+     * the OpenRegister object PUT semantics this config intentionally does
+     * NOT share — this is a flat IAppConfig blob, not an OR object).
+     *
+     * @param array $data The submitted configuration fields.
+     *
+     * @return array{success: bool, config: array} The persisted configuration.
+     *
+     * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
+     */
+    public function updateEolSyncConfig(array $data): array
+    {
+        $current = $this->getEolSyncConfig();
+
+        if (array_key_exists('enabled', $data) === true) {
+            $current['enabled'] = ($data['enabled'] === true || $data['enabled'] === 'true');
+        }
+
+        if (array_key_exists('register', $data) === true && trim((string) $data['register']) !== '') {
+            $current['register'] = trim((string) $data['register']);
+        }
+
+        if (array_key_exists('productSchema', $data) === true && trim((string) $data['productSchema']) !== '') {
+            $current['productSchema'] = trim((string) $data['productSchema']);
+        }
+
+        if (array_key_exists('cycleSchema', $data) === true && trim((string) $data['cycleSchema']) !== '') {
+            $current['cycleSchema'] = trim((string) $data['cycleSchema']);
+        }
+
+        if (array_key_exists('intervalSeconds', $data) === true && (int) $data['intervalSeconds'] > 0) {
+            $current['intervalSeconds'] = (int) $data['intervalSeconds'];
+        }
+
+        $this->config->setValueString($this->appName, self::EOL_SYNC_CONFIG_KEY, json_encode($current));
+
+        return [
+            'success' => true,
+            'config'  => $current,
+        ];
+    }//end updateEolSyncConfig()
+
+    /**
+     * Get the last-recorded EOL sync status: whether the feed is currently
+     * available, a reason when it is not, and the outcome counts of the most
+     * recent run. Defaults to an "unavailable / never run" status before the
+     * first run.
+     *
+     * @return array{available: bool, reason: string|null, matched: int, skipped: int, lastRunAt: string|null}
+     *
+     * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
+     */
+    public function getEolSyncStatus(): array
+    {
+        $statusJson = $this->config->getValueString($this->appName, self::EOL_SYNC_STATUS_KEY, '{}');
+        $decoded    = json_decode($statusJson, true);
+        if (is_array($decoded) === false) {
+            $decoded = [];
+        }
+
+        return [
+            'available' => ($decoded['available'] ?? false) === true,
+            'reason'    => $decoded['reason'] ?? 'not-yet-run',
+            'matched'   => (int) ($decoded['matched'] ?? 0),
+            'skipped'   => (int) ($decoded['skipped'] ?? 0),
+            'lastRunAt' => $decoded['lastRunAt'] ?? null,
+        ];
+    }//end getEolSyncStatus()
+
+    /**
+     * Persist the outcome of an EOL sync run (scheduled or manual).
+     *
+     * @param array $status The status fields (`available`, `reason`, `matched`, `skipped`, `lastRunAt`).
+     *
+     * @return void
+     *
+     * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
+     */
+    public function setEolSyncStatus(array $status): void
+    {
+        $this->config->setValueString($this->appName, self::EOL_SYNC_STATUS_KEY, json_encode($status));
+    }//end setEolSyncStatus()
+
     /**
      * Deep-merge a register fragment onto the base config (ADR-037).
      *

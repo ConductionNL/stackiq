@@ -93,6 +93,9 @@
 		<!-- Catalog Federation Section -->
 		<FederationSettings />
 
+		<!-- End-of-life Feed Sync Section -->
+		<EolSyncSettings />
+
 		<!-- Background Jobs Configuration Section -->
 		<CronjobConfiguration />
 	</CnAdminSettingsShell>
@@ -118,6 +121,7 @@ import EmailConfiguration from './sections/EmailConfiguration.vue'
 import CronjobConfiguration from './sections/CronjobConfiguration.vue'
 import ModerationQueue from './sections/ModerationQueue.vue'
 import FederationSettings from './sections/FederationSettings.vue'
+import EolSyncSettings from './sections/EolSyncSettings.vue'
 import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
 
 /**
@@ -142,6 +146,7 @@ export default defineComponent({
 		CronjobConfiguration,
 		ModerationQueue,
 		FederationSettings,
+		EolSyncSettings,
 		AlwaysVisibleSection,
 		Web,
 	},
