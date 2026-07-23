@@ -39,6 +39,20 @@
 			"order": 20
 		},
 		{
+			"id": "Modules",
+			"label": "Applications",
+			"icon": "icon-category-app-bundles",
+			"route": "Modules",
+			"order": 25
+		},
+		{
+			"id": "Diensten",
+			"label": "Services",
+			"icon": "icon-category-organization",
+			"route": "Diensten",
+			"order": 30
+		},
+		{
 			"id": "Contracten",
 			"label": "Contracts",
 			"icon": "icon-file",
@@ -309,6 +323,45 @@
 					]
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "Modules",
+			"route": "/modules",
+			"type": "custom",
+			"title": "Applications",
+			"component": "FacetedCatalogIndexView",
+			"_note": "Faceted index page (gemma-faceted-search): CnFacetSidebar (live GEMMA-dimension counts from FacetService) + a standalone CnIndexPage narrowed via { id: matchedObjectIds }. Stays custom rather than type:index — see customComponents.js's FacetedCatalogIndexView entry for why CnIndexPage's own embedded facet sidebar cannot drive this narrowing.",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "module",
+				"description": "Browse the application (module) catalogue, filtered by GEMMA architecture dimension.",
+				"columns": [
+					"naam",
+					"aanbieder",
+					"type",
+					"licentietype",
+					"publicatiedatum"
+				]
+			}
+		},
+		{
+			"id": "Diensten",
+			"route": "/diensten",
+			"type": "custom",
+			"title": "Services",
+			"component": "FacetedCatalogIndexView",
+			"_note": "Faceted index page (gemma-faceted-search) — see the Modules page's _note; identical component, schema: dienst. GEMMA links are transitive via dienst.modules (FacetService resolves them server-side).",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "dienst",
+				"description": "Browse the service (dienst) catalogue, filtered by GEMMA architecture dimension.",
+				"columns": [
+					"naam",
+					"aanbieder",
+					"type",
+					"publicatiedatum"
+				]
 			}
 		},
 		{
