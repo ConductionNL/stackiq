@@ -22,6 +22,7 @@ import DashboardCustomView from './views/Dashboard.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
+import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 
 export default {
 	// --- Lib gap: settings sub-section orchestration. ---
@@ -56,5 +57,14 @@ export default {
 	ContractApprovalPanel: {
 		kind: 'page',
 		component: ContractApprovalPanel,
+	},
+
+	// --- Admin-triggered organisation-merge (VNG Softwarecatalogus #141). ---
+	// Resolved by CnDetailPage as an OrganisatieDetail bodyWidget. Dry-run
+	// preview + confirm dialog + execute; no built-in widget expresses a
+	// cross-object relation re-pointing action.
+	OrganisationMergePanel: {
+		kind: 'page',
+		component: OrganisationMergePanel,
 	},
 }

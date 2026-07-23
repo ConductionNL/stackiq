@@ -39,6 +39,15 @@ abstract class ObjectEntity
     /** @return mixed */
     abstract public function getSchema();
 
+    /** @return string|null */
+    abstract public function getOrganisation();
+
+    /**
+     * @param  string|null $organisation
+     * @return void
+     */
+    abstract public function setOrganisation($organisation=null);
+
     /**
      * @param  array<string,mixed>|null $object
      * @return self

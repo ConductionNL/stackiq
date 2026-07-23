@@ -23,6 +23,7 @@ import DashboardCustomView from './views/Dashboard.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
+import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import LicensePostureView from './views/LicensePostureView.vue'
@@ -67,6 +68,13 @@ export default {
 	// owns no approval workflow. Stays a custom tab component because it surfaces
 	// a cross-app outcome no built-in detail widget expresses.
 	ContractApprovalPanel,
+
+	// --- Admin-triggered organisation-merge (VNG Softwarecatalogus #141). ---
+	// Dry-run preview + confirm dialog + execute for folding a source
+	// organisation into a target (gemeentelijke herindeling /
+	// leveranciersovername). Rendered as an OrganisatieDetail bodyWidget.
+	// No built-in widget expresses a cross-object relation re-pointing action.
+	OrganisationMergePanel,
 
 	// --- Lib gap: CVSS-derived severity index + severity-band quick filters. ---
 	// The Vulnerabilities index shows a DERIVED severity band (from cvssScore),

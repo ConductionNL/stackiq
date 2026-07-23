@@ -42,6 +42,7 @@ use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\GebruikSyncService;
 use OCA\SoftwareCatalog\Service\ModuleComplianceService;
 use OCA\SoftwareCatalog\Service\ModuleRegistrationService;
+use OCA\SoftwareCatalog\Service\MergeOrganisatieService;
 use OCA\SoftwareCatalog\Service\ModuleVersionService;
 use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
@@ -80,6 +81,7 @@ use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\IAppConfig;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IGroupManager;
 use OCP\IUserManager;
 use OCP\Security\ISecureRandom;
@@ -238,6 +240,25 @@ class Application extends App implements IBootstrap
                     config: $container->get(IAppConfig::class),
                     userManager: $container->get(IUserManager::class),
                     emailService: $container->get(SymfonyEmailService::class),
+                    );
+                }
+                );
+
+        // Register the organisation-merge service (VNG Softwarecatalogus #141 —
+        // gemeentelijke herindeling / leveranciersovername).
+        $context->registerService(
+                MergeOrganisatieService::class,
+                function ($container) {
+                    return new MergeOrganisatieService(
+                    container: $container,
+                    appManager: $container->get('OCP\App\IAppManager'),
+                    groupManager: $container->get(IGroupManager::class),
+                    logger: $container->get('Psr\Log\LoggerInterface'),
+                    eventDispatcher: $container->get(IEventDispatcher::class),
+                    settingsService: $container->get(SettingsService::class),
+                    organisatieService: $container->get(OrganisatieService::class),
+                    progressTracker: $container->get(ProgressTracker::class),
+                    organizationHandler: $container->get(OrganizationHandler::class),
                     );
                 }
                 );

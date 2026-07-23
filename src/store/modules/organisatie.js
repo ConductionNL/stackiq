@@ -418,6 +418,70 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		},
 
 		/**
+		 * Preview an organisation merge: per-relation-type counts, no writes.
+		 * Admin-only server-side (403 surfaces as a thrown Error here).
+		 * @param {string} sourceUuid - The source organisation UUID (merged away).
+		 * @param {string} targetUuid - The target organisation UUID (merge destination).
+		 * @return {Promise<object>} `{sourceUuid, targetUuid, counts, blockers}`.
+		 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-system-shall-preview-a-merge-with-per-relation-type-counts-before-any-write
+		 */
+		async dryRunMerge(sourceUuid, targetUuid) {
+			const url = generateUrl('/apps/softwarecatalog/api/organisaties/{sourceUuid}/merge/dry-run', {
+				sourceUuid,
+			})
+
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+				},
+				body: JSON.stringify({ targetUuid }),
+			})
+
+			const data = await response.json()
+
+			if (!response.ok) {
+				throw new Error(data.message || `HTTP error! status: ${response.status}`)
+			}
+
+			return data
+		},
+
+		/**
+		 * Execute an organisation merge: re-point every relation type, migrate
+		 * NC group membership, tombstone the source. Idempotent — safe to call
+		 * again against a partially or fully completed merge.
+		 * @param {string} sourceUuid - The source organisation UUID (merged away).
+		 * @param {string} targetUuid - The target organisation UUID (merge destination).
+		 * @return {Promise<object>} `{operationId, sourceUuid, targetUuid, status, counts}`.
+		 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
+		 */
+		async executeMerge(sourceUuid, targetUuid) {
+			const url = generateUrl('/apps/softwarecatalog/api/organisaties/{sourceUuid}/merge', {
+				sourceUuid,
+			})
+
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+				},
+				body: JSON.stringify({ targetUuid, confirm: true }),
+			})
+
+			const data = await response.json()
+
+			if (!response.ok) {
+				// 409 (blockers) still returns a structured body — surface its message.
+				throw new Error(data.message || `HTTP error! status: ${response.status}`)
+			}
+
+			return data
+		},
+
+		/**
 		 * Get user info for multiple contactpersonen in one request
 		 * @param {Array<string>} contactpersoonIds - Array of contactpersoon UUIDs
 		 * @return {Promise<object>} Bulk user info object keyed by contactpersoon ID

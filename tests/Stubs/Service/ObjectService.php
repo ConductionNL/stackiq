@@ -45,8 +45,24 @@ abstract class ObjectService
         string|int|null $register=null,
         string|int|null $schema=null,
         bool $_rbac=true,
-        bool $_multitenancy=true
+        bool $_multitenancy=true,
+        bool $_render=true
     ): ?ObjectEntity;
+
+    /**
+     * Find all objects matching a config bag (register/schema/filters/limit/...).
+     *
+     * @param array $config        Configuration bag (`_register`, `_schema`, `filters`, `limit`, ...).
+     * @param bool  $_rbac         Apply RBAC.
+     * @param bool  $_multitenancy Apply multitenancy.
+     *
+     * @return array<int, ObjectEntity>
+     */
+    abstract public function findAll(
+        array $config=[],
+        bool $_rbac=true,
+        bool $_multitenancy=true
+    ): array;
 
     /**
      * Search objects with pagination.
@@ -110,22 +126,40 @@ abstract class ObjectService
     /**
      * Persist an object.
      *
-     * @param array      $object        The object data bag.
-     * @param int|string $register      Register slug or id.
-     * @param int|string $schema        Schema slug or id.
-     * @param string     $uuid          Object uuid.
-     * @param bool       $_rbac         Apply RBAC.
-     * @param bool       $_multitenancy Apply multitenancy.
+     * `$register`/`$schema`/`$uuid` keep their original stub positions
+     * (position-bound `willReturnCallback` closures in existing tests rely
+     * on that order); `$extend`/`$silent`/`$uploadedFiles`/`$currentUser`
+     * are appended so production code that calls `saveObject()` with named
+     * arguments (the convention throughout this codebase — see
+     * PublicationService/IntakeService/FederationService) resolves
+     * correctly against the mock regardless of declared position. `$object`
+     * is widened to `array|ObjectEntity` to match the real
+     * `OCA\OpenRegister\Service\ObjectService::saveObject()` signature.
+     *
+     * @param array|ObjectEntity $object        The object data bag or entity.
+     * @param int|string         $register      Register slug or id.
+     * @param int|string         $schema        Schema slug or id.
+     * @param string             $uuid          Object uuid.
+     * @param bool               $_rbac         Apply RBAC.
+     * @param bool               $_multitenancy Apply multitenancy.
+     * @param array|null         $extend        Properties to extend the object with.
+     * @param bool               $silent        Skip audit trail creation and events.
+     * @param array|null         $uploadedFiles Uploaded files.
+     * @param mixed              $currentUser   Explicit acting user.
      *
      * @return ObjectEntity
      */
     abstract public function saveObject(
-        array $object=[],
+        array|ObjectEntity $object=[],
         int|string $register='',
         int|string $schema='',
         string $uuid='',
         bool $_rbac=true,
-        bool $_multitenancy=true
+        bool $_multitenancy=true,
+        ?array $extend=[],
+        bool $silent=false,
+        ?array $uploadedFiles=null,
+        mixed $currentUser=null
     ): ObjectEntity;
 
     /**

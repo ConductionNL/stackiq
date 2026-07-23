@@ -248,6 +248,10 @@ class OrganisatieService
         return match ($normalizedStatus) {
             'actief', 'active' => true,
             'inactief', 'inactive', 'deactief' => false,
+            // 'samengevoegd' is the organisation-merge tombstone status — a
+            // merged-away organisation MUST NOT be reported as active.
+            // @spec openspec/specs/organisation-merge/spec.md#requirement-the-source-organisation-must-be-tombstoned-never-hard-deleted
+            'samengevoegd' => false,
             // Default to active for unknown statuses.
             default => true
         };

@@ -191,6 +191,12 @@ return [
         ['name' => 'moderation#approve', 'url' => '/api/moderation/{uuid}/approve', 'verb' => 'POST'],
         ['name' => 'moderation#reject', 'url' => '/api/moderation/{uuid}/reject', 'verb' => 'POST'],
 
+        // ORGANISATION MERGE (gemeentelijke herindeling / leveranciersovername) —
+        // admin-gated (isAdmin guard in the controller body, no-admin-idor safe).
+        // @spec openspec/specs/organisation-merge/spec.md#requirement-both-merge-endpoints-must-be-admin-only-with-an-explicit-per-object-authorization-guard
+        ['name' => 'merge#dryRun', 'url' => '/api/organisaties/{uuid}/merge/dry-run', 'verb' => 'POST'],
+        ['name' => 'merge#execute', 'url' => '/api/organisaties/{uuid}/merge', 'verb' => 'POST'],
+
         // FEDERATION SETTINGS / MANUAL PULL — admin-gated (AuthorizedAdminSetting).
         ['name' => 'federation#status', 'url' => '/api/federation/status', 'verb' => 'GET'],
         ['name' => 'federation#addPeer', 'url' => '/api/federation/peers', 'verb' => 'POST'],

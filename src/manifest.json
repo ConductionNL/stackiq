@@ -152,10 +152,11 @@
 				"viewMode": "cards",
 				"cardComponent": "OrganisatieCard",
 				"columns": ["naam", "type", "status", "website"],
+				"filter": { "status": { "$ne": "samengevoegd" } },
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			},
-			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs."
+			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs. config.filter excludes organisation-merge tombstones (status='samengevoegd') from the default listing per the organisation-merge spec — a merged-away source stays readable by direct UUID lookup (OrganisatieDetail route) but never appears in this index."
 		},
 		{
 			"id": "OrganisatieDetail",
@@ -183,6 +184,9 @@
 					{ "id": "3", "widgetId": "org-diensten", "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "4", "widgetId": "org-modules", "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "5", "widgetId": "org-contactpersonen", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"bodyWidgets": [
+					{ "id": "org-merge", "component": "OrganisationMergePanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,
