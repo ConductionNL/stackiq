@@ -43,6 +43,8 @@ use OCP\IUserSession;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/nextcloud/softwarecatalog
+ *
+ * @spec openspec/changes/vendor-visibility-rbac/tasks.md#task-2
  */
 class GebruikController extends Controller
 {
@@ -68,10 +70,16 @@ class GebruikController extends Controller
     }//end __construct()
 
     /**
-     * Fetch gebruiken based on user role.
+     * Fetch gebruiken based on user role, per the vendor-visibility-rbac
+     * visibility matrix (see `applyAanbodScopeToOptions()`).
      *
-     * For a gebruik-beheerder, returns all gebruiken.
-     * For an aanbod-beheerder, returns gebruiken of applications of the user's organization.
+     * For `admin`/`ambtenaar`, returns all gebruiken (unrestricted bypass).
+     * For a `gebruik-beheerder`, returns only gebruiken where the caller's
+     * own organisation is the afnemer — NOT every organisation's gebruiken;
+     * that was a cross-organisation leak closed by this capability
+     * (discovery.md finding 2).
+     * For an `aanbod-beheerder`, returns gebruiken of applications of the
+     * user's organization.
      *
      * @NoCSRFRequired
      * @PublicPage
@@ -83,6 +91,7 @@ class GebruikController extends Controller
      *
      * @spec openspec/specs/method-decomposition/spec.md
      * @spec openspec/specs/open-data-publishing/spec.md
+     * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-every-rbac-bypassing-gebruik-koppeling-contract-read-must-evaluate-its-deny-check-before-issuing-the-bypass-query-req-001
      */
     public function getGebruiken(): JSONResponse
     {
@@ -122,9 +131,10 @@ class GebruikController extends Controller
      *
      * @param \OCP\IUser $user The authenticated user.
      *
-     * @return array{isAdmin:bool,isBeheerder:bool,isAanbod:bool,hasAccess:bool,orgUuid:string}
+     * @return array{isAdmin:bool,isBeheerder:bool,isAanbod:bool,isAmbtenaar:bool,hasAccess:bool,orgUuid:string}
      *
      * @spec openspec/changes/method-decomposition/tasks.md#task-9-3
+     * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-gebruik-beheerder-reads-of-gebruik-objects-must-be-scoped-to-the-caller-s-own-organisation-req-003
      */
     private function resolveUserRoles(\OCP\IUser $user): array
     {
@@ -145,56 +155,112 @@ class GebruikController extends Controller
         $isAdmin     = in_array(needle: 'admin', haystack: $groupNames);
         $isBeheerder = in_array(needle: 'gebruik-beheerder', haystack: $groupNames);
         $isAanbod    = in_array(needle: 'aanbod-beheerder', haystack: $groupNames);
+        // `ambtenaar` is the same orthogonal "sees everything" bypass group
+        // used elsewhere in this codebase (AangebodenGebruikController::
+        // isUserInGroup('ambtenaar')). It was missing from this resolver —
+        // without it an ambtenaar who is not ALSO admin/gebruik-beheerder/
+        // aanbod-beheerder failed hasAccess entirely (REQ-003 regression
+        // scenario: "ambtenaar retains the existing unrestricted read").
+        $isAmbtenaar = in_array(needle: 'ambtenaar', haystack: $groupNames);
 
         return [
             'isAdmin'     => $isAdmin,
             'isBeheerder' => $isBeheerder,
             'isAanbod'    => $isAanbod,
-            'hasAccess'   => ($isAdmin === true || $isBeheerder === true || $isAanbod === true),
+            'isAmbtenaar' => $isAmbtenaar,
+            'hasAccess'   => (
+                $isAdmin === true
+                || $isBeheerder === true
+                || $isAanbod === true
+                || $isAmbtenaar === true
+            ),
             'orgUuid'     => $orgUuid,
         ];
 
     }//end resolveUserRoles()
 
     /**
-     * Apply aanbod-beheerder scoping to query options.
+     * Apply organisation-scoping to query options, per the vendor-visibility-
+     * rbac visibility matrix.
      *
-     * For an aanbod-beheerder that is neither admin nor gebruik-beheerder,
-     * restrict the visible gebruiken to the organisation's applicaties.
-     * Returns the (possibly augmented) options array, or null when the user
-     * is asking for a module they cannot see — the caller treats null as
-     * "render empty result".
+     * Deny-before-grant ordering (REQ-001): every branch below resolves the
+     * caller's role + relationship and either returns unchanged options
+     * (full read, admin/ambtenaar only), a narrowed options array (scoped
+     * read), or null ("render the empty result") — BEFORE
+     * `GebruikService::getGebruiken()` ever issues its `_rbac:false` /
+     * `_multitenancy:false` bypass query. No branch here can fall through to
+     * an unscoped query for a non-admin, non-ambtenaar caller.
+     *
+     * - `admin` / `ambtenaar`: unrestricted read (existing bypass, unchanged).
+     * - `aanbod-beheerder` (vendor, REQ-002): scoped to the organisation's own
+     *   offered applications (`module` IN the vendor's own applicatie ids) —
+     *   existing, unchanged behaviour, now regression-tested.
+     * - `gebruik-beheerder` (municipality/samenwerking, REQ-003): scoped to
+     *   the organisation's own `afnemer` relationship. Closes
+     *   `discovery.md` finding 2 — this branch did not exist before this
+     *   change, so every `gebruik-beheerder` fell through to the
+     *   `return $options` no-op below and received every organisation's
+     *   gebruik data.
      *
      * Extracted from `getGebruiken()` per
-     * `openspec/changes/method-decomposition/tasks.md` task 9.3.
+     * `openspec/changes/method-decomposition/tasks.md` task 9.3; extended by
+     * `vendor-visibility-rbac`.
      *
-     * @param array{isAdmin:bool,isBeheerder:bool,isAanbod:bool,orgUuid:string} $roles   Role flags.
-     * @param array<string,mixed>                                               $options Current request params.
+     * @param array{isAdmin:bool,isBeheerder:bool,isAanbod:bool,isAmbtenaar?:bool,orgUuid:string} $roles   Role flags.
+     * @param array<string,mixed>                                                                 $options Current request params.
      *
      * @return array<string,mixed>|null
      *
      * @spec openspec/changes/method-decomposition/tasks.md#task-9-3
+     * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-aanbod-beheerder-vendor-reads-of-gebruik-koppeling-objects-must-be-scoped-to-the-vendor-s-own-offered-products-req-002
+     * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-gebruik-beheerder-reads-of-gebruik-objects-must-be-scoped-to-the-caller-s-own-organisation-req-003
      */
     private function applyAanbodScopeToOptions(array $roles, array $options): ?array
     {
-        if ($roles['isAanbod'] !== true || $roles['isAdmin'] === true || $roles['isBeheerder'] === true) {
+        $isAmbtenaar = $roles['isAmbtenaar'] ?? false;
+
+        // Admin / ambtenaar: unrestricted read (unchanged, existing bypass).
+        if ($roles['isAdmin'] === true || $isAmbtenaar === true) {
             return $options;
         }
 
-        $applicatieIds = $this->gebruikService->getApplicationIds(
-            options: ['aanbieder' => $roles['orgUuid']]
-        );
+        // Aanbod-beheerder (vendor, REQ-002): scope to the vendor's own
+        // offered applications. Unchanged from pre-existing behaviour.
+        if ($roles['isAanbod'] === true && $roles['isBeheerder'] !== true) {
+            $applicatieIds = $this->gebruikService->getApplicationIds(
+                options: ['aanbieder' => $roles['orgUuid']]
+            );
 
-        if ($applicatieIds === []) {
-            return null;
+            if ($applicatieIds === []) {
+                return null;
+            }
+
+            if (isset($options['module']) === true && in_array($options['module'], $applicatieIds) === false) {
+                return null;
+            }
+
+            if (isset($options['module']) === false) {
+                $options['module'] = $applicatieIds;
+            }
+
+            return $options;
         }
 
-        if (isset($options['module']) === true && in_array($options['module'], $applicatieIds) === false) {
-            return null;
-        }
+        // Gebruik-beheerder (municipality/samenwerking, REQ-003): scope to
+        // the caller's own organisation's applicatielandschap via the
+        // `afnemer` relationship — the same field that defines "this
+        // gebruik record is used by my organisation" throughout the rest of
+        // this codebase (AangebodenGebruikService::getGebruiksWhereAfnemer).
+        // Deny (return null) rather than silently widening if the caller
+        // already asked for a different organisation's afnemer filter.
+        if ($roles['isBeheerder'] === true) {
+            if (isset($options['afnemer']) === true && $options['afnemer'] !== $roles['orgUuid']) {
+                return null;
+            }
 
-        if (isset($options['module']) === false) {
-            $options['module'] = $applicatieIds;
+            $options['afnemer'] = $roles['orgUuid'];
+
+            return $options;
         }
 
         return $options;

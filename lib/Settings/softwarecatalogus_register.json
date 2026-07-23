@@ -3242,8 +3242,6 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public",
-            "aanbod-beheerder",
             "ambtenaar",
             "functioneel-beheerder",
             "gebruik-beheerder",
@@ -3252,7 +3250,8 @@
             "software-catalog-admins",
             "organisatie-beheerder",
             "organisaties-beheerder",
-            "gebruik-raadpleger"
+            "gebruik-raadpleger",
+            {"group": "aanbod-beheerder", "match": {"_organisation": "$organisation"}}
           ],
           "update": [
             "aanbod-beheerder",
