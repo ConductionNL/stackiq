@@ -38,6 +38,43 @@ import { getLanguage } from '@nextcloud/l10n'
 export const OR_API_BASE = '/index.php/apps/openregister/api'
 
 /**
+ * Module-level active-organisation UUID (multi-org-membership).
+ *
+ * A plain module-level value rather than a Vue reactive/injected one —
+ * SoftwareCatalog reloads the page on every organisation switch (see
+ * `OrganisationSwitcher.vue`), so the active organisation is stable for the
+ * lifetime of a single page load and does not need cross-component
+ * reactivity. Set once at boot from `App.vue`'s `/api/me` fetch via
+ * {@link setActiveOrganisationUuid}; read by `softwarecatalogPlugin.js`'s
+ * write paths via {@link getActiveOrganisationUuid}.
+ *
+ * @type {string|null}
+ */
+let _activeOrganisationUuid = null
+
+/**
+ * Set the module-level active-organisation UUID used to stamp
+ * `X-OpenRegister-Organisation` on writes.
+ *
+ * @param {string|null} uuid The active organisation UUID, or null/empty to clear.
+ * @return {void}
+ * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregisters-organisationservice-not-reimplemented-req-006
+ */
+export function setActiveOrganisationUuid(uuid) {
+	_activeOrganisationUuid = (typeof uuid === 'string' && uuid.length > 0) ? uuid : null
+}
+
+/**
+ * Read the module-level active-organisation UUID.
+ *
+ * @return {string|null} The active organisation UUID, or null when none is set.
+ * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregisters-organisationservice-not-reimplemented-req-006
+ */
+export function getActiveOrganisationUuid() {
+	return _activeOrganisationUuid
+}
+
+/**
  * Resolve the active user's language code (BCP-47 region tag stripped).
  *
  * `@nextcloud/l10n`'s `getLanguage()` already returns the short language

@@ -24,7 +24,9 @@
 			:page-types="pageTypes"
 			app-id="softwarecatalog"
 			:translate="translateForApp"
-			:permissions="permissions">
+			:permissions="permissions"
+			:initial-organisation-uuid="activeOrganisationUuid"
+			:initial-organisation="activeOrganisation">
 			<template #sidebar>
 				<CnObjectSidebar
 					v-if="objectSidebarState.active"
@@ -39,6 +41,19 @@
 					:open="objectSidebarState.open"
 					@update:open="objectSidebarState.open = $event" />
 			</template>
+			<!-- Suppress the default read-only CnTenantBadge — OrganisationSwitcher
+			     below renders a combined active-organisation label + switcher
+			     instead, self-contained (see design.md's "no slot-inject
+			     dependency" decision), so there is exactly one on-screen
+			     indicator. -->
+			<template #tenant-badge />
+			<template #header-actions>
+				<OrganisationSwitcher
+					v-if="organisations.length > 0"
+					:organisations="organisations"
+					:active-organisation-uuid="activeOrganisationUuid"
+					:is-beheerder="isBeheerder" />
+			</template>
 		</CnAppRoot>
 
 		<!-- Legacy global modals + dialogs (keep until every consumer migrates to CnFormDialog / CnDeleteDialog). -->
@@ -50,10 +65,13 @@
 <script>
 import Vue from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
 import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
+import OrganisationSwitcher from './components/organisations/OrganisationSwitcher.vue'
 import { settingsStore } from './store/store.js'
+import { setActiveOrganisationUuid } from './composables/orClient.js'
 
 export default {
 	name: 'App',
@@ -63,6 +81,7 @@ export default {
 		CnObjectSidebar,
 		Modals,
 		Dialogs,
+		OrganisationSwitcher,
 	},
 
 	/**
@@ -132,6 +151,16 @@ export default {
 				hiddenTabs: [],
 				tabs: undefined,
 			}),
+			/**
+			 * The authenticated user's organisations, and which one is
+			 * currently active — fetched once at boot from `/api/me`
+			 * (multi-org-membership). Empty/null until that fetch resolves;
+			 * `OrganisationSwitcher` only renders once populated.
+			 */
+			organisations: [],
+			activeOrganisationUuid: null,
+			activeOrganisation: null,
+			isBeheerder: false,
 		}
 	},
 
@@ -159,9 +188,45 @@ export default {
 			// eslint-disable-next-line no-console
 			console.warn('[softwarecatalog] settingsStore.loadSettings() failed; continuing with defaults', e)
 		}
+
+		await this.loadOrganisations()
 	},
 
 	methods: {
+		/**
+		 * Fetch the authenticated user's organisations and active
+		 * organisation from the already-shipped `/api/me` aggregate
+		 * endpoint (multi-org-membership). Seeds `CnAppRoot`'s tenant
+		 * context for first paint and the `orClient.js` write-header
+		 * getter; a failure leaves the app in its pre-existing
+		 * single-tenant behaviour (no switcher rendered, no header
+		 * stamped) rather than blocking boot.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-the-organisation-switcher-must-list-only-the-authenticated-users-own-organisations-req-003
+		 */
+		async loadOrganisations() {
+			try {
+				const response = await fetch(generateUrl('/apps/softwarecatalog/api/me'), {
+					headers: { requesttoken: OC.requestToken },
+				})
+				if (!response.ok) return
+
+				const data = await response.json()
+				const orgs = data?.organisations?.all ?? []
+				const active = data?.organisations?.active ?? null
+
+				this.organisations = orgs
+				this.activeOrganisation = active
+				this.activeOrganisationUuid = active?.uuid ?? null
+				this.isBeheerder = data?.isBeheerder === true
+				setActiveOrganisationUuid(this.activeOrganisationUuid)
+			} catch (e) {
+				// eslint-disable-next-line no-console
+				console.warn('[softwarecatalog] Failed to load organisations; continuing single-tenant', e)
+			}
+		},
+
 		/**
 		 * Translate function passed down to CnAppRoot / CnAppNav /
 		 * CnPageRenderer. Closes over the Nextcloud `translate` import so
@@ -169,7 +234,7 @@ export default {
 		 *
 		 * @param {string} key Translation key.
 		 * @return {string} Translated string (or the key on miss).
-		  * @spec exclude i18n wrapper around @nextcloud/l10n translate
+		 * @spec exclude i18n wrapper around @nextcloud/l10n translate
 		 */
 		translateForApp(key) {
 			return ncT('softwarecatalog', key)
