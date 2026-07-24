@@ -30,6 +30,7 @@ import LicensePostureView from './views/LicensePostureView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
+import SuitesIndexView from './views/suites/SuitesIndexView.vue'
 
 export default {
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
@@ -133,4 +134,13 @@ export default {
 	// kwetsbaarheid register. No built-in detail widget expresses an upload
 	// flow + cross-schema read-time match, so it stays a custom tab component.
 	SbomComponentsPanel,
+
+	// --- Lib gap: the guided suite-creation wizard's action button. ---
+	// A declarative `type: index` page has no slot to inject the multi-step
+	// "New suite" wizard trigger alongside the generic single-form create
+	// button, so this stays a custom page. `CnIndexPage` itself still
+	// self-fetches (register="voorzieningen" schema="suite") exactly as a
+	// declarative type:index page would.
+	// @spec openspec/specs/suite-wizard/spec.md
+	SuitesIndexView,
 }
