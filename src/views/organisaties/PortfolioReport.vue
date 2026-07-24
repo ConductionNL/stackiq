@@ -352,6 +352,33 @@ export default {
 
 		/**
 		 * Load the organisation collection the picker depends on.
+		 *
+		 * `getSchemaConfig('organisatie')` cannot be used here: it only
+		 * resolves a type from the `voorzieningenConfig` blob when that
+		 * blob's `<type>_schema` key holds a NUMERIC schema id, and
+		 * `organisatie_schema` is unset on instances where the voorzieningen
+		 * auto-configure flow never wrote it (it only ever populates
+		 * `module`/`compliancy`/`moduleVersie`/`sbomComponent` — see
+		 * `SettingsService::normalizeVoorzieningenConfig()`). That is exactly
+		 * why the picker rendered "No results" despite the register holding
+		 * real `Gemeente`/`Samenwerking`/supplier organisations: the schema
+		 * never got registered, so `fetchCollection()` threw
+		 * "Object type ... is not registered" before any request was even
+		 * sent.
+		 *
+		 * The manifest-driven `Organisaties` index page (`src/manifest.json`
+		 * `pages[].config` for route `/organisaties`) never hits this gap: the
+		 * shared library's self-fetch path
+		 * (`node_modules/@conduction/nextcloud-vue/src/components/CnIndexPage/useSelfFetchList.js`)
+		 * calls `registerObjectType(type, props.schema, props.register, ...)`
+		 * using the SCHEMA SLUG itself (`'organisatie'`) as the id — which
+		 * OpenRegister's `/api/objects/{register}/{schemaSlugOrId}` accepts
+		 * interchangeably with a numeric id — rather than resolving a numeric
+		 * schema id from a config blob first. This mirrors that proven path:
+		 * register the slug directly against the voorzieningen register id
+		 * (which IS reliably populated — `voorzieningenConfig.register`),
+		 * with no dependency on `organisatie_schema` ever being set.
+		 *
 		 * @return {Promise<void>}
 		 */
 		async loadOrganisations() {
@@ -359,17 +386,17 @@ export default {
 				if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
 					await objectStore.fetchSettings()
 				}
+				const voorzieningenConfig = objectStore.settings?.voorzieningen
+					|| objectStore.settings?.voorzieningenConfig
+					|| {}
+				const registerId = voorzieningenConfig.register
 				if (typeof objectStore.registerObjectType === 'function'
+					&& registerId
 					&& !objectStore.objectTypeRegistry?.organisatie) {
-					let cfg = null
-					try {
-						cfg = objectStore.getSchemaConfig?.('organisatie')
-					} catch (cfgError) {
-						// getSchemaConfig throws when no schema/register resolves; fall through.
-					}
-					if (cfg?.register && cfg?.schema) {
-						objectStore.registerObjectType('organisatie', cfg.schema, cfg.register)
-					}
+					objectStore.registerObjectType('organisatie', 'organisatie', registerId, {
+						registerSlug: 'voorzieningen',
+						schemaSlug: 'organisatie',
+					})
 				}
 				if (typeof objectStore.fetchCollection === 'function') {
 					await objectStore.fetchCollection('organisatie', { _limit: 1000 })
