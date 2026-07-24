@@ -2,7 +2,7 @@
 
 /**
  * Verification test for the `contract` schema's OpenRegister RBAC read rule
- * (vendor-visibility-rbac REQ-006).
+ * (vendor-visibility-rbac REQ-006, extended by schema-rbac-hardening).
  *
  * Contract CRUD runs entirely through OpenRegister's own object store
  * (ADR-022, `contract-administration`) — there is no app-local contract
@@ -16,6 +16,16 @@
  * the `_organisation` OR-stamped multitenancy field — the exact signal
  * already trusted elsewhere in this codebase
  * (`ContractApprovalService::authorizeSubmit()`).
+ *
+ * schema-rbac-hardening (softwarecatalog #390) extends this: every other
+ * role the `contract` schema previously granted an unscoped read
+ * (`functioneel-beheerder`, `gebruik-beheerder`, `vng-raadpleger`,
+ * `software-catalog-users`, `organisatie-beheerder`,
+ * `organisaties-beheerder`, `gebruik-raadpleger`) is now match-scoped the
+ * same way, except the two deliberate global exceptions documented in
+ * design.md Decision 4: `ambtenaar` (locked in by REQ-006's own scenario)
+ * and `software-catalog-admins` (the app's designated super-user group,
+ * wired into `setSuperUserGroups()` alongside Nextcloud's `admin`).
  *
  * @category  Test
  * @package   OCA\SoftwareCatalog\Tests\Unit\Settings
@@ -139,6 +149,103 @@ class ContractRbacTest extends TestCase
         $this->assertContains('ambtenaar', $authorization['read']);
 
     }//end testAmbtenaarRetainsUnrestrictedRead()
+
+
+    /**
+     * schema-rbac-hardening / REQ-006 (extended), Decision 4:
+     * `software-catalog-admins` retains an unrestricted read grant — the
+     * app's designated super-user group, wired alongside `admin` in
+     * `SettingsService::createAndConfigureUserGroups()`.
+     *
+     * @return void
+     */
+    public function testSoftwareCatalogAdminsRetainsUnrestrictedRead(): void
+    {
+        $authorization = $this->loadContractAuthorization();
+
+        $this->assertContains('software-catalog-admins', $authorization['read']);
+
+    }//end testSoftwareCatalogAdminsRetainsUnrestrictedRead()
+
+
+    /**
+     * Data provider of every role that schema-rbac-hardening (#390) newly
+     * scopes on `contract` beyond the `aanbod-beheerder` grant REQ-006
+     * already covered.
+     *
+     * @return array<string,array<int,string>>
+     */
+    public static function newlyScopedRoleProvider(): array
+    {
+        return [
+            'functioneel-beheerder'  => ['functioneel-beheerder'],
+            'gebruik-beheerder'      => ['gebruik-beheerder'],
+            'vng-raadpleger'         => ['vng-raadpleger'],
+            'software-catalog-users' => ['software-catalog-users'],
+            'organisatie-beheerder'  => ['organisatie-beheerder'],
+            'organisaties-beheerder' => ['organisaties-beheerder'],
+            'gebruik-raadpleger'     => ['gebruik-raadpleger'],
+        ];
+
+    }//end newlyScopedRoleProvider()
+
+
+    /**
+     * schema-rbac-hardening / REQ-006 (extended): none of these roles MUST
+     * remain a bare unscoped read grant on `contract` (softwarecatalog
+     * #390 — the roles REQ-006 left unfixed alongside `aanbod-beheerder`).
+     *
+     * @dataProvider newlyScopedRoleProvider
+     *
+     * @param string $role The role under test.
+     *
+     * @return void
+     */
+    public function testRoleReadIsNotBare(string $role): void
+    {
+        $authorization = $this->loadContractAuthorization();
+
+        $this->assertNotContains(
+            $role,
+            $authorization['read'],
+            "{$role} MUST NOT be a bare unscoped read grant on contract (REQ-006 extended by schema-rbac-hardening)"
+        );
+
+    }//end testRoleReadIsNotBare()
+
+
+    /**
+     * schema-rbac-hardening / REQ-006 (extended): every role in
+     * {@see newlyScopedRoleProvider()} MUST have a match-scoped read grant
+     * on `_organisation`.
+     *
+     * @dataProvider newlyScopedRoleProvider
+     *
+     * @param string $role The role under test.
+     *
+     * @return void
+     */
+    public function testRoleReadIsOrganisationScoped(string $role): void
+    {
+        $authorization = $this->loadContractAuthorization();
+
+        $scopedEntries = array_values(
+            array_filter(
+                $authorization['read'],
+                static function ($entry) use ($role) {
+                    return is_array($entry) === true
+                        && ($entry['group'] ?? null) === $role
+                        && ($entry['match']['_organisation'] ?? null) === '$organisation';
+                }
+            )
+        );
+
+        $this->assertNotEmpty(
+            $scopedEntries,
+            "{$role} MUST have an _organisation-scoped read grant on contract"
+        );
+
+    }//end testRoleReadIsOrganisationScoped()
 
 
 }//end class
