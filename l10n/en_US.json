@@ -406,6 +406,7 @@
         "BBN1": "BBN1",
         "BBN2": "BBN2",
         "BBN3": "BBN3",
-        "Without DPIA (BBN2+)": "Without DPIA (BBN2+)"
+        "Without DPIA (BBN2+)": "Without DPIA (BBN2+)",
+        "The most recent register import did not fully reach OpenRegister — some schemas or object types could not be verified. Re-run the import or check the server log for details.": "The most recent register import did not fully reach OpenRegister — some schemas or object types could not be verified. Re-run the import or check the server log for details."
     }
 }
