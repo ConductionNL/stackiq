@@ -517,5 +517,99 @@ export const useOrganisatieStore = defineStore('organisatie', {
 				throw error
 			}
 		},
+
+		// ==========================================
+		// Self-service colleague access (multi-org-membership)
+		// ==========================================
+
+		/**
+		 * Fetch an organisation's current members (Nextcloud user ids).
+		 * Consumes OpenRegister's own `GET /api/organisations/{uuid}`
+		 * directly — already gated by `hasAccessToOrganisation()` — rather
+		 * than adding a SoftwareCatalog read endpoint for the same data.
+		 *
+		 * @param {string} uuid The organisation UUID.
+		 * @return {Promise<string[]>} The member user ids.
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
+		 */
+		async fetchMembers(uuid) {
+			const url = generateUrl('/apps/openregister/api/organisations/{uuid}', { uuid })
+
+			const response = await fetch(url, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+				},
+			})
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}))
+				throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+			}
+
+			const data = await response.json()
+			return data?.organisation?.users || []
+		},
+
+		/**
+		 * Grant an existing Nextcloud user access to an organisation.
+		 * Server-side, this is authorized by SoftwareCatalog's
+		 * `beheerder`-of-this-organisation guard, then delegated to
+		 * OpenRegister's own `OrganisationService::joinOrganisation()`.
+		 *
+		 * @param {string} uuid The organisation UUID.
+		 * @param {string} userId The existing Nextcloud user id to grant access to.
+		 * @return {Promise<object>} The success response body.
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
+		 */
+		async grantAccess(uuid, userId) {
+			const url = generateUrl('/apps/softwarecatalog/api/organisations/{uuid}/members', { uuid })
+
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+				},
+				body: JSON.stringify({ userId }),
+			})
+
+			const data = await response.json().catch(() => ({}))
+
+			if (!response.ok) {
+				throw new Error(data.error || `HTTP error! status: ${response.status}`)
+			}
+
+			return data
+		},
+
+		/**
+		 * Revoke an existing member's access to an organisation.
+		 *
+		 * @param {string} uuid The organisation UUID.
+		 * @param {string} userId The Nextcloud user id to revoke access from.
+		 * @return {Promise<object>} The success response body.
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
+		 */
+		async revokeAccess(uuid, userId) {
+			const url = generateUrl('/apps/softwarecatalog/api/organisations/{uuid}/members/{userId}', { uuid, userId })
+
+			const response = await fetch(url, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+				},
+			})
+
+			const data = await response.json().catch(() => ({}))
+
+			if (!response.ok) {
+				throw new Error(data.error || `HTTP error! status: ${response.status}`)
+			}
+
+			return data
+		},
 	},
 })

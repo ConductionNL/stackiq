@@ -1467,6 +1467,7 @@ class ContactpersonenController extends Controller
 
             // Initialize response with user data from Nextcloud.
             $response = $this->buildEmptyMeResponse(userEmail: $userEmail);
+            $response['isBeheerder'] = $this->groupManager->isInGroup($userId, 'beheerder');
 
             // Try to get contactpersoon data for additional profile info.
             $this->enrichMeWithContactpersoonData(
@@ -1573,6 +1574,14 @@ class ContactpersonenController extends Controller
                 'active' => null,
                 'all'    => [],
             ],
+            // Global `beheerder` NC group membership — a client-side hint
+            // only (per-organisation authorization is re-verified
+            // server-side on every grant/revoke by
+            // OrganisationMembersController; this flag merely lets the
+            // frontend decide whether to render the "manage members"
+            // affordance at all).
+            // See @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004 for the authorization contract this flag hints at.
+            'isBeheerder'   => false,
         ];
     }//end buildEmptyMeResponse()
 

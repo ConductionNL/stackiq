@@ -568,6 +568,14 @@
         "Suite created.": "Suite created.",
         "Suites": "Suites",
         "Version": "Version",
-        "Vulnerability match": "Vulnerability match"
+        "Vulnerability match": "Vulnerability match",
+        "Current members": "Current members",
+        "Failed to switch organisation": "Failed to switch organisation",
+        "Grant access": "Grant access",
+        "Grant access to an existing Nextcloud user": "Grant access to an existing Nextcloud user",
+        "Manage access to {name}": "Manage access to {name}",
+        "Manage members": "Manage members",
+        "No members yet.": "No members yet.",
+        "Revoke access": "Revoke access"
     }
 }

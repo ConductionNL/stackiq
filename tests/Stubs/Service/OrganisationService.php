@@ -5,10 +5,13 @@
  *
  * The real OrganisationService lives in the OpenRegister app which is not
  * available as a Composer dependency in the test environment. This stub
- * declares the single method SoftwareCatalog's
+ * declares the methods SoftwareCatalog's
  * AangebodenGebruikService::getCurrentOrganisation() /
- * AanbodService::getCurrentOrganisation() rely on, so PHPUnit can create
- * mocks against it for vendor-visibility-rbac's deny-before-grant tests.
+ * AanbodService::getCurrentOrganisation() rely on (vendor-visibility-rbac's
+ * deny-before-grant tests), plus the membership-management surface
+ * `OrganisationMembersController` and its tests rely on
+ * (multi-org-membership): `getUserOrganisations()`, `joinOrganisation()`,
+ * `leaveOrganisation()`.
  *
  * SPDX-License-Identifier: EUPL-1.2
  *
@@ -36,5 +39,38 @@ abstract class OrganisationService
      * @return Organisation|null
      */
     abstract public function getActiveOrganisation(): ?Organisation;
+
+    /**
+     * Get the caller's own organisations (session-scoped).
+     *
+     * @return Organisation[]
+     */
+    abstract public function getUserOrganisations(): array;
+
+    /**
+     * Add a user to an organisation. Real implementation performs no
+     * caller-side authorization — callers MUST authorize before invoking.
+     *
+     * @param string      $organisationUuid The organisation UUID.
+     * @param string|null $targetUserId     Target user id, or null for the current user.
+     *
+     * @return bool True on success.
+     *
+     * @throws \Exception When the organisation or target user is not found.
+     */
+    abstract public function joinOrganisation(string $organisationUuid, ?string $targetUserId = null): bool;
+
+    /**
+     * Remove a user from an organisation. Real implementation performs no
+     * caller-side authorization — callers MUST authorize before invoking.
+     *
+     * @param string      $organisationUuid The organisation UUID.
+     * @param string|null $targetUserId     Target user id, or null for the current user.
+     *
+     * @return bool True on success.
+     *
+     * @throws \Exception When the organisation is not found, or the target would be left with no organisation.
+     */
+    abstract public function leaveOrganisation(string $organisationUuid, ?string $targetUserId = null): bool;
 
 }//end class

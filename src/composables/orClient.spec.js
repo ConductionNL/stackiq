@@ -13,6 +13,8 @@ import {
 	withLanguageParam,
 	buildWriteHeaders,
 	buildObjectUrl,
+	setActiveOrganisationUuid,
+	getActiveOrganisationUuid,
 } from './orClient.js'
 
 jest.mock('@nextcloud/l10n', () => ({
@@ -119,5 +121,37 @@ describe('orClient.buildObjectUrl', () => {
 	it('throws when register or schema is missing', () => {
 		expect(() => buildObjectUrl({ schema: 21, uuid: 'x' })).toThrow()
 		expect(() => buildObjectUrl({ register: 7, uuid: 'x' })).toThrow()
+	})
+})
+
+describe('orClient.setActiveOrganisationUuid / getActiveOrganisationUuid (multi-org-membership)', () => {
+	afterEach(() => {
+		setActiveOrganisationUuid(null)
+	})
+
+	it('starts unset', () => {
+		expect(getActiveOrganisationUuid()).toBeNull()
+	})
+
+	it('stores and returns the active organisation uuid', () => {
+		setActiveOrganisationUuid('org-a')
+		expect(getActiveOrganisationUuid()).toBe('org-a')
+	})
+
+	it('normalises an empty string to null', () => {
+		setActiveOrganisationUuid('org-a')
+		setActiveOrganisationUuid('')
+		expect(getActiveOrganisationUuid()).toBeNull()
+	})
+
+	it('normalises a non-string value to null', () => {
+		setActiveOrganisationUuid(42)
+		expect(getActiveOrganisationUuid()).toBeNull()
+	})
+
+	it('feeds buildWriteHeaders so a write stamps the active organisation', () => {
+		setActiveOrganisationUuid('org-b')
+		const headers = buildWriteHeaders({}, { organisation: getActiveOrganisationUuid() })
+		expect(headers).toHaveProperty('X-OpenRegister-Organisation', 'org-b')
 	})
 })

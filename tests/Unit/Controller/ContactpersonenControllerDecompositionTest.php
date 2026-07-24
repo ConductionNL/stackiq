@@ -183,6 +183,7 @@ class ContactpersonenControllerDecompositionTest extends TestCase
         $this->assertSame('', $result['functie']);
         $this->assertNull($result['organisations']['active']);
         $this->assertSame([], $result['organisations']['all']);
+        $this->assertFalse($result['isBeheerder']);
     }
 
     public function testProjectCatalogGroupsKeepsOnlyCatalogGroups(): void
