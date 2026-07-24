@@ -314,7 +314,8 @@ class Application extends App implements IBootstrap
                     container: $container,
                     appManager: $container->get('OCP\App\IAppManager'),
                     logger: $container->get('Psr\Log\LoggerInterface'),
-                    groupManager: $container->get(IGroupManager::class)
+                    groupManager: $container->get(IGroupManager::class),
+                    l10n: $container->get('OCP\IL10N')
                     );
                 }
                 );
