@@ -1,0 +1,90 @@
+{
+  "components": {
+    "schemas": {
+      "beoordeeling": {
+        "properties": {
+          "auteur": {
+            "type": "string",
+            "description": "Display name of the submitting user. Stamped server-side by ReviewService from the authenticated Nextcloud session at submission time — a client-supplied value is always discarded and never persisted.",
+            "visible": true,
+            "facetable": false,
+            "title": "Auteur",
+            "order": 10,
+            "example": "Bijvoorbeeld: Jan Jansen"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "default": "pending",
+            "description": "Moderation status. Every new review is forced to 'pending' server-side by ReviewService regardless of client input; only an admin approval/rejection decision (ModerationService, reusing the organisatie moderation pattern) may transition it. The public RBAC read rule below only ever matches 'approved'.",
+            "visible": true,
+            "facetable": true,
+            "title": "Status",
+            "order": 11,
+            "example": "Bijvoorbeeld: pending"
+          }
+        },
+        "authorization": {
+          "create": [
+            "vng-raadpleger",
+            "software-catalog-users",
+            "software-catalog-admins",
+            "organisaties-beheerder",
+            "organisatie-beheerder",
+            "gebruik-raadpleger",
+            "gebruik-beheerder",
+            "functioneel-beheerder",
+            "ambtenaar",
+            "aanbod-beheerder"
+          ],
+          "read": [
+            {
+              "group": "public",
+              "match": {
+                "status": "approved"
+              }
+            },
+            "aanbod-beheerder",
+            "ambtenaar",
+            "functioneel-beheerder",
+            "gebruik-beheerder",
+            "vng-raadpleger",
+            "software-catalog-users",
+            "software-catalog-admins",
+            "organisatie-beheerder",
+            "organisaties-beheerder",
+            "gebruik-raadpleger"
+          ],
+          "update": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "delete": [
+            "software-catalog-admins"
+          ]
+        }
+      }
+    }
+  }
+}

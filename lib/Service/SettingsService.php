@@ -64,6 +64,8 @@ use Symfony\Component\Mime\Address;
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ *
+ * @spec openspec/specs/settings-service/spec.md
  */
 class SettingsService
 {
@@ -154,6 +156,8 @@ class SettingsService
      * Checks if OpenRegister is enabled
      *
      * @return bool True if OpenRegister is enabled
+     *
+     * @spec openspec/specs/settings-service/spec.md
      */
     public function isOpenRegisterEnabled(): bool
     {
@@ -2286,6 +2290,8 @@ class SettingsService
      * @param array<string, mixed> $settings Raw settings from getEmailSettings().
      *
      * @return array<string, mixed> The settings, safe to return over HTTP.
+     *
+     * @spec openspec/specs/settings-service/spec.md
      */
     public function redactEmailSecrets(array $settings): array
     {
@@ -6304,6 +6310,8 @@ class SettingsService
      * Get catalog location
      *
      * @return string The catalog location URL
+     *
+     * @spec openspec/specs/settings-service/spec.md
      */
     public function getCatalogLocation(): string
     {
@@ -6316,6 +6324,8 @@ class SettingsService
      * @param string $location The catalog location URL.
      *
      * @return void
+     *
+     * @spec openspec/specs/settings-service/spec.md
      */
     public function setCatalogLocation(string $location): void
     {
@@ -7144,14 +7154,33 @@ class SettingsService
      * merged by key union (recursing on shared keys); list arrays are concatenated;
      * scalars in the fragment overwrite the base. Disjoint fragments never collide.
      *
-     * @param array<mixed> $base    The accumulated config.
-     * @param array<mixed> $overlay The fragment to merge in.
+     * EXCEPTION (catalog-ratings, softwarecatalog#375): any key literally named
+     * `authorization` switches its entire subtree to REPLACE semantics for list
+     * values, instead of the general concatenation above. Concatenating an RBAC
+     * rule list is a fail-OPEN trap: if the base already carries an unconditional
+     * entry such as `read: ["public"]`, concatenating a narrower overlay rule onto
+     * it produces `["public", {...}]` — the dangerous unconditional entry is still
+     * present, so the schema stays fully world-readable no matter what the overlay
+     * adds (the same class of bug as OR's veto-after-grant trap, or#2025, one layer
+     * up in the config-merge step). A fragment narrowing a schema's authorization
+     * MUST be able to remove a dangerous base entry outright, so `authorization`
+     * lists are replaced wholesale. This is scoped to that one key name — every
+     * other merge (including every fragment that predates this one) is unaffected.
+     *
+     * @param array<mixed> $base         The accumulated config.
+     * @param array<mixed> $overlay      The fragment to merge in.
+     * @param bool         $replaceLists Whether list values in this subtree replace
+     *                                   (true, inside an `authorization` block)
+     *                                   rather than concatenate (false, the general
+     *                                   case).
      *
      * @return array<mixed> The merged config.
      */
-    private static function deepMergeConfig(array $base, array $overlay): array
+    private static function deepMergeConfig(array $base, array $overlay, bool $replaceLists=false): array
     {
         foreach ($overlay as $key => $value) {
+            $childReplaceLists = ($replaceLists === true || $key === 'authorization');
+
             if (is_array($value) === true
                 && isset($base[$key]) === true
                 && is_array($base[$key]) === true
@@ -7159,14 +7188,18 @@ class SettingsService
                 $baseIsList    = ($base[$key] === [] || array_keys($base[$key]) === range(0, (count($base[$key]) - 1)));
                 $overlayIsList = ($value === [] || array_keys($value) === range(0, (count($value) - 1)));
                 if ($baseIsList === true && $overlayIsList === true) {
-                    $base[$key] = array_merge($base[$key], $value);
+                    if ($childReplaceLists === true) {
+                        $base[$key] = $value;
+                    } else {
+                        $base[$key] = array_merge($base[$key], $value);
+                    }
                 } else {
-                    $base[$key] = self::deepMergeConfig(base: $base[$key], overlay: $value);
+                    $base[$key] = self::deepMergeConfig(base: $base[$key], overlay: $value, replaceLists: $childReplaceLists);
                 }
             } else {
                 $base[$key] = $value;
             }
-        }
+        }//end foreach
 
         return $base;
 
