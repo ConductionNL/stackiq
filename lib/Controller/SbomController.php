@@ -41,6 +41,7 @@ use OCA\SoftwareCatalog\AppInfo\Application;
 use OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException;
 use OCA\SoftwareCatalog\Service\SbomImportService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -94,6 +95,21 @@ class SbomController extends Controller
     /**
      * Import an SBOM for a `moduleVersie`. Multipart upload only.
      *
+     * `DoesNotExistException` is caught here (not just the explicit
+     * `RuntimeException` "moduleVersie not found" guard already inside
+     * `SbomImportService::importForModuleVersie()`): OpenRegister's real
+     * `ObjectService::find()` does not reliably return `null` for a missing
+     * object the way the unit-test stub does — for a well-formed but
+     * non-existent uuid its cross-table fallback lookup re-throws
+     * `OCP\AppFramework\Db\DoesNotExistException` instead. That exception can
+     * originate from `authorizeManage()` (via
+     * `SbomImportService::resolveParentModuleUuid()`, for a non-admin/
+     * manage-group caller) or from `importForModuleVersie()` itself, so the
+     * whole method body is covered by one outer try/catch rather than
+     * threading a guard through each call site individually. Uncaught, this
+     * escaped as a 500 (confirmed live for `GET .../sbom` on
+     * `getSbomImportStatus()` — the same defect class applies here).
+     *
      * @param string $moduleVersieUuid The target moduleVersie's uuid.
      *
      * @return JSONResponse The import result summary, or a 400/401/403/404/422/500.
@@ -106,22 +122,27 @@ class SbomController extends Controller
     #[NoCSRFRequired]
     public function importSbom(string $moduleVersieUuid): JSONResponse
     {
-        $guard = $this->authorizeManage(moduleVersieUuid: $moduleVersieUuid);
-        if ($guard instanceof JSONResponse) {
-            return $guard;
-        }
-
-        $validated = $this->validateUpload(moduleVersieUuid: $moduleVersieUuid);
-        if ($validated instanceof JSONResponse) {
-            return $validated;
-        }
-
         try {
+            $guard = $this->authorizeManage(moduleVersieUuid: $moduleVersieUuid);
+            if ($guard instanceof JSONResponse) {
+                return $guard;
+            }
+
+            $validated = $this->validateUpload(moduleVersieUuid: $moduleVersieUuid);
+            if ($validated instanceof JSONResponse) {
+                return $validated;
+            }
+
             $result = $this->importService->importForModuleVersie(
                 moduleVersieUuid: $moduleVersieUuid,
                 rawJson: $validated['contents'],
                 format: $validated['format'],
                 fileName: $validated['fileName']
+            );
+        } catch (DoesNotExistException $e) {
+            return new JSONResponse(
+                data: ['message' => 'moduleVersie not found: '.$moduleVersieUuid, 'error' => 'MODULE_VERSION_NOT_FOUND'],
+                statusCode: Http::STATUS_NOT_FOUND
             );
         } catch (UnsupportedSbomFormatException $e) {
             return new JSONResponse(
@@ -228,12 +249,26 @@ class SbomController extends Controller
      * Read SBOM import status/provenance for a `moduleVersie`, optionally
      * including a `progress-tracking` snapshot when `operationId` is given.
      *
+     * Confirmed live (500 on a non-existent `moduleVersieUuid`):
+     * `SbomImportService::getStatus()` calls OpenRegister's real
+     * `ObjectService::find()`, which — despite its `?ObjectEntity` return
+     * type suggesting `null` on a miss (and despite the local
+     * `if ($moduleVersie !== null)` guard already inside `getStatus()`) —
+     * can re-throw `OCP\AppFramework\Db\DoesNotExistException` from its
+     * cross-table fallback lookup for a well-formed but unresolvable uuid,
+     * rather than returning `null`. Uncaught, that propagated straight
+     * through this controller method as a 500. Caught here and translated
+     * to a proper 404 — the endpoint is a plain "read status for this uuid"
+     * lookup, so a missing `moduleVersie` is an ordinary not-found, not a
+     * server error.
+     *
      * @param string $moduleVersieUuid The target moduleVersie's uuid.
      *
-     * @return JSONResponse `{sbomLastImportedAt, sbomFormat, sbomFileName, progress}`.
+     * @return JSONResponse `{sbomLastImportedAt, sbomFormat, sbomFileName, progress}`, or a 404.
      *
      * @NoAdminRequired
      * @spec            openspec/specs/sbom-import/spec.md#requirement-large-imports-run-in-bounded-batches-with-progress-reporting
+     * @spec            openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
      */
     #[NoAdminRequired]
     public function getSbomImportStatus(string $moduleVersieUuid): JSONResponse
@@ -247,12 +282,19 @@ class SbomController extends Controller
             $operationId = null;
         }
 
-        return new JSONResponse(
-            data: $this->importService->getStatus(
-                moduleVersieUuid: $moduleVersieUuid,
-                operationId: $operationId
-            )
-        );
+        try {
+            return new JSONResponse(
+                data: $this->importService->getStatus(
+                    moduleVersieUuid: $moduleVersieUuid,
+                    operationId: $operationId
+                )
+            );
+        } catch (DoesNotExistException $e) {
+            return new JSONResponse(
+                data: ['message' => 'moduleVersie not found: '.$moduleVersieUuid, 'error' => 'MODULE_VERSION_NOT_FOUND'],
+                statusCode: Http::STATUS_NOT_FOUND
+            );
+        }
     }//end getSbomImportStatus()
 
     /**

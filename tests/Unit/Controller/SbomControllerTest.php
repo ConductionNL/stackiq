@@ -27,6 +27,7 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
 
 use OCA\SoftwareCatalog\Controller\SbomController;
 use OCA\SoftwareCatalog\Service\SbomImportService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -306,4 +307,68 @@ class SbomControllerTest extends TestCase
 
         $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
     }//end testStatusRefusesUnauthenticated()
+
+    /**
+     * REGRESSION: a non-existent `moduleVersieUuid` returns 404, not 500.
+     *
+     * Confirmed live: `GET /apps/softwarecatalog/api/moduleversies/{uuid}/sbom`
+     * for a well-formed but non-existent uuid 500'd with an uncaught
+     * `OCP\AppFramework\Db\DoesNotExistException` ("Object with identifier
+     * '...' not found in any magic table") — OpenRegister's real
+     * `ObjectService::find()` re-throws instead of returning `null` for this
+     * shape, unlike the assumption `SbomImportService::getStatus()`'s own
+     * `if ($moduleVersie !== null)` guard was written under.
+     *
+     * @return void
+     */
+    public function testStatusReturns404ForNonExistentModuleVersie(): void
+    {
+        $request = $this->createMock(IRequest::class);
+        $request->method('getParam')->willReturn(null);
+        $this->userSession  = $this->createMock(IUserSession::class);
+        $this->groupManager = $this->createMock(IGroupManager::class);
+        $this->importService = $this->createMock(SbomImportService::class);
+
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('caller-uid');
+        $this->userSession->method('getUser')->willReturn($user);
+
+        $this->importService->method('getStatus')
+            ->willThrowException(new DoesNotExistException("Object with identifier '00000000-0000-0000-0000-000000000000' not found in any magic table"));
+
+        $controller = new SbomController(
+            $request,
+            $this->userSession,
+            $this->groupManager,
+            $this->importService,
+            $this->createMock(LoggerInterface::class)
+        );
+
+        $response = $controller->getSbomImportStatus('00000000-0000-0000-0000-000000000000');
+
+        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+        $this->assertSame('MODULE_VERSION_NOT_FOUND', $response->getData()['error'] ?? null);
+    }//end testStatusReturns404ForNonExistentModuleVersie()
+
+    /**
+     * REGRESSION: `importSbom()` also translates a `DoesNotExistException`
+     * escaping `SbomImportService::importForModuleVersie()` (same underlying
+     * OpenRegister `find()` behaviour as `testStatusReturns404ForNonExistentModuleVersie()`)
+     * to 404, not 500.
+     *
+     * @return void
+     */
+    public function testImportReturns404ForNonExistentModuleVersie(): void
+    {
+        $upload = $this->uploadedFile('{"bomFormat":"CycloneDX","specVersion":"1.6","components":[]}');
+
+        $controller = $this->makeController(isAdmin: true, memberGroups: [], uploadedFile: $upload);
+        $this->importService->method('importForModuleVersie')
+            ->willThrowException(new DoesNotExistException("Object with identifier '00000000-0000-0000-0000-000000000000' not found in any magic table"));
+
+        $response = $controller->importSbom('00000000-0000-0000-0000-000000000000');
+
+        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+        $this->assertSame('MODULE_VERSION_NOT_FOUND', $response->getData()['error'] ?? null);
+    }//end testImportReturns404ForNonExistentModuleVersie()
 }//end class
