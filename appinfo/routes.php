@@ -273,6 +273,13 @@ return [
         ['name' => 'portfolioReport#index', 'url' => '/api/portfolio-report', 'verb' => 'GET'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode routing)
-        ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
+        // `postfix` keeps this SPA catch-all from colliding with the bare-root
+        // `dashboard#page` route above: both entries target the same
+        // controller#method, so without a postfix they generate the same
+        // internal route name and the later one silently displaces the first —
+        // which 404'd the app's own entry point (`/apps/softwarecatalog/`) for
+        // every user, because this route's `path` requirement ('.+') can never
+        // match an empty path.
+        ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => ''], 'postfix' => 'spa'],
     ],
 ];
