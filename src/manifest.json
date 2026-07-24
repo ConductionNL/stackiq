@@ -46,6 +46,13 @@
 			"order": 25
 		},
 		{
+			"id": "Suites",
+			"label": "Suites",
+			"icon": "icon-category-app-bundles",
+			"route": "Suites",
+			"order": 27
+		},
+		{
 			"id": "Diensten",
 			"label": "Services",
 			"icon": "icon-category-organization",
@@ -444,6 +451,41 @@
 					"type",
 					"publicatiedatum"
 				]
+			}
+		},
+		{
+			"id": "Suites",
+			"route": "/suites",
+			"type": "custom",
+			"title": "Suites",
+			"component": "SuitesIndexView",
+			"_note": "suite-wizard: index of `suite` objects (an application suite — a bundled product made up of one or more existing applications, replacing the retired incumbent 'product' concept per VNG Softwarecatalogus #242 / softwarecatalog#372). Stays `type: custom` solely so the guided multi-step creation wizard's action button can sit in CnIndexPage's #actions slot alongside the self-fetch list (register=voorzieningen, schema=suite) — a declarative type:index page has no slot for it. Create/edit/delete of an individual suite outside the wizard still reuse the generic ObjectModal via CnIndexPage's own default form dialog."
+		},
+		{
+			"id": "SuiteDetail",
+			"route": "/suites/:id",
+			"type": "detail",
+			"title": "Suite",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "suite",
+				"_note": "suite-wizard: catalog archetype (a bundled product made up of one or more existing applications). Body: suite data 8-wide (naam, beschrijvingKort, beschrijvingLang, website, logo, contactpersoon) with a Related panel 4-wide surfacing both the contact person and the attached applications (`applicaties`) — the latter via the platform's generic bidirectional relation index (the same `/uses`+`/used` mechanism `md-related` on ModuleDetail already relies on, which is also how a module's own detail page surfaces which suite(s) include it, with no ModuleDetail change needed). A suite does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"widgets": [
+					{ "id": "suite-data", "type": "data", "title": "Suite", "icon": "PackageVariant", "content": { "columns": 2, "include": [ "naam", "beschrijvingKort", "beschrijvingLang", "website", "logo", "contactpersoon" ] } },
+					{ "id": "suite-related", "type": "related", "title": "Applications & contact", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "suite-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "suite-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			}
 		},
 		{

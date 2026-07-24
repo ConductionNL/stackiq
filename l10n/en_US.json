@@ -407,6 +407,27 @@
         "BBN2": "BBN2",
         "BBN3": "BBN3",
         "Without DPIA (BBN2+)": "Without DPIA (BBN2+)",
-        "The most recent register import did not fully reach OpenRegister — some schemas or object types could not be verified. Re-run the import or check the server log for details.": "The most recent register import did not fully reach OpenRegister — some schemas or object types could not be verified. Re-run the import or check the server log for details."
+        "The most recent register import did not fully reach OpenRegister — some schemas or object types could not be verified. Re-run the import or check the server log for details.": "The most recent register import did not fully reach OpenRegister — some schemas or object types could not be verified. Re-run the import or check the server log for details.",
+        "Suites": "Suites",
+        "New suite": "New suite",
+        "Create suite": "Create suite",
+        "Suite created.": "Suite created.",
+        "Failed to create the suite.": "Failed to create the suite.",
+        "Application suites — bundled products made up of one or more existing applications.": "Application suites — bundled products made up of one or more existing applications.",
+        "Details": "Details",
+        "Confirm": "Confirm",
+        "Back": "Back",
+        "A brief summary of the suite": "A brief summary of the suite",
+        "A detailed description of the suite and what it covers": "A detailed description of the suite and what it covers",
+        "Long description": "Long description",
+        "e.g. Centric Leefomgeving": "e.g. Centric Leefomgeving",
+        "https://example.com/suite": "https://example.com/suite",
+        "Enter a name and a short description.": "Enter a name and a short description.",
+        "Existing applications": "Existing applications",
+        "Select one or more applications": "Select one or more applications",
+        "Attach the applications that make up this suite. Only applications already in the catalogue can be attached — creating a new application is not part of this wizard.": "Attach the applications that make up this suite. Only applications already in the catalogue can be attached — creating a new application is not part of this wizard.",
+        "Could not load applications. Please try again.": "Could not load applications. Please try again.",
+        "Applications ({count})": "Applications ({count})",
+        "No applications attached yet.": "No applications attached yet."
     }
 }
