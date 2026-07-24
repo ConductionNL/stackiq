@@ -8,6 +8,8 @@ an existing Nextcloud user's membership without an administrator. Both build
 on OpenRegister's existing `OrganisationService`/`OrganisationController`
 (ADR-011, ADR-022) rather than reimplementing membership.
 
+@e2e exclude No live deployment in this change's implementation pass (the shared dev Nextcloud instance was deliberately left untouched — see design.md). Server-side authorization scenarios (REQ-001, REQ-004, REQ-005, REQ-006) are covered by PHPUnit tests exercising both the allowed and denied paths against mocked OpenRegister collaborators; client-side decision-logic scenarios (REQ-002, REQ-003) are covered by pure-logic unit tests on the extracted helper modules. Browser-driven Playwright e2e coverage is deferred to a follow-up verification pass against a live instance, per docs/features/multi-org-membership.md.
+
 ## Requirements
 ### Requirement: Switching the active organisation MUST be verified against server-side membership, never a client-supplied claim (REQ-001)
 
