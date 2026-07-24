@@ -41,6 +41,7 @@
 <script>
 import { NcSelect, NcNoteCard } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
+import { mapApplicationOptions } from '../../utils/suiteWizard.js'
 
 export default {
 	name: 'Step2Applications',
@@ -74,15 +75,13 @@ export default {
 		 * @return {Array<{uuid: string, label: string, raw: object}>}
 		 */
 		applicationOptions() {
-			const modules = objectStore.getCollection ? objectStore.getCollection('module') : []
-			return (modules || []).map((mod) => {
-				const uuid = mod.uuid || mod.id || mod['@self']?.id
-				return {
-					uuid,
-					label: mod.naam || mod.title || uuid,
-					raw: mod,
-				}
-			})
+			// `getCollection()` returns the paginated ENVELOPE ({ results, ... }),
+			// not a bare array. Mapping lives in `mapApplicationOptions()` so it
+			// is unit-testable against both shapes — reading the envelope as an
+			// array threw "(intermediate value).map is not a function" and left
+			// this step blank, and no test covered this computed.
+			const collection = objectStore.getCollection ? objectStore.getCollection('module') : null
+			return mapApplicationOptions(collection)
 		},
 
 		/**

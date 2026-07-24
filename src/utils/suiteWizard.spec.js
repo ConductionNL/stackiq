@@ -9,6 +9,7 @@ import {
 	isApplicationsStepValid,
 	buildSuitePayload,
 	summarizeApplications,
+	mapApplicationOptions,
 } from './suiteWizard.js'
 
 describe('suiteWizard.isDetailsStepValid', () => {
@@ -110,5 +111,43 @@ describe('suiteWizard.summarizeApplications', () => {
 
 	it('returns an empty array for non-array input', () => {
 		expect(summarizeApplications(undefined)).toEqual([])
+	})
+})
+
+
+describe('suiteWizard.mapApplicationOptions', () => {
+	// Regression: `objectStore.getCollection()` returns the paginated ENVELOPE,
+	// not a bare array. The component computed mapped it as an array, which threw
+	// "(intermediate value).map is not a function" at runtime and left the
+	// wizard's Applications step blank — no application could be attached to a
+	// suite. Found only by running the wizard in a browser (2026-07-24); no test
+	// covered the computed. These cases pin BOTH shapes.
+	it('maps the paginated envelope shape returned by getCollection()', () => {
+		const envelope = { results: [{ uuid: 'u1', naam: 'Zaaksysteem' }], total: 1, page: 1 }
+
+		expect(mapApplicationOptions(envelope)).toEqual([
+			{ uuid: 'u1', label: 'Zaaksysteem', raw: { uuid: 'u1', naam: 'Zaaksysteem' } },
+		])
+	})
+
+	it('still maps a bare array', () => {
+		expect(mapApplicationOptions([{ uuid: 'u2', naam: 'DMS' }])).toEqual([
+			{ uuid: 'u2', label: 'DMS', raw: { uuid: 'u2', naam: 'DMS' } },
+		])
+	})
+
+	it('returns an empty list while the collection is still loading', () => {
+		expect(mapApplicationOptions(null)).toEqual([])
+		expect(mapApplicationOptions(undefined)).toEqual([])
+		expect(mapApplicationOptions({})).toEqual([])
+	})
+
+	it('falls back to id and @self.id for the identifier, and to the uuid for the label', () => {
+		const envelope = { results: [{ id: 'i1' }, { '@self': { id: 's1' } }] }
+
+		expect(mapApplicationOptions(envelope).map((o) => [o.uuid, o.label])).toEqual([
+			['i1', 'i1'],
+			['s1', 's1'],
+		])
 	})
 })

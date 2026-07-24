@@ -90,3 +90,33 @@ export function summarizeApplications(applications) {
 	if (!Array.isArray(applications)) return []
 	return applications.map((app) => (app && (app.naam || app.id)) || '')
 }
+
+/**
+ * Map an object-store collection of modules to `NcSelect` option shape.
+ *
+ * Accepts the paginated ENVELOPE that `objectStore.getCollection()` actually
+ * returns (`{ results: [...] }`) as well as a bare array, and tolerates
+ * null/undefined while the collection is still loading. Reading the envelope
+ * as an array threw `(intermediate value).map is not a function` at runtime and
+ * left the wizard's Applications step blank, so no application could ever be
+ * attached to a suite — the component's own computed had no unit test.
+ *
+ * @param {object|Array|null} collection Collection envelope, bare array, or null.
+ *
+ * @return {Array<{uuid: string, label: string, raw: object}>} Option list.
+ *
+ * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-must-let-the-user-attach-one-or-more-existing-applications-to-the-new-suite
+ */
+export function mapApplicationOptions(collection) {
+	const modules = Array.isArray(collection) ? collection : (collection?.results || [])
+
+	return modules.map((mod) => {
+		const uuid = mod.uuid || mod.id || mod['@self']?.id
+
+		return {
+			uuid,
+			label: mod.naam || mod.title || uuid,
+			raw: mod,
+		}
+	})
+}
