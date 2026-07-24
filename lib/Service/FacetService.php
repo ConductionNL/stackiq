@@ -437,7 +437,7 @@ class FacetService
             $pagedQuery['_page']  = $page;
 
             $paginated  = $objectService->searchObjectsPaginated($pagedQuery);
-            $results    = $paginated['results'] ?? [];
+            $results    = array_map([$this, 'normalizeObject'], $paginated['results'] ?? []);
             $allObjects = array_merge($allObjects, $results);
 
             $totalPages = (int) ($paginated['pages'] ?? 1);
@@ -463,6 +463,52 @@ class FacetService
         return $allObjects;
 
     }//end fetchBaseObjects()
+
+    /**
+     * Normalize a single OpenRegister search result into a plain data-bag
+     * array, tolerant of the several shapes OpenRegister can hand back.
+     *
+     * `ObjectService::searchObjectsPaginated()`/`searchObjects()` return
+     * `OCA\OpenRegister\Db\ObjectEntity` instances in production (confirmed
+     * live: `ObjectEntity` given where an `array` was assumed), NOT plain
+     * arrays — only the unit-test stub returned arrays, which is how this
+     * shipped green and dead. This is the single boundary every OR search
+     * result MUST pass through before any other FacetService method (all of
+     * which are `array`-typed) touches it.
+     *
+     * Preference order: already an array → returned as-is. An `ObjectEntity`
+     * (or any object exposing `jsonSerialize()`) → `jsonSerialize()`, which
+     * merges the payload properties with `@self` metadata AND mirrors the id
+     * at the top level (see `ObjectEntity::jsonSerialize()`), so both the
+     * payload fields `extractRelatedIdentifiers()`/`extractRelatedNames()`
+     * read AND the `id`/`@self.id` shapes `objectIdentifier()` reads survive.
+     * An object exposing only `getObject()` → that (payload only, `id`
+     * still present at top level per `ObjectEntity::getObject()`). Anything
+     * else → cast to array as a last-resort fallback.
+     *
+     * @param mixed $object A single OpenRegister search result entry.
+     *
+     * @return array The normalized data-bag array.
+     *
+     * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
+     */
+    private function normalizeObject(mixed $object): array
+    {
+        if (is_array($object) === true) {
+            return $object;
+        }
+
+        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+            return (array) $object->jsonSerialize();
+        }
+
+        if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+            return (array) $object->getObject();
+        }
+
+        return (array) $object;
+
+    }//end normalizeObject()
 
     /**
      * Resolve the module object(s) backing each base object's GEMMA dimensions.
@@ -567,8 +613,16 @@ class FacetService
             return [];
         }
 
+        if (is_array($results) === false) {
+            // Defensive: `searchObjects()`'s declared return type is
+            // `array|int` (a `count`-mode caller could pass a shape that
+            // resolves to an int); this call site is never in count mode,
+            // but stay defensive rather than fatal on an unexpected shape.
+            return [];
+        }
+
         $byId = [];
-        foreach ($results as $module) {
+        foreach (array_map([$this, 'normalizeObject'], $results) as $module) {
             $key        = $this->objectIdentifier(object: $module);
             $byId[$key] = $module;
         }

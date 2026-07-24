@@ -39,6 +39,50 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
+ * Minimal fake mirroring the runtime contract of the REAL
+ * `OCA\OpenRegister\Db\ObjectEntity` (not the test-only abstract stub in
+ * `tests/Stubs/Db/ObjectEntity.php`, which cannot be instantiated directly):
+ * `jsonSerialize()` merges the payload properties with `@self` metadata and
+ * mirrors `id` at the top level, exactly as
+ * `OCA\OpenRegister\Db\ObjectEntity::jsonSerialize()` does in production.
+ *
+ * `searchObjectsPaginated()`/`searchObjects()` return real `ObjectEntity`
+ * instances in production, never plain arrays — the OLD test double fed
+ * `FacetService` plain arrays only, which is exactly how the production 500
+ * (`FacetService::objectIdentifier(): Argument #1 ($object) must be of type
+ * array, OCA\OpenRegister\Db\ObjectEntity given`) shipped green.
+ *
+ * @category Test
+ * @package  OCA\SoftwareCatalog\Tests\Unit\Service
+ */
+final class FakeObjectEntity implements \JsonSerializable
+{
+
+    /**
+     * @param string               $id      The object's identifier.
+     * @param array<string,mixed>  $payload The object's payload properties (no `id`/`@self`).
+     */
+    public function __construct(private readonly string $id, private readonly array $payload)
+    {
+    }
+
+    /**
+     * Mirrors `ObjectEntity::jsonSerialize()`: payload + `@self.id` + top-level `id`.
+     *
+     * @return array<string,mixed>
+     */
+    public function jsonSerialize(): array
+    {
+        $data           = $this->payload;
+        $data['@self']  = ['id' => $this->id];
+        $data['id']     = $this->id;
+
+        return $data;
+
+    }//end jsonSerialize()
+}//end class
+
+/**
  * Unit tests for FacetService.
  *
  * @spec openspec/changes/gemma-faceted-search/tasks.md#task-8
@@ -274,6 +318,78 @@ class FacetServiceTest extends TestCase
         $this->assertSame(3, $result['_meta']['totalMatched']);
 
     }//end testGetFacetsAggregatesDirectModuleFields()
+
+    /**
+     * REGRESSION: the SAME assertions as
+     * `testGetFacetsAggregatesDirectModuleFields()`, but `searchObjectsPaginated()`
+     * returns `FakeObjectEntity` instances (mirroring the real OpenRegister
+     * `ObjectEntity` contract) instead of plain arrays — this is the shape
+     * production actually hands back. Proves `FacetService` normalizes at
+     * the `fetchBaseObjects()` boundary rather than assuming `array`
+     * (the exact defect that produced the live 500:
+     * `objectIdentifier(): Argument #1 ($object) must be of type array,
+     * OCA\OpenRegister\Db\ObjectEntity given`).
+     *
+     * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
+     *
+     * @return void
+     */
+    public function testGetFacetsAggregatesDirectModuleFieldsWhenResultsAreObjectEntityInstances(): void
+    {
+        $modules = [
+            new FakeObjectEntity(
+                id: 'm1',
+                payload: [
+                    'referentieComponenten' => [['identifier' => 'rc-1']],
+                    'standaardVersies'      => [['name' => 'StUF-ZKN']],
+                ]
+            ),
+            new FakeObjectEntity(
+                id: 'm2',
+                payload: [
+                    'referentieComponenten' => [['identifier' => 'rc-1']],
+                    'standaardVersies'      => [['name' => 'StUF-ZKN']],
+                ]
+            ),
+            new FakeObjectEntity(
+                id: 'm3',
+                payload: [
+                    'referentieComponenten' => ['rc-2'],
+                    'standaardVersies'      => [],
+                ]
+            ),
+        ];
+
+        $captured      = [];
+        $objectService = $this->makePaginatedObjectService(results: $modules, capturedRef: $captured);
+
+        $archiMateService = $this->createMock(ArchiMateService::class);
+        $archiMateService->method('getElementObjects')->willReturn(
+            [
+                ['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domein' => 'Bedrijfsvoering'],
+                ['identifier' => 'rc-2', 'name' => 'Klantcontactcomponent', 'domein' => 'Dienstverlening'],
+            ]
+        );
+        $archiMateService->method('getRelationshipObjects')->willReturn([]);
+
+        $service = $this->makeService(objectService: $objectService, archiMateService: $archiMateService);
+
+        $result = $service->getFacets(schema: 'module');
+
+        $refCompByValue = array_column($result['referentiecomponent'], 'count', 'value');
+        $this->assertSame(2, $refCompByValue['Zaakregistratiecomponent']);
+        $this->assertSame(1, $refCompByValue['Klantcontactcomponent']);
+
+        $standaardByValue = array_column($result['standaard'], 'count', 'value');
+        $this->assertSame(2, $standaardByValue['StUF-ZKN']);
+
+        $domeinByValue = array_column($result['domein'], 'count', 'value');
+        $this->assertSame(2, $domeinByValue['Bedrijfsvoering']);
+        $this->assertSame(1, $domeinByValue['Dienstverlening']);
+
+        $this->assertSame(3, $result['_meta']['totalMatched']);
+
+    }//end testGetFacetsAggregatesDirectModuleFieldsWhenResultsAreObjectEntityInstances()
 
     /**
      * `applicatieservice` is resolved via a `relation` connecting a referentiecomponent
@@ -607,4 +723,61 @@ class FacetServiceTest extends TestCase
         $this->assertSame(1, $refCompByValue['Zaakregistratiecomponent']);
 
     }//end testGetFacetsResolvesDienstFacetsTransitivelyViaModules()
+
+    /**
+     * REGRESSION: the SAME scenario as
+     * `testGetFacetsResolvesDienstFacetsTransitivelyViaModules()`, but BOTH
+     * OpenRegister boundaries return `FakeObjectEntity` instances instead of
+     * plain arrays — the bounded base-object page (`searchObjectsPaginated()`,
+     * the `dienst` results) AND the batch module lookup
+     * (`searchObjects()`, resolved inside `fetchModulesByIdentifiers()`).
+     * Proves normalization happens at BOTH boundaries `FacetService`
+     * consumes OpenRegister search results from, not just the first one.
+     *
+     * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
+     *
+     * @return void
+     */
+    public function testGetFacetsResolvesDienstFacetsWhenBothLookupsReturnObjectEntityInstances(): void
+    {
+        $objectService = $this->createMock(ObjectService::class);
+
+        $capturedPaginated = [];
+        $objectService->method('searchObjectsPaginated')->willReturnCallback(
+            function (array $query) use (&$capturedPaginated): array {
+                $capturedPaginated[] = $query;
+                return [
+                    'results' => [
+                        new FakeObjectEntity(id: 'd1', payload: ['modules' => [['id' => 'm1']]]),
+                    ],
+                    'total' => 1,
+                    'page'  => 1,
+                    'pages' => 1,
+                ];
+            }
+        );
+        $objectService->method('searchObjects')->willReturn(
+            [
+                new FakeObjectEntity(
+                    id: 'm1',
+                    payload: ['referentieComponenten' => [['identifier' => 'rc-1']], 'standaardVersies' => []]
+                ),
+            ]
+        );
+
+        $archiMateService = $this->createMock(ArchiMateService::class);
+        $archiMateService->method('getElementObjects')->willReturn(
+            [['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent']]
+        );
+        $archiMateService->method('getRelationshipObjects')->willReturn([]);
+
+        $service = $this->makeService(objectService: $objectService, archiMateService: $archiMateService);
+
+        $result = $service->getFacets(schema: 'dienst');
+
+        $refCompByValue = array_column($result['referentiecomponent'], 'count', 'value');
+        $this->assertSame(1, $refCompByValue['Zaakregistratiecomponent']);
+        $this->assertSame(1, $result['_meta']['totalMatched']);
+
+    }//end testGetFacetsResolvesDienstFacetsWhenBothLookupsReturnObjectEntityInstances()
 }//end class
