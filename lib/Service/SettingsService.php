@@ -1580,6 +1580,11 @@ class SettingsService
 
                     // Import via configuration service if available with version checking.
                     try {
+                        // Default to the caller-supplied $force in case an exception is
+                        // thrown below (e.g. from getConfigurationService()) before
+                        // resolveImportForce() runs — the catch block's error-surfacing
+                        // check below still needs a defined value.
+                        $effectiveForce       = $force;
                         $configurationService = $this->getConfigurationService();
 
                         // Content-derived version signature (register-import-reliability):
@@ -1595,14 +1600,54 @@ class SettingsService
                             fragmentSig: $fragmentSig
                         );
 
+                        $appId = \OCA\SoftwareCatalog\AppInfo\Application::APP_ID;
+
+                        // Force-when-stale workaround (register-import-reliability,
+                        // https://github.com/ConductionNL/openregister/issues/2075):
+                        // OpenRegister's importFromApp(force: false) advances the
+                        // STORED configuration version whenever any
+                        // registers/schemas/objects come back from the import, but
+                        // does NOT apply property/authorization changes to schemas
+                        // that already exist — only newly-created schemas get the
+                        // full payload. A monolith or fragment edit to an EXISTING
+                        // schema (e.g. a fragment adding a property + an
+                        // authorization rule to an already-shipped schema)
+                        // therefore advances the version, makes the instance LOOK
+                        // up to date, and leaves the schema stale — strictly worse
+                        // than the pre-computeConfigVersion() no-op, because the
+                        // very version this call just wrote now also gates off
+                        // every later non-forced import. Verified live: a version
+                        // that legitimately advanced across an `occ upgrade` still
+                        // left the pre-existing schema unchanged until a
+                        // force:true import was run.
+                        //
+                        // Work around it here, entirely on the consumer side: use
+                        // this app's own content-derived $configVersion as the
+                        // authority for "something changed" (resolveImportForce()
+                        // reads back the version OpenRegister already stored via
+                        // the same content-derived scheme, so this is a
+                        // like-for-like comparison — unlike the removed
+                        // app-semver-vs-content-version comparison documented on
+                        // shouldLoadSettings()) and force the import whenever it
+                        // differs, so the change actually applies instead of just
+                        // being recorded. When the versions match we keep today's
+                        // cheap no-op path — do not import on every request.
+                        $effectiveForce = $this->resolveImportForce(
+                            configurationService: $configurationService,
+                            appId: $appId,
+                            configVersion: $configVersion,
+                            force: $force
+                        );
+
                         // Log the import attempt for debugging.
                         $this->logger->info(
                                 'SettingsService: Attempting to import softwarecatalogus_register.json',
                                 [
-                                    'force'          => $force,
-                                    'app_id'         => \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
-                                    'config_version' => $configVersion,
-                                    'data_size'      => strlen(json_encode($softwareCatalogSettings)),
+                                    'force'           => $force,
+                                    'effective_force' => $effectiveForce,
+                                    'app_id'          => $appId,
+                                    'config_version'  => $configVersion,
+                                    'data_size'       => strlen(json_encode($softwareCatalogSettings)),
                                 ]
                                 );
 
@@ -1619,10 +1664,10 @@ class SettingsService
                         // full mechanism) — do not attempt to de-duplicate rows or change lookup
                         // behavior from this app; the fix belongs in OpenRegister.
                         $importResult = $configurationService->importFromApp(
-                            appId: \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
+                            appId: $appId,
                             data: $softwareCatalogSettings,
                             version: $configVersion,
-                            force: $force
+                            force: $effectiveForce
                         );
 
                         $this->logger->info(
@@ -1651,15 +1696,19 @@ class SettingsService
                         $this->logger->error(
                                 'Failed to import softwarecatalog settings: '.$e->getMessage(),
                                 [
-                                    'exception'  => $e,
-                                    'trace'      => $e->getTraceAsString(),
-                                    'force_flag' => $force,
-                                    'app_id'     => \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
+                                    'exception'       => $e,
+                                    'trace'           => $e->getTraceAsString(),
+                                    'force_flag'      => $force,
+                                    'effective_force' => $effectiveForce,
+                                    'app_id'          => \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
                                 ]
                                 );
 
                         // In force mode, we want to surface import errors more prominently.
-                        if ($force === true) {
+                        // Uses $effectiveForce (not just the caller-supplied $force) so a
+                        // failure while forcing because of a detected version mismatch is
+                        // surfaced just as loudly as an explicit caller force:true.
+                        if ($effectiveForce === true) {
                             throw new \RuntimeException('Force import failed: '.$e->getMessage(), 0, $e);
                         }
                     }//end try
@@ -1716,6 +1765,79 @@ class SettingsService
 
         return $configVersion;
     }//end computeConfigVersion()
+
+    /**
+     * Decides whether `importFromApp()` should be forced for this
+     * `loadSettings()` call.
+     *
+     * Workaround for https://github.com/ConductionNL/openregister/issues/2075:
+     * `ConfigurationService::importFromApp(force: false)` advances the
+     * STORED configuration version whenever any registers/schemas/objects
+     * come back from the import, but does NOT apply property or
+     * authorization changes to schemas that already exist — only
+     * newly-created schemas receive the full payload. A register edit that
+     * only touches an EXISTING schema therefore advances the version,
+     * makes the instance LOOK up to date, and leaves the schema itself
+     * stale — worse than a plain no-op, because the version this call just
+     * wrote also gates off every later non-forced import attempt.
+     *
+     * This method treats the content-derived `$configVersion` computed by
+     * `computeConfigVersion()` as the authority for "something changed":
+     * it reads back the version OpenRegister already has stored for this
+     * app via `ConfigurationService::getConfiguredAppVersion()` — the same
+     * content-derived scheme, so this is a like-for-like comparison
+     * (unlike the app-semver-vs-content-version comparison removed from
+     * `shouldLoadSettings()`, see that method's docblock) — and forces the
+     * import whenever the two differ, so the change actually applies
+     * instead of merely being recorded. When they match, the caller's
+     * `$force` is passed through unchanged, preserving the existing cheap
+     * no-op path (this method MUST NOT force an import on every request).
+     *
+     * An explicit caller-supplied `$force=true` always forces, regardless
+     * of the version comparison.
+     *
+     * A stored version of `null` — either nothing has ever been imported
+     * for this app, or `getConfiguredAppVersion()` itself could not
+     * determine one (it swallows its own exceptions and returns `null`,
+     * see its docblock) — is treated as "differs". For a first-ever
+     * import there is nothing existing to skip, so forcing is harmless.
+     * For an undeterminable lookup, this mirrors `importFromApp()`'s own
+     * internal `findByApp()`/organisation-scope lookup (see the
+     * register-import-reliability note above the `importFromApp()` call
+     * in `loadSettings()`): a miss there already causes OpenRegister to
+     * treat the call as a fresh import today, so this does not introduce
+     * a new failure mode.
+     *
+     * @param \OCA\OpenRegister\Service\ConfigurationService $configurationService The resolved OpenRegister configuration service.
+     * @param string                                         $appId                The app id to look up the stored version for.
+     * @param string                                         $configVersion        The version this call just computed via `computeConfigVersion()`.
+     * @param bool                                            $force                The caller-supplied `$force` argument to `loadSettings()`.
+     *
+     * @return bool Whether `importFromApp()` should be called with `force=true`.
+     *
+     * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-run-auto-configuration-import-and-configuration-maintenance-req-003
+     */
+    private function resolveImportForce(
+        \OCA\OpenRegister\Service\ConfigurationService $configurationService,
+        string $appId,
+        string $configVersion,
+        bool $force
+    ): bool {
+        if ($force === true) {
+            return true;
+        }
+
+        try {
+            $storedConfigVersion = $configurationService->getConfiguredAppVersion($appId);
+        } catch (\Exception $e) {
+            // Defensive only — getConfiguredAppVersion() already catches its
+            // own exceptions and returns null. Treat as "unknown", same as a
+            // null return below.
+            $storedConfigVersion = null;
+        }
+
+        return $storedConfigVersion !== $configVersion;
+    }//end resolveImportForce()
 
     /**
      * Verifies the live OpenRegister schema set against the register this
