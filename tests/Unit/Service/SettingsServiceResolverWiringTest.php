@@ -29,6 +29,7 @@ use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -67,6 +68,9 @@ class SettingsServiceResolverWiringTest extends TestCase
     /** @var IGroupManager|MockObject */
     private IGroupManager|MockObject $groupManager;
 
+    /** @var IL10N|MockObject */
+    private IL10N|MockObject $l10n;
+
 
     /**
      * Build collaborator mocks shared across cases.
@@ -82,6 +86,7 @@ class SettingsServiceResolverWiringTest extends TestCase
         $this->appManager   = $this->createMock(IAppManager::class);
         $this->logger       = $this->createMock(LoggerInterface::class);
         $this->groupManager = $this->createMock(IGroupManager::class);
+        $this->l10n         = $this->createMock(IL10N::class);
 
     }//end setUp()
 
@@ -100,6 +105,7 @@ class SettingsServiceResolverWiringTest extends TestCase
             $this->appManager,
             $this->logger,
             $this->groupManager,
+            $this->l10n,
         );
 
     }//end makeService()

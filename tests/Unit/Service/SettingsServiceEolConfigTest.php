@@ -24,6 +24,7 @@ use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -65,7 +66,8 @@ class SettingsServiceEolConfigTest extends TestCase
             container: $this->createMock(ContainerInterface::class),
             appManager: $this->createMock(IAppManager::class),
             logger: $this->createMock(LoggerInterface::class),
-            groupManager: $this->createMock(IGroupManager::class)
+            groupManager: $this->createMock(IGroupManager::class),
+            l10n: $this->createMock(IL10N::class)
         );
     }//end makeService()
 

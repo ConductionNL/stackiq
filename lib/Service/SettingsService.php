@@ -20,6 +20,7 @@ namespace OCA\SoftwareCatalog\Service;
 
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -111,6 +112,9 @@ class SettingsService
      * @param IAppManager        $appManager   App manager interface
      * @param LoggerInterface    $logger       Logger interface
      * @param IGroupManager      $groupManager Group manager interface
+     * @param IL10N              $l10n         Localization service, used for the
+     *                                         user-facing register-verification warning text
+     *                                         surfaced via getConfigurationStatus().
      */
     public function __construct(
         private readonly IAppConfig $config,
@@ -118,7 +122,8 @@ class SettingsService
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,
-        private readonly IGroupManager $groupManager
+        private readonly IGroupManager $groupManager,
+        private readonly IL10N $l10n
     ) {
         $this->appName = 'softwarecatalog';
     }//end __construct()
@@ -1235,10 +1240,76 @@ class SettingsService
     public function getConfigurationStatus(): array
     {
         return [
-            'organization' => $this->buildObjectTypeStatusEntry(objectType: 'organization'),
-            'contact'      => $this->buildObjectTypeStatusEntry(objectType: 'contactpersoon'),
+            'organization'         => $this->buildObjectTypeStatusEntry(objectType: 'organization'),
+            'contact'              => $this->buildObjectTypeStatusEntry(objectType: 'contactpersoon'),
+            'registerVerification' => $this->getRegisterVerificationStatus(),
         ];
     }//end getConfigurationStatus()
+
+    /**
+     * Reads back the most recent register-verification result persisted by
+     * persistRegisterVerificationStatus() (register-import-reliability),
+     * so a no-op or partial import is visible in the settings status
+     * payload rather than looking identical to a fully successful one.
+     *
+     * @return array{
+     *     ok: bool,
+     *     checked: bool,
+     *     missingSchemas: array<int, string>,
+     *     unresolvedObjectTypes: array<int, string>,
+     *     message: string|null
+     * }
+     *
+     * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-read-and-persist-every-configuration-domain-req-002
+     */
+    protected function getRegisterVerificationStatus(): array
+    {
+        $unchecked = [
+            'ok'                    => true,
+            'checked'               => false,
+            'missingSchemas'        => [],
+            'unresolvedObjectTypes' => [],
+            'message'               => null,
+        ];
+
+        $raw = $this->config->getValueString($this->appName, 'register_verification_status', '');
+        if ($raw === '') {
+            return $unchecked;
+        }
+
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded) === false) {
+            return $unchecked;
+        }
+
+        $ok = ($decoded['ok'] ?? true) === true;
+
+        $missingSchemas = [];
+        if (is_array($decoded['missingSchemas'] ?? null) === true) {
+            $missingSchemas = $decoded['missingSchemas'];
+        }
+
+        $unresolvedObjectTypes = [];
+        if (is_array($decoded['unresolvedObjectTypes'] ?? null) === true) {
+            $unresolvedObjectTypes = $decoded['unresolvedObjectTypes'];
+        }
+
+        $message = null;
+        if ($ok === false) {
+            $message = $this->l10n->t(
+                'The most recent register import did not fully reach OpenRegister — some schemas or '
+                .'object types could not be verified. Re-run the import or check the server log for details.'
+            );
+        }
+
+        return [
+            'ok'                    => $ok,
+            'checked'               => true,
+            'missingSchemas'        => $missingSchemas,
+            'unresolvedObjectTypes' => $unresolvedObjectTypes,
+            'message'               => $message,
+        ];
+    }//end getRegisterVerificationStatus()
 
     /**
      * Builds a single object-type status entry (configured/schemaId/registerId).
@@ -1507,15 +1578,18 @@ class SettingsService
                     try {
                         $configurationService = $this->getConfigurationService();
 
-                        // Use the configuration file's own version (from info.version) for change detection.
-                        // This ensures changes to the JSON file trigger re-import even if app version is unchanged.
-                        $configVersion = $softwareCatalogSettings['info']['version'] ?? '0.0.0';
-
-                        // Fold the fragment signature into the version so OpenRegister's
-                        // version-gated importFromApp re-imports whenever fragments change.
-                        if ($fragmentSig !== '') {
-                            $configVersion .= '+frag.'.substr(md5($fragmentSig), 0, 8);
-                        }
+                        // Content-derived version signature (register-import-reliability):
+                        // folds a hash of the monolith's OWN content (+base.<md5-8>) alongside
+                        // the existing fragment-file hash (+frag.<md5-8>) so ANY register edit —
+                        // monolith or fragment — produces a version OpenRegister has not seen
+                        // before and therefore re-imports, instead of relying on a human
+                        // remembering to bump info.version by hand. See computeConfigVersion()'s
+                        // own docblock for the full @spec anchor.
+                        $configVersion = self::computeConfigVersion(
+                            baseVersion: (string) ($softwareCatalogSettings['info']['version'] ?? '0.0.0'),
+                            monolithContent: $softwareCatalogContent,
+                            fragmentSig: $fragmentSig
+                        );
 
                         // Log the import attempt for debugging.
                         $this->logger->info(
@@ -1529,6 +1603,17 @@ class SettingsService
                                 );
 
                         // Use importFromApp which handles Configuration entity creation automatically.
+                        // NOTE (register-import-reliability): this app's own call site is the only
+                        // place it calls importFromApp() and always passes the same appId, so it
+                        // cannot itself cause duplicate Configuration rows. If more than one
+                        // "Software Catalog Register" configuration row is ever observed in
+                        // oc_openregister_configurations, the cause is upstream: OpenRegister's
+                        // ConfigurationMapper::findByApp()/findBySourceUrl() organisation-scope
+                        // their lookup, so a caller whose active-organisation context differs from
+                        // an existing row's can fail to find it and create a duplicate instead. See
+                        // https://github.com/ConductionNL/openregister/issues/2072 (filed with the
+                        // full mechanism) — do not attempt to de-duplicate rows or change lookup
+                        // behavior from this app; the fix belongs in OpenRegister.
                         $importResult = $configurationService->importFromApp(
                             appId: \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
                             data: $softwareCatalogSettings,
@@ -1545,6 +1630,18 @@ class SettingsService
 
                         $results['softwarecatalog_imported'] = true;
                         $results['import_result']            = $importResult;
+
+                        // Post-import verification (register-import-reliability): a version-gate
+                        // skip, a partial import, or a duplicate-configuration-row resolution
+                        // mistake on OpenRegister's side can all make an import look
+                        // successful here while the live schema set never actually changed.
+                        // Walk the effective (monolith + fragments) merged register and confirm
+                        // every schema slug it declares, and every schema id this app resolves
+                        // for its own object-type lookups, actually resolves in OpenRegister. See
+                        // verifyRegisterAgainstEffectiveConfig()'s own docblock for the @spec anchor.
+                        $verification = $this->verifyRegisterAgainstEffectiveConfig(effectiveRegister: $softwareCatalogSettings);
+                        $results['registerVerification'] = $verification;
+                        $this->persistRegisterVerificationStatus(verification: $verification);
                     } catch (\Exception $e) {
                         $results['softwarecatalog_import_error'] = $e->getMessage();
                         $this->logger->error(
@@ -1574,6 +1671,158 @@ class SettingsService
             throw new \RuntimeException('Failed to load settings: '.$e->getMessage());
         }//end try
     }//end loadSettings()
+
+    /**
+     * Computes the content-derived import version passed to
+     * ConfigurationService::importFromApp()'s version gate.
+     *
+     * Folds an md5 of the monolith register file's OWN raw content into the
+     * signature (`+base.<md5-8>`) alongside the existing ADR-037 fragment
+     * signature (`+frag.<md5-8>`), so ANY register change — whether it
+     * edits the monolith directly or lands as a fragment file — produces a
+     * version string OpenRegister has not seen before and therefore
+     * re-imports. Before this, the signature was derived only from
+     * `info.version` + the fragment hash: a monolith edit that did not also
+     * bump `info.version` by hand produced a byte-identical version and the
+     * import was silently skipped.
+     *
+     * Deliberately content-derived rather than "always re-import" — the
+     * hash is cheap (one extra md5() call on a string already read into
+     * memory) and only changes when the shipped register content actually
+     * changes, so an unchanged register still short-circuits at
+     * OpenRegister's version gate.
+     *
+     * @param string $baseVersion     The register JSON's own `info.version` field.
+     * @param string $monolithContent The raw (unparsed) content of the monolith register file.
+     * @param string $fragmentSig     The accumulated `filename:md5;` signature of merged
+     *                                ADR-037 fragment files, or an empty string if none exist.
+     *
+     * @return string The content-derived version, e.g. `2.4.0+base.1a2b3c4d+frag.9003c029`.
+     *
+     * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-run-auto-configuration-import-and-configuration-maintenance-req-003
+     */
+    private static function computeConfigVersion(string $baseVersion, string $monolithContent, string $fragmentSig): string
+    {
+        $configVersion  = $baseVersion;
+        $configVersion .= '+base.'.substr(md5($monolithContent), 0, 8);
+
+        if ($fragmentSig !== '') {
+            $configVersion .= '+frag.'.substr(md5($fragmentSig), 0, 8);
+        }
+
+        return $configVersion;
+    }//end computeConfigVersion()
+
+    /**
+     * Verifies the live OpenRegister schema set against the register this
+     * app just (attempted to) import, so a no-op or partial import is
+     * observable instead of looking identical to a full success.
+     *
+     * Walks every schema slug declared in the effective (monolith +
+     * merged fragments) register and confirms it resolves in OpenRegister,
+     * and confirms every schema id this app resolves for its own tracked
+     * object types (per getConfigurationStatus()) is non-null. Any miss is
+     * logged as a WARNING and recorded in the returned summary rather than
+     * failing the request — verification is a diagnostic, not a gate.
+     *
+     * @param array<string, mixed> $effectiveRegister The merged register data
+     *                                                (monolith + fragments) that was just imported.
+     *
+     * @return array{ok: bool, missingSchemas: array<int, string>, unresolvedObjectTypes: array<int, string>}
+     *
+     * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-run-auto-configuration-import-and-configuration-maintenance-req-003
+     */
+    private function verifyRegisterAgainstEffectiveConfig(array $effectiveRegister): array
+    {
+        $verification = [
+            'ok'                    => true,
+            'missingSchemas'        => [],
+            'unresolvedObjectTypes' => [],
+        ];
+
+        $schemas = $effectiveRegister['components']['schemas'] ?? [];
+        if (is_array($schemas) === false || empty($schemas) === true) {
+            return $verification;
+        }
+
+        try {
+            $schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
+        } catch (\Throwable $e) {
+            // Cannot verify without the mapper — do not fail the import over a diagnostic.
+            $this->logger->warning(
+                'SettingsService: could not resolve SchemaMapper for register verification, skipping',
+                ['exception' => $e->getMessage()]
+            );
+            return $verification;
+        }
+
+        foreach (array_keys($schemas) as $slug) {
+            if (is_string($slug) === false || $slug === '') {
+                continue;
+            }
+
+            try {
+                $matches = $schemaMapper->findBySlug(slug: $slug, limit: 1);
+            } catch (\Throwable $e) {
+                $matches = [];
+            }
+
+            if (empty($matches) === true) {
+                $verification['ok'] = false;
+                $verification['missingSchemas'][] = $slug;
+                $this->logger->warning(
+                    'SettingsService: register verification found a schema slug from the shipped '
+                    .'register that does not resolve in OpenRegister — the import may not have '
+                    .'reached this instance.',
+                    ['schemaSlug' => $slug]
+                );
+            }
+        }//end foreach
+
+        // Also confirm the object types this app's own status reporting tracks
+        // (see getConfigurationStatus()) resolve to a schema id post-import.
+        foreach (['organization', 'contactpersoon'] as $objectType) {
+            if ($this->getSchemaIdForObjectType(objectType: $objectType) === null) {
+                $verification['ok'] = false;
+                $verification['unresolvedObjectTypes'][] = $objectType;
+                $this->logger->warning(
+                    'SettingsService: register verification found an object type this app tracks '
+                    .'that does not resolve to a configured schema id after import.',
+                    ['objectType' => $objectType]
+                );
+            }
+        }
+
+        return $verification;
+    }//end verifyRegisterAgainstEffectiveConfig()
+
+    /**
+     * Persists the most recent register-verification result to app config
+     * so getConfigurationStatus() can surface it without re-running an
+     * import — verification only runs when loadSettings() actually
+     * attempts an import, while status can be polled independently.
+     *
+     * @param array<string, mixed> $verification The summary from verifyRegisterAgainstEffectiveConfig().
+     *
+     * @return void
+     *
+     * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-read-and-persist-every-configuration-domain-req-002
+     */
+    private function persistRegisterVerificationStatus(array $verification): void
+    {
+        try {
+            $this->config->setValueString(
+                $this->appName,
+                'register_verification_status',
+                json_encode($verification, JSON_THROW_ON_ERROR)
+            );
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'SettingsService: failed to persist register verification status',
+                ['exception' => $e->getMessage()]
+            );
+        }
+    }//end persistRegisterVerificationStatus()
 
     /**
      * Gets the list of generic user groups from configuration
@@ -3057,71 +3306,45 @@ class SettingsService
     }//end createSmtpTransport()
 
     /**
-     * Check if settings should be loaded based on version comparison.
+     * Whether initialize() should attempt loadSettings().
      *
-     * This method compares the current app version with the stored configuration
-     * version to determine if a settings import is needed.
+     * ALWAYS true (register-import-reliability). This previously compared
+     * this app's own semantic version (`appManager->getAppVersion()`, e.g.
+     * "0.2.17") against `ConfigurationService::getConfiguredAppVersion()` —
+     * but that value is not an app semver at all: it is exactly the
+     * register-content version string this same service computes and
+     * passes as the `version` argument to `importFromApp()` (e.g.
+     * "2.3.1+frag.9003c029" — see computeConfigVersion()). Those are two
+     * unrelated versioning schemes sharing one stored slot.
+     * `version_compare("0.2.17", "2.3.1+frag.9003c029", ">")` evaluates to
+     * `false` (verified) because the leading numeral of an app semver here
+     * (0) is always less than the leading numeral of a register-content
+     * version (2). Once any import has ever stored such a value, this
+     * comparison could never return true again for any future app
+     * version bump — permanently preventing loadSettings() from being
+     * invoked, regardless of subsequent register changes. This is the
+     * confirmed mechanism behind the live evidence's "versions DID differ
+     * ... yet nothing imported and no import log line appeared": the
+     * "Attempting to import" log line in loadSettings() never fired
+     * because loadSettings() was never entered.
      *
-     * @return bool True if settings should be loaded, false otherwise.
+     * loadSettings() is only ever reached from an explicit admin-triggered
+     * controller action or the install/upgrade repair step
+     * (InitializeSettings::run(), which has its own
+     * last_initialized_version gate against repeated runs within the same
+     * app version) — never from a per-request code path — so always
+     * attempting it here is cheap (a couple of file reads plus md5()). The
+     * actual, potentially expensive, schema/register write remains gated
+     * by importFromApp()'s own comparison of two like-for-like
+     * content-derived versions.
+     *
+     * @return bool Always true — see above.
+     *
+     * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-run-auto-configuration-import-and-configuration-maintenance-req-003
      */
     private function shouldLoadSettings(): bool
     {
-        try {
-            // Get the current app version.
-            $currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
-
-            $this->logger->info(
-                    'SettingsService: Checking if settings should be loaded',
-                    [
-                        'current_app_version' => $currentAppVersion,
-                    ]
-                    );
-
-            // Get the configuration service to check stored version.
-            $configurationService = $this->getConfigurationService();
-            $appId         = \OCA\SoftwareCatalog\AppInfo\Application::APP_ID;
-            $storedVersion = $configurationService->getConfiguredAppVersion($appId);
-
-            $this->logger->info(
-                    'SettingsService: Version comparison details',
-                    [
-                        'current_app_version'    => $currentAppVersion,
-                        'stored_config_version'  => $storedVersion,
-                        'stored_version_is_null' => $storedVersion === null,
-                    ]
-                    );
-
-            // If no stored version exists, we need to load settings.
-            if ($storedVersion === null) {
-                $this->logger->info('SettingsService: No stored version found, settings should be loaded');
-                return true;
-            }
-
-            // Compare versions using semantic versioning.
-            // Load settings if current version is newer than stored version.
-            $shouldLoad = version_compare($currentAppVersion, $storedVersion, '>');
-
-            $this->logger->info(
-                    'SettingsService: Version comparison result',
-                    [
-                        'current_version'        => $currentAppVersion,
-                        'stored_version'         => $storedVersion,
-                        'should_load'            => $shouldLoad,
-                        'version_compare_result' => version_compare($currentAppVersion, $storedVersion),
-                    ]
-                    );
-
-            return $shouldLoad;
-        } catch (\Exception $e) {
-            // If we can't determine versions, err on the side of loading settings.
-            $this->logger->warning(
-                    'Failed to check if settings should be loaded: '.$e->getMessage(),
-                    [
-                        'exception' => $e,
-                    ]
-                    );
-            return true;
-        }//end try
+        return true;
     }//end shouldLoadSettings()
 
     /**
