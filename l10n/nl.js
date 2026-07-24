@@ -441,7 +441,16 @@ OC.L10N.register(
     "What was your experience with this software?" : "Wat was uw ervaring met deze software?",
     "Submit review" : "Beoordeling indienen",
     "Thank you — your review was submitted for moderation" : "Bedankt — uw beoordeling is ingediend ter moderatie",
-    "Could not submit your review" : "Kon uw beoordeling niet indienen"
+    "Could not submit your review" : "Kon uw beoordeling niet indienen",
+    "Failed to switch organisation" : "Wisselen van organisatie is mislukt",
+    "Manage members" : "Leden beheren",
+    "Manage access to {name}" : "Toegang tot {name} beheren",
+    "Grant access to an existing Nextcloud user" : "Toegang geven aan een bestaande Nextcloud-gebruiker",
+    "Grant access" : "Toegang geven",
+    "Current members" : "Huidige leden",
+    "No members yet." : "Nog geen leden.",
+    "Revoke access" : "Toegang intrekken",
+    "Close" : "Sluiten"
 },
 "nplurals=2; plural=(n != 1);"
 );

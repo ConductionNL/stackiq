@@ -404,7 +404,16 @@ OC.L10N.register(
     "What was your experience with this software?" : "What was your experience with this software?",
     "Submit review" : "Submit review",
     "Thank you — your review was submitted for moderation" : "Thank you — your review was submitted for moderation",
-    "Could not submit your review" : "Could not submit your review"
+    "Could not submit your review" : "Could not submit your review",
+    "Failed to switch organisation" : "Failed to switch organisation",
+    "Manage members" : "Manage members",
+    "Manage access to {name}" : "Manage access to {name}",
+    "Grant access to an existing Nextcloud user" : "Grant access to an existing Nextcloud user",
+    "Grant access" : "Grant access",
+    "Current members" : "Current members",
+    "No members yet." : "No members yet.",
+    "Revoke access" : "Revoke access",
+    "Close" : "Close"
 },
 "nplurals=2; plural=(n != 1);"
 );
