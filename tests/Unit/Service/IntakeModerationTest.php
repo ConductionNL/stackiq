@@ -9,6 +9,12 @@
  * unpublished. Also covers anti-spam validation, privileged-key stripping,
  * duplicate-pending refusal, and the not-pending / peer-sourced guards.
  *
+ * Also covers (catalog-ratings, softwarecatalog#375) that `ModerationService`
+ * generalised to a second type (`beoordeeling`) without changing ANY of the
+ * above default-organisatie assertions — every test above calls
+ * `approve()`/`reject()`/`listPending()` with no `$type` argument, so they
+ * keep exercising the exact pre-existing organisatie/registratiestatus path.
+ *
  * @category  Tests
  * @package   OCA\SoftwareCatalog\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
@@ -17,6 +23,7 @@
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
  */
 
 declare(strict_types=1);
@@ -241,6 +248,87 @@ class IntakeModerationTest extends TestCase
         $this->assertCount(1, $result['items']);
         $this->assertSame('Q1', $result['items'][0]['naam']);
     }//end testListPending()
+
+    /**
+     * beoordeeling (catalog-ratings, softwarecatalog#375): approval sets
+     * `status = approved` — no publicatiedatum stamping involved (the
+     * schema's own status-conditioned public RBAC rule does that job).
+     *
+     * @return void
+     *
+     * @spec openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
+     */
+    public function testBeoordeelingApprovalSetsStatusApproved(): void
+    {
+        $pending       = $this->entity(['id' => 'rev-1', 'naam' => 'Great tool', 'status' => 'pending']);
+        $objectService = $this->objectServiceWithFind($pending);
+        $moderation    = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
+
+        $result = $moderation->approve('rev-1', type: ModerationService::MODERATED_TYPE_REVIEW);
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame('approved', $result['status']);
+        $stored = $this->saved[0];
+        $this->assertSame('approved', $stored['status']);
+        $this->assertArrayNotHasKey('publicatiedatum', $stored);
+    }//end testBeoordeelingApprovalSetsStatusApproved()
+
+    /**
+     * beoordeeling: rejection sets `status = rejected` and stays hidden.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
+     */
+    public function testBeoordeelingRejectionSetsStatusRejected(): void
+    {
+        $pending       = $this->entity(['id' => 'rev-2', 'naam' => 'Meh tool', 'status' => 'pending']);
+        $objectService = $this->objectServiceWithFind($pending);
+        $moderation    = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
+
+        $result = $moderation->reject('rev-2', type: ModerationService::MODERATED_TYPE_REVIEW);
+
+        $this->assertTrue($result['ok']);
+        $this->assertSame('rejected', $result['status']);
+        $this->assertSame('rejected', $this->saved[0]['status']);
+    }//end testBeoordeelingRejectionSetsStatusRejected()
+
+    /**
+     * beoordeeling: pending list uses the `status` field, not `registratiestatus`.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
+     */
+    public function testBeoordeelingListPending(): void
+    {
+        $one           = $this->entity(['id' => 'rev-3', 'naam' => 'Q1 review', 'status' => 'pending']);
+        $objectService = $this->objectService([$one]);
+        $moderation    = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
+
+        $result = $moderation->listPending(type: ModerationService::MODERATED_TYPE_REVIEW);
+        $this->assertTrue($result['ok']);
+        $this->assertCount(1, $result['items']);
+        $this->assertSame('Q1 review', $result['items'][0]['naam']);
+    }//end testBeoordeelingListPending()
+
+    /**
+     * beoordeeling: a non-pending review cannot be (re-)decided — same
+     * idempotency guard as organisatie, generalised across the status field.
+     *
+     * @return void
+     */
+    public function testBeoordeelingNonPendingCannotBeApproved(): void
+    {
+        $active        = $this->entity(['id' => 'rev-4', 'naam' => 'Already approved', 'status' => 'approved']);
+        $objectService = $this->objectServiceWithFind($active);
+        $moderation    = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
+
+        $result = $moderation->approve('rev-4', type: ModerationService::MODERATED_TYPE_REVIEW);
+        $this->assertFalse($result['ok']);
+        $this->assertStringContainsString('not pending', $result['reason']);
+        $this->assertSame([], $this->saved);
+    }//end testBeoordeelingNonPendingCannotBeApproved()
 
     /**
      * Build an ObjectService mock whose searchObjects returns $found and whose
