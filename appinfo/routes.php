@@ -220,6 +220,14 @@ return [
         ['name' => 'merge#dryRun', 'url' => '/api/organisaties/{uuid}/merge/dry-run', 'verb' => 'POST'],
         ['name' => 'merge#execute', 'url' => '/api/organisaties/{uuid}/merge', 'verb' => 'POST'],
 
+        // SELF-SERVICE COLLEAGUE ACCESS (multi-org-membership) — beheerder-of-this-
+        // organisation gated (authorizeBeheerder() guard in the controller body,
+        // no-admin-idor safe). Delegates the actual membership mutation to
+        // OpenRegister's OrganisationService::joinOrganisation()/leaveOrganisation().
+        // @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
+        ['name' => 'organisationMembers#grant', 'url' => '/api/organisations/{uuid}/members', 'verb' => 'POST'],
+        ['name' => 'organisationMembers#revoke', 'url' => '/api/organisations/{uuid}/members/{userId}', 'verb' => 'DELETE'],
+
         // FEDERATION SETTINGS / MANUAL PULL — admin-gated (AuthorizedAdminSetting).
         ['name' => 'federation#status', 'url' => '/api/federation/status', 'verb' => 'GET'],
         ['name' => 'federation#addPeer', 'url' => '/api/federation/peers', 'verb' => 'POST'],
