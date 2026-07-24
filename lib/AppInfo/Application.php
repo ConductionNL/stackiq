@@ -107,6 +107,8 @@ use Psr\Log\LoggerInterface;
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ *
+ * @spec openspec/specs/settings-service/spec.md
  */
 class Application extends App implements IBootstrap
 {
@@ -129,6 +131,8 @@ class Application extends App implements IBootstrap
      * @param IRegistrationContext $context Registration context
      *
      * @return void
+     *
+     * @spec openspec/specs/settings-service/spec.md
      */
     public function register(IRegistrationContext $context): void
     {
@@ -413,11 +417,41 @@ class Application extends App implements IBootstrap
                 }
                 );
 
-        // Register the registration moderation/approval-queue service.
+        // Register the registration/review moderation/approval-queue service
+        // (generalised to also moderate beoordeeling — softwarecatalog#375).
         $context->registerService(
                 \OCA\SoftwareCatalog\Service\ModerationService::class,
                 function ($container) {
                     return new \OCA\SoftwareCatalog\Service\ModerationService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    logger: $container->get('Psr\Log\LoggerInterface')
+                    );
+                }
+                );
+
+        // Register the authenticated review-submission service (catalog-ratings,
+        // softwarecatalog#375). Author identity comes from IUserSession, never
+        // from client input.
+        $context->registerService(
+                \OCA\SoftwareCatalog\Service\ReviewService::class,
+                function ($container) {
+                    return new \OCA\SoftwareCatalog\Service\ReviewService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    userSession: $container->get(\OCP\IUserSession::class),
+                    logger: $container->get('Psr\Log\LoggerInterface')
+                    );
+                }
+                );
+
+        // Register the public approved-only review aggregate/read service
+        // (catalog-ratings, softwarecatalog#375) — split from ReviewService
+        // to keep each class under the complexity budget.
+        $context->registerService(
+                \OCA\SoftwareCatalog\Service\ReviewAggregateService::class,
+                function ($container) {
+                    return new \OCA\SoftwareCatalog\Service\ReviewAggregateService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
                     logger: $container->get('Psr\Log\LoggerInterface')

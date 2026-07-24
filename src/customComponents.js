@@ -31,6 +31,7 @@ import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
+import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 
 export default {
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
@@ -143,4 +144,13 @@ export default {
 	// declarative type:index page would.
 	// @spec openspec/specs/suite-wizard/spec.md
 	SuitesIndexView,
+	// --- Ratings & reviews (softwarecatalog#375). ---
+	// Approved-only aggregate (average + count) + a bounded approved-review
+	// list, computed server-side by ReviewService, plus the "Write a review"
+	// action opening SubmitReviewModal.vue. No built-in body widget
+	// expresses a moderated, authored, cross-schema aggregate + submit
+	// flow, so it stays a custom body-widget component (ModuleDetail's
+	// bodyWidgets, same escape hatch as ContractApprovalPanel).
+	// @spec openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
+	ReviewsPanel,
 }

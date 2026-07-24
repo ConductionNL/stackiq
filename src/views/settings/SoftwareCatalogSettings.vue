@@ -90,6 +90,18 @@
 		<!-- Registration Moderation Queue Section -->
 		<ModerationQueue />
 
+		<!-- Review Moderation Queue Section (softwarecatalog#375) — the
+		     same ModerationQueue.vue component, parameterised for the
+		     beoordeeling type, per catalog-ratings spec's "reuse the
+		     pattern, don't invent a second mechanism" requirement. -->
+		<ModerationQueue
+			type="beoordeeling"
+			entity-label="review"
+			:name="t('softwarecatalog', 'Review moderation')"
+			:description="t('softwarecatalog', 'Review pending ratings and testimonials. Approving a review publishes it; rejecting leaves it hidden.')"
+			:loading-text="t('softwarecatalog', 'Loading pending reviews…')"
+			:empty-description="t('softwarecatalog', 'There are no pending reviews right now.')" />
+
 		<!-- Catalog Federation Section -->
 		<FederationSettings />
 
@@ -104,6 +116,7 @@
 <script>
 import { defineComponent } from 'vue'
 import { loadState } from '@nextcloud/initial-state'
+import { translate as t } from '@nextcloud/l10n'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 import {
 	NcButton,
@@ -237,6 +250,8 @@ export default defineComponent({
 	},
 
 	methods: {
+		t,
+
 		/**
 		 * Handle catalog location input change
 		 *

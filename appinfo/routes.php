@@ -200,10 +200,19 @@ return [
         // until an admin approves). Anti-spam rate-limited.
         ['name' => 'intake#submit', 'url' => '/api/intake/register', 'verb' => 'POST'],
 
-        // REGISTRATION MODERATION / APPROVAL QUEUE — admin-gated (isAdmin guard).
+        // REGISTRATION / REVIEW MODERATION / APPROVAL QUEUE — admin-gated
+        // (AuthorizedAdminSetting). Selects organisatie (default) or
+        // beoordeeling via the `type` query param — one generalised
+        // mechanism, see ModerationService.
         ['name' => 'moderation#pending', 'url' => '/api/moderation/pending', 'verb' => 'GET'],
         ['name' => 'moderation#approve', 'url' => '/api/moderation/{uuid}/approve', 'verb' => 'POST'],
         ['name' => 'moderation#reject', 'url' => '/api/moderation/{uuid}/reject', 'verb' => 'POST'],
+
+        // CATALOG RATINGS (softwarecatalog#375) — authenticated review
+        // submission (author/status always server-stamped, never from the
+        // client) + public approved-only aggregate for module/dienst detail.
+        ['name' => 'review#submit', 'url' => '/api/reviews', 'verb' => 'POST'],
+        ['name' => 'review#aggregate', 'url' => '/api/reviews/aggregate', 'verb' => 'GET'],
 
         // ORGANISATION MERGE (gemeentelijke herindeling / leveranciersovername) —
         // admin-gated (isAdmin guard in the controller body, no-admin-idor safe).

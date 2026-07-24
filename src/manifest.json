@@ -304,6 +304,9 @@
 					{ "id": "4", "widgetId": "md-compliance", "gridX": 0, "gridY": 8, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "5", "widgetId": "md-versions", "gridX": 6, "gridY": 8, "gridWidth": 6, "gridHeight": 4 }
 				],
+				"bodyWidgets": [
+					{ "id": "md-reviews", "component": "ReviewsPanel", "props": { "objectId": "@objectId", "subjectType": "module" }, "placement": "end", "colSpan": 12 }
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -601,10 +604,10 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "beoordeeling",
 				"columns": [
-					"titel",
+					"naam",
 					"auteur",
-					"score",
-					"datum"
+					"waardering",
+					"status"
 				],
 				"sidebar": {
 					"enabled": true,
