@@ -3,13 +3,21 @@
 /**
  * Regression + negative tests for AangebodenGebruikService's already-correct
  * cross-organisation relationship scoping (vendor-visibility-rbac REQ-001,
- * REQ-002, REQ-005).
+ * REQ-002, REQ-005, REQ-008).
  *
  * discovery.md's audit found these paths already implement the correct
  * "resolve caller relationship, deny BEFORE the RBAC-bypass query" ordering.
  * This test locks that behaviour in with regression coverage so it cannot
  * silently regress, per tasks.md Task 3/Task 4 and design.md's Trade-offs
  * section ("Lock in already-correct behaviour").
+ *
+ * schema-rbac-hardening adds coverage for getGebruiksWhereDeelnemers(): the
+ * app-level, session-scoped `deelnemers` bypass query that stands in for the
+ * documented residual (REQ-008, Decision 6) — OpenRegister's
+ * `OperatorEvaluator` has no array-contains operator, so `deelnemers`-array
+ * sharing cannot be expressed as a schema-RBAC match condition, and this
+ * app-level path is the only enforcement point. These tests confirm the
+ * schema-RBAC edits in this change did not affect it.
  *
  * @category  Test
  * @package   OCA\SoftwareCatalog\Tests\Unit\Service
@@ -21,6 +29,7 @@
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-every-rbac-bypassing-gebruik-koppeling-contract-read-must-evaluate-its-deny-check-before-issuing-the-bypass-query-req-001
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-aanbod-beheerder-vendor-reads-of-gebruik-koppeling-objects-must-be-scoped-to-the-vendor-s-own-offered-products-req-002
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-deelname-and-afnemer-relationship-reads-remain-unaffected-req-005
+ * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-gebruik-koppeling-and-organisatie-schema-level-rbac-reads-must-deny-cross-organisation-access-for-gebruik-beheerder-req-008
  */
 
 declare(strict_types=1);
@@ -264,6 +273,65 @@ class AangebodenGebruikServiceTest extends TestCase
         $this->assertSame(0, $result['total']);
 
     }//end testGetKoppelingenGebruikByUuidAmbtenaarBypassesOwnershipCheck()
+
+
+    /**
+     * schema-rbac-hardening / REQ-008 regression: with no current
+     * organisation (anonymous / no active org), getGebruiksWhereDeelnemers()
+     * returns the documented empty envelope and NEVER issues the
+     * RBAC-disabled search — deny before grant (REQ-001), unaffected by this
+     * change's schema-RBAC edits.
+     *
+     * @return void
+     */
+    public function testGetGebruiksWhereDeelnemersWithNoCurrentOrgNeverSearches(): void
+    {
+        $this->setUpService(activeOrgUuid: null);
+
+        $this->objectService->expects($this->never())->method('searchObjects');
+
+        $result = $this->service->getGebruiksWhereDeelnemers();
+
+        $this->assertSame([], $result['gebruiks']);
+        $this->assertSame(0, $result['count']);
+        $this->assertSame('No current organization available', $result['message']);
+
+    }//end testGetGebruiksWhereDeelnemersWithNoCurrentOrgNeverSearches()
+
+
+    /**
+     * schema-rbac-hardening / REQ-008 (Decision 6) regression: with a
+     * current organisation, the RBAC-disabled deelnemers query is
+     * field-scoped to `deelnemers => currentOrg` from the caller's own
+     * session — never client-supplied, and never an unscoped
+     * cross-organisation query. Confirms this app-level bypass path (the
+     * documented stand-in for the undeliverable array-contains schema
+     * match) still works exactly as before after this change's schema-RBAC
+     * edits.
+     *
+     * @return void
+     */
+    public function testGetGebruiksWhereDeelnemersScopesQueryToCurrentOrg(): void
+    {
+        $this->setUpService(activeOrgUuid: 'org-a');
+
+        $capturedQuery = null;
+        $this->objectService->expects($this->once())
+            ->method('searchObjects')
+            ->willReturnCallback(
+                function (array $query) use (&$capturedQuery) {
+                    $capturedQuery = $query;
+                    return [];
+                }
+            );
+
+        $result = $this->service->getGebruiksWhereDeelnemers();
+
+        $this->assertIsArray($capturedQuery);
+        $this->assertSame('org-a', $capturedQuery['deelnemers']);
+        $this->assertSame(0, $result['count']);
+
+    }//end testGetGebruiksWhereDeelnemersScopesQueryToCurrentOrg()
 
 
 }//end class

@@ -84,9 +84,39 @@ class AanbodController extends Controller
      * @PublicPage
      *
      * @spec openspec/specs/aanbod-listings/spec.md
+     * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-must-require-authentication-explicitly-not-implicitly-req-009
      */
     public function getAanbod(): JSONResponse
     {
+        // REQ-009: explicit authentication guard, mirroring
+        // AangebodenGebruikController::getGebruiksWhereAfnemer() (REQ-004). Do
+        // NOT rely on AanbodService::getAanbod()'s internal
+        // getCurrentOrganisation() resolving to null for an anonymous session
+        // as the sole safeguard — reject before the service is ever invoked
+        // (deny-before-grant, REQ-001).
+        if ($this->userSession->getUser() === null) {
+            $this->logger->info(
+                    'API: Rejecting unauthenticated aanbod request',
+                    [
+                        'endpoint' => '/api/aanbod',
+                        'method'   => 'GET',
+                    ]
+                    );
+
+            return new JSONResponse(
+                    [
+                        'results' => [],
+                        'total'   => 0,
+                        'page'    => 1,
+                        'pages'   => 0,
+                        'limit'   => 20,
+                        'offset'  => 0,
+                        'message' => 'Not authenticated',
+                    ],
+                    Http::STATUS_UNAUTHORIZED
+                    );
+        }//end if
+
         $this->logger->info(
                 'API: Getting aanbod objects',
                 [

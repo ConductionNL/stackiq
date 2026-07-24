@@ -2422,7 +2422,12 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "gebruik-beheerder",
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
             {
               "group": "public",
               "match": {
@@ -3077,7 +3082,18 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "gebruik-beheerder",
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "afnemer": "$organisation"
+              }
+            },
             {
               "group": "aanbod-beheerder",
               "match": {
@@ -3397,14 +3413,14 @@
           ],
           "read": [
             "ambtenaar",
-            "functioneel-beheerder",
-            "gebruik-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
             "software-catalog-admins",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "gebruik-raadpleger",
+            {"group": "functioneel-beheerder", "match": {"_organisation": "$organisation"}},
+            {"group": "gebruik-beheerder", "match": {"_organisation": "$organisation"}},
+            {"group": "vng-raadpleger", "match": {"_organisation": "$organisation"}},
+            {"group": "software-catalog-users", "match": {"_organisation": "$organisation"}},
+            {"group": "organisatie-beheerder", "match": {"_organisation": "$organisation"}},
+            {"group": "organisaties-beheerder", "match": {"_organisation": "$organisation"}},
+            {"group": "gebruik-raadpleger", "match": {"_organisation": "$organisation"}},
             {"group": "aanbod-beheerder", "match": {"_organisation": "$organisation"}}
           ],
           "update": [
@@ -3777,7 +3793,12 @@
             "vng-raadpleger"
           ],
           "read": [
-            "gebruik-beheerder",
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
             {
               "group": "public",
               "match": {
