@@ -45,9 +45,9 @@ The service MUST expose get/set (and focused get/update) pairs for voorzieningen
 
 ### Requirement: The system SHALL run auto-configuration, import and configuration maintenance (REQ-003)
 
-`autoConfigure`, `autoConfigureAfterImport`, `configureOpenCatalogi`, `initialize`, `loadSettings`, `performConsolidatedAutoConfiguration`, `manualImport`, `forceUpdate`, `resetAutoConfiguration`, `compactToJsonConfiguration`, `cleanupOldConfiguration`, and `clearConfigurationCache` MUST create/repair the register-schema configuration in OpenRegister, import seed data, and maintain the cached configuration, returning a result summary. `loadSettings` MUST compute the import version passed to `importFromApp` from the content of both the monolith register file and any merged ADR-037 fragment files, so that a change to either one produces a different version and forces a re-import rather than being silently skipped by the version gate. `initialize` MUST NOT rely on any comparison between this app's own semantic version and the register-content version string stored by a previous `importFromApp` call to decide whether to invoke `loadSettings` at all — those are two unrelated versioning schemes on the same stored value, and comparing them can permanently prevent `loadSettings` from ever running again regardless of subsequent register changes. After a successful import, `loadSettings`/`initialize` MUST verify that every schema slug present in the effective (monolith + fragments) merged register resolves in OpenRegister, and that every schema id this app resolves via its own object-type lookups is non-null, recording any mismatch as a warning rather than allowing a partial or no-op import to be reported as full success.
+`autoConfigure`, `autoConfigureAfterImport`, `configureOpenCatalogi`, `initialize`, `loadSettings`, `performConsolidatedAutoConfiguration`, `manualImport`, `forceUpdate`, `resetAutoConfiguration`, `compactToJsonConfiguration`, `cleanupOldConfiguration`, and `clearConfigurationCache` MUST create/repair the register-schema configuration in OpenRegister, import seed data, and maintain the cached configuration, returning a result summary. `loadSettings` MUST compute the import version passed to `importFromApp` from the content of both the monolith register file and any merged ADR-037 fragment files, so that a change to either one produces a different version and forces a re-import rather than being silently skipped by the version gate. `initialize` MUST NOT rely on any comparison between this app's own semantic version and the register-content version string stored by a previous `importFromApp` call to decide whether to invoke `loadSettings` at all — those are two unrelated versioning schemes on the same stored value, and comparing them can permanently prevent `loadSettings` from ever running again regardless of subsequent register changes. Before calling `importFromApp`, `loadSettings` MUST compare its freshly computed content-derived version against the version OpenRegister already has stored for this app (via `ConfigurationService::getConfiguredAppVersion`) and MUST call `importFromApp` with `force=true` whenever the two differ — even when the caller's own `$force` argument is `false` — because `importFromApp(force: false)` only records a changed version without applying property/authorization changes to already-existing schemas (see https://github.com/ConductionNL/openregister/issues/2075). When the computed and stored versions match, `loadSettings` MUST NOT force the import, preserving the existing cheap no-op path; an explicit caller-supplied `force=true` MUST continue to force the import regardless of this comparison. After a successful import, `loadSettings`/`initialize` MUST verify that every schema slug present in the effective (monolith + fragments) merged register resolves in OpenRegister, and that every schema id this app resolves via its own object-type lookups is non-null, recording any mismatch as a warning rather than allowing a partial or no-op import to be reported as full success.
 
-(Previously: the import version was derived only from the register JSON's own `info.version` field plus a hash of the fragment files — a monolith edit that did not also bump `info.version` produced a byte-identical version string and `importFromApp` silently skipped the import. `initialize` additionally gated entry into `loadSettings` on comparing this app's own semver against the stored register-content version, which could permanently block `loadSettings` from running again at all. No post-import verification existed.)
+(Previously: the import version was derived only from the register JSON's own `info.version` field plus a hash of the fragment files — a monolith edit that did not also bump `info.version` produced a byte-identical version string and `importFromApp` silently skipped the import. `initialize` additionally gated entry into `loadSettings` on comparing this app's own semver against the stored register-content version, which could permanently block `loadSettings` from running again at all. No post-import verification existed. After the content-derived version fix (case 3 below) shipped, live verification showed the stored version now legitimately advances on register content changes, but `importFromApp(force: false)` still does not apply the corresponding changes to schemas that already exist — so the instance looked up to date while the schema was stale, and the newly-advanced version additionally gated off any later non-forced retry. `loadSettings` did not yet force the import based on its own version comparison.)
 
 #### Scenario: REQ-003 case 1
 
@@ -79,6 +79,26 @@ The service MUST expose get/set (and focused get/update) pairs for voorzieningen
 - WHEN `initialize()` runs during that upgrade
 - THEN `loadSettings()` MUST be invoked regardless of how the stored register-content version compares to the app's own semantic version
 - AND the decision of whether an actual re-import occurs MUST come only from `importFromApp`'s comparison of the newly computed content-derived version against the stored one
+
+#### Scenario: REQ-003 case 6 — a stale stored version forces the import so changes to existing schemas apply
+
+- GIVEN `loadSettings()`'s freshly computed content-derived version differs from the version `ConfigurationService::getConfiguredAppVersion` reports as already stored for this app
+- AND the caller invoked `loadSettings()` with `force=false`
+- WHEN `loadSettings()` calls `importFromApp`
+- THEN `importFromApp` MUST be called with `force=true`, so changes to already-existing schemas are applied rather than only recorded on the stored version marker
+
+#### Scenario: REQ-003 case 7 — matching versions preserve the cheap no-op path
+
+- GIVEN `loadSettings()`'s freshly computed content-derived version matches the version `ConfigurationService::getConfiguredAppVersion` reports as already stored for this app
+- AND the caller invoked `loadSettings()` with `force=false`
+- WHEN `loadSettings()` calls `importFromApp`
+- THEN `importFromApp` MUST be called with `force=false`, so an unchanged register still short-circuits at OpenRegister's version gate instead of re-importing on every call
+
+#### Scenario: REQ-003 case 8 — an explicit caller force always forces
+
+- GIVEN the caller invoked `loadSettings()` with `force=true`
+- WHEN `loadSettings()` calls `importFromApp`
+- THEN `importFromApp` MUST be called with `force=true` regardless of how the computed and stored versions compare
 
 ### Requirement: The system SHALL manage email settings, templates and connectivity tests (REQ-004)
 
