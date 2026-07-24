@@ -530,7 +530,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 *
 		 * @param {string} uuid The organisation UUID.
 		 * @return {Promise<string[]>} The member user ids.
-		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregisters-organisationservice-not-reimplemented-req-006
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
 		 */
 		async fetchMembers(uuid) {
 			const url = generateUrl('/apps/openregister/api/organisations/{uuid}', { uuid })

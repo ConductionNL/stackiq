@@ -58,7 +58,7 @@ let _activeOrganisationUuid = null
  *
  * @param {string|null} uuid The active organisation UUID, or null/empty to clear.
  * @return {void}
- * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregisters-organisationservice-not-reimplemented-req-006
+ * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
  */
 export function setActiveOrganisationUuid(uuid) {
 	_activeOrganisationUuid = (typeof uuid === 'string' && uuid.length > 0) ? uuid : null
@@ -68,7 +68,7 @@ export function setActiveOrganisationUuid(uuid) {
  * Read the module-level active-organisation UUID.
  *
  * @return {string|null} The active organisation UUID, or null when none is set.
- * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregisters-organisationservice-not-reimplemented-req-006
+ * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
  */
 export function getActiveOrganisationUuid() {
 	return _activeOrganisationUuid

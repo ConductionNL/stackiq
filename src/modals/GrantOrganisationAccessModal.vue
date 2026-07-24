@@ -141,7 +141,7 @@ export default {
 		 *
 		 * @param {boolean} isOpen The new `open` prop value.
 		 * @return {void}
-		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregisters-organisationservice-not-reimplemented-req-006
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
 		 */
 		open(isOpen) {
 			if (isOpen && this.organisationUuid) {
@@ -155,7 +155,7 @@ export default {
 		 * Load the organisation's current member list.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregisters-organisationservice-not-reimplemented-req-006
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
 		 */
 		async loadMembers() {
 			this.loading = true

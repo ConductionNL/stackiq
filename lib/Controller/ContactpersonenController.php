@@ -1580,7 +1580,7 @@ class ContactpersonenController extends Controller
             // OrganisationMembersController; this flag merely lets the
             // frontend decide whether to render the "manage members"
             // affordance at all).
-            // @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004.
+            // See @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004 for the authorization contract this flag hints at.
             'isBeheerder'   => false,
         ];
     }//end buildEmptyMeResponse()

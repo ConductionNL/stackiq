@@ -132,7 +132,7 @@ export default {
 		 * translated placeholder when not yet resolved.
 		 *
 		 * @return {string}
-		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-the-organisation-switcher-must-list-only-the-authenticated-users-own-organisations-req-003
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-the-organisation-switcher-must-list-only-the-authenticated-user-s-own-organisations-req-003
 		 */
 		activeOrganisationName() {
 			return resolveActiveOrganisationName(
@@ -151,7 +151,7 @@ export default {
 		 * affordance specifically, not the whole component.
 		 *
 		 * @return {Array}
-		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-the-organisation-switcher-must-list-only-the-authenticated-users-own-organisations-req-003
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-the-organisation-switcher-must-list-only-the-authenticated-user-s-own-organisations-req-003
 		 */
 		otherOrganisations() {
 			return resolveOtherOrganisations(this.organisations, this.activeOrganisationUuid)

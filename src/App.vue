@@ -203,7 +203,7 @@ export default {
 		 * stamped) rather than blocking boot.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-the-organisation-switcher-must-list-only-the-authenticated-users-own-organisations-req-003
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-the-organisation-switcher-must-list-only-the-authenticated-user-s-own-organisations-req-003
 		 */
 		async loadOrganisations() {
 			try {
