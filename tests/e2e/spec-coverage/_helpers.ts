@@ -92,6 +92,27 @@ export async function dismissSupportDialog(page: Page): Promise<void> {
 	await dialog.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 }
 
+/**
+ * Dismiss the first-run onboarding walkthrough ("Welcome to Software Catalog").
+ * It renders a full-screen dim overlay (`.cn-walkthrough__dim--full`) that sits
+ * ABOVE the app chrome and intercepts every pointer event, so any nav click made
+ * while the tour is open silently misses its target. The user's own state may or
+ * may not have the tour marked seen, so we close it defensively on each route
+ * load rather than relying on persisted "seen" state.
+ */
+export async function dismissWalkthrough(page: Page): Promise<void> {
+	const tour = page.locator('.cn-walkthrough').first()
+	if ((await tour.count()) === 0) return
+	if ((await tour.isVisible().catch(() => false)) === false) return
+	const closeBtn = tour.getByRole('button', { name: /close tour/i }).first()
+	if (await closeBtn.count()) {
+		await closeBtn.click({ timeout: 5000 }).catch(() => {})
+	} else {
+		await page.keyboard.press('Escape').catch(() => {})
+	}
+	await tour.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+}
+
 /** Deep-link to a route and wait for the Vue shell + main region to mount. */
 export async function gotoAppRoute(page: Page, route: string): Promise<void> {
 	// The in-app router runs in hash mode, so deep links are `#<route>`. A bare
@@ -103,6 +124,7 @@ export async function gotoAppRoute(page: Page, route: string): Promise<void> {
 	await page.locator(APP_SHELL).first().waitFor({ state: 'attached', timeout: 30000 })
 	await page.locator(APP_MAIN).first().waitFor({ state: 'visible', timeout: 30000 })
 	await dismissSupportDialog(page)
+	await dismissWalkthrough(page)
 }
 
 /**
@@ -122,7 +144,30 @@ export function appNav(page: Page) {
  */
 export async function navClickTo(page: Page, navLabel: string): Promise<void> {
 	await gotoAppRoute(page, '/')
-	const link = appNav(page).getByRole('link', { name: navLabel, exact: true }).first()
+	const nav = appNav(page)
+	const link = nav.getByRole('link', { name: navLabel, exact: true }).first()
+
+	// Some entries live inside a collapsible parent submenu that starts
+	// collapsed (e.g. "Reports & Compliance" → "Compliance matrix"), so the
+	// nested link is present in the DOM but not yet visible. Expand collapsed
+	// parents — exactly what a user does before clicking the child. A collapsed
+	// parent's toggle is labelled "Open menu"; opening it flips the label to
+	// "Close menu", so re-querying `.first()` each pass walks through the
+	// remaining collapsed parents without re-closing the ones just opened.
+	if ((await link.isVisible().catch(() => false)) === false) {
+		const maxExpansions = await nav.locator('button[aria-label="Open menu"]').count()
+		for (let i = 0; i < maxExpansions; i++) {
+			const toggle = nav.locator('button[aria-label="Open menu"]').first()
+			if ((await toggle.isVisible().catch(() => false)) === false) {
+				break
+			}
+			await toggle.click().catch(() => {})
+			if (await link.isVisible().catch(() => false)) {
+				break
+			}
+		}
+	}
+
 	await link.waitFor({ state: 'visible', timeout: 30000 })
 	await link.click()
 	await page.locator(APP_MAIN).first().waitFor({ state: 'visible', timeout: 30000 })
