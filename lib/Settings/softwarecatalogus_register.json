@@ -3,8 +3,8 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.4.1",
-    "changelog": "2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
+    "version": "2.4.2",
+    "changelog": "2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
   },
   "x-openregister": {
     "type": "application",
@@ -2345,57 +2345,6 @@
               "Samenwerking",
               "Leverancier"
             ]
-          },
-          "sbomLastImportedAt": {
-            "description": "Tijdstip waarop de laatste SBOM (Software Bill of Materials) voor deze versie is geïmporteerd",
-            "type": "string",
-            "format": "date-time",
-            "order": 20,
-            "title": "SBOM last imported on",
-            "visible": true,
-            "facetable": false,
-            "hideOnForm": true
-          },
-          "sbomFormat": {
-            "description": "Formaat van de laatst geïmporteerde SBOM",
-            "type": "string",
-            "order": 21,
-            "title": "SBOM format",
-            "visible": true,
-            "facetable": false,
-            "hideOnForm": true,
-            "enum": [
-              "cyclonedx-json",
-              "spdx-json"
-            ]
-          },
-          "sbomFileName": {
-            "description": "Bestandsnaam van de laatst geïmporteerde SBOM",
-            "type": "string",
-            "order": 22,
-            "title": "SBOM file name",
-            "visible": true,
-            "facetable": false,
-            "hideOnForm": true
-          },
-          "sbomComponents": {
-            "description": "De componenten die voor deze versie zijn geïmporteerd uit een SBOM",
-            "type": "array",
-            "visible": true,
-            "order": 23,
-            "facetable": false,
-            "title": "SBOM components",
-            "hideOnForm": true,
-            "$ref": "#/components/schemas/sbomComponent",
-            "x-relation-filter": { "moduleVersie": "@objectId" },
-            "items": {
-              "type": "object",
-              "objectConfiguration": {
-                "handling": "related-object"
-              },
-              "$ref": "#/components/schemas/sbomComponent",
-              "inversedBy": "moduleVersie"
-            }
           }
         },
         "archive": [],
@@ -7878,6 +7827,57 @@
             "order": 21,
             "facetable": false,
             "title": "EOL updated on"
+          },
+          "sbomLastImportedAt": {
+            "description": "Tijdstip waarop de laatste SBOM (Software Bill of Materials) voor deze versie is geïmporteerd",
+            "type": "string",
+            "format": "date-time",
+            "order": 22,
+            "title": "SBOM last imported on",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true
+          },
+          "sbomFormat": {
+            "description": "Formaat van de laatst geïmporteerde SBOM",
+            "type": "string",
+            "order": 23,
+            "title": "SBOM format",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true,
+            "enum": [
+              "cyclonedx-json",
+              "spdx-json"
+            ]
+          },
+          "sbomFileName": {
+            "description": "Bestandsnaam van de laatst geïmporteerde SBOM",
+            "type": "string",
+            "order": 24,
+            "title": "SBOM file name",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true
+          },
+          "sbomComponents": {
+            "description": "De componenten die voor deze versie zijn geïmporteerd uit een SBOM",
+            "type": "array",
+            "visible": true,
+            "order": 25,
+            "facetable": false,
+            "title": "SBOM components",
+            "hideOnForm": true,
+            "$ref": "#/components/schemas/sbomComponent",
+            "x-relation-filter": { "moduleVersie": "@objectId" },
+            "items": {
+              "type": "object",
+              "objectConfiguration": {
+                "handling": "related-object"
+              },
+              "$ref": "#/components/schemas/sbomComponent",
+              "inversedBy": "moduleVersie"
+            }
           }
         },
         "archive": [],
