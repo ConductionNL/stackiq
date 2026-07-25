@@ -44,11 +44,17 @@ export interface VoorzieningenConfig {
 /**
  * Build a basic-auth API context. Basic auth bypasses the CSRF requesttoken
  * that cookie writes require, so the seed/cleanup POST/DELETE calls succeed.
+ *
+ * `send: 'always'` is REQUIRED: Nextcloud answers an unauthenticated API
+ * request with `401` but WITHOUT a `WWW-Authenticate: Basic` challenge header,
+ * so Playwright's default reactive `httpCredentials` (send: 'unauthorized')
+ * never retries with the Authorization header and every seed/config call fails
+ * with 401. Sending the header pre-emptively on the first request fixes it.
  */
 export async function newApiContext(): Promise<APIRequestContext> {
 	return await playwrightRequest.newContext({
 		baseURL: BASE_URL,
-		httpCredentials: { username: NC_ADMIN_USER, password: NC_ADMIN_PASS },
+		httpCredentials: { username: NC_ADMIN_USER, password: NC_ADMIN_PASS, send: 'always' },
 		extraHTTPHeaders: { 'OCS-APIREQUEST': 'true' },
 	})
 }

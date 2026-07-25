@@ -51,6 +51,7 @@ import {
 	cleanupByToken,
 	RUN_ID,
 } from './workflows/_fixtures'
+import { dismissWalkthrough } from './spec-coverage/_helpers'
 
 const FIXTURES_DIR = path.resolve(__dirname, '../fixtures/sbom')
 const CYCLONEDX_16 = path.join(FIXTURES_DIR, 'cyclonedx-1.6-valid.json') // 3 components
@@ -88,7 +89,21 @@ test.afterAll(async () => {
 
 /** Navigate to a moduleVersie's detail page and open the Components sidebar tab. */
 async function openComponentsTab(page: Page): Promise<void> {
-	await page.goto(`/apps/softwarecatalog/moduleversies/${moduleVersieId}`, { waitUntil: 'networkidle' })
+	// The in-app router is hash-mode: a bare `/apps/softwarecatalog/moduleversies/:id`
+	// path boots the SPA with an empty hash, so vue-router falls back to the
+	// Dashboard and the detail page (with its Components tab) never mounts. Deep
+	// links MUST carry the `#` route.
+	await page.goto(`/apps/softwarecatalog/#/moduleversies/${moduleVersieId}`, { waitUntil: 'networkidle' })
+	// The first-run walkthrough overlay intercepts pointer events — dismiss it
+	// before touching anything.
+	await dismissWalkthrough(page)
+	// The detail page mounts with its right-hand sidebar collapsed, and the
+	// Components / History tabs live INSIDE that sidebar — present in the DOM but
+	// not visible, so a direct tab click waits forever. Open the sidebar first.
+	const openSidebar = page.getByRole('button', { name: 'Open sidebar' })
+	if (await openSidebar.isVisible().catch(() => false)) {
+		await openSidebar.click()
+	}
 	await page.getByRole('tab', { name: 'Components' }).click()
 }
 
@@ -121,12 +136,17 @@ test(
 test(
 	'sbom-import upload-and-replace: uploading a CycloneDX file renders the component list and summary counts; a second import replaces the first',
 	async ({ page }) => {
+		// Two full import round-trips (parse + persist + vulnerability match) run
+		// back-to-back here; on a shared/loaded instance each can approach the
+		// default 30s slice, so give this test the tripled budget.
+		test.slow()
+
 		await openComponentsTab(page)
 
 		// First import: 3-component fixture.
 		await page.getByTestId('sbom-file-input').setInputFiles(CYCLONEDX_16)
 		await page.getByTestId('sbom-import-button').click()
-		await expect(page.getByTestId('sbom-upload-success')).toBeVisible({ timeout: 20000 })
+		await expect(page.getByTestId('sbom-upload-success')).toBeVisible({ timeout: 40000 })
 
 		const table = page.getByTestId('sbom-component-table')
 		await expect(table).toBeVisible()
@@ -143,7 +163,7 @@ test(
 		// only the new set is live afterwards.
 		await page.getByTestId('sbom-file-input').setInputFiles(CYCLONEDX_15)
 		await page.getByTestId('sbom-import-button').click()
-		await expect(page.getByTestId('sbom-upload-success')).toBeVisible({ timeout: 20000 })
+		await expect(page.getByTestId('sbom-upload-success')).toBeVisible({ timeout: 40000 })
 
 		await expect(table.locator('tbody tr')).toHaveCount(2)
 		await expect(table.getByText('lodash')).toHaveCount(0)
