@@ -881,6 +881,19 @@ class SettingsService
             'compliancy'    => 'compliancy_schema',
             'moduleVersie'  => 'moduleVersie_schema',
             'sbomComponent' => 'sbomComponent_schema',
+            // Every catalog object type stored in the voorzieningen register must
+            // be mapped here, or getSchemaIdForObjectType() returns null for it
+            // even though its `<type>_schema` id is present in the config — which
+            // silently killed the ratings feature (`beoordeeling` was unmapped, so
+            // ReviewService/ReviewAggregateService read "not configured" forever).
+            'beoordeeling'  => 'beoordeeling_schema',
+            'dienst'        => 'dienst_schema',
+            'gebruik'       => 'gebruik_schema',
+            'contract'      => 'contract_schema',
+            'koppeling'     => 'koppeling_schema',
+            'suite'         => 'suite_schema',
+            'kwetsbaarheid' => 'kwetsbaarheid_schema',
+            'sector'        => 'sector_schema',
         ];
 
         // Only check voorzieningen config if object type exists in the key map.
@@ -1017,10 +1030,22 @@ class SettingsService
             }
         }
 
-        // Check Voorzieningen register for organisatie/organization and contactpersoon/contact.
-        $orgContactTypes = ['organisatie', 'organization', 'contactpersoon', 'contact'];
-        if ($result === null && in_array($objectType, $orgContactTypes, true) === true) {
-            $voorzieningenConfig = $this->getVoorzieningenConfig();
+        // Check Voorzieningen register for every catalog object type. All catalog
+        // schemas (organisatie, contactpersoon, module, gebruik, contract,
+        // koppeling, beoordeeling, suite, kwetsbaarheid, sector, …) live in the one
+        // voorzieningen register, but this method previously mapped it only for
+        // organisatie/contactpersoon — so a caller resolving e.g. `beoordeeling`
+        // got null and the feature read as "not configured" (ratings submit,
+        // aggregate and moderation were all dead this way). Mirror the schema-side
+        // key map: any type with a `<type>_schema` in the voorzieningen config
+        // belongs to the voorzieningen register.
+        $voorzieningenConfig = $this->getVoorzieningenConfig();
+        $isVoorzieningenType = in_array($objectType, ['organisatie', 'organization', 'contactpersoon', 'contact'], true);
+        if ($isVoorzieningenType === false) {
+            $isVoorzieningenType = isset($voorzieningenConfig[$objectType.'_schema']);
+        }
+
+        if ($result === null && $isVoorzieningenType === true) {
             if (isset($voorzieningenConfig['register']) === true && empty($voorzieningenConfig['register']) === false) {
                 $result = (int) $voorzieningenConfig['register'];
             }
