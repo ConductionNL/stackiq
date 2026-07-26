@@ -355,7 +355,11 @@ OC.L10N.register(
     "Could not load the approval state." : "Could not load the approval state.",
     "Contract submitted to decidesk for a decision." : "Contract submitted to decidesk for a decision.",
     "Submitting the contract failed; it remains in negotiation." : "Submitting the contract failed; it remains in negotiation.",
-    "Could not refresh the outcome." : "Could not refresh the outcome."
+    "Could not refresh the outcome." : "Could not refresh the outcome.",
+    "Vulnerability" : "Vulnerability",
+    "Connection" : "Connection",
+    "Assessment" : "Assessment",
+    "SBOM component" : "SBOM component"
 },
 "nplurals=2; plural=(n != 1);"
 );

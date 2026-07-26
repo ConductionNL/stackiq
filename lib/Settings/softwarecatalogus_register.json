@@ -3,8 +3,8 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.4.2",
-    "changelog": "2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
+    "version": "2.4.3",
+    "changelog": "2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
   },
   "x-openregister": {
     "type": "application",
@@ -1330,7 +1330,7 @@
         "uri": null,
         "slug": "dienst",
         "x-schema-org": "schema:Service",
-        "title": "Dienst",
+        "title": "Service",
         "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
         "version": "0.2.1",
         "summary": "",
@@ -1639,7 +1639,7 @@
             }
           }
         },
-        "title": "Kwetsbaarheid",
+        "title": "Vulnerability",
         "description": "Schema voor kwetsbaarheden. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "1.0.20",
         "summary": "",
@@ -1792,7 +1792,7 @@
         "uri": null,
         "slug": "contactpersoon",
         "x-schema-org": "schema:Person",
-        "title": "Contactpersoon",
+        "title": "Contact person",
         "description": "Contactgegevens van een persoon",
         "version": "0.0.27",
         "summary": "",
@@ -2026,7 +2026,7 @@
         "uri": null,
         "slug": "organisatie",
         "x-schema-org": "schema:Organization",
-        "title": "Organisatie",
+        "title": "Organisation",
         "description": "Een organisatie die voorzieningen aanbiedt",
         "version": "0.5.0",
         "summary": "",
@@ -2546,7 +2546,7 @@
       "gebruik": {
         "uri": null,
         "slug": "gebruik",
-        "title": "Gebruik",
+        "title": "Usage",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
         "version": "1.4.0",
         "summary": "",
@@ -3440,7 +3440,7 @@
       "koppeling": {
         "uri": null,
         "slug": "koppeling",
-        "title": "Koppeling",
+        "title": "Connection",
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
         "version": "0.3.0",
         "summary": "",
@@ -3851,7 +3851,7 @@
             }
           }
         },
-        "title": "Beoordeeling",
+        "title": "Assessment",
         "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "0.1.3",
         "summary": "",
@@ -6808,7 +6808,7 @@
             }
           }
         },
-        "title": "Applicatie",
+        "title": "Application",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
         "version": "0.3.2",
         "summary": "",
@@ -7539,7 +7539,7 @@
       "bioMaatregel": {
         "uri": null,
         "slug": "bioMaatregel",
-        "title": "BIO-maatregel",
+        "title": "BIO measure",
         "description": "Een BIO 2.0 (Baseline Informatiebeveiliging Overheid) maatregel uit de gepubliceerde maatregelenlijst. Wordt gebruikt als selectiebron voor compliance-registraties (compliancy.bioMaatregel) en het BIO-dekkingsrapport.",
         "version": "0.0.1",
         "summary": "",
@@ -7693,7 +7693,7 @@
             }
           }
         },
-        "title": "Applicatieversie",
+        "title": "Application version",
         "description": "Schema voor applicatieversies",
         "version": "0.1.3",
         "summary": "",
@@ -7936,7 +7936,7 @@
       "sbomComponent": {
         "uri": null,
         "slug": "sbomComponent",
-        "title": "SBOM-component",
+        "title": "SBOM component",
         "description": "Schema voor componenten die zijn geïmporteerd uit een SBOM (Software Bill of Materials, CycloneDX of SPDX) voor een applicatieversie.",
         "version": "0.0.1",
         "summary": "",
