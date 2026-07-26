@@ -533,7 +533,11 @@ OC.L10N.register(
     "Current members" : "Huidige leden",
     "No members yet." : "Nog geen leden.",
     "Revoke access" : "Toegang intrekken",
-    "Close" : "Sluiten"
+    "Close" : "Sluiten",
+    "Vulnerability" : "Kwetsbaarheid",
+    "Connection" : "Koppeling",
+    "Assessment" : "Beoordeling",
+    "SBOM component" : "SBOM-component"
 },
 "nplurals=2; plural=(n != 1);"
 );

@@ -659,6 +659,10 @@
         "Manage access to {name}": "Manage access to {name}",
         "Manage members": "Manage members",
         "No members yet.": "No members yet.",
-        "Revoke access": "Revoke access"
+        "Revoke access": "Revoke access",
+        "Vulnerability": "Vulnerability",
+        "Connection": "Connection",
+        "Assessment": "Assessment",
+        "SBOM component": "SBOM component"
     }
 }
