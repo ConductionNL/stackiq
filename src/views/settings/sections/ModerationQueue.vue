@@ -2,21 +2,28 @@
  - @copyright Copyright (c) 2026 Conduction B.V. <info@conduction.nl>
  - @license AGPL-3.0-or-later
  -
- - Moderation queue admin section: lists anonymous registrations awaiting
- - moderation (registratiestatus=pending) and offers approve/reject per item.
- - Approve flips the entry to active + publishes it (publicatiedatum=now);
- - reject leaves it unpublished. Rendered inside the admin settings panel —
- - admin-gated by the IDelegatedSettings framework and by the
+ - Moderation queue admin section: lists entries of `type` awaiting moderation
+ - (organisatie: registratiestatus=pending, default; beoordeeling:
+ - status=pending, softwarecatalog#375) and offers approve/reject per item.
+ - Approve flips organisatie to active + publishes it (publicatiedatum=now);
+ - for beoordeeling it flips status to approved (the schema's own status-
+ - conditioned public RBAC rule does the rest — no publicatiedatum involved).
+ - Reject leaves the entry hidden. One generalised component instance is
+ - reused per moderated type (`type` prop) rather than a second component —
+ - see ModerationService's docblock. Rendered inside the admin settings
+ - panel — admin-gated by the IDelegatedSettings framework and by the
  - AuthorizedAdminSetting attribute on every ModerationController method; NOT
  - registered in the in-app router.
+ -
+ - @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
  -->
 
 <template>
 	<AlwaysVisibleSection
-		:name="t('softwarecatalog', 'Registration moderation')"
-		:description="t('softwarecatalog', 'Review anonymous catalog registrations. Approving an entry publishes it; rejecting leaves it hidden.')"
+		:name="name"
+		:description="description"
 		:loading="loading"
-		:loading-text="t('softwarecatalog', 'Loading pending registrations…')"
+		:loading-text="loadingText"
 		:show-refresh-button="true"
 		:refreshing="loading"
 		:refresh-button-text="t('softwarecatalog', 'Refresh queue')"
@@ -24,7 +31,7 @@
 		<NcEmptyContent
 			v-if="items.length === 0"
 			:name="t('softwarecatalog', 'Nothing to moderate')"
-			:description="t('softwarecatalog', 'There are no pending registrations right now.')">
+			:description="emptyDescription">
 			<template #icon>
 				<CheckCircle :size="40" />
 			</template>
@@ -82,9 +89,14 @@ import { apiRequest } from '../../../utils/adminApi.js'
 import { moderationItemTitle, moderationItemSubtitle } from '../../../utils/moderationItem.js'
 
 /**
- * Registration moderation queue admin section.
+ * Generalised moderation queue admin section — reused for BOTH the
+ * organisatie (anonymous registration) and beoordeeling (review) moderated
+ * types via the `type` prop, per softwarecatalog#375 ("reuse the
+ * ModerationQueue.vue pattern... do not invent a second moderation
+ * mechanism").
  *
  * @spec openspec/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
  */
 export default defineComponent({
 	name: 'ModerationQueue',
@@ -96,6 +108,47 @@ export default defineComponent({
 		Check,
 		Close,
 		CheckCircle,
+	},
+
+	props: {
+		/**
+		 * The moderated object type — matches ModerationService's `$type`
+		 * parameter. Defaults to the original 'organisatie' behavior so the
+		 * existing settings-page instance needs no changes.
+		 */
+		type: {
+			type: String,
+			default: 'organisatie',
+		},
+		/** Section title. Defaults to the original organisatie copy. */
+		name: {
+			type: String,
+			default: () => t('softwarecatalog', 'Registration moderation'),
+		},
+		/** Section description. Defaults to the original organisatie copy. */
+		description: {
+			type: String,
+			default: () => t('softwarecatalog', 'Review anonymous catalog registrations. Approving an entry publishes it; rejecting leaves it hidden.'),
+		},
+		/** Loading-state copy. Defaults to the original organisatie copy. */
+		loadingText: {
+			type: String,
+			default: () => t('softwarecatalog', 'Loading pending registrations…'),
+		},
+		/** Empty-state copy. Defaults to the original organisatie copy. */
+		emptyDescription: {
+			type: String,
+			default: () => t('softwarecatalog', 'There are no pending registrations right now.'),
+		},
+		/**
+		 * Lower-case singular noun used to build the approve/reject toast
+		 * messages ('registration', default — matches the original
+		 * organisatie copy exactly; 'review' for beoordeeling).
+		 */
+		entityLabel: {
+			type: String,
+			default: 'registration',
+		},
 	},
 
 	/**
@@ -125,15 +178,16 @@ export default defineComponent({
 		itemSubtitle: moderationItemSubtitle,
 
 		/**
-		 * Load the pending registrations from the admin endpoint.
+		 * Load the pending entries (of `type`) from the admin endpoint.
 		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/open-data-publishing/spec.md
+		 * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
 		 */
 		async loadPending() {
 			this.loading = true
 			try {
-				const data = await apiRequest('moderation/pending')
+				const data = await apiRequest(`moderation/pending?type=${encodeURIComponent(this.type)}`)
 				this.items = Array.isArray(data.items) ? data.items : []
 			} catch (error) {
 				showError(t('softwarecatalog', 'Could not load the moderation queue') + ': ' + error.message)
@@ -143,31 +197,33 @@ export default defineComponent({
 		},
 
 		/**
-		 * Approve a pending registration (active + published).
+		 * Approve a pending entry.
 		 *
-		 * @param {object} item - The registration data bag (carries `id`).
+		 * @param {object} item - The entry data bag (carries `id`).
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
 		async approve(item) {
-			await this.decide(item, 'approve', t('softwarecatalog', 'Registration approved and published'))
+			const label = this.entityLabel.charAt(0).toUpperCase() + this.entityLabel.slice(1)
+			await this.decide(item, 'approve', t('softwarecatalog', '{label} approved and published', { label }))
 		},
 
 		/**
-		 * Reject a pending registration (stays hidden).
+		 * Reject a pending entry (stays hidden).
 		 *
-		 * @param {object} item - The registration data bag (carries `id`).
+		 * @param {object} item - The entry data bag (carries `id`).
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
 		async reject(item) {
-			await this.decide(item, 'reject', t('softwarecatalog', 'Registration rejected'))
+			const label = this.entityLabel.charAt(0).toUpperCase() + this.entityLabel.slice(1)
+			await this.decide(item, 'reject', t('softwarecatalog', '{label} rejected', { label }))
 		},
 
 		/**
 		 * Shared approve/reject path: POST the decision, toast, then refresh.
 		 *
-		 * @param {object} item       - The registration data bag.
+		 * @param {object} item       - The entry data bag.
 		 * @param {string} action     - 'approve' or 'reject'.
 		 * @param {string} successMsg - Success toast message.
 		 * @return {Promise<void>}
@@ -176,17 +232,17 @@ export default defineComponent({
 		async decide(item, action, successMsg) {
 			const uuid = item.id || item.uuid
 			if (!uuid) {
-				showError(t('softwarecatalog', 'Registration has no identifier'))
+				showError(t('softwarecatalog', '{label} has no identifier', { label: this.entityLabel.charAt(0).toUpperCase() + this.entityLabel.slice(1) }))
 				return
 			}
 			this.busyId = uuid
 			this.busyAction = action
 			try {
-				await apiRequest(`moderation/${encodeURIComponent(uuid)}/${action}`, { method: 'POST' })
+				await apiRequest(`moderation/${encodeURIComponent(uuid)}/${action}?type=${encodeURIComponent(this.type)}`, { method: 'POST' })
 				showSuccess(successMsg)
 				await this.loadPending()
 			} catch (error) {
-				showError(t('softwarecatalog', 'Could not update the registration') + ': ' + error.message)
+				showError(t('softwarecatalog', 'Could not update the {label}', { label: this.entityLabel }) + ': ' + error.message)
 			} finally {
 				this.busyId = null
 				this.busyAction = null

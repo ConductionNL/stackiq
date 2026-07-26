@@ -113,7 +113,7 @@ class SettingsServiceDecompositionTest extends TestCase
     {
         $service = $this->getMockBuilder(SettingsService::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getSchemaIdForObjectType', 'getRegisterIdForObjectType'])
+            ->onlyMethods(['getSchemaIdForObjectType', 'getRegisterIdForObjectType', 'getRegisterVerificationStatus'])
             ->getMock();
 
         $service->method('getSchemaIdForObjectType')->willReturnMap(
@@ -128,17 +128,28 @@ class SettingsServiceDecompositionTest extends TestCase
                 ['contactpersoon', 22],
             ]
         );
+        $service->method('getRegisterVerificationStatus')->willReturn(
+            [
+                'ok'                    => true,
+                'checked'               => false,
+                'missingSchemas'        => [],
+                'unresolvedObjectTypes' => [],
+                'message'               => null,
+            ]
+        );
 
         $status = $service->getConfigurationStatus();
 
         $this->assertArrayHasKey('organization', $status);
         $this->assertArrayHasKey('contact', $status);
+        $this->assertArrayHasKey('registerVerification', $status);
         $this->assertTrue($status['organization']['configured']);
         $this->assertSame(11, $status['organization']['schemaId']);
         $this->assertSame(21, $status['organization']['registerId']);
         $this->assertTrue($status['contact']['configured']);
         $this->assertSame(12, $status['contact']['schemaId']);
         $this->assertSame(22, $status['contact']['registerId']);
+        $this->assertTrue($status['registerVerification']['ok']);
 
     }//end testGetConfigurationStatusDelegatesToHelperForBothObjectTypes()
 

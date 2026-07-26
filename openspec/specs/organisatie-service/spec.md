@@ -8,7 +8,6 @@ status: done
 Provides the backend service that maps SoftwareCatalog organisation data into OpenRegister organisation entities and keeps them in sync: it creates entities, updates their active flag from a SoftwareCatalog status, and maps the payload shape with name fallbacks. It also assigns Nextcloud users to an organisation with per-user notification emails and resolves the members of the admin group, failing safe by logging and returning null/false rather than propagating exceptions.
 
 @e2e exclude PHP OrganisatieService backend (OpenRegister entity create/update/map/sync) — no UI surface; covered by PHPUnit service tests and Newman REST collections.
-
 ## Requirements
 ### Requirement: The system SHALL create an OpenRegister organisation entity from SoftwareCatalog object data (REQ-001)
 
@@ -36,7 +35,7 @@ Provides the backend service that maps SoftwareCatalog organisation data into Op
 
 `updateOrganizationStatus(organizationUuid, objectData)` MUST find the OpenRegister `Organisation` by SC UUID via `OrganisationMapper::findByUuid`, map `objectData['beoordeling']` (default `'actief'`) through `mapStatus` to a boolean, call `setActive` + `save`. On success it MUST return `true`; on any exception it MUST log + return `false` (never propagate).
 
-`mapStatus(status)` MUST normalise its input (lowercase + trim) and return: `true` for `actief` / `active`; `false` for `inactief` / `inactive` / `deactief`; `true` for any other value (default-active for unknown statuses).
+`mapStatus(status)` MUST normalise its input (lowercase + trim) and return: `true` for `actief` / `active`; `false` for `inactief` / `inactive` / `deactief`; `false` for `samengevoegd` (the organisation-merge tombstone status — a merged-away organisation MUST NOT be reported as active); `true` for any other unrecognised value (default-active for unknown statuses).
 
 #### Scenario: Active status maps to true
 - WHEN `mapStatus('Actief')` is called
@@ -47,6 +46,10 @@ Provides the backend service that maps SoftwareCatalog organisation data into Op
 - THEN the return value MUST be `false`
 - AND `mapStatus('deactief')` MUST also return `false`
 
+#### Scenario: Merged (tombstoned) status maps to false
+- WHEN `mapStatus('samengevoegd')` is called
+- THEN the return value MUST be `false`
+
 #### Scenario: Unknown status defaults to active
 - WHEN `mapStatus('pending')` is called
 - THEN the return value MUST be `true`
@@ -54,6 +57,12 @@ Provides the backend service that maps SoftwareCatalog organisation data into Op
 #### Scenario: Update success
 - GIVEN an organisation exists in OR with the supplied UUID
 - WHEN `updateOrganizationStatus('uuid-1', ['beoordeling' => 'inactief'])` is called
+- THEN the OR organisation's `active` flag MUST be `false` after the call
+- AND the method MUST return `true`
+
+#### Scenario: Tombstoning via merge also deactivates the OR entity
+- GIVEN an organisation exists in OR with the supplied UUID
+- WHEN `updateOrganizationStatus('uuid-1', ['beoordeling' => 'samengevoegd'])` is called (as part of `organisation-merge` tombstoning the source)
 - THEN the OR organisation's `active` flag MUST be `false` after the call
 - AND the method MUST return `true`
 

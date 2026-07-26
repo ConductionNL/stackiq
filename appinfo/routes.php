@@ -78,6 +78,12 @@ return [
         // Configuration cache management
         ['name' => 'settings#clearCache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
 
+        // SBOM (Software Bill of Materials) import routes — CycloneDX/SPDX
+        // upload scoped to a single moduleVersie, and its status.
+        // @spec openspec/specs/sbom-import/spec.md
+        ['name' => 'sbom#importSbom', 'url' => '/api/moduleversies/{moduleVersieUuid}/sbom', 'verb' => 'POST'],
+        ['name' => 'sbom#getSbomImportStatus', 'url' => '/api/moduleversies/{moduleVersieUuid}/sbom', 'verb' => 'GET'],
+
         // ArchiMate import/export routes
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
         ['name' => 'settings#exportArchiMate', 'url' => '/api/archimate/export', 'verb' => 'POST'],
@@ -168,6 +174,14 @@ return [
         ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
 
         // ========================================================================
+        // FACET API ENDPOINTS - GEMMA-dimension facet aggregation for the
+        // module/dienst index pages (gemma-faceted-search)
+        // ========================================================================
+
+        // @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
+        ['name' => 'facet#getFacets', 'url' => '/api/facets/{schema}', 'verb' => 'GET'],
+
+        // ========================================================================
         // AANBOD API ENDPOINTS - Unified API for all aanbod types
         // ========================================================================
 
@@ -186,10 +200,33 @@ return [
         // until an admin approves). Anti-spam rate-limited.
         ['name' => 'intake#submit', 'url' => '/api/intake/register', 'verb' => 'POST'],
 
-        // REGISTRATION MODERATION / APPROVAL QUEUE — admin-gated (isAdmin guard).
+        // REGISTRATION / REVIEW MODERATION / APPROVAL QUEUE — admin-gated
+        // (AuthorizedAdminSetting). Selects organisatie (default) or
+        // beoordeeling via the `type` query param — one generalised
+        // mechanism, see ModerationService.
         ['name' => 'moderation#pending', 'url' => '/api/moderation/pending', 'verb' => 'GET'],
         ['name' => 'moderation#approve', 'url' => '/api/moderation/{uuid}/approve', 'verb' => 'POST'],
         ['name' => 'moderation#reject', 'url' => '/api/moderation/{uuid}/reject', 'verb' => 'POST'],
+
+        // CATALOG RATINGS (softwarecatalog#375) — authenticated review
+        // submission (author/status always server-stamped, never from the
+        // client) + public approved-only aggregate for module/dienst detail.
+        ['name' => 'review#submit', 'url' => '/api/reviews', 'verb' => 'POST'],
+        ['name' => 'review#aggregate', 'url' => '/api/reviews/aggregate', 'verb' => 'GET'],
+
+        // ORGANISATION MERGE (gemeentelijke herindeling / leveranciersovername) —
+        // admin-gated (isAdmin guard in the controller body, no-admin-idor safe).
+        // @spec openspec/specs/organisation-merge/spec.md#requirement-both-merge-endpoints-must-be-admin-only-with-an-explicit-per-object-authorization-guard
+        ['name' => 'merge#dryRun', 'url' => '/api/organisaties/{uuid}/merge/dry-run', 'verb' => 'POST'],
+        ['name' => 'merge#execute', 'url' => '/api/organisaties/{uuid}/merge', 'verb' => 'POST'],
+
+        // SELF-SERVICE COLLEAGUE ACCESS (multi-org-membership) — beheerder-of-this-
+        // organisation gated (authorizeBeheerder() guard in the controller body,
+        // no-admin-idor safe). Delegates the actual membership mutation to
+        // OpenRegister's OrganisationService::joinOrganisation()/leaveOrganisation().
+        // @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
+        ['name' => 'organisationMembers#grant', 'url' => '/api/organisations/{uuid}/members', 'verb' => 'POST'],
+        ['name' => 'organisationMembers#revoke', 'url' => '/api/organisations/{uuid}/members/{userId}', 'verb' => 'DELETE'],
 
         // FEDERATION SETTINGS / MANUAL PULL — admin-gated (AuthorizedAdminSetting).
         ['name' => 'federation#status', 'url' => '/api/federation/status', 'verb' => 'GET'],
@@ -235,11 +272,31 @@ return [
         ['name' => 'settings#getCronjobUsers', 'url' => '/api/settings/cronjobs/users', 'verb' => 'GET'],
         ['name' => 'settings#getCronjobOrganisations', 'url' => '/api/settings/cronjobs/organisations', 'verb' => 'GET'],
 
+        // ========================================================================
+        // EOL FEED SYNC API ENDPOINTS (eol-feed-integration)
+        // ========================================================================
+
+        ['name' => 'settings#getEolSyncConfig', 'url' => '/api/eol-sync/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateEolSyncConfig', 'url' => '/api/eol-sync/config', 'verb' => 'POST'],
+        ['name' => 'settings#triggerEolSync', 'url' => '/api/eol-sync/trigger', 'verb' => 'POST'],
+        ['name' => 'settings#getEolSyncStatus', 'url' => '/api/eol-sync/status', 'verb' => 'GET'],
+
         // Gebruik by group
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],
         ['name' => 'gebruik#getGebruikenForDeelnemer', 'url' => '/api/gebruik/deelnemer', 'verb' => 'GET'],
 
+        // Portfolio rationalization report (TIME quadrants + EOL + cloud + cost), JSON or CSV (?format=csv).
+        // @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
+        ['name' => 'portfolioReport#index', 'url' => '/api/portfolio-report', 'verb' => 'GET'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode routing)
-        ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
+        // `postfix` keeps this SPA catch-all from colliding with the bare-root
+        // `dashboard#page` route above: both entries target the same
+        // controller#method, so without a postfix they generate the same
+        // internal route name and the later one silently displaces the first —
+        // which 404'd the app's own entry point (`/apps/softwarecatalog/`) for
+        // every user, because this route's `path` requirement ('.+') can never
+        // match an empty path.
+        ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => ''], 'postfix' => 'spa'],
     ],
 ];

@@ -3,7 +3,8 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.3.2"
+    "version": "2.4.2",
+    "changelog": "2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
   },
   "x-openregister": {
     "type": "application",
@@ -760,6 +761,53 @@
               "version": "0.0.1"
             }
           }
+        ],
+        "bioMaatregel": [
+          {
+            "slug": "bio-5-1-1",
+            "code": "5.1.1",
+            "naam": "Toegangsbeveiligingsbeleid",
+            "thema": "Toegangsbeveiliging",
+            "bioVersie": "BIO 2.0",
+            "bbnNiveau": ["BBN1", "BBN2", "BBN3"],
+            "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
+          },
+          {
+            "slug": "bio-9-2-1",
+            "code": "9.2.1",
+            "naam": "Beheer van gebruikerstoegang",
+            "thema": "Toegangsbeveiliging",
+            "bioVersie": "BIO 2.0",
+            "bbnNiveau": ["BBN2", "BBN3"],
+            "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
+          },
+          {
+            "slug": "bio-10-1-1",
+            "code": "10.1.1",
+            "naam": "Cryptografisch beleid",
+            "thema": "Cryptografie",
+            "bioVersie": "BIO 2.0",
+            "bbnNiveau": ["BBN2", "BBN3"],
+            "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
+          },
+          {
+            "slug": "bio-12-1-1",
+            "code": "12.1.1",
+            "naam": "Netwerkbeveiligingsbeheer",
+            "thema": "Communicatiebeveiliging",
+            "bioVersie": "BIO 2.0",
+            "bbnNiveau": ["BBN1", "BBN2", "BBN3"],
+            "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
+          },
+          {
+            "slug": "bio-13-2-1",
+            "code": "13.2.1",
+            "naam": "Gegevensoverdrachtbeleid",
+            "thema": "Communicatiebeveiliging",
+            "bioVersie": "BIO 2.0",
+            "bbnNiveau": ["BBN2", "BBN3"],
+            "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
+          }
         ]
       }
     }
@@ -769,7 +817,7 @@
       "voorzieningen": {
         "slug": "voorzieningen",
         "title": "Voorzieningen",
-        "version": "2.0.3",
+        "version": "2.1.0",
         "description": "Register voor voorzieningen uit de softwarecatalogus",
         "published": "2025-01-01T00:00:00+00:00",
         "schemas": [
@@ -785,7 +833,9 @@
           "koppeling",
           "beoordeeling",
           "compliancy",
-          "moduleVersie"
+          "moduleVersie",
+          "sbomComponent",
+          "bioMaatregel"
         ],
         "source": "internal",
         "tablePrefix": "",
@@ -849,6 +899,14 @@
               "autoCreateTable": true
             },
             "moduleVersie": {
+              "magicMapping": true,
+              "autoCreateTable": true
+            },
+            "sbomComponent": {
+              "magicMapping": true,
+              "autoCreateTable": true
+            },
+            "bioMaatregel": {
               "magicMapping": true,
               "autoCreateTable": true
             }
@@ -997,7 +1055,7 @@
             "visible": true,
             "order": 1,
             "facetable": false,
-            "title": "Naam",
+            "title": "Name",
             "maxLength": 200,
             "example": "Bijvoorbeeld: Overheid"
           },
@@ -1007,7 +1065,7 @@
             "visible": true,
             "order": 2,
             "facetable": false,
-            "title": "Beschrijving",
+            "title": "Description",
             "maxLength": 1000,
             "example": "Bijvoorbeeld: Publieke sector en overheidsdiensten"
           }
@@ -1101,7 +1159,7 @@
             "order": 1,
             "maxLength": 200,
             "facetable": false,
-            "title": "Naam",
+            "title": "Name",
             "table": {
               "default": true
             },
@@ -1109,7 +1167,7 @@
           },
           "beschrijvingKort": {
             "type": "string",
-            "title": "Korte omschrijving",
+            "title": "Short description",
             "description": "Korte beschrijving van de suite",
             "facetable": false,
             "maxLength": 255,
@@ -1127,7 +1185,7 @@
             "order": 3,
             "maxLength": 5000,
             "facetable": false,
-            "title": "Uitgebreide omschrijving",
+            "title": "Extended description",
             "example": "Bijvoorbeeld: Een uitgebreide beschrijving van de suite met alle functionaliteiten"
           },
           "logo": {
@@ -1181,7 +1239,7 @@
             "visible": true,
             "order": 7,
             "facetable": false,
-            "title": "Applicaties",
+            "title": "Applications",
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -1313,13 +1371,13 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Naam",
+            "title": "Name",
             "example": "Bijvoorbeeld: Implementatie en ondersteuning"
           },
           "beschrijvingKort": {
             "type": "string",
             "description": "Een korte beschrijving van de dienst voor o.a. in de zoekresultaten.",
-            "title": "Korte omschrijving",
+            "title": "Short description",
             "facetable": false,
             "maxLength": 255,
             "table": {
@@ -1335,7 +1393,7 @@
             "visible": true,
             "order": 6,
             "facetable": false,
-            "title": "Uitgebreide omschrijving",
+            "title": "Extended description",
             "maxLength": 5000,
             "example": "Bijvoorbeeld: Uitgebreide beschrijving van de dienst met alle details"
           },
@@ -1356,7 +1414,7 @@
             "visible": true,
             "order": 1,
             "facetable": false,
-            "title": "Contactpersoon",
+            "title": "Contact person",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -1369,7 +1427,7 @@
             "visible": true,
             "order": 2,
             "facetable": false,
-            "title": "Applicatie",
+            "title": "Application",
             "$ref": "#/components/schemas/module",
             "x-relation-filter": { "aanbieder": "@object.aanbieder" },
             "items": {
@@ -1391,7 +1449,7 @@
             "table": {
               "default": true
             },
-            "title": "Aanbieder",
+            "title": "Provider",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -1418,10 +1476,10 @@
               "default": true
             },
             "facetable": {
-              "title": "Diensttype",
+              "title": "Service type",
               "aggregated": false
             },
-            "title": "Diensttype",
+            "title": "Service type",
             "example": "Bijvoorbeeld: Implementatieondersteuning"
           },
           "logo": {
@@ -1449,7 +1507,7 @@
             "visible": false,
             "order": 8,
             "facetable": false,
-            "title": "Koppelingen",
+            "title": "Connections",
             "$ref": "#/components/schemas/koppeling",
             "x-relation-filter": { "dienst": "@objectId" },
             "items": {
@@ -1468,7 +1526,7 @@
             "visible": true,
             "order": 50,
             "facetable": false,
-            "title": "Publicatiedatum"
+            "title": "Publication date"
           },
           "depublicatiedatum": {
             "description": "Depublication date. When set (and not in the future) the dienst is withdrawn from the open-data surface. Set by the depublish action.",
@@ -1477,7 +1535,7 @@
             "visible": true,
             "order": 51,
             "facetable": false,
-            "title": "Depublicatiedatum"
+            "title": "Unpublication date"
           }
         },
         "archive": [],
@@ -1598,7 +1656,7 @@
             "visible": true,
             "order": 1,
             "facetable": false,
-            "title": "Naam",
+            "title": "Name",
             "maxLength": 200,
             "example": "Bijvoorbeeld: SQL Injection"
           },
@@ -1609,7 +1667,7 @@
             "visible": true,
             "order": 2,
             "facetable": false,
-            "title": "Samenvatting",
+            "title": "Summary",
             "example": "Bijvoorbeeld: Korte beschrijving van de kwetsbaarheid"
           },
           "beschrijvingLang": {
@@ -1619,7 +1677,7 @@
             "visible": true,
             "order": 3,
             "facetable": false,
-            "title": "Beschrijving",
+            "title": "Description",
             "maxLength": 5000,
             "example": "Bijvoorbeeld: Uitgebreide beschrijving van de kwetsbaarheid"
           },
@@ -1651,7 +1709,7 @@
             "visible": true,
             "order": 6,
             "facetable": false,
-            "title": "Getroffen Applicaties",
+            "title": "Affected applications",
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -1779,13 +1837,13 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Functie",
+            "title": "Job title",
             "order": 4,
             "example": "Bijvoorbeeld: Beheerder"
           },
           "organisatie": {
             "type": "object",
-            "title": "Organisatie",
+            "title": "Organization",
             "description": "De organisatie waartoe deze contactpersoon behoort",
             "visible": false,
             "hideOnCollection": true,
@@ -1798,7 +1856,7 @@
           },
           "notificaties": {
             "type": "array",
-            "title": "Notificaties",
+            "title": "Notifications",
             "description": "Lijst van notificaties voor deze contactpersoon",
             "facetable": false,
             "visible": false,
@@ -1811,7 +1869,7 @@
           },
           "rollen": {
             "description": "De rollen die deze contactpersoon heeft",
-            "title": "Rollen",
+            "title": "Roles",
             "type": "array",
             "visible": true,
             "facetable": false,
@@ -2025,7 +2083,7 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Contactpersonen",
+            "title": "Contact persons",
             "authorization": {
               "read": [
                 "authenticated"
@@ -2066,7 +2124,7 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Deelnames"
+            "title": "Participations"
           },
           "deelnemers": {
             "description": "Deelnemers in deze organisatie",
@@ -2103,19 +2161,19 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Deelnemers",
+            "title": "Participants",
             "writeBack": true,
             "removeAfterWriteBack": false
           },
           "type": {
             "description": "Type van de organisatie (Gemeente, Leverancier, Samenwerking) ",
-            "title": "Organisatietype",
+            "title": "Organization type",
             "type": "string",
             "required": true,
             "visible": true,
             "facetable": {
               "aggregated": false,
-              "title": "Organisatietype",
+              "title": "Organization type",
               "description": "Type van de organisatie",
               "order": null
             },
@@ -2181,12 +2239,24 @@
             "enum": [
               "Concept",
               "Actief",
-              "Deactief"
+              "Deactief",
+              "samengevoegd"
             ]
+          },
+          "mergedInto": {
+            "description": "Organisation-merge tombstone: the target organisation UUID this organisation was merged into. Set only when status equals 'samengevoegd'; absent/null on every organisation that has never been a merge source.",
+            "title": "Merged with",
+            "type": "string",
+            "visible": false,
+            "hideOnCollection": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 52,
+            "maxLength": 255
           },
           "registratiestatus": {
             "description": "Moderatiestatus van een (anoniem) zelf-geregistreerde organisatie. 'pending' tot een beheerder de registratie goedkeurt; pas daarna 'active'. Anoniem geregistreerde organisaties zijn 'pending' en niet zichtbaar in de open-data/federatie-laag tot goedkeuring.",
-            "title": "Registratiestatus",
+            "title": "Registration status",
             "type": "string",
             "visible": false,
             "hideOnCollection": true,
@@ -2205,7 +2275,7 @@
             "visible": true,
             "order": 50,
             "facetable": false,
-            "title": "Publicatiedatum"
+            "title": "Publication date"
           },
           "depublicatiedatum": {
             "description": "Depublication date. When set (and not in the future) the organisation is withdrawn from the open-data surface. Set by the depublish action.",
@@ -2214,11 +2284,11 @@
             "visible": true,
             "order": 51,
             "facetable": false,
-            "title": "Depublicatiedatum"
+            "title": "Unpublication date"
           },
           "samenwerkingtype": {
             "description": "Type samenwerking van de organisatie",
-            "title": "Samenwerkingstype",
+            "title": "Collaboration type",
             "type": "string",
             "visible": false,
             "facetable": true,
@@ -2266,7 +2336,7 @@
             "type": "string",
             "order": 18,
             "facetable": true,
-            "title": "Geregistreerd door",
+            "title": "Registered by",
             "visible": false,
             "hideOnForm": true,
             "enum": [
@@ -2302,7 +2372,12 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "gebruik-beheerder",
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
             {
               "group": "public",
               "match": {
@@ -2473,7 +2548,7 @@
         "slug": "gebruik",
         "title": "Gebruik",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.3.0",
+        "version": "1.4.0",
         "summary": "",
         "icon": "Usage",
         "x-openregister-notifications": {
@@ -2497,7 +2572,7 @@
         "properties": {
           "afnemer": {
             "type": "object",
-            "title": "Afnemer",
+            "title": "Consumer",
             "description": "De organisatie die afnemer is van de applicatie",
             "facetable": false,
             "objectConfiguration": {
@@ -2509,7 +2584,7 @@
           },
           "aanbieder": {
             "type": "object",
-            "title": "Aanbieder",
+            "title": "Provider",
             "description": "De organisatie die aanbieder is van de applicatie",
             "facetable": false,
             "visible": false,
@@ -2529,7 +2604,7 @@
               "handling": "related-object"
             },
             "$ref": "#/components/schemas/contactpersoon",
-            "title": "Contactpersoon",
+            "title": "Contact person",
             "order": 3
           },
           "deelnemers": {
@@ -2537,7 +2612,7 @@
             "type": "array",
             "visible": true,
             "facetable": false,
-            "title": "Deelnemers",
+            "title": "Participants",
             "order": 6,
             "items": {
               "type": "object",
@@ -2554,7 +2629,7 @@
             "visible": true,
             "order": 14,
             "facetable": false,
-            "title": "Startdatum Verwerving",
+            "title": "Acquisition start date",
             "example": "Bijvoorbeeld: 2025-01-01"
           },
           "startDatumGepland": {
@@ -2584,7 +2659,7 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Geplande Startdatum",
+            "title": "Planned start date",
             "example": "Bijvoorbeeld: 2025-02-01"
           },
           "startDatumInProductie": {
@@ -2614,7 +2689,7 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Startdatum In Productie",
+            "title": "Start date in production",
             "example": "Bijvoorbeeld: 2025-03-01"
           },
           "startDatumUitTeFaseren": {
@@ -2644,7 +2719,7 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Startdatum Uit Te Faseren",
+            "title": "Phase-out start date",
             "example": "Bijvoorbeeld: 2025-12-31"
           },
           "startDatumUitGefaseerd": {
@@ -2674,7 +2749,7 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Startdatum Uit Gefaseerd",
+            "title": "Phase-out completed date",
             "example": "Bijvoorbeeld: 2025-12-31"
           },
           "status": {
@@ -2742,7 +2817,7 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "Interne notitie",
+            "title": "Internal note",
             "example": "Bijvoorbeeld: Interne notitie over het gebruik",
             "authorization": {
               "read": [
@@ -2769,7 +2844,7 @@
             "visible": true,
             "order": 20,
             "facetable": false,
-            "title": "Applicatie",
+            "title": "Application",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -2785,7 +2860,7 @@
             "visible": true,
             "order": 21,
             "facetable": false,
-            "title": "Versie",
+            "title": "Version",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -2802,7 +2877,7 @@
             "visible": true,
             "order": 22,
             "facetable": true,
-            "title": "Referentiecomponenten",
+            "title": "Reference components",
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -2821,7 +2896,7 @@
             "visible": false,
             "order": 22,
             "facetable": false,
-            "title": "Amef elementen",
+            "title": "AMEF elements",
             "items": {
               "type": "string"
             }
@@ -2832,7 +2907,7 @@
             "visible": true,
             "order": 24,
             "facetable": false,
-            "title": "Koppelingen",
+            "title": "Connections",
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -2847,7 +2922,7 @@
             "visible": true,
             "order": 25,
             "facetable": false,
-            "title": "Diensten",
+            "title": "Services",
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -2882,7 +2957,7 @@
             "visible": true,
             "order": 30,
             "facetable": false,
-            "title": "Geplande vervanging",
+            "title": "Planned replacement",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -2895,7 +2970,41 @@
             "visible": true,
             "order": 31,
             "facetable": false,
-            "title": "Geplande vervangingsdatum",
+            "title": "Planned replacement date",
+            "example": "Bijvoorbeeld: 2027-01-01"
+          },
+          "timeClassification": {
+            "description": "Gartner TIME-classificatie van dit gebruik: Tolerate (gedogen), Invest (investeren), Migrate (migreren) of Eliminate (uitfaseren). Wordt per gebruik vastgelegd, niet op de module zelf.",
+            "type": "string",
+            "visible": true,
+            "order": 32,
+            "facetable": true,
+            "title": "TIME classification",
+            "enum": [
+              "Tolerate",
+              "Invest",
+              "Migrate",
+              "Eliminate"
+            ],
+            "example": "Bijvoorbeeld: Migrate"
+          },
+          "timeRationale": {
+            "description": "Onderbouwing van de TIME-classificatie voor dit gebruik.",
+            "type": "string",
+            "visible": true,
+            "order": 33,
+            "facetable": false,
+            "title": "TIME rationale",
+            "example": "Bijvoorbeeld: Verouderd platform, opvolger reeds gepland"
+          },
+          "timeReviewDate": {
+            "description": "Datum waarop de TIME-classificatie van dit gebruik opnieuw beoordeeld moet worden.",
+            "type": "string",
+            "format": "date",
+            "visible": true,
+            "order": 34,
+            "facetable": false,
+            "title": "TIME review date",
             "example": "Bijvoorbeeld: 2027-01-01"
           }
         },
@@ -2923,7 +3032,18 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "gebruik-beheerder",
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "afnemer": "$organisation"
+              }
+            },
             {
               "group": "aanbod-beheerder",
               "match": {
@@ -3048,7 +3168,7 @@
             "type": "object",
             "facetable": false,
             "required": true,
-            "title": "Dienst",
+            "title": "Service",
             "order": 12,
             "objectConfiguration": {
               "handling": "related-object"
@@ -3060,7 +3180,7 @@
             "type": "object",
             "facetable": false,
             "required": true,
-            "title": "Gebruik",
+            "title": "Usage",
             "order": 13,
             "objectConfiguration": {
               "handling": "related-object"
@@ -3073,7 +3193,7 @@
             "description": "De startdatum van het contract",
             "facetable": false,
             "required": true,
-            "title": "Startdatum",
+            "title": "Start date",
             "order": 10,
             "example": "Bijvoorbeeld: 2025-01-01"
           },
@@ -3082,7 +3202,7 @@
             "format": "date",
             "description": "De einddatum van het contract (indien van toepassing)",
             "facetable": false,
-            "title": "Einddatum",
+            "title": "End date",
             "order": 6,
             "example": "Bijvoorbeeld: 2025-12-31"
           },
@@ -3091,7 +3211,7 @@
             "description": "Het referentienummer van het contract",
             "facetable": false,
             "required": true,
-            "title": "Contract Nummer",
+            "title": "Contract number",
             "order": 3,
             "example": "Bijvoorbeeld: CON-2025-001"
           },
@@ -3105,7 +3225,7 @@
             "description": "Het type contract",
             "facetable": false,
             "required": true,
-            "title": "Contract Type",
+            "title": "Contract type",
             "order": 4,
             "example": "Bijvoorbeeld: SLA"
           },
@@ -3113,7 +3233,7 @@
             "type": "number",
             "description": "De kosten verbonden aan het contract",
             "facetable": false,
-            "title": "Kosten",
+            "title": "Costs",
             "order": 7,
             "example": "Bijvoorbeeld: 1000.00"
           },
@@ -3126,7 +3246,7 @@
             ],
             "description": "De periode waarop de kosten betrekking hebben",
             "facetable": false,
-            "title": "Kosten Periode",
+            "title": "Cost period",
             "order": 8,
             "example": "Bijvoorbeeld: Jaarlijks"
           },
@@ -3149,7 +3269,7 @@
             "objectConfiguration": {
               "handling": "nested-object"
             },
-            "title": "Contactpersoon Aanbieder",
+            "title": "Contact person (provider)",
             "order": 1
           },
           "contactpersoonGebruiker": {
@@ -3171,14 +3291,14 @@
             "objectConfiguration": {
               "handling": "nested-object"
             },
-            "title": "Contactpersoon Gebruiker",
+            "title": "Contact person (user)",
             "order": 2
           },
           "documentReferentie": {
             "type": "string",
             "description": "Referentie naar het contractdocument",
             "facetable": false,
-            "title": "Document Referentie",
+            "title": "Document reference",
             "order": 5,
             "example": "Bijvoorbeeld: CON-2025-001.pdf"
           },
@@ -3242,17 +3362,16 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public",
-            "aanbod-beheerder",
             "ambtenaar",
-            "functioneel-beheerder",
-            "gebruik-beheerder",
-            "vng-raadpleger",
-            "software-catalog-users",
             "software-catalog-admins",
-            "organisatie-beheerder",
-            "organisaties-beheerder",
-            "gebruik-raadpleger"
+            {"group": "functioneel-beheerder", "match": {"_organisation": "$organisation"}},
+            {"group": "gebruik-beheerder", "match": {"_organisation": "$organisation"}},
+            {"group": "vng-raadpleger", "match": {"_organisation": "$organisation"}},
+            {"group": "software-catalog-users", "match": {"_organisation": "$organisation"}},
+            {"group": "organisatie-beheerder", "match": {"_organisation": "$organisation"}},
+            {"group": "organisaties-beheerder", "match": {"_organisation": "$organisation"}},
+            {"group": "gebruik-raadpleger", "match": {"_organisation": "$organisation"}},
+            {"group": "aanbod-beheerder", "match": {"_organisation": "$organisation"}}
           ],
           "update": [
             "aanbod-beheerder",
@@ -3336,7 +3455,7 @@
             "order": 1,
             "required": true,
             "facetable": false,
-            "title": "Naam",
+            "title": "Name",
             "default": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB | buitengemeentelijkVoorziening }}",
             "defaultBehavior": "falsy",
             "table": {
@@ -3352,7 +3471,7 @@
             },
             "order": 5,
             "facetable": false,
-            "title": "Korte beschrijving",
+            "title": "Short description",
             "example": "Bijvoorbeeld: Korte beschrijving van de koppeling"
           },
           "beschrijvingLang": {
@@ -3361,7 +3480,7 @@
             "format": "markdown",
             "order": 6,
             "facetable": false,
-            "title": "Lange beschrijving",
+            "title": "Long description",
             "example": "Bijvoorbeeld: Uitgebreide beschrijving van de koppeling"
           },
           "type": {
@@ -3369,7 +3488,7 @@
             "type": "string",
             "order": 1,
             "facetable": false,
-            "title": "Transportprotocol",
+            "title": "Transport protocol",
             "enum": [
               "n.v.t.",
               "bestandsoverdracht",
@@ -3404,7 +3523,7 @@
             "format": "date",
             "order": 4,
             "facetable": false,
-            "title": "Datum In Ontwikkeling",
+            "title": "Date in development",
             "example": "Bijvoorbeeld: 2025-01-01"
           },
           "datumInGebruik": {
@@ -3413,7 +3532,7 @@
             "format": "date",
             "order": 5,
             "facetable": false,
-            "title": "Datum In Gebruik"
+            "title": "Date in use"
           },
           "datumEindeOndersteuning": {
             "description": "Startdatum einde ondersteuning",
@@ -3421,7 +3540,7 @@
             "format": "date",
             "order": 6,
             "facetable": false,
-            "title": "Datum Einde Ondersteuning"
+            "title": "End of support date"
           },
           "datumTeruggetrokken": {
             "description": "Datum waarop de koppeling teruggetrokken is",
@@ -3429,13 +3548,13 @@
             "format": "date",
             "order": 7,
             "facetable": false,
-            "title": "Datum Teruggetrokken"
+            "title": "Date withdrawn"
           },
           "gegevensuitwisselingRichting": {
             "description": "Kies welke applicatie de gegevens verzendt en welke deze ontvangt.",
             "type": "string",
             "order": 8,
-            "title": "Richting gegevensuitwisseling",
+            "title": "Data exchange direction",
             "facetable": false,
             "required": true,
             "enum": [
@@ -3453,7 +3572,7 @@
             "table": {
               "default": true
             },
-            "title": "Applicatie A",
+            "title": "Application A",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -3473,7 +3592,7 @@
             "table": {
               "default": true
             },
-            "title": "Applicatie B"
+            "title": "Application B"
           },
           "buitengemeentelijkVoorziening": {
             "description": "Buitengemeentelijke voorziening waarmee gekoppeld wordt",
@@ -3483,7 +3602,7 @@
             "table": {
               "default": true
             },
-            "title": "Buitengemeentelijke Voorziening",
+            "title": "Inter-municipal facility",
             "objectConfiguration": {
               "handling": "related-object",
               "queryParams": "gemmaType=Buitengemeentenlijke voorziening"
@@ -3495,7 +3614,7 @@
             "type": "array",
             "order": 12,
             "facetable": false,
-            "title": "Standaardversie",
+            "title": "Standard version",
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -3510,7 +3629,7 @@
             "type": "object",
             "order": 13,
             "facetable": false,
-            "title": "Intermediair",
+            "title": "Intermediary",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -3527,7 +3646,7 @@
               "default": true
             },
             "facetable": false,
-            "title": "Aanbieder",
+            "title": "Provider",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -3539,7 +3658,7 @@
             "visible": false,
             "order": 15,
             "facetable": false,
-            "title": "Dienst",
+            "title": "Service",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -3551,7 +3670,7 @@
             "type": "string",
             "order": 16,
             "facetable": true,
-            "title": "Geregistreerd door",
+            "title": "Registered by",
             "visible": false,
             "hideOnForm": true,
             "enum": [
@@ -3571,7 +3690,7 @@
             "type": "string",
             "order": 17,
             "facetable": true,
-            "title": "Type koppeling",
+            "title": "Connection type",
             "visible": false,
             "hideOnForm": true,
             "default": "{{ buitengemeentelijkVoorziening | ifFilled: extern, intern }}",
@@ -3588,7 +3707,7 @@
             "visible": true,
             "order": 50,
             "facetable": false,
-            "title": "Publicatiedatum"
+            "title": "Publication date"
           },
           "depublicatiedatum": {
             "description": "Depublication date. When set (and not in the future) the koppeling is withdrawn from the open-data surface. Set by the depublish action.",
@@ -3597,7 +3716,7 @@
             "visible": true,
             "order": 51,
             "facetable": false,
-            "title": "Depublicatiedatum"
+            "title": "Unpublication date"
           }
         },
         "archive": [],
@@ -3624,7 +3743,12 @@
             "vng-raadpleger"
           ],
           "read": [
-            "gebruik-beheerder",
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
             {
               "group": "public",
               "match": {
@@ -3743,7 +3867,7 @@
             "visible": true,
             "required": true,
             "facetable": false,
-            "title": "Naam",
+            "title": "Name",
             "order": 1
           },
           "beschrijvingKort": {
@@ -3752,7 +3876,7 @@
             "maxLength": 255,
             "visible": true,
             "facetable": false,
-            "title": "Samenvatting",
+            "title": "Summary",
             "order": 2
           },
           "beschrijvingLang": {
@@ -3761,7 +3885,7 @@
             "format": "markdown",
             "visible": true,
             "facetable": false,
-            "title": "Beschrijving",
+            "title": "Description",
             "order": 3
           },
           "waardering": {
@@ -3772,7 +3896,7 @@
             "visible": true,
             "required": true,
             "facetable": false,
-            "title": "Waardering",
+            "title": "Rating",
             "order": 4
           },
           "modules": {
@@ -3780,7 +3904,7 @@
             "type": "array",
             "visible": true,
             "facetable": false,
-            "title": "Applicaties",
+            "title": "Applications",
             "order": 6,
             "items": {
               "type": "object",
@@ -3796,7 +3920,7 @@
             "type": "array",
             "visible": true,
             "facetable": false,
-            "title": "Diensten",
+            "title": "Services",
             "order": 7,
             "items": {
               "type": "object",
@@ -3811,7 +3935,7 @@
             "type": "array",
             "visible": true,
             "facetable": false,
-            "title": "Koppelingen",
+            "title": "Connections",
             "order": 8,
             "items": {
               "type": "object",
@@ -3826,7 +3950,7 @@
             "type": "object",
             "visible": true,
             "facetable": false,
-            "title": "Gebruik",
+            "title": "Usage",
             "order": 9,
             "objectConfiguration": {
               "handling": "related-object"
@@ -3861,7 +3985,7 @@
         "slug": "element",
         "title": "Element",
         "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
-        "version": "0.0.10",
+        "version": "0.0.11",
         "summary": "",
         "icon": "Cube",
         "required": [
@@ -5021,7 +5145,8 @@
         "configuration": {
           "objectNameField": "name",
           "objectSummaryField": "summary",
-          "objectDescriptionField": "documentation"
+          "objectDescriptionField": "documentation",
+          "x-openregister-shareable": true
         }
       },
       "view": {
@@ -6669,9 +6794,24 @@
         "uri": null,
         "slug": "module",
         "x-schema-org": "schema:SoftwareApplication",
+        "x-openregister-notifications": {
+          "dpia-review-overdue": {
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"dpiaStatus": {"operator": "equals", "value": "executed"}, "dpiaVolgendeBeoordeling": {"operator": "withinNext", "value": "P0D"}}},
+            "enabled": true,
+            "channels": ["nc-notification", "email"],
+            "recipients": [
+              {"kind": "groups", "groups": ["software-catalog-admins"]},
+              {"kind": "object-acl", "permission": "manage"}
+            ],
+            "subject": {
+              "nl": "DPIA-beoordeling verlopen: {{naam}} (uiterlijk {{dpiaVolgendeBeoordeling}})",
+              "en": "DPIA review overdue: {{naam}} (due {{dpiaVolgendeBeoordeling}})"
+            }
+          }
+        },
         "title": "Applicatie",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.3.1",
+        "version": "0.3.2",
         "summary": "",
         "icon": "Package",
         "required": [
@@ -6681,7 +6821,7 @@
           "naam": {
             "type": "string",
             "description": "Naam van uw applicatie",
-            "title": "Naam",
+            "title": "Name",
             "order": 1,
             "facetable": false,
             "required": true,
@@ -6694,7 +6834,7 @@
           "beschrijvingKort": {
             "type": "string",
             "description": "Een korte beschrijving van de applicatie voor o.a. in de zoekresultaten.",
-            "title": "Korte omschrijving",
+            "title": "Short description",
             "order": 2,
             "facetable": false,
             "required": false,
@@ -6707,7 +6847,7 @@
           "beschrijvingLang": {
             "type": "string",
             "description": "Een uitgebreide omschrijving van uw applicatie. Dit kan met mark down opgemaakt worden.",
-            "title": "Uitgebreide omschrijving",
+            "title": "Extended description",
             "order": 3,
             "facetable": false,
             "format": "markdown",
@@ -6735,7 +6875,7 @@
             "visible": true,
             "order": 5,
             "facetable": false,
-            "title": "Contactpersoon",
+            "title": "Contact person",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -6776,7 +6916,7 @@
               "Elders"
             ],
             "facetable": true,
-            "title": "Jurisdictie",
+            "title": "Jurisdiction",
             "example": "Bijvoorbeeld: NL"
           },
           "hostingLocatie": {
@@ -6791,7 +6931,7 @@
               "Elders"
             ],
             "facetable": true,
-            "title": "Hosting locatie",
+            "title": "Hosting location",
             "example": "Bijvoorbeeld: NL"
           },
           "aanbieder": {
@@ -6804,7 +6944,7 @@
             "table": {
               "default": true
             },
-            "title": "Leverancier",
+            "title": "Supplier",
             "objectConfiguration": {
               "handling": "related-object"
             },
@@ -6836,7 +6976,7 @@
             "fileConfiguration": [],
             "oneOf": [],
             "facetable": true,
-            "title": "Licentievorm"
+            "title": "License type"
           },
           "licentie": {
             "description": "Selecteer één van de veel gebruikte open source licenties.",
@@ -6864,7 +7004,7 @@
               "European Union Public Licence (EUPL), versie 1.2"
             ],
             "licentie": "License",
-            "title": "Licentie"
+            "title": "License"
           },
           "referentieComponenten": {
             "description": "GEMMA referentiecomponenten die de applicatie implementeert",
@@ -6872,7 +7012,7 @@
             "visible": true,
             "order": 9,
             "facetable": true,
-            "title": "Referentiecomponenten",
+            "title": "Reference components",
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -6924,7 +7064,7 @@
             "visible": true,
             "order": 21,
             "facetable": false,
-            "title": "Diensten",
+            "title": "Services",
             "hideOnForm": true,
             "table": {
               "default": true
@@ -6944,7 +7084,7 @@
             "visible": true,
             "order": 22,
             "facetable": false,
-            "title": "Koppelingen",
+            "title": "Connections",
             "hideOnForm": true,
             "items": {
               "type": "object",
@@ -6983,7 +7123,7 @@
             "visible": false,
             "order": 24,
             "facetable": false,
-            "title": "Standaarden AMEF",
+            "title": "AMEF standards",
             "hideOnForm": true,
             "items": {
               "type": "string"
@@ -6995,7 +7135,7 @@
             "visible": false,
             "order": 25,
             "facetable": false,
-            "title": "Standaarden Gemma",
+            "title": "GEMMA standards",
             "hideOnForm": true,
             "items": {
               "type": "string"
@@ -7007,7 +7147,7 @@
             "visible": true,
             "order": 26,
             "facetable": true,
-            "title": "Standaardversies",
+            "title": "Standard versions",
             "hideOnForm": true,
             "table": {
               "default": true
@@ -7027,7 +7167,7 @@
             "visible": true,
             "order": 26,
             "facetable": false,
-            "title": "Applicatieversies",
+            "title": "Application versions",
             "hideOnForm": true,
             "$ref": "#/components/schemas/moduleVersie",
             "x-relation-filter": { "module": "@objectId" },
@@ -7046,7 +7186,7 @@
             "visible": false,
             "order": 27,
             "facetable": false,
-            "title": "Gebruik",
+            "title": "Usage",
             "hideOnForm": true,
             "$ref": "#/components/schemas/gebruik",
             "x-relation-filter": { "module": "@objectId" },
@@ -7063,7 +7203,7 @@
             "type": "string",
             "order": 30,
             "facetable": false,
-            "title": "Geregistreerd door",
+            "title": "Registered by",
             "visible": false,
             "hideOnForm": true,
             "enum": [
@@ -7080,7 +7220,7 @@
             "visible": true,
             "order": 50,
             "facetable": false,
-            "title": "Publicatiedatum"
+            "title": "Publication date"
           },
           "depublicatiedatum": {
             "description": "Depublication date. When set (and not in the future) the module is withdrawn from the open-data surface. Set by the depublish action.",
@@ -7089,7 +7229,85 @@
             "visible": true,
             "order": 51,
             "facetable": false,
-            "title": "Depublicatiedatum"
+            "title": "Unpublication date"
+          },
+          "eolProductSlug": {
+            "description": "De product-identifier op endoflife.date die bij deze applicatie hoort (bijv. \"postgresql\"). Optioneel; alleen gezet wanneer een beheerder deze applicatie koppelt aan een endoflife.date-product voor automatische einde-ondersteuning-matching. Zonder deze waarde slaat de EOL-matcher deze applicatie volledig over (geen lees- of schrijfactie).",
+            "type": "string",
+            "order": 52,
+            "facetable": false,
+            "title": "Endoflife.date product-slug",
+            "example": "postgresql"
+          },
+          "bbnLevel": {
+            "description": "Het BBN-niveau (Baseline Informatiebeveiliging Overheid) waarop deze applicatie is geclassificeerd.",
+            "type": "string",
+            "visible": true,
+            "order": 53,
+            "enum": [
+              "BBN1",
+              "BBN2",
+              "BBN3"
+            ],
+            "facetable": true,
+            "title": "BBN level",
+            "table": {
+              "default": true
+            },
+            "example": "Bijvoorbeeld: BBN2"
+          },
+          "dpiaStatus": {
+            "description": "De status van de Data Protection Impact Assessment (DPIA) voor deze applicatie.",
+            "type": "string",
+            "visible": true,
+            "order": 54,
+            "enum": [
+              "not required",
+              "required",
+              "executed"
+            ],
+            "facetable": true,
+            "title": "DPIA status",
+            "table": {
+              "default": true
+            },
+            "example": "Bijvoorbeeld: executed"
+          },
+          "dpiaDate": {
+            "description": "De datum waarop de DPIA is uitgevoerd. Alleen betekenisvol wanneer dpiaStatus 'executed' is; dit wordt niet afgedwongen bij het opslaan.",
+            "type": "string",
+            "format": "date",
+            "visible": true,
+            "order": 55,
+            "facetable": false,
+            "title": "DPIA date",
+            "example": "Bijvoorbeeld: 2026-03-01"
+          },
+          "dpiaVolgendeBeoordeling": {
+            "description": "De datum waarop de DPIA opnieuw beoordeeld moet worden.",
+            "type": "string",
+            "format": "date",
+            "visible": true,
+            "order": 56,
+            "facetable": false,
+            "title": "Next DPIA review date",
+            "example": "Bijvoorbeeld: 2027-03-01"
+          },
+          "dpiaDocumentRef": {
+            "description": "Nextcloud Files-verwijzing naar het DPIA-document (link, niet opslaan), naar analogie van compliancy.bewijsReferentie.",
+            "type": "string",
+            "visible": true,
+            "order": 57,
+            "facetable": false,
+            "title": "DPIA document (Nextcloud Files)"
+          },
+          "verwerkingsregisterRef": {
+            "description": "Verwijzing (URL of identifier) naar de vermelding van deze applicatie in het register van verwerkingen van de organisatie. Dit veld slaat alleen de verwijzing op; het register zelf wordt niet gemodelleerd.",
+            "type": "string",
+            "visible": true,
+            "order": 58,
+            "facetable": false,
+            "title": "Processing register reference"
           }
         },
         "archive": [],
@@ -7205,7 +7423,7 @@
         "slug": "compliancy",
         "title": "Compliancy",
         "description": "Schema voor compliancy en standaard ondersteuning",
-        "version": "0.0.11",
+        "version": "0.0.12",
         "summary": "",
         "icon": "CheckCircle",
         "required": [],
@@ -7214,7 +7432,7 @@
             "description": "Standaardversie die door deze compliance wordt ondersteund",
             "type": "object",
             "order": 1,
-            "title": "Standaard Versie",
+            "title": "Standard version",
             "visible": true,
             "facetable": false,
             "objectConfiguration": {
@@ -7227,15 +7445,27 @@
             "description": "Het gemma id van de standaardversie die door deze compliance wordt ondersteund",
             "type": "string",
             "order": 1,
-            "title": "Standaard Gemaa",
+            "title": "GEMMA standard",
             "visible": true,
             "facetable": false
+          },
+          "bioMaatregel": {
+            "description": "BIO-maatregel die door deze compliance wordt ondersteund. Een compliancy record koppelt aan precies een van standaardversie of bioMaatregel, nooit beide.",
+            "type": "object",
+            "order": 2,
+            "title": "BIO measure",
+            "visible": true,
+            "facetable": false,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/bioMaatregel"
           },
           "module": {
             "description": "De applicatie waarvan de compliance wordt geregistreerd",
             "type": "object",
             "order": 4,
-            "title": "Applicatie",
+            "title": "Application",
             "visible": true,
             "facetable": false,
             "objectConfiguration": {
@@ -7249,7 +7479,7 @@
             "type": "file",
             "format": "base64",
             "order": 5,
-            "title": "Bewijs",
+            "title": "Evidence",
             "visible": true,
             "facetable": false,
             "fileConfiguration": {
@@ -7276,7 +7506,7 @@
             "description": "Nextcloud Files-verwijzing naar het bewijsstuk (link, niet opslaan). De voorkeursmanier om nieuw bewijs te koppelen; het legacy base64-veld 'bewijs' blijft leesbaar voor bestaande records.",
             "type": "string",
             "order": 6,
-            "title": "Bewijs (Nextcloud Files)",
+            "title": "Evidence (Nextcloud Files)",
             "visible": true,
             "facetable": false
           }
@@ -7304,6 +7534,132 @@
           "allowedTags": [
             "testraport"
           ],
+          "autoPublish": true
+        }
+      },
+      "bioMaatregel": {
+        "uri": null,
+        "slug": "bioMaatregel",
+        "title": "BIO-maatregel",
+        "description": "Een BIO 2.0 (Baseline Informatiebeveiliging Overheid) maatregel uit de gepubliceerde maatregelenlijst. Wordt gebruikt als selectiebron voor compliance-registraties (compliancy.bioMaatregel) en het BIO-dekkingsrapport.",
+        "version": "0.0.1",
+        "summary": "",
+        "icon": "ShieldLockOutline",
+        "required": [
+          "code",
+          "naam"
+        ],
+        "properties": {
+          "code": {
+            "description": "De BIO-maatregelcode (bijvoorbeeld 5.1.1)",
+            "type": "string",
+            "order": 1,
+            "facetable": true,
+            "required": true,
+            "title": "Code",
+            "maxLength": 20,
+            "table": {
+              "default": true
+            },
+            "example": "Bijvoorbeeld: 5.1.1"
+          },
+          "naam": {
+            "description": "De naam van de BIO-maatregel",
+            "type": "string",
+            "order": 2,
+            "facetable": false,
+            "required": true,
+            "title": "Name",
+            "maxLength": 255,
+            "table": {
+              "default": true
+            },
+            "example": "Bijvoorbeeld: Toegangsbeveiligingsbeleid"
+          },
+          "omschrijving": {
+            "description": "Een uitgebreide omschrijving van de maatregel",
+            "type": "string",
+            "order": 3,
+            "facetable": false,
+            "format": "markdown",
+            "title": "Description",
+            "maxLength": 5000,
+            "example": "Bijvoorbeeld: De organisatie stelt een toegangsbeveiligingsbeleid vast en onderhoudt dit periodiek."
+          },
+          "thema": {
+            "description": "Het BIO-thema waartoe de maatregel behoort",
+            "type": "string",
+            "order": 4,
+            "facetable": true,
+            "title": "Theme",
+            "table": {
+              "default": true
+            },
+            "maxLength": 200,
+            "example": "Bijvoorbeeld: Toegangsbeveiliging"
+          },
+          "bioVersie": {
+            "description": "De BIO-versie waarin deze maatregel is gepubliceerd",
+            "type": "string",
+            "order": 5,
+            "facetable": true,
+            "title": "BIO version",
+            "default": "BIO 2.0",
+            "maxLength": 50,
+            "example": "Bijvoorbeeld: BIO 2.0"
+          },
+          "bbnNiveau": {
+            "description": "De BBN-niveaus (Baseline Informatiebeveiliging Overheid) waarop deze maatregel van toepassing is",
+            "type": "array",
+            "order": 6,
+            "facetable": true,
+            "title": "BBN level",
+            "table": {
+              "default": true
+            },
+            "items": {
+              "type": "string",
+              "enum": [
+                "BBN1",
+                "BBN2",
+                "BBN3"
+              ]
+            },
+            "example": [
+              "BBN2",
+              "BBN3"
+            ]
+          },
+          "bron": {
+            "description": "Verwijzing naar de gepubliceerde maatregel (baselineinformatiebeveiligingoverheid.nl)",
+            "type": "string",
+            "format": "url",
+            "order": 7,
+            "facetable": false,
+            "title": "Source",
+            "maxLength": 500,
+            "example": "Bijvoorbeeld: https://www.baselineinformatiebeveiligingoverheid.nl"
+          }
+        },
+        "archive": [],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "searchable": true,
+        "maxDepth": 0,
+        "owner": "system",
+        "application": null,
+        "organisation": null,
+        "groups": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
+        "configuration": {
+          "objectNameField": "naam",
+          "objectSummaryField": "thema",
+          "objectDescriptionField": "omschrijving",
           "autoPublish": true
         }
       },
@@ -7340,7 +7696,7 @@
         },
         "title": "Applicatieversie",
         "description": "Schema voor applicatieversies",
-        "version": "0.1.2",
+        "version": "0.1.3",
         "summary": "",
         "icon": "ViewModule",
         "required": [],
@@ -7349,7 +7705,7 @@
             "description": "De applicatie waarvan dit een versie is",
             "type": "object",
             "order": 1,
-            "title": "Applicatie",
+            "title": "Application",
             "facetable": false,
             "objectConfiguration": {
               "handling": "related-object"
@@ -7361,27 +7717,27 @@
             "description": "Voer de versie van uw applicatie in; dit kan een nummer, tekst of combinatie daarvan zijn.",
             "type": "string",
             "order": 2,
-            "title": "Versie",
+            "title": "Version",
             "default": "1.0.0"
           },
           "pakketversie_beschrijving": {
             "description": "Beschrijving van de pakketversie",
             "type": "string",
             "order": 2,
-            "title": "Pakketversie beschrijving"
+            "title": "Package version description"
           },
           "beschrijvingKort": {
             "description": "Een korte omschrijving van de versie (256 karakters)",
             "type": "string",
             "order": 3,
-            "title": "Korte omschrijving",
+            "title": "Short description",
             "maxLength": 255
           },
           "beschrijvingLang": {
             "description": "Uitgebreide beschrijving van de applicatieversie",
             "type": "string",
             "order": 4,
-            "title": "Beschrijving",
+            "title": "Description",
             "format": "markdown"
           },
           "status": {
@@ -7402,28 +7758,28 @@
             "type": "string",
             "format": "date",
             "order": 14,
-            "title": "Datum In Ontwikkeling"
+            "title": "Date in development"
           },
           "datumInGebruik": {
             "description": "Startdatum van gebruik",
             "type": "string",
             "format": "date",
             "order": 15,
-            "title": "Datum In Gebruik"
+            "title": "Date in use"
           },
           "datumEindeOndersteuning": {
             "description": "Startdatum einde ondersteuning",
             "type": "string",
             "format": "date",
             "order": 16,
-            "title": "Datum Einde Ondersteuning"
+            "title": "End of support date"
           },
           "datumTeruggetrokken": {
             "description": "Datum waarop de applicatie teruggetrokken is",
             "type": "string",
             "format": "date",
             "order": 17,
-            "title": "Datum Teruggetrokken"
+            "title": "Date withdrawn"
           },
           "gebruiken": {
             "description": "Het gebruik van deze applicatieversie",
@@ -7431,7 +7787,7 @@
             "visible": true,
             "order": 18,
             "facetable": false,
-            "title": "Gebruik",
+            "title": "Usage",
             "$ref": "#/components/schemas/gebruik",
             "x-relation-filter": { "moduleVersie": "@objectId" },
             "items": {
@@ -7447,7 +7803,7 @@
             "type": "string",
             "order": 19,
             "facetable": true,
-            "title": "Geregistreerd door",
+            "title": "Registered by",
             "visible": false,
             "hideOnForm": true,
             "enum": [
@@ -7456,6 +7812,73 @@
               "Samenwerking",
               "Leverancier"
             ]
+          },
+          "eolBron": {
+            "description": "Herkomst van de gestempelde einde-ondersteuning-datum (bijv. \"endoflife.date\"). Alleen gezet door de EOL-matcher; afwezig bij een handmatig ingevoerde datumEindeOndersteuning.",
+            "type": "string",
+            "order": 20,
+            "facetable": false,
+            "title": "EOL source",
+            "example": "endoflife.date"
+          },
+          "eolBijgewerktOp": {
+            "description": "Tijdstip waarop de EOL-matcher deze versie voor het laatst heeft bijgewerkt vanuit de bron. Alleen gezet door de EOL-matcher; afwezig bij een handmatig ingevoerde datumEindeOndersteuning.",
+            "type": "string",
+            "format": "date-time",
+            "order": 21,
+            "facetable": false,
+            "title": "EOL updated on"
+          },
+          "sbomLastImportedAt": {
+            "description": "Tijdstip waarop de laatste SBOM (Software Bill of Materials) voor deze versie is geïmporteerd",
+            "type": "string",
+            "format": "date-time",
+            "order": 22,
+            "title": "SBOM last imported on",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true
+          },
+          "sbomFormat": {
+            "description": "Formaat van de laatst geïmporteerde SBOM",
+            "type": "string",
+            "order": 23,
+            "title": "SBOM format",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true,
+            "enum": [
+              "cyclonedx-json",
+              "spdx-json"
+            ]
+          },
+          "sbomFileName": {
+            "description": "Bestandsnaam van de laatst geïmporteerde SBOM",
+            "type": "string",
+            "order": 24,
+            "title": "SBOM file name",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true
+          },
+          "sbomComponents": {
+            "description": "De componenten die voor deze versie zijn geïmporteerd uit een SBOM",
+            "type": "array",
+            "visible": true,
+            "order": 25,
+            "facetable": false,
+            "title": "SBOM components",
+            "hideOnForm": true,
+            "$ref": "#/components/schemas/sbomComponent",
+            "x-relation-filter": { "moduleVersie": "@objectId" },
+            "items": {
+              "type": "object",
+              "objectConfiguration": {
+                "handling": "related-object"
+              },
+              "$ref": "#/components/schemas/sbomComponent",
+              "inversedBy": "moduleVersie"
+            }
           }
         },
         "archive": [],
@@ -7509,6 +7932,142 @@
               }
             }
           }
+        }
+      },
+      "sbomComponent": {
+        "uri": null,
+        "slug": "sbomComponent",
+        "title": "SBOM-component",
+        "description": "Schema voor componenten die zijn geïmporteerd uit een SBOM (Software Bill of Materials, CycloneDX of SPDX) voor een applicatieversie.",
+        "version": "0.0.1",
+        "summary": "",
+        "icon": "PackageVariantClosed",
+        "required": [
+          "moduleVersie",
+          "name"
+        ],
+        "properties": {
+          "moduleVersie": {
+            "description": "De applicatieversie waarvan dit component onderdeel is",
+            "type": "object",
+            "order": 1,
+            "title": "Application version",
+            "visible": true,
+            "facetable": false,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/moduleVersie",
+            "inversedBy": "sbomComponents"
+          },
+          "name": {
+            "description": "Naam van het component zoals gerapporteerd in de SBOM",
+            "type": "string",
+            "order": 2,
+            "title": "Name",
+            "visible": true,
+            "facetable": false,
+            "maxLength": 255
+          },
+          "version": {
+            "description": "Versie van het component zoals gerapporteerd in de SBOM",
+            "type": "string",
+            "order": 3,
+            "title": "Version",
+            "visible": true,
+            "facetable": false,
+            "maxLength": 100
+          },
+          "purl": {
+            "description": "Package URL (pkg:...) van het component",
+            "type": "string",
+            "order": 4,
+            "title": "Package URL",
+            "visible": true,
+            "facetable": false,
+            "maxLength": 500
+          },
+          "licenses": {
+            "description": "Licentie-identificaties of -expressies zoals gerapporteerd in de SBOM",
+            "type": "array",
+            "order": 5,
+            "title": "Licenses",
+            "visible": true,
+            "facetable": false,
+            "items": {
+              "type": "string"
+            }
+          },
+          "type": {
+            "description": "CycloneDX componenttype (library, application, framework, container, ...)",
+            "type": "string",
+            "order": 6,
+            "title": "Type",
+            "visible": true,
+            "facetable": true
+          },
+          "hashes": {
+            "description": "Bestandshashes van het component (alleen informatief, niet gebruikt voor matching)",
+            "type": "array",
+            "order": 7,
+            "title": "Hashes",
+            "visible": false,
+            "facetable": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "alg": {
+                  "type": "string",
+                  "title": "Algorithm"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "Value"
+                }
+              }
+            }
+          },
+          "bomRef": {
+            "description": "CycloneDX bom-ref van het component; alleen gebruikt voor traceerbaarheid binnen één import",
+            "type": "string",
+            "order": 8,
+            "title": "BOM reference",
+            "visible": false,
+            "facetable": false,
+            "maxLength": 255
+          },
+          "vexCveIds": {
+            "description": "CVE-identificaties die de SBOM's VEX-blok (vulnerabilities[]) aan dit component koppelt via bom-ref. Ruwe feiten uit het brondocument — GEEN opgeslagen match: het al-dan-niet overeenkomen met een kwetsbaarheid wordt altijd on-the-fly berekend tegen het kwetsbaarheid-register, nooit hier vastgelegd.",
+            "type": "array",
+            "order": 9,
+            "title": "VEX CVE-ids",
+            "visible": false,
+            "facetable": false,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "archive": [],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "searchable": true,
+        "maxDepth": 0,
+        "owner": "system",
+        "application": null,
+        "organisation": null,
+        "groups": null,
+        "authorization": {
+          "read": [
+            "public"
+          ]
+        },
+        "configuration": {
+          "objectNameField": "name",
+          "objectSummaryField": "version",
+          "objectDescriptionField": "purl",
+          "autoPublish": true
         }
       }
     },

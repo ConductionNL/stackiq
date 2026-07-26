@@ -418,6 +418,70 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		},
 
 		/**
+		 * Preview an organisation merge: per-relation-type counts, no writes.
+		 * Admin-only server-side (403 surfaces as a thrown Error here).
+		 * @param {string} sourceUuid - The source organisation UUID (merged away).
+		 * @param {string} targetUuid - The target organisation UUID (merge destination).
+		 * @return {Promise<object>} `{sourceUuid, targetUuid, counts, blockers}`.
+		 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-system-shall-preview-a-merge-with-per-relation-type-counts-before-any-write
+		 */
+		async dryRunMerge(sourceUuid, targetUuid) {
+			const url = generateUrl('/apps/softwarecatalog/api/organisaties/{sourceUuid}/merge/dry-run', {
+				sourceUuid,
+			})
+
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+				},
+				body: JSON.stringify({ targetUuid }),
+			})
+
+			const data = await response.json()
+
+			if (!response.ok) {
+				throw new Error(data.message || `HTTP error! status: ${response.status}`)
+			}
+
+			return data
+		},
+
+		/**
+		 * Execute an organisation merge: re-point every relation type, migrate
+		 * NC group membership, tombstone the source. Idempotent — safe to call
+		 * again against a partially or fully completed merge.
+		 * @param {string} sourceUuid - The source organisation UUID (merged away).
+		 * @param {string} targetUuid - The target organisation UUID (merge destination).
+		 * @return {Promise<object>} `{operationId, sourceUuid, targetUuid, status, counts}`.
+		 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
+		 */
+		async executeMerge(sourceUuid, targetUuid) {
+			const url = generateUrl('/apps/softwarecatalog/api/organisaties/{sourceUuid}/merge', {
+				sourceUuid,
+			})
+
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+				},
+				body: JSON.stringify({ targetUuid, confirm: true }),
+			})
+
+			const data = await response.json()
+
+			if (!response.ok) {
+				// 409 (blockers) still returns a structured body — surface its message.
+				throw new Error(data.message || `HTTP error! status: ${response.status}`)
+			}
+
+			return data
+		},
+
+		/**
 		 * Get user info for multiple contactpersonen in one request
 		 * @param {Array<string>} contactpersoonIds - Array of contactpersoon UUIDs
 		 * @return {Promise<object>} Bulk user info object keyed by contactpersoon ID
@@ -452,6 +516,100 @@ export const useOrganisatieStore = defineStore('organisatie', {
 				console.error('Store: Error getting bulk user info:', error)
 				throw error
 			}
+		},
+
+		// ==========================================
+		// Self-service colleague access (multi-org-membership)
+		// ==========================================
+
+		/**
+		 * Fetch an organisation's current members (Nextcloud user ids).
+		 * Consumes OpenRegister's own `GET /api/organisations/{uuid}`
+		 * directly — already gated by `hasAccessToOrganisation()` — rather
+		 * than adding a SoftwareCatalog read endpoint for the same data.
+		 *
+		 * @param {string} uuid The organisation UUID.
+		 * @return {Promise<string[]>} The member user ids.
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
+		 */
+		async fetchMembers(uuid) {
+			const url = generateUrl('/apps/openregister/api/organisations/{uuid}', { uuid })
+
+			const response = await fetch(url, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+				},
+			})
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}))
+				throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+			}
+
+			const data = await response.json()
+			return data?.organisation?.users || []
+		},
+
+		/**
+		 * Grant an existing Nextcloud user access to an organisation.
+		 * Server-side, this is authorized by SoftwareCatalog's
+		 * `beheerder`-of-this-organisation guard, then delegated to
+		 * OpenRegister's own `OrganisationService::joinOrganisation()`.
+		 *
+		 * @param {string} uuid The organisation UUID.
+		 * @param {string} userId The existing Nextcloud user id to grant access to.
+		 * @return {Promise<object>} The success response body.
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
+		 */
+		async grantAccess(uuid, userId) {
+			const url = generateUrl('/apps/softwarecatalog/api/organisations/{uuid}/members', { uuid })
+
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+				},
+				body: JSON.stringify({ userId }),
+			})
+
+			const data = await response.json().catch(() => ({}))
+
+			if (!response.ok) {
+				throw new Error(data.error || `HTTP error! status: ${response.status}`)
+			}
+
+			return data
+		},
+
+		/**
+		 * Revoke an existing member's access to an organisation.
+		 *
+		 * @param {string} uuid The organisation UUID.
+		 * @param {string} userId The Nextcloud user id to revoke access from.
+		 * @return {Promise<object>} The success response body.
+		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
+		 */
+		async revokeAccess(uuid, userId) {
+			const url = generateUrl('/apps/softwarecatalog/api/organisations/{uuid}/members/{userId}', { uuid, userId })
+
+			const response = await fetch(url, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: OC.requestToken,
+				},
+			})
+
+			const data = await response.json().catch(() => ({}))
+
+			if (!response.ok) {
+				throw new Error(data.error || `HTTP error! status: ${response.status}`)
+			}
+
+			return data
 		},
 	},
 })

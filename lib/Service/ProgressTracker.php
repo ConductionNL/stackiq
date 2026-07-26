@@ -186,7 +186,7 @@ class ProgressTracker
      *
      * @spec openspec/specs/progress-tracking/spec.md
      */
-    public function updateProgress(int $processedItems=null, string $currentItem=null, string $itemType=null): void
+    public function updateProgress(?int $processedItems=null, ?string $currentItem=null, ?string $itemType=null): void
     {
         if ($processedItems !== null) {
             $this->progress['processed_items'] = $processedItems;
@@ -219,7 +219,7 @@ class ProgressTracker
      *
      * @spec openspec/specs/progress-tracking/spec.md
      */
-    public function incrementProgress(string $currentItem=null, string $itemType=null): void
+    public function incrementProgress(?string $currentItem=null, ?string $itemType=null): void
     {
         $this->updateProgress(
             processedItems: $this->progress['processed_items'] + 1,
@@ -338,7 +338,7 @@ class ProgressTracker
      *
      * @spec openspec/specs/progress-tracking/spec.md
      */
-    public function getProgress(string $operationId=null): ?array
+    public function getProgress(?string $operationId=null): ?array
     {
         if ($operationId !== null && $operationId !== $this->progress['operation_id']) {
             // Load progress from session for different operation.

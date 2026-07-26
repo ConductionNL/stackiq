@@ -15,7 +15,7 @@
 
 import { buildHeaders, buildQueryString } from '@conduction/nextcloud-vue'
 
-import { withLanguageParam, buildWriteHeaders } from '../../composables/orClient.js'
+import { withLanguageParam, buildWriteHeaders, getActiveOrganisationUuid } from '../../composables/orClient.js'
 
 /**
  * Extract an ID from a value that can be either a primitive or an object.
@@ -580,7 +580,7 @@ export function softwarecatalogPlugin() {
 					const url = this._buildUrl(type, isUpdate ? id : null)
 					const response = await fetch(url, {
 						method: isUpdate ? 'PUT' : 'POST',
-						headers: buildHeaders(),
+						headers: buildWriteHeaders(buildHeaders(), { organisation: getActiveOrganisationUuid() }),
 						body: JSON.stringify(objectData),
 					})
 
@@ -720,7 +720,7 @@ export function softwarecatalogPlugin() {
 						`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}`,
 						{
 							method: 'PATCH',
-							headers: buildWriteHeaders(buildHeaders(), { targetLang }),
+							headers: buildWriteHeaders(buildHeaders(), { targetLang, organisation: getActiveOrganisationUuid() }),
 							body: JSON.stringify(changes),
 						},
 					)

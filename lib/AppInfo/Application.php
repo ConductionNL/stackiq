@@ -27,6 +27,9 @@ use OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob;
 use OCA\SoftwareCatalog\Service\Federation\FederationConfig;
 use OCA\SoftwareCatalog\Service\Federation\FederationMerger;
 use OCA\SoftwareCatalog\Service\Federation\FederationService;
+use OCA\SoftwareCatalog\BackgroundJob\EolSyncJob;
+use OCA\SoftwareCatalog\Service\EolMatcherService;
+use OCA\SoftwareCatalog\Service\EolSyncService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Dashboard\ConceptOrganisatiesWidget;
 use OCA\SoftwareCatalog\EventListener\DecisionConcludedListener;
@@ -39,13 +42,17 @@ use OCA\SoftwareCatalog\Service\ArchiMateExportService;
 use OCA\SoftwareCatalog\Service\ArchiMateImportService;
 use OCA\SoftwareCatalog\Service\ArchiMateService;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
+use OCA\SoftwareCatalog\Service\FacetService;
 use OCA\SoftwareCatalog\Service\GebruikSyncService;
 use OCA\SoftwareCatalog\Service\ModuleComplianceService;
 use OCA\SoftwareCatalog\Service\ModuleRegistrationService;
+use OCA\SoftwareCatalog\Service\MergeOrganisatieService;
 use OCA\SoftwareCatalog\Service\ModuleVersionService;
 use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCA\SoftwareCatalog\Service\ProgressTracker;
+use OCA\SoftwareCatalog\Service\SbomImportService;
+use OCA\SoftwareCatalog\Service\SbomParserService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogContactSyncService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
@@ -53,6 +60,7 @@ use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
 use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCA\SoftwareCatalog\Service\ViewQueryBuilder;
 use OCA\SoftwareCatalog\Service\ViewService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -80,6 +88,7 @@ use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\IAppConfig;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IGroupManager;
 use OCP\IUserManager;
 use OCP\Security\ISecureRandom;
@@ -98,6 +107,8 @@ use Psr\Log\LoggerInterface;
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ *
+ * @spec openspec/specs/settings-service/spec.md
  */
 class Application extends App implements IBootstrap
 {
@@ -120,6 +131,8 @@ class Application extends App implements IBootstrap
      * @param IRegistrationContext $context Registration context
      *
      * @return void
+     *
+     * @spec openspec/specs/settings-service/spec.md
      */
     public function register(IRegistrationContext $context): void
     {
@@ -242,6 +255,25 @@ class Application extends App implements IBootstrap
                 }
                 );
 
+        // Register the organisation-merge service (VNG Softwarecatalogus #141 —
+        // gemeentelijke herindeling / leveranciersovername).
+        $context->registerService(
+                MergeOrganisatieService::class,
+                function ($container) {
+                    return new MergeOrganisatieService(
+                    container: $container,
+                    appManager: $container->get('OCP\App\IAppManager'),
+                    groupManager: $container->get(IGroupManager::class),
+                    logger: $container->get('Psr\Log\LoggerInterface'),
+                    eventDispatcher: $container->get(IEventDispatcher::class),
+                    settingsService: $container->get(SettingsService::class),
+                    organisatieService: $container->get(OrganisatieService::class),
+                    progressTracker: $container->get(ProgressTracker::class),
+                    organizationHandler: $container->get(OrganizationHandler::class),
+                    );
+                }
+                );
+
         $context->registerService(
                 ContactpersoonService::class,
                 function ($container) {
@@ -286,7 +318,8 @@ class Application extends App implements IBootstrap
                     container: $container,
                     appManager: $container->get('OCP\App\IAppManager'),
                     logger: $container->get('Psr\Log\LoggerInterface'),
-                    groupManager: $container->get(IGroupManager::class)
+                    groupManager: $container->get(IGroupManager::class),
+                    l10n: $container->get('OCP\IL10N')
                     );
                 }
                 );
@@ -384,11 +417,41 @@ class Application extends App implements IBootstrap
                 }
                 );
 
-        // Register the registration moderation/approval-queue service.
+        // Register the registration/review moderation/approval-queue service
+        // (generalised to also moderate beoordeeling — softwarecatalog#375).
         $context->registerService(
                 \OCA\SoftwareCatalog\Service\ModerationService::class,
                 function ($container) {
                     return new \OCA\SoftwareCatalog\Service\ModerationService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    logger: $container->get('Psr\Log\LoggerInterface')
+                    );
+                }
+                );
+
+        // Register the authenticated review-submission service (catalog-ratings,
+        // softwarecatalog#375). Author identity comes from IUserSession, never
+        // from client input.
+        $context->registerService(
+                \OCA\SoftwareCatalog\Service\ReviewService::class,
+                function ($container) {
+                    return new \OCA\SoftwareCatalog\Service\ReviewService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    userSession: $container->get(\OCP\IUserSession::class),
+                    logger: $container->get('Psr\Log\LoggerInterface')
+                    );
+                }
+                );
+
+        // Register the public approved-only review aggregate/read service
+        // (catalog-ratings, softwarecatalog#375) — split from ReviewService
+        // to keep each class under the complexity budget.
+        $context->registerService(
+                \OCA\SoftwareCatalog\Service\ReviewAggregateService::class,
+                function ($container) {
+                    return new \OCA\SoftwareCatalog\Service\ReviewAggregateService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
@@ -403,6 +466,29 @@ class Application extends App implements IBootstrap
                     return new ModuleVersionService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
+                    logger: $container->get('Psr\Log\LoggerInterface')
+                    );
+                }
+                );
+
+        // Register the pure SBOM parser (no OR/HTTP dependency — ADR-008).
+        $context->registerService(
+                SbomParserService::class,
+                function ($container) {
+                    return new SbomParserService();
+                }
+                );
+
+        // Register the SBOM import orchestrator (parse → replace previous
+        // component set → bulk-save new set → record provenance).
+        $context->registerService(
+                SbomImportService::class,
+                function ($container) {
+                    return new SbomImportService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    parser: $container->get(SbomParserService::class),
+                    progressTracker: $container->get(ProgressTracker::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
                     );
                 }
@@ -465,6 +551,23 @@ class Application extends App implements IBootstrap
                     logger: $container->get('Psr\Log\LoggerInterface'),
                     settingsService: $container->get(SettingsService::class),
                     userSession: $container->get('OCP\IUserSession'),
+                    cacheFactory: $container->get(ICacheFactory::class)
+                    );
+                }
+                );
+
+        // Register Facet service for GEMMA-dimension facet aggregation
+        // (gemma-faceted-search) — mirrors ViewService's cache-factory wiring.
+        $context->registerService(
+                FacetService::class,
+                function ($container) {
+                    return new FacetService(
+                    container: $container,
+                    settingsService: $container->get(SettingsService::class),
+                    archiMateService: $container->get(ArchiMateService::class),
+                    queryBuilder: $container->get(ViewQueryBuilder::class),
+                    userSession: $container->get('OCP\IUserSession'),
+                    logger: $container->get('Psr\Log\LoggerInterface'),
                     cacheFactory: $container->get(ICacheFactory::class)
                     );
                 }
@@ -567,6 +670,37 @@ class Application extends App implements IBootstrap
                     timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
                     federation: $container->get(FederationService::class),
                     config: $container->get(FederationConfig::class),
+                    logger: $container->get(LoggerInterface::class)
+                    );
+                }
+                );
+
+        // Register the EOL matcher + sync orchestration + scheduled job
+        // (eol-feed-integration). EolMatcherService has zero OCP dependencies
+        // by design (design.md "Nextcloud Integration" — pure matching logic).
+        $context->registerService(
+                EolMatcherService::class,
+                function ($container) {
+                    return new EolMatcherService();
+                }
+                );
+        $context->registerService(
+                EolSyncService::class,
+                function ($container) {
+                    return new EolSyncService(
+                    settingsService: $container->get(SettingsService::class),
+                    matcher: $container->get(EolMatcherService::class),
+                    timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
+                    logger: $container->get(LoggerInterface::class)
+                    );
+                }
+                );
+        $context->registerService(
+                EolSyncJob::class,
+                function ($container) {
+                    return new EolSyncJob(
+                    timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
+                    eolSyncService: $container->get(EolSyncService::class),
                     logger: $container->get(LoggerInterface::class)
                     );
                 }

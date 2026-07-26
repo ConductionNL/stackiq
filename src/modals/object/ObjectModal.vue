@@ -108,7 +108,36 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 							<BTab title="Form Editor" active>
 								<div v-if="fullSelectedSchema" class="form-editor">
 									<div v-for="(prop, key) in schemaProperties" :key="key" class="form-field">
-										<template v-if="prop.type === 'string'">
+										<!-- Enum-on-string fields (status, timeClassification, ...) render as a
+										     clearable NcSelect rather than free text, so the TIME quadrant
+										     (Tolerate/Invest/Migrate/Eliminate) and every other enum field can be
+										     picked from — and cleared back to unclassified — without typos.
+										     formData already carries the full cloned object (see initializeData()),
+										     so this PUT-semantic form only ever touches the edited key.
+										     @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-editing-time-fields-preserves-every-other-gebruik-field -->
+										<template v-if="prop.type === 'string' && Array.isArray(prop.enum)">
+											<NcSelect
+												:input-label="prop.title || key"
+												:options="prop.enum"
+												:value="getFieldValue(key) || null"
+												:placeholder="prop.example"
+												:clearable="true"
+												@input="value => setFieldValue(key, value)" />
+											<p v-if="prop.description" class="form-field-helper">
+												{{ prop.description }}
+											</p>
+										</template>
+										<template v-else-if="prop.type === 'string' && prop.format === 'date'">
+											<NcTextField
+												:label="prop.title || key"
+												:value="getFieldValue(key)"
+												:placeholder="prop.example"
+												:helper-text="prop.description"
+												:required="prop.required"
+												type="date"
+												@update:value="value => setFieldValue(key, value)" />
+										</template>
+										<template v-else-if="prop.type === 'string'">
 											<NcTextField
 												:label="prop.title || key"
 												:value="getFieldValue(key)"
@@ -797,6 +826,12 @@ export default {
 	bottom: 0;
 	right: 0;
 	transform: translateY(100%);
+}
+
+.form-field-helper {
+	margin: 4px 0 0;
+	font-size: 12px;
+	color: var(--color-text-maxcontrast);
 }
 
 .error-message {

@@ -5,7 +5,9 @@
 				{{ t('softwarecatalog', 'Compliance matrix') }}
 			</h2>
 			<p class="cmv-intro">
-				{{ t('softwarecatalog', 'Which applications support which standards. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.') }}
+				{{ columnSource === 'bioMaatregel'
+					? t('softwarecatalog', 'Which applications support which BIO 2.0 measures, plus each application\'s BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.')
+					: t('softwarecatalog', 'Which applications support which standards. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.') }}
 			</p>
 			<NcButton type="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
 				<template #icon>
@@ -16,34 +18,63 @@
 			</NcButton>
 		</div>
 
-		<!-- Filter-first: pick standards before cells render. -->
+		<!-- Column-source scope: standards (GEMMA) or BIO 2.0 measures. -->
+		<div class="cmv-scope" role="radiogroup" :aria-label="t('softwarecatalog', 'Compliance matrix scope')">
+			<NcCheckboxRadioSwitch
+				:checked.sync="columnSource"
+				value="standaardversie"
+				name="cmv-columnSource"
+				type="radio">
+				{{ t('softwarecatalog', 'Standards') }}
+			</NcCheckboxRadioSwitch>
+			<NcCheckboxRadioSwitch
+				:checked.sync="columnSource"
+				value="bioMaatregel"
+				name="cmv-columnSource"
+				type="radio">
+				{{ t('softwarecatalog', 'BIO measures') }}
+			</NcCheckboxRadioSwitch>
+		</div>
+
+		<!-- Filter-first: pick columns (and optionally an organisation scope) before cells render. -->
 		<div class="cmv-filters">
 			<NcSelect
-				v-model="selectedStandards"
+				v-model="selectedColumns"
 				class="cmv-standardSelect"
-				:options="standardOptions"
+				:options="columnOptions"
 				:multiple="true"
 				:close-on-select="false"
-				:input-label="t('softwarecatalog', 'Standards')"
-				:placeholder="t('softwarecatalog', 'Select one or more standards')"
+				:input-label="columnSource === 'bioMaatregel' ? t('softwarecatalog', 'BIO measures') : t('softwarecatalog', 'Standards')"
+				:placeholder="columnSource === 'bioMaatregel' ? t('softwarecatalog', 'Select one or more BIO measures') : t('softwarecatalog', 'Select one or more standards')"
+				track-by="uuid"
+				label="label"
+				@input="onSelectionChange" />
+			<NcSelect
+				v-model="selectedOrganisation"
+				class="cmv-orgSelect"
+				:options="organisationOptions"
+				:multiple="false"
+				:clearable="true"
+				:input-label="t('softwarecatalog', 'Organisation (scope to in-use applications)')"
+				:placeholder="t('softwarecatalog', 'All applications')"
 				track-by="uuid"
 				label="label"
 				@input="onSelectionChange" />
 		</div>
 
 		<NcEmptyContent
-			v-if="!loading && noStandardsImported"
-			:name="t('softwarecatalog', 'No standards imported')"
-			:description="t('softwarecatalog', 'Import GEMMA standards via the ArchiMate import before building a compliance matrix.')">
+			v-if="!loading && noColumnsImported"
+			:name="columnSource === 'bioMaatregel' ? t('softwarecatalog', 'No BIO measures seeded') : t('softwarecatalog', 'No standards imported')"
+			:description="columnSource === 'bioMaatregel' ? t('softwarecatalog', 'The BIO measures catalog is seeded on install/upgrade. Refresh, or check the BIO measures catalog.') : t('softwarecatalog', 'Import GEMMA standards via the ArchiMate import before building a compliance matrix.')">
 			<template #icon>
 				<CheckboxMarkedCircleOutline :size="40" />
 			</template>
 		</NcEmptyContent>
 
 		<NcEmptyContent
-			v-else-if="!loading && selectedStandards.length === 0"
-			:name="t('softwarecatalog', 'Select standards to compare')"
-			:description="t('softwarecatalog', 'Pick one or more standards above to render the compliance matrix.')">
+			v-else-if="!loading && selectedColumns.length === 0"
+			:name="columnSource === 'bioMaatregel' ? t('softwarecatalog', 'Select BIO measures to compare') : t('softwarecatalog', 'Select standards to compare')"
+			:description="t('softwarecatalog', 'Pick one or more columns above to render the compliance matrix.')">
 			<template #icon>
 				<TableLarge :size="40" />
 			</template>
@@ -63,6 +94,12 @@
 						<th scope="col">
 							{{ t('softwarecatalog', 'Module') }}
 						</th>
+						<th v-if="columnSource === 'bioMaatregel'" scope="col">
+							{{ t('softwarecatalog', 'BBN level') }}
+						</th>
+						<th v-if="columnSource === 'bioMaatregel'" scope="col">
+							{{ t('softwarecatalog', 'DPIA status') }}
+						</th>
 						<th v-for="column in matrix.columns" :key="column.uuid" scope="col">
 							{{ column.label }}
 						</th>
@@ -73,6 +110,12 @@
 						<th scope="row" class="cmv-rowHeader">
 							{{ moduleLabel(row.module) }}
 						</th>
+						<td v-if="columnSource === 'bioMaatregel'" class="cmv-cell cmv-cell--meta">
+							{{ bbnLevelLabel(row.module) }}
+						</td>
+						<td v-if="columnSource === 'bioMaatregel'" class="cmv-cell cmv-cell--meta">
+							{{ dpiaStatusLabel(row.module) }}
+						</td>
 						<td
 							v-for="column in matrix.columns"
 							:key="column.uuid"
@@ -101,6 +144,12 @@
 					{{ t('softwarecatalog', 'Some compliancy records only reference a standard by name and could not be matched to a standard version. They are excluded from the matrix.') + ' (' + matrix.unresolved.length + ')' }}
 				</NcNoteCard>
 			</div>
+
+			<div v-if="matrix.conflicted.length > 0" class="cmv-unresolved">
+				<NcNoteCard type="warning">
+					{{ t('softwarecatalog', 'Some compliancy records reference both a standard and a BIO measure — a data-quality issue. They are excluded from both matrices until corrected.') + ' (' + matrix.conflicted.length + ')' }}
+				</NcNoteCard>
+			</div>
 		</div>
 
 		<NcLoadingIcon v-if="loading" :size="40" class="cmv-loading" />
@@ -108,11 +157,11 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect, NcEmptyContent, NcNoteCard } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcSelect, NcEmptyContent, NcNoteCard, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
 import { objectStore, navigationStore } from '../store/store.js'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
-import { buildComplianceMatrix, resolveUuid, standardLabel } from '../utils/complianceMatrix.js'
+import { buildComplianceMatrix, resolveUuid, columnLabel, dataOf, COLUMN_SOURCE } from '../utils/complianceMatrix.js'
 
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
@@ -127,11 +176,16 @@ import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarke
  * @copyright 2026 Conduction B.V.
  * @license AGPL-3.0-or-later
  *
- * Filter-first compliance matrix: modules × selected standard versions, with
- * verified / claimed / none cell states. The buyer-facing answer to "does this
- * application support standard X, and is that a claim or a fact?".
+ * Filter-first compliance matrix: modules × a selected column source
+ * (GEMMA standard versions, or — since bio-compliance-assessment — BIO 2.0
+ * measures), with verified / claimed / none cell states. The buyer-facing
+ * answer to "does this application support standard/measure X, and is that
+ * a claim or a fact?". In the BIO scope, optionally narrowed to a single
+ * organisation's in-use applications, with each row also showing the
+ * application's BBN level and DPIA status (the BIO coverage report).
  *
  * @spec openspec/specs/module-compliance-assessment/spec.md
+ * @spec openspec/specs/bio-compliance-assessment/spec.md
  */
 export default {
 	name: 'ComplianceMatrixView',
@@ -141,6 +195,7 @@ export default {
 		NcSelect,
 		NcEmptyContent,
 		NcNoteCard,
+		NcCheckboxRadioSwitch,
 		Refresh,
 		CheckCircle,
 		HelpCircle,
@@ -160,14 +215,17 @@ export default {
 	 * @spec openspec/specs/realtime-updates-ui/spec.md
 	 */
 	setup() {
-		useLiveCollections(objectStore, ['module', 'compliancy', 'element'])
+		useLiveCollections(objectStore, ['module', 'compliancy', 'element', 'bioMaatregel', 'gebruik', 'organisatie'])
 		return {}
 	},
 
 	data() {
 		return {
 			loading: true,
+			columnSource: COLUMN_SOURCE.STANDAARDVERSIE,
 			selectedStandards: [],
+			selectedBioMeasures: [],
+			selectedOrganisation: null,
 		}
 	},
 
@@ -201,12 +259,44 @@ export default {
 		},
 
 		/**
-		 * Whether no standards are available to pick.
-		 * @return {boolean} True when no standaardversie elements exist.
-		 * @spec openspec/specs/module-compliance-assessment/spec.md
+		 * All BIO 2.0 measures currently in the store.
+		 * @return {Array} bioMaatregel records.
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog
 		 */
-		noStandardsImported() {
-			return this.standaardversies.length === 0
+		bioMaatregelen() {
+			return objectStore.getCollection('bioMaatregel')?.results || []
+		},
+
+		/**
+		 * All gebruik (in-use) records currently in the store — used to scope
+		 * the matrix to a single organisation's in-use applications.
+		 * @return {Array} gebruik records.
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
+		 */
+		gebruiken() {
+			return objectStore.getCollection('gebruik')?.results || []
+		},
+
+		/**
+		 * All organisatie records currently in the store — the coverage-report
+		 * organisation picker's source.
+		 * @return {Array} organisatie records.
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
+		 */
+		organisaties() {
+			return objectStore.getCollection('organisatie')?.results || []
+		},
+
+		/**
+		 * Whether no columns are available to pick for the active column source.
+		 * @return {boolean} True when the active source has no entries.
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md
+		 */
+		noColumnsImported() {
+			return this.columnSource === COLUMN_SOURCE.BIO_MAATREGEL
+				? this.bioMaatregelen.length === 0
+				: this.standaardversies.length === 0
 		},
 
 		/**
@@ -217,23 +307,122 @@ export default {
 		standardOptions() {
 			return this.standaardversies.map((standard) => ({
 				uuid: resolveUuid(standard.uuid ?? standard.id ?? standard['@self']?.id ?? standard),
-				label: standardLabel(standard),
+				label: columnLabel(standard),
 				raw: standard,
 			}))
 		},
 
 		/**
+		 * NcSelect options for the BIO measures picker.
+		 * @return {Array<{uuid: string, label: string}>} Options.
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog
+		 */
+		bioMaatregelOptions() {
+			return this.bioMaatregelen.map((measure) => ({
+				uuid: resolveUuid(measure.uuid ?? measure.id ?? measure['@self']?.id ?? measure),
+				label: columnLabel(measure),
+				raw: measure,
+			}))
+		},
+
+		/**
+		 * The options for the active column source.
+		 * @return {Array<{uuid: string, label: string}>} Options.
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md
+		 */
+		columnOptions() {
+			return this.columnSource === COLUMN_SOURCE.BIO_MAATREGEL ? this.bioMaatregelOptions : this.standardOptions
+		},
+
+		/**
+		 * The current column selection, proxied to whichever of
+		 * selectedStandards/selectedBioMeasures matches the active column
+		 * source — so switching scope back and forth does not lose a
+		 * previously-made selection in the other scope.
+		 * @return {Array<object>} Selected NcSelect options.
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md
+		 */
+		selectedColumns: {
+			get() {
+				return this.columnSource === COLUMN_SOURCE.BIO_MAATREGEL ? this.selectedBioMeasures : this.selectedStandards
+			},
+			set(value) {
+				if (this.columnSource === COLUMN_SOURCE.BIO_MAATREGEL) {
+					this.selectedBioMeasures = value
+				} else {
+					this.selectedStandards = value
+				}
+			},
+		},
+
+		/**
+		 * NcSelect options for the organisation scope picker.
+		 * @return {Array<{uuid: string, label: string}>} Options.
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
+		 */
+		organisationOptions() {
+			return this.organisaties.map((org) => {
+				const data = dataOf(org)
+				return {
+					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
+					label: data.naam || data.title || resolveUuid(org.uuid ?? org.id ?? ''),
+					raw: org,
+				}
+			})
+		},
+
+		/**
+		 * Modules in scope for the matrix: every module, unless an
+		 * organisation is selected — then only that organisation's in-use
+		 * applications (gebruik.afnemer === org → gebruik.module), per the
+		 * BIO coverage report requirement. Applications with no compliance
+		 * data are still included (rendered as "none"/"not set"), never
+		 * omitted.
+		 * @return {Array<object>} Modules to render as matrix rows.
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
+		 */
+		scopedModules() {
+			if (!this.selectedOrganisation) {
+				return this.modules
+			}
+			const orgUuid = this.selectedOrganisation.uuid
+			const inUseModuleUuids = new Set(
+				this.gebruiken
+					.map((g) => dataOf(g))
+					.filter((data) => resolveUuid(data.afnemer) === orgUuid)
+					.map((data) => resolveUuid(data.module))
+					.filter(Boolean),
+			)
+			return this.modules.filter((module) => inUseModuleUuids.has(resolveUuid(module.uuid ?? module.id ?? module)))
+		},
+
+		/**
 		 * The computed matrix for the current selection.
-		 * @return {object} { rows, columns, unresolved }.
+		 * @return {object} { rows, columns, unresolved, conflicted }.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md
 		 */
 		matrix() {
-			const selected = this.selectedStandards.map((option) => option.raw || option)
+			const selected = this.selectedColumns.map((option) => option.raw || option)
 			return buildComplianceMatrix({
-				modules: this.modules,
-				standaardversies: selected,
+				modules: this.scopedModules,
+				columns: selected,
 				compliancy: this.compliancy,
+				columnSource: this.columnSource,
 			})
+		},
+	},
+
+	watch: {
+		/**
+		 * Re-encode the URL whenever the column-source scope changes (the
+		 * `.sync`-bound radio switches update `columnSource` directly, so
+		 * this is the only hook point for that transition).
+		 * @return {void}
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md
+		 */
+		columnSource() {
+			this.onSelectionChange()
 		},
 	},
 
@@ -254,6 +443,7 @@ export default {
 		 * Fetch the collections the matrix depends on.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md
 		 */
 		async loadData() {
 			this.loading = true
@@ -265,6 +455,9 @@ export default {
 					this.fetchType('module'),
 					this.fetchType('compliancy'),
 					this.fetchType('element'),
+					this.fetchType('bioMaatregel'),
+					this.fetchType('gebruik'),
+					this.fetchType('organisatie'),
 				])
 			} catch (error) {
 				console.error('ComplianceMatrixView: failed to load data', error)
@@ -314,34 +507,73 @@ export default {
 		},
 
 		/**
-		 * Encode the standard selection in the URL so the comparison is shareable.
+		 * Encode the current selection (column source, standards, BIO
+		 * measures, organisation scope) in the URL so the comparison is
+		 * shareable — restoring it renders the same selection without
+		 * re-picking filters.
 		 * @return {void}
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md
 		 */
 		onSelectionChange() {
-			const uuids = this.selectedStandards.map((option) => option.uuid).filter(Boolean)
 			const url = new URL(window.location.href)
-			if (uuids.length > 0) {
-				url.searchParams.set('standards', uuids.join(','))
+
+			url.searchParams.set('columnSource', this.columnSource)
+
+			const standardUuids = this.selectedStandards.map((option) => option.uuid).filter(Boolean)
+			if (standardUuids.length > 0) {
+				url.searchParams.set('standards', standardUuids.join(','))
 			} else {
 				url.searchParams.delete('standards')
 			}
+
+			const bioMeasureUuids = this.selectedBioMeasures.map((option) => option.uuid).filter(Boolean)
+			if (bioMeasureUuids.length > 0) {
+				url.searchParams.set('bioMeasures', bioMeasureUuids.join(','))
+			} else {
+				url.searchParams.delete('bioMeasures')
+			}
+
+			if (this.selectedOrganisation?.uuid) {
+				url.searchParams.set('org', this.selectedOrganisation.uuid)
+			} else {
+				url.searchParams.delete('org')
+			}
+
 			window.history.replaceState({}, '', url.toString())
 		},
 
 		/**
-		 * Restore the selection from the URL `standards` query parameter.
+		 * Restore the selection from the URL query parameters (`columnSource`,
+		 * `standards`, `bioMeasures`, `org`).
 		 * @return {void}
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md
 		 */
 		restoreSelectionFromUrl() {
 			const url = new URL(window.location.href)
-			const raw = url.searchParams.get('standards')
-			if (!raw) {
-				return
+
+			const columnSource = url.searchParams.get('columnSource')
+			if (columnSource === COLUMN_SOURCE.BIO_MAATREGEL || columnSource === COLUMN_SOURCE.STANDAARDVERSIE) {
+				this.columnSource = columnSource
 			}
-			const wanted = new Set(raw.split(',').map((s) => s.trim()).filter(Boolean))
-			this.selectedStandards = this.standardOptions.filter((option) => wanted.has(option.uuid))
+
+			const rawStandards = url.searchParams.get('standards')
+			if (rawStandards) {
+				const wanted = new Set(rawStandards.split(',').map((s) => s.trim()).filter(Boolean))
+				this.selectedStandards = this.standardOptions.filter((option) => wanted.has(option.uuid))
+			}
+
+			const rawBioMeasures = url.searchParams.get('bioMeasures')
+			if (rawBioMeasures) {
+				const wanted = new Set(rawBioMeasures.split(',').map((s) => s.trim()).filter(Boolean))
+				this.selectedBioMeasures = this.bioMaatregelOptions.filter((option) => wanted.has(option.uuid))
+			}
+
+			const rawOrg = url.searchParams.get('org')
+			if (rawOrg) {
+				this.selectedOrganisation = this.organisationOptions.find((option) => option.uuid === rawOrg) || null
+			}
 		},
 
 		/**
@@ -393,6 +625,40 @@ export default {
 		cellAriaLabel(row, column) {
 			return this.moduleLabel(row.module) + ' — ' + column.label + ': ' + this.stateLabel(row.cells[column.uuid].state)
 		},
+
+		/**
+		 * BBN level for a module row in the BIO coverage report. Applications
+		 * with no BBN level are shown as "Not set" — never omitted.
+		 * @param {object} module Module object.
+		 * @return {string} Display label.
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
+		 */
+		bbnLevelLabel(module) {
+			const data = dataOf(module)
+			return data.bbnLevel || t('softwarecatalog', 'Not set')
+		},
+
+		/**
+		 * DPIA status for a module row in the BIO coverage report, translated.
+		 * Applications with no DPIA status are shown as "Not set" — never
+		 * omitted.
+		 * @param {object} module Module object.
+		 * @return {string} Display label.
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
+		 */
+		dpiaStatusLabel(module) {
+			const data = dataOf(module)
+			if (data.dpiaStatus === 'executed') {
+				return t('softwarecatalog', 'Executed')
+			}
+			if (data.dpiaStatus === 'required') {
+				return t('softwarecatalog', 'Required')
+			}
+			if (data.dpiaStatus === 'not required') {
+				return t('softwarecatalog', 'Not required')
+			}
+			return t('softwarecatalog', 'Not set')
+		},
 	},
 }
 </script>
@@ -421,9 +687,29 @@ export default {
 	max-width: 70ch;
 }
 
+.cmv-scope {
+	display: flex;
+	gap: 16px;
+	margin-bottom: 12px;
+}
+
 .cmv-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
 	margin-bottom: 16px;
+}
+
+.cmv-standardSelect,
+.cmv-orgSelect {
 	max-width: 480px;
+	flex: 1 1 320px;
+}
+
+.cmv-cell--meta {
+	text-align: center;
+	color: var(--color-text-maxcontrast);
+	font-size: 13px;
 }
 
 .cmv-legend {

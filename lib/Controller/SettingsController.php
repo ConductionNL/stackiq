@@ -38,6 +38,7 @@ use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCA\SoftwareCatalog\Service\ArchiMateService;
 use OCA\SoftwareCatalog\Service\ProgressTracker;
+use OCA\SoftwareCatalog\Service\EolSyncService;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\ConfigurationService;
@@ -82,6 +83,7 @@ class SettingsController extends Controller
      * @param OrganizationSyncService $orgSyncSvc       The organization sync service.
      * @param ArchiMateService        $archiMateService The ArchiMate import/export service.
      * @param ProgressTracker         $progressTracker  The progress tracking service.
+     * @param EolSyncService          $eolSyncService   The EOL feed sync orchestration service.
      * @param LoggerInterface         $logger           The logger instance.
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList)
@@ -98,6 +100,7 @@ class SettingsController extends Controller
         private readonly OrganizationSyncService $orgSyncSvc,
         private readonly ArchiMateService $archiMateService,
         private readonly ProgressTracker $progressTracker,
+        private readonly EolSyncService $eolSyncService,
         private readonly LoggerInterface $logger,
     ) {
         parent::__construct(appName: $appName, request: $request);
@@ -3671,4 +3674,108 @@ class SettingsController extends Controller
             Http::STATUS_GONE
         );
     }//end getCronjobOrganisations()
+
+    // ===.
+    // EOL SYNC ENDPOINTS (eol-feed-integration).
+    // ===.
+
+    /**
+     * Get the EOL sync configuration (enabled toggle, register/schema
+     * slugs, sync interval).
+     *
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse The current EOL sync configuration.
+     *
+     * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
+     */
+    public function getEolSyncConfig(): JSONResponse
+    {
+        try {
+            return new JSONResponse(
+                [
+                    'success' => true,
+                    'config'  => $this->eolSyncService->getConfig(),
+                ]
+            );
+        } catch (\Exception $e) {
+            return $this->buildConfigErrorResponse(operationLabel: 'get EOL sync config', exception: $e, includeParams: false);
+        }
+    }//end getEolSyncConfig()
+
+    /**
+     * Update the EOL sync configuration.
+     *
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse The updated EOL sync configuration.
+     *
+     * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
+     */
+    public function updateEolSyncConfig(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+            return new JSONResponse($this->eolSyncService->updateConfig($data));
+        } catch (\Exception $e) {
+            return $this->buildConfigErrorResponse(operationLabel: 'update EOL sync config', exception: $e, includeParams: true);
+        }
+    }//end updateEolSyncConfig()
+
+    /**
+     * Trigger an EOL sync run immediately, outside the scheduled interval.
+     * Runs the identical logic the scheduled `EolSyncJob` invokes, so the
+     * two trigger paths can never drift.
+     *
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse The resulting sync status.
+     *
+     * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
+     */
+    public function triggerEolSync(): JSONResponse
+    {
+        try {
+            return new JSONResponse(
+                [
+                    'success' => true,
+                    'status'  => $this->eolSyncService->run(),
+                ]
+            );
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to trigger EOL sync', ['exception' => $e->getMessage()]);
+            return new JSONResponse(
+                [
+                    'success' => false,
+                    'message' => 'Failed to trigger EOL sync: '.$e->getMessage(),
+                ],
+                500
+            );
+        }
+    }//end triggerEolSync()
+
+    /**
+     * Get the last-recorded EOL sync status — distinguishes "not configured"
+     * from "configured but nothing matched yet" from "ran, N matched, M
+     * skipped" (design.md Decision 6).
+     *
+     * @NoCSRFRequired
+     *
+     * @return JSONResponse The current EOL sync status.
+     *
+     * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
+     */
+    public function getEolSyncStatus(): JSONResponse
+    {
+        try {
+            return new JSONResponse(
+                [
+                    'success' => true,
+                    'status'  => $this->eolSyncService->getStatus(),
+                ]
+            );
+        } catch (\Exception $e) {
+            return $this->buildConfigErrorResponse(operationLabel: 'get EOL sync status', exception: $e, includeParams: false);
+        }
+    }//end getEolSyncStatus()
 }//end class

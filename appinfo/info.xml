@@ -50,7 +50,7 @@ Vrij en open source onder de EUPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.2.17</version>
+    <version>0.2.18</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>SoftwareCatalog</namespace>
@@ -90,6 +90,7 @@ Vrij en open source onder de EUPL-licentie.
 		<job>OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob</job>
 		<job>OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob</job>
 		<job>OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob</job>
+		<job>OCA\SoftwareCatalog\BackgroundJob\EolSyncJob</job>
 	</background-jobs>
 
     <navigations>

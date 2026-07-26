@@ -39,6 +39,27 @@
 			"order": 20
 		},
 		{
+			"id": "Modules",
+			"label": "Applications",
+			"icon": "icon-category-app-bundles",
+			"route": "Modules",
+			"order": 25
+		},
+		{
+			"id": "Suites",
+			"label": "Suites",
+			"icon": "icon-category-app-bundles",
+			"route": "Suites",
+			"order": 27
+		},
+		{
+			"id": "Diensten",
+			"label": "Services",
+			"icon": "icon-category-organization",
+			"route": "Diensten",
+			"order": 30
+		},
+		{
 			"id": "Contracten",
 			"label": "Contracts",
 			"icon": "icon-file",
@@ -51,6 +72,13 @@
 			"icon": "icon-checkmark",
 			"route": "Standaarden",
 			"order": 50
+		},
+		{
+			"id": "BioMaatregelen",
+			"label": "BIO measures",
+			"icon": "icon-category-security",
+			"route": "BioMaatregelen",
+			"order": 55
 		},
 		{
 			"id": "Reviews",
@@ -108,6 +136,13 @@
 			"order": 86
 		},
 		{
+			"id": "PortfolioReport",
+			"label": "Portfolio rationalization",
+			"icon": "icon-category-monitoring",
+			"route": "PortfolioReport",
+			"order": 87
+		},
+		{
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "icon-info",
@@ -152,10 +187,11 @@
 				"viewMode": "cards",
 				"cardComponent": "OrganisatieCard",
 				"columns": ["naam", "type", "status", "website"],
+				"filter": { "status": ["Concept", "Actief", "Deactief"] },
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			},
-			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs."
+			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs. config.filter excludes organisation-merge tombstones (status='samengevoegd') from the default listing per the organisation-merge spec — a merged-away source stays readable by direct UUID lookup (OrganisatieDetail route) but never appears in this index."
 		},
 		{
 			"id": "OrganisatieDetail",
@@ -165,14 +201,14 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "organisatie",
-				"_note": "ADR-062 rollout (round 2): this page did not exist before — organisatie objects (vendors, municipalities, collaborations) were only reachable as index cards with no detail view (codeberg softwarecatalog#76). Vendor/organisation archetype: the organisatie schema itself carries only catalogue-role fields (contactsUid, type, status, registratiestatus, samenwerkingtype, geregistreerdDoor, publicatie dates) because identity (name, website, e-mail, KvK) lives in the linked Nextcloud contact via contactsUid, not on this OR object — so the body leads with those 8 catalogue fields (2-col) rather than name/address. Top-right: a stats-block KPI card counting the organisation's own diensten, modules and contactpersonen (all FK-scoped via aanbieder/organisatie = @objectId) so a reader sees portfolio size at a glance without opening any list. Below: three FK object-lists — Services (dienst.aanbieder) and Applications (module.aanbieder) are the org's supply-side offerings; Contact persons (contactpersoon.organisatie) links to the existing ContactpersoonDetail page. Services/Applications have no dedicated index or detail page anywhere in this app yet (a real fleet gap, not something this change fabricates a page for) so their rowRoute/viewAllRoute are intentionally omitted — noted as a follow-up rather than invented. An organisation does not communicate itself (contact happens through the linked NC contact), so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. Card-click navigation from the Organisaties index required a matching fix in OrganisatieCard.vue (the custom cardComponent never emitted the `click` event CnCardGrid/CnPageRenderer listen on for register+schema route resolution — clicking a card was previously a no-op).",
+				"_note": "ADR-062 rollout (round 2): this page did not exist before — organisatie objects (vendors, municipalities, collaborations) were only reachable as index cards with no detail view (codeberg softwarecatalog#76). Vendor/organisation archetype: the organisatie schema itself carries only catalogue-role fields (contactsUid, type, status, registratiestatus, samenwerkingtype, geregistreerdDoor, publicatie dates) because identity (name, website, e-mail, KvK) lives in the linked Nextcloud contact via contactsUid, not on this OR object — so the body leads with those 8 catalogue fields (2-col) rather than name/address. Top-right: a stats-block KPI card counting the organisation's own diensten, modules and contactpersonen (all FK-scoped via aanbieder/organisatie = @objectId) so a reader sees portfolio size at a glance without opening any list. Below: three FK object-lists — Services (dienst.aanbieder) and Applications (module.aanbieder) are the org's supply-side offerings; Contact persons (contactpersoon.organisatie) links to the existing ContactpersoonDetail page. Services still have no dedicated index/detail page (a real fleet gap, follow-up remains). Applications now do — bio-compliance-assessment added Modules/ModuleDetail (BBN level and DPIA tracking needed somewhere to live), so org-modules now carries `rowRoute: ModuleDetail` and a bbnLevel column; org-diensten's rowRoute stays intentionally omitted. An organisation does not communicate itself (contact happens through the linked NC contact), so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. Card-click navigation from the Organisaties index required a matching fix in OrganisatieCard.vue (the custom cardComponent never emitted the `click` event CnCardGrid/CnPageRenderer listen on for register+schema route resolution — clicking a card was previously a no-op).",
 				"widgets": [
 					{ "id": "org-data", "type": "data", "title": "Organisation", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "contactsUid", "type", "status", "registratiestatus", "samenwerkingtype", "geregistreerdDoor", "publicatiedatum", "depublicatiedatum" ] } },
 					{ "id": "org-stats-services", "type": "stats-block", "title": "Services", "icon": "ChartBar", "content": { "entries": [ { "title": "Services", "register": "@resolve:voorzieningen_register", "schema": "dienst", "metric": "count", "filter": { "aanbieder": "@objectId" } } ] } },
 					{ "id": "org-stats-applications", "type": "stats-block", "title": "Applications", "icon": "ChartBar", "content": { "entries": [ { "title": "Applications", "register": "@resolve:voorzieningen_register", "schema": "module", "metric": "count", "filter": { "aanbieder": "@objectId" } } ] } },
 					{ "id": "org-stats-contact-persons", "type": "stats-block", "title": "Contact persons", "icon": "ChartBar", "content": { "entries": [ { "title": "Contact persons", "register": "@resolve:voorzieningen_register", "schema": "contactpersoon", "metric": "count", "filter": { "organisatie": "@objectId" } } ] } },
 					{ "id": "org-diensten", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "dienst", "filter": { "aanbieder": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
-					{ "id": "org-modules", "type": "object-list", "title": "Applications", "icon": "Package", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "aanbieder": "@objectId" }, "columns": [ { "key": "licentietype", "label": "License type" } ], "limit": 25, "emptyText": "No applications registered for this organisation yet" } },
+					{ "id": "org-modules", "type": "object-list", "title": "Applications", "icon": "Package", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "aanbieder": "@objectId" }, "columns": [ { "key": "licentietype", "label": "License type" }, { "key": "bbnLevel", "label": "BBN level" } ], "limit": 25, "rowRoute": "ModuleDetail", "emptyText": "No applications registered for this organisation yet" } },
 					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactpersoon", "filter": { "organisatie": "@objectId" }, "columns": [ { "key": "functie", "label": "Function" }, { "key": "rollen", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
 				],
 				"layout": [
@@ -183,6 +219,9 @@
 					{ "id": "3", "widgetId": "org-diensten", "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "4", "widgetId": "org-modules", "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "5", "widgetId": "org-contactpersonen", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"bodyWidgets": [
+					{ "id": "org-merge", "component": "OrganisationMergePanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -231,6 +270,42 @@
 				"layout": [
 					{ "id": "1", "widgetId": "cp-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
 					{ "id": "2", "widgetId": "cp-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
+			"id": "ModuleDetail",
+			"route": "/modules/:id",
+			"type": "detail",
+			"title": "Application",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "module",
+				"_note": "bio-compliance-assessment: catalog archetype (an offered application). Body: application data 8-wide top-left (naam, descriptions, website, contactpersoon, hosting/licence fields, then the new BBN level and DPIA status/dates/document-reference/verwerkingsregister fields) with a Documentation files panel 4-wide top-right. Below, a Related panel surfaces the vendor (aanbieder) and linked services/couplings, then two object-lists: compliance claims (compliancy records — both GEMMA standards and, since this change, BIO measures — filtered by module=@objectId) and application versions (moduleVersie filtered by module=@objectId). An application does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"widgets": [
+					{ "id": "md-data", "type": "data", "title": "Application", "icon": "Package", "content": { "columns": 2, "include": [ "naam", "beschrijvingKort", "beschrijvingLang", "website", "aanbieder", "contactpersoon", "cloudDienstverleningsmodel", "hostingJurisdictie", "hostingLocatie", "licentietype", "licentie", "bbnLevel", "dpiaStatus", "dpiaDate", "dpiaVolgendeBeoordeling", "dpiaDocumentRef", "verwerkingsregisterRef" ] } },
+					{ "id": "md-files", "type": "integration", "integrationId": "files", "title": "Documentation", "icon": "FolderOutline" },
+					{ "id": "md-related", "type": "related", "title": "Vendor & services", "icon": "LinkVariant" },
+					{ "id": "md-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@objectId" }, "columns": [ { "key": "standaardversie", "label": "Standard" }, { "key": "bioMaatregel", "label": "BIO measure" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
+					{ "id": "md-versions", "type": "object-list", "title": "Application versions", "icon": "ViewModule", "content": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersie", "filter": { "module": "@objectId" }, "columns": [ { "key": "versie", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ModuleversieDetail", "allowCreate": false, "emptyText": "No versions registered yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "md-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "2", "widgetId": "md-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "md-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "4", "widgetId": "md-compliance", "gridX": 0, "gridY": 8, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "5", "widgetId": "md-versions", "gridX": 6, "gridY": 8, "gridWidth": 6, "gridHeight": 4 }
+				],
+				"bodyWidgets": [
+					{ "id": "md-reviews", "component": "ReviewsPanel", "props": { "objectId": "@objectId", "subjectType": "module" }, "placement": "end", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -308,6 +383,115 @@
 			}
 		},
 		{
+			"id": "Modules",
+			"route": "/modules",
+			"type": "custom",
+			"title": "Applications",
+			"component": "FacetedCatalogIndexView",
+			"_note": "Faceted index page (gemma-faceted-search): CnFacetSidebar (live GEMMA-dimension counts from FacetService) + a standalone CnIndexPage narrowed via { id: matchedObjectIds }. Stays custom rather than type:index — see customComponents.js's FacetedCatalogIndexView entry for why CnIndexPage's own embedded facet sidebar cannot drive this narrowing. bio-compliance-assessment: bbnLevel/dpiaStatus columns + BBN/DPIA quickFilters reconciled onto this page after gemma-faceted-search (#382) merged — see FacetedCatalogIndexView.vue's quickFilters prop docblock for how the quick filter's field constraints compose with the facet { id: ... } narrowing (disjoint keys, additive AND, no clobber).",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "module",
+				"description": "Browse the application (module) catalogue, filtered by GEMMA architecture dimension.",
+				"columns": [
+					"naam",
+					"aanbieder",
+					"type",
+					"licentietype",
+					"publicatiedatum",
+					"bbnLevel",
+					"dpiaStatus"
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "BBN1",
+						"filter": {
+							"bbnLevel": "BBN1"
+						}
+					},
+					{
+						"label": "BBN2",
+						"filter": {
+							"bbnLevel": "BBN2"
+						}
+					},
+					{
+						"label": "BBN3",
+						"filter": {
+							"bbnLevel": "BBN3"
+						}
+					},
+					{
+						"label": "Without DPIA (BBN2+)",
+						"filter": {
+							"bbnLevel": ["BBN2", "BBN3"],
+							"dpiaStatus": ["not required", "required"]
+						},
+						"icon": "AlertCircle"
+					}
+				]
+			}
+		},
+		{
+			"id": "Diensten",
+			"route": "/diensten",
+			"type": "custom",
+			"title": "Services",
+			"component": "FacetedCatalogIndexView",
+			"_note": "Faceted index page (gemma-faceted-search) — see the Modules page's _note; identical component, schema: dienst. GEMMA links are transitive via dienst.modules (FacetService resolves them server-side).",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "dienst",
+				"description": "Browse the service (dienst) catalogue, filtered by GEMMA architecture dimension.",
+				"columns": [
+					"naam",
+					"aanbieder",
+					"type",
+					"publicatiedatum"
+				]
+			}
+		},
+		{
+			"id": "Suites",
+			"route": "/suites",
+			"type": "custom",
+			"title": "Suites",
+			"component": "SuitesIndexView",
+			"_note": "suite-wizard: index of `suite` objects (an application suite — a bundled product made up of one or more existing applications, replacing the retired incumbent 'product' concept per VNG Softwarecatalogus #242 / softwarecatalog#372). Stays `type: custom` solely so the guided multi-step creation wizard's action button can sit in CnIndexPage's #actions slot alongside the self-fetch list (register=voorzieningen, schema=suite) — a declarative type:index page has no slot for it. Create/edit/delete of an individual suite outside the wizard still reuse the generic ObjectModal via CnIndexPage's own default form dialog."
+		},
+		{
+			"id": "SuiteDetail",
+			"route": "/suites/:id",
+			"type": "detail",
+			"title": "Suite",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "suite",
+				"_note": "suite-wizard: catalog archetype (a bundled product made up of one or more existing applications). Body: suite data 8-wide (naam, beschrijvingKort, beschrijvingLang, website, logo, contactpersoon) with a Related panel 4-wide surfacing both the contact person and the attached applications (`applicaties`) — the latter via the platform's generic bidirectional relation index (the same `/uses`+`/used` mechanism `md-related` on ModuleDetail already relies on, which is also how a module's own detail page surfaces which suite(s) include it, with no ModuleDetail change needed). A suite does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"widgets": [
+					{ "id": "suite-data", "type": "data", "title": "Suite", "icon": "PackageVariant", "content": { "columns": 2, "include": [ "naam", "beschrijvingKort", "beschrijvingLang", "website", "logo", "contactpersoon" ] } },
+					{ "id": "suite-related", "type": "related", "title": "Applications & contact", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "suite-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "suite-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
 			"id": "Standaarden",
 			"route": "/standaarden",
 			"type": "index",
@@ -362,6 +546,56 @@
 			}
 		},
 		{
+			"id": "BioMaatregelen",
+			"route": "/bio-maatregelen",
+			"type": "index",
+			"title": "BIO measures",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "bioMaatregel",
+				"columns": [
+					"code",
+					"naam",
+					"thema",
+					"bioVersie",
+					"bbnNiveau"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			},
+			"_note": "bio-compliance-assessment: BIO 2.0 measures reference catalog (design.md Decision 1/Decision 4), following the Standaarden/StandaardDetail index+detail pattern. Publicly readable (authorization.read: [\"public\"]) since it is a selection source for compliancy.bioMaatregel and the BIO coverage report (ComplianceMatrixView), not organisation-owned data."
+		},
+		{
+			"id": "BioMaatregelDetail",
+			"route": "/bio-maatregelen/:id",
+			"type": "detail",
+			"title": "BIO measure",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "bioMaatregel",
+				"_note": "Catalog archetype (a BIO 2.0 measure), mirroring StandaardDetail's shape for the parallel bioMaatregel relation (design.md Decision 1: compliancy links to a standaardversie OR a bioMaatregel, never a third parallel model). Body: measure data 8-wide (code, naam, omschrijving, thema, bioVersie, bbnNiveau, bron). Below, a compliancy object-list shows every compliance claim referencing this measure (compliancy.bioMaatregel = @objectId), mirroring how StandaardDetail's st-compliance widget shows claims for a standard.",
+				"widgets": [
+					{ "id": "bm-data", "type": "data", "title": "BIO measure", "icon": "ShieldLockOutline", "content": { "columns": 2 } },
+					{ "id": "bm-compliance", "type": "object-list", "title": "Compliance claims for this measure", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "bioMaatregel": "@objectId" }, "columns": [ { "key": "module", "label": "Module" }, { "key": "url", "label": "Evidence URL" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "bm-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "2", "widgetId": "bm-compliance", "gridX": 0, "gridY": 4, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://softwarecatalog.conduction.nl"
+			}
+		},
+		{
 			"id": "Reviews",
 			"route": "/reviews",
 			"type": "index",
@@ -370,10 +604,10 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "beoordeeling",
 				"columns": [
-					"titel",
+					"naam",
 					"auteur",
-					"score",
-					"datum"
+					"waardering",
+					"status"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -518,6 +752,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
+						{ "id": "components", "label": "Components", "icon": "Package", "component": "SbomComponentsPanel" },
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
@@ -575,6 +810,14 @@
 			"title": "Portfolio roadmap",
 			"component": "LifecycleRoadmapView",
 			"_note": "Per-organisation roadmap: the selected organisation's applications-in-use grouped into derived lifecycle-phase swimlanes (Onbekend first) and ordered within each lane by nearest urgency (end-of-support / phase-out / planned replacement). No standard index/roadmap type derives and groups by computed lifecycle phase."
+		},
+		{
+			"id": "PortfolioReport",
+			"route": "/portfolio-report",
+			"type": "custom",
+			"title": "Portfolio rationalization",
+			"component": "PortfolioReportView",
+			"_note": "Gartner TIME rationalization report (openspec/changes/portfolio-rationalization-time): a per-organisation, RBAC-scoped, bounded server-side aggregate (GET /api/portfolio-report) combining TIME quadrant counts (Tolerate/Invest/Migrate/Eliminate + Unclassified) with EOL exposure (application-lifecycle-tracking derivation), cloud-transition share (cloudDienstverleningsmodel), and annualised cost overlay (contract-administration derivation) per quadrant, plus a CSV export of the underlying rows. Unlike LifecycleRoadmap/LicensePosture (which derive client-side over full collections), this report reads a single composed backend endpoint so aggregation stays bounded and organisation-scoped server-side per design.md Decision 3/4 — no built-in index/detail/dashboard type expresses a fetched, pre-aggregated multi-metric report with a CSV export variant."
 		},
 		{
 			"id": "FeaturesRoadmap",
