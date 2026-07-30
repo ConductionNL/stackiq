@@ -27,125 +27,125 @@
 		{
 			"id": "Dashboard",
 			"label": "Dashboard",
-			"icon": "icon-category-dashboard",
+			"icon": "ViewDashboardOutline",
 			"route": "Dashboard",
 			"order": 10
 		},
 		{
 			"id": "Organisaties",
 			"label": "Organisations",
-			"icon": "icon-category-organization",
+			"icon": "OfficeBuildingOutline",
 			"route": "Organisaties",
 			"order": 20
 		},
 		{
 			"id": "Modules",
 			"label": "Applications",
-			"icon": "icon-category-app-bundles",
+			"icon": "ApplicationOutline",
 			"route": "Modules",
 			"order": 25
 		},
 		{
 			"id": "Suites",
 			"label": "Suites",
-			"icon": "icon-category-app-bundles",
+			"icon": "ViewGridOutline",
 			"route": "Suites",
 			"order": 27
 		},
 		{
 			"id": "Diensten",
 			"label": "Services",
-			"icon": "icon-category-organization",
+			"icon": "Domain",
 			"route": "Diensten",
 			"order": 30
 		},
 		{
 			"id": "Contracten",
 			"label": "Contracts",
-			"icon": "icon-file",
+			"icon": "FileSign",
 			"route": "Contracten",
 			"order": 40
 		},
 		{
 			"id": "Standaarden",
 			"label": "Standards",
-			"icon": "icon-checkmark",
+			"icon": "ClipboardCheckOutline",
 			"route": "Standaarden",
 			"order": 50
 		},
 		{
 			"id": "BioMaatregelen",
 			"label": "BIO measures",
-			"icon": "icon-category-security",
+			"icon": "ShieldOutline",
 			"route": "BioMaatregelen",
 			"order": 55
 		},
 		{
 			"id": "Reviews",
 			"label": "Reviews",
-			"icon": "icon-comment",
+			"icon": "CommentOutline",
 			"route": "Reviews",
 			"order": 60
 		},
 		{
 			"id": "Komplianties",
 			"label": "Compliance",
-			"icon": "icon-checkmark",
+			"icon": "ClipboardCheckOutline",
 			"route": "Komplianties",
 			"order": 70
 		},
 		{
 			"id": "ComplianceMatrix",
 			"label": "Compliance matrix",
-			"icon": "icon-category-monitoring",
+			"icon": "ClipboardCheckOutline",
 			"route": "ComplianceMatrix",
 			"order": 75
 		},
 		{
 			"id": "ReportsCompliance",
 			"label": "Reports & Compliance",
-			"icon": "icon-category-monitoring",
+			"icon": "ChartBoxOutline",
 			"order": 78
 		},
 		{
 			"id": "Moduleversies",
 			"label": "Module versions",
-			"icon": "icon-files",
+			"icon": "PuzzleOutline",
 			"route": "Moduleversies",
 			"order": 80
 		},
 		{
 			"id": "Kwetsbaarheden",
 			"label": "Vulnerabilities",
-			"icon": "icon-category-security",
+			"icon": "ShieldAlertOutline",
 			"route": "Kwetsbaarheden",
 			"order": 82
 		},
 		{
 			"id": "LifecycleRoadmap",
 			"label": "Portfolio roadmap",
-			"icon": "icon-category-organization",
+			"icon": "MapOutline",
 			"route": "LifecycleRoadmap",
 			"order": 85
 		},
 		{
 			"id": "LicensePosture",
 			"label": "License posture",
-			"icon": "icon-category-monitoring",
+			"icon": "ChartLine",
 			"route": "LicensePosture",
 			"order": 86
 		},
 		{
 			"id": "PortfolioReport",
 			"label": "Portfolio rationalization",
-			"icon": "icon-category-monitoring",
+			"icon": "BriefcaseOutline",
 			"route": "PortfolioReport",
 			"order": 87
 		},
 		{
 			"id": "Documentation",
 			"label": "Documentation",
-			"icon": "icon-info",
+			"icon": "BookOpenVariantOutline",
 			"href": "https://softwarecatalog.conduction.nl",
 			"section": "footer",
 			"order": 90
@@ -153,7 +153,7 @@
 		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
-			"icon": "icon-toggle",
+			"icon": "MapMarkerPath",
 			"route": "FeaturesRoadmap",
 			"section": "footer",
 			"order": 95
@@ -161,7 +161,7 @@
 		{
 			"id": "SettingsMenu",
 			"label": "Settings",
-			"icon": "icon-settings",
+			"icon": "CogOutline",
 			"route": "Settings",
 			"section": "settings",
 			"order": 99
