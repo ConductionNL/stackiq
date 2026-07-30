@@ -2550,7 +2550,7 @@
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
         "version": "1.4.0",
         "summary": "",
-        "icon": "Usage",
+        "icon": "Gauge",
         "x-openregister-notifications": {
           "phaseout-approaching": {
             "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"startDatumUitTeFaseren": {"operator": "withinNext", "value": "P180D"}}},
@@ -6148,7 +6148,7 @@
         "description": "AMEF Property Definition - Definitie van eigenschappen voor ArchiMate elementen",
         "version": "0.0.8",
         "summary": "",
-        "icon": "Settings",
+        "icon": "CogOutline",
         "required": [
           "identifier",
           "type"
