@@ -15,7 +15,7 @@ import { reactive } from 'vue'
 				<LayersOutline />
 			</template>
 			<template #action>
-				<NcButton type="primary" @click="navigationStore.setModal('addDirectory')">
+				<NcButton variant="primary" @click="navigationStore.setModal('addDirectory')">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
@@ -70,16 +70,16 @@ import { reactive } from 'vue'
 			<template #icon>
 				<CogOutline :size="20" />
 			</template>
-			<NcCheckboxRadioSwitch :checked.sync="directoryStore.listingItem.available" type="switch">
+			<NcCheckboxRadioSwitch v-model="directoryStore.listingItem.available" type="switch">
 				Beschickbaar maken voor mijn zoek opdrachten
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch :checked.sync="directoryStore.listingItem.default" type="switch">
+			<NcCheckboxRadioSwitch v-model="directoryStore.listingItem.default" type="switch">
 				Standaard mee nemen in de beantwoording van mijn zoekopdrachten
 			</NcCheckboxRadioSwitch>
 
 			<NcButton
 				:disabled="syncLoading"
-				type="primary"
+				variant="primary"
 				class="syncButton"
 				@click="synDirectroy">
 				<template #icon>
@@ -101,7 +101,7 @@ import { reactive } from 'vue'
 			<div v-if="!loading">
 				<NcCheckboxRadioSwitch v-for="(metadataSingular, i) in directoryStore.listingItem.metadata"
 					:key="`${metadataSingular}${i}`"
-					:checked.sync="checkedMetadata[metadataSingular]"
+					v-model="checkedMetadata[metadataSingular]"
 					type="switch">
 					{{ metadataSingular }}
 				</NcCheckboxRadioSwitch>
@@ -234,7 +234,7 @@ export default {
 					// Check if the metadata URL exists in the metadataStore.metaDataList
 					const exists = metadataStore.metaDataList.some(metaData => metaData.source === metadataUrl)
 					// Update the checkedMetadata reactive state
-					this.$set(this.checkedMetadata, metadataUrl, exists)
+					this.checkedMetadata[metadataUrl] = exists
 				})
 			}
 			this.loading = false

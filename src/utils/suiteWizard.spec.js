@@ -114,7 +114,6 @@ describe('suiteWizard.summarizeApplications', () => {
 	})
 })
 
-
 describe('suiteWizard.mapApplicationOptions', () => {
 	// Regression: `objectStore.getCollection()` returns the paginated ENVELOPE,
 	// not a bare array. The component computed mapped it as an array, which threw

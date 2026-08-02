@@ -12,8 +12,8 @@ import { reactive } from 'vue'
 				<Magnify :size="20" />
 			</template>
 			Zoek snel in het voor uw beschikbare federatieve netwerk<br>
-			<NcTextField class="searchField"
-				:value.sync="searchStore.search"
+			<NcTextField v-model="searchStore.search"
+				class="searchField"
 				label="Zoeken" />
 			<NcNoteCard v-if="searchStore.searchError" type="error">
 				<p>{{ searchStore.searchError }}</p>
@@ -25,8 +25,8 @@ import { reactive } from 'vue'
 			</template>
 			<NcCheckboxRadioSwitch v-for="(catalogiItem, i) in catalogiStore.catalogiList"
 				:key="`${catalogiItem}${i}`"
-				type="switch"
-				:checked.sync="searchStore.catalogi[catalogiItem.id]">
+				v-model="searchStore.catalogi[catalogiItem.id]"
+				type="switch">
 				{{ catalogiItem.title || 'Geen titel' }}
 			</NcCheckboxRadioSwitch>
 		</NcAppSidebarTab>
@@ -36,8 +36,8 @@ import { reactive } from 'vue'
 			</template>
 			<NcCheckboxRadioSwitch v-for="(metaData, i) in metadataStore.metaDataList"
 				:key="`${metaData}${i}`"
-				type="switch"
-				:checked.sync="searchStore.metadata[metaData.id]">
+				v-model="searchStore.metadata[metaData.id]"
+				type="switch">
 				{{ metaData.title || 'Geen titel' }}
 			</NcCheckboxRadioSwitch>
 		</NcAppSidebarTab>

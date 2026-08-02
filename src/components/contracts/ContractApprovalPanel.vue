@@ -38,7 +38,7 @@
 				<div v-if="configured" class="contract-approval-panel__actions">
 					<NcButton
 						v-if="canSubmitApproval"
-						type="primary"
+						variant="primary"
 						:disabled="busy"
 						@click="submit(false)">
 						<template #icon>
@@ -49,7 +49,7 @@
 
 					<NcButton
 						v-if="canSubmitRenewal"
-						type="primary"
+						variant="primary"
 						:disabled="busy"
 						@click="submit(true)">
 						<template #icon>

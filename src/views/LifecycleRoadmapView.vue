@@ -7,7 +7,7 @@
 			<p class="rm-intro">
 				{{ t('softwarecatalog', 'Applications in use for an organisation, grouped by lifecycle phase and ordered by nearest urgency (end-of-support, phase-out or planned replacement).') }}
 			</p>
-			<NcButton type="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
+			<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
@@ -25,7 +25,7 @@
 				:placeholder="t('softwarecatalog', 'Select an organisation')"
 				track-by="uuid"
 				label="label"
-				@input="onOrgChange" />
+				@update:model-value="onOrgChange" />
 		</div>
 
 		<NcEmptyContent

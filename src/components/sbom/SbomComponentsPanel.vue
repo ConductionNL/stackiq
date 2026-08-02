@@ -54,7 +54,7 @@
 					<span v-if="selectedFile" class="sbom-upload__file-size">{{ formatFileSize(selectedFile.size) }}</span>
 				</label>
 
-				<NcButton type="primary"
+				<NcButton variant="primary"
 					:disabled="!selectedFile || uploading"
 					data-testid="sbom-import-button"
 					@click="importSbom">

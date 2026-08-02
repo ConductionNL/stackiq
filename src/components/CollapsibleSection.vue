@@ -34,7 +34,7 @@
 					<!-- Save Button -->
 					<NcButton
 						v-if="showSaveButton && !loading"
-						type="primary"
+						variant="primary"
 						:disabled="saving || !canSave"
 						@click="handleSave">
 						<template #icon>
@@ -47,7 +47,7 @@
 					<!-- Refresh Button -->
 					<NcButton
 						v-if="showRefreshButton && !loading"
-						type="secondary"
+						variant="secondary"
 						:disabled="refreshing"
 						@click="handleRefresh">
 						<template #icon>
@@ -60,7 +60,7 @@
 					<!-- Info Button -->
 					<NcButton
 						v-if="hasInfoContent"
-						type="tertiary-no-background"
+						variant="tertiary-no-background"
 						:aria-label="'Show information about ' + name"
 						@click="showInfoModal = true">
 						<template #icon>
@@ -70,7 +70,7 @@
 
 					<!-- Collapse Toggle -->
 					<NcButton
-						type="tertiary-no-background"
+						variant="tertiary-no-background"
 						:aria-label="isExpanded ? 'Collapse section' : 'Expand section'"
 						@click="toggleExpanded">
 						<template #icon>

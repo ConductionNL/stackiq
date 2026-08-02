@@ -9,7 +9,7 @@
 					? t('softwarecatalog', 'Which applications support which BIO 2.0 measures, plus each application\'s BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.')
 					: t('softwarecatalog', 'Which applications support which standards. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.') }}
 			</p>
-			<NcButton type="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
+			<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
@@ -21,14 +21,14 @@
 		<!-- Column-source scope: standards (GEMMA) or BIO 2.0 measures. -->
 		<div class="cmv-scope" role="radiogroup" :aria-label="t('softwarecatalog', 'Compliance matrix scope')">
 			<NcCheckboxRadioSwitch
-				:checked.sync="columnSource"
+				v-model="columnSource"
 				value="standaardversie"
 				name="cmv-columnSource"
 				type="radio">
 				{{ t('softwarecatalog', 'Standards') }}
 			</NcCheckboxRadioSwitch>
 			<NcCheckboxRadioSwitch
-				:checked.sync="columnSource"
+				v-model="columnSource"
 				value="bioMaatregel"
 				name="cmv-columnSource"
 				type="radio">
@@ -48,7 +48,7 @@
 				:placeholder="columnSource === 'bioMaatregel' ? t('softwarecatalog', 'Select one or more BIO measures') : t('softwarecatalog', 'Select one or more standards')"
 				track-by="uuid"
 				label="label"
-				@input="onSelectionChange" />
+				@update:model-value="onSelectionChange" />
 			<NcSelect
 				v-model="selectedOrganisation"
 				class="cmv-orgSelect"
@@ -59,7 +59,7 @@
 				:placeholder="t('softwarecatalog', 'All applications')"
 				track-by="uuid"
 				label="label"
-				@input="onSelectionChange" />
+				@update:model-value="onSelectionChange" />
 		</div>
 
 		<NcEmptyContent
@@ -416,7 +416,7 @@ export default {
 	watch: {
 		/**
 		 * Re-encode the URL whenever the column-source scope changes (the
-		 * `.sync`-bound radio switches update `columnSource` directly, so
+		 * `v-model`-bound radio switches update `columnSource` directly, so
 		 * this is the only hook point for that transition).
 		 * @return {void}
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md

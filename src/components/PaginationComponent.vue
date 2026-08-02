@@ -30,7 +30,7 @@
 					<NcButton
 						v-else
 						:key="page"
-						:type="page === currentPage ? 'primary' : 'secondary'"
+						:variant="page === currentPage ? 'primary' : 'secondary'"
 						:disabled="page === currentPage"
 						@click="changePage(page)">
 						{{ page }}
@@ -59,7 +59,7 @@
 			<NcSelect
 				id="pageSize"
 				class="pagination-page-size-select"
-				:value="currentPageSizeOption"
+				:model-value="currentPageSizeOption"
 				:options="pageSizeOptions"
 				:clearable="false"
 				:input-label="t('softwarecatalog', 'Items per page')"

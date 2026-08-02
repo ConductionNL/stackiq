@@ -29,7 +29,7 @@
 			</p>
 			<div class="pr-actions">
 				<NcButton
-					type="tertiary"
+					variant="tertiary"
 					:disabled="!selectedOrg || loading"
 					:aria-label="t('softwarecatalog', 'Refresh report')"
 					@click="loadReport">
@@ -40,7 +40,7 @@
 					{{ t('softwarecatalog', 'Refresh') }}
 				</NcButton>
 				<NcButton
-					type="secondary"
+					variant="secondary"
 					:disabled="!selectedOrg || loading"
 					:aria-label="t('softwarecatalog', 'Export CSV')"
 					@click="exportCsv">
@@ -61,7 +61,7 @@
 				:placeholder="t('softwarecatalog', 'Select an organisation')"
 				track-by="uuid"
 				label="label"
-				@input="loadReport" />
+				@update:model-value="loadReport" />
 		</div>
 
 		<NcEmptyContent

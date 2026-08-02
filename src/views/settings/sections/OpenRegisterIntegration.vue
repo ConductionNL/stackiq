@@ -56,7 +56,7 @@
 										input-label="Select Voorzieningen Register"
 										:loading="loadingRegisters"
 										:disabled="loadingRegisters"
-										@change="handleVoorzieningenRegisterChange" />
+										@update:model-value="handleVoorzieningenRegisterChange" />
 								</div>
 
 								<div class="register-selection-item">
@@ -66,7 +66,7 @@
 										input-label="Select AMEF Register"
 										:loading="loadingRegisters"
 										:disabled="loadingRegisters"
-										@change="handleAmefRegisterChange" />
+										@update:model-value="handleAmefRegisterChange" />
 								</div>
 							</div>
 						</div>
@@ -92,7 +92,7 @@
 											:input-label="item.title"
 											:loading="loadingVoorzieningenSchemas"
 											:disabled="loadingVoorzieningenSchemas"
-											@change="validateConfiguration" />
+											@update:model-value="validateConfiguration" />
 									</div>
 								</div>
 							</div>
@@ -132,7 +132,7 @@
 											:input-label="item.title"
 											:loading="loadingAmefSchemas"
 											:disabled="loadingAmefSchemas"
-											@change="validateConfiguration" />
+											@update:model-value="validateConfiguration" />
 									</div>
 								</div>
 							</div>
@@ -175,8 +175,7 @@ import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 
 // Nextcloud Vue components
-import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
+import { NcSelect, NcNoteCard } from '@nextcloud/vue'
 
 // Custom components
 import StandardTabs from '../../../components/StandardTabs.vue'

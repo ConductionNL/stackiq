@@ -22,7 +22,7 @@
 		@refresh="loadStatus">
 		<template #header-actions>
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="!status.available || !status.enabled || pulling || status.peers.length === 0"
 				@click="triggerPull">
 				<template #icon>
@@ -56,13 +56,13 @@
 			</p>
 			<div class="federation-add-row">
 				<NcTextField
-					:value.sync="newPeerUrl"
+					v-model="newPeerUrl"
 					:label="t('softwarecatalog', 'Peer catalog URL')"
 					:placeholder="'https://catalog.example.org'"
 					:disabled="adding"
 					@keydown.enter="addPeer" />
 				<NcButton
-					type="secondary"
+					variant="secondary"
 					:disabled="adding || newPeerUrl.trim() === ''"
 					@click="addPeer">
 					<template #icon>
@@ -107,7 +107,7 @@
 						</span>
 					</div>
 					<NcButton
-						type="tertiary"
+						variant="tertiary"
 						:aria-label="t('softwarecatalog', 'Remove peer')"
 						:disabled="removingUrl === peer.url"
 						@click="removePeer(peer.url)">

@@ -16,25 +16,25 @@
 
 			<div class="gemma-view-index__toggle-group">
 				<NcCheckboxRadioSwitch
-					:checked="viewStore.includeGebruik"
+					:model-value="viewStore.includeGebruik"
 					type="switch"
-					@update:checked="onGebruikToggle">
+					@update:model-value="onGebruikToggle">
 					{{ t('softwarecatalog', 'Gebruik') }}
 				</NcCheckboxRadioSwitch>
 
 				<!-- Deelnames toggle is independent from gebruik toggle per spec -->
 				<NcCheckboxRadioSwitch
-					:checked="viewStore.includeDeelnamesGebruik"
+					:model-value="viewStore.includeDeelnamesGebruik"
 					type="switch"
-					@update:checked="onDeelnamesToggle">
+					@update:model-value="onDeelnamesToggle">
 					{{ t('softwarecatalog', 'Deelnames') }}
 				</NcCheckboxRadioSwitch>
 
 				<!-- Product toggle is independent from the other toggles -->
 				<NcCheckboxRadioSwitch
-					:checked="viewStore.includeProducts"
+					:model-value="viewStore.includeProducts"
 					type="switch"
-					@update:checked="onProductsToggle">
+					@update:model-value="onProductsToggle">
 					{{ t('softwarecatalog', 'Products') }}
 				</NcCheckboxRadioSwitch>
 			</div>

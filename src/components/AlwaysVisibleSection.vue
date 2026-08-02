@@ -23,7 +23,7 @@
 			<div class="header-buttons">
 				<NcButton
 					v-if="showSaveButton"
-					type="primary"
+					variant="primary"
 					:disabled="loading || saving || !canSave"
 					class="title-save-button"
 					@click="handleSave">
@@ -36,7 +36,7 @@
 
 				<NcButton
 					v-if="showRefreshButton"
-					type="secondary"
+					variant="secondary"
 					:disabled="loading || refreshing"
 					class="title-refresh-button"
 					@click="handleRefresh">
@@ -49,7 +49,7 @@
 
 				<NcButton
 					v-if="hasInfoContent"
-					type="tertiary-no-background"
+					variant="tertiary-no-background"
 					:aria-label="'Show information about ' + name"
 					@click="showInfoModal = true">
 					<template #icon>

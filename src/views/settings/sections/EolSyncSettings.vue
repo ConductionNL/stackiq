@@ -32,7 +32,7 @@
 		@refresh="loadAll">
 		<template #header-actions>
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="syncing"
 				@click="triggerSync">
 				<template #icon>
@@ -54,7 +54,7 @@
 		<div class="eol-sync-settings">
 			<div class="setting-group">
 				<NcCheckboxRadioSwitch
-					:checked.sync="config.enabled"
+					v-model="config.enabled"
 					type="switch">
 					{{ t('softwarecatalog', 'Enable EOL feed sync') }}
 				</NcCheckboxRadioSwitch>
@@ -69,15 +69,15 @@
 					{{ t('softwarecatalog', 'Pre-filled with the names the openconnector endoflife-date-source change provisions. Change them if your instance uses different names — no code change required.') }}
 				</p>
 				<NcTextField
-					:value.sync="config.register"
+					v-model="config.register"
 					:label="t('softwarecatalog', 'Register slug')"
 					:disabled="!config.enabled" />
 				<NcTextField
-					:value.sync="config.productSchema"
+					v-model="config.productSchema"
 					:label="t('softwarecatalog', 'eolProduct schema slug')"
 					:disabled="!config.enabled" />
 				<NcTextField
-					:value.sync="config.cycleSchema"
+					v-model="config.cycleSchema"
 					:label="t('softwarecatalog', 'eolCycle schema slug')"
 					:disabled="!config.enabled" />
 			</div>
@@ -85,7 +85,7 @@
 			<div class="setting-group">
 				<h4>{{ t('softwarecatalog', 'Schedule') }}</h4>
 				<NcTextField
-					:value.sync="intervalMinutesInput"
+					v-model="intervalMinutesInput"
 					type="number"
 					:label="t('softwarecatalog', 'Sync interval (minutes)')"
 					:disabled="!config.enabled" />

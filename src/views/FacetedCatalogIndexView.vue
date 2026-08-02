@@ -50,13 +50,13 @@ generic route-query-to-filter passthrough never sees it (see the
 
 		<div class="faceted-catalog-index__toolbar">
 			<NcTextField
-				:value="searchValue"
+				:model-value="searchValue"
 				class="faceted-catalog-index__search"
 				:label="t('softwarecatalog', 'Search')"
 				:placeholder="t('softwarecatalog', 'Search applications and services…')"
-				@update:value="onSearchInput" />
+				@update:model-value="onSearchInput" />
 			<NcButton v-if="searchValue !== ''"
-				type="tertiary"
+				variant="tertiary"
 				:aria-label="t('softwarecatalog', 'Clear search')"
 				@click="onSearchInput('')">
 				<template #icon>
@@ -302,7 +302,7 @@ export default {
 		this.facetStore.fetchSavedViews(this.schema)
 	},
 
-	beforeDestroy() {
+	beforeUnmount() {
 		clearTimeout(this.searchDebounceTimer)
 	},
 

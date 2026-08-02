@@ -47,7 +47,7 @@
 				</div>
 				<div class="moderation-actions">
 					<NcButton
-						type="success"
+						variant="success"
 						:disabled="busyId === item.id"
 						@click="approve(item)">
 						<template #icon>
@@ -57,7 +57,7 @@
 						{{ t('softwarecatalog', 'Approve') }}
 					</NcButton>
 					<NcButton
-						type="error"
+						variant="error"
 						:disabled="busyId === item.id"
 						@click="reject(item)">
 						<template #icon>

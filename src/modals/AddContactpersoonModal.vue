@@ -24,42 +24,39 @@ Modal component for adding new contactpersoon to an organisation
 			<form class="contactpersoon-form" @submit.prevent="saveContactpersoon">
 				<div class="form-row">
 					<NcTextField
-						:value="formData.voornaam"
+						v-model="formData.voornaam"
 						:label="t('softwarecatalog', 'First Name')"
 						:placeholder="t('softwarecatalog', 'Enter first name')"
 						class="compact-field"
-						required
-						@update:value="formData.voornaam = $event" />
+						required />
 				</div>
 
 				<div class="form-row">
 					<NcTextField
-						:value="formData.achternaam"
+						v-model="formData.achternaam"
 						:label="t('softwarecatalog', 'Last Name')"
 						:placeholder="t('softwarecatalog', 'Enter last name')"
 						class="compact-field"
-						required
-						@update:value="formData.achternaam = $event" />
+						required />
 				</div>
 
 				<div class="form-row">
 					<NcTextField
-						:value="formData['e-mailadres']"
+						v-model="formData['e-mailadres']"
 						type="email"
 						:label="t('softwarecatalog', 'Email Address')"
 						:placeholder="t('softwarecatalog', 'Enter email address')"
 						class="compact-field"
-						required
-						@update:value="formData['e-mailadres'] = $event" />
+						required />
 				</div>
 
 				<div class="dialog-actions">
-					<NcButton type="secondary" @click="closeModal">
+					<NcButton variant="secondary" @click="closeModal">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
-					<NcButton type="primary"
+					<NcButton variant="primary"
 						:disabled="loading || !isFormValid"
-						native-type="submit">
+						type="submit">
 						<template #icon>
 							<NcLoadingIcon v-if="loading" :size="20" />
 						</template>

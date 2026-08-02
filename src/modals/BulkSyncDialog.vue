@@ -117,7 +117,7 @@
 				<NcButton
 					v-if="!syncCompleted"
 					:disabled="bulkSyncLoading"
-					type="primary"
+					variant="primary"
 					@click="startBulkSync">
 					{{ bulkSyncLoading ? 'Syncing...' : 'Start Sync' }}
 				</NcButton>

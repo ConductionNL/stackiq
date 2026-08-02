@@ -8,7 +8,7 @@
 				{{ t('softwarecatalog', 'Track vulnerabilities (CVE / CVSS) against the applications in your catalogue and see which in-production usages are exposed.') }}
 			</p>
 			<div class="vv-actions">
-				<NcButton type="primary"
+				<NcButton variant="primary"
 					:aria-label="t('softwarecatalog', 'Report a vulnerability')"
 					data-testid="vuln-report"
 					@click="reportVulnerability">
@@ -17,7 +17,7 @@
 					</template>
 					{{ t('softwarecatalog', 'Report vulnerability') }}
 				</NcButton>
-				<NcButton type="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
+				<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
 					<template #icon>
 						<NcLoadingIcon v-if="loading" :size="20" />
 						<Refresh v-else :size="20" />
@@ -84,12 +84,12 @@
 					<td>{{ row.affectedCount }}</td>
 					<td>{{ row.exposureCount }}</td>
 					<td class="vv-actionsCol" @click.stop>
-						<NcButton type="tertiary" :aria-label="t('softwarecatalog', 'Edit')" @click="editVulnerability(row)">
+						<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Edit')" @click="editVulnerability(row)">
 							<template #icon>
 								<Pencil :size="18" />
 							</template>
 						</NcButton>
-						<NcButton type="tertiary" :aria-label="t('softwarecatalog', 'Delete')" @click="deleteVulnerability(row)">
+						<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Delete')" @click="deleteVulnerability(row)">
 							<template #icon>
 								<Delete :size="18" />
 							</template>

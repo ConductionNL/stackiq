@@ -104,8 +104,14 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 
 					<!-- Edit Tabs -->
 					<div class="tabContainer">
-						<BTabs v-model="activeTab" content-class="mt-3" justified>
-							<BTab title="Form Editor" active>
+						<StandardTabs
+							:tabs="[
+								{ key: 'form', title: 'Form Editor' },
+								{ key: 'json', title: 'JSON Editor' },
+							]"
+							:active-tab="activeTab"
+							@update:active-tab="activeTab = $event">
+							<div v-show="activeTab === 'form'">
 								<div v-if="fullSelectedSchema" class="form-editor">
 									<div v-for="(prop, key) in schemaProperties" :key="key" class="form-field">
 										<!-- Enum-on-string fields (status, timeClassification, ...) render as a
@@ -119,10 +125,10 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 											<NcSelect
 												:input-label="prop.title || key"
 												:options="prop.enum"
-												:value="getFieldValue(key) || null"
+												:model-value="getFieldValue(key) || null"
 												:placeholder="prop.example"
 												:clearable="true"
-												@input="value => setFieldValue(key, value)" />
+												@update:model-value="value => setFieldValue(key, value)" />
 											<p v-if="prop.description" class="form-field-helper">
 												{{ prop.description }}
 											</p>
@@ -130,34 +136,35 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										<template v-else-if="prop.type === 'string' && prop.format === 'date'">
 											<NcTextField
 												:label="prop.title || key"
-												:value="getFieldValue(key)"
+												:model-value="getFieldValue(key)"
 												:placeholder="prop.example"
 												:helper-text="prop.description"
 												:required="prop.required"
 												type="date"
-												@update:value="value => setFieldValue(key, value)" />
+												@update:model-value="value => setFieldValue(key, value)" />
 										</template>
 										<template v-else-if="prop.type === 'string'">
 											<NcTextField
 												:label="prop.title || key"
-												:value="getFieldValue(key)"
+												:model-value="getFieldValue(key)"
 												:placeholder="prop.example"
 												:helper-text="prop.description"
 												:required="prop.required"
-												@update:value="value => setFieldValue(key, value)" />
+												@update:model-value="value => setFieldValue(key, value)" />
 										</template>
 										<template v-else-if="prop.type === 'boolean'">
 											<NcCheckboxRadioSwitch
-												:checked.sync="formData[key]"
+												:model-value="Boolean(formData[key])"
 												:helper-text="prop.description"
-												type="switch">
+												type="switch"
+												@update:model-value="value => setFieldValue(key, value)">
 												{{ prop.title || key }}
 											</NcCheckboxRadioSwitch>
 										</template>
 										<template v-else-if="prop.type === 'number' || prop.type === 'integer'">
 											<NcTextField
 												:label="prop.title || key"
-												:value="getFieldValue(key)"
+												:model-value="getFieldValue(key)"
 												:placeholder="prop.example"
 												:helper-text="prop.description"
 												:required="prop.required"
@@ -165,7 +172,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												:min="prop.minimum"
 												:max="prop.maximum"
 												:step="prop.type === 'integer' ? '1' : 'any'"
-												@update:value="value => setFieldValue(key, value)" />
+												@update:model-value="value => setFieldValue(key, value)" />
 										</template>
 										<template v-else>
 											{{ prop.type }}
@@ -175,9 +182,9 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 								<NcEmptyContent v-else>
 									Please select a schema to edit the publication
 								</NcEmptyContent>
-							</BTab>
+							</div>
 
-							<BTab title="JSON Editor">
+							<div v-show="activeTab === 'json'">
 								<div class="json-editor">
 									<div :class="`codeMirrorContainer ${getTheme()}`">
 										<CodeMirror
@@ -193,7 +200,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 											style="height: 400px" />
 										<NcButton
 											class="format-json-button"
-											type="secondary"
+											variant="secondary"
 											size="small"
 											:disabled="!fullSelectedSchema"
 											@click="formatJSON">
@@ -204,8 +211,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										Invalid JSON format
 									</span>
 								</div>
-							</BTab>
-						</BTabs>
+							</div>
+						</StandardTabs>
 					</div>
 				</div>
 			</div>
@@ -219,8 +226,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				</NcButton>
 
 				<NcButton
-					:disabled="loading || (activeTab === 1 && !isValidJson(jsonData))"
-					type="primary"
+					:disabled="loading || (activeTab === 'json' && !isValidJson(jsonData))"
+					variant="primary"
 					@click="saveObject">
 					<template #icon>
 						<NcLoadingIcon v-if="loading" :size="20" />
@@ -247,7 +254,7 @@ import {
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
-import { BTabs, BTab } from 'bootstrap-vue'
+import StandardTabs from '../../components/StandardTabs.vue'
 import { getTheme } from '../../services/getTheme.js'
 import { json, jsonParseLinter } from '@codemirror/lang-json'
 
@@ -269,9 +276,14 @@ export default {
 		NcSelect,
 		NcCheckboxRadioSwitch,
 		NcEmptyContent,
-		BTabs,
-		BTab,
+		NcLoadingIcon,
+		NcNoteCard,
+		StandardTabs,
 		CodeMirror,
+		ContentSaveOutline,
+		Cancel,
+		Plus,
+		Pencil,
 	},
 	props: {
 		/**
@@ -285,7 +297,7 @@ export default {
 	},
 	data() {
 		return {
-			activeTab: 0,
+			activeTab: 'form',
 			isNewObject: false,
 			loading: false,
 			error: null,
@@ -405,7 +417,7 @@ export default {
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
-				if (this.activeTab === 1 && this.isValidJson(newValue)) {
+				if (this.activeTab === 'json' && this.isValidJson(newValue)) {
 					this.updateFormFromJson()
 				}
 			},
@@ -415,7 +427,7 @@ export default {
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
-				if (this.activeTab === 0) {
+				if (this.activeTab === 'form') {
 					this.updateJsonFromForm()
 				}
 			},
@@ -425,7 +437,7 @@ export default {
 	mounted() {
 		this.initializeData()
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		clearTimeout(this.closeModalTimeout)
 	},
 	methods: {
@@ -557,7 +569,7 @@ export default {
 			}
 			try {
 				let dataToSave
-				if (this.activeTab === 1) {
+				if (this.activeTab === 'json') {
 					if (!this.jsonData.trim()) {
 						throw new Error('JSON data cannot be empty')
 					}
@@ -693,7 +705,7 @@ export default {
 			this.error = null
 			this.formData = {}
 			this.jsonData = ''
-			this.activeTab = 0
+			this.activeTab = 'form'
 			// Reset selections
 			this.selectedCatalogus = null
 			this.selectedRegister = null
@@ -710,7 +722,7 @@ export default {
 		 */
 		setFieldValue(key, value) {
 			if (this.formData[key] === value) return
-			this.$set(this.formData, key, value)
+			this.formData[key] = value
 		},
 
 		/**

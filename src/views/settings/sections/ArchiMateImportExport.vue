@@ -172,7 +172,7 @@
 								<div class="error-details-header">
 									<h5>Import Errors Details</h5>
 									<NcButton
-										type="tertiary-no-background"
+										variant="tertiary-no-background"
 										@click="hideErrorDetails">
 										<template #icon>
 											<Close :size="20" />
@@ -308,7 +308,7 @@
 				<div class="import-button-section">
 					<NcButton
 						v-if="!importResult && !importError"
-						type="primary"
+						variant="primary"
 						:disabled="!selectedFile || importing"
 						@click="importArchiMateFile">
 						<template #icon>
@@ -320,7 +320,7 @@
 
 					<NcButton
 						v-else
-						type="primary"
+						variant="primary"
 						@click="resetImport">
 						<template #icon>
 							<Refresh :size="20" />
@@ -351,17 +351,17 @@
 						<label>Include in organization export:</label>
 						<div class="checkbox-group">
 							<NcCheckboxRadioSwitch
-								:checked.sync="includeModules"
+								v-model="includeModules"
 								:disabled="exportingOrg">
 								Modules
 							</NcCheckboxRadioSwitch>
 							<NcCheckboxRadioSwitch
-								:checked.sync="includeDeelnames"
+								v-model="includeDeelnames"
 								:disabled="exportingOrg">
 								Deelnames
 							</NcCheckboxRadioSwitch>
 							<NcCheckboxRadioSwitch
-								:checked.sync="includeGebruik"
+								v-model="includeGebruik"
 								:disabled="exportingOrg">
 								Gebruik
 							</NcCheckboxRadioSwitch>
@@ -369,7 +369,7 @@
 					</div>
 
 					<NcButton
-						type="secondary"
+						variant="secondary"
 						:disabled="exporting"
 						@click="exportArchiMateFile">
 						<template #icon>
@@ -380,7 +380,7 @@
 					</NcButton>
 
 					<NcButton
-						type="primary"
+						variant="primary"
 						:disabled="exportingOrg || !selectedOrganization"
 						@click="exportOrgArchiMateFile">
 						<template #icon>
@@ -429,11 +429,7 @@ import { withHeartbeat } from '../../../utils/heartbeat.js'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
-import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
+import { NcButton, NcNoteCard, NcLoadingIcon, NcSelect, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 
 // Icons
 import CloudUpload from 'vue-material-design-icons/CloudUpload.vue'

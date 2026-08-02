@@ -25,11 +25,10 @@
 			<form class="review-form" @submit.prevent="submitReview">
 				<div class="form-row">
 					<NcTextField
-						:value="formData.naam"
+						v-model="formData.naam"
 						:label="t('softwarecatalog', 'Title')"
 						:placeholder="t('softwarecatalog', 'Summarise your experience in a few words')"
-						required
-						@update:value="formData.naam = $event" />
+						required />
 				</div>
 
 				<div class="form-row">
@@ -46,10 +45,9 @@
 
 				<div class="form-row">
 					<NcTextArea
-						:value="formData.beschrijvingLang"
+						v-model="formData.beschrijvingLang"
 						:label="t('softwarecatalog', 'Testimonial')"
-						:placeholder="t('softwarecatalog', 'What was your experience with this software?')"
-						@update:value="formData.beschrijvingLang = $event" />
+						:placeholder="t('softwarecatalog', 'What was your experience with this software?')" />
 				</div>
 
 				<NcNoteCard v-if="error" type="error">
@@ -57,12 +55,12 @@
 				</NcNoteCard>
 
 				<div class="dialog-actions">
-					<NcButton type="secondary" @click="closeModal">
+					<NcButton variant="secondary" @click="closeModal">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
-					<NcButton type="primary"
+					<NcButton variant="primary"
 						:disabled="loading || !isFormValid"
-						native-type="submit">
+						type="submit">
 						<template #icon>
 							<NcLoadingIcon v-if="loading" :size="20" />
 						</template>

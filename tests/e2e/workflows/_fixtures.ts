@@ -24,8 +24,12 @@
  */
 
 import { request as playwrightRequest, type APIRequestContext } from '@playwright/test'
+import { resolveBaseUrl } from '../base-url'
 
-export const BASE_URL = process.env.BASE_URL ?? process.env.NEXTCLOUD_URL ?? 'http://localhost:8080'
+// Re-exported from the single central resolver (tests/e2e/base-url.ts). These
+// fixtures CREATE organisations and contracts, so a `localhost:8080` fallback
+// here would write test data into the shared dev container.
+export const BASE_URL = resolveBaseUrl()
 export const NC_ADMIN_USER = process.env.NC_ADMIN_USER ?? 'admin'
 export const NC_ADMIN_PASS = process.env.NC_ADMIN_PASS ?? 'admin'
 

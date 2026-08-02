@@ -1,5 +1,5 @@
-import Vue from 'vue'
-import { PiniaVuePlugin } from 'pinia'
+import { createApp, h } from 'vue'
+import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import pinia from './pinia.js'
 import ConceptOrganisatiesWidget from './views/widgets/ConceptOrganisatiesWidget.vue'
 
@@ -9,13 +9,16 @@ import ConceptOrganisatiesWidget from './views/widgets/ConceptOrganisatiesWidget
 // aliased packages).
 import '@conduction/nextcloud-vue/css/index.css'
 
-Vue.use(PiniaVuePlugin)
-
 OCA.Dashboard.register('softwarecatalog_concept_organisaties_widget', async (el, { widget }) => {
-	Vue.mixin({ methods: { t, n } })
-	const View = Vue.extend(ConceptOrganisatiesWidget)
-	new View({
-		pinia,
-		propsData: { title: widget.title },
-	}).$mount(el)
+	const app = createApp({
+		render: () => h(ConceptOrganisatiesWidget, { title: widget.title }),
+	})
+
+	// Previously `Vue.mixin({ methods: { t, n } })` referenced bare `t`/`n`,
+	// which resolved to Nextcloud's globals rather than to the l10n module.
+	// Import them explicitly so the widget bundle does not depend on globals.
+	app.mixin({ methods: { t, n } })
+	app.use(pinia)
+
+	app.mount(el)
 })

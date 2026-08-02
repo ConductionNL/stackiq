@@ -61,7 +61,7 @@
 					</NcNoteCard>
 
 					<NcButton v-if="!success"
-						type="secondary"
+						variant="secondary"
 						:disabled="!selectedTarget || previewing || busy"
 						@click="preview">
 						<template #icon>

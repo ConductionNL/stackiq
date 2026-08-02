@@ -33,7 +33,7 @@
 		@refresh="refreshConfiguration">
 		<template #header-actions>
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="loading || performingSync"
 				@click="performManualSync">
 				<template #icon>
@@ -59,13 +59,13 @@
 								:options="timeWindowOptions"
 								input-label="Time Window"
 								:disabled="loading || loadingSyncStatus"
-								@change="handleTimeWindowChange" />
+								@update:model-value="handleTimeWindowChange" />
 						</div>
 
 						<!-- Sync Actions in same row -->
 						<div class="sync-actions">
 							<NcButton
-								type="secondary"
+								variant="secondary"
 								:disabled="loading || loadingSyncStatus"
 								@click="refreshConfiguration">
 								<template #icon>
@@ -76,7 +76,7 @@
 							</NcButton>
 
 							<NcButton
-								type="secondary"
+								variant="secondary"
 								:disabled="loading || loadingSyncStatus"
 								@click="loadSyncStatus">
 								<template #icon>
@@ -214,7 +214,7 @@
 
 						<div class="sync-actions">
 							<NcButton
-								type="primary"
+								variant="primary"
 								:disabled="loading || performingOrgSync"
 								@click="performOrganisationSync">
 								<template #icon>

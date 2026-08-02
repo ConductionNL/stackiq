@@ -43,9 +43,9 @@
 						<div class="cronjob-title">
 							<h4>{{ job.name }}</h4>
 							<NcCheckboxRadioSwitch
-								:checked="job.enabled"
+								:model-value="job.enabled"
 								type="switch"
-								@update:checked="updateJobEnabled(job.id, $event)">
+								@update:model-value="updateJobEnabled(job.id, $event)">
 								{{ job.enabled ? 'Enabled' : 'Disabled' }}
 							</NcCheckboxRadioSwitch>
 						</div>
@@ -75,7 +75,7 @@
 						<!-- Save button, Run button and status -->
 						<div class="config-actions">
 							<NcButton
-								type="primary"
+								variant="primary"
 								:disabled="!canSaveJob(job) || savingJob === job.id"
 								@click="saveJobConfig(job)">
 								<template #icon>
@@ -86,7 +86,7 @@
 							</NcButton>
 
 							<NcButton
-								type="secondary"
+								variant="secondary"
 								:disabled="!job.organisationUuid || runningJob === job.id"
 								@click="runJob(job)">
 								<template #icon>
@@ -143,12 +143,7 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 
 // Nextcloud Vue components
-import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcEmptyContent from '@nextcloud/vue/dist/Components/NcEmptyContent.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
+import { NcSelect, NcNoteCard, NcEmptyContent, NcLoadingIcon, NcCheckboxRadioSwitch, NcButton } from '@nextcloud/vue'
 
 // Custom components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'

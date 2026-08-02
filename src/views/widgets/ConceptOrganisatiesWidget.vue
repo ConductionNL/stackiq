@@ -6,7 +6,7 @@ import { objectStore } from '../../store/store.js'
 <template>
 	<div class="concept-organisaties-widget">
 		<div class="widget-header">
-			<NcButton type="tertiary"
+			<NcButton variant="tertiary"
 				:aria-label="t('softwarecatalog', 'Refresh')"
 				@click="fetchData">
 				<template #icon>

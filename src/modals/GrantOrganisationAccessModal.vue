@@ -30,7 +30,7 @@
 					:input-label="t('softwarecatalog', 'Grant access to an existing Nextcloud user')"
 					:multiple="false" />
 				<NcButton
-					type="primary"
+					variant="primary"
 					:disabled="!selectedUser || granting"
 					@click="onGrant">
 					<template #icon>

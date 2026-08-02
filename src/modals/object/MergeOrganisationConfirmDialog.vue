@@ -53,7 +53,7 @@
 			<NcButton :disabled="busy" @click="$emit('cancel')">
 				{{ t('softwarecatalog', 'Cancel') }}
 			</NcButton>
-			<NcButton type="error" :disabled="busy" @click="$emit('confirm')">
+			<NcButton variant="error" :disabled="busy" @click="$emit('confirm')">
 				<template #icon>
 					<NcLoadingIcon v-if="busy" :size="20" />
 				</template>

@@ -28,7 +28,7 @@
 			:show-add="false"
 			@row-click="onRowOpen">
 			<template #actions>
-				<NcButton type="primary" @click="showWizard = true">
+				<NcButton variant="primary" @click="showWizard = true">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
@@ -37,7 +37,7 @@
 			</template>
 		</CnIndexPage>
 
-		<SuiteWizardDialog :show.sync="showWizard" @created="onSuiteCreated" />
+		<SuiteWizardDialog v-model:show="showWizard" @created="onSuiteCreated" />
 	</div>
 </template>
 
