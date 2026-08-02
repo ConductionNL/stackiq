@@ -8,4 +8,4 @@ on:
 
 jobs:
   protect:
-    uses: Conduction/.github/.github/workflows/branch-protection.yml@main
+    uses: ConductionNL/.github/.github/workflows/branch-protection.yml@main

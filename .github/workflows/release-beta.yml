@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    uses: Conduction/.github/.github/workflows/release-beta.yml@main
+    uses: ConductionNL/.github/.github/workflows/release-beta.yml@main
     with:
       app-name: softwarecatalog
     secrets: inherit
