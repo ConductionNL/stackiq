@@ -48,12 +48,12 @@
 					<div class="group-list">
 						<div v-for="(group, index) in genericUserGroups" :key="index" class="group-item">
 							<NcTextField
-								:value="(group || '').toString()"
+								:model-value="(group || '').toString()"
 								:placeholder="'Group name'"
 								label="Group Name"
-								@update:value="updateGroupName(index, $event)" />
+								@update:model-value="updateGroupName(index, $event)" />
 							<NcButton
-								type="tertiary-no-background"
+								variant="tertiary-no-background"
 								:aria-label="'Remove group'"
 								@click="removeGroup(index)">
 								<template #icon>
@@ -65,7 +65,7 @@
 
 					<div class="group-actions">
 						<NcButton
-							type="secondary"
+							variant="secondary"
 							@click="addGroup">
 							<template #icon>
 								<Plus :size="20" />
@@ -128,12 +128,12 @@
 					<div class="group-list">
 						<div v-for="(group, index) in organizationAdminGroups" :key="index" class="group-item">
 							<NcTextField
-								:value="group || ''"
+								:model-value="group || ''"
 								:placeholder="'Group name'"
 								label="Group Name"
-								@update:value="updateOrganizationAdminGroupName(index, $event)" />
+								@update:model-value="updateOrganizationAdminGroupName(index, $event)" />
 							<NcButton
-								type="tertiary-no-background"
+								variant="tertiary-no-background"
 								:aria-label="'Remove group'"
 								@click="removeOrganizationAdminGroup(index)">
 								<template #icon>
@@ -145,7 +145,7 @@
 
 					<div class="group-actions">
 						<NcButton
-							type="secondary"
+							variant="secondary"
 							@click="addOrganizationAdminGroup">
 							<template #icon>
 								<Plus :size="20" />
@@ -182,12 +182,12 @@
 					<div class="group-list">
 						<div v-for="(group, index) in superUserGroups" :key="index" class="group-item">
 							<NcTextField
-								:value="group || ''"
+								:model-value="group || ''"
 								:placeholder="'Group name'"
 								label="Group Name"
-								@update:value="updateSuperUserGroupName(index, $event)" />
+								@update:model-value="updateSuperUserGroupName(index, $event)" />
 							<NcButton
-								type="tertiary-no-background"
+								variant="tertiary-no-background"
 								:aria-label="'Remove group'"
 								@click="removeSuperUserGroup(index)">
 								<template #icon>
@@ -199,7 +199,7 @@
 
 					<div class="group-actions">
 						<NcButton
-							type="secondary"
+							variant="secondary"
 							@click="addSuperUserGroup">
 							<template #icon>
 								<Plus :size="20" />

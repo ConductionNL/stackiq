@@ -26,7 +26,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 			</NcButton>
 			<NcButton
 				:disabled="loading || success"
-				type="primary"
+				variant="primary"
 				@click="lockObject()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
@@ -38,12 +38,12 @@ import { objectStore, navigationStore } from '../../store/store.js'
 
 		<div v-if="!success" class="formContainer">
 			<NcTextField
-				:value.sync="process"
+				v-model="process"
 				:label="t('softwarecatalog', 'Process Name (optional)')"
 				:disabled="loading" />
 			<NcTextField
+				v-model="duration"
 				type="number"
-				:value.sync="duration"
 				:label="t('softwarecatalog', 'Duration in seconds (optional)')"
 				:disabled="loading" />
 		</div>

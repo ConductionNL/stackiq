@@ -22,19 +22,18 @@ free-text search, if any) on the module/dienst index pages, then emits
 
 			<form class="save-facet-view-modal__form" @submit.prevent="save">
 				<NcTextField
-					:value="name"
+					v-model="name"
 					:label="t('softwarecatalog', 'View name')"
 					:placeholder="t('softwarecatalog', 'e.g. Zaakregistratie modules')"
-					required
-					@update:value="name = $event" />
+					required />
 
 				<div class="save-facet-view-modal__actions">
-					<NcButton type="secondary" @click="closeModal">
+					<NcButton variant="secondary" @click="closeModal">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
-					<NcButton type="primary"
+					<NcButton variant="primary"
 						:disabled="saving || name.trim() === ''"
-						native-type="submit">
+						type="submit">
 						<template #icon>
 							<NcLoadingIcon v-if="saving" :size="20" />
 						</template>

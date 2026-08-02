@@ -11,14 +11,17 @@
 import { chromium, type FullConfig } from '@playwright/test'
 import * as path from 'path'
 import * as fs from 'fs'
+import { resolveBaseUrl } from './base-url'
 
 const AUTH_DIR = path.resolve(__dirname, '.auth')
 const STORAGE_STATE = path.join(AUTH_DIR, 'admin.json')
 
 export default async function globalSetup(config: FullConfig): Promise<void> {
+	// No `?? 'http://localhost:8080'` — see tests/e2e/base-url.ts. globalSetup
+	// performs LOGINS, so an unconfigured run here would fire credentials at
+	// whatever instance the fallback named.
 	const baseURL = (config.projects[0]?.use?.baseURL as string | undefined)
-		?? process.env.NEXTCLOUD_URL
-		?? 'http://localhost:8080'
+		?? resolveBaseUrl()
 	const username = process.env.NC_ADMIN_USER ?? 'admin'
 	const password = process.env.NC_ADMIN_PASS ?? 'admin'
 

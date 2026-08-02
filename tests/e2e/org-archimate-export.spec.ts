@@ -76,12 +76,15 @@
  */
 
 import { test, expect, request as playwrightRequest, type Page } from '@playwright/test'
+import { resolveBaseUrl } from './base-url'
 
 // ---------------------------------------------------------------------------
 // Fixture setup
 // ---------------------------------------------------------------------------
 
-const BASE_URL = process.env.BASE_URL ?? process.env.NEXTCLOUD_URL ?? 'http://localhost:8080'
+// Resolved centrally (tests/e2e/base-url.ts) so this spec's absolute API calls
+// and its relative `page.goto()`s cannot end up on different instances.
+const BASE_URL = resolveBaseUrl()
 const NC_ADMIN_USER = process.env.NC_ADMIN_USER ?? 'admin'
 const NC_ADMIN_PASS = process.env.NC_ADMIN_PASS ?? 'admin'
 

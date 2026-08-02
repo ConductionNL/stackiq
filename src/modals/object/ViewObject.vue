@@ -69,7 +69,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 						</div>
 
 						<div v-if="hasSelectedSchema && !allSelectionsComplete" class="selectionStep">
-							<NcButton type="primary" @click="proceedToProperties">
+							<NcButton variant="primary" @click="proceedToProperties">
 								<template #icon>
 									<ArrowRight :size="20" />
 								</template>
@@ -93,7 +93,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										<!-- Show/Hide Constant & Immutable Properties Toggle -->
 										<NcButton v-if="hasConstantOrImmutableProperties"
 											v-tooltip="showConstantProperties ? 'Hide constant & immutable properties' : 'Show constant & immutable properties'"
-											type="primary"
+											variant="primary"
 											size="small"
 											class="action-btn eye-toggle-btn"
 											:aria-label="showConstantProperties ? 'Hide constant & immutable properties' : 'Show constant & immutable properties'"
@@ -148,9 +148,9 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												<!-- Boolean properties -->
 												<NcCheckboxRadioSwitch
 													v-if="getPropertyInputComponent(key) === 'NcCheckboxRadioSwitch'"
-													:checked="formData[key] !== undefined ? formData[key] : value"
+													:model-value="Boolean(formData[key] !== undefined ? formData[key] : value)"
 													type="switch"
-													@update:checked="updatePropertyValue(key, $event)">
+													@update:model-value="updatePropertyValue(key, $event)">
 													{{ getPropertyDisplayName(key) }}
 												</NcCheckboxRadioSwitch>
 
@@ -161,35 +161,28 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 													:append-to-body="true"
 													:popup-class="'view-object-datepicker'"
 													:popup-style="{ zIndex: 12000 }"
-													:value="getDateTimePickerValue(key, value)"
+													:model-value="getDateTimePickerValue(key, value)"
 													:label="getPropertyDisplayName(key)"
 													:type="getDateTimePickerType(key)"
 													:placeholder="getPropertyDisplayName(key)"
 													:clearable="true"
-													@input="handleDateTimeUpdate(key, $event)"
-													@update:value="handleDateTimeUpdate(key, $event)"
-													@change="handleDateTimeUpdate(key, $event)"
-													@update:modelValue="handleDateTimeUpdate(key, $event)" />
+													@update:model-value="handleDateTimeUpdate(key, $event)" />
 
 												<!-- Text area properties -->
 												<NcTextArea
 													v-else-if="getPropertyInputComponent(key) === 'NcTextArea'"
 													ref="propertyValueInput"
-													:value="String(formData[key] !== undefined ? formData[key] : value || '')"
+													:model-value="String(formData[key] !== undefined ? formData[key] : value || '')"
 													:placeholder="getPropertyDisplayName(key)"
 													:rows="4"
-													@update:value="updatePropertyValue(key, $event)" />
+													@update:model-value="updatePropertyValue(key, $event)" />
 
 												<!-- Markdown editor properties -->
-												<Editor
+												<div
 													v-else-if="getPropertyInputComponent(key) === 'Editor'"
 													:key="`editor-${key}`"
-													:initial-value="String(formData[key] !== undefined ? formData[key] : value || '')"
-													:options="getMarkdownEditorOptions(key)"
-													initial-edit-type="wysiwyg"
-													height="400px"
-													@load="(editor) => markdownEditors[key] = editor"
-													@blur="updateMarkdownValue(key, markdownEditors[key])" />
+													ref="markdownEditorContainer"
+													class="markdown-editor-container" />
 
 												<!-- Themes properties -->
 												<div v-else-if="getPropertyInputComponent(key) === 'NcTextFieldArray' && key === 'themes'" class="input-with-icon">
@@ -204,13 +197,13 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												<div v-else-if="getPropertyInputComponent(key) === 'NcTextFieldArray'" class="input-with-icon">
 													<NcTextField
 														ref="propertyValueInput"
-														:value="String(formData[key] !== undefined ? (Array.isArray(formData[key]) ? formData[key].join(',') : formData[key]) : (Array.isArray(value) ? value.join(',') : value || ''))"
+														:model-value="String(formData[key] !== undefined ? (Array.isArray(formData[key]) ? formData[key].join(',') : formData[key]) : (Array.isArray(value) ? value.join(',') : value || ''))"
 														:type="getPropertyInputType(key)"
 														:placeholder="getPropertyDisplayName(key)"
 														:min="getPropertyMinimum(key)"
 														:max="getPropertyMaximum(key)"
 														:step="getPropertyStep(key)"
-														@update:value="updatePropertyValue(key, $event.split(/ *, */g).filter(Boolean))" />
+														@update:model-value="updatePropertyValue(key, $event.split(/ *, */g).filter(Boolean))" />
 													<InformationOutline
 														v-tooltip="'Array values should be separated by commas'"
 														:size="25"
@@ -221,13 +214,13 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												<NcTextField
 													v-else
 													ref="propertyValueInput"
-													:value="String(formData[key] !== undefined ? formData[key] : value || '')"
+													:model-value="String(formData[key] !== undefined ? formData[key] : value || '')"
 													:type="getPropertyInputType(key)"
 													:placeholder="getPropertyDisplayName(key)"
 													:min="getPropertyMinimum(key)"
 													:max="getPropertyMaximum(key)"
 													:step="getPropertyStep(key)"
-													@update:value="updatePropertyValue(key, $event)" />
+													@update:model-value="updatePropertyValue(key, $event)" />
 											</div>
 											<div v-else>
 												<template v-if="formData[key] !== undefined">
@@ -268,7 +261,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									<td class="tableColumnActions">
 										<NcButton v-if="canDropProperty(key, value)"
 											v-tooltip="getDropPropertyTooltip(key)"
-											type="tertiary-no-background"
+											variant="tertiary-no-background"
 											size="small"
 											class="drop-property-btn"
 											:aria-label="getDropPropertyTooltip(key)"
@@ -285,8 +278,32 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 
 					<!-- For existing objects, show tabs -->
 					<div v-else class="tabContainer">
-						<BTabs v-model="activeTab" content-class="mt-3" justified>
-							<BTab title="Properties" active>
+						<div class="standard-tabs">
+							<div class="tab-navigation">
+								<button
+									class="tab-button"
+									:class="{ active: activeTab === 'properties' }"
+									@click="activeTab = 'properties'">
+									Properties
+								</button>
+								<button
+									class="tab-button"
+									:class="{ active: activeTab === 'metadata' }"
+									@click="activeTab = 'metadata'">
+									Metadata
+								</button>
+								<button
+									class="tab-button"
+									:class="{ active: activeTab === 'files' }"
+									@click="activeTab = 'files'">
+									<div class="tab-title">
+										<span>Files</span>
+										<NcLoadingIcon v-if="currentObject && objectStore.isLoading(`publication_${currentObject.id}_files`)" :size="16" />
+										<NcCounterBubble v-else :count="filesTotalItems" />
+									</div>
+								</button>
+							</div>
+							<div v-show="activeTab === 'properties'" class="tab-content">
 								<div class="viewTableContainer">
 									<table class="viewTable">
 										<thead>
@@ -301,7 +318,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 													<!-- Show/Hide Constant & Immutable Properties Toggle -->
 													<NcButton v-if="hasConstantOrImmutableProperties"
 														v-tooltip="showConstantProperties ? 'Hide constant & immutable properties' : 'Show constant & immutable properties'"
-														type="primary"
+														variant="primary"
 														size="small"
 														class="action-btn eye-toggle-btn"
 														:aria-label="showConstantProperties ? 'Hide constant & immutable properties' : 'Show constant & immutable properties'"
@@ -356,9 +373,9 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 															<!-- Boolean properties -->
 															<NcCheckboxRadioSwitch
 																v-if="getPropertyInputComponent(key) === 'NcCheckboxRadioSwitch'"
-																:checked="formData[key] !== undefined ? formData[key] : value"
+																:model-value="Boolean(formData[key] !== undefined ? formData[key] : value)"
 																type="switch"
-																@update:checked="updatePropertyValue(key, $event)">
+																@update:model-value="updatePropertyValue(key, $event)">
 																{{ getPropertyDisplayName(key) }}
 															</NcCheckboxRadioSwitch>
 
@@ -369,36 +386,29 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																:append-to-body="true"
 																:popup-class="'view-object-datepicker'"
 																:popup-style="{ zIndex: 12000 }"
-																:value="getDateTimePickerValue(key, value)"
+																:model-value="getDateTimePickerValue(key, value)"
 																:label="getPropertyDisplayName(key)"
 																:type="getDateTimePickerType(key)"
 																:placeholder="getPropertyDisplayName(key)"
 																:clearable="true"
-																@input="handleDateTimeUpdate(key, $event)"
-																@update:value="handleDateTimeUpdate(key, $event)"
-																@change="handleDateTimeUpdate(key, $event)"
-																@update:modelValue="handleDateTimeUpdate(key, $event)" />
+																@update:model-value="handleDateTimeUpdate(key, $event)" />
 
 															<!-- Text area properties -->
 															<NcTextArea
 																v-else-if="getPropertyInputComponent(key) === 'NcTextArea'"
 																ref="propertyValueInput"
 																class="textarea-property"
-																:value="String(formData[key] !== undefined ? formData[key] : value || '')"
+																:model-value="String(formData[key] !== undefined ? formData[key] : value || '')"
 																:placeholder="getPropertyDisplayName(key)"
 																:rows="4"
-																@update:value="updatePropertyValue(key, $event)" />
+																@update:model-value="updatePropertyValue(key, $event)" />
 
 															<!-- Markdown editor properties -->
-															<Editor
+															<div
 																v-else-if="getPropertyInputComponent(key) === 'Editor'"
 																:key="`editor-${key}-tab`"
-																:initial-value="String(formData[key] !== undefined ? formData[key] : value || '')"
-																:options="getMarkdownEditorOptions(key)"
-																initial-edit-type="wysiwyg"
-																height="400px"
-																@load="(editor) => markdownEditors[key] = editor"
-																@blur="updateMarkdownValue(key, markdownEditors[key])" />
+																ref="markdownEditorContainer"
+																class="markdown-editor-container" />
 
 															<!-- Themes properties -->
 															<div v-else-if="getPropertyInputComponent(key) === 'NcTextFieldArray' && key === 'themes'" class="input-with-icon">
@@ -413,13 +423,13 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 															<div v-else-if="getPropertyInputComponent(key) === 'NcTextFieldArray'" class="input-with-icon">
 																<NcTextField
 																	ref="propertyValueInput"
-																	:value="String(formData[key] !== undefined ? (Array.isArray(formData[key]) ? formData[key].join(',') : formData[key]) : (Array.isArray(value) ? value.join(',') : value || ''))"
+																	:model-value="String(formData[key] !== undefined ? (Array.isArray(formData[key]) ? formData[key].join(',') : formData[key]) : (Array.isArray(value) ? value.join(',') : value || ''))"
 																	:type="getPropertyInputType(key)"
 																	:placeholder="getPropertyDisplayName(key)"
 																	:min="getPropertyMinimum(key)"
 																	:max="getPropertyMaximum(key)"
 																	:step="getPropertyStep(key)"
-																	@update:value="updatePropertyValue(key, $event.split(/ *, */g).filter(Boolean))" />
+																	@update:model-value="updatePropertyValue(key, $event.split(/ *, */g).filter(Boolean))" />
 																<InformationOutline
 																	v-tooltip="'Array values should be separated by commas'"
 																	:size="25"
@@ -430,13 +440,13 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 															<NcTextField
 																v-else
 																ref="propertyValueInput"
-																:value="String(formData[key] !== undefined ? formData[key] : value || '')"
+																:model-value="String(formData[key] !== undefined ? formData[key] : value || '')"
 																:type="getPropertyInputType(key)"
 																:placeholder="getPropertyDisplayName(key)"
 																:min="getPropertyMinimum(key)"
 																:max="getPropertyMaximum(key)"
 																:step="getPropertyStep(key)"
-																@update:value="updatePropertyValue(key, $event)" />
+																@update:model-value="updatePropertyValue(key, $event)" />
 														</div>
 														<div v-else>
 															<template v-if="formData[key] !== undefined">
@@ -477,7 +487,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												<td class="tableColumnActions">
 													<NcButton v-if="canDropProperty(key, value)"
 														v-tooltip="getDropPropertyTooltip(key)"
-														type="tertiary-no-background"
+														variant="tertiary-no-background"
 														size="small"
 														class="drop-property-btn"
 														:aria-label="getDropPropertyTooltip(key)"
@@ -491,8 +501,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										</tbody>
 									</table>
 								</div>
-							</BTab>
-							<BTab title="Metadata">
+							</div>
+							<div v-show="activeTab === 'metadata'" class="tab-content">
 								<div class="viewTableContainer">
 									<table class="viewTable">
 										<thead>
@@ -520,15 +530,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										</tbody>
 									</table>
 								</div>
-							</BTab>
-							<BTab>
-								<template #title>
-									<div class="tab-title">
-										<span>Files</span>
-										<NcLoadingIcon v-if="currentObject && objectStore.isLoading(`publication_${currentObject.id}_files`)" :size="16" />
-										<NcCounterBubble v-else :count="filesTotalItems" />
-									</div>
-								</template>
+							</div>
+							<div v-show="activeTab === 'files'" class="tab-content">
 								<!-- Info box for new objects -->
 								<NcNoteCard v-if="isNewObject" type="info" class="files-info-card">
 									<p><strong>Files can be added after the publication is created.</strong></p>
@@ -587,9 +590,9 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												<tr class="viewTableRow">
 													<th class="tableColumnCheckbox">
 														<NcCheckboxRadioSwitch
-															:checked="allFilesSelected"
+															:model-value="allFilesSelected"
 															:indeterminate="someFilesSelected"
-															@update:checked="toggleSelectAllFiles" />
+															@update:model-value="toggleSelectAllFiles" />
 													</th>
 													<th class="tableColumnExpanded table-row-title">
 														Name
@@ -617,8 +620,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 													}">
 													<td class="tableColumnCheckbox">
 														<NcCheckboxRadioSwitch
-															:checked="selectedAttachments.includes(attachment.id)"
-															@update:checked="(checked) => toggleFileSelection(attachment.id, checked)" />
+															:model-value="selectedAttachments.includes(attachment.id)"
+															@update:model-value="(checked) => toggleFileSelection(attachment.id, checked)" />
 													</td>
 													<td class="tableColumnExpanded table-row-title">
 														<div class="file-name-container">
@@ -666,7 +669,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																	:options="labelOptionsEdit.options" />
 																<NcButton
 																	v-tooltip="'Save labels'"
-																	type="primary"
+																	variant="primary"
 																	size="small"
 																	:aria-label="`save labels for ${attachment.name ?? attachment?.title ?? 'file'}`"
 																	class="editTagsButton"
@@ -677,7 +680,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																</NcButton>
 																<NcButton
 																	v-tooltip="'Cancel'"
-																	type="secondary"
+																	variant="secondary"
 																	size="small"
 																	@click="cancelFileLabelEditing">
 																	<template #icon>
@@ -760,8 +763,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									:min-items-to-show="5"
 									@page-changed="onFilesPageChanged"
 									@page-size-changed="onFilesPageSizeChanged" />
-							</BTab>
-						</BTabs>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -794,14 +797,14 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					Depublish
 				</NcButton>
 				<NcButton v-if="!isNewObject"
-					type="error"
+					variant="error"
 					@click="singleDeleteObject">
 					<template #icon>
 						<Delete :size="20" />
 					</template>
 					Delete
 				</NcButton>
-				<NcButton type="primary" :disabled="isSaving" @click="saveObject">
+				<NcButton variant="primary" :disabled="isSaving" @click="saveObject">
 					<template #icon>
 						<NcLoadingIcon v-if="isSaving" :size="20" />
 						<ContentSave v-else :size="20" />
@@ -831,9 +834,12 @@ import {
 } from '@nextcloud/vue'
 // import { json, jsonParseLinter } from '@codemirror/lang-json'
 // import CodeMirror from 'vue-codemirror6'
-import { BTabs, BTab } from 'bootstrap-vue'
+import { markRaw } from 'vue'
 import { getTheme } from '../../services/getTheme.js'
-import { Editor } from '@toast-ui/vue-editor'
+// The Vue-2 `@toast-ui/vue-editor` wrapper is gone; the framework-agnostic core
+// editor is instantiated by hand against a plain `<div>` ref instead — see
+// createMarkdownEditor() / destroyMarkdownEditors().
+import { Editor } from '@toast-ui/editor'
 import '@toast-ui/editor/dist/toastui-editor.css'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import FileOutline from 'vue-material-design-icons/FileOutline.vue'
@@ -877,10 +883,7 @@ export default {
 		NcDateTimePicker,
 		NcEmptyContent,
 		NcSelect,
-		Editor,
 		// CodeMirror,
-		BTabs,
-		BTab,
 		Cancel,
 		FileOutline,
 		OpenInNew,
@@ -909,7 +912,7 @@ export default {
 	},
 	data() {
 		return {
-			activeTab: 0,
+			activeTab: 'properties',
 			formData: {}, // Ensure this is always an object, never an array
 			jsonData: '',
 			selectedProperty: null,
@@ -1374,7 +1377,7 @@ export default {
 			set(selectedThemes) {
 				// Extract just the IDs from the selected theme objects
 				const themeIds = selectedThemes.map(theme => typeof theme === 'object' ? theme.id : theme)
-				this.$set(this.formData, 'themes', themeIds)
+				this.formData.themes = themeIds
 			},
 		},
 	},
@@ -1457,6 +1460,23 @@ export default {
 				}
 			},
 		},
+		/**
+		 * The Toast UI markdown editor is no longer a Vue component, so its
+		 * lifetime has to be tied by hand to the row that is currently being
+		 * edited: exactly one property can be in edit mode at a time, so the
+		 * previous instance is always destroyed before a new one is built.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		selectedProperty: {
+			handler(newKey) {
+				this.destroyMarkdownEditors()
+
+				if (newKey && this.getPropertyInputComponent(newKey) === 'Editor') {
+					this.$nextTick(() => this.createMarkdownEditor(newKey))
+				}
+			},
+		},
 	},
 	/**
 	 * @spec openspec/specs/fe-object-modals/spec.md
@@ -1467,6 +1487,12 @@ export default {
 		objectStore.fetchCollection('theme')
 		// Fetch tags for the label options dropdown
 		this.getAllTags()
+	},
+	/**
+	 * @spec openspec/specs/fe-object-modals/spec.md
+	 */
+	beforeUnmount() {
+		this.destroyMarkdownEditors()
 	},
 	methods: {
 		/**
@@ -1514,7 +1540,7 @@ export default {
 		 */
 		closeModal() {
 			// Clear state first
-			this.activeTab = 0
+			this.activeTab = 'properties'
 			this.success = null
 			this.error = null
 			this.isCopied = false
@@ -2014,15 +2040,15 @@ export default {
 			if (key === 'themes' && Array.isArray(newValue)) {
 				// Extract just the IDs from the selected theme objects
 				const themeIds = newValue.map(theme => typeof theme === 'object' ? theme.id : theme)
-				this.$set(this.formData, key, themeIds)
+				this.formData[key] = themeIds
 				return
 			}
 
 			// Convert date/time values to proper format for storage
 			const processedValue = this.processDateTimeValue(key, newValue)
 
-			// Update the form data using Vue 2 reactivity
-			this.$set(this.formData, key, processedValue)
+			// Update the form data
+			this.formData[key] = processedValue
 		},
 		// Test method to verify Vue methods are working
 		/**
@@ -2082,8 +2108,8 @@ export default {
 				processedValue = ''
 			}
 
-			// Update the form data using Vue 2 reactivity
-			this.$set(this.formData, key, processedValue)
+			// Update the form data
+			this.formData[key] = processedValue
 
 		},
 		/**
@@ -2338,6 +2364,73 @@ export default {
 					},
 				},
 			}
+		},
+		/**
+		 * Initial markdown handed to a freshly created editor. Mirrors what the
+		 * template used to bind to the wrapper's `initial-value` prop: the edited
+		 * value when the property has been touched, the stored value otherwise.
+		 *
+		 * @param {string} key Property key being edited
+		 * @return {string} Markdown source for the editor
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		getMarkdownInitialValue(key) {
+			if (this.formData[key] !== undefined) {
+				return String(this.formData[key])
+			}
+
+			const entry = this.objectProperties.find(([k]) => k === key)
+			return String((entry ? entry[1] : '') || '')
+		},
+		/**
+		 * Build the Toast UI editor against the `<div>` rendered for the property
+		 * currently in edit mode. Replaces the removed `@toast-ui/vue-editor`
+		 * wrapper; `blur` still writes the markdown back into formData.
+		 *
+		 * @param {string} key Property key being edited
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		createMarkdownEditor(key) {
+			const refs = this.$refs.markdownEditorContainer
+			const el = Array.isArray(refs) ? refs[0] : refs
+
+			if (!el || this.markdownEditors[key]) {
+				return
+			}
+
+			const { events = {}, ...options } = this.getMarkdownEditorOptions(key)
+
+			const editor = new Editor({
+				...options,
+				el,
+				initialValue: this.getMarkdownInitialValue(key),
+				initialEditType: 'wysiwyg',
+				height: '400px',
+				events: {
+					...events,
+					blur: () => this.updateMarkdownValue(key, this.markdownEditors[key]),
+				},
+			})
+
+			// markRaw keeps the editor instance out of the reactivity proxy —
+			// a proxied Toast UI instance breaks its internal identity checks.
+			this.markdownEditors[key] = markRaw(editor)
+		},
+		/**
+		 * Tear down every live markdown editor. Called when the edited property
+		 * changes and from beforeUnmount(), so no editor outlives its `<div>`.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		destroyMarkdownEditors() {
+			Object.keys(this.markdownEditors).forEach(key => {
+				try {
+					this.markdownEditors[key]?.destroy()
+				} catch (error) {
+					console.warn('Could not destroy markdown editor:', error)
+				}
+				delete this.markdownEditors[key]
+			})
 		},
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -3585,17 +3678,17 @@ export default {
 				}
 
 				// Set the default value in formData
-				this.$set(this.formData, key, defaultValue)
+				this.formData[key] = defaultValue
 			} else {
 				// For non-schema properties, remove completely from formData
 				if (this.formData[key] !== undefined) {
-					this.$delete(this.formData, key)
+					delete this.formData[key]
 				}
 
 				// If it was in the original object, we need to track its removal
 				// We'll set it to a special marker that indicates deletion
 				if (this.currentObject && Object.prototype.hasOwnProperty.call(this.currentObject, key)) {
-					this.$set(this.formData, key, undefined)
+					this.formData[key] = undefined
 				}
 			}
 
@@ -3843,6 +3936,103 @@ export default {
 
 .publishedIcon {
 	color: var(--color-success);
+}
+
+/* Tab strip. Mirrors src/components/StandardTabs.vue so the modal keeps the
+   app-wide tab look, but written out here because the Files tab needs a
+   component-rendered title (spinner / counter bubble) and StandardTabs only
+   accepts plain title strings. */
+.standard-tabs {
+	width: 100%;
+}
+
+.tab-navigation {
+	display: flex;
+	border: 1px solid var(--color-border);
+	border-bottom: none;
+	margin-bottom: 0;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+	padding: 0 8px;
+}
+
+.tab-button {
+	flex: 1;
+	padding: 12px 16px;
+	background: none;
+	border: none;
+	color: var(--color-text-lighter);
+	font-weight: 500;
+	font-size: 14px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	position: relative;
+	min-height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.tab-button:hover {
+	color: var(--color-main-text);
+	background-color: var(--color-background-hover);
+}
+
+.tab-button.active {
+	color: var(--color-primary);
+	background-color: var(--color-background);
+	font-weight: 600;
+	border: 1px solid var(--color-border);
+	border-bottom: 2px solid var(--color-background);
+	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+}
+
+.tab-button.active::after {
+	content: '';
+	position: absolute;
+	bottom: -2px;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background-color: var(--color-primary);
+}
+
+.tab-content {
+	padding: 8px 0 0 0;
+	border: none;
+	border-top: none;
+	border-radius: 0;
+	background-color: transparent;
+}
+
+@media (max-width: 768px) {
+	.tab-navigation {
+		flex-direction: column;
+		border-bottom: none;
+		border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+		padding: 8px;
+	}
+
+	.tab-button {
+		border-bottom: none;
+		border-radius: var(--border-radius);
+		margin-bottom: 4px;
+		min-height: 40px;
+	}
+
+	.tab-button.active {
+		background-color: var(--color-primary);
+		color: white;
+		border-bottom-color: transparent;
+	}
+
+	.tab-button.active::after {
+		display: none;
+	}
+
+	.tab-content {
+		border-top: 1px solid var(--color-border);
+	}
 }
 
 .tab-title {

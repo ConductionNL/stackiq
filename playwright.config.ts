@@ -3,10 +3,14 @@
 
 import { defineConfig, devices } from '@playwright/test'
 import * as path from 'path'
+import { resolveBaseUrl } from './tests/e2e/base-url'
 
 /**
  * Playwright configuration for softwarecatalog e2e tests.
- * Base URL: http://localhost:8080 (Nextcloud dev container)
+ *
+ * Base URL comes from `tests/e2e/base-url.ts` and has NO default — see the
+ * rationale there. Set PLAYWRIGHT_BASE_URL (or CI's BASE_URL) to an isolated
+ * instance; never let it fall back to the shared dev container.
  *
  * globalSetup logs in once and persists session state to
  * tests/e2e/.auth/admin.json so all specs start pre-authenticated.
@@ -23,16 +27,26 @@ export default defineConfig({
 	reporter: 'list',
 	outputDir: 'test-results',
 	use: {
-		baseURL: process.env.BASE_URL ?? process.env.NEXTCLOUD_URL ?? 'http://localhost:8080',
+		baseURL: resolveBaseUrl(),
 		storageState: path.resolve(__dirname, 'tests/e2e/.auth/admin.json'),
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure',
 	},
 	projects: [
+		// Boot smoke check. Runs the same globalSetup (so it is authenticated) but
+		// asserts only that the bundle MOUNTS. Run it before the full suite: a
+		// dead bundle otherwise burns the whole e2e budget producing failures that
+		// look like product defects. See tests/e2e/smoke/app-mounts.spec.ts.
+		{
+			name: 'smoke',
+			testMatch: /smoke\/.*\.spec\.ts$/,
+			use: { ...devices['Desktop Chrome'] },
+		},
 		{
 			name: 'chromium',
-			// Visual specs run only under the opt-in `visual` project (GAP-5).
-			testIgnore: ['**/visual/**'],
+			// Visual specs run only under the opt-in `visual` project (GAP-5);
+			// smoke has its own project and must not run twice.
+			testIgnore: ['**/visual/**', '**/smoke/**'],
 			use: { ...devices['Desktop Chrome'] },
 		},
 		// Visual-regression project (GAP-5). Opt-in / non-gating:

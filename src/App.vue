@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import Vue from 'vue'
+import { reactive } from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
@@ -90,7 +90,9 @@ export default {
 	provide() {
 		return {
 			// Channel for CnDetailPage → host-rendered CnObjectSidebar.
-			// Vue.observable makes the plain object reactive for Vue 2.
+			// `reactive()` (Vue 3) makes the plain object reactive; injecting
+			// the object itself — not a value read off it — is what keeps the
+			// channel live for every injecting descendant.
 			objectSidebarState: this.objectSidebarState,
 		}
 	},
@@ -139,7 +141,7 @@ export default {
 
 	data() {
 		return {
-			objectSidebarState: Vue.observable({
+			objectSidebarState: reactive({
 				active: false,
 				open: true,
 				objectType: '',

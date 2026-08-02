@@ -42,7 +42,7 @@
 								: t('softwarecatalog', '{count} reviews', { count }) }}
 						</span>
 					</div>
-					<NcButton type="secondary" @click="openSubmitModal">
+					<NcButton variant="secondary" @click="openSubmitModal">
 						<template #icon>
 							<Star :size="20" />
 						</template>

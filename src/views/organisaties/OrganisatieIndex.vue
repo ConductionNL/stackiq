@@ -30,7 +30,7 @@
 				<OfficeBuildingOutline :size="64" />
 			</template>
 			<template #action>
-				<NcButton type="primary" @click="createOrganisatie">
+				<NcButton variant="primary" @click="createOrganisatie">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
@@ -42,7 +42,7 @@
 		<!-- Card grid -->
 		<template v-else>
 			<div class="organisatieIndexView__toolbar">
-				<NcButton type="primary" @click="createOrganisatie">
+				<NcButton variant="primary" @click="createOrganisatie">
 					<template #icon>
 						<Plus :size="20" />
 					</template>

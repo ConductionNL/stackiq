@@ -18,7 +18,12 @@ jobs:
       enable-eslint: true
       enable-phpunit: true
       enable-sbom: true
-      additional-apps: '[{"repo":"Conduction/openregister","app":"openregister"}]'
+      # ⚠️ `Conduction/openregister` 404s — the org is `ConductionNL`. The
+      # earlier org-ref fix corrected the `uses:` line above but not this
+      # EMBEDDED repo reference, because a `uses:`-grep does not see it. With a
+      # dead ref the openregister dependency was never checked out, so every
+      # job that needs it ran against a missing app.
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister"}]'
       # Newman disabled: tests/magic-mapper-import.postman_collection.json was
       # written against a dev env with URL rewriting + a fixed disk layout — it
       # hits bare paths like `/configurations` and uploads files from

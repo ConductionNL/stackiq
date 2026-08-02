@@ -10,14 +10,14 @@
 		<template #actions>
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === false"
-				type="secondary"
+				variant="secondary"
 				:disabled="autoConfiguring"
 				@click="consolidatedAutoConfigure">
 				Auto Configure
 			</NcButton>
 			<NcButton
 				class="ml-8"
-				type="error"
+				variant="error"
 				:disabled="autoConfiguring"
 				@click="handleForceUpdate">
 				Force Update
@@ -25,7 +25,7 @@
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === true"
 				class="ml-8"
-				type="tertiary"
+				variant="tertiary"
 				:disabled="autoConfiguring"
 				@click="handleResetAutoConfig">
 				Reset Auto-Config
@@ -54,11 +54,10 @@
 				<p>Set the base URL for your software catalog interface</p>
 
 				<NcTextField
-					:value="catalogLocation"
+					v-model="catalogLocation"
 					:label="t('softwarecatalog', 'Software Catalog Location URL')"
 					:placeholder="t('softwarecatalog', 'https://catalog.example.com')"
-					:disabled="store.loading"
-					@update:value="onCatalogLocationChange">
+					:disabled="store.loading">
 					<template #icon>
 						<Web :size="16" />
 					</template>

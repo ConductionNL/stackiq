@@ -7,7 +7,7 @@
 			<p class="pv-intro">
 				{{ t('softwarecatalog', 'Open-source vs closed-source posture of the applications you actually run, weighted by in-production deployment — with per-vendor and per-organisation breakdowns.') }}
 			</p>
-			<NcButton type="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
+			<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />

@@ -6,7 +6,7 @@
 		:layout="dashboardLayout"
 		:loading="loading">
 		<template #header-actions>
-			<NcButton type="secondary" @click="refreshAllData">
+			<NcButton variant="secondary" @click="refreshAllData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
@@ -27,7 +27,7 @@
 					</p>
 					<div class="infoBoxActions">
 						<NcButton
-							type="primary"
+							variant="primary"
 							@click="navigateToOrganizations">
 							<template #icon>
 								<OfficeBuildingOutline :size="16" />
@@ -72,7 +72,7 @@
 								<NcButton
 									v-if="stat.slug === 'organisatie'"
 									size="small"
-									type="tertiary"
+									variant="tertiary"
 									@click.stop="navigateToObjectType(stat.slug)">
 									<template #icon>
 										<component :is="getIconForObjectType(stat.slug)" :size="16" />
@@ -123,7 +123,7 @@
 								<NcButton
 									v-if="stat.slug === 'organisatie'"
 									size="small"
-									type="tertiary"
+									variant="tertiary"
 									@click.stop="navigateToObjectType(stat.slug)">
 									<template #icon>
 										<component :is="getIconForObjectType(stat.slug)" :size="16" />

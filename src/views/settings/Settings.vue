@@ -24,7 +24,7 @@
 						:options="registerOptions"
 						input-label="Register"
 						:disabled="loading || !settings.openRegisters"
-						@change="handleRegisterChange" />
+						@update:model-value="handleRegisterChange" />
 				</div>
 
 				<!-- Warning if selected register has no schemas -->
@@ -53,7 +53,7 @@
 				<!-- Save Buttons -->
 				<div class="button-container">
 					<NcButton
-						type="primary"
+						variant="primary"
 						:disabled="loading || saving || !selectedRegister || !hasSchemas"
 						@click="saveAll">
 						<template #icon>
@@ -82,11 +82,10 @@
 					<p>Set the base URL for your catalog interface</p>
 
 					<NcTextField
-						:value.sync="catalogLocation"
+						v-model="catalogLocation"
 						:label="t('softwarecatalog', 'Catalog Location URL')"
 						:placeholder="t('softwarecatalog', 'https://catalog.example.com')"
-						:disabled="loading || savingCatalogLocation"
-						@update:value="onCatalogLocationChange">
+						:disabled="loading || savingCatalogLocation">
 						<template #icon>
 							<Web :size="16" />
 						</template>
@@ -101,7 +100,7 @@
 					<!-- Save Catalog Location Button -->
 					<div class="button-container">
 						<NcButton
-							type="secondary"
+							variant="secondary"
 							:disabled="loading || savingCatalogLocation || !catalogLocationChanged"
 							@click="saveCatalogLocation">
 							<template #icon>

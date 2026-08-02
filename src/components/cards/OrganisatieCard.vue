@@ -97,7 +97,7 @@
 					</div>
 					<div class="viewToggleContainer" @click.stop>
 						<NcButton
-							:type="currentView === 'contactpersonen' ? 'primary' : 'secondary'"
+							:variant="currentView === 'contactpersonen' ? 'primary' : 'secondary'"
 							size="small"
 							@click="toggleView">
 							<template #icon>
@@ -124,7 +124,7 @@
 					</div>
 					<div class="viewToggleContainer">
 						<NcButton
-							:type="currentView === 'organisatie' ? 'primary' : 'secondary'"
+							:variant="currentView === 'organisatie' ? 'primary' : 'secondary'"
 							size="small"
 							@click="toggleView">
 							<template #icon>

@@ -29,12 +29,45 @@ webpackConfig.entry = {
 	},
 }
 
-// Use local source when available (monorepo dev), otherwise fall back to npm package
+// Nextcloud's shared webpack config hardcodes `publicPath: '/apps/<app>/js/'`,
+// but this app is installed under `custom_apps/`, which is served from
+// `/custom_apps/<app>/js/`. The wrong path does NOT 404 — Nextcloud answers
+// 200 with `text/html`, so lazy chunks fail as a MIME refusal / ChunkLoadError
+// rather than a missing file. Vue 2 never surfaced this because it emitted no
+// async chunks; the Vue 3 dependency set splits @nextcloud/dialogs@7,
+// @nextcloud/files, @nextcloud/paths and @mdi/js into dozens.
+webpackConfig.output = {
+	...(webpackConfig.output || {}),
+	publicPath: 'auto',
+}
+
+// Use local source when available (monorepo dev), otherwise fall back to npm package.
+//
+// ⚠️ USE_LOCAL_LIB is opt-OUT, and the shared `apps-extra/nextcloud-vue`
+// checkout sits on the Vue 2 (1.x / beta.*) line. Defaulting to "on" would
+// silently compile Vue 2 library sources into this Vue 3 app and still produce
+// a green build, so the major version is checked rather than the default
+// trusted: a 1.x sibling is the Vue 2 line and must be ignored.
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
-const useLocalLib = process.env.USE_LOCAL_LIB !== 'false' && fs.existsSync(localLib)
+const localLibPkg = path.resolve(__dirname, '../nextcloud-vue/package.json')
+let useLocalLib = process.env.USE_LOCAL_LIB !== 'false' && fs.existsSync(localLib)
+if (useLocalLib && fs.existsSync(localLibPkg)) {
+	const localVersion = JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || ''
+	if (!localVersion.startsWith('2.')) {
+		useLocalLib = false
+		// eslint-disable-next-line no-console
+		console.warn(
+			`[softwarecatalog] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
+			+ 'that is the Vue 2 line and this app is Vue 3. Building against the npm dist.',
+		)
+	}
+}
 
 webpackConfig.resolve = {
-	extensions: ['.ts', '.tsx', '.vue', '.js'],
+	// `.mjs` matters now: @nextcloud/vue@9, @nextcloud/dialogs@7 and
+	// vue-router@4/5 all ship .mjs entry files, and overriding `extensions`
+	// drops the framework default that would otherwise cover them.
+	extensions: ['.ts', '.tsx', '.vue', '.js', '.mjs', '.json'],
 	alias: {
 		'@': path.resolve(__dirname, 'src'),
 		...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
@@ -42,7 +75,19 @@ webpackConfig.resolve = {
 		// the same instances as the app (prevents dual-Pinia / dual-Vue bugs).
 		'vue$': path.resolve(__dirname, 'node_modules/vue'),
 		'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
-		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
+		// ⚠️ @nextcloud/vue@9 ships an `exports` map with NO `main` and NO
+		// `module`. Webpack applies an exports map to a PACKAGE REQUEST, never
+		// to an already-absolutised path, so the Vue-2-era alias to the package
+		// DIRECTORY resolves to nothing and every import fails with
+		// "Can't resolve '@nextcloud/vue'". Alias to the absolute FILE.
+		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue/dist/index.mjs'),
+		// @nextcloud/vue@9 hard-depends on vue-router ^5.1.0 while this app is
+		// on vue-router 4, so npm installs a SECOND nested copy under
+		// node_modules/@nextcloud/vue/node_modules/vue-router. Two router
+		// modules mean two injection keys: nc-vue's own RouterLink would look
+		// up a router this app never provided and navigation dies with no
+		// console error. Force every `vue-router` request onto one file.
+		'vue-router$': path.resolve(__dirname, 'node_modules/vue-router/dist/vue-router.mjs'),
 	},
 }
 
@@ -70,23 +115,24 @@ webpackConfig.plugins = [
 	new webpack.DefinePlugin({ appVersion: JSON.stringify(process.env.npm_package_version) }),
 ]
 
-// Force @nextcloud/dialogs to resolve from this app's node_modules,
-// preventing the nextcloud-vue submodule's nested deps (Vue 3) from leaking in.
-// Register the exact-match style.css alias BEFORE the bare package alias below:
-// enhanced-resolve applies the first matching entry, and the bare alias maps the
-// package to its DIRECTORY, so '@nextcloud/dialogs/style.css' (imported by
-// nextcloud-vue's useAppInstaller) would resolve to a non-existent root style.css.
-// dialogs v6 ships the stylesheet at dist/style.css behind its "exports" map.
+// Force @nextcloud/dialogs to resolve from this app's node_modules, preventing
+// a nested copy from leaking in. Register the exact-match style.css alias BEFORE
+// the bare package alias below: enhanced-resolve applies the first matching
+// entry, so '@nextcloud/dialogs/style.css' (imported by nextcloud-vue's
+// useAppInstaller) must be mapped explicitly.
+// ⚠️ dialogs v7 is the same exports-map-only shape as @nextcloud/vue@9 — the
+// bare alias must point at the absolute ENTRY FILE, not the package directory.
 webpackConfig.resolve.alias['@nextcloud/dialogs/style.css$'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs/dist/style.css')
-webpackConfig.resolve.alias['@nextcloud/dialogs'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs')
+webpackConfig.resolve.alias['@nextcloud/dialogs$'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs/dist/index.mjs')
 
-// dialogs v6 drags in a FilePicker chunk that imports node's `path`, and webpack 5 no
-// longer auto-polyfills node core modules — without this the bundle fails to emit with
-// "Can't resolve 'path'". This app only uses the toast APIs (showError/showSuccess), so
-// the FilePicker code path never runs and an empty module is safe.
+// @nextcloud/dialogs drags in a FilePicker chunk that imports node's `path`, and
+// webpack 5 no longer auto-polyfills node core modules. `path-browserify` is a
+// declared dependency rather than `false`, because @nextcloud/paths (pulled in by
+// the Vue 3 dependency set) genuinely calls into it at runtime and an empty
+// module would only defer the failure to a route the user actually opens.
 webpackConfig.resolve.fallback = {
 	...(webpackConfig.resolve.fallback || {}),
-	path: false,
+	path: require.resolve('path-browserify'),
 }
 
 // Bypass @nextcloud/axios's `exports` field which only declares the `import`

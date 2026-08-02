@@ -12,19 +12,17 @@
 				<div class="form-grid">
 					<div class="form-row">
 						<NcTextField
-							:value="formData.naam"
+							v-model="formData.naam"
 							:label="t('softwarecatalog', 'Name')"
 							:placeholder="t('softwarecatalog', 'Organisation name')"
-							required
-							@update:value="formData.naam = $event" />
+							required />
 					</div>
 
 					<div class="form-row">
 						<NcTextField
-							:value="formData.website"
+							v-model="formData.website"
 							:label="t('softwarecatalog', 'Website')"
-							:placeholder="t('softwarecatalog', 'https://example.com')"
-							@update:value="formData.website = $event" />
+							:placeholder="t('softwarecatalog', 'https://example.com')" />
 					</div>
 
 					<div class="form-row">
@@ -36,48 +34,43 @@
 							label="label"
 							track-by="value"
 							:clearable="false"
-							@input="handleTypeChange" />
+							@update:model-value="handleTypeChange" />
 					</div>
 
 					<div class="form-row">
 						<NcTextField
-							:value="formData.beschrijvingKort"
+							v-model="formData.beschrijvingKort"
 							:label="t('softwarecatalog', 'Short Description')"
-							:placeholder="t('softwarecatalog', 'Brief description of the organisation')"
-							@update:value="formData.beschrijvingKort = $event" />
+							:placeholder="t('softwarecatalog', 'Brief description of the organisation')" />
 					</div>
 
 					<div class="form-row">
 						<NcTextField
-							:value="formData['e-mailadres']"
+							v-model="formData['e-mailadres']"
 							:label="t('softwarecatalog', 'Email')"
 							:placeholder="t('softwarecatalog', 'contact@example.com')"
-							type="email"
-							@update:value="formData['e-mailadres'] = $event" />
+							type="email" />
 					</div>
 
 					<div class="form-row">
 						<NcTextField
-							:value="formData.telefoonnummer"
+							v-model="formData.telefoonnummer"
 							:label="t('softwarecatalog', 'Phone')"
-							:placeholder="t('softwarecatalog', '+31 20 123 4567')"
-							@update:value="formData.telefoonnummer = $event" />
+							:placeholder="t('softwarecatalog', '+31 20 123 4567')" />
 					</div>
 
 					<div class="form-row">
 						<NcTextField
-							:value="formData.oin"
+							v-model="formData.oin"
 							:label="t('softwarecatalog', 'OIN')"
-							:placeholder="t('softwarecatalog', 'Organisation Identification Number')"
-							@update:value="formData.oin = $event" />
+							:placeholder="t('softwarecatalog', 'Organisation Identification Number')" />
 					</div>
 
 					<div class="form-row">
 						<NcTextField
-							:value="formData.cbs"
+							v-model="formData.cbs"
 							:label="t('softwarecatalog', 'CBS')"
-							:placeholder="t('softwarecatalog', 'CBS number')"
-							@update:value="formData.cbs = $event" />
+							:placeholder="t('softwarecatalog', 'CBS number')" />
 					</div>
 				</div>
 
@@ -91,13 +84,13 @@
 				</div>
 
 				<div class="form-actions">
-					<NcButton type="secondary" @click="closeModal">
+					<NcButton variant="secondary" @click="closeModal">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
 					<NcButton v-if="!success"
-						type="primary"
+						variant="primary"
 						:disabled="loading || !isFormValid"
-						native-type="submit">
+						type="submit">
 						<template #icon>
 							<NcLoadingIcon v-if="loading" :size="20" />
 						</template>

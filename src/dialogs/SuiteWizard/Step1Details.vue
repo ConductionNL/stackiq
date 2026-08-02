@@ -12,27 +12,27 @@
 -->
 <template>
 	<div class="suite-wizard-step1">
-		<NcTextField :value="payload.naam"
+		<NcTextField :model-value="payload.naam"
 			:label="t('softwarecatalog', 'Name') + ' *'"
 			:placeholder="t('softwarecatalog', 'e.g. Centric Leefomgeving')"
 			required
-			@update:value="onField('naam', $event)" />
+			@update:model-value="onField('naam', $event)" />
 
-		<NcTextField :value="payload.beschrijvingKort"
+		<NcTextField :model-value="payload.beschrijvingKort"
 			:label="t('softwarecatalog', 'Short description') + ' *'"
 			:placeholder="t('softwarecatalog', 'A brief summary of the suite')"
 			required
-			@update:value="onField('beschrijvingKort', $event)" />
+			@update:model-value="onField('beschrijvingKort', $event)" />
 
-		<NcTextArea :value.sync="beschrijvingLangModel"
+		<NcTextArea v-model="beschrijvingLangModel"
 			:label="t('softwarecatalog', 'Long description')"
 			:placeholder="t('softwarecatalog', 'A detailed description of the suite and what it covers')" />
 
-		<NcTextField :value="payload.website"
+		<NcTextField :model-value="payload.website"
 			:label="t('softwarecatalog', 'Website')"
 			:placeholder="t('softwarecatalog', 'https://example.com/suite')"
 			type="url"
-			@update:value="onField('website', $event)" />
+			@update:model-value="onField('website', $event)" />
 	</div>
 </template>
 
@@ -60,7 +60,7 @@ export default {
 
 	computed: {
 		/**
-		 * `.sync` bridge for `NcTextArea`'s `value` — writes through
+		 * `v-model` bridge for `NcTextArea` — writes through
 		 * `onField` so `_step1Valid` recomputes on every keystroke.
 		 *
 		 * @return {string} The current long description.

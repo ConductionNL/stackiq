@@ -28,7 +28,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 			<NcButton
 				v-if="success === null"
 				:disabled="loading"
-				type="error"
+				variant="error"
 				@click="deleteObject()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />

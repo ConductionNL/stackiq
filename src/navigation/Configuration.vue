@@ -5,18 +5,18 @@
 				<CogOutline :size="20" />
 			</template>
 		</NcAppNavigationItem>
-		<NcAppSettingsDialog :open.sync="settingsOpen" :show-navigation="true" name="Applicatie instellingen">
+		<NcAppSettingsDialog v-model:open="settingsOpen" :show-navigation="true" name="Applicatie instellingen">
 			<NcAppSettingsSection id="federation" name="Federatief stelsel" doc-url="https://conduction.gitbook.io/opencatalogi-nextcloud/beheerders/directory">
 				<template #icon>
 					<LanConnect :size="20" />
 				</template>
-				<NcCheckboxRadioSwitch :checked.sync="configuration.federationActive" type="switch">
+				<NcCheckboxRadioSwitch v-model="configuration.federationActive" type="switch">
 					{{ t('forms', 'Maak automatisch verbinding met federatief stelsel.') }}
 				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch :checked.sync="configuration.federationActive" type="switch">
+				<NcCheckboxRadioSwitch v-model="configuration.federationActive" type="switch">
 					{{ t('forms', 'Werk catalogi automatisch bij.') }}
 				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch :checked.sync="configuration.federationListed" type="switch">
+				<NcCheckboxRadioSwitch v-model="configuration.federationListed" type="switch">
 					{{ t('forms', 'Maak deze installatie vindbaar binnen het federatief stelsel.') }}
 				</NcCheckboxRadioSwitch>
 				<NcTextField id="federationLocation"
@@ -31,10 +31,10 @@
 				<p>
 					Hier kunt u de details instellen voor verschillende verbindingen.
 				</p>
-				<NcCheckboxRadioSwitch :checked.sync="configuration.mongoStorage" type="switch">
+				<NcCheckboxRadioSwitch v-model="configuration.mongoStorage" type="switch">
 					{{ t('forms', 'Gebruik externe opslag (bijv. MongoDb) in plaats van de interne opslag van Next Cloud.') }}
 				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch :checked.sync="configuration.cloudStorage" type="switch">
+				<NcCheckboxRadioSwitch v-model="configuration.cloudStorage" type="switch">
 					{{ t('forms', 'Gebruik VNG API\'s in plaats van MongoDB.') }}
 				</NcCheckboxRadioSwitch>
 				<p>
@@ -47,14 +47,14 @@
 								<td>Locatie</td>
 								<td>
 									<NcTextField id="drcLocation"
-										:value.sync="configuration.drcLocation"
+										v-model="configuration.drcLocation"
 										:label-outside="true"
 										placeholder="https://" />
 								</td>
 								<td>Sleutel</td>
 								<td>
 									<NcTextField id="drcKey"
-										:value.sync="configuration.drcKey"
+										v-model="configuration.drcKey"
 										:label-outside="true"
 										placeholder="***" />
 								</td>
@@ -66,14 +66,14 @@
 								<td>Locatie</td>
 								<td>
 									<NcTextField id="orcLocation"
-										:value.sync="configuration.orcLocation"
+										v-model="configuration.orcLocation"
 										:label-outside="true"
 										placeholder="https://" />
 								</td>
 								<td>Sleutel</td>
 								<td>
 									<NcTextField id="orcKey"
-										:value.sync="configuration.orcKey"
+										v-model="configuration.orcKey"
 										:label-outside="true"
 										placeholder="***" />
 								</td>
@@ -85,21 +85,21 @@
 								<td>Locatie</td>
 								<td>
 									<NcTextField id="elasticLocation"
-										:value.sync="configuration.elasticLocation"
+										v-model="configuration.elasticLocation"
 										:label-outside="true"
 										placeholder="https://" />
 								</td>
 								<td>Sleutel</td>
 								<td>
 									<NcTextField id="elasticKey"
-										:value.sync="configuration.elasticKey"
+										v-model="configuration.elasticKey"
 										:label-outside="true"
 										placeholder="***" />
 								</td>
 								<td>Index</td>
 								<td>
 									<NcTextField id="elasticIndex"
-										:value.sync="configuration.elasticIndex"
+										v-model="configuration.elasticIndex"
 										:label-outside="true"
 										placeholder="objects" />
 								</td>
@@ -111,21 +111,21 @@
 								<td>Locatie</td>
 								<td>
 									<NcTextField id="mongodbLocation"
-										:value.sync="configuration.mongodbLocation"
+										v-model="configuration.mongodbLocation"
 										:label-outside="true"
 										placeholder="https://" />
 								</td>
 								<td>Sleutel</td>
 								<td>
 									<NcTextField id="mongodbKey"
-										:value.sync="configuration.mongodbKey"
+										v-model="configuration.mongodbKey"
 										:label-outside="true"
 										placeholder="***" />
 								</td>
 								<td>Cluster naam</td>
 								<td>
 									<NcTextField id="mongodbCluster"
-										:value.sync="configuration.mongodbCluster"
+										v-model="configuration.mongodbCluster"
 										:label-outside="true"
 										placeholder="***" />
 								</td>
@@ -134,7 +134,7 @@
 					</table>
 				</p>
 				<NcButton aria-label="Opslaan"
-					type="primary"
+					variant="primary"
 					wide
 					@click="saveConfig(); feedbackPosition = 'top'">
 					<template #icon>
@@ -162,12 +162,12 @@
 					Hier kunt u de details voor uw organisatie instellen.
 				</p>
 
-				<NcTextField id="organisationName" :value.sync="configuration.organisationName" />
-				<NcTextField id="organisationOin" :value.sync="configuration.organisationOin" />
-				<NcTextArea id="organisationPki" :value.sync="configuration.organisationPki" />
+				<NcTextField id="organisationName" v-model="configuration.organisationName" />
+				<NcTextField id="organisationOin" v-model="configuration.organisationOin" />
+				<NcTextArea id="organisationPki" v-model="configuration.organisationPki" />
 
 				<NcButton aria-label="Opslaan"
-					type="primary"
+					variant="primary"
 					wide
 					@click="saveConfig(); feedbackPosition = 'bottom'">
 					<template #icon>

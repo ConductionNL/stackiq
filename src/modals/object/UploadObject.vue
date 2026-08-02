@@ -39,7 +39,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 			</NcButton>
 			<NcButton v-if="success === null"
 				:disabled="!registers.value?.id || !schemas.value?.id || loading || !validateJson(object)"
-				type="primary"
+				variant="primary"
 				@click="uploadObject()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />

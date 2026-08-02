@@ -128,13 +128,30 @@ export async function gotoAppRoute(page: Page, route: string): Promise<void> {
 }
 
 /**
- * The app's OWN navigation — the `<nav>` whose links target
- * `/apps/softwarecatalog/...`. Scoping to it avoids matching Nextcloud's global
- * Applications-menu "Dashboard" entry (`/apps/dashboard/`), which collides with
- * the in-app "Dashboard" nav label.
+ * The app's OWN navigation. Scoping to it avoids matching Nextcloud's global
+ * Applications-menu "Dashboard" entry, which collides with the in-app
+ * "Dashboard" nav label — that is what this helper exists for, and the identity
+ * check below is unchanged in strength.
+ *
+ * ⚠️ This used to be `nav:has(a[href*="/apps/softwarecatalog/"])`, which stopped
+ * matching ANYTHING under vue-router 4. In hash mode v4 emits HASH-RELATIVE
+ * hrefs (`#/organisaties`); vue-router 3 emitted the base too
+ * (`/apps/softwarecatalog/#/organisaties`). v4's `createHref` explicitly strips
+ * everything before the `#`, so no configuration of `createWebHashHistory`
+ * restores the old shape — the change is by design, not a misconfiguration.
+ *
+ * Navigation itself is unaffected: `#/organisaties` resolves against the current
+ * document, the click navigates, and the target page renders. Verified in a
+ * browser before this selector was touched, precisely so that a stale selector
+ * could not be "fixed" into hiding a real routing regression.
+ *
+ * `nav#app-navigation-vue` is @nextcloud/vue's own NcAppNavigation host and is
+ * unique on the page (the other two navs are core's app-menu and user-menu), so
+ * it identifies the same element by a stable handle rather than by an href
+ * format the router owns.
  */
 export function appNav(page: Page) {
-	return page.locator('nav:has(a[href*="/apps/softwarecatalog/"])').first()
+	return page.locator('nav#app-navigation-vue').first()
 }
 
 /**

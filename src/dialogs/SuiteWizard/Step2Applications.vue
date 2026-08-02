@@ -25,7 +25,7 @@
 			{{ loadError }}
 		</NcNoteCard>
 
-		<NcSelect :value="selected"
+		<NcSelect :model-value="selected"
 			:options="applicationOptions"
 			:loading="loading"
 			:multiple="true"
@@ -34,7 +34,7 @@
 			:placeholder="t('softwarecatalog', 'Select one or more applications')"
 			track-by="uuid"
 			label="label"
-			@input="onSelectionChange" />
+			@update:model-value="onSelectionChange" />
 	</div>
 </template>
 

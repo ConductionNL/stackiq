@@ -47,7 +47,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 			<NcButton
 				v-if="success === null"
 				:disabled="loading"
-				type="primary"
+				variant="primary"
 				@click="changeStatus()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />

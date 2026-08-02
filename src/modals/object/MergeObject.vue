@@ -36,7 +36,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					v-model="searchTerm"
 					label="Search objects"
 					placeholder="Type to search for objects..."
-					@input="searchObjects" />
+					@update:model-value="searchObjects" />
 			</div>
 
 			<div v-if="loading" class="loading-container">
@@ -108,7 +108,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										track-by="value"
 										:input-label="t('softwarecatalog', 'Choose value for {property}', { property })"
 										:placeholder="'Choose value for ' + property"
-										@input="onPropertySelectionChange(property, $event)" />
+										@update:model-value="onPropertySelectionChange(property, $event)" />
 									<NcTextField
 										v-if="mergedData[property] === 'custom'"
 										v-model="customValues[property]"
@@ -143,7 +143,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				</div>
 
 				<div class="table-toggle">
-					<NcButton type="tertiary" @click="toggleFileList">
+					<NcButton variant="tertiary" @click="toggleFileList">
 						{{ showFileList ? 'Hide Files' : 'View Files' }}
 						<template #icon>
 							<ChevronUp v-if="showFileList" :size="20" />
@@ -200,7 +200,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				</div>
 
 				<div class="table-toggle">
-					<NcButton type="tertiary" @click="toggleRelationList">
+					<NcButton variant="tertiary" @click="toggleRelationList">
 						{{ showRelationList ? 'Hide Relations' : 'View Relations' }}
 						<template #icon>
 							<ChevronUp v-if="showRelationList" :size="20" />
@@ -349,7 +349,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 			</NcButton>
 
 			<NcButton v-if="step === 3 && mergeResult?.success"
-				type="secondary"
+				variant="secondary"
 				@click="viewMergedObject">
 				<template #icon>
 					<Eye :size="20" />
@@ -359,7 +359,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 
 			<NcButton v-if="step === 1"
 				:disabled="!selectedTargetObject"
-				type="primary"
+				variant="primary"
 				@click="nextStep">
 				<template #icon>
 					<ArrowRight :size="20" />
@@ -368,7 +368,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 			</NcButton>
 
 			<NcButton v-if="step === 2"
-				type="secondary"
+				variant="secondary"
 				@click="previousStep">
 				<template #icon>
 					<ArrowLeft :size="20" />
@@ -378,7 +378,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 
 			<NcButton v-if="step === 2"
 				:disabled="loading || !canMerge"
-				type="primary"
+				variant="primary"
 				@click="performMerge">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
@@ -624,8 +624,10 @@ export default {
 				// eslint-disable-next-line no-console
 				console.log('Set mergedData[' + property + '] to:', selectedOption.value)
 
-				// Clear custom value if switching away from custom
-				if (selectedOption.value !== 'custom') {
+				// Clear custom value if switching away from custom, and make sure it
+				// is a defined string when switching to custom — the v9 NcTextField
+				// declares modelValue as required and calls .toString() on it.
+				if (selectedOption.value !== 'custom' || this.customValues[property] === undefined) {
 					this.customValues[property] = ''
 				}
 			}

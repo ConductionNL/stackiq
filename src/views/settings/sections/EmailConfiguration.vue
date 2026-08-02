@@ -44,7 +44,7 @@
 					<!-- Enable Email Notifications -->
 					<div class="setting-group">
 						<NcCheckboxRadioSwitch
-							:checked.sync="emailSettings.enabled"
+							v-model="emailSettings.enabled"
 							type="switch">
 							Enable Email Notifications
 						</NcCheckboxRadioSwitch>
@@ -60,14 +60,14 @@
 							label="Sender Email"
 							placeholder="noreply@example.com"
 							:disabled="!emailSettings.enabled"
-							:value="(emailSettings.senderEmail || '').toString()"
-							@update:value="emailSettings.senderEmail = $event" />
+							:model-value="(emailSettings.senderEmail || '').toString()"
+							@update:model-value="emailSettings.senderEmail = $event" />
 						<NcTextField
 							label="Sender Name"
 							placeholder="Software Catalog"
 							:disabled="!emailSettings.enabled"
-							:value="(emailSettings.senderName || '').toString()"
-							@update:value="emailSettings.senderName = $event" />
+							:model-value="(emailSettings.senderName || '').toString()"
+							@update:model-value="emailSettings.senderName = $event" />
 					</div>
 
 					<!-- Test Receiver Override -->
@@ -77,8 +77,8 @@
 							label="Test Receiver Override"
 							placeholder="test@example.com"
 							:disabled="!emailSettings.enabled"
-							:value="(emailSettings.testReceiverOverride || '').toString()"
-							@update:value="emailSettings.testReceiverOverride = $event" />
+							:model-value="(emailSettings.testReceiverOverride || '').toString()"
+							@update:model-value="emailSettings.testReceiverOverride = $event" />
 						<p class="setting-description">
 							If set, all emails will be sent to this address instead of the intended recipients (useful for testing)
 						</p>
@@ -87,8 +87,16 @@
 					<!-- Transport Configuration -->
 					<div class="setting-group">
 						<h4>Email Transport</h4>
+						<!-- `:reduce` keeps the STRING in the model. The options are
+						     {label,value} objects, so without it v-model would store the
+						     whole object and `transportType === 'smtp'` below (and the
+						     saved payload) would silently break. Under Vue 2 this binding
+						     was `:value.sync`, which NcSelect never emitted — it never
+						     round-tripped at all, so the mismatch was latent until the
+						     binding became live. -->
 						<NcSelect
-							:value.sync="emailSettings.transportType"
+							v-model="emailSettings.transportType"
+							:reduce="option => option.value"
 							:options="[
 								{ label: 'SMTP', value: 'smtp' },
 								{ label: 'Mailjet', value: 'mailjet' },
@@ -107,17 +115,20 @@
 								label="SMTP Host"
 								placeholder="smtp.gmail.com"
 								:disabled="!emailSettings.enabled"
-								:value="(emailSettings.smtpHost || '').toString()"
-								@update:value="emailSettings.smtpHost = $event" />
+								:model-value="(emailSettings.smtpHost || '').toString()"
+								@update:model-value="emailSettings.smtpHost = $event" />
 							<NcTextField
 								label="SMTP Port"
 								placeholder="587"
 								type="text"
 								:disabled="!emailSettings.enabled"
-								:value="(emailSettings.smtpPort == null ? '' : String(emailSettings.smtpPort))"
-								@update:value="emailSettings.smtpPort = $event" />
+								:model-value="(emailSettings.smtpPort == null ? '' : String(emailSettings.smtpPort))"
+								@update:model-value="emailSettings.smtpPort = $event" />
+							<!-- See the transport select above: `:reduce` keeps the stored
+							     value a plain string rather than the {label,value} option. -->
 							<NcSelect
-								:value.sync="emailSettings.smtpEncryption"
+								v-model="emailSettings.smtpEncryption"
+								:reduce="option => option.value"
 								:options="[
 									{ label: 'None', value: 'none' },
 									{ label: 'TLS', value: 'tls' },
@@ -129,14 +140,14 @@
 								label="SMTP Username"
 								placeholder="your-email@gmail.com"
 								:disabled="!emailSettings.enabled"
-								:value="(emailSettings.smtpUsername || '').toString()"
-								@update:value="emailSettings.smtpUsername = $event" />
+								:model-value="(emailSettings.smtpUsername || '').toString()"
+								@update:model-value="emailSettings.smtpUsername = $event" />
 							<NcPasswordField
 								label="SMTP Password"
 								placeholder="Your app password"
 								:disabled="!emailSettings.enabled"
-								:value="(emailSettings.smtpPassword || '').toString()"
-								@update:value="emailSettings.smtpPassword = $event" />
+								:model-value="(emailSettings.smtpPassword || '').toString()"
+								@update:model-value="emailSettings.smtpPassword = $event" />
 						</div>
 					</div>
 
@@ -146,13 +157,13 @@
 						<NcTextField
 							label="Mailjet API Key"
 							:disabled="!emailSettings.enabled"
-							:value="(emailSettings.mailjetApiKey || '').toString()"
-							@update:value="emailSettings.mailjetApiKey = $event" />
+							:model-value="(emailSettings.mailjetApiKey || '').toString()"
+							@update:model-value="emailSettings.mailjetApiKey = $event" />
 						<NcPasswordField
 							label="Mailjet API Secret"
 							:disabled="!emailSettings.enabled"
-							:value="(emailSettings.mailjetApiSecret || '').toString()"
-							@update:value="emailSettings.mailjetApiSecret = $event" />
+							:model-value="(emailSettings.mailjetApiSecret || '').toString()"
+							@update:model-value="emailSettings.mailjetApiSecret = $event" />
 					</div>
 				</div>
 			</div>
@@ -164,7 +175,7 @@
 
 					<div class="email-type-group">
 						<NcCheckboxRadioSwitch
-							:checked.sync="emailSettings.organizationRegistrationEnabled"
+							v-model="emailSettings.organizationRegistrationEnabled"
 							type="switch"
 							:disabled="!emailSettings.enabled">
 							Organization Registration
@@ -176,7 +187,7 @@
 
 					<div class="email-type-group">
 						<NcCheckboxRadioSwitch
-							:checked.sync="emailSettings.organizationActivationEnabled"
+							v-model="emailSettings.organizationActivationEnabled"
 							type="switch"
 							:disabled="!emailSettings.enabled">
 							Organization Activation
@@ -188,7 +199,7 @@
 
 					<div class="email-type-group">
 						<NcCheckboxRadioSwitch
-							:checked.sync="emailSettings.userCreationEnabled"
+							v-model="emailSettings.userCreationEnabled"
 							type="switch"
 							:disabled="!emailSettings.enabled">
 							User Creation
@@ -200,7 +211,7 @@
 
 					<div class="email-type-group">
 						<NcCheckboxRadioSwitch
-							:checked.sync="emailSettings.userPasswordEnabled"
+							v-model="emailSettings.userPasswordEnabled"
 							type="switch"
 							:disabled="!emailSettings.enabled">
 							Password Reset
@@ -222,7 +233,7 @@
 						<h4>Connection Test</h4>
 						<p>Test the connection to your email provider</p>
 						<NcButton
-							type="secondary"
+							variant="secondary"
 							:disabled="!emailSettings.enabled || testingConnection"
 							@click="testEmailConnection">
 							<template #icon>
@@ -244,11 +255,11 @@
 						<h4>Send Test Email</h4>
 						<p>Send a test email to verify delivery</p>
 						<NcTextField
-							:value.sync="testEmailAddress"
+							v-model="testEmailAddress"
 							label="Test Email Address"
 							placeholder="test@example.com" />
 						<NcButton
-							type="primary"
+							variant="primary"
 							:disabled="!emailSettings.enabled || testingEmail || !testEmailAddress"
 							@click="sendTestEmail">
 							<template #icon>
@@ -277,7 +288,7 @@
 							<NcButton
 								v-for="template in availableTemplates"
 								:key="template.key"
-								:type="activeTemplate === template.key ? 'primary' : 'secondary'"
+								:variant="activeTemplate === template.key ? 'primary' : 'secondary'"
 								@click="activeTemplate = template.key">
 								{{ template.name }}
 							</NcButton>
@@ -302,20 +313,20 @@
 							</div>
 
 							<NcTextArea
-								:value="getActiveTemplateContent()"
+								:model-value="getActiveTemplateContent()"
 								:placeholder="'Enter your template content here...'"
 								label="Template Content"
 								rows="15"
-								@update:value="updateTemplateContent($event)" />
+								@update:model-value="updateTemplateContent($event)" />
 
 							<div class="template-actions">
 								<NcButton
-									type="secondary"
+									variant="secondary"
 									@click="resetTemplate">
 									Reset to Default
 								</NcButton>
 								<NcButton
-									type="primary"
+									variant="primary"
 									:disabled="loading || savingTemplate"
 									@click="saveTemplate">
 									<template #icon>
@@ -413,14 +424,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcTextField from '@nextcloud/vue/dist/Components/NcTextField.js'
-import NcPasswordField from '@nextcloud/vue/dist/Components/NcPasswordField.js'
-import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
-import NcTextArea from '@nextcloud/vue/dist/Components/NcTextArea.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
+import { NcButton, NcTextField, NcPasswordField, NcSelect, NcCheckboxRadioSwitch, NcTextArea, NcNoteCard, NcLoadingIcon } from '@nextcloud/vue'
 
 // Icons
 import Save from 'vue-material-design-icons/ContentSave.vue'

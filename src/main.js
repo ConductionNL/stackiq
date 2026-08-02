@@ -10,20 +10,19 @@
  * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
  */
 
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import { PiniaVuePlugin } from 'pinia'
+import { createApp, h } from 'vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
 	defaultPageTypes,
 	registerIcons,
 	registerTranslations,
+	registerBuiltinDashboardWidgets,
 	useAppManifest,
 	resolveManifestSentinels,
 	buildManifest,
 } from '@conduction/nextcloud-vue'
-import Tooltip from '@nextcloud/vue/dist/Directives/Tooltip.js'
 import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
@@ -36,17 +35,23 @@ import { routesFromManifest } from './router.js'
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
 
+// gridstack is a peerDependency of @conduction/nextcloud-vue that no consumer
+// declares. The stylesheet is the silent half: v12 sizes dashboard items with
+// `width: var(--gs-column-width)`, so without it every widget renders 0 px wide
+// with no console error.
+import 'gridstack/dist/gridstack.min.css'
+
 // Global (unscoped) app styles
 import './assets/app.css'
 
-Vue.mixin({ methods: { t, n } })
-Vue.directive('tooltip', Tooltip)
-
-Vue.use(PiniaVuePlugin)
-Vue.use(VueRouter)
-
 // Register library-side icon set + lib translations once at bootstrap.
 registerIcons(appIcons)
+
+// nc-vue's `sideEffects: ["**/*.css"]` lets webpack drop the bare imports that
+// register the built-in `stat` / `object-table` dashboard widgets, which then
+// render "Widget not available". This app uses `stat` and `stats-block` widgets
+// in detail-page widget slots, so the explicit call is load-bearing.
+registerBuiltinDashboardWidgets()
 try {
 	registerTranslations()
 } catch (e) {
@@ -81,12 +86,11 @@ const mergedManifest = buildManifest(bundledManifest, fragments, menuLayout)
 tryLoadTranslations()
 
 // Pass shallow copies of the registry maps to CnAppRoot. The lib exports
-// `defaultPageTypes` (and consumers' `customComponents`) as frozen module
-// objects in some bundle shapes — Vue 2's `Vue.extend()` mutates component
-// definitions to attach an internal `_Ctor` cache, which throws
-// "Cannot add property _Ctor, object is not extensible" against a frozen
-// source map. Cloning here yields extensible objects without changing
-// the values the lib resolves at render time.
+// `defaultPageTypes` (and consumers' `customComponents`) as FROZEN module
+// objects, and anything that writes a cache key onto a component definition
+// throws "Cannot add property …, object is not extensible" against them.
+// Cloning here yields extensible objects without changing the values the lib
+// resolves at render time.
 const pageTypesProp = { ...defaultPageTypes }
 const customComponentsProp = { ...customComponents }
 const registryProp = { ...registry }
@@ -117,9 +121,8 @@ const registryProp = { ...registry }
 async function bootstrap() {
 	const { manifest: resolvedManifest } = await resolveManifestSentinels(mergedManifest, 'softwarecatalog')
 
-	const router = new VueRouter({
-		mode: 'hash',
-		base: generateUrl('/apps/softwarecatalog'),
+	const router = createRouter({
+		history: createWebHashHistory(generateUrl('/apps/softwarecatalog')),
 		routes: routesFromManifest(resolvedManifest),
 	})
 
@@ -128,20 +131,30 @@ async function bootstrap() {
 	// unusable for this app).
 	const { manifest: manifestRef } = useAppManifest({ manifest: resolvedManifest })
 
-	new Vue({
-		pinia,
-		router,
-		render(h) {
+	const app = createApp({
+		render() {
 			return h(App, {
-				props: {
-					manifest: manifestRef.value,
-					customComponents: customComponentsProp,
-					pageTypes: pageTypesProp,
-					registry: registryProp,
-				},
+				manifest: manifestRef.value,
+				customComponents: customComponentsProp,
+				pageTypes: pageTypesProp,
+				registry: registryProp,
 			})
 		},
-	}).$mount('#content')
+	})
+
+	// Vue 3 has no global `Vue.mixin` — `t`/`n` are installed on the app
+	// instance so every component still resolves them in templates.
+	app.mixin({ methods: { t, n } })
+	app.use(pinia)
+	app.use(router)
+
+	// ⚠️ Vue 2's `$mount('#content')` REPLACED the matched element; Vue 3's
+	// `mount()` renders INSIDE it. `#content` is Nextcloud core's own
+	// `layout.user.php` wrapper — under Vue 2 the app replaced it outright,
+	// but under Vue 3 the same selector would nest the whole app inside core's
+	// chrome. `templates/index.php` already emits the app's own host element,
+	// so mount onto that and stop reasoning about which div wins.
+	app.mount('#softwarecatalog')
 }
 
 bootstrap()

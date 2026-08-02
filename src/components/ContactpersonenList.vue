@@ -173,12 +173,11 @@
 
 				<div class="password-input">
 					<NcTextField
-						:value="newPassword"
+						v-model="newPassword"
 						type="password"
 						:label="t('softwarecatalog', 'New password')"
 						:placeholder="t('softwarecatalog', 'Enter new password')"
-						class="compact-input"
-						@update:value="newPassword = $event" />
+						class="compact-input" />
 				</div>
 
 				<!-- Password Requirements -->
@@ -255,11 +254,11 @@
 				</div>
 
 				<div class="dialog-actions">
-					<NcButton type="secondary" @click="closePasswordDialog">
+					<NcButton variant="secondary" @click="closePasswordDialog">
 						{{ t("softwarecatalog", "Cancel") }}
 					</NcButton>
 					<NcButton
-						type="primary"
+						variant="primary"
 						:disabled="passwordLoading || !isPasswordValid || pwnedCheckLoading"
 						@click="savePassword">
 						<template #icon>
@@ -290,10 +289,10 @@
 					<NcCheckboxRadioSwitch
 						v-for="group in availableGroups"
 						:key="group.id"
-						:checked="selectedGroups.includes(group.id)"
+						:model-value="selectedGroups.includes(group.id)"
 						type="checkbox"
 						class="compact-checkbox"
-						@update:checked="toggleGroup(group.id, $event)">
+						@update:model-value="toggleGroup(group.id, $event)">
 						{{ group.name }}
 						<template #description>
 							{{ group.description }}
@@ -302,11 +301,11 @@
 				</div>
 
 				<div class="dialog-actions">
-					<NcButton type="secondary" @click="closeGroupsDialog">
+					<NcButton variant="secondary" @click="closeGroupsDialog">
 						{{ t("softwarecatalog", "Cancel") }}
 					</NcButton>
 					<NcButton
-						type="primary"
+						variant="primary"
 						:disabled="groupsLoading"
 						@click="saveGroups">
 						<template #icon>
@@ -502,7 +501,7 @@ export default {
 	/**
 	 * @spec openspec/specs/fe-organizations/spec.md
 	 */
-	beforeDestroy() {
+	beforeUnmount() {
 		// Clean up timeouts to prevent memory leaks
 		if (this.userStatusRefreshTimeout) {
 			clearTimeout(this.userStatusRefreshTimeout)
@@ -864,11 +863,8 @@ export default {
 					}
 
 					// Force reactivity update.
-					this.$set(
-						this.organisationData.contactpersonen,
-						index,
-						contactpersoon,
-					)
+					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
+					this.organisationData.contactpersonen[index] = contactpersoon
 				}
 			})
 		},
@@ -977,7 +973,7 @@ export default {
 			// Set loading state on the specific contactpersoon - ensure it's an object first
 			const contactObject = this.organisationData.contactpersonen[contactIndex]
 			if (typeof contactObject === 'object' && contactObject !== null) {
-				this.$set(contactObject, 'loading', true)
+				contactObject.loading = true
 			} else {
 				console.error('Contactpersoon is not an object:', contactObject)
 				showError(
@@ -1046,7 +1042,7 @@ export default {
 				const contactObject
           = this.organisationData.contactpersonen[contactIndex]
 				if (typeof contactObject === 'object' && contactObject !== null) {
-					this.$set(contactObject, 'loading', false)
+					contactObject.loading = false
 				}
 			}
 		},
@@ -1295,11 +1291,8 @@ export default {
 					}
 
 					// Force reactivity update.
-					this.$set(
-						this.organisationData.contactpersonen,
-						contactIndex,
-						contactpersoon,
-					)
+					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
+					this.organisationData.contactpersonen[contactIndex] = contactpersoon
 				}
 			}
 		},
@@ -1333,11 +1326,8 @@ export default {
 					}
 
 					// Force reactivity update.
-					this.$set(
-						this.organisationData.contactpersonen,
-						contactIndex,
-						contactpersoon,
-					)
+					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
+					this.organisationData.contactpersonen[contactIndex] = contactpersoon
 				}
 			}
 		},

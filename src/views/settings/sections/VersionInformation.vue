@@ -27,14 +27,14 @@
 		<template #header-actions>
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === false"
-				type="secondary"
+				variant="secondary"
 				:disabled="autoConfiguring"
 				@click="consolidatedAutoConfigure">
 				Auto Configure
 			</NcButton>
 			<NcButton
 				class="ml-8"
-				type="error"
+				variant="error"
 				:disabled="autoConfiguring"
 				@click="handleForceUpdate">
 				Force Update
@@ -42,7 +42,7 @@
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === true"
 				class="ml-8"
-				type="tertiary"
+				variant="tertiary"
 				:disabled="autoConfiguring"
 				@click="handleResetAutoConfig">
 				Reset Auto-Config
