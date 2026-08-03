@@ -1836,7 +1836,7 @@ class SettingsService
      * @param \OCA\OpenRegister\Service\ConfigurationService $configurationService The resolved OpenRegister configuration service.
      * @param string                                         $appId                The app id to look up the stored version for.
      * @param string                                         $configVersion        The version this call just computed via `computeConfigVersion()`.
-     * @param bool                                            $force                The caller-supplied `$force` argument to `loadSettings()`.
+     * @param bool                                           $force                The caller-supplied `$force` argument to `loadSettings()`.
      *
      * @return bool Whether `importFromApp()` should be called with `force=true`.
      *
@@ -7322,6 +7322,11 @@ class SettingsService
      *                                   case).
      *
      * @return array<mixed> The merged config.
+     *
+     * $replaceLists is not a responsibility switch: it selects list-merge SEMANTICS
+     * (replace vs. append) inside one recursive merge, as documented above.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      */
     private static function deepMergeConfig(array $base, array $overlay, bool $replaceLists=false): array
     {

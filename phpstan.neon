@@ -37,6 +37,24 @@ parameters:
         - '#has invalid return type OCA\\OpenRegister\\#'
         - '#has invalid type OCA\\OpenRegister\\#'
         - '#implements unknown interface OCA\\OpenRegister\\#'
+        # Decidesk cross-app contract classes. Decidesk owns DecisionConcludedEvent /
+        # DecisionRequestedEvent and is an optional co-installed app: the listener only
+        # runs when decidesk is present, and ContractApprovalService instantiates the
+        # request event from an FQCN string constant, so SoftwareCatalog stays loadable
+        # without decidesk. Scoped to the OCA\Decidesk namespace only.
+        - '#Class OCA\\Decidesk\\Event\\[A-Za-z]+ not found#'
+        - '#Instantiated class .?OCA\\Decidesk\\Event\\[A-Za-z]+ not found#'
+        - '#on an unknown class OCA\\Decidesk\\Event\\#'
+        # SoftwareCatalogEventListener::{resolveCatalogSchemaIds,isActiveStatus,matchesSchema}
+        # are an INCOMPLETE decomposition (openspec method-decomposition task 6.1): the
+        # helpers were written and are covered by
+        # tests/Unit/EventListener/SoftwareCatalogEventListenerDecompositionTest.php via
+        # ReflectionMethod, but the per-lifecycle handlers still carry the inline code they
+        # were meant to replace. They are NOT deletable — that would delete passing tests —
+        # and wiring them in is a behaviour change (the helpers use strict in_array() and a
+        # null-guard the inline code lacks). Tracked so the refactor can be finished
+        # deliberately rather than silently dropped.
+        - '#Method OCA\\SoftwareCatalog\\EventListener\\SoftwareCatalogEventListener::(resolveCatalogSchemaIds|isActiveStatus|matchesSchema)\(\) is unused#'
         # GuzzleHttp is available at runtime via Nextcloud but not in composer require
         - '#unknown class GuzzleHttp\\#'
         - '#GuzzleHttp\\[a-zA-Z\\]+.*not found#'

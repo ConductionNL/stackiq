@@ -218,9 +218,10 @@ class SbomController extends Controller
         }
 
         // JSON-only gate BEFORE the parser is invoked (semantic bomFormat/
-        // specVersion validation happens inside SbomParserService).
-        json_decode($contents);
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        // specVersion validation happens inside SbomParserService). json_validate()
+        // is the PHP 8.3 predicate for this; the previous json_decode() call
+        // discarded its result and relied on json_last_error() as a side effect.
+        if (json_validate($contents) === false) {
             return new JSONResponse(
                 data: [
                     'message' => 'Uploaded file is not valid JSON: '.json_last_error_msg(),

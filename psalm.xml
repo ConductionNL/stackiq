@@ -90,6 +90,20 @@
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
+                <!--
+                  RegisterResolverService is resolved from the container by FQCN
+                  string, like the OpenRegister services above.
+                -->
+                <referencedClass name="OCA\OpenRegister\Service\RegisterResolverService"/>
+                <!--
+                  Decidesk cross-app contract classes. Decidesk owns these event
+                  types and is an optional co-installed app: the listener is only
+                  invoked when decidesk is present, and ContractApprovalService
+                  instantiates the request event from an FQCN string constant so
+                  SoftwareCatalog stays loadable without decidesk.
+                -->
+                <referencedClass name="OCA\Decidesk\Event\DecisionConcludedEvent"/>
+                <referencedClass name="OCA\Decidesk\Event\DecisionRequestedEvent"/>
                 <!-- Additional OCP infrastructure types used across the fleet -->
                 <referencedClass name="OCP\AppFramework\Bootstrap\IBootContext"/>
                 <referencedClass name="OCP\AppFramework\Bootstrap\IRegistrationContext"/>

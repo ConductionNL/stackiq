@@ -38,7 +38,12 @@ use OCP\IAppConfig;
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
+ * LongVariable: $parentOrganisationUuid (22 chars) names exactly what it holds;
+ * the shorter alternatives are ambiguous against the organisation's own uuid,
+ * which is the bug this identifier exists to prevent.
+ *
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ * @SuppressWarnings(PHPMD.LongVariable)
  */
 class OrganisatieService
 {

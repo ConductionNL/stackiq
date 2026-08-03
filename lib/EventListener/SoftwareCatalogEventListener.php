@@ -41,6 +41,18 @@ use Psr\Log\LoggerInterface;
  * in the software catalog, including user management, email notifications, and
  * user blocking/unblocking functionality.
  *
+ * resolveCatalogSchemaIds(), isActiveStatus() and matchesSchema() are an
+ * INCOMPLETE decomposition (openspec method-decomposition task 6.1): the helpers
+ * exist and are covered by
+ * tests/Unit/EventListener/SoftwareCatalogEventListenerDecompositionTest.php via
+ * ReflectionMethod, but the per-lifecycle handlers below still carry the inline
+ * code they were meant to replace. They are deliberately NOT deleted — that would
+ * delete passing tests — and wiring them in is a behaviour change (the helpers use
+ * a strict in_array() and a null-guard that the inline code lacks). Suppressed so
+ * the gate is honest about this being tracked debt, not an oversight.
+ *
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ *
  * @category EventListener
  * @package  OCA\SoftwareCatalog\EventListener
  * @author   Conduction b.v. <info@conduction.nl>

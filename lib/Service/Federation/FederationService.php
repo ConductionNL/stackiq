@@ -34,6 +34,13 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Orchestrates federation by delegating to OpenCatalogi services.
+ *
+ * Exceeds PHPMD's class-complexity threshold (84 vs 50): peer discovery, mirror
+ * loading, merge application and failure/stale bookkeeping all branch on the
+ * same per-peer state machine, and each peer failure must degrade
+ * independently rather than abort the sync.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class FederationService
 {
@@ -98,6 +105,10 @@ class FederationService
      *               allowed:bool}>, staleAfter:int, message:string}
      *
      * @spec openspec/specs/federated-catalog-sync/spec.md
+     *
+     * The else branch is a genuine either/or between two disjoint states.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function getStatus(): array
     {
@@ -176,7 +187,7 @@ class FederationService
     {
         $peerUrl  = trim($peerUrl);
         $peers    = $this->config->getPeers();
-        $filtered = array_values(array_filter($peers, static fn (string $p): bool => $p !== $peerUrl));
+        $filtered = array_values(array_filter($peers, static fn (string $peer): bool => $peer !== $peerUrl));
         if (count($filtered) === count($peers)) {
             return ['ok' => false, 'reason' => 'peer not found'];
         }
@@ -486,6 +497,10 @@ class FederationService
      * @param array{register:int,schema:int} $target  The mirror register/schema.
      *
      * @return array<int,array<string,mixed>> The peer's local mirror data bags.
+     *
+     * The else branch is a genuine either/or between two disjoint states.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function loadPeerMirrors(string $peerUrl, array $target): array
     {
@@ -537,6 +552,10 @@ class FederationService
      * @param string|null                    $uuidKey       Data key holding the existing uuid (null = create).
      *
      * @return int The count of successfully applied mirrors.
+     *
+     * The else branch is a genuine either/or between two disjoint states.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function applyMirrors(object $objectService, array $target, array $mirrors, ?string $uuidKey): int
     {
@@ -743,10 +762,10 @@ class FederationService
             return false;
         }
 
-        $ip = filter_var($host, FILTER_VALIDATE_IP);
-        if ($ip !== false) {
+        $address = filter_var($host, FILTER_VALIDATE_IP);
+        if ($address !== false) {
             $public = filter_var(
-                $ip,
+                $address,
                 FILTER_VALIDATE_IP,
                 (FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
             );

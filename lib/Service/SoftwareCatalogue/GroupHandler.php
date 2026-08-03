@@ -43,7 +43,12 @@ use RuntimeException;
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
+ * Exceeds PHPMD's class-complexity threshold (53 vs 50): group provisioning
+ * branches once per role the catalogue defines, and each role's membership rule
+ * must be evaluated against the same organisation snapshot.
+ *
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class GroupHandler
 {

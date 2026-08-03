@@ -71,6 +71,13 @@ class InitializeSettings implements IRepairStep
      *
      * @return void
      * @spec   openspec/specs/repair-init/spec.md
+     *
+     * Complexity is one guard per initialisation step (app installed, register
+     * resolvable, each schema present); a repair step must skip cleanly at any
+     * point rather than abort a Nextcloud upgrade.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function run(IOutput $output): void
     {

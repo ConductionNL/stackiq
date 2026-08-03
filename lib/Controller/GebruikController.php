@@ -214,6 +214,12 @@ class GebruikController extends Controller
      * @spec openspec/changes/method-decomposition/tasks.md#task-9-3
      * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-aanbod-beheerder-vendor-reads-of-gebruik-koppeling-objects-must-be-scoped-to-the-vendor-s-own-offered-products-req-002
      * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-gebruik-beheerder-reads-of-gebruik-objects-must-be-scoped-to-the-caller-s-own-organisation-req-003
+     *
+     * Every branch is an RBAC scoping rule from the two specs above. This is a
+     * security-relevant decision table; flattening it into helpers would move the
+     * rules away from the single place they are evaluated.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function applyAanbodScopeToOptions(array $roles, array $options): ?array
     {

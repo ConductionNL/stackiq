@@ -120,6 +120,14 @@ class EolSyncService
      * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
      * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
      * @spec openspec/specs/eol-feed-integration/spec.md#requirement-softwarecatalog-performs-no-direct-http-to-the-eol-feed
+     *
+     * Complexity and length are the graceful-degradation requirement made literal:
+     * every feed/parse/match/write step has its own failure branch that must record
+     * a reason and continue, because the spec forbids aborting the whole sync.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function run(): array
     {

@@ -809,6 +809,11 @@ class ViewService
      * @return array Gebruik data indexed by elementRef.
      *
      * @spec openspec/changes/deelnames-gebruik/tasks.md#task-2
+     *
+     * @psalm-suppress UnusedParam $options is documented above as kept for signature
+     *                 compatibility with the sibling enrichment methods.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     private function getGebruikData(array $options=[]): array
     {

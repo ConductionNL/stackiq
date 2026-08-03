@@ -273,6 +273,12 @@ class ContactpersonenController extends Controller
      *
      * @spec openspec/specs/contactpersonen-api/spec.md
      * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     *
+     * 187 lines vs a threshold of 100: contact -> Nextcloud user conversion is one
+     * transaction (validate, create user, set display name/email, join groups, write
+     * back the link) whose steps must unwind together on failure.
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function convertToUser(string $contactpersoonId): JSONResponse
     {
@@ -1580,7 +1586,10 @@ class ContactpersonenController extends Controller
             // OrganisationMembersController; this flag merely lets the
             // frontend decide whether to render the "manage members"
             // affordance at all).
-            // See @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004 for the authorization contract this flag hints at.
+            // See the multi-org-membership spec for the authorization contract
+            // this flag hints at: openspec/specs/multi-org-membership/spec.md,
+            // requirement "granting or revoking organisation access must be
+            // restricted to a beheerder of that organisation" (REQ-004).
             'isBeheerder'   => false,
         ];
     }//end buildEmptyMeResponse()

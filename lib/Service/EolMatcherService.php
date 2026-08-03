@@ -124,10 +124,8 @@ class EolMatcherService
         $versieSegments = explode('.', $versie);
         $cycleSegments  = explode('.', $cycle);
 
+        // Explode() always yields at least one segment, so $depth >= 1.
         $depth = min(count($versieSegments), count($cycleSegments));
-        if ($depth === 0) {
-            return null;
-        }
 
         for ($i = 0; $i < $depth; $i++) {
             if ($versieSegments[$i] !== $cycleSegments[$i]) {

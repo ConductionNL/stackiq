@@ -164,7 +164,7 @@ class OrganizationContactSyncJob extends TimedJob
 
         foreach (['contactpersoon', 'organisatie'] as $objectType) {
             $schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
-            if ($schemaId === null || $schemaId === false) {
+            if ($schemaId === null) {
                 continue;
             }
 
@@ -194,6 +194,14 @@ class OrganizationContactSyncJob extends TimedJob
      * @param string  $objectType    The object type.
      *
      * @return void
+     *
+     * Complexity is one guard per precondition (schema configured, object found,
+     * contact resolvable, write permitted) plus the either/or on link-vs-create.
+     * Each must be checked before the next is meaningful.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function refreshOne(
         object $objectService,

@@ -69,6 +69,12 @@ class FederationMerger
      *               existing local mirror data bag, marked withdrawn + stale.
      *
      * @spec openspec/specs/federated-catalog-sync/spec.md
+     *
+     * Complexity is the merge decision table itself (new / updated / unchanged /
+     * withdrawn / stale), which is only correct read as one pass.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function plan(
         string $peerUrl,
@@ -154,6 +160,10 @@ class FederationMerger
      * @return bool True when the peer's mirrors should be marked stale.
      *
      * @spec openspec/specs/federated-catalog-sync/spec.md
+     *
+     * The else branch is a genuine either/or between two disjoint states.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function isStale(int $consecutiveFailures, ?int $threshold=null): bool
     {
@@ -175,6 +185,10 @@ class FederationMerger
      * @return array<string,mixed> The mirror with `_source.stale` set.
      *
      * @spec openspec/specs/federated-catalog-sync/spec.md
+     *
+     * The else branch is a genuine either/or between two disjoint states.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function applyStale(array $mirror, bool $stale): array
     {
@@ -247,6 +261,10 @@ class FederationMerger
      * @param string              $syncedAt The ISO-8601 sync moment.
      *
      * @return array<string,mixed> The mirror marked withdrawn + stale.
+     *
+     * The else branch is a genuine either/or between two disjoint states.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function markWithdrawn(array $mirror, string $syncedAt): array
     {

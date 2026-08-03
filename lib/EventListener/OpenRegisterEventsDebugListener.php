@@ -208,6 +208,10 @@ class OpenRegisterEventsDebugListener implements IEventListener
      * @param Event $event The dispatched event
      *
      * @return array|null Payload, or null when the event is not an Object* event
+     *
+     * The else branch is a genuine either/or over two disjoint event shapes.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function extractObjectEventData(Event $event): ?array
     {

@@ -140,6 +140,13 @@ class PublicationController extends Controller
      * @return JSONResponse|null Error response, or null when authorized.
      *
      * @spec openspec/specs/open-data-publishing/spec.md
+     *
+     * Every branch is an authorization guard; each must return its own error
+     * response, so they cannot be collapsed. Keeping them in one method keeps the
+     * whole gate auditable in one read.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     private function authorizeEntry(string $objectType, string $uuid): ?JSONResponse
     {

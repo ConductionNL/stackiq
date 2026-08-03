@@ -38,7 +38,6 @@ use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -70,7 +69,6 @@ class MigrateContactsToNc implements IRepairStep
      * Constructor.
      *
      * @param IAppManager                       $appManager      The app manager.
-     * @param ContainerInterface                $container       The DI container.
      * @param SettingsService                   $settingsService The settings service (register/schema id resolution).
      * @param SoftwareCatalogContactSyncService $contactSync     The contacts bridge.
      * @param IAppConfig                        $appConfig       The app config (convergence marker).
@@ -80,7 +78,6 @@ class MigrateContactsToNc implements IRepairStep
      */
     public function __construct(
         private readonly IAppManager $appManager,
-        private readonly ContainerInterface $container,
         private readonly SettingsService $settingsService,
         private readonly SoftwareCatalogContactSyncService $contactSync,
         private readonly IAppConfig $appConfig,
@@ -187,6 +184,10 @@ class MigrateContactsToNc implements IRepairStep
      * @return array{linked:int,created:int,skipped:int,failed:int,readFailed:int} The per-type counters.
      *
      * @spec exclude system-context adoption
+     *
+     * The else branch is a genuine either/or (record already linked vs. not).
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function migrateType(IOutput $output, int $registerId, string $objectType): array
     {
@@ -199,7 +200,7 @@ class MigrateContactsToNc implements IRepairStep
         ];
 
         $schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
-        if ($schemaId === null || $schemaId === false) {
+        if ($schemaId === null) {
             $output->warning(sprintf('Schema id for "%s" not configured — skipping', $objectType));
             return $stats;
         }
@@ -263,6 +264,11 @@ class MigrateContactsToNc implements IRepairStep
      * @return void
      *
      * @spec exclude system-context adoption
+     *
+     * The two else branches are genuine either/or forks (existing contact vs. new,
+     * write succeeded vs. failed) and each updates a different counter.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function migrateOne(
         object $objectService,

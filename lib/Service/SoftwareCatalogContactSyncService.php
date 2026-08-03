@@ -42,6 +42,12 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * Exceeds PHPMD's class-complexity threshold (53 vs 50): the bidirectional
+ * record <-> vCard mapping branches once per optional contact property, and both
+ * directions must stay in one class so the mapping stays symmetric.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class SoftwareCatalogContactSyncService
 {
@@ -213,6 +219,12 @@ class SoftwareCatalogContactSyncService
      * @return ?array<string, mixed> The matched contact, or null.
      *
      * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+     *
+     * Complexity sits on the threshold (10 vs 10): the branches are the match
+     * strategies tried in priority order (stored uid, then email, then name), each
+     * of which must be attempted before the next is meaningful.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function findContactForRecord(string $objectType, array $record): ?array
     {
@@ -296,6 +308,10 @@ class SoftwareCatalogContactSyncService
      * @param array<string, mixed> $record     The relationship record.
      *
      * @return array<string, mixed> The vCard property set.
+     *
+     * The else branch is a genuine either/or between the two record shapes.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function recordToVCard(string $objectType, array $record): array
     {

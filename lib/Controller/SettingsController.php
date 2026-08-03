@@ -195,6 +195,11 @@ class SettingsController extends Controller
      * @return JSONResponse
      *
      * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     *
+     * $includeParams is not a responsibility switch — it only decides whether the
+     * (already-built) log payload is attached to the response, as documented above.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      */
     private function buildConfigErrorResponse(
         string $operationLabel,

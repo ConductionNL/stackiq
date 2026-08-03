@@ -188,6 +188,10 @@ class FederationConfig
      * @return void
      *
      * @spec openspec/specs/federated-catalog-sync/spec.md
+     *
+     * The else branch is a genuine either/or between two disjoint states.
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     public function setPeerFailures(string $peerUrl, int $failures): void
     {

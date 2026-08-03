@@ -49,9 +49,23 @@ use RuntimeException;
  *
  * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
  *
+ * PHPMD suppressions below, in order:
+ *  - class length (1095 vs 1000): the GEMMA dimension map and the disjunctive
+ *    count pass are one algorithm and are only correct read together;
+ *  - LongVariable: the identifiers are GEMMA domain terms
+ *    ($referentiecomponentIdsByObjectId, $applicatieserviceNamesByReferentiecomponentId).
+ *    Dutch reference-architecture vocabulary simply exceeds a 20-character limit,
+ *    and abbreviating it would make the dimension wiring unreadable;
+ *  - UnusedPrivateMethod: normalizeObject() IS called, twice, as
+ *    array_map([$this, 'normalizeObject'], ...) — PHPMD cannot resolve the
+ *    callable-array form, so this one is a false positive.
+ *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
  */
 class FacetService
 {
