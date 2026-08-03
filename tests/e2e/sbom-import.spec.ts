@@ -52,6 +52,7 @@ import {
 	RUN_ID,
 } from './workflows/_fixtures'
 import { dismissWalkthrough } from './spec-coverage/_helpers'
+import { APP_PATH } from './base-url'
 
 const FIXTURES_DIR = path.resolve(__dirname, '../fixtures/sbom')
 const CYCLONEDX_16 = path.join(FIXTURES_DIR, 'cyclonedx-1.6-valid.json') // 3 components
@@ -93,7 +94,14 @@ async function openComponentsTab(page: Page): Promise<void> {
 	// path boots the SPA with an empty hash, so vue-router falls back to the
 	// Dashboard and the detail page (with its Components tab) never mounts. Deep
 	// links MUST carry the `#` route.
-	await page.goto(`/apps/softwarecatalog/#/moduleversies/${moduleVersieId}`, { waitUntil: 'networkidle' })
+	//
+	// `/index.php/...`, not the pretty path — see the APP_PATH docblock in
+	// tests/e2e/base-url.ts. `domcontentloaded`, not `networkidle`: the SPA keeps
+	// a background poll alive so the network never goes idle; the app-root wait
+	// below is the real readiness signal.
+	await page.goto(`${APP_PATH}/#/moduleversies/${moduleVersieId}`, { waitUntil: 'domcontentloaded' })
+	await page.locator('.softwarecatalog-app-root').first()
+		.waitFor({ state: 'attached', timeout: 30000 })
 	// The first-run walkthrough overlay intercepts pointer events — dismiss it
 	// before touching anything.
 	await dismissWalkthrough(page)

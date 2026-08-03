@@ -11,8 +11,14 @@
  * no Vue `$data`/`__vue__` patching.
  */
 import { expect, type Page } from '@playwright/test'
+import { APP_PATH } from '../base-url'
 
-export const APP_BASE = '/apps/softwarecatalog'
+// Was the hardcoded pretty path `/apps/softwarecatalog`, which only resolves
+// behind a rewrite rule. See the APP_PATH docblock in tests/e2e/base-url.ts —
+// on the CI runner's `php -S` that path is served by the built-in server's own
+// "Not Found" page, and every spec then failed on a 30s app-root timeout that
+// read like a mount failure.
+export const APP_BASE = APP_PATH
 export const APP_SHELL = '.softwarecatalog-app-root'
 export const APP_MAIN = 'main'
 

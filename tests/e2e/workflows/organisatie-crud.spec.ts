@@ -47,11 +47,19 @@ test.beforeAll(async () => {
 	cfg = await resolveConfig(apiCtx)
 	// Seed one real, non-"Generic" organisation (the org-export toggle and the
 	// custom card view both need a real organisation with a truthy id).
+	//
+	// `contactsUid` is REQUIRED on the organisatie schema (identity lives in
+	// Nextcloud Contacts; this record holds only the catalog-side relation).
+	// Omitting it is silently survivable on an instance whose magic-mapper table
+	// predates the requirement, and a hard `SQLSTATE[23502] ... contacts_uid ...
+	// not-null` rejection on a fresh install. A synthetic UID satisfies the
+	// declared contract; nothing here asserts contact resolution.
 	await createObject(apiCtx, cfg.register, cfg.organisatie_schema, {
 		naam: orgName,
 		type: 'Leverancier',
 		website: 'https://e2e-seeded-org.example.com',
 		status: 'Actief',
+		contactsUid: `${RUN_ID}-org`,
 	})
 })
 

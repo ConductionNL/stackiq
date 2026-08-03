@@ -76,7 +76,7 @@
  */
 
 import { test, expect, request as playwrightRequest, type Page } from '@playwright/test'
-import { resolveBaseUrl } from './base-url'
+import { APP_PATH, resolveBaseUrl } from './base-url'
 
 // ---------------------------------------------------------------------------
 // Fixture setup
@@ -134,10 +134,27 @@ async function seedOrganization(): Promise<void> {
 			}
 		}
 
-		// `type` is a required (not-null) field on the organisatie schema.
+		// `type` AND `contactsUid` are required (not-null) on the organisatie
+		// schema. `contactsUid` was missing from this payload, which is invisible
+		// on an instance whose magic-mapper table predates the requirement but is
+		// a hard failure on a fresh install: OpenRegister rejected the create with
+		// `SQLSTATE[23502] ... null value in column "contacts_uid" ... violates
+		// not-null constraint` (surfaced, confusingly, as HTTP 403).
+		//
+		// Identity for an organisation lives in Nextcloud Contacts and this record
+		// only stores the catalog-side relation, so a fixture that is not testing
+		// contact resolution supplies a synthetic UID. It satisfies the schema's
+		// declared contract; nothing here asserts the UID resolves to a contact.
 		const createRes = await ctx.post(
 			`/index.php/apps/openregister/api/objects/${register}/${schema}`,
-			{ data: { naam: SEEDED_ORG_NAME, type: 'Leverancier', status: 'Actief' } },
+			{
+				data: {
+					naam: SEEDED_ORG_NAME,
+					type: 'Leverancier',
+					status: 'Actief',
+					contactsUid: 'e2e-org-archimate-export',
+				},
+			},
 		)
 		if (!createRes.ok()) {
 			throw new Error(
@@ -192,7 +209,12 @@ async function selectOrganization(page: Page, optionLabel: string): Promise<bool
 test(
 	'swc-fix spa-mounts: main app dashboard renders without white-screen',
 	async ({ page }) => {
-		await page.goto('/apps/softwarecatalog', { waitUntil: 'networkidle' })
+		// `/index.php/...`, not the pretty path — see the APP_PATH docblock in
+		// tests/e2e/base-url.ts. `domcontentloaded`, not `networkidle`: the SPA
+		// keeps a background poll alive so the network never goes idle (the same
+		// reasoning manifest-pages.spec.ts and visual/_visual-helpers.ts already
+		// document). The heading assertion below is the real readiness signal.
+		await page.goto(APP_PATH, { waitUntil: 'domcontentloaded' })
 		// Two headings named "Dashboard" exist (widget + page title) — both prove
 		// Vue mounted. Using .first() avoids the strict-mode violation.
 		await expect(

@@ -4,9 +4,10 @@
  * Real UI smoke coverage for the manifest-driven SoftwareCatalog SPA pages.
  *
  * src/manifest.json declares the rendering pages (index / detail / dashboard /
- * roadmap / settings). The app shell (CnAppRoot) uses vue-router in *history*
- * mode with base `/apps/softwarecatalog`, so every page is a real deep-linkable
- * path. Each test drives the real UI by navigating to the page route and
+ * roadmap / settings). The app shell (CnAppRoot) uses vue-router in *hash*
+ * mode, so every page is deep-linkable as `<app entry>#<route>` (this header
+ * previously claimed history mode — it is not; see `gotoAppRoute` below, which
+ * has always built hash URLs). Each test drives the real UI by navigating to the page route and
  * asserting the Vue shell mounted (the `.softwarecatalog-app-root` shell that
  * replaces `#content` on mount renders) and the page-specific title text is
  * visible — no Vue-internals
@@ -33,8 +34,12 @@
  */
 
 import { test, expect, type Page } from '@playwright/test'
+import { APP_PATH } from './base-url'
 
-const APP_BASE = '/apps/softwarecatalog'
+// Was the hardcoded pretty path `/apps/softwarecatalog`. See the APP_PATH
+// docblock in tests/e2e/base-url.ts: without a rewrite rule that path is not a
+// Nextcloud URL at all, and the CI runner has no rewriting.
+const APP_BASE = APP_PATH
 
 // The Vue app bootstraps with `.$mount('#content')` (src/main.js), replacing
 // Nextcloud's standard `#content` node with the App.vue root, whose outermost
