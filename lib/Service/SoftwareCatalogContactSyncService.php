@@ -42,6 +42,13 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Overall complexity 56 (threshold 50). The
+ * class maps several distinct softwarecatalog relationship types (organisation, contactpersoon,
+ * …) onto Nextcloud's vCard contact model, and each mapping needs per-field presence checks
+ * because the legacy identity fields are optional and inconsistently populated across records.
+ * The Contacts API is also an optional dependency, so every entry point carries an availability
+ * guard. Both are breadth of mapping rather than depth of logic.
  */
 class SoftwareCatalogContactSyncService
 {
@@ -213,6 +220,12 @@ class SoftwareCatalogContactSyncService
      * @return ?array<string, mixed> The matched contact, or null.
      *
      * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 10, exactly at the threshold. The
+     * branches are the documented identity-match cascade: Contacts API availability, then e-mail,
+     * then — for organisations only — CBS and KvK code as fallbacks, each with an
+     * empty/absent-value guard so a blank legacy field can never match an unrelated contact. The
+     * cascade order is the specified behaviour and is clearer read top-to-bottom in one method.
      */
     public function findContactForRecord(string $objectType, array $record): ?array
     {

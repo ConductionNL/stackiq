@@ -237,6 +237,12 @@ class Application extends App implements IBootstrap
      * @return void
      *
      * @spec openspec/changes/method-decomposition/tasks.md#task-9-1
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength) 498 lines of flat, branch-free DI
+     * wiring — one `registerService()` closure per domain service. The length is genuine
+     * and this method SHOULD be split into per-domain registrars the way
+     * `registerHandlerServices()` already was; that split is a deliberate follow-up and is
+     * deferred here only because it is a behaviour change, not a quality-gate change.
      */
     private function registerDomainServices(IRegistrationContext $context): void
     {

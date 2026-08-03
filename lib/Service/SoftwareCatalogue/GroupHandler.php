@@ -44,6 +44,12 @@ use RuntimeException;
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Overall complexity 53 (threshold 50). Group
+ * management is the app's RBAC surface: every operation has to verify the group exists, that the
+ * user exists, that the caller is allowed to change that membership, and that the derived
+ * organisation groups stay consistent — and each of those has to fail closed rather than silently
+ * no-op. The branching is authorization checking, which is exactly where it belongs in view.
  */
 class GroupHandler
 {

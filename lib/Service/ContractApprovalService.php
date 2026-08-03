@@ -46,6 +46,13 @@ use RuntimeException;
  * Raises and projects contract approval decisions delegated to decidesk.
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Overall complexity 56 (threshold 50). This
+ * class is the fail-closed boundary to an optional cross-app dependency (decidesk): every
+ * delegation path has to check that the event contract exists, that the listener actually handled
+ * the request, and that a decision id came back, and refuse on each. Fail-open here would silently
+ * auto-approve contracts, so that defensive branching is the point of the class and the
+ * complexity is inherent rather than accidental.
  */
 class ContractApprovalService
 {
@@ -167,6 +174,11 @@ class ContractApprovalService
      * @throws RuntimeException When delegation is not available or the listener did not handle it.
      *
      * @spec openspec/specs/contract-decision-delegation/spec.md
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$isRenewal` selects the `decisionType`
+     * (`contract-approval` vs `contract-renewal`) carried on the raised decidesk event; the
+     * fail-closed logic, persistence and return value are byte-for-byte identical on both paths.
+     * It is a payload discriminator, not a second responsibility.
      */
     public function submitForApproval(string $contractUuid, bool $isRenewal=false): string
     {

@@ -194,6 +194,15 @@ class OrganizationContactSyncJob extends TimedJob
      * @param string  $objectType    The object type.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 12 (threshold 10) and NPath 217
+     * (threshold 200) are almost entirely defensive duck-typing against an OpenRegister entity
+     * whose shape is not guaranteed here (`method_exists($object, 'getObject'/'getUuid')`) plus
+     * four independent early-return guards that each mean "this record is already correct, skip
+     * it". Every branch is a flat guard clause; there is no nesting to extract.
+     *
+     * @SuppressWarnings(PHPMD.NPathComplexity) See the CyclomaticComplexity note above — the 217
+     * paths are the product of those same independent guard clauses, not real logic depth.
      */
     private function refreshOne(
         object $objectService,

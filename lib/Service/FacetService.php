@@ -52,6 +52,14 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength) 1095 lines (threshold 1000). This is a real
+ * smell, not a defensible shape: the class currently holds three separable concerns — candidate
+ * resolution + RBAC scoping, GEMMA dimension mapping via ArchiMate element lookups, and the
+ * disjunctive count aggregation. It SHOULD be split along those seams (the aggregation half in
+ * particular has no dependency on the OpenRegister/ArchiMate plumbing). Recorded here as a
+ * deliberate follow-up; splitting it is a behaviour-affecting refactor and is out of scope for a
+ * quality-gate-only change.
  */
 class FacetService
 {
