@@ -17,6 +17,16 @@ parameters:
         - lib/Resources/template
     scanDirectories:
         - vendor/nextcloud/ocp
+    scanFiles:
+        # decidesk decision-event contract (DecisionRequestedEvent +
+        # DecisionConcludedEvent). decidesk is a sibling Nextcloud app, not a
+        # Composer dependency, so it is genuinely absent from the CI analysis
+        # path. The stub mirrors the real signatures in decidesk/lib/Event/ and
+        # supplies real type information rather than silencing the diagnostic —
+        # that is what also resolves the six `Call to method X() on an unknown
+        # class` errors that a bare ignore pattern cannot fix. Analysis-only;
+        # never loaded at runtime or by PHPUnit.
+        - tests/analysis-stubs/decidesk-events.stub.php
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         # Nextcloud server internals (\OC, OC_App, OC\) not stubbed in nextcloud/ocp

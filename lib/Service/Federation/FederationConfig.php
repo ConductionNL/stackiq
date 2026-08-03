@@ -197,9 +197,10 @@ class FederationConfig
             $decoded = [];
         }
 
-        if ($failures <= 0) {
-            unset($decoded[$peerUrl]);
-        } else {
+        // A non-positive failure count clears the entry entirely, so drop it
+        // first and only re-add it when there is a positive count to record.
+        unset($decoded[$peerUrl]);
+        if ($failures > 0) {
             $decoded[$peerUrl] = $failures;
         }
 

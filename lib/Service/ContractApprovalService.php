@@ -40,6 +40,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Raises and projects contract approval decisions delegated to decidesk.
@@ -163,7 +164,7 @@ class ContractApprovalService
      *
      * @return string The decidesk decision id.
      *
-     * @throws \RuntimeException When delegation is not available or the listener did not handle it.
+     * @throws RuntimeException When delegation is not available or the listener did not handle it.
      *
      * @spec openspec/specs/contract-decision-delegation/spec.md
      */
@@ -171,12 +172,12 @@ class ContractApprovalService
     {
         if ($this->isDelegationConfigured() === false) {
             // Fail closed — never auto-approve when decidesk is not installed.
-            throw new \RuntimeException('Contract approval delegation is not available (decidesk event contract not installed).');
+            throw new RuntimeException('Contract approval delegation is not available (decidesk event contract not installed).');
         }
 
         $contract = $this->loadContract(contractUuid: $contractUuid);
         if ($contract === null) {
-            throw new \RuntimeException('Contract not found: '.$contractUuid);
+            throw new RuntimeException('Contract not found: '.$contractUuid);
         }
 
         $data = $contract->getObject();
@@ -208,16 +209,16 @@ class ContractApprovalService
                 'ContractApprovalService: dispatching decidesk decision request failed — contract left in negotiation',
                 ['contractUuid' => $contractUuid, 'error' => $e->getMessage()]
             );
-            throw new \RuntimeException('Failed to raise the approval decision in decidesk.', 0, $e);
+            throw new RuntimeException('Failed to raise the approval decision in decidesk.', 0, $e);
         }//end try
 
         if ($event->isHandled() === false) {
-            throw new \RuntimeException('decidesk did not handle the approval request; contract left in negotiation.');
+            throw new RuntimeException('decidesk did not handle the approval request; contract left in negotiation.');
         }
 
         $decisionId = (string) ($event->getDecisionId() ?? '');
         if ($decisionId === '') {
-            throw new \RuntimeException('decidesk did not return a decision id; contract left in negotiation.');
+            throw new RuntimeException('decidesk did not return a decision id; contract left in negotiation.');
         }
 
         $data['approvalDecisionId'] = $decisionId;

@@ -273,12 +273,12 @@ class PublicationService
             return null;
         }
 
-        $ts = strtotime($when);
-        if ($ts === false) {
+        $timestamp = strtotime($when);
+        if ($timestamp === false) {
             return null;
         }
 
-        return gmdate('Y-m-d\TH:i:sP', $ts);
+        return gmdate('Y-m-d\TH:i:sP', $timestamp);
     }//end normaliseDate()
 
     /**

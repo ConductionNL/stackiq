@@ -164,7 +164,7 @@ class OrganizationContactSyncJob extends TimedJob
 
         foreach (['contactpersoon', 'organisatie'] as $objectType) {
             $schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
-            if ($schemaId === null || $schemaId === false) {
+            if ($schemaId === null) {
                 continue;
             }
 
@@ -225,10 +225,10 @@ class OrganizationContactSyncJob extends TimedJob
             }
 
             $data['contactsUid'] = $resolved;
+
+            $uuidArg = null;
             if ($uuid !== '') {
                 $uuidArg = $uuid;
-            } else {
-                $uuidArg = null;
             }
 
             $objectService->saveObject($data, [], $registerId, $schemaId, $uuidArg, false, false);

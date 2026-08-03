@@ -226,13 +226,9 @@ class OpenRegisterEventsDebugListener implements IEventListener
         }
 
         if ($event instanceof ObjectUpdatedEvent) {
-            $newObject = $event->getNewObject();
-            $oldObject = $event->getOldObject();
-            if ($oldObject !== null) {
-                $oldObjectData = $oldObject->getObject();
-            } else {
-                $oldObjectData = null;
-            }
+            $newObject     = $event->getNewObject();
+            $oldObject     = $event->getOldObject();
+            $oldObjectData = $oldObject?->getObject();
 
             return [
                 'eventType'     => 'ObjectUpdated',

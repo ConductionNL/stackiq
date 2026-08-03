@@ -157,10 +157,9 @@ class FederationMerger
      */
     public function isStale(int $consecutiveFailures, ?int $threshold=null): bool
     {
+        $limit = self::DEFAULT_STALE_AFTER_FAILURES;
         if ($threshold !== null && $threshold > 0) {
             $limit = $threshold;
-        } else {
-            $limit = self::DEFAULT_STALE_AFTER_FAILURES;
         }
 
         return $consecutiveFailures >= $limit;
@@ -178,10 +177,9 @@ class FederationMerger
      */
     public function applyStale(array $mirror, bool $stale): array
     {
+        $source = [];
         if (is_array($mirror['_source'] ?? null) === true) {
             $source = $mirror['_source'];
-        } else {
-            $source = [];
         }
 
         $source['stale']   = $stale;
@@ -250,10 +248,9 @@ class FederationMerger
      */
     private function markWithdrawn(array $mirror, string $syncedAt): array
     {
+        $source = [];
         if (is_array($mirror['_source'] ?? null) === true) {
             $source = $mirror['_source'];
-        } else {
-            $source = [];
         }
 
         $source['withdrawn']   = true;

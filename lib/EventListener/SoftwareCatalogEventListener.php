@@ -441,10 +441,11 @@ class SoftwareCatalogEventListener implements IEventListener
         );
 
         // Get configuration for different object types.
-        $organisatieSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
-        $contactSchemaId     = $settingsService->getSchemaIdForObjectType(objectType: 'contactpersoon');
-        $contactInfoSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'contactgegevens');
-        $gebruikSchemaId     = $settingsService->getSchemaIdForObjectType(objectType: 'gebruik');
+        $catalogSchemaIds    = $this->resolveCatalogSchemaIds(settingsService: $settingsService);
+        $organisatieSchemaId = $catalogSchemaIds['organisatie'];
+        $contactSchemaId     = $catalogSchemaIds['contactpersoon'];
+        $contactInfoSchemaId = $catalogSchemaIds['contactgegevens'];
+        $gebruikSchemaId     = $catalogSchemaIds['gebruik'];
 
         $logger->debug(
             'SoftwareCatalog: Configuration lookup results',
@@ -458,12 +459,12 @@ class SoftwareCatalogEventListener implements IEventListener
         );
 
         // Check if this is an organization object.
-        if ($organisatieSchemaId !== null && $objectSchemaIdInt === (int) $organisatieSchemaId) {
+        if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $organisatieSchemaId) === true) {
             $objectData = $object->getObject();
             $status     = strtolower($objectData['status'] ?? '');
 
             // Only process active organizations.
-            if (in_array(needle: $status, haystack: ['actief', 'active']) !== true) {
+            if ($this->isActiveStatus(status: $status) === false) {
                 $logger->debug(
                         'SoftwareCatalog: Skipping non-active organization creation',
                         [
@@ -487,21 +488,21 @@ class SoftwareCatalogEventListener implements IEventListener
         }//end if
 
         // Check if this is a contactpersoon object.
-        if ($contactSchemaId !== null && $objectSchemaIdInt === (int) $contactSchemaId) {
+        if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $contactSchemaId) === true) {
             $logger->info('SoftwareCatalog: Processing contactpersoon creation', ['objectId' => $objectId]);
             $contactSvc->processContactpersoon($object);
             return;
         }
 
         // Check if this is a contactgegevens object (deprecated - use contactpersoon instead).
-        if ($contactInfoSchemaId !== null && $objectSchemaIdInt === (int) $contactInfoSchemaId) {
+        if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $contactInfoSchemaId) === true) {
             $logger->info('SoftwareCatalog: Processing contactgegevens creation (deprecated)', ['objectId' => $objectId]);
             // Contactgegevens is deprecated, use contactpersoon instead.
             return;
         }
 
         // Check if this is a gebruik object.
-        if ($gebruikSchemaId !== null && $objectSchemaIdInt === (int) $gebruikSchemaId) {
+        if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $gebruikSchemaId) === true) {
             $logger->info('SoftwareCatalog: Processing gebruik creation', ['objectId' => $objectId]);
             $this->runGebruikSync(object: $object, phase: 'creation', logger: $logger);
             return;
@@ -615,14 +616,14 @@ class SoftwareCatalogEventListener implements IEventListener
                         'status'        => $status,
                         'oldStatus'     => $oldStatus,
                         'statusChanged' => ($status !== $oldStatus),
-                        'isActief'      => in_array(needle: $status, haystack: ['actief', 'active']),
-                        'willProcess'   => (in_array(needle: $status, haystack: ['actief', 'active']) === true
+                        'isActief'      => $this->isActiveStatus(status: $status),
+                        'willProcess'   => ($this->isActiveStatus(status: $status) === true
                             && $status !== $oldStatus),
                     ]
                     );
 
             // Only process active organizations.
-            if (in_array(needle: $status, haystack: ['actief', 'active']) === true && $status !== $oldStatus) {
+            if ($this->isActiveStatus(status: $status) === true && $status !== $oldStatus) {
                 $logger->info(
                         'SoftwareCatalog: Processing active organization update',
                         [
@@ -642,7 +643,7 @@ class SoftwareCatalogEventListener implements IEventListener
                 }
             }//end if
 
-            if (in_array(needle: $status, haystack: ['actief', 'active']) !== true || $status === $oldStatus) {
+            if ($this->isActiveStatus(status: $status) === false || $status === $oldStatus) {
                 $logger->debug(
                         'SoftwareCatalog: Skipping non-active organization update',
                         [

@@ -38,7 +38,6 @@ use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -70,7 +69,6 @@ class MigrateContactsToNc implements IRepairStep
      * Constructor.
      *
      * @param IAppManager                       $appManager      The app manager.
-     * @param ContainerInterface                $container       The DI container.
      * @param SettingsService                   $settingsService The settings service (register/schema id resolution).
      * @param SoftwareCatalogContactSyncService $contactSync     The contacts bridge.
      * @param IAppConfig                        $appConfig       The app config (convergence marker).
@@ -80,7 +78,6 @@ class MigrateContactsToNc implements IRepairStep
      */
     public function __construct(
         private readonly IAppManager $appManager,
-        private readonly ContainerInterface $container,
         private readonly SettingsService $settingsService,
         private readonly SoftwareCatalogContactSyncService $contactSync,
         private readonly IAppConfig $appConfig,
@@ -199,7 +196,7 @@ class MigrateContactsToNc implements IRepairStep
         ];
 
         $schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
-        if ($schemaId === null || $schemaId === false) {
+        if ($schemaId === null) {
             $output->warning(sprintf('Schema id for "%s" not configured — skipping', $objectType));
             return $stats;
         }
@@ -220,11 +217,7 @@ class MigrateContactsToNc implements IRepairStep
                     ->findAll([], false, false);
             };
 
-            if (method_exists($objectService, 'runAsSystem') === true) {
-                $objects = $objectService->runAsSystem($readObjects);
-            } else {
-                $objects = $readObjects();
-            }
+            $objects = $this->runElevated(objectService: $objectService, work: $readObjects);
         } catch (\Throwable $e) {
             $output->warning(sprintf('Could not read "%s" objects: %s', $objectType, $e->getMessage()));
             $this->logger->error(
@@ -318,17 +311,14 @@ class MigrateContactsToNc implements IRepairStep
                 );
             };
 
-            if (method_exists($objectService, 'runAsSystem') === true) {
-                $objectService->runAsSystem($saveObject);
-            } else {
-                $saveObject();
+            $this->runElevated(objectService: $objectService, work: $saveObject);
+
+            $statKey = 'created';
+            if ($alreadyExisted === true) {
+                $statKey = 'linked';
             }
 
-            if ($alreadyExisted === true) {
-                $stats['linked']++;
-            } else {
-                $stats['created']++;
-            }
+            $stats[$statKey]++;
         } catch (\Throwable $e) {
             // Fail-safe per-object: never abort the whole migration, never drop data.
             $stats['failed']++;
@@ -338,6 +328,30 @@ class MigrateContactsToNc implements IRepairStep
             );
         }//end try
     }//end migrateOne()
+
+    /**
+     * Run a unit of OpenRegister work with system elevation when available.
+     *
+     * Repair steps run user-less, so without elevation OpenRegister RBAC denies
+     * the read/write as 'Anonymous'. `runAsSystem()` was added to OpenRegister's
+     * ObjectService later than this repair step, so the capability is probed
+     * rather than assumed and the work is executed directly on older installs.
+     *
+     * @param object   $objectService The OpenRegister ObjectService handle.
+     * @param callable $work          The unit of work to execute.
+     *
+     * @return mixed Whatever the unit of work returns.
+     *
+     * @spec exclude system-context adoption
+     */
+    private function runElevated(object $objectService, callable $work): mixed
+    {
+        if (method_exists($objectService, 'runAsSystem') === true) {
+            return $objectService->runAsSystem($work);
+        }
+
+        return $work();
+    }//end runElevated()
 
     /**
      * Extract the object data array from an OpenRegister entity or array.
