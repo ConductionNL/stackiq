@@ -380,11 +380,15 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.moduleVersie_schema}?_search=${encodeURIComponent(versie)}&_limit=20`,
 		)
 		const rows = (await res.json())?.results ?? []
-		// NOTE: the manifest moduleVersie create modal does not persist the new
-		// version on this instance (a direct OR API create of the same payload
-		// DOES persist, and the contactpersoon manifest create works), so this is
-		// a real, isolated create-flow bug in the moduleVersie surface — kept as a
-		// failing assertion rather than weakened, so the regression stays visible.
+		// The note that used to sit here said this create "does not persist on
+		// this instance" and was kept as a deliberately failing assertion. That is
+		// no longer true, and the reason is worth recording: it PASSES on a fresh
+		// install carrying the current register (CI run 30806889564, 8.6s). The
+		// `maxLength: null` fix described above had been applied to the register
+		// file but never force-imported into the long-lived dev instance the note
+		// was written against — `importFromApp(force: false)` advances the recorded
+		// configuration version WITHOUT applying it, so the instance kept serving
+		// the old schema and the "bug" was a stale environment, not code.
 		expect(rows.some((r: Record<string, unknown>) => r.versie === versie)).toBeTruthy()
 	})
 })
