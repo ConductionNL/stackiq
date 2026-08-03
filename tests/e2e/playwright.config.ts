@@ -38,8 +38,13 @@
  * route — which surfaces as ~50 selector timeouts that all read like product
  * defects. Projects run in declaration order under `workers: 1`, so smoke
  * runs first and labels that failure mode before the regression suite spends
- * the budget reproducing it 50 times. `chromium` ignores `**/smoke/**` so
- * nothing runs twice.
+ * the budget reproducing it 50 times. The `chromium` project's testIgnore
+ * excludes the smoke directory, so nothing runs twice.
+ *
+ * (Deliberately spelled out in prose: a glob written literally here would
+ * contain the `*` + `/` sequence that CLOSES this block comment, which turns
+ * the remaining prose into executable code. That is exactly how the first
+ * version of this file died — `ReferenceError: smoke is not defined`.)
  *
  * The report/output paths differ from the root config deliberately: the
  * workflow uploads `server/apps/softwarecatalog/playwright-report/` and
