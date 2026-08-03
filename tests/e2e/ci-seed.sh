@@ -270,22 +270,3 @@ if [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
 fi
 
 echo "[ci-seed] done."
-
-# ═══════════════════════════════════════════════════════════════════════════
-# TEMPORARY POSITIVE CONTROL — REVERT THIS BLOCK BEFORE MERGING.
-#
-# A green e2e job only means something if the specs would go RED when the app
-# is broken. This truncates the webpack bundle AFTER the gate above has already
-# verified and warmed the real one, so the gate still passes on its own terms
-# and the failure lands squarely on the specs.
-#
-# TRUNCATE, do not delete: a delete-based control is defeated by any
-# `fs.existsSync()` self-heal in globalSetup (that is how a sibling repo got
-# 82/82 green with the bundle "removed"). softwarecatalog has no such self-heal,
-# but truncation is used anyway so the evidence is comparable across repos.
-# ═══════════════════════════════════════════════════════════════════════════
-CONTROL_BUNDLE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/js/softwarecatalog-main.js"
-echo "[ci-seed][CONTROL] bundle path: ${CONTROL_BUNDLE}"
-echo "[ci-seed][CONTROL] bytes BEFORE: $(stat -c %s "$CONTROL_BUNDLE")"
-printf '/* truncated by the e2e positive control */\n' > "$CONTROL_BUNDLE"
-echo "[ci-seed][CONTROL] bytes AFTER:  $(stat -c %s "$CONTROL_BUNDLE")"
