@@ -76,7 +76,7 @@
  */
 
 import { test, expect, request as playwrightRequest, type Page } from '@playwright/test'
-import { resolveBaseUrl } from './base-url'
+import { APP_PATH, resolveBaseUrl } from './base-url'
 
 // ---------------------------------------------------------------------------
 // Fixture setup
@@ -122,22 +122,52 @@ async function seedOrganization(): Promise<void> {
 			throw new Error('voorzieningen register/organisatie schema not configured')
 		}
 
-		// Skip seeding if an organisation with this name already exists.
+		// Skip seeding if an organisation with this name already exists. Match on
+		// `contactsUid` too: that is the schema's objectNameField now, and a
+		// `_fields=id,naam` projection returns nothing useful because `naam` is no
+		// longer a property of this schema.
 		const existing = await ctx.get(
-			`/index.php/apps/openregister/api/objects/${register}/${schema}?_limit=5000&_fields=id,naam`,
+			`/index.php/apps/openregister/api/objects/${register}/${schema}?_limit=5000`,
 		)
 		if (existing.ok()) {
 			const data = await existing.json()
 			const list = data?.results ?? data ?? []
-			if (Array.isArray(list) && list.some(o => (o.naam || o.name) === SEEDED_ORG_NAME)) {
+			const matches = (o: Record<string, unknown>): boolean =>
+				o.contactsUid === SEEDED_ORG_NAME
+				|| o.naam === SEEDED_ORG_NAME
+				|| o.name === SEEDED_ORG_NAME
+				|| (o as { '@self'?: { name?: string } })['@self']?.name === SEEDED_ORG_NAME
+			if (Array.isArray(list) && list.some(matches)) {
 				return
 			}
 		}
 
-		// `type` is a required (not-null) field on the organisatie schema.
+		// `type` AND `contactsUid` are required (not-null) on the organisatie
+		// schema. `contactsUid` was missing from this payload, which is invisible
+		// on an instance whose magic-mapper table predates the requirement but is
+		// a hard failure on a fresh install: OpenRegister rejected the create with
+		// `SQLSTATE[23502] ... null value in column "contacts_uid" ... violates
+		// not-null constraint` (surfaced, confusingly, as HTTP 403).
+		//
+		// Identity for an organisation lives in Nextcloud Contacts and this record
+		// only stores the catalog-side relation, so a fixture that is not testing
+		// contact resolution supplies a synthetic UID. It satisfies the schema's
+		// declared contract; nothing here asserts the UID resolves to a contact.
+		//
+		// The UID is deliberately SEEDED_ORG_NAME: the schema's
+		// `configuration.objectNameField` is `contactsUid`, so the UID *is* the
+		// object's display name and therefore the label the Organization combobox
+		// renders. `naam` is no longer a property of this schema at all.
 		const createRes = await ctx.post(
 			`/index.php/apps/openregister/api/objects/${register}/${schema}`,
-			{ data: { naam: SEEDED_ORG_NAME, type: 'Leverancier', status: 'Actief' } },
+			{
+				data: {
+					naam: SEEDED_ORG_NAME,
+					type: 'Leverancier',
+					status: 'Actief',
+					contactsUid: SEEDED_ORG_NAME,
+				},
+			},
 		)
 		if (!createRes.ok()) {
 			throw new Error(
@@ -192,7 +222,12 @@ async function selectOrganization(page: Page, optionLabel: string): Promise<bool
 test(
 	'swc-fix spa-mounts: main app dashboard renders without white-screen',
 	async ({ page }) => {
-		await page.goto('/apps/softwarecatalog', { waitUntil: 'networkidle' })
+		// `/index.php/...`, not the pretty path — see the APP_PATH docblock in
+		// tests/e2e/base-url.ts. `domcontentloaded`, not `networkidle`: the SPA
+		// keeps a background poll alive so the network never goes idle (the same
+		// reasoning manifest-pages.spec.ts and visual/_visual-helpers.ts already
+		// document). The heading assertion below is the real readiness signal.
+		await page.goto(APP_PATH, { waitUntil: 'domcontentloaded' })
 		// Two headings named "Dashboard" exist (widget + page title) — both prove
 		// Vue mounted. Using .first() avoids the strict-mode violation.
 		await expect(

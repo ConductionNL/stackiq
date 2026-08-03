@@ -26,11 +26,23 @@
  * that regression is live on another app in this fleet right now. So: strict
  * about having a value, liberal about which of the known names carries it.
  *
+ * The workflow's Playwright step exports FOUR names for the same value —
+ * `BASE_URL`, `NEXTCLOUD_URL`, `NC_BASE_URL` and (in the seed step) nothing at
+ * all. `NC_BASE_URL` was missing from this list; it happens to be the last of
+ * the three the workflow sets, so the omission was invisible while the other
+ * two were present, and would have become a hard failure the moment they were
+ * not. All four accepted names are listed here.
+ *
  * There is deliberately NO default. An unset target must abort the run loudly
  * rather than silently choose a shared instance.
  */
 
-const CANDIDATES = ['PLAYWRIGHT_BASE_URL', 'BASE_URL', 'NEXTCLOUD_URL'] as const
+const CANDIDATES = [
+	'PLAYWRIGHT_BASE_URL',
+	'BASE_URL',
+	'NEXTCLOUD_URL',
+	'NC_BASE_URL',
+] as const
 
 /**
  * Resolve the base URL of the Nextcloud instance under test.
@@ -55,3 +67,34 @@ export function resolveBaseUrl(): string {
 }
 
 export const BASE_URL = resolveBaseUrl()
+
+/**
+ * The app's entry path, WITH the `/index.php` front controller.
+ *
+ * ⚠️ THE `/index.php` PREFIX IS NOT COSMETIC — it is the difference between
+ * the suite running and 404-ing.
+ *
+ * The pretty form `/apps/softwarecatalog` only resolves where a rewrite rule
+ * maps every unmatched path onto `index.php` — Apache + `.htaccess` in the
+ * docker dev images. The CI runner serves Nextcloud with PHP's built-in
+ * server (`php -S 0.0.0.0:8080`, no router script), which has no rewriting at
+ * all: it resolves a request against the filesystem first, and
+ * `server/apps/softwarecatalog/` IS a real directory with no `index.php`
+ * inside it. So the request never reaches Nextcloud and the built-in server
+ * answers with its OWN error page:
+ *
+ *     Not Found — The requested resource /apps/softwarecatalog was not found
+ *     on this server.
+ *
+ * Observed on run 30797297831: 50 of 58 failures were this one cause. Every
+ * one of them surfaced as `waiting for locator('.softwarecatalog-app-root')`
+ * timing out after 30s — a message that accuses the app of not mounting.
+ * The three specs that already used the `/index.php/...` form (the `smoke`
+ * project and the admin-settings tests) passed in the same run, which is what
+ * isolated it.
+ *
+ * `/index.php/apps/...` resolves on BOTH kinds of instance, so this is the
+ * portable spelling, not a CI workaround. Testing that the rewrite rule is in
+ * place is a webserver-config concern, not something these specs assert.
+ */
+export const APP_PATH = '/index.php/apps/softwarecatalog'

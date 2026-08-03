@@ -75,7 +75,25 @@ test('contract approval: the config endpoint reports a delegation flag', async (
 	// wired (the UI hides the action when configured=false).
 	await gotoAppRoute(page, '/contracten')
 
-	const res = await page.request.get('/index.php/apps/softwarecatalog/api/contracts/approval/config')
+	// ⚠️ Send the CSRF request token, the way the frontend does.
+	//
+	// `ContractApprovalController::config()` carries `#[NoAdminRequired]` but NOT
+	// `#[NoCSRFRequired]`, so a cookie-authenticated request without a
+	// `requesttoken` header is rejected by Nextcloud's SecurityMiddleware with
+	// **412 Precondition Failed** — before the controller runs. The bare
+	// `page.request.get()` here did exactly that, and the failure read as if the
+	// endpoint answered with an unexpected status when in fact it was never
+	// reached. Pulling `OC.requestToken` out of the loaded page makes this call
+	// identical to the one the Vue panel makes.
+	const requestToken = await page.evaluate(
+		() => (window as unknown as { OC?: { requestToken?: string } }).OC?.requestToken ?? '',
+	)
+	expect(requestToken, 'OC.requestToken should be available on a loaded app page').not.toBe('')
+
+	const res = await page.request.get(
+		'/index.php/apps/softwarecatalog/api/contracts/approval/config',
+		{ headers: { requesttoken: requestToken, 'OCS-APIREQUEST': 'true' } },
+	)
 	// Authenticated session → 200 with a boolean `configured`; an unauthenticated
 	// context returns 401 — either way the endpoint exists and is auth-gated.
 	expect([200, 401]).toContain(res.status())

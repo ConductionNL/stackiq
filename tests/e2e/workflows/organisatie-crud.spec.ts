@@ -47,11 +47,19 @@ test.beforeAll(async () => {
 	cfg = await resolveConfig(apiCtx)
 	// Seed one real, non-"Generic" organisation (the org-export toggle and the
 	// custom card view both need a real organisation with a truthy id).
+	//
+	// `contactsUid` is REQUIRED on the organisatie schema (identity lives in
+	// Nextcloud Contacts; this record holds only the catalog-side relation).
+	// Omitting it is silently survivable on an instance whose magic-mapper table
+	// predates the requirement, and a hard `SQLSTATE[23502] ... contacts_uid ...
+	// not-null` rejection on a fresh install. A synthetic UID satisfies the
+	// declared contract; nothing here asserts contact resolution.
 	await createObject(apiCtx, cfg.register, cfg.organisatie_schema, {
 		naam: orgName,
 		type: 'Leverancier',
 		website: 'https://e2e-seeded-org.example.com',
 		status: 'Actief',
+		contactsUid: `${RUN_ID}-org`,
 	})
 })
 
@@ -98,8 +106,19 @@ test('"Add organisation" opens the create modal', async ({ page }) => {
 	await main.getByRole('button', { name: /Add organisation/i }).first().click()
 	const modal = page.locator('#objectModal, [role="dialog"], .modal-container').first()
 	await expect(modal).toBeVisible({ timeout: 15000 })
-	// The ObjectModal exposes the Catalogus/Register/Schema cascade.
-	await expect(modal.getByText('Catalogus:', { exact: false }).first()).toBeVisible({ timeout: 10000 })
+
+	// ⚠️ This used to assert the legacy ObjectModal's `Catalogus:` ->
+	// Register -> Schema cascade. That surface is gone: src/manifest.json
+	// decomposed the bespoke OrganisatieIndexView into a standard `type: index`
+	// page (its own `_note` records the change), so the create affordance now
+	// opens nc-vue's CnIndexPage form dialog, which is already bound to the
+	// register + schema from the page config and asks for no cascade at all.
+	// Asserting the cascade asserted the presence of a component the product
+	// deliberately stopped rendering.
+	//
+	// What the entry point is actually supposed to prove is that a create FORM
+	// mounted, so assert that: an editable field for the schema's properties.
+	await expect(modal.locator('input, textarea, select').first()).toBeVisible({ timeout: 10000 })
 	await page.keyboard.press('Escape')
 })
 

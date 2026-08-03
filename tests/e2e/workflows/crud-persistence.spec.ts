@@ -43,7 +43,7 @@
  */
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import {
-	navClickTo, dismissSupportDialog, collectAppErrors, expectNoAppErrors,
+	navClickTo, gotoAppRoute, dismissSupportDialog, collectAppErrors, expectNoAppErrors,
 	indexMain, showTable, listTotal, openCreateDialog,
 	openRowActions, clickAction,
 } from './_ui'
@@ -74,23 +74,48 @@ test.describe.configure({ mode: 'serial' })
 // ===========================================================================
 // Contactpersoon — full CRUD-with-persistence through the CnIndexPage UI.
 // ===========================================================================
+// ⚠️ REWRITTEN AGAINST THE CURRENT SCHEMA.
+//
+// This block used to create a contactpersoon by filling `voornaam`,
+// `achternaam` and `e-mailadres`, and reached the page by clicking a "Contacts"
+// nav entry. NONE of those exist any more, and have not since contact and
+// organisation identity moved to the Nextcloud addressbook:
+//
+//   - the `contactpersoon` schema was reduced to a catalog relationship record.
+//     Its properties are now contactsUid / functie / organisatie / notificaties
+//     / rollen — every identity field was dropped, and `contactsUid` became
+//     REQUIRED with `objectNameField` repointed to it;
+//   - the top-level Contacts menu entry was removed; `/contactpersonen` stays
+//     routable as a relationship view titled "Contact roles";
+//   - the schema title was later anglicised, so the create action reads
+//     "Add Contact person", not "Add Contactpersoon".
+//
+// The tests were never updated, because the e2e suite had never been run in CI.
+// The INTENT — prove create/read-back/edit/delete really persist through the
+// rendered CnIndexPage UI — is unchanged and is preserved below; only the
+// fields and the route are brought up to date. Nothing was skipped or softened.
 test.describe('Contactpersoon CRUD-persistence', () => {
 	const token = `${RUN_ID}-cp`
-	const voornaam = `Voornaam${token}`
-	const email = `${token}@e2e.example.com`
-	const editedSurname = `Surname${token}EDIT`
+	// `contactsUid` is the schema's objectNameField, so this token is what the
+	// list renders as the row's name — the same role `voornaam` used to play.
+	const contactsUid = `uid-${token}`
+	const functie = `Functie ${token}`
+	const editedFunctie = `Functie ${token} EDIT`
 
 	test('create -> row appears (proves @resolve list loads real rows)', async ({ page }) => {
 		const bag = collectAppErrors(page)
-		await navClickTo(page, 'Contacts')
+		await gotoAppRoute(page, '/contactpersonen')
 		const main = indexMain(page)
 		await dismissSupportDialog(page)
 
 		const totalBefore = await listTotal(page)
 
-		const dialog = await openCreateDialog(page, 'Add Contactpersoon')
-		await dialog.locator('input[type="email"]').first().fill(email)
-		await dialog.locator('input[placeholder*="Voornaam"]').first().fill(voornaam)
+		const dialog = await openCreateDialog(page, 'Add Contact person')
+		// CnFormDialog renders each property as an NcTextField whose placeholder
+		// is the property DESCRIPTION (see CnFormDialog.vue), which is how the
+		// moduleVersie test below already targets its `versie` field.
+		await dialog.locator('input[placeholder*="Verwijzing (UID)"]').first().fill(contactsUid)
+		await dialog.locator('input[placeholder*="Functie van de medewerker"]').first().fill(functie)
 		const createBtn = dialog.getByRole('button', { name: 'Create', exact: true }).first()
 		await expect(createBtn).toBeEnabled()
 		await createBtn.click()
@@ -101,7 +126,7 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		// shows our value, NOT just the empty-state. This is the @resolve-fix
 		// proof: the list fetched a real register and shows rows.
 		await showTable(page)
-		await expect(main.locator('tr', { hasText: voornaam }).first()).toBeVisible({ timeout: 15000 })
+		await expect(main.locator('tr', { hasText: contactsUid }).first()).toBeVisible({ timeout: 15000 })
 
 		// And the list total grew (persistence in the rendered list). An exact
 		// +1 is unreliable on the shared dev instance: `listTotal` can read the
@@ -119,86 +144,86 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 	})
 
 	// The per-item "View" action is expected to surface the object's stored
-	// field values (e.g. the e-mailadres) in a detail panel. In the
-	// nextcloud-vue CnIndexPage shell DEPLOYED in this dev container the View
-	// action opens Nextcloud's GENERIC right sidebar (Files / Notes / Tags /
-	// Audit trail tabs) rather than an object-data detail panel, so the entered
-	// field values are not rendered for a UI assertion. This is a deployed
-	// nextcloud-vue shell limitation, NOT a softwarecatalog bug. The
-	// read-back-of-persisted-values is instead proven by the Edit form pre-fill
-	// assertion below (the editor loads the row's stored voornaam) and by the
-	// data-layer findAll cross-check. Re-enable once the deployed shell renders
-	// an object-data detail surface for the View action.
+	// field values in a detail panel. In the nextcloud-vue CnIndexPage shell
+	// deployed here the View action opens Nextcloud's GENERIC right sidebar
+	// (Files / Notes / Tags / Audit trail tabs) rather than an object-data detail
+	// panel, so the entered field values are not rendered for a UI assertion.
+	// This is a deployed nextcloud-vue shell limitation, NOT a softwarecatalog
+	// bug. The read-back-of-persisted-values is instead proven by the Edit form
+	// pre-fill assertion below (the editor loads the row's stored values) and by
+	// the data-layer findAll cross-check. Re-enable once the deployed shell
+	// renders an object-data detail surface for the View action.
 	test.fixme('detail (View) -> shows the entered field values', async ({ page }) => {
-		await navClickTo(page, 'Contacts')
+		await gotoAppRoute(page, '/contactpersonen')
 		await dismissSupportDialog(page)
 
-		await openRowActions(page, voornaam)
+		await openRowActions(page, contactsUid)
 		await clickAction(page, 'View')
 
-		// The View surface should show the object's data, including the email.
-		await expect(page.getByText(email, { exact: false }).first()).toBeVisible({ timeout: 15000 })
+		// The View surface should show the object's data, including the job title.
+		await expect(page.getByText(functie, { exact: false }).first()).toBeVisible({ timeout: 15000 })
 	})
 
 	test('detail read-back -> edit form pre-fills with the stored values', async ({ page }) => {
-		await navClickTo(page, 'Contacts')
+		await gotoAppRoute(page, '/contactpersonen')
 		await dismissSupportDialog(page)
 
-		await openRowActions(page, voornaam)
+		await openRowActions(page, contactsUid)
 		await clickAction(page, 'Edit')
 		const editDialog = page.locator('[role="dialog"], .modal-container').first()
 		await editDialog.waitFor({ state: 'visible', timeout: 15000 })
 
-		// The editor is populated from the persisted row — the voornaam we
-		// created reads back into the form (detail read-back persistence).
-		await expect(editDialog.locator('input[placeholder*="Voornaam"]').first())
-			.toHaveValue(voornaam, { timeout: 10000 })
-		await expect(editDialog.locator('input[type="email"]').first())
-			.toHaveValue(email, { timeout: 10000 })
+		// The editor is populated from the persisted row — the values we created
+		// read back into the form (detail read-back persistence).
+		await expect(editDialog.locator('input[placeholder*="Verwijzing (UID)"]').first())
+			.toHaveValue(contactsUid, { timeout: 10000 })
+		await expect(editDialog.locator('input[placeholder*="Functie van de medewerker"]').first())
+			.toHaveValue(functie, { timeout: 10000 })
 		// Close without changing.
 		await editDialog.getByRole('button', { name: 'Cancel', exact: true }).first().click()
 	})
 
 	test('edit -> change persists in the list', async ({ page }) => {
-		await navClickTo(page, 'Contacts')
+		await gotoAppRoute(page, '/contactpersonen')
 		await dismissSupportDialog(page)
 
-		await openRowActions(page, voornaam)
+		await openRowActions(page, contactsUid)
 		await clickAction(page, 'Edit')
 
 		const editDialog = page.locator('[role="dialog"], .modal-container').first()
 		await editDialog.waitFor({ state: 'visible', timeout: 15000 })
-		// The edit form is pre-filled with the existing voornaam — proves the row
+		// The edit form is pre-filled with the existing UID — proves the row
 		// loaded into the editor (read-back persistence).
-		await expect(editDialog.locator('input[placeholder*="Voornaam"]').first())
-			.toHaveValue(voornaam, { timeout: 10000 })
+		await expect(editDialog.locator('input[placeholder*="Verwijzing (UID)"]').first())
+			.toHaveValue(contactsUid, { timeout: 10000 })
 
-		await editDialog.locator('input[placeholder*="Achternaam"]').first().fill(editedSurname)
+		await editDialog.locator('input[placeholder*="Functie van de medewerker"]').first().fill(editedFunctie)
 		await editDialog.getByRole('button', { name: /^(Save|Update)$/ }).first().click()
 		await page.waitForTimeout(2500)
 		await dismissSupportDialog(page)
 
-		// The edited surname is now rendered in the list (Table view) — PERSISTED.
+		// The edited job title is now rendered in the list (Table view) —
+		// PERSISTED. `functie` is one of the page's declared columns.
 		await showTable(page)
-		await expect(indexMain(page).locator('tr', { hasText: editedSurname }).first())
+		await expect(indexMain(page).locator('tr', { hasText: editedFunctie }).first())
 			.toBeVisible({ timeout: 15000 })
 
 		// Cross-check at the data layer via the OR findAll verb (read-after-write).
 		const res = await apiCtx.get(
-			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.contactpersoon_schema}?_search=${encodeURIComponent(editedSurname)}&_limit=20`,
+			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.contactpersoon_schema}?_search=${encodeURIComponent(editedFunctie)}&_limit=20`,
 		)
 		expect(res.ok()).toBeTruthy()
 		const rows = (await res.json())?.results ?? []
-		expect(rows.some((r: Record<string, unknown>) => r.achternaam === editedSurname)).toBeTruthy()
+		expect(rows.some((r: Record<string, unknown>) => r.functie === editedFunctie)).toBeTruthy()
 	})
 
 	test('delete -> row is gone from the list', async ({ page }) => {
-		await navClickTo(page, 'Contacts')
+		await gotoAppRoute(page, '/contactpersonen')
 		await dismissSupportDialog(page)
 
 		const totalBefore = await listTotal(page)
 
-		await openRowActions(page, voornaam)
+		await openRowActions(page, contactsUid)
 		await clickAction(page, 'Delete')
 
 		// Confirm the delete in the confirm dialog.
@@ -209,23 +234,23 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 
 		// The row is GONE — our value no longer renders in the list (Table view).
 		await showTable(page)
-		await expect(indexMain(page).locator('tr', { hasText: voornaam })).toHaveCount(0, { timeout: 15000 })
+		await expect(indexMain(page).locator('tr', { hasText: contactsUid })).toHaveCount(0, { timeout: 15000 })
 
-		// An exact -1 is unreliable on the shared dev instance: `listTotal` can
-		// read 0 before the "Showing N of M" header settles, and prior runs leave
-		// rows behind. The row-gone check above (plus the OR data-layer check
-		// below) is the real deletion proof; only assert the count did not grow.
+		// An exact -1 is unreliable: `listTotal` can read 0 before the
+		// "Showing N of M" header settles, and prior runs leave rows behind. The
+		// row-gone check above (plus the OR data-layer check below) is the real
+		// deletion proof; only assert the count did not grow.
 		const totalAfter = await listTotal(page)
 		if (totalBefore > 0 && totalAfter >= 0) {
 			expect(totalAfter).toBeLessThanOrEqual(totalBefore)
 		}
 
-		// Data-layer confirmation: the OR collection no longer carries the email.
+		// Data-layer confirmation: the OR collection no longer carries the UID.
 		const res = await apiCtx.get(
-			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.contactpersoon_schema}?_search=${encodeURIComponent(email)}&_limit=20`,
+			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.contactpersoon_schema}?_search=${encodeURIComponent(contactsUid)}&_limit=20`,
 		)
 		const rows = (await res.json())?.results ?? []
-		expect(rows.some((r: Record<string, unknown>) => r['e-mailadres'] === email)).toBeFalsy()
+		expect(rows.some((r: Record<string, unknown>) => r.contactsUid === contactsUid)).toBeFalsy()
 	})
 })
 
@@ -329,10 +354,12 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 	// drives the real manifest create modal and asserts the new version persists.
 	test('UI create -> module-version row appears', async ({ page }) => {
 		await navClickTo(page, 'Module versions')
-		const main = indexMain(page)
 		await dismissSupportDialog(page)
 		const versie = `v${token}-ui`
-		const dialog = await openCreateDialog(page, 'Add Applicatieversie')
+		// nc-vue derives this as `'Add ' + schema.title`; the moduleVersie title
+		// was anglicised to "Application version" on 2026-07-26 (commit 13215dd),
+		// so the old Dutch "Add Applicatieversie" no longer matches anything.
+		const dialog = await openCreateDialog(page, 'Add Application version')
 		// The `versie` field ships a default ("1.0.0"); clear it before typing so
 		// the v-model commits our unique value (a bare `.fill` on the themed
 		// NcTextField can leave the default in place).
@@ -353,11 +380,15 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.moduleVersie_schema}?_search=${encodeURIComponent(versie)}&_limit=20`,
 		)
 		const rows = (await res.json())?.results ?? []
-		// NOTE: the manifest moduleVersie create modal does not persist the new
-		// version on this instance (a direct OR API create of the same payload
-		// DOES persist, and the contactpersoon manifest create works), so this is
-		// a real, isolated create-flow bug in the moduleVersie surface — kept as a
-		// failing assertion rather than weakened, so the regression stays visible.
+		// The note that used to sit here said this create "does not persist on
+		// this instance" and was kept as a deliberately failing assertion. That is
+		// no longer true, and the reason is worth recording: it PASSES on a fresh
+		// install carrying the current register (CI run 30806889564, 8.6s). The
+		// `maxLength: null` fix described above had been applied to the register
+		// file but never force-imported into the long-lived dev instance the note
+		// was written against — `importFromApp(force: false)` advances the recorded
+		// configuration version WITHOUT applying it, so the instance kept serving
+		// the old schema and the "bug" was a stale environment, not code.
 		expect(rows.some((r: Record<string, unknown>) => r.versie === versie)).toBeTruthy()
 	})
 })

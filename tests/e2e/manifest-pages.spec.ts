@@ -4,9 +4,10 @@
  * Real UI smoke coverage for the manifest-driven SoftwareCatalog SPA pages.
  *
  * src/manifest.json declares the rendering pages (index / detail / dashboard /
- * roadmap / settings). The app shell (CnAppRoot) uses vue-router in *history*
- * mode with base `/apps/softwarecatalog`, so every page is a real deep-linkable
- * path. Each test drives the real UI by navigating to the page route and
+ * roadmap / settings). The app shell (CnAppRoot) uses vue-router in *hash*
+ * mode, so every page is deep-linkable as `<app entry>#<route>` (this header
+ * previously claimed history mode — it is not; see `gotoAppRoute` below, which
+ * has always built hash URLs). Each test drives the real UI by navigating to the page route and
  * asserting the Vue shell mounted (the `.softwarecatalog-app-root` shell that
  * replaces `#content` on mount renders) and the page-specific title text is
  * visible — no Vue-internals
@@ -33,8 +34,12 @@
  */
 
 import { test, expect, type Page } from '@playwright/test'
+import { APP_PATH } from './base-url'
 
-const APP_BASE = '/apps/softwarecatalog'
+// Was the hardcoded pretty path `/apps/softwarecatalog`. See the APP_PATH
+// docblock in tests/e2e/base-url.ts: without a rewrite rule that path is not a
+// Nextcloud URL at all, and the CI runner has no rewriting.
+const APP_BASE = APP_PATH
 
 // The Vue app bootstraps with `.$mount('#content')` (src/main.js), replacing
 // Nextcloud's standard `#content` node with the App.vue root, whose outermost
@@ -126,8 +131,16 @@ test('manifest index organisaties: list page renders the organisation cards', as
 	await expectIndexShellRendered(page, 'Organisations')
 })
 
+// ⚠️ `/contactpersonen` is NOT in this list, and must not be added back.
+// `expectIndexShellRendered` proves the route mounted by finding the page's own
+// navigation entry — and the Contacts entry no longer exists. It was removed
+// deliberately when contact/organisation identity moved to the Nextcloud
+// addressbook: src/manifest.json keeps `Contactpersonen` as a routable
+// `type: index` page titled "Contact roles" (a catalog relationship view) but
+// declares no menu entry for it. Asserting a nav link that the product
+// deliberately deleted is not coverage, it is a stale expectation — the
+// contactpersonen route gets its own surface-based test below instead.
 const INDEX_PAGES: Array<{ route: string; title: string; name: string }> = [
-	{ route: '/contactpersonen', title: 'Contacts', name: 'contactpersonen' },
 	{ route: '/contracten', title: 'Contracts', name: 'contracten' },
 	{ route: '/standaarden', title: 'Standards', name: 'standaarden' },
 	{ route: '/reviews', title: 'Reviews', name: 'reviews' },
@@ -141,6 +154,18 @@ for (const p of INDEX_PAGES) {
 		await expectIndexShellRendered(page, p.title)
 	})
 }
+
+// The contactpersonen index has no navigation entry (see the note above), so it
+// is proven by its own rendered surface: the CnIndexPage create action, whose
+// label nc-vue derives as `Add {schema.title}` — "Add Contact person".
+test('manifest index contactpersonen: list page renders its own index surface', async ({ page }) => {
+	await gotoAppRoute(page, '/contactpersonen')
+	const main = page.locator(APP_MAIN).first()
+	await expect(main).toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByRole('button', { name: 'Add Contact person', exact: true }).first(),
+	).toBeVisible({ timeout: 30000 })
+})
 
 // ---------------------------------------------------------------------------
 // Roadmap page (type: roadmap)

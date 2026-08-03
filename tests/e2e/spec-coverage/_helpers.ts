@@ -11,8 +11,14 @@
  * no Vue `$data`/`__vue__` patching.
  */
 import { expect, type Page } from '@playwright/test'
+import { APP_PATH } from '../base-url'
 
-export const APP_BASE = '/apps/softwarecatalog'
+// Was the hardcoded pretty path `/apps/softwarecatalog`, which only resolves
+// behind a rewrite rule. See the APP_PATH docblock in tests/e2e/base-url.ts —
+// on the CI runner's `php -S` that path is served by the built-in server's own
+// "Not Found" page, and every spec then failed on a 30s app-root timeout that
+// read like a mount failure.
+export const APP_BASE = APP_PATH
 export const APP_SHELL = '.softwarecatalog-app-root'
 export const APP_MAIN = 'main'
 
@@ -102,8 +108,27 @@ export async function dismissSupportDialog(page: Page): Promise<void> {
  */
 export async function dismissWalkthrough(page: Page): Promise<void> {
 	const tour = page.locator('.cn-walkthrough').first()
-	if ((await tour.count()) === 0) return
-	if ((await tour.isVisible().catch(() => false)) === false) return
+
+	// ⚠️ Do NOT decide "absent" from a single synchronous `count()`/`isVisible()`
+	// probe. The walkthrough mounts asynchronously after the shell, so a probe
+	// taken the instant the app root attaches frequently sees nothing, returns
+	// early, and the dim then appears over the page a few hundred ms later —
+	// after which every click retries for the full test timeout against
+	// `.cn-walkthrough__dim--full ... subtree intercepts pointer events`.
+	//
+	// This is not rare: globalSetup captures storageState BEFORE any app page is
+	// opened, so the "tour seen" flag is never in the saved state and EVERY test
+	// gets a fresh context in which the tour opens again. It only looked
+	// intermittent because the race is usually won.
+	//
+	// So wait a bounded moment for it to appear; a timeout here means it is
+	// genuinely not coming.
+	try {
+		await tour.waitFor({ state: 'visible', timeout: 3000 })
+	} catch {
+		return
+	}
+
 	const closeBtn = tour.getByRole('button', { name: /close tour/i }).first()
 	if (await closeBtn.count()) {
 		await closeBtn.click({ timeout: 5000 }).catch(() => {})
@@ -111,6 +136,10 @@ export async function dismissWalkthrough(page: Page): Promise<void> {
 		await page.keyboard.press('Escape').catch(() => {})
 	}
 	await tour.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+	// The dim layer is what actually swallows the clicks; make sure it is gone,
+	// not merely that the dialog reports itself hidden.
+	await page.locator('.cn-walkthrough__dim').first()
+		.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 }
 
 /** Deep-link to a route and wait for the Vue shell + main region to mount. */

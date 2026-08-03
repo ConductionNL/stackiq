@@ -50,11 +50,23 @@ test.beforeAll(async () => {
 	cfg = await resolveConfig(apiCtx)
 	// Seed a real organisation so the combobox offers a truthy-value option that
 	// flips `selectedOrganization` truthy and reveals the toggle group.
+	//
+	// `contactsUid` is REQUIRED on the organisatie schema (identity lives in
+	// Nextcloud Contacts; this record holds only the catalog-side relation).
+	// Omitting it is silently survivable on an instance whose magic-mapper table
+	// predates the requirement, and a hard `SQLSTATE[23502] ... contacts_uid ...
+	// not-null` rejection on a fresh install. A synthetic UID satisfies the
+	// declared contract; nothing in this workflow asserts contact resolution.
 	seededOrgId = await createObject(apiCtx, cfg.register, cfg.organisatie_schema, {
 		naam: exportOrgName,
 		type: 'Leverancier',
 		website: 'https://e2e-export-org.example.com',
 		status: 'Actief',
+		// The UID doubles as the display name on purpose: the schema's
+		// `configuration.objectNameField` is `contactsUid`, so this is the label
+		// the Organization combobox renders for the seeded row. `naam` is no
+		// longer a property of the organisatie schema.
+		contactsUid: exportOrgName,
 	})
 })
 
