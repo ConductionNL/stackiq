@@ -254,15 +254,15 @@ class FacetService
             baseObjects: $baseObjects
         );
 
-        $dimensionValuesByObjectId = $this->buildDimensionValueMap(modulesByObjectId: $modulesByObjectId);
+        $dimValsByObjId = $this->buildDimensionValueMap(modulesByObjectId: $modulesByObjectId);
 
         $facets = $this->computeFacets(
-            dimensionValuesByObjectId: $dimensionValuesByObjectId,
+            dimValsByObjId: $dimValsByObjId,
             selectedFilters: $normalizedFilters
         );
 
         $matchedObjectIds = $this->filterObjectIds(
-            dimensionValuesByObjectId: $dimensionValuesByObjectId,
+            dimValsByObjId: $dimValsByObjId,
             selectedFilters: $normalizedFilters,
             excludeDimension: null
         );
@@ -437,7 +437,7 @@ class FacetService
             $pagedQuery['_page']  = $page;
 
             $paginated  = $objectService->searchObjectsPaginated($pagedQuery);
-            $results    = array_map([$this, 'normalizeObject'], $paginated['results'] ?? []);
+            $results    = array_map(fn (mixed $entry): array => $this->normalizeObject(object: $entry), ($paginated['results'] ?? []));
             $allObjects = array_merge($allObjects, $results);
 
             $totalPages = (int) ($paginated['pages'] ?? 1);
@@ -622,7 +622,7 @@ class FacetService
         }
 
         $byId = [];
-        foreach (array_map([$this, 'normalizeObject'], $results) as $module) {
+        foreach (array_map(fn (mixed $entry): array => $this->normalizeObject(object: $entry), $results) as $module) {
             $key        = $this->objectIdentifier(object: $module);
             $byId[$key] = $module;
         }
@@ -646,9 +646,9 @@ class FacetService
     private function buildDimensionValueMap(array $modulesByObjectId): array
     {
         // Pass 1: direct fields (referentiecomponent identifiers + standaard identifiers).
-        $referentiecomponentIdsByObjectId = [];
-        $standaardValuesByObjectId        = [];
-        $allReferentiecomponentIds        = [];
+        $refCompIdsByObjId = [];
+        $stdValsByObjId    = [];
+        $allRefCompIds     = [];
 
         foreach ($modulesByObjectId as $objectId => $modules) {
             $refCompIds  = [];
@@ -662,32 +662,32 @@ class FacetService
             $refCompIds  = array_values(array_unique($refCompIds));
             $standaarden = array_values(array_unique(array_filter($standaarden)));
 
-            $referentiecomponentIdsByObjectId[$objectId] = $refCompIds;
-            $standaardValuesByObjectId[$objectId]        = $standaarden;
-            $allReferentiecomponentIds = array_merge($allReferentiecomponentIds, $refCompIds);
+            $refCompIdsByObjId[$objectId] = $refCompIds;
+            $stdValsByObjId[$objectId]    = $standaarden;
+            $allRefCompIds = array_merge($allRefCompIds, $refCompIds);
         }
 
-        $allReferentiecomponentIds = array_values(array_unique($allReferentiecomponentIds));
+        $allRefCompIds = array_values(array_unique($allRefCompIds));
 
         // Pass 2: resolve referentiecomponent elements themselves (for the
         // referentiecomponent facet's display value + the `domein` field).
-        $elementsById = $this->resolveElementsByIdentifier(identifiers: $allReferentiecomponentIds);
+        $elementsById = $this->resolveElementsByIdentifier(identifiers: $allRefCompIds);
 
         // Pass 3: resolve applicatieservice elements reachable via a `relation`
         // touching one of the referentiecomponent elements.
-        $applicatieserviceNamesByReferentiecomponentId = $this->resolveApplicatieservicesForReferentiecomponenten(
-            referentiecomponentIds: $allReferentiecomponentIds
+        $appSvcNmByRefComp = $this->resolveApplicatieservicesForReferentiecomponenten(
+            refCompIds: $allRefCompIds
         );
 
         // Assemble the final per-object dimension map.
-        $dimensionValuesByObjectId = [];
+        $dimValsByObjId = [];
 
         foreach ($modulesByObjectId as $objectId => $modules) {
-            $refCompIds = $referentiecomponentIdsByObjectId[$objectId] ?? [];
+            $refCompIds = $refCompIdsByObjId[$objectId] ?? [];
 
-            $referentiecomponentNames = [];
-            $domeinValues            = [];
-            $applicatieserviceValues = [];
+            $refCompNames = [];
+            $domeinValues = [];
+            $appSvcValues = [];
 
             foreach ($refCompIds as $refCompId) {
                 $element = $elementsById[$refCompId] ?? null;
@@ -695,7 +695,7 @@ class FacetService
                 // `elementDisplayName()` itself falls back to `$refCompId` when
                 // `$element` carries no usable `name` — pass an empty element
                 // array when unresolved so the same call covers both cases.
-                $referentiecomponentNames[] = $this->elementDisplayName(
+                $refCompNames[] = $this->elementDisplayName(
                     element: $element ?? [],
                     fallbackIdentifier: $refCompId
                 );
@@ -705,20 +705,20 @@ class FacetService
                     $domeinValues[] = trim($domein);
                 }
 
-                foreach (($applicatieserviceNamesByReferentiecomponentId[$refCompId] ?? []) as $applicatieserviceName) {
-                    $applicatieserviceValues[] = $applicatieserviceName;
+                foreach (($appSvcNmByRefComp[$refCompId] ?? []) as $appSvcName) {
+                    $appSvcValues[] = $appSvcName;
                 }
             }
 
-            $dimensionValuesByObjectId[$objectId] = [
-                'referentiecomponent' => array_values(array_unique($referentiecomponentNames)),
-                'standaard'           => $standaardValuesByObjectId[$objectId] ?? [],
+            $dimValsByObjId[$objectId] = [
+                'referentiecomponent' => array_values(array_unique($refCompNames)),
+                'standaard'           => $stdValsByObjId[$objectId] ?? [],
                 'domein'              => array_values(array_unique($domeinValues)),
-                'applicatieservice'   => array_values(array_unique($applicatieserviceValues)),
+                'applicatieservice'   => array_values(array_unique($appSvcValues)),
             ];
         }//end foreach
 
-        return $dimensionValuesByObjectId;
+        return $dimValsByObjId;
 
     }//end buildDimensionValueMap()
 
@@ -774,16 +774,16 @@ class FacetService
      * relationship-resolution pattern `ViewService`/`ArchiMateService` already
      * perform for referentiecomponent overlays (design.md trade-offs).
      *
-     * @param array $referentiecomponentIds Distinct referentiecomponent element identifiers.
+     * @param array $refCompIds Distinct referentiecomponent element identifiers.
      *
      * @return array<string,string[]> Referentiecomponent identifier => applicatieservice names.
      *
      * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
      * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-queries-must-be-bounded
      */
-    private function resolveApplicatieservicesForReferentiecomponenten(array $referentiecomponentIds): array
+    private function resolveApplicatieservicesForReferentiecomponenten(array $refCompIds): array
     {
-        if (empty($referentiecomponentIds) === true) {
+        if (empty($refCompIds) === true) {
             return [];
         }
 
@@ -801,20 +801,20 @@ class FacetService
             return [];
         }
 
-        $otherEndpointsByRefCompId = $this->collectRelationEndpoints(
+        $otherEpsByRefComp = $this->collectRelationEndpoints(
             relations: $relations,
-            referentiecomponentIds: $referentiecomponentIds
+            refCompIds: $refCompIds
         );
 
-        if (empty($otherEndpointsByRefCompId) === true) {
+        if (empty($otherEpsByRefComp) === true) {
             return [];
         }
 
-        $allOtherIds  = array_values(array_unique(array_merge(...array_values($otherEndpointsByRefCompId))));
+        $allOtherIds  = array_values(array_unique(array_merge(...array_values($otherEpsByRefComp))));
         $elementsById = $this->resolveElementsByIdentifier(identifiers: $allOtherIds);
 
         return $this->mapEndpointsToApplicatieserviceNames(
-            otherEndpointsByRefCompId: $otherEndpointsByRefCompId,
+            otherEpsByRefComp: $otherEpsByRefComp,
             elementsById: $elementsById
         );
 
@@ -826,15 +826,15 @@ class FacetService
      * relations are undirected for this lookup's purposes (either endpoint
      * order counts).
      *
-     * @param array $relations              Bounded relation objects.
-     * @param array $referentiecomponentIds Distinct referentiecomponent element identifiers.
+     * @param array $relations  Bounded relation objects.
+     * @param array $refCompIds Distinct referentiecomponent element identifiers.
      *
      * @return array<string,string[]> Referentiecomponent identifier => other-endpoint identifiers.
      */
-    private function collectRelationEndpoints(array $relations, array $referentiecomponentIds): array
+    private function collectRelationEndpoints(array $relations, array $refCompIds): array
     {
-        $refCompLookup = array_flip($referentiecomponentIds);
-        $otherEndpointsByRefCompId = [];
+        $refCompLookup     = array_flip($refCompIds);
+        $otherEpsByRefComp = [];
 
         foreach ($relations as $relation) {
             $source = $relation['source'] ?? null;
@@ -844,15 +844,15 @@ class FacetService
             }
 
             if (isset($refCompLookup[$source]) === true) {
-                $otherEndpointsByRefCompId[$source][] = $target;
+                $otherEpsByRefComp[$source][] = $target;
             }
 
             if (isset($refCompLookup[$target]) === true) {
-                $otherEndpointsByRefCompId[$target][] = $source;
+                $otherEpsByRefComp[$target][] = $source;
             }
         }
 
-        return $otherEndpointsByRefCompId;
+        return $otherEpsByRefComp;
 
     }//end collectRelationEndpoints()
 
@@ -860,16 +860,16 @@ class FacetService
      * Filter each referentiecomponent's other-endpoint identifiers down to
      * `Applicatieservice`-typed elements and resolve their display names.
      *
-     * @param array $otherEndpointsByRefCompId Referentiecomponent identifier => other-endpoint identifiers.
-     * @param array $elementsById              Resolved element identifier => element object.
+     * @param array $otherEpsByRefComp Referentiecomponent identifier => other-endpoint identifiers.
+     * @param array $elementsById      Resolved element identifier => element object.
      *
      * @return array<string,string[]> Referentiecomponent identifier => applicatieservice names.
      */
-    private function mapEndpointsToApplicatieserviceNames(array $otherEndpointsByRefCompId, array $elementsById): array
+    private function mapEndpointsToApplicatieserviceNames(array $otherEpsByRefComp, array $elementsById): array
     {
         $result = [];
 
-        foreach ($otherEndpointsByRefCompId as $refCompId => $otherIds) {
+        foreach ($otherEpsByRefComp as $refCompId => $otherIds) {
             $names = [];
             foreach (array_unique($otherIds) as $otherId) {
                 $element = $elementsById[$otherId] ?? null;
@@ -895,27 +895,27 @@ class FacetService
      * dimension (not its own selection) — "self-count is not narrowed by its
      * own selection" per the spec scenario.
      *
-     * @param array $dimensionValuesByObjectId Object id => dimension => values.
-     * @param array $selectedFilters           Normalized selected filters.
+     * @param array $dimValsByObjId  Object id => dimension => values.
+     * @param array $selectedFilters Normalized selected filters.
      *
      * @return array<string,array<int,array{value:string,label:string,count:int}>>
      *
      * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
      */
-    private function computeFacets(array $dimensionValuesByObjectId, array $selectedFilters): array
+    private function computeFacets(array $dimValsByObjId, array $selectedFilters): array
     {
         $facets = [];
 
         foreach (self::DIMENSIONS as $dimension) {
             $narrowedObjectIds = $this->filterObjectIds(
-                dimensionValuesByObjectId: $dimensionValuesByObjectId,
+                dimValsByObjId: $dimValsByObjId,
                 selectedFilters: $selectedFilters,
                 excludeDimension: $dimension
             );
 
             $counts = [];
             foreach ($narrowedObjectIds as $objectId) {
-                $values = $dimensionValuesByObjectId[$objectId][$dimension] ?? [];
+                $values = $dimValsByObjId[$objectId][$dimension] ?? [];
                 foreach ($values as $value) {
                     $counts[$value] = ($counts[$value] ?? 0) + 1;
                 }
@@ -946,19 +946,19 @@ class FacetService
      * applying that one dimension's own filter (used when computing that
      * dimension's own disjunctive counts).
      *
-     * @param array       $dimensionValuesByObjectId Object id => dimension => values.
-     * @param array       $selectedFilters           Normalized selected filters.
-     * @param string|null $excludeDimension          Dimension to skip filtering on, or null.
+     * @param array       $dimValsByObjId   Object id => dimension => values.
+     * @param array       $selectedFilters  Normalized selected filters.
+     * @param string|null $excludeDimension Dimension to skip filtering on, or null.
      *
      * @return string[] Matching object ids.
      *
      * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
      */
-    private function filterObjectIds(array $dimensionValuesByObjectId, array $selectedFilters, ?string $excludeDimension): array
+    private function filterObjectIds(array $dimValsByObjId, array $selectedFilters, ?string $excludeDimension): array
     {
         $matched = [];
 
-        foreach ($dimensionValuesByObjectId as $objectId => $dimensionValues) {
+        foreach ($dimValsByObjId as $objectId => $dimensionValues) {
             $isMatch = true;
 
             foreach ($selectedFilters as $dimension => $selectedValues) {

@@ -92,7 +92,11 @@ class MergeOrganisatieService
     /**
      * Relation types re-pointed via a business-level object field (scalar and/or array).
      *
-     * @var array<string, array{field: string, arrayField: string|null}>
+     * The optional `schema` key overrides the OpenRegister schema slug when it
+     * differs from the relation-type key (`aanbod` lives on the `koppeling`
+     * schema); `walkRelations()` falls back to the key via `?? $type`.
+     *
+     * @var array<string, array{field: string, arrayField: string|null, schema?: string}>
      */
     private const FIELD_RELATION_TYPES = [
         'gebruik'        => ['field' => 'afnemer', 'arrayField' => 'deelnemers'],
@@ -241,7 +245,7 @@ class MergeOrganisatieService
             context: ['sourceUuid' => $sourceUuid, 'targetUuid' => $targetUuid, 'actor' => $actorUid, 'operationId' => $operationId]
         );
 
-        $counts = $this->walkRelations(sourceUuid: $sourceUuid, targetUuid: $targetUuid, commit: true, operationId: $operationId);
+        $counts = $this->walkRelations(sourceUuid: $sourceUuid, targetUuid: $targetUuid, commit: true);
         $counts['groupMembers'] = $this->migrateGroupMembership(sourceUuid: $sourceUuid, targetUuid: $targetUuid);
 
         $this->tombstoneSource(sourceUuid: $sourceUuid, targetUuid: $targetUuid);
@@ -286,10 +290,9 @@ class MergeOrganisatieService
      * enumerates AND re-points. Both callers run the identical per-type
      * logic below, which is what guarantees dry-run/execute parity.
      *
-     * @param string      $sourceUuid  The source organisation UUID.
-     * @param string      $targetUuid  The target organisation UUID.
-     * @param bool        $commit      Whether to write (true) or only count (false).
-     * @param string|null $operationId Progress-tracking operation id (execute only).
+     * @param string $sourceUuid The source organisation UUID.
+     * @param string $targetUuid The target organisation UUID.
+     * @param bool   $commit     Whether to write (true) or only count (false).
      *
      * @return array<string, int> Per-relation-type counts.
      *
@@ -297,7 +300,7 @@ class MergeOrganisatieService
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `commit` is the documented dry-run/execute parity gate, not a generic flag.
      */
-    private function walkRelations(string $sourceUuid, string $targetUuid, bool $commit, ?string $operationId=null): array
+    private function walkRelations(string $sourceUuid, string $targetUuid, bool $commit): array
     {
         $counts = $this->emptyCounts();
 
@@ -381,12 +384,13 @@ class MergeOrganisatieService
                 $arrayMatched = false;
                 $newArray     = [];
                 foreach ($data[$arrayField] as $entry) {
+                    $replacement = $entry;
                     if ($entry === $source) {
                         $arrayMatched = true;
-                        $newArray[]   = $target;
-                    } else {
-                        $newArray[] = $entry;
+                        $replacement  = $target;
                     }
+
+                    $newArray[] = $replacement;
                 }
 
                 if ($arrayMatched === true) {

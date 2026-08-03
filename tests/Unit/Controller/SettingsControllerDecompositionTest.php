@@ -15,8 +15,13 @@ use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * Unit tests for the W30 SettingsController decomposition helper
- * (buildConfigErrorResponse).
+ * Unit tests for the W30 SettingsController decomposition helpers
+ * (buildConfigReadErrorResponse / buildConfigWriteErrorResponse).
+ *
+ * These target the two intent-named entry points the controller actually
+ * calls, rather than the shared private core — the read/write distinction
+ * (whether the redacted request params reach the log) is the behaviour under
+ * test, and it now lives in the choice of entry point.
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-3
  */
@@ -35,11 +40,11 @@ class SettingsControllerDecompositionTest extends TestCase
         return $controller;
     }
 
-    private function call(SettingsController $controller, string $label, \Exception $e, bool $includeParams)
+    private function call(SettingsController $controller, string $method, string $label, \Exception $e)
     {
-        $ref = new ReflectionMethod($controller, 'buildConfigErrorResponse');
+        $ref = new ReflectionMethod($controller, $method);
         $ref->setAccessible(true);
-        return $ref->invokeArgs($controller, [$label, $e, $includeParams]);
+        return $ref->invokeArgs($controller, [$label, $e]);
     }
 
     public function testErrorResponseReturnsStatus500AndCanonicalShape(): void
@@ -51,7 +56,12 @@ class SettingsControllerDecompositionTest extends TestCase
         );
 
         $controller = $this->makeController($logger);
-        $response = $this->call($controller, 'get sync config', new \RuntimeException('boom'), false);
+        $response = $this->call(
+            $controller,
+            'buildConfigReadErrorResponse',
+            'get sync config',
+            new \RuntimeException('boom')
+        );
 
         $this->assertSame(500, $response->getStatus());
         $data = $response->getData();
@@ -81,9 +91,9 @@ class SettingsControllerDecompositionTest extends TestCase
         $reqProp->setAccessible(true);
         $reqProp->setValue($controller, $request);
 
-        $ref = new ReflectionMethod($controller, 'buildConfigErrorResponse');
+        $ref = new ReflectionMethod($controller, 'buildConfigWriteErrorResponse');
         $ref->setAccessible(true);
-        $response = $ref->invokeArgs($controller, ['update general config', new \LogicException('nope'), true]);
+        $response = $ref->invokeArgs($controller, ['update general config', new \LogicException('nope')]);
 
         $this->assertSame(500, $response->getStatus());
         $this->assertSame(

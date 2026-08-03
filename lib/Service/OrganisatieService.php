@@ -292,7 +292,7 @@ class OrganisatieService
     ): \OCA\OpenRegister\Db\Organisation {
         // Resolve the active organisation as the parent for the new (child)
         // organisation, restoring the hierarchy the hotfix disabled.
-        $parentOrganisationUuid = $this->getActiveOrganisationUuid(organisationService: $organisationService);
+        $parentOrgUuid = $this->getActiveOrganisationUuid(organisationService: $organisationService);
 
         $this->logger->info(
                 'OrganisatieService: Creating organisation entity',
@@ -300,7 +300,7 @@ class OrganisatieService
                     'uuid'               => $organizationUuid,
                     'name'               => $mappedData['naam'],
                     'active'             => $mappedData['active'],
-                    'parentOrganisation' => $parentOrganisationUuid,
+                    'parentOrganisation' => $parentOrgUuid,
                 ]
                 );
 
@@ -319,13 +319,13 @@ class OrganisatieService
         // already uses in addUsersToOrganization()); a link failure is logged
         // and swallowed so the organisation is still returned (flat) rather
         // than lost — matching the pre-hotfix "org always created" guarantee.
-        if ($parentOrganisationUuid !== null
-            && $parentOrganisationUuid !== ''
-            && $parentOrganisationUuid !== $organisationEntity->getUuid()
+        if ($parentOrgUuid !== null
+            && $parentOrgUuid !== ''
+            && $parentOrgUuid !== $organisationEntity->getUuid()
         ) {
             $organisationEntity = $this->linkParentOrganisation(
                 organisationEntity: $organisationEntity,
-                parentOrganisationUuid: $parentOrganisationUuid
+                parentOrgUuid: $parentOrgUuid
             );
         }
 
@@ -351,8 +351,8 @@ class OrganisatieService
      * entity is returned unchanged so organisation creation never fails
      * outright over a hierarchy link.
      *
-     * @param \OCA\OpenRegister\Db\Organisation $organisationEntity     The created organisation entity.
-     * @param string                            $parentOrganisationUuid The parent organisation UUID to link.
+     * @param \OCA\OpenRegister\Db\Organisation $organisationEntity The created organisation entity.
+     * @param string                            $parentOrgUuid      The parent organisation UUID to link.
      *
      * @return \OCA\OpenRegister\Db\Organisation The entity with the parent set (or the original on failure).
      *
@@ -360,19 +360,19 @@ class OrganisatieService
      */
     private function linkParentOrganisation(
         \OCA\OpenRegister\Db\Organisation $organisationEntity,
-        string $parentOrganisationUuid
+        string $parentOrgUuid
     ): \OCA\OpenRegister\Db\Organisation {
         try {
             $organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
 
-            $organisationEntity->setParent($parentOrganisationUuid);
+            $organisationEntity->setParent($parentOrgUuid);
             $saved = $organisationMapper->save($organisationEntity);
 
             $this->logger->info(
                     'OrganisatieService: Linked organisation to parent',
                     [
                         'uuid'   => $organisationEntity->getUuid(),
-                        'parent' => $parentOrganisationUuid,
+                        'parent' => $parentOrgUuid,
                     ]
                     );
 
@@ -382,7 +382,7 @@ class OrganisatieService
                     'OrganisatieService: Failed to link organisation to parent, leaving it flat',
                     [
                         'uuid'   => $organisationEntity->getUuid(),
-                        'parent' => $parentOrganisationUuid,
+                        'parent' => $parentOrgUuid,
                         'error'  => $e->getMessage(),
                     ]
                     );

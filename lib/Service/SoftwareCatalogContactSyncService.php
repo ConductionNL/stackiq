@@ -299,39 +299,9 @@ class SoftwareCatalogContactSyncService
      */
     private function recordToVCard(string $objectType, array $record): array
     {
-        $properties = [];
-
-        if ($objectType === 'organisatie') {
-            $name = trim((string) ($record['naam'] ?? ''));
-            $properties['FN']   = $name;
-            $properties['ORG']  = $name;
-            $properties['KIND'] = 'org';
-
-            $cbsCode = trim((string) ($record['cbsCode'] ?? ''));
-            if ($cbsCode !== '') {
-                $properties['X-KVK']    = $cbsCode;
-                $properties['NICKNAME'] = $cbsCode;
-            }
-
-            $website = trim((string) ($record['website'] ?? ''));
-            if ($website !== '') {
-                $properties['URL'] = $website;
-            }
-        } else {
-            $voornaam      = trim((string) ($record['voornaam'] ?? ''));
-            $tussenvoegsel = trim((string) ($record['tussenvoegsel'] ?? ''));
-            $achternaam    = trim((string) ($record['achternaam'] ?? ''));
-            $family        = trim(trim($tussenvoegsel.' '.$achternaam));
-
-            $properties['FN'] = trim($voornaam.' '.$family);
-            // N = Family;Given;Additional;Prefix;Suffix.
-            $properties['N'] = $family.';'.$voornaam.';;;';
-
-            $functie = trim((string) ($record['functie'] ?? ''));
-            if ($functie !== '') {
-                $properties['TITLE'] = $functie;
-            }
-        }//end if
+        // The identity block differs per kind; the contact channels below are
+        // shared by both.
+        $properties = $this->identityProperties(objectType: $objectType, record: $record);
 
         $email = trim((string) ($record['e-mailadres'] ?? $record['email'] ?? ''));
         if ($email !== '') {
@@ -345,6 +315,81 @@ class SoftwareCatalogContactSyncService
 
         return $properties;
     }//end recordToVCard()
+
+    /**
+     * Select and build the kind-specific vCard identity properties.
+     *
+     * @param string               $objectType The relationship type.
+     * @param array<string, mixed> $record     The relationship record.
+     *
+     * @return array<string, mixed> The identity property set.
+     */
+    private function identityProperties(string $objectType, array $record): array
+    {
+        if ($objectType === 'organisatie') {
+            return $this->organisationIdentityProperties(record: $record);
+        }
+
+        return $this->personIdentityProperties(record: $record);
+    }//end identityProperties()
+
+    /**
+     * Build the organisation-kind vCard identity properties.
+     *
+     * @param array<string, mixed> $record The relationship record.
+     *
+     * @return array<string, mixed> The identity property set.
+     */
+    private function organisationIdentityProperties(array $record): array
+    {
+        $name       = trim((string) ($record['naam'] ?? ''));
+        $properties = [
+            'FN'   => $name,
+            'ORG'  => $name,
+            'KIND' => 'org',
+        ];
+
+        $cbsCode = trim((string) ($record['cbsCode'] ?? ''));
+        if ($cbsCode !== '') {
+            $properties['X-KVK']    = $cbsCode;
+            $properties['NICKNAME'] = $cbsCode;
+        }
+
+        $website = trim((string) ($record['website'] ?? ''));
+        if ($website !== '') {
+            $properties['URL'] = $website;
+        }
+
+        return $properties;
+    }//end organisationIdentityProperties()
+
+    /**
+     * Build the person-kind vCard identity properties.
+     *
+     * @param array<string, mixed> $record The relationship record.
+     *
+     * @return array<string, mixed> The identity property set.
+     */
+    private function personIdentityProperties(array $record): array
+    {
+        $voornaam      = trim((string) ($record['voornaam'] ?? ''));
+        $tussenvoegsel = trim((string) ($record['tussenvoegsel'] ?? ''));
+        $achternaam    = trim((string) ($record['achternaam'] ?? ''));
+        $family        = trim(trim($tussenvoegsel.' '.$achternaam));
+
+        $properties = [
+            'FN' => trim($voornaam.' '.$family),
+            // N = Family;Given;Additional;Prefix;Suffix.
+            'N'  => $family.';'.$voornaam.';;;',
+        ];
+
+        $functie = trim((string) ($record['functie'] ?? ''));
+        if ($functie !== '') {
+            $properties['TITLE'] = $functie;
+        }
+
+        return $properties;
+    }//end personIdentityProperties()
 
     /**
      * Return the key of the first writable addressbook, or null when none is

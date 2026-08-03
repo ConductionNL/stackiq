@@ -114,10 +114,9 @@ class FederationService
             ];
         }
 
+        $message = 'Federation unavailable — requires OpenCatalogi';
         if ($available === true) {
             $message = 'Federation available';
-        } else {
-            $message = 'Federation unavailable — requires OpenCatalogi';
         }
 
         return [
@@ -176,7 +175,7 @@ class FederationService
     {
         $peerUrl  = trim($peerUrl);
         $peers    = $this->config->getPeers();
-        $filtered = array_values(array_filter($peers, static fn (string $p): bool => $p !== $peerUrl));
+        $filtered = array_values(array_filter($peers, static fn (string $peer): bool => $peer !== $peerUrl));
         if (count($filtered) === count($peers)) {
             return ['ok' => false, 'reason' => 'peer not found'];
         }
@@ -509,10 +508,9 @@ class FederationService
             return [];
         }
 
+        $items = [];
         if (is_array($objects) === true) {
             $items = $objects;
-        } else {
-            $items = [];
         }
 
         $mirrors = [];
@@ -542,10 +540,9 @@ class FederationService
     {
         $count = 0;
         foreach ($mirrors as $mirror) {
+            $uuid = '';
             if ($uuidKey !== null) {
                 $uuid = (string) ($mirror[$uuidKey] ?? '');
-            } else {
-                $uuid = '';
             }
 
             try {
@@ -743,10 +740,10 @@ class FederationService
             return false;
         }
 
-        $ip = filter_var($host, FILTER_VALIDATE_IP);
-        if ($ip !== false) {
+        $ipAddress = filter_var($host, FILTER_VALIDATE_IP);
+        if ($ipAddress !== false) {
             $public = filter_var(
-                $ip,
+                $ipAddress,
                 FILTER_VALIDATE_IP,
                 (FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)
             );

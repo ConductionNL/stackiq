@@ -121,13 +121,21 @@ class EolMatcherService
      */
     private function matchDepth(string $versie, string $cycle): ?int
     {
+        // Reject empty input. `explode()` never returns an empty array, so the
+        // segment count below is always >= 1 and a `$depth === 0` test could
+        // never fire — the degenerate case is an empty STRING: explode('.', '')
+        // yields [''], which would let two empty inputs "match" at depth 1 and
+        // produce an EOL stamp from no version information at all. matchVersion()
+        // already rejects both empty inputs upstream, so this is defence in depth
+        // for any future caller.
+        if ($versie === '' || $cycle === '') {
+            return null;
+        }
+
         $versieSegments = explode('.', $versie);
         $cycleSegments  = explode('.', $cycle);
 
         $depth = min(count($versieSegments), count($cycleSegments));
-        if ($depth === 0) {
-            return null;
-        }
 
         for ($i = 0; $i < $depth; $i++) {
             if ($versieSegments[$i] !== $cycleSegments[$i]) {

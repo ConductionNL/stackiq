@@ -44,6 +44,8 @@ use OCA\SoftwareCatalog\Service\ArchiMateService;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\FacetService;
 use OCA\SoftwareCatalog\Service\GebruikSyncService;
+use OCA\SoftwareCatalog\Service\IntakeService;
+use OCA\SoftwareCatalog\Service\ModerationService;
 use OCA\SoftwareCatalog\Service\ModuleComplianceService;
 use OCA\SoftwareCatalog\Service\ModuleRegistrationService;
 use OCA\SoftwareCatalog\Service\MergeOrganisatieService;
@@ -51,6 +53,9 @@ use OCA\SoftwareCatalog\Service\ModuleVersionService;
 use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
 use OCA\SoftwareCatalog\Service\ProgressTracker;
+use OCA\SoftwareCatalog\Service\PublicationService;
+use OCA\SoftwareCatalog\Service\ReviewAggregateService;
+use OCA\SoftwareCatalog\Service\ReviewService;
 use OCA\SoftwareCatalog\Service\SbomImportService;
 use OCA\SoftwareCatalog\Service\SbomParserService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -394,9 +399,9 @@ class Application extends App implements IBootstrap
         // Register open-data publication service (sets/clears publicatiedatum — the
         // live OR RBAC publish gate; no @self.published, no app-local flag).
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\PublicationService::class,
+                PublicationService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\PublicationService(
+                    return new PublicationService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
@@ -407,9 +412,9 @@ class Application extends App implements IBootstrap
         // Register the anonymous-registration intake service (queues submissions
         // as registratiestatus=pending, no publicatiedatum — invisible until approved).
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\IntakeService::class,
+                IntakeService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\IntakeService(
+                    return new IntakeService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
@@ -420,9 +425,9 @@ class Application extends App implements IBootstrap
         // Register the registration/review moderation/approval-queue service
         // (generalised to also moderate beoordeeling — softwarecatalog#375).
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ModerationService::class,
+                ModerationService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ModerationService(
+                    return new ModerationService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
@@ -434,9 +439,9 @@ class Application extends App implements IBootstrap
         // softwarecatalog#375). Author identity comes from IUserSession, never
         // from client input.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ReviewService::class,
+                ReviewService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ReviewService(
+                    return new ReviewService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
                     userSession: $container->get(\OCP\IUserSession::class),
@@ -449,9 +454,9 @@ class Application extends App implements IBootstrap
         // (catalog-ratings, softwarecatalog#375) — split from ReviewService
         // to keep each class under the complexity budget.
         $context->registerService(
-                \OCA\SoftwareCatalog\Service\ReviewAggregateService::class,
+                ReviewAggregateService::class,
                 function ($container) {
-                    return new \OCA\SoftwareCatalog\Service\ReviewAggregateService(
+                    return new ReviewAggregateService(
                     container: $container,
                     settingsService: $container->get(SettingsService::class),
                     logger: $container->get('Psr\Log\LoggerInterface')
@@ -474,7 +479,7 @@ class Application extends App implements IBootstrap
         // Register the pure SBOM parser (no OR/HTTP dependency — ADR-008).
         $context->registerService(
                 SbomParserService::class,
-                function ($container) {
+                function () {
                     return new SbomParserService();
                 }
                 );
@@ -646,7 +651,7 @@ class Application extends App implements IBootstrap
                 );
         $context->registerService(
                 FederationMerger::class,
-                function ($container) {
+                function () {
                     return new FederationMerger();
                 }
                 );
@@ -680,7 +685,7 @@ class Application extends App implements IBootstrap
         // by design (design.md "Nextcloud Integration" — pure matching logic).
         $context->registerService(
                 EolMatcherService::class,
-                function ($container) {
+                function () {
                     return new EolMatcherService();
                 }
                 );

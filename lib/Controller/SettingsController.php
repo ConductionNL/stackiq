@@ -179,7 +179,7 @@ class SettingsController extends Controller
     }//end getRedactedParams()
 
     /**
-     * Builds the canonical "config endpoint failed" JSONResponse.
+     * Build the 500 response for a failed config READ.
      *
      * Centralises the error-log emission + the
      * `{success: false, message: "Failed to <op>: <exception>"}` shape that
@@ -187,10 +187,53 @@ class SettingsController extends Controller
      * `updateGeneralConfig()`, `getSyncConfig()`, `updateSyncConfig()`, and
      * `getGeneralConfig()` as part of task 3.X.
      *
-     * @param string     $operationLabel "update sync config" / "get general config" / …
+     * A read failure logs no request params — the read endpoints take none.
+     *
+     * @param string     $operationLabel "get sync config" / "get general config" / …
      * @param \Exception $exception      The caught exception.
-     * @param bool       $includeParams  Attach the redacted request params to the
-     *                                   log payload (the "update" endpoints want this).
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function buildConfigReadErrorResponse(string $operationLabel, \Exception $exception): JSONResponse
+    {
+        return $this->buildConfigErrorResponse(
+            operationLabel: $operationLabel,
+            exception: $exception,
+            context: ['exception' => $exception->getMessage()]
+        );
+    }//end buildConfigReadErrorResponse()
+
+    /**
+     * Build the 500 response for a failed config WRITE, attaching the redacted
+     * request params to the log payload so a rejected update can be diagnosed.
+     *
+     * @param string     $operationLabel "update sync config" / "update general config" / …
+     * @param \Exception $exception      The caught exception.
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/method-decomposition/tasks.md#task-3
+     */
+    private function buildConfigWriteErrorResponse(string $operationLabel, \Exception $exception): JSONResponse
+    {
+        return $this->buildConfigErrorResponse(
+            operationLabel: $operationLabel,
+            exception: $exception,
+            context: [
+                'exception'   => $exception->getMessage(),
+                'requestData' => $this->getRedactedParams(),
+            ]
+        );
+    }//end buildConfigWriteErrorResponse()
+
+    /**
+     * Log the failure and build the shared 500 config-error response body.
+     *
+     * @param string               $operationLabel "update sync config" / "get general config" / …
+     * @param \Exception           $exception      The caught exception.
+     * @param array<string, mixed> $context        The log context payload.
      *
      * @return JSONResponse
      *
@@ -199,13 +242,8 @@ class SettingsController extends Controller
     private function buildConfigErrorResponse(
         string $operationLabel,
         \Exception $exception,
-        bool $includeParams=false
+        array $context
     ): JSONResponse {
-        $context = ['exception' => $exception->getMessage()];
-        if ($includeParams === true) {
-            $context['requestData'] = $this->getRedactedParams();
-        }
-
         $this->logger->error('Failed to '.$operationLabel, $context);
 
         return new JSONResponse(
@@ -406,7 +444,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse(operationLabel: 'get general config', exception: $e, includeParams: false);
+            return $this->buildConfigReadErrorResponse(operationLabel: 'get general config', exception: $e);
         }//end try
     }//end getGeneralConfig()
 
@@ -438,7 +476,7 @@ class SettingsController extends Controller
                 ]
             );
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse(operationLabel: 'update general config', exception: $e, includeParams: true);
+            return $this->buildConfigWriteErrorResponse(operationLabel: 'update general config', exception: $e);
         }//end try
     }//end updateGeneralConfig()
 
@@ -465,7 +503,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse(operationLabel: 'get sync config', exception: $e, includeParams: false);
+            return $this->buildConfigReadErrorResponse(operationLabel: 'get sync config', exception: $e);
         }//end try
     }//end getSyncConfig()
 
@@ -497,7 +535,7 @@ class SettingsController extends Controller
                     ]
                     );
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse(operationLabel: 'update sync config', exception: $e, includeParams: true);
+            return $this->buildConfigWriteErrorResponse(operationLabel: 'update sync config', exception: $e);
         }//end try
     }//end updateSyncConfig()
 
@@ -3699,7 +3737,7 @@ class SettingsController extends Controller
                 ]
             );
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse(operationLabel: 'get EOL sync config', exception: $e, includeParams: false);
+            return $this->buildConfigReadErrorResponse(operationLabel: 'get EOL sync config', exception: $e);
         }
     }//end getEolSyncConfig()
 
@@ -3718,7 +3756,7 @@ class SettingsController extends Controller
             $data = $this->request->getParams();
             return new JSONResponse($this->eolSyncService->updateConfig($data));
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse(operationLabel: 'update EOL sync config', exception: $e, includeParams: true);
+            return $this->buildConfigWriteErrorResponse(operationLabel: 'update EOL sync config', exception: $e);
         }
     }//end updateEolSyncConfig()
 
@@ -3775,7 +3813,7 @@ class SettingsController extends Controller
                 ]
             );
         } catch (\Exception $e) {
-            return $this->buildConfigErrorResponse(operationLabel: 'get EOL sync status', exception: $e, includeParams: false);
+            return $this->buildConfigReadErrorResponse(operationLabel: 'get EOL sync status', exception: $e);
         }
     }//end getEolSyncStatus()
 }//end class

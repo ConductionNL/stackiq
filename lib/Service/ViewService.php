@@ -439,7 +439,7 @@ class ViewService
         }
 
         if ($this->shouldIncludeGebruik(options: $options) === true) {
-            $gebruikData = $this->getGebruikData(options: $options);
+            $gebruikData = $this->getGebruikData();
         }
 
         if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
@@ -804,13 +804,14 @@ class ViewService
      * Retrieves only organisation-owned gebruik via standard RBAC filtering.
      * Deelnames gebruik is retrieved separately via getDeelnamesGebruikData().
      *
-     * @param array $options Query options (unused, kept for signature compatibility).
+     * The register/schema and organisation scope are resolved from settings and
+     * the current session, so this needs no caller-supplied query options.
      *
      * @return array Gebruik data indexed by elementRef.
      *
      * @spec openspec/changes/deelnames-gebruik/tasks.md#task-2
      */
-    private function getGebruikData(array $options=[]): array
+    private function getGebruikData(): array
     {
         $this->logger->debug(message: 'Getting regular gebruik data for view enrichment');
 

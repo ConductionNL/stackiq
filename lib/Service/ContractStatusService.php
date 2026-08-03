@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
+use DateTimeImmutable;
 use OCA\OpenRegister\Service\ObjectService;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -66,14 +67,14 @@ class ContractStatusService
      * (other status, missing/blank/unparseable end date, future end date)
      * returns false — the transition is never applied.
      *
-     * @param array              $contractData The contract object data bag.
-     * @param \DateTimeImmutable $now          Logical "now".
+     * @param array             $contractData The contract object data bag.
+     * @param DateTimeImmutable $now          Logical "now".
      *
      * @return bool True when the contract must be expired.
      *
      * @spec openspec/specs/contract-administration/spec.md
      */
-    public function shouldExpire(array $contractData, \DateTimeImmutable $now): bool
+    public function shouldExpire(array $contractData, DateTimeImmutable $now): bool
     {
         $status = $contractData['status'] ?? null;
         if ($status !== self::STATUS_ACTIVE) {
@@ -86,7 +87,7 @@ class ContractStatusService
         }
 
         try {
-            $end = new \DateTimeImmutable($eindDatum);
+            $end = new DateTimeImmutable($eindDatum);
         } catch (\Exception $e) {
             // Fail-closed: an unparseable end date never triggers a transition.
             $this->logger->debug(
@@ -105,15 +106,15 @@ class ContractStatusService
      * Returns the number of contracts transitioned. Degrades to 0 (no error)
      * when OpenRegister is unavailable or the contract schema is not configured.
      *
-     * @param \DateTimeImmutable|null $now Logical "now" (defaults to current time).
+     * @param DateTimeImmutable|null $now Logical "now" (defaults to current time).
      *
      * @return int The number of contracts transitioned to Verlopen.
      *
      * @spec openspec/specs/contract-administration/spec.md
      */
-    public function expirePastContracts(?\DateTimeImmutable $now=null): int
+    public function expirePastContracts(?DateTimeImmutable $now=null): int
     {
-        $now = ($now ?? new \DateTimeImmutable());
+        $now = ($now ?? new DateTimeImmutable());
 
         $objectService = $this->getObjectService();
         if ($objectService === null) {
