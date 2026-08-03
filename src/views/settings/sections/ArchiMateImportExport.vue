@@ -972,9 +972,30 @@ export default {
 					return
 				}
 
-				// Load organizations from OpenRegister
+				// Load organizations from OpenRegister.
+				//
+				// ⚠️ This used to request `_fields=id,naam` and then
+				// `.filter(org => org.naam || org.name)`. `naam` was DROPPED from the
+				// organisatie schema when contact/organisation identity moved to the
+				// Nextcloud addressbook — the schema is now a relationship record
+				// (contactsUid / type / status / …) and its `objectNameField` is
+				// `contactsUid`. So every row came back without a `naam`, the filter
+				// discarded all of them, and `organizationOptions` stayed empty: the
+				// Organization select offered nothing but the built-in "Generic"
+				// placeholder and the whole per-organisation export was unreachable.
+				//
+				// Nothing errored — the fetch succeeded, the array was simply empty —
+				// which is why this survived unnoticed. Found by the e2e suite the
+				// first time it ran against a FRESH install carrying the current
+				// register (an older instance still had the pre-migration table).
+				//
+				// Fixed by asking for whole objects and labelling by the object's own
+				// name (`@self.name`, which OpenRegister derives from the schema's
+				// configured objectNameField), with the legacy identity fields kept as
+				// fallbacks so an instance that has not yet been re-imported still
+				// renders its organisations.
 				const orgResponse = await fetch(
-					`/index.php/apps/openregister/api/objects/${voorzRegister}/${orgSchema}?_limit=5000&_fields=id,naam`,
+					`/index.php/apps/openregister/api/objects/${voorzRegister}/${orgSchema}?_limit=5000`,
 					{
 						headers: {
 							'OCS-APIREQUEST': 'true',
@@ -988,11 +1009,11 @@ export default {
 				const orgs = orgData?.results || orgData || []
 				if (Array.isArray(orgs) && orgs.length > 0) {
 					this.organizationOptions = orgs
-						.filter(org => org.naam || org.name)
 						.map(org => ({
-							label: org.naam || org.name,
+							label: org['@self']?.name || org.naam || org.name || org.contactsUid || '',
 							value: org.id || org['@self']?.id,
 						}))
+						.filter(option => option.label !== '' && option.value)
 						.sort((a, b) => a.label.localeCompare(b.label))
 				}
 			} catch (error) {

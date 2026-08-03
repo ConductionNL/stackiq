@@ -131,8 +131,16 @@ test('manifest index organisaties: list page renders the organisation cards', as
 	await expectIndexShellRendered(page, 'Organisations')
 })
 
+// ⚠️ `/contactpersonen` is NOT in this list, and must not be added back.
+// `expectIndexShellRendered` proves the route mounted by finding the page's own
+// navigation entry — and the Contacts entry no longer exists. It was removed
+// deliberately when contact/organisation identity moved to the Nextcloud
+// addressbook: src/manifest.json keeps `Contactpersonen` as a routable
+// `type: index` page titled "Contact roles" (a catalog relationship view) but
+// declares no menu entry for it. Asserting a nav link that the product
+// deliberately deleted is not coverage, it is a stale expectation — the
+// contactpersonen route gets its own surface-based test below instead.
 const INDEX_PAGES: Array<{ route: string; title: string; name: string }> = [
-	{ route: '/contactpersonen', title: 'Contacts', name: 'contactpersonen' },
 	{ route: '/contracten', title: 'Contracts', name: 'contracten' },
 	{ route: '/standaarden', title: 'Standards', name: 'standaarden' },
 	{ route: '/reviews', title: 'Reviews', name: 'reviews' },
@@ -146,6 +154,18 @@ for (const p of INDEX_PAGES) {
 		await expectIndexShellRendered(page, p.title)
 	})
 }
+
+// The contactpersonen index has no navigation entry (see the note above), so it
+// is proven by its own rendered surface: the CnIndexPage create action, whose
+// label nc-vue derives as `Add {schema.title}` — "Add Contact person".
+test('manifest index contactpersonen: list page renders its own index surface', async ({ page }) => {
+	await gotoAppRoute(page, '/contactpersonen')
+	const main = page.locator(APP_MAIN).first()
+	await expect(main).toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByRole('button', { name: 'Add Contact person', exact: true }).first(),
+	).toBeVisible({ timeout: 30000 })
+})
 
 // ---------------------------------------------------------------------------
 // Roadmap page (type: roadmap)

@@ -62,7 +62,11 @@ test.beforeAll(async () => {
 		type: 'Leverancier',
 		website: 'https://e2e-export-org.example.com',
 		status: 'Actief',
-		contactsUid: `${RUN_ID}-export-org`,
+		// The UID doubles as the display name on purpose: the schema's
+		// `configuration.objectNameField` is `contactsUid`, so this is the label
+		// the Organization combobox renders for the seeded row. `naam` is no
+		// longer a property of the organisatie schema.
+		contactsUid: exportOrgName,
 	})
 })
 

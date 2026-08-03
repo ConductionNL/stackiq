@@ -53,11 +53,29 @@ test('settings: maintenance action buttons are present', async ({ page }) => {
 	const bag = collectAppErrors(page)
 	const main = await gotoSettings(page)
 
-	// Version Information section actions. "Auto Configure" + "Force Update" are
-	// always rendered; "Reset Auto-Config" is conditional (`v-if` on
-	// autoConfigCompleted), so it is not asserted here.
-	await expect(main.getByRole('button', { name: 'Auto Configure' }).first()).toBeVisible({ timeout: 30000 })
-	await expect(main.getByRole('button', { name: 'Force Update' }).first()).toBeVisible()
+	// Version Information section actions.
+	//
+	// ⚠️ The previous comment here claimed "Auto Configure + Force Update are
+	// always rendered; Reset Auto-Config is conditional". Read the component
+	// (VersionInformation.vue): "Auto Configure" is `v-if
+	// versionInfo.autoConfigCompleted === false` and "Reset Auto-Config" is
+	// `v-if versionInfo.autoConfigCompleted === true`. They are MUTUALLY
+	// EXCLUSIVE halves of the same flag; only "Force Update" is unconditional.
+	// Asserting "Auto Configure" therefore asserted that auto-configuration had
+	// NOT completed — which is exactly the state a correctly provisioned
+	// instance is not in. It passed only on an instance that had never finished
+	// configuring itself.
+	//
+	// So: assert the unconditional button, and assert that the flag-driven pair
+	// renders exactly one of its two halves. That is the real invariant.
+	await expect(main.getByRole('button', { name: 'Force Update' }).first()).toBeVisible({ timeout: 30000 })
+	const autoConfigure = main.getByRole('button', { name: 'Auto Configure' }).first()
+	const resetAutoConfig = main.getByRole('button', { name: 'Reset Auto-Config' }).first()
+	await expect(autoConfigure.or(resetAutoConfig)).toBeVisible({ timeout: 30000 })
+	expect(
+		(await autoConfigure.count()) + (await resetAutoConfig.count()),
+		'Auto Configure and Reset Auto-Config are mutually exclusive v-ifs on autoConfigCompleted',
+	).toBe(1)
 
 	// General Settings save + standards sync.
 	await expect(main.getByRole('button', { name: 'Sync Standards' }).first()).toBeVisible()

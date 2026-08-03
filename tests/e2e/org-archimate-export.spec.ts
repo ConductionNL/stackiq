@@ -122,14 +122,22 @@ async function seedOrganization(): Promise<void> {
 			throw new Error('voorzieningen register/organisatie schema not configured')
 		}
 
-		// Skip seeding if an organisation with this name already exists.
+		// Skip seeding if an organisation with this name already exists. Match on
+		// `contactsUid` too: that is the schema's objectNameField now, and a
+		// `_fields=id,naam` projection returns nothing useful because `naam` is no
+		// longer a property of this schema.
 		const existing = await ctx.get(
-			`/index.php/apps/openregister/api/objects/${register}/${schema}?_limit=5000&_fields=id,naam`,
+			`/index.php/apps/openregister/api/objects/${register}/${schema}?_limit=5000`,
 		)
 		if (existing.ok()) {
 			const data = await existing.json()
 			const list = data?.results ?? data ?? []
-			if (Array.isArray(list) && list.some(o => (o.naam || o.name) === SEEDED_ORG_NAME)) {
+			const matches = (o: Record<string, unknown>): boolean =>
+				o.contactsUid === SEEDED_ORG_NAME
+				|| o.naam === SEEDED_ORG_NAME
+				|| o.name === SEEDED_ORG_NAME
+				|| (o as { '@self'?: { name?: string } })['@self']?.name === SEEDED_ORG_NAME
+			if (Array.isArray(list) && list.some(matches)) {
 				return
 			}
 		}
@@ -145,6 +153,11 @@ async function seedOrganization(): Promise<void> {
 		// only stores the catalog-side relation, so a fixture that is not testing
 		// contact resolution supplies a synthetic UID. It satisfies the schema's
 		// declared contract; nothing here asserts the UID resolves to a contact.
+		//
+		// The UID is deliberately SEEDED_ORG_NAME: the schema's
+		// `configuration.objectNameField` is `contactsUid`, so the UID *is* the
+		// object's display name and therefore the label the Organization combobox
+		// renders. `naam` is no longer a property of this schema at all.
 		const createRes = await ctx.post(
 			`/index.php/apps/openregister/api/objects/${register}/${schema}`,
 			{
@@ -152,7 +165,7 @@ async function seedOrganization(): Promise<void> {
 					naam: SEEDED_ORG_NAME,
 					type: 'Leverancier',
 					status: 'Actief',
-					contactsUid: 'e2e-org-archimate-export',
+					contactsUid: SEEDED_ORG_NAME,
 				},
 			},
 		)

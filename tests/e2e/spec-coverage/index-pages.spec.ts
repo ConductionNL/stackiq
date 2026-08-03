@@ -21,7 +21,7 @@
  * assert it is genuinely absent alongside any other app-origin error / 5xx.
  */
 import { test, expect } from '@playwright/test'
-import { navClickTo, collectAppErrors, expectNoAppErrors, expectIndexSurface, APP_MAIN } from './_helpers'
+import { navClickTo, gotoAppRoute, collectAppErrors, expectNoAppErrors, expectIndexSurface, APP_MAIN } from './_helpers'
 
 interface IndexPage {
 	/** Exact app-navigation link label. */
@@ -36,12 +36,22 @@ interface IndexPage {
 // schema). NOTE: "Organisations" is intentionally NOT here — it is a
 // `type: custom` page (component OrganisatieIndexView) with its own surface,
 // covered by a dedicated test below.
+// ⚠️ `addLabel` is not free text. nc-vue's CnIndexPage derives its primary
+// create action as `'Add ' + schema.title` (CnIndexPage.vue), and the
+// softwarecatalog schema titles were rewritten from Dutch to English on
+// 2026-07-26 (commit 13215dd). The Dutch spellings these entries used to carry
+// — "Add Beoordeeling", "Add Applicatieversie", "Add Contactpersoon" — have not
+// existed in the rendered UI since. "Add Contract" and "Add Compliancy" happen
+// to be spelled identically in both, which is why only three of the five broke.
+//
+// `Contacts` is likewise absent: the nav entry was deliberately removed when
+// contact/organisation identity moved to the Nextcloud addressbook, so
+// `/contactpersonen` is reached by route below rather than by a nav click.
 const INDEX_PAGES: IndexPage[] = [
-	{ navLabel: 'Contacts', addLabel: 'Add Contactpersoon', name: 'contactpersonen' },
 	{ navLabel: 'Contracts', addLabel: 'Add Contract', name: 'contracten' },
-	{ navLabel: 'Reviews', addLabel: 'Add Beoordeeling', name: 'reviews' },
+	{ navLabel: 'Reviews', addLabel: 'Add Assessment', name: 'reviews' },
 	{ navLabel: 'Compliance', addLabel: 'Add Compliancy', name: 'komplianties' },
-	{ navLabel: 'Module versions', addLabel: 'Add Applicatieversie', name: 'moduleversies' },
+	{ navLabel: 'Module versions', addLabel: 'Add Application version', name: 'moduleversies' },
 ]
 
 for (const p of INDEX_PAGES) {
@@ -52,6 +62,16 @@ for (const p of INDEX_PAGES) {
 		expectNoAppErrors(bag)
 	})
 }
+
+// The contactpersonen index is a routable page with NO menu entry (see above),
+// so the user's real path to it is the route, not a nav click. Everything else
+// about the surface contract is unchanged.
+test('index contactpersonen: the route reaches the CnIndexPage surface (toggle + add + list body)', async ({ page }) => {
+	const bag = collectAppErrors(page)
+	await gotoAppRoute(page, '/contactpersonen')
+	await expectIndexSurface(page, 'Add Contact person')
+	expectNoAppErrors(bag)
+})
 
 // BUG (pre-existing, app config/manifest): the "Standards" index page is wired
 // to the schema slug `standaard`, but NO `standaard` schema exists in the
@@ -100,7 +120,7 @@ test('custom organisaties: nav entry reaches the OrganisatieIndexView surface', 
 // ---------------------------------------------------------------------------
 test('index contactpersonen: Cards/Table view toggle switches the list mode', async ({ page }) => {
 	const bag = collectAppErrors(page)
-	await navClickTo(page, 'Contacts')
+	await gotoAppRoute(page, '/contactpersonen')
 	const main = page.locator(APP_MAIN).first()
 
 	// Both view-mode controls are present.
@@ -129,12 +149,12 @@ test('index contactpersonen: Cards/Table view toggle switches the list mode', as
 // manifest CnIndexPage create flow). We assert a dialog surfaces, then dismiss
 // with Escape to leave the app clean. Data-independent (no save).
 // ---------------------------------------------------------------------------
-test('index contactpersonen: "Add Contactpersoon" opens a create dialog', async ({ page }) => {
+test('index contactpersonen: "Add Contact person" opens a create dialog', async ({ page }) => {
 	const bag = collectAppErrors(page)
-	await navClickTo(page, 'Contacts')
+	await gotoAppRoute(page, '/contactpersonen')
 	const main = page.locator(APP_MAIN).first()
 
-	const addBtn = main.getByRole('button', { name: 'Add Contactpersoon', exact: true }).first()
+	const addBtn = main.getByRole('button', { name: 'Add Contact person', exact: true }).first()
 	await expect(addBtn).toBeVisible({ timeout: 30000 })
 	await addBtn.click()
 

@@ -106,8 +106,19 @@ test('"Add organisation" opens the create modal', async ({ page }) => {
 	await main.getByRole('button', { name: /Add organisation/i }).first().click()
 	const modal = page.locator('#objectModal, [role="dialog"], .modal-container').first()
 	await expect(modal).toBeVisible({ timeout: 15000 })
-	// The ObjectModal exposes the Catalogus/Register/Schema cascade.
-	await expect(modal.getByText('Catalogus:', { exact: false }).first()).toBeVisible({ timeout: 10000 })
+
+	// ⚠️ This used to assert the legacy ObjectModal's `Catalogus:` ->
+	// Register -> Schema cascade. That surface is gone: src/manifest.json
+	// decomposed the bespoke OrganisatieIndexView into a standard `type: index`
+	// page (its own `_note` records the change), so the create affordance now
+	// opens nc-vue's CnIndexPage form dialog, which is already bound to the
+	// register + schema from the page config and asks for no cascade at all.
+	// Asserting the cascade asserted the presence of a component the product
+	// deliberately stopped rendering.
+	//
+	// What the entry point is actually supposed to prove is that a create FORM
+	// mounted, so assert that: an editable field for the schema's properties.
+	await expect(modal.locator('input, textarea, select').first()).toBeVisible({ timeout: 10000 })
 	await page.keyboard.press('Escape')
 })
 
