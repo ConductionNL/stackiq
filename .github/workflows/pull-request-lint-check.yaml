@@ -9,6 +9,8 @@ on:
 jobs:
   lint-check:
     runs-on: ubuntu-latest
+    # Observed max 1.4 min across 176 fleet runs; 15 leaves ample headroom.
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
