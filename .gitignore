@@ -45,11 +45,30 @@ Thumbs.db
 # Repo-specific
 /data/
 *.csv
-/test-results/**/*.json
-/test-results/**/*.html
-/test-results/**/*.png
 /reacties/screenshots/
 .last-update
 /coverage-vitest/
 /coverage/
 .hydra/
+
+# Playwright e2e artefacts
+#
+# `tests/e2e/.auth/` holds the storageState written by globalSetup — a live
+# Nextcloud session cookie for the admin user. It was COMMITTED
+# (tests/e2e/.auth/admin.json), which is both a credential in git history and a
+# correctness hazard: a stale session against whatever instance last generated
+# it makes an unauthenticated run look like a dead bundle (see the comment in
+# tests/e2e/smoke/app-mounts.spec.ts, which already documented the symptom).
+# globalSetup recreates it on every run, so nothing depends on it being there.
+tests/e2e/.auth/
+tests/e2e/playwright-report/
+tests/e2e/test-results/
+# The CI config (tests/e2e/playwright.config.ts) writes its report and its
+# per-test output to the APP ROOT instead, because that is where the shared
+# workflow's upload-artifact steps look:
+# server/apps/<app>/playwright-report/ and .../test-results/.
+# The previous `/test-results/**/*.json` style entries ignored only three file
+# extensions inside that directory, so traces (.zip) and the directory itself
+# were still tracked candidates.
+/playwright-report/
+/test-results/

@@ -26,11 +26,23 @@
  * that regression is live on another app in this fleet right now. So: strict
  * about having a value, liberal about which of the known names carries it.
  *
+ * The workflow's Playwright step exports FOUR names for the same value —
+ * `BASE_URL`, `NEXTCLOUD_URL`, `NC_BASE_URL` and (in the seed step) nothing at
+ * all. `NC_BASE_URL` was missing from this list; it happens to be the last of
+ * the three the workflow sets, so the omission was invisible while the other
+ * two were present, and would have become a hard failure the moment they were
+ * not. All four accepted names are listed here.
+ *
  * There is deliberately NO default. An unset target must abort the run loudly
  * rather than silently choose a shared instance.
  */
 
-const CANDIDATES = ['PLAYWRIGHT_BASE_URL', 'BASE_URL', 'NEXTCLOUD_URL'] as const
+const CANDIDATES = [
+	'PLAYWRIGHT_BASE_URL',
+	'BASE_URL',
+	'NEXTCLOUD_URL',
+	'NC_BASE_URL',
+] as const
 
 /**
  * Resolve the base URL of the Nextcloud instance under test.

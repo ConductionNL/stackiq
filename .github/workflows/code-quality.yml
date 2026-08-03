@@ -23,7 +23,13 @@ jobs:
       # EMBEDDED repo reference, because a `uses:`-grep does not see it. With a
       # dead ref the openregister dependency was never checked out, so every
       # job that needs it ran against a missing app.
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister"}]'
+      # `ref` was absent, so this checked out openregister's DEFAULT branch
+      # (`main`). Every other app in this fleet is developed against
+      # openregister `development`, and the e2e suite drives OpenRegister's
+      # object API directly (tests/e2e/workflows/_fixtures.ts), so testing
+      # against `main` measures a different backend than the one this app is
+      # written for. Pinned to `development` to match.
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
       # Newman disabled: tests/magic-mapper-import.postman_collection.json was
       # written against a dev env with URL rewriting + a fixed disk layout — it
       # hits bare paths like `/configurations` and uploads files from
@@ -33,3 +39,27 @@ jobs:
       # a seed step provisions the `voorzieningen` register/`module` schema.
       enable-newman: false
       newman-collection-path: "tests"
+
+      # ── E2E browser tests ────────────────────────────────────────────────
+      # `playwright-test-path` does double duty in the shared workflow:
+      #   1. it is the directory the "Validate Playwright tests exist" step
+      #      counts *.spec.ts in;
+      #   2. it is the FIRST place the run step looks for a config —
+      #      `${playwright-test-path}/playwright.config.ts`, falling back to
+      #      the repo root only if that file is absent.
+      # We ship tests/e2e/playwright.config.ts precisely so lookup (2) hits it.
+      # The run step passes no `--project`, so the ROOT config would also run
+      # its `visual` project — pixel baselines whose own header says a CI Linux
+      # runner cannot byte-match a dev-container PNG. The tests/e2e config
+      # declares only `smoke` + `chromium`.
+      enable-playwright: true
+      playwright-test-path: tests/e2e
+      # `occ app:enable softwarecatalog` runs InitializeSettings, but that
+      # repair step has no user session (OpenRegister RBAC can deny it),
+      # swallows its own exception as a warning, and imports with
+      # `force: false` — so a fresh install can come up with no `voorzieningen`
+      # register at all and nothing exits non-zero. The script imports
+      # explicitly over the admin API and fails loudly if the registers,
+      # schemas, or the app's own register→schema mapping still aren't there.
+      # cwd for this step is the Nextcloud server root.
+      playwright-seed-command: 'bash apps/softwarecatalog/tests/e2e/ci-seed.sh'
