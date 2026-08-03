@@ -71,6 +71,14 @@ class InitializeSettings implements IRepairStep
      *
      * @return void
      * @spec   openspec/specs/repair-init/spec.md
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 11 (threshold 10). A repair step
+     * runs at install/upgrade time with no user session and must never abort the upgrade, so the
+     * body is a sequence of independent "is this piece already present / still resolvable?"
+     * checks, each with its own tolerated-failure branch that reports to `IOutput` and continues.
+     *
+     * @SuppressWarnings(PHPMD.NPathComplexity) NPath 385 (threshold 200) — the product of those
+     * independent tolerated-failure checks, not nested logic.
      */
     public function run(IOutput $output): void
     {

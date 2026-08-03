@@ -7322,6 +7322,14 @@ class SettingsService
      *                                   case).
      *
      * @return array<mixed> The merged config.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$replaceLists` is not a caller-facing mode
+     * switch — it is the recursion state of this private static helper. Public callers always
+     * enter with the default `false`; the flag is set to `true` only by the recursive call once
+     * an `authorization` key has been crossed, and it stays true for that whole subtree. Turning
+     * it into two methods would mean duplicating the merge for the sole purpose of removing a
+     * parameter that no external caller ever passes, and would make the fail-open trap this flag
+     * exists to close (softwarecatalog#375) easier to reintroduce.
      */
     private static function deepMergeConfig(array $base, array $overlay, bool $replaceLists=false): array
     {

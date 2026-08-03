@@ -69,6 +69,16 @@ class FederationMerger
      *               existing local mirror data bag, marked withdrawn + stale.
      *
      * @spec openspec/specs/federated-catalog-sync/spec.md
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 11 (threshold 10). A three-way
+     * reconciliation (create / update / withdraw) over two collections is inherently branchy:
+     * each peer entry needs an id-presence guard, an ownership guard (never touch a locally-owned
+     * entry), and a no-op-equal check before it becomes an update, and each local mirror needs the
+     * inverse "still present at the peer?" check before it becomes a withdraw.
+     *
+     * @SuppressWarnings(PHPMD.NPathComplexity) NPath 255 (threshold 200) — the product of those
+     * per-entry guards, each of which exists to keep the plan idempotent and to keep
+     * locally-owned entries out of it.
      */
     public function plan(
         string $peerUrl,

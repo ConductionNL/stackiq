@@ -273,6 +273,13 @@ class ContactpersonenController extends Controller
      *
      * @spec openspec/specs/contactpersonen-api/spec.md
      * @spec openspec/changes/method-decomposition/tasks.md#task-5
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength) 187 lines (threshold 100). Most of the body
+     * is the multi-line, named-argument `JSONResponse` error payloads this codebase's phpcs rules
+     * mandate — one argument per line — for each distinct failure mode of the convert flow. The
+     * method is still longer than it should be and SHOULD be decomposed further (task 5 of
+     * `method-decomposition` already carved out the permission check); that is a deliberate
+     * follow-up rather than something to smuggle into a quality-gate-only change.
      */
     public function convertToUser(string $contactpersoonId): JSONResponse
     {

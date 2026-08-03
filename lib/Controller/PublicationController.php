@@ -140,6 +140,16 @@ class PublicationController extends Controller
      * @return JSONResponse|null Error response, or null when authorized.
      *
      * @spec openspec/specs/open-data-publishing/spec.md
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 11 (threshold 10). Every branch is
+     * an independent fail-closed IDOR guard — not logged in, entry not found, entry is a
+     * federated peer mirror, caller is not admin, caller's organisation does not own the entry —
+     * each returning its own JSONResponse. Collapsing them would either merge distinct refusal
+     * reasons or hide a guard behind a helper, both of which make the authorization path harder
+     * to audit than the complexity score is worth.
+     *
+     * @SuppressWarnings(PHPMD.NPathComplexity) NPath 384 (threshold 200) is the product of those
+     * same independent guard clauses; the guards are sequential and flat, not deeply nested.
      */
     private function authorizeEntry(string $objectType, string $uuid): ?JSONResponse
     {

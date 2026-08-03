@@ -214,6 +214,13 @@ class GebruikController extends Controller
      * @spec openspec/changes/method-decomposition/tasks.md#task-9-3
      * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-aanbod-beheerder-vendor-reads-of-gebruik-koppeling-objects-must-be-scoped-to-the-vendor-s-own-offered-products-req-002
      * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-gebruik-beheerder-reads-of-gebruik-objects-must-be-scoped-to-the-caller-s-own-organisation-req-003
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 12 (threshold 10). This method IS
+     * the RBAC decision table: one explicit branch per caller role (admin/ambtenaar bypass,
+     * aanbod-beheerder vendor scope, gebruik-beheerder organisation scope) plus the empty-scope
+     * guards that make each branch fail closed. Splitting the table across helpers would move the
+     * branches out of sight of the reader auditing that no role falls through to an unscoped
+     * query — which is exactly the bug (`discovery.md` finding 2) this method was written to fix.
      */
     private function applyAanbodScopeToOptions(array $roles, array $options): ?array
     {

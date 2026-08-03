@@ -79,6 +79,12 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Coupling 15 (threshold 13). An organisation
+ * merge legitimately touches every system that can hold an organisation reference: OpenRegister
+ * objects, Nextcloud groups and users, the app's own organisation handler, the audit log
+ * (`CriticalActionPerformedEvent`), the event dispatcher and the progress tracker. The count is
+ * the breadth of the merge itself, not an accidental dependency tangle.
  */
 class MergeOrganisatieService
 {
@@ -365,6 +371,12 @@ class MergeOrganisatieService
      * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `commit` is the documented dry-run/execute parity gate.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 10, exactly at the threshold. The
+     * branches are the two reference shapes a schema may use (a scalar organisation field and/or
+     * an array-of-uuid field, either of which may be absent on a given object), crossed with the
+     * dry-run/execute gate above. Splitting the scalar and array paths would duplicate the
+     * count-vs-write logic that must stay identical for dry-run/execute parity to hold.
      */
     private function repointByField(string $objectType, string $field, ?string $arrayField, string $source, string $target, bool $commit): int
     {
