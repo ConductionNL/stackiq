@@ -15,6 +15,9 @@ on:
 jobs:
   release-management:
     runs-on: ubuntu-latest
+    # Observed max 0.7 min across 26 fleet runs; 45 matches the shared release
+    # jobs — a spurious release failure is expensive, so keep this loose.
+    timeout-minutes: 45
     steps:
     
       - name: Checkout Code

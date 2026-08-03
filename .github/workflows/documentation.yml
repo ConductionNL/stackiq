@@ -12,6 +12,8 @@ jobs:
   deploy:
     name: Deploy Documentation
     runs-on: ubuntu-latest
+    # Observed max 2.5 min across 23 fleet runs; 20 leaves ample headroom.
+    timeout-minutes: 20
     if: github.event_name == 'push'
     permissions:
       contents: write

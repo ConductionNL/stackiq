@@ -12,6 +12,11 @@ jobs:
   php-checks:
     name: ${{ matrix.check.name }}
     runs-on: ubuntu-latest
+    # One job-level bound covers every matrix leg, so it must clear the
+    # SLOWEST leg. Lint/PHPCS/PHPMD/Psalm/PHPStan run ~4 min, but the PHPUnit
+    # leg has been observed at 18.9 min while SUCCEEDING — a 20 bound would
+    # leave ~6% headroom and turn a slow-but-healthy run into a red check.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -49,6 +54,8 @@ jobs:
   frontend-quality:
     name: Frontend Quality
     runs-on: ubuntu-latest
+    # Observed max 5.3 min across 49 fleet runs; 20 leaves ample headroom.
+    timeout-minutes: 20
 
     steps:
       - name: Checkout

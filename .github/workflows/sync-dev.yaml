@@ -11,6 +11,8 @@ on:
 jobs:
   sync-to-development-release:
     runs-on: ubuntu-latest
+    # Branch-sync job; fleet sync jobs run well under a minute. 20 is generous.
+    timeout-minutes: 20
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3

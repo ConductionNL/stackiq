@@ -12,6 +12,8 @@ on:
 jobs:
   create-pr:
     runs-on: ubuntu-latest
+    # Observed max 5.6 min across 152 fleet runs; 20 leaves ample headroom.
+    timeout-minutes: 20
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
