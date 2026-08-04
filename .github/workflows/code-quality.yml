@@ -1,6 +1,33 @@
 name: Code Quality
 
 on:
+  # ⚠️ The `push:` trigger was MISSING from this workflow, and it is the only
+  # repo in the fleet where that was true (checked against all 22 others; every
+  # one of them carries this same list).
+  #
+  # Three jobs in the shared quality workflow run ONLY on `push`:
+  #
+  #   SBOM                    `github.ref` must be main/beta/development
+  #   Features Extract        `github.event_name != 'pull_request'`
+  #   Coverage Baseline Check `github.event_name == 'push'`
+  #
+  # With no push trigger, none of them could ever fire here. The last push run
+  # on `development` is 23289135240, from **2026-03-19** — five months of
+  # merges during which the SBOM was never regenerated, `docs/features.json`
+  # was never checked against `openspec/specs/`, and the coverage ratchet never
+  # ran.
+  #
+  # This is the hardest version of the problem to see: the inputs all say
+  # `true`, the PR checks are green, and the Quality Report on every PR looks
+  # complete — because on a PR those three jobs are *correctly* skipped. There
+  # is no red, no skip anyone would question, and no run at all to inspect. You
+  # can only find it by asking what the LAST PUSH RUN was, which nothing
+  # prompts you to do.
+  #
+  # `enable-coverage-guard` was switched on here in the previous commit; without
+  # this trigger its push-side half would have been dead on arrival.
+  push:
+    branches: [main, beta, development, feature/**, bugfix/**, hotfix/**]
   pull_request:
     branches: [main, beta, development]
 
