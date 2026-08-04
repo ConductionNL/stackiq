@@ -64,15 +64,22 @@ jobs:
       # cwd for this step is the Nextcloud server root.
       playwright-seed-command: 'bash apps/softwarecatalog/tests/e2e/ci-seed.sh'
 
-      # ── Integration tests ────────────────────────────────────────────────
-      # Was explicitly `false`. `newman-collection-path` already points at
-      # `tests`, and tests/magic-mapper-import.postman_collection.json sits at
-      # exactly that level — which matters, because the validator counts
-      # collections RECURSIVELY (`find`) while the run step globs them FLAT
-      # (`for collection in *.postman_collection.json` after `cd`). A path that
-      # only satisfies the validator would pass validation and then run nothing.
-      # This one satisfies both.
-      enable-newman: true
+      # Integration Tests (Newman) stays OFF here, deliberately. The
+      # `enable-newman: false` further up is not a default nobody chose: it
+      # records that the collection's requests hard-code
+      # `/var/www/html/custom_apps/openregister/...` paths that do not exist on
+      # a CI runner (Nextcloud lives under `server/apps/`, no rewrite), and that
+      # it assumes a seeded `voorzieningen` register / `module` schema. Turning
+      # it on would produce a guaranteed red whose cause is already written
+      # down. Flipped back on in the commit that rewrites the collection to the
+      # CI base_url and adds the seed step.
+      #
+      # Noted while checking this, because it is the kind of thing that reads as
+      # working when it is not: the validator counts collections RECURSIVELY
+      # (`find`) while the run step globs them FLAT (`for collection in
+      # *.postman_collection.json` after `cd`). A `newman-collection-path` that
+      # only satisfies the validator passes validation and then runs nothing.
+      # The configured `tests` path does satisfy both here.
 
       # ── Frontend Check legs ──────────────────────────────────────────────
       # `frontend-checks` defaults to `[]`, and an empty list means the shared
