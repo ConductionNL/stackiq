@@ -63,3 +63,49 @@ jobs:
       # schemas, or the app's own register→schema mapping still aren't there.
       # cwd for this step is the Nextcloud server root.
       playwright-seed-command: 'bash apps/softwarecatalog/tests/e2e/ci-seed.sh'
+
+      # ── Integration tests ────────────────────────────────────────────────
+      # Was explicitly `false`. `newman-collection-path` already points at
+      # `tests`, and tests/magic-mapper-import.postman_collection.json sits at
+      # exactly that level — which matters, because the validator counts
+      # collections RECURSIVELY (`find`) while the run step globs them FLAT
+      # (`for collection in *.postman_collection.json` after `cd`). A path that
+      # only satisfies the validator would pass validation and then run nothing.
+      # This one satisfies both.
+      enable-newman: true
+
+      # ── Frontend Check legs ──────────────────────────────────────────────
+      # `frontend-checks` defaults to `[]`, and an empty list means the shared
+      # workflow emits NO "Frontend Check" job at all — so these three
+      # validators ran nowhere while the run still looked complete.
+      # Measured on this tree before enabling: ALL THREE PASS. They are enabled
+      # to keep them passing, not because they are currently broken.
+      # `test:l10n:parity` is deliberately NOT added: measured on this tree it
+      # is short 404+ translations across the required locales. That is a
+      # translation backlog, and a permanently-red leg is one that gets switched
+      # off again.
+      # `test` / `test:unit` are NOT listed: "Frontend Tests (unit)" runs them.
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n"]'
+
+      # ── Coverage ratchet ─────────────────────────────────────────────────
+      # `enable-coverage-guard` defaults to FALSE, which is why both
+      # "Coverage Baseline Protection" and "Coverage Baseline Check" have only
+      # ever reported `skipped`. It needs two inputs this repo did not have,
+      # both added in this commit: `scripts/coverage-guard.php` (byte-identical
+      # to openregister's) and `.coverage-baseline` = 13.01, this repo's own
+      # measured coverage (4077 of 31330 statements) read from clover.xml in the
+      # `coverage-report` artifact of run 30911570224. That is the lowest figure
+      # in the fleet by a wide margin and is recorded here as measured, not
+      # rounded up: the ratchet's job is to stop it falling further, and a
+      # baseline set above the truth would fail on the first honest run.
+      enable-coverage-guard: true
+
+      # ── Hydra mechanical gates ───────────────────────────────────────────
+      # `enable-hydra-gates` defaults to FALSE, so this tier has never executed
+      # here — the job reported `skipped`, which the Quality Report renders
+      # identically to a pass. Pinned to v1.0.1 so a change to the gate package
+      # cannot move this repo's verdict without a commit here.
+      # `enable-axe` deliberately NOT set: a vanilla Nextcloud 34 already carries
+      # serious/critical violations from core's own UI.
+      enable-hydra-gates: true
+      hydra-gates-ref: v1.0.1
