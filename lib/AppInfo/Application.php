@@ -33,7 +33,6 @@ use OCA\SoftwareCatalog\Service\EolSyncService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Dashboard\ConceptOrganisatiesWidget;
 use OCA\SoftwareCatalog\EventListener\DecisionConcludedListener;
-use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
 use OCA\SoftwareCatalog\EventListener\TestEventListener;
 use OCA\SoftwareCatalog\EventListener\ModuleComplianceSubscriber;
 use OCA\SoftwareCatalog\EventListener\ModuleRegistrationSubscriber;
@@ -69,10 +68,6 @@ use OCA\SoftwareCatalog\Service\ViewQueryBuilder;
 use OCA\SoftwareCatalog\Service\ViewService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\OpenRegister\Event\ObjectDeletedEvent;
-use OCA\OpenRegister\Event\ObjectLockedEvent;
-use OCA\OpenRegister\Event\ObjectUnlockedEvent;
-use OCA\OpenRegister\Event\ObjectRevertedEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\OpenRegister\Event\OrganisationCreatedEvent;
 use OCA\OpenRegister\Event\RegisterCreatedEvent;
@@ -762,15 +757,26 @@ class Application extends App implements IBootstrap
         // TEST event listener for easily triggerable Nextcloud events.
         $context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
 
-        // OpenRegister object lifecycle events — broadcast to the
-        // SoftwareCatalog cross-cutting listener.
-        $context->registerEventListener(ObjectCreatedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectUpdatedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectDeletedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectLockedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectUnlockedEvent::class, SoftwareCatalogEventListener::class);
-        $context->registerEventListener(ObjectRevertedEvent::class, SoftwareCatalogEventListener::class);
-
+        // OpenRegister object lifecycle events are NO LONGER broadcast to
+        // SoftwareCatalogEventListener.
+        //
+        // That listener's own docblock has said "DISABLED: All processing is now
+        // handled by cron-based OrganizationSyncService to avoid race conditions"
+        // for some time — and the work really did move: OrganizationContactSyncJob
+        // runs performOrganizationsSync / performContactSync / performUserSync on
+        // a schedule. Only these registrations were never removed, so the listener
+        // kept running its full body on every object event in the instance and
+        // then discarded the result.
+        //
+        // The cost was not theoretical. Importing OpenCatalogi's configuration —
+        // twelve seeded objects — produced 657 SoftwareCatalog event handlings.
+        // Each one resolved three services from the container and wrote six log
+        // lines BEFORE reaching the schema check that decides the event is not
+        // ours. `occ maintenance:repair` reached 119 of 120 steps and then sat in
+        // that last step for 25+ minutes at 100% CPU.
+        //
+        // Deliberately not "fixed" by making the listener filter earlier: the
+        // documented design is that it does not run at all.
         // Module-compliance subscriber — runs on create/update only.
         $context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
