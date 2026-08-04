@@ -3985,7 +3985,7 @@
         "slug": "element",
         "title": "Element",
         "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
-        "version": "0.0.10",
+        "version": "0.0.11",
         "summary": "",
         "icon": "Cube",
         "required": [
@@ -5145,7 +5145,8 @@
         "configuration": {
           "objectNameField": "name",
           "objectSummaryField": "summary",
-          "objectDescriptionField": "documentation"
+          "objectDescriptionField": "documentation",
+          "x-openregister-shareable": true
         }
       },
       "view": {
