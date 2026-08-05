@@ -1,6 +1,6 @@
 <!--
  - @copyright Copyright (c) 2026 Conduction B.V. <info@conduction.nl>
- - @license AGPL-3.0-or-later
+ - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
  - EOL feed sync admin section: configure the register/schema names the
  - matcher reads `eolProduct`/`eolCycle` from (provisioned by the sibling

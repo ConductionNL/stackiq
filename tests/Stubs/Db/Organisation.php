@@ -7,7 +7,7 @@
  * partly magic. This stub declares the concrete surface the SoftwareCatalog
  * unit tests exercise (uuid + parent + a couple of read accessors).
  *
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
  * @package  OCA\SoftwareCatalog\Tests\Stubs\Db

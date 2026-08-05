@@ -143,7 +143,7 @@ import {
  *
  * @author   Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2
  * @version  1.0.0
  */
 export default defineComponent({
