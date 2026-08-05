@@ -8,7 +8,7 @@
  * @module softwarecatalogPlugin
  * @author Ruben Linde
  * @copyright 2024
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
  * @spec openspec/specs/softwarecatalog-store-migration/spec.md#requirement-plugin-shape-for-app-specific-extensions
  */

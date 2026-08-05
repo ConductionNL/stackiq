@@ -1,6 +1,6 @@
 <!--
   - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
-  - SPDX-License-Identifier: AGPL-3.0-or-later
+  - SPDX-License-Identifier: EUPL-1.2
   -
   - Ratings & reviews body widget (softwarecatalog#375) — registered via
   - src/customComponents.js and placed on ModuleDetail's `bodyWidgets`

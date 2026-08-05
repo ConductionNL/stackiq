@@ -26,7 +26,7 @@ use Psr\Log\LoggerInterface;
  * @category Tests
  * @package  OCA\SoftwareCatalog\Tests\Unit\EventListener
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  * @version  1.0.0
  */

@@ -106,7 +106,7 @@ const EOL_WINDOW_DAYS = 180
  * @class LifecycleRoadmapView
  * @module Views
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
  * Per-organisation portfolio roadmap: the organisation's gebruiken grouped by
  * derived lifecycle phase (incl. Onbekend, rendered first), ordered within a

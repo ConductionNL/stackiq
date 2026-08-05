@@ -174,7 +174,7 @@ import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarke
  * @class ComplianceMatrixView
  * @module Views
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
  * Filter-first compliance matrix: modules × a selected column source
  * (GEMMA standard versions, or — since bio-compliance-assessment — BIO 2.0

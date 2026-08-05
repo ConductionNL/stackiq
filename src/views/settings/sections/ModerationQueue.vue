@@ -1,6 +1,6 @@
 <!--
  - @copyright Copyright (c) 2026 Conduction B.V. <info@conduction.nl>
- - @license AGPL-3.0-or-later
+ - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
  - Moderation queue admin section: lists entries of `type` awaiting moderation
  - (organisatie: registratiestatus=pending, default; beoordeeling:

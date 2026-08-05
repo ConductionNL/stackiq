@@ -14,7 +14,7 @@
  * @module utils/translationBadge
  * @author Ruben Linde
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
  * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#3.5
  */
