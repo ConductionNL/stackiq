@@ -1,19 +1,19 @@
 <!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
- - @license AGPL-3.0-or-later
+ - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - This program is free software: you can redistribute it and/or modify
- - it under the terms of the GNU Affero General Public License as
- - published by the Free Software Foundation, either version 3 of the
- - License, or (at your option) any later version.
+ - Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+ - the European Commission – subsequent versions of the EUPL (the "Licence");
+ - You may not use this work except in compliance with the Licence.
+ - You may obtain a copy of the Licence at:
  -
- - This program is distributed in the hope that it will be useful,
- - but WITHOUT ANY WARRANTY; without even the implied warranty of
- - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- - GNU Affero General Public License for more details.
+ - https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - You should have received a copy of the GNU Affero General Public License
- - along with this program. If not, see <http://www.gnu.org/licenses/>.
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the Licence is distributed on an "AS IS" basis,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the Licence for the specific language governing permissions and
+ - limitations under the Licence.
  -->
 
 <template>
@@ -107,7 +107,7 @@ import Information from 'vue-material-design-icons/Information.vue'
  * Always shows content without toggle functionality
  *
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2
  * @version  1.0.0
  */
 export default defineComponent({

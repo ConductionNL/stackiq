@@ -140,7 +140,7 @@ import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
  * Software Catalog Settings component
  *
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2
  * @version  1.0.0
  */
 export default defineComponent({

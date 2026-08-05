@@ -19,7 +19,7 @@
  * @module utils/lifecyclePhase
  * @author Ruben Linde
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
  * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */

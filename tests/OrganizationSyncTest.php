@@ -8,7 +8,7 @@
  * @category Test
  * @package  OCA\SoftwareCatalog\Tests
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  1.0.0
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */
@@ -31,7 +31,7 @@ use PHPUnit\Framework\TestCase;
  * @category Test
  * @package  OCA\SoftwareCatalog\Tests
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  1.0.0
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */

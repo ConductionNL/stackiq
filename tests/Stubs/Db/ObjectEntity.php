@@ -8,7 +8,7 @@
  * stub declares the getters/setters the unit tests stub explicitly. Resolved
  * via the `OCA\OpenRegister\ => tests/Stubs/` autoload-dev mapping.
  *
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
  * @package  OCA\SoftwareCatalog\Tests\Stubs\Db

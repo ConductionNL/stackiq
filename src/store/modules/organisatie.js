@@ -6,7 +6,7 @@
  * @package
  * @author Ruben Linde
  * @copyright 2024
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  * @version 1.0.0
  * @see https://github.com/opencatalogi/softwarecatalog
  */

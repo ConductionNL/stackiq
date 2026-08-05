@@ -1,6 +1,6 @@
 <!--
   - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
-  - SPDX-License-Identifier: AGPL-3.0-or-later
+  - SPDX-License-Identifier: EUPL-1.2
   -->
 <template>
 	<CnWidgetWrapper
@@ -78,7 +78,7 @@ import Autorenew from 'vue-material-design-icons/Autorenew.vue'
  * @class ContractApprovalPanel
  * @module Components/Contracts
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
  * Read-only Approval panel for the ContractDetail page sidebar. It surfaces the
  * `approvalState` PROJECTION of the decidesk outcome and offers the

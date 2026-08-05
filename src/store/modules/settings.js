@@ -12,7 +12,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
  * - Register and schema management
  *
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2
  * @version  1.0.0
  */
 export const useSettingsStore = defineStore('settings', {

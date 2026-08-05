@@ -126,7 +126,7 @@ import SyncIcon from 'vue-material-design-icons/Sync.vue'
  * Displays object counts for all configured registers
  *
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2
  * @version  1.0.0
  */
 export default defineComponent({

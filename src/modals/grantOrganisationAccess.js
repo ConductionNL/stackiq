@@ -7,7 +7,7 @@
  * @module modals/grantOrganisationAccess
  * @author Ruben Linde
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
  * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-access-must-only-target-an-existing-nextcloud-user-req-005
  */

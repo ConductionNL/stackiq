@@ -13,7 +13,7 @@
  * @spec openspec/specs/open-data-publishing/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 const API_BASE = '/index.php/apps/softwarecatalog/api'
