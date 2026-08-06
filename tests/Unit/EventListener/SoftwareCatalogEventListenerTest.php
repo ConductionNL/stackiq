@@ -134,11 +134,6 @@ class SoftwareCatalogEventListenerTest extends TestCase
             ->method('handleNewContact')
             ->with($contact);
 
-        $this->softwareCatalogueService
-            ->expects($this->once())
-            ->method('createUserForContactIfNotExists')
-            ->with($contact);
-
         // Handle the event
         $this->eventListener->handle($event);
     }
@@ -192,11 +187,6 @@ class SoftwareCatalogEventListenerTest extends TestCase
         $this->softwareCatalogueService
             ->expects($this->once())
             ->method('handleContactUpdate')
-            ->with($newContact);
-
-        $this->softwareCatalogueService
-            ->expects($this->once())
-            ->method('createUserForContactIfNotExists')
             ->with($newContact);
 
         // Handle the event

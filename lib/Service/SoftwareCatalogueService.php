@@ -840,25 +840,6 @@ class SoftwareCatalogueService
     }//end handleNewContact()
 
     /**
-     * Creates user for contact if not exists
-     *
-     * @param object $contactObject The contact object
-     *
-     * @return void
-     * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
-     */
-    public function createUserForContactIfNotExists(object $contactObject): void
-    {
-        // Implementation for creating user from contact.
-        $this->_logger->info(
-                'Creating user for contact if not exists',
-                [
-                    'objectId' => $contactObject->getId(),
-                ]
-                );
-    }//end createUserForContactIfNotExists()
-
-    /**
      * Handles new gebruiker creation
      *
      * @param object $gebruikerObject The gebruiker object
