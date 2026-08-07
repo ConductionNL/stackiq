@@ -42,9 +42,14 @@ future (and not superseded by a `depublicatiedatum`). Visibility SHALL be
 enforced by the OpenRegister/OpenCatalogi public RBAC read gate
 `{group:public, match:{publicatiedatum:{$lte:$now}}}` (NOT the removed
 `@self.published` predicate) — the app SHALL NOT implement its own anonymous
-filtering. Publishing an entry to the federation SHALL set `publicatiedatum` via
-`FederationService::publishEntryForFederation()` (delegating to the shared
-`PublicationService`).
+filtering. Publishing an entry to the federation SHALL set `publicatiedatum`
+through the app's single publish seam — `PublicationController::publish()`
+(route `publication#publish`, `PUT /api/publication/{objectType}/{uuid}/publish`)
+delegating to `PublicationService::publish()`, behind that controller's
+per-object ownership guard. Federation SHALL NOT own a second publish entry
+point: there is one publish model and federation consumes its result, because
+the visibility rule above is the same rule that governs anonymous open-data
+reads.
 
 #### Scenario: Published entry is visible to a peer
 

@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service\Federation;
 
-use OCA\SoftwareCatalog\Service\PublicationService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -223,52 +222,27 @@ class FederationService
         }
     }//end announce()
 
-    /**
-     * Make a local catalog entry visible to the federation by PUBLISHING it —
-     * i.e. set its `publicatiedatum` (the live OR RBAC publish gate) via the
-     * PublicationService. Only entries past their publicatiedatum are exposed to
-     * anonymous federation reads through the OpenCatalogi/OpenRegister public
-     * read surface; drafts (no publicatiedatum) never leave the instance.
+    /*
+     * NO federation-specific publish entry point lives here, deliberately.
      *
-     * This is the publication-visibility leg of federation: it reuses the exact
-     * same `{group:public, match:{publicatiedatum:{$lte:$now}}}` rule that
-     * governs anonymous open-data reads, so one publish model serves both. The
-     * live cross-instance pull/merge remains deferred (needs a two-instance
-     * testbed) — see the @spec'd federated-catalog-sync subscription leg.
+     * `publishEntryForFederation()` used to sit at this spot: a pass-through to
+     * `PublicationService::publish()` with ZERO production callers (only two
+     * unit tests that constructed FederationService and called it directly).
+     * Gate 57 (orphaned-write-capability) named it, and tracing the callers
+     * showed the capability itself is NOT missing — it is live through
+     * `PublicationController::publish()`, routed as `publication#publish`
+     * (`PUT /api/publication/{objectType}/{uuid}/publish`, appinfo/routes.php),
+     * which calls the SAME `PublicationService::publish()` behind a per-object
+     * `authorizeEntry()` IDOR guard and additionally honours the optional
+     * ISO-8601 `$when` argument the wrapper silently dropped.
      *
-     * @param string $objectType The publishable catalog object type.
-     * @param string $uuid       The entry uuid.
-     *
-     * @return array{ok:bool, reason:string} Result.
-     *
-     * @spec openspec/specs/federated-catalog-sync/spec.md
+     * Federation therefore has nothing of its own to publish: it consumes the
+     * result of that one publish model, because visibility is enforced by the
+     * OpenRegister public RBAC read gate
+     * `{group:public, match:{publicatiedatum:{$lte:$now}}}` — the same rule that
+     * governs anonymous open-data reads. Re-adding a second, guardless publish
+     * seam here would duplicate a live capability and weaken it.
      */
-    public function publishEntryForFederation(string $objectType, string $uuid): array
-    {
-        $publication = $this->getPublicationService();
-        if ($publication === null) {
-            return ['ok' => false, 'reason' => 'PublicationService unavailable'];
-        }
-
-        $result = $publication->publish($objectType, $uuid);
-        return ['ok' => $result['ok'], 'reason' => $result['reason']];
-    }//end publishEntryForFederation()
-
-    /**
-     * Get the open-data PublicationService (lazy, via the container) — federation
-     * reuses the same publicatiedatum publish gate as anonymous open data.
-     *
-     * @return PublicationService|null The service, or null when unavailable.
-     */
-    private function getPublicationService(): ?PublicationService
-    {
-        try {
-            return $this->container->get(PublicationService::class);
-        } catch (\Throwable $e) {
-            $this->logger->error('[Federation] PublicationService unavailable', ['error' => $e->getMessage()]);
-            return null;
-        }
-    }//end getPublicationService()
 
     /**
      * Discover peer catalogs from the configured directory.
