@@ -71,7 +71,7 @@ Vrij en open source onder de EUPL-licentie.
     <screenshot>https://codeberg.org/Conduction/softwarecatalog/raw/branch/main/img/screenshot-connections.png</screenshot>
 
     <dependencies>
-        <nextcloud min-version="28" max-version="34"/>
+        <nextcloud min-version="32" max-version="34"/>
         <php min-version="8.3" min-int-size="64"/>
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
