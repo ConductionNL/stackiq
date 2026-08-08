@@ -680,6 +680,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																</NcButton>
 																<NcButton
 																	v-tooltip="'Cancel'"
+																	:aria-label="`cancel editing labels for ${attachment.name ?? attachment?.title ?? 'file'}`"
 																	variant="secondary"
 																	size="small"
 																	@click="cancelFileLabelEditing">

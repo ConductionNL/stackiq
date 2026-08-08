@@ -292,10 +292,10 @@
 				"_note": "bio-compliance-assessment: catalog archetype (an offered application). Body: application data 8-wide top-left (naam, descriptions, website, contactpersoon, hosting/licence fields, then the new BBN level and DPIA status/dates/document-reference/verwerkingsregister fields) with a Documentation files panel 4-wide top-right. Below, a Related panel surfaces the vendor (aanbieder) and linked services/couplings, then two object-lists: compliance claims (compliancy records — both GEMMA standards and, since this change, BIO measures — filtered by module=@objectId) and application versions (moduleVersie filtered by module=@objectId). An application does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
 					{ "id": "md-data", "type": "data", "title": "Application", "icon": "Package", "content": { "columns": 2, "include": [ "naam", "beschrijvingKort", "beschrijvingLang", "website", "aanbieder", "contactpersoon", "cloudDienstverleningsmodel", "hostingJurisdictie", "hostingLocatie", "licentietype", "licentie", "bbnLevel", "dpiaStatus", "dpiaDate", "dpiaVolgendeBeoordeling", "dpiaDocumentRef", "verwerkingsregisterRef" ] } },
-					{ "id": "md-files", "type": "integration", "integrationId": "files", "title": "Documentation", "icon": "BookOpenVariantOutline" },
+					{ "id": "md-files", "type": "integration", "integrationId": "files", "title": "Documentation", "icon": "BookOpenVariant" },
 					{ "id": "md-related", "type": "related", "title": "Vendor & services", "icon": "LinkVariant" },
 					{ "id": "md-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@objectId" }, "columns": [ { "key": "standaardversie", "label": "Standard" }, { "key": "bioMaatregel", "label": "BIO measure" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
-					{ "id": "md-versions", "type": "object-list", "title": "Application versions", "icon": "ViewModule", "content": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersie", "filter": { "module": "@objectId" }, "columns": [ { "key": "versie", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ModuleversieDetail", "allowCreate": false, "emptyText": "No versions registered yet" } }
+					{ "id": "md-versions", "type": "object-list", "title": "Application versions", "icon": "SourceBranch", "content": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersie", "filter": { "module": "@objectId" }, "columns": [ { "key": "versie", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ModuleversieDetail", "allowCreate": false, "emptyText": "No versions registered yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "md-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
@@ -474,7 +474,7 @@
 				"schema": "suite",
 				"_note": "suite-wizard: catalog archetype (a bundled product made up of one or more existing applications). Body: suite data 8-wide (naam, beschrijvingKort, beschrijvingLang, website, logo, contactpersoon) with a Related panel 4-wide surfacing both the contact person and the attached applications (`applicaties`) — the latter via the platform's generic bidirectional relation index (the same `/uses`+`/used` mechanism `md-related` on ModuleDetail already relies on, which is also how a module's own detail page surfaces which suite(s) include it, with no ModuleDetail change needed). A suite does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
-					{ "id": "suite-data", "type": "data", "title": "Suite", "icon": "PackageVariant", "content": { "columns": 2, "include": [ "naam", "beschrijvingKort", "beschrijvingLang", "website", "logo", "contactpersoon" ] } },
+					{ "id": "suite-data", "type": "data", "title": "Suite", "icon": "Package", "content": { "columns": 2, "include": [ "naam", "beschrijvingKort", "beschrijvingLang", "website", "logo", "contactpersoon" ] } },
 					{ "id": "suite-related", "type": "related", "title": "Applications & contact", "icon": "LinkVariant" }
 				],
 				"layout": [
@@ -578,7 +578,7 @@
 				"schema": "bioMaatregel",
 				"_note": "Catalog archetype (a BIO 2.0 measure), mirroring StandaardDetail's shape for the parallel bioMaatregel relation (design.md Decision 1: compliancy links to a standaardversie OR a bioMaatregel, never a third parallel model). Body: measure data 8-wide (code, naam, omschrijving, thema, bioVersie, bbnNiveau, bron). Below, a compliancy object-list shows every compliance claim referencing this measure (compliancy.bioMaatregel = @objectId), mirroring how StandaardDetail's st-compliance widget shows claims for a standard.",
 				"widgets": [
-					{ "id": "bm-data", "type": "data", "title": "BIO measure", "icon": "ShieldLockOutline", "content": { "columns": 2 } },
+					{ "id": "bm-data", "type": "data", "title": "BIO measure", "icon": "ShieldCheckOutline", "content": { "columns": 2 } },
 					{ "id": "bm-compliance", "type": "object-list", "title": "Compliance claims for this measure", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "bioMaatregel": "@objectId" }, "columns": [ { "key": "module", "label": "Module" }, { "key": "url", "label": "Evidence URL" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } }
 				],
 				"layout": [

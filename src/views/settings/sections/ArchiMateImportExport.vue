@@ -173,6 +173,7 @@
 									<h5>Import Errors Details</h5>
 									<NcButton
 										variant="tertiary-no-background"
+										aria-label="Close import error details"
 										@click="hideErrorDetails">
 										<template #icon>
 											<Close :size="20" />

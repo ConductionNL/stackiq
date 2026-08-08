@@ -44,12 +44,25 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<p>Loading objects...</p>
 			</div>
 
-			<div v-else-if="availableObjects.length" class="object-list">
+			<div v-else-if="availableObjects.length"
+				class="object-list"
+				role="listbox"
+				aria-label="Merge target">
+				<!-- role/tabindex/keydown rather than a click-only div: picking the
+				     merge target is the consequential choice in this dialog, and a
+				     keyboard user could not make it at all. role="option" inside the
+				     listbox above carries the selected state to a screen reader
+				     (WCAG 2.1.1, 4.1.2). -->
 				<div v-for="obj in availableObjects"
 					:key="obj['@self'].id"
 					class="object-item table-row-selectable"
+					role="option"
+					tabindex="0"
+					:aria-selected="selectedTargetObject?.['@self']?.id === obj['@self'].id"
 					:class="{ 'table-row-selected': selectedTargetObject?.['@self']?.id === obj['@self'].id }"
-					@click="selectTargetObject(obj)">
+					@click="selectTargetObject(obj)"
+					@keydown.enter.prevent="selectTargetObject(obj)"
+					@keydown.space.prevent="selectTargetObject(obj)">
 					<div class="object-info">
 						<strong>{{ obj['@self']?.name || obj.name || obj.title || obj['@self']?.title || obj['@self']?.id }}</strong>
 						<p class="object-id">
