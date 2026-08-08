@@ -500,8 +500,9 @@ class SettingsService
                     $stringValue = json_encode($value);
                 } else {
                     // Ensure value is converted to string as required by setValueString.
-                        $stringValue = (string) $value;
+                    $stringValue = (string) $value;
                     if (is_string($value) === true) {
+                        $stringValue = $value;
                     }
                 }
 
@@ -4179,12 +4180,14 @@ class SettingsService
                 $originalSlug  = $schema['slug'] ?? '';
                 $lowercaseSlug = strtolower($originalSlug);
 
-                    $hasMappingOriginalValue = 'NO';
+                $hasMappingOriginalValue = 'NO';
                 if (isset($slugToKey[$originalSlug]) === true) {
+                    $hasMappingOriginalValue = 'YES';
                 }
 
-                    $hasMappingLowercaseValue = 'NO';
+                $hasMappingLowercaseValue = 'NO';
                 if (isset($slugToKey[$lowercaseSlug]) === true) {
+                    $hasMappingLowercaseValue = 'YES';
                 }
 
                 $this->logger->info(
@@ -4802,12 +4805,14 @@ class SettingsService
             // Get AMEF object counts.
             $amefObjectCounts = $this->getAmefObjectCounts();
 
-                $importValue = [];
+            $importValue = [];
             if (is_array($importDecoded) === true) {
+                $importValue = $importDecoded;
             }
 
-                $exportValue = [];
+            $exportValue = [];
             if (is_array($exportDecoded) === true) {
+                $exportValue = $exportDecoded;
             }
 
             return [

@@ -201,8 +201,9 @@ class AangebodenGebruikService
             $filteredResults = [];
             foreach ($searchResult['results'] ?? [] as $result) {
                 // Convert ObjectEntity to array if needed.
+                $resultData = $result;
+                if (is_array(value: $result) === false) {
                     $resultData = $result->getObject();
-                if (is_array(value: $result) === true) {
                 }
 
                 $selfOrg = $resultData['@self']['organisation'] ?? null;
@@ -405,8 +406,9 @@ class AangebodenGebruikService
             }
 
             // Get organization filter if provided (for ambtenaar).
-                $organisationFilter = null;
+            $organisationFilter = null;
             if ($isAmbtenaar === true && isset($options['organisation']) === true) {
+                $organisationFilter = $options['organisation'];
             }
 
             // Build search query using ObjectService's buildSearchQuery.
@@ -823,8 +825,9 @@ class AangebodenGebruikService
 
                     // Process and add to results.
                     foreach ($gebruikItems as $gebruik) {
+                        $gebruikData = $gebruik;
+                        if (is_array(value: $gebruik) === false) {
                             $gebruikData = $gebruik->jsonSerialize();
-                        if (is_array(value: $gebruik) === true) {
                         }
 
                         $gebruikData['_filter_type'] = 'deelnemers';
@@ -1345,8 +1348,9 @@ class AangebodenGebruikService
                 );
 
                 foreach ($suites as $suite) {
+                    $suiteData = $suite;
+                    if (is_array(value: $suite) === false) {
                         $suiteData = $suite->getObject();
-                    if (is_array(value: $suite) === true) {
                     }
 
                     $appUuids[] = $suiteData['uuid'] ?? $suiteData['id'] ?? null;
@@ -1372,8 +1376,9 @@ class AangebodenGebruikService
                 );
 
                 foreach ($modules as $module) {
+                    $moduleData = $module;
+                    if (is_array(value: $module) === false) {
                         $moduleData = $module->getObject();
-                    if (is_array(value: $module) === true) {
                     }
 
                     $appUuids[] = $moduleData['uuid'] ?? $moduleData['id'] ?? null;

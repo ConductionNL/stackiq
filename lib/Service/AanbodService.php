@@ -191,8 +191,9 @@ class AanbodService
                     foreach ($searchResult['results'] ?? [] as $result) {
                         // Use jsonSerialize() instead of getObject() to include @self metadata.
                         // GetObject() only returns raw object data without @self.organisation.
+                        $resultData = $result;
+                        if (is_array($result) === false) {
                             $resultData = $result->jsonSerialize();
-                        if (is_array($result) === true) {
                         }
 
                         $selfOrg = $resultData['@self']['organisation'] ?? null;

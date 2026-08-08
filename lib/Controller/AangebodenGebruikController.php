@@ -141,8 +141,9 @@ class AangebodenGebruikController extends Controller
             $result = $this->gebruikSvc->getGebruiksWhereAfnemer($options);
 
             // Determine HTTP status code based on whether there's an error.
-                $statusCode = 200;
+            $statusCode = 200;
             if (isset($result['error']) === true) {
+                $statusCode = 500;
             }
 
             $this->logger->info(
@@ -231,8 +232,9 @@ class AangebodenGebruikController extends Controller
             );
 
             // Determine HTTP status code based on whether there's an error.
-                $statusCode = 200;
+            $statusCode = 200;
             if (isset($result['error']) === true) {
+                $statusCode = 500;
             }
 
             $this->logger->info(
