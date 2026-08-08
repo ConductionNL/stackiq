@@ -18,6 +18,7 @@ import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import ApplicationOutline from 'vue-material-design-icons/ApplicationOutline.vue'
 import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
+import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import BriefcaseOutline from 'vue-material-design-icons/BriefcaseOutline.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
@@ -56,6 +57,7 @@ import ShieldAlertOutline from 'vue-material-design-icons/ShieldAlertOutline.vue
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import ShieldOutline from 'vue-material-design-icons/ShieldOutline.vue'
+import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
@@ -68,6 +70,7 @@ export default {
 	AlertCircle,
 	ApplicationOutline,
 	ArrowRight,
+	BookOpenVariant,
 	BookOpenVariantOutline,
 	BriefcaseOutline,
 	ChartBar,
@@ -106,6 +109,7 @@ export default {
 	ShieldCheckOutline,
 	ShieldLockOutline,
 	ShieldOutline,
+	SourceBranch,
 	Star,
 	ViewDashboardOutline,
 	ViewGridOutline,

@@ -34,6 +34,23 @@ const REGISTRY_FILE = path.join(
 	'node_modules/@conduction/nextcloud-vue/src/components/CnWidgetGrid/widgetIcons.js',
 )
 
+// THERE ARE TWO REGISTRIES AND AN ICON MUST BE IN BOTH.
+//
+// CnWidgetGrid resolves widget icons through nc-vue's widgetIcons.js above;
+// CnAppNav, CnIcon and the Cn*Page headers resolve through THIS app's own
+// src/icons.js (ADR-077). The two lists overlap but are not equal, and the
+// failure modes differ: an unknown name in the widget registry renders
+// DEFAULT_ICON, while an unknown name in the app registry renders NO ICON AT
+// ALL — which src/icons.js says in its own header.
+//
+// This was learned the hard way. A first pass replaced four unknown widget
+// icons with names taken from the widget registry alone; two of them —
+// BookOpenVariant and SourceBranch — were absent from src/icons.js, so the
+// repair traded a wrong glyph for no glyph. hydra-gates checks the two
+// registries in two different gates (55 and 60), so neither gate on its own
+// would have said so.
+const APP_REGISTRY_FILE = path.join(repoRoot, 'src/icons.js')
+
 /**
  * Extract the registry keys from the installed widgetIcons.js.
  *
@@ -47,6 +64,23 @@ function readRegistry() {
 	const source = fs.readFileSync(REGISTRY_FILE, 'utf8')
 	const names = new Set()
 	for (const m of source.matchAll(/^\s*([A-Z][A-Za-z0-9]*)\s*:\s*[A-Za-z0-9]+Icon\s*,/gm)) {
+		names.add(m[1])
+	}
+	return names
+}
+
+/**
+ * Extract the icon names this app registers via src/icons.js.
+ *
+ * The default export is a shorthand object of imported components, so the
+ * registered names are the bare identifiers inside it.
+ *
+ * @return {Set<string>} the icon names the app registry recognises.
+ */
+function readAppRegistry() {
+	const source = fs.readFileSync(APP_REGISTRY_FILE, 'utf8')
+	const names = new Set()
+	for (const m of source.matchAll(/^import\s+([A-Z][A-Za-z0-9]*)\s+from\s+'vue-material-design-icons\//gm)) {
 		names.add(m[1])
 	}
 	return names
@@ -139,6 +173,29 @@ describe('manifest widget icons resolve in the shared registry', () => {
 			.map(({ page, widget, icon }) => `${page}.${widget}: ${icon}`)
 
 		expect(unknown, 'These widget icons fall back to DEFAULT_ICON and render the wrong glyph')
+			.toEqual([])
+	})
+
+	it('reads a plausible app registry from src/icons.js', () => {
+		// Same positive control, for the second registry.
+		expect(fs.existsSync(APP_REGISTRY_FILE)).toBe(true)
+		const appRegistry = readAppRegistry()
+		expect(appRegistry.size).toBeGreaterThan(30)
+		expect(appRegistry.has('AccountGroup')).toBe(true)
+		expect(appRegistry.has('ThisIconDoesNotExist')).toBe(false)
+	})
+
+	it('names no icon this app has not registered in src/icons.js', () => {
+		const appRegistry = readAppRegistry()
+		const manifest = JSON.parse(
+			fs.readFileSync(path.join(repoRoot, 'src/manifest.json'), 'utf8'),
+		)
+
+		const unregistered = collectWidgetIcons(manifest)
+			.filter(({ icon }) => !appRegistry.has(icon))
+			.map(({ page, widget, icon }) => `${page}.${widget}: ${icon}`)
+
+		expect(unregistered, 'These icons are not in src/icons.js and render NO icon at all, not a fallback')
 			.toEqual([])
 	})
 })
