@@ -406,8 +406,9 @@ class ModuleComplianceService
                 && (is_object($standaardversie) === false || isset($standaardversie->uuid) === false)
             ) {
                 $tracking['invalidType']++;
-                    $standaardversieValue = (string) $standaardversie;
+                $standaardversieValue = (string) $standaardversie;
                 if (is_array($standaardversie) === true) {
+                    $standaardversieValue = json_encode($standaardversie);
                 }
 
                 $this->logger->warning(

@@ -688,8 +688,9 @@ class SymfonyEmailService
                 );
 
         // Prepare template data.
-            $displayName = 'Gebruiker';
+        $displayName = 'Gebruiker';
         if (empty($userName) === false) {
+            $displayName = $userName;
         }
 
         $templateData = [
@@ -784,8 +785,9 @@ class SymfonyEmailService
                 );
 
         // Prepare template data.
-            $displayName = 'Gebruiker';
+        $displayName = 'Gebruiker';
         if (empty($userName) === false) {
+            $displayName = $userName;
         }
 
         $templateData = [
