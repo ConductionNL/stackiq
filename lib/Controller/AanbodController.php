@@ -80,8 +80,16 @@ class AanbodController extends Controller
      *
      * @return JSONResponse JSON response with aanbod objects array
      *
+     * REQ-009 requires an authenticated caller, and the body enforces it.
+     * The PublicPage annotation told Nextcloud's middleware to admit
+     * anonymous requests anyway, so declared and enforced contract disagreed:
+     * every anonymous call was admitted, routed, and only then rejected by
+     * the controller. @NoAdminRequired is the annotation that matches —
+     * any logged-in user, rejected at the middleware. The in-body guard
+     * stays as deny-before-grant (REQ-001).
+     *
      * @NoCSRFRequired
-     * @PublicPage
+     * @NoAdminRequired
      *
      * @spec openspec/specs/aanbod-listings/spec.md
      * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-must-require-authentication-explicitly-not-implicitly-req-009

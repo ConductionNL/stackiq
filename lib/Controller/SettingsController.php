@@ -2290,7 +2290,10 @@ class SettingsController extends Controller
     /**
      * Get generic user groups
      *
-     * @NoAdminRequired
+     * Admin-only: the body rejects a non-admin with 403, so the endpoint
+     * must not declare @NoAdminRequired. Its sibling setGenericUserGroups()
+     * already omits it.
+     *
      * @NoCSRFRequired
      *
      * @return JSONResponse Generic user groups
@@ -2387,7 +2390,10 @@ class SettingsController extends Controller
     /**
      * Get organization admin groups
      *
-     * @NoAdminRequired
+     * Admin-only: the body rejects a non-admin with 403, so the endpoint
+     * must not declare @NoAdminRequired. Its sibling
+     * setOrganizationAdminGroups() already omits it.
+     *
      * @NoCSRFRequired
      *
      * @return JSONResponse Organization admin groups
@@ -2484,7 +2490,10 @@ class SettingsController extends Controller
     /**
      * Get super user groups
      *
-     * @NoAdminRequired
+     * Admin-only: the body rejects a non-admin with 403, so the endpoint
+     * must not declare @NoAdminRequired. Its sibling setSuperUserGroups()
+     * already omits it.
+     *
      * @NoCSRFRequired
      *
      * @return JSONResponse Super user groups
@@ -2581,7 +2590,10 @@ class SettingsController extends Controller
     /**
      * Get all user groups
      *
-     * @NoAdminRequired
+     * Admin-only: the body rejects a non-admin with 403, and the payload is
+     * the full group list of the instance — an enumeration surface. The
+     * endpoint must not declare @NoAdminRequired.
+     *
      * @NoCSRFRequired
      *
      * @return JSONResponse All user groups
@@ -2631,7 +2643,9 @@ class SettingsController extends Controller
     /**
      * Clear ArchiMate import status
      *
-     * @NoAdminRequired
+     * Admin-only: the body rejects a non-admin with 403, and importArchiMate()
+     * — the operation whose status this clears — is already admin-only.
+     *
      * @NoCSRFRequired
      *
      * @return JSONResponse Clear result
@@ -2682,9 +2696,11 @@ class SettingsController extends Controller
      *
      * @deprecated Use cancelArchiMateImport() instead.
      *
-     * @NoAdminRequired
+     * Admin-only: the body rejects a non-admin with 403, and importArchiMate()
+     * — the process this kills — is already admin-only.
+     *
      * @NoCSRFRequired
-     * @spec            openspec/specs/settings-admin-controller/spec.md
+     * @spec           openspec/specs/settings-admin-controller/spec.md
      */
     public function killArchiMateImport(): JSONResponse
     {
@@ -2728,7 +2744,9 @@ class SettingsController extends Controller
      * Cancel a running ArchiMate import
      * This combines force clearing and process killing for complete cancellation
      *
-     * @NoAdminRequired
+     * Admin-only: the body rejects a non-admin with 403, and importArchiMate()
+     * — the process this cancels — is already admin-only.
+     *
      * @NoCSRFRequired
      *
      * @return JSONResponse Cancellation result
@@ -2773,7 +2791,8 @@ class SettingsController extends Controller
     /**
      * Clear ArchiMate export status
      *
-     * @NoAdminRequired
+     * Admin-only: the body rejects a non-admin with 403.
+     *
      * @NoCSRFRequired
      *
      * @return JSONResponse Clear result
@@ -3322,7 +3341,14 @@ class SettingsController extends Controller
     /**
      * Get user groups configuration only
      *
-     * @NoAdminRequired
+     * This endpoint returns the union of getGenericUserGroups(),
+     * getOrganizationAdminGroups(), getSuperUserGroups() and getAllGroups().
+     * Each of those is exposed on its own route behind an explicit
+     * `isAdmin() === false -> 403` guard, so this aggregate MUST carry the
+     * same guard: without it any authenticated user reads through it the
+     * data the four dedicated routes refuse them, and the guards on those
+     * routes protect nothing.
+     *
      * @NoCSRFRequired
      *
      * @return JSONResponse User groups configuration
@@ -3330,8 +3356,13 @@ class SettingsController extends Controller
      */
     public function getUserGroupsConfig(): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
         }
 
         try {
@@ -3365,6 +3396,15 @@ class SettingsController extends Controller
      */
     public function updateUserGroupsConfig(): JSONResponse
     {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
+            return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+            return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+        }
+
         try {
             $data   = $this->request->getParams();
             $result = $this->settingsService->updateUserGroupsConfig($data);
