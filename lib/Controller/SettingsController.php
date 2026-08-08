@@ -294,15 +294,34 @@ class SettingsController extends Controller
     }//end index()
 
     /**
-     * Handle the post request to update settings.
+     * Write the app-configuration settings block read back by index().
+     *
+     * This is the canonical AppHost write verb for `/api/settings`
+     * (`PUT /api/settings` → `settings#update`). It persists exactly the three
+     * sections `index()` surfaces through `SettingsService::getAllSettings()`:
+     *
+     * - `configuration` / `selectedRegister` → `SettingsService::updateSettings`
+     * - `userGroups.{generic,organizationAdmin,superUser}` → validated via
+     *   `validateGroups`, then persisted through the matching setter
+     * - `emailSettings` → `SettingsService::updateEmailSettings`
+     *
+     * It deliberately does NOT absorb the controller's other configuration
+     * surfaces (general/sync/archimate/email/amef/voorzieningen/user-groups/
+     * cronjob/eol-sync config, email templates, ArchiMate import-export,
+     * progress and statistics). Those are separate endpoints on their own URLs
+     * and keep their own handlers — this method is not a catch-all.
+     *
+     * Admin-only: no NoAdminRequired tag is declared, so Nextcloud's security
+     * middleware requires an administrator — the same posture as `create()`.
+     * Net privilege change is zero.
      *
      * @return JSONResponse JSON response containing the updated settings.
      *
      * @NoCSRFRequired
      *
-     * @spec openspec/specs/method-decomposition/spec.md
+     * @spec openspec/specs/method-decomposition/spec.md#requirement-settingscontroller-settings-crud-endpoints-req-decomp-013
      */
-    public function create(): JSONResponse
+    public function update(): JSONResponse
     {
         try {
             $data   = $this->request->getParams();
@@ -325,6 +344,26 @@ class SettingsController extends Controller
             );
             return new JSONResponse(['error' => $e->getMessage()], 500);
         }//end try
+
+    }//end update()
+
+    /**
+     * Handle the post request to update settings.
+     *
+     * Legacy alias for `update()`, kept so `POST /api/settings` keeps behaving
+     * exactly as before. The auth attributes are repeated here on purpose:
+     * Nextcloud's middleware only evaluates the attributes of the method the
+     * router actually dispatched, so delegation does not inherit them.
+     *
+     * @return JSONResponse JSON response containing the updated settings.
+     *
+     * @NoCSRFRequired
+     *
+     * @spec openspec/specs/method-decomposition/spec.md#requirement-settingscontroller-settings-crud-endpoints-req-decomp-013
+     */
+    public function create(): JSONResponse
+    {
+        return $this->update();
 
     }//end create()
 

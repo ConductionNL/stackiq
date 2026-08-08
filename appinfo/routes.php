@@ -35,6 +35,10 @@ return [
         // Core Settings API routes (minimal, for basic app functionality)
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
+        // Canonical AppHost write verb. `settings#create` (POST, above) is the
+        // legacy alias and delegates to `update()`; both are kept.
+        // @spec openspec/specs/method-decomposition/spec.md#requirement-settingscontroller-settings-crud-endpoints-req-decomp-013
+        ['name' => 'settings#update', 'url' => '/api/settings', 'verb' => 'PUT'],
         ['name' => 'settings#load', 'url' => '/api/settings/load', 'verb' => 'GET'],
         ['name' => 'settings#initialize', 'url' => '/api/settings/initialize', 'verb' => 'POST'],
         ['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
