@@ -87,10 +87,18 @@ class AangebodenGebruikController extends Controller
      *
      * @return JSONResponse JSON response with gebruiks array where org is afnemer
      *
+     * REQ-004 requires an authenticated caller, and the body enforces it.
+     * The PublicPage annotation told Nextcloud's middleware to admit
+     * anonymous requests anyway, so declared and enforced contract disagreed:
+     * every anonymous call was admitted, routed, and only then rejected by
+     * the controller. @NoAdminRequired is the annotation that matches —
+     * any logged-in user, rejected at the middleware. The in-body guard
+     * stays as deny-before-grant (REQ-001).
+     *
      * @NoCSRFRequired
-     * @PublicPage
-     * @spec           openspec/specs/aangeboden-gebruik-api/spec.md
-     * @spec           openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-offered-usage-afnemer-endpoint-must-require-authentication-explicitly-not-implicitly-req-004
+     * @NoAdminRequired
+     * @spec            openspec/specs/aangeboden-gebruik-api/spec.md
+     * @spec            openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-offered-usage-afnemer-endpoint-must-require-authentication-explicitly-not-implicitly-req-004
      */
     public function getGebruiksWhereAfnemer(): JSONResponse
     {
