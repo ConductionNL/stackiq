@@ -711,6 +711,22 @@ class ViewService
             $amefConfig = $this->settingsService->getAmefConfig();
             $registerId = $amefConfig['register_id'] ?? null;
 
+            // Fail closed on an unconfigured register. This used to be the one
+            // read of `register_id` with no guard at all: the loop below only
+            // checks the SCHEMA, so an empty register would have been pinned
+            // into `@self` and OpenRegister asked for "any register" — an
+            // unpinned query returns rows, which reads exactly like a correct
+            // result. `empty()` rather than `=== null` because the legacy
+            // config fallback resolves unset ids to `''`, and `'' === null` is
+            // false.
+            if (empty($registerId) === true) {
+                $this->logger->warning(
+                    'ViewService: AMEF register is not configured; skipping the module lookup rather than issuing an unpinned query'
+                );
+
+                return [];
+            }
+
             // Modules could be in various schemas - check common ones.
             $moduleSchemas = [
                 $amefConfig['module_schema'] ?? null,
@@ -721,7 +737,7 @@ class ViewService
             $allModules = [];
 
             foreach ($moduleSchemas as $schemaId) {
-                if ($schemaId === null) {
+                if (empty($schemaId) === true) {
                     continue;
                 }
 
