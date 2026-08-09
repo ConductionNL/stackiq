@@ -27,11 +27,11 @@
 			<table class="compact-table">
 				<thead>
 					<tr>
-						<th>{{ t("softwarecatalog", "Name") }}</th>
-						<th>{{ t("softwarecatalog", "Email") }}</th>
-						<th>{{ t("softwarecatalog", "Status") }}</th>
-						<th>{{ t("softwarecatalog", "Groups") }}</th>
-						<th>{{ t("softwarecatalog", "Actions") }}</th>
+						<th scope="col">{{ t("softwarecatalog", "Name") }}</th>
+						<th scope="col">{{ t("softwarecatalog", "Email") }}</th>
+						<th scope="col">{{ t("softwarecatalog", "Status") }}</th>
+						<th scope="col">{{ t("softwarecatalog", "Groups") }}</th>
+						<th scope="col">{{ t("softwarecatalog", "Actions") }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -1551,5 +1551,13 @@ export default {
 
 .loading-icon {
 	color: var(--color-text-lighter);
+}
+
+/* WCAG 2.3.3 — the password-requirement colour transition is decorative; the
+   met/unmet colour still changes, it just changes instantly. */
+@media (prefers-reduced-motion: reduce) {
+	.requirements-list li {
+		transition: none;
+	}
 }
 </style>

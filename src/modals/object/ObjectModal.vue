@@ -24,6 +24,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 							<span class="detail-label">Catalogus:</span>
 							<NcButton v-if="selectedCatalogus"
 								class="pencil-button"
+								aria-label="Change catalogue"
 								@click="() => {
 									selectedCatalogus = null;
 									selectedRegister = null;
@@ -48,6 +49,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 							<span class="detail-label">Register:</span>
 							<NcButton v-if="selectedRegister"
 								class="pencil-button"
+								aria-label="Change register"
 								@click="() => {
 									selectedRegister = null;
 									selectedSchema = null
@@ -71,6 +73,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 							<span class="detail-label">Schema:</span>
 							<NcButton v-if="selectedSchema"
 								class="pencil-button"
+								aria-label="Change schema"
 								@click="() => {
 									selectedSchema = null
 								}">

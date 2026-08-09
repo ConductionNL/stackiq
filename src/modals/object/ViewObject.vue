@@ -83,13 +83,13 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 						<table class="viewTable">
 							<thead>
 								<tr class="viewTableRow">
-									<th class="tableColumnConstrained">
+									<th scope="col" class="tableColumnConstrained">
 										Property
 									</th>
-									<th class="tableColumnExpanded">
+									<th scope="col" class="tableColumnExpanded">
 										Value
 									</th>
-									<th class="tableColumnActions actions-header-cell">
+									<th scope="col" class="tableColumnActions actions-header-cell">
 										<!-- Show/Hide Constant & Immutable Properties Toggle -->
 										<NcButton v-if="hasConstantOrImmutableProperties"
 											v-tooltip="showConstantProperties ? 'Hide constant & immutable properties' : 'Show constant & immutable properties'"
@@ -197,6 +197,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												<div v-else-if="getPropertyInputComponent(key) === 'NcTextFieldArray'" class="input-with-icon">
 													<NcTextField
 														ref="propertyValueInput"
+														:aria-label="getPropertyDisplayName(key)"
 														:model-value="String(formData[key] !== undefined ? (Array.isArray(formData[key]) ? formData[key].join(',') : formData[key]) : (Array.isArray(value) ? value.join(',') : value || ''))"
 														:type="getPropertyInputType(key)"
 														:placeholder="getPropertyDisplayName(key)"
@@ -214,6 +215,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												<NcTextField
 													v-else
 													ref="propertyValueInput"
+													:aria-label="getPropertyDisplayName(key)"
 													:model-value="String(formData[key] !== undefined ? formData[key] : value || '')"
 													:type="getPropertyInputType(key)"
 													:placeholder="getPropertyDisplayName(key)"
@@ -308,13 +310,13 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									<table class="viewTable">
 										<thead>
 											<tr class="viewTableRow">
-												<th class="tableColumnConstrained">
+												<th scope="col" class="tableColumnConstrained">
 													Property
 												</th>
-												<th class="tableColumnExpanded">
+												<th scope="col" class="tableColumnExpanded">
 													Value
 												</th>
-												<th class="tableColumnActions actions-header-cell">
+												<th scope="col" class="tableColumnActions actions-header-cell">
 													<!-- Show/Hide Constant & Immutable Properties Toggle -->
 													<NcButton v-if="hasConstantOrImmutableProperties"
 														v-tooltip="showConstantProperties ? 'Hide constant & immutable properties' : 'Show constant & immutable properties'"
@@ -423,6 +425,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 															<div v-else-if="getPropertyInputComponent(key) === 'NcTextFieldArray'" class="input-with-icon">
 																<NcTextField
 																	ref="propertyValueInput"
+																	:aria-label="getPropertyDisplayName(key)"
 																	:model-value="String(formData[key] !== undefined ? (Array.isArray(formData[key]) ? formData[key].join(',') : formData[key]) : (Array.isArray(value) ? value.join(',') : value || ''))"
 																	:type="getPropertyInputType(key)"
 																	:placeholder="getPropertyDisplayName(key)"
@@ -440,6 +443,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 															<NcTextField
 																v-else
 																ref="propertyValueInput"
+																:aria-label="getPropertyDisplayName(key)"
 																:model-value="String(formData[key] !== undefined ? formData[key] : value || '')"
 																:type="getPropertyInputType(key)"
 																:placeholder="getPropertyDisplayName(key)"
@@ -507,10 +511,10 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									<table class="viewTable">
 										<thead>
 											<tr class="viewTableRow">
-												<th class="tableColumnConstrained">
+												<th scope="col" class="tableColumnConstrained">
 													Metadata
 												</th>
-												<th class="tableColumnExpanded">
+												<th scope="col" class="tableColumnExpanded">
 													Value
 												</th>
 											</tr>
@@ -588,25 +592,28 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										<table class="viewTable">
 											<thead>
 												<tr class="viewTableRow">
-													<th class="tableColumnCheckbox">
+													<th scope="col" class="tableColumnCheckbox">
 														<NcCheckboxRadioSwitch
 															:model-value="allFilesSelected"
 															:indeterminate="someFilesSelected"
+															aria-label="Select all attachments"
 															@update:model-value="toggleSelectAllFiles" />
 													</th>
-													<th class="tableColumnExpanded table-row-title">
+													<th scope="col" class="tableColumnExpanded table-row-title">
 														Name
 													</th>
-													<th class="tableColumnConstrained short-column">
+													<th scope="col" class="tableColumnConstrained short-column">
 														Size
 													</th>
-													<th class="tableColumnConstrained table-row-type">
+													<th scope="col" class="tableColumnConstrained table-row-type">
 														Type
 													</th>
-													<th :class="`tableColumnConstrained ${editingTags ? 'table-row-labels' : 'short-column'}`">
+													<th scope="col" :class="`tableColumnConstrained ${editingTags ? 'table-row-labels' : 'short-column'}`">
 														Labels
 													</th>
-													<th class="table-row-actions" />
+													<th scope="col" class="table-row-actions">
+														<span class="hidden-visually">Actions</span>
+													</th>
 												</tr>
 											</thead>
 											<tbody>
@@ -621,6 +628,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 													<td class="tableColumnCheckbox">
 														<NcCheckboxRadioSwitch
 															:model-value="selectedAttachments.includes(attachment.id)"
+															:aria-label="`Select ${attachment.title || attachment.name || 'attachment'}`"
 															@update:model-value="(checked) => toggleFileSelection(attachment.id, checked)" />
 													</td>
 													<td class="tableColumnExpanded table-row-title">
@@ -4375,5 +4383,19 @@ export default {
 .viewObjectDialog .viewTable th.table-row-title,
 .viewObjectDialog .viewTable td.table-row-title {
 	width: 100%;
+}
+
+/* WCAG 2.3.3 — row hover, the drop-property button and the tab strip all
+   animate purely for polish. `!important` mirrors the declaration it has to
+   override on .drop-property-btn. */
+@media (prefers-reduced-motion: reduce) {
+	.viewTableRow,
+	.tab-button {
+		transition: none;
+	}
+
+	.drop-property-btn {
+		transition: none !important;
+	}
 }
 </style>

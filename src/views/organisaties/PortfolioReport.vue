@@ -110,12 +110,12 @@
 				<table class="pr-table">
 					<thead>
 						<tr>
-							<th>{{ t('softwarecatalog', 'Quadrant') }}</th>
-							<th>{{ t('softwarecatalog', 'Count') }}</th>
-							<th>{{ t('softwarecatalog', 'EOL exposed') }}</th>
-							<th>{{ t('softwarecatalog', 'Cloud-transition share') }}</th>
-							<th>{{ t('softwarecatalog', 'Annualised cost') }}</th>
-							<th>{{ t('softwarecatalog', 'One-off cost') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'Quadrant') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'Count') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'EOL exposed') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'Cloud-transition share') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'Annualised cost') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'One-off cost') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -153,13 +153,13 @@
 					<table v-else class="pr-table">
 						<thead>
 							<tr>
-								<th>{{ t('softwarecatalog', 'Application') }}</th>
-								<th>{{ t('softwarecatalog', 'Rationale') }}</th>
-								<th>{{ t('softwarecatalog', 'Review date') }}</th>
-								<th>{{ t('softwarecatalog', 'Lifecycle phase') }}</th>
-								<th>{{ t('softwarecatalog', 'EOL status') }}</th>
-								<th>{{ t('softwarecatalog', 'Hosting model') }}</th>
-								<th>{{ t('softwarecatalog', 'Annualised cost') }}</th>
+								<th scope="col">{{ t('softwarecatalog', 'Application') }}</th>
+								<th scope="col">{{ t('softwarecatalog', 'Rationale') }}</th>
+								<th scope="col">{{ t('softwarecatalog', 'Review date') }}</th>
+								<th scope="col">{{ t('softwarecatalog', 'Lifecycle phase') }}</th>
+								<th scope="col">{{ t('softwarecatalog', 'EOL status') }}</th>
+								<th scope="col">{{ t('softwarecatalog', 'Hosting model') }}</th>
+								<th scope="col">{{ t('softwarecatalog', 'Annualised cost') }}</th>
 							</tr>
 						</thead>
 						<tbody>

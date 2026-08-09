@@ -64,11 +64,11 @@
 							<table class="modules-table">
 								<thead>
 									<tr>
-										<th>Module Name</th>
-										<th>Status</th>
-										<th>Reason</th>
-										<th>Compliance Count</th>
-										<th>Standards Count</th>
+										<th scope="col">Module Name</th>
+										<th scope="col">Status</th>
+										<th scope="col">Reason</th>
+										<th scope="col">Compliance Count</th>
+										<th scope="col">Standards Count</th>
 									</tr>
 								</thead>
 								<tbody>
