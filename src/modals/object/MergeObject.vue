@@ -92,10 +92,10 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<table class="merge-table">
 					<thead>
 						<tr>
-							<th>Property</th>
-							<th>Source</th>
-							<th>Target</th>
-							<th>Result Value</th>
+							<th scope="col">Property</th>
+							<th scope="col">Source</th>
+							<th scope="col">Target</th>
+							<th scope="col">Result Value</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -125,6 +125,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									<NcTextField
 										v-if="mergedData[property] === 'custom'"
 										v-model="customValues[property]"
+										:label="'Custom value for ' + property"
+										:label-outside="false"
 										:placeholder="'Enter custom value for ' + property"
 										class="custom-input" />
 								</template>
@@ -169,9 +171,9 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					<table class="file-table">
 						<thead>
 							<tr>
-								<th>Filename</th>
-								<th>Size</th>
-								<th>Type</th>
+								<th scope="col">Filename</th>
+								<th scope="col">Size</th>
+								<th scope="col">Type</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -226,9 +228,9 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					<table class="relation-table">
 						<thead>
 							<tr>
-								<th>Related Object</th>
-								<th>Relation Type</th>
-								<th>Register/Schema</th>
+								<th scope="col">Related Object</th>
+								<th scope="col">Relation Type</th>
+								<th scope="col">Register/Schema</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -305,9 +307,9 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					<table class="report-table">
 						<thead>
 							<tr>
-								<th>Property</th>
-								<th>Old Value</th>
-								<th>New Value</th>
+								<th scope="col">Property</th>
+								<th scope="col">Old Value</th>
+								<th scope="col">New Value</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -1193,5 +1195,13 @@ export default {
 
 .codeMirrorContainer.dark :deep(.cm-line .ͼd)::selection {
 	color: #623907;
+}
+
+/* WCAG 2.3.3 — the selectable-row hover transition is decorative; the
+   highlight still appears, it just appears instantly. */
+@media (prefers-reduced-motion: reduce) {
+	.object-item {
+		transition: none;
+	}
 }
 </style>

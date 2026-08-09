@@ -31,11 +31,11 @@
 				<table>
 					<thead>
 						<tr>
-							<th>Register</th>
-							<th>Object Type</th>
-							<th>Count</th>
-							<th>Status</th>
-							<th>Actions</th>
+							<th scope="col">Register</th>
+							<th scope="col">Object Type</th>
+							<th scope="col">Count</th>
+							<th scope="col">Status</th>
+							<th scope="col">Actions</th>
 						</tr>
 					</thead>
 					<tbody>

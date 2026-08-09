@@ -56,13 +56,15 @@
 		<table v-else class="vv-table" data-testid="vuln-table">
 			<thead>
 				<tr>
-					<th>{{ t('softwarecatalog', 'Name') }}</th>
-					<th>{{ t('softwarecatalog', 'CVE') }}</th>
-					<th>{{ t('softwarecatalog', 'CVSS') }}</th>
-					<th>{{ t('softwarecatalog', 'Severity') }}</th>
-					<th>{{ t('softwarecatalog', 'Affected applications') }}</th>
-					<th>{{ t('softwarecatalog', 'Exposed usages') }}</th>
-					<th class="vv-actionsCol" />
+					<th scope="col">{{ t('softwarecatalog', 'Name') }}</th>
+					<th scope="col">{{ t('softwarecatalog', 'CVE') }}</th>
+					<th scope="col">{{ t('softwarecatalog', 'CVSS') }}</th>
+					<th scope="col">{{ t('softwarecatalog', 'Severity') }}</th>
+					<th scope="col">{{ t('softwarecatalog', 'Affected applications') }}</th>
+					<th scope="col">{{ t('softwarecatalog', 'Exposed usages') }}</th>
+					<th scope="col" class="vv-actionsCol">
+						<span class="hidden-visually">{{ t('softwarecatalog', 'Actions') }}</span>
+					</th>
 				</tr>
 			</thead>
 			<tbody>

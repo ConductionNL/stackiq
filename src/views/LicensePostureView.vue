@@ -55,12 +55,12 @@
 				<table v-else class="pv-table">
 					<thead>
 						<tr>
-							<th>{{ t('softwarecatalog', 'Vendor') }}</th>
-							<th>{{ t('softwarecatalog', 'Deployments') }}</th>
-							<th>{{ t('softwarecatalog', 'Open') }}</th>
-							<th>{{ t('softwarecatalog', 'Closed') }}</th>
-							<th>{{ t('softwarecatalog', 'Unknown') }}</th>
-							<th>{{ t('softwarecatalog', 'Annual cost') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'Vendor') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'Deployments') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'Open') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'Closed') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'Unknown') }}</th>
+							<th scope="col">{{ t('softwarecatalog', 'Annual cost') }}</th>
 						</tr>
 					</thead>
 					<tbody>

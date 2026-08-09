@@ -152,7 +152,13 @@
 										Unchanged
 									</div>
 								</div>
-								<div class="summary-item errors" :class="{ clickable: importResult.statistics.summary.total_errors > 0 }" @click="showErrorDetails">
+								<button
+									type="button"
+									class="summary-item errors"
+									:class="{ clickable: importResult.statistics.summary.total_errors > 0 }"
+									:disabled="importResult.statistics.summary.total_errors === 0"
+									:aria-label="`Show details for ${importResult.statistics.summary.total_errors} import errors`"
+									@click="showErrorDetails">
 									<div class="summary-number">
 										{{ importResult.statistics.summary.total_errors }}
 									</div>
@@ -162,7 +168,7 @@
 									<div v-if="importResult.statistics.summary.total_errors > 0" class="click-hint">
 										Click to view details
 									</div>
-								</div>
+								</button>
 							</div>
 						</div>
 
@@ -1283,6 +1289,16 @@ export default {
 	border-radius: var(--border-radius);
 	border: 2px solid transparent;
 	transition: all 0.2s ease;
+	/* The errors tile is a real <button>; neutralise the UA button chrome so
+	   it renders identically to the sibling <div> tiles. */
+	font: inherit;
+	color: inherit;
+	text-align: center;
+	width: 100%;
+}
+
+button.summary-item:disabled {
+	cursor: default;
 }
 
 .summary-item.created {
@@ -1902,6 +1918,17 @@ export default {
 	.error-meta {
 		flex-direction: column;
 		gap: 0.25rem;
+	}
+}
+
+/* WCAG 2.3.3 — the upload drop-zone and the import summary tiles animate on
+   hover purely for polish; a reduced-motion user gets the same end state
+   without the movement. */
+@media (prefers-reduced-motion: reduce) {
+	.file-upload-label,
+	.summary-item,
+	.summary-item.clickable {
+		transition: none;
 	}
 }
 </style>

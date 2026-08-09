@@ -706,4 +706,12 @@ export default {
 .tab-panel.active {
 	display: block; /* Show when active */
 }
+
+/* WCAG 2.3.3 — the tab underline transition is decorative; the active
+   underline still moves, it just moves instantly. */
+@media (prefers-reduced-motion: reduce) {
+	.tab-button {
+		transition: none;
+	}
+}
 </style>

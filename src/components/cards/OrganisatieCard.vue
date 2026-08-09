@@ -530,4 +530,11 @@ export default {
 	color: var(--color-main-text);
 }
 
+/* WCAG 2.3.3 — the card's hover shadow transition is decorative; the shadow
+   still appears, it just appears instantly. */
+@media (prefers-reduced-motion: reduce) {
+	.organisatieCard {
+		transition: none;
+	}
+}
 </style>

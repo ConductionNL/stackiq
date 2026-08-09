@@ -432,4 +432,12 @@ export default {
 	padding-top: 16px;
 	border-top: 1px solid var(--color-border);
 }
+
+/* WCAG 2.3.3 — the expand animation is decorative; a reduced-motion user gets
+   the expanded section immediately instead of the slide. */
+@media (prefers-reduced-motion: reduce) {
+	.section-content {
+		animation: none;
+	}
+}
 </style>

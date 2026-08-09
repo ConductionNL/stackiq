@@ -167,4 +167,13 @@ export default {
 	}
 	.tab-content { border-top: 1px solid var(--color-border); }
 }
+
+/* WCAG 2.3.3 — honour a reduced-motion preference for the tab hover/active
+   transition. Scoped to the selector that declares motion; everything else
+   keeps its appearance. */
+@media (prefers-reduced-motion: reduce) {
+	.tab-button {
+		transition: none;
+	}
+}
 </style>

@@ -49,12 +49,12 @@
 				<table class="objectStatisticsTable">
 					<thead>
 						<tr>
-							<th>Object Type</th>
-							<th class="countHeader">
-								Aantal
+							<th scope="col">Object Type</th>
+							<th scope="col" class="countHeader">
+								Count
 							</th>
-							<th class="manageHeader">
-								Beheren
+							<th scope="col" class="manageHeader">
+								Manage
 							</th>
 						</tr>
 					</thead>
@@ -77,11 +77,11 @@
 									<template #icon>
 										<component :is="getIconForObjectType(stat.slug)" :size="16" />
 									</template>
-									Beheren
+									Manage
 								</NcButton>
 								<span v-else class="disabledManage">
 									<component :is="getIconForObjectType(stat.slug)" :size="16" />
-									<span class="strikethrough">Beheren</span>
+									<span class="strikethrough">Manage</span>
 								</span>
 							</td>
 						</tr>
@@ -100,12 +100,12 @@
 				<table class="objectStatisticsTable">
 					<thead>
 						<tr>
-							<th>Object Type</th>
-							<th class="countHeader">
-								Aantal
+							<th scope="col">Object Type</th>
+							<th scope="col" class="countHeader">
+								Count
 							</th>
-							<th class="manageHeader">
-								Beheren
+							<th scope="col" class="manageHeader">
+								Manage
 							</th>
 						</tr>
 					</thead>
@@ -128,11 +128,11 @@
 									<template #icon>
 										<component :is="getIconForObjectType(stat.slug)" :size="16" />
 									</template>
-									Beheren
+									Manage
 								</NcButton>
 								<span v-else class="disabledManage">
 									<component :is="getIconForObjectType(stat.slug)" :size="16" />
-									<span class="strikethrough">Beheren</span>
+									<span class="strikethrough">Manage</span>
 								</span>
 							</td>
 						</tr>

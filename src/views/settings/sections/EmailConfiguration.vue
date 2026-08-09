@@ -882,4 +882,11 @@ export default {
 .save-results {
 	margin-top: 1rem;
 }
+
+/* WCAG 2.3.3 — the template-variable chip's hover transition is decorative. */
+@media (prefers-reduced-motion: reduce) {
+	.variable-tag {
+		transition: none;
+	}
+}
 </style>
