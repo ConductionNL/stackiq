@@ -74,6 +74,7 @@ export default {
 		 *
 		 * @param {object} row The clicked suite row.
 		 * @return {void}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-suite-index-page-shall-list-existing-suites
 		 */
 		onRowOpen(row) {
 			const id = row && (row.id || row.uuid || row['@self']?.id)
@@ -87,6 +88,7 @@ export default {
 		 *
 		 * @param {string} suiteId The newly-created suite's id.
 		 * @return {void}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-submitting-the-wizard-shall-create-a-suite-object-with-the-attached-applications
 		 */
 		onSuiteCreated(suiteId) {
 			this.showWizard = false

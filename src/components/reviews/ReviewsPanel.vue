@@ -176,6 +176,7 @@ export default {
 		 * Open the submit-review modal.
 		 *
 		 * @return {void}
+		 * @spec openspec/specs/catalog-ratings/spec.md
 		 */
 		openSubmitModal() {
 			this.showSubmitModal = true

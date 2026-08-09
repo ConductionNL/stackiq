@@ -157,6 +157,7 @@ export default {
 		 *
 		 * @param {boolean} value - New toggle state.
 		 * @return {void}
+		 * @spec openspec/specs/view-enrichment-api/spec.md#requirement-frontend-filter-toggles-must-map-to-backend-enrichment-parameters
 		 */
 		onProductsToggle(value) {
 			this.viewStore.setIncludeProducts(value)
@@ -168,6 +169,7 @@ export default {
 		 *
 		 * @param {object} view - View object from the API.
 		 * @return {boolean} True when at least one node has deelnamesGebruik.
+		 * @spec openspec/specs/view-enrichment-api/spec.md#requirement-enrichment-api-must-return-standard-viewnode-format
 		 */
 		hasDeelnamesData(view) {
 			const nodes = view.viewNodes ?? []
@@ -179,6 +181,7 @@ export default {
 		 *
 		 * @param {object} view - View object from the API.
 		 * @return {boolean} True when at least one node has products.
+		 * @spec openspec/specs/view-enrichment-api/spec.md#requirement-enrichment-api-must-return-standard-viewnode-format
 		 */
 		hasProductsData(view) {
 			const nodes = view.viewNodes ?? []

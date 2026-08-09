@@ -393,6 +393,7 @@ export default {
 		 *
 		 * @param {string} slug - OR schema slug (e.g. 'organisatie', 'standaard').
 		 * @return {void}
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		navigateToSchema(slug) {
 			const slugToSelected = {

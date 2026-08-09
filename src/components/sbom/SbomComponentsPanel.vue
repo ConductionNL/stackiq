@@ -206,6 +206,7 @@ export default {
 		 * The moduleVersie's raw data bag.
 		 *
 		 * @return {object} The property bag.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-imported-components-persist-as-openregister-objects-scoped-to-a-moduleversie
 		 */
 		moduleVersieData() {
 			if (!this.moduleVersie) {
@@ -243,6 +244,7 @@ export default {
 		 * All kwetsbaarheid records — the vulnerability-match candidate set.
 		 *
 		 * @return {Array<object>} The kwetsbaarheid records.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-components-are-matched-against-existing-kwetsbaarheden-without-external-calls
 		 */
 		kwetsbaarheden() {
 			return objectStore.getCollection('kwetsbaarheid')?.results || []
@@ -263,6 +265,7 @@ export default {
 		 * Display rows for CnDataTable: name/version/purl/licenses plus match badge counts.
 		 *
 		 * @return {Array<object>} The table rows.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-the-module-version-detail-page-shows-imported-components-with-summary-counts
 		 */
 		rows() {
 			return this.matches.rows.map(({ component, confirmed, possible }) => {
@@ -283,6 +286,7 @@ export default {
 		 * Total imported component count.
 		 *
 		 * @return {number} The count.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-the-module-version-detail-page-shows-imported-components-with-summary-counts
 		 */
 		totalComponents() {
 			return this.components.length
@@ -292,6 +296,7 @@ export default {
 		 * Distinct, non-empty license count across the imported set.
 		 *
 		 * @return {number} The count.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-the-module-version-detail-page-shows-imported-components-with-summary-counts
 		 */
 		distinctLicenseCount() {
 			const set = new Set()
@@ -313,6 +318,7 @@ export default {
 		 * deduplicated) across the whole component list.
 		 *
 		 * @return {number} The count.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-components-are-matched-against-existing-kwetsbaarheden-without-external-calls
 		 */
 		matchedVulnerabilityCount() {
 			return this.matches.matchedVulnerabilityCount
@@ -378,6 +384,7 @@ export default {
 		 *
 		 * @param {string} type Object type slug.
 		 * @return {Promise<void>} Resolves once fetched.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-the-module-version-detail-page-shows-imported-components-with-summary-counts
 		 */
 		async fetchType(type) {
 			if (typeof objectStore.registerObjectType === 'function'
@@ -402,6 +409,7 @@ export default {
 		 *
 		 * @param {Event} event The file input change event.
 		 * @return {void}
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
 		 */
 		handleFileSelect(event) {
 			const file = event.target.files[0]
@@ -417,6 +425,7 @@ export default {
 		 *
 		 * @param {number} bytes The size in bytes.
 		 * @return {string} A human-readable size.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
 		 */
 		formatFileSize(bytes) {
 			if (!bytes) {

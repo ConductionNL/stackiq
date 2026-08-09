@@ -343,9 +343,18 @@ export default {
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md
 		 */
 		selectedColumns: {
+			/**
+			 * @return {Array<object>} Selected NcSelect options for the active scope.
+			 * @spec openspec/specs/bio-compliance-assessment/spec.md
+			 */
 			get() {
 				return this.columnSource === COLUMN_SOURCE.BIO_MAATREGEL ? this.selectedBioMeasures : this.selectedStandards
 			},
+			/**
+			 * @param {Array<object>} value The new selection for the active scope.
+			 * @return {void}
+			 * @spec openspec/specs/bio-compliance-assessment/spec.md
+			 */
 			set(value) {
 				if (this.columnSource === COLUMN_SOURCE.BIO_MAATREGEL) {
 					this.selectedBioMeasures = value

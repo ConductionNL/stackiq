@@ -1478,6 +1478,11 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		selectedProperty: {
+			/**
+			 * @param {string|null} newKey The property now in edit mode, if any.
+			 * @return {void}
+			 * @spec openspec/specs/fe-object-modals/spec.md
+			 */
 			handler(newKey) {
 				this.destroyMarkdownEditors()
 

@@ -161,6 +161,7 @@ export default {
 		 * Close the modal and reset its state.
 		 *
 		 * @return {void}
+		 * @spec openspec/specs/catalog-ratings/spec.md
 		 */
 		closeModal() {
 			this.resetForm()
@@ -171,6 +172,7 @@ export default {
 		 * Reset the form back to its initial state.
 		 *
 		 * @return {void}
+		 * @spec openspec/specs/catalog-ratings/spec.md
 		 */
 		resetForm() {
 			this.formData = { naam: '', beschrijvingLang: '' }

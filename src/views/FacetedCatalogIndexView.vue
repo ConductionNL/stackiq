@@ -224,6 +224,12 @@ export default {
 		},
 	},
 
+	/**
+	 * Expose the facet Pinia store to the options API.
+	 *
+	 * @return {{facetStore: object}} The store bindings.
+	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-sidebar-ui-on-the-module-and-dienst-index-pages
+	 */
 	setup() {
 		const facetStore = useFacetStore()
 		return { facetStore }
@@ -259,12 +265,16 @@ export default {
 		 * `facetData` — which is exactly what this feature supplies.
 		 *
 		 * @return {object} A schema document with the four facetable dimensions.
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-sidebar-ui-on-the-module-and-dienst-index-pages
 		 */
 		facetDimensionSchema() {
 			return buildFacetDimensionSchema(DIMENSION_LABELS)
 		},
 
-		/** @return {string} The current free-text search term for this schema. */
+		/**
+		 * @return {string} The current free-text search term for this schema.
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facets-combine-with-free-text-search
+		 */
 		searchValue() {
 			return this.facetStore[this.schema].search
 		},
@@ -276,6 +286,7 @@ export default {
 		 * filter or search term is active.
 		 *
 		 * @return {object} The `CnIndexPage` `filter` prop value.
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
 		 */
 		listFilter() {
 			if (!this.facetStore.hasActiveFilterOrSearchFor(this.schema)) {
@@ -297,6 +308,7 @@ export default {
 		 * `listFilter` — whenever the narrowing id set changes.
 		 *
 		 * @return {string} A key that changes exactly when `listFilter` does.
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-sidebar-ui-on-the-module-and-dienst-index-pages
 		 */
 		indexPageKey() {
 			return `${this.schema}-${JSON.stringify(this.listFilter)}`
@@ -307,6 +319,12 @@ export default {
 		this.facetStore.setFiltersFromQuery(this.schema, this.$route.query)
 	},
 
+	/**
+	 * Fetch the initial facet counts and this schema's saved views.
+	 *
+	 * @return {void}
+	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
+	 */
 	mounted() {
 		this.refetch()
 		this.facetStore.fetchSavedViews(this.schema)
@@ -322,6 +340,7 @@ export default {
 		 * already live in the store).
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
 		 */
 		async refetch() {
 			await this.facetStore.fetchFacets(this.schema)
@@ -354,6 +373,7 @@ export default {
 		 *
 		 * @param {{key: string, values: Array}} payload The filter change.
 		 * @return {void}
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-filter-state-is-url-encoded-and-deep-linkable
 		 */
 		onFacetFilterChange({ key, values }) {
 			this.facetStore.setFilter(this.schema, key, values)
@@ -362,7 +382,10 @@ export default {
 		},
 
 		/**
+		 * Clear every active facet filter for this schema and refetch.
+		 *
 		 * @return {void}
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-filter-state-is-url-encoded-and-deep-linkable
 		 */
 		onClearAllFacets() {
 			this.facetStore.clearFilters(this.schema)
@@ -375,6 +398,7 @@ export default {
 		 *
 		 * @param {string} value The new search term.
 		 * @return {void}
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facets-combine-with-free-text-search
 		 */
 		onSearchInput(value) {
 			this.facetStore.setSearch(this.schema, value)

@@ -81,6 +81,7 @@ export default {
 		 * Seed values for the wizard's shared stepData.
 		 *
 		 * @return {object}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
 		 */
 		defaults() {
 			return {
@@ -98,6 +99,7 @@ export default {
 		 * (attach existing only), confirm.
 		 *
 		 * @return {Array<{id: string, label: string}>}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
 		 */
 		wizardSteps() {
 			return [
@@ -191,6 +193,7 @@ export default {
 		 * reopens fresh.
 		 *
 		 * @return {void}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
 		 */
 		onClose() {
 			this.$emit('update:show', false)

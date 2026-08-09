@@ -133,6 +133,7 @@ export function hasEvidence(record) {
  *
  * @param {object} record A record (OR object or plain data).
  * @return {object} The property bag.
+ * @spec openspec/specs/module-compliance-assessment/spec.md
  */
 export function dataOf(record) {
 	if (!record || typeof record !== 'object') {
