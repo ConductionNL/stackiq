@@ -7,7 +7,5 @@
 		"ComplianceMatrix": "ReportsCompliance"
 	},
 	"removals": [],
-	"settingsSection": [
-		"SettingsMenu"
-	]
+	"settingsSection": []
 }

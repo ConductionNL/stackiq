@@ -209,38 +209,56 @@ for (const p of DETAIL_PAGES) {
 }
 
 // ---------------------------------------------------------------------------
-// Settings page (type: settings) — in-app settings surface
+// Settings — the Nextcloud admin settings section
 // ---------------------------------------------------------------------------
+// These tests used to drive the in-app `#/settings` route, a manifest
+// `type: "settings"` page. ADR-079 D1 removed it: app-level configuration has
+// exactly one home, `/settings/admin/<app>`, where Nextcloud authorizes the
+// caller server-side before the section renders. The SAME component
+// (`src/views/settings/SoftwareCatalogSettings.vue`) renders there, mounted by
+// `src/settings.js` into `templates/settings/admin.php`, so these assertions
+// are unchanged in substance — only the door they walk through moved.
+//
+// `domcontentloaded`, not `networkidle`: Nextcloud keeps long-lived polls open,
+// so the network never goes idle (ADR-074 rule 4). The visibility assertions
+// below are the real readiness signal.
+const ADMIN_SETTINGS_URL = '/settings/admin/softwarecatalog'
+
+/**
+ * Open the app's Nextcloud admin settings section and return its host element.
+ * Auth is injected from storageState (see playwright.config.ts).
+ */
+async function gotoAdminSettings(page: Page) {
+	await page.goto(ADMIN_SETTINGS_URL, { waitUntil: 'domcontentloaded' })
+	const host = page.locator('#softwarecatalog-settings')
+	await expect(host).toBeVisible({ timeout: 30000 })
+	return host
+}
+
 // The settings shell (SoftwareCatalogSettings.vue) renders its section
 // navigation and the configuration status — fe-settings-ui "Open settings".
 // @e2e fe-settings-ui::open-settings
-test('manifest settings: in-app settings page renders', async ({ page }) => {
-	await gotoAppRoute(page, '/settings')
-	const main = page.locator(APP_MAIN).first()
-	await expect(main).toBeVisible()
-	// Scope to main so the assertion can't match a transient notification toast
-	// elsewhere in the DOM (which also contains app/section words but is hidden).
-	await expect(main.getByText('SoftwareCatalog', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+test('admin settings: the settings section renders', async ({ page }) => {
+	const host = await gotoAdminSettings(page)
+	// Scope to the app's own settings host so the assertion can't match a
+	// transient notification toast elsewhere in the DOM.
+	await expect(host.getByText('SoftwareCatalog', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
 
 // The settings shell renders the Statistics overview section (StatisticsOverview.vue),
 // which loads and displays aggregate object counts — fe-settings-ui "View statistics".
 // @e2e fe-settings-ui::view-statistics
-test('manifest settings: statistics section renders', async ({ page }) => {
-	await gotoAppRoute(page, '/settings')
-	const main = page.locator(APP_MAIN).first()
-	await expect(main).toBeVisible()
-	await expect(main.getByText('Statistics', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+test('admin settings: statistics section renders', async ({ page }) => {
+	const host = await gotoAdminSettings(page)
+	await expect(host.getByText('Statistics', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })
 
 // The settings shell renders the Version information section (VersionInformation.vue),
 // which loads and displays the app version — fe-settings-ui "View version information".
 // @e2e fe-settings-ui::view-version-information
-test('manifest settings: version information section renders', async ({ page }) => {
-	await gotoAppRoute(page, '/settings')
-	const main = page.locator(APP_MAIN).first()
-	await expect(main).toBeVisible()
-	// Match the "Version Information" section heading inside main, not a hidden
-	// "Application Version was updated" notification toast in the DOM.
-	await expect(main.getByText('Version Information', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+test('admin settings: version information section renders', async ({ page }) => {
+	const host = await gotoAdminSettings(page)
+	// Match the "Version Information" section heading inside the settings host,
+	// not a hidden "Application Version was updated" notification toast.
+	await expect(host.getByText('Version Information', { exact: false }).first()).toBeVisible({ timeout: 30000 })
 })

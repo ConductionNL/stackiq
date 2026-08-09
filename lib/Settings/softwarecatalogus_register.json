@@ -4192,7 +4192,7 @@
             "$ref": "",
             "items": {
               "cascadeDelete": true,
-              "$ref": "#/components/schemas/property",
+              "$ref": "#/components/schemas/property-definition",
               "type": "object"
             },
             "objectConfiguration": {
@@ -5356,7 +5356,7 @@
             "$ref": "",
             "items": {
               "cascadeDelete": true,
-              "$ref": "#/components/schemas/property",
+              "$ref": "#/components/schemas/property-definition",
               "type": "object"
             },
             "objectConfiguration": {
@@ -5803,7 +5803,7 @@
             "$ref": "",
             "items": {
               "cascadeDelete": true,
-              "$ref": "#/components/schemas/property",
+              "$ref": "#/components/schemas/property-definition",
               "type": "object"
             },
             "objectConfiguration": {
@@ -6632,7 +6632,7 @@
             "$ref": "",
             "items": {
               "cascadeDelete": true,
-              "$ref": "#/components/schemas/property",
+              "$ref": "#/components/schemas/property-definition",
               "type": "object"
             },
             "objectConfiguration": {
@@ -8018,11 +8018,13 @@
               "properties": {
                 "alg": {
                   "type": "string",
-                  "title": "Algorithm"
+                  "title": "Algorithm",
+                  "description": "Naam van het hash-algoritme zoals CycloneDX het aanlevert, bijvoorbeeld SHA-256 of SHA-512."
                 },
                 "value": {
                   "type": "string",
-                  "title": "Value"
+                  "title": "Value",
+                  "description": "De hexadecimale hashwaarde die met het genoemde algoritme over het componentbestand is berekend."
                 }
               }
             }

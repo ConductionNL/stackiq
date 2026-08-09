@@ -1,8 +1,15 @@
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
- * Behavioural UI coverage for the in-app Settings page (manifest page
- * `Settings` → SoftwareCatalogSettings.vue).
+ * Behavioural UI coverage for the app's settings surface
+ * (`/settings/admin/softwarecatalog` → SoftwareCatalogSettings.vue).
+ *
+ * This drove the in-app manifest page `Settings` until ADR-079 D1 removed it:
+ * app-level configuration has exactly one home, the Nextcloud admin settings
+ * section, which the platform authorizes server-side before it renders. The
+ * SAME component renders there — mounted by `src/settings.js` into
+ * `templates/settings/admin.php` — so every assertion below is unchanged; only
+ * the door they walk through moved.
  *
  * The existing manifest-pages smoke asserts only three section TITLES exist.
  * This suite drives the real settings surface and its interactions:
@@ -19,11 +26,18 @@
  * longer filters that message, so this suite asserts it is genuinely absent.
  */
 import { test, expect } from '@playwright/test'
-import { gotoAppRoute, collectAppErrors, expectNoAppErrors, APP_MAIN } from './_helpers'
+import { collectAppErrors, expectNoAppErrors } from './_helpers'
 
+/**
+ * Open the app's Nextcloud admin settings section and return its host element.
+ *
+ * `domcontentloaded`, not `networkidle`: Nextcloud keeps long-lived polls open,
+ * so the network never goes idle (ADR-074 rule 4). The banner assertion below
+ * is the real readiness signal.
+ */
 async function gotoSettings(page) {
-	await gotoAppRoute(page, '/settings')
-	const main = page.locator(APP_MAIN).first()
+	await page.goto('/settings/admin/softwarecatalog', { waitUntil: 'domcontentloaded' })
+	const main = page.locator('#softwarecatalog-settings')
 	// The settings shell renders the app name banner first.
 	await expect(main.getByText('SoftwareCatalog', { exact: false }).first())
 		.toBeVisible({ timeout: 30000 })

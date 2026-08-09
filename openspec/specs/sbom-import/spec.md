@@ -224,3 +224,23 @@ unset.
 - **THEN** existing `moduleVersie` objects without the new fields load and
   save unchanged
 
+
+## Notes
+
+### SPDX 2.x is a second parser entry point, not a second requirement
+
+`SbomParserService` exposes two explicit entry points rather than one
+auto-detecting `parse()`: `parse()` for CycloneDX and `parseSpdx()` for SPDX
+2.x JSON. Both normalise to the same component DTO shape
+(`name`/`version`/`purl`/`licenses`); SPDX carries no VEX-equivalent block in
+this app's scope, so `parseSpdx()` always returns an empty `vulnerabilities`
+list and no component can arrive with a confirmed CVE match through that path.
+`spdxVersion` values outside `SPDX-2.*` are rejected with
+`UnsupportedSbomFormatException`, mirroring the CycloneDX `bomFormat` /
+`specVersion` rejection above.
+
+This is recorded as a note rather than as a Requirement because the SPDX path
+has unit coverage (`tests/Unit/SbomParserServiceTest.php`) but no browser-level
+proof; promoting it to a Requirement means writing the Scenarios and the
+Playwright test that assert them, which is follow-up work rather than something
+to declare satisfied here.

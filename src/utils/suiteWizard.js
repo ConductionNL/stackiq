@@ -105,7 +105,7 @@ export function summarizeApplications(applications) {
  *
  * @return {Array<{uuid: string, label: string, raw: object}>} Option list.
  *
- * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-must-let-the-user-attach-one-or-more-existing-applications-to-the-new-suite
+ * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
  */
 export function mapApplicationOptions(collection) {
 	const modules = Array.isArray(collection) ? collection : (collection?.results || [])
