@@ -93,7 +93,7 @@ generic route-query-to-filter passthrough never sees it (see the
 		<div class="faceted-catalog-index__body">
 			<CnFacetSidebar
 				:title="t('softwarecatalog', 'GEMMA filters')"
-				:filters="facetDimensionFilters"
+				:schema="facetDimensionSchema"
 				:facet-data="facetStore.facetDataFor(schema)"
 				:active-filters="facetStore[schema].activeFilters"
 				:loading="facetStore[schema].loading"
@@ -135,6 +135,7 @@ import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
 
 import { useFacetStore } from '../store/modules/facets.js'
+import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
@@ -244,21 +245,30 @@ export default {
 
 	computed: {
 		/**
-		 * `CnFacetSidebar`'s `filters` prop — one `select` entry per GEMMA
-		 * dimension. `options` is left empty: `CnFacetSidebar.getFilterOptions()`
-		 * prefers live `facetData` (this feature's counts) over static
-		 * `options` whenever both are present.
+		 * `CnFacetSidebar`'s `schema` prop — a schema-shaped document whose
+		 * facetable properties are the four GEMMA dimensions.
 		 *
-		 * @return {Array<object>} The filter definitions.
+		 * ⚠️ This USED to be a `filters` prop carrying the already-derived
+		 * filter list. `CnFacetSidebar` declares no `filters` prop: its props
+		 * are `schema`, `facetData`, `activeFilters`, `loading`, `title`,
+		 * `clearLabel`, `userIsAdmin`, and it derives its filter list itself
+		 * via `effectiveFilters() => filtersFromSchema(this.schema)`. Vue drops
+		 * an undeclared prop into `$attrs` silently, so the four dimensions
+		 * were passed, discarded, and `filtersFromSchema(null)` returned `[]` —
+		 * the sidebar rendered its title and an empty body, and no console
+		 * error was logged. Verified against the shipped
+		 * `@conduction/nextcloud-vue` dist, not only its `src/`.
+		 *
+		 * `filtersFromSchema` keeps only properties with `facetable: true`,
+		 * orders them by `order`, labels them from `title`, and (absent an
+		 * `enum`) makes each a `select` whose options come from live
+		 * `facetData` — which is exactly what this feature supplies.
+		 *
+		 * @return {object} A schema document with the four facetable dimensions.
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-sidebar-ui-on-the-module-and-dienst-index-pages
 		 */
-		facetDimensionFilters() {
-			return Object.keys(DIMENSION_LABELS).map((key) => ({
-				key,
-				label: DIMENSION_LABELS[key](),
-				type: 'select',
-				options: [],
-			}))
+		facetDimensionSchema() {
+			return buildFacetDimensionSchema(DIMENSION_LABELS)
 		},
 
 		/**

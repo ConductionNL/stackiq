@@ -1622,6 +1622,48 @@ class ArchiMateService
     }//end createTempFile()
 
     /**
+     * Read a configured id, failing closed on the empty default.
+     *
+     * The legacy fallback used to read every id with `''` as its default, so
+     * an unconfigured instance produced a config array full of empty STRINGS.
+     * Its consumers guard with `=== null` — `ViewService::getViews()` and
+     * `getView()` throw only when a value `=== null` — and `'' === null` is
+     * false. Today nothing reaches a query only because that fallback writes
+     * PLURAL key names (`views_schema`) while every consumer reads SINGULAR
+     * ones (`view_schema`), so the lookups miss and fall back to `null`. That
+     * is an accident of naming, not a defence: adding the singular keys — the
+     * obvious "cleanup" — would send `register => ''` straight into
+     * `searchObjects()` as an UNPINNED query, and an unpinned query returns
+     * rows, which reads exactly like a correct result.
+     *
+     * Returning null instead of `''` makes `?? null` downstream yield null,
+     * which is what every consumer already checks for, and the warning names
+     * the missing key so a misconfigured import stops reporting "0 objects"
+     * with no explanation.
+     *
+     * @param string $key The app-config key holding the id.
+     *
+     * @return string|null The configured id, or null when it is unset.
+     *
+     * @spec openspec/specs/archimate-import/spec.md
+     */
+    private function resolveConfiguredId(string $key): ?string
+    {
+        $value = $this->config->getValueString('softwarecatalog', $key, '');
+        if (trim($value) === '') {
+            $this->logger->warning(
+                    'ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string',
+                    ['key' => $key]
+                    );
+
+            return null;
+        }
+
+        return $value;
+
+    }//end resolveConfiguredId()
+
+    /**
      * Get AMEF configuration from app config
      *
      * @return array AMEF configuration
@@ -1637,45 +1679,27 @@ class ArchiMateService
             $decoded = json_decode($config, true);
 
             if (is_array($decoded) === false) {
-                // Fallback to individual config values for backward compatibility.
-                $decoded = [
-                    'register_id'                 => $this->config->getValueString('softwarecatalog', 'amef_register', ''),
-                    'model_schema_id'             => $this->config->getValueString(
-                        'softwarecatalog',
-                            'amef_model_schema',
-                            ''
-                    ),
-                    'elements_schema'             => $this->config->getValueString(
-                        'softwarecatalog',
-                            'amef_elements_schema',
-                            ''
-                    ),
-                    'relationships_schema'        => $this->config->getValueString(
-                        'softwarecatalog',
-                            'amef_relationships_schema',
-                            ''
-                    ),
-                    'views_schema'                => $this->config->getValueString(
-                        'softwarecatalog',
-                            'amef_views_schema',
-                            ''
-                    ),
-                    'organizations_schema'        => $this->config->getValueString(
-                        'softwarecatalog',
-                            'amef_organizations_schema',
-                            ''
-                    ),
-                    'folders_schema'              => $this->config->getValueString(
-                        'softwarecatalog',
-                            'amef_folders_schema',
-                            ''
-                    ),
-                    'property_definitions_schema' => $this->config->getValueString(
-                        'softwarecatalog',
-                            'amef_property_definitions_schema',
-                            ''
-                    ),
-                ];
+                // Fallback to individual config values for backward
+                // compatibility. Every id is read through
+                // resolveConfiguredId(), which guards the empty default at the
+                // point of the read and omits the key entirely when it is
+                // unset — so `?? null` downstream yields null, which is what
+                // the consumers already check for.
+                $decoded = array_filter(
+                    [
+                        'register_id'                 => $this->resolveConfiguredId(key: 'amef_register'),
+                        'model_schema_id'             => $this->resolveConfiguredId(key: 'amef_model_schema'),
+                        'elements_schema'             => $this->resolveConfiguredId(key: 'amef_elements_schema'),
+                        'relationships_schema'        => $this->resolveConfiguredId(key: 'amef_relationships_schema'),
+                        'views_schema'                => $this->resolveConfiguredId(key: 'amef_views_schema'),
+                        'organizations_schema'        => $this->resolveConfiguredId(key: 'amef_organizations_schema'),
+                        'folders_schema'              => $this->resolveConfiguredId(key: 'amef_folders_schema'),
+                        'property_definitions_schema' => $this->resolveConfiguredId(key: 'amef_property_definitions_schema'),
+                    ],
+                    static function ($value) {
+                        return $value !== null;
+                    }
+                );
             }//end if
 
             return $decoded;
