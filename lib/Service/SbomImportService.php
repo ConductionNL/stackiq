@@ -298,7 +298,7 @@ class SbomImportService
      *
      * @return array<string, mixed> `{sbomLastImportedAt, sbomFormat, sbomFileName, progress}`.
      *
-     * @spec openspec/specs/sbom-import/spec.md#requirement-modulversie-records-sbom-import-provenance
+     * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
      */
     public function getStatus(string $moduleVersieUuid, ?string $operationId=null): array
     {
@@ -450,7 +450,7 @@ class SbomImportService
      *
      * @return void
      *
-     * @spec openspec/specs/sbom-import/spec.md#requirement-modulversie-records-sbom-import-provenance
+     * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
      */
     private function recordProvenance(
         ObjectService $objectService,

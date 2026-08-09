@@ -798,7 +798,7 @@ else:
 echo ""
 echo "--- Step 8b: Importing AMEF test data ---"
 
-AMEF_FILE="/var/www/html/custom_apps/softwarecatalog/data/GEMMA release.xml"
+AMEF_FILE="/var/www/html/custom_apps/softwarecatalog/tests/fixtures/amef/GEMMA release.xml"
 if docker exec nextcloud test -f "$AMEF_FILE"; then
     # Check if AMEF views already exist (full GEMMA release has 248 views)
     VIEW_COUNT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \

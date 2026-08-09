@@ -157,14 +157,6 @@
 			"route": "FeaturesRoadmap",
 			"section": "footer",
 			"order": 95
-		},
-		{
-			"id": "SettingsMenu",
-			"label": "Settings",
-			"icon": "CogOutline",
-			"route": "Settings",
-			"section": "settings",
-			"order": 99
 		}
 	],
 	"pages": [
@@ -826,26 +818,6 @@
 			"title": "Features & roadmap",
 			"config": {
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
-			}
-		},
-		{
-			"id": "Settings",
-			"route": "/settings",
-			"type": "settings",
-			"title": "Settings",
-			"config": {
-				"saveEndpoint": "/index.php/apps/softwarecatalog/api/settings",
-				"sections": [
-					{
-						"title": "Algemeen",
-						"widgets": [
-							{
-								"type": "component",
-								"componentName": "SoftwareCatalogSettingsPage"
-							}
-						]
-					}
-				]
 			}
 		}
 	]
