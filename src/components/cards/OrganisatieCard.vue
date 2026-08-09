@@ -11,7 +11,18 @@
  */
 
 <template>
-	<div class="organisatieCard" @click="handleCardClick">
+	<!-- role/tabindex/keydown rather than a click-only div: the whole card
+	     navigates to the organisation detail page, so it is the primary control
+	     in this component and a keyboard user could not activate it at all
+	     (WCAG 2.1.1). The nested .cardHeaderActions already stops propagation,
+	     so the NcActions menu is unaffected. -->
+	<div class="organisatieCard"
+		role="button"
+		tabindex="0"
+		:aria-label="`Open ${getOrganisatieTitle(item)}`"
+		@click="handleCardClick"
+		@keydown.enter.prevent="handleCardClick"
+		@keydown.space.prevent="handleCardClick">
 		<div class="cardHeader">
 			<h2 v-tooltip.bottom="getOrganisatieSummary(item)">
 				<component :is="cardIcon" :size="20" />

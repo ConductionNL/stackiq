@@ -79,7 +79,12 @@ test.afterAll(async () => {
 
 /** Open the ArchiMate Import/Export admin section and wait for it to mount. */
 async function goToArchiMateSettings(page: Page): Promise<void> {
-	await page.goto('/settings/admin/softwarecatalog', { waitUntil: 'networkidle' })
+	// `domcontentloaded`, not `networkidle`: Nextcloud keeps long-lived
+	// connections open (notifications polling, dashboard widgets), so the
+	// network never goes idle and this wait can only ever time out or be
+	// satisfied by luck (ADR-074 rule 4). The real readiness signal is the
+	// heading assertion below, which waits for the SPA to actually mount.
+	await page.goto('/settings/admin/softwarecatalog', { waitUntil: 'domcontentloaded' })
 	await expect(
 		page.getByRole('heading', { name: 'ArchiMate Import/Export' }),
 	).toBeVisible({ timeout: 30000 })

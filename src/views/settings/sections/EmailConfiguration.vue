@@ -301,13 +301,20 @@
 								<div class="available-variables">
 									<h5>Available Variables:</h5>
 									<div class="variables-list">
-										<span
+										<!-- A real button rather than a clickable span: this inserts a
+										     template variable into the editor, so it is a control, and
+										     a keyboard or screen-reader user could not reach it at all
+										     while it was a span (WCAG 2.1.1). type="button" keeps it
+										     from submitting the settings form. -->
+										<button
 											v-for="(description, variable) in getActiveTemplateVariables()"
 											:key="variable"
+											type="button"
 											class="variable-tag"
+											:title="description"
 											@click="insertVariable(variable)">
 											{{ formatTemplateVariable(variable) }}
-										</span>
+										</button>
 									</div>
 								</div>
 							</div>
@@ -848,6 +855,10 @@ export default {
 
 .variable-tag {
 	display: inline-block;
+	/* The element is now a <button>; reset the UA chrome so the visual
+	   result is byte-for-byte what the <span> rendered. */
+	border: none;
+	appearance: none;
 	padding: 0.25rem 0.5rem;
 	background: var(--color-primary-light);
 	color: var(--color-primary-text);
