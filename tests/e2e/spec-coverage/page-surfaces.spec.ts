@@ -96,22 +96,29 @@ test('suites index: SuitesIndexView renders its own New suite action', async ({ 
 	expectNoAppErrors(bag)
 })
 
-test('portfolio rationalization: PortfolioReport renders its quadrant summary table', async ({ page }) => {
+test('portfolio rationalization: PortfolioReport renders its report chrome', async ({ page }) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Portfolio rationalization')
 
-	const summary = page.locator('[data-testid="pr-summary"]')
-	await expect(summary).toBeVisible({ timeout: 30000 })
+	const main = page.locator(APP_MAIN).first()
+	await expect(main).toBeVisible({ timeout: 30000 })
 
-	// The TIME report's own column set. The header row is declared by the
-	// component, so it is present with or without rows behind it — and absent
-	// on any other page.
-	for (const column of ['Quadrant', 'Count', 'EOL exposed', 'Cloud-transition share', 'Annualised cost']) {
-		await expect(
-			summary.getByRole('columnheader', { name: column, exact: false }).first(),
-			`quadrant-summary column "${column}" missing`,
-		).toBeVisible({ timeout: 30000 })
-	}
+	// The refresh control is declared unconditionally by THIS component and by
+	// nothing else in the app.
+	//
+	// ⚠️ NOT `[data-testid="pr-summary"]`: that section sits behind
+	// `v-else-if="selectedOrg && report"`. On an instance with no organisation
+	// selected the page correctly renders its empty state instead, so asserting
+	// the summary table would be asserting on seed data, not on the page.
+	await expect(main.getByRole('button', { name: 'Refresh report' }).first())
+		.toBeVisible({ timeout: 30000 })
+
+	// …and the page is in one of its two legitimate states: the org-picker
+	// empty state, or the rendered quadrant summary. Both are this page's own
+	// markup; neither is the shell.
+	const emptyState = main.getByText('Pick an organisation above', { exact: false }).first()
+	const summary = page.locator('[data-testid="pr-summary"]')
+	await expect(emptyState.or(summary)).toBeVisible({ timeout: 30000 })
 
 	expectNoAppErrors(bag)
 })
