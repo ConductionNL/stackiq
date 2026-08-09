@@ -3,6 +3,8 @@
 /**
  * Behavioural e2e coverage for the software license-posture (SAM) surface.
  *
+ * Page component under test: src/views/LicensePostureView.vue.
+ *
  * Drives the REAL UI of the LicensePosture manifest custom page: the nav entry
  * reaches the posture dashboard, which renders the portfolio open-vs-closed
  * share (weighted by in-production deployment), the per-vendor rollup
