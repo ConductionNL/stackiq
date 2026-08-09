@@ -3328,10 +3328,10 @@
             "type": "array",
             "title": "Decisions",
             "description": "Approval/renewal decisions for this contract. References decidesk Decision objects (ADR-066); Decidesk owns the making and eIDAS signing.",
+            "x-external-register": "decidesk",
             "items": {
               "type": "string",
               "format": "uuid",
-              "$ref": "Decision",
               "x-external-register": "decidesk"
             },
             "referenceType": "decision",
