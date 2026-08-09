@@ -1695,36 +1695,6 @@ class ArchiMateService
     }//end getAmefConfig()
 
     /**
-     * Get Voorzieningen configuration directly from IAppConfig
-     *
-     * @return array The voorzieningen configuration
-     */
-    private function getVoorzieningenConfig(): array
-    {
-        $config  = $this->config->getValueString('softwarecatalog', 'voorzieningen_config', '{}');
-        $decoded = json_decode($config, true);
-
-        if (is_array($decoded) === false) {
-            // Fallback to individual config values for backward compatibility.
-            $decoded = [
-                'register'              => $this->config->getValueString('softwarecatalog', 'voorzieningen_register', ''),
-                'organisatie_schema'    => $this->config->getValueString(
-                    'softwarecatalog',
-                        'voorzieningen_organisatie_schema',
-                        ''
-                ),
-                'contactpersoon_schema' => $this->config->getValueString(
-                    'softwarecatalog',
-                        'voorzieningen_contactpersoon_schema',
-                        ''
-                ),
-            ];
-        }
-
-        return $decoded;
-    }//end getVoorzieningenConfig()
-
-    /**
      * Get the current status of ArchiMate operations
      *
      * @return array Status information including import/export status and object counts
