@@ -169,6 +169,15 @@ class ContactpersonenController extends Controller
     /**
      * Get contactpersonen for an organisation with user status.
      *
+     * Authorization (GH#459): the response carries Nextcloud account data —
+     * username, full group membership and enabled/disabled state — for every
+     * contact of the requested organisation. That is the same payload
+     * {@see getUserInfo()} and {@see getBulkUserInfo()} refuse to non-admins,
+     * so the same bar applies here: an instance admin may read any
+     * organisation, anybody else may read only their OWN organisation, and a
+     * caller whose organisation cannot be resolved is refused. This mirrors
+     * {@see verifyCrossTenantScope()}, which already fails closed for writes.
+     *
      * @param string $organisationId The organisation ID.
      *
      * @return JSONResponse List of contactpersonen with user information.
@@ -179,8 +188,17 @@ class ContactpersonenController extends Controller
      */
     public function getContactpersonen(string $organisationId): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $authError = $this->checkOrganisationReadPermission(
+            currentUser: $currentUser,
+            organisationId: $organisationId
+        );
+        if ($authError !== null) {
+            return $authError;
         }
 
         try {
@@ -199,40 +217,39 @@ class ContactpersonenController extends Controller
             $contactpersonen = $objectService->searchObjectsPaginated($searchParams);
 
             // Enhance with user information.
+            //
+            // GH#459 second finding: the filter above is a bare top-level
+            // `organisation` key. Whether OpenRegister treats that as an
+            // object-property filter, as `@self` metadata, or ignores it is
+            // not visible from here — and an ignored filter returns an
+            // UNSCOPED result set that looks exactly like a scoped one. The
+            // organisation of every returned record is therefore re-checked
+            // here, so a filter that fails to scope cannot leak.
             $enhancedContacts = [];
             foreach ($contactpersonen['results'] as $contactpersoon) {
                 $contactData = $contactpersoon->getObject();
-                $username    = $contactData['username'] ?? null;
 
-                $hasUser  = empty($username) === false;
-                $userInfo = [
-                    'hasUser'  => $hasUser,
-                    'username' => $username,
-                    'groups'   => [],
-                    'disabled' => false,
-                ];
-
-                if (empty($username) === false) {
-                    $user = $this->userManager->get($username);
-                    if ($user !== null) {
-                        $userGroups         = $this->groupManager->getUserGroups($user);
-                        $userInfo['groups'] = array_map(
-                                function ($group) {
-                                    return $group->getGID();
-                                },
-                                $userGroups
-                                );
-
-                        // Get the disabled status from Nextcloud.
-                        $userInfo['disabled'] = ($user->isEnabled() === false);
-                    }
+                $contactOrg = $this->normaliseOrganisationRef(value: ($contactData['organisation'] ?? null));
+                if ($contactOrg === null) {
+                    $contactOrg = $this->normaliseOrganisationRef(value: ($contactData['organisatie'] ?? null));
                 }
 
+                // A record with no resolvable organisation is NOT served: an
+                // unattributed contact must not be presented as a member of
+                // the organisation the caller asked for.
+                if ($contactOrg === null || $contactOrg !== trim($organisationId)) {
+                    continue;
+                }
+
+                // The buildUserInfoData() shape is what the admin-gated
+                // getUserInfo()/getBulkUserInfo() already return: it reports
+                // only the three software-catalog group memberships instead of
+                // every GID the account holds, which is all this surface needs.
                 $enhancedContacts[] = [
                     'id'   => $contactpersoon->getId(),
                     'uuid' => $contactpersoon->getUuid(),
                     'data' => $contactData,
-                    'user' => $userInfo,
+                    'user' => $this->buildUserInfoData(contactData: $contactData),
                 ];
             }//end foreach
 
@@ -240,7 +257,7 @@ class ContactpersonenController extends Controller
                     [
                         'success'         => true,
                         'contactpersonen' => $enhancedContacts,
-                        'total'           => $contactpersonen['total'] ?? count($enhancedContacts),
+                        'total'           => count($enhancedContacts),
                     ]
                     );
         } catch (\Exception $e) {
@@ -261,6 +278,110 @@ class ContactpersonenController extends Controller
                     );
         }//end try
     }//end getContactpersonen()
+
+    /**
+     * Check whether the caller may read the contact persons of an organisation.
+     *
+     * The contact-person read-outs carry Nextcloud account data (username,
+     * group membership, enabled state). Instance admins may read any
+     * organisation; everybody else may read only the organisation their own
+     * contactpersoon record belongs to. A caller whose organisation cannot be
+     * resolved is refused — the same fail-closed posture
+     * {@see verifyCrossTenantScope()} already applies to writes (GH#459).
+     *
+     * @param \OCP\IUser $currentUser    The currently authenticated caller.
+     * @param string     $organisationId The organisation the caller asked for.
+     *
+     * @return JSONResponse|null Forbidden response when refused, null when permitted.
+     *
+     * @spec openspec/specs/contactpersonen-api/spec.md
+     */
+    private function checkOrganisationReadPermission(\OCP\IUser $currentUser, string $organisationId): ?JSONResponse
+    {
+        if ($this->groupManager->isAdmin($currentUser->getUID()) === true) {
+            return null;
+        }
+
+        if (trim($organisationId) === '') {
+            return new JSONResponse(
+                ['success' => false, 'message' => 'Forbidden: an organisation is required'],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+
+        $callerOrgUuid = null;
+        try {
+            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+            $callerOrgUuid = $this->resolveContactOrganisation(objectService: $objectService, username: $currentUser->getUID());
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                'ContactpersonenController: could not resolve the caller organisation, denying contact read',
+                ['callerUid' => $currentUser->getUID(), 'organisationId' => $organisationId, 'error' => $e->getMessage()]
+            );
+
+            return new JSONResponse(
+                ['success' => false, 'message' => 'Forbidden: organisation scope could not be verified'],
+                Http::STATUS_FORBIDDEN
+            );
+        }//end try
+
+        if ($callerOrgUuid === null || $callerOrgUuid !== trim($organisationId)) {
+            $this->logger->warning(
+                'ContactpersonenController: cross-organisation contact read denied',
+                ['callerUid' => $currentUser->getUID(), 'callerOrg' => $callerOrgUuid, 'requestedOrg' => $organisationId]
+            );
+
+            return new JSONResponse(
+                ['success' => false, 'message' => 'Forbidden: you may only read contact persons of your own organisation'],
+                Http::STATUS_FORBIDDEN
+            );
+        }
+
+        return null;
+
+    }//end checkOrganisationReadPermission()
+
+    /**
+     * Normalise an organisation reference to a plain identifier string.
+     *
+     * Accepts a UUID string, or a nested related-object array carrying
+     * `uuid`, `id`, or an `@self` envelope with either of those.
+     *
+     * @param mixed $value The raw stored value.
+     *
+     * @return string|null The identifier, or null when there is none.
+     *
+     * @spec openspec/specs/contactpersonen-api/spec.md
+     */
+    private function normaliseOrganisationRef(mixed $value): ?string
+    {
+        if (is_string($value) === true) {
+            $trimmed = trim($value);
+            if ($trimmed === '') {
+                return null;
+            }
+
+            return $trimmed;
+        }
+
+        if (is_array($value) === false) {
+            return null;
+        }
+
+        foreach (['uuid', 'id', '@self'] as $key) {
+            if (array_key_exists($key, $value) === false) {
+                continue;
+            }
+
+            $nested = $this->normaliseOrganisationRef(value: $value[$key]);
+            if ($nested !== null) {
+                return $nested;
+            }
+        }
+
+        return null;
+
+    }//end normaliseOrganisationRef()
 
     /**
      * Convert a contactpersoon to a user account.
@@ -872,6 +993,12 @@ class ContactpersonenController extends Controller
     /**
      * Resolve the organisation UUID for a user's contactpersoon.
      *
+     * The stored value is normalised: `organisatie` is declared as a related
+     * object in lib/Settings/softwarecatalogus_register.json, so it may arrive
+     * as a bare UUID string or as a nested envelope. Returning the raw value
+     * made a nested reference compare unequal to a plain UUID, which both this
+     * method's callers treat as "different tenant" (GH#459).
+     *
      * @param object $objectService The OpenRegister ObjectService.
      * @param string $username      The username to look up.
      *
@@ -890,7 +1017,13 @@ class ContactpersonenController extends Controller
         }
 
         $data = $results['results'][0]->getObject();
-        return $data['organisation'] ?? $data['organisatie'] ?? null;
+
+        $ref = $this->normaliseOrganisationRef(value: ($data['organisation'] ?? null));
+        if ($ref !== null) {
+            return $ref;
+        }
+
+        return $this->normaliseOrganisationRef(value: ($data['organisatie'] ?? null));
 
     }//end resolveContactOrganisation()
 
@@ -963,6 +1096,10 @@ class ContactpersonenController extends Controller
      * Returns all contact persons linked to a specific organization,
      * with their corresponding Nextcloud user details spliced in.
      *
+     * Same authorization bar as {@see getContactpersonen()} — this is the
+     * sibling route that returns the same account data for a caller-chosen
+     * organisation (GH#459).
+     *
      * @param string $organizationUuid The organization UUID.
      *
      * @return JSONResponse JSON response containing contact persons with user details.
@@ -973,8 +1110,17 @@ class ContactpersonenController extends Controller
      */
     public function getContactPersonsWithUserDetailsForOrganization(string $organizationUuid): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser === null) {
             return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
+        $authError = $this->checkOrganisationReadPermission(
+            currentUser: $currentUser,
+            organisationId: $organizationUuid
+        );
+        if ($authError !== null) {
+            return $authError;
         }
 
         try {
