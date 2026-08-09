@@ -309,6 +309,7 @@ export default {
 		/**
 		 * Quadrant chart x-axis categories (translated labels).
 		 * @return {Array<string>} Categories.
+		 * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
 		chartCategories() {
 			return this.quadrantSummary.map((row) => this.quadrantLabel(row.key))
@@ -319,6 +320,7 @@ export default {
 		 * CnChartWidget's `colorMap` contract, which is keyed by the resolved
 		 * category label, not the raw quadrant key).
 		 * @return {Record<string, string>} Label → CSS colour.
+		 * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
 		chartColorMap() {
 			const map = {}
@@ -380,6 +382,7 @@ export default {
 		 * with no dependency on `organisatie_schema` ever being set.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-report-and-csv-export-are-scoped-to-the-requesters-authorised-organisations
 		 */
 		async loadOrganisations() {
 			try {
@@ -463,6 +466,7 @@ export default {
 		 * — matches `LifecycleRoadmapView.phaseLabel()`'s convention.
 		 * @param {string} key A QUADRANT_ORDER key.
 		 * @return {string} Display label.
+		 * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
 		quadrantLabel(key) {
 			const map = {

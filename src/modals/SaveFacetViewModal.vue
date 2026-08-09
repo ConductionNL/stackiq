@@ -80,6 +80,14 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Clear the name field each time the modal is (re)opened, so a
+		 * previous attempt's text never leaks into the next save.
+		 *
+		 * @param {boolean} value Whether the modal became visible.
+		 * @return {void}
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
+		 */
 		show(value) {
 			if (value === true) {
 				this.name = ''
@@ -89,14 +97,20 @@ export default {
 
 	methods: {
 		/**
+		 * Dismiss the modal without saving.
+		 *
 		 * @return {void}
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
 		 */
 		closeModal() {
 			this.$emit('close')
 		},
 
 		/**
+		 * Emit the trimmed view name, refusing an empty one.
+		 *
 		 * @return {void}
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
 		 */
 		save() {
 			const trimmed = this.name.trim()

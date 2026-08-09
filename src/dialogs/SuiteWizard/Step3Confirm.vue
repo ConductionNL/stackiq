@@ -57,6 +57,7 @@ export default {
 		 * The attached applications' names, for the review list.
 		 *
 		 * @return {Array<string>}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-submitting-the-wizard-shall-create-a-suite-object-with-the-attached-applications
 		 */
 		applicationNames() {
 			return summarizeApplications(this.payload.applications)

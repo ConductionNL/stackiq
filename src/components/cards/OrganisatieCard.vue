@@ -240,6 +240,7 @@ export default {
 		 * a custom cardComponent like this one must emit it explicitly —
 		 * without it, clicking an organisation card was a no-op.
 		 * @return {void}
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		handleCardClick() {
 			this.$emit('click', this.item)

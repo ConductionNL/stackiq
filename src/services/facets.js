@@ -31,6 +31,7 @@ export const FACET_DIMENSIONS = ['referentiecomponent', 'standaard', 'applicatie
  * @param {string} [options.search] Free-text query.
  * @param {string} [options.organization] Organisation override.
  * @return {URLSearchParams} The query parameters.
+ * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
  */
 export function buildFacetQueryParams({ filters = {}, search = '', organization = '' } = {}) {
 	const params = new URLSearchParams()

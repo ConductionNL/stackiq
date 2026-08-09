@@ -64,11 +64,21 @@ export default {
 		 * `onField` so `_step1Valid` recomputes on every keystroke.
 		 *
 		 * @return {string} The current long description.
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
 		 */
 		beschrijvingLangModel: {
+			/**
+			 * @return {string} The current long description.
+			 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
+			 */
 			get() {
 				return this.payload.beschrijvingLang || ''
 			},
+			/**
+			 * @param {string} value The new long description.
+			 * @return {void}
+			 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
+			 */
 			set(value) {
 				this.onField('beschrijvingLang', value)
 			},
@@ -86,6 +96,7 @@ export default {
 		 * @param {string} key The stepData field to update.
 		 * @param {string} value The new value.
 		 * @return {void}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-must-require-at-least-one-attached-application-before-advancing-past-the-applications-step
 		 */
 		onField(key, value) {
 			const merged = { ...this.payload, [key]: value }

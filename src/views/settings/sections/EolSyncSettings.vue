@@ -180,9 +180,18 @@ export default defineComponent({
 		 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
 		 */
 		intervalMinutesInput: {
+			/**
+			 * @return {string} The interval in minutes, as a string for NcTextField.
+			 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
+			 */
 			get() {
 				return String(Math.max(1, Math.round((this.config.intervalSeconds || 86400) / 60)))
 			},
+			/**
+			 * @param {string} value The new interval in minutes.
+			 * @return {void}
+			 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
+			 */
 			set(value) {
 				const minutes = parseInt(value, 10)
 				if (Number.isFinite(minutes) && minutes > 0) {
@@ -196,6 +205,7 @@ export default defineComponent({
 		 * feature has never run.
 		 *
 		 * @return {string} The formatted timestamp.
+		 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
 		 */
 		formattedLastRunAt() {
 			if (!this.status.lastRunAt) {

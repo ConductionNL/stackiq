@@ -73,6 +73,7 @@ export default {
 		 * Existing modules, mapped to `NcSelect` option shape.
 		 *
 		 * @return {Array<{uuid: string, label: string, raw: object}>}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
 		 */
 		applicationOptions() {
 			// `getCollection()` returns the paginated ENVELOPE ({ results, ... }),
@@ -89,6 +90,7 @@ export default {
 		 * so re-entering this step (e.g. via "Back") keeps the selection.
 		 *
 		 * @return {Array<object>}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-must-require-at-least-one-attached-application-before-advancing-past-the-applications-step
 		 */
 		selected() {
 			const applications = this.payload.applications || []
@@ -149,6 +151,7 @@ export default {
 		 *
 		 * @param {Array<{raw: object}>} options The selected NcSelect options.
 		 * @return {void}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-must-require-at-least-one-attached-application-before-advancing-past-the-applications-step
 		 */
 		onSelectionChange(options) {
 			const applications = (options || []).map((option) => option.raw)

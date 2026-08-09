@@ -200,6 +200,7 @@ export const useFacetStore = defineStore('facets', {
 		 * @param {string} dimension The facet dimension key.
 		 * @param {Array|string|null} values The new selection for that dimension.
 		 * @return {void}
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-filter-state-is-url-encoded-and-deep-linkable
 		 */
 		setFilter(schema, dimension, values) {
 			if (!this[schema]) {
@@ -224,6 +225,7 @@ export const useFacetStore = defineStore('facets', {
 		 * @param {string} schema `module` or `dienst`.
 		 * @param {string} value The search term.
 		 * @return {void}
+		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facets-combine-with-free-text-search
 		 */
 		setSearch(schema, value) {
 			if (!this[schema]) {

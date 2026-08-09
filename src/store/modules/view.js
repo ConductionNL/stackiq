@@ -65,6 +65,7 @@ export const useViewStore = defineStore('view', {
 		 * Fetch all views with current enrichment flags from the backend.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/view-enrichment-api/spec.md#requirement-frontend-must-call-enrichment-api-for-views
 		 */
 		async fetchViews() {
 			this.loading = true
@@ -102,6 +103,7 @@ export const useViewStore = defineStore('view', {
 		 *
 		 * @param {string} viewId - The view identifier.
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/view-enrichment-api/spec.md#requirement-frontend-must-call-enrichment-api-for-views
 		 */
 		async fetchView(viewId) {
 			this.loading = true

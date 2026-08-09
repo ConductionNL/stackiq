@@ -42,6 +42,7 @@ export const QUADRANT_COLORS = {
  *
  * @param {string} key A QUADRANT_ORDER key.
  * @return {string} A CSS custom-property reference.
+ * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
  */
 export function quadrantColor(key) {
 	return QUADRANT_COLORS[key] || 'var(--color-primary-element)'
@@ -53,6 +54,7 @@ export function quadrantColor(key) {
  *
  * @param {Record<string, number>} cloudTransition Hosting model → count.
  * @return {string} Display label, or an em dash when empty.
+ * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
  */
 export function cloudTransitionLabel(cloudTransition) {
 	const entries = Object.entries(cloudTransition || {})
@@ -70,6 +72,7 @@ export function cloudTransitionLabel(cloudTransition) {
  *
  * @param {number} amount The amount.
  * @return {string} Currency label, or an em dash when zero/falsy.
+ * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
  */
 export function formatCurrency(amount) {
 	if (!amount) {
@@ -89,6 +92,7 @@ export function formatCurrency(amount) {
  *
  * @param {Array<{quadrant: string}>} rows Report rows (each carries a `quadrant` key).
  * @return {Array<{key: string, rows: Array}>} Grouped rows, one entry per QUADRANT_ORDER key.
+ * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
  */
 export function groupRowsByQuadrant(rows) {
 	const list = Array.isArray(rows) ? rows : []
@@ -106,6 +110,7 @@ export function groupRowsByQuadrant(rows) {
  * @param {string} baseUrl The report endpoint's base URL (no query string).
  * @param {string} organisationUuid The selected organisation's uuid.
  * @return {string} The CSV export URL, or '' when `organisationUuid` is empty.
+ * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-csv-export-of-the-portfolio-report
  */
 export function buildCsvExportUrl(baseUrl, organisationUuid) {
 	if (!organisationUuid) {

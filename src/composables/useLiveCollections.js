@@ -26,6 +26,15 @@
 import { computed } from 'vue'
 import { useObjectSubscription } from '@conduction/nextcloud-vue'
 
+/**
+ * Subscribe a component to live updates for a static list of object types.
+ *
+ * @param {object} objectStore The app's createObjectStore-based store instance.
+ * @param {Array<string>} types Object type slugs to subscribe to (static list).
+ * @return {void}
+ *
+ * @spec openspec/specs/realtime-updates-ui/spec.md
+ */
 export function useLiveCollections(objectStore, types) {
 	for (const type of types) {
 		useObjectSubscription(objectStore, type, null, {
