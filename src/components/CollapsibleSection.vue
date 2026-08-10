@@ -96,26 +96,23 @@
 			</div>
 		</div>
 
-		<!-- Info Modal -->
-		<NcModal
+		<!-- Info Modal — own file per ADR-004/ADR-012 -->
+		<CollapsibleSectionInfoModal
 			v-if="showInfoModal"
+			:name="name"
 			@close="showInfoModal = false">
-			<div class="info-modal">
-				<div class="modal-header">
-					<h2>{{ name }} - Information</h2>
-				</div>
-				<div class="modal-content">
-					<slot name="info-content">
-						<p>No additional information available.</p>
-					</slot>
-				</div>
-				<div class="modal-footer">
-					<NcButton @click="showInfoModal = false">
-						Close
-					</NcButton>
-				</div>
-			</div>
-		</NcModal>
+			<!--
+				BOTH slot names are honoured, matching AlwaysVisibleSection: this
+				section has always used `info-content`, and `info` is accepted as an
+				alias so the two sections share one slot API and no caller can be
+				silently empty. The empty-state paragraph is the last fallback.
+			-->
+			<slot name="info-content">
+				<slot name="info">
+					<p>No additional information available.</p>
+				</slot>
+			</slot>
+		</CollapsibleSectionInfoModal>
 	</NcSettingsSection>
 </template>
 
@@ -136,7 +133,6 @@ import {
 	NcSettingsSection,
 	NcButton,
 	NcLoadingIcon,
-	NcModal,
 } from '@nextcloud/vue'
 
 // Icons
@@ -146,6 +142,8 @@ import Information from 'vue-material-design-icons/Information.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 
+import CollapsibleSectionInfoModal from '../modals/CollapsibleSectionInfoModal.vue'
+
 export default {
 	name: 'CollapsibleSection',
 
@@ -153,12 +151,12 @@ export default {
 		NcSettingsSection,
 		NcButton,
 		NcLoadingIcon,
-		NcModal,
 		Save,
 		Refresh,
 		Information,
 		ChevronUp,
 		ChevronDown,
+		CollapsibleSectionInfoModal,
 	},
 
 	props: {
@@ -365,73 +363,8 @@ export default {
 	padding: 40px 0;
 }
 
-/* Info Modal Styles */
-.info-modal {
-	padding: 20px;
-	max-width: 600px;
-	max-height: 80vh;
-	overflow-y: auto;
-}
-
-.modal-header {
-	margin-bottom: 16px;
-	padding-bottom: 16px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h2 {
-	margin: 0;
-	font-size: 20px;
-	font-weight: 600;
-	color: var(--color-main-text);
-}
-
-.modal-content {
-	margin-bottom: 20px;
-	line-height: 1.6;
-}
-
-.modal-content :deep(h3) {
-	margin-top: 20px;
-	margin-bottom: 12px;
-	font-size: 16px;
-	font-weight: 600;
-}
-
-.modal-content :deep(h4) {
-	margin-top: 16px;
-	margin-bottom: 8px;
-	font-size: 14px;
-	font-weight: 600;
-}
-
-.modal-content :deep(ul) {
-	padding-left: 20px;
-	margin-bottom: 16px;
-}
-
-.modal-content :deep(li) {
-	margin-bottom: 4px;
-}
-
-.modal-content :deep(p) {
-	margin-bottom: 12px;
-}
-
-.modal-content :deep(code) {
-	background-color: var(--color-background-dark);
-	padding: 2px 6px;
-	border-radius: 4px;
-	font-family: monospace;
-	font-size: 13px;
-}
-
-.modal-footer {
-	display: flex;
-	justify-content: flex-end;
-	padding-top: 16px;
-	border-top: 1px solid var(--color-border);
-}
+/* The info-modal styles live with the modal in
+   src/modals/CollapsibleSectionInfoModal.vue */
 
 /* WCAG 2.3.3 — the expand animation is decorative; a reduced-motion user gets
    the expanded section immediately instead of the slide. */
