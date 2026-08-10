@@ -81,26 +81,36 @@
 			</div>
 		</div>
 
-		<!-- Info Modal -->
-		<NcModal
+		<!-- Info Modal — own file per ADR-004/ADR-012 -->
+		<AlwaysVisibleSectionInfoModal
 			v-if="hasInfoContent"
+			:name="name"
 			:show="showInfoModal"
-			:title="name + ' Information'"
-			:name="name + ' Info'"
 			@close="showInfoModal = false">
-			<div class="info-content">
+			<!--
+				BOTH slot names are honoured. `info-content` wins when supplied and
+				`info` is the fallback, so no caller can be silently empty.
+
+				This section only ever declared `info`, but four of its five callers
+				(UserGroupsConfiguration, EmailConfiguration, ArchiMateImportExport,
+				OrganizationSynchronization) pass `#info-content` — the name
+				CollapsibleSection uses. They all set `:has-info-content="true"`, so
+				the (i) button rendered and opened a completely EMPTY modal.
+			-->
+			<slot name="info-content">
 				<slot name="info" />
-			</div>
-		</NcModal>
+			</slot>
+		</AlwaysVisibleSectionInfoModal>
 	</NcSettingsSection>
 </template>
 
 <script>
 import { defineComponent } from 'vue'
-import { NcSettingsSection, NcButton, NcLoadingIcon, NcModal } from '@nextcloud/vue'
+import { NcSettingsSection, NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import Save from 'vue-material-design-icons/ContentSave.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Information from 'vue-material-design-icons/Information.vue'
+import AlwaysVisibleSectionInfoModal from '../modals/AlwaysVisibleSectionInfoModal.vue'
 
 /**
  * Always Visible Section component
@@ -117,10 +127,10 @@ export default defineComponent({
 		NcSettingsSection,
 		NcButton,
 		NcLoadingIcon,
-		NcModal,
 		Save,
 		Refresh,
 		Information,
+		AlwaysVisibleSectionInfoModal,
 	},
 
 	props: {
@@ -311,10 +321,7 @@ export default defineComponent({
 	color: var(--color-text-lighter);
 }
 
-.info-content {
-	max-width: 600px;
-	line-height: 1.6;
-}
+/* .info-content lives with the modal in src/modals/AlwaysVisibleSectionInfoModal.vue */
 
 /* Responsive */
 @media (max-width: 768px) {

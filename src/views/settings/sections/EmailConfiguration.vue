@@ -382,7 +382,12 @@
 				<h4>Email Templates</h4>
 				<p>Customize the content and appearance of system emails:</p>
 				<ul>
-					<li><strong>Template Variables</strong> - Use placeholders like {{ organization.name }} and {{ user.email }}</li>
+					<!-- v-pre: the braces below are LITERAL documentation of the email
+					     template placeholders, not Vue interpolation. Without it Vue
+					     compiles them to `organization.name` / `user.email` lookups on
+					     this component, neither of which exists, and rendering the panel
+					     throws "Cannot read properties of undefined (reading 'name')". -->
+					<li v-pre><strong>Template Variables</strong> - Use placeholders like {{ organization.name }} and {{ user.email }}</li>
 					<li><strong>HTML Support</strong> - Include formatting, links, and basic styling</li>
 					<li><strong>Personalization</strong> - Templates are automatically populated with relevant data</li>
 					<li><strong>Multi-language</strong> - Support for different languages and locales</li>
