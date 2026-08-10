@@ -87,7 +87,7 @@ class SbomRegisterShapeTest extends TestCase
      * actually writes them to and the status endpoint reads them from.
      *
      * @return void
-     * @spec   openspec/specs/sbom-import/spec.md#requirement-a-successful-import-records-provenance-on-the-version
+     * @spec   openspec/specs/sbom-import/spec.md#scenario-a-successful-import-records-provenance-on-the-version
      */
     public function testModuleVersieCarriesSbomProvenance(): void
     {
@@ -117,7 +117,7 @@ class SbomRegisterShapeTest extends TestCase
      * that shipped the silent-drop defect.
      *
      * @return void
-     * @spec   openspec/specs/sbom-import/spec.md#requirement-a-successful-import-records-provenance-on-the-version
+     * @spec   openspec/specs/sbom-import/spec.md#scenario-a-successful-import-records-provenance-on-the-version
      */
     public function testOrganisatieDoesNotCarrySbomProvenance(): void
     {
@@ -136,7 +136,7 @@ class SbomRegisterShapeTest extends TestCase
      * rows without these fields stays non-destructive.
      *
      * @return void
-     * @spec   openspec/specs/sbom-import/spec.md#requirement-existing-versions-are-unaffected-by-the-schema-addition
+     * @spec   openspec/specs/sbom-import/spec.md#scenario-existing-versions-are-unaffected-by-the-schema-addition
      */
     public function testSbomProvenanceIsOptional(): void
     {
@@ -155,7 +155,7 @@ class SbomRegisterShapeTest extends TestCase
      * voorzieningen register, so imported components have a home table.
      *
      * @return void
-     * @spec   openspec/specs/sbom-import/spec.md#requirement-a-parsed-component-persists-with-its-moduleversie-relation
+     * @spec   openspec/specs/sbom-import/spec.md#scenario-a-parsed-component-persists-with-its-moduleversie-relation
      */
     public function testSbomComponentIsRegisteredInVoorzieningen(): void
     {

@@ -142,3 +142,25 @@ The service MUST call `importFromApp` from a single call site with the same, sta
 - AND WHEN the true fix is determined to belong in OpenRegister rather than this app
 - THEN an issue MUST be filed against the owning repository documenting the mechanism, and referenced from this app's code and docs
 
+### Requirement: The system SHALL merge ADR-037 register fragments so disjoint fragments never collide (REQ-007)
+
+`SettingsService::deepMergeConfig()` is the single merge primitive that folds every `register.d/*.json` fragment onto the monolith register. Its contract MUST be: nested maps merge key-by-key so that fragments touching *disjoint* keys all survive the merge; list values concatenate; scalar values from the overlay overwrite the base. This is what allows concurrent OpenSpec changes to each ship their own fragment without either one's schemas or paths being lost — the property ADR-037 exists to provide. The one deliberate exception is the `authorization` subtree, which replaces rather than concatenates; that carve-out and its rationale are specified under `catalog-ratings`, and this requirement MUST NOT be read as overriding it.
+
+#### Scenario: Disjoint fragments union their schemas and paths
+
+- GIVEN a base register declaring schema `Existing` and path `/existing`
+- AND a fragment adding schema `AlphaComponent` and path `/alpha`
+- AND a second fragment adding schema `BetaService` and path `/beta`
+- WHEN the fragments are merged onto the base in sequence
+- THEN all three schemas MUST be present under `components.schemas`
+- AND all three paths MUST be present under `paths`
+- AND no earlier fragment's contribution may be dropped by a later one
+
+#### Scenario: Lists concatenate and scalars overwrite
+
+- GIVEN a base with `required: ["a", "b"]` and `info.version: "0.1.0"`
+- AND an overlay with `required: ["c"]` and `info.version: "0.2.0"`
+- WHEN the overlay is merged onto the base
+- THEN `required` MUST be `["a", "b", "c"]`
+- AND `info.version` MUST be `"0.2.0"`
+
