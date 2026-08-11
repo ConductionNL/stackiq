@@ -35,6 +35,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\IntakeService;
 use OCA\SoftwareCatalog\Service\ModerationService;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCP\AppFramework\Db\Entity;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -122,6 +123,45 @@ class IntakeModerationTest extends TestCase
         $this->assertStringContainsString('naam', $result['reason']);
         $this->assertSame([], $this->saved);
     }//end testMissingRequiredFieldRejected()
+
+    /**
+     * `entityUuid()` must read the uuid off a saved entity whose `getUuid()`
+     * is reached through `Entity::__call()` — which is what every real
+     * OpenRegister `ObjectEntity` returned by `saveObject()` does.
+     *
+     * With the old `method_exists()` probe this returned `null` for EVERY real
+     * save (the `is_array()` arm cannot rescue an object), so `submit()`
+     * answered `uuid: null` to the client and wrote `['uuid' => null]` to the
+     * audit log — softwarecatalog#490. See the twin test in ReviewServiceTest;
+     * the two services carry byte-identical copies of this helper.
+     *
+     * @return void
+     */
+    public function testEntityUuidReadsAMagicAccessorUuid(): void
+    {
+        $entity = new class extends Entity {
+
+            /**
+             * The uuid — a property reached via __call, as on ObjectEntity.
+             *
+             * @var string|null
+             */
+            protected ?string $uuid = null;
+        };
+        $entity->setUuid('intake-uuid-1');
+
+        $this->assertFalse(
+            method_exists($entity, 'getUuid'),
+            'the double must reach getUuid() through __call, like the real ObjectEntity'
+        );
+
+        $intake = new IntakeService($this->container($this->objectService([])), $this->settings(), $this->logger());
+
+        $method = new \ReflectionMethod($intake, 'entityUuid');
+        $method->setAccessible(true);
+
+        $this->assertSame('intake-uuid-1', $method->invoke($intake, $entity));
+    }//end testEntityUuidReadsAMagicAccessorUuid()
 
     /**
      * Anti-spam validation: oversized value is rejected.

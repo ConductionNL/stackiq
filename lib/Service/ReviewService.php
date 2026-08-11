@@ -362,15 +362,34 @@ class ReviewService
     /**
      * The uuid of a saved entity (handles entity or array result shapes).
      *
+     * `ObjectService::saveObject()` returns an `ObjectEntity`, whose
+     * `getUuid()` is an `@method` docblock served by `Entity::__call()` over
+     * `protected ?string $uuid`. A bare `method_exists()` probe is therefore
+     * FALSE, and because an object is not an array the array arm below cannot
+     * rescue it — so this method used to return `null` for EVERY real save,
+     * putting `uuid: null` in the submit response and the audit log
+     * (softwarecatalog#490). `property_exists()` is the instrument
+     * `Entity::getter()` itself decides on; `method_exists()` is kept as the
+     * second arm for genuinely concrete accessors, and the call is wrapped
+     * because neither probe guarantees the other object's shape.
+     *
      * @param mixed $entity The saveObject result.
      *
      * @return string|null The uuid, or null.
      */
     private function entityUuid(mixed $entity): ?string
     {
-        if (is_object($entity) === true && method_exists($entity, 'getUuid') === true) {
-            $uuid = $entity->getUuid();
-            if (is_string($uuid) === true) {
+        if (is_object($entity) === true
+            && (property_exists($entity, 'uuid') === true || method_exists($entity, 'getUuid') === true)
+        ) {
+            try {
+                $uuid = $entity->getUuid();
+            } catch (\Throwable $e) {
+                $this->logger->warning('ReviewService: could not read uuid from saved entity', ['exception' => $e->getMessage()]);
+                return null;
+            }
+
+            if (is_string($uuid) === true && $uuid !== '') {
                 return $uuid;
             }
 

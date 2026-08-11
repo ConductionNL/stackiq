@@ -35,9 +35,13 @@
  *   field (no `$ref: organisatie` property), so ownership is carried by
  *   OpenRegister's system-level `@self.organisation` (the same mechanism
  *   design.md documents explicitly for compliancy). Re-pointed via
- *   `@self.organisation` in the save payload, matching
- *   `SaveObject::applyCallerSuppliedFields()`'s admin-gated
- *   `@self.organisation` acceptance path.
+ *   `@self.organisation` in the save payload, matching OpenRegister's
+ *   `SaveObject::setSelfMetadata()` acceptance path, which honours a
+ *   caller-supplied `@self.organisation` when the caller is an admin or a
+ *   verified member of the target organisation; a merge is admin-triggered, so
+ *   the admin arm applies. (An earlier revision of this docblock named
+ *   `SaveObject::applyCallerSuppliedFields()`. No such method exists anywhere
+ *   in OpenRegister — grepped across the whole tree with a positive control.)
  * - compliancy: `@self.organisation` (system-level owning organisation).
  *
  * @category  Service
@@ -446,10 +450,7 @@ class MergeOrganisatieService
         $count    = 0;
 
         foreach ($entities as $entity) {
-            $owningOrganisation = null;
-            if (method_exists($entity, 'getOrganisation') === true) {
-                $owningOrganisation = $entity->getOrganisation();
-            }
+            $owningOrganisation = $this->readOwningOrganisation(entity: $entity);
 
             if ($owningOrganisation !== $source) {
                 continue;
@@ -466,6 +467,65 @@ class MergeOrganisatieService
 
         return $count;
     }//end repointBySelfOrganisation()
+
+    /**
+     * Read an OpenRegister object's system-level owning organisation
+     * (`@self.organisation`).
+     *
+     * `ObjectEntity` declares `getOrganisation()` ONLY as an `@method` docblock
+     * tag over `protected ?string $organisation`, so the accessor is reached
+     * through `OCP\AppFramework\Db\Entity::__call()`. Two probes are therefore
+     * wrong here, and both fail silently:
+     *
+     * - `method_exists()` is **false** for every such accessor. That was
+     *   softwarecatalog#490: the caller's re-point branch never ran, so a merge
+     *   re-pointed nothing for `contract`/`compliancy` while still tombstoning
+     *   the source organisation.
+     * - `is_callable()` is **true** for ANY name on a class with `__call()`, so
+     *   swapping the probe would make the branch unconditionally true and move
+     *   the failure into a runtime `BadFunctionCallException`.
+     *
+     * `Entity::getter()` itself decides on `property_exists()`, so that is the
+     * primary instrument below; `method_exists()` is kept as a second arm for
+     * an entity that genuinely declares the accessor. The call is still
+     * wrapped, because `$entity` comes from `ObjectService::findAll()` and is
+     * not type-guaranteed to be an `Entity` subclass.
+     *
+     * Deliberately NOT read from `jsonSerialize()`: `ObjectEntity::getObjectArray()`
+     * types `organisation` as `array|string|null`, so an expanded organisation
+     * would silently fail the UUID comparison in the caller. The property holds
+     * the raw `?string`.
+     *
+     * @param object $entity The OpenRegister ObjectEntity to read.
+     *
+     * @return string|null The owning organisation UUID, or null when the entity carries none.
+     *
+     * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
+     */
+    private function readOwningOrganisation(object $entity): ?string
+    {
+        if (property_exists($entity, 'organisation') === false
+            && method_exists($entity, 'getOrganisation') === false
+        ) {
+            return null;
+        }
+
+        try {
+            $owningOrganisation = $entity->getOrganisation();
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'MergeOrganisatieService: could not read @self.organisation from object entity',
+                ['exception' => $e->getMessage(), 'entity' => $entity::class]
+            );
+            return null;
+        }
+
+        if (is_string($owningOrganisation) === false) {
+            return null;
+        }
+
+        return $owningOrganisation;
+    }//end readOwningOrganisation()
 
     /**
      * Save the full existing payload (only the organisation-reference field(s)
