@@ -173,29 +173,27 @@ test('facets: a text query narrows the aggregated set', async () => {
 	}
 })
 
-// @e2e gemma-faceted-search::repeated-identical-facet-request-is-served-from-cache
-test('facets: a repeated identical request is served from cache, a different one is not', async () => {
-	// A parameter combination nothing has asked for yet, so the first call is
-	// guaranteed to be a cache MISS. Using the run token rather than the bare
-	// endpoint matters: the unparameterised call is warmed by the other tests
-	// in this file, and asserting `cached === false` on it would fail for a
-	// reason that has nothing to do with the behaviour.
-	const url = `${FACETS}/module?search=${encodeURIComponent(TOKEN)}-cachecheck`
-
-	const first = await ctx.get(url)
-	expect(first.status()).toBe(200)
-	expect((await first.json())?._meta?.cached, 'first request for a fresh parameter set was already cached').toBe(false)
-
-	const second = await ctx.get(url)
-	expect(second.status()).toBe(200)
-	expect((await second.json())?._meta?.cached, 'the repeated identical request was NOT served from cache').toBe(true)
-
-	// A DIFFERENT parameter set is a different cache entry — proving the flag
-	// tracks the request rather than being stuck on after any first call.
-	const other = await ctx.get(`${url}-variant`)
-	expect(other.status()).toBe(200)
-	expect((await other.json())?._meta?.cached, 'a different parameter set reused another entry\'s cache').toBe(false)
-})
+// ⚠️ `repeated-identical-facet-request-is-served-from-cache` IS NOT CLAIMED HERE.
+//
+// It passed locally and FAILED ON CI, and the difference is the environment,
+// not the code. The facet cache is `ICacheFactory::createDistributed(...)`,
+// which degrades to a NULL cache when Nextcloud has no memcache backend
+// configured — nothing is stored and `_meta.cached` is therefore always false.
+//
+// Measured on both sides:
+//   dev rig  — `occ config:system:get memcache.local` -> \OC\Memcache\APCu,
+//              APCu present; the flag flips false -> true reliably.
+//   CI       — the shared workflow configures no memcache at all (zero
+//              mentions of memcache/apcu in the job log); both calls returned
+//              `cached: false` and the assertion failed on the first run and
+//              its retry.
+//
+// So on the instance where this suite actually runs, the scenario has no
+// observable behaviour. The tempting fixes are both wrong: a `test.skip` guard
+// on "is caching available" would never be false on CI, so it would credit
+// coverage that never executes; and asserting only that `cached` is a boolean
+// is an assertion that cannot fail. Left uncovered and counted until the CI
+// instance configures a cache backend.
 
 // @e2e gemma-faceted-search::facet-panel-renders-alongside-the-existing-index-page-toolbar
 test('facets: the GEMMA panel renders beside the search box on the module index', async ({ page }) => {
