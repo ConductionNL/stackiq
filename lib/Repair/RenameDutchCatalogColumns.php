@@ -312,29 +312,46 @@ class RenameDutchCatalogColumns implements IRepairStep
 
         $tables = [];
         while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
-            $name   = (string) ($row['table_name'] ?? '');
-            $offset = strpos($name, $marker);
-            if ($offset === false) {
-                continue;
+            $name = (string) ($row['table_name'] ?? '');
+            if ($this->isMigratableShard(table: $name, marker: $marker, excluded: $excluded) === true) {
+                $tables[] = $name;
             }
-
-            // Everything after the marker must be the numeric schema id, so
-            // register 13 cannot match register 130's tables.
-            $schemaId = substr($name, ($offset + strlen($marker)));
-            if (ctype_digit($schemaId) === false) {
-                continue;
-            }
-
-            if (in_array((int) $schemaId, $excluded, true) === true) {
-                continue;
-            }
-
-            $tables[] = $name;
         }
 
         return $tables;
 
     }//end inScopeShardTables()
+
+    /**
+     * Whether a table is a shard of this register that is NOT wire-exempt.
+     *
+     * @param string          $table    Table name from information_schema.
+     * @param string          $marker   `openregister_table_<registerId>_`.
+     * @param array<int, int> $excluded Schema ids exempt as external wire formats.
+     *
+     * @return bool
+     */
+    private function isMigratableShard(string $table, string $marker, array $excluded): bool
+    {
+        $offset = strpos($table, $marker);
+        if ($offset === false) {
+            return false;
+        }
+
+        // Everything after the marker must be the numeric schema id, so a
+        // derived table (…_13_50_backup) or a non-shard (…_13_audit) is left
+        // alone. Note this is NOT what stops register 13 matching register
+        // 130's tables — the marker already ends in '_', so `…_table_13_` is
+        // not a substring of `…_table_130_50` in the first place.
+        $schemaId = substr($table, ($offset + strlen($marker)));
+        if (ctype_digit($schemaId) === false) {
+            return false;
+        }
+
+        // GEMMA/ArchiMate schemas carry an external wire format and are exempt.
+        return in_array((int) $schemaId, $excluded, true) === false;
+
+    }//end isMigratableShard()
 
     /**
      * Resolve the schema ids of the externally-standardised schemas.
