@@ -74,16 +74,12 @@ Every OpenRegister `searchObjects()` (or equivalent aggregate) call issued by th
 
 #### Scenario: Facet aggregation query sets an explicit limit
 
-@e2e exclude The subject is a PHP array key (`$pagedQuery['_limit']`) that exists only between `FacetService` and `ObjectService` inside one request; no browser or HTTP response ever carries it. Verified against the live endpoint rather than assumed: `GET /apps/softwarecatalog/api/facets/module` returns `_meta` = `{totalMatched, processingTimeMs, cached, matchedObjectIds}` — the query array is not echoed in any form, so there is nothing a Playwright assertion could read. Covered instead by a unit test on `FacetService`'s query construction, which can inspect the array directly.
-
 - GIVEN `FacetService` builds a query to aggregate `referentiecomponent` values across the `module` schema
 - WHEN the query array is constructed
 - THEN it MUST include an explicit `_limit` value
 - AND the value MUST NOT be silently omitted or left to default
 
 #### Scenario: A register too large for one bounded page pages instead of scanning unbounded
-
-@e2e exclude Distinguishes "paged through `searchObjectsPaginated()`" from "one unbounded `searchObjects()`" — two implementations that produce the BYTE-IDENTICAL response. Verified: the endpoint's `_meta` (`totalMatched, processingTimeMs, cached, matchedObjectIds`) discloses no paging state, and the overflow path's only external signal is a `LoggerInterface::warning` line. A browser cannot read a log file, and a response that is the same either way cannot be asserted on. Covered by a unit test that counts calls to the paginated verb.
 
 - GIVEN the `module` register has more objects than fit in one bounded facet aggregation page
 - WHEN facet counts are computed
@@ -102,8 +98,6 @@ Facet aggregation SHALL count only objects the requesting user is authorized to 
 - AND no facet value that exists only among the other 32 (invisible) modules MUST appear
 
 #### Scenario: Facet aggregation uses the same authorization path as the object list
-
-@e2e exclude Asserts CODE-PATH IDENTITY ("the identical scoping ... MUST NOT use a separate, unscoped counting code path"), not an outcome. Two code paths that happen to agree on every observable output are indistinguishable from one shared path by any black-box observation, so no browser assertion can decide this proposition — even a perfect test of the OUTCOME would leave the requirement unproven, which is why this is not merely "hard to test". The observable half (a restricted user's counts reflect only their own scope) is a SEPARATE scenario in this same requirement and is NOT excluded.
 
 - GIVEN the module index page's own object list query is scoped by RBAC/organisation context
 - WHEN the facet aggregation query is built
@@ -215,8 +209,6 @@ All facet dimension labels, facet value display strings sourced from the UI laye
 - THEN the dimension labels (e.g. "Referentiecomponent", "Standaard", "Applicatieservice", "Domein") and the "Save as view" action MUST render in Dutch
 
 #### Scenario: Translation keys are in English
-
-@e2e exclude The subject is the KEY side of the `l10n/*.json` source files. A browser is only ever served the resolved VALUE — by the time any string reaches the DOM the key has been substituted away, so a rendered page is identical whether the key was `facetSaveAsView` or a Dutch literal. This is a repository-file property, enforceable only by reading `l10n/` (which the sibling scenario "Facet panel renders in the user's selected language" does NOT substitute for: that one asserts the values).
 
 - GIVEN the softwarecatalog `l10n` translation files
 - WHEN the facet panel's translation keys are inspected
