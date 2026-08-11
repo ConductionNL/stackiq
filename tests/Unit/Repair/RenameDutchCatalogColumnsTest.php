@@ -32,6 +32,7 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Repair;
 
 use OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
 use ReflectionClass;
 use ReflectionMethod;
 
@@ -48,18 +49,29 @@ class RenameDutchCatalogColumnsTest extends TestCase
     private RenameDutchCatalogColumns $step;
 
     /**
-     * Build the step WITHOUT running its constructor.
+     * Build the step WITHOUT running its constructor, then inject a logger.
      *
-     * The methods under test are pure — they read neither $db nor $logger
-     * except to log a refusal — so no collaborators are needed, and mocking
-     * IDBConnection can drag in Doctrine types the unit environment does not
-     * install.
+     * The constructor is skipped because mocking IDBConnection drags in
+     * Doctrine types this app's unit environment does not install.
+     *
+     * $logger IS still required, though: hasCollision() logs when it refuses an
+     * ambiguous rename, and a readonly promoted property left uninitialised
+     * throws "must not be accessed before initialization" the moment that path
+     * runs. An earlier version of this file skipped the constructor and set
+     * nothing; the collision test then errored in CI for exactly that reason,
+     * while the local standalone check of the same logic passed — because it
+     * exercised the algorithm as a free function, with no object state at all.
      *
      * @return void
      */
     protected function setUp(): void
     {
-        $this->step = (new ReflectionClass(RenameDutchCatalogColumns::class))->newInstanceWithoutConstructor();
+        $class      = new ReflectionClass(RenameDutchCatalogColumns::class);
+        $this->step = $class->newInstanceWithoutConstructor();
+
+        $logger = $class->getProperty('logger');
+        $logger->setAccessible(true);
+        $logger->setValue($this->step, new NullLogger());
 
     }//end setUp()
 
