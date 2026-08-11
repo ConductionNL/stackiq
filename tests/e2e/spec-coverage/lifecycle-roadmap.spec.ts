@@ -43,8 +43,14 @@ test('roadmap: nav entry reaches the organisation-first roadmap surface', async 
 	await expect(roadmap.locator('.rm-intro')).toContainText(/grouped by lifecycle phase/i)
 
 	// The refresh control the view owns (it re-runs loadData()).
+	//
+	// Queried by its ACCESSIBLE NAME, which is the `aria-label` "Refresh data"
+	// — not the visible label "Refresh". When an element carries aria-label,
+	// that label wins over its text content, so `{ name: 'Refresh', exact: true }`
+	// matches nothing. CI caught this; it is also the assertion worth making,
+	// because the accessible name is what a screen-reader user hears.
 	await expect(
-		roadmap.getByRole('button', { name: 'Refresh', exact: true }).first(),
+		roadmap.getByRole('button', { name: 'Refresh data', exact: true }).first(),
 	).toBeVisible()
 
 	// Organisation-first: the organisation selector is present and, until an
