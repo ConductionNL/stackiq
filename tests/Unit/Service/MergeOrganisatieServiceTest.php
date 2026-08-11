@@ -32,7 +32,6 @@ use OCA\SoftwareCatalog\Service\ProgressTracker;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
 use OCP\App\IAppManager;
-use OCP\AppFramework\Db\Entity;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -762,9 +761,10 @@ class MergeOrganisatieServiceTest extends TestCase
 
     /**
      * Build a FAITHFUL OpenRegister ObjectEntity double: a concrete subclass of
-     * the `ObjectEntity` stub (which extends `OCP\AppFramework\Db\Entity`),
-     * whose `organisation` and `uuid` attributes are reached through
-     * `Entity::__call()`, exactly as the real `ObjectEntity` reaches them.
+     * the `ObjectEntity` stub, whose `organisation` and `uuid` attributes are
+     * reached through the stub's `__call()` — which mirrors
+     * `OCP\AppFramework\Db\Entity::__call()`, exactly as the real
+     * `ObjectEntity` reaches them.
      *
      * This used to return `createMock(ObjectEntity::class)` over a stub that
      * declared `getOrganisation()` CONCRETELY — PHPUnit 10 removed
