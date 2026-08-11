@@ -288,18 +288,44 @@ class RenameDutchCatalogColumns implements IRepairStep
 
         $excluded = $this->wireSchemaIds();
 
-        $prefix  = preg_quote($this->db->getPrefix(), '/');
-        $pattern = '/^'.$prefix.'openregister_table_'.((int) $registerId).'_(\d+)$/';
+        // Table discovery goes through information_schema, NOT IDBConnection.
+        // OCP\IDBConnection exposes neither getSchema() nor getPrefix(); both
+        // exist only on the concrete OC\DB\Connection. Calling them is a runtime
+        // fatal that `php -l` and phpcs both report as clean — only phpstan
+        // catches it. Pattern follows openregister's own RegisterService: anchor
+        // on the `openregister_table_` MARKER, never on a computed prefix.
+        try {
+            $stmt = $this->db->prepare(
+                'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
+            );
+            $stmt->bindValue('pattern', '%openregister\_table\_%');
+            $stmt->execute();
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'RenameDutchCatalogColumns: could not list tables; skipping.',
+                ['exception' => $e->getMessage()]
+            );
+            return [];
+        }
+
+        $marker = 'openregister_table_'.((int) $registerId).'_';
 
         $tables = [];
-        foreach ($this->db->getSchema()->getTableNames() as $qualified) {
-            $name    = substr($qualified, (strrpos($qualified, '.') + 1));
-            $matches = [];
-            if (preg_match($pattern, $name, $matches) !== 1) {
+        while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
+            $name = (string) ($row['table_name'] ?? '');
+            $at   = strpos($name, $marker);
+            if ($at === false) {
                 continue;
             }
 
-            if (in_array((int) $matches[1], $excluded, true) === true) {
+            // Everything after the marker must be the numeric schema id, so
+            // register 13 cannot match register 130's tables.
+            $schemaId = substr($name, ($at + strlen($marker)));
+            if (ctype_digit($schemaId) === false) {
+                continue;
+            }
+
+            if (in_array((int) $schemaId, $excluded, true) === true) {
                 continue;
             }
 
@@ -347,8 +373,13 @@ class RenameDutchCatalogColumns implements IRepairStep
      */
     private function columnsOf(string $table): array
     {
+        // information_schema again — IDBConnection has no getSchema().
         try {
-            return array_keys($this->db->getSchema()->getTable($table)->getColumns());
+            $stmt = $this->db->prepare(
+                'SELECT column_name FROM information_schema.columns WHERE table_name = :table'
+            );
+            $stmt->bindValue('table', $table);
+            $stmt->execute();
         } catch (\Throwable $e) {
             $this->logger->warning(
                 'RenameDutchCatalogColumns: could not read columns; skipping table.',
@@ -356,6 +387,16 @@ class RenameDutchCatalogColumns implements IRepairStep
             );
             return [];
         }
+
+        $columns = [];
+        while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
+            $name = (string) ($row['column_name'] ?? '');
+            if ($name !== '') {
+                $columns[] = $name;
+            }
+        }
+
+        return $columns;
 
     }//end columnsOf()
 
