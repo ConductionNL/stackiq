@@ -312,15 +312,15 @@ class RenameDutchCatalogColumns implements IRepairStep
 
         $tables = [];
         while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
-            $name = (string) ($row['table_name'] ?? '');
-            $at   = strpos($name, $marker);
-            if ($at === false) {
+            $name   = (string) ($row['table_name'] ?? '');
+            $offset = strpos($name, $marker);
+            if ($offset === false) {
                 continue;
             }
 
             // Everything after the marker must be the numeric schema id, so
             // register 13 cannot match register 130's tables.
-            $schemaId = substr($name, ($at + strlen($marker)));
+            $schemaId = substr($name, ($offset + strlen($marker)));
             if (ctype_digit($schemaId) === false) {
                 continue;
             }
@@ -373,7 +373,7 @@ class RenameDutchCatalogColumns implements IRepairStep
      */
     private function columnsOf(string $table): array
     {
-        // information_schema again — IDBConnection has no getSchema().
+        // Queried from information_schema — IDBConnection has no getSchema().
         try {
             $stmt = $this->db->prepare(
                 'SELECT column_name FROM information_schema.columns WHERE table_name = :table'
