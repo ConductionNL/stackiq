@@ -16,6 +16,8 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
+import { getRequestToken } from '@nextcloud/auth'
+
 const API_BASE = '/index.php/apps/softwarecatalog/api'
 
 /**
@@ -50,11 +52,40 @@ export async function apiRequest(path, options = {}, fetchImpl = undefined) {
 		throw new Error('No fetch implementation available')
 	}
 
+	// ⚠️ `requesttoken` is NOT optional on a state-changing request.
+	//
+	// Nextcloud's CSRF middleware rejects any cookie-authenticated request
+	// whose method is not GET/HEAD unless the controller declares
+	// `#[NoCSRFRequired]` OR the request carries the session's request token.
+	// `X-Requested-With: XMLHttpRequest` does NOT satisfy it — that header was
+	// dropped as a CSRF signal long ago.
+	//
+	// Without this header EVERY write that goes through this helper failed
+	// with a rendered "CSRF check failed" alert and no server-side effect:
+	//   SubmitReviewModal      POST reviews
+	//   ModerationQueue        POST moderation/{uuid}/approve|reject
+	//   FederationSettings     POST/DELETE federation/peers, POST federation/pull
+	//   EolSyncSettings        POST eol-sync/config, POST eol-sync/trigger
+	// None of those controllers is `#[NoCSRFRequired]`, so none of them was
+	// reachable from the UI. Measured, not inferred: a Playwright run driving
+	// the real "Write a review" modal captured the alert text `CSRF check
+	// failed` in the dialog, and the same flow passes once this header is sent.
+	//
+	// Reads are unaffected (GET is exempt), which is why the settings sections
+	// rendered correctly and only their WRITE actions were dead — a failure
+	// mode that looks like "the button does nothing".
+	//
+	// `getRequestToken()` reads the token @nextcloud/auth keeps in sync with
+	// the `data-requesttoken` head meta, so it stays correct across NC's
+	// token rotation. This is the same source `@nextcloud/axios` uses; the
+	// sibling store `src/store/modules/facets.js` already goes through axios
+	// and was never affected.
 	const init = {
 		method: options.method || 'GET',
 		headers: {
 			'Content-Type': 'application/json',
 			'X-Requested-With': 'XMLHttpRequest',
+			requesttoken: getRequestToken() ?? '',
 		},
 	}
 	if (options.body !== undefined && options.body !== null) {
