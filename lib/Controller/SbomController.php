@@ -279,17 +279,25 @@ class SbomController extends Controller {
 			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		$readError = $this->authorizeRead(moduleVersieUuid: $moduleVersieUuid);
-		if ($readError !== null) {
-			return $readError;
-		}
-
 		$operationId = $this->request->getParam('operationId');
 		if (is_string($operationId) === false) {
 			$operationId = null;
 		}
 
+		// The guard goes INSIDE the try, for the reason importSbom()'s docblock
+		// already records: authorizeRead() reaches
+		// SbomImportService::resolveParentModuleUuid(), and OpenRegister's real
+		// ObjectService::find() RE-THROWS DoesNotExistException for a
+		// well-formed but non-existent uuid rather than returning null. Guarding
+		// outside the try would therefore turn this endpoint's clean 404 into a
+		// 500 for exactly the callers the guard was added for — non-admins
+		// passing an unknown id.
 		try {
+			$readError = $this->authorizeRead(moduleVersieUuid: $moduleVersieUuid);
+			if ($readError !== null) {
+				return $readError;
+			}
+
 			return new JSONResponse(
 				data: $this->importService->getStatus(
 					moduleVersieUuid: $moduleVersieUuid,
