@@ -351,7 +351,7 @@ class OrganizationSyncService {
 					'LOWER(o.status) = ' . $countQb->createNamedParameter('actief')
 				)
 			)
-			->execute()->fetchOne();
+			->executeQuery()->fetchOne();
 
 		$stats['totalRemaining'] = $totalRemaining;
 
@@ -378,7 +378,7 @@ class OrganizationSyncService {
 			->orderBy('o._updated', 'ASC')
 			->setMaxResults($batchSize);
 
-		$rows = $qb->execute()->fetchAll();
+		$rows = $qb->executeQuery()->fetchAll();
 
 		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		if ($objectService instanceof ObjectService === false) {
@@ -495,7 +495,7 @@ class OrganizationSyncService {
 			->orderBy('o._updated', 'ASC')
 			->setMaxResults($batchSize);
 
-		$contacts = $qb->execute()->fetchAll();
+		$contacts = $qb->executeQuery()->fetchAll();
 		$stats['totalRemaining'] = count($contacts);
 
 		if (empty($contacts) === true) {
@@ -611,7 +611,7 @@ class OrganizationSyncService {
 			->andWhere($qb->createFunction('o.organisatie IS NOT NULL'))
 			->andWhere($qb->createFunction($jsonContainsCheck));
 
-		$users = $qb->execute()->fetchAll();
+		$users = $qb->executeQuery()->fetchAll();
 
 		if (empty($users) === false) {
 			$this->logger->info('UserSync: adding ' . count($users) . ' users to their org entities');

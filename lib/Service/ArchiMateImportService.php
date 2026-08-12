@@ -2178,8 +2178,6 @@ class ArchiMateImportService {
 			$propertyDefs = $data['propertyDefinitions'];
 		} elseif (isset($data['property_definitions']) === true) {
 			$propertyDefs = $data['property_definitions'];
-		} elseif (isset($data['propertyDefinitions']) === true) {
-			$propertyDefs = $data['propertyDefinitions'];
 		}
 
 		if ($propertyDefs !== false && isset($propertyDefs['propertyDefinition']) === true) {

@@ -69,7 +69,8 @@ class DashboardController extends Controller {
 				$this->appName,
 				'error',
 				['error' => $e->getMessage()],
-				'500'
+				TemplateResponse::RENDER_AS_ERROR,
+				Http::STATUS_INTERNAL_SERVER_ERROR
 			);
 		}
 	}//end page()
