@@ -115,6 +115,24 @@ Vrij en open source onder de EUPL-licentie.
 			-->
 			<step>OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns</step>
 		</post-migration>
+		<!--
+			FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
+			`Installer::installAppLastSteps()` guards both the pre-migration and
+			post-migration blocks with `if ($previousVersion !== '')`, and only
+			`repair-steps/install` runs unconditionally afterwards. Until this block
+			existed a brand-new SoftwareCatalog install ran NONE of the steps above,
+			so InitializeSettings never fired and the register was never imported —
+			despite that step's own docblock saying it initialises settings "on
+			install/upgrade".
+
+			Only InitializeSettings belongs here. MigrateContactsToNc,
+			BackfillContractApprovalState and RenameDutchCatalogColumns are all
+			migrations or backfills over data a fresh install does not yet have, so
+			they stay upgrade-only rather than running against an empty database.
+		-->
+		<install>
+			<step>OCA\SoftwareCatalog\Repair\InitializeSettings</step>
+		</install>
 	</repair-steps>
 
 	<settings>
