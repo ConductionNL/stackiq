@@ -99,6 +99,14 @@ Vrij en open source onder de EUPL-licentie.
 			<step>OCA\SoftwareCatalog\Repair\InitializeSettings</step>
 			<step>OCA\SoftwareCatalog\Repair\MigrateContactsToNc</step>
 			<step>OCA\SoftwareCatalog\Repair\BackfillContractApprovalState</step>
+			<!--
+				Must run AFTER the register sync that adds the English columns, so it
+				can tell the rename case from the back-fill case. Scoped by SCHEMA,
+				not by register: element/relation/view hold the GEMMA/GGM import and
+				their Dutch property names are that import's wire format.
+				Idempotent, non-destructive, and refuses ambiguous renames.
+			-->
+			<step>OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns</step>
 		</post-migration>
 	</repair-steps>
 
