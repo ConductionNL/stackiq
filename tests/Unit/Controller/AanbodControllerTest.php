@@ -41,100 +41,92 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-must-require-authentication-explicitly-not-implicitly-req-009
  */
-class AanbodControllerTest extends TestCase
-{
+class AanbodControllerTest extends TestCase {
 
-    /** @var AanbodService|MockObject */
-    private AanbodService|MockObject $aanbodService;
+	/** @var AanbodService|MockObject */
+	private AanbodService|MockObject $aanbodService;
 
-    /** @var IUserSession|MockObject */
-    private IUserSession|MockObject $userSession;
+	/** @var IUserSession|MockObject */
+	private IUserSession|MockObject $userSession;
 
+	/**
+	 * Build the controller with the current mocks.
+	 *
+	 * @return AanbodController The controller under test.
+	 */
+	private function makeController(): AanbodController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParams')->willReturn([]);
+		$request->method('getParam')->willReturn(null);
 
-    /**
-     * Build the controller with the current mocks.
-     *
-     * @return AanbodController The controller under test.
-     */
-    private function makeController(): AanbodController
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParams')->willReturn([]);
-        $request->method('getParam')->willReturn(null);
+		$this->aanbodService = $this->createMock(AanbodService::class);
+		$this->userSession = $this->createMock(IUserSession::class);
 
-        $this->aanbodService = $this->createMock(AanbodService::class);
-        $this->userSession   = $this->createMock(IUserSession::class);
+		return new AanbodController(
+			'softwarecatalog',
+			$request,
+			$this->userSession,
+			$this->aanbodService,
+			$this->createMock(LoggerInterface::class)
+		);
 
-        return new AanbodController(
-            'softwarecatalog',
-            $request,
-            $this->userSession,
-            $this->aanbodService,
-            $this->createMock(LoggerInterface::class)
-        );
+	}//end makeController()
 
-    }//end makeController()
+	/**
+	 * REQ-009: an unauthenticated caller is rejected by the controller
+	 * itself — AanbodService::getAanbod() MUST NEVER be invoked.
+	 *
+	 * @return void
+	 */
+	public function testUnauthenticatedCallerIsRejectedBeforeServiceIsInvoked(): void {
+		$controller = $this->makeController();
+		$this->userSession->method('getUser')->willReturn(null);
 
+		$this->aanbodService->expects($this->never())->method('getAanbod');
 
-    /**
-     * REQ-009: an unauthenticated caller is rejected by the controller
-     * itself — AanbodService::getAanbod() MUST NEVER be invoked.
-     *
-     * @return void
-     */
-    public function testUnauthenticatedCallerIsRejectedBeforeServiceIsInvoked(): void
-    {
-        $controller = $this->makeController();
-        $this->userSession->method('getUser')->willReturn(null);
+		$response = $controller->getAanbod();
 
-        $this->aanbodService->expects($this->never())->method('getAanbod');
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame([], $data['results']);
+		$this->assertSame(0, $data['total']);
+		$this->assertSame('Not authenticated', $data['message']);
 
-        $response = $controller->getAanbod();
+	}//end testUnauthenticatedCallerIsRejectedBeforeServiceIsInvoked()
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-        $data = $response->getData();
-        $this->assertSame([], $data['results']);
-        $this->assertSame(0, $data['total']);
-        $this->assertSame('Not authenticated', $data['message']);
+	/**
+	 * REQ-009: an authenticated caller still reaches the service — the
+	 * guard only blocks the fully-anonymous case. The service's own "no
+	 * active organisation" handling (existing behaviour, per the
+	 * pre-existing docs/security/vendor-visibility-rbac.md audit entry for
+	 * this route) is responsible for that narrower case.
+	 *
+	 * @return void
+	 */
+	public function testAuthenticatedCallerReachesService(): void {
+		$controller = $this->makeController();
 
-    }//end testUnauthenticatedCallerIsRejectedBeforeServiceIsInvoked()
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('caller-uid');
+		$this->userSession->method('getUser')->willReturn($user);
 
+		$this->aanbodService->expects($this->once())
+			->method('getAanbod')
+			->willReturn(
+				[
+					'results' => [],
+					'total' => 0,
+					'page' => 1,
+					'pages' => 0,
+					'limit' => 20,
+					'offset' => 0,
+				]
+			);
 
-    /**
-     * REQ-009: an authenticated caller still reaches the service — the
-     * guard only blocks the fully-anonymous case. The service's own "no
-     * active organisation" handling (existing behaviour, per the
-     * pre-existing docs/security/vendor-visibility-rbac.md audit entry for
-     * this route) is responsible for that narrower case.
-     *
-     * @return void
-     */
-    public function testAuthenticatedCallerReachesService(): void
-    {
-        $controller = $this->makeController();
+		$response = $controller->getAanbod();
 
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('caller-uid');
-        $this->userSession->method('getUser')->willReturn($user);
+		$this->assertSame(200, $response->getStatus());
 
-        $this->aanbodService->expects($this->once())
-            ->method('getAanbod')
-            ->willReturn(
-                [
-                    'results' => [],
-                    'total'   => 0,
-                    'page'    => 1,
-                    'pages'   => 0,
-                    'limit'   => 20,
-                    'offset'  => 0,
-                ]
-            );
-
-        $response = $controller->getAanbod();
-
-        $this->assertSame(200, $response->getStatus());
-
-    }//end testAuthenticatedCallerReachesService()
-
+	}//end testAuthenticatedCallerReachesService()
 
 }//end class

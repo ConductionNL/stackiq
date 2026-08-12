@@ -24,20 +24,17 @@ namespace OCA\OpenRegister\Db;
  * Stub for the OpenRegister SchemaMapper with the surface used by
  * SoftwareCatalog tests.
  */
-abstract class SchemaMapper
-{
+abstract class SchemaMapper {
 
-
-    /**
-     * Find schemas matching a slug.
-     *
-     * @param string $slug   The slug to search for.
-     * @param int    $limit  Maximum number of results.
-     * @param int    $offset Offset for pagination.
-     *
-     * @return array<int, object> Array of matching schema entities.
-     */
-    abstract public function findBySlug(string $slug, int $limit = 10, int $offset = 0): array;
-
+	/**
+	 * Find schemas matching a slug.
+	 *
+	 * @param string $slug The slug to search for.
+	 * @param int $limit Maximum number of results.
+	 * @param int $offset Offset for pagination.
+	 *
+	 * @return array<int, object> Array of matching schema entities.
+	 */
+	abstract public function findBySlug(string $slug, int $limit = 10, int $offset = 0): array;
 
 }//end class

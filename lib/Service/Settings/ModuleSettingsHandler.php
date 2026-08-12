@@ -35,118 +35,113 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-1
  */
-class ModuleSettingsHandler
-{
+class ModuleSettingsHandler {
 
-    /**
-     * The application name used as the config namespace.
-     *
-     * @var string
-     */
-    private const APP_NAME = 'softwarecatalog';
+	/**
+	 * The application name used as the config namespace.
+	 *
+	 * @var string
+	 */
+	private const APP_NAME = 'softwarecatalog';
 
-    /**
-     * Constructor.
-     *
-     * @param IAppConfig      $config The application configuration service.
-     * @param LoggerInterface $logger Logger instance.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-1
-     */
-    public function __construct(
-        private readonly IAppConfig $config,
-        private readonly LoggerInterface $logger
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $config The application configuration service.
+	 * @param LoggerInterface $logger Logger instance.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
+	 */
+	public function __construct(
+		private readonly IAppConfig $config,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Get the AMEF (Applicatie Module Export Format) configuration.
-     *
-     * @return array<string,mixed> AMEF configuration.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-1
-     */
-    public function getAmefConfig(): array
-    {
-        return [
-            'enabled'        => $this->config->getValueString(self::APP_NAME, 'amef_enabled', 'true') === 'true',
-            'version'        => $this->config->getValueString(self::APP_NAME, 'amef_version', '1.0'),
-            'exportPath'     => $this->config->getValueString(self::APP_NAME, 'amef_export_path', ''),
-            'includeModules' => $this->config->getValueString(self::APP_NAME, 'amef_include_modules', 'true') === 'true',
-        ];
+	/**
+	 * Get the AMEF (Applicatie Module Export Format) configuration.
+	 *
+	 * @return array<string,mixed> AMEF configuration.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
+	 */
+	public function getAmefConfig(): array {
+		return [
+			'enabled' => $this->config->getValueString(self::APP_NAME, 'amef_enabled', 'true') === 'true',
+			'version' => $this->config->getValueString(self::APP_NAME, 'amef_version', '1.0'),
+			'exportPath' => $this->config->getValueString(self::APP_NAME, 'amef_export_path', ''),
+			'includeModules' => $this->config->getValueString(self::APP_NAME, 'amef_include_modules', 'true') === 'true',
+		];
 
-    }//end getAmefConfig()
+	}//end getAmefConfig()
 
-    /**
-     * Update the AMEF configuration from a data array.
-     *
-     * @param array<string,mixed> $data AMEF config fields to update.
-     *
-     * @return array<string,mixed> The updated AMEF configuration.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-1
-     */
-    public function setAmefConfig(array $data): array
-    {
-        $this->validateModuleConfig(data: $data);
+	/**
+	 * Update the AMEF configuration from a data array.
+	 *
+	 * @param array<string,mixed> $data AMEF config fields to update.
+	 *
+	 * @return array<string,mixed> The updated AMEF configuration.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
+	 */
+	public function setAmefConfig(array $data): array {
+		$this->validateModuleConfig(data: $data);
 
-        if (isset($data['enabled']) === true) {
-            $enabledStr = 'false';
-            if ($data['enabled'] === true) {
-                $enabledStr = 'true';
-            }
+		if (isset($data['enabled']) === true) {
+			$enabledStr = 'false';
+			if ($data['enabled'] === true) {
+				$enabledStr = 'true';
+			}
 
-            $this->config->setValueString(self::APP_NAME, 'amef_enabled', $enabledStr);
-        }
+			$this->config->setValueString(self::APP_NAME, 'amef_enabled', $enabledStr);
+		}
 
-        if (isset($data['version']) === true) {
-            $this->config->setValueString(self::APP_NAME, 'amef_version', (string) $data['version']);
-        }
+		if (isset($data['version']) === true) {
+			$this->config->setValueString(self::APP_NAME, 'amef_version', (string)$data['version']);
+		}
 
-        if (isset($data['exportPath']) === true) {
-            $this->config->setValueString(self::APP_NAME, 'amef_export_path', (string) $data['exportPath']);
-        }
+		if (isset($data['exportPath']) === true) {
+			$this->config->setValueString(self::APP_NAME, 'amef_export_path', (string)$data['exportPath']);
+		}
 
-        if (isset($data['includeModules']) === true) {
-            $includeStr = 'false';
-            if ($data['includeModules'] === true) {
-                $includeStr = 'true';
-            }
+		if (isset($data['includeModules']) === true) {
+			$includeStr = 'false';
+			if ($data['includeModules'] === true) {
+				$includeStr = 'true';
+			}
 
-            $this->config->setValueString(self::APP_NAME, 'amef_include_modules', $includeStr);
-        }
+			$this->config->setValueString(self::APP_NAME, 'amef_include_modules', $includeStr);
+		}
 
-        $this->logger->info('ModuleSettingsHandler: Updated AMEF configuration', ['data' => $data]);
+		$this->logger->info('ModuleSettingsHandler: Updated AMEF configuration', ['data' => $data]);
 
-        return $this->getAmefConfig();
+		return $this->getAmefConfig();
+	}//end setAmefConfig()
 
-    }//end setAmefConfig()
+	/**
+	 * Validate module configuration data.
+	 *
+	 * Guard clause: throws when a version value is in an unsupported format.
+	 *
+	 * @param array<string,mixed> $data Module configuration data.
+	 *
+	 * @return void
+	 *
+	 * @throws \InvalidArgumentException When the configuration contains invalid values.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
+	 */
+	private function validateModuleConfig(array $data): void {
+		if (isset($data['version']) === false) {
+			return;
+		}
 
-    /**
-     * Validate module configuration data.
-     *
-     * Guard clause: throws when a version value is in an unsupported format.
-     *
-     * @param array<string,mixed> $data Module configuration data.
-     *
-     * @return void
-     *
-     * @throws \InvalidArgumentException When the configuration contains invalid values.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-1
-     */
-    private function validateModuleConfig(array $data): void
-    {
-        if (isset($data['version']) === false) {
-            return;
-        }
+		$version = (string)$data['version'];
+		if (preg_match('/^\d+\.\d+(\.\d+)?$/', $version) !== 1) {
+			throw new InvalidArgumentException(
+				sprintf('Invalid AMEF version format "%s". Expected: major.minor[.patch]', $version)
+			);
+		}
 
-        $version = (string) $data['version'];
-        if (preg_match('/^\d+\.\d+(\.\d+)?$/', $version) !== 1) {
-            throw new InvalidArgumentException(
-                sprintf('Invalid AMEF version format "%s". Expected: major.minor[.patch]', $version)
-            );
-        }
-
-    }//end validateModuleConfig()
+	}//end validateModuleConfig()
 }//end class

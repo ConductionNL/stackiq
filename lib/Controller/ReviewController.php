@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Review (beoordeeling) submission + approved-only read/aggregate controller.
  *
@@ -45,87 +46,84 @@ use OCP\IRequest;
  *
  * @spec openspec/specs/catalog-ratings/spec.md
  */
-class ReviewController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest               $request   The request.
-     * @param ReviewService          $reviews   The review submission service.
-     * @param ReviewAggregateService $aggregate The review aggregate/read service.
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly ReviewService $reviews,
-        private readonly ReviewAggregateService $aggregate,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class ReviewController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param ReviewService $reviews The review submission service.
+	 * @param ReviewAggregateService $aggregate The review aggregate/read service.
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly ReviewService $reviews,
+		private readonly ReviewAggregateService $aggregate,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * Submit an authenticated review into the moderation queue.
-     *
-     * @param array<string,mixed> $review      The review payload (naam, waardering, beschrijvingKort/Lang).
-     * @param string              $subjectType 'module' or 'dienst'.
-     * @param string              $subjectId   The uuid of the module/dienst being reviewed.
-     *
-     * @return JSONResponse `{ok, uuid, status}` (202 Accepted) or a 400/401.
-     *
-     * @NoAdminRequired
-     * @spec            openspec/specs/catalog-ratings/spec.md#requirement-the-submitting-users-identity-must-be-bound-server-side-and-must-not-be-accepted-from-client-input
-     */
-    #[NoAdminRequired]
-    public function submit(array $review=[], string $subjectType='', string $subjectId=''): JSONResponse
-    {
-        $result = $this->reviews->submit(payload: $review, subjectType: $subjectType, subjectId: $subjectId);
-        if ($result['ok'] === false) {
-            $statusCode = Http::STATUS_BAD_REQUEST;
-            if ($result['reason'] === 'not authenticated') {
-                $statusCode = Http::STATUS_UNAUTHORIZED;
-            }
+	/**
+	 * Submit an authenticated review into the moderation queue.
+	 *
+	 * @param array<string,mixed> $review The review payload (naam, waardering, beschrijvingKort/Lang).
+	 * @param string $subjectType 'module' or 'dienst'.
+	 * @param string $subjectId The uuid of the module/dienst being reviewed.
+	 *
+	 * @return JSONResponse `{ok, uuid, status}` (202 Accepted) or a 400/401.
+	 *
+	 * @NoAdminRequired
+	 * @spec            openspec/specs/catalog-ratings/spec.md#requirement-the-submitting-users-identity-must-be-bound-server-side-and-must-not-be-accepted-from-client-input
+	 */
+	#[NoAdminRequired]
+	public function submit(array $review = [], string $subjectType = '', string $subjectId = ''): JSONResponse {
+		$result = $this->reviews->submit(payload: $review, subjectType: $subjectType, subjectId: $subjectId);
+		if ($result['ok'] === false) {
+			$statusCode = Http::STATUS_BAD_REQUEST;
+			if ($result['reason'] === 'not authenticated') {
+				$statusCode = Http::STATUS_UNAUTHORIZED;
+			}
 
-            return new JSONResponse(data: ['message' => $result['reason']], statusCode: $statusCode);
-        }
+			return new JSONResponse(data: ['message' => $result['reason']], statusCode: $statusCode);
+		}
 
-        return new JSONResponse(
-            data: [
-                'ok'      => true,
-                'uuid'    => $result['uuid'],
-                'status'  => $result['status'],
-                'message' => 'Review received and queued for moderation',
-            ],
-            statusCode: Http::STATUS_ACCEPTED
-        );
-    }//end submit()
+		return new JSONResponse(
+			data: [
+				'ok' => true,
+				'uuid' => $result['uuid'],
+				'status' => $result['status'],
+				'message' => 'Review received and queued for moderation',
+			],
+			statusCode: Http::STATUS_ACCEPTED
+		);
+	}//end submit()
 
-    /**
-     * The approved-only aggregate (average + count) and a bounded list of
-     * approved reviews for a module or dienst.
-     *
-     * @param string $subjectType 'module' or 'dienst'.
-     * @param string $subjectId   The uuid of the module/dienst.
-     *
-     * @return JSONResponse `{average, count, items}` or a 400.
-     *
-     * @PublicPage
-     * @NoCSRFRequired
-     * @spec           openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
-     */
-    #[PublicPage]
-    #[NoCSRFRequired]
-    public function aggregate(string $subjectType='', string $subjectId=''): JSONResponse
-    {
-        $result = $this->aggregate->getAggregate(subjectType: $subjectType, subjectId: $subjectId);
-        if ($result['ok'] === false) {
-            return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
-        }
+	/**
+	 * The approved-only aggregate (average + count) and a bounded list of
+	 * approved reviews for a module or dienst.
+	 *
+	 * @param string $subjectType 'module' or 'dienst'.
+	 * @param string $subjectId The uuid of the module/dienst.
+	 *
+	 * @return JSONResponse `{average, count, items}` or a 400.
+	 *
+	 * @PublicPage
+	 * @NoCSRFRequired
+	 * @spec           openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	public function aggregate(string $subjectType = '', string $subjectId = ''): JSONResponse {
+		$result = $this->aggregate->getAggregate(subjectType: $subjectType, subjectId: $subjectId);
+		if ($result['ok'] === false) {
+			return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
+		}
 
-        return new JSONResponse(
-            data: [
-                'average' => $result['average'],
-                'count'   => $result['count'],
-                'items'   => $result['items'],
-            ]
-        );
-    }//end aggregate()
+		return new JSONResponse(
+			data: [
+				'average' => $result['average'],
+				'count' => $result['count'],
+				'items' => $result['items'],
+			]
+		);
+	}//end aggregate()
 }//end class

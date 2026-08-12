@@ -64,264 +64,255 @@ namespace OCA\SoftwareCatalog\Portal;
  *
  * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
  */
-class PortalContributionProvider
-{
-    /**
-     * The OpenRegister register slug every collection below lives in.
-     *
-     * @var string
-     */
-    private const REGISTER = 'voorzieningen';
+class PortalContributionProvider {
+	/**
+	 * The OpenRegister register slug every collection below lives in.
+	 *
+	 * @var string
+	 */
+	private const REGISTER = 'voorzieningen';
 
-    /**
-     * The claim carrying the subject's organisatie UUID used to scope reads.
-     *
-     * @var string
-     */
-    private const ORG_CLAIM = 'organisationId';
+	/**
+	 * The claim carrying the subject's organisatie UUID used to scope reads.
+	 *
+	 * @var string
+	 */
+	private const ORG_CLAIM = 'organisationId';
 
-    /**
-     * The audiences this provider contributes to (contract v2, preferred).
-     *
-     * The registry probes for this method first. Software Catalog serves
-     * software suppliers (`vendor-org`, organisatie.type "Leverancier") and the
-     * municipalities/collaborations that consume that software (`participant-org`,
-     * organisatie.type "Gemeente" / "Samenwerking" / "Community"). The two
-     * audiences exist because the same `gebruik` object is scoped by a DIFFERENT
-     * property for each side (`aanbieder` vs `afnemer`).
-     *
-     * @return array<int, string> The audience identifiers.
-     *
-     * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
-     */
-    public function getAudiences(): array
-    {
-        return ['vendor-org', 'participant-org'];
+	/**
+	 * The audiences this provider contributes to (contract v2, preferred).
+	 *
+	 * The registry probes for this method first. Software Catalog serves
+	 * software suppliers (`vendor-org`, organisatie.type "Leverancier") and the
+	 * municipalities/collaborations that consume that software (`participant-org`,
+	 * organisatie.type "Gemeente" / "Samenwerking" / "Community"). The two
+	 * audiences exist because the same `gebruik` object is scoped by a DIFFERENT
+	 * property for each side (`aanbieder` vs `afnemer`).
+	 *
+	 * @return array<int, string> The audience identifiers.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	public function getAudiences(): array {
+		return ['vendor-org', 'participant-org'];
+	}//end getAudiences()
 
-    }//end getAudiences()
+	/**
+	 * The primary audience this provider contributes to (contract v1 fallback).
+	 *
+	 * Kept alongside getAudiences() so the provider also works against a v1
+	 * registry that predates multi-audience support.
+	 *
+	 * @return string The primary audience identifier.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	public function getAudience(): string {
+		return 'vendor-org';
+	}//end getAudience()
 
-    /**
-     * The primary audience this provider contributes to (contract v1 fallback).
-     *
-     * Kept alongside getAudiences() so the provider also works against a v1
-     * registry that predates multi-audience support.
-     *
-     * @return string The primary audience identifier.
-     *
-     * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
-     */
-    public function getAudience(): string
-    {
-        return 'vendor-org';
+	/**
+	 * Build the declarative portal manifest for one resolved subject.
+	 *
+	 * The subject array is server-derived by portaliq (subjectRef UUID,
+	 * audience, organisation, trust level low|substantial|high). Returns null
+	 * for any audience Software Catalog does not serve (fail-closed; the registry
+	 * already filters by audience, but a provider must not rely on that). This
+	 * wave declares READ collections only — no create-actions and no endpoint
+	 * actions (see design.md for the deferral rationale).
+	 *
+	 * @param array<string, mixed> $subject The resolved portal subject.
+	 *
+	 * @return array<string, mixed>|null The manifest, or null when not contributing.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	public function getContribution(array $subject): ?array {
+		$audience = ($subject['audience'] ?? '');
 
-    }//end getAudience()
+		if ($audience === 'vendor-org') {
+			return $this->vendorContribution();
+		}
 
-    /**
-     * Build the declarative portal manifest for one resolved subject.
-     *
-     * The subject array is server-derived by portaliq (subjectRef UUID,
-     * audience, organisation, trust level low|substantial|high). Returns null
-     * for any audience Software Catalog does not serve (fail-closed; the registry
-     * already filters by audience, but a provider must not rely on that). This
-     * wave declares READ collections only — no create-actions and no endpoint
-     * actions (see design.md for the deferral rationale).
-     *
-     * @param array<string, mixed> $subject The resolved portal subject.
-     *
-     * @return array<string, mixed>|null The manifest, or null when not contributing.
-     *
-     * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
-     */
-    public function getContribution(array $subject): ?array
-    {
-        $audience = ($subject['audience'] ?? '');
+		if ($audience === 'participant-org') {
+			return $this->participantContribution();
+		}
 
-        if ($audience === 'vendor-org') {
-            return $this->vendorContribution();
-        }
+		return null;
+	}//end getContribution()
 
-        if ($audience === 'participant-org') {
-            return $this->participantContribution();
-        }
+	/**
+	 * Manifest for the `vendor-org` audience (software supplier / Leverancier).
+	 *
+	 * Read surfaces are organisatie-scoped by the supplier's own organisatie
+	 * UUID: `dienst.aanbieder` and `gebruik.aanbieder` reference it directly;
+	 * `contract` reaches it one hop via its required `dienst` (→ `dienst.aanbieder`)
+	 * and `compliancy` one hop via its `module` (→ `module.aanbieder`). Field
+	 * whitelists drop `gebruik.interneAantekening` (staff note), the customer's
+	 * `contract.contactpersoonGebruiker`, `contract.opmerkingen`, and heavy/base64
+	 * columns (`logo`, `bewijs`). `contract` is gated at eIDAS-substantial trust
+	 * because it carries commercial terms (`kosten`).
+	 *
+	 * @return array<string, mixed> The vendor-org manifest.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function vendorContribution(): array {
+		return [
+			'label' => 'Software Catalog',
+			'collections' => [
+				[
+					'id' => 'vendorDiensten',
+					'register' => self::REGISTER,
+					'schema' => 'dienst',
+					'scopeField' => 'aanbieder',
+					'scopeClaim' => self::ORG_CLAIM,
+					'label' => 'My services',
+					'listable' => true,
+					'fields' => [
+						'naam',
+						'beschrijvingKort',
+						'beschrijvingLang',
+						'website',
+						'type',
+						'modules',
+					],
+				],
+				[
+					'id' => 'vendorGebruik',
+					'register' => self::REGISTER,
+					'schema' => 'gebruik',
+					'scopeField' => 'aanbieder',
+					'scopeClaim' => self::ORG_CLAIM,
+					'label' => 'Deployments of my offerings',
+					'listable' => true,
+					'fields' => [
+						'status',
+						'startDatumVerwerving',
+						'startDatumGepland',
+						'startDatumInProductie',
+						'startDatumUitTeFaseren',
+						'startDatumUitGefaseerd',
+						'afnemer',
+						'module',
+						'moduleVersie',
+					],
+				],
+				[
+					'id' => 'vendorContracts',
+					'register' => self::REGISTER,
+					'schema' => 'contract',
+					'scopeField' => 'aanbieder',
+					'via' => 'dienst',
+					'scopeClaim' => self::ORG_CLAIM,
+					'minTrust' => 'substantial',
+					'label' => 'Contracts for my services',
+					'listable' => true,
+					'fields' => [
+						'dienst',
+						'gebruik',
+						'startDatum',
+						'eindDatum',
+						'contractNummer',
+						'contractType',
+						'kosten',
+						'kostenPeriode',
+						'contactpersoonAanbieder',
+						'documentReferentie',
+						'status',
+					],
+				],
+				[
+					'id' => 'vendorCompliancy',
+					'register' => self::REGISTER,
+					'schema' => 'compliancy',
+					'scopeField' => 'aanbieder',
+					'via' => 'module',
+					'scopeClaim' => self::ORG_CLAIM,
+					'label' => 'Compliance of my modules',
+					'listable' => true,
+					'fields' => [
+						'standaardversie',
+						'standaardGemma',
+						'module',
+						'url',
+					],
+				],
+			],
+			'actions' => [],
+			'notifications' => [],
+		];
 
-        return null;
+	}//end vendorContribution()
 
-    }//end getContribution()
+	/**
+	 * Manifest for the `participant-org` audience (municipality / Gemeente).
+	 *
+	 * A participant is the consuming side, so `gebruik` is scoped by its required
+	 * `afnemer` (their own organisatie UUID) and `contract` reaches that UUID one
+	 * hop via its required `gebruik` (→ `gebruik.afnemer`). Participants do not own
+	 * `dienst`, `module` or `compliancy` rows, so those vendor surfaces are
+	 * absent. Field whitelists drop `gebruik.interneAantekening`, the supplier's
+	 * `contract.contactpersoonAanbieder` and `contract.opmerkingen`. `contract`
+	 * is gated at eIDAS-substantial trust (commercial terms).
+	 *
+	 * @return array<string, mixed> The participant-org manifest.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function participantContribution(): array {
+		return [
+			'label' => 'Software Catalog',
+			'collections' => [
+				[
+					'id' => 'participantGebruik',
+					'register' => self::REGISTER,
+					'schema' => 'gebruik',
+					'scopeField' => 'afnemer',
+					'scopeClaim' => self::ORG_CLAIM,
+					'label' => 'Software we use',
+					'listable' => true,
+					'fields' => [
+						'status',
+						'startDatumVerwerving',
+						'startDatumGepland',
+						'startDatumInProductie',
+						'startDatumUitTeFaseren',
+						'startDatumUitGefaseerd',
+						'aanbieder',
+						'module',
+						'moduleVersie',
+						'diensten',
+					],
+				],
+				[
+					'id' => 'participantContracts',
+					'register' => self::REGISTER,
+					'schema' => 'contract',
+					'scopeField' => 'afnemer',
+					'via' => 'gebruik',
+					'scopeClaim' => self::ORG_CLAIM,
+					'minTrust' => 'substantial',
+					'label' => 'Our contracts',
+					'listable' => true,
+					'fields' => [
+						'dienst',
+						'gebruik',
+						'startDatum',
+						'eindDatum',
+						'contractNummer',
+						'contractType',
+						'kosten',
+						'kostenPeriode',
+						'contactpersoonGebruiker',
+						'documentReferentie',
+						'status',
+					],
+				],
+			],
+			'actions' => [],
+			'notifications' => [],
+		];
 
-    /**
-     * Manifest for the `vendor-org` audience (software supplier / Leverancier).
-     *
-     * Read surfaces are organisatie-scoped by the supplier's own organisatie
-     * UUID: `dienst.aanbieder` and `gebruik.aanbieder` reference it directly;
-     * `contract` reaches it one hop via its required `dienst` (→ `dienst.aanbieder`)
-     * and `compliancy` one hop via its `module` (→ `module.aanbieder`). Field
-     * whitelists drop `gebruik.interneAantekening` (staff note), the customer's
-     * `contract.contactpersoonGebruiker`, `contract.opmerkingen`, and heavy/base64
-     * columns (`logo`, `bewijs`). `contract` is gated at eIDAS-substantial trust
-     * because it carries commercial terms (`kosten`).
-     *
-     * @return array<string, mixed> The vendor-org manifest.
-     *
-     * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
-     */
-    private function vendorContribution(): array
-    {
-        return [
-            'label'         => 'Software Catalog',
-            'collections'   => [
-                [
-                    'id'         => 'vendorDiensten',
-                    'register'   => self::REGISTER,
-                    'schema'     => 'dienst',
-                    'scopeField' => 'aanbieder',
-                    'scopeClaim' => self::ORG_CLAIM,
-                    'label'      => 'My services',
-                    'listable'   => true,
-                    'fields'     => [
-                        'naam',
-                        'beschrijvingKort',
-                        'beschrijvingLang',
-                        'website',
-                        'type',
-                        'modules',
-                    ],
-                ],
-                [
-                    'id'         => 'vendorGebruik',
-                    'register'   => self::REGISTER,
-                    'schema'     => 'gebruik',
-                    'scopeField' => 'aanbieder',
-                    'scopeClaim' => self::ORG_CLAIM,
-                    'label'      => 'Deployments of my offerings',
-                    'listable'   => true,
-                    'fields'     => [
-                        'status',
-                        'startDatumVerwerving',
-                        'startDatumGepland',
-                        'startDatumInProductie',
-                        'startDatumUitTeFaseren',
-                        'startDatumUitGefaseerd',
-                        'afnemer',
-                        'module',
-                        'moduleVersie',
-                    ],
-                ],
-                [
-                    'id'         => 'vendorContracts',
-                    'register'   => self::REGISTER,
-                    'schema'     => 'contract',
-                    'scopeField' => 'aanbieder',
-                    'via'        => 'dienst',
-                    'scopeClaim' => self::ORG_CLAIM,
-                    'minTrust'   => 'substantial',
-                    'label'      => 'Contracts for my services',
-                    'listable'   => true,
-                    'fields'     => [
-                        'dienst',
-                        'gebruik',
-                        'startDatum',
-                        'eindDatum',
-                        'contractNummer',
-                        'contractType',
-                        'kosten',
-                        'kostenPeriode',
-                        'contactpersoonAanbieder',
-                        'documentReferentie',
-                        'status',
-                    ],
-                ],
-                [
-                    'id'         => 'vendorCompliancy',
-                    'register'   => self::REGISTER,
-                    'schema'     => 'compliancy',
-                    'scopeField' => 'aanbieder',
-                    'via'        => 'module',
-                    'scopeClaim' => self::ORG_CLAIM,
-                    'label'      => 'Compliance of my modules',
-                    'listable'   => true,
-                    'fields'     => [
-                        'standaardversie',
-                        'standaardGemma',
-                        'module',
-                        'url',
-                    ],
-                ],
-            ],
-            'actions'       => [],
-            'notifications' => [],
-        ];
-
-    }//end vendorContribution()
-
-    /**
-     * Manifest for the `participant-org` audience (municipality / Gemeente).
-     *
-     * A participant is the consuming side, so `gebruik` is scoped by its required
-     * `afnemer` (their own organisatie UUID) and `contract` reaches that UUID one
-     * hop via its required `gebruik` (→ `gebruik.afnemer`). Participants do not own
-     * `dienst`, `module` or `compliancy` rows, so those vendor surfaces are
-     * absent. Field whitelists drop `gebruik.interneAantekening`, the supplier's
-     * `contract.contactpersoonAanbieder` and `contract.opmerkingen`. `contract`
-     * is gated at eIDAS-substantial trust (commercial terms).
-     *
-     * @return array<string, mixed> The participant-org manifest.
-     *
-     * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
-     */
-    private function participantContribution(): array
-    {
-        return [
-            'label'         => 'Software Catalog',
-            'collections'   => [
-                [
-                    'id'         => 'participantGebruik',
-                    'register'   => self::REGISTER,
-                    'schema'     => 'gebruik',
-                    'scopeField' => 'afnemer',
-                    'scopeClaim' => self::ORG_CLAIM,
-                    'label'      => 'Software we use',
-                    'listable'   => true,
-                    'fields'     => [
-                        'status',
-                        'startDatumVerwerving',
-                        'startDatumGepland',
-                        'startDatumInProductie',
-                        'startDatumUitTeFaseren',
-                        'startDatumUitGefaseerd',
-                        'aanbieder',
-                        'module',
-                        'moduleVersie',
-                        'diensten',
-                    ],
-                ],
-                [
-                    'id'         => 'participantContracts',
-                    'register'   => self::REGISTER,
-                    'schema'     => 'contract',
-                    'scopeField' => 'afnemer',
-                    'via'        => 'gebruik',
-                    'scopeClaim' => self::ORG_CLAIM,
-                    'minTrust'   => 'substantial',
-                    'label'      => 'Our contracts',
-                    'listable'   => true,
-                    'fields'     => [
-                        'dienst',
-                        'gebruik',
-                        'startDatum',
-                        'eindDatum',
-                        'contractNummer',
-                        'contractType',
-                        'kosten',
-                        'kostenPeriode',
-                        'contactpersoonGebruiker',
-                        'documentReferentie',
-                        'status',
-                    ],
-                ],
-            ],
-            'actions'       => [],
-            'notifications' => [],
-        ];
-
-    }//end participantContribution()
+	}//end participantContribution()
 }//end class

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Unit tests for SbomImportService.
  *
@@ -42,451 +43,433 @@ use Psr\Log\LoggerInterface;
 /**
  * Test class for SbomImportService.
  */
-class SbomImportServiceTest extends TestCase
-{
-    /**
-     * @var string
-     */
-    private string $fixturesDir;
+class SbomImportServiceTest extends TestCase {
+	/**
+	 * @var string
+	 */
+	private string $fixturesDir;
 
-    /**
-     * @var ObjectService|MockObject
-     */
-    private ObjectService|MockObject $objectService;
+	/**
+	 * @var ObjectService|MockObject
+	 */
+	private ObjectService|MockObject $objectService;
 
-    /**
-     * @var ProgressTracker|MockObject
-     */
-    private ProgressTracker|MockObject $progressTracker;
+	/**
+	 * @var ProgressTracker|MockObject
+	 */
+	private ProgressTracker|MockObject $progressTracker;
 
-    /**
-     * @var array<int,array<string,mixed>> Objects saved via saveObjects().
-     */
-    private array $savedBatches = [];
+	/**
+	 * @var array<int,array<string,mixed>> Objects saved via saveObjects().
+	 */
+	private array $savedBatches = [];
 
-    /**
-     * @var array<int,array<int,string>> UUID batches passed to deleteObjects().
-     */
-    private array $deletedBatches = [];
+	/**
+	 * @var array<int,array<int,string>> UUID batches passed to deleteObjects().
+	 */
+	private array $deletedBatches = [];
 
-    /**
-     * @var array<string,mixed>|null The moduleVersie data bag last saved via saveObject().
-     */
-    private ?array $savedModuleVersie = null;
+	/**
+	 * @var array<string,mixed>|null The moduleVersie data bag last saved via saveObject().
+	 */
+	private ?array $savedModuleVersie = null;
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->fixturesDir       = __DIR__.'/../fixtures/sbom';
-        $this->savedBatches      = [];
-        $this->deletedBatches    = [];
-        $this->savedModuleVersie = null;
-    }//end setUp()
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->fixturesDir = __DIR__ . '/../fixtures/sbom';
+		$this->savedBatches = [];
+		$this->deletedBatches = [];
+		$this->savedModuleVersie = null;
+	}//end setUp()
 
-    /**
-     * Read a fixture file's raw contents.
-     *
-     * @param string $name The fixture file name.
-     *
-     * @return string The raw contents.
-     */
-    private function fixture(string $name): string
-    {
-        return (string) file_get_contents($this->fixturesDir.'/'.$name);
-    }//end fixture()
+	/**
+	 * Read a fixture file's raw contents.
+	 *
+	 * @param string $name The fixture file name.
+	 *
+	 * @return string The raw contents.
+	 */
+	private function fixture(string $name): string {
+		return (string)file_get_contents($this->fixturesDir . '/' . $name);
+	}//end fixture()
 
-    /**
-     * Build a moduleVersie entity stub.
-     *
-     * @param array<string,mixed> $data Existing moduleVersie data.
-     *
-     * @return ObjectEntity|MockObject
-     */
-    private function moduleVersieEntity(array $data): ObjectEntity|MockObject
-    {
-        $entity = $this->createMock(ObjectEntity::class);
-        $entity->method('getObject')->willReturn($data);
-        $entity->method('getUuid')->willReturn('mv-uuid-1');
+	/**
+	 * Build a moduleVersie entity stub.
+	 *
+	 * @param array<string,mixed> $data Existing moduleVersie data.
+	 *
+	 * @return ObjectEntity|MockObject
+	 */
+	private function moduleVersieEntity(array $data): ObjectEntity|MockObject {
+		$entity = $this->createMock(ObjectEntity::class);
+		$entity->method('getObject')->willReturn($data);
+		$entity->method('getUuid')->willReturn('mv-uuid-1');
 
-        return $entity;
-    }//end moduleVersieEntity()
+		return $entity;
+	}//end moduleVersieEntity()
 
-    /**
-     * Build a previously-imported sbomComponent entity stub exposing only
-     * getUuid() (the replace path only needs the uuid to delete).
-     *
-     * @param string $uuid The component uuid.
-     *
-     * @return ObjectEntity|MockObject
-     */
-    private function previousComponentEntity(string $uuid): ObjectEntity|MockObject
-    {
-        $entity = $this->createMock(ObjectEntity::class);
-        $entity->method('getUuid')->willReturn($uuid);
+	/**
+	 * Build a previously-imported sbomComponent entity stub exposing only
+	 * getUuid() (the replace path only needs the uuid to delete).
+	 *
+	 * @param string $uuid The component uuid.
+	 *
+	 * @return ObjectEntity|MockObject
+	 */
+	private function previousComponentEntity(string $uuid): ObjectEntity|MockObject {
+		$entity = $this->createMock(ObjectEntity::class);
+		$entity->method('getUuid')->willReturn($uuid);
 
-        return $entity;
-    }//end previousComponentEntity()
+		return $entity;
+	}//end previousComponentEntity()
 
-    /**
-     * Build a fully-wired SbomImportService whose ObjectService is a mock
-     * pre-configured with a moduleVersie find() result and a previous
-     * component set for searchObjects().
-     *
-     * @param array<string,mixed>   $moduleVersieData Existing moduleVersie data bag.
-     * @param array<int,string>     $previousUuids     Uuids of the previous live component set.
-     *
-     * @return SbomImportService
-     */
-    private function makeService(array $moduleVersieData = ['versie' => '1.0.0'], array $previousUuids = []): SbomImportService
-    {
-        $container       = $this->createMock(ContainerInterface::class);
-        $settings        = $this->createMock(SettingsService::class);
-        $this->objectService  = $this->createMock(ObjectService::class);
-        $this->progressTracker = $this->createMock(ProgressTracker::class);
-        $logger          = $this->createMock(LoggerInterface::class);
+	/**
+	 * Build a fully-wired SbomImportService whose ObjectService is a mock
+	 * pre-configured with a moduleVersie find() result and a previous
+	 * component set for searchObjects().
+	 *
+	 * @param array<string,mixed> $moduleVersieData Existing moduleVersie data bag.
+	 * @param array<int,string> $previousUuids Uuids of the previous live component set.
+	 *
+	 * @return SbomImportService
+	 */
+	private function makeService(array $moduleVersieData = ['versie' => '1.0.0'], array $previousUuids = []): SbomImportService {
+		$container = $this->createMock(ContainerInterface::class);
+		$settings = $this->createMock(SettingsService::class);
+		$this->objectService = $this->createMock(ObjectService::class);
+		$this->progressTracker = $this->createMock(ProgressTracker::class);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $settings->method('getVoorzieningenConfig')->willReturn(['register' => 1]);
-        $settings->method('getSchemaIdForObjectType')->willReturnMap(
-            [
-                ['moduleVersie', 10],
-                ['sbomComponent', 20],
-                ['module', 30],
-            ]
-        );
+		$settings->method('getVoorzieningenConfig')->willReturn(['register' => 1]);
+		$settings->method('getSchemaIdForObjectType')->willReturnMap(
+			[
+				['moduleVersie', 10],
+				['sbomComponent', 20],
+				['module', 30],
+			]
+		);
 
-        $entity = $this->moduleVersieEntity($moduleVersieData);
-        $this->objectService->method('find')->willReturn($entity);
+		$entity = $this->moduleVersieEntity($moduleVersieData);
+		$this->objectService->method('find')->willReturn($entity);
 
-        $previousEntities = array_map([$this, 'previousComponentEntity'], $previousUuids);
-        $this->objectService->method('searchObjects')->willReturn($previousEntities);
+		$previousEntities = array_map([$this, 'previousComponentEntity'], $previousUuids);
+		$this->objectService->method('searchObjects')->willReturn($previousEntities);
 
-        $this->objectService->method('deleteObjects')->willReturnCallback(
-            function (array $uuids) {
-                $this->deletedBatches[] = $uuids;
-                return ['deleted_uuids' => $uuids, 'skipped_uuids' => [], 'cascade_count' => 0];
-            }
-        );
+		$this->objectService->method('deleteObjects')->willReturnCallback(
+			function (array $uuids) {
+				$this->deletedBatches[] = $uuids;
+				return ['deleted_uuids' => $uuids, 'skipped_uuids' => [], 'cascade_count' => 0];
+			}
+		);
 
-        $this->objectService->method('saveObjects')->willReturnCallback(
-            function (array $objects) {
-                $this->savedBatches[] = $objects;
-                return ['statistics' => ['objectsCreated' => count($objects)]];
-            }
-        );
+		$this->objectService->method('saveObjects')->willReturnCallback(
+			function (array $objects) {
+				$this->savedBatches[] = $objects;
+				return ['statistics' => ['objectsCreated' => count($objects)]];
+			}
+		);
 
-        $this->objectService->method('saveObject')->willReturnCallback(
-            function (array $object) use ($entity) {
-                $this->savedModuleVersie = $object;
-                return $entity;
-            }
-        );
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use ($entity) {
+				$this->savedModuleVersie = $object;
+				return $entity;
+			}
+		);
 
-        $container->method('get')->willReturn($this->objectService);
+		$container->method('get')->willReturn($this->objectService);
 
-        return new SbomImportService(
-            $container,
-            $settings,
-            new SbomParserService(),
-            $this->progressTracker,
-            $logger
-        );
-    }//end makeService()
+		return new SbomImportService(
+			$container,
+			$settings,
+			new SbomParserService(),
+			$this->progressTracker,
+			$logger
+		);
+	}//end makeService()
 
-    /**
-     * A first import creates one sbomComponent per parsed component, linked
-     * to the target moduleVersie.
-     *
-     * @return void
-     */
-    public function testImportCreatesOneComponentPerParsedEntry(): void
-    {
-        $service = $this->makeService();
+	/**
+	 * A first import creates one sbomComponent per parsed component, linked
+	 * to the target moduleVersie.
+	 *
+	 * @return void
+	 */
+	public function testImportCreatesOneComponentPerParsedEntry(): void {
+		$service = $this->makeService();
 
-        $result = $service->importForModuleVersie(
-            'mv-uuid-1',
-            $this->fixture('cyclonedx-1.6-valid.json'),
-            'cyclonedx-json',
-            'sbom.json'
-        );
+		$result = $service->importForModuleVersie(
+			'mv-uuid-1',
+			$this->fixture('cyclonedx-1.6-valid.json'),
+			'cyclonedx-json',
+			'sbom.json'
+		);
 
-        $this->assertTrue($result['success']);
-        $this->assertSame(3, $result['componentCount']);
-        $this->assertCount(1, $this->savedBatches);
-        $this->assertCount(3, $this->savedBatches[0]);
+		$this->assertTrue($result['success']);
+		$this->assertSame(3, $result['componentCount']);
+		$this->assertCount(1, $this->savedBatches);
+		$this->assertCount(3, $this->savedBatches[0]);
 
-        foreach ($this->savedBatches[0] as $componentData) {
-            $this->assertSame('mv-uuid-1', $componentData['moduleVersie']);
-        }
+		foreach ($this->savedBatches[0] as $componentData) {
+			$this->assertSame('mv-uuid-1', $componentData['moduleVersie']);
+		}
 
-        $this->assertSame('lodash', $this->savedBatches[0][0]['name']);
-        $this->assertSame(['MIT'], $this->savedBatches[0][0]['licenses']);
-    }//end testImportCreatesOneComponentPerParsedEntry()
+		$this->assertSame('lodash', $this->savedBatches[0][0]['name']);
+		$this->assertSame(['MIT'], $this->savedBatches[0][0]['licenses']);
+	}//end testImportCreatesOneComponentPerParsedEntry()
 
-    /**
-     * A VEX vulnerabilities[] block's cveId is attached to the matching
-     * component's `vexCveIds` (raw fact, keyed by bom-ref) — a component
-     * with no VEX entry gets an empty array, never null/undefined.
-     *
-     * @return void
-     */
-    public function testVexCveIdsAreAttachedToTheMatchingComponentByBomRef(): void
-    {
-        $service = $this->makeService();
+	/**
+	 * A VEX vulnerabilities[] block's cveId is attached to the matching
+	 * component's `vexCveIds` (raw fact, keyed by bom-ref) — a component
+	 * with no VEX entry gets an empty array, never null/undefined.
+	 *
+	 * @return void
+	 */
+	public function testVexCveIdsAreAttachedToTheMatchingComponentByBomRef(): void {
+		$service = $this->makeService();
 
-        $service->importForModuleVersie(
-            'mv-uuid-1',
-            $this->fixture('cyclonedx-with-vex.json'),
-            'cyclonedx-json',
-            'sbom.json'
-        );
+		$service->importForModuleVersie(
+			'mv-uuid-1',
+			$this->fixture('cyclonedx-with-vex.json'),
+			'cyclonedx-json',
+			'sbom.json'
+		);
 
-        $this->assertCount(1, $this->savedBatches[0]);
-        $this->assertSame(['CVE-2021-44228'], $this->savedBatches[0][0]['vexCveIds']);
-    }//end testVexCveIdsAreAttachedToTheMatchingComponentByBomRef()
+		$this->assertCount(1, $this->savedBatches[0]);
+		$this->assertSame(['CVE-2021-44228'], $this->savedBatches[0][0]['vexCveIds']);
+	}//end testVexCveIdsAreAttachedToTheMatchingComponentByBomRef()
 
-    /**
-     * A component with no VEX entry gets an empty vexCveIds array.
-     *
-     * @return void
-     */
-    public function testComponentsWithoutVexEntryGetEmptyVexCveIds(): void
-    {
-        $service = $this->makeService();
+	/**
+	 * A component with no VEX entry gets an empty vexCveIds array.
+	 *
+	 * @return void
+	 */
+	public function testComponentsWithoutVexEntryGetEmptyVexCveIds(): void {
+		$service = $this->makeService();
 
-        $service->importForModuleVersie(
-            'mv-uuid-1',
-            $this->fixture('cyclonedx-1.6-valid.json'),
-            'cyclonedx-json',
-            'sbom.json'
-        );
+		$service->importForModuleVersie(
+			'mv-uuid-1',
+			$this->fixture('cyclonedx-1.6-valid.json'),
+			'cyclonedx-json',
+			'sbom.json'
+		);
 
-        foreach ($this->savedBatches[0] as $componentData) {
-            $this->assertSame([], $componentData['vexCveIds']);
-        }
-    }//end testComponentsWithoutVexEntryGetEmptyVexCveIds()
+		foreach ($this->savedBatches[0] as $componentData) {
+			$this->assertSame([], $componentData['vexCveIds']);
+		}
+	}//end testComponentsWithoutVexEntryGetEmptyVexCveIds()
 
-    /**
-     * A second import soft-deletes the previous live set; only the new set
-     * is created.
-     *
-     * @return void
-     */
-    public function testReimportReplacesPreviousLiveSet(): void
-    {
-        $service = $this->makeService(['versie' => '1.0.0'], ['prev-1', 'prev-2']);
+	/**
+	 * A second import soft-deletes the previous live set; only the new set
+	 * is created.
+	 *
+	 * @return void
+	 */
+	public function testReimportReplacesPreviousLiveSet(): void {
+		$service = $this->makeService(['versie' => '1.0.0'], ['prev-1', 'prev-2']);
 
-        $result = $service->importForModuleVersie(
-            'mv-uuid-1',
-            $this->fixture('cyclonedx-1.5-valid.json'),
-            'cyclonedx-json',
-            'sbom-v2.json'
-        );
+		$result = $service->importForModuleVersie(
+			'mv-uuid-1',
+			$this->fixture('cyclonedx-1.5-valid.json'),
+			'cyclonedx-json',
+			'sbom-v2.json'
+		);
 
-        $this->assertSame(2, $result['previousComponentCount']);
-        $this->assertCount(1, $this->deletedBatches);
-        $this->assertSame(['prev-1', 'prev-2'], $this->deletedBatches[0]);
-        // Only the newly parsed set is created — no mixing with the old uuids.
-        $this->assertCount(2, $this->savedBatches[0]);
-    }//end testReimportReplacesPreviousLiveSet()
+		$this->assertSame(2, $result['previousComponentCount']);
+		$this->assertCount(1, $this->deletedBatches);
+		$this->assertSame(['prev-1', 'prev-2'], $this->deletedBatches[0]);
+		// Only the newly parsed set is created — no mixing with the old uuids.
+		$this->assertCount(2, $this->savedBatches[0]);
+	}//end testReimportReplacesPreviousLiveSet()
 
-    /**
-     * When the previous live set is empty (e.g. already-trashed rows from an
-     * earlier replace, which OR's default search excludes), no delete batch
-     * is issued and the count is zero.
-     *
-     * @return void
-     */
-    public function testNoPreviousLiveSetMeansNoDeleteBatch(): void
-    {
-        $service = $this->makeService(['versie' => '1.0.0'], []);
+	/**
+	 * When the previous live set is empty (e.g. already-trashed rows from an
+	 * earlier replace, which OR's default search excludes), no delete batch
+	 * is issued and the count is zero.
+	 *
+	 * @return void
+	 */
+	public function testNoPreviousLiveSetMeansNoDeleteBatch(): void {
+		$service = $this->makeService(['versie' => '1.0.0'], []);
 
-        $result = $service->importForModuleVersie(
-            'mv-uuid-1',
-            $this->fixture('cyclonedx-1.5-valid.json'),
-            'cyclonedx-json',
-            'sbom.json'
-        );
+		$result = $service->importForModuleVersie(
+			'mv-uuid-1',
+			$this->fixture('cyclonedx-1.5-valid.json'),
+			'cyclonedx-json',
+			'sbom.json'
+		);
 
-        $this->assertSame(0, $result['previousComponentCount']);
-        $this->assertSame([], $this->deletedBatches);
-    }//end testNoPreviousLiveSetMeansNoDeleteBatch()
+		$this->assertSame(0, $result['previousComponentCount']);
+		$this->assertSame([], $this->deletedBatches);
+	}//end testNoPreviousLiveSetMeansNoDeleteBatch()
 
-    /**
-     * A successful import records sbomLastImportedAt/sbomFormat/sbomFileName
-     * on the moduleVersie, carrying every pre-existing field forward
-     * (PUT-semantic saveObject — an omitted field would be nulled).
-     *
-     * @return void
-     */
-    public function testImportRecordsProvenanceAndCarriesExistingFieldsForward(): void
-    {
-        $service = $this->makeService(['versie' => '2.3.1', 'beschrijvingKort' => 'Keep me']);
+	/**
+	 * A successful import records sbomLastImportedAt/sbomFormat/sbomFileName
+	 * on the moduleVersie, carrying every pre-existing field forward
+	 * (PUT-semantic saveObject — an omitted field would be nulled).
+	 *
+	 * @return void
+	 */
+	public function testImportRecordsProvenanceAndCarriesExistingFieldsForward(): void {
+		$service = $this->makeService(['versie' => '2.3.1', 'beschrijvingKort' => 'Keep me']);
 
-        $service->importForModuleVersie(
-            'mv-uuid-1',
-            $this->fixture('cyclonedx-1.6-valid.json'),
-            'cyclonedx-json',
-            'my-sbom.json'
-        );
+		$service->importForModuleVersie(
+			'mv-uuid-1',
+			$this->fixture('cyclonedx-1.6-valid.json'),
+			'cyclonedx-json',
+			'my-sbom.json'
+		);
 
-        $this->assertNotNull($this->savedModuleVersie);
-        $this->assertSame('2.3.1', $this->savedModuleVersie['versie']);
-        $this->assertSame('Keep me', $this->savedModuleVersie['beschrijvingKort']);
-        $this->assertSame('cyclonedx-json', $this->savedModuleVersie['sbomFormat']);
-        $this->assertSame('my-sbom.json', $this->savedModuleVersie['sbomFileName']);
-        $this->assertNotEmpty($this->savedModuleVersie['sbomLastImportedAt']);
-    }//end testImportRecordsProvenanceAndCarriesExistingFieldsForward()
+		$this->assertNotNull($this->savedModuleVersie);
+		$this->assertSame('2.3.1', $this->savedModuleVersie['versie']);
+		$this->assertSame('Keep me', $this->savedModuleVersie['beschrijvingKort']);
+		$this->assertSame('cyclonedx-json', $this->savedModuleVersie['sbomFormat']);
+		$this->assertSame('my-sbom.json', $this->savedModuleVersie['sbomFileName']);
+		$this->assertNotEmpty($this->savedModuleVersie['sbomLastImportedAt']);
+	}//end testImportRecordsProvenanceAndCarriesExistingFieldsForward()
 
-    /**
-     * A parsed set of more than 50 components starts a progress-tracking
-     * operation, updates it, and completes it, with the operation id
-     * returned in the response.
-     *
-     * @return void
-     */
-    public function testLargeImportTracksProgressAndReturnsOperationId(): void
-    {
-        $service = $this->makeService();
+	/**
+	 * A parsed set of more than 50 components starts a progress-tracking
+	 * operation, updates it, and completes it, with the operation id
+	 * returned in the response.
+	 *
+	 * @return void
+	 */
+	public function testLargeImportTracksProgressAndReturnsOperationId(): void {
+		$service = $this->makeService();
 
-        $this->progressTracker->expects($this->once())
-            ->method('startOperation')
-            ->with('sbom-import', ['total_items' => 60])
-            ->willReturn('sbom-import_abc123');
-        $this->progressTracker->expects($this->atLeastOnce())->method('updateProgress');
-        $this->progressTracker->expects($this->once())->method('completeOperation');
+		$this->progressTracker->expects($this->once())
+			->method('startOperation')
+			->with('sbom-import', ['total_items' => 60])
+			->willReturn('sbom-import_abc123');
+		$this->progressTracker->expects($this->atLeastOnce())->method('updateProgress');
+		$this->progressTracker->expects($this->once())->method('completeOperation');
 
-        $largeDocument = [
-            'bomFormat'    => 'CycloneDX',
-            'specVersion'  => '1.6',
-            'components'   => array_fill(
-                0,
-                60,
-                ['name' => 'pkg', 'version' => '1.0.0', 'purl' => 'pkg:generic/pkg@1.0.0', 'licenses' => []]
-            ),
-        ];
+		$largeDocument = [
+			'bomFormat' => 'CycloneDX',
+			'specVersion' => '1.6',
+			'components' => array_fill(
+				0,
+				60,
+				['name' => 'pkg', 'version' => '1.0.0', 'purl' => 'pkg:generic/pkg@1.0.0', 'licenses' => []]
+			),
+		];
 
-        $result = $service->importForModuleVersie(
-            'mv-uuid-1',
-            json_encode($largeDocument),
-            'cyclonedx-json',
-            'large.json'
-        );
+		$result = $service->importForModuleVersie(
+			'mv-uuid-1',
+			json_encode($largeDocument),
+			'cyclonedx-json',
+			'large.json'
+		);
 
-        $this->assertSame('sbom-import_abc123', $result['operationId']);
-        $this->assertSame(60, $result['componentCount']);
-        // Two batches of 100-max — 60 components is exactly one batch.
-        $this->assertCount(1, $this->savedBatches);
-    }//end testLargeImportTracksProgressAndReturnsOperationId()
+		$this->assertSame('sbom-import_abc123', $result['operationId']);
+		$this->assertSame(60, $result['componentCount']);
+		// Two batches of 100-max — 60 components is exactly one batch.
+		$this->assertCount(1, $this->savedBatches);
+	}//end testLargeImportTracksProgressAndReturnsOperationId()
 
-    /**
-     * A parsed set of 50 or fewer components completes without starting a
-     * progress-tracking operation; operationId is null.
-     *
-     * @return void
-     */
-    public function testSmallImportDoesNotTrackProgress(): void
-    {
-        $service = $this->makeService();
+	/**
+	 * A parsed set of 50 or fewer components completes without starting a
+	 * progress-tracking operation; operationId is null.
+	 *
+	 * @return void
+	 */
+	public function testSmallImportDoesNotTrackProgress(): void {
+		$service = $this->makeService();
 
-        $this->progressTracker->expects($this->never())->method('startOperation');
-        $this->progressTracker->expects($this->never())->method('completeOperation');
+		$this->progressTracker->expects($this->never())->method('startOperation');
+		$this->progressTracker->expects($this->never())->method('completeOperation');
 
-        $result = $service->importForModuleVersie(
-            'mv-uuid-1',
-            $this->fixture('cyclonedx-1.6-valid.json'),
-            'cyclonedx-json',
-            'sbom.json'
-        );
+		$result = $service->importForModuleVersie(
+			'mv-uuid-1',
+			$this->fixture('cyclonedx-1.6-valid.json'),
+			'cyclonedx-json',
+			'sbom.json'
+		);
 
-        $this->assertNull($result['operationId']);
-        $this->assertSame(3, $result['componentCount']);
-    }//end testSmallImportDoesNotTrackProgress()
+		$this->assertNull($result['operationId']);
+		$this->assertSame(3, $result['componentCount']);
+	}//end testSmallImportDoesNotTrackProgress()
 
-    /**
-     * An unsupported SBOM format throws before any OR write — no delete, no
-     * save is issued.
-     *
-     * @return void
-     */
-    public function testUnsupportedFormatWritesNothing(): void
-    {
-        $service = $this->makeService();
+	/**
+	 * An unsupported SBOM format throws before any OR write — no delete, no
+	 * save is issued.
+	 *
+	 * @return void
+	 */
+	public function testUnsupportedFormatWritesNothing(): void {
+		$service = $this->makeService();
 
-        $this->objectService->expects($this->never())->method('deleteObjects');
-        $this->objectService->expects($this->never())->method('saveObjects');
-        $this->objectService->expects($this->never())->method('saveObject');
+		$this->objectService->expects($this->never())->method('deleteObjects');
+		$this->objectService->expects($this->never())->method('saveObjects');
+		$this->objectService->expects($this->never())->method('saveObject');
 
-        $this->expectException(UnsupportedSbomFormatException::class);
+		$this->expectException(UnsupportedSbomFormatException::class);
 
-        $service->importForModuleVersie(
-            'mv-uuid-1',
-            $this->fixture('cyclonedx-invalid-format.json'),
-            'cyclonedx-json',
-            'bad.json'
-        );
-    }//end testUnsupportedFormatWritesNothing()
+		$service->importForModuleVersie(
+			'mv-uuid-1',
+			$this->fixture('cyclonedx-invalid-format.json'),
+			'cyclonedx-json',
+			'bad.json'
+		);
+	}//end testUnsupportedFormatWritesNothing()
 
-    /**
-     * A moduleVersie that cannot be resolved throws a RuntimeException.
-     *
-     * @return void
-     */
-    public function testModuleVersieNotFoundThrows(): void
-    {
-        $container      = $this->createMock(ContainerInterface::class);
-        $settings       = $this->createMock(SettingsService::class);
-        $objectService  = $this->createMock(ObjectService::class);
-        $progressTracker = $this->createMock(ProgressTracker::class);
-        $logger         = $this->createMock(LoggerInterface::class);
+	/**
+	 * A moduleVersie that cannot be resolved throws a RuntimeException.
+	 *
+	 * @return void
+	 */
+	public function testModuleVersieNotFoundThrows(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$settings = $this->createMock(SettingsService::class);
+		$objectService = $this->createMock(ObjectService::class);
+		$progressTracker = $this->createMock(ProgressTracker::class);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $settings->method('getVoorzieningenConfig')->willReturn(['register' => 1]);
-        $settings->method('getSchemaIdForObjectType')->willReturnMap(
-            [
-                ['moduleVersie', 10],
-                ['sbomComponent', 20],
-            ]
-        );
-        $objectService->method('find')->willReturn(null);
-        $container->method('get')->willReturn($objectService);
+		$settings->method('getVoorzieningenConfig')->willReturn(['register' => 1]);
+		$settings->method('getSchemaIdForObjectType')->willReturnMap(
+			[
+				['moduleVersie', 10],
+				['sbomComponent', 20],
+			]
+		);
+		$objectService->method('find')->willReturn(null);
+		$container->method('get')->willReturn($objectService);
 
-        $service = new SbomImportService($container, $settings, new SbomParserService(), $progressTracker, $logger);
+		$service = new SbomImportService($container, $settings, new SbomParserService(), $progressTracker, $logger);
 
-        $this->expectException(\RuntimeException::class);
+		$this->expectException(\RuntimeException::class);
 
-        $service->importForModuleVersie(
-            'missing-uuid',
-            $this->fixture('cyclonedx-1.6-valid.json'),
-            'cyclonedx-json',
-            'sbom.json'
-        );
-    }//end testModuleVersieNotFoundThrows()
+		$service->importForModuleVersie(
+			'missing-uuid',
+			$this->fixture('cyclonedx-1.6-valid.json'),
+			'cyclonedx-json',
+			'sbom.json'
+		);
+	}//end testModuleVersieNotFoundThrows()
 
-    /**
-     * resolveParentModuleUuid() reads the moduleVersie's `module` relation
-     * and resolves a plain-string uuid.
-     *
-     * @return void
-     */
-    public function testResolveParentModuleUuidReadsModuleRelation(): void
-    {
-        $service = $this->makeService(['module' => 'module-uuid-1']);
+	/**
+	 * resolveParentModuleUuid() reads the moduleVersie's `module` relation
+	 * and resolves a plain-string uuid.
+	 *
+	 * @return void
+	 */
+	public function testResolveParentModuleUuidReadsModuleRelation(): void {
+		$service = $this->makeService(['module' => 'module-uuid-1']);
 
-        $this->assertSame('module-uuid-1', $service->resolveParentModuleUuid('mv-uuid-1'));
-    }//end testResolveParentModuleUuidReadsModuleRelation()
+		$this->assertSame('module-uuid-1', $service->resolveParentModuleUuid('mv-uuid-1'));
+	}//end testResolveParentModuleUuidReadsModuleRelation()
 
-    /**
-     * resolveParentModuleUuid() also resolves an array-shaped relation
-     * (`{uuid: ...}`), matching the lenient relation shapes used elsewhere
-     * in this codebase.
-     *
-     * @return void
-     */
-    public function testResolveParentModuleUuidReadsArrayShapedRelation(): void
-    {
-        $service = $this->makeService(['module' => ['uuid' => 'module-uuid-2']]);
+	/**
+	 * resolveParentModuleUuid() also resolves an array-shaped relation
+	 * (`{uuid: ...}`), matching the lenient relation shapes used elsewhere
+	 * in this codebase.
+	 *
+	 * @return void
+	 */
+	public function testResolveParentModuleUuidReadsArrayShapedRelation(): void {
+		$service = $this->makeService(['module' => ['uuid' => 'module-uuid-2']]);
 
-        $this->assertSame('module-uuid-2', $service->resolveParentModuleUuid('mv-uuid-1'));
-    }//end testResolveParentModuleUuidReadsArrayShapedRelation()
+		$this->assertSame('module-uuid-2', $service->resolveParentModuleUuid('mv-uuid-1'));
+	}//end testResolveParentModuleUuidReadsArrayShapedRelation()
 }//end class

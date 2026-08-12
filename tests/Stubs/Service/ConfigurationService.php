@@ -23,30 +23,27 @@ namespace OCA\OpenRegister\Service;
 /**
  * Stub for ConfigurationService with the surface used by SoftwareCatalog tests.
  */
-abstract class ConfigurationService
-{
+abstract class ConfigurationService {
 
+	/**
+	 * Import configuration from an app's JSON data.
+	 *
+	 * @param string $appId The application ID.
+	 * @param array $data The configuration data.
+	 * @param string $version The configuration version.
+	 * @param bool $force Force import regardless of version.
+	 *
+	 * @return array
+	 */
+	abstract public function importFromApp(string $appId, array $data, string $version, bool $force = false): array;
 
-    /**
-     * Import configuration from an app's JSON data.
-     *
-     * @param string $appId   The application ID.
-     * @param array  $data    The configuration data.
-     * @param string $version The configuration version.
-     * @param bool   $force   Force import regardless of version.
-     *
-     * @return array
-     */
-    abstract public function importFromApp(string $appId, array $data, string $version, bool $force=false): array;
-
-    /**
-     * Get the configured app version from appconfig.
-     *
-     * @param string $appId The app ID to get the version for.
-     *
-     * @return null|string The configured version or null if not set.
-     */
-    abstract public function getConfiguredAppVersion(string $appId): string|null;
-
+	/**
+	 * Get the configured app version from appconfig.
+	 *
+	 * @param string $appId The app ID to get the version for.
+	 *
+	 * @return null|string The configured version or null if not set.
+	 */
+	abstract public function getConfiguredAppVersion(string $appId): ?string;
 
 }//end class

@@ -44,208 +44,205 @@ use Psr\Log\LoggerInterface;
  * @version  GIT: 1.0.0
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */
-class OrganizationContactSyncJob extends TimedJob
-{
+class OrganizationContactSyncJob extends TimedJob {
 
-    /**
-     * Organization synchronization service
-     *
-     * @var OrganizationSyncService The service handling sync operations
-     */
-    private OrganizationSyncService $orgSyncService;
+	/**
+	 * Organization synchronization service
+	 *
+	 * @var OrganizationSyncService The service handling sync operations
+	 */
+	private OrganizationSyncService $orgSyncService;
 
-    /**
-     * Constructor for OrganizationContactSyncJob
-     *
-     * @param ITimeFactory                      $timeFactory     The time factory for job scheduling
-     * @param OrganizationSyncService           $orgSyncService  The sync service
-     * @param SoftwareCatalogContactSyncService $contactSync     The Nextcloud-Contacts bridge
-     * @param SettingsService                   $settingsService The settings service (register/schema id resolution)
-     * @param IAppManager                       $appManager      The Nextcloud app manager
-     * @param LoggerInterface                   $logger          The logger
-     */
-    public function __construct(
-        ITimeFactory $timeFactory,
-        OrganizationSyncService $orgSyncService,
-        private readonly SoftwareCatalogContactSyncService $contactSync,
-        private readonly SettingsService $settingsService,
-        private readonly IAppManager $appManager,
-        private readonly LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $timeFactory);
-        $this->setInterval(seconds: 300);
-        // 5 minutes.
-        $this->orgSyncService = $orgSyncService;
-    }//end __construct()
+	/**
+	 * Constructor for OrganizationContactSyncJob
+	 *
+	 * @param ITimeFactory $timeFactory The time factory for job scheduling
+	 * @param OrganizationSyncService $orgSyncService The sync service
+	 * @param SoftwareCatalogContactSyncService $contactSync The Nextcloud-Contacts bridge
+	 * @param SettingsService $settingsService The settings service (register/schema id resolution)
+	 * @param IAppManager $appManager The Nextcloud app manager
+	 * @param LoggerInterface $logger The logger
+	 */
+	public function __construct(
+		ITimeFactory $timeFactory,
+		OrganizationSyncService $orgSyncService,
+		private readonly SoftwareCatalogContactSyncService $contactSync,
+		private readonly SettingsService $settingsService,
+		private readonly IAppManager $appManager,
+		private readonly LoggerInterface $logger,
+	) {
+		parent::__construct(time: $timeFactory);
+		$this->setInterval(seconds: 300);
+		// 5 minutes.
+		$this->orgSyncService = $orgSyncService;
+	}//end __construct()
 
-    /**
-     * Runs the background job
-     *
-     * Delegates organisation/contact synchronisation to the
-     * OrganizationSyncService, then keeps every catalog relationship record's
-     * `contactsUid` link to the Nextcloud addressbook fresh via
-     * SoftwareCatalogContactSyncService. Per cross-app interface contract #2,
-     * identity lives in Nextcloud Contacts — this job refreshes the link, it
-     * does NOT mirror identity into OpenRegister.
-     *
-     * No user context is needed since all ObjectService calls use _rbac: false.
-     *
-     * @param mixed $argument Job arguments (not used)
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @spec                                          openspec/specs/softwarecatalog-contacts-to-nc/spec.md
-     */
-    protected function run($argument): void
-    {
-        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-            $this->logger->info('[OrganizationContactSyncJob] OpenRegister not installed, skipping sync');
-            return;
-        }
+	/**
+	 * Runs the background job
+	 *
+	 * Delegates organisation/contact synchronisation to the
+	 * OrganizationSyncService, then keeps every catalog relationship record's
+	 * `contactsUid` link to the Nextcloud addressbook fresh via
+	 * SoftwareCatalogContactSyncService. Per cross-app interface contract #2,
+	 * identity lives in Nextcloud Contacts — this job refreshes the link, it
+	 * does NOT mirror identity into OpenRegister.
+	 *
+	 * No user context is needed since all ObjectService calls use _rbac: false.
+	 *
+	 * @param mixed $argument Job arguments (not used)
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 * @spec                                          openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 */
+	protected function run($argument): void {
+		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+			$this->logger->info('[OrganizationContactSyncJob] OpenRegister not installed, skipping sync');
+			return;
+		}
 
-        $this->logger->info('[OrganizationContactSyncJob] Starting scheduled organization sync');
-        try {
-            $this->orgSyncService->performScheduledSync();
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                '[OrganizationContactSyncJob] Fatal error during sync — cron pass protected',
-                [
-                    'error' => $e->getMessage(),
-                    'file'  => $e->getFile(),
-                    'line'  => $e->getLine(),
-                ]
-            );
-        }//end try
+		$this->logger->info('[OrganizationContactSyncJob] Starting scheduled organization sync');
+		try {
+			$this->orgSyncService->performScheduledSync();
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'[OrganizationContactSyncJob] Fatal error during sync — cron pass protected',
+				[
+					'error' => $e->getMessage(),
+					'file' => $e->getFile(),
+					'line' => $e->getLine(),
+				]
+			);
+		}//end try
 
-        // Keep contactsUid links fresh (identity stays in NC Contacts).
-        try {
-            $this->refreshContactsUidLinks();
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                '[OrganizationContactSyncJob] Fatal error during contactsUid link refresh — cron pass protected',
-                [
-                    'error' => $e->getMessage(),
-                    'file'  => $e->getFile(),
-                    'line'  => $e->getLine(),
-                ]
-            );
-        }//end try
-    }//end run()
+		// Keep contactsUid links fresh (identity stays in NC Contacts).
+		try {
+			$this->refreshContactsUidLinks();
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'[OrganizationContactSyncJob] Fatal error during contactsUid link refresh — cron pass protected',
+				[
+					'error' => $e->getMessage(),
+					'file' => $e->getFile(),
+					'line' => $e->getLine(),
+				]
+			);
+		}//end try
+	}//end run()
 
-    /**
-     * Refresh the `contactsUid` link on every contactpersoon/organisatie record.
-     *
-     * For each record this (re)resolves its Nextcloud Contact through
-     * SoftwareCatalogContactSyncService and writes back the UID only when it is
-     * missing or has changed. Never mirrors identity into OpenRegister and
-     * never deletes a source object — a record that cannot be resolved is left
-     * intact for a later pass.
-     *
-     * @return void
-     */
-    private function refreshContactsUidLinks(): void
-    {
-        if ($this->contactSync->isAvailable() === false) {
-            $this->logger->info('[OrganizationContactSyncJob] Nextcloud Contacts unavailable, skipping link refresh');
-            return;
-        }
+	/**
+	 * Refresh the `contactsUid` link on every contactpersoon/organisatie record.
+	 *
+	 * For each record this (re)resolves its Nextcloud Contact through
+	 * SoftwareCatalogContactSyncService and writes back the UID only when it is
+	 * missing or has changed. Never mirrors identity into OpenRegister and
+	 * never deletes a source object — a record that cannot be resolved is left
+	 * intact for a later pass.
+	 *
+	 * @return void
+	 */
+	private function refreshContactsUidLinks(): void {
+		if ($this->contactSync->isAvailable() === false) {
+			$this->logger->info('[OrganizationContactSyncJob] Nextcloud Contacts unavailable, skipping link refresh');
+			return;
+		}
 
-        $registerId = $this->settingsService->getVoorzieningenRegisterId();
-        if ($registerId === null) {
-            $this->logger->info('[OrganizationContactSyncJob] Voorzieningen register not configured, skipping link refresh');
-            return;
-        }
+		$registerId = $this->settingsService->getVoorzieningenRegisterId();
+		if ($registerId === null) {
+			$this->logger->info('[OrganizationContactSyncJob] Voorzieningen register not configured, skipping link refresh');
+			return;
+		}
 
-        $objectService = $this->settingsService->getObjectService();
-        if ($objectService === null) {
-            return;
-        }
+		$objectService = $this->settingsService->getObjectService();
+		if ($objectService === null) {
+			return;
+		}
 
-        foreach (['contactpersoon', 'organisatie'] as $objectType) {
-            $schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
-            if ($schemaId === null) {
-                continue;
-            }
+		foreach (['contactpersoon', 'organisatie'] as $objectType) {
+			$schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
+			if ($schemaId === null) {
+				continue;
+			}
 
-            $objects = $objectService->setRegister($registerId)
-                ->setSchema($schemaId)
-                ->findAll([], false, false);
+			$objects = $objectService->setRegister($registerId)
+				->setSchema($schemaId)
+				->findAll([], false, false);
 
-            foreach ($objects as $object) {
-                $this->refreshOne(
-                    objectService: $objectService,
-                    object: $object,
-                    registerId: $registerId,
-                    schemaId: $schemaId,
-                    objectType: $objectType
-                );
-            }
-        }
-    }//end refreshContactsUidLinks()
+			foreach ($objects as $object) {
+				$this->refreshOne(
+					objectService: $objectService,
+					object: $object,
+					registerId: $registerId,
+					schemaId: $schemaId,
+					objectType: $objectType
+				);
+			}
+		}
+	}//end refreshContactsUidLinks()
 
-    /**
-     * Refresh the contactsUid link for a single record.
-     *
-     * @param object  $objectService The OpenRegister ObjectService.
-     * @param mixed   $object        The OpenRegister object entity.
-     * @param integer $registerId    The register id.
-     * @param integer $schemaId      The schema id.
-     * @param string  $objectType    The object type.
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 12 (threshold 10) and NPath 217
-     * (threshold 200) are almost entirely defensive duck-typing against an OpenRegister entity
-     * whose shape is not guaranteed here (`method_exists($object, 'getObject'/'getUuid')`) plus
-     * four independent early-return guards that each mean "this record is already correct, skip
-     * it". Every branch is a flat guard clause; there is no nesting to extract.
-     *
-     * @SuppressWarnings(PHPMD.NPathComplexity) See the CyclomaticComplexity note above — the 217
-     * paths are the product of those same independent guard clauses, not real logic depth.
-     */
-    private function refreshOne(
-        object $objectService,
-        mixed $object,
-        int $registerId,
-        int $schemaId,
-        string $objectType
-    ): void {
-        try {
-            $data = (array) $object;
-            if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-                $data = (array) $object->getObject();
-            }
+	/**
+	 * Refresh the contactsUid link for a single record.
+	 *
+	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param mixed $object The OpenRegister object entity.
+	 * @param integer $registerId The register id.
+	 * @param integer $schemaId The schema id.
+	 * @param string $objectType The object type.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 12 (threshold 10) and NPath 217
+	 * (threshold 200) are almost entirely defensive duck-typing against an OpenRegister entity
+	 * whose shape is not guaranteed here (`method_exists($object, 'getObject'/'getUuid')`) plus
+	 * four independent early-return guards that each mean "this record is already correct, skip
+	 * it". Every branch is a flat guard clause; there is no nesting to extract.
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity) See the CyclomaticComplexity note above — the 217
+	 * paths are the product of those same independent guard clauses, not real logic depth.
+	 */
+	private function refreshOne(
+		object $objectService,
+		mixed $object,
+		int $registerId,
+		int $schemaId,
+		string $objectType,
+	): void {
+		try {
+			$data = (array)$object;
+			if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+				$data = (array)$object->getObject();
+			}
 
-            $uuid = (string) ($data['id'] ?? '');
-            if (is_object($object) === true && method_exists($object, 'getUuid') === true) {
-                $uuid = (string) $object->getUuid();
-            }
+			$uuid = (string)($data['id'] ?? '');
+			if (is_object($object) === true && method_exists($object, 'getUuid') === true) {
+				$uuid = (string)$object->getUuid();
+			}
 
-            $current = trim((string) ($data['contactsUid'] ?? ''));
-            if ($current !== '' && $this->contactSync->findContactByUid($current) !== null) {
-                // Link already fresh.
-                return;
-            }
+			$current = trim((string)($data['contactsUid'] ?? ''));
+			if ($current !== '' && $this->contactSync->findContactByUid($current) !== null) {
+				// Link already fresh.
+				return;
+			}
 
-            $resolved = $this->contactSync->syncToContacts($objectType, $data);
-            if ($resolved === null || $resolved === '' || $resolved === $current) {
-                return;
-            }
+			$resolved = $this->contactSync->syncToContacts($objectType, $data);
+			if ($resolved === null || $resolved === '' || $resolved === $current) {
+				return;
+			}
 
-            $data['contactsUid'] = $resolved;
+			$data['contactsUid'] = $resolved;
 
-            $uuidArg = null;
-            if ($uuid !== '') {
-                $uuidArg = $uuid;
-            }
+			$uuidArg = null;
+			if ($uuid !== '') {
+				$uuidArg = $uuid;
+			}
 
-            $objectService->saveObject($data, [], $registerId, $schemaId, $uuidArg, false, false);
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                '[OrganizationContactSyncJob] Could not refresh contactsUid link — record left intact',
-                ['objectType' => $objectType, 'error' => $e->getMessage()]
-            );
-        }//end try
-    }//end refreshOne()
+			$objectService->saveObject($data, [], $registerId, $schemaId, $uuidArg, false, false);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'[OrganizationContactSyncJob] Could not refresh contactsUid link — record left intact',
+				['objectType' => $objectType, 'error' => $e->getMessage()]
+			);
+		}//end try
+	}//end refreshOne()
 }//end class

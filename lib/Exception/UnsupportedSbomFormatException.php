@@ -1,4 +1,5 @@
 <?php
+
 /**
  * UnsupportedSbomFormatException.
  *
@@ -31,6 +32,5 @@ namespace OCA\SoftwareCatalog\Exception;
  *
  * @spec openspec/specs/sbom-import/spec.md#requirement-cyclonedx-sbom-files-are-parsed-into-a-normalized-component-list
  */
-class UnsupportedSbomFormatException extends \RuntimeException
-{
+class UnsupportedSbomFormatException extends \RuntimeException {
 }//end class

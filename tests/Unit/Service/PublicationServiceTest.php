@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Unit tests for PublicationService.
  *
@@ -27,150 +28,143 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\PublicationService;
 use OCA\SoftwareCatalog\Service\SettingsService;
-use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Test class for PublicationService.
  */
-class PublicationServiceTest extends TestCase
-{
-    /**
-     * @var ObjectService|MockObject
-     */
-    private ObjectService|MockObject $objectService;
+class PublicationServiceTest extends TestCase {
+	/**
+	 * @var ObjectService|MockObject
+	 */
+	private ObjectService|MockObject $objectService;
 
-    /**
-     * @var SettingsService|MockObject
-     */
-    private SettingsService|MockObject $settings;
+	/**
+	 * @var SettingsService|MockObject
+	 */
+	private SettingsService|MockObject $settings;
 
-    /**
-     * @var array<string,mixed>|null Last data bag handed to saveObject().
-     */
-    private ?array $savedObject = null;
+	/**
+	 * @var array<string,mixed>|null Last data bag handed to saveObject().
+	 */
+	private ?array $savedObject = null;
 
-    /**
-     * Build a PublicationService whose ObjectService::find() returns the given
-     * data bag, capturing whatever saveObject() is called with.
-     *
-     * @param array<string,mixed> $entryData The existing entry data.
-     *
-     * @return PublicationService The service under test.
-     */
-    private function makeService(array $entryData): PublicationService
-    {
-        $container           = $this->createMock(ContainerInterface::class);
-        $this->settings      = $this->createMock(SettingsService::class);
-        $this->objectService = $this->createMock(ObjectService::class);
-        $logger              = $this->createMock(LoggerInterface::class);
+	/**
+	 * Build a PublicationService whose ObjectService::find() returns the given
+	 * data bag, capturing whatever saveObject() is called with.
+	 *
+	 * @param array<string,mixed> $entryData The existing entry data.
+	 *
+	 * @return PublicationService The service under test.
+	 */
+	private function makeService(array $entryData): PublicationService {
+		$container = $this->createMock(ContainerInterface::class);
+		$this->settings = $this->createMock(SettingsService::class);
+		$this->objectService = $this->createMock(ObjectService::class);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $this->settings->method('getSchemaIdForObjectType')->willReturn(3);
-        $this->settings->method('getRegisterIdForObjectType')->willReturn(1);
+		$this->settings->method('getSchemaIdForObjectType')->willReturn(3);
+		$this->settings->method('getRegisterIdForObjectType')->willReturn(1);
 
-        $entity = $this->createMock(ObjectEntity::class);
-        $entity->method('getObject')->willReturn($entryData);
-        $this->objectService->method('find')->willReturn($entity);
+		$entity = $this->createMock(ObjectEntity::class);
+		$entity->method('getObject')->willReturn($entryData);
+		$this->objectService->method('find')->willReturn($entity);
 
-        $this->savedObject = null;
-        $this->objectService->method('saveObject')->willReturnCallback(
-            function (array $object) use ($entity): ObjectEntity {
-                $this->savedObject = $object;
-                return $entity;
-            }
-        );
+		$this->savedObject = null;
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use ($entity): ObjectEntity {
+				$this->savedObject = $object;
+				return $entity;
+			}
+		);
 
-        $container->method('get')->willReturn($this->objectService);
+		$container->method('get')->willReturn($this->objectService);
 
-        return new PublicationService($container, $this->settings, $logger);
-    }//end makeService()
+		return new PublicationService($container, $this->settings, $logger);
+	}//end makeService()
 
-    /**
-     * publish() sets publicatiedatum (<= now) and clears depublicatiedatum.
-     *
-     * @return void
-     */
-    public function testPublishSetsPublicatiedatum(): void
-    {
-        $service = $this->makeService(['naam' => 'Mijn dienst', 'depublicatiedatum' => '2020-01-01T00:00:00+00:00']);
+	/**
+	 * publish() sets publicatiedatum (<= now) and clears depublicatiedatum.
+	 *
+	 * @return void
+	 */
+	public function testPublishSetsPublicatiedatum(): void {
+		$service = $this->makeService(['naam' => 'Mijn dienst', 'depublicatiedatum' => '2020-01-01T00:00:00+00:00']);
 
-        $result = $service->publish('dienst', 'uuid-1');
+		$result = $service->publish('dienst', 'uuid-1');
 
-        $this->assertTrue($result['ok']);
-        $this->assertNotNull($result['publicatiedatum']);
-        // The saved object carries publicatiedatum and a cleared depublicatiedatum.
-        $this->assertArrayHasKey('publicatiedatum', $this->savedObject);
-        $this->assertNotNull($this->savedObject['publicatiedatum']);
-        $this->assertNull($this->savedObject['depublicatiedatum']);
-        // publicatiedatum is in the past/present (anonymous-visible now).
-        $this->assertLessThanOrEqual(time(), strtotime($this->savedObject['publicatiedatum']));
-    }//end testPublishSetsPublicatiedatum()
+		$this->assertTrue($result['ok']);
+		$this->assertNotNull($result['publicatiedatum']);
+		// The saved object carries publicatiedatum and a cleared depublicatiedatum.
+		$this->assertArrayHasKey('publicatiedatum', $this->savedObject);
+		$this->assertNotNull($this->savedObject['publicatiedatum']);
+		$this->assertNull($this->savedObject['depublicatiedatum']);
+		// publicatiedatum is in the past/present (anonymous-visible now).
+		$this->assertLessThanOrEqual(time(), strtotime($this->savedObject['publicatiedatum']));
+	}//end testPublishSetsPublicatiedatum()
 
-    /**
-     * publish(when=future) keeps the entry scheduled (publicatiedatum > now).
-     *
-     * @return void
-     */
-    public function testPublishWithFutureMomentSchedules(): void
-    {
-        $service = $this->makeService(['naam' => 'Mijn dienst']);
-        $future  = gmdate('Y-m-d\TH:i:sP', (time() + 86400));
+	/**
+	 * publish(when=future) keeps the entry scheduled (publicatiedatum > now).
+	 *
+	 * @return void
+	 */
+	public function testPublishWithFutureMomentSchedules(): void {
+		$service = $this->makeService(['naam' => 'Mijn dienst']);
+		$future = gmdate('Y-m-d\TH:i:sP', (time() + 86400));
 
-        $result = $service->publish('dienst', 'uuid-1', $future);
+		$result = $service->publish('dienst', 'uuid-1', $future);
 
-        $this->assertTrue($result['ok']);
-        $this->assertGreaterThan(time(), strtotime($this->savedObject['publicatiedatum']));
-    }//end testPublishWithFutureMomentSchedules()
+		$this->assertTrue($result['ok']);
+		$this->assertGreaterThan(time(), strtotime($this->savedObject['publicatiedatum']));
+	}//end testPublishWithFutureMomentSchedules()
 
-    /**
-     * depublish() sets depublicatiedatum and clears publicatiedatum.
-     *
-     * @return void
-     */
-    public function testDepublishClearsPublicatiedatum(): void
-    {
-        $service = $this->makeService(
-            ['naam' => 'Mijn dienst', 'publicatiedatum' => '2024-01-01T00:00:00+00:00']
-        );
+	/**
+	 * depublish() sets depublicatiedatum and clears publicatiedatum.
+	 *
+	 * @return void
+	 */
+	public function testDepublishClearsPublicatiedatum(): void {
+		$service = $this->makeService(
+			['naam' => 'Mijn dienst', 'publicatiedatum' => '2024-01-01T00:00:00+00:00']
+		);
 
-        $result = $service->depublish('dienst', 'uuid-1');
+		$result = $service->depublish('dienst', 'uuid-1');
 
-        $this->assertTrue($result['ok']);
-        $this->assertNull($this->savedObject['publicatiedatum']);
-        $this->assertNotNull($this->savedObject['depublicatiedatum']);
-    }//end testDepublishClearsPublicatiedatum()
+		$this->assertTrue($result['ok']);
+		$this->assertNull($this->savedObject['publicatiedatum']);
+		$this->assertNotNull($this->savedObject['depublicatiedatum']);
+	}//end testDepublishClearsPublicatiedatum()
 
-    /**
-     * Non-publishable object types are rejected (no save).
-     *
-     * @return void
-     */
-    public function testNonPublishableTypeRejected(): void
-    {
-        $this->assertFalse((new PublicationService(
-            $this->createMock(ContainerInterface::class),
-            $this->createMock(SettingsService::class),
-            $this->createMock(LoggerInterface::class)
-        ))->isPublishableType('contactpersoon'));
+	/**
+	 * Non-publishable object types are rejected (no save).
+	 *
+	 * @return void
+	 */
+	public function testNonPublishableTypeRejected(): void {
+		$this->assertFalse((new PublicationService(
+			$this->createMock(ContainerInterface::class),
+			$this->createMock(SettingsService::class),
+			$this->createMock(LoggerInterface::class)
+		))->isPublishableType('contactpersoon'));
 
-        $service = $this->makeService(['naam' => 'x']);
-        $result  = $service->publish('contactpersoon', 'uuid-1');
-        $this->assertFalse($result['ok']);
-        $this->assertNull($this->savedObject);
-    }//end testNonPublishableTypeRejected()
+		$service = $this->makeService(['naam' => 'x']);
+		$result = $service->publish('contactpersoon', 'uuid-1');
+		$this->assertFalse($result['ok']);
+		$this->assertNull($this->savedObject);
+	}//end testNonPublishableTypeRejected()
 
-    /**
-     * All four catalog entry types are publishable.
-     *
-     * @return void
-     */
-    public function testPublishableTypes(): void
-    {
-        $service = $this->makeService(['naam' => 'x']);
-        foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $type) {
-            $this->assertTrue($service->isPublishableType($type), $type.' should be publishable');
-        }
-    }//end testPublishableTypes()
+	/**
+	 * All four catalog entry types are publishable.
+	 *
+	 * @return void
+	 */
+	public function testPublishableTypes(): void {
+		$service = $this->makeService(['naam' => 'x']);
+		foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $type) {
+			$this->assertTrue($service->isPublishableType($type), $type . ' should be publishable');
+		}
+	}//end testPublishableTypes()
 }//end class

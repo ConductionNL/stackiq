@@ -32,84 +32,74 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-8-2
  */
-class ModuleComplianceServiceDecompositionTest extends TestCase
-{
+class ModuleComplianceServiceDecompositionTest extends TestCase {
 
-    /**
-     * Build a service without invoking the constructor — the helper under
-     * test does not touch any collaborator.
-     *
-     * @return ModuleComplianceService
-     */
-    private function makeService(): ModuleComplianceService
-    {
-        $reflection = new \ReflectionClass(ModuleComplianceService::class);
-        return $reflection->newInstanceWithoutConstructor();
+	/**
+	 * Build a service without invoking the constructor — the helper under
+	 * test does not touch any collaborator.
+	 *
+	 * @return ModuleComplianceService
+	 */
+	private function makeService(): ModuleComplianceService {
+		$reflection = new \ReflectionClass(ModuleComplianceService::class);
+		return $reflection->newInstanceWithoutConstructor();
+	}//end makeService()
 
-    }//end makeService()
+	/**
+	 * normaliseCurrentStandaarden returns the array unchanged when it is
+	 * already an array.
+	 *
+	 * @return void
+	 */
+	public function testNormaliseReturnsArrayUnchanged(): void {
+		$service = $this->makeService();
+		$reflection = new \ReflectionMethod($service, 'normaliseCurrentStandaarden');
+		$reflection->setAccessible(true);
 
+		$this->assertSame(
+			['a', 'b'],
+			$reflection->invoke($service, ['a', 'b'])
+		);
+		$this->assertSame([], $reflection->invoke($service, []));
 
-    /**
-     * normaliseCurrentStandaarden returns the array unchanged when it is
-     * already an array.
-     *
-     * @return void
-     */
-    public function testNormaliseReturnsArrayUnchanged(): void
-    {
-        $service    = $this->makeService();
-        $reflection = new \ReflectionMethod($service, 'normaliseCurrentStandaarden');
-        $reflection->setAccessible(true);
+	}//end testNormaliseReturnsArrayUnchanged()
 
-        $this->assertSame(
-            ['a', 'b'],
-            $reflection->invoke($service, ['a', 'b'])
-        );
-        $this->assertSame([], $reflection->invoke($service, []));
+	/**
+	 * normaliseCurrentStandaarden coerces non-array values to an empty
+	 * array, matching the legacy guard clause it replaces.
+	 *
+	 * @return void
+	 */
+	public function testNormaliseCoercesNonArrayToEmpty(): void {
+		$service = $this->makeService();
+		$reflection = new \ReflectionMethod($service, 'normaliseCurrentStandaarden');
+		$reflection->setAccessible(true);
 
-    }//end testNormaliseReturnsArrayUnchanged()
+		$this->assertSame([], $reflection->invoke($service, null));
+		$this->assertSame([], $reflection->invoke($service, 'not-an-array'));
+		$this->assertSame([], $reflection->invoke($service, 42));
 
+	}//end testNormaliseCoercesNonArrayToEmpty()
 
-    /**
-     * normaliseCurrentStandaarden coerces non-array values to an empty
-     * array, matching the legacy guard clause it replaces.
-     *
-     * @return void
-     */
-    public function testNormaliseCoercesNonArrayToEmpty(): void
-    {
-        $service    = $this->makeService();
-        $reflection = new \ReflectionMethod($service, 'normaliseCurrentStandaarden');
-        $reflection->setAccessible(true);
+	/**
+	 * The extracted helpers exist with the documented visibility.
+	 *
+	 * @return void
+	 */
+	public function testExtractedHelpersExistAndArePrivate(): void {
+		$reflection = new \ReflectionClass(ModuleComplianceService::class);
 
-        $this->assertSame([], $reflection->invoke($service, null));
-        $this->assertSame([], $reflection->invoke($service, 'not-an-array'));
-        $this->assertSame([], $reflection->invoke($service, 42));
+		foreach (['normaliseCurrentStandaarden', 'syncStandaarden'] as $method) {
+			$this->assertTrue(
+				$reflection->hasMethod($method),
+				sprintf('Expected helper %s() on ModuleComplianceService', $method)
+			);
+			$this->assertTrue(
+				$reflection->getMethod($method)->isPrivate(),
+				sprintf('Helper %s() must remain private', $method)
+			);
+		}
 
-    }//end testNormaliseCoercesNonArrayToEmpty()
-
-
-    /**
-     * The extracted helpers exist with the documented visibility.
-     *
-     * @return void
-     */
-    public function testExtractedHelpersExistAndArePrivate(): void
-    {
-        $reflection = new \ReflectionClass(ModuleComplianceService::class);
-
-        foreach (['normaliseCurrentStandaarden', 'syncStandaarden'] as $method) {
-            $this->assertTrue(
-                $reflection->hasMethod($method),
-                sprintf('Expected helper %s() on ModuleComplianceService', $method)
-            );
-            $this->assertTrue(
-                $reflection->getMethod($method)->isPrivate(),
-                sprintf('Helper %s() must remain private', $method)
-            );
-        }
-
-    }//end testExtractedHelpersExistAndArePrivate()
-
+	}//end testExtractedHelpersExistAndArePrivate()
 
 }//end class

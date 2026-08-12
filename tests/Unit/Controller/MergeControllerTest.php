@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Unit tests for MergeController's admin-only authorization guard.
  *
@@ -38,142 +39,135 @@ use Psr\Log\LoggerInterface;
 /**
  * Test class for MergeController's admin-only guard.
  */
-class MergeControllerTest extends TestCase
-{
-    /**
-     * @var MergeOrganisatieService|MockObject
-     */
-    private MergeOrganisatieService|MockObject $mergeService;
+class MergeControllerTest extends TestCase {
+	/**
+	 * @var MergeOrganisatieService|MockObject
+	 */
+	private MergeOrganisatieService|MockObject $mergeService;
 
-    /**
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $userSession;
+	/**
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $userSession;
 
-    /**
-     * @var IGroupManager|MockObject
-     */
-    private IGroupManager|MockObject $groupManager;
+	/**
+	 * @var IGroupManager|MockObject
+	 */
+	private IGroupManager|MockObject $groupManager;
 
-    /**
-     * Build the controller with the current mocks and a logged-in user.
-     *
-     * @param bool $isAdmin Whether the logged-in user is an admin.
-     *
-     * @return MergeController The controller under test.
-     */
-    private function makeController(bool $isAdmin): MergeController
-    {
-        $request = $this->createMock(IRequest::class);
+	/**
+	 * Build the controller with the current mocks and a logged-in user.
+	 *
+	 * @param bool $isAdmin Whether the logged-in user is an admin.
+	 *
+	 * @return MergeController The controller under test.
+	 */
+	private function makeController(bool $isAdmin): MergeController {
+		$request = $this->createMock(IRequest::class);
 
-        $this->mergeService = $this->createMock(MergeOrganisatieService::class);
-        $this->userSession   = $this->createMock(IUserSession::class);
-        $this->groupManager  = $this->createMock(IGroupManager::class);
+		$this->mergeService = $this->createMock(MergeOrganisatieService::class);
+		$this->userSession = $this->createMock(IUserSession::class);
+		$this->groupManager = $this->createMock(IGroupManager::class);
 
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('caller-uid');
-        $this->userSession->method('getUser')->willReturn($user);
-        $this->groupManager->method('isAdmin')->with('caller-uid')->willReturn($isAdmin);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('caller-uid');
+		$this->userSession->method('getUser')->willReturn($user);
+		$this->groupManager->method('isAdmin')->with('caller-uid')->willReturn($isAdmin);
 
-        return new MergeController(
-            $request,
-            $this->userSession,
-            $this->groupManager,
-            $this->mergeService,
-            $this->createMock(LoggerInterface::class)
-        );
-    }//end makeController()
+		return new MergeController(
+			$request,
+			$this->userSession,
+			$this->groupManager,
+			$this->mergeService,
+			$this->createMock(LoggerInterface::class)
+		);
+	}//end makeController()
 
-    /**
-     * A non-admin caller is refused (403) on dryRun(), and the merge service
-     * is never invoked.
-     *
-     * @return void
-     */
-    public function testDryRunRefusesNonAdmin(): void
-    {
-        $controller = $this->makeController(isAdmin: false);
-        $this->mergeService->expects($this->never())->method('dryRun');
+	/**
+	 * A non-admin caller is refused (403) on dryRun(), and the merge service
+	 * is never invoked.
+	 *
+	 * @return void
+	 */
+	public function testDryRunRefusesNonAdmin(): void {
+		$controller = $this->makeController(isAdmin: false);
+		$this->mergeService->expects($this->never())->method('dryRun');
 
-        $response = $controller->dryRun(uuid: 'org-a', targetUuid: 'org-b');
+		$response = $controller->dryRun(uuid: 'org-a', targetUuid: 'org-b');
 
-        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
-    }//end testDryRunRefusesNonAdmin()
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}//end testDryRunRefusesNonAdmin()
 
-    /**
-     * A non-admin caller is refused (403) on execute(), and the merge
-     * service is never invoked — no object or audit entry is written.
-     *
-     * @return void
-     */
-    public function testExecuteRefusesNonAdmin(): void
-    {
-        $controller = $this->makeController(isAdmin: false);
-        $this->mergeService->expects($this->never())->method('execute');
+	/**
+	 * A non-admin caller is refused (403) on execute(), and the merge
+	 * service is never invoked — no object or audit entry is written.
+	 *
+	 * @return void
+	 */
+	public function testExecuteRefusesNonAdmin(): void {
+		$controller = $this->makeController(isAdmin: false);
+		$this->mergeService->expects($this->never())->method('execute');
 
-        $response = $controller->execute(uuid: 'org-a', targetUuid: 'org-b');
+		$response = $controller->execute(uuid: 'org-a', targetUuid: 'org-b');
 
-        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
-    }//end testExecuteRefusesNonAdmin()
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}//end testExecuteRefusesNonAdmin()
 
-    /**
-     * An admin caller is authorized: dryRun() reaches the service and its
-     * result is returned with 200.
-     *
-     * @return void
-     */
-    public function testDryRunAuthorizesAdmin(): void
-    {
-        $controller = $this->makeController(isAdmin: true);
-        $this->mergeService->expects($this->once())
-            ->method('dryRun')
-            ->with('org-a', 'org-b')
-            ->willReturn(['sourceUuid' => 'org-a', 'targetUuid' => 'org-b', 'counts' => [], 'blockers' => []]);
+	/**
+	 * An admin caller is authorized: dryRun() reaches the service and its
+	 * result is returned with 200.
+	 *
+	 * @return void
+	 */
+	public function testDryRunAuthorizesAdmin(): void {
+		$controller = $this->makeController(isAdmin: true);
+		$this->mergeService->expects($this->once())
+			->method('dryRun')
+			->with('org-a', 'org-b')
+			->willReturn(['sourceUuid' => 'org-a', 'targetUuid' => 'org-b', 'counts' => [], 'blockers' => []]);
 
-        $response = $controller->dryRun(uuid: 'org-a', targetUuid: 'org-b');
+		$response = $controller->dryRun(uuid: 'org-a', targetUuid: 'org-b');
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-    }//end testDryRunAuthorizesAdmin()
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+	}//end testDryRunAuthorizesAdmin()
 
-    /**
-     * An admin caller's blocked execute() result (ok: false) surfaces as 409,
-     * not a 5xx or silent success.
-     *
-     * @return void
-     */
-    public function testExecuteSurfacesServiceBlockersAs409(): void
-    {
-        $controller = $this->makeController(isAdmin: true);
-        $this->mergeService->method('execute')->willReturn(
-            ['ok' => false, 'sourceUuid' => 'org-a', 'targetUuid' => 'org-a', 'blockers' => [['type' => 'self-merge', 'message' => '...']]]
-        );
+	/**
+	 * An admin caller's blocked execute() result (ok: false) surfaces as 409,
+	 * not a 5xx or silent success.
+	 *
+	 * @return void
+	 */
+	public function testExecuteSurfacesServiceBlockersAs409(): void {
+		$controller = $this->makeController(isAdmin: true);
+		$this->mergeService->method('execute')->willReturn(
+			['ok' => false, 'sourceUuid' => 'org-a', 'targetUuid' => 'org-a', 'blockers' => [['type' => 'self-merge', 'message' => '...']]]
+		);
 
-        $response = $controller->execute(uuid: 'org-a', targetUuid: 'org-a');
+		$response = $controller->execute(uuid: 'org-a', targetUuid: 'org-a');
 
-        $this->assertSame(Http::STATUS_CONFLICT, $response->getStatus());
-    }//end testExecuteSurfacesServiceBlockersAs409()
+		$this->assertSame(Http::STATUS_CONFLICT, $response->getStatus());
+	}//end testExecuteSurfacesServiceBlockersAs409()
 
-    /**
-     * An admin caller's successful execute() result surfaces with 200.
-     *
-     * @return void
-     */
-    public function testExecuteReturns200OnSuccess(): void
-    {
-        $controller = $this->makeController(isAdmin: true);
-        $this->mergeService->method('execute')->willReturn(
-            [
-                'ok'          => true,
-                'operationId' => 'org_merge_1',
-                'sourceUuid'  => 'org-a',
-                'targetUuid'  => 'org-b',
-                'status'      => 'completed',
-                'counts'      => [],
-            ]
-        );
+	/**
+	 * An admin caller's successful execute() result surfaces with 200.
+	 *
+	 * @return void
+	 */
+	public function testExecuteReturns200OnSuccess(): void {
+		$controller = $this->makeController(isAdmin: true);
+		$this->mergeService->method('execute')->willReturn(
+			[
+				'ok' => true,
+				'operationId' => 'org_merge_1',
+				'sourceUuid' => 'org-a',
+				'targetUuid' => 'org-b',
+				'status' => 'completed',
+				'counts' => [],
+			]
+		);
 
-        $response = $controller->execute(uuid: 'org-a', targetUuid: 'org-b');
+		$response = $controller->execute(uuid: 'org-a', targetUuid: 'org-b');
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-    }//end testExecuteReturns200OnSuccess()
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+	}//end testExecuteReturns200OnSuccess()
 }//end class

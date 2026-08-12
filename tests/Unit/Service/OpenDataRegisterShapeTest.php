@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Register-shape tests for open-data-publishing.
  *
@@ -26,42 +27,39 @@ use PHPUnit\Framework\TestCase;
 /**
  * Validates the organisatie schema gains the moderation field.
  */
-class OpenDataRegisterShapeTest extends TestCase
-{
-    /**
-     * @var array<string,mixed>
-     */
-    private array $organisatie;
+class OpenDataRegisterShapeTest extends TestCase {
+	/**
+	 * @var array<string,mixed>
+	 */
+	private array $organisatie;
 
-    /**
-     * Load the organisatie schema once.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $path    = __DIR__.'/../../../lib/Settings/softwarecatalogus_register.json';
-        $decoded = json_decode((string) file_get_contents($path), true);
-        $this->assertIsArray($decoded);
-        $this->organisatie = $decoded['components']['schemas']['organisatie'];
-    }//end setUp()
+	/**
+	 * Load the organisatie schema once.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$path = __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json';
+		$decoded = json_decode((string)file_get_contents($path), true);
+		$this->assertIsArray($decoded);
+		$this->organisatie = $decoded['components']['schemas']['organisatie'];
+	}//end setUp()
 
-    /**
-     * The moderation field is present, optional, and enumerates the states.
-     *
-     * @return void
-     */
-    public function testOrganisatieHasModerationField(): void
-    {
-        $props = $this->organisatie['properties'] ?? [];
-        $this->assertArrayHasKey('registratiestatus', $props);
+	/**
+	 * The moderation field is present, optional, and enumerates the states.
+	 *
+	 * @return void
+	 */
+	public function testOrganisatieHasModerationField(): void {
+		$props = $this->organisatie['properties'] ?? [];
+		$this->assertArrayHasKey('registratiestatus', $props);
 
-        $field = $props['registratiestatus'];
-        $this->assertSame('string', $field['type']);
-        $this->assertSame(['pending', 'active', 'rejected'], $field['enum']);
+		$field = $props['registratiestatus'];
+		$this->assertSame('string', $field['type']);
+		$this->assertSame(['pending', 'active', 'rejected'], $field['enum']);
 
-        // Optional: not in `required` (import-over-existing is non-destructive).
-        $required = $this->organisatie['required'] ?? [];
-        $this->assertNotContains('registratiestatus', $required);
-    }//end testOrganisatieHasModerationField()
+		// Optional: not in `required` (import-over-existing is non-destructive).
+		$required = $this->organisatie['required'] ?? [];
+		$this->assertNotContains('registratiestatus', $required);
+	}//end testOrganisatieHasModerationField()
 }//end class

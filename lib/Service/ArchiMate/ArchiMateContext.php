@@ -36,21 +36,20 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-4
  */
-class ArchiMateContext
-{
-    /**
-     * Constructor.
-     *
-     * @param ObjectService   $objectService   The OpenRegister object service.
-     * @param SettingsService $settingsService The SoftwareCatalog settings service.
-     * @param LoggerInterface $logger          The application logger.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-4
-     */
-    public function __construct(
-        public readonly ObjectService $objectService,
-        public readonly SettingsService $settingsService,
-        public readonly LoggerInterface $logger
-    ) {
-    }//end __construct()
+class ArchiMateContext {
+	/**
+	 * Constructor.
+	 *
+	 * @param ObjectService $objectService The OpenRegister object service.
+	 * @param SettingsService $settingsService The SoftwareCatalog settings service.
+	 * @param LoggerInterface $logger The application logger.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-4
+	 */
+	public function __construct(
+		public readonly ObjectService $objectService,
+		public readonly SettingsService $settingsService,
+		public readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 }//end class

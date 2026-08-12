@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Unit tests for OrganisatieService::mapStatus() — organisation-merge tombstone status.
  *
@@ -39,95 +40,90 @@ use ReflectionMethod;
  *
  * @spec openspec/specs/organisatie-service/spec.md#requirement-the-system-shall-update-the-active-flag-of-an-openregister-organisation-from-a-softwarecatalog-status-req-002
  */
-class OrganisatieServiceMapStatusMergeTest extends TestCase
-{
-    /**
-     * Build an OrganisatieService without invoking the constructor, wiring
-     * only the properties the methods under test read.
-     *
-     * @param ContainerInterface $container The DI container.
-     * @param LoggerInterface    $logger    The logger.
-     *
-     * @return OrganisatieService
-     */
-    private function makeService(ContainerInterface $container, LoggerInterface $logger): OrganisatieService
-    {
-        $reflection = new ReflectionClass(OrganisatieService::class);
-        $service    = $reflection->newInstanceWithoutConstructor();
+class OrganisatieServiceMapStatusMergeTest extends TestCase {
+	/**
+	 * Build an OrganisatieService without invoking the constructor, wiring
+	 * only the properties the methods under test read.
+	 *
+	 * @param ContainerInterface $container The DI container.
+	 * @param LoggerInterface $logger The logger.
+	 *
+	 * @return OrganisatieService
+	 */
+	private function makeService(ContainerInterface $container, LoggerInterface $logger): OrganisatieService {
+		$reflection = new ReflectionClass(OrganisatieService::class);
+		$service = $reflection->newInstanceWithoutConstructor();
 
-        $containerProp = $reflection->getProperty('container');
-        $containerProp->setAccessible(true);
-        $containerProp->setValue($service, $container);
+		$containerProp = $reflection->getProperty('container');
+		$containerProp->setAccessible(true);
+		$containerProp->setValue($service, $container);
 
-        $loggerProp = $reflection->getProperty('logger');
-        $loggerProp->setAccessible(true);
-        $loggerProp->setValue($service, $logger);
+		$loggerProp = $reflection->getProperty('logger');
+		$loggerProp->setAccessible(true);
+		$loggerProp->setValue($service, $logger);
 
-        return $service;
-    }//end makeService()
+		return $service;
+	}//end makeService()
 
-    /**
-     * `mapStatus('samengevoegd')` MUST return false — a merged-away
-     * organisation is never reported as active.
-     *
-     * @return void
-     */
-    public function testMapStatusMergedReturnsFalse(): void
-    {
-        $service = $this->makeService($this->createMock(ContainerInterface::class), new NullLogger());
+	/**
+	 * `mapStatus('samengevoegd')` MUST return false — a merged-away
+	 * organisation is never reported as active.
+	 *
+	 * @return void
+	 */
+	public function testMapStatusMergedReturnsFalse(): void {
+		$service = $this->makeService($this->createMock(ContainerInterface::class), new NullLogger());
 
-        $method = new ReflectionMethod($service, 'mapStatus');
-        $method->setAccessible(true);
+		$method = new ReflectionMethod($service, 'mapStatus');
+		$method->setAccessible(true);
 
-        $this->assertFalse($method->invoke($service, 'samengevoegd'));
-    }//end testMapStatusMergedReturnsFalse()
+		$this->assertFalse($method->invoke($service, 'samengevoegd'));
+	}//end testMapStatusMergedReturnsFalse()
 
-    /**
-     * Existing actief/inactief/unknown mapping is unchanged by the merge status addition.
-     *
-     * @return void
-     */
-    public function testMapStatusExistingValuesUnchanged(): void
-    {
-        $service = $this->makeService($this->createMock(ContainerInterface::class), new NullLogger());
+	/**
+	 * Existing actief/inactief/unknown mapping is unchanged by the merge status addition.
+	 *
+	 * @return void
+	 */
+	public function testMapStatusExistingValuesUnchanged(): void {
+		$service = $this->makeService($this->createMock(ContainerInterface::class), new NullLogger());
 
-        $method = new ReflectionMethod($service, 'mapStatus');
-        $method->setAccessible(true);
+		$method = new ReflectionMethod($service, 'mapStatus');
+		$method->setAccessible(true);
 
-        $this->assertTrue($method->invoke($service, 'Actief'));
-        $this->assertFalse($method->invoke($service, ' inactief '));
-        $this->assertFalse($method->invoke($service, 'deactief'));
-        $this->assertTrue($method->invoke($service, 'pending'));
-    }//end testMapStatusExistingValuesUnchanged()
+		$this->assertTrue($method->invoke($service, 'Actief'));
+		$this->assertFalse($method->invoke($service, ' inactief '));
+		$this->assertFalse($method->invoke($service, 'deactief'));
+		$this->assertTrue($method->invoke($service, 'pending'));
+	}//end testMapStatusExistingValuesUnchanged()
 
-    /**
-     * Tombstoning via merge (`updateOrganizationStatus(..., ['beoordeling' =>
-     * 'samengevoegd'])`) also deactivates the OR core Organisation entity.
-     *
-     * @return void
-     */
-    public function testUpdateOrganizationStatusSamengevoegdDeactivatesOrEntity(): void
-    {
-        $entity = new Organisation();
-        $entity->setUuid('uuid-1');
-        $entity->setActive(true);
+	/**
+	 * Tombstoning via merge (`updateOrganizationStatus(..., ['beoordeling' =>
+	 * 'samengevoegd'])`) also deactivates the OR core Organisation entity.
+	 *
+	 * @return void
+	 */
+	public function testUpdateOrganizationStatusSamengevoegdDeactivatesOrEntity(): void {
+		$entity = new Organisation();
+		$entity->setUuid('uuid-1');
+		$entity->setActive(true);
 
-        $mapper = $this->createMock(OrganisationMapper::class);
-        $mapper->method('findByUuid')->with('uuid-1')->willReturn($entity);
-        $mapper->expects($this->once())->method('save')->willReturnCallback(
-            static function (Organisation $org): Organisation {
-                return $org;
-            }
-        );
+		$mapper = $this->createMock(OrganisationMapper::class);
+		$mapper->method('findByUuid')->with('uuid-1')->willReturn($entity);
+		$mapper->expects($this->once())->method('save')->willReturnCallback(
+			static function (Organisation $org): Organisation {
+				return $org;
+			}
+		);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($mapper);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($mapper);
 
-        $service = $this->makeService($container, new NullLogger());
+		$service = $this->makeService($container, new NullLogger());
 
-        $result = $service->updateOrganizationStatus('uuid-1', ['beoordeling' => 'samengevoegd']);
+		$result = $service->updateOrganizationStatus('uuid-1', ['beoordeling' => 'samengevoegd']);
 
-        $this->assertTrue($result);
-        $this->assertFalse($entity->isActive());
-    }//end testUpdateOrganizationStatusSamengevoegdDeactivatesOrEntity()
+		$this->assertTrue($result);
+		$this->assertFalse($entity->isActive());
+	}//end testUpdateOrganizationStatusSamengevoegdDeactivatesOrEntity()
 }//end class

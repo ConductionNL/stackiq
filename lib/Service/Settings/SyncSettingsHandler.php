@@ -35,153 +35,145 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-1
  */
-class SyncSettingsHandler
-{
+class SyncSettingsHandler {
 
-    /**
-     * The application name used as the config namespace.
-     *
-     * @var string
-     */
-    private const APP_NAME = 'softwarecatalog';
+	/**
+	 * The application name used as the config namespace.
+	 *
+	 * @var string
+	 */
+	private const APP_NAME = 'softwarecatalog';
 
-    /**
-     * Constructor.
-     *
-     * @param IAppConfig      $config The application configuration service.
-     * @param LoggerInterface $logger Logger instance.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-1
-     */
-    public function __construct(
-        private readonly IAppConfig $config,
-        private readonly LoggerInterface $logger
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $config The application configuration service.
+	 * @param LoggerInterface $logger Logger instance.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
+	 */
+	public function __construct(
+		private readonly IAppConfig $config,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Get the sync time window in minutes.
-     *
-     * @return string The sync time window value (default: '10').
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-1
-     */
-    public function getSyncTimeWindow(): string
-    {
-        return $this->config->getValueString(self::APP_NAME, 'syncTimeWindow', '10');
+	/**
+	 * Get the sync time window in minutes.
+	 *
+	 * @return string The sync time window value (default: '10').
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
+	 */
+	public function getSyncTimeWindow(): string {
+		return $this->config->getValueString(self::APP_NAME, 'syncTimeWindow', '10');
+	}//end getSyncTimeWindow()
 
-    }//end getSyncTimeWindow()
+	/**
+	 * Set the sync time window in minutes.
+	 *
+	 * @param string $minutes The time window value in minutes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
+	 */
+	public function setSyncTimeWindow(string $minutes): void {
+		$this->validateSyncConfig(minutes: $minutes);
+		$this->config->setValueString(self::APP_NAME, 'syncTimeWindow', $minutes);
 
-    /**
-     * Set the sync time window in minutes.
-     *
-     * @param string $minutes The time window value in minutes.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-1
-     */
-    public function setSyncTimeWindow(string $minutes): void
-    {
-        $this->validateSyncConfig(minutes: $minutes);
-        $this->config->setValueString(self::APP_NAME, 'syncTimeWindow', $minutes);
+		$this->logger->info(
+			'SyncSettingsHandler: Updated syncTimeWindow',
+			['minutes' => $minutes]
+		);
 
-        $this->logger->info(
-            'SyncSettingsHandler: Updated syncTimeWindow',
-            ['minutes' => $minutes]
-        );
+	}//end setSyncTimeWindow()
 
-    }//end setSyncTimeWindow()
+	/**
+	 * Get the cron-job configuration array.
+	 *
+	 * @return array<string,mixed> Cron-job configuration.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
+	 */
+	public function getCronjobConfig(): array {
+		return [
+			'syncTimeWindow' => $this->getSyncTimeWindow(),
+			'syncEnabled' => $this->config->getValueString(self::APP_NAME, 'syncEnabled', 'true') === 'true',
+			'cronjobInterval' => $this->config->getValueString(self::APP_NAME, 'cronjobInterval', '*/5 * * * *'),
+			'lastSyncTime' => $this->config->getValueString(self::APP_NAME, 'lastSyncTime', ''),
+			'organizationSyncEnabled' => $this->config->getValueString(self::APP_NAME, 'organizationSyncEnabled', 'true') === 'true',
+		];
 
-    /**
-     * Get the cron-job configuration array.
-     *
-     * @return array<string,mixed> Cron-job configuration.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-1
-     */
-    public function getCronjobConfig(): array
-    {
-        return [
-            'syncTimeWindow'          => $this->getSyncTimeWindow(),
-            'syncEnabled'             => $this->config->getValueString(self::APP_NAME, 'syncEnabled', 'true') === 'true',
-            'cronjobInterval'         => $this->config->getValueString(self::APP_NAME, 'cronjobInterval', '*/5 * * * *'),
-            'lastSyncTime'            => $this->config->getValueString(self::APP_NAME, 'lastSyncTime', ''),
-            'organizationSyncEnabled' => $this->config->getValueString(self::APP_NAME, 'organizationSyncEnabled', 'true') === 'true',
-        ];
+	}//end getCronjobConfig()
 
-    }//end getCronjobConfig()
+	/**
+	 * Update the cron-job configuration from a data array.
+	 *
+	 * @param array<string,mixed> $data Cron-job config fields to update.
+	 *
+	 * @return array<string,mixed> The updated cron-job configuration.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
+	 */
+	public function updateCronjobConfig(array $data): array {
+		if (isset($data['syncTimeWindow']) === true) {
+			$this->setSyncTimeWindow(minutes: (string)$data['syncTimeWindow']);
+		}
 
-    /**
-     * Update the cron-job configuration from a data array.
-     *
-     * @param array<string,mixed> $data Cron-job config fields to update.
-     *
-     * @return array<string,mixed> The updated cron-job configuration.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-1
-     */
-    public function updateCronjobConfig(array $data): array
-    {
-        if (isset($data['syncTimeWindow']) === true) {
-            $this->setSyncTimeWindow(minutes: (string) $data['syncTimeWindow']);
-        }
+		if (isset($data['syncEnabled']) === true) {
+			$syncEnabledStr = 'false';
+			if ($data['syncEnabled'] === true) {
+				$syncEnabledStr = 'true';
+			}
 
-        if (isset($data['syncEnabled']) === true) {
-            $syncEnabledStr = 'false';
-            if ($data['syncEnabled'] === true) {
-                $syncEnabledStr = 'true';
-            }
+			$this->config->setValueString(self::APP_NAME, 'syncEnabled', $syncEnabledStr);
+		}
 
-            $this->config->setValueString(self::APP_NAME, 'syncEnabled', $syncEnabledStr);
-        }
+		if (isset($data['cronjobInterval']) === true) {
+			$this->config->setValueString(self::APP_NAME, 'cronjobInterval', (string)$data['cronjobInterval']);
+		}
 
-        if (isset($data['cronjobInterval']) === true) {
-            $this->config->setValueString(self::APP_NAME, 'cronjobInterval', (string) $data['cronjobInterval']);
-        }
+		if (isset($data['organizationSyncEnabled']) === true) {
+			$orgSyncEnabledStr = 'false';
+			if ($data['organizationSyncEnabled'] === true) {
+				$orgSyncEnabledStr = 'true';
+			}
 
-        if (isset($data['organizationSyncEnabled']) === true) {
-            $orgSyncEnabledStr = 'false';
-            if ($data['organizationSyncEnabled'] === true) {
-                $orgSyncEnabledStr = 'true';
-            }
+			$this->config->setValueString(self::APP_NAME, 'organizationSyncEnabled', $orgSyncEnabledStr);
+		}
 
-            $this->config->setValueString(self::APP_NAME, 'organizationSyncEnabled', $orgSyncEnabledStr);
-        }
+		$this->logger->info('SyncSettingsHandler: Updated cron-job configuration', ['data' => $data]);
 
-        $this->logger->info('SyncSettingsHandler: Updated cron-job configuration', ['data' => $data]);
+		return $this->getCronjobConfig();
+	}//end updateCronjobConfig()
 
-        return $this->getCronjobConfig();
+	/**
+	 * Validate sync configuration values.
+	 *
+	 * Guard clause: throws if the minutes value is non-numeric or out of range.
+	 *
+	 * @param string $minutes The time window value to validate.
+	 *
+	 * @return void
+	 *
+	 * @throws \InvalidArgumentException When the value is invalid.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
+	 */
+	private function validateSyncConfig(string $minutes): void {
+		if (is_numeric($minutes) === false) {
+			throw new InvalidArgumentException(
+				sprintf('syncTimeWindow must be numeric, got "%s".', $minutes)
+			);
+		}
 
-    }//end updateCronjobConfig()
+		$value = (int)$minutes;
+		if ($value < 1 || $value > 10080) {
+			throw new InvalidArgumentException(
+				sprintf('syncTimeWindow must be between 1 and 10080 minutes, got %d.', $value)
+			);
+		}
 
-    /**
-     * Validate sync configuration values.
-     *
-     * Guard clause: throws if the minutes value is non-numeric or out of range.
-     *
-     * @param string $minutes The time window value to validate.
-     *
-     * @return void
-     *
-     * @throws \InvalidArgumentException When the value is invalid.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-1
-     */
-    private function validateSyncConfig(string $minutes): void
-    {
-        if (is_numeric($minutes) === false) {
-            throw new InvalidArgumentException(
-                sprintf('syncTimeWindow must be numeric, got "%s".', $minutes)
-            );
-        }
-
-        $value = (int) $minutes;
-        if ($value < 1 || $value > 10080) {
-            throw new InvalidArgumentException(
-                sprintf('syncTimeWindow must be between 1 and 10080 minutes, got %d.', $value)
-            );
-        }
-
-    }//end validateSyncConfig()
+	}//end validateSyncConfig()
 }//end class

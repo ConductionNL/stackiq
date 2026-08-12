@@ -31,103 +31,90 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-9-6
  */
-class ViewControllerDecompositionTest extends TestCase
-{
+class ViewControllerDecompositionTest extends TestCase {
 
-    /**
-     * Build a ViewController without invoking the constructor — none of the
-     * helpers touch a property.
-     *
-     * @return ViewController
-     */
-    private function makeController(): ViewController
-    {
-        $reflection = new \ReflectionClass(ViewController::class);
-        return $reflection->newInstanceWithoutConstructor();
+	/**
+	 * Build a ViewController without invoking the constructor — none of the
+	 * helpers touch a property.
+	 *
+	 * @return ViewController
+	 */
+	private function makeController(): ViewController {
+		$reflection = new \ReflectionClass(ViewController::class);
+		return $reflection->newInstanceWithoutConstructor();
+	}//end makeController()
 
-    }//end makeController()
+	/**
+	 * Verifier for a private method via reflection.
+	 *
+	 * @param ViewController $controller The controller under test.
+	 * @param string $method The private method name.
+	 * @param mixed ...$args Arguments to forward.
+	 *
+	 * @return mixed The invoked method's return value.
+	 */
+	private function invoke(ViewController $controller, string $method, mixed ...$args): mixed {
+		$reflection = new \ReflectionMethod($controller, $method);
+		$reflection->setAccessible(true);
+		return $reflection->invokeArgs($controller, $args);
+	}//end invoke()
 
+	/**
+	 * Success → 200; failure → 500 for the list endpoint.
+	 *
+	 * @return void
+	 */
+	public function testDetermineListStatusCode(): void {
+		$controller = $this->makeController();
 
-    /**
-     * Verifier for a private method via reflection.
-     *
-     * @param ViewController $controller The controller under test.
-     * @param string         $method     The private method name.
-     * @param mixed          ...$args    Arguments to forward.
-     *
-     * @return mixed The invoked method's return value.
-     */
-    private function invoke(ViewController $controller, string $method, mixed ...$args): mixed
-    {
-        $reflection = new \ReflectionMethod($controller, $method);
-        $reflection->setAccessible(true);
-        return $reflection->invokeArgs($controller, $args);
+		$this->assertSame(200, $this->invoke($controller, 'determineListStatusCode', ['success' => true]));
+		$this->assertSame(500, $this->invoke($controller, 'determineListStatusCode', ['success' => false]));
 
-    }//end invoke()
+	}//end testDetermineListStatusCode()
 
+	/**
+	 * Single-view status code resolution covers 200 / 404 / 500.
+	 *
+	 * @return void
+	 */
+	public function testDetermineViewStatusCode(): void {
+		$controller = $this->makeController();
 
-    /**
-     * Success → 200; failure → 500 for the list endpoint.
-     *
-     * @return void
-     */
-    public function testDetermineListStatusCode(): void
-    {
-        $controller = $this->makeController();
+		$this->assertSame(
+			200,
+			$this->invoke($controller, 'determineViewStatusCode', ['success' => true, 'view' => ['id' => 'v1']])
+		);
+		$this->assertSame(
+			404,
+			$this->invoke($controller, 'determineViewStatusCode', ['success' => false, 'view' => null])
+		);
+		$this->assertSame(
+			500,
+			$this->invoke($controller, 'determineViewStatusCode', ['success' => false, 'view' => ['id' => 'v1']])
+		);
 
-        $this->assertSame(200, $this->invoke($controller, 'determineListStatusCode', ['success' => true]));
-        $this->assertSame(500, $this->invoke($controller, 'determineListStatusCode', ['success' => false]));
+	}//end testDetermineViewStatusCode()
 
-    }//end testDetermineListStatusCode()
+	/**
+	 * buildListErrorPayload returns the canonical empty-list error envelope
+	 * with the exception's message wired in.
+	 *
+	 * @return void
+	 */
+	public function testBuildListErrorPayloadIncludesExceptionMessage(): void {
+		$controller = $this->makeController();
 
+		$payload = $this->invoke(
+			$controller,
+			'buildListErrorPayload',
+			new \RuntimeException('boom')
+		);
 
-    /**
-     * Single-view status code resolution covers 200 / 404 / 500.
-     *
-     * @return void
-     */
-    public function testDetermineViewStatusCode(): void
-    {
-        $controller = $this->makeController();
+		$this->assertSame(false, $payload['success']);
+		$this->assertStringContainsString('boom', $payload['error']);
+		$this->assertSame([], $payload['views']);
+		$this->assertSame(0, $payload['count']);
 
-        $this->assertSame(
-            200,
-            $this->invoke($controller, 'determineViewStatusCode', ['success' => true, 'view' => ['id' => 'v1']])
-        );
-        $this->assertSame(
-            404,
-            $this->invoke($controller, 'determineViewStatusCode', ['success' => false, 'view' => null])
-        );
-        $this->assertSame(
-            500,
-            $this->invoke($controller, 'determineViewStatusCode', ['success' => false, 'view' => ['id' => 'v1']])
-        );
-
-    }//end testDetermineViewStatusCode()
-
-
-    /**
-     * buildListErrorPayload returns the canonical empty-list error envelope
-     * with the exception's message wired in.
-     *
-     * @return void
-     */
-    public function testBuildListErrorPayloadIncludesExceptionMessage(): void
-    {
-        $controller = $this->makeController();
-
-        $payload = $this->invoke(
-            $controller,
-            'buildListErrorPayload',
-            new \RuntimeException('boom')
-        );
-
-        $this->assertSame(false, $payload['success']);
-        $this->assertStringContainsString('boom', $payload['error']);
-        $this->assertSame([], $payload['views']);
-        $this->assertSame(0, $payload['count']);
-
-    }//end testBuildListErrorPayloadIncludesExceptionMessage()
-
+	}//end testBuildListErrorPayloadIncludesExceptionMessage()
 
 }//end class

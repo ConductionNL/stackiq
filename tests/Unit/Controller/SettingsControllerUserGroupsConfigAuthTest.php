@@ -75,235 +75,221 @@ use Psr\Log\LoggerInterface;
  * check is self-consistent. The defect lives in the relationship between
  * two endpoints, which neither gate models.
  */
-final class SettingsControllerUserGroupsConfigAuthTest extends TestCase
-{
+final class SettingsControllerUserGroupsConfigAuthTest extends TestCase {
 
-    /**
-     * The service double whose data must not leak.
-     *
-     * @var SettingsService|MockObject
-     */
-    private SettingsService|MockObject $settingsService;
+	/**
+	 * The service double whose data must not leak.
+	 *
+	 * @var SettingsService|MockObject
+	 */
+	private SettingsService|MockObject $settingsService;
 
-    /**
-     * The group manager double that decides admin-ness.
-     *
-     * @var IGroupManager|MockObject
-     */
-    private IGroupManager|MockObject $groupManager;
+	/**
+	 * The group manager double that decides admin-ness.
+	 *
+	 * @var IGroupManager|MockObject
+	 */
+	private IGroupManager|MockObject $groupManager;
 
-    /**
-     * The session double.
-     *
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $userSession;
+	/**
+	 * The session double.
+	 *
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $userSession;
 
+	/**
+	 * Build a SettingsController for a caller with the given identity.
+	 *
+	 * @param string|null $uid The caller's UID, or null for anonymous.
+	 * @param bool $isAdmin Whether that caller is a Nextcloud admin.
+	 *
+	 * @return SettingsController The controller under test.
+	 */
+	private function makeController(?string $uid, bool $isAdmin): SettingsController {
+		$this->settingsService = $this->createMock(SettingsService::class);
+		$this->groupManager = $this->createMock(IGroupManager::class);
+		$this->userSession = $this->createMock(IUserSession::class);
 
-    /**
-     * Build a SettingsController for a caller with the given identity.
-     *
-     * @param string|null $uid     The caller's UID, or null for anonymous.
-     * @param bool        $isAdmin Whether that caller is a Nextcloud admin.
-     *
-     * @return SettingsController The controller under test.
-     */
-    private function makeController(?string $uid, bool $isAdmin): SettingsController
-    {
-        $this->settingsService = $this->createMock(SettingsService::class);
-        $this->groupManager    = $this->createMock(IGroupManager::class);
-        $this->userSession     = $this->createMock(IUserSession::class);
+		if ($uid === null) {
+			$this->userSession->method('getUser')->willReturn(null);
+		} else {
+			$user = $this->createMock(IUser::class);
+			$user->method('getUID')->willReturn($uid);
+			$this->userSession->method('getUser')->willReturn($user);
+			$this->groupManager->method('isAdmin')->with($uid)->willReturn($isAdmin);
+		}
 
-        if ($uid === null) {
-            $this->userSession->method('getUser')->willReturn(null);
-        } else {
-            $user = $this->createMock(IUser::class);
-            $user->method('getUID')->willReturn($uid);
-            $this->userSession->method('getUser')->willReturn($user);
-            $this->groupManager->method('isAdmin')->with($uid)->willReturn($isAdmin);
-        }
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParams')->willReturn([]);
 
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParams')->willReturn([]);
+		return new SettingsController(
+			'softwarecatalog',
+			$request,
+			$this->createMock(IAppConfig::class),
+			$this->createMock(ContainerInterface::class),
+			$this->createMock(IAppManager::class),
+			$this->groupManager,
+			$this->userSession,
+			$this->settingsService,
+			$this->createMock(OrganizationSyncService::class),
+			$this->createMock(ArchiMateService::class),
+			$this->createMock(ProgressTracker::class),
+			$this->createMock(EolSyncService::class),
+			$this->createMock(LoggerInterface::class)
+		);
 
-        return new SettingsController(
-            'softwarecatalog',
-            $request,
-            $this->createMock(IAppConfig::class),
-            $this->createMock(ContainerInterface::class),
-            $this->createMock(IAppManager::class),
-            $this->groupManager,
-            $this->userSession,
-            $this->settingsService,
-            $this->createMock(OrganizationSyncService::class),
-            $this->createMock(ArchiMateService::class),
-            $this->createMock(ProgressTracker::class),
-            $this->createMock(EolSyncService::class),
-            $this->createMock(LoggerInterface::class)
-        );
+	}//end makeController()
 
-    }//end makeController()
+	/**
+	 * THE REGRESSION TEST. A non-admin, authenticated caller must be
+	 * refused, and the service must never be reached — deny before grant,
+	 * not deny after fetching.
+	 *
+	 * @return void
+	 */
+	public function testNonAdminIsRefusedAndTheServiceIsNeverReached(): void {
+		$controller = $this->makeController(uid: 'plain-user', isAdmin: false);
 
+		// A spy rather than expects($this->never()): the controller wraps its
+		// body in catch (\Exception), which would swallow a PHPUnit
+		// expectation failure into a 500 and report the leak as an unrelated
+		// server error. Counting the calls and asserting afterwards keeps the
+		// failure message about the thing that actually went wrong.
+		$calls = 0;
+		$this->settingsService->method('getUserGroupsConfig')->willReturnCallback(
+			function () use (&$calls): array {
+				$calls++;
+				return [
+					'success' => true,
+					'config' => [
+						'generic' => [],
+						'organizationAdmin' => [],
+						'superUser' => ['SENTINEL-super-user-group'],
+						'allGroups' => ['SENTINEL-super-user-group'],
+					],
+				];
+			}
+		);
 
-    /**
-     * THE REGRESSION TEST. A non-admin, authenticated caller must be
-     * refused, and the service must never be reached — deny before grant,
-     * not deny after fetching.
-     *
-     * @return void
-     */
-    public function testNonAdminIsRefusedAndTheServiceIsNeverReached(): void
-    {
-        $controller = $this->makeController(uid: 'plain-user', isAdmin: false);
+		$response = $controller->getUserGroupsConfig();
 
-        // A spy rather than expects($this->never()): the controller wraps its
-        // body in catch (\Exception), which would swallow a PHPUnit
-        // expectation failure into a 500 and report the leak as an unrelated
-        // server error. Counting the calls and asserting afterwards keeps the
-        // failure message about the thing that actually went wrong.
-        $calls = 0;
-        $this->settingsService->method('getUserGroupsConfig')->willReturnCallback(
-            function () use (&$calls): array {
-                $calls++;
-                return [
-                    'success' => true,
-                    'config'  => [
-                        'generic'           => [],
-                        'organizationAdmin' => [],
-                        'superUser'         => ['SENTINEL-super-user-group'],
-                        'allGroups'         => ['SENTINEL-super-user-group'],
-                    ],
-                ];
-            }
-        );
+		$this->assertSame(
+			Http::STATUS_FORBIDDEN,
+			$response->getStatus(),
+			'A non-admin must not read the user-groups configuration through the aggregate route: '
+			. 'it is the union of four endpoints that each refuse this caller with 403.'
+		);
 
-        $response = $controller->getUserGroupsConfig();
+		$this->assertStringNotContainsString(
+			'SENTINEL-super-user-group',
+			json_encode($response->getData()),
+			'The refusal must not carry the payload: a non-admin received the super-user group list.'
+		);
 
-        $this->assertSame(
-            Http::STATUS_FORBIDDEN,
-            $response->getStatus(),
-            'A non-admin must not read the user-groups configuration through the aggregate route: '
-            .'it is the union of four endpoints that each refuse this caller with 403.'
-        );
+		$this->assertSame(
+			0,
+			$calls,
+			'Deny before grant — the service must not be consulted at all for a caller who will be refused.'
+		);
 
-        $this->assertStringNotContainsString(
-            'SENTINEL-super-user-group',
-            json_encode($response->getData()),
-            'The refusal must not carry the payload: a non-admin received the super-user group list.'
-        );
+	}//end testNonAdminIsRefusedAndTheServiceIsNeverReached()
 
-        $this->assertSame(
-            0,
-            $calls,
-            'Deny before grant — the service must not be consulted at all for a caller who will be refused.'
-        );
+	/**
+	 * The positive control. Without this arm the assertion above is
+	 * satisfied by an endpoint that refuses EVERYONE, which would break
+	 * the admin settings panel while still looking secure.
+	 *
+	 * @return void
+	 */
+	public function testAdminStillGetsTheConfiguration(): void {
+		$controller = $this->makeController(uid: 'an-admin', isAdmin: true);
 
-    }//end testNonAdminIsRefusedAndTheServiceIsNeverReached()
+		$this->settingsService->expects($this->once())
+			->method('getUserGroupsConfig')
+			->willReturn(
+				[
+					'success' => true,
+					'config' => [
+						'generic' => ['software-catalog-users'],
+						'organizationAdmin' => [],
+						'superUser' => ['admin'],
+						'allGroups' => ['admin', 'software-catalog-users'],
+					],
+				]
+			);
 
+		$response = $controller->getUserGroupsConfig();
 
-    /**
-     * The positive control. Without this arm the assertion above is
-     * satisfied by an endpoint that refuses EVERYONE, which would break
-     * the admin settings panel while still looking secure.
-     *
-     * @return void
-     */
-    public function testAdminStillGetsTheConfiguration(): void
-    {
-        $controller = $this->makeController(uid: 'an-admin', isAdmin: true);
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame(
+			['software-catalog-users'],
+			$response->getData()['config']['generic'],
+			'The admin must still receive the configuration itself, not merely a 200.'
+		);
 
-        $this->settingsService->expects($this->once())
-            ->method('getUserGroupsConfig')
-            ->willReturn(
-                [
-                    'success' => true,
-                    'config'  => [
-                        'generic'           => ['software-catalog-users'],
-                        'organizationAdmin' => [],
-                        'superUser'         => ['admin'],
-                        'allGroups'         => ['admin', 'software-catalog-users'],
-                    ],
-                ]
-            );
+	}//end testAdminStillGetsTheConfiguration()
 
-        $response = $controller->getUserGroupsConfig();
+	/**
+	 * An anonymous caller keeps its 401 — the guard added here must not
+	 * turn "not logged in" into "forbidden", which would tell an anonymous
+	 * prober that the resource exists and is admin-only.
+	 *
+	 * @return void
+	 */
+	public function testAnonymousStillGets401(): void {
+		$controller = $this->makeController(uid: null, isAdmin: false);
 
-        $this->assertSame(200, $response->getStatus());
-        $this->assertSame(
-            ['software-catalog-users'],
-            $response->getData()['config']['generic'],
-            'The admin must still receive the configuration itself, not merely a 200.'
-        );
+		$this->settingsService->expects($this->never())->method('getUserGroupsConfig');
 
-    }//end testAdminStillGetsTheConfiguration()
+		$response = $controller->getUserGroupsConfig();
 
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 
-    /**
-     * An anonymous caller keeps its 401 — the guard added here must not
-     * turn "not logged in" into "forbidden", which would tell an anonymous
-     * prober that the resource exists and is admin-only.
-     *
-     * @return void
-     */
-    public function testAnonymousStillGets401(): void
-    {
-        $controller = $this->makeController(uid: null, isAdmin: false);
+	}//end testAnonymousStillGets401()
 
-        $this->settingsService->expects($this->never())->method('getUserGroupsConfig');
+	/**
+	 * The write half of the same route. It was already admin-only through
+	 * the absence of @NoAdminRequired, i.e. through middleware alone; this
+	 * asserts the in-body guard that now backs it up, so a future
+	 * annotation edit cannot silently open a write path.
+	 *
+	 * @return void
+	 */
+	public function testNonAdminCannotUpdateTheConfiguration(): void {
+		$controller = $this->makeController(uid: 'plain-user', isAdmin: false);
 
-        $response = $controller->getUserGroupsConfig();
+		$calls = 0;
+		$this->settingsService->method('updateUserGroupsConfig')->willReturnCallback(
+			function () use (&$calls): array {
+				$calls++;
+				return ['success' => true];
+			}
+		);
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$response = $controller->updateUserGroupsConfig();
 
-    }//end testAnonymousStillGets401()
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame(0, $calls, 'A non-admin write must never reach the service.');
 
+	}//end testNonAdminCannotUpdateTheConfiguration()
 
-    /**
-     * The write half of the same route. It was already admin-only through
-     * the absence of @NoAdminRequired, i.e. through middleware alone; this
-     * asserts the in-body guard that now backs it up, so a future
-     * annotation edit cannot silently open a write path.
-     *
-     * @return void
-     */
-    public function testNonAdminCannotUpdateTheConfiguration(): void
-    {
-        $controller = $this->makeController(uid: 'plain-user', isAdmin: false);
+	/**
+	 * And its positive control.
+	 *
+	 * @return void
+	 */
+	public function testAdminCanUpdateTheConfiguration(): void {
+		$controller = $this->makeController(uid: 'an-admin', isAdmin: true);
 
-        $calls = 0;
-        $this->settingsService->method('updateUserGroupsConfig')->willReturnCallback(
-            function () use (&$calls): array {
-                $calls++;
-                return ['success' => true];
-            }
-        );
+		$this->settingsService->expects($this->once())
+			->method('updateUserGroupsConfig')
+			->willReturn(['success' => true]);
 
-        $response = $controller->updateUserGroupsConfig();
+		$response = $controller->updateUserGroupsConfig();
 
-        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
-        $this->assertSame(0, $calls, 'A non-admin write must never reach the service.');
+		$this->assertSame(200, $response->getStatus());
 
-    }//end testNonAdminCannotUpdateTheConfiguration()
-
-
-    /**
-     * And its positive control.
-     *
-     * @return void
-     */
-    public function testAdminCanUpdateTheConfiguration(): void
-    {
-        $controller = $this->makeController(uid: 'an-admin', isAdmin: true);
-
-        $this->settingsService->expects($this->once())
-            ->method('updateUserGroupsConfig')
-            ->willReturn(['success' => true]);
-
-        $response = $controller->updateUserGroupsConfig();
-
-        $this->assertSame(200, $response->getStatus());
-
-    }//end testAdminCanUpdateTheConfiguration()
-
+	}//end testAdminCanUpdateTheConfiguration()
 
 }//end class

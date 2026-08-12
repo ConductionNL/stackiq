@@ -44,307 +44,280 @@ use Psr\Log\LoggerInterface;
 /**
  * Contract tests for aanbod#acceptAanbod and aanbod#denyAanbod.
  */
-class AanbodControllerAcceptDenyContractTest extends TestCase
-{
+class AanbodControllerAcceptDenyContractTest extends TestCase {
 
-    /**
-     * The mocked aanbod service.
-     *
-     * @var AanbodService|MockObject
-     */
-    private AanbodService|MockObject $aanbodService;
+	/**
+	 * The mocked aanbod service.
+	 *
+	 * @var AanbodService|MockObject
+	 */
+	private AanbodService|MockObject $aanbodService;
 
-    /**
-     * The mocked user session.
-     *
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $userSession;
+	/**
+	 * The mocked user session.
+	 *
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $userSession;
 
+	/**
+	 * Build the controller under test with fresh mocks.
+	 *
+	 * @param array<string,mixed> $params Body params the request reports.
+	 *
+	 * @return AanbodController The controller under test.
+	 */
+	private function makeController(array $params = []): AanbodController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParams')->willReturn($params);
 
-    /**
-     * Build the controller under test with fresh mocks.
-     *
-     * @param array<string,mixed> $params Body params the request reports.
-     *
-     * @return AanbodController The controller under test.
-     */
-    private function makeController(array $params=[]): AanbodController
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParams')->willReturn($params);
+		$this->aanbodService = $this->createMock(AanbodService::class);
+		$this->userSession = $this->createMock(IUserSession::class);
 
-        $this->aanbodService = $this->createMock(AanbodService::class);
-        $this->userSession   = $this->createMock(IUserSession::class);
+		return new AanbodController(
+			'softwarecatalog',
+			$request,
+			$this->userSession,
+			$this->aanbodService,
+			$this->createMock(LoggerInterface::class)
+		);
 
-        return new AanbodController(
-            'softwarecatalog',
-            $request,
-            $this->userSession,
-            $this->aanbodService,
-            $this->createMock(LoggerInterface::class)
-        );
+	}//end makeController()
 
-    }//end makeController()
+	/**
+	 * Authenticate the session.
+	 *
+	 * @return void
+	 */
+	private function withUser(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
 
+	}//end withUser()
 
-    /**
-     * Authenticate the session.
-     *
-     * @return void
-     */
-    private function withUser(): void
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('alice');
-        $this->userSession->method('getUser')->willReturn($user);
+	/**
+	 * Both mutating endpoints refuse an anonymous caller before the service is
+	 * reached — nothing may be accepted or deleted without a session.
+	 *
+	 * @param string $method The controller method name.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider mutatingMethodProvider
+	 */
+	public function testAnonymousCallerCannotMutate(string $method): void {
+		$controller = $this->makeController();
+		$this->userSession->method('getUser')->willReturn(null);
 
-    }//end withUser()
+		$this->aanbodService->expects($this->never())->method('acceptAanbod');
+		$this->aanbodService->expects($this->never())->method('denyAanbod');
 
+		$response = $controller->$method('uuid-1');
 
-    /**
-     * Both mutating endpoints refuse an anonymous caller before the service is
-     * reached — nothing may be accepted or deleted without a session.
-     *
-     * @param string $method The controller method name.
-     *
-     * @return void
-     *
-     * @dataProvider mutatingMethodProvider
-     */
-    public function testAnonymousCallerCannotMutate(string $method): void
-    {
-        $controller = $this->makeController();
-        $this->userSession->method('getUser')->willReturn(null);
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame(['message' => 'Not authenticated'], $response->getData());
 
-        $this->aanbodService->expects($this->never())->method('acceptAanbod');
-        $this->aanbodService->expects($this->never())->method('denyAanbod');
+	}//end testAnonymousCallerCannotMutate()
 
-        $response = $controller->$method('uuid-1');
+	/**
+	 * The two mutating endpoints.
+	 *
+	 * @return array<string, array{0: string}>
+	 */
+	public static function mutatingMethodProvider(): array {
+		return [
+			'acceptAanbod' => ['acceptAanbod'],
+			'denyAanbod' => ['denyAanbod'],
+		];
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-        $this->assertSame(['message' => 'Not authenticated'], $response->getData());
+	}//end mutatingMethodProvider()
 
-    }//end testAnonymousCallerCannotMutate()
+	/**
+	 * An empty uuid is a 400 decided by the controller, and the service is not
+	 * asked to accept "everything".
+	 *
+	 * @param string $method The controller method name.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider mutatingMethodProvider
+	 */
+	public function testAnEmptyUuidIsRejectedWith400(string $method): void {
+		$controller = $this->makeController();
+		$this->withUser();
 
+		$this->aanbodService->expects($this->never())->method('acceptAanbod');
+		$this->aanbodService->expects($this->never())->method('denyAanbod');
 
-    /**
-     * The two mutating endpoints.
-     *
-     * @return array<string, array{0: string}>
-     */
-    public static function mutatingMethodProvider(): array
-    {
-        return [
-            'acceptAanbod' => ['acceptAanbod'],
-            'denyAanbod'   => ['denyAanbod'],
-        ];
+		$response = $controller->$method('');
 
-    }//end mutatingMethodProvider()
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertFalse($response->getData()['success']);
 
+	}//end testAnEmptyUuidIsRejectedWith400()
 
-    /**
-     * An empty uuid is a 400 decided by the controller, and the service is not
-     * asked to accept "everything".
-     *
-     * @param string $method The controller method name.
-     *
-     * @return void
-     *
-     * @dataProvider mutatingMethodProvider
-     */
-    public function testAnEmptyUuidIsRejectedWith400(string $method): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
+	/**
+	 * Accept forwards the uuid and returns 200 with the service envelope.
+	 *
+	 * @return void
+	 */
+	public function testAcceptReturns200AndTheServiceEnvelope(): void {
+		$controller = $this->makeController();
+		$this->withUser();
 
-        $this->aanbodService->expects($this->never())->method('acceptAanbod');
-        $this->aanbodService->expects($this->never())->method('denyAanbod');
+		$this->aanbodService->expects($this->once())
+			->method('acceptAanbod')
+			->with('uuid-1', $this->isType('array'))
+			->willReturn(['success' => true, 'aanbod' => ['uuid' => 'uuid-1']]);
 
-        $response = $controller->$method('');
+		$response = $controller->acceptAanbod('uuid-1');
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-        $this->assertFalse($response->getData()['success']);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertTrue($response->getData()['success']);
 
-    }//end testAnEmptyUuidIsRejectedWith400()
+	}//end testAcceptReturns200AndTheServiceEnvelope()
 
+	/**
+	 * The path parameter is not forwarded as a body option — a `uuid` key in
+	 * the options would shadow the path value inside the service.
+	 *
+	 * @return void
+	 */
+	public function testAcceptStripsThePathParameterFromTheForwardedOptions(): void {
+		$controller = $this->makeController(['uuid' => 'uuid-other', 'reason' => 'ok']);
+		$this->withUser();
 
-    /**
-     * Accept forwards the uuid and returns 200 with the service envelope.
-     *
-     * @return void
-     */
-    public function testAcceptReturns200AndTheServiceEnvelope(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
+		$this->aanbodService->expects($this->once())
+			->method('acceptAanbod')
+			->with('uuid-1', ['reason' => 'ok'])
+			->willReturn(['success' => true]);
 
-        $this->aanbodService->expects($this->once())
-            ->method('acceptAanbod')
-            ->with('uuid-1', $this->isType('array'))
-            ->willReturn(['success' => true, 'aanbod' => ['uuid' => 'uuid-1']]);
+		$controller->acceptAanbod('uuid-1');
 
-        $response = $controller->acceptAanbod('uuid-1');
+	}//end testAcceptStripsThePathParameterFromTheForwardedOptions()
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertTrue($response->getData()['success']);
+	/**
+	 * A missing aanbod is 404, not 500.
+	 *
+	 * @return void
+	 */
+	public function testAcceptMapsAMissingAanbodTo404(): void {
+		$controller = $this->makeController();
+		$this->withUser();
+		$this->aanbodService->method('acceptAanbod')
+			->willReturn(['success' => false, 'error' => 'Aanbod object not found']);
 
-    }//end testAcceptReturns200AndTheServiceEnvelope()
+		$this->assertSame(
+			Http::STATUS_NOT_FOUND,
+			$controller->acceptAanbod('uuid-1')->getStatus()
+		);
 
+	}//end testAcceptMapsAMissingAanbodTo404()
 
-    /**
-     * The path parameter is not forwarded as a body option — a `uuid` key in
-     * the options would shadow the path value inside the service.
-     *
-     * @return void
-     */
-    public function testAcceptStripsThePathParameterFromTheForwardedOptions(): void
-    {
-        $controller = $this->makeController(['uuid' => 'uuid-other', 'reason' => 'ok']);
-        $this->withUser();
+	/**
+	 * An authorisation refusal is 403 — distinguishable from a server fault so
+	 * the UI does not offer a pointless retry.
+	 *
+	 * @return void
+	 */
+	public function testAcceptMapsAnAuthorisationRefusalTo403(): void {
+		$controller = $this->makeController();
+		$this->withUser();
+		$this->aanbodService->method('acceptAanbod')
+			->willReturn(
+				[
+					'success' => false,
+					'error' => 'Operation not allowed: active organisation is not the aanbieder',
+				]
+			);
 
-        $this->aanbodService->expects($this->once())
-            ->method('acceptAanbod')
-            ->with('uuid-1', ['reason' => 'ok'])
-            ->willReturn(['success' => true]);
+		$this->assertSame(
+			Http::STATUS_FORBIDDEN,
+			$controller->acceptAanbod('uuid-1')->getStatus()
+		);
 
-        $controller->acceptAanbod('uuid-1');
+	}//end testAcceptMapsAnAuthorisationRefusalTo403()
 
-    }//end testAcceptStripsThePathParameterFromTheForwardedOptions()
+	/**
+	 * Any other failure envelope is a 500.
+	 *
+	 * @return void
+	 */
+	public function testAcceptMapsAnUnclassifiedFailureTo500(): void {
+		$controller = $this->makeController();
+		$this->withUser();
+		$this->aanbodService->method('acceptAanbod')
+			->willReturn(['success' => false, 'error' => 'register write failed']);
 
+		$this->assertSame(
+			Http::STATUS_INTERNAL_SERVER_ERROR,
+			$controller->acceptAanbod('uuid-1')->getStatus()
+		);
 
-    /**
-     * A missing aanbod is 404, not 500.
-     *
-     * @return void
-     */
-    public function testAcceptMapsAMissingAanbodTo404(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-        $this->aanbodService->method('acceptAanbod')
-            ->willReturn(['success' => false, 'error' => 'Aanbod object not found']);
+	}//end testAcceptMapsAnUnclassifiedFailureTo500()
 
-        $this->assertSame(
-            Http::STATUS_NOT_FOUND,
-            $controller->acceptAanbod('uuid-1')->getStatus()
-        );
+	/**
+	 * Deny returns 200 and reports the deletion in the envelope.
+	 *
+	 * @return void
+	 */
+	public function testDenyReturns200AndReportsTheDeletion(): void {
+		$controller = $this->makeController();
+		$this->withUser();
 
-    }//end testAcceptMapsAMissingAanbodTo404()
+		$this->aanbodService->expects($this->once())
+			->method('denyAanbod')
+			->with('uuid-1', $this->isType('array'))
+			->willReturn(['success' => true, 'deleted' => true]);
 
+		$response = $controller->denyAanbod('uuid-1');
 
-    /**
-     * An authorisation refusal is 403 — distinguishable from a server fault so
-     * the UI does not offer a pointless retry.
-     *
-     * @return void
-     */
-    public function testAcceptMapsAnAuthorisationRefusalTo403(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-        $this->aanbodService->method('acceptAanbod')
-            ->willReturn(
-                [
-                    'success' => false,
-                    'error'   => 'Operation not allowed: active organisation is not the aanbieder',
-                ]
-            );
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertTrue($response->getData()['deleted']);
 
-        $this->assertSame(
-            Http::STATUS_FORBIDDEN,
-            $controller->acceptAanbod('uuid-1')->getStatus()
-        );
+	}//end testDenyReturns200AndReportsTheDeletion()
 
-    }//end testAcceptMapsAnAuthorisationRefusalTo403()
+	/**
+	 * Deny maps a refusal to 403 rather than deleting anything.
+	 *
+	 * @return void
+	 */
+	public function testDenyMapsAnAuthorisationRefusalTo403(): void {
+		$controller = $this->makeController();
+		$this->withUser();
+		$this->aanbodService->method('denyAanbod')
+			->willReturn(
+				[
+					'success' => false,
+					'error' => 'Operation not allowed: active organisation is not the afnemer',
+				]
+			);
 
+		$this->assertSame(
+			Http::STATUS_FORBIDDEN,
+			$controller->denyAanbod('uuid-1')->getStatus()
+		);
 
-    /**
-     * Any other failure envelope is a 500.
-     *
-     * @return void
-     */
-    public function testAcceptMapsAnUnclassifiedFailureTo500(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-        $this->aanbodService->method('acceptAanbod')
-            ->willReturn(['success' => false, 'error' => 'register write failed']);
+	}//end testDenyMapsAnAuthorisationRefusalTo403()
 
-        $this->assertSame(
-            Http::STATUS_INTERNAL_SERVER_ERROR,
-            $controller->acceptAanbod('uuid-1')->getStatus()
-        );
+	/**
+	 * A thrown service error is converted into the documented 500 payload.
+	 *
+	 * @return void
+	 */
+	public function testDenyConvertsAThrownServiceErrorIntoThe500Payload(): void {
+		$controller = $this->makeController();
+		$this->withUser();
+		$this->aanbodService->method('denyAanbod')
+			->willThrowException(new \Exception('register down'));
 
-    }//end testAcceptMapsAnUnclassifiedFailureTo500()
+		$response = $controller->denyAanbod('uuid-1');
+		$data = $response->getData();
 
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertFalse($data['success']);
+		$this->assertStringContainsString('register down', $data['error']);
 
-    /**
-     * Deny returns 200 and reports the deletion in the envelope.
-     *
-     * @return void
-     */
-    public function testDenyReturns200AndReportsTheDeletion(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-
-        $this->aanbodService->expects($this->once())
-            ->method('denyAanbod')
-            ->with('uuid-1', $this->isType('array'))
-            ->willReturn(['success' => true, 'deleted' => true]);
-
-        $response = $controller->denyAanbod('uuid-1');
-
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertTrue($response->getData()['deleted']);
-
-    }//end testDenyReturns200AndReportsTheDeletion()
-
-
-    /**
-     * Deny maps a refusal to 403 rather than deleting anything.
-     *
-     * @return void
-     */
-    public function testDenyMapsAnAuthorisationRefusalTo403(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-        $this->aanbodService->method('denyAanbod')
-            ->willReturn(
-                [
-                    'success' => false,
-                    'error'   => 'Operation not allowed: active organisation is not the afnemer',
-                ]
-            );
-
-        $this->assertSame(
-            Http::STATUS_FORBIDDEN,
-            $controller->denyAanbod('uuid-1')->getStatus()
-        );
-
-    }//end testDenyMapsAnAuthorisationRefusalTo403()
-
-
-    /**
-     * A thrown service error is converted into the documented 500 payload.
-     *
-     * @return void
-     */
-    public function testDenyConvertsAThrownServiceErrorIntoThe500Payload(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-        $this->aanbodService->method('denyAanbod')
-            ->willThrowException(new \Exception('register down'));
-
-        $response = $controller->denyAanbod('uuid-1');
-        $data     = $response->getData();
-
-        $this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
-        $this->assertFalse($data['success']);
-        $this->assertStringContainsString('register down', $data['error']);
-
-    }//end testDenyConvertsAThrownServiceErrorIntoThe500Payload()
+	}//end testDenyConvertsAThrownServiceErrorIntoThe500Payload()
 }//end class

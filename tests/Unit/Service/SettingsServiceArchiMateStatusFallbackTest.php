@@ -56,118 +56,108 @@ use Psr\Log\LoggerInterface;
  * well-formed array with `import` and `export` keys, and that is precisely
  * why the defect survived.
  */
-final class SettingsServiceArchiMateStatusFallbackTest extends TestCase
-{
+final class SettingsServiceArchiMateStatusFallbackTest extends TestCase {
 
+	/**
+	 * Build a SettingsService whose container ALWAYS throws, so
+	 * getArchiMateStatus() is forced down its config-reading fallback —
+	 * the branch that carried the defect.
+	 *
+	 * @param array $store Reference to the backing key/value store.
+	 *
+	 * @return SettingsService The service under test.
+	 */
+	private function makeService(array &$store): SettingsService {
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use (&$store): string {
+				return $store[$key] ?? $default;
+			}
+		);
 
-    /**
-     * Build a SettingsService whose container ALWAYS throws, so
-     * getArchiMateStatus() is forced down its config-reading fallback —
-     * the branch that carried the defect.
-     *
-     * @param array $store Reference to the backing key/value store.
-     *
-     * @return SettingsService The service under test.
-     */
-    private function makeService(array &$store): SettingsService
-    {
-        $config = $this->createMock(IAppConfig::class);
-        $config->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default='') use (&$store): string {
-                return $store[$key] ?? $default;
-            }
-        );
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willThrowException(
+			new \Exception('ArchiMateService not resolvable in a unit context')
+		);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willThrowException(
-            new \Exception('ArchiMateService not resolvable in a unit context')
-        );
+		return new SettingsService(
+			config: $config,
+			request: $this->createMock(IRequest::class),
+			container: $container,
+			appManager: $this->createMock(IAppManager::class),
+			logger: $this->createMock(LoggerInterface::class),
+			groupManager: $this->createMock(IGroupManager::class),
+			l10n: $this->createMock(IL10N::class)
+		);
 
-        return new SettingsService(
-            config: $config,
-            request: $this->createMock(IRequest::class),
-            container: $container,
-            appManager: $this->createMock(IAppManager::class),
-            logger: $this->createMock(LoggerInterface::class),
-            groupManager: $this->createMock(IGroupManager::class),
-            l10n: $this->createMock(IL10N::class)
-        );
+	}//end makeService()
 
-    }//end makeService()
+	/**
+	 * A persisted import status MUST reach the caller. Before the fix this
+	 * returned [] no matter what had been stored.
+	 *
+	 * @return void
+	 */
+	public function testPersistedImportStatusIsReturnedNotDiscarded(): void {
+		$store = [
+			'archimate_import_status' => json_encode(
+				[
+					'status' => 'completed',
+					'processed' => 42,
+				]
+			),
+		];
 
+		$status = $this->makeService($store)->getArchiMateStatus();
 
-    /**
-     * A persisted import status MUST reach the caller. Before the fix this
-     * returned [] no matter what had been stored.
-     *
-     * @return void
-     */
-    public function testPersistedImportStatusIsReturnedNotDiscarded(): void
-    {
-        $store = [
-            'archimate_import_status' => json_encode(
-                [
-                    'status'    => 'completed',
-                    'processed' => 42,
-                ]
-            ),
-        ];
+		$this->assertSame(
+			'completed',
+			$status['import']['status'] ?? null,
+			'The persisted ArchiMate import status must be returned. An empty array here means '
+			. 'a finished import and an import that never ran are indistinguishable in the admin panel.'
+		);
+		$this->assertSame(42, $status['import']['processed'] ?? null);
 
-        $status = $this->makeService($store)->getArchiMateStatus();
+	}//end testPersistedImportStatusIsReturnedNotDiscarded()
 
-        $this->assertSame(
-            'completed',
-            $status['import']['status'] ?? null,
-            'The persisted ArchiMate import status must be returned. An empty array here means '
-            .'a finished import and an import that never ran are indistinguishable in the admin panel.'
-        );
-        $this->assertSame(42, $status['import']['processed'] ?? null);
+	/**
+	 * Same for the export half — two separate sites carried the same
+	 * defect, so both need their own arm.
+	 *
+	 * @return void
+	 */
+	public function testPersistedExportStatusIsReturnedNotDiscarded(): void {
+		$store = [
+			'archimate_export_status' => json_encode(
+				[
+					'status' => 'running',
+					'exported' => 7,
+				]
+			),
+		];
 
-    }//end testPersistedImportStatusIsReturnedNotDiscarded()
+		$status = $this->makeService($store)->getArchiMateStatus();
 
+		$this->assertSame('running', $status['export']['status'] ?? null);
+		$this->assertSame(7, $status['export']['exported'] ?? null);
 
-    /**
-     * Same for the export half — two separate sites carried the same
-     * defect, so both need their own arm.
-     *
-     * @return void
-     */
-    public function testPersistedExportStatusIsReturnedNotDiscarded(): void
-    {
-        $store = [
-            'archimate_export_status' => json_encode(
-                [
-                    'status'   => 'running',
-                    'exported' => 7,
-                ]
-            ),
-        ];
+	}//end testPersistedExportStatusIsReturnedNotDiscarded()
 
-        $status = $this->makeService($store)->getArchiMateStatus();
+	/**
+	 * The positive control for the negative case: when nothing is stored
+	 * the default '{}' decodes to an empty array and an empty array is the
+	 * correct answer. Without this arm the assertions above could be
+	 * satisfied by code that never consults the config at all.
+	 *
+	 * @return void
+	 */
+	public function testUnsetStatusStillYieldsAnEmptyArray(): void {
+		$store = [];
+		$status = $this->makeService($store)->getArchiMateStatus();
 
-        $this->assertSame('running', $status['export']['status'] ?? null);
-        $this->assertSame(7, $status['export']['exported'] ?? null);
+		$this->assertSame([], $status['import']);
+		$this->assertSame([], $status['export']);
 
-    }//end testPersistedExportStatusIsReturnedNotDiscarded()
-
-
-    /**
-     * The positive control for the negative case: when nothing is stored
-     * the default '{}' decodes to an empty array and an empty array is the
-     * correct answer. Without this arm the assertions above could be
-     * satisfied by code that never consults the config at all.
-     *
-     * @return void
-     */
-    public function testUnsetStatusStillYieldsAnEmptyArray(): void
-    {
-        $store  = [];
-        $status = $this->makeService($store)->getArchiMateStatus();
-
-        $this->assertSame([], $status['import']);
-        $this->assertSame([], $status['export']);
-
-    }//end testUnsetStatusStillYieldsAnEmptyArray()
-
+	}//end testUnsetStatusStillYieldsAnEmptyArray()
 
 }//end class

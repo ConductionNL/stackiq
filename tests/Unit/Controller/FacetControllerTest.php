@@ -31,187 +31,181 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/gemma-faceted-search/tasks.md#task-7
  */
-class FacetControllerTest extends TestCase
-{
+class FacetControllerTest extends TestCase {
 
-    /**
-     * A supported schema returns 200 with the service's payload.
-     *
-     * @return void
-     */
-    public function testGetFacetsReturns200OnSuccess(): void
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParam')->willReturn(null);
+	/**
+	 * A supported schema returns 200 with the service's payload.
+	 *
+	 * @return void
+	 */
+	public function testGetFacetsReturns200OnSuccess(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturn(null);
 
-        $facetService = $this->createMock(FacetService::class);
-        $facetService->method('getFacets')->willReturn(
-            [
-                'referentiecomponent' => [],
-                'standaard'           => [],
-                'applicatieservice'   => [],
-                'domein'              => [],
-                '_meta'               => ['totalMatched' => 0, 'processingTimeMs' => 1.0, 'cached' => false],
-            ]
-        );
+		$facetService = $this->createMock(FacetService::class);
+		$facetService->method('getFacets')->willReturn(
+			[
+				'referentiecomponent' => [],
+				'standaard' => [],
+				'applicatieservice' => [],
+				'domein' => [],
+				'_meta' => ['totalMatched' => 0, 'processingTimeMs' => 1.0, 'cached' => false],
+			]
+		);
 
-        $controller = new FacetController(
-            appName: 'softwarecatalog',
-            request: $request,
-            facetService: $facetService,
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$controller = new FacetController(
+			appName: 'softwarecatalog',
+			request: $request,
+			facetService: $facetService,
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
-        $response = $controller->getFacets('module');
+		$response = $controller->getFacets('module');
 
-        $this->assertSame(200, $response->getStatus());
+		$this->assertSame(200, $response->getStatus());
 
-    }//end testGetFacetsReturns200OnSuccess()
+	}//end testGetFacetsReturns200OnSuccess()
 
-    /**
-     * An unsupported schema (service throws InvalidArgumentException) maps to 400
-     * with an error naming the supported schemas.
-     *
-     * @return void
-     */
-    public function testGetFacetsReturns400ForUnsupportedSchema(): void
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParam')->willReturn(null);
+	/**
+	 * An unsupported schema (service throws InvalidArgumentException) maps to 400
+	 * with an error naming the supported schemas.
+	 *
+	 * @return void
+	 */
+	public function testGetFacetsReturns400ForUnsupportedSchema(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturn(null);
 
-        $facetService = $this->createMock(FacetService::class);
-        $facetService->method('getFacets')->willThrowException(
-            new \InvalidArgumentException('Unsupported facet schema "contract". Supported schemas: module, dienst.')
-        );
+		$facetService = $this->createMock(FacetService::class);
+		$facetService->method('getFacets')->willThrowException(
+			new \InvalidArgumentException('Unsupported facet schema "contract". Supported schemas: module, dienst.')
+		);
 
-        $controller = new FacetController(
-            appName: 'softwarecatalog',
-            request: $request,
-            facetService: $facetService,
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$controller = new FacetController(
+			appName: 'softwarecatalog',
+			request: $request,
+			facetService: $facetService,
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
-        $response = $controller->getFacets('contract');
+		$response = $controller->getFacets('contract');
 
-        $this->assertSame(400, $response->getStatus());
-        $data = $response->getData();
-        $this->assertContains('module', $data['supportedSchemas']);
-        $this->assertContains('dienst', $data['supportedSchemas']);
+		$this->assertSame(400, $response->getStatus());
+		$data = $response->getData();
+		$this->assertContains('module', $data['supportedSchemas']);
+		$this->assertContains('dienst', $data['supportedSchemas']);
 
-    }//end testGetFacetsReturns400ForUnsupportedSchema()
+	}//end testGetFacetsReturns400ForUnsupportedSchema()
 
-    /**
-     * ObjectService unavailable (service throws RuntimeException) maps to 503
-     * with a logged, descriptive error.
-     *
-     * @return void
-     */
-    public function testGetFacetsReturns503WhenObjectServiceUnavailable(): void
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParam')->willReturn(null);
+	/**
+	 * ObjectService unavailable (service throws RuntimeException) maps to 503
+	 * with a logged, descriptive error.
+	 *
+	 * @return void
+	 */
+	public function testGetFacetsReturns503WhenObjectServiceUnavailable(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturn(null);
 
-        $facetService = $this->createMock(FacetService::class);
-        $facetService->method('getFacets')->willThrowException(
-            new \RuntimeException('OpenRegister ObjectService not available')
-        );
+		$facetService = $this->createMock(FacetService::class);
+		$facetService->method('getFacets')->willThrowException(
+			new \RuntimeException('OpenRegister ObjectService not available')
+		);
 
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())->method('error');
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error');
 
-        $controller = new FacetController(
-            appName: 'softwarecatalog',
-            request: $request,
-            facetService: $facetService,
-            logger: $logger
-        );
+		$controller = new FacetController(
+			appName: 'softwarecatalog',
+			request: $request,
+			facetService: $facetService,
+			logger: $logger
+		);
 
-        $response = $controller->getFacets('module');
+		$response = $controller->getFacets('module');
 
-        $this->assertSame(503, $response->getStatus());
+		$this->assertSame(503, $response->getStatus());
 
-    }//end testGetFacetsReturns503WhenObjectServiceUnavailable()
+	}//end testGetFacetsReturns503WhenObjectServiceUnavailable()
 
-    /**
-     * Any other exception maps to 500 with a logged, descriptive error.
-     *
-     * @return void
-     */
-    public function testGetFacetsReturns500OnUnexpectedException(): void
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParam')->willReturn(null);
+	/**
+	 * Any other exception maps to 500 with a logged, descriptive error.
+	 *
+	 * @return void
+	 */
+	public function testGetFacetsReturns500OnUnexpectedException(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturn(null);
 
-        $facetService = $this->createMock(FacetService::class);
-        $facetService->method('getFacets')->willThrowException(new \Exception('boom'));
+		$facetService = $this->createMock(FacetService::class);
+		$facetService->method('getFacets')->willThrowException(new \Exception('boom'));
 
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())->method('error');
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error');
 
-        $controller = new FacetController(
-            appName: 'softwarecatalog',
-            request: $request,
-            facetService: $facetService,
-            logger: $logger
-        );
+		$controller = new FacetController(
+			appName: 'softwarecatalog',
+			request: $request,
+			facetService: $facetService,
+			logger: $logger
+		);
 
-        $response = $controller->getFacets('module');
+		$response = $controller->getFacets('module');
 
-        $this->assertSame(500, $response->getStatus());
+		$this->assertSame(500, $response->getStatus());
 
-    }//end testGetFacetsReturns500OnUnexpectedException()
+	}//end testGetFacetsReturns500OnUnexpectedException()
 
-    /**
-     * Array-shaped facet query parameters (`referentiecomponent[]=A&referentiecomponent[]=B`)
-     * are forwarded to `FacetService::getFacets()` as filters.
-     *
-     * @return void
-     */
-    public function testGetFacetsForwardsArrayFilterParams(): void
-    {
-        $paramMap = [
-            'referentiecomponent' => ['A', 'B'],
-            'standaard'           => null,
-            'applicatieservice'   => null,
-            'domein'              => null,
-            'search'              => 'zaak',
-            'organization'        => null,
-        ];
+	/**
+	 * Array-shaped facet query parameters (`referentiecomponent[]=A&referentiecomponent[]=B`)
+	 * are forwarded to `FacetService::getFacets()` as filters.
+	 *
+	 * @return void
+	 */
+	public function testGetFacetsForwardsArrayFilterParams(): void {
+		$paramMap = [
+			'referentiecomponent' => ['A', 'B'],
+			'standaard' => null,
+			'applicatieservice' => null,
+			'domein' => null,
+			'search' => 'zaak',
+			'organization' => null,
+		];
 
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParam')->willReturnCallback(
-            fn (string $key) => $paramMap[$key] ?? null
-        );
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			fn (string $key) => $paramMap[$key] ?? null
+		);
 
-        $capturedFilters = null;
-        $capturedSearch  = null;
+		$capturedFilters = null;
+		$capturedSearch = null;
 
-        $facetService = $this->createMock(FacetService::class);
-        $facetService->method('getFacets')->willReturnCallback(
-            function (string $schema, array $filters=[], ?string $search=null, ?string $organization=null) use (&$capturedFilters, &$capturedSearch): array {
-                $capturedFilters = $filters;
-                $capturedSearch  = $search;
-                return [
-                    'referentiecomponent' => [],
-                    'standaard'           => [],
-                    'applicatieservice'   => [],
-                    'domein'              => [],
-                    '_meta'               => ['totalMatched' => 0, 'processingTimeMs' => 1.0, 'cached' => false],
-                ];
-            }
-        );
+		$facetService = $this->createMock(FacetService::class);
+		$facetService->method('getFacets')->willReturnCallback(
+			function (string $schema, array $filters = [], ?string $search = null, ?string $organization = null) use (&$capturedFilters, &$capturedSearch): array {
+				$capturedFilters = $filters;
+				$capturedSearch = $search;
+				return [
+					'referentiecomponent' => [],
+					'standaard' => [],
+					'applicatieservice' => [],
+					'domein' => [],
+					'_meta' => ['totalMatched' => 0, 'processingTimeMs' => 1.0, 'cached' => false],
+				];
+			}
+		);
 
-        $controller = new FacetController(
-            appName: 'softwarecatalog',
-            request: $request,
-            facetService: $facetService,
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$controller = new FacetController(
+			appName: 'softwarecatalog',
+			request: $request,
+			facetService: $facetService,
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
-        $controller->getFacets('module');
+		$controller->getFacets('module');
 
-        $this->assertSame(['A', 'B'], $capturedFilters['referentiecomponent']);
-        $this->assertSame('zaak', $capturedSearch);
+		$this->assertSame(['A', 'B'], $capturedFilters['referentiecomponent']);
+		$this->assertSame('zaak', $capturedSearch);
 
-    }//end testGetFacetsForwardsArrayFilterParams()
+	}//end testGetFacetsForwardsArrayFilterParams()
 }//end class

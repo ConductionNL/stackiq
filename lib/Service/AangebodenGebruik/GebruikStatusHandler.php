@@ -35,124 +35,118 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-7
  */
-class GebruikStatusHandler
-{
-    /**
-     * Constructor.
-     *
-     * @param ObjectService             $objectService The OpenRegister object service.
-     * @param StatusTransitionValidator $validator     Status transition validator.
-     * @param LoggerInterface           $logger        Logger instance.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-7
-     */
-    public function __construct(
-        private readonly ObjectService $objectService,
-        private readonly StatusTransitionValidator $validator,
-        private readonly LoggerInterface $logger
-    ) {
-    }//end __construct()
+class GebruikStatusHandler {
+	/**
+	 * Constructor.
+	 *
+	 * @param ObjectService $objectService The OpenRegister object service.
+	 * @param StatusTransitionValidator $validator Status transition validator.
+	 * @param LoggerInterface $logger Logger instance.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-7
+	 */
+	public function __construct(
+		private readonly ObjectService $objectService,
+		private readonly StatusTransitionValidator $validator,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Update the status of a gebruik object after transition validation.
-     *
-     * @param object $gebruikObject The current gebruik object (from OpenRegister).
-     * @param string $newStatus     The requested new status.
-     *
-     * @return array<string,mixed> Result with keys 'success' (bool), 'message' (string),
-     *                             and 'object' (object|null) when successful.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-7
-     */
-    public function updateStatus(object $gebruikObject, string $newStatus): array
-    {
-        $objectData    = $gebruikObject->getObject();
-        $currentStatus = (string) ($objectData['status'] ?? '');
+	/**
+	 * Update the status of a gebruik object after transition validation.
+	 *
+	 * @param object $gebruikObject The current gebruik object (from OpenRegister).
+	 * @param string $newStatus The requested new status.
+	 *
+	 * @return array<string,mixed> Result with keys 'success' (bool), 'message' (string),
+	 *                             and 'object' (object|null) when successful.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-7
+	 */
+	public function updateStatus(object $gebruikObject, string $newStatus): array {
+		$objectData = $gebruikObject->getObject();
+		$currentStatus = (string)($objectData['status'] ?? '');
 
-        // Validate the transition before any persistence.
-        if ($this->validateTransition(current: $currentStatus, next: $newStatus) === false) {
-            return [
-                'success' => false,
-                'message' => $this->validator->buildErrorMessage(
-                    currentStatus: $currentStatus,
-                    newStatus: $newStatus
-                ),
-                'object'  => null,
-            ];
-        }
+		// Validate the transition before any persistence.
+		if ($this->validateTransition(current: $currentStatus, next: $newStatus) === false) {
+			return [
+				'success' => false,
+				'message' => $this->validator->buildErrorMessage(
+					currentStatus: $currentStatus,
+					newStatus: $newStatus
+				),
+				'object' => null,
+			];
+		}
 
-        return $this->persistStatusChange(gebruikObject: $gebruikObject, newStatus: $newStatus);
+		return $this->persistStatusChange(gebruikObject: $gebruikObject, newStatus: $newStatus);
+	}//end updateStatus()
 
-    }//end updateStatus()
+	/**
+	 * Validate a status transition using the transition map.
+	 *
+	 * @param string $current Current status value.
+	 * @param string $next Requested next status value.
+	 *
+	 * @return bool True when the transition is permitted.
+	 */
+	private function validateTransition(string $current, string $next): bool {
+		if ($current === '') {
+			// New objects with no status may transition to any status.
+			return true;
+		}
 
-    /**
-     * Validate a status transition using the transition map.
-     *
-     * @param string $current Current status value.
-     * @param string $next    Requested next status value.
-     *
-     * @return bool True when the transition is permitted.
-     */
-    private function validateTransition(string $current, string $next): bool
-    {
-        if ($current === '') {
-            // New objects with no status may transition to any status.
-            return true;
-        }
+		return $this->validator->isAllowed(currentStatus: $current, newStatus: $next);
+	}//end validateTransition()
 
-        return $this->validator->isAllowed(currentStatus: $current, newStatus: $next);
+	/**
+	 * Persist the status change to OpenRegister.
+	 *
+	 * @param object $gebruikObject The gebruik object to update.
+	 * @param string $newStatus The validated new status.
+	 *
+	 * @return array<string,mixed> Result array with 'success', 'message', and 'object'.
+	 */
+	private function persistStatusChange(object $gebruikObject, string $newStatus): array {
+		try {
+			$objectData = $gebruikObject->getObject();
+			$objectData['status'] = $newStatus;
 
-    }//end validateTransition()
+			$updated = $this->objectService->saveObject(
+				register: $gebruikObject->getRegister(),
+				schema: $gebruikObject->getSchema(),
+				object: $objectData
+			);
 
-    /**
-     * Persist the status change to OpenRegister.
-     *
-     * @param object $gebruikObject The gebruik object to update.
-     * @param string $newStatus     The validated new status.
-     *
-     * @return array<string,mixed> Result array with 'success', 'message', and 'object'.
-     */
-    private function persistStatusChange(object $gebruikObject, string $newStatus): array
-    {
-        try {
-            $objectData           = $gebruikObject->getObject();
-            $objectData['status'] = $newStatus;
+			$this->logger->info(
+				'GebruikStatusHandler: Status updated successfully',
+				[
+					'uuid' => $gebruikObject->getUuid(),
+					'newStatus' => $newStatus,
+				]
+			);
 
-            $updated = $this->objectService->saveObject(
-                register: $gebruikObject->getRegister(),
-                schema: $gebruikObject->getSchema(),
-                object: $objectData
-            );
+			return [
+				'success' => true,
+				'message' => sprintf('Status updated to "%s".', $newStatus),
+				'object' => $updated,
+			];
+		} catch (\Exception $e) {
+			$this->logger->error(
+				'GebruikStatusHandler: Failed to persist status change',
+				[
+					'uuid' => $gebruikObject->getUuid(),
+					'newStatus' => $newStatus,
+					'exception' => $e->getMessage(),
+				]
+			);
 
-            $this->logger->info(
-                'GebruikStatusHandler: Status updated successfully',
-                [
-                    'uuid'      => $gebruikObject->getUuid(),
-                    'newStatus' => $newStatus,
-                ]
-            );
+			return [
+				'success' => false,
+				'message' => 'Failed to persist status change: ' . $e->getMessage(),
+				'object' => null,
+			];
+		}//end try
 
-            return [
-                'success' => true,
-                'message' => sprintf('Status updated to "%s".', $newStatus),
-                'object'  => $updated,
-            ];
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'GebruikStatusHandler: Failed to persist status change',
-                [
-                    'uuid'      => $gebruikObject->getUuid(),
-                    'newStatus' => $newStatus,
-                    'exception' => $e->getMessage(),
-                ]
-            );
-
-            return [
-                'success' => false,
-                'message' => 'Failed to persist status change: '.$e->getMessage(),
-                'object'  => null,
-            ];
-        }//end try
-
-    }//end persistStatusChange()
+	}//end persistStatusChange()
 }//end class

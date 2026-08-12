@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Softwarecatalog DecisionConcludedListener.
  *
@@ -42,70 +43,68 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
  */
-class DecisionConcludedListener implements IEventListener
-{
-    /**
-     * Constructor.
-     *
-     * @param ContractApprovalService $approvalService The approval-delegation service.
-     * @param LoggerInterface         $logger          The logger.
-     */
-    public function __construct(
-        private readonly ContractApprovalService $approvalService,
-        private readonly LoggerInterface $logger,
-    ) {
-    }//end __construct()
+class DecisionConcludedListener implements IEventListener {
+	/**
+	 * Constructor.
+	 *
+	 * @param ContractApprovalService $approvalService The approval-delegation service.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private readonly ContractApprovalService $approvalService,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Handle a concluded decidesk Decision.
-     *
-     * Only `DecisionConcludedEvent`s whose `sourceApp` is softwarecatalog are
-     * acted on; everything else is ignored. The carried `decisionId` is
-     * IDOR-checked against the contract's stored `approvalDecisionId` inside
-     * `resolveContractForOutcome()` before any projection is written.
-     *
-     * @param Event $event The dispatched event.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/contract-decision-delegation/spec.md
-     */
-    public function handle(Event $event): void
-    {
-        if (($event instanceof DecisionConcludedEvent) === false) {
-            return;
-        }
+	/**
+	 * Handle a concluded decidesk Decision.
+	 *
+	 * Only `DecisionConcludedEvent`s whose `sourceApp` is softwarecatalog are
+	 * acted on; everything else is ignored. The carried `decisionId` is
+	 * IDOR-checked against the contract's stored `approvalDecisionId` inside
+	 * `resolveContractForOutcome()` before any projection is written.
+	 *
+	 * @param Event $event The dispatched event.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/contract-decision-delegation/spec.md
+	 */
+	public function handle(Event $event): void {
+		if (($event instanceof DecisionConcludedEvent) === false) {
+			return;
+		}
 
-        if ($event->getSourceApp() !== ContractApprovalService::SOURCE_APP) {
-            return;
-        }
+		if ($event->getSourceApp() !== ContractApprovalService::SOURCE_APP) {
+			return;
+		}
 
-        try {
-            $contractUuid = $this->approvalService->resolveContractForOutcome(
-                subjectId: (string) ($event->getSubjectId() ?? ''),
-                externalReference: $event->getExternalReference(),
-                decisionId: $event->getDecisionId()
-            );
+		try {
+			$contractUuid = $this->approvalService->resolveContractForOutcome(
+				subjectId: (string)($event->getSubjectId() ?? ''),
+				externalReference: $event->getExternalReference(),
+				decisionId: $event->getDecisionId()
+			);
 
-            if ($contractUuid === null) {
-                return;
-            }
+			if ($contractUuid === null) {
+				return;
+			}
 
-            $this->approvalService->projectOutcome(
-                contractUuid: $contractUuid,
-                outcomeStatus: $event->getStatus()
-            );
-        } catch (\Throwable $e) {
-            // Never break the dispatch chain; a projection failure leaves the
-            // contract in its prior (fail-closed) state.
-            $this->logger->error(
-                'DecisionConcludedListener: projecting contract outcome failed',
-                [
-                    'decisionId' => $event->getDecisionId(),
-                    'error'      => $e->getMessage(),
-                ]
-            );
-        }//end try
+			$this->approvalService->projectOutcome(
+				contractUuid: $contractUuid,
+				outcomeStatus: $event->getStatus()
+			);
+		} catch (\Throwable $e) {
+			// Never break the dispatch chain; a projection failure leaves the
+			// contract in its prior (fail-closed) state.
+			$this->logger->error(
+				'DecisionConcludedListener: projecting contract outcome failed',
+				[
+					'decisionId' => $event->getDecisionId(),
+					'error' => $e->getMessage(),
+				]
+			);
+		}//end try
 
-    }//end handle()
+	}//end handle()
 }//end class

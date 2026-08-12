@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Registration / review moderation / approval-queue controller.
  *
@@ -52,86 +53,82 @@ use OCP\IRequest;
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md
  */
-class ModerationController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest          $request    The request.
-     * @param ModerationService $moderation The moderation service.
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly ModerationService $moderation,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class ModerationController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param ModerationService $moderation The moderation service.
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly ModerationService $moderation,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * List the pending entries (of `type`) awaiting moderation.
-     *
-     * @param string $type The moderated object type ('organisatie', default, or 'beoordeeling').
-     *
-     * @return JSONResponse `{ok, items}` or a 400.
-     *
-     * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
-     * @spec                                                                               openspec/specs/open-data-publishing/spec.md
-     * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
-     */
-    #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
-    public function pending(string $type=ModerationService::MODERATED_TYPE): JSONResponse
-    {
-        $result = $this->moderation->listPending(type: $type);
-        if ($result['ok'] === false) {
-            return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
-        }
+	/**
+	 * List the pending entries (of `type`) awaiting moderation.
+	 *
+	 * @param string $type The moderated object type ('organisatie', default, or 'beoordeeling').
+	 *
+	 * @return JSONResponse `{ok, items}` or a 400.
+	 *
+	 * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+	 * @spec                                                                               openspec/specs/open-data-publishing/spec.md
+	 * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
+	 */
+	#[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
+	public function pending(string $type = ModerationService::MODERATED_TYPE): JSONResponse {
+		$result = $this->moderation->listPending(type: $type);
+		if ($result['ok'] === false) {
+			return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
+		}
 
-        return new JSONResponse(data: $result);
-    }//end pending()
+		return new JSONResponse(data: $result);
+	}//end pending()
 
-    /**
-     * Approve a pending entry (of `type`).
-     *
-     * @param string $uuid The entry uuid.
-     * @param string $type The moderated object type ('organisatie', default, or 'beoordeeling').
-     *
-     * @return JSONResponse `{ok, status}` or a 400.
-     *
-     * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
-     * @spec                                                                               openspec/specs/open-data-publishing/spec.md
-     * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
-     */
-    #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
-    public function approve(string $uuid, string $type=ModerationService::MODERATED_TYPE): JSONResponse
-    {
-        $result = $this->moderation->approve($uuid, type: $type);
-        if ($result['ok'] === false) {
-            return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
-        }
+	/**
+	 * Approve a pending entry (of `type`).
+	 *
+	 * @param string $uuid The entry uuid.
+	 * @param string $type The moderated object type ('organisatie', default, or 'beoordeeling').
+	 *
+	 * @return JSONResponse `{ok, status}` or a 400.
+	 *
+	 * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+	 * @spec                                                                               openspec/specs/open-data-publishing/spec.md
+	 * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
+	 */
+	#[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
+	public function approve(string $uuid, string $type = ModerationService::MODERATED_TYPE): JSONResponse {
+		$result = $this->moderation->approve($uuid, type: $type);
+		if ($result['ok'] === false) {
+			return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
+		}
 
-        return new JSONResponse(data: $result);
-    }//end approve()
+		return new JSONResponse(data: $result);
+	}//end approve()
 
-    /**
-     * Reject a pending entry (of `type`).
-     *
-     * @param string $uuid The entry uuid.
-     * @param string $type The moderated object type ('organisatie', default, or 'beoordeeling').
-     *
-     * @return JSONResponse `{ok, status}` or a 400.
-     *
-     * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
-     * @spec                                                                               openspec/specs/open-data-publishing/spec.md
-     * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
-     */
-    #[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
-    public function reject(string $uuid, string $type=ModerationService::MODERATED_TYPE): JSONResponse
-    {
-        $result = $this->moderation->reject($uuid, type: $type);
-        if ($result['ok'] === false) {
-            return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
-        }
+	/**
+	 * Reject a pending entry (of `type`).
+	 *
+	 * @param string $uuid The entry uuid.
+	 * @param string $type The moderated object type ('organisatie', default, or 'beoordeeling').
+	 *
+	 * @return JSONResponse `{ok, status}` or a 400.
+	 *
+	 * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+	 * @spec                                                                               openspec/specs/open-data-publishing/spec.md
+	 * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
+	 */
+	#[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
+	public function reject(string $uuid, string $type = ModerationService::MODERATED_TYPE): JSONResponse {
+		$result = $this->moderation->reject($uuid, type: $type);
+		if ($result['ok'] === false) {
+			return new JSONResponse(data: ['message' => $result['reason']], statusCode: Http::STATUS_BAD_REQUEST);
+		}
 
-        return new JSONResponse(data: $result);
-    }//end reject()
+		return new JSONResponse(data: $result);
+	}//end reject()
 }//end class

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Contract Status Background Job.
  *
@@ -36,53 +37,51 @@ use Psr\Log\LoggerInterface;
 /**
  * Daily background job that expires past-end-date active contracts.
  */
-class ContractStatusJob extends TimedJob
-{
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory          $timeFactory   The time factory for scheduling.
-     * @param ContractStatusService $statusService The contract status maintenance service.
-     * @param IAppManager           $appManager    The Nextcloud app manager.
-     * @param LoggerInterface       $logger        The logger.
-     */
-    public function __construct(
-        ITimeFactory $timeFactory,
-        private readonly ContractStatusService $statusService,
-        private readonly IAppManager $appManager,
-        private readonly LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $timeFactory);
-        // Run once a day (86400s).
-        $this->setInterval(seconds: 86400);
-    }//end __construct()
+class ContractStatusJob extends TimedJob {
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $timeFactory The time factory for scheduling.
+	 * @param ContractStatusService $statusService The contract status maintenance service.
+	 * @param IAppManager $appManager The Nextcloud app manager.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		ITimeFactory $timeFactory,
+		private readonly ContractStatusService $statusService,
+		private readonly IAppManager $appManager,
+		private readonly LoggerInterface $logger,
+	) {
+		parent::__construct(time: $timeFactory);
+		// Run once a day (86400s).
+		$this->setInterval(seconds: 86400);
+	}//end __construct()
 
-    /**
-     * Run the daily contract-status maintenance pass.
-     *
-     * @param mixed $argument Job arguments (not used).
-     *
-     * @return void
-     *
-     * @spec openspec/specs/contract-administration/spec.md
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    protected function run($argument): void
-    {
-        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-            $this->logger->info('[ContractStatusJob] OpenRegister not installed, skipping run');
-            return;
-        }
+	/**
+	 * Run the daily contract-status maintenance pass.
+	 *
+	 * @param mixed $argument Job arguments (not used).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/contract-administration/spec.md
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 */
+	protected function run($argument): void {
+		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+			$this->logger->info('[ContractStatusJob] OpenRegister not installed, skipping run');
+			return;
+		}
 
-        try {
-            $count = $this->statusService->expirePastContracts();
-            $this->logger->info('[ContractStatusJob] Contract status pass complete', ['transitioned' => $count]);
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                '[ContractStatusJob] Fatal error during contract status pass — cron pass protected',
-                ['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]
-            );
-        }
-    }//end run()
+		try {
+			$count = $this->statusService->expirePastContracts();
+			$this->logger->info('[ContractStatusJob] Contract status pass complete', ['transitioned' => $count]);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'[ContractStatusJob] Fatal error during contract status pass — cron pass protected',
+				['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]
+			);
+		}
+	}//end run()
 }//end class

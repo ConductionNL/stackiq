@@ -43,183 +43,169 @@ use PHPUnit\Framework\TestCase;
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */
-class ReviewControllerContractTest extends TestCase
-{
+class ReviewControllerContractTest extends TestCase {
 
-    /** @var ReviewAggregateService|MockObject */
-    private ReviewAggregateService|MockObject $aggregateService;
+	/** @var ReviewAggregateService|MockObject */
+	private ReviewAggregateService|MockObject $aggregateService;
 
-    private ReviewController $controller;
+	private ReviewController $controller;
 
+	/**
+	 * Set up the controller with mocked services.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up the controller with mocked services.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->aggregateService = $this->createMock(ReviewAggregateService::class);
 
-        $this->aggregateService = $this->createMock(ReviewAggregateService::class);
+		$this->controller = new ReviewController(
+			$this->createMock(IRequest::class),
+			$this->createMock(ReviewService::class),
+			$this->aggregateService
+		);
 
-        $this->controller = new ReviewController(
-            $this->createMock(IRequest::class),
-            $this->createMock(ReviewService::class),
-            $this->aggregateService
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * A successful aggregate returns exactly average/count/items with HTTP 200.
+	 *
+	 * @return void
+	 */
+	public function testAggregateSuccessBodyCarriesExactlyTheContractKeys(): void {
+		$items = [
+			['uuid' => 'r-1', 'waardering' => 4],
+			['uuid' => 'r-2', 'waardering' => 5],
+		];
 
+		$this->aggregateService
+			->method('getAggregate')
+			->willReturn(
+				[
+					'ok' => true,
+					'reason' => 'ok',
+					'average' => 4.5,
+					'count' => 2,
+					'items' => $items,
+				]
+			);
 
-    /**
-     * A successful aggregate returns exactly average/count/items with HTTP 200.
-     *
-     * @return void
-     */
-    public function testAggregateSuccessBodyCarriesExactlyTheContractKeys(): void
-    {
-        $items = [
-            ['uuid' => 'r-1', 'waardering' => 4],
-            ['uuid' => 'r-2', 'waardering' => 5],
-        ];
+		$response = $this->controller->aggregate('module', 'module-uuid');
+		$body = $response->getData();
 
-        $this->aggregateService
-            ->method('getAggregate')
-            ->willReturn(
-                [
-                    'ok'      => true,
-                    'reason'  => 'ok',
-                    'average' => 4.5,
-                    'count'   => 2,
-                    'items'   => $items,
-                ]
-            );
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['average', 'count', 'items'], array_keys($body));
+		$this->assertSame(4.5, $body['average']);
+		$this->assertSame(2, $body['count']);
+		$this->assertSame($items, $body['items']);
 
-        $response = $this->controller->aggregate('module', 'module-uuid');
-        $body     = $response->getData();
+	}//end testAggregateSuccessBodyCarriesExactlyTheContractKeys()
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame(['average', 'count', 'items'], array_keys($body));
-        $this->assertSame(4.5, $body['average']);
-        $this->assertSame(2, $body['count']);
-        $this->assertSame($items, $body['items']);
+	/**
+	 * The service's internal `ok`/`reason` bookkeeping must never reach the wire.
+	 *
+	 * @return void
+	 */
+	public function testAggregateDoesNotLeakInternalBookkeepingKeys(): void {
+		$this->aggregateService
+			->method('getAggregate')
+			->willReturn(
+				[
+					'ok' => true,
+					'reason' => 'ok',
+					'average' => null,
+					'count' => 0,
+					'items' => [],
+				]
+			);
 
-    }//end testAggregateSuccessBodyCarriesExactlyTheContractKeys()
+		$body = $this->controller->aggregate('dienst', 'dienst-uuid')->getData();
 
+		$this->assertArrayNotHasKey('ok', $body);
+		$this->assertArrayNotHasKey('reason', $body);
 
-    /**
-     * The service's internal `ok`/`reason` bookkeeping must never reach the wire.
-     *
-     * @return void
-     */
-    public function testAggregateDoesNotLeakInternalBookkeepingKeys(): void
-    {
-        $this->aggregateService
-            ->method('getAggregate')
-            ->willReturn(
-                [
-                    'ok'      => true,
-                    'reason'  => 'ok',
-                    'average' => null,
-                    'count'   => 0,
-                    'items'   => [],
-                ]
-            );
+	}//end testAggregateDoesNotLeakInternalBookkeepingKeys()
 
-        $body = $this->controller->aggregate('dienst', 'dienst-uuid')->getData();
+	/**
+	 * A subject with no approved reviews is a 200 with a null average, not a 404.
+	 *
+	 * A consumer rendering a star widget has to distinguish "nothing approved
+	 * yet" from "bad request"; that difference is the contract.
+	 *
+	 * @return void
+	 */
+	public function testAggregateWithNoApprovedReviewsIsAnEmptyTwoHundred(): void {
+		$this->aggregateService
+			->method('getAggregate')
+			->willReturn(
+				[
+					'ok' => true,
+					'reason' => 'ok',
+					'average' => null,
+					'count' => 0,
+					'items' => [],
+				]
+			);
 
-        $this->assertArrayNotHasKey('ok', $body);
-        $this->assertArrayNotHasKey('reason', $body);
+		$response = $this->controller->aggregate('module', 'module-uuid');
 
-    }//end testAggregateDoesNotLeakInternalBookkeepingKeys()
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertNull($response->getData()['average']);
+		$this->assertSame(0, $response->getData()['count']);
+		$this->assertSame([], $response->getData()['items']);
 
+	}//end testAggregateWithNoApprovedReviewsIsAnEmptyTwoHundred()
 
-    /**
-     * A subject with no approved reviews is a 200 with a null average, not a 404.
-     *
-     * A consumer rendering a star widget has to distinguish "nothing approved
-     * yet" from "bad request"; that difference is the contract.
-     *
-     * @return void
-     */
-    public function testAggregateWithNoApprovedReviewsIsAnEmptyTwoHundred(): void
-    {
-        $this->aggregateService
-            ->method('getAggregate')
-            ->willReturn(
-                [
-                    'ok'      => true,
-                    'reason'  => 'ok',
-                    'average' => null,
-                    'count'   => 0,
-                    'items'   => [],
-                ]
-            );
+	/**
+	 * A rejected request is a 400 carrying `message`, and no aggregate keys.
+	 *
+	 * @return void
+	 */
+	public function testAggregateFailureIsFourHundredWithAMessage(): void {
+		$this->aggregateService
+			->method('getAggregate')
+			->willReturn(
+				[
+					'ok' => false,
+					'reason' => 'invalid subject type',
+					'average' => null,
+					'count' => 0,
+					'items' => [],
+				]
+			);
 
-        $response = $this->controller->aggregate('module', 'module-uuid');
+		$response = $this->controller->aggregate('bogus', 'some-uuid');
+		$body = $response->getData();
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertNull($response->getData()['average']);
-        $this->assertSame(0, $response->getData()['count']);
-        $this->assertSame([], $response->getData()['items']);
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertSame(['message'], array_keys($body));
+		$this->assertSame('invalid subject type', $body['message']);
 
-    }//end testAggregateWithNoApprovedReviewsIsAnEmptyTwoHundred()
+	}//end testAggregateFailureIsFourHundredWithAMessage()
 
+	/**
+	 * The caller's subjectType/subjectId reach the service unaltered.
+	 *
+	 * @return void
+	 */
+	public function testAggregatePassesTheSubjectThroughToTheService(): void {
+		$this->aggregateService
+			->expects($this->once())
+			->method('getAggregate')
+			->with('dienst', 'the-subject-uuid')
+			->willReturn(
+				[
+					'ok' => true,
+					'reason' => 'ok',
+					'average' => 3.0,
+					'count' => 1,
+					'items' => [],
+				]
+			);
 
-    /**
-     * A rejected request is a 400 carrying `message`, and no aggregate keys.
-     *
-     * @return void
-     */
-    public function testAggregateFailureIsFourHundredWithAMessage(): void
-    {
-        $this->aggregateService
-            ->method('getAggregate')
-            ->willReturn(
-                [
-                    'ok'      => false,
-                    'reason'  => 'invalid subject type',
-                    'average' => null,
-                    'count'   => 0,
-                    'items'   => [],
-                ]
-            );
+		$this->controller->aggregate('dienst', 'the-subject-uuid');
 
-        $response = $this->controller->aggregate('bogus', 'some-uuid');
-        $body     = $response->getData();
-
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-        $this->assertSame(['message'], array_keys($body));
-        $this->assertSame('invalid subject type', $body['message']);
-
-    }//end testAggregateFailureIsFourHundredWithAMessage()
-
-
-    /**
-     * The caller's subjectType/subjectId reach the service unaltered.
-     *
-     * @return void
-     */
-    public function testAggregatePassesTheSubjectThroughToTheService(): void
-    {
-        $this->aggregateService
-            ->expects($this->once())
-            ->method('getAggregate')
-            ->with('dienst', 'the-subject-uuid')
-            ->willReturn(
-                [
-                    'ok'      => true,
-                    'reason'  => 'ok',
-                    'average' => 3.0,
-                    'count'   => 1,
-                    'items'   => [],
-                ]
-            );
-
-        $this->controller->aggregate('dienst', 'the-subject-uuid');
-
-    }//end testAggregatePassesTheSubjectThroughToTheService()
-
+	}//end testAggregatePassesTheSubjectThroughToTheService()
 
 }//end class

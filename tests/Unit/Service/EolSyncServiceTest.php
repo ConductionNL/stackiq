@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Unit tests for EolSyncService — config resolution, graceful degradation,
  * and the end-to-end match-and-stamp orchestration.
@@ -33,307 +34,298 @@ use Psr\Log\LoggerInterface;
 /**
  * Covers every degradation path plus the happy-path orchestration.
  */
-class EolSyncServiceTest extends TestCase
-{
+class EolSyncServiceTest extends TestCase {
 
-    private const DEFAULT_CONFIG = [
-        'enabled'         => true,
-        'register'        => 'openconnector',
-        'productSchema'   => 'eolProduct',
-        'cycleSchema'     => 'eolCycle',
-        'intervalSeconds' => 86400,
-    ];
+	private const DEFAULT_CONFIG = [
+		'enabled' => true,
+		'register' => 'openconnector',
+		'productSchema' => 'eolProduct',
+		'cycleSchema' => 'eolCycle',
+		'intervalSeconds' => 86400,
+	];
 
-    /**
-     * A fixed time factory so status timestamps are deterministic.
-     *
-     * @return ITimeFactory&\PHPUnit\Framework\MockObject\MockObject
-     */
-    private function timeFactory(): ITimeFactory
-    {
-        $timeFactory = $this->createMock(ITimeFactory::class);
-        $timeFactory->method('getDateTime')->willReturn(new \DateTime('2026-07-23T12:00:00+00:00'));
-        return $timeFactory;
-    }//end timeFactory()
+	/**
+	 * A fixed time factory so status timestamps are deterministic.
+	 *
+	 * @return ITimeFactory&\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private function timeFactory(): ITimeFactory {
+		$timeFactory = $this->createMock(ITimeFactory::class);
+		$timeFactory->method('getDateTime')->willReturn(new \DateTime('2026-07-23T12:00:00+00:00'));
+		return $timeFactory;
+	}//end timeFactory()
 
-    /**
-     * Disabled config degrades without ever touching ObjectService.
-     *
-     * @spec openspec/specs/eol-feed-integration/spec.md#scenario-missing-register-degrades-to-manual-only-not-an-error
-     * @return void
-     */
-    public function testDisabledConfigDegradesGracefully(): void
-    {
-        $config = self::DEFAULT_CONFIG;
-        $config['enabled'] = false;
+	/**
+	 * Disabled config degrades without ever touching ObjectService.
+	 *
+	 * @spec openspec/specs/eol-feed-integration/spec.md#scenario-missing-register-degrades-to-manual-only-not-an-error
+	 * @return void
+	 */
+	public function testDisabledConfigDegradesGracefully(): void {
+		$config = self::DEFAULT_CONFIG;
+		$config['enabled'] = false;
 
-        $settingsService = $this->createMock(SettingsService::class);
-        $settingsService->method('getEolSyncConfig')->willReturn($config);
-        // ObjectService must never be requested when disabled.
-        $settingsService->expects($this->never())->method('getObjectService');
-        $settingsService->expects($this->once())->method('setEolSyncStatus')->with(
-            $this->callback(function (array $status): bool {
-                return $status['available'] === false && $status['reason'] === 'disabled'
-                    && $status['matched'] === 0 && $status['skipped'] === 0;
-            })
-        );
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->method('getEolSyncConfig')->willReturn($config);
+		// ObjectService must never be requested when disabled.
+		$settingsService->expects($this->never())->method('getObjectService');
+		$settingsService->expects($this->once())->method('setEolSyncStatus')->with(
+			$this->callback(function (array $status): bool {
+				return $status['available'] === false && $status['reason'] === 'disabled'
+					&& $status['matched'] === 0 && $status['skipped'] === 0;
+			})
+		);
 
-        $service = new EolSyncService(
-            settingsService: $settingsService,
-            matcher: new EolMatcherService(),
-            timeFactory: $this->timeFactory(),
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$service = new EolSyncService(
+			settingsService: $settingsService,
+			matcher: new EolMatcherService(),
+			timeFactory: $this->timeFactory(),
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
-        $status = $service->run();
+		$status = $service->run();
 
-        $this->assertFalse($status['available']);
-        $this->assertSame('disabled', $status['reason']);
-    }//end testDisabledConfigDegradesGracefully()
+		$this->assertFalse($status['available']);
+		$this->assertSame('disabled', $status['reason']);
+	}//end testDisabledConfigDegradesGracefully()
 
-    /**
-     * OpenRegister absent degrades gracefully — no exception, no object
-     * touched.
-     *
-     * @spec openspec/specs/eol-feed-integration/spec.md#scenario-core-lifecycle-capability-is-unaffected-by-feed-absence
-     * @return void
-     */
-    public function testOpenRegisterNotInstalledDegradesGracefully(): void
-    {
-        $settingsService = $this->createMock(SettingsService::class);
-        $settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
-        $settingsService->method('isOpenRegisterInstalled')->willReturn(false);
-        $settingsService->expects($this->never())->method('getObjectService');
+	/**
+	 * OpenRegister absent degrades gracefully — no exception, no object
+	 * touched.
+	 *
+	 * @spec openspec/specs/eol-feed-integration/spec.md#scenario-core-lifecycle-capability-is-unaffected-by-feed-absence
+	 * @return void
+	 */
+	public function testOpenRegisterNotInstalledDegradesGracefully(): void {
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$settingsService->method('isOpenRegisterInstalled')->willReturn(false);
+		$settingsService->expects($this->never())->method('getObjectService');
 
-        $service = new EolSyncService(
-            settingsService: $settingsService,
-            matcher: new EolMatcherService(),
-            timeFactory: $this->timeFactory(),
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$service = new EolSyncService(
+			settingsService: $settingsService,
+			matcher: new EolMatcherService(),
+			timeFactory: $this->timeFactory(),
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
-        $status = $service->run();
+		$status = $service->run();
 
-        $this->assertFalse($status['available']);
-        $this->assertSame('openregister-not-installed', $status['reason']);
-    }//end testOpenRegisterNotInstalledDegradesGracefully()
+		$this->assertFalse($status['available']);
+		$this->assertSame('openregister-not-installed', $status['reason']);
+	}//end testOpenRegisterNotInstalledDegradesGracefully()
 
-    /**
-     * The configured register/schema failing to resolve degrades gracefully
-     * — no exception propagates to the caller.
-     *
-     * @spec openspec/specs/eol-feed-integration/spec.md#scenario-missing-register-degrades-to-manual-only-not-an-error
-     * @return void
-     */
-    public function testUnresolvableRegisterDegradesGracefully(): void
-    {
-        $settingsService = $this->createMock(SettingsService::class);
-        $settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
-        $settingsService->method('isOpenRegisterInstalled')->willReturn(true);
-        $settingsService->method('getRegisterIdForObjectType')->willReturn(1);
-        $settingsService->method('getSchemaIdForObjectType')->willReturn(2);
+	/**
+	 * The configured register/schema failing to resolve degrades gracefully
+	 * — no exception propagates to the caller.
+	 *
+	 * @spec openspec/specs/eol-feed-integration/spec.md#scenario-missing-register-degrades-to-manual-only-not-an-error
+	 * @return void
+	 */
+	public function testUnresolvableRegisterDegradesGracefully(): void {
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$settingsService->method('isOpenRegisterInstalled')->willReturn(true);
+		$settingsService->method('getRegisterIdForObjectType')->willReturn(1);
+		$settingsService->method('getSchemaIdForObjectType')->willReturn(2);
 
-        $objectService = $this->createMock(ObjectService::class);
-        $objectService->method('setRegister')->willThrowException(new \RuntimeException('register not found'));
-        $settingsService->method('getObjectService')->willReturn($objectService);
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->method('setRegister')->willThrowException(new \RuntimeException('register not found'));
+		$settingsService->method('getObjectService')->willReturn($objectService);
 
-        $objectService->expects($this->never())->method('saveObject');
+		$objectService->expects($this->never())->method('saveObject');
 
-        $service = new EolSyncService(
-            settingsService: $settingsService,
-            matcher: new EolMatcherService(),
-            timeFactory: $this->timeFactory(),
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$service = new EolSyncService(
+			settingsService: $settingsService,
+			matcher: new EolMatcherService(),
+			timeFactory: $this->timeFactory(),
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
-        $status = $service->run();
+		$status = $service->run();
 
-        $this->assertFalse($status['available']);
-        $this->assertSame('eol-register-or-schema-not-found', $status['reason']);
-    }//end testUnresolvableRegisterDegradesGracefully()
+		$this->assertFalse($status['available']);
+		$this->assertSame('eol-register-or-schema-not-found', $status['reason']);
+	}//end testUnresolvableRegisterDegradesGracefully()
 
-    /**
-     * Module/moduleVersie schema not configured degrades gracefully (a
-     * fresh install where softwarecatalog itself is not yet configured).
-     *
-     * @return void
-     */
-    public function testModuleSchemaNotConfiguredDegradesGracefully(): void
-    {
-        $settingsService = $this->createMock(SettingsService::class);
-        $settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
-        $settingsService->method('isOpenRegisterInstalled')->willReturn(true);
-        $settingsService->method('getObjectService')->willReturn($this->createMock(ObjectService::class));
-        $settingsService->method('getRegisterIdForObjectType')->willReturn(null);
+	/**
+	 * Module/moduleVersie schema not configured degrades gracefully (a
+	 * fresh install where softwarecatalog itself is not yet configured).
+	 *
+	 * @return void
+	 */
+	public function testModuleSchemaNotConfiguredDegradesGracefully(): void {
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$settingsService->method('isOpenRegisterInstalled')->willReturn(true);
+		$settingsService->method('getObjectService')->willReturn($this->createMock(ObjectService::class));
+		$settingsService->method('getRegisterIdForObjectType')->willReturn(null);
 
-        $service = new EolSyncService(
-            settingsService: $settingsService,
-            matcher: new EolMatcherService(),
-            timeFactory: $this->timeFactory(),
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$service = new EolSyncService(
+			settingsService: $settingsService,
+			matcher: new EolMatcherService(),
+			timeFactory: $this->timeFactory(),
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
-        $status = $service->run();
+		$status = $service->run();
 
-        $this->assertFalse($status['available']);
-        $this->assertSame('module-schema-not-configured', $status['reason']);
-    }//end testModuleSchemaNotConfiguredDegradesGracefully()
+		$this->assertFalse($status['available']);
+		$this->assertSame('module-schema-not-configured', $status['reason']);
+	}//end testModuleSchemaNotConfiguredDegradesGracefully()
 
-    /**
-     * The happy path: one mapped module with one matching moduleVersie is
-     * stamped and saved; the status reports matched/skipped counts.
-     *
-     * @spec openspec/specs/eol-feed-integration/spec.md#scenario-the-scheduled-job-runs-the-match
-     * @return void
-     */
-    public function testSuccessfulRunMatchesStampsAndReportsStatus(): void
-    {
-        $settingsService = $this->createMock(SettingsService::class);
-        $settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
-        $settingsService->method('isOpenRegisterInstalled')->willReturn(true);
-        $settingsService->method('getRegisterIdForObjectType')->willReturn(10);
-        $settingsService->method('getSchemaIdForObjectType')->willReturnMap(
-            [
-                ['module', 20],
-                ['moduleVersie', 21],
-            ]
-        );
+	/**
+	 * The happy path: one mapped module with one matching moduleVersie is
+	 * stamped and saved; the status reports matched/skipped counts.
+	 *
+	 * @spec openspec/specs/eol-feed-integration/spec.md#scenario-the-scheduled-job-runs-the-match
+	 * @return void
+	 */
+	public function testSuccessfulRunMatchesStampsAndReportsStatus(): void {
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$settingsService->method('isOpenRegisterInstalled')->willReturn(true);
+		$settingsService->method('getRegisterIdForObjectType')->willReturn(10);
+		$settingsService->method('getSchemaIdForObjectType')->willReturnMap(
+			[
+				['module', 20],
+				['moduleVersie', 21],
+			]
+		);
 
-        $module = ['id' => 'module-uuid-1', 'eolProductSlug' => 'postgresql'];
-        $moduleVersie = ['id' => 'mv-uuid-1', 'module' => 'module-uuid-1', 'versie' => '16.2', 'beschrijvingKort' => 'keep me'];
-        $cycle = ['product' => 'postgresql', 'cycle' => '16', 'eol' => '2028-11-09'];
+		$module = ['id' => 'module-uuid-1', 'eolProductSlug' => 'postgresql'];
+		$moduleVersie = ['id' => 'mv-uuid-1', 'module' => 'module-uuid-1', 'versie' => '16.2', 'beschrijvingKort' => 'keep me'];
+		$cycle = ['product' => 'postgresql', 'cycle' => '16', 'eol' => '2028-11-09'];
 
-        $objectService = $this->createMock(ObjectService::class);
-        $objectService->method('searchObjects')->willReturnCallback(
-            function (array $query) use ($module, $moduleVersie): array {
-                if (($query['@self']['schema'] ?? null) === 20) {
-                    return [$module];
-                }
-                if (($query['@self']['schema'] ?? null) === 21) {
-                    return [$moduleVersie];
-                }
-                return [];
-            }
-        );
-        $objectService->method('findAll')->willReturn([$cycle]);
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->method('searchObjects')->willReturnCallback(
+			function (array $query) use ($module, $moduleVersie): array {
+				if (($query['@self']['schema'] ?? null) === 20) {
+					return [$module];
+				}
+				if (($query['@self']['schema'] ?? null) === 21) {
+					return [$moduleVersie];
+				}
+				return [];
+			}
+		);
+		$objectService->method('findAll')->willReturn([$cycle]);
 
-        $savedObjects = [];
-        $objectService->method('saveObject')->willReturnCallback(
-            function (array $object) use (&$savedObjects) {
-                $savedObjects[] = $object;
-                return $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
-            }
-        );
+		$savedObjects = [];
+		$objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$savedObjects) {
+				$savedObjects[] = $object;
+				return $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+			}
+		);
 
-        $settingsService->method('getObjectService')->willReturn($objectService);
+		$settingsService->method('getObjectService')->willReturn($objectService);
 
-        $recordedStatus = null;
-        $settingsService->expects($this->once())->method('setEolSyncStatus')->with(
-            $this->callback(function (array $status) use (&$recordedStatus): bool {
-                $recordedStatus = $status;
-                return true;
-            })
-        );
+		$recordedStatus = null;
+		$settingsService->expects($this->once())->method('setEolSyncStatus')->with(
+			$this->callback(function (array $status) use (&$recordedStatus): bool {
+				$recordedStatus = $status;
+				return true;
+			})
+		);
 
-        $service = new EolSyncService(
-            settingsService: $settingsService,
-            matcher: new EolMatcherService(),
-            timeFactory: $this->timeFactory(),
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$service = new EolSyncService(
+			settingsService: $settingsService,
+			matcher: new EolMatcherService(),
+			timeFactory: $this->timeFactory(),
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
-        $status = $service->run();
+		$status = $service->run();
 
-        $this->assertTrue($status['available']);
-        $this->assertSame(1, $status['matched']);
-        $this->assertSame(0, $status['skipped']);
-        $this->assertSame($recordedStatus, $status);
+		$this->assertTrue($status['available']);
+		$this->assertSame(1, $status['matched']);
+		$this->assertSame(0, $status['skipped']);
+		$this->assertSame($recordedStatus, $status);
 
-        $this->assertCount(1, $savedObjects);
-        $this->assertSame('2028-11-09', $savedObjects[0]['datumEindeOndersteuning']);
-        $this->assertSame('endoflife.date', $savedObjects[0]['eolBron']);
-        $this->assertSame('keep me', $savedObjects[0]['beschrijvingKort']);
-    }//end testSuccessfulRunMatchesStampsAndReportsStatus()
+		$this->assertCount(1, $savedObjects);
+		$this->assertSame('2028-11-09', $savedObjects[0]['datumEindeOndersteuning']);
+		$this->assertSame('endoflife.date', $savedObjects[0]['eolBron']);
+		$this->assertSame('keep me', $savedObjects[0]['beschrijvingKort']);
+	}//end testSuccessfulRunMatchesStampsAndReportsStatus()
 
-    /**
-     * A module with no eolProductSlug is never read or written — the
-     * matcher must include zero unmapped modules (spec "no read, no
-     * write").
-     *
-     * @spec openspec/specs/eol-feed-integration/spec.md#scenario-a-mapped-module-is-eligible-for-matching
-     * @return void
-     */
-    public function testUnmappedModuleIsNeverProcessed(): void
-    {
-        $settingsService = $this->createMock(SettingsService::class);
-        $settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
-        $settingsService->method('isOpenRegisterInstalled')->willReturn(true);
-        $settingsService->method('getRegisterIdForObjectType')->willReturn(10);
-        $settingsService->method('getSchemaIdForObjectType')->willReturnMap(
-            [
-                ['module', 20],
-                ['moduleVersie', 21],
-            ]
-        );
+	/**
+	 * A module with no eolProductSlug is never read or written — the
+	 * matcher must include zero unmapped modules (spec "no read, no
+	 * write").
+	 *
+	 * @spec openspec/specs/eol-feed-integration/spec.md#scenario-a-mapped-module-is-eligible-for-matching
+	 * @return void
+	 */
+	public function testUnmappedModuleIsNeverProcessed(): void {
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$settingsService->method('isOpenRegisterInstalled')->willReturn(true);
+		$settingsService->method('getRegisterIdForObjectType')->willReturn(10);
+		$settingsService->method('getSchemaIdForObjectType')->willReturnMap(
+			[
+				['module', 20],
+				['moduleVersie', 21],
+			]
+		);
 
-        $unmappedModule = ['id' => 'module-uuid-2', 'eolProductSlug' => ''];
+		$unmappedModule = ['id' => 'module-uuid-2', 'eolProductSlug' => ''];
 
-        $objectService = $this->createMock(ObjectService::class);
-        $objectService->method('searchObjects')->willReturnCallback(
-            function (array $query) use ($unmappedModule): array {
-                if (($query['@self']['schema'] ?? null) === 20) {
-                    return [$unmappedModule];
-                }
-                // The moduleVersie schema (21) must never be queried for an
-                // unmapped module.
-                $this->fail('moduleVersie must not be read for an unmapped module');
-            }
-        );
-        $objectService->expects($this->never())->method('findAll');
-        $objectService->expects($this->never())->method('saveObject');
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->method('searchObjects')->willReturnCallback(
+			function (array $query) use ($unmappedModule): array {
+				if (($query['@self']['schema'] ?? null) === 20) {
+					return [$unmappedModule];
+				}
+				// The moduleVersie schema (21) must never be queried for an
+				// unmapped module.
+				$this->fail('moduleVersie must not be read for an unmapped module');
+			}
+		);
+		$objectService->expects($this->never())->method('findAll');
+		$objectService->expects($this->never())->method('saveObject');
 
-        $settingsService->method('getObjectService')->willReturn($objectService);
+		$settingsService->method('getObjectService')->willReturn($objectService);
 
-        $service = new EolSyncService(
-            settingsService: $settingsService,
-            matcher: new EolMatcherService(),
-            timeFactory: $this->timeFactory(),
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$service = new EolSyncService(
+			settingsService: $settingsService,
+			matcher: new EolMatcherService(),
+			timeFactory: $this->timeFactory(),
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
-        $status = $service->run();
+		$status = $service->run();
 
-        $this->assertTrue($status['available']);
-        $this->assertSame(0, $status['matched']);
-        $this->assertSame(0, $status['skipped']);
-    }//end testUnmappedModuleIsNeverProcessed()
+		$this->assertTrue($status['available']);
+		$this->assertSame(0, $status['matched']);
+		$this->assertSame(0, $status['skipped']);
+	}//end testUnmappedModuleIsNeverProcessed()
 
-    /**
-     * getConfig()/updateConfig()/getStatus() are thin delegators onto
-     * SettingsService — the actual persistence/merge behaviour is covered
-     * by SettingsServiceEolConfigTest.
-     *
-     * @return void
-     */
-    public function testConfigAndStatusDelegateToSettingsService(): void
-    {
-        $settingsService = $this->createMock(SettingsService::class);
-        $settingsService->expects($this->once())->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
-        $settingsService->expects($this->once())->method('updateEolSyncConfig')->with(['enabled' => false])
-            ->willReturn(['success' => true, 'config' => self::DEFAULT_CONFIG]);
-        $settingsService->expects($this->once())->method('getEolSyncStatus')->willReturn(
-            ['available' => true, 'reason' => null, 'matched' => 3, 'skipped' => 1, 'lastRunAt' => '2026-07-23T12:00:00+00:00']
-        );
+	/**
+	 * getConfig()/updateConfig()/getStatus() are thin delegators onto
+	 * SettingsService — the actual persistence/merge behaviour is covered
+	 * by SettingsServiceEolConfigTest.
+	 *
+	 * @return void
+	 */
+	public function testConfigAndStatusDelegateToSettingsService(): void {
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->expects($this->once())->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$settingsService->expects($this->once())->method('updateEolSyncConfig')->with(['enabled' => false])
+			->willReturn(['success' => true, 'config' => self::DEFAULT_CONFIG]);
+		$settingsService->expects($this->once())->method('getEolSyncStatus')->willReturn(
+			['available' => true, 'reason' => null, 'matched' => 3, 'skipped' => 1, 'lastRunAt' => '2026-07-23T12:00:00+00:00']
+		);
 
-        $service = new EolSyncService(
-            settingsService: $settingsService,
-            matcher: new EolMatcherService(),
-            timeFactory: $this->timeFactory(),
-            logger: $this->createMock(LoggerInterface::class)
-        );
+		$service = new EolSyncService(
+			settingsService: $settingsService,
+			matcher: new EolMatcherService(),
+			timeFactory: $this->timeFactory(),
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
-        $this->assertSame(self::DEFAULT_CONFIG, $service->getConfig());
-        $this->assertSame(['success' => true, 'config' => self::DEFAULT_CONFIG], $service->updateConfig(['enabled' => false]));
-        $this->assertSame(3, $service->getStatus()['matched']);
-    }//end testConfigAndStatusDelegateToSettingsService()
+		$this->assertSame(self::DEFAULT_CONFIG, $service->getConfig());
+		$this->assertSame(['success' => true, 'config' => self::DEFAULT_CONFIG], $service->updateConfig(['enabled' => false]));
+		$this->assertSame(3, $service->getStatus()['matched']);
+	}//end testConfigAndStatusDelegateToSettingsService()
 }//end class

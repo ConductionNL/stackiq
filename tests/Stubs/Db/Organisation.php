@@ -20,100 +20,91 @@ namespace OCA\OpenRegister\Db;
 /**
  * Stub for the OpenRegister Organisation entity.
  */
-class Organisation
-{
+class Organisation {
 
-    /**
-     * @var int|null
-     */
-    private ?int $id = null;
+	/**
+	 * @var int|null
+	 */
+	private ?int $id = null;
 
-    /**
-     * @var string
-     */
-    private string $uuid = '';
+	/**
+	 * @var string
+	 */
+	private string $uuid = '';
 
-    /**
-     * @var string|null
-     */
-    private ?string $parent = null;
+	/**
+	 * @var string|null
+	 */
+	private ?string $parent = null;
 
-    /**
-     * @var bool
-     */
-    private bool $active = true;
+	/**
+	 * @var bool
+	 */
+	private bool $active = true;
 
-    /**
-     * @param int|null $id The id.
-     *
-     * @return void
-     */
-    public function setId(?int $id): void
-    {
-        $this->id = $id;
-    }//end setId()
+	/**
+	 * @param int|null $id The id.
+	 *
+	 * @return void
+	 */
+	public function setId(?int $id): void {
+		$this->id = $id;
+	}//end setId()
 
-    /**
-     * @return int|null
-     */
-    public function getId(): ?int
-    {
-        return $this->id;
-    }//end getId()
+	/**
+	 * @return int|null
+	 */
+	public function getId(): ?int {
+		return $this->id;
+	}//end getId()
 
-    /**
-     * @param string $uuid The uuid.
-     *
-     * @return void
-     */
-    public function setUuid(string $uuid): void
-    {
-        $this->uuid = $uuid;
-    }//end setUuid()
+	/**
+	 * @param string $uuid The uuid.
+	 *
+	 * @return void
+	 */
+	public function setUuid(string $uuid): void {
+		$this->uuid = $uuid;
+	}//end setUuid()
 
-    /**
-     * @return string
-     */
-    public function getUuid(): string
-    {
-        return $this->uuid;
-    }//end getUuid()
+	/**
+	 * @return string
+	 */
+	public function getUuid(): string {
+		return $this->uuid;
+	}//end getUuid()
 
-    /**
-     * @param string|null $parent The parent uuid.
-     *
-     * @return static
-     */
-    public function setParent(?string $parent): static
-    {
-        $this->parent = $parent;
-        return $this;
-    }//end setParent()
+	/**
+	 * @param string|null $parent The parent uuid.
+	 *
+	 * @return static
+	 */
+	public function setParent(?string $parent): static {
+		$this->parent = $parent;
+		return $this;
+	}//end setParent()
 
-    /**
-     * @return string|null
-     */
-    public function getParent(): ?string
-    {
-        return $this->parent;
-    }//end getParent()
+	/**
+	 * @return string|null
+	 */
+	public function getParent(): ?string {
+		return $this->parent;
+	}//end getParent()
 
-    /**
-     * @param bool $active Active flag.
-     *
-     * @return void
-     */
-    public function setActive(bool $active): void
-    {
-        $this->active = $active;
-    }//end setActive()
+	/**
+	 * @param bool $active Active flag.
+	 *
+	 * @return void
+	 */
+	public function setActive(bool $active): void {
+		$this->active = $active;
+	}//end setActive()
 
-    /**
-     * @return bool
-     */
-    public function isActive(): bool
-    {
-        return $this->active;
-    }//end isActive()
+	/**
+	 * @return bool
+	 */
+	public function isActive(): bool {
+		return $this->active;
+	}//end isActive()
 
 }//end class

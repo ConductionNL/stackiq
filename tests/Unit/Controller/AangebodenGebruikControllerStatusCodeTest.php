@@ -57,169 +57,154 @@ use Psr\Log\LoggerInterface;
  * These tests assert the STATUS CODE, not the envelope, because the
  * envelope was always right and is exactly what made the defect invisible.
  */
-final class AangebodenGebruikControllerStatusCodeTest extends TestCase
-{
+final class AangebodenGebruikControllerStatusCodeTest extends TestCase {
 
-    /**
-     * The service double the controller under test delegates to.
-     *
-     * @var AangebodenGebruikService|MockObject
-     */
-    private AangebodenGebruikService|MockObject $gebruikSvc;
+	/**
+	 * The service double the controller under test delegates to.
+	 *
+	 * @var AangebodenGebruikService|MockObject
+	 */
+	private AangebodenGebruikService|MockObject $gebruikSvc;
 
-    /**
-     * The session double, always populated with an authenticated user so
-     * the controller's own auth guard is not what these tests measure.
-     *
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $userSession;
+	/**
+	 * The session double, always populated with an authenticated user so
+	 * the controller's own auth guard is not what these tests measure.
+	 *
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $userSession;
 
+	/**
+	 * Build the controller with an authenticated caller in session.
+	 *
+	 * @return AangebodenGebruikController The controller under test.
+	 */
+	private function makeController(): AangebodenGebruikController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParams')->willReturn([]);
+		$request->method('getParam')->willReturn(null);
 
-    /**
-     * Build the controller with an authenticated caller in session.
-     *
-     * @return AangebodenGebruikController The controller under test.
-     */
-    private function makeController(): AangebodenGebruikController
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParams')->willReturn([]);
-        $request->method('getParam')->willReturn(null);
+		$this->gebruikSvc = $this->createMock(AangebodenGebruikService::class);
+		$this->userSession = $this->createMock(IUserSession::class);
 
-        $this->gebruikSvc  = $this->createMock(AangebodenGebruikService::class);
-        $this->userSession = $this->createMock(IUserSession::class);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('caller-uid');
+		$this->userSession->method('getUser')->willReturn($user);
 
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('caller-uid');
-        $this->userSession->method('getUser')->willReturn($user);
+		return new AangebodenGebruikController(
+			'softwarecatalog',
+			$request,
+			$this->userSession,
+			$this->gebruikSvc,
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(IGroupManager::class)
+		);
 
-        return new AangebodenGebruikController(
-            'softwarecatalog',
-            $request,
-            $this->userSession,
-            $this->gebruikSvc,
-            $this->createMock(LoggerInterface::class),
-            $this->createMock(IGroupManager::class)
-        );
+	}//end makeController()
 
-    }//end makeController()
+	/**
+	 * The error envelope produced by the service layer on failure.
+	 *
+	 * @param string|null $error The error message, or null for the success shape.
+	 *
+	 * @return array The service return value.
+	 */
+	private function envelope(?string $error): array {
+		$envelope = [
+			'results' => [],
+			'total' => 0,
+			'page' => 1,
+			'pages' => 0,
+			'limit' => 20,
+			'offset' => 0,
+		];
 
+		if ($error !== null) {
+			$envelope['error'] = $error;
+		}
 
-    /**
-     * The error envelope produced by the service layer on failure.
-     *
-     * @param string|null $error The error message, or null for the success shape.
-     *
-     * @return array The service return value.
-     */
-    private function envelope(?string $error): array
-    {
-        $envelope = [
-            'results' => [],
-            'total'   => 0,
-            'page'    => 1,
-            'pages'   => 0,
-            'limit'   => 20,
-            'offset'  => 0,
-        ];
+		return $envelope;
+	}//end envelope()
 
-        if ($error !== null) {
-            $envelope['error'] = $error;
-        }
+	/**
+	 * A service-reported error on the afnemer listing MUST surface as 500,
+	 * not as a 200 carrying an `error` key.
+	 *
+	 * @return void
+	 */
+	public function testAfnemerListingReturns500WhenTheServiceReportsAnError(): void {
+		$controller = $this->makeController();
 
-        return $envelope;
+		$this->gebruikSvc->method('getGebruiksWhereAfnemer')
+			->willReturn($this->envelope('Voorzieningen configuration not found'));
 
-    }//end envelope()
+		$response = $controller->getGebruiksWhereAfnemer();
 
+		$this->assertSame(
+			500,
+			$response->getStatus(),
+			'A service error must be reported as HTTP 500. Returning 200 makes a '
+			. 'backend failure indistinguishable from an empty result set for every '
+			. 'client that branches on response.ok.'
+		);
 
-    /**
-     * A service-reported error on the afnemer listing MUST surface as 500,
-     * not as a 200 carrying an `error` key.
-     *
-     * @return void
-     */
-    public function testAfnemerListingReturns500WhenTheServiceReportsAnError(): void
-    {
-        $controller = $this->makeController();
+	}//end testAfnemerListingReturns500WhenTheServiceReportsAnError()
 
-        $this->gebruikSvc->method('getGebruiksWhereAfnemer')
-            ->willReturn($this->envelope('Voorzieningen configuration not found'));
+	/**
+	 * The success path must stay 200 — the fix must not turn every
+	 * response into a 500. Without this arm the test above would also pass
+	 * against a hardcoded `$statusCode = 500`.
+	 *
+	 * @return void
+	 */
+	public function testAfnemerListingReturns200OnSuccess(): void {
+		$controller = $this->makeController();
 
-        $response = $controller->getGebruiksWhereAfnemer();
+		$this->gebruikSvc->method('getGebruiksWhereAfnemer')
+			->willReturn($this->envelope(null));
 
-        $this->assertSame(
-            500,
-            $response->getStatus(),
-            'A service error must be reported as HTTP 500. Returning 200 makes a '
-            .'backend failure indistinguishable from an empty result set for every '
-            .'client that branches on response.ok.'
-        );
+		$response = $controller->getGebruiksWhereAfnemer();
 
-    }//end testAfnemerListingReturns500WhenTheServiceReportsAnError()
+		$this->assertSame(200, $response->getStatus());
 
+	}//end testAfnemerListingReturns200OnSuccess()
 
-    /**
-     * The success path must stay 200 — the fix must not turn every
-     * response into a 500. Without this arm the test above would also pass
-     * against a hardcoded `$statusCode = 500`.
-     *
-     * @return void
-     */
-    public function testAfnemerListingReturns200OnSuccess(): void
-    {
-        $controller = $this->makeController();
+	/**
+	 * Same defect, second site: the koppelingen-by-UUID endpoint.
+	 *
+	 * @return void
+	 */
+	public function testKoppelingenByUuidReturns500WhenTheServiceReportsAnError(): void {
+		$controller = $this->makeController();
 
-        $this->gebruikSvc->method('getGebruiksWhereAfnemer')
-            ->willReturn($this->envelope(null));
+		$this->gebruikSvc->method('getKoppelingenGebruikByUuid')
+			->willReturn($this->envelope('Voorzieningen configuration not found'));
 
-        $response = $controller->getGebruiksWhereAfnemer();
+		$response = $controller->getKoppelingenGebruikByUuid('some-uuid');
 
-        $this->assertSame(200, $response->getStatus());
+		$this->assertSame(
+			500,
+			$response->getStatus(),
+			'A service error must be reported as HTTP 500 on the koppelingen-by-UUID endpoint too.'
+		);
 
-    }//end testAfnemerListingReturns200OnSuccess()
+	}//end testKoppelingenByUuidReturns500WhenTheServiceReportsAnError()
 
+	/**
+	 * And its success arm.
+	 *
+	 * @return void
+	 */
+	public function testKoppelingenByUuidReturns200OnSuccess(): void {
+		$controller = $this->makeController();
 
-    /**
-     * Same defect, second site: the koppelingen-by-UUID endpoint.
-     *
-     * @return void
-     */
-    public function testKoppelingenByUuidReturns500WhenTheServiceReportsAnError(): void
-    {
-        $controller = $this->makeController();
+		$this->gebruikSvc->method('getKoppelingenGebruikByUuid')
+			->willReturn($this->envelope(null));
 
-        $this->gebruikSvc->method('getKoppelingenGebruikByUuid')
-            ->willReturn($this->envelope('Voorzieningen configuration not found'));
+		$response = $controller->getKoppelingenGebruikByUuid('some-uuid');
 
-        $response = $controller->getKoppelingenGebruikByUuid('some-uuid');
+		$this->assertSame(200, $response->getStatus());
 
-        $this->assertSame(
-            500,
-            $response->getStatus(),
-            'A service error must be reported as HTTP 500 on the koppelingen-by-UUID endpoint too.'
-        );
-
-    }//end testKoppelingenByUuidReturns500WhenTheServiceReportsAnError()
-
-
-    /**
-     * And its success arm.
-     *
-     * @return void
-     */
-    public function testKoppelingenByUuidReturns200OnSuccess(): void
-    {
-        $controller = $this->makeController();
-
-        $this->gebruikSvc->method('getKoppelingenGebruikByUuid')
-            ->willReturn($this->envelope(null));
-
-        $response = $controller->getKoppelingenGebruikByUuid('some-uuid');
-
-        $this->assertSame(200, $response->getStatus());
-
-    }//end testKoppelingenByUuidReturns200OnSuccess()
-
+	}//end testKoppelingenByUuidReturns200OnSuccess()
 
 }//end class

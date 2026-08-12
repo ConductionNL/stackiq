@@ -34,73 +34,65 @@ use Psr\Log\NullLogger;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-8-8
  */
-class OpenRegisterEventsDebugListenerDecompositionTest extends TestCase
-{
+class OpenRegisterEventsDebugListenerDecompositionTest extends TestCase {
 
-    /**
-     * Build the listener with a no-op logger.
-     *
-     * @return OpenRegisterEventsDebugListener
-     */
-    private function makeListener(): OpenRegisterEventsDebugListener
-    {
-        return new OpenRegisterEventsDebugListener(new NullLogger(), true);
+	/**
+	 * Build the listener with a no-op logger.
+	 *
+	 * @return OpenRegisterEventsDebugListener
+	 */
+	private function makeListener(): OpenRegisterEventsDebugListener {
+		return new OpenRegisterEventsDebugListener(new NullLogger(), true);
+	}//end makeListener()
 
-    }//end makeListener()
+	/**
+	 * Each per-family extractor returns null for an unknown event type,
+	 * so extractEventData falls through to the Unknown branch.
+	 *
+	 * @return void
+	 */
+	public function testExtractEventDataReturnsUnknownForUnknownEvent(): void {
+		$listener = $this->makeListener();
+		$event = new class extends Event {
+		};
 
+		$reflection = new \ReflectionMethod($listener, 'extractEventData');
+		$reflection->setAccessible(true);
 
-    /**
-     * Each per-family extractor returns null for an unknown event type,
-     * so extractEventData falls through to the Unknown branch.
-     *
-     * @return void
-     */
-    public function testExtractEventDataReturnsUnknownForUnknownEvent(): void
-    {
-        $listener = $this->makeListener();
-        $event    = new class extends Event {
-        };
+		$payload = $reflection->invoke($listener, $event);
 
-        $reflection = new \ReflectionMethod($listener, 'extractEventData');
-        $reflection->setAccessible(true);
+		$this->assertSame('Unknown', $payload['eventType']);
+		$this->assertSame(get_class($event), $payload['eventClass']);
+		$this->assertArrayHasKey('note', $payload);
 
-        $payload = $reflection->invoke($listener, $event);
+	}//end testExtractEventDataReturnsUnknownForUnknownEvent()
 
-        $this->assertSame('Unknown', $payload['eventType']);
-        $this->assertSame(get_class($event), $payload['eventClass']);
-        $this->assertArrayHasKey('note', $payload);
+	/**
+	 * Each per-family extractor returns null when the event doesn't match.
+	 *
+	 * @return void
+	 */
+	public function testPerFamilyExtractorsReturnNullForUnknownEvent(): void {
+		$listener = $this->makeListener();
+		$event = new class extends Event {
+		};
 
-    }//end testExtractEventDataReturnsUnknownForUnknownEvent()
+		foreach (
+			[
+				'extractObjectEventData',
+				'extractRegisterEventData',
+				'extractSchemaEventData',
+				'extractOrganisationEventData',
+			] as $methodName
+		) {
+			$reflection = new \ReflectionMethod($listener, $methodName);
+			$reflection->setAccessible(true);
+			$this->assertNull(
+				$reflection->invoke($listener, $event),
+				"{$methodName} should return null for unrelated events"
+			);
+		}
 
-
-    /**
-     * Each per-family extractor returns null when the event doesn't match.
-     *
-     * @return void
-     */
-    public function testPerFamilyExtractorsReturnNullForUnknownEvent(): void
-    {
-        $listener = $this->makeListener();
-        $event    = new class extends Event {
-        };
-
-        foreach (
-            [
-                'extractObjectEventData',
-                'extractRegisterEventData',
-                'extractSchemaEventData',
-                'extractOrganisationEventData',
-            ] as $methodName
-        ) {
-            $reflection = new \ReflectionMethod($listener, $methodName);
-            $reflection->setAccessible(true);
-            $this->assertNull(
-                $reflection->invoke($listener, $event),
-                "{$methodName} should return null for unrelated events"
-            );
-        }
-
-    }//end testPerFamilyExtractorsReturnNullForUnknownEvent()
-
+	}//end testPerFamilyExtractorsReturnNullForUnknownEvent()
 
 }//end class

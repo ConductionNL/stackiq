@@ -42,120 +42,107 @@ use PHPUnit\Framework\TestCase;
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */
-class ArchiMateConfigFailModeTest extends TestCase
-{
+class ArchiMateConfigFailModeTest extends TestCase {
 
+	/**
+	 * Build the service with only the two collaborators the resolver touches.
+	 *
+	 * @param array<string,string> $values Config key => stored value.
+	 *
+	 * @return ArchiMateImportService
+	 */
+	private function serviceWithConfig(array $values): ArchiMateImportService {
+		// The legacy fallback is only reached when `amef_config` does not
+		// decode to an array. Its DEFAULT is '{}', which decodes to [] — so on
+		// an instance that never wrote the key, getAmefConfig() returns [] and
+		// the fallback never runs at all. Malformed JSON is the branch under
+		// test here, and callers must not be given empty ids on that path.
+		$values['amef_config'] = $values['amef_config'] ?? 'not-json';
 
-    /**
-     * Build the service with only the two collaborators the resolver touches.
-     *
-     * @param array<string,string> $values Config key => stored value.
-     *
-     * @return ArchiMateImportService
-     */
-    private function serviceWithConfig(array $values): ArchiMateImportService
-    {
-        // The legacy fallback is only reached when `amef_config` does not
-        // decode to an array. Its DEFAULT is '{}', which decodes to [] — so on
-        // an instance that never wrote the key, getAmefConfig() returns [] and
-        // the fallback never runs at all. Malformed JSON is the branch under
-        // test here, and callers must not be given empty ids on that path.
-        $values['amef_config'] = $values['amef_config'] ?? 'not-json';
+		$config = $this->createMock(\OCP\IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($values) {
+				return $values[$key] ?? $default;
+			}
+		);
 
-        $config = $this->createMock(\OCP\IAppConfig::class);
-        $config->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default = '') use ($values) {
-                return $values[$key] ?? $default;
-            }
-        );
+		$service = (new \ReflectionClass(ArchiMateImportService::class))->newInstanceWithoutConstructor();
 
-        $service = (new \ReflectionClass(ArchiMateImportService::class))->newInstanceWithoutConstructor();
+		foreach (['config' => $config, 'logger' => $this->createMock(\Psr\Log\LoggerInterface::class)] as $prop => $value) {
+			$property = new \ReflectionProperty(ArchiMateImportService::class, $prop);
+			$property->setValue($service, $value);
+		}
 
-        foreach (['config' => $config, 'logger' => $this->createMock(\Psr\Log\LoggerInterface::class)] as $prop => $value) {
-            $property = new \ReflectionProperty(ArchiMateImportService::class, $prop);
-            $property->setValue($service, $value);
-        }
+		return $service;
+	}//end serviceWithConfig()
 
-        return $service;
+	/**
+	 * An unconfigured instance yields no id keys at all — not empty strings.
+	 *
+	 * @return void
+	 */
+	public function testUnconfiguredInstanceOmitsEveryIdRatherThanEmittingEmptyStrings(): void {
+		$config = $this->serviceWithConfig([])->getAmefConfig();
 
-    }//end serviceWithConfig()
+		// Guard against a vacuous pass: if the fallback had not run at all,
+		// the loop below would iterate nothing and prove nothing.
+		$this->assertSame([], $config, 'every id was unset, so none should survive');
 
+		foreach ($config as $key => $value) {
+			$this->assertNotSame('', $value, sprintf('"%s" was handed on as an empty string', $key));
+		}
 
-    /**
-     * An unconfigured instance yields no id keys at all — not empty strings.
-     *
-     * @return void
-     */
-    public function testUnconfiguredInstanceOmitsEveryIdRatherThanEmittingEmptyStrings(): void
-    {
-        $config = $this->serviceWithConfig([])->getAmefConfig();
+		// The property the consumers rely on: `?? null` must yield null.
+		$this->assertNull($config['register_id'] ?? null);
+		$this->assertNull($config['views_schema'] ?? null);
 
-        // Guard against a vacuous pass: if the fallback had not run at all,
-        // the loop below would iterate nothing and prove nothing.
-        $this->assertSame([], $config, 'every id was unset, so none should survive');
+	}//end testUnconfiguredInstanceOmitsEveryIdRatherThanEmittingEmptyStrings()
 
-        foreach ($config as $key => $value) {
-            $this->assertNotSame('', $value, sprintf('"%s" was handed on as an empty string', $key));
-        }
+	/**
+	 * A configured id still comes through untouched.
+	 *
+	 * @return void
+	 */
+	public function testConfiguredIdsAreReturnedUnchanged(): void {
+		$config = $this->serviceWithConfig(
+			[
+				'amef_register' => '11',
+				'amef_views_schema' => '42',
+			]
+		)->getAmefConfig();
 
-        // The property the consumers rely on: `?? null` must yield null.
-        $this->assertNull($config['register_id'] ?? null);
-        $this->assertNull($config['views_schema'] ?? null);
+		$this->assertSame('11', $config['register_id']);
+		$this->assertSame('42', $config['views_schema']);
 
-    }//end testUnconfiguredInstanceOmitsEveryIdRatherThanEmittingEmptyStrings()
+	}//end testConfiguredIdsAreReturnedUnchanged()
 
+	/**
+	 * A partially configured instance keeps what is set and drops what is not.
+	 *
+	 * This is the shape that makes the difference real: with `''` retained, a
+	 * `=== null` guard on the missing half would pass.
+	 *
+	 * @return void
+	 */
+	public function testPartialConfigurationKeepsSetIdsAndDropsUnsetOnes(): void {
+		$config = $this->serviceWithConfig(['amef_register' => '11'])->getAmefConfig();
 
-    /**
-     * A configured id still comes through untouched.
-     *
-     * @return void
-     */
-    public function testConfiguredIdsAreReturnedUnchanged(): void
-    {
-        $config = $this->serviceWithConfig(
-            [
-                'amef_register'      => '11',
-                'amef_views_schema'  => '42',
-            ]
-        )->getAmefConfig();
+		$this->assertSame('11', $config['register_id']);
+		$this->assertArrayNotHasKey('views_schema', $config);
+		$this->assertArrayNotHasKey('elements_schema', $config);
 
-        $this->assertSame('11', $config['register_id']);
-        $this->assertSame('42', $config['views_schema']);
+	}//end testPartialConfigurationKeepsSetIdsAndDropsUnsetOnes()
 
-    }//end testConfiguredIdsAreReturnedUnchanged()
+	/**
+	 * A whitespace-only id counts as unset, not as a usable value.
+	 *
+	 * @return void
+	 */
+	public function testWhitespaceOnlyIdIsTreatedAsUnset(): void {
+		$config = $this->serviceWithConfig(['amef_register' => '   '])->getAmefConfig();
 
+		$this->assertArrayNotHasKey('register_id', $config);
 
-    /**
-     * A partially configured instance keeps what is set and drops what is not.
-     *
-     * This is the shape that makes the difference real: with `''` retained, a
-     * `=== null` guard on the missing half would pass.
-     *
-     * @return void
-     */
-    public function testPartialConfigurationKeepsSetIdsAndDropsUnsetOnes(): void
-    {
-        $config = $this->serviceWithConfig(['amef_register' => '11'])->getAmefConfig();
-
-        $this->assertSame('11', $config['register_id']);
-        $this->assertArrayNotHasKey('views_schema', $config);
-        $this->assertArrayNotHasKey('elements_schema', $config);
-
-    }//end testPartialConfigurationKeepsSetIdsAndDropsUnsetOnes()
-
-
-    /**
-     * A whitespace-only id counts as unset, not as a usable value.
-     *
-     * @return void
-     */
-    public function testWhitespaceOnlyIdIsTreatedAsUnset(): void
-    {
-        $config = $this->serviceWithConfig(['amef_register' => '   '])->getAmefConfig();
-
-        $this->assertArrayNotHasKey('register_id', $config);
-
-    }//end testWhitespaceOnlyIdIsTreatedAsUnset()
-
+	}//end testWhitespaceOnlyIdIsTreatedAsUnset()
 
 }//end class

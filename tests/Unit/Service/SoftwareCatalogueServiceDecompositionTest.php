@@ -44,175 +44,159 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-2-6
  */
-class SoftwareCatalogueServiceDecompositionTest extends TestCase
-{
+class SoftwareCatalogueServiceDecompositionTest extends TestCase {
 
+	/**
+	 * Builds a partially-mocked SoftwareCatalogueService whose container
+	 * resolves SettingsService to a stub we control. Constructor is
+	 * skipped because we only exercise one private helper.
+	 *
+	 * @param SettingsService $settings Stub settings service.
+	 * @param LoggerInterface $logger Logger spy (assertions on
+	 *                                error logging).
+	 *
+	 * @return SoftwareCatalogueService
+	 */
+	private function buildService(SettingsService $settings, LoggerInterface $logger): SoftwareCatalogueService {
+		$service = (new \ReflectionClass(SoftwareCatalogueService::class))
+			->newInstanceWithoutConstructor();
 
-    /**
-     * Builds a partially-mocked SoftwareCatalogueService whose container
-     * resolves SettingsService to a stub we control. Constructor is
-     * skipped because we only exercise one private helper.
-     *
-     * @param SettingsService $settings   Stub settings service.
-     * @param LoggerInterface $logger     Logger spy (assertions on
-     *                                    error logging).
-     *
-     * @return SoftwareCatalogueService
-     */
-    private function buildService(SettingsService $settings, LoggerInterface $logger): SoftwareCatalogueService
-    {
-        $service = (new \ReflectionClass(SoftwareCatalogueService::class))
-            ->newInstanceWithoutConstructor();
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')
+			->willReturnCallback(
+				function (string $class) use ($settings) {
+					if ($class === SettingsService::class) {
+						return $settings;
+					}
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')
-            ->willReturnCallback(
-                function (string $class) use ($settings) {
-                    if ($class === SettingsService::class) {
-                        return $settings;
-                    }
+					return null;
+				}
+			);
 
-                    return null;
-                }
-            );
+		$reflection = new \ReflectionClass($service);
 
-        $reflection = new \ReflectionClass($service);
+		$containerProp = $reflection->getProperty('_container');
+		$containerProp->setAccessible(true);
+		$containerProp->setValue($service, $container);
 
-        $containerProp = $reflection->getProperty('_container');
-        $containerProp->setAccessible(true);
-        $containerProp->setValue($service, $container);
+		$loggerProp = $reflection->getProperty('_logger');
+		$loggerProp->setAccessible(true);
+		$loggerProp->setValue($service, $logger);
 
-        $loggerProp = $reflection->getProperty('_logger');
-        $loggerProp->setAccessible(true);
-        $loggerProp->setValue($service, $logger);
+		return $service;
+	}//end buildService()
 
-        return $service;
+	/**
+	 * Invokes the private resolveVoorzieningenContext helper on the
+	 * given service.
+	 *
+	 * @param SoftwareCatalogueService $service Service under test.
+	 * @param string $schemaSlug Schema slug.
+	 * @param string $logContext Log context.
+	 *
+	 * @return array<string,int>|null
+	 */
+	private function callResolver(SoftwareCatalogueService $service, string $schemaSlug, string $logContext): ?array {
+		$reflection = new \ReflectionMethod($service, 'resolveVoorzieningenContext');
+		$reflection->setAccessible(true);
+		return $reflection->invoke($service, $schemaSlug, $logContext);
+	}//end callResolver()
 
-    }//end buildService()
+	/**
+	 * When both the voorzieningen register and the requested schema
+	 * resolve, the helper returns the (registerId, schemaId) tuple.
+	 *
+	 * @return void
+	 */
+	public function testResolveVoorzieningenContextReturnsTupleWhenConfigured(): void {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getVoorzieningenRegisterId')->willReturn(3);
+		$settings->method('getSchemaIdForObjectType')->with('contactpersoon')->willReturn(11);
 
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->never())->method('error');
 
-    /**
-     * Invokes the private resolveVoorzieningenContext helper on the
-     * given service.
-     *
-     * @param SoftwareCatalogueService $service    Service under test.
-     * @param string                   $schemaSlug Schema slug.
-     * @param string                   $logContext Log context.
-     *
-     * @return array<string,int>|null
-     */
-    private function callResolver(SoftwareCatalogueService $service, string $schemaSlug, string $logContext): ?array
-    {
-        $reflection = new \ReflectionMethod($service, 'resolveVoorzieningenContext');
-        $reflection->setAccessible(true);
-        return $reflection->invoke($service, $schemaSlug, $logContext);
+		$service = $this->buildService($settings, $logger);
+		$result = $this->callResolver($service, 'contactpersoon', 'contactpersonen');
 
-    }//end callResolver()
+		$this->assertSame(
+			[
+				'registerId' => 3,
+				'schemaId' => 11,
+			],
+			$result
+		);
 
+	}//end testResolveVoorzieningenContextReturnsTupleWhenConfigured()
 
-    /**
-     * When both the voorzieningen register and the requested schema
-     * resolve, the helper returns the (registerId, schemaId) tuple.
-     *
-     * @return void
-     */
-    public function testResolveVoorzieningenContextReturnsTupleWhenConfigured(): void
-    {
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getVoorzieningenRegisterId')->willReturn(3);
-        $settings->method('getSchemaIdForObjectType')->with('contactpersoon')->willReturn(11);
+	/**
+	 * When the voorzieningen register is unconfigured (null), the
+	 * helper returns null and logs the missing-config error.
+	 *
+	 * @return void
+	 */
+	public function testResolveVoorzieningenContextReturnsNullWhenRegisterMissing(): void {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getVoorzieningenRegisterId')->willReturn(null);
+		$settings->method('getSchemaIdForObjectType')->willReturn(11);
 
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->never())->method('error');
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('error')
+			->with($this->stringContains('Register or schema not configured for contactpersonen'));
 
-        $service = $this->buildService($settings, $logger);
-        $result  = $this->callResolver($service, 'contactpersoon', 'contactpersonen');
+		$service = $this->buildService($settings, $logger);
+		$this->assertNull($this->callResolver($service, 'contactpersoon', 'contactpersonen'));
 
-        $this->assertSame(
-            [
-                'registerId' => 3,
-                'schemaId'   => 11,
-            ],
-            $result
-        );
+	}//end testResolveVoorzieningenContextReturnsNullWhenRegisterMissing()
 
-    }//end testResolveVoorzieningenContextReturnsTupleWhenConfigured()
+	/**
+	 * When the requested schema is unconfigured (null), the helper
+	 * returns null and logs an error mentioning the supplied log
+	 * context.
+	 *
+	 * @return void
+	 */
+	public function testResolveVoorzieningenContextReturnsNullWhenSchemaMissing(): void {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getVoorzieningenRegisterId')->willReturn(3);
+		$settings->method('getSchemaIdForObjectType')->willReturn(null);
 
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('error')
+			->with($this->stringContains('organisatie'));
 
-    /**
-     * When the voorzieningen register is unconfigured (null), the
-     * helper returns null and logs the missing-config error.
-     *
-     * @return void
-     */
-    public function testResolveVoorzieningenContextReturnsNullWhenRegisterMissing(): void
-    {
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getVoorzieningenRegisterId')->willReturn(null);
-        $settings->method('getSchemaIdForObjectType')->willReturn(11);
+		$service = $this->buildService($settings, $logger);
+		$this->assertNull($this->callResolver($service, 'organisatie', 'organisatie'));
 
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())
-            ->method('error')
-            ->with($this->stringContains('Register or schema not configured for contactpersonen'));
+	}//end testResolveVoorzieningenContextReturnsNullWhenSchemaMissing()
 
-        $service = $this->buildService($settings, $logger);
-        $this->assertNull($this->callResolver($service, 'contactpersoon', 'contactpersonen'));
+	/**
+	 * The helper's schema-id guard treats the legacy `false` sentinel
+	 * the same as `null` (the call sites in
+	 * `SoftwareCatalogueService` historically checked for both shapes).
+	 * SettingsService::getSchemaIdForObjectType() is typed `?int` so we
+	 * cover the runtime guard by asserting the documented behavior in
+	 * the source — the live call site already passed phpunit on the
+	 * three real return values (positive int, null) above; the `false`
+	 * branch is defensive plumbing per ADR-022.
+	 *
+	 * @return void
+	 */
+	public function testResolveVoorzieningenContextLogsContextLabelOnFailure(): void {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getVoorzieningenRegisterId')->willReturn(null);
+		$settings->method('getSchemaIdForObjectType')->willReturn(11);
 
-    }//end testResolveVoorzieningenContextReturnsNullWhenRegisterMissing()
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('error')
+			->with($this->stringContains('aangeboden gebruik'));
 
+		$service = $this->buildService($settings, $logger);
+		$this->assertNull($this->callResolver($service, 'gebruik', 'aangeboden gebruik'));
 
-    /**
-     * When the requested schema is unconfigured (null), the helper
-     * returns null and logs an error mentioning the supplied log
-     * context.
-     *
-     * @return void
-     */
-    public function testResolveVoorzieningenContextReturnsNullWhenSchemaMissing(): void
-    {
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getVoorzieningenRegisterId')->willReturn(3);
-        $settings->method('getSchemaIdForObjectType')->willReturn(null);
-
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())
-            ->method('error')
-            ->with($this->stringContains('organisatie'));
-
-        $service = $this->buildService($settings, $logger);
-        $this->assertNull($this->callResolver($service, 'organisatie', 'organisatie'));
-
-    }//end testResolveVoorzieningenContextReturnsNullWhenSchemaMissing()
-
-
-    /**
-     * The helper's schema-id guard treats the legacy `false` sentinel
-     * the same as `null` (the call sites in
-     * `SoftwareCatalogueService` historically checked for both shapes).
-     * SettingsService::getSchemaIdForObjectType() is typed `?int` so we
-     * cover the runtime guard by asserting the documented behavior in
-     * the source — the live call site already passed phpunit on the
-     * three real return values (positive int, null) above; the `false`
-     * branch is defensive plumbing per ADR-022.
-     *
-     * @return void
-     */
-    public function testResolveVoorzieningenContextLogsContextLabelOnFailure(): void
-    {
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getVoorzieningenRegisterId')->willReturn(null);
-        $settings->method('getSchemaIdForObjectType')->willReturn(11);
-
-        $logger = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())
-            ->method('error')
-            ->with($this->stringContains('aangeboden gebruik'));
-
-        $service = $this->buildService($settings, $logger);
-        $this->assertNull($this->callResolver($service, 'gebruik', 'aangeboden gebruik'));
-
-    }//end testResolveVoorzieningenContextLogsContextLabelOnFailure()
-
+	}//end testResolveVoorzieningenContextLogsContextLabelOnFailure()
 
 }//end class

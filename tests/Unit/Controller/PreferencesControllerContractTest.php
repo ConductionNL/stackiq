@@ -37,223 +37,202 @@ use PHPUnit\Framework\TestCase;
 /**
  * Contract tests for preferences#getPreference and preferences#setPreference.
  */
-class PreferencesControllerContractTest extends TestCase
-{
+class PreferencesControllerContractTest extends TestCase {
 
-    /**
-     * The mocked config.
-     *
-     * @var IConfig|MockObject
-     */
-    private IConfig|MockObject $config;
+	/**
+	 * The mocked config.
+	 *
+	 * @var IConfig|MockObject
+	 */
+	private IConfig|MockObject $config;
 
-    /**
-     * The mocked user session.
-     *
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $userSession;
+	/**
+	 * The mocked user session.
+	 *
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $userSession;
 
+	/**
+	 * Build the controller under test with fresh mocks.
+	 *
+	 * @return PreferencesController The controller under test.
+	 */
+	private function makeController(): PreferencesController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParams')->willReturn([]);
 
-    /**
-     * Build the controller under test with fresh mocks.
-     *
-     * @return PreferencesController The controller under test.
-     */
-    private function makeController(): PreferencesController
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParams')->willReturn([]);
+		$this->config = $this->createMock(IConfig::class);
+		$this->userSession = $this->createMock(IUserSession::class);
 
-        $this->config      = $this->createMock(IConfig::class);
-        $this->userSession = $this->createMock(IUserSession::class);
+		return new PreferencesController(
+			$request,
+			$this->config,
+			$this->userSession
+		);
 
-        return new PreferencesController(
-            $request,
-            $this->config,
-            $this->userSession
-        );
+	}//end makeController()
 
-    }//end makeController()
+	/**
+	 * Authenticate the session.
+	 *
+	 * @return void
+	 */
+	private function withUser(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
 
+	}//end withUser()
 
-    /**
-     * Authenticate the session.
-     *
-     * @return void
-     */
-    private function withUser(): void
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('alice');
-        $this->userSession->method('getUser')->willReturn($user);
+	/**
+	 * GET /api/preferences/{key} rejects an anonymous caller with 401 and
+	 * never touches IConfig.
+	 *
+	 * @return void
+	 */
+	public function testGetPreferenceRejectsAnonymousWith401(): void {
+		$controller = $this->makeController();
+		$this->userSession->method('getUser')->willReturn(null);
+		$this->config->expects($this->never())->method('getUserValue');
 
-    }//end withUser()
+		$response = $controller->getPreference('tour-seen');
 
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame(['message' => 'Not logged in'], $response->getData());
 
-    /**
-     * GET /api/preferences/{key} rejects an anonymous caller with 401 and
-     * never touches IConfig.
-     *
-     * @return void
-     */
-    public function testGetPreferenceRejectsAnonymousWith401(): void
-    {
-        $controller = $this->makeController();
-        $this->userSession->method('getUser')->willReturn(null);
-        $this->config->expects($this->never())->method('getUserValue');
+	}//end testGetPreferenceRejectsAnonymousWith401()
 
-        $response = $controller->getPreference('tour-seen');
+	/**
+	 * A key that sanitises to nothing is a 400, and IConfig is not consulted.
+	 *
+	 * @return void
+	 */
+	public function testGetPreferenceRejectsAKeyThatSanitisesToNothing(): void {
+		$controller = $this->makeController();
+		$this->withUser();
+		$this->config->expects($this->never())->method('getUserValue');
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-        $this->assertSame(['message' => 'Not logged in'], $response->getData());
+		$response = $controller->getPreference('///');
 
-    }//end testGetPreferenceRejectsAnonymousWith401()
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertSame(['message' => 'Invalid key'], $response->getData());
 
+	}//end testGetPreferenceRejectsAKeyThatSanitisesToNothing()
 
-    /**
-     * A key that sanitises to nothing is a 400, and IConfig is not consulted.
-     *
-     * @return void
-     */
-    public function testGetPreferenceRejectsAKeyThatSanitisesToNothing(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-        $this->config->expects($this->never())->method('getUserValue');
+	/**
+	 * The key that reaches IConfig is lower-cased, stripped to
+	 * `[a-z0-9-]` and prefixed with `pref_`, so a caller cannot escape the
+	 * preference namespace via path traversal or an app-name prefix.
+	 *
+	 * @return void
+	 */
+	public function testGetPreferenceNamespacesAndSanitisesTheKeyItReads(): void {
+		$controller = $this->makeController();
+		$this->withUser();
 
-        $response = $controller->getPreference('///');
+		$this->config->expects($this->once())
+			->method('getUserValue')
+			->with('alice', 'softwarecatalog', 'pref_appspassword', '')
+			->willReturn('');
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-        $this->assertSame(['message' => 'Invalid key'], $response->getData());
+		$response = $controller->getPreference('../apps/Password');
 
-    }//end testGetPreferenceRejectsAKeyThatSanitisesToNothing()
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['value' => null], $response->getData());
 
+	}//end testGetPreferenceNamespacesAndSanitisesTheKeyItReads()
 
-    /**
-     * The key that reaches IConfig is lower-cased, stripped to
-     * `[a-z0-9-]` and prefixed with `pref_`, so a caller cannot escape the
-     * preference namespace via path traversal or an app-name prefix.
-     *
-     * @return void
-     */
-    public function testGetPreferenceNamespacesAndSanitisesTheKeyItReads(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
+	/**
+	 * A stored value is returned under the `value` key; an unset preference
+	 * reads back as an explicit null rather than an empty string.
+	 *
+	 * @return void
+	 */
+	public function testGetPreferenceReturnsTheStoredValueOrNull(): void {
+		$controller = $this->makeController();
+		$this->withUser();
+		$this->config->method('getUserValue')->willReturn('yes');
 
-        $this->config->expects($this->once())
-            ->method('getUserValue')
-            ->with('alice', 'softwarecatalog', 'pref_appspassword', '')
-            ->willReturn('');
+		$this->assertSame(['value' => 'yes'], $controller->getPreference('tour-seen')->getData());
 
-        $response = $controller->getPreference('../apps/Password');
+	}//end testGetPreferenceReturnsTheStoredValueOrNull()
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame(['value' => null], $response->getData());
+	/**
+	 * POST /api/preferences/{key} rejects an anonymous caller with 401 and
+	 * never writes.
+	 *
+	 * @return void
+	 */
+	public function testSetPreferenceRejectsAnonymousWith401(): void {
+		$controller = $this->makeController();
+		$this->userSession->method('getUser')->willReturn(null);
+		$this->config->expects($this->never())->method('setUserValue');
+		$this->config->expects($this->never())->method('deleteUserValue');
 
-    }//end testGetPreferenceNamespacesAndSanitisesTheKeyItReads()
+		$response = $controller->setPreference('tour-seen', 'yes');
 
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame(['message' => 'Not logged in'], $response->getData());
 
-    /**
-     * A stored value is returned under the `value` key; an unset preference
-     * reads back as an explicit null rather than an empty string.
-     *
-     * @return void
-     */
-    public function testGetPreferenceReturnsTheStoredValueOrNull(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-        $this->config->method('getUserValue')->willReturn('yes');
+	}//end testSetPreferenceRejectsAnonymousWith401()
 
-        $this->assertSame(['value' => 'yes'], $controller->getPreference('tour-seen')->getData());
+	/**
+	 * An unsafe key is rejected with 400 before any write happens.
+	 *
+	 * @return void
+	 */
+	public function testSetPreferenceRejectsAnUnsafeKeyBeforeWriting(): void {
+		$controller = $this->makeController();
+		$this->withUser();
+		$this->config->expects($this->never())->method('setUserValue');
 
-    }//end testGetPreferenceReturnsTheStoredValueOrNull()
+		$response = $controller->setPreference('!!!', 'yes');
 
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 
-    /**
-     * POST /api/preferences/{key} rejects an anonymous caller with 401 and
-     * never writes.
-     *
-     * @return void
-     */
-    public function testSetPreferenceRejectsAnonymousWith401(): void
-    {
-        $controller = $this->makeController();
-        $this->userSession->method('getUser')->willReturn(null);
-        $this->config->expects($this->never())->method('setUserValue');
-        $this->config->expects($this->never())->method('deleteUserValue');
+	}//end testSetPreferenceRejectsAnUnsafeKeyBeforeWriting()
 
-        $response = $controller->setPreference('tour-seen', 'yes');
+	/**
+	 * A write lands on the sanitised, `pref_`-namespaced key and echoes the
+	 * stored value back.
+	 *
+	 * @return void
+	 */
+	public function testSetPreferenceWritesToTheNamespacedKeyAndEchoesTheValue(): void {
+		$controller = $this->makeController();
+		$this->withUser();
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-        $this->assertSame(['message' => 'Not logged in'], $response->getData());
+		$this->config->expects($this->once())
+			->method('setUserValue')
+			->with('alice', 'softwarecatalog', 'pref_tour-seen', 'yes');
 
-    }//end testSetPreferenceRejectsAnonymousWith401()
+		$response = $controller->setPreference('Tour-Seen', 'yes');
 
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['value' => 'yes'], $response->getData());
 
-    /**
-     * An unsafe key is rejected with 400 before any write happens.
-     *
-     * @return void
-     */
-    public function testSetPreferenceRejectsAnUnsafeKeyBeforeWriting(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-        $this->config->expects($this->never())->method('setUserValue');
+	}//end testSetPreferenceWritesToTheNamespacedKeyAndEchoesTheValue()
 
-        $response = $controller->setPreference('!!!', 'yes');
+	/**
+	 * An empty value CLEARS the preference (delete, not a stored empty
+	 * string), and the response reports the cleared state as null.
+	 *
+	 * @return void
+	 */
+	public function testSetPreferenceWithAnEmptyValueDeletesTheStoredPreference(): void {
+		$controller = $this->makeController();
+		$this->withUser();
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->config->expects($this->once())
+			->method('deleteUserValue')
+			->with('alice', 'softwarecatalog', 'pref_tour-seen');
+		$this->config->expects($this->never())->method('setUserValue');
 
-    }//end testSetPreferenceRejectsAnUnsafeKeyBeforeWriting()
+		$response = $controller->setPreference('tour-seen', '');
 
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['value' => null], $response->getData());
 
-    /**
-     * A write lands on the sanitised, `pref_`-namespaced key and echoes the
-     * stored value back.
-     *
-     * @return void
-     */
-    public function testSetPreferenceWritesToTheNamespacedKeyAndEchoesTheValue(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-
-        $this->config->expects($this->once())
-            ->method('setUserValue')
-            ->with('alice', 'softwarecatalog', 'pref_tour-seen', 'yes');
-
-        $response = $controller->setPreference('Tour-Seen', 'yes');
-
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame(['value' => 'yes'], $response->getData());
-
-    }//end testSetPreferenceWritesToTheNamespacedKeyAndEchoesTheValue()
-
-
-    /**
-     * An empty value CLEARS the preference (delete, not a stored empty
-     * string), and the response reports the cleared state as null.
-     *
-     * @return void
-     */
-    public function testSetPreferenceWithAnEmptyValueDeletesTheStoredPreference(): void
-    {
-        $controller = $this->makeController();
-        $this->withUser();
-
-        $this->config->expects($this->once())
-            ->method('deleteUserValue')
-            ->with('alice', 'softwarecatalog', 'pref_tour-seen');
-        $this->config->expects($this->never())->method('setUserValue');
-
-        $response = $controller->setPreference('tour-seen', '');
-
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame(['value' => null], $response->getData());
-
-    }//end testSetPreferenceWithAnEmptyValueDeletesTheStoredPreference()
+	}//end testSetPreferenceWithAnEmptyValueDeletesTheStoredPreference()
 }//end class
