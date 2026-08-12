@@ -63,130 +63,122 @@ use RecursiveIteratorIterator;
  * predate the refactor. Every other construct — if / elseif / else / for /
  * foreach / while / switch — is in scope.
  */
-final class NoEmptyControlFlowBlockTest extends TestCase
-{
+final class NoEmptyControlFlowBlockTest extends TestCase {
 
+	/**
+	 * Constructs whose body must never be empty, keyed by token id.
+	 *
+	 * @return array<int, string> Token id to human-readable keyword.
+	 */
+	private function guardedConstructs(): array {
+		return [
+			T_IF => 'if',
+			T_ELSEIF => 'elseif',
+			T_ELSE => 'else',
+			T_FOR => 'for',
+			T_FOREACH => 'foreach',
+			T_WHILE => 'while',
+			T_SWITCH => 'switch',
+		];
 
-    /**
-     * Constructs whose body must never be empty, keyed by token id.
-     *
-     * @return array<int, string> Token id to human-readable keyword.
-     */
-    private function guardedConstructs(): array
-    {
-        return [
-            T_IF      => 'if',
-            T_ELSEIF  => 'elseif',
-            T_ELSE    => 'else',
-            T_FOR     => 'for',
-            T_FOREACH => 'foreach',
-            T_WHILE   => 'while',
-            T_SWITCH  => 'switch',
-        ];
+	}//end guardedConstructs()
 
-    }//end guardedConstructs()
+	/**
+	 * Find every empty guarded block in a single PHP source string.
+	 *
+	 * Works on the token stream rather than on text so that multi-line
+	 * conditions, comments between the condition and the brace, and
+	 * arbitrary indentation cannot hide a finding — the original
+	 * hand-rolled grep for this defect missed sites for exactly those
+	 * reasons.
+	 *
+	 * @param string $source The PHP source to scan.
+	 *
+	 * @return array<int, array{line: int, keyword: string}> The findings.
+	 */
+	private function findEmptyBlocks(string $source): array {
+		$significant = [];
+		foreach (token_get_all($source) as $token) {
+			if (is_array($token) === true) {
+				if (in_array($token[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true) === true) {
+					continue;
+				}
 
+				$significant[] = [
+					'id' => $token[0],
+					'text' => $token[1],
+					'line' => $token[2],
+				];
+				continue;
+			}
 
-    /**
-     * Find every empty guarded block in a single PHP source string.
-     *
-     * Works on the token stream rather than on text so that multi-line
-     * conditions, comments between the condition and the brace, and
-     * arbitrary indentation cannot hide a finding — the original
-     * hand-rolled grep for this defect missed sites for exactly those
-     * reasons.
-     *
-     * @param string $source The PHP source to scan.
-     *
-     * @return array<int, array{line: int, keyword: string}> The findings.
-     */
-    private function findEmptyBlocks(string $source): array
-    {
-        $significant = [];
-        foreach (token_get_all($source) as $token) {
-            if (is_array($token) === true) {
-                if (in_array($token[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true) === true) {
-                    continue;
-                }
+			$significant[] = [
+				'id' => null,
+				'text' => $token,
+				'line' => 0,
+			];
+		}
 
-                $significant[] = [
-                    'id'   => $token[0],
-                    'text' => $token[1],
-                    'line' => $token[2],
-                ];
-                continue;
-            }
+		$constructs = $this->guardedConstructs();
+		$findings = [];
+		$count = count($significant);
 
-            $significant[] = [
-                'id'   => null,
-                'text' => $token,
-                'line' => 0,
-            ];
-        }
+		for ($i = 0; $i < ($count - 1); $i++) {
+			if ($significant[$i]['text'] !== '{' || $significant[$i + 1]['text'] !== '}') {
+				continue;
+			}
 
-        $constructs = $this->guardedConstructs();
-        $findings   = [];
-        $count      = count($significant);
+			// Walk back over the balanced condition parentheses, if any.
+			$j = ($i - 1);
+			if ($j >= 0 && $significant[$j]['text'] === ')') {
+				$depth = 0;
+				while ($j >= 0) {
+					if ($significant[$j]['text'] === ')') {
+						$depth++;
+					}
 
-        for ($i = 0; $i < ($count - 1); $i++) {
-            if ($significant[$i]['text'] !== '{' || $significant[$i + 1]['text'] !== '}') {
-                continue;
-            }
+					if ($significant[$j]['text'] === '(') {
+						$depth--;
+						if ($depth === 0) {
+							$j--;
+							break;
+						}
+					}
 
-            // Walk back over the balanced condition parentheses, if any.
-            $j = ($i - 1);
-            if ($j >= 0 && $significant[$j]['text'] === ')') {
-                $depth = 0;
-                while ($j >= 0) {
-                    if ($significant[$j]['text'] === ')') {
-                        $depth++;
-                    }
+					$j--;
+				}
+			}
 
-                    if ($significant[$j]['text'] === '(') {
-                        $depth--;
-                        if ($depth === 0) {
-                            $j--;
-                            break;
-                        }
-                    }
+			if ($j < 0 || isset($constructs[$significant[$j]['id']]) === false) {
+				continue;
+			}
 
-                    $j--;
-                }
-            }
+			$line = 0;
+			for ($k = $j; $k <= $i; $k++) {
+				if ($significant[$k]['line'] > 0) {
+					$line = $significant[$k]['line'];
+					break;
+				}
+			}
 
-            if ($j < 0 || isset($constructs[$significant[$j]['id']]) === false) {
-                continue;
-            }
+			$findings[] = [
+				'line' => $line,
+				'keyword' => $constructs[$significant[$j]['id']],
+			];
+		}//end for
 
-            $line = 0;
-            for ($k = $j; $k <= $i; $k++) {
-                if ($significant[$k]['line'] > 0) {
-                    $line = $significant[$k]['line'];
-                    break;
-                }
-            }
+		return $findings;
+	}//end findEmptyBlocks()
 
-            $findings[] = [
-                'line'    => $line,
-                'keyword' => $constructs[$significant[$j]['id']],
-            ];
-        }//end for
-
-        return $findings;
-
-    }//end findEmptyBlocks()
-
-
-    /**
-     * The scanner must be able to report a finding. Without this arm a
-     * broken scanner and a clean tree produce byte-identical output, and
-     * the assertion below would be permanently, silently green.
-     *
-     * @return void
-     */
-    public function testTheScannerDetectsTheExactShapeTheRefactorLeftBehind(): void
-    {
-        $mangled = <<<'PHP'
+	/**
+	 * The scanner must be able to report a finding. Without this arm a
+	 * broken scanner and a clean tree produce byte-identical output, and
+	 * the assertion below would be permanently, silently green.
+	 *
+	 * @return void
+	 */
+	public function testTheScannerDetectsTheExactShapeTheRefactorLeftBehind(): void {
+		$mangled = <<<'PHP'
 <?php
 function f($result) {
     $statusCode = 200;
@@ -196,14 +188,14 @@ function f($result) {
 }
 PHP;
 
-        $findings = $this->findEmptyBlocks($mangled);
+		$findings = $this->findEmptyBlocks($mangled);
 
-        $this->assertCount(1, $findings, 'The scanner must find the empty if body.');
-        $this->assertSame('if', $findings[0]['keyword']);
+		$this->assertCount(1, $findings, 'The scanner must find the empty if body.');
+		$this->assertSame('if', $findings[0]['keyword']);
 
-        // And it must NOT fire on the repaired shape, or it would report
-        // every fixed site as still broken.
-        $repaired = <<<'PHP'
+		// And it must NOT fire on the repaired shape, or it would report
+		// every fixed site as still broken.
+		$repaired = <<<'PHP'
 <?php
 function f($result) {
     $statusCode = 200;
@@ -214,10 +206,10 @@ function f($result) {
 }
 PHP;
 
-        $this->assertSame([], $this->findEmptyBlocks($repaired));
+		$this->assertSame([], $this->findEmptyBlocks($repaired));
 
-        // An empty catch is explicitly out of scope.
-        $emptyCatch = <<<'PHP'
+		// An empty catch is explicitly out of scope.
+		$emptyCatch = <<<'PHP'
 <?php
 function f() {
     try {
@@ -227,55 +219,52 @@ function f() {
 }
 PHP;
 
-        $this->assertSame([], $this->findEmptyBlocks($emptyCatch));
+		$this->assertSame([], $this->findEmptyBlocks($emptyCatch));
 
-    }//end testTheScannerDetectsTheExactShapeTheRefactorLeftBehind()
+	}//end testTheScannerDetectsTheExactShapeTheRefactorLeftBehind()
 
+	/**
+	 * No shipped file under lib/ may contain an empty guarded block.
+	 *
+	 * @return void
+	 */
+	public function testNoShippedFileContainsAnEmptyGuardedBlock(): void {
+		$libDir = dirname(__DIR__, 2) . '/lib';
+		$this->assertDirectoryExists($libDir, 'lib/ must exist for this scan to mean anything.');
 
-    /**
-     * No shipped file under lib/ may contain an empty guarded block.
-     *
-     * @return void
-     */
-    public function testNoShippedFileContainsAnEmptyGuardedBlock(): void
-    {
-        $libDir = dirname(__DIR__, 2).'/lib';
-        $this->assertDirectoryExists($libDir, 'lib/ must exist for this scan to mean anything.');
+		$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($libDir));
+		$scanned = 0;
+		$findings = [];
 
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($libDir));
-        $scanned  = 0;
-        $findings = [];
+		foreach ($iterator as $file) {
+			if ($file->isDir() === true || $file->getExtension() !== 'php') {
+				continue;
+			}
 
-        foreach ($iterator as $file) {
-            if ($file->isDir() === true || $file->getExtension() !== 'php') {
-                continue;
-            }
+			$scanned++;
+			$relative = substr($file->getPathname(), (strlen($libDir) - 3));
 
-            $scanned++;
-            $relative = substr($file->getPathname(), (strlen($libDir) - 3));
+			foreach ($this->findEmptyBlocks(file_get_contents($file->getPathname())) as $finding) {
+				$findings[] = $relative . ':' . $finding['line'] . ' — empty ' . $finding['keyword'] . ' body';
+			}
+		}
 
-            foreach ($this->findEmptyBlocks(file_get_contents($file->getPathname())) as $finding) {
-                $findings[] = $relative.':'.$finding['line'].' — empty '.$finding['keyword'].' body';
-            }
-        }
+		// Positive control on the INPUT: a zero finding count is only
+		// meaningful if the scan actually read files.
+		$this->assertGreaterThan(
+			50,
+			$scanned,
+			'Fewer than 50 PHP files were scanned under lib/ — the scan did not run over the real tree, '
+			. 'so a clean result says nothing.'
+		);
 
-        // Positive control on the INPUT: a zero finding count is only
-        // meaningful if the scan actually read files.
-        $this->assertGreaterThan(
-            50,
-            $scanned,
-            'Fewer than 50 PHP files were scanned under lib/ — the scan did not run over the real tree, '
-            .'so a clean result says nothing.'
-        );
+		$this->assertSame(
+			[],
+			$findings,
+			'Empty control-flow bodies found in lib/. Each one is a branch whose only statement was '
+			. "deleted, so the code always takes its default path:\n  " . implode("\n  ", $findings)
+		);
 
-        $this->assertSame(
-            [],
-            $findings,
-            "Empty control-flow bodies found in lib/. Each one is a branch whose only statement was "
-            ."deleted, so the code always takes its default path:\n  ".implode("\n  ", $findings)
-        );
-
-    }//end testNoShippedFileContainsAnEmptyGuardedBlock()
-
+	}//end testNoShippedFileContainsAnEmptyGuardedBlock()
 
 }//end class

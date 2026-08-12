@@ -20,25 +20,24 @@ namespace OCA\OpenRegister\Db;
 /**
  * Stub for the OpenRegister OrganisationMapper.
  */
-abstract class OrganisationMapper
-{
+abstract class OrganisationMapper {
 
-    /**
-     * Find an organisation by uuid.
-     *
-     * @param string $uuid The organisation uuid.
-     *
-     * @return Organisation
-     */
-    abstract public function findByUuid(string $uuid): Organisation;
+	/**
+	 * Find an organisation by uuid.
+	 *
+	 * @param string $uuid The organisation uuid.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function findByUuid(string $uuid): Organisation;
 
-    /**
-     * Persist an organisation entity.
-     *
-     * @param Organisation $entity The entity to save.
-     *
-     * @return Organisation
-     */
-    abstract public function save(Organisation $entity): Organisation;
+	/**
+	 * Persist an organisation entity.
+	 *
+	 * @param Organisation $entity The entity to save.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function save(Organisation $entity): Organisation;
 
 }//end class

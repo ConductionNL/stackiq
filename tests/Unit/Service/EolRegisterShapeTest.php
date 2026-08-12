@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Register-shape tests for eol-feed-integration.
  *
@@ -29,92 +30,86 @@ use PHPUnit\Framework\TestCase;
 /**
  * Validates the softwarecatalogus register file shape for the EOL feed change.
  */
-class EolRegisterShapeTest extends TestCase
-{
+class EolRegisterShapeTest extends TestCase {
 
-    /**
-     * @var array<string,mixed>
-     */
-    private array $register;
+	/**
+	 * @var array<string,mixed>
+	 */
+	private array $register;
 
-    /**
-     * Load and decode the register file once.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $path = __DIR__.'/../../../lib/Settings/softwarecatalogus_register.json';
-        $this->assertFileExists($path);
-        $decoded = json_decode((string) file_get_contents($path), true);
-        $this->assertIsArray($decoded, 'register file must be valid JSON');
-        $this->register = $decoded;
-    }//end setUp()
+	/**
+	 * Load and decode the register file once.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$path = __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json';
+		$this->assertFileExists($path);
+		$decoded = json_decode((string)file_get_contents($path), true);
+		$this->assertIsArray($decoded, 'register file must be valid JSON');
+		$this->register = $decoded;
+	}//end setUp()
 
-    /**
-     * Fetch a schema definition by slug.
-     *
-     * @param string $slug The schema slug.
-     *
-     * @return array<string,mixed> The schema definition.
-     */
-    private function schema(string $slug): array
-    {
-        $schemas = $this->register['components']['schemas'] ?? [];
-        $this->assertArrayHasKey($slug, $schemas, "schema $slug must exist");
-        return $schemas[$slug];
-    }//end schema()
+	/**
+	 * Fetch a schema definition by slug.
+	 *
+	 * @param string $slug The schema slug.
+	 *
+	 * @return array<string,mixed> The schema definition.
+	 */
+	private function schema(string $slug): array {
+		$schemas = $this->register['components']['schemas'] ?? [];
+		$this->assertArrayHasKey($slug, $schemas, "schema $slug must exist");
+		return $schemas[$slug];
+	}//end schema()
 
-    /**
-     * The module schema gains the optional eolProductSlug mapping field.
-     *
-     * @return void
-     */
-    public function testModuleHasOptionalEolProductSlugField(): void
-    {
-        $module = $this->schema('module');
-        $props  = $module['properties'] ?? [];
+	/**
+	 * The module schema gains the optional eolProductSlug mapping field.
+	 *
+	 * @return void
+	 */
+	public function testModuleHasOptionalEolProductSlugField(): void {
+		$module = $this->schema('module');
+		$props = $module['properties'] ?? [];
 
-        $this->assertArrayHasKey('eolProductSlug', $props);
-        $this->assertSame('string', $props['eolProductSlug']['type'] ?? null);
+		$this->assertArrayHasKey('eolProductSlug', $props);
+		$this->assertSame('string', $props['eolProductSlug']['type'] ?? null);
 
-        // Optional: not listed in `required` (import-over-existing is non-destructive).
-        $required = $module['required'] ?? [];
-        $this->assertNotContains('eolProductSlug', $required);
-    }//end testModuleHasOptionalEolProductSlugField()
+		// Optional: not listed in `required` (import-over-existing is non-destructive).
+		$required = $module['required'] ?? [];
+		$this->assertNotContains('eolProductSlug', $required);
+	}//end testModuleHasOptionalEolProductSlugField()
 
-    /**
-     * The moduleVersie schema gains the two optional provenance fields.
-     *
-     * @return void
-     */
-    public function testModuleVersieHasOptionalProvenanceFields(): void
-    {
-        $moduleVersie = $this->schema('moduleVersie');
-        $props        = $moduleVersie['properties'] ?? [];
+	/**
+	 * The moduleVersie schema gains the two optional provenance fields.
+	 *
+	 * @return void
+	 */
+	public function testModuleVersieHasOptionalProvenanceFields(): void {
+		$moduleVersie = $this->schema('moduleVersie');
+		$props = $moduleVersie['properties'] ?? [];
 
-        $this->assertArrayHasKey('eolBron', $props);
-        $this->assertArrayHasKey('eolBijgewerktOp', $props);
-        $this->assertSame('string', $props['eolBron']['type'] ?? null);
-        $this->assertSame('date-time', $props['eolBijgewerktOp']['format'] ?? null);
+		$this->assertArrayHasKey('eolBron', $props);
+		$this->assertArrayHasKey('eolBijgewerktOp', $props);
+		$this->assertSame('string', $props['eolBron']['type'] ?? null);
+		$this->assertSame('date-time', $props['eolBijgewerktOp']['format'] ?? null);
 
-        // Optional: not listed in `required`.
-        $required = $moduleVersie['required'] ?? [];
-        $this->assertNotContains('eolBron', $required);
-        $this->assertNotContains('eolBijgewerktOp', $required);
-    }//end testModuleVersieHasOptionalProvenanceFields()
+		// Optional: not listed in `required`.
+		$required = $moduleVersie['required'] ?? [];
+		$this->assertNotContains('eolBron', $required);
+		$this->assertNotContains('eolBijgewerktOp', $required);
+	}//end testModuleVersieHasOptionalProvenanceFields()
 
-    /**
-     * The moduleVersie schema still declares datumEindeOndersteuning — the
-     * field the matcher stamps and application-lifecycle-tracking already
-     * reads for EOL indicators/filters/roadmap/notification.
-     *
-     * @return void
-     */
-    public function testModuleVersieStillDeclaresDatumEindeOndersteuning(): void
-    {
-        $props = $this->schema('moduleVersie')['properties'] ?? [];
-        $this->assertArrayHasKey('datumEindeOndersteuning', $props);
-        $this->assertSame('date', $props['datumEindeOndersteuning']['format'] ?? null);
-    }//end testModuleVersieStillDeclaresDatumEindeOndersteuning()
+	/**
+	 * The moduleVersie schema still declares datumEindeOndersteuning — the
+	 * field the matcher stamps and application-lifecycle-tracking already
+	 * reads for EOL indicators/filters/roadmap/notification.
+	 *
+	 * @return void
+	 */
+	public function testModuleVersieStillDeclaresDatumEindeOndersteuning(): void {
+		$props = $this->schema('moduleVersie')['properties'] ?? [];
+		$this->assertArrayHasKey('datumEindeOndersteuning', $props);
+		$this->assertSame('date', $props['datumEindeOndersteuning']['format'] ?? null);
+	}//end testModuleVersieStillDeclaresDatumEindeOndersteuning()
 }//end class

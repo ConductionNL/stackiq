@@ -38,131 +38,118 @@ use PHPUnit\Framework\TestCase;
 /**
  * Contract tests for dashboard#page and dashboard#index.
  */
-class DashboardControllerContractTest extends TestCase
-{
+class DashboardControllerContractTest extends TestCase {
 
-    /**
-     * The mocked user session.
-     *
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $userSession;
+	/**
+	 * The mocked user session.
+	 *
+	 * @var IUserSession|MockObject
+	 */
+	private IUserSession|MockObject $userSession;
 
+	/**
+	 * Build the controller under test with fresh mocks.
+	 *
+	 * @return DashboardController The controller under test.
+	 */
+	private function makeController(): DashboardController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParams')->willReturn([]);
 
-    /**
-     * Build the controller under test with fresh mocks.
-     *
-     * @return DashboardController The controller under test.
-     */
-    private function makeController(): DashboardController
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParams')->willReturn([]);
+		$this->userSession = $this->createMock(IUserSession::class);
 
-        $this->userSession = $this->createMock(IUserSession::class);
+		return new DashboardController(
+			'softwarecatalog',
+			$request,
+			$this->userSession
+		);
 
-        return new DashboardController(
-            'softwarecatalog',
-            $request,
-            $this->userSession
-        );
+	}//end makeController()
 
-    }//end makeController()
+	/**
+	 * GET / renders the `index` template of this app — the single entrypoint
+	 * every SPA route is served from.
+	 *
+	 * @return void
+	 */
+	public function testPageRendersTheAppIndexTemplate(): void {
+		$controller = $this->makeController();
 
+		$response = $controller->page(null);
 
-    /**
-     * GET / renders the `index` template of this app — the single entrypoint
-     * every SPA route is served from.
-     *
-     * @return void
-     */
-    public function testPageRendersTheAppIndexTemplate(): void
-    {
-        $controller = $this->makeController();
+		$this->assertInstanceOf(TemplateResponse::class, $response);
+		$this->assertSame('index', $response->getTemplateName());
+		$this->assertSame('softwarecatalog', $response->getApp());
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 
-        $response = $controller->page(null);
+	}//end testPageRendersTheAppIndexTemplate()
 
-        $this->assertInstanceOf(TemplateResponse::class, $response);
-        $this->assertSame('index', $response->getTemplateName());
-        $this->assertSame('softwarecatalog', $response->getApp());
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+	/**
+	 * GET / attaches a Content-Security-Policy that permits the outbound
+	 * connections the bundle makes. Without it the SPA boots and then fails
+	 * every fetch, which reads as a product outage rather than a policy bug.
+	 *
+	 * @return void
+	 */
+	public function testPageAttachesAContentSecurityPolicyAllowingAppConnections(): void {
+		$controller = $this->makeController();
 
-    }//end testPageRendersTheAppIndexTemplate()
+		$response = $controller->page(null);
+		$csp = $response->getContentSecurityPolicy();
 
+		$this->assertNotNull($csp);
+		$this->assertStringContainsString('connect-src', $csp->buildPolicy());
+		$this->assertStringContainsString('*', $csp->buildPolicy());
 
-    /**
-     * GET / attaches a Content-Security-Policy that permits the outbound
-     * connections the bundle makes. Without it the SPA boots and then fails
-     * every fetch, which reads as a product outage rather than a policy bug.
-     *
-     * @return void
-     */
-    public function testPageAttachesAContentSecurityPolicyAllowingAppConnections(): void
-    {
-        $controller = $this->makeController();
+	}//end testPageAttachesAContentSecurityPolicyAllowingAppConnections()
 
-        $response = $controller->page(null);
-        $csp      = $response->getContentSecurityPolicy();
+	/**
+	 * The entrypoint does not depend on the optional query parameter — a
+	 * deep-link with one renders the same template.
+	 *
+	 * @return void
+	 */
+	public function testPageIgnoresTheOptionalQueryParameter(): void {
+		$controller = $this->makeController();
 
-        $this->assertNotNull($csp);
-        $this->assertStringContainsString('connect-src', $csp->buildPolicy());
-        $this->assertStringContainsString('*', $csp->buildPolicy());
+		$response = $controller->page('anything');
 
-    }//end testPageAttachesAContentSecurityPolicyAllowingAppConnections()
+		$this->assertSame('index', $response->getTemplateName());
 
+	}//end testPageIgnoresTheOptionalQueryParameter()
 
-    /**
-     * The entrypoint does not depend on the optional query parameter — a
-     * deep-link with one renders the same template.
-     *
-     * @return void
-     */
-    public function testPageIgnoresTheOptionalQueryParameter(): void
-    {
-        $controller = $this->makeController();
+	/**
+	 * The JSON probe rejects an anonymous caller with 401.
+	 *
+	 * @return void
+	 */
+	public function testIndexRejectsAnonymousWith401(): void {
+		$controller = $this->makeController();
+		$this->userSession->method('getUser')->willReturn(null);
 
-        $response = $controller->page('anything');
+		$response = $controller->index();
 
-        $this->assertSame('index', $response->getTemplateName());
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame(['message' => 'Not authenticated'], $response->getData());
 
-    }//end testPageIgnoresTheOptionalQueryParameter()
+	}//end testIndexRejectsAnonymousWith401()
 
+	/**
+	 * The JSON probe answers an authenticated caller with the documented
+	 * `{results: []}` envelope.
+	 *
+	 * @return void
+	 */
+	public function testIndexReturnsTheResultsEnvelopeForAnAuthenticatedCaller(): void {
+		$controller = $this->makeController();
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
 
-    /**
-     * The JSON probe rejects an anonymous caller with 401.
-     *
-     * @return void
-     */
-    public function testIndexRejectsAnonymousWith401(): void
-    {
-        $controller = $this->makeController();
-        $this->userSession->method('getUser')->willReturn(null);
+		$response = $controller->index();
 
-        $response = $controller->index();
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['results' => []], $response->getData());
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-        $this->assertSame(['message' => 'Not authenticated'], $response->getData());
-
-    }//end testIndexRejectsAnonymousWith401()
-
-
-    /**
-     * The JSON probe answers an authenticated caller with the documented
-     * `{results: []}` envelope.
-     *
-     * @return void
-     */
-    public function testIndexReturnsTheResultsEnvelopeForAnAuthenticatedCaller(): void
-    {
-        $controller = $this->makeController();
-        $user       = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('alice');
-        $this->userSession->method('getUser')->willReturn($user);
-
-        $response = $controller->index();
-
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame(['results' => []], $response->getData());
-
-    }//end testIndexReturnsTheResultsEnvelopeForAnAuthenticatedCaller()
+	}//end testIndexReturnsTheResultsEnvelopeForAnAuthenticatedCaller()
 }//end class

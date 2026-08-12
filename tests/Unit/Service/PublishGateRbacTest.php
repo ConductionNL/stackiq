@@ -1,4 +1,5 @@
 <?php
+
 /**
  * RBAC publish-gate tests for open-data-publishing.
  *
@@ -31,139 +32,132 @@ use PHPUnit\Framework\TestCase;
 /**
  * Validates the publicatiedatum<=$now public read gate semantics.
  */
-class PublishGateRbacTest extends TestCase
-{
-    /**
-     * @var array<string,mixed> The decoded register configuration.
-     */
-    private array $register;
+class PublishGateRbacTest extends TestCase {
+	/**
+	 * @var array<string,mixed> The decoded register configuration.
+	 */
+	private array $register;
 
-    /**
-     * Load the register once.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $path    = __DIR__.'/../../../lib/Settings/softwarecatalogus_register.json';
-        $decoded = json_decode((string) file_get_contents($path), true);
-        $this->assertIsArray($decoded);
-        $this->register = $decoded;
-    }//end setUp()
+	/**
+	 * Load the register once.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$path = __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json';
+		$decoded = json_decode((string)file_get_contents($path), true);
+		$this->assertIsArray($decoded);
+		$this->register = $decoded;
+	}//end setUp()
 
-    /**
-     * Extract the public read rule that gates on publicatiedatum from a schema.
-     *
-     * @param string $schemaName The schema key.
-     *
-     * @return array<string,mixed>|null The match map, or null when absent.
-     */
-    private function publicPublishGate(string $schemaName): ?array
-    {
-        $read = $this->register['components']['schemas'][$schemaName]['authorization']['read'] ?? [];
-        foreach ($read as $rule) {
-            if (is_array($rule) === true
-                && ($rule['group'] ?? null) === 'public'
-                && isset($rule['match']['publicatiedatum']) === true
-            ) {
-                return $rule['match'];
-            }
-        }
-        return null;
-    }//end publicPublishGate()
+	/**
+	 * Extract the public read rule that gates on publicatiedatum from a schema.
+	 *
+	 * @param string $schemaName The schema key.
+	 *
+	 * @return array<string,mixed>|null The match map, or null when absent.
+	 */
+	private function publicPublishGate(string $schemaName): ?array {
+		$read = $this->register['components']['schemas'][$schemaName]['authorization']['read'] ?? [];
+		foreach ($read as $rule) {
+			if (is_array($rule) === true
+				&& ($rule['group'] ?? null) === 'public'
+				&& isset($rule['match']['publicatiedatum']) === true
+			) {
+				return $rule['match'];
+			}
+		}
+		return null;
+	}//end publicPublishGate()
 
-    /**
-     * Evaluate the OR `match` predicate against object data exactly as the OR
-     * RBAC filter does: `$now` → current moment, `$lte` → object value <= bound.
-     *
-     * @param array<string,mixed> $match  The match predicate (with $lte/$now).
-     * @param array<string,mixed> $object The candidate object data.
-     *
-     * @return bool Whether the public group may read the object.
-     */
-    private function publicCanRead(array $match, array $object): bool
-    {
-        foreach ($match as $field => $condition) {
-            $value = $object[$field] ?? null;
-            if (is_array($condition) === true && array_key_exists('$lte', $condition) === true) {
-                if ($value === null || $value === '') {
-                    // No publication date set → never matches (never visible).
-                    return false;
-                }
-                $bound    = $condition['$lte'] === '$now' ? time() : strtotime((string) $condition['$lte']);
-                $objectTs = strtotime((string) $value);
-                if ($objectTs === false || $objectTs > $bound) {
-                    return false;
-                }
-                continue;
-            }
-            if ($value !== $condition) {
-                return false;
-            }
-        }
-        return true;
-    }//end publicCanRead()
+	/**
+	 * Evaluate the OR `match` predicate against object data exactly as the OR
+	 * RBAC filter does: `$now` → current moment, `$lte` → object value <= bound.
+	 *
+	 * @param array<string,mixed> $match The match predicate (with $lte/$now).
+	 * @param array<string,mixed> $object The candidate object data.
+	 *
+	 * @return bool Whether the public group may read the object.
+	 */
+	private function publicCanRead(array $match, array $object): bool {
+		foreach ($match as $field => $condition) {
+			$value = $object[$field] ?? null;
+			if (is_array($condition) === true && array_key_exists('$lte', $condition) === true) {
+				if ($value === null || $value === '') {
+					// No publication date set → never matches (never visible).
+					return false;
+				}
+				$bound = $condition['$lte'] === '$now' ? time() : strtotime((string)$condition['$lte']);
+				$objectTs = strtotime((string)$value);
+				if ($objectTs === false || $objectTs > $bound) {
+					return false;
+				}
+				continue;
+			}
+			if ($value !== $condition) {
+				return false;
+			}
+		}
+		return true;
+	}//end publicCanRead()
 
-    /**
-     * Every publishable schema carries the public publicatiedatum<=$now gate.
-     *
-     * @return void
-     */
-    public function testEveryPublishableSchemaHasTheGate(): void
-    {
-        foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $schema) {
-            $match = $this->publicPublishGate($schema);
-            $this->assertNotNull($match, $schema.' must have a public publicatiedatum gate');
-            $this->assertSame('$now', $match['publicatiedatum']['$lte'], $schema.' gate must be $lte $now');
-        }
-    }//end testEveryPublishableSchemaHasTheGate()
+	/**
+	 * Every publishable schema carries the public publicatiedatum<=$now gate.
+	 *
+	 * @return void
+	 */
+	public function testEveryPublishableSchemaHasTheGate(): void {
+		foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $schema) {
+			$match = $this->publicPublishGate($schema);
+			$this->assertNotNull($match, $schema . ' must have a public publicatiedatum gate');
+			$this->assertSame('$now', $match['publicatiedatum']['$lte'], $schema . ' gate must be $lte $now');
+		}
+	}//end testEveryPublishableSchemaHasTheGate()
 
-    /**
-     * An anonymous (public-group) read returns the object once publicatiedatum
-     * <= now, and NOT before (future date or absent).
-     *
-     * @return void
-     */
-    public function testAnonReadVisibleOnlyWhenPublicatiedatumInThePast(): void
-    {
-        foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $schema) {
-            $match = $this->publicPublishGate($schema);
-            $this->assertNotNull($match);
+	/**
+	 * An anonymous (public-group) read returns the object once publicatiedatum
+	 * <= now, and NOT before (future date or absent).
+	 *
+	 * @return void
+	 */
+	public function testAnonReadVisibleOnlyWhenPublicatiedatumInThePast(): void {
+		foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $schema) {
+			$match = $this->publicPublishGate($schema);
+			$this->assertNotNull($match);
 
-            // Not published (no publicatiedatum) → invisible to public.
-            $this->assertFalse(
-                $this->publicCanRead($match, ['naam' => 'Draft']),
-                $schema.': unpublished entry must NOT be anon-visible'
-            );
+			// Not published (no publicatiedatum) → invisible to public.
+			$this->assertFalse(
+				$this->publicCanRead($match, ['naam' => 'Draft']),
+				$schema . ': unpublished entry must NOT be anon-visible'
+			);
 
-            // Published in the future → still invisible until that moment.
-            $future = gmdate('Y-m-d\TH:i:sP', (time() + 86400));
-            $this->assertFalse(
-                $this->publicCanRead($match, ['publicatiedatum' => $future]),
-                $schema.': future-dated entry must NOT be anon-visible yet'
-            );
+			// Published in the future → still invisible until that moment.
+			$future = gmdate('Y-m-d\TH:i:sP', (time() + 86400));
+			$this->assertFalse(
+				$this->publicCanRead($match, ['publicatiedatum' => $future]),
+				$schema . ': future-dated entry must NOT be anon-visible yet'
+			);
 
-            // Published in the past → anon-visible.
-            $past = gmdate('Y-m-d\TH:i:sP', (time() - 3600));
-            $this->assertTrue(
-                $this->publicCanRead($match, ['publicatiedatum' => $past]),
-                $schema.': past-published entry MUST be anon-visible'
-            );
-        }
-    }//end testAnonReadVisibleOnlyWhenPublicatiedatumInThePast()
+			// Published in the past → anon-visible.
+			$past = gmdate('Y-m-d\TH:i:sP', (time() - 3600));
+			$this->assertTrue(
+				$this->publicCanRead($match, ['publicatiedatum' => $past]),
+				$schema . ': past-published entry MUST be anon-visible'
+			);
+		}
+	}//end testAnonReadVisibleOnlyWhenPublicatiedatumInThePast()
 
-    /**
-     * Publishable schemas carry the publicatiedatum + depublicatiedatum fields.
-     *
-     * @return void
-     */
-    public function testPublishGateFieldsPresent(): void
-    {
-        foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $schema) {
-            $props = $this->register['components']['schemas'][$schema]['properties'] ?? [];
-            $this->assertArrayHasKey('publicatiedatum', $props, $schema.' needs publicatiedatum');
-            $this->assertArrayHasKey('depublicatiedatum', $props, $schema.' needs depublicatiedatum');
-            $this->assertSame('date-time', $props['publicatiedatum']['format']);
-        }
-    }//end testPublishGateFieldsPresent()
+	/**
+	 * Publishable schemas carry the publicatiedatum + depublicatiedatum fields.
+	 *
+	 * @return void
+	 */
+	public function testPublishGateFieldsPresent(): void {
+		foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $schema) {
+			$props = $this->register['components']['schemas'][$schema]['properties'] ?? [];
+			$this->assertArrayHasKey('publicatiedatum', $props, $schema . ' needs publicatiedatum');
+			$this->assertArrayHasKey('depublicatiedatum', $props, $schema . ' needs depublicatiedatum');
+			$this->assertSame('date-time', $props['publicatiedatum']['format']);
+		}
+	}//end testPublishGateFieldsPresent()
 }//end class

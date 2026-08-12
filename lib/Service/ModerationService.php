@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Registration / review moderation / approval queue.
  *
@@ -53,320 +54,311 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md
  */
-class ModerationService
-{
-    /**
-     * The moderated catalog object type (default / legacy — organisatie).
-     */
-    public const MODERATED_TYPE = 'organisatie';
+class ModerationService {
+	/**
+	 * The moderated catalog object type (default / legacy — organisatie).
+	 */
+	public const MODERATED_TYPE = 'organisatie';
 
-    /**
-     * The review moderated catalog object type.
-     */
-    public const MODERATED_TYPE_REVIEW = 'beoordeeling';
+	/**
+	 * The review moderated catalog object type.
+	 */
+	public const MODERATED_TYPE_REVIEW = 'beoordeeling';
 
-    /**
-     * Pending (awaiting moderation) state — shared field value across types.
-     */
-    public const STATUS_PENDING = 'pending';
+	/**
+	 * Pending (awaiting moderation) state — shared field value across types.
+	 */
+	public const STATUS_PENDING = 'pending';
 
-    /**
-     * Approved (active, publishable) state for organisatie.
-     */
-    public const STATUS_ACTIVE = 'active';
+	/**
+	 * Approved (active, publishable) state for organisatie.
+	 */
+	public const STATUS_ACTIVE = 'active';
 
-    /**
-     * Approved (publicly visible) state for beoordeeling.
-     */
-    public const STATUS_APPROVED = 'approved';
+	/**
+	 * Approved (publicly visible) state for beoordeeling.
+	 */
+	public const STATUS_APPROVED = 'approved';
 
-    /**
-     * Rejected state — shared field value across types.
-     */
-    public const STATUS_REJECTED = 'rejected';
+	/**
+	 * Rejected state — shared field value across types.
+	 */
+	public const STATUS_REJECTED = 'rejected';
 
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface $container       The DI container (lazy OR lookup).
-     * @param SettingsService    $settingsService Resolves register/schema ids.
-     * @param LoggerInterface    $logger          Logger.
-     */
-    public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly SettingsService $settingsService,
-        private readonly LoggerInterface $logger
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container The DI container (lazy OR lookup).
+	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly SettingsService $settingsService,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * List the pending entries (of the given type) awaiting moderation.
-     *
-     * @param string $type The moderated object type (default: organisatie).
-     *
-     * @return array{ok:bool, reason:string, items:array<int,array<string,mixed>>}
-     *
-     * @spec openspec/specs/open-data-publishing/spec.md
-     * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
-     */
-    public function listPending(string $type=self::MODERATED_TYPE): array
-    {
-        $config = $this->typeConfig(type: $type);
-        $target = $this->resolveTarget(type: $type);
-        if ($target === null) {
-            return ['ok' => false, 'reason' => 'register/schema not configured', 'items' => []];
-        }
+	/**
+	 * List the pending entries (of the given type) awaiting moderation.
+	 *
+	 * @param string $type The moderated object type (default: organisatie).
+	 *
+	 * @return array{ok:bool, reason:string, items:array<int,array<string,mixed>>}
+	 *
+	 * @spec openspec/specs/open-data-publishing/spec.md
+	 * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
+	 */
+	public function listPending(string $type = self::MODERATED_TYPE): array {
+		$config = $this->typeConfig(type: $type);
+		$target = $this->resolveTarget(type: $type);
+		if ($target === null) {
+			return ['ok' => false, 'reason' => 'register/schema not configured', 'items' => []];
+		}
 
-        $objectService = $this->getObjectService();
-        if ($objectService === null) {
-            return ['ok' => false, 'reason' => 'ObjectService unavailable', 'items' => []];
-        }
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return ['ok' => false, 'reason' => 'ObjectService unavailable', 'items' => []];
+		}
 
-        try {
-            $objects = $objectService->searchObjects(
-                query: [
-                    '@self'                => ['register' => $target['register'], 'schema' => $target['schema']],
-                    $config['statusField'] => self::STATUS_PENDING,
-                    '_limit'               => 500,
-                ],
-                _rbac: false,
-                _multitenancy: false
-            );
-        } catch (\Throwable $e) {
-            $this->logger->error('ModerationService: listPending failed', ['type' => $type, 'error' => $e->getMessage()]);
-            return ['ok' => false, 'reason' => 'query failed', 'items' => []];
-        }
+		try {
+			$objects = $objectService->searchObjects(
+				query: [
+					'@self' => ['register' => $target['register'], 'schema' => $target['schema']],
+					$config['statusField'] => self::STATUS_PENDING,
+					'_limit' => 500,
+				],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error('ModerationService: listPending failed', ['type' => $type, 'error' => $e->getMessage()]);
+			return ['ok' => false, 'reason' => 'query failed', 'items' => []];
+		}
 
-        $items      = [];
-        $objectList = [];
-        if (is_array($objects) === true) {
-            $objectList = $objects;
-        }
+		$items = [];
+		$objectList = [];
+		if (is_array($objects) === true) {
+			$objectList = $objects;
+		}
 
-        foreach ($objectList as $object) {
-            $items[] = $this->toDataBag(object: $object);
-        }
+		foreach ($objectList as $object) {
+			$items[] = $this->toDataBag(object: $object);
+		}
 
-        return ['ok' => true, 'reason' => 'ok', 'items' => $items];
-    }//end listPending()
+		return ['ok' => true, 'reason' => 'ok', 'items' => $items];
+	}//end listPending()
 
-    /**
-     * Approve a pending entry: set it to the type's "approved" value and, for
-     * organisatie only, publish it (`publicatiedatum = now`) so the public
-     * RBAC read gate makes it anonymously visible.
-     *
-     * @param string $uuid The entry uuid.
-     * @param string $type The moderated object type (default: organisatie).
-     *
-     * @return array{ok:bool, reason:string, status:?string} Result.
-     *
-     * @spec openspec/specs/open-data-publishing/spec.md
-     * @spec openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
-     */
-    public function approve(string $uuid, string $type=self::MODERATED_TYPE): array
-    {
-        $config = $this->typeConfig(type: $type);
-        return $this->decide(
-            uuid: $uuid,
-            type: $type,
-            mutator: static function (array $data) use ($config): array {
-                $data[$config['statusField']] = $config['approvedValue'];
-                if ($config['stampPublication'] === true) {
-                    $data['publicatiedatum']   = gmdate('Y-m-d\TH:i:sP');
-                    $data['depublicatiedatum'] = null;
-                }
+	/**
+	 * Approve a pending entry: set it to the type's "approved" value and, for
+	 * organisatie only, publish it (`publicatiedatum = now`) so the public
+	 * RBAC read gate makes it anonymously visible.
+	 *
+	 * @param string $uuid The entry uuid.
+	 * @param string $type The moderated object type (default: organisatie).
+	 *
+	 * @return array{ok:bool, reason:string, status:?string} Result.
+	 *
+	 * @spec openspec/specs/open-data-publishing/spec.md
+	 * @spec openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
+	 */
+	public function approve(string $uuid, string $type = self::MODERATED_TYPE): array {
+		$config = $this->typeConfig(type: $type);
+		return $this->decide(
+			uuid: $uuid,
+			type: $type,
+			mutator: static function (array $data) use ($config): array {
+				$data[$config['statusField']] = $config['approvedValue'];
+				if ($config['stampPublication'] === true) {
+					$data['publicatiedatum'] = gmdate('Y-m-d\TH:i:sP');
+					$data['depublicatiedatum'] = null;
+				}
 
-                return $data;
-            },
-            status: $config['approvedValue'],
-            action: 'approved'
-        );
-    }//end approve()
+				return $data;
+			},
+			status: $config['approvedValue'],
+			action: 'approved'
+		);
+	}//end approve()
 
-    /**
-     * Reject a pending entry: set it to the type's "rejected" value; for
-     * organisatie, never give it a `publicatiedatum` (stays invisible).
-     *
-     * @param string $uuid The entry uuid.
-     * @param string $type The moderated object type (default: organisatie).
-     *
-     * @return array{ok:bool, reason:string, status:?string} Result.
-     *
-     * @spec openspec/specs/open-data-publishing/spec.md
-     * @spec openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
-     */
-    public function reject(string $uuid, string $type=self::MODERATED_TYPE): array
-    {
-        $config = $this->typeConfig(type: $type);
-        return $this->decide(
-            uuid: $uuid,
-            type: $type,
-            mutator: static function (array $data) use ($config): array {
-                $data[$config['statusField']] = self::STATUS_REJECTED;
-                if ($config['stampPublication'] === true) {
-                    $data['publicatiedatum'] = null;
-                }
+	/**
+	 * Reject a pending entry: set it to the type's "rejected" value; for
+	 * organisatie, never give it a `publicatiedatum` (stays invisible).
+	 *
+	 * @param string $uuid The entry uuid.
+	 * @param string $type The moderated object type (default: organisatie).
+	 *
+	 * @return array{ok:bool, reason:string, status:?string} Result.
+	 *
+	 * @spec openspec/specs/open-data-publishing/spec.md
+	 * @spec openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
+	 */
+	public function reject(string $uuid, string $type = self::MODERATED_TYPE): array {
+		$config = $this->typeConfig(type: $type);
+		return $this->decide(
+			uuid: $uuid,
+			type: $type,
+			mutator: static function (array $data) use ($config): array {
+				$data[$config['statusField']] = self::STATUS_REJECTED;
+				if ($config['stampPublication'] === true) {
+					$data['publicatiedatum'] = null;
+				}
 
-                return $data;
-            },
-            status: self::STATUS_REJECTED,
-            action: 'rejected'
-        );
-    }//end reject()
+				return $data;
+			},
+			status: self::STATUS_REJECTED,
+			action: 'rejected'
+		);
+	}//end reject()
 
-    /**
-     * Per-type moderation configuration: which field carries the moderation
-     * state, what its "approved" value is, and whether approval also stamps
-     * `publicatiedatum` (organisatie only — beoordeeling's public visibility
-     * is governed entirely by its own `status` field via the schema RBAC
-     * rule, no publication date involved).
-     *
-     * @param string $type The moderated object type.
-     *
-     * @return array{statusField:string, approvedValue:string, stampPublication:bool} The config.
-     */
-    private function typeConfig(string $type): array
-    {
-        if ($type === self::MODERATED_TYPE_REVIEW) {
-            return ['statusField' => 'status', 'approvedValue' => self::STATUS_APPROVED, 'stampPublication' => false];
-        }
+	/**
+	 * Per-type moderation configuration: which field carries the moderation
+	 * state, what its "approved" value is, and whether approval also stamps
+	 * `publicatiedatum` (organisatie only — beoordeeling's public visibility
+	 * is governed entirely by its own `status` field via the schema RBAC
+	 * rule, no publication date involved).
+	 *
+	 * @param string $type The moderated object type.
+	 *
+	 * @return array{statusField:string, approvedValue:string, stampPublication:bool} The config.
+	 */
+	private function typeConfig(string $type): array {
+		if ($type === self::MODERATED_TYPE_REVIEW) {
+			return ['statusField' => 'status', 'approvedValue' => self::STATUS_APPROVED, 'stampPublication' => false];
+		}
 
-        return ['statusField' => 'registratiestatus', 'approvedValue' => self::STATUS_ACTIVE, 'stampPublication' => true];
-    }//end typeConfig()
+		return ['statusField' => 'registratiestatus', 'approvedValue' => self::STATUS_ACTIVE, 'stampPublication' => true];
+	}//end typeConfig()
 
-    /**
-     * Apply a moderation decision to a pending entry.
-     *
-     * Only an entry that is currently `pending` may be decided — this keeps
-     * the action idempotent and prevents re-deciding an already-approved
-     * entry (which would re-stamp its publicatiedatum for organisatie).
-     *
-     * @param string                                            $uuid    The entry uuid.
-     * @param string                                            $type    The moderated object type.
-     * @param callable(array<string,mixed>):array<string,mixed> $mutator The state mutation.
-     * @param string                                            $status  The resulting status.
-     * @param string                                            $action  Log label.
-     *
-     * @return array{ok:bool, reason:string, status:?string} Result.
-     */
-    private function decide(string $uuid, string $type, callable $mutator, string $status, string $action): array
-    {
-        $config = $this->typeConfig(type: $type);
-        $target = $this->resolveTarget(type: $type);
-        if ($target === null) {
-            return ['ok' => false, 'reason' => 'register/schema not configured', 'status' => null];
-        }
+	/**
+	 * Apply a moderation decision to a pending entry.
+	 *
+	 * Only an entry that is currently `pending` may be decided — this keeps
+	 * the action idempotent and prevents re-deciding an already-approved
+	 * entry (which would re-stamp its publicatiedatum for organisatie).
+	 *
+	 * @param string $uuid The entry uuid.
+	 * @param string $type The moderated object type.
+	 * @param callable(array<string,mixed>):array<string,mixed> $mutator The state mutation.
+	 * @param string $status The resulting status.
+	 * @param string $action Log label.
+	 *
+	 * @return array{ok:bool, reason:string, status:?string} Result.
+	 */
+	private function decide(string $uuid, string $type, callable $mutator, string $status, string $action): array {
+		$config = $this->typeConfig(type: $type);
+		$target = $this->resolveTarget(type: $type);
+		if ($target === null) {
+			return ['ok' => false, 'reason' => 'register/schema not configured', 'status' => null];
+		}
 
-        $objectService = $this->getObjectService();
-        if ($objectService === null) {
-            return ['ok' => false, 'reason' => 'ObjectService unavailable', 'status' => null];
-        }
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return ['ok' => false, 'reason' => 'ObjectService unavailable', 'status' => null];
+		}
 
-        try {
-            $entity = $objectService->find(
-                id: $uuid,
-                register: (string) $target['register'],
-                schema: (string) $target['schema'],
-                _rbac: false,
-                _multitenancy: false
-            );
-        } catch (\Throwable $e) {
-            return ['ok' => false, 'reason' => 'entry not found', 'status' => null];
-        }
+		try {
+			$entity = $objectService->find(
+				id: $uuid,
+				register: (string)$target['register'],
+				schema: (string)$target['schema'],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\Throwable $e) {
+			return ['ok' => false, 'reason' => 'entry not found', 'status' => null];
+		}
 
-        if ($entity === null) {
-            return ['ok' => false, 'reason' => 'entry not found', 'status' => null];
-        }
+		if ($entity === null) {
+			return ['ok' => false, 'reason' => 'entry not found', 'status' => null];
+		}
 
-        $data = $this->toDataBag(object: $entity);
+		$data = $this->toDataBag(object: $entity);
 
-        // A peer-sourced (federated) mirror is never moderated locally.
-        if (is_array($data['_source'] ?? null) === true && trim((string) ($data['_source']['instance'] ?? '')) !== '') {
-            return ['ok' => false, 'reason' => 'peer-sourced entries cannot be moderated locally', 'status' => null];
-        }
+		// A peer-sourced (federated) mirror is never moderated locally.
+		if (is_array($data['_source'] ?? null) === true && trim((string)($data['_source']['instance'] ?? '')) !== '') {
+			return ['ok' => false, 'reason' => 'peer-sourced entries cannot be moderated locally', 'status' => null];
+		}
 
-        if (($data[$config['statusField']] ?? null) !== self::STATUS_PENDING) {
-            return ['ok' => false, 'reason' => 'entry is not pending moderation', 'status' => null];
-        }
+		if (($data[$config['statusField']] ?? null) !== self::STATUS_PENDING) {
+			return ['ok' => false, 'reason' => 'entry is not pending moderation', 'status' => null];
+		}
 
-        $data = $mutator($data);
-        unset($data['id']);
+		$data = $mutator($data);
+		unset($data['id']);
 
-        try {
-            $objectService->saveObject(
-                object: $data,
-                register: $target['register'],
-                schema: $target['schema'],
-                uuid: $uuid
-            );
-        } catch (\Throwable $e) {
-            $this->logger->error('ModerationService: '.$action.' failed', ['type' => $type, 'uuid' => $uuid, 'error' => $e->getMessage()]);
-            return ['ok' => false, 'reason' => 'could not update entry', 'status' => null];
-        }
+		try {
+			$objectService->saveObject(
+				object: $data,
+				register: $target['register'],
+				schema: $target['schema'],
+				uuid: $uuid
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error('ModerationService: ' . $action . ' failed', ['type' => $type, 'uuid' => $uuid, 'error' => $e->getMessage()]);
+			return ['ok' => false, 'reason' => 'could not update entry', 'status' => null];
+		}
 
-        $this->logger->info('ModerationService: entry '.$action, ['type' => $type, 'uuid' => $uuid, 'status' => $status]);
-        return ['ok' => true, 'reason' => $action, 'status' => $status];
-    }//end decide()
+		$this->logger->info('ModerationService: entry ' . $action, ['type' => $type, 'uuid' => $uuid, 'status' => $status]);
+		return ['ok' => true, 'reason' => $action, 'status' => $status];
+	}//end decide()
 
-    /**
-     * Resolve the moderated register/schema for a given type.
-     *
-     * @param string $type The moderated object type.
-     *
-     * @return array{register:int, schema:int}|null The target, or null.
-     */
-    private function resolveTarget(string $type): ?array
-    {
-        $register = $this->settingsService->getRegisterIdForObjectType($type);
-        $schema   = $this->settingsService->getSchemaIdForObjectType($type);
-        if ($register === null || $schema === null) {
-            return null;
-        }
+	/**
+	 * Resolve the moderated register/schema for a given type.
+	 *
+	 * @param string $type The moderated object type.
+	 *
+	 * @return array{register:int, schema:int}|null The target, or null.
+	 */
+	private function resolveTarget(string $type): ?array {
+		$register = $this->settingsService->getRegisterIdForObjectType($type);
+		$schema = $this->settingsService->getSchemaIdForObjectType($type);
+		if ($register === null || $schema === null) {
+			return null;
+		}
 
-        return ['register' => (int) $register, 'schema' => (int) $schema];
-    }//end resolveTarget()
+		return ['register' => (int)$register, 'schema' => (int)$schema];
+	}//end resolveTarget()
 
-    /**
-     * Normalise an ObjectService result item to a data bag (with its uuid).
-     *
-     * @param mixed $object The result item (ObjectEntity or array).
-     *
-     * @return array<string,mixed> The data bag.
-     */
-    private function toDataBag(mixed $object): array
-    {
-        if (is_array($object) === true) {
-            return $object;
-        }
+	/**
+	 * Normalise an ObjectService result item to a data bag (with its uuid).
+	 *
+	 * @param mixed $object The result item (ObjectEntity or array).
+	 *
+	 * @return array<string,mixed> The data bag.
+	 */
+	private function toDataBag(mixed $object): array {
+		if (is_array($object) === true) {
+			return $object;
+		}
 
-        if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $data = $object->getObject();
-            if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
-                $data['id'] = $object->getUuid();
-            }
+		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+			$data = $object->getObject();
+			if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
+				$data['id'] = $object->getUuid();
+			}
 
-            if (is_array($data) === true) {
-                return $data;
-            }
+			if (is_array($data) === true) {
+				return $data;
+			}
 
-            return [];
-        }
+			return [];
+		}
 
-        return [];
-    }//end toDataBag()
+		return [];
+	}//end toDataBag()
 
-    /**
-     * Get the OpenRegister ObjectService from the DI container.
-     *
-     * @return object|null The object service, or null when OR is absent.
-     */
-    private function getObjectService(): ?object
-    {
-        try {
-            return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-        } catch (\Throwable $e) {
-            $this->logger->error('ModerationService: ObjectService unavailable', ['error' => $e->getMessage()]);
-            return null;
-        }
-    }//end getObjectService()
+	/**
+	 * Get the OpenRegister ObjectService from the DI container.
+	 *
+	 * @return object|null The object service, or null when OR is absent.
+	 */
+	private function getObjectService(): ?object {
+		try {
+			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+		} catch (\Throwable $e) {
+			$this->logger->error('ModerationService: ObjectService unavailable', ['error' => $e->getMessage()]);
+			return null;
+		}
+	}//end getObjectService()
 }//end class

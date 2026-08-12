@@ -79,379 +79,362 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/english-vocabulary-migration/spec.md
  */
-class RenameDutchCatalogColumns implements IRepairStep
-{
-    /**
-     * The register slug whose shard tables are in scope.
-     *
-     * @var string
-     */
-    private const REGISTER_SLUG = 'softwarecatalog';
+class RenameDutchCatalogColumns implements IRepairStep {
+	/**
+	 * The register slug whose shard tables are in scope.
+	 *
+	 * @var string
+	 */
+	private const REGISTER_SLUG = 'softwarecatalog';
 
-    /**
-     * Schema slugs holding externally-standardised field names, which are
-     * exempt from the vocabulary rule and must NOT be migrated.
-     *
-     * `element`, `relation` and `view` carry the GEMMA/GGM architecture model
-     * imported from VNG. Their property names are the import's wire format:
-     * `view` alone holds gemma_status, gemma_thema, gemma_type, gemma_url,
-     * detailniveau, publiceren and titel_view_swc.
-     *
-     * `model` and `property-definition` are the ArchiMate Open Exchange File
-     * Format containers — `model` carries xmlns, xsi, schema_location and
-     * identifier straight off the exchange root element. Neither holds a column
-     * this step's map targets today, so listing them changes nothing now; they
-     * are here so that a property added later is exempt by default rather than
-     * migrated by omission.
-     *
-     * @var array<int, string>
-     */
-    private const WIRE_SCHEMA_SLUGS = [
-        'element',
-        'relation',
-        'view',
-        'model',
-        'property-definition',
-    ];
+	/**
+	 * Schema slugs holding externally-standardised field names, which are
+	 * exempt from the vocabulary rule and must NOT be migrated.
+	 *
+	 * `element`, `relation` and `view` carry the GEMMA/GGM architecture model
+	 * imported from VNG. Their property names are the import's wire format:
+	 * `view` alone holds gemma_status, gemma_thema, gemma_type, gemma_url,
+	 * detailniveau, publiceren and titel_view_swc.
+	 *
+	 * `model` and `property-definition` are the ArchiMate Open Exchange File
+	 * Format containers — `model` carries xmlns, xsi, schema_location and
+	 * identifier straight off the exchange root element. Neither holds a column
+	 * this step's map targets today, so listing them changes nothing now; they
+	 * are here so that a property added later is exempt by default rather than
+	 * migrated by omission.
+	 *
+	 * @var array<int, string>
+	 */
+	private const WIRE_SCHEMA_SLUGS = [
+		'element',
+		'relation',
+		'view',
+		'model',
+		'property-definition',
+	];
 
-    /**
-     * Old snake_case column name => new snake_case column name.
-     *
-     * Snake_case, not camelCase: MagicMapper stores `shortDescription` as
-     * `short_description`, and a camelCase column is exactly what its
-     * de-duplication path then drops.
-     *
-     * @var array<string, string>
-     */
-    private const COLUMN_MAP = [
-        'naam'              => 'name',
-        'beschrijving'      => 'description',
-        'beschrijving_kort' => 'short_description',
-        'beschrijving_lang' => 'description',
-        'omschrijving'      => 'description',
-        'contactpersoon'    => 'contact_person',
-        'publicatiedatum'   => 'publication_date',
-        'depublicatiedatum' => 'depublication_date',
-    ];
+	/**
+	 * Old snake_case column name => new snake_case column name.
+	 *
+	 * Snake_case, not camelCase: MagicMapper stores `shortDescription` as
+	 * `short_description`, and a camelCase column is exactly what its
+	 * de-duplication path then drops.
+	 *
+	 * @var array<string, string>
+	 */
+	private const COLUMN_MAP = [
+		'naam' => 'name',
+		'beschrijving' => 'description',
+		'beschrijving_kort' => 'short_description',
+		'beschrijving_lang' => 'description',
+		'omschrijving' => 'description',
+		'contactpersoon' => 'contact_person',
+		'publicatiedatum' => 'publication_date',
+		'depublicatiedatum' => 'depublication_date',
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param IDBConnection   $db     Database connection.
-     * @param LoggerInterface $logger Logger.
-     */
-    public function __construct(
-        private readonly IDBConnection $db,
-        private readonly LoggerInterface $logger,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IDBConnection $db Database connection.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		private readonly IDBConnection $db,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Human-readable step name.
-     *
-     * @return string
-     *
-     * @spec openspec/specs/english-vocabulary-migration/spec.md
-     */
-    public function getName(): string
-    {
-        return 'Move catalog data from the Dutch columns to the English ones';
+	/**
+	 * Human-readable step name.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/english-vocabulary-migration/spec.md
+	 */
+	public function getName(): string {
+		return 'Move catalog data from the Dutch columns to the English ones';
+	}//end getName()
 
-    }//end getName()
+	/**
+	 * Run the column migration across every in-scope shard table.
+	 *
+	 * @param IOutput $output Repair output.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/english-vocabulary-migration/spec.md
+	 */
+	public function run(IOutput $output): void {
+		$tables = $this->inScopeShardTables();
+		if ($tables === []) {
+			$output->info('RenameDutchCatalogColumns: no in-scope shard tables on this install; nothing to do.');
+			return;
+		}
 
-    /**
-     * Run the column migration across every in-scope shard table.
-     *
-     * @param IOutput $output Repair output.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/english-vocabulary-migration/spec.md
-     */
-    public function run(IOutput $output): void
-    {
-        $tables = $this->inScopeShardTables();
-        if ($tables === []) {
-            $output->info('RenameDutchCatalogColumns: no in-scope shard tables on this install; nothing to do.');
-            return;
-        }
+		$renamed = 0;
+		$copied = 0;
+		$refused = 0;
 
-        $renamed = 0;
-        $copied  = 0;
-        $refused = 0;
+		foreach ($tables as $table) {
+			$columns = $this->columnsOf(table: $table);
+			$qTable = $this->quote(identifier: $table);
 
-        foreach ($tables as $table) {
-            $columns = $this->columnsOf(table: $table);
-            $qTable  = $this->quote(identifier: $table);
+			foreach (self::COLUMN_MAP as $old => $new) {
+				if (in_array($old, $columns, true) === false) {
+					// Already migrated, or this schema never had the property.
+					continue;
+				}
 
-            foreach (self::COLUMN_MAP as $old => $new) {
-                if (in_array($old, $columns, true) === false) {
-                    // Already migrated, or this schema never had the property.
-                    continue;
-                }
+				if ($this->hasCollision(table: $table, columns: $columns, target: $new) === true) {
+					$refused++;
+					continue;
+				}
 
-                if ($this->hasCollision(table: $table, columns: $columns, target: $new) === true) {
-                    $refused++;
-                    continue;
-                }
+				$qOld = $this->quote(identifier: $old);
+				$qNew = $this->quote(identifier: $new);
 
-                $qOld = $this->quote(identifier: $old);
-                $qNew = $this->quote(identifier: $new);
+				if (in_array($new, $columns, true) === false) {
+					$sql = 'ALTER TABLE ' . $qTable . ' RENAME COLUMN ' . $qOld . ' TO ' . $qNew;
+					if ($this->exec(sql: $sql) === true) {
+						$renamed++;
+					}
 
-                if (in_array($new, $columns, true) === false) {
-                    $sql = 'ALTER TABLE '.$qTable.' RENAME COLUMN '.$qOld.' TO '.$qNew;
-                    if ($this->exec(sql: $sql) === true) {
-                        $renamed++;
-                    }
+					continue;
+				}
 
-                    continue;
-                }
+				// The mapper already added an empty English column: back-fill and
+				// leave the Dutch one, so this stays reversible.
+				$sql = 'UPDATE ' . $qTable . ' SET ' . $qNew . ' = ' . $qOld
+					. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
+				if ($this->exec(sql: $sql) === true) {
+					$copied++;
+				}
+			}//end foreach
+		}//end foreach
 
-                // The mapper already added an empty English column: back-fill and
-                // leave the Dutch one, so this stays reversible.
-                $sql = 'UPDATE '.$qTable.' SET '.$qNew.' = '.$qOld
-                    .' WHERE '.$qNew.' IS NULL AND '.$qOld.' IS NOT NULL';
-                if ($this->exec(sql: $sql) === true) {
-                    $copied++;
-                }
-            }//end foreach
-        }//end foreach
+		$output->info(
+			'RenameDutchCatalogColumns: ' . $renamed . ' column(s) renamed, '
+			. $copied . ' back-filled, ' . $refused . ' refused for ambiguity, across '
+			. count($tables) . ' shard table(s).'
+		);
 
-        $output->info(
-            'RenameDutchCatalogColumns: '.$renamed.' column(s) renamed, '
-            .$copied.' back-filled, '.$refused.' refused for ambiguity, across '
-            .count($tables).' shard table(s).'
-        );
+	}//end run()
 
-    }//end run()
+	/**
+	 * Whether two Dutch columns in this table both target one English name.
+	 *
+	 * Merging them would silently destroy one of the two values, so the step
+	 * refuses both and leaves a log line for a human to resolve.
+	 *
+	 * @param string $table Table name.
+	 * @param array<int, string> $columns Its column names.
+	 * @param string $target The English destination name.
+	 *
+	 * @return bool True when the rename is ambiguous and must be skipped.
+	 */
+	private function hasCollision(string $table, array $columns, string $target): bool {
+		$sources = [];
+		foreach (self::COLUMN_MAP as $old => $new) {
+			if ($new === $target && in_array($old, $columns, true) === true) {
+				$sources[] = $old;
+			}
+		}
 
-    /**
-     * Whether two Dutch columns in this table both target one English name.
-     *
-     * Merging them would silently destroy one of the two values, so the step
-     * refuses both and leaves a log line for a human to resolve.
-     *
-     * @param string             $table   Table name.
-     * @param array<int, string> $columns Its column names.
-     * @param string             $target  The English destination name.
-     *
-     * @return bool True when the rename is ambiguous and must be skipped.
-     */
-    private function hasCollision(string $table, array $columns, string $target): bool
-    {
-        $sources = [];
-        foreach (self::COLUMN_MAP as $old => $new) {
-            if ($new === $target && in_array($old, $columns, true) === true) {
-                $sources[] = $old;
-            }
-        }
+		if (count($sources) < 2) {
+			return false;
+		}
 
-        if (count($sources) < 2) {
-            return false;
-        }
+		$this->logger->warning(
+			'RenameDutchCatalogColumns: refusing an ambiguous rename; two source columns target one destination.',
+			['table' => $table, 'sources' => $sources, 'target' => $target]
+		);
 
-        $this->logger->warning(
-            'RenameDutchCatalogColumns: refusing an ambiguous rename; two source columns target one destination.',
-            ['table' => $table, 'sources' => $sources, 'target' => $target]
-        );
+		return true;
+	}//end hasCollision()
 
-        return true;
+	/**
+	 * Resolve the shard tables in scope: this register, minus the wire schemas.
+	 *
+	 * Ids are looked up at runtime — both the register id and the schema ids
+	 * differ per install.
+	 *
+	 * @return array<int, string>
+	 */
+	private function inScopeShardTables(): array {
+		try {
+			$registerId = $this->db->executeQuery(
+				'SELECT id FROM `*PREFIX*openregister_registers` WHERE slug = ?',
+				[self::REGISTER_SLUG]
+			)->fetchOne();
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'RenameDutchCatalogColumns: could not resolve the register; skipping.',
+				['exception' => $e->getMessage()]
+			);
+			return [];
+		}
 
-    }//end hasCollision()
+		if ($registerId === false || $registerId === null) {
+			return [];
+		}
 
-    /**
-     * Resolve the shard tables in scope: this register, minus the wire schemas.
-     *
-     * Ids are looked up at runtime — both the register id and the schema ids
-     * differ per install.
-     *
-     * @return array<int, string>
-     */
-    private function inScopeShardTables(): array
-    {
-        try {
-            $registerId = $this->db->executeQuery(
-                'SELECT id FROM `*PREFIX*openregister_registers` WHERE slug = ?',
-                [self::REGISTER_SLUG]
-            )->fetchOne();
-        } catch (Exception $e) {
-            $this->logger->warning(
-                'RenameDutchCatalogColumns: could not resolve the register; skipping.',
-                ['exception' => $e->getMessage()]
-            );
-            return [];
-        }
+		$excluded = $this->wireSchemaIds();
 
-        if ($registerId === false || $registerId === null) {
-            return [];
-        }
+		// Table discovery goes through information_schema, NOT IDBConnection.
+		// OCP\IDBConnection exposes neither getSchema() nor getPrefix(); both
+		// exist only on the concrete OC\DB\Connection. Calling them is a runtime
+		// fatal that `php -l` and phpcs both report as clean — only phpstan
+		// catches it. Pattern follows openregister's own RegisterService: anchor
+		// on the `openregister_table_` MARKER, never on a computed prefix.
+		try {
+			$stmt = $this->db->prepare(
+				'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
+			);
+			$stmt->bindValue('pattern', '%openregister\_table\_%');
+			$stmt->execute();
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'RenameDutchCatalogColumns: could not list tables; skipping.',
+				['exception' => $e->getMessage()]
+			);
+			return [];
+		}
 
-        $excluded = $this->wireSchemaIds();
+		$marker = 'openregister_table_' . ((int)$registerId) . '_';
 
-        // Table discovery goes through information_schema, NOT IDBConnection.
-        // OCP\IDBConnection exposes neither getSchema() nor getPrefix(); both
-        // exist only on the concrete OC\DB\Connection. Calling them is a runtime
-        // fatal that `php -l` and phpcs both report as clean — only phpstan
-        // catches it. Pattern follows openregister's own RegisterService: anchor
-        // on the `openregister_table_` MARKER, never on a computed prefix.
-        try {
-            $stmt = $this->db->prepare(
-                'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
-            );
-            $stmt->bindValue('pattern', '%openregister\_table\_%');
-            $stmt->execute();
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'RenameDutchCatalogColumns: could not list tables; skipping.',
-                ['exception' => $e->getMessage()]
-            );
-            return [];
-        }
+		$tables = [];
+		while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
+			$name = (string)($row['table_name'] ?? '');
+			if ($this->isMigratableShard(table: $name, marker: $marker, excluded: $excluded) === true) {
+				$tables[] = $name;
+			}
+		}
 
-        $marker = 'openregister_table_'.((int) $registerId).'_';
+		return $tables;
+	}//end inScopeShardTables()
 
-        $tables = [];
-        while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
-            $name = (string) ($row['table_name'] ?? '');
-            if ($this->isMigratableShard(table: $name, marker: $marker, excluded: $excluded) === true) {
-                $tables[] = $name;
-            }
-        }
+	/**
+	 * Whether a table is a shard of this register that is NOT wire-exempt.
+	 *
+	 * @param string $table Table name from information_schema.
+	 * @param string $marker `openregister_table_<registerId>_`.
+	 * @param array<int, int> $excluded Schema ids exempt as external wire formats.
+	 *
+	 * @return bool
+	 */
+	private function isMigratableShard(string $table, string $marker, array $excluded): bool {
+		$offset = strpos($table, $marker);
+		if ($offset === false) {
+			return false;
+		}
 
-        return $tables;
+		// Everything after the marker must be the numeric schema id, so a
+		// derived table (…_13_50_backup) or a non-shard (…_13_audit) is left
+		// alone. Note this is NOT what stops register 13 matching register
+		// 130's tables — the marker already ends in '_', so `…_table_13_` is
+		// not a substring of `…_table_130_50` in the first place.
+		$schemaId = substr($table, ($offset + strlen($marker)));
+		if (ctype_digit($schemaId) === false) {
+			return false;
+		}
 
-    }//end inScopeShardTables()
+		// GEMMA/ArchiMate schemas carry an external wire format and are exempt.
+		return in_array((int)$schemaId, $excluded, true) === false;
+	}//end isMigratableShard()
 
-    /**
-     * Whether a table is a shard of this register that is NOT wire-exempt.
-     *
-     * @param string          $table    Table name from information_schema.
-     * @param string          $marker   `openregister_table_<registerId>_`.
-     * @param array<int, int> $excluded Schema ids exempt as external wire formats.
-     *
-     * @return bool
-     */
-    private function isMigratableShard(string $table, string $marker, array $excluded): bool
-    {
-        $offset = strpos($table, $marker);
-        if ($offset === false) {
-            return false;
-        }
+	/**
+	 * Resolve the schema ids of the externally-standardised schemas.
+	 *
+	 * @return array<int, int>
+	 */
+	private function wireSchemaIds(): array {
+		$placeholders = implode(',', array_fill(0, count(self::WIRE_SCHEMA_SLUGS), '?'));
 
-        // Everything after the marker must be the numeric schema id, so a
-        // derived table (…_13_50_backup) or a non-shard (…_13_audit) is left
-        // alone. Note this is NOT what stops register 13 matching register
-        // 130's tables — the marker already ends in '_', so `…_table_13_` is
-        // not a substring of `…_table_130_50` in the first place.
-        $schemaId = substr($table, ($offset + strlen($marker)));
-        if (ctype_digit($schemaId) === false) {
-            return false;
-        }
+		try {
+			$ids = $this->db->executeQuery(
+				'SELECT id FROM `*PREFIX*openregister_schemas` WHERE slug IN (' . $placeholders . ')',
+				self::WIRE_SCHEMA_SLUGS
+			)->fetchAll(\PDO::FETCH_COLUMN);
+		} catch (Exception $e) {
+			// Fail CLOSED: if the exempt set cannot be resolved, migrate nothing
+			// rather than risk rewriting the GEMMA import contract.
+			$this->logger->error(
+				'RenameDutchCatalogColumns: could not resolve the exempt GEMMA schemas; refusing to migrate anything.',
+				['exception' => $e->getMessage()]
+			);
+			throw $e;
+		}
 
-        // GEMMA/ArchiMate schemas carry an external wire format and are exempt.
-        return in_array((int) $schemaId, $excluded, true) === false;
+		return array_map('intval', $ids);
+	}//end wireSchemaIds()
 
-    }//end isMigratableShard()
+	/**
+	 * List the column names of a table.
+	 *
+	 * @param string $table Table name.
+	 *
+	 * @return array<int, string>
+	 */
+	private function columnsOf(string $table): array {
+		// Queried from information_schema — IDBConnection has no getSchema().
+		try {
+			$stmt = $this->db->prepare(
+				'SELECT column_name FROM information_schema.columns WHERE table_name = :table'
+			);
+			$stmt->bindValue('table', $table);
+			$stmt->execute();
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'RenameDutchCatalogColumns: could not read columns; skipping table.',
+				['table' => $table, 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
 
-    /**
-     * Resolve the schema ids of the externally-standardised schemas.
-     *
-     * @return array<int, int>
-     */
-    private function wireSchemaIds(): array
-    {
-        $placeholders = implode(',', array_fill(0, count(self::WIRE_SCHEMA_SLUGS), '?'));
+		$columns = [];
+		while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
+			$name = (string)($row['column_name'] ?? '');
+			if ($name !== '') {
+				$columns[] = $name;
+			}
+		}
 
-        try {
-            $ids = $this->db->executeQuery(
-                'SELECT id FROM `*PREFIX*openregister_schemas` WHERE slug IN ('.$placeholders.')',
-                self::WIRE_SCHEMA_SLUGS
-            )->fetchAll(\PDO::FETCH_COLUMN);
-        } catch (Exception $e) {
-            // Fail CLOSED: if the exempt set cannot be resolved, migrate nothing
-            // rather than risk rewriting the GEMMA import contract.
-            $this->logger->error(
-                'RenameDutchCatalogColumns: could not resolve the exempt GEMMA schemas; refusing to migrate anything.',
-                ['exception' => $e->getMessage()]
-            );
-            throw $e;
-        }
+		return $columns;
+	}//end columnsOf()
 
-        return array_map('intval', $ids);
+	/**
+	 * Execute one DDL/DML statement, logging and swallowing failure.
+	 *
+	 * A failure must not abort the repair run: the remaining tables are
+	 * independent, and an un-migrated column is still readable.
+	 *
+	 * @param string $sql The statement.
+	 *
+	 * @return bool Whether it succeeded.
+	 */
+	private function exec(string $sql): bool {
+		try {
+			$this->db->executeStatement($sql);
+			return true;
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'RenameDutchCatalogColumns: statement failed; leaving the column as it was.',
+				['sql' => $sql, 'exception' => $e->getMessage()]
+			);
+			return false;
+		}
 
-    }//end wireSchemaIds()
+	}//end exec()
 
-    /**
-     * List the column names of a table.
-     *
-     * @param string $table Table name.
-     *
-     * @return array<int, string>
-     */
-    private function columnsOf(string $table): array
-    {
-        // Queried from information_schema — IDBConnection has no getSchema().
-        try {
-            $stmt = $this->db->prepare(
-                'SELECT column_name FROM information_schema.columns WHERE table_name = :table'
-            );
-            $stmt->bindValue('table', $table);
-            $stmt->execute();
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'RenameDutchCatalogColumns: could not read columns; skipping table.',
-                ['table' => $table, 'exception' => $e->getMessage()]
-            );
-            return [];
-        }
-
-        $columns = [];
-        while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
-            $name = (string) ($row['column_name'] ?? '');
-            if ($name !== '') {
-                $columns[] = $name;
-            }
-        }
-
-        return $columns;
-
-    }//end columnsOf()
-
-    /**
-     * Execute one DDL/DML statement, logging and swallowing failure.
-     *
-     * A failure must not abort the repair run: the remaining tables are
-     * independent, and an un-migrated column is still readable.
-     *
-     * @param string $sql The statement.
-     *
-     * @return bool Whether it succeeded.
-     */
-    private function exec(string $sql): bool
-    {
-        try {
-            $this->db->executeStatement($sql);
-            return true;
-        } catch (Exception $e) {
-            $this->logger->warning(
-                'RenameDutchCatalogColumns: statement failed; leaving the column as it was.',
-                ['sql' => $sql, 'exception' => $e->getMessage()]
-            );
-            return false;
-        }
-
-    }//end exec()
-
-    /**
-     * Quote an identifier for the active platform.
-     *
-     * @param string $identifier Table or column name.
-     *
-     * @return string
-     */
-    private function quote(string $identifier): string
-    {
-        return $this->db->getDatabasePlatform()->quoteSingleIdentifier($identifier);
-
-    }//end quote()
+	/**
+	 * Quote an identifier for the active platform.
+	 *
+	 * @param string $identifier Table or column name.
+	 *
+	 * @return string
+	 */
+	private function quote(string $identifier): string {
+		return $this->db->getDatabasePlatform()->quoteSingleIdentifier($identifier);
+	}//end quote()
 }//end class

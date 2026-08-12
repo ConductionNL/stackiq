@@ -28,7 +28,7 @@
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
     "test:smoke": "playwright test --project smoke",
-    "stylelint": "stylelint src/**/*.vue src/**/*.scss src/**/*.css",
+    "stylelint": "stylelint \"src/**/*.{vue,scss,css}\"",
     "check:manifest": "node tests/validate-manifest.js"
   },
   "browserslist": [

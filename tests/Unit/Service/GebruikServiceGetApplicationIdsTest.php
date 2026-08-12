@@ -39,137 +39,129 @@ use Psr\Log\LoggerInterface;
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */
-class GebruikServiceGetApplicationIdsTest extends TestCase
-{
+class GebruikServiceGetApplicationIdsTest extends TestCase {
 
-    /** @var SettingsService|MockObject */
-    private SettingsService|MockObject $settingsService;
+	/** @var SettingsService|MockObject */
+	private SettingsService|MockObject $settingsService;
 
-    /** @var IAppManager|MockObject */
-    private IAppManager|MockObject $appManager;
+	/** @var IAppManager|MockObject */
+	private IAppManager|MockObject $appManager;
 
-    /** @var ContainerInterface|MockObject */
-    private ContainerInterface|MockObject $container;
+	/** @var ContainerInterface|MockObject */
+	private ContainerInterface|MockObject $container;
 
-    /** @var ObjectService|MockObject */
-    private ObjectService|MockObject $objectService;
+	/** @var ObjectService|MockObject */
+	private ObjectService|MockObject $objectService;
 
-    /** @var LoggerInterface|MockObject */
-    private LoggerInterface|MockObject $logger;
+	/** @var LoggerInterface|MockObject */
+	private LoggerInterface|MockObject $logger;
 
-    private GebruikService $service;
+	private GebruikService $service;
 
+	/**
+	 * Set up mocks and the service under test.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up mocks and the service under test.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->settingsService = $this->createMock(SettingsService::class);
+		$this->appManager = $this->createMock(IAppManager::class);
+		$this->objectService = $this->createMock(ObjectService::class);
+		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->container = $this->createMock(ContainerInterface::class);
 
-        $this->settingsService = $this->createMock(SettingsService::class);
-        $this->appManager      = $this->createMock(IAppManager::class);
-        $this->objectService   = $this->createMock(ObjectService::class);
-        $this->logger          = $this->createMock(LoggerInterface::class);
-        $this->container       = $this->createMock(ContainerInterface::class);
+		// openregister is "installed".
+		$this->appManager
+			->method('getInstalledApps')
+			->willReturn(['openregister']);
 
-        // openregister is "installed".
-        $this->appManager
-            ->method('getInstalledApps')
-            ->willReturn(['openregister']);
+		$this->container
+			->method('get')
+			->with('OCA\OpenRegister\Service\ObjectService')
+			->willReturn($this->objectService);
 
-        $this->container
-            ->method('get')
-            ->with('OCA\OpenRegister\Service\ObjectService')
-            ->willReturn($this->objectService);
+		// SettingsService returns a minimal voorzieningen config.
+		$this->settingsService
+			->method('getVoorzieningenConfig')
+			->willReturn(
+				[
+					'register' => 'reg-1',
+					'gebruik_schema' => 'schema-gebruik',
+					'module_schema' => 'schema-module',
+				]
+			);
 
-        // SettingsService returns a minimal voorzieningen config.
-        $this->settingsService
-            ->method('getVoorzieningenConfig')
-            ->willReturn(
-                [
-                    'register'      => 'reg-1',
-                    'gebruik_schema' => 'schema-gebruik',
-                    'module_schema'  => 'schema-module',
-                ]
-            );
+		$this->service = new GebruikService(
+			$this->settingsService,
+			$this->appManager,
+			$this->container,
+			$this->logger
+		);
 
-        $this->service = new GebruikService(
-            $this->settingsService,
-            $this->appManager,
-            $this->container,
-            $this->logger
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * SB2-regression: when ObjectService returns ObjectEntity instances,
+	 * getApplicationIds must NOT call getObject() on the already-serialized
+	 * array and must return the id from @self.id.
+	 *
+	 * Before the fix this threw "Call to a member function getObject() on array".
+	 *
+	 * @return void
+	 */
+	public function testGetApplicationIdsWithObjectEntityReturnsIds(): void {
+		$uuid = 'applic-uuid-1234';
 
+		// Build a mock ObjectEntity whose jsonSerialize() returns @self metadata.
+		$objectEntity = $this->createMock(ObjectEntity::class);
+		$objectEntity
+			->method('jsonSerialize')
+			->willReturn(
+				[
+					'@self' => ['id' => $uuid],
+					'naam' => 'TestApplication',
+				]
+			);
 
-    /**
-     * SB2-regression: when ObjectService returns ObjectEntity instances,
-     * getApplicationIds must NOT call getObject() on the already-serialized
-     * array and must return the id from @self.id.
-     *
-     * Before the fix this threw "Call to a member function getObject() on array".
-     *
-     * @return void
-     */
-    public function testGetApplicationIdsWithObjectEntityReturnsIds(): void
-    {
-        $uuid = 'applic-uuid-1234';
+		// getObject() must NOT be called — if it is the test would fail via
+		// the unexpected-call expectation below.
+		$objectEntity->expects($this->never())->method('getObject');
 
-        // Build a mock ObjectEntity whose jsonSerialize() returns @self metadata.
-        $objectEntity = $this->createMock(ObjectEntity::class);
-        $objectEntity
-            ->method('jsonSerialize')
-            ->willReturn(
-                [
-                    '@self' => ['id' => $uuid],
-                    'naam'  => 'TestApplication',
-                ]
-            );
+		$this->objectService
+			->method('searchObjectsPaginated')
+			->willReturn(['results' => [$objectEntity]]);
 
-        // getObject() must NOT be called — if it is the test would fail via
-        // the unexpected-call expectation below.
-        $objectEntity->expects($this->never())->method('getObject');
+		$result = $this->service->getApplicationIds([]);
 
-        $this->objectService
-            ->method('searchObjectsPaginated')
-            ->willReturn(['results' => [$objectEntity]]);
+		$this->assertSame([$uuid], $result);
 
-        $result = $this->service->getApplicationIds([]);
+	}//end testGetApplicationIdsWithObjectEntityReturnsIds()
 
-        $this->assertSame([$uuid], $result);
+	/**
+	 * SB2-regression: when ObjectService returns plain arrays (already
+	 * serialized), getApplicationIds must return the ids without any method
+	 * call on the item.
+	 *
+	 * @return void
+	 */
+	public function testGetApplicationIdsWithArrayResultsReturnsIds(): void {
+		$uuid = 'applic-uuid-5678';
 
-    }//end testGetApplicationIdsWithObjectEntityReturnsIds()
+		$arrayResult = [
+			'@self' => ['id' => $uuid],
+			'naam' => 'TestApplication2',
+		];
 
+		$this->objectService
+			->method('searchObjectsPaginated')
+			->willReturn(['results' => [$arrayResult]]);
 
-    /**
-     * SB2-regression: when ObjectService returns plain arrays (already
-     * serialized), getApplicationIds must return the ids without any method
-     * call on the item.
-     *
-     * @return void
-     */
-    public function testGetApplicationIdsWithArrayResultsReturnsIds(): void
-    {
-        $uuid = 'applic-uuid-5678';
+		$result = $this->service->getApplicationIds([]);
 
-        $arrayResult = [
-            '@self' => ['id' => $uuid],
-            'naam'  => 'TestApplication2',
-        ];
+		$this->assertSame([$uuid], $result);
 
-        $this->objectService
-            ->method('searchObjectsPaginated')
-            ->willReturn(['results' => [$arrayResult]]);
-
-        $result = $this->service->getApplicationIds([]);
-
-        $this->assertSame([$uuid], $result);
-
-    }//end testGetApplicationIdsWithArrayResultsReturnsIds()
-
+	}//end testGetApplicationIdsWithArrayResultsReturnsIds()
 
 }//end class

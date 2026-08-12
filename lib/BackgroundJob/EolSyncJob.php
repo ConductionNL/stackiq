@@ -1,4 +1,5 @@
 <?php
+
 /**
  * EOL Sync Background Job.
  *
@@ -42,66 +43,64 @@ use Psr\Log\LoggerInterface;
  * so an admin's interval change takes effect on the next pass without a
  * code change or app restart.
  */
-class EolSyncJob extends TimedJob
-{
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory    $timeFactory    The time factory for job scheduling.
-     * @param EolSyncService  $eolSyncService The EOL sync orchestration service.
-     * @param LoggerInterface $logger         The logger.
-     */
-    public function __construct(
-        ITimeFactory $timeFactory,
-        private readonly EolSyncService $eolSyncService,
-        private readonly LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $timeFactory);
+class EolSyncJob extends TimedJob {
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $timeFactory The time factory for job scheduling.
+	 * @param EolSyncService $eolSyncService The EOL sync orchestration service.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		ITimeFactory $timeFactory,
+		private readonly EolSyncService $eolSyncService,
+		private readonly LoggerInterface $logger,
+	) {
+		parent::__construct(time: $timeFactory);
 
-        // Floor at 300s (the shortest interval any existing SoftwareCatalog
-        // background job runs at — OrganizationContactSyncJob) so a
-        // mistyped admin value can never schedule a tighter loop than the
-        // rest of the app's cron surface.
-        $intervalSeconds = $this->eolSyncService->getConfig()['intervalSeconds'] ?? 86400;
-        $this->setInterval(seconds: max(300, (int) $intervalSeconds));
-    }//end __construct()
+		// Floor at 300s (the shortest interval any existing SoftwareCatalog
+		// background job runs at — OrganizationContactSyncJob) so a
+		// mistyped admin value can never schedule a tighter loop than the
+		// rest of the app's cron surface.
+		$intervalSeconds = $this->eolSyncService->getConfig()['intervalSeconds'] ?? 86400;
+		$this->setInterval(seconds: max(300, (int)$intervalSeconds));
+	}//end __construct()
 
-    /**
-     * Runs the background job.
-     *
-     * Delegates entirely to `EolSyncService::run()`, which resolves the
-     * configured EOL register/schema via OpenRegister's `ObjectService`
-     * (never HTTP), matches and stamps mapped modules' versions, and
-     * records a status summary. Operates in system (non-RBAC) context —
-     * every downstream OpenRegister call is made with `_rbac: false`.
-     *
-     * @param mixed $argument Job arguments (not used).
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @spec                                          openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
-     */
-    protected function run($argument): void
-    {
-        try {
-            $status = $this->eolSyncService->run();
-            $this->logger->info(
-                '[EolSyncJob] EOL sync run completed',
-                $status
-            );
-        } catch (\Throwable $e) {
-            // EolSyncService::run() is designed to never throw (it degrades
-            // to a recorded status instead), but this guard keeps a future
-            // regression there from breaking the shared cron pass.
-            $this->logger->error(
-                '[EolSyncJob] Fatal error during EOL sync — cron pass protected',
-                [
-                    'error' => $e->getMessage(),
-                    'file'  => $e->getFile(),
-                    'line'  => $e->getLine(),
-                ]
-            );
-        }//end try
-    }//end run()
+	/**
+	 * Runs the background job.
+	 *
+	 * Delegates entirely to `EolSyncService::run()`, which resolves the
+	 * configured EOL register/schema via OpenRegister's `ObjectService`
+	 * (never HTTP), matches and stamps mapped modules' versions, and
+	 * records a status summary. Operates in system (non-RBAC) context —
+	 * every downstream OpenRegister call is made with `_rbac: false`.
+	 *
+	 * @param mixed $argument Job arguments (not used).
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 * @spec                                          openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
+	 */
+	protected function run($argument): void {
+		try {
+			$status = $this->eolSyncService->run();
+			$this->logger->info(
+				'[EolSyncJob] EOL sync run completed',
+				$status
+			);
+		} catch (\Throwable $e) {
+			// EolSyncService::run() is designed to never throw (it degrades
+			// to a recorded status instead), but this guard keeps a future
+			// regression there from breaking the shared cron pass.
+			$this->logger->error(
+				'[EolSyncJob] Fatal error during EOL sync — cron pass protected',
+				[
+					'error' => $e->getMessage(),
+					'file' => $e->getFile(),
+					'line' => $e->getLine(),
+				]
+			);
+		}//end try
+	}//end run()
 }//end class

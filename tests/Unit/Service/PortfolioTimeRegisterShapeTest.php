@@ -31,119 +31,111 @@ use PHPUnit\Framework\TestCase;
 /**
  * Validates the softwarecatalogus register file shape for the TIME change.
  */
-class PortfolioTimeRegisterShapeTest extends TestCase
-{
-    /**
-     * @var array<string,mixed>
-     */
-    private array $register;
+class PortfolioTimeRegisterShapeTest extends TestCase {
+	/**
+	 * @var array<string,mixed>
+	 */
+	private array $register;
 
-    /**
-     * Load and decode the register file once.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $path = __DIR__.'/../../../lib/Settings/softwarecatalogus_register.json';
-        $this->assertFileExists($path);
-        $decoded = json_decode((string) file_get_contents($path), true);
-        $this->assertIsArray($decoded, 'register file must be valid JSON');
-        $this->register = $decoded;
-    }//end setUp()
+	/**
+	 * Load and decode the register file once.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$path = __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json';
+		$this->assertFileExists($path);
+		$decoded = json_decode((string)file_get_contents($path), true);
+		$this->assertIsArray($decoded, 'register file must be valid JSON');
+		$this->register = $decoded;
+	}//end setUp()
 
-    /**
-     * Fetch the gebruik schema definition.
-     *
-     * @return array<string,mixed>
-     */
-    private function gebruikSchema(): array
-    {
-        $schemas = $this->register['components']['schemas'] ?? [];
-        $this->assertArrayHasKey('gebruik', $schemas);
-        return $schemas['gebruik'];
-    }//end gebruikSchema()
+	/**
+	 * Fetch the gebruik schema definition.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function gebruikSchema(): array {
+		$schemas = $this->register['components']['schemas'] ?? [];
+		$this->assertArrayHasKey('gebruik', $schemas);
+		return $schemas['gebruik'];
+	}//end gebruikSchema()
 
-    /**
-     * The gebruik schema gains exactly the three TIME properties, all
-     * optional (not in `required`).
-     *
-     * @return void
-     */
-    public function testGebruikHasOptionalTimeFields(): void
-    {
-        $gebruik = $this->gebruikSchema();
-        $props   = $gebruik['properties'] ?? [];
+	/**
+	 * The gebruik schema gains exactly the three TIME properties, all
+	 * optional (not in `required`).
+	 *
+	 * @return void
+	 */
+	public function testGebruikHasOptionalTimeFields(): void {
+		$gebruik = $this->gebruikSchema();
+		$props = $gebruik['properties'] ?? [];
 
-        $this->assertArrayHasKey('timeClassification', $props);
-        $this->assertArrayHasKey('timeRationale', $props);
-        $this->assertArrayHasKey('timeReviewDate', $props);
+		$this->assertArrayHasKey('timeClassification', $props);
+		$this->assertArrayHasKey('timeRationale', $props);
+		$this->assertArrayHasKey('timeReviewDate', $props);
 
-        $required = $gebruik['required'] ?? [];
-        $this->assertNotContains('timeClassification', $required);
-        $this->assertNotContains('timeRationale', $required);
-        $this->assertNotContains('timeReviewDate', $required);
-    }//end testGebruikHasOptionalTimeFields()
+		$required = $gebruik['required'] ?? [];
+		$this->assertNotContains('timeClassification', $required);
+		$this->assertNotContains('timeRationale', $required);
+		$this->assertNotContains('timeReviewDate', $required);
+	}//end testGebruikHasOptionalTimeFields()
 
-    /**
-     * `timeClassification` matches the `status` field's enum-on-string
-     * convention (type: string, enum, title) with the four canonical
-     * Gartner TIME values.
-     *
-     * @return void
-     */
-    public function testTimeClassificationIsEnumOnString(): void
-    {
-        $props = $this->gebruikSchema()['properties'];
-        $field = $props['timeClassification'];
+	/**
+	 * `timeClassification` matches the `status` field's enum-on-string
+	 * convention (type: string, enum, title) with the four canonical
+	 * Gartner TIME values.
+	 *
+	 * @return void
+	 */
+	public function testTimeClassificationIsEnumOnString(): void {
+		$props = $this->gebruikSchema()['properties'];
+		$field = $props['timeClassification'];
 
-        $this->assertSame('string', $field['type']);
-        $this->assertSame(
-            ['Tolerate', 'Invest', 'Migrate', 'Eliminate'],
-            $field['enum']
-        );
-        $this->assertArrayHasKey('title', $field);
-    }//end testTimeClassificationIsEnumOnString()
+		$this->assertSame('string', $field['type']);
+		$this->assertSame(
+			['Tolerate', 'Invest', 'Migrate', 'Eliminate'],
+			$field['enum']
+		);
+		$this->assertArrayHasKey('title', $field);
+	}//end testTimeClassificationIsEnumOnString()
 
-    /**
-     * `timeReviewDate` is a `date`-format string field, matching the
-     * existing phase-date fields' shape.
-     *
-     * @return void
-     */
-    public function testTimeReviewDateIsDateField(): void
-    {
-        $props = $this->gebruikSchema()['properties'];
+	/**
+	 * `timeReviewDate` is a `date`-format string field, matching the
+	 * existing phase-date fields' shape.
+	 *
+	 * @return void
+	 */
+	public function testTimeReviewDateIsDateField(): void {
+		$props = $this->gebruikSchema()['properties'];
 
-        $this->assertSame('string', $props['timeReviewDate']['type']);
-        $this->assertSame('date', $props['timeReviewDate']['format']);
-    }//end testTimeReviewDateIsDateField()
+		$this->assertSame('string', $props['timeReviewDate']['type']);
+		$this->assertSame('date', $props['timeReviewDate']['format']);
+	}//end testTimeReviewDateIsDateField()
 
-    /**
-     * `timeRationale` is a free-text string field.
-     *
-     * @return void
-     */
-    public function testTimeRationaleIsStringField(): void
-    {
-        $props = $this->gebruikSchema()['properties'];
+	/**
+	 * `timeRationale` is a free-text string field.
+	 *
+	 * @return void
+	 */
+	public function testTimeRationaleIsStringField(): void {
+		$props = $this->gebruikSchema()['properties'];
 
-        $this->assertSame('string', $props['timeRationale']['type']);
-    }//end testTimeRationaleIsStringField()
+		$this->assertSame('string', $props['timeRationale']['type']);
+	}//end testTimeRationaleIsStringField()
 
-    /**
-     * design.md Decision 1: no competing `deploymentModel` field was added —
-     * the existing `cloudDienstverleningsmodel` (Hosting) field remains the
-     * sole deployment-model source, still facetable.
-     *
-     * @return void
-     */
-    public function testNoCompetingDeploymentModelFieldWasAdded(): void
-    {
-        $props = $this->gebruikSchema()['properties'];
+	/**
+	 * design.md Decision 1: no competing `deploymentModel` field was added —
+	 * the existing `cloudDienstverleningsmodel` (Hosting) field remains the
+	 * sole deployment-model source, still facetable.
+	 *
+	 * @return void
+	 */
+	public function testNoCompetingDeploymentModelFieldWasAdded(): void {
+		$props = $this->gebruikSchema()['properties'];
 
-        $this->assertArrayNotHasKey('deploymentModel', $props);
-        $this->assertArrayHasKey('cloudDienstverleningsmodel', $props);
-        $this->assertTrue($props['cloudDienstverleningsmodel']['facetable']);
-    }//end testNoCompetingDeploymentModelFieldWasAdded()
+		$this->assertArrayNotHasKey('deploymentModel', $props);
+		$this->assertArrayHasKey('cloudDienstverleningsmodel', $props);
+		$this->assertTrue($props['cloudDienstverleningsmodel']['facetable']);
+	}//end testNoCompetingDeploymentModelFieldWasAdded()
 }//end class

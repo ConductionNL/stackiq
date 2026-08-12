@@ -40,101 +40,93 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-offered-usage-afnemer-endpoint-must-require-authentication-explicitly-not-implicitly-req-004
  */
-class AangebodenGebruikControllerTest extends TestCase
-{
+class AangebodenGebruikControllerTest extends TestCase {
 
-    /** @var AangebodenGebruikService|MockObject */
-    private AangebodenGebruikService|MockObject $gebruikSvc;
+	/** @var AangebodenGebruikService|MockObject */
+	private AangebodenGebruikService|MockObject $gebruikSvc;
 
-    /** @var IUserSession|MockObject */
-    private IUserSession|MockObject $userSession;
+	/** @var IUserSession|MockObject */
+	private IUserSession|MockObject $userSession;
 
+	/**
+	 * Build the controller with the current mocks.
+	 *
+	 * @return AangebodenGebruikController The controller under test.
+	 */
+	private function makeController(): AangebodenGebruikController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParams')->willReturn([]);
 
-    /**
-     * Build the controller with the current mocks.
-     *
-     * @return AangebodenGebruikController The controller under test.
-     */
-    private function makeController(): AangebodenGebruikController
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getParams')->willReturn([]);
+		$this->gebruikSvc = $this->createMock(AangebodenGebruikService::class);
+		$this->userSession = $this->createMock(IUserSession::class);
+		$groupManager = $this->createMock(IGroupManager::class);
 
-        $this->gebruikSvc  = $this->createMock(AangebodenGebruikService::class);
-        $this->userSession = $this->createMock(IUserSession::class);
-        $groupManager       = $this->createMock(IGroupManager::class);
+		return new AangebodenGebruikController(
+			'softwarecatalog',
+			$request,
+			$this->userSession,
+			$this->gebruikSvc,
+			$this->createMock(LoggerInterface::class),
+			$groupManager
+		);
 
-        return new AangebodenGebruikController(
-            'softwarecatalog',
-            $request,
-            $this->userSession,
-            $this->gebruikSvc,
-            $this->createMock(LoggerInterface::class),
-            $groupManager
-        );
+	}//end makeController()
 
-    }//end makeController()
+	/**
+	 * REQ-004 / TC-9: an unauthenticated caller is rejected by the
+	 * controller itself — AangebodenGebruikService::getGebruiksWhereAfnemer()
+	 * MUST NEVER be invoked.
+	 *
+	 * @return void
+	 */
+	public function testUnauthenticatedCallerIsRejectedBeforeServiceIsInvoked(): void {
+		$controller = $this->makeController();
+		$this->userSession->method('getUser')->willReturn(null);
 
+		$this->gebruikSvc->expects($this->never())->method('getGebruiksWhereAfnemer');
 
-    /**
-     * REQ-004 / TC-9: an unauthenticated caller is rejected by the
-     * controller itself — AangebodenGebruikService::getGebruiksWhereAfnemer()
-     * MUST NEVER be invoked.
-     *
-     * @return void
-     */
-    public function testUnauthenticatedCallerIsRejectedBeforeServiceIsInvoked(): void
-    {
-        $controller = $this->makeController();
-        $this->userSession->method('getUser')->willReturn(null);
+		$response = $controller->getGebruiksWhereAfnemer();
 
-        $this->gebruikSvc->expects($this->never())->method('getGebruiksWhereAfnemer');
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame([], $data['results']);
+		$this->assertSame(0, $data['total']);
 
-        $response = $controller->getGebruiksWhereAfnemer();
+	}//end testUnauthenticatedCallerIsRejectedBeforeServiceIsInvoked()
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-        $data = $response->getData();
-        $this->assertSame([], $data['results']);
-        $this->assertSame(0, $data['total']);
+	/**
+	 * REQ-004 / TC-10: an authenticated caller still reaches the service —
+	 * the guard only blocks the fully-anonymous case. The service's own
+	 * "no active organisation" handling (existing behaviour) is
+	 * responsible for that narrower case.
+	 *
+	 * @return void
+	 */
+	public function testAuthenticatedCallerReachesService(): void {
+		$controller = $this->makeController();
 
-    }//end testUnauthenticatedCallerIsRejectedBeforeServiceIsInvoked()
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('caller-uid');
+		$this->userSession->method('getUser')->willReturn($user);
 
+		$this->gebruikSvc->expects($this->once())
+			->method('getGebruiksWhereAfnemer')
+			->willReturn(
+				[
+					'results' => [],
+					'total' => 0,
+					'page' => 1,
+					'pages' => 0,
+					'limit' => 20,
+					'offset' => 0,
+					'message' => 'No current organization available',
+				]
+			);
 
-    /**
-     * REQ-004 / TC-10: an authenticated caller still reaches the service —
-     * the guard only blocks the fully-anonymous case. The service's own
-     * "no active organisation" handling (existing behaviour) is
-     * responsible for that narrower case.
-     *
-     * @return void
-     */
-    public function testAuthenticatedCallerReachesService(): void
-    {
-        $controller = $this->makeController();
+		$response = $controller->getGebruiksWhereAfnemer();
 
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('caller-uid');
-        $this->userSession->method('getUser')->willReturn($user);
+		$this->assertSame(200, $response->getStatus());
 
-        $this->gebruikSvc->expects($this->once())
-            ->method('getGebruiksWhereAfnemer')
-            ->willReturn(
-                [
-                    'results' => [],
-                    'total'   => 0,
-                    'page'    => 1,
-                    'pages'   => 0,
-                    'limit'   => 20,
-                    'offset'  => 0,
-                    'message' => 'No current organization available',
-                ]
-            );
-
-        $response = $controller->getGebruiksWhereAfnemer();
-
-        $this->assertSame(200, $response->getStatus());
-
-    }//end testAuthenticatedCallerReachesService()
-
+	}//end testAuthenticatedCallerReachesService()
 
 }//end class

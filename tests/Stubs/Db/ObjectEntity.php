@@ -57,105 +57,101 @@ use BadFunctionCallException;
 /**
  * Stub for ObjectEntity with the surface used by SoftwareCatalog tests.
  */
-abstract class ObjectEntity
-{
+abstract class ObjectEntity {
 
-    /**
-     * The system-level owning organisation (`@self.organisation`).
-     *
-     * A PROPERTY, not a declared accessor — on the real ObjectEntity this is
-     * `protected ?string $organisation` reached through `Entity::__call()`, so
-     * `method_exists($entity, 'getOrganisation')` is FALSE and
-     * `property_exists($entity, 'organisation')` is TRUE. Declaring it this way
-     * is what lets a test tell the two apart. See softwarecatalog#490.
-     *
-     * @var string|null
-     */
-    protected ?string $organisation = null;
+	/**
+	 * The system-level owning organisation (`@self.organisation`).
+	 *
+	 * A PROPERTY, not a declared accessor — on the real ObjectEntity this is
+	 * `protected ?string $organisation` reached through `Entity::__call()`, so
+	 * `method_exists($entity, 'getOrganisation')` is FALSE and
+	 * `property_exists($entity, 'organisation')` is TRUE. Declaring it this way
+	 * is what lets a test tell the two apart. See softwarecatalog#490.
+	 *
+	 * @var string|null
+	 */
+	protected ?string $organisation = null;
 
-    /**
-     * Magic accessor dispatch, mirroring `OCP\AppFramework\Db\Entity::__call()`.
-     *
-     * @param string       $method The called method name.
-     * @param array<mixed> $args   The call arguments.
-     *
-     * @return mixed
-     *
-     * @throws BadFunctionCallException When the name maps to no attribute.
-     */
-    public function __call(string $method, array $args)
-    {
-        if (str_starts_with($method, 'get') === true) {
-            return $this->getter(lcfirst(substr($method, 3)));
-        }
+	/**
+	 * Magic accessor dispatch, mirroring `OCP\AppFramework\Db\Entity::__call()`.
+	 *
+	 * @param string $method The called method name.
+	 * @param array<mixed> $args The call arguments.
+	 *
+	 * @return mixed
+	 *
+	 * @throws BadFunctionCallException When the name maps to no attribute.
+	 */
+	public function __call(string $method, array $args) {
+		if (str_starts_with($method, 'get') === true) {
+			return $this->getter(lcfirst(substr($method, 3)));
+		}
 
-        if (str_starts_with($method, 'set') === true) {
-            $this->setter(lcfirst(substr($method, 3)), $args);
-            return $this;
-        }
+		if (str_starts_with($method, 'set') === true) {
+			$this->setter(lcfirst(substr($method, 3)), $args);
+			return $this;
+		}
 
-        throw new BadFunctionCallException($method.' does not exist');
-    }//end __call()
+		throw new BadFunctionCallException($method . ' does not exist');
+	}//end __call()
 
-    /**
-     * Generic attribute read, mirroring `Entity::getter()`.
-     *
-     * @param string $name The attribute name.
-     *
-     * @return mixed
-     *
-     * @throws BadFunctionCallException When no such property exists.
-     */
-    protected function getter(string $name)
-    {
-        if (property_exists($this, $name) === false) {
-            throw new BadFunctionCallException($name.' is not a valid attribute');
-        }
+	/**
+	 * Generic attribute read, mirroring `Entity::getter()`.
+	 *
+	 * @param string $name The attribute name.
+	 *
+	 * @return mixed
+	 *
+	 * @throws BadFunctionCallException When no such property exists.
+	 */
+	protected function getter(string $name) {
+		if (property_exists($this, $name) === false) {
+			throw new BadFunctionCallException($name . ' is not a valid attribute');
+		}
 
-        return $this->$name;
-    }//end getter()
+		return $this->$name;
+	}//end getter()
 
-    /**
-     * Generic attribute write, mirroring `Entity::setter()`.
-     *
-     * @param string       $name The attribute name.
-     * @param array<mixed> $args The call arguments.
-     *
-     * @return void
-     *
-     * @throws BadFunctionCallException When no such property exists.
-     */
-    protected function setter(string $name, array $args): void
-    {
-        if (property_exists($this, $name) === false) {
-            throw new BadFunctionCallException($name.' is not a valid attribute');
-        }
+	/**
+	 * Generic attribute write, mirroring `Entity::setter()`.
+	 *
+	 * @param string $name The attribute name.
+	 * @param array<mixed> $args The call arguments.
+	 *
+	 * @return void
+	 *
+	 * @throws BadFunctionCallException When no such property exists.
+	 */
+	protected function setter(string $name, array $args): void {
+		if (property_exists($this, $name) === false) {
+			throw new BadFunctionCallException($name . ' is not a valid attribute');
+		}
 
-        $this->$name = ($args[0] ?? null);
-    }//end setter()
+		$this->$name = ($args[0] ?? null);
+	}//end setter()
 
-    /** @return int */
-    abstract public function getId();
+	/** @return int */
+	abstract public function getId();
 
-    /** @return string */
-    abstract public function getUuid();
+	/** @return string */
+	abstract public function getUuid();
 
-    /** @return array<string,mixed> */
-    abstract public function getObject();
+	/** @return array<string,mixed> */
+	abstract public function getObject();
 
-    /** @return mixed */
-    abstract public function getRegister();
+	/** @return mixed */
+	abstract public function getRegister();
 
-    /** @return mixed */
-    abstract public function getSchema();
+	/** @return mixed */
+	abstract public function getSchema();
 
-    /**
-     * @param  array<string,mixed>|null $object
-     * @return self
-     */
-    abstract public function setObject($object=null);
+	/**
+	 * @param array<string,mixed>|null $object
+	 * @return self
+	 */
+	abstract public function setObject($object = null);
 
-    /** @return array<string,mixed> */
-    abstract public function jsonSerialize();
+	/** @return array<string,mixed> */
+	abstract public function jsonSerialize();
 
 }//end class

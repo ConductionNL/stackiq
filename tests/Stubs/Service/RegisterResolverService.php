@@ -21,43 +21,40 @@ namespace OCA\OpenRegister\Service;
 /**
  * Stub for RegisterResolverService with the surface used by SoftwareCatalog tests.
  */
-abstract class RegisterResolverService
-{
+abstract class RegisterResolverService {
 
-    /**
-     * Resolve a `<context>_register` config key to a slug or UUID string.
-     *
-     * @param string      $appId            Consumer app id.
-     * @param string      $configKey        Config key to read.
-     * @param string|null $default          Fallback when unset.
-     * @param string|null $organisationUuid Optional org override.
-     *
-     * @return string
-     */
-    abstract public function resolveRegisterId(
-        string $appId,
-        string $configKey,
-        ?string $default = null,
-        ?string $organisationUuid = null,
-    ): string;
+	/**
+	 * Resolve a `<context>_register` config key to a slug or UUID string.
+	 *
+	 * @param string $appId Consumer app id.
+	 * @param string $configKey Config key to read.
+	 * @param string|null $default Fallback when unset.
+	 * @param string|null $organisationUuid Optional org override.
+	 *
+	 * @return string
+	 */
+	abstract public function resolveRegisterId(
+		string $appId,
+		string $configKey,
+		?string $default = null,
+		?string $organisationUuid = null,
+	): string;
 
-
-    /**
-     * Resolve a `<context>_schema` config key to a slug or UUID string.
-     *
-     * @param string      $appId            Consumer app id.
-     * @param string      $configKey        Config key to read.
-     * @param string|null $default          Fallback when unset.
-     * @param string|null $organisationUuid Optional org override.
-     *
-     * @return string
-     */
-    abstract public function resolveSchemaId(
-        string $appId,
-        string $configKey,
-        ?string $default = null,
-        ?string $organisationUuid = null,
-    ): string;
-
+	/**
+	 * Resolve a `<context>_schema` config key to a slug or UUID string.
+	 *
+	 * @param string $appId Consumer app id.
+	 * @param string $configKey Config key to read.
+	 * @param string|null $default Fallback when unset.
+	 * @param string|null $organisationUuid Optional org override.
+	 *
+	 * @return string
+	 */
+	abstract public function resolveSchemaId(
+		string $appId,
+		string $configKey,
+		?string $default = null,
+		?string $organisationUuid = null,
+	): string;
 
 }//end class

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SBOM Import Service.
  *
@@ -49,587 +50,576 @@ use RuntimeException;
  *
  * @spec openspec/specs/sbom-import/spec.md
  */
-class SbomImportService
-{
-    /**
-     * Maximum objects per OR bulk create/delete call — bounds a single
-     * unbounded bulk-save call for large SBOMs (design Decision 4 /
-     * non-functional performance requirement: batches of ~100).
-     */
-    private const BATCH_SIZE = 100;
+class SbomImportService {
+	/**
+	 * Maximum objects per OR bulk create/delete call — bounds a single
+	 * unbounded bulk-save call for large SBOMs (design Decision 4 /
+	 * non-functional performance requirement: batches of ~100).
+	 */
+	private const BATCH_SIZE = 100;
 
-    /**
-     * Component count above which a `progress-tracking` operation is
-     * started (design Decision 4 / spec "Large imports run in bounded
-     * batches with progress reporting").
-     */
-    private const PROGRESS_THRESHOLD = 50;
+	/**
+	 * Component count above which a `progress-tracking` operation is
+	 * started (design Decision 4 / spec "Large imports run in bounded
+	 * batches with progress reporting").
+	 */
+	private const PROGRESS_THRESHOLD = 50;
 
-    /**
-     * Supported SBOM upload formats.
-     *
-     * @var array<int,string>
-     */
-    public const SUPPORTED_FORMATS = ['cyclonedx-json', 'spdx-json'];
+	/**
+	 * Supported SBOM upload formats.
+	 *
+	 * @var array<int,string>
+	 */
+	public const SUPPORTED_FORMATS = ['cyclonedx-json', 'spdx-json'];
 
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface $container       The DI container (lazy OR lookup).
-     * @param SettingsService    $settingsService Resolves register/schema ids.
-     * @param SbomParserService  $parser          The pure SBOM parser.
-     * @param ProgressTracker    $progressTracker Progress reporting for large imports.
-     * @param LoggerInterface    $logger          Logger.
-     */
-    public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly SettingsService $settingsService,
-        private readonly SbomParserService $parser,
-        private readonly ProgressTracker $progressTracker,
-        private readonly LoggerInterface $logger
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container The DI container (lazy OR lookup).
+	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param SbomParserService $parser The pure SBOM parser.
+	 * @param ProgressTracker $progressTracker Progress reporting for large imports.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly SettingsService $settingsService,
+		private readonly SbomParserService $parser,
+		private readonly ProgressTracker $progressTracker,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Import an uploaded SBOM for a `moduleVersie`: parse, replace the
-     * previous component set, and record provenance.
-     *
-     * @param string $moduleVersieUuid The target moduleVersie's uuid.
-     * @param string $rawJson          The raw uploaded file contents.
-     * @param string $format           `cyclonedx-json` or `spdx-json`.
-     * @param string $fileName         The uploaded file's original name.
-     *
-     * @return array<string, mixed> Import result summary.
-     *
-     * @throws \OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException When the
-     *                                       document's format/version is not supported.
-     *                                       No component is written in that case.
-     * @throws RuntimeException When the target `moduleVersie` cannot be
-     *                           resolved, or required configuration is missing.
-     *
-     * @spec openspec/specs/sbom-import/spec.md#requirement-imported-components-persist-as-openregister-objects-scoped-to-a-moduleversie
-     */
-    public function importForModuleVersie(
-        string $moduleVersieUuid,
-        string $rawJson,
-        string $format,
-        string $fileName
-    ): array {
-        // 1. Parse — pure, no OR/HTTP call. Throws on unsupported format;
-        // nothing has been written yet at this point.
-        $parsed     = $this->parseUpload(rawJson: $rawJson, format: $format);
-        $components = $parsed['components'];
-        $vexPairs   = $parsed['vulnerabilities'];
+	/**
+	 * Import an uploaded SBOM for a `moduleVersie`: parse, replace the
+	 * previous component set, and record provenance.
+	 *
+	 * @param string $moduleVersieUuid The target moduleVersie's uuid.
+	 * @param string $rawJson The raw uploaded file contents.
+	 * @param string $format `cyclonedx-json` or `spdx-json`.
+	 * @param string $fileName The uploaded file's original name.
+	 *
+	 * @return array<string, mixed> Import result summary.
+	 *
+	 * @throws \OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException When the
+	 *                                                                       document's format/version is not supported.
+	 *                                                                       No component is written in that case.
+	 * @throws RuntimeException When the target `moduleVersie` cannot be
+	 *                          resolved, or required configuration is missing.
+	 *
+	 * @spec openspec/specs/sbom-import/spec.md#requirement-imported-components-persist-as-openregister-objects-scoped-to-a-moduleversie
+	 */
+	public function importForModuleVersie(
+		string $moduleVersieUuid,
+		string $rawJson,
+		string $format,
+		string $fileName,
+	): array {
+		// 1. Parse — pure, no OR/HTTP call. Throws on unsupported format;
+		// nothing has been written yet at this point.
+		$parsed = $this->parseUpload(rawJson: $rawJson, format: $format);
+		$components = $parsed['components'];
+		$vexPairs = $parsed['vulnerabilities'];
 
-        $coordinates   = $this->resolveCoordinates();
-        $objectService = $coordinates['objectService'];
+		$coordinates = $this->resolveCoordinates();
+		$objectService = $coordinates['objectService'];
 
-        $moduleVersie = $objectService->find(
-            id: $moduleVersieUuid,
-            register: $coordinates['registerId'],
-            schema: $coordinates['moduleVersieSchemaId'],
-            _rbac: false,
-            _multitenancy: false
-        );
+		$moduleVersie = $objectService->find(
+			id: $moduleVersieUuid,
+			register: $coordinates['registerId'],
+			schema: $coordinates['moduleVersieSchemaId'],
+			_rbac: false,
+			_multitenancy: false
+		);
 
-        if ($moduleVersie === null) {
-            throw new RuntimeException('moduleVersie not found: '.$moduleVersieUuid);
-        }
+		if ($moduleVersie === null) {
+			throw new RuntimeException('moduleVersie not found: ' . $moduleVersieUuid);
+		}
 
-        $componentCount = count($components);
-        $trackProgress  = $componentCount > self::PROGRESS_THRESHOLD;
-        $operationId    = null;
+		$componentCount = count($components);
+		$trackProgress = $componentCount > self::PROGRESS_THRESHOLD;
+		$operationId = null;
 
-        if ($trackProgress === true) {
-            $operationId = $this->progressTracker->startOperation(
-                'sbom-import',
-                ['total_items' => $componentCount]
-            );
-            $this->progressTracker->setPhase('processing_elements');
-        }
+		if ($trackProgress === true) {
+			$operationId = $this->progressTracker->startOperation(
+				'sbom-import',
+				['total_items' => $componentCount]
+			);
+			$this->progressTracker->setPhase('processing_elements');
+		}
 
-        $previousUuids = $this->replacePreviousComponentSet(
-            objectService: $objectService,
-            registerId: $coordinates['registerId'],
-            componentSchemaId: $coordinates['sbomComponentSchemaId'],
-            moduleVersieUuid: $moduleVersieUuid
-        );
+		$previousUuids = $this->replacePreviousComponentSet(
+			objectService: $objectService,
+			registerId: $coordinates['registerId'],
+			componentSchemaId: $coordinates['sbomComponentSchemaId'],
+			moduleVersieUuid: $moduleVersieUuid
+		);
 
-        $createdCount = $this->createComponentSet(
-            objectService: $objectService,
-            registerId: $coordinates['registerId'],
-            componentSchemaId: $coordinates['sbomComponentSchemaId'],
-            moduleVersieUuid: $moduleVersieUuid,
-            components: $components,
-            vexPairs: $vexPairs,
-            trackProgress: $trackProgress
-        );
+		$createdCount = $this->createComponentSet(
+			objectService: $objectService,
+			registerId: $coordinates['registerId'],
+			componentSchemaId: $coordinates['sbomComponentSchemaId'],
+			moduleVersieUuid: $moduleVersieUuid,
+			components: $components,
+			vexPairs: $vexPairs,
+			trackProgress: $trackProgress
+		);
 
-        $this->recordProvenance(
-            objectService: $objectService,
-            registerId: $coordinates['registerId'],
-            moduleVersieSchemaId: $coordinates['moduleVersieSchemaId'],
-            moduleVersie: $moduleVersie,
-            format: $format,
-            fileName: $fileName
-        );
+		$this->recordProvenance(
+			objectService: $objectService,
+			registerId: $coordinates['registerId'],
+			moduleVersieSchemaId: $coordinates['moduleVersieSchemaId'],
+			moduleVersie: $moduleVersie,
+			format: $format,
+			fileName: $fileName
+		);
 
-        if ($trackProgress === true) {
-            $this->progressTracker->completeOperation(
-                [
-                    'componentsCreated' => $createdCount,
-                    'previousCount'     => count($previousUuids),
-                ]
-            );
-        }
+		if ($trackProgress === true) {
+			$this->progressTracker->completeOperation(
+				[
+					'componentsCreated' => $createdCount,
+					'previousCount' => count($previousUuids),
+				]
+			);
+		}
 
-        $this->logger->info(
-            'SbomImportService: import completed',
-            [
-                'moduleVersieUuid' => $moduleVersieUuid,
-                'format'           => $format,
-                'componentCount'   => $createdCount,
-                'previousCount'    => count($previousUuids),
-            ]
-        );
+		$this->logger->info(
+			'SbomImportService: import completed',
+			[
+				'moduleVersieUuid' => $moduleVersieUuid,
+				'format' => $format,
+				'componentCount' => $createdCount,
+				'previousCount' => count($previousUuids),
+			]
+		);
 
-        return [
-            'success'                => true,
-            'operationId'            => $operationId,
-            'moduleVersieUuid'       => $moduleVersieUuid,
-            'componentCount'         => $createdCount,
-            'previousComponentCount' => count($previousUuids),
-            'distinctLicenseCount'   => $this->countDistinctLicenses(components: $components),
-            'vulnerabilityPairCount' => count($vexPairs),
-            'sbomFormat'             => $format,
-            'sbomFileName'           => $fileName,
-        ];
-    }//end importForModuleVersie()
+		return [
+			'success' => true,
+			'operationId' => $operationId,
+			'moduleVersieUuid' => $moduleVersieUuid,
+			'componentCount' => $createdCount,
+			'previousComponentCount' => count($previousUuids),
+			'distinctLicenseCount' => $this->countDistinctLicenses(components: $components),
+			'vulnerabilityPairCount' => count($vexPairs),
+			'sbomFormat' => $format,
+			'sbomFileName' => $fileName,
+		];
+	}//end importForModuleVersie()
 
-    /**
-     * Select and invoke the parser matching the uploaded `format` (design
-     * Decision 1 — explicit format selection, never content-sniffed).
-     *
-     * @param string $rawJson The raw uploaded file contents.
-     * @param string $format  `cyclonedx-json` or `spdx-json`.
-     *
-     * @return array{components: array<int, array<string, mixed>>, vulnerabilities: array<int, array{cveId: string, componentBomRef: string}>}
-     *
-     * @throws \OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException When
-     *         the document's format/version is not supported.
-     *
-     * @spec openspec/specs/sbom-import/spec.md#requirement-cyclonedx-sbom-files-are-parsed-into-a-normalized-component-list
-     */
-    private function parseUpload(string $rawJson, string $format): array
-    {
-        if ($format === 'spdx-json') {
-            return $this->parser->parseSpdx(json: $rawJson);
-        }
+	/**
+	 * Select and invoke the parser matching the uploaded `format` (design
+	 * Decision 1 — explicit format selection, never content-sniffed).
+	 *
+	 * @param string $rawJson The raw uploaded file contents.
+	 * @param string $format `cyclonedx-json` or `spdx-json`.
+	 *
+	 * @return array{components: array<int, array<string, mixed>>, vulnerabilities: array<int, array{cveId: string, componentBomRef: string}>}
+	 *
+	 * @throws \OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException When
+	 *                                                                       the document's format/version is not supported.
+	 *
+	 * @spec openspec/specs/sbom-import/spec.md#requirement-cyclonedx-sbom-files-are-parsed-into-a-normalized-component-list
+	 */
+	private function parseUpload(string $rawJson, string $format): array {
+		if ($format === 'spdx-json') {
+			return $this->parser->parseSpdx(json: $rawJson);
+		}
 
-        return $this->parser->parse(json: $rawJson);
-    }//end parseUpload()
+		return $this->parser->parse(json: $rawJson);
+	}//end parseUpload()
 
-    /**
-     * Resolve the parent `module` uuid of a `moduleVersie` — used by the
-     * controller's manage-ACL authorization guard, which needs to know which
-     * module the caller must be allowed to manage before any write happens.
-     *
-     * @param string $moduleVersieUuid The moduleVersie uuid.
-     *
-     * @return string|null The parent module uuid, or null when not resolvable.
-     *
-     * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
-     */
-    public function resolveParentModuleUuid(string $moduleVersieUuid): ?string
-    {
-        $coordinates  = $this->resolveCoordinates();
-        $moduleVersie = $coordinates['objectService']->find(
-            id: $moduleVersieUuid,
-            register: $coordinates['registerId'],
-            schema: $coordinates['moduleVersieSchemaId'],
-            _rbac: false,
-            _multitenancy: false
-        );
+	/**
+	 * Resolve the parent `module` uuid of a `moduleVersie` — used by the
+	 * controller's manage-ACL authorization guard, which needs to know which
+	 * module the caller must be allowed to manage before any write happens.
+	 *
+	 * @param string $moduleVersieUuid The moduleVersie uuid.
+	 *
+	 * @return string|null The parent module uuid, or null when not resolvable.
+	 *
+	 * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
+	 */
+	public function resolveParentModuleUuid(string $moduleVersieUuid): ?string {
+		$coordinates = $this->resolveCoordinates();
+		$moduleVersie = $coordinates['objectService']->find(
+			id: $moduleVersieUuid,
+			register: $coordinates['registerId'],
+			schema: $coordinates['moduleVersieSchemaId'],
+			_rbac: false,
+			_multitenancy: false
+		);
 
-        if ($moduleVersie === null) {
-            return null;
-        }
+		if ($moduleVersie === null) {
+			return null;
+		}
 
-        return $this->resolveRelationUuid(relation: $moduleVersie->getObject()['module'] ?? null);
-    }//end resolveParentModuleUuid()
+		return $this->resolveRelationUuid(relation: $moduleVersie->getObject()['module'] ?? null);
+	}//end resolveParentModuleUuid()
 
-    /**
-     * Whether the current OR request context can resolve (read) a `module`
-     * object under RBAC — used as the "manage-ACL on the target module"
-     * check alongside a role-group membership check in the controller.
-     *
-     * @param string $moduleUuid The module uuid.
-     *
-     * @return bool True when the module resolves under RBAC for the acting user.
-     *
-     * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
-     */
-    public function userCanReadModule(string $moduleUuid): bool
-    {
-        $objectService  = $this->getObjectService();
-        $registerId     = $this->settingsService->getVoorzieningenConfig()['register'] ?? null;
-        $moduleSchemaId = $this->settingsService->getSchemaIdForObjectType('module');
+	/**
+	 * Whether the current OR request context can resolve (read) a `module`
+	 * object under RBAC — used as the "manage-ACL on the target module"
+	 * check alongside a role-group membership check in the controller.
+	 *
+	 * @param string $moduleUuid The module uuid.
+	 *
+	 * @return bool True when the module resolves under RBAC for the acting user.
+	 *
+	 * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
+	 */
+	public function userCanReadModule(string $moduleUuid): bool {
+		$objectService = $this->getObjectService();
+		$registerId = $this->settingsService->getVoorzieningenConfig()['register'] ?? null;
+		$moduleSchemaId = $this->settingsService->getSchemaIdForObjectType('module');
 
-        if ($objectService === null || $registerId === null || $moduleSchemaId === null) {
-            return false;
-        }
+		if ($objectService === null || $registerId === null || $moduleSchemaId === null) {
+			return false;
+		}
 
-        $module = $objectService->find(
-            id: $moduleUuid,
-            register: (int) $registerId,
-            schema: (int) $moduleSchemaId,
-            _rbac: true,
-            _multitenancy: true
-        );
+		$module = $objectService->find(
+			id: $moduleUuid,
+			register: (int)$registerId,
+			schema: (int)$moduleSchemaId,
+			_rbac: true,
+			_multitenancy: true
+		);
 
-        return $module !== null;
-    }//end userCanReadModule()
+		return $module !== null;
+	}//end userCanReadModule()
 
-    /**
-     * Read SBOM import provenance + optional progress for a `moduleVersie`.
-     *
-     * @param string      $moduleVersieUuid The moduleVersie uuid.
-     * @param string|null $operationId      Optional progress-tracking operation id.
-     *
-     * @return array<string, mixed> `{sbomLastImportedAt, sbomFormat, sbomFileName, progress}`.
-     *
-     * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
-     */
-    public function getStatus(string $moduleVersieUuid, ?string $operationId=null): array
-    {
-        $coordinates  = $this->resolveCoordinates();
-        $moduleVersie = $coordinates['objectService']->find(
-            id: $moduleVersieUuid,
-            register: $coordinates['registerId'],
-            schema: $coordinates['moduleVersieSchemaId'],
-            _rbac: false,
-            _multitenancy: false
-        );
+	/**
+	 * Read SBOM import provenance + optional progress for a `moduleVersie`.
+	 *
+	 * @param string $moduleVersieUuid The moduleVersie uuid.
+	 * @param string|null $operationId Optional progress-tracking operation id.
+	 *
+	 * @return array<string, mixed> `{sbomLastImportedAt, sbomFormat, sbomFileName, progress}`.
+	 *
+	 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
+	 */
+	public function getStatus(string $moduleVersieUuid, ?string $operationId = null): array {
+		$coordinates = $this->resolveCoordinates();
+		$moduleVersie = $coordinates['objectService']->find(
+			id: $moduleVersieUuid,
+			register: $coordinates['registerId'],
+			schema: $coordinates['moduleVersieSchemaId'],
+			_rbac: false,
+			_multitenancy: false
+		);
 
-        $data = [];
-        if ($moduleVersie !== null) {
-            $data = $moduleVersie->getObject();
-        }
+		$data = [];
+		if ($moduleVersie !== null) {
+			$data = $moduleVersie->getObject();
+		}
 
-        $progress = null;
-        if ($operationId !== null) {
-            $progress = $this->progressTracker->getProgress(operationId: $operationId);
-        }
+		$progress = null;
+		if ($operationId !== null) {
+			$progress = $this->progressTracker->getProgress(operationId: $operationId);
+		}
 
-        return [
-            'sbomLastImportedAt' => $data['sbomLastImportedAt'] ?? null,
-            'sbomFormat'         => $data['sbomFormat'] ?? null,
-            'sbomFileName'       => $data['sbomFileName'] ?? null,
-            'progress'           => $progress,
-        ];
-    }//end getStatus()
+		return [
+			'sbomLastImportedAt' => $data['sbomLastImportedAt'] ?? null,
+			'sbomFormat' => $data['sbomFormat'] ?? null,
+			'sbomFileName' => $data['sbomFileName'] ?? null,
+			'progress' => $progress,
+		];
+	}//end getStatus()
 
-    /**
-     * Soft-delete the previous LIVE `sbomComponent` set for a `moduleVersie`,
-     * in bounded batches. OR's search already excludes `_deleted` rows by
-     * default, so a prior replace's trashed rows are never re-queried.
-     *
-     * @param ObjectService $objectService     The OR object service.
-     * @param int           $registerId        The voorzieningen register id.
-     * @param int           $componentSchemaId The sbomComponent schema id.
-     * @param string        $moduleVersieUuid  The target moduleVersie uuid.
-     *
-     * @return array<int,string> The uuids that were soft-deleted.
-     *
-     * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
-     */
-    private function replacePreviousComponentSet(
-        ObjectService $objectService,
-        int $registerId,
-        int $componentSchemaId,
-        string $moduleVersieUuid
-    ): array {
-        $previous = $objectService->searchObjects(
-            [
-                '@self'        => [
-                    'schema'   => $componentSchemaId,
-                    'register' => $registerId,
-                ],
-                'moduleVersie' => $moduleVersieUuid,
-                '_limit'       => 1000,
-            ],
-            _rbac: false,
-            _multitenancy: false
-        );
+	/**
+	 * Soft-delete the previous LIVE `sbomComponent` set for a `moduleVersie`,
+	 * in bounded batches. OR's search already excludes `_deleted` rows by
+	 * default, so a prior replace's trashed rows are never re-queried.
+	 *
+	 * @param ObjectService $objectService The OR object service.
+	 * @param int $registerId The voorzieningen register id.
+	 * @param int $componentSchemaId The sbomComponent schema id.
+	 * @param string $moduleVersieUuid The target moduleVersie uuid.
+	 *
+	 * @return array<int,string> The uuids that were soft-deleted.
+	 *
+	 * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
+	 */
+	private function replacePreviousComponentSet(
+		ObjectService $objectService,
+		int $registerId,
+		int $componentSchemaId,
+		string $moduleVersieUuid,
+	): array {
+		$previous = $objectService->searchObjects(
+			[
+				'@self' => [
+					'schema' => $componentSchemaId,
+					'register' => $registerId,
+				],
+				'moduleVersie' => $moduleVersieUuid,
+				'_limit' => 1000,
+			],
+			_rbac: false,
+			_multitenancy: false
+		);
 
-        if (is_array($previous) === false) {
-            $previous = [];
-        }
+		if (is_array($previous) === false) {
+			$previous = [];
+		}
 
-        $previousUuids = [];
-        foreach ($previous as $object) {
-            $previousUuids[] = $object->getUuid();
-        }
+		$previousUuids = [];
+		foreach ($previous as $object) {
+			$previousUuids[] = $object->getUuid();
+		}
 
-        foreach (array_chunk($previousUuids, self::BATCH_SIZE) as $batch) {
-            $objectService->deleteObjects($batch, _rbac: false, _multitenancy: false);
-        }
+		foreach (array_chunk($previousUuids, self::BATCH_SIZE) as $batch) {
+			$objectService->deleteObjects($batch, _rbac: false, _multitenancy: false);
+		}
 
-        return $previousUuids;
-    }//end replacePreviousComponentSet()
+		return $previousUuids;
+	}//end replacePreviousComponentSet()
 
-    /**
-     * Bulk-save the newly parsed component set in bounded batches, reporting
-     * progress per batch when tracking is active.
-     *
-     * @param ObjectService                                         $objectService     The OR object service.
-     * @param int                                                   $registerId        The voorzieningen register id.
-     * @param int                                                   $componentSchemaId The sbomComponent schema id.
-     * @param string                                                $moduleVersieUuid  The target moduleVersie uuid.
-     * @param array<int,array<string,mixed>>                        $components        The parsed component DTOs.
-     * @param array<int,array{cveId:string,componentBomRef:string}> $vexPairs          The parsed VEX cveId/bom-ref pairs.
-     * @param bool                                                  $trackProgress     Whether a progress operation is active.
-     *
-     * @return int The number of components created.
-     *
-     * @spec openspec/specs/sbom-import/spec.md#requirement-large-imports-run-in-bounded-batches-with-progress-reporting
-     */
-    private function createComponentSet(
-        ObjectService $objectService,
-        int $registerId,
-        int $componentSchemaId,
-        string $moduleVersieUuid,
-        array $components,
-        array $vexPairs,
-        bool $trackProgress
-    ): int {
-        $created        = 0;
-        $vexCveIdsByRef = $this->groupVexCveIdsByBomRef(vexPairs: $vexPairs);
+	/**
+	 * Bulk-save the newly parsed component set in bounded batches, reporting
+	 * progress per batch when tracking is active.
+	 *
+	 * @param ObjectService $objectService The OR object service.
+	 * @param int $registerId The voorzieningen register id.
+	 * @param int $componentSchemaId The sbomComponent schema id.
+	 * @param string $moduleVersieUuid The target moduleVersie uuid.
+	 * @param array<int,array<string,mixed>> $components The parsed component DTOs.
+	 * @param array<int,array{cveId:string,componentBomRef:string}> $vexPairs The parsed VEX cveId/bom-ref pairs.
+	 * @param bool $trackProgress Whether a progress operation is active.
+	 *
+	 * @return int The number of components created.
+	 *
+	 * @spec openspec/specs/sbom-import/spec.md#requirement-large-imports-run-in-bounded-batches-with-progress-reporting
+	 */
+	private function createComponentSet(
+		ObjectService $objectService,
+		int $registerId,
+		int $componentSchemaId,
+		string $moduleVersieUuid,
+		array $components,
+		array $vexPairs,
+		bool $trackProgress,
+	): int {
+		$created = 0;
+		$vexCveIdsByRef = $this->groupVexCveIdsByBomRef(vexPairs: $vexPairs);
 
-        foreach (array_chunk($components, self::BATCH_SIZE) as $batch) {
-            $payload = [];
-            foreach ($batch as $component) {
-                $payload[] = $this->componentToObjectData(
-                    component: $component,
-                    moduleVersieUuid: $moduleVersieUuid,
-                    vexCveIdsByRef: $vexCveIdsByRef
-                );
-            }
+		foreach (array_chunk($components, self::BATCH_SIZE) as $batch) {
+			$payload = [];
+			foreach ($batch as $component) {
+				$payload[] = $this->componentToObjectData(
+					component: $component,
+					moduleVersieUuid: $moduleVersieUuid,
+					vexCveIdsByRef: $vexCveIdsByRef
+				);
+			}
 
-            $objectService->saveObjects(
-                objects: $payload,
-                register: $registerId,
-                schema: $componentSchemaId,
-                _rbac: false,
-                _multitenancy: false
-            );
+			$objectService->saveObjects(
+				objects: $payload,
+				register: $registerId,
+				schema: $componentSchemaId,
+				_rbac: false,
+				_multitenancy: false
+			);
 
-            $created += count($batch);
+			$created += count($batch);
 
-            if ($trackProgress === true) {
-                $this->progressTracker->updateProgress(processedItems: $created);
-                $this->progressTracker->updateStatistics(['componentsCreated' => $created]);
-            }
-        }//end foreach
+			if ($trackProgress === true) {
+				$this->progressTracker->updateProgress(processedItems: $created);
+				$this->progressTracker->updateStatistics(['componentsCreated' => $created]);
+			}
+		}//end foreach
 
-        return $created;
-    }//end createComponentSet()
+		return $created;
+	}//end createComponentSet()
 
-    /**
-     * Record import provenance on the `moduleVersie` — PUT-semantic OR save,
-     * so the FULL current object data is carried forward and only the three
-     * provenance fields are changed (an omitted field would otherwise be
-     * nulled by `saveObject()`).
-     *
-     * @param ObjectService $objectService        The OR object service.
-     * @param int           $registerId           The voorzieningen register id.
-     * @param int           $moduleVersieSchemaId The moduleVersie schema id.
-     * @param object        $moduleVersie         The current moduleVersie entity.
-     * @param string        $format               The import format.
-     * @param string        $fileName             The uploaded file's original name.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
-     */
-    private function recordProvenance(
-        ObjectService $objectService,
-        int $registerId,
-        int $moduleVersieSchemaId,
-        object $moduleVersie,
-        string $format,
-        string $fileName
-    ): void {
-        $data = $moduleVersie->getObject();
-        $data['sbomLastImportedAt'] = (new DateTime())->format(DateTime::ATOM);
-        $data['sbomFormat']         = $format;
-        $data['sbomFileName']       = $fileName;
+	/**
+	 * Record import provenance on the `moduleVersie` — PUT-semantic OR save,
+	 * so the FULL current object data is carried forward and only the three
+	 * provenance fields are changed (an omitted field would otherwise be
+	 * nulled by `saveObject()`).
+	 *
+	 * @param ObjectService $objectService The OR object service.
+	 * @param int $registerId The voorzieningen register id.
+	 * @param int $moduleVersieSchemaId The moduleVersie schema id.
+	 * @param object $moduleVersie The current moduleVersie entity.
+	 * @param string $format The import format.
+	 * @param string $fileName The uploaded file's original name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
+	 */
+	private function recordProvenance(
+		ObjectService $objectService,
+		int $registerId,
+		int $moduleVersieSchemaId,
+		object $moduleVersie,
+		string $format,
+		string $fileName,
+	): void {
+		$data = $moduleVersie->getObject();
+		$data['sbomLastImportedAt'] = (new DateTime())->format(DateTime::ATOM);
+		$data['sbomFormat'] = $format;
+		$data['sbomFileName'] = $fileName;
 
-        $objectService->saveObject(
-            object: $data,
-            register: $registerId,
-            schema: $moduleVersieSchemaId,
-            uuid: $moduleVersie->getUuid(),
-            _rbac: false,
-            _multitenancy: false
-        );
-    }//end recordProvenance()
+		$objectService->saveObject(
+			object: $data,
+			register: $registerId,
+			schema: $moduleVersieSchemaId,
+			uuid: $moduleVersie->getUuid(),
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end recordProvenance()
 
-    /**
-     * Map a normalized component DTO to the `sbomComponent` OR object data
-     * bag, including its required `moduleVersie` relation and any raw
-     * VEX-extracted CVE ids for its `bomRef` (a fact from the source
-     * document — NOT a stored match; the frontend still computes the
-     * confirmed match against `kwetsbaarheid` at render time).
-     *
-     * @param array<string,mixed>             $component        The normalized component DTO.
-     * @param string                          $moduleVersieUuid The target moduleVersie uuid.
-     * @param array<string,array<int,string>> $vexCveIdsByRef   bomRef => [cveId, ...].
-     *
-     * @return array<string,mixed> The `sbomComponent` object data bag.
-     */
-    private function componentToObjectData(array $component, string $moduleVersieUuid, array $vexCveIdsByRef): array
-    {
-        $bomRef = $component['bomRef'] ?? '';
+	/**
+	 * Map a normalized component DTO to the `sbomComponent` OR object data
+	 * bag, including its required `moduleVersie` relation and any raw
+	 * VEX-extracted CVE ids for its `bomRef` (a fact from the source
+	 * document — NOT a stored match; the frontend still computes the
+	 * confirmed match against `kwetsbaarheid` at render time).
+	 *
+	 * @param array<string,mixed> $component The normalized component DTO.
+	 * @param string $moduleVersieUuid The target moduleVersie uuid.
+	 * @param array<string,array<int,string>> $vexCveIdsByRef bomRef => [cveId, ...].
+	 *
+	 * @return array<string,mixed> The `sbomComponent` object data bag.
+	 */
+	private function componentToObjectData(array $component, string $moduleVersieUuid, array $vexCveIdsByRef): array {
+		$bomRef = $component['bomRef'] ?? '';
 
-        $vexCveIds = [];
-        if ($bomRef !== '') {
-            $vexCveIds = $vexCveIdsByRef[$bomRef] ?? [];
-        }
+		$vexCveIds = [];
+		if ($bomRef !== '') {
+			$vexCveIds = $vexCveIdsByRef[$bomRef] ?? [];
+		}
 
-        return [
-            'moduleVersie' => $moduleVersieUuid,
-            'name'         => $component['name'] ?? '',
-            'version'      => $component['version'] ?? '',
-            'purl'         => $component['purl'] ?? '',
-            'licenses'     => $component['licenses'] ?? [],
-            'type'         => $component['type'] ?? '',
-            'hashes'       => $component['hashes'] ?? [],
-            'bomRef'       => $bomRef,
-            'vexCveIds'    => $vexCveIds,
-        ];
-    }//end componentToObjectData()
+		return [
+			'moduleVersie' => $moduleVersieUuid,
+			'name' => $component['name'] ?? '',
+			'version' => $component['version'] ?? '',
+			'purl' => $component['purl'] ?? '',
+			'licenses' => $component['licenses'] ?? [],
+			'type' => $component['type'] ?? '',
+			'hashes' => $component['hashes'] ?? [],
+			'bomRef' => $bomRef,
+			'vexCveIds' => $vexCveIds,
+		];
+	}//end componentToObjectData()
 
-    /**
-     * Group VEX cveId/bom-ref pairs by bom-ref, so each component's raw
-     * VEX-derived CVE ids can be attached in one pass.
-     *
-     * @param array<int,array{cveId:string,componentBomRef:string}> $vexPairs The parsed VEX pairs.
-     *
-     * @return array<string,array<int,string>> bomRef => [cveId, ...].
-     */
-    private function groupVexCveIdsByBomRef(array $vexPairs): array
-    {
-        $grouped = [];
-        foreach ($vexPairs as $pair) {
-            $ref = $pair['componentBomRef'];
-            if ($ref === '') {
-                continue;
-            }
+	/**
+	 * Group VEX cveId/bom-ref pairs by bom-ref, so each component's raw
+	 * VEX-derived CVE ids can be attached in one pass.
+	 *
+	 * @param array<int,array{cveId:string,componentBomRef:string}> $vexPairs The parsed VEX pairs.
+	 *
+	 * @return array<string,array<int,string>> bomRef => [cveId, ...].
+	 */
+	private function groupVexCveIdsByBomRef(array $vexPairs): array {
+		$grouped = [];
+		foreach ($vexPairs as $pair) {
+			$ref = $pair['componentBomRef'];
+			if ($ref === '') {
+				continue;
+			}
 
-            $grouped[$ref][] = $pair['cveId'];
-        }
+			$grouped[$ref][] = $pair['cveId'];
+		}
 
-        return $grouped;
-    }//end groupVexCveIdsByBomRef()
+		return $grouped;
+	}//end groupVexCveIdsByBomRef()
 
-    /**
-     * Count the distinct, non-empty licenses across a component list.
-     *
-     * @param array<int,array<string,mixed>> $components The parsed component DTOs.
-     *
-     * @return int The distinct license count.
-     */
-    private function countDistinctLicenses(array $components): int
-    {
-        $licenses = [];
-        foreach ($components as $component) {
-            foreach (($component['licenses'] ?? []) as $license) {
-                if (is_string($license) === true && $license !== '') {
-                    $licenses[$license] = true;
-                }
-            }
-        }
+	/**
+	 * Count the distinct, non-empty licenses across a component list.
+	 *
+	 * @param array<int,array<string,mixed>> $components The parsed component DTOs.
+	 *
+	 * @return int The distinct license count.
+	 */
+	private function countDistinctLicenses(array $components): int {
+		$licenses = [];
+		foreach ($components as $component) {
+			foreach (($component['licenses'] ?? []) as $license) {
+				if (is_string($license) === true && $license !== '') {
+					$licenses[$license] = true;
+				}
+			}
+		}
 
-        return count($licenses);
-    }//end countDistinctLicenses()
+		return count($licenses);
+	}//end countDistinctLicenses()
 
-    /**
-     * Resolve a relation value (string uuid, or array/object carrying a
-     * `uuid`/`id`) to a plain uuid string.
-     *
-     * @param mixed $relation The raw relation value.
-     *
-     * @return string|null The resolved uuid, or null when not resolvable.
-     */
-    private function resolveRelationUuid(mixed $relation): ?string
-    {
-        if (is_string($relation) === true && $relation !== '') {
-            return $relation;
-        }
+	/**
+	 * Resolve a relation value (string uuid, or array/object carrying a
+	 * `uuid`/`id`) to a plain uuid string.
+	 *
+	 * @param mixed $relation The raw relation value.
+	 *
+	 * @return string|null The resolved uuid, or null when not resolvable.
+	 */
+	private function resolveRelationUuid(mixed $relation): ?string {
+		if (is_string($relation) === true && $relation !== '') {
+			return $relation;
+		}
 
-        if (is_array($relation) === true) {
-            return $relation['uuid'] ?? ($relation['id'] ?? null);
-        }
+		if (is_array($relation) === true) {
+			return $relation['uuid'] ?? ($relation['id'] ?? null);
+		}
 
-        if (is_object($relation) === true) {
-            return $relation->uuid ?? ($relation->id ?? null);
-        }
+		if (is_object($relation) === true) {
+			return $relation->uuid ?? ($relation->id ?? null);
+		}
 
-        return null;
-    }//end resolveRelationUuid()
+		return null;
+	}//end resolveRelationUuid()
 
-    /**
-     * Resolve the register/schema coordinates + ObjectService this service
-     * needs for every operation.
-     *
-     * @return array{objectService: ObjectService, registerId: int, moduleVersieSchemaId: int, sbomComponentSchemaId: int}
-     *
-     * @throws RuntimeException When ObjectService or required schema/register
-     *                           configuration is not available.
-     */
-    private function resolveCoordinates(): array
-    {
-        $objectService = $this->getObjectService();
-        if ($objectService === null) {
-            throw new RuntimeException('ObjectService not available');
-        }
+	/**
+	 * Resolve the register/schema coordinates + ObjectService this service
+	 * needs for every operation.
+	 *
+	 * @return array{objectService: ObjectService, registerId: int, moduleVersieSchemaId: int, sbomComponentSchemaId: int}
+	 *
+	 * @throws RuntimeException When ObjectService or required schema/register
+	 *                          configuration is not available.
+	 */
+	private function resolveCoordinates(): array {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			throw new RuntimeException('ObjectService not available');
+		}
 
-        $voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-        $registerId          = $voorzieningenConfig['register'] ?? null;
+		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$registerId = $voorzieningenConfig['register'] ?? null;
 
-        $moduleVersieSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
-        $componentSchemaId    = $this->settingsService->getSchemaIdForObjectType('sbomComponent');
+		$moduleVersieSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
+		$componentSchemaId = $this->settingsService->getSchemaIdForObjectType('sbomComponent');
 
-        if ($registerId === null || $moduleVersieSchemaId === null || $componentSchemaId === null) {
-            throw new RuntimeException(
-                'sbom-import: voorzieningen register or moduleVersie/sbomComponent schema not configured'
-            );
-        }
+		if ($registerId === null || $moduleVersieSchemaId === null || $componentSchemaId === null) {
+			throw new RuntimeException(
+				'sbom-import: voorzieningen register or moduleVersie/sbomComponent schema not configured'
+			);
+		}
 
-        return [
-            'objectService'         => $objectService,
-            'registerId'            => (int) $registerId,
-            'moduleVersieSchemaId'  => (int) $moduleVersieSchemaId,
-            'sbomComponentSchemaId' => (int) $componentSchemaId,
-        ];
-    }//end resolveCoordinates()
+		return [
+			'objectService' => $objectService,
+			'registerId' => (int)$registerId,
+			'moduleVersieSchemaId' => (int)$moduleVersieSchemaId,
+			'sbomComponentSchemaId' => (int)$componentSchemaId,
+		];
+	}//end resolveCoordinates()
 
-    /**
-     * Get the OpenRegister ObjectService from the DI container.
-     *
-     * @return ObjectService|null The object service, or null if not available.
-     */
-    private function getObjectService(): ?ObjectService
-    {
-        try {
-            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'SbomImportService: Failed to get ObjectService',
-                ['exception' => $e->getMessage()]
-            );
-            return null;
-        }
-    }//end getObjectService()
+	/**
+	 * Get the OpenRegister ObjectService from the DI container.
+	 *
+	 * @return ObjectService|null The object service, or null if not available.
+	 */
+	private function getObjectService(): ?ObjectService {
+		try {
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		} catch (\Exception $e) {
+			$this->logger->error(
+				'SbomImportService: Failed to get ObjectService',
+				['exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end getObjectService()
 }//end class

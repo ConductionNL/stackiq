@@ -19,11 +19,12 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
-use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -35,7 +36,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Db\ObjectEntity;
 
 /**
  * Tests for updateUserGroups cross-tenant scope enforcement (SB1).
@@ -47,239 +47,226 @@ use OCA\OpenRegister\Db\ObjectEntity;
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */
-class ContactpersonenControllerUpdateUserGroupsTest extends TestCase
-{
+class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 
-    /** @var IUserManager|MockObject */
-    private IUserManager|MockObject $userManager;
+	/** @var IUserManager|MockObject */
+	private IUserManager|MockObject $userManager;
 
-    /** @var IGroupManager|MockObject */
-    private IGroupManager|MockObject $groupManager;
+	/** @var IGroupManager|MockObject */
+	private IGroupManager|MockObject $groupManager;
 
-    /** @var IUserSession|MockObject */
-    private IUserSession|MockObject $userSession;
+	/** @var IUserSession|MockObject */
+	private IUserSession|MockObject $userSession;
 
-    /** @var ContainerInterface|MockObject */
-    private ContainerInterface|MockObject $container;
+	/** @var ContainerInterface|MockObject */
+	private ContainerInterface|MockObject $container;
 
-    /** @var ObjectService|MockObject */
-    private ObjectService|MockObject $objectService;
+	/** @var ObjectService|MockObject */
+	private ObjectService|MockObject $objectService;
 
-    /** @var LoggerInterface|MockObject */
-    private LoggerInterface|MockObject $logger;
+	/** @var LoggerInterface|MockObject */
+	private LoggerInterface|MockObject $logger;
 
-    private ContactpersonenController $controller;
+	private ContactpersonenController $controller;
 
+	/**
+	 * Set up mocks and the controller instance.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up mocks and the controller instance.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->userManager = $this->createMock(IUserManager::class);
+		$this->groupManager = $this->createMock(IGroupManager::class);
+		$this->userSession = $this->createMock(IUserSession::class);
+		$this->objectService = $this->createMock(ObjectService::class);
+		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->container = $this->createMock(ContainerInterface::class);
 
-        $this->userManager   = $this->createMock(IUserManager::class);
-        $this->groupManager  = $this->createMock(IGroupManager::class);
-        $this->userSession   = $this->createMock(IUserSession::class);
-        $this->objectService = $this->createMock(ObjectService::class);
-        $this->logger        = $this->createMock(LoggerInterface::class);
-        $this->container     = $this->createMock(ContainerInterface::class);
+		$this->container
+			->method('get')
+			->with('OCA\OpenRegister\Service\ObjectService')
+			->willReturn($this->objectService);
 
-        $this->container
-            ->method('get')
-            ->with('OCA\OpenRegister\Service\ObjectService')
-            ->willReturn($this->objectService);
+		$this->controller = new ContactpersonenController(
+			'softwarecatalog',
+			$this->createMock(IRequest::class),
+			$this->createMock(SettingsService::class),
+			$this->createMock(ContactPersonHandler::class),
+			$this->createMock(ContactpersoonService::class),
+			$this->userManager,
+			$this->groupManager,
+			$this->userSession,
+			$this->container,
+			$this->createMock(ISecureRandom::class),
+			$this->logger
+		);
 
-        $this->controller = new ContactpersonenController(
-            'softwarecatalog',
-            $this->createMock(IRequest::class),
-            $this->createMock(SettingsService::class),
-            $this->createMock(ContactPersonHandler::class),
-            $this->createMock(ContactpersoonService::class),
-            $this->userManager,
-            $this->groupManager,
-            $this->userSession,
-            $this->container,
-            $this->createMock(ISecureRandom::class),
-            $this->logger
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Build a stub ObjectEntity that returns a given organisation UUID from getObject().
+	 *
+	 * @param string $organisationUuid The organisation UUID to embed in the object data.
+	 *
+	 * @return ObjectEntity
+	 */
+	private function makeContactpersoonEntity(string $organisationUuid): ObjectEntity {
+		$entity = $this->createMock(ObjectEntity::class);
+		$entity->method('getObject')->willReturn(['organisation' => $organisationUuid]);
+		return $entity;
+	}//end makeContactpersoonEntity()
 
+	/**
+	 * SB1-regression: org-admin in tenant A must be denied when target user is in tenant B.
+	 *
+	 * The caller belongs to org-uuid-A; the target user belongs to org-uuid-B.
+	 * Expected: HTTP 403.
+	 *
+	 * @return void
+	 */
+	public function testCrossTenantUpdateDenied(): void {
+		$callerUid = 'orgadmin@a.nl';
+		$targetUid = 'user@b.nl';
+		$callerOrgUuid = 'org-uuid-A';
+		$targetOrgUuid = 'org-uuid-B';
 
-    /**
-     * Build a stub ObjectEntity that returns a given organisation UUID from getObject().
-     *
-     * @param string $organisationUuid The organisation UUID to embed in the object data.
-     *
-     * @return ObjectEntity
-     */
-    private function makeContactpersoonEntity(string $organisationUuid): ObjectEntity
-    {
-        $entity = $this->createMock(ObjectEntity::class);
-        $entity->method('getObject')->willReturn(['organisation' => $organisationUuid]);
-        return $entity;
+		// Caller is authenticated.
+		$callerUser = $this->createMock(IUser::class);
+		$callerUser->method('getUID')->willReturn($callerUid);
+		$this->userSession->method('getUser')->willReturn($callerUser);
 
-    }//end makeContactpersoonEntity()
+		// Caller is org-admin (gebruik-beheerder), NOT full admin.
+		$this->groupManager
+			->method('isAdmin')
+			->with($callerUid)
+			->willReturn(false);
+		$this->groupManager
+			->method('isInGroup')
+			->willReturnMap(
+				[
+					[$callerUid, 'gebruik-beheerder', true],
+					[$callerUid, 'aanbod-beheerder', false],
+				]
+			);
 
+		// Target user exists in Nextcloud.
+		$targetUser = $this->createMock(IUser::class);
+		$targetUser->method('getUID')->willReturn($targetUid);
+		$this->userManager->method('get')->with($targetUid)->willReturn($targetUser);
 
-    /**
-     * SB1-regression: org-admin in tenant A must be denied when target user is in tenant B.
-     *
-     * The caller belongs to org-uuid-A; the target user belongs to org-uuid-B.
-     * Expected: HTTP 403.
-     *
-     * @return void
-     */
-    public function testCrossTenantUpdateDenied(): void
-    {
-        $callerUid    = 'orgadmin@a.nl';
-        $targetUid    = 'user@b.nl';
-        $callerOrgUuid = 'org-uuid-A';
-        $targetOrgUuid = 'org-uuid-B';
+		// ObjectService returns contactpersonen for target and caller.
+		$targetContactpersoon = $this->makeContactpersoonEntity($targetOrgUuid);
+		$callerContactpersoon = $this->makeContactpersoonEntity($callerOrgUuid);
 
-        // Caller is authenticated.
-        $callerUser = $this->createMock(IUser::class);
-        $callerUser->method('getUID')->willReturn($callerUid);
-        $this->userSession->method('getUser')->willReturn($callerUser);
+		$this->objectService
+			->method('searchObjectsPaginated')
+			->willReturnCallback(
+				function (array $query) use ($targetUid, $callerUid, $targetContactpersoon, $callerContactpersoon): array {
+					if (($query['username'] ?? '') === $targetUid) {
+						return ['results' => [$targetContactpersoon]];
+					}
 
-        // Caller is org-admin (gebruik-beheerder), NOT full admin.
-        $this->groupManager
-            ->method('isAdmin')
-            ->with($callerUid)
-            ->willReturn(false);
-        $this->groupManager
-            ->method('isInGroup')
-            ->willReturnMap(
-                [
-                    [$callerUid, 'gebruik-beheerder', true],
-                    [$callerUid, 'aanbod-beheerder', false],
-                ]
-            );
+					if (($query['username'] ?? '') === $callerUid) {
+						return ['results' => [$callerContactpersoon]];
+					}
 
-        // Target user exists in Nextcloud.
-        $targetUser = $this->createMock(IUser::class);
-        $targetUser->method('getUID')->willReturn($targetUid);
-        $this->userManager->method('get')->with($targetUid)->willReturn($targetUser);
+					return ['results' => []];
+				}
+			);
 
-        // ObjectService returns contactpersonen for target and caller.
-        $targetContactpersoon = $this->makeContactpersoonEntity($targetOrgUuid);
-        $callerContactpersoon = $this->makeContactpersoonEntity($callerOrgUuid);
+		$response = $this->controller->updateUserGroups($targetUid, ['gebruik-raadpleger']);
 
-        $this->objectService
-            ->method('searchObjectsPaginated')
-            ->willReturnCallback(
-                function (array $query) use ($targetUid, $callerUid, $targetContactpersoon, $callerContactpersoon): array {
-                    if (($query['username'] ?? '') === $targetUid) {
-                        return ['results' => [$targetContactpersoon]];
-                    }
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$data = $response->getData();
+		$this->assertFalse($data['success']);
 
-                    if (($query['username'] ?? '') === $callerUid) {
-                        return ['results' => [$callerContactpersoon]];
-                    }
+	}//end testCrossTenantUpdateDenied()
 
-                    return ['results' => []];
-                }
-            );
+	/**
+	 * SB1-regression: org-admin in tenant A CAN update users in the same tenant.
+	 *
+	 * Both caller and target belong to org-uuid-A.
+	 * Expected: the update proceeds (HTTP 200).
+	 *
+	 * @return void
+	 */
+	public function testSameTenantUpdateAllowed(): void {
+		$callerUid = 'orgadmin@a.nl';
+		$targetUid = 'user@a.nl';
+		$sharedOrgUuid = 'org-uuid-A';
 
-        $response = $this->controller->updateUserGroups($targetUid, ['gebruik-raadpleger']);
+		$callerUser = $this->createMock(IUser::class);
+		$callerUser->method('getUID')->willReturn($callerUid);
+		$this->userSession->method('getUser')->willReturn($callerUser);
 
-        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
-        $data = $response->getData();
-        $this->assertFalse($data['success']);
+		$this->groupManager->method('isAdmin')->with($callerUid)->willReturn(false);
+		$this->groupManager
+			->method('isInGroup')
+			->willReturnMap(
+				[
+					[$callerUid, 'gebruik-beheerder', true],
+					[$callerUid, 'aanbod-beheerder', false],
+				]
+			);
 
-    }//end testCrossTenantUpdateDenied()
+		$targetUser = $this->createMock(IUser::class);
+		$targetUser->method('getUID')->willReturn($targetUid);
+		$this->userManager->method('get')->with($targetUid)->willReturn($targetUser);
 
+		// Both belong to the same organisation.
+		$sharedContactpersoon = $this->makeContactpersoonEntity($sharedOrgUuid);
 
-    /**
-     * SB1-regression: org-admin in tenant A CAN update users in the same tenant.
-     *
-     * Both caller and target belong to org-uuid-A.
-     * Expected: the update proceeds (HTTP 200).
-     *
-     * @return void
-     */
-    public function testSameTenantUpdateAllowed(): void
-    {
-        $callerUid   = 'orgadmin@a.nl';
-        $targetUid   = 'user@a.nl';
-        $sharedOrgUuid = 'org-uuid-A';
+		$this->objectService
+			->method('searchObjectsPaginated')
+			->willReturn(['results' => [$sharedContactpersoon]]);
 
-        $callerUser = $this->createMock(IUser::class);
-        $callerUser->method('getUID')->willReturn($callerUid);
-        $this->userSession->method('getUser')->willReturn($callerUser);
+		// getUserGroups returns an empty array so no group changes are made.
+		$this->groupManager->method('getUserGroups')->willReturn([]);
 
-        $this->groupManager->method('isAdmin')->with($callerUid)->willReturn(false);
-        $this->groupManager
-            ->method('isInGroup')
-            ->willReturnMap(
-                [
-                    [$callerUid, 'gebruik-beheerder', true],
-                    [$callerUid, 'aanbod-beheerder', false],
-                ]
-            );
+		$response = $this->controller->updateUserGroups($targetUid, []);
 
-        $targetUser = $this->createMock(IUser::class);
-        $targetUser->method('getUID')->willReturn($targetUid);
-        $this->userManager->method('get')->with($targetUid)->willReturn($targetUser);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
 
-        // Both belong to the same organisation.
-        $sharedContactpersoon = $this->makeContactpersoonEntity($sharedOrgUuid);
+	}//end testSameTenantUpdateAllowed()
 
-        $this->objectService
-            ->method('searchObjectsPaginated')
-            ->willReturn(['results' => [$sharedContactpersoon]]);
+	/**
+	 * SB1-regression: full admin bypasses cross-tenant check.
+	 *
+	 * Expected: update is allowed even if orgs differ.
+	 *
+	 * @return void
+	 */
+	public function testFullAdminBypassesTenantCheck(): void {
+		$adminUid = 'admin';
+		$targetUid = 'user@b.nl';
 
-        // getUserGroups returns an empty array so no group changes are made.
-        $this->groupManager->method('getUserGroups')->willReturn([]);
+		$adminUser = $this->createMock(IUser::class);
+		$adminUser->method('getUID')->willReturn($adminUid);
+		$this->userSession->method('getUser')->willReturn($adminUser);
 
-        $response = $this->controller->updateUserGroups($targetUid, []);
+		// isAdmin returns true for full admin.
+		$this->groupManager->method('isAdmin')->with($adminUid)->willReturn(true);
+		$this->groupManager->method('isInGroup')->willReturn(false);
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $data = $response->getData();
-        $this->assertTrue($data['success']);
+		$targetUser = $this->createMock(IUser::class);
+		$targetUser->method('getUID')->willReturn($targetUid);
+		$this->userManager->method('get')->with($targetUid)->willReturn($targetUser);
 
-    }//end testSameTenantUpdateAllowed()
+		// ObjectService should NOT be called for org lookup when full admin.
+		$this->objectService->expects($this->never())->method('searchObjectsPaginated');
 
+		$this->groupManager->method('getUserGroups')->willReturn([]);
 
-    /**
-     * SB1-regression: full admin bypasses cross-tenant check.
-     *
-     * Expected: update is allowed even if orgs differ.
-     *
-     * @return void
-     */
-    public function testFullAdminBypassesTenantCheck(): void
-    {
-        $adminUid     = 'admin';
-        $targetUid    = 'user@b.nl';
+		$response = $this->controller->updateUserGroups($targetUid, []);
 
-        $adminUser = $this->createMock(IUser::class);
-        $adminUser->method('getUID')->willReturn($adminUid);
-        $this->userSession->method('getUser')->willReturn($adminUser);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$data = $response->getData();
+		$this->assertTrue($data['success']);
 
-        // isAdmin returns true for full admin.
-        $this->groupManager->method('isAdmin')->with($adminUid)->willReturn(true);
-        $this->groupManager->method('isInGroup')->willReturn(false);
-
-        $targetUser = $this->createMock(IUser::class);
-        $targetUser->method('getUID')->willReturn($targetUid);
-        $this->userManager->method('get')->with($targetUid)->willReturn($targetUser);
-
-        // ObjectService should NOT be called for org lookup when full admin.
-        $this->objectService->expects($this->never())->method('searchObjectsPaginated');
-
-        $this->groupManager->method('getUserGroups')->willReturn([]);
-
-        $response = $this->controller->updateUserGroups($targetUid, []);
-
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $data = $response->getData();
-        $this->assertTrue($data['success']);
-
-    }//end testFullAdminBypassesTenantCheck()
-
+	}//end testFullAdminBypassesTenantCheck()
 
 }//end class

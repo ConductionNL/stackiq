@@ -42,212 +42,195 @@ use PHPUnit\Framework\TestCase;
  * Tests for the `gebruik`, `koppeling`, and `organisatie` schemas'
  * `authorization.read` rules.
  */
-class SchemaRbacTest extends TestCase
-{
+class SchemaRbacTest extends TestCase {
 
+	/**
+	 * Load a schema's `authorization` block from the real, deployed
+	 * register config — not a fixture — so this test fails the moment the
+	 * shipped config regresses.
+	 *
+	 * @param string $schemaName The schema to load (gebruik, koppeling,
+	 *                           organisatie).
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function loadAuthorization(string $schemaName): array {
+		$path = __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json';
+		$this->assertFileExists($path, 'softwarecatalogus_register.json must exist');
 
-    /**
-     * Load a schema's `authorization` block from the real, deployed
-     * register config — not a fixture — so this test fails the moment the
-     * shipped config regresses.
-     *
-     * @param string $schemaName The schema to load (gebruik, koppeling,
-     *                           organisatie).
-     *
-     * @return array<string,mixed>
-     */
-    private function loadAuthorization(string $schemaName): array
-    {
-        $path = __DIR__.'/../../../lib/Settings/softwarecatalogus_register.json';
-        $this->assertFileExists($path, 'softwarecatalogus_register.json must exist');
+		$config = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
 
-        $config = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+		$this->assertArrayHasKey($schemaName, $config['components']['schemas']);
+		$this->assertArrayHasKey('authorization', $config['components']['schemas'][$schemaName]);
 
-        $this->assertArrayHasKey($schemaName, $config['components']['schemas']);
-        $this->assertArrayHasKey('authorization', $config['components']['schemas'][$schemaName]);
+		return $config['components']['schemas'][$schemaName]['authorization'];
+	}//end loadAuthorization()
 
-        return $config['components']['schemas'][$schemaName]['authorization'];
+	/**
+	 * Data provider of the three schemas this requirement covers.
+	 *
+	 * @return array<string,array<int,string>>
+	 */
+	public static function schemaProvider(): array {
+		return [
+			'gebruik' => ['gebruik'],
+			'koppeling' => ['koppeling'],
+			'organisatie' => ['organisatie'],
+		];
 
-    }//end loadAuthorization()
+	}//end schemaProvider()
 
+	/**
+	 * REQ-008 / TC-1,2,3: `gebruik-beheerder` MUST NOT be a bare unscoped
+	 * read grant on any of the three schemas.
+	 *
+	 * @dataProvider schemaProvider
+	 *
+	 * @param string $schemaName The schema under test.
+	 *
+	 * @return void
+	 */
+	public function testGebruikBeheerderReadIsNotBare(string $schemaName): void {
+		$authorization = $this->loadAuthorization($schemaName);
 
-    /**
-     * Data provider of the three schemas this requirement covers.
-     *
-     * @return array<string,array<int,string>>
-     */
-    public static function schemaProvider(): array
-    {
-        return [
-            'gebruik'     => ['gebruik'],
-            'koppeling'   => ['koppeling'],
-            'organisatie' => ['organisatie'],
-        ];
+		foreach ($authorization['read'] as $entry) {
+			$this->assertNotSame(
+				'gebruik-beheerder',
+				$entry,
+				"gebruik-beheerder MUST NOT be a bare unscoped read grant on {$schemaName} (REQ-008)"
+			);
+		}
 
-    }//end schemaProvider()
+	}//end testGebruikBeheerderReadIsNotBare()
 
+	/**
+	 * REQ-008 / TC-1,2,3: `gebruik-beheerder` MUST have at least one
+	 * match-scoped read grant on `_organisation` for every one of the three
+	 * schemas.
+	 *
+	 * @dataProvider schemaProvider
+	 *
+	 * @param string $schemaName The schema under test.
+	 *
+	 * @return void
+	 */
+	public function testGebruikBeheerderReadIsOrganisationScoped(string $schemaName): void {
+		$authorization = $this->loadAuthorization($schemaName);
 
-    /**
-     * REQ-008 / TC-1,2,3: `gebruik-beheerder` MUST NOT be a bare unscoped
-     * read grant on any of the three schemas.
-     *
-     * @dataProvider schemaProvider
-     *
-     * @param string $schemaName The schema under test.
-     *
-     * @return void
-     */
-    public function testGebruikBeheerderReadIsNotBare(string $schemaName): void
-    {
-        $authorization = $this->loadAuthorization($schemaName);
+		$organisationScoped = array_values(
+			array_filter(
+				$authorization['read'],
+				static function ($entry) {
+					return is_array($entry) === true
+						&& ($entry['group'] ?? null) === 'gebruik-beheerder'
+						&& ($entry['match']['_organisation'] ?? null) === '$organisation';
+				}
+			)
+		);
 
-        foreach ($authorization['read'] as $entry) {
-            $this->assertNotSame(
-                'gebruik-beheerder',
-                $entry,
-                "gebruik-beheerder MUST NOT be a bare unscoped read grant on {$schemaName} (REQ-008)"
-            );
-        }
+		$this->assertNotEmpty(
+			$organisationScoped,
+			"gebruik-beheerder MUST have an _organisation-scoped read grant on {$schemaName} (REQ-008)"
+		);
 
-    }//end testGebruikBeheerderReadIsNotBare()
+	}//end testGebruikBeheerderReadIsOrganisationScoped()
 
+	/**
+	 * REQ-008 / Decision 1: `gebruik` specifically MUST also grant
+	 * `gebruik-beheerder` a match-scoped read on `afnemer`, so a
+	 * municipality retains visibility of gebruik records it is the afnemer
+	 * on even when a different session/organisation created the record.
+	 *
+	 * @return void
+	 */
+	public function testGebruikBeheerderReadOnGebruikIsAlsoAfnemerScoped(): void {
+		$authorization = $this->loadAuthorization('gebruik');
 
-    /**
-     * REQ-008 / TC-1,2,3: `gebruik-beheerder` MUST have at least one
-     * match-scoped read grant on `_organisation` for every one of the three
-     * schemas.
-     *
-     * @dataProvider schemaProvider
-     *
-     * @param string $schemaName The schema under test.
-     *
-     * @return void
-     */
-    public function testGebruikBeheerderReadIsOrganisationScoped(string $schemaName): void
-    {
-        $authorization = $this->loadAuthorization($schemaName);
+		$afnemerScoped = array_values(
+			array_filter(
+				$authorization['read'],
+				static function ($entry) {
+					return is_array($entry) === true
+						&& ($entry['group'] ?? null) === 'gebruik-beheerder'
+						&& ($entry['match']['afnemer'] ?? null) === '$organisation';
+				}
+			)
+		);
 
-        $organisationScoped = array_values(
-            array_filter(
-                $authorization['read'],
-                static function ($entry) {
-                    return is_array($entry) === true
-                        && ($entry['group'] ?? null) === 'gebruik-beheerder'
-                        && ($entry['match']['_organisation'] ?? null) === '$organisation';
-                }
-            )
-        );
+		$this->assertNotEmpty(
+			$afnemerScoped,
+			'gebruik-beheerder MUST have an afnemer-scoped read grant on gebruik (REQ-008, Decision 1)'
+		);
 
-        $this->assertNotEmpty(
-            $organisationScoped,
-            "gebruik-beheerder MUST have an _organisation-scoped read grant on {$schemaName} (REQ-008)"
-        );
+	}//end testGebruikBeheerderReadOnGebruikIsAlsoAfnemerScoped()
 
-    }//end testGebruikBeheerderReadIsOrganisationScoped()
+	/**
+	 * REQ-008: the pre-existing `aanbod-beheerder` scoped grants on
+	 * `gebruik` and `koppeling` (REQ-002) MUST be untouched by this change.
+	 *
+	 * @return void
+	 */
+	public function testAanbodBeheerderGrantsAreUntouchedOnGebruikAndKoppeling(): void {
+		foreach (['gebruik', 'koppeling'] as $schemaName) {
+			$authorization = $this->loadAuthorization($schemaName);
 
+			$organisationScoped = array_values(
+				array_filter(
+					$authorization['read'],
+					static function ($entry) {
+						return is_array($entry) === true
+							&& ($entry['group'] ?? null) === 'aanbod-beheerder'
+							&& ($entry['match']['_organisation'] ?? null) === '$organisation';
+					}
+				)
+			);
+			$aanbiederScoped = array_values(
+				array_filter(
+					$authorization['read'],
+					static function ($entry) {
+						return is_array($entry) === true
+							&& ($entry['group'] ?? null) === 'aanbod-beheerder'
+							&& ($entry['match']['aanbieder'] ?? null) === '$organisation';
+					}
+				)
+			);
 
-    /**
-     * REQ-008 / Decision 1: `gebruik` specifically MUST also grant
-     * `gebruik-beheerder` a match-scoped read on `afnemer`, so a
-     * municipality retains visibility of gebruik records it is the afnemer
-     * on even when a different session/organisation created the record.
-     *
-     * @return void
-     */
-    public function testGebruikBeheerderReadOnGebruikIsAlsoAfnemerScoped(): void
-    {
-        $authorization = $this->loadAuthorization('gebruik');
+			$this->assertNotEmpty($organisationScoped, "aanbod-beheerder _organisation grant missing on {$schemaName}");
+			$this->assertNotEmpty($aanbiederScoped, "aanbod-beheerder aanbieder grant missing on {$schemaName}");
+		}
 
-        $afnemerScoped = array_values(
-            array_filter(
-                $authorization['read'],
-                static function ($entry) {
-                    return is_array($entry) === true
-                        && ($entry['group'] ?? null) === 'gebruik-beheerder'
-                        && ($entry['match']['afnemer'] ?? null) === '$organisation';
-                }
-            )
-        );
+	}//end testAanbodBeheerderGrantsAreUntouchedOnGebruikAndKoppeling()
 
-        $this->assertNotEmpty(
-            $afnemerScoped,
-            'gebruik-beheerder MUST have an afnemer-scoped read grant on gebruik (REQ-008, Decision 1)'
-        );
+	/**
+	 * REQ-008: the pre-existing `public` match rules on `organisatie` and
+	 * `koppeling` (unrelated to this change) MUST be untouched.
+	 *
+	 * @return void
+	 */
+	public function testPublicGrantsAreUntouchedOnOrganisatieAndKoppeling(): void {
+		$organisatie = $this->loadAuthorization('organisatie');
+		$koppeling = $this->loadAuthorization('koppeling');
 
-    }//end testGebruikBeheerderReadOnGebruikIsAlsoAfnemerScoped()
+		$publicEntries = array_values(
+			array_filter(
+				$organisatie['read'],
+				static function ($entry) {
+					return is_array($entry) === true && ($entry['group'] ?? null) === 'public';
+				}
+			)
+		);
+		$this->assertCount(4, $publicEntries, 'organisatie MUST retain its 4 pre-existing public match rules');
 
+		$publicEntriesKoppeling = array_values(
+			array_filter(
+				$koppeling['read'],
+				static function ($entry) {
+					return is_array($entry) === true && ($entry['group'] ?? null) === 'public';
+				}
+			)
+		);
+		$this->assertCount(1, $publicEntriesKoppeling, 'koppeling MUST retain its 1 pre-existing public match rule');
 
-    /**
-     * REQ-008: the pre-existing `aanbod-beheerder` scoped grants on
-     * `gebruik` and `koppeling` (REQ-002) MUST be untouched by this change.
-     *
-     * @return void
-     */
-    public function testAanbodBeheerderGrantsAreUntouchedOnGebruikAndKoppeling(): void
-    {
-        foreach (['gebruik', 'koppeling'] as $schemaName) {
-            $authorization = $this->loadAuthorization($schemaName);
-
-            $organisationScoped = array_values(
-                array_filter(
-                    $authorization['read'],
-                    static function ($entry) {
-                        return is_array($entry) === true
-                            && ($entry['group'] ?? null) === 'aanbod-beheerder'
-                            && ($entry['match']['_organisation'] ?? null) === '$organisation';
-                    }
-                )
-            );
-            $aanbiederScoped = array_values(
-                array_filter(
-                    $authorization['read'],
-                    static function ($entry) {
-                        return is_array($entry) === true
-                            && ($entry['group'] ?? null) === 'aanbod-beheerder'
-                            && ($entry['match']['aanbieder'] ?? null) === '$organisation';
-                    }
-                )
-            );
-
-            $this->assertNotEmpty($organisationScoped, "aanbod-beheerder _organisation grant missing on {$schemaName}");
-            $this->assertNotEmpty($aanbiederScoped, "aanbod-beheerder aanbieder grant missing on {$schemaName}");
-        }
-
-    }//end testAanbodBeheerderGrantsAreUntouchedOnGebruikAndKoppeling()
-
-
-    /**
-     * REQ-008: the pre-existing `public` match rules on `organisatie` and
-     * `koppeling` (unrelated to this change) MUST be untouched.
-     *
-     * @return void
-     */
-    public function testPublicGrantsAreUntouchedOnOrganisatieAndKoppeling(): void
-    {
-        $organisatie = $this->loadAuthorization('organisatie');
-        $koppeling   = $this->loadAuthorization('koppeling');
-
-        $publicEntries = array_values(
-            array_filter(
-                $organisatie['read'],
-                static function ($entry) {
-                    return is_array($entry) === true && ($entry['group'] ?? null) === 'public';
-                }
-            )
-        );
-        $this->assertCount(4, $publicEntries, 'organisatie MUST retain its 4 pre-existing public match rules');
-
-        $publicEntriesKoppeling = array_values(
-            array_filter(
-                $koppeling['read'],
-                static function ($entry) {
-                    return is_array($entry) === true && ($entry['group'] ?? null) === 'public';
-                }
-            )
-        );
-        $this->assertCount(1, $publicEntriesKoppeling, 'koppeling MUST retain its 1 pre-existing public match rule');
-
-    }//end testPublicGrantsAreUntouchedOnOrganisatieAndKoppeling()
-
+	}//end testPublicGrantsAreUntouchedOnOrganisatieAndKoppeling()
 
 }//end class
