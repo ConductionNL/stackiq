@@ -209,11 +209,13 @@ class RenameDutchCatalogColumns implements IRepairStep {
 			return;
 		}
 
-		$renamed = 0;
-		$copied = 0;
-		$refused = 0;
-		$deferred = 0;
-		$skippedTables = 0;
+		$totals = [
+			'renamed' => 0,
+			'copied' => 0,
+			'refused' => 0,
+			'deferred' => 0,
+			'skippedTables' => 0,
+		];
 
 		foreach ($tables as $table => $schemaId) {
 			$declared = $this->declaredColumnsOf(schemaId: $schemaId);
@@ -221,62 +223,86 @@ class RenameDutchCatalogColumns implements IRepairStep {
 				// Fail closed: without the schema's declared properties there is
 				// no way to tell "renamed, mapper behind" from "not renamed at
 				// all", and those need opposite actions.
-				$skippedTables++;
+				$totals['skippedTables']++;
 				continue;
 			}
 
-			$columns = $this->columnsOf(table: $table);
-			$qTable = $this->quote(identifier: $table);
-
-			foreach (self::COLUMN_MAP as $old => $new) {
-				if (in_array($old, $columns, true) === false) {
-					// Already migrated, or this schema never had the property.
-					continue;
-				}
-
-				if ($this->renameIsSafe(old: $old, new: $new, declared: $declared) === false) {
-					// The register has not moved to the English name for this
-					// schema yet. Moving the data now would orphan it.
-					$deferred++;
-					continue;
-				}
-
-				if ($this->hasCollision(table: $table, columns: $columns, target: $new) === true) {
-					$refused++;
-					continue;
-				}
-
-				$qOld = $this->quote(identifier: $old);
-				$qNew = $this->quote(identifier: $new);
-
-				if (in_array($new, $columns, true) === false) {
-					$sql = 'ALTER TABLE ' . $qTable . ' RENAME COLUMN ' . $qOld . ' TO ' . $qNew;
-					if ($this->exec(sql: $sql) === true) {
-						$renamed++;
-					}
-
-					continue;
-				}
-
-				// The mapper already added an empty English column: back-fill and
-				// leave the Dutch one, so this stays reversible.
-				$sql = 'UPDATE ' . $qTable . ' SET ' . $qNew . ' = ' . $qOld
-					. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
-				if ($this->exec(sql: $sql) === true) {
-					$copied++;
-				}
-			}//end foreach
-		}//end foreach
+			foreach ($this->migrateTable(table: $table, declared: $declared) as $key => $count) {
+				$totals[$key] += $count;
+			}
+		}
 
 		$output->info(
-			'RenameDutchCatalogColumns: ' . $renamed . ' column(s) renamed, '
-			. $copied . ' back-filled, ' . $refused . ' refused for ambiguity, '
-			. $deferred . ' deferred because the register still declares the Dutch name, '
-			. $skippedTables . ' table(s) skipped for an unreadable schema, across '
+			'RenameDutchCatalogColumns: ' . $totals['renamed'] . ' column(s) renamed, '
+			. $totals['copied'] . ' back-filled, ' . $totals['refused'] . ' refused for ambiguity, '
+			. $totals['deferred'] . ' deferred because the register still declares the Dutch name, '
+			. $totals['skippedTables'] . ' table(s) skipped for an unreadable schema, across '
 			. count($tables) . ' shard table(s).'
 		);
 
 	}//end run()
+
+	/**
+	 * Move every migratable column of one shard table.
+	 *
+	 * Split out of `run()` so that method stays a readable table loop and this
+	 * one carries the per-column decision. Returns counters rather than
+	 * mutating shared state, so the two levels cannot disagree about what was
+	 * done.
+	 *
+	 * @param string $table The shard table name.
+	 * @param array<int, string> $declared Snake_cased declared property names
+	 *                                     of that table's schema.
+	 *
+	 * @return array<string, int> Counts keyed `renamed`/`copied`/`refused`/`deferred`.
+	 */
+	private function migrateTable(string $table, array $declared): array {
+		$counts = ['renamed' => 0, 'copied' => 0, 'refused' => 0, 'deferred' => 0];
+
+		$columns = $this->columnsOf(table: $table);
+		$qTable = $this->quote(identifier: $table);
+
+		foreach (self::COLUMN_MAP as $old => $new) {
+			if (in_array($old, $columns, true) === false) {
+				// Already migrated, or this schema never had the property.
+				continue;
+			}
+
+			if ($this->renameIsSafe(old: $old, new: $new, declared: $declared) === false) {
+				// The register has not moved to the English name for this
+				// schema yet. Moving the data now would orphan it.
+				$counts['deferred']++;
+				continue;
+			}
+
+			if ($this->hasCollision(table: $table, columns: $columns, target: $new) === true) {
+				$counts['refused']++;
+				continue;
+			}
+
+			$qOld = $this->quote(identifier: $old);
+			$qNew = $this->quote(identifier: $new);
+
+			if (in_array($new, $columns, true) === false) {
+				$sql = 'ALTER TABLE ' . $qTable . ' RENAME COLUMN ' . $qOld . ' TO ' . $qNew;
+				if ($this->exec(sql: $sql) === true) {
+					$counts['renamed']++;
+				}
+
+				continue;
+			}
+
+			// The mapper already added an empty English column: back-fill and
+			// leave the Dutch one, so this stays reversible.
+			$sql = 'UPDATE ' . $qTable . ' SET ' . $qNew . ' = ' . $qOld
+				. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
+			if ($this->exec(sql: $sql) === true) {
+				$counts['copied']++;
+			}
+		}//end foreach
+
+		return $counts;
+	}//end migrateTable()
 
 	/**
 	 * Whether moving `$old` to `$new` is safe for a schema declaring `$declared`.
@@ -335,9 +361,12 @@ class RenameDutchCatalogColumns implements IRepairStep {
 	 */
 	private function declaredColumnsOf(int $schemaId): ?array {
 		try {
+			// Bound as a string, not an int: IDBConnection::executeQuery()
+			// declares `array<string>` for its parameter list, and the driver
+			// casts back for the numeric comparison.
 			$raw = $this->db->executeQuery(
 				'SELECT properties FROM `*PREFIX*openregister_schemas` WHERE id = ?',
-				[$schemaId]
+				[(string)$schemaId]
 			)->fetchOne();
 		} catch (Exception $e) {
 			$this->logger->warning(
