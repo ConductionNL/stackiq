@@ -288,6 +288,33 @@ class GebruikController extends Controller {
 
 		$orgUuid = $this->config->getUserValue(userId: $user->getUID(), appName: 'core', key: 'organisation');
 
+		// Fail CLOSED on a missing organisation, as the app's canonical
+		// deelnemers-scoped read already does in
+		// AangebodenGebruikService::getGebruiksWhereDeelnemers(). getUserValue()
+		// returns '' rather than null when the user-value was never set, so
+		// without this the scope below degrades to `deelnemers: ['']` — and the
+		// query runs with `_rbac: false, _multitenancy: false`, so an empty
+		// predicate that OpenRegister chooses to ignore would return every
+		// organisation's gebruik data rather than none.
+		if ($orgUuid === '') {
+			return new JSONResponse(
+				['message' => 'No organisation is set for this account'],
+				Http::STATUS_FORBIDDEN
+			);
+		}
+
+		// The scope is forced AFTER getParams(), so a caller cannot supply or
+		// override `deelnemers` and read another organisation's usage.
+		//
+		// ⚠️ OPEN, and deliberately not "fixed" by guessing: this passes an
+		// ARRAY where the canonical sibling passes a SCALAR, and whether
+		// OpenRegister honours array-containment matching on a `related-object`
+		// array property is unverified. If it silently ignores the array form
+		// this scope is vacuous. It could not be settled here — the instance
+		// available has zero gebruik rows, so a live A/B would have returned
+		// empty under both forms and proved nothing. Filed rather than changed:
+		// swapping the filter form on a working endpoint could equally break
+		// it, and an unmeasured change to a scope is not a fix.
 		$options = $this->request->getParams();
 		$options['deelnemers'] = [$orgUuid];
 

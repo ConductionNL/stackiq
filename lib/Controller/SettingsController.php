@@ -827,6 +827,11 @@ class SettingsController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 * @no-admin-idor-exempt Takes no object reference. The only parameter is a
+	 *      typed `int $minutesBack` time window, and
+	 *      OrganizationSyncService::getSyncStatusWithErrorHandling() accepts no
+	 *      object id either — it reports aggregate sync timing, not a record.
+	 *      There is nothing for a caller to substitute.
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
@@ -910,6 +915,10 @@ class SettingsController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 * @no-admin-idor-exempt An availability probe that touches no storage. The
+	 *      body reads one `timestamp` request param, logs it at debug level and
+	 *      echoes it back; there is no mapper, service or object lookup on the
+	 *      path at all, so there is no direct object reference to substitute.
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
@@ -1591,8 +1600,20 @@ class SettingsController extends Controller {
 	 * @spec openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function exportArchiMate(): Response {
-		if ($this->userSession->getUser() === null) {
+		$currentUser = $this->userSession->getUser();
+		if ($currentUser === null) {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Same guard as the sibling exportOrgArchiMate(), which has carried it
+		// all along. This endpoint exports the WHOLE register while the sibling
+		// exports one organisation, so it was the broader of the two and the
+		// only one unguarded. @NoAdminRequired is kept deliberately: the helper
+		// grants organisation-admins as well as admins, which is the tier the
+		// admin UI relies on and which the annotation's removal would drop.
+		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser);
+		if ($permissionError !== null) {
+			return $permissionError;
 		}
 
 		try {
@@ -1771,6 +1792,13 @@ class SettingsController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
+	 * @no-admin-idor-exempt The scope is in the RECEIVER, not in an argument.
+	 *      `$fileName` is resolved against
+	 *      `IRootFolder::getUserFolder($userSession->getUser()->getUID())`, so
+	 *      it can only ever name a file in the caller's own home; and `..` and
+	 *      `/` are rejected outright before that, so it cannot escape it. A
+	 *      substituted filename reaches a different file only if the caller
+	 *      already owns that file.
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function downloadArchiMate(string $fileName): Response {
@@ -1868,7 +1896,13 @@ class SettingsController extends Controller {
 	/**
 	 * Test email connection (separate from sending test email)
 	 *
-	 * @NoAdminRequired
+	 * Admin-only: the caller-supplied smtpHost/smtpPort reach a DSN in
+	 * SettingsService::testEmailConnection(), and the server then opens an
+	 * outbound TCP connection to whatever host and port were named. For a
+	 * non-admin that is an SSRF and internal port-scan primitive, so the
+	 * endpoint must not declare @NoAdminRequired. Its sibling sendTestEmail()
+	 * already omits it, as does every other action on this controller.
+	 *
 	 * @NoCSRFRequired
 	 *
 	 * @return JSONResponse Test connection result
@@ -2083,7 +2117,12 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Template content.
 	 *
-	 * @NoAdminRequired
+	 * Admin-only, to match the write it pairs with. It reads admin-authored
+	 * mail templates out of app configuration, and no frontend code calls this
+	 * route at all — the settings UI reads templates from the bulk settings
+	 * payload instead (verified with a positive control on a route that IS
+	 * called). Leaving it open bought nothing and exposed admin content.
+	 *
 	 * @NoCSRFRequired
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
 	 */
@@ -2126,7 +2165,14 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result.
 	 *
-	 * @NoAdminRequired
+	 * Admin-only: this writes app configuration —
+	 * setValueString($appName, "email_template_{$templateName}", $content) —
+	 * and the stored HTML is rendered into real outbound mail. It was the only
+	 * write on this controller declaring @NoAdminRequired, so any authenticated
+	 * user could rewrite the templates every recipient receives, and mint
+	 * unbounded `email_template_*` config rows besides. Its sibling
+	 * updateEmailSettings() already omits the annotation.
+	 *
 	 * @NoCSRFRequired
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
 	 */
@@ -2185,7 +2231,9 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Default template content.
 	 *
-	 * @NoAdminRequired
+	 * Admin-only, for the same reason as getEmailTemplate(): it belongs to the
+	 * admin mail-template surface and has no non-admin consumer.
+	 *
 	 * @NoCSRFRequired
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
 	 */
@@ -2228,7 +2276,9 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Available variables for template.
 	 *
-	 * @NoAdminRequired
+	 * Admin-only, for the same reason as getEmailTemplate(): it belongs to the
+	 * admin mail-template surface and has no non-admin consumer.
+	 *
 	 * @NoCSRFRequired
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
 	 */
@@ -3448,7 +3498,20 @@ class SettingsController extends Controller {
 	/**
 	 * Sync OpenRegister organisations to voorzieningen register
 	 *
-	 * @NoAdminRequired
+	 * Admin-only: this triggers a register-wide write sync with a
+	 * caller-chosen batch size, so the endpoint must not carry the
+	 * no-admin-required annotation. Its siblings performSync(),
+	 * bulkSyncStandards() and triggerEolSync() already omit it — the
+	 * annotation's absence IS the check on this controller, which is why none
+	 * of them carries an in-body one.
+	 *
+	 * The annotation is deliberately NOT spelled out above. Nextcloud's own
+	 * ControllerMethodReflector matches `^\h+\*\h+@([A-Z]\w+)` against the raw
+	 * docblock, so writing "must not declare @NoAdminRequired" at the start of
+	 * a comment line RE-DECLARES it — the sentence explaining the removal
+	 * undoes the removal, in the framework and not merely in a linter. Gate-7
+	 * caught it here; nothing else would have.
+	 *
 	 * @NoCSRFRequired
 	 *
 	 * @return JSONResponse The sync results
