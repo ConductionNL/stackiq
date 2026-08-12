@@ -233,4 +233,163 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 		self::assertNotSame('', $this->step->getName());
 
 	}//end testGetName()
+
+	// ── softwarecatalog#492: the ordering guard ────────────────────────────
+
+	/**
+	 * The guard's full truth table.
+	 *
+	 * Both halves are required, and each one alone is wrong in a different
+	 * direction — so all four combinations are pinned rather than the two that
+	 * happen to occur today.
+	 *
+	 * @return void
+	 */
+	public function testRenameIsSafeOnlyWhenTheRegisterHasMoved(): void {
+		// The register has moved: English declared, Dutch gone. Follow it.
+		self::assertTrue(
+			$this->call('renameIsSafe', ['naam', 'name', ['name', 'description']]),
+			'The destination is declared and the source is not — the data should follow'
+		);
+
+		// TODAY's state: Dutch still declared, English declared nowhere.
+		// This is the case that made #492 a data-loss bug.
+		self::assertFalse(
+			$this->call('renameIsSafe', ['naam', 'name', ['naam', 'beschrijving']]),
+			'The register still declares the Dutch name — renaming would orphan the data'
+		);
+
+		// Ambiguous window: the register declares BOTH. Writes and reads could
+		// land on different columns, so defer rather than guess.
+		self::assertFalse(
+			$this->call('renameIsSafe', ['naam', 'name', ['naam', 'name']]),
+			'Both names declared is ambiguous, not a green light'
+		);
+
+		// The property was simply dropped: neither name is declared. There is
+		// no destination to move to.
+		self::assertFalse(
+			$this->call('renameIsSafe', ['naam', 'name', ['beschrijving']]),
+			'Neither name declared — there is nothing to move the data into'
+		);
+
+	}//end testRenameIsSafeOnlyWhenTheRegisterHasMoved()
+
+	/**
+	 * An unreadable schema declares nothing, so nothing is migrated.
+	 *
+	 * `declaredColumnsOf()` returns null on failure and `run()` skips the whole
+	 * table; this pins the adjacent case, where it returns an empty set.
+	 *
+	 * @return void
+	 */
+	public function testAnEmptyDeclaredSetMigratesNothing(): void {
+		foreach ($this->constant('COLUMN_MAP') as $old => $new) {
+			self::assertFalse(
+				$this->call('renameIsSafe', [$old, $new, []]),
+				"'$old' must not move when the schema declares nothing"
+			);
+		}
+
+	}//end testAnEmptyDeclaredSetMigratesNothing()
+
+	/**
+	 * The column-name transform matches MagicMapper's, name for name.
+	 *
+	 * The comparison is only meaningful if both sides spell the name the same
+	 * way. `beschrijvingKort` must become `beschrijving_kort`, or the guard
+	 * would defer every rename forever — and a guard that always says no is as
+	 * useless as one that always says yes, while being much harder to notice.
+	 *
+	 * @return void
+	 */
+	public function testSanitizeColumnNameMirrorsMagicMapper(): void {
+		$cases = [
+			'naam' => 'naam',
+			'beschrijvingKort' => 'beschrijving_kort',
+			'beschrijvingLang' => 'beschrijving_lang',
+			'shortDescription' => 'short_description',
+			'publicationDate' => 'publication_date',
+			'depublicationDate' => 'depublication_date',
+			'contactPerson' => 'contact_person',
+			'property-definition' => 'property_definition',
+		];
+
+		foreach ($cases as $property => $expected) {
+			self::assertSame(
+				$expected,
+				$this->call('sanitizeColumnName', [$property]),
+				"'$property' must materialise as '$expected'"
+			);
+		}
+
+	}//end testSanitizeColumnNameMirrorsMagicMapper()
+
+	/**
+	 * Against the register this repo actually ships, the step is a NO-OP.
+	 *
+	 * This is the regression test for softwarecatalog#492, and it is the one
+	 * that would have caught it. The register still declares `naam`,
+	 * `beschrijvingKort`, `contactpersoon`, `publicatiedatum` and friends on
+	 * every in-scope schema, and declares none of the English destinations
+	 * there — so every rename must defer.
+	 *
+	 * It is written against the SHIPPED FILE rather than a fixture on purpose.
+	 * A fixture would pin what I believed the register said; the file pins what
+	 * it says. When the register is renamed to English this test starts failing,
+	 * which is the correct moment for a human to look — at which point the
+	 * expectation flips to "these renames are now permitted", in the same PR
+	 * that renames the register (decidesk#467's shape).
+	 *
+	 * @return void
+	 */
+	public function testShippedRegisterStillDeclaresDutchSoNothingMoves(): void {
+		$path = __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json';
+		self::assertFileExists($path, 'softwarecatalogus_register.json must exist');
+
+		$register = json_decode((string)file_get_contents($path), true);
+		self::assertIsArray($register);
+
+		$schemas = ($register['components']['schemas'] ?? []);
+		self::assertIsArray($schemas);
+		// Positive control: the extraction must actually be finding schemas,
+		// otherwise an empty loop below would pass for free.
+		self::assertGreaterThan(10, count($schemas), 'the register extraction found no schemas');
+
+		$wire = $this->constant('WIRE_SCHEMA_SLUGS');
+		$map = $this->constant('COLUMN_MAP');
+
+		$checked = 0;
+		foreach ($schemas as $slug => $schema) {
+			if (in_array($slug, $wire, true) === true) {
+				continue;
+			}
+
+			$declared = [];
+			foreach (array_keys(($schema['properties'] ?? [])) as $property) {
+				$declared[] = $this->call('sanitizeColumnName', [(string)$property]);
+			}
+
+			foreach ($map as $old => $new) {
+				if (in_array($old, $declared, true) === false) {
+					continue;
+				}
+
+				$checked++;
+				self::assertFalse(
+					$this->call('renameIsSafe', [$old, $new, $declared]),
+					"Schema '$slug' still declares '$old'; moving it to '$new' would orphan the data"
+				);
+			}
+		}
+
+		// Second positive control: if this were 0 the assertions above never
+		// ran, and a silently empty loop is exactly how #492 shipped green.
+		self::assertGreaterThan(
+			20,
+			$checked,
+			'no Dutch column was inspected — the guard was not actually exercised'
+		);
+
+	}//end testShippedRegisterStillDeclaresDutchSoNothingMoves()
 }//end class
