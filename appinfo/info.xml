@@ -87,12 +87,19 @@ Vrij en open source onder de EUPL-licentie.
         CI already tests stable32 only, so this changes the advertised app-store
         range and nothing about what runs.
         -->
-        <nextcloud min-version="32" max-version="34"/>
         <php min-version="8.3" min-int-size="64"/>
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
+        <nextcloud min-version="32" max-version="34"/>
     </dependencies>
+
+	<background-jobs>
+		<job>OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob</job>
+		<job>OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob</job>
+		<job>OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob</job>
+		<job>OCA\SoftwareCatalog\BackgroundJob\EolSyncJob</job>
+	</background-jobs>
 
 	<repair-steps>
 		<post-migration>
@@ -110,12 +117,10 @@ Vrij en open source onder de EUPL-licentie.
 		</post-migration>
 	</repair-steps>
 
-	<background-jobs>
-		<job>OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob</job>
-		<job>OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob</job>
-		<job>OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob</job>
-		<job>OCA\SoftwareCatalog\BackgroundJob\EolSyncJob</job>
-	</background-jobs>
+	<settings>
+		<admin>OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin</admin>
+		<admin-section>OCA\SoftwareCatalog\Sections\SoftwareCatalogAdmin</admin-section>
+	</settings>
 
     <navigations>
         <navigation>
@@ -125,9 +130,4 @@ Vrij en open source onder de EUPL-licentie.
             <icon>app.svg</icon>
         </navigation>
     </navigations>
-
-	<settings>
-		<admin>OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin</admin>
-		<admin-section>OCA\SoftwareCatalog\Sections\SoftwareCatalogAdmin</admin-section>
-	</settings>
 </info>
