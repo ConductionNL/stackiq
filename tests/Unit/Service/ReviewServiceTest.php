@@ -30,6 +30,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\ReviewService;
 use OCA\SoftwareCatalog\Service\SettingsService;
+use OCP\AppFramework\Db\Entity;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -227,6 +228,57 @@ class ReviewServiceTest extends TestCase
         $this->assertSame('invalid subject type', $result['reason']);
         $this->assertSame([], $this->saved);
     }//end testInvalidSubjectTypeRejected()
+
+    /**
+     * `entityUuid()` must read the uuid off a saved entity whose `getUuid()`
+     * is reached through `Entity::__call()` — which is what every real
+     * OpenRegister `ObjectEntity` returned by `saveObject()` does.
+     *
+     * With the old `method_exists()` probe this returned `null` for EVERY real
+     * save (the `is_array()` arm cannot rescue an object), so `submit()`
+     * answered `uuid: null` to the client and wrote `['uuid' => null]` to the
+     * audit log — softwarecatalog#490.
+     *
+     * The private method is exercised directly because the shared
+     * `tests/Stubs/Db/ObjectEntity` still declares `getUuid()` concretely (8
+     * other test files configure it on a mock), so a double routed through
+     * `saveObject()`'s `: ObjectEntity` return type cannot express the magic
+     * shape. Recorded as remaining debt rather than hidden.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
+     */
+    public function testEntityUuidReadsAMagicAccessorUuid(): void
+    {
+        $entity = new class extends Entity {
+
+            /**
+             * The uuid — a property reached via __call, as on ObjectEntity.
+             *
+             * @var string|null
+             */
+            protected ?string $uuid = null;
+        };
+        $entity->setUuid('review-uuid-1');
+
+        $this->assertFalse(
+            method_exists($entity, 'getUuid'),
+            'the double must reach getUuid() through __call, like the real ObjectEntity'
+        );
+
+        $service = new ReviewService(
+            $this->container($this->objectService([])),
+            $this->settings(),
+            $this->userSession($this->user('jan.jansen', 'Jan Jansen')),
+            $this->logger()
+        );
+
+        $method = new \ReflectionMethod($service, 'entityUuid');
+        $method->setAccessible(true);
+
+        $this->assertSame('review-uuid-1', $method->invoke($service, $entity));
+    }//end testEntityUuidReadsAMagicAccessorUuid()
 
     /**
      * Build an ObjectService mock whose searchObjects returns $found and whose

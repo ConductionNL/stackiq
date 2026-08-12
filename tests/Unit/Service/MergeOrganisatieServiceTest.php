@@ -212,6 +212,130 @@ class MergeOrganisatieServiceTest extends TestCase
     }//end testUntouchedContractFieldsSurviveRepointing()
 
     /**
+     * The `entity()` double asserts its own premise: the real
+     * OpenRegister `ObjectEntity` declares `getOrganisation()` only as an
+     * `@method` docblock tag over `protected ?string $organisation`, so it is
+     * reached through `Entity::__call()`. That makes `method_exists()` FALSE
+     * and `property_exists()` TRUE on the property the framework itself keys
+     * on (`Entity::getter()` does exactly this check).
+     *
+     * Without this test the fixture could silently drift back to the concrete
+     * shape of `tests/Stubs/Db/ObjectEntity.php` — which is precisely how the
+     * defect this file now covers stayed green for its entire life.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
+     */
+    public function testTheMagicEntityDoubleMatchesTheRealObjectEntityAccessorShape(): void
+    {
+        $entity = $this->entity(['id' => 'c1'], uuid: 'c1', organisation: 'org-a');
+
+        $this->assertFalse(
+            method_exists($entity, 'getOrganisation'),
+            'the double must reach getOrganisation() through __call, like the real ObjectEntity'
+        );
+        $this->assertTrue(
+            property_exists($entity, 'organisation'),
+            'property_exists() is the instrument Entity::getter() itself uses'
+        );
+        $this->assertSame('org-a', $entity->getOrganisation());
+    }//end testTheMagicEntityDoubleMatchesTheRealObjectEntityAccessorShape()
+
+    /**
+     * Objects owned through the system-level `@self.organisation` field
+     * (`contract`, `compliancy`) are re-pointed when the entity reaches
+     * `getOrganisation()` through `Entity::__call()` — which is what every
+     * real OpenRegister `ObjectEntity` does.
+     *
+     * This is the regression test for #490: with a `method_exists()` probe the
+     * branch below never ran, so `execute()` re-pointed NOTHING for these two
+     * relation types while still tombstoning the source organisation — leaving
+     * live objects owned by a retired organisation.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
+     */
+    public function testSelfOrganisationRelationsAreRepointedForMagicAccessorEntities(): void
+    {
+        $service = $this->makeService(
+            organisations: [
+                'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief']),
+                'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
+            ],
+            typedFixtures: [
+                'contract'   => [
+                    $this->entity(
+                        ['id' => 'c1', 'contractNummer' => 'C-100', 'kosten' => 5000],
+                        uuid: 'c1',
+                        organisation: 'org-a'
+                    ),
+                    $this->entity(['id' => 'c2'], uuid: 'c2', organisation: 'org-b'),
+                ],
+                'compliancy' => [
+                    $this->entity(['id' => 'cp1'], uuid: 'cp1', organisation: 'org-a'),
+                ],
+            ],
+            groupMembers: []
+        );
+
+        $result = $service->execute(sourceUuid: 'org-a', targetUuid: 'org-b');
+
+        $this->assertSame(1, $result['counts']['contract'], 'the contract owned by the source MUST be counted');
+        $this->assertSame(1, $result['counts']['compliancy'], 'the compliancy owned by the source MUST be counted');
+
+        $contractSave = $this->findSave(schemaId: self::SCHEMA_IDS['contract'], uuid: 'c1');
+        $this->assertNotNull($contractSave, 'the contract MUST be re-pointed, not silently skipped');
+        $this->assertSame('org-b', $contractSave['object']['@self']['organisation']);
+        // PUT-semantics: every unrelated field is carried forward.
+        $this->assertSame('C-100', $contractSave['object']['contractNummer']);
+        $this->assertSame(5000, $contractSave['object']['kosten']);
+
+        $this->assertNotNull($this->findSave(schemaId: self::SCHEMA_IDS['compliancy'], uuid: 'cp1'));
+        $this->assertNull(
+            $this->findSave(schemaId: self::SCHEMA_IDS['contract'], uuid: 'c2'),
+            'a contract already owned by the target MUST NOT be re-saved'
+        );
+
+        // The data-loss half of #490: the source is tombstoned either way, so a
+        // silent zero here leaves live objects owned by a retired organisation.
+        $tombstone = $this->findSave(schemaId: self::SCHEMA_IDS['organisatie'], uuid: 'org-a');
+        $this->assertNotNull($tombstone);
+        $this->assertSame('samengevoegd', $tombstone['object']['status']);
+    }//end testSelfOrganisationRelationsAreRepointedForMagicAccessorEntities()
+
+    /**
+     * Dry-run and execute agree for magic-accessor entities too. Before #490
+     * they agreed only because BOTH were equally broken (0 == 0), so the
+     * parity assertion could not detect the defect on its own.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/organisation-merge/spec.md#requirement-dry-run-and-execute-must-report-structurally-identical-counts-for-the-same-unchanged-input
+     */
+    public function testDryRunCountsSelfOrganisationRelationsForMagicAccessorEntities(): void
+    {
+        $service = $this->makeService(
+            organisations: [
+                'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief']),
+                'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
+            ],
+            typedFixtures: [
+                'contract'   => [$this->entity(['id' => 'c1'], uuid: 'c1', organisation: 'org-a')],
+                'compliancy' => [$this->entity(['id' => 'cp1'], uuid: 'cp1', organisation: 'org-a')],
+            ],
+            groupMembers: []
+        );
+
+        $result = $service->dryRun(sourceUuid: 'org-a', targetUuid: 'org-b');
+
+        $this->assertSame(1, $result['counts']['contract']);
+        $this->assertSame(1, $result['counts']['compliancy']);
+        $this->assertSame([], $this->savedCalls, 'dry-run MUST NOT write any object');
+    }//end testDryRunCountsSelfOrganisationRelationsForMagicAccessorEntities()
+
+    /**
      * A gebruik object with the source as one of several deelnemers only
      * replaces the matching entry.
      *
@@ -636,7 +760,22 @@ class MergeOrganisatieServiceTest extends TestCase
     }//end makeService()
 
     /**
-     * Build an ObjectEntity mock returning $data / $uuid / $organisation.
+     * Build a FAITHFUL OpenRegister ObjectEntity double: a concrete subclass of
+     * the `ObjectEntity` stub, whose `organisation` and `uuid` attributes are
+     * reached through the stub's `__call()` — which mirrors
+     * `OCP\AppFramework\Db\Entity::__call()`, exactly as the real
+     * `ObjectEntity` reaches them.
+     *
+     * This used to return `createMock(ObjectEntity::class)` over a stub that
+     * declared `getOrganisation()` CONCRETELY — PHPUnit 10 removed
+     * `addMethods()`, so a mock cannot configure a magic accessor. That double
+     * made `method_exists($entity, 'getOrganisation')` TRUE in the suite and
+     * FALSE in production, i.e. it inverted the exact predicate under test, and
+     * is why softwarecatalog#490 was green here for its entire life.
+     *
+     * It must be a SUBCLASS, not an arbitrary `Entity`: `ObjectService::find()`
+     * declares `?ObjectEntity`, and an incompatible return raises a `TypeError`
+     * that `findOrganisatie()` swallows into a `source-not-found` blocker.
      *
      * @param array<string, mixed> $data         The object payload (getObject()).
      * @param string|null          $uuid         The uuid (defaults to $data['id']).
@@ -646,10 +785,100 @@ class MergeOrganisatieServiceTest extends TestCase
      */
     private function entity(array $data, ?string $uuid=null, ?string $organisation=null): ObjectEntity
     {
-        $entity = $this->createMock(ObjectEntity::class);
-        $entity->method('getObject')->willReturn($data);
-        $entity->method('getUuid')->willReturn($uuid ?? (string) ($data['id'] ?? ''));
-        $entity->method('getOrganisation')->willReturn($organisation);
+        $entity = new class extends ObjectEntity {
+
+            /**
+             * The object uuid — a property, reached via __call as on the real entity.
+             *
+             * @var string|null
+             */
+            protected ?string $uuid = null;
+
+            /**
+             * The object payload.
+             *
+             * @var array<string, mixed>|null
+             */
+            protected ?array $object = null;
+
+            /**
+             * The numeric database id.
+             *
+             * @return int
+             */
+            public function getId()
+            {
+                return 0;
+            }//end getId()
+
+            /**
+             * The object uuid.
+             *
+             * @return string
+             */
+            public function getUuid()
+            {
+                return (string) $this->uuid;
+            }//end getUuid()
+
+            /**
+             * Mirrors ObjectEntity::getObject(), which is explicitly declared
+             * (not magic) on the real entity because it injects the uuid as `id`.
+             *
+             * @return array<string, mixed>
+             */
+            public function getObject()
+            {
+                return array_merge(['id' => $this->uuid], ($this->object ?? []));
+            }//end getObject()
+
+            /**
+             * The register id — unused by these tests.
+             *
+             * @return mixed
+             */
+            public function getRegister()
+            {
+                return null;
+            }//end getRegister()
+
+            /**
+             * The schema id — unused by these tests.
+             *
+             * @return mixed
+             */
+            public function getSchema()
+            {
+                return null;
+            }//end getSchema()
+
+            /**
+             * Set the object payload.
+             *
+             * @param array<string, mixed>|null $object The payload.
+             *
+             * @return self
+             */
+            public function setObject($object=null)
+            {
+                $this->object = $object;
+                return $this;
+            }//end setObject()
+
+            /**
+             * Serialise the payload.
+             *
+             * @return array<string, mixed>
+             */
+            public function jsonSerialize()
+            {
+                return $this->getObject();
+            }//end jsonSerialize()
+        };
+
+        $entity->setUuid($uuid ?? (string) ($data['id'] ?? ''));
+        $entity->setObject($data);
+        $entity->setOrganisation($organisation);
 
         return $entity;
     }//end entity()
