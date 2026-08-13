@@ -264,7 +264,7 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		expect(res.ok()).toBeTruthy()
 		const rows = (await res.json())?.results ?? []
 		expect(
-			rows.some((r: Record<string, unknown>) => r.functie === editedFunctie),
+			rows.some((r: Record<string, unknown>) => r.role === editedFunctie),
 		).toBeTruthy()
 	})
 
@@ -351,7 +351,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}`,
 			{
 				data: {
-					naam: `Component ${token}`,
+					name: `Component ${token}`,
 					type: 'Applicatie',
 					beschrijvingKort: 'e2e seeded component',
 				},
@@ -368,7 +368,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		let rows = (await res.json())?.results ?? []
 		expect(
 			rows.some((r: Record<string, unknown>) =>
-				String(r.naam).includes(token),
+				String(r.name).includes(token),
 			),
 		).toBeTruthy()
 
@@ -378,7 +378,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}/${id}`,
 			{
 				data: {
-					naam: `Component ${token}`,
+					name: `Component ${token}`,
 					type: 'Applicatie',
 					beschrijvingKort: editedDesc,
 				},
@@ -401,7 +401,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		rows = (await res.json())?.results ?? []
 		expect(
 			rows.some((r: Record<string, unknown>) =>
-				String(r.naam).includes(token),
+				String(r.name).includes(token),
 			),
 		).toBeFalsy()
 	})
@@ -421,7 +421,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		)
 		expect(
 			((await res.json())?.results ?? []).some(
-				(r: Record<string, unknown>) => r.versie === versie,
+				(r: Record<string, unknown>) => r.version === versie,
 			),
 		).toBeTruthy()
 
@@ -485,7 +485,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		// configuration version WITHOUT applying it, so the instance kept serving
 		// the old schema and the "bug" was a stale environment, not code.
 		expect(
-			rows.some((r: Record<string, unknown>) => r.versie === versie),
+			rows.some((r: Record<string, unknown>) => r.version === versie),
 		).toBeTruthy()
 	})
 })

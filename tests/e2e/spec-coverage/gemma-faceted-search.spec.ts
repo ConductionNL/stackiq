@@ -71,7 +71,7 @@ test.beforeAll(async () => {
 	for (const n of [1, 2]) {
 		seeded.push(
 			await createObject(ctx, config.register, 'module', {
-				naam: `${TOKEN} module ${n}`,
+				name: `${TOKEN} module ${n}`,
 			}),
 		)
 	}

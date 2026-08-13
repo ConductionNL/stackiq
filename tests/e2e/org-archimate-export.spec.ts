@@ -141,7 +141,7 @@ async function seedOrganization(): Promise<void> {
 			const list = data?.results ?? data ?? []
 			const matches = (o: Record<string, unknown>): boolean =>
 				o.contactsUid === SEEDED_ORG_NAME
-				|| o.naam === SEEDED_ORG_NAME
+				|| o.name === SEEDED_ORG_NAME
 				|| o.name === SEEDED_ORG_NAME
 				|| (o as { '@self'?: { name?: string } })['@self']?.name
 					=== SEEDED_ORG_NAME
@@ -170,7 +170,7 @@ async function seedOrganization(): Promise<void> {
 			`/index.php/apps/openregister/api/objects/${register}/${schema}`,
 			{
 				data: {
-					naam: SEEDED_ORG_NAME,
+					name: SEEDED_ORG_NAME,
 					type: 'Leverancier',
 					status: 'Actief',
 					contactsUid: SEEDED_ORG_NAME,
