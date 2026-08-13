@@ -192,9 +192,9 @@ class GebruikSyncService {
 			$gebruikUuid = $gebruikObject->getUuid();
 
 			// Get the referentiecomponenten IDs.
-			$referenceComponenten = $gebruikData['gebruiktForReferentiecomponenten'] ?? [];
+			$referenceComponents = $gebruikData['gebruiktForReferentiecomponenten'] ?? [];
 
-			if (empty($referenceComponenten) === true) {
+			if (empty($referenceComponents) === true) {
 				$this->logger->info(
 					'No referentiecomponenten found for gebruik object',
 					[
@@ -209,13 +209,13 @@ class GebruikSyncService {
 				[
 					'app' => 'softwarecatalog',
 					'gebruikId' => $gebruikUuid,
-					'referentieComponentenCount' => count($referenceComponenten),
+					'referentieComponentenCount' => count($referenceComponents),
 				]
 			);
 
 			// Extract IDs from referentiecomponenten.
 			$referenceIds = [];
-			foreach ($referenceComponenten as $component) {
+			foreach ($referenceComponents as $component) {
 				if (isset($component['id']) === true) {
 					$referenceIds[] = $component['id'];
 				}

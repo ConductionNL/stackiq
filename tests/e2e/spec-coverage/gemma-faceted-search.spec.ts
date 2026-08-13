@@ -16,9 +16,9 @@
  * views) are NOT covered here, and not because they are hard: the fixtures
  * cannot be built through the object API. Measured on a live instance —
  * POSTing a module with
- *     {"standardVersions":["StUF-ZKN-x"],"referenceComponenten":["RC-x"]}
+ *     {"standardVersions":["StUF-ZKN-x"],"referenceComponents":["RC-x"]}
  * returns 200 with BOTH arrays silently emptied (`"standardVersions":[]`,
- * `"referenceComponenten":[]`). They are relation fields; OpenRegister drops
+ * `"referenceComponents":[]`). They are relation fields; OpenRegister drops
  * bare strings without erroring. Seeding them needs real `element` objects in
  * the AMEF register plus `relation` rows, which is a fixture layer this file
  * deliberately does not fake — a facet test seeded with data the product

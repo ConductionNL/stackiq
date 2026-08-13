@@ -238,7 +238,7 @@ class RenameDutchCatalogColumns implements IRepairStep {
 		'nora_kwaliteitsdoel' => 'nora_quality_goal',
 		'notificaties' => 'notifications',
 		'publicatiedatum' => 'publication_date',
-		'referentie_componenten' => 'reference_componenten',
+		'referentie_componenten' => 'reference_components',
 		'registratiestatus' => 'registration_status',
 		'rollen' => 'roles',
 		'standaard' => 'standard',

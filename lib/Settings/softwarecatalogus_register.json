@@ -7006,7 +7006,7 @@
             "licence": "License",
             "title": "License"
           },
-          "referenceComponenten": {
+          "referenceComponents": {
             "description": "GEMMA referentiecomponenten die de applicatie implementeert",
             "type": "array",
             "visible": true,

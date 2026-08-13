@@ -264,17 +264,17 @@ class FacetServiceTest extends TestCase {
 		$modules = [
 			[
 				'id' => 'm1',
-				'referenceComponenten' => [['identifier' => 'rc-1']],
+				'referenceComponents' => [['identifier' => 'rc-1']],
 				'standardVersions' => [['name' => 'StUF-ZKN']],
 			],
 			[
 				'id' => 'm2',
-				'referenceComponenten' => [['identifier' => 'rc-1']],
+				'referenceComponents' => [['identifier' => 'rc-1']],
 				'standardVersions' => [['name' => 'StUF-ZKN']],
 			],
 			[
 				'id' => 'm3',
-				'referenceComponenten' => ['rc-2'],
+				'referenceComponents' => ['rc-2'],
 				'standardVersions' => [],
 			],
 		];
@@ -299,7 +299,7 @@ class FacetServiceTest extends TestCase {
 		$this->assertSame(2, $refCompByValue['Zaakregistratiecomponent']);
 		$this->assertSame(1, $refCompByValue['Klantcontactcomponent']);
 
-		$standardByValue = array_column($result['standard'], 'count', 'value');
+		$standardByValue = array_column($result['standaard'], 'count', 'value');
 		$this->assertSame(2, $standardByValue['StUF-ZKN']);
 
 		$domeinByValue = array_column($result['domein'], 'count', 'value');
@@ -330,21 +330,21 @@ class FacetServiceTest extends TestCase {
 			new FakeObjectEntity(
 				id: 'm1',
 				payload: [
-					'referenceComponenten' => [['identifier' => 'rc-1']],
+					'referenceComponents' => [['identifier' => 'rc-1']],
 					'standardVersions' => [['name' => 'StUF-ZKN']],
 				]
 			),
 			new FakeObjectEntity(
 				id: 'm2',
 				payload: [
-					'referenceComponenten' => [['identifier' => 'rc-1']],
+					'referenceComponents' => [['identifier' => 'rc-1']],
 					'standardVersions' => [['name' => 'StUF-ZKN']],
 				]
 			),
 			new FakeObjectEntity(
 				id: 'm3',
 				payload: [
-					'referenceComponenten' => ['rc-2'],
+					'referenceComponents' => ['rc-2'],
 					'standardVersions' => [],
 				]
 			),
@@ -370,7 +370,7 @@ class FacetServiceTest extends TestCase {
 		$this->assertSame(2, $refCompByValue['Zaakregistratiecomponent']);
 		$this->assertSame(1, $refCompByValue['Klantcontactcomponent']);
 
-		$standardByValue = array_column($result['standard'], 'count', 'value');
+		$standardByValue = array_column($result['standaard'], 'count', 'value');
 		$this->assertSame(2, $standardByValue['StUF-ZKN']);
 
 		$domeinByValue = array_column($result['domein'], 'count', 'value');
@@ -391,7 +391,7 @@ class FacetServiceTest extends TestCase {
 	 */
 	public function testGetFacetsResolvesApplicatieserviceViaRelationship(): void {
 		$modules = [
-			['id' => 'm1', 'referenceComponenten' => [['identifier' => 'rc-1']], 'standardVersions' => []],
+			['id' => 'm1', 'referenceComponents' => [['identifier' => 'rc-1']], 'standardVersions' => []],
 		];
 
 		$captured = [];
@@ -435,9 +435,9 @@ class FacetServiceTest extends TestCase {
 	 */
 	public function testGetFacetsNarrowingIsDisjunctive(): void {
 		$modules = [
-			['id' => 'm1', 'referenceComponenten' => [['identifier' => 'rc-1']], 'standardVersions' => [['name' => 'StUF-ZKN']]],
-			['id' => 'm2', 'referenceComponenten' => [['identifier' => 'rc-1']], 'standardVersions' => []],
-			['id' => 'm3', 'referenceComponenten' => [['identifier' => 'rc-2']], 'standardVersions' => [['name' => 'StUF-ZKN']]],
+			['id' => 'm1', 'referenceComponents' => [['identifier' => 'rc-1']], 'standardVersions' => [['name' => 'StUF-ZKN']]],
+			['id' => 'm2', 'referenceComponents' => [['identifier' => 'rc-1']], 'standardVersions' => []],
+			['id' => 'm3', 'referenceComponents' => [['identifier' => 'rc-2']], 'standardVersions' => [['name' => 'StUF-ZKN']]],
 		];
 
 		$captured = [];
@@ -461,7 +461,7 @@ class FacetServiceTest extends TestCase {
 
 		// `standaard` is narrowed to the 2 modules carrying "Zaakregistratiecomponent" —
 		// only m1 of those also carries "StUF-ZKN".
-		$standardByValue = array_column($result['standard'], 'count', 'value');
+		$standardByValue = array_column($result['standaard'], 'count', 'value');
 		$this->assertSame(1, $standardByValue['StUF-ZKN']);
 
 		// `referentiecomponent`'s OWN count is NOT narrowed by its own selection —
@@ -482,9 +482,9 @@ class FacetServiceTest extends TestCase {
 	 */
 	public function testGetFacetsOrWithinDimensionAndAcrossDimensions(): void {
 		$modules = [
-			['id' => 'm1', 'referenceComponenten' => [['identifier' => 'rc-1']], 'standardVersions' => [['name' => 'StUF-ZKN']]],
-			['id' => 'm2', 'referenceComponenten' => [['identifier' => 'rc-2']], 'standardVersions' => []],
-			['id' => 'm3', 'referenceComponenten' => [['identifier' => 'rc-3']], 'standardVersions' => []],
+			['id' => 'm1', 'referenceComponents' => [['identifier' => 'rc-1']], 'standardVersions' => [['name' => 'StUF-ZKN']]],
+			['id' => 'm2', 'referenceComponents' => [['identifier' => 'rc-2']], 'standardVersions' => []],
+			['id' => 'm3', 'referenceComponents' => [['identifier' => 'rc-3']], 'standardVersions' => []],
 		];
 
 		$captured = [];
@@ -685,7 +685,7 @@ class FacetServiceTest extends TestCase {
 		);
 		$objectService->method('searchObjects')->willReturn(
 			[
-				['id' => 'm1', 'referenceComponenten' => [['identifier' => 'rc-1']], 'standardVersions' => []],
+				['id' => 'm1', 'referenceComponents' => [['identifier' => 'rc-1']], 'standardVersions' => []],
 			]
 		);
 
@@ -739,7 +739,7 @@ class FacetServiceTest extends TestCase {
 			[
 				new FakeObjectEntity(
 					id: 'm1',
-					payload: ['referenceComponenten' => [['identifier' => 'rc-1']], 'standardVersions' => []]
+					payload: ['referenceComponents' => [['identifier' => 'rc-1']], 'standardVersions' => []]
 				),
 			]
 		);

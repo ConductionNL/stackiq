@@ -2899,7 +2899,7 @@ class ArchiMateService {
 		);
 
 		// OPTIMIZATION: Single-pass processing - collect all data types at once.
-		$referenceComponenten = [];
+		$referenceComponents = [];
 		$standards = [];
 		$gemmaRelationshipMap = [];
 
@@ -2927,7 +2927,7 @@ class ArchiMateService {
 					$gemmaTypeVariations[$gemmaTypeValue]++;
 
 					if ($gemmaTypeValue === 'Referentiecomponent') {
-						$referenceComponenten[$object['identifier']] = $index;
+						$referenceComponents[$object['identifier']] = $index;
 					} elseif ($gemmaTypeValue === 'Standaard') {
 						$standards[$object['identifier']] = $index;
 					}
@@ -2938,7 +2938,7 @@ class ArchiMateService {
 			if (isset($object['section']) === true && $object['section'] === 'relationship') {
 				$this->processRelationshipImmediate(
 					relationship: $object,
-					referenceComponenten: $referenceComponenten,
+					referenceComponents: $referenceComponents,
 					standards: $standards,
 					gemmaRelationshipMap: $gemmaRelationshipMap
 				);
@@ -2952,7 +2952,7 @@ class ArchiMateService {
 				'total_elements' => $elementCount,
 				'elements_with_gemma_type' => $elementsWithGemmaType,
 				'gemma_type_variations' => $gemmaTypeVariations,
-				'referentiecomponenten_count' => count($referenceComponenten),
+				'referentiecomponenten_count' => count($referenceComponents),
 				'standaarden_count' => count($standards),
 				'processed_relationships' => count($gemmaRelationshipMap),
 			]
@@ -2972,8 +2972,8 @@ class ArchiMateService {
 		// STEP 2: Apply the processed relationship mappings to Referentiecomponenten.
 		$enhancedCount = 0;
 		foreach ($gemmaRelationshipMap as $referenceComponentId => $standardsMap) {
-			if (isset($referenceComponenten[$referenceComponentId]) === true) {
-				$objectIndex = $referenceComponenten[$referenceComponentId];
+			if (isset($referenceComponents[$referenceComponentId]) === true) {
+				$objectIndex = $referenceComponents[$referenceComponentId];
 
 				// Remove duplicates and add the properties.
 				$recommendedStandards = array_unique($standardsMap['aanbevolen']);
@@ -3006,7 +3006,7 @@ class ArchiMateService {
 			'GEMMA Referentiecomponent-Standaard processing completed',
 			[
 				'referentiecomponenten_enhanced' => $enhancedCount,
-				'total_referentiecomponenten' => count($referenceComponenten),
+				'total_referentiecomponenten' => count($referenceComponents),
 				'total_relationships_processed' => count($gemmaRelationshipMap),
 			]
 		);
@@ -3018,7 +3018,7 @@ class ArchiMateService {
 	 * OPTIMIZATION: Process relationship immediately when found (single-pass algorithm)
 	 *
 	 * @param array $relationship The relationship object.
-	 * @param array $referenceComponenten Array of Referentiecomponent identifiers.
+	 * @param array $referenceComponents Array of Referentiecomponent identifiers.
 	 * @param array $standards Array of Standaard identifiers.
 	 * @param array $gemmaRelationshipMap The relationship map to update (by reference).
 	 *
@@ -3026,7 +3026,7 @@ class ArchiMateService {
 	 */
 	private function processRelationshipImmediate(
 		array $relationship,
-		array $referenceComponenten,
+		array $referenceComponents,
 		array $standards,
 		array &$gemmaRelationshipMap,
 	): void {
@@ -3050,11 +3050,11 @@ class ArchiMateService {
 		$refCompId = null;
 		$standardId = null;
 
-		if (isset($referenceComponenten[$source]) === true && isset($standards[$target]) === true) {
+		if (isset($referenceComponents[$source]) === true && isset($standards[$target]) === true) {
 			// Referentiecomponent -> Standaard.
 			$refCompId = $source;
 			$standardId = $target;
-		} elseif (isset($standards[$source]) === true && isset($referenceComponenten[$target]) === true) {
+		} elseif (isset($standards[$source]) === true && isset($referenceComponents[$target]) === true) {
 			// Standaard -> Referentiecomponent (reverse direction).
 			$refCompId = $target;
 			$standardId = $source;

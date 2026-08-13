@@ -1053,9 +1053,9 @@ class ViewService {
 		$expandedNodes = $existingNodes;
 
 		// Look for referentiecomponent relationships in the module.
-		$referenceComponenten = $this->extractReferenceComponenten(module: $module);
+		$referenceComponents = $this->extractReferenceComponenten(module: $module);
 
-		foreach ($referenceComponenten as $referenceComponentId) {
+		foreach ($referenceComponents as $referenceComponentId) {
 			// Find if there's an existing node for this referentiecomponent.
 			$parentNode = $nodesByModelId[$referenceComponentId] ?? null;
 
@@ -1091,12 +1091,12 @@ class ViewService {
 	 * @return array Array of referentiecomponent identifiers.
 	 */
 	private function extractReferenceComponenten(array $module): array {
-		$referenceComponenten = [];
+		$referenceComponents = [];
 
 		// Look for referentiecomponent relationships in various possible locations.
 		$possibleFields = [
 			'referentiecomponenten',
-			'referenceComponenten',
+			'referenceComponents',
 			'relatedComponents',
 			'components',
 			'relationships',
@@ -1110,21 +1110,21 @@ class ViewService {
 					// Handle array of components.
 					foreach ($value as $component) {
 						if (is_string(value: $component) === true) {
-							$referenceComponenten[] = $component;
+							$referenceComponents[] = $component;
 						} elseif (is_array(value: $component) === true && isset($component['id']) === true) {
-							$referenceComponenten[] = $component['id'];
+							$referenceComponents[] = $component['id'];
 						} elseif (is_array(value: $component) === true && isset($component['identifier']) === true) {
-							$referenceComponenten[] = $component['identifier'];
+							$referenceComponents[] = $component['identifier'];
 						}
 					}
 				} elseif (is_string(value: $value) === true) {
 					// Handle single component ID.
-					$referenceComponenten[] = $value;
+					$referenceComponents[] = $value;
 				}
 			}
 		}//end foreach
 
-		return array_unique($referenceComponenten);
+		return array_unique($referenceComponents);
 	}//end extractReferentieComponenten()
 
 	/**

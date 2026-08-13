@@ -645,7 +645,7 @@ class FacetService {
 			$standards = [];
 
 			foreach ($modules as $module) {
-				$refCompIds = array_merge($refCompIds, $this->extractRelatedIdentifiers(object: $module, field: 'referenceComponenten'));
+				$refCompIds = array_merge($refCompIds, $this->extractRelatedIdentifiers(object: $module, field: 'referenceComponents'));
 				$standards = array_merge($standards, $this->extractRelatedNames(object: $module, field: 'standardVersions'));
 			}
 
