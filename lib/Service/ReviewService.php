@@ -297,7 +297,7 @@ class ReviewService {
 	private function validateRating(array $payload): ?string {
 		$rating = $payload['rating'];
 		if (is_numeric($rating) === false || (int)$rating < 1 || (int)$rating > 10) {
-			return 'waardering must be between 1 and 10';
+			return 'rating must be between 1 and 10';
 		}
 
 		return null;
