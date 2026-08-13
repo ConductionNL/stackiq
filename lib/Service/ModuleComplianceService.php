@@ -467,8 +467,15 @@ class ModuleComplianceService {
 			}
 
 			// Get current module data.
-			/* @var array<string, mixed> $moduleData */
 			$moduleData = $moduleObject->getObject();
+
+			// Read every value needed BEFORE the write below. Assigning a key
+			// narrows the inferred array shape to just that key, after which
+			// phpstan reports every other offset as non-existent. A /* @var */
+			// annotation does not help: a single-asterisk comment is not a
+			// docblock, so phpstan ignores it — which is what happened when the
+			// /** */ form was changed to satisfy phpcs.
+			$moduleUuid = $moduleData['uuid'] ?? null;
 
 			// Update the standards property.
 			$moduleData['standardVersions'] = $standaardversieUuids;
@@ -489,7 +496,7 @@ class ModuleComplianceService {
 				'ModuleComplianceService: Updated module standaarden',
 				[
 					'moduleId' => $moduleObject->getId(),
-					'moduleUuid' => $moduleData['uuid'] ?? null,
+					'moduleUuid' => $moduleUuid,
 					'standards' => $standaardversieUuids,
 				]
 			);

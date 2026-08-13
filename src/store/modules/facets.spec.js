@@ -157,7 +157,7 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 
 		expect(store.module.activeFilters).toEqual({
 			referentiecomponent: ['Zaakregistratiecomponent'],
-			standaard: ['StUF-ZKN'],
+			standard: ['StUF-ZKN'],
 		})
 		expect(store.module.search).toBe('zaak')
 	})
@@ -193,7 +193,7 @@ describe('facets store — fetchFacets', () => {
 	it('populates data on success and clears loading', async () => {
 		const payload = {
 			referentiecomponent: [],
-			standaard: [],
+			standard: [],
 			applicatieservice: [],
 			domein: [],
 			_meta: { totalMatched: 0, matchedObjectIds: [] },
@@ -211,7 +211,7 @@ describe('facets store — fetchFacets', () => {
 	it('passes the schema state (filters/search) through to the API client', async () => {
 		fetchFacets.mockResolvedValue({
 			referentiecomponent: [],
-			standaard: [],
+			standard: [],
 			applicatieservice: [],
 			domein: [],
 			_meta: {},

@@ -491,7 +491,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "element",
-				"filter": { "gemmaType": "standard" },
+				"filter": { "gemmaType": "standaard" },
 				"columns": [
 					"name",
 					"gemmaThema",

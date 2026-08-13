@@ -522,11 +522,13 @@ class ContactPersonHandler {
 					isFirstContact: $isFirstContact
 				);
 
-				// Update contactpersoon with username and auto-assigned role.
-				$objectData['username'] = $username;
-
-				// Populate the rollen field if a role was assigned and rollen is empty.
+				// Read the existing roles BEFORE writing username: assigning a key
+				// narrows the inferred array shape, after which phpstan reports
+				// every other offset as non-existent.
 				$currentRoles = $objectData['roles'] ?? [];
+
+				// Update the contact person with username and auto-assigned role.
+				$objectData['username'] = $username;
 				if (empty($assignedRole) === false
 					&& (empty($currentRoles) === true || is_array($currentRoles) === false)
 				) {
