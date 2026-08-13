@@ -108,6 +108,19 @@ class ReviewController extends Controller {
 	 *
 	 * @PublicPage
 	 * @NoCSRFRequired
+	 * @no-admin-idor-exempt The lookup IS constrained to the scope this
+	 *      endpoint declares public, which is the remedy for
+	 *      `publicpage-unscoped-object-lookup` (there is no session identity on
+	 *      a public page, so an ownership check is not available and not the
+	 *      fix). `$subjectId` never reaches storage: the query in
+	 *      ReviewAggregateService::fetchApprovedReviews() is keyed on
+	 *      `@self.register` / `@self.schema` plus `status = approved` — with
+	 *      the metadata filters correctly nested under `@self` — and the
+	 *      subject is matched in memory afterwards. `status` is then re-checked
+	 *      in PHP over every row, which that method's own comment names as the
+	 *      real enforcement point because `_rbac: false` bypasses
+	 *      OpenRegister's enforcement of the predicate. So an arbitrary
+	 *      `subjectId` can only ever select from already-approved reviews.
 	 * @spec           openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
 	 */
 	#[PublicPage]

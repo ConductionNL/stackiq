@@ -284,7 +284,20 @@ class SbomController extends Controller {
 			$operationId = null;
 		}
 
+		// The guard goes INSIDE the try, for the reason importSbom()'s docblock
+		// already records: authorizeRead() reaches
+		// SbomImportService::resolveParentModuleUuid(), and OpenRegister's real
+		// ObjectService::find() RE-THROWS DoesNotExistException for a
+		// well-formed but non-existent uuid rather than returning null. Guarding
+		// outside the try would therefore turn this endpoint's clean 404 into a
+		// 500 for exactly the callers the guard was added for — non-admins
+		// passing an unknown id.
 		try {
+			$readError = $this->authorizeRead(moduleVersieUuid: $moduleVersieUuid);
+			if ($readError !== null) {
+				return $readError;
+			}
+
 			return new JSONResponse(
 				data: $this->importService->getStatus(
 					moduleVersieUuid: $moduleVersieUuid,
@@ -298,6 +311,62 @@ class SbomController extends Controller {
 			);
 		}
 	}//end getSbomImportStatus()
+
+	/**
+	 * Read-ACL authorization guard (IDOR guard) for the import-status read.
+	 *
+	 * `getSbomImportStatus()` took a caller-supplied `moduleVersieUuid` all the
+	 * way to `SbomImportService::getStatus()`, whose lookup runs with
+	 * `_rbac: false, _multitenancy: false` — so the object reference was never
+	 * scoped to the caller and any authenticated user could read any
+	 * moduleVersie's import provenance by substituting a uuid.
+	 *
+	 * This is `authorizeManage()`'s read tier: the same two building blocks
+	 * (`resolveParentModuleUuid` + `userCanReadModule`) minus the editor-group
+	 * membership requirement, because reading a status is not managing an
+	 * import. `userCanReadModule()` resolves with `_rbac: true,
+	 * _multitenancy: true`, and — checked rather than assumed — the `module`
+	 * schema carries a real `authorization.read` ACL (group tiers plus an
+	 * `_organisation` match), so this is a genuine scope rather than the
+	 * default-open case an authorization-less schema would give.
+	 *
+	 * Refuses with 404, not 403, deliberately: the sibling not-found path
+	 * already answers 404 for an unknown uuid, and matching it keeps the
+	 * endpoint from becoming an existence oracle for other tenants' ids.
+	 *
+	 * @param string $moduleVersieUuid The target moduleVersie's uuid.
+	 *
+	 * @return JSONResponse|null Error response, or null when authorized.
+	 *
+	 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
+	 */
+	private function authorizeRead(string $moduleVersieUuid): ?JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->groupManager->isAdmin($user->getUID()) === true) {
+			return null;
+		}
+
+		$moduleUuid = $this->importService->resolveParentModuleUuid($moduleVersieUuid);
+		if ($moduleUuid === null || $this->importService->userCanReadModule($moduleUuid) === false) {
+			$this->logger->warning(
+				'SbomController: status read refused (no read access to the parent module)',
+				['moduleVersieUuid' => $moduleVersieUuid, 'uid' => $user->getUID()]
+			);
+			return new JSONResponse(
+				data: [
+					'message' => 'moduleVersie not found: ' . $moduleVersieUuid,
+					'error' => 'MODULE_VERSION_NOT_FOUND',
+				],
+				statusCode: Http::STATUS_NOT_FOUND
+			);
+		}
+
+		return null;
+	}//end authorizeRead()
 
 	/**
 	 * Manage-ACL authorization guard (IDOR guard). Returns a JSONResponse to
