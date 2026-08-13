@@ -146,7 +146,7 @@ class FacetService {
 	 * @throws InvalidArgumentException When `$schema` is not supported.
 	 * @throws RuntimeException When OpenRegister's ObjectService is unavailable.
 	 *
-	 * @return array{referentiecomponent: array, standard: array, applicatieservice: array,
+	 * @return array{referentiecomponent: array, standaard: array, applicatieservice: array,
 	 *     domein: array, _meta: array{totalMatched: int, processingTimeMs: float, cached: bool,
 	 *     matchedObjectIds: string[]}}
 	 *
@@ -232,7 +232,7 @@ class FacetService {
 	 * @param string|null $normalizedSearch Normalized free-text query.
 	 * @param string|null $organization Optional organisation override.
 	 *
-	 * @return array{referentiecomponent: array, standard: array, applicatieservice: array,
+	 * @return array{referentiecomponent: array, standaard: array, applicatieservice: array,
 	 *     domein: array, _meta: array{totalMatched: int, processingTimeMs: float, cached: bool,
 	 *     matchedObjectIds: string[]}}
 	 */
@@ -702,7 +702,7 @@ class FacetService {
 
 			$dimValsByObjId[$objectId] = [
 				'referentiecomponent' => array_values(array_unique($refCompNames)),
-				'standard' => $stdValsByObjId[$objectId] ?? [],
+				'standaard' => $stdValsByObjId[$objectId] ?? [],
 				'domein' => array_values(array_unique($domeinValues)),
 				'applicatieservice' => array_values(array_unique($appSvcValues)),
 			];

@@ -242,7 +242,7 @@ class FacetServiceTest extends TestCase {
 
 		$result = $service->getFacets(schema: 'module');
 
-		foreach (['referentiecomponent', 'standard', 'applicatieservice', 'domein'] as $dimension) {
+		foreach (['referentiecomponent', 'standaard', 'applicatieservice', 'domein'] as $dimension) {
 			$this->assertArrayHasKey($dimension, $result);
 			$this->assertSame([], $result[$dimension]);
 		}
@@ -511,7 +511,7 @@ class FacetServiceTest extends TestCase {
 			schema: 'module',
 			filters: [
 				'referentiecomponent' => ['A'],
-				'standard' => ['StUF-ZKN'],
+				'standaard' => ['StUF-ZKN'],
 			]
 		);
 		$this->assertSame(1, $andResult['_meta']['totalMatched']);
@@ -639,7 +639,7 @@ class FacetServiceTest extends TestCase {
 	public function testGetFacetsServesFromCacheOnHit(): void {
 		$cachedPayload = [
 			'referentiecomponent' => [],
-			'standard' => [],
+			'standaard' => [],
 			'applicatieservice' => [],
 			'domein' => [],
 			'_meta' => ['totalMatched' => 0, 'processingTimeMs' => 5.0, 'cached' => false],
