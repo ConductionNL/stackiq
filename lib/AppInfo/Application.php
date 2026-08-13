@@ -374,7 +374,7 @@ class Application extends App implements IBootstrap {
 			}
 		);
 
-		// Register module registration service (auto-sets geregistreerdDoor).
+		// Register module registration service (auto-sets registeredBy).
 		$context->registerService(
 			ModuleRegistrationService::class,
 			function ($container) {
@@ -769,7 +769,7 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
 
-		// Module registration — sets geregistreerdDoor on each save.
+		// Module registration — sets registeredBy on each save.
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
 

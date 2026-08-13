@@ -201,8 +201,8 @@ class ModuleComplianceServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testNormaliseCoercesNonArrayToEmpty(): void {
-		$this->assertSame([], $this->invoke('normaliseCurrentStandaarden', [null]));
-		$this->assertSame([], $this->invoke('normaliseCurrentStandaarden', ['scalar']));
-		$this->assertSame(['x'], $this->invoke('normaliseCurrentStandaarden', [['x']]));
+		$this->assertSame([], $this->invoke('normaliseCurrentStandards', [null]));
+		$this->assertSame([], $this->invoke('normaliseCurrentStandards', ['scalar']));
+		$this->assertSame(['x'], $this->invoke('normaliseCurrentStandards', [['x']]));
 	}//end testNormaliseCoercesNonArrayToEmpty()
 }//end class

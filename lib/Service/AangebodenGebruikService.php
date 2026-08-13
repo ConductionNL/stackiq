@@ -983,8 +983,8 @@ class AangebodenGebruikService {
 
 			$gebruikData['@self'] = $selfData;
 
-			// Update geregistreerdDoor based on the accepting organisation's type.
-			$gebruikData = $this->updateGeregistreerdBy(
+			// Update registeredBy based on the accepting organisation's type.
+			$gebruikData = $this->updateRegisteredBy(
 				objectService: $objectService,
 				objectData: $gebruikData,
 				organisationUuid: $currentOrg
@@ -1517,7 +1517,7 @@ class AangebodenGebruikService {
 	}//end checkOrganisationOwnership()
 
 	/**
-	 * Mapping from organisatie.type to geregistreerdDoor value
+	 * Mapping from organisatie.type to registeredBy value
 	 */
 	private const TYPE_MAP = [
 		'Gemeente' => 'Gemeente',
@@ -1527,10 +1527,10 @@ class AangebodenGebruikService {
 	];
 
 	/**
-	 * Update geregistreerdDoor on object data based on the organisation's type
+	 * Update registeredBy on object data based on the organisation's type
 	 *
 	 * Looks up the organisation object by UUID, reads its type, and maps it
-	 * to the appropriate geregistreerdDoor value using TYPE_MAP.
+	 * to the appropriate registeredBy value using TYPE_MAP.
 	 *
 	 * @param ObjectService $objectService The OpenRegister object service
 	 * @param array $objectData The object data to update
@@ -1538,7 +1538,7 @@ class AangebodenGebruikService {
 	 *
 	 * @return array The updated object data
 	 */
-	private function updateGeregistreerdBy(
+	private function updateRegisteredBy(
 		ObjectService $objectService,
 		array $objectData,
 		string $organisationUuid,
@@ -1568,20 +1568,20 @@ class AangebodenGebruikService {
 			$orgType = $organisationData['type'] ?? null;
 
 			if ($orgType !== null && isset(self::TYPE_MAP[$orgType]) === true) {
-				$objectData['geregistreerdBy'] = self::TYPE_MAP[$orgType];
+				$objectData['registeredBy'] = self::TYPE_MAP[$orgType];
 
 				$this->logger->info(
-					'Updated geregistreerdDoor during transfer',
+					'Updated registeredBy during transfer',
 					[
 						'organisationUuid' => $organisationUuid,
 						'orgType' => $orgType,
-						'geregistreerdBy' => self::TYPE_MAP[$orgType],
+						'registeredBy' => self::TYPE_MAP[$orgType],
 					]
 				);
 			}
 		} catch (Exception $e) {
 			$this->logger->warning(
-				'Failed to update geregistreerdDoor during transfer',
+				'Failed to update registeredBy during transfer',
 				[
 					'organisationUuid' => $organisationUuid,
 					'error' => $e->getMessage(),
