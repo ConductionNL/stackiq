@@ -341,7 +341,7 @@ class ArchiMateService {
 			}
 
 			$organization = $orgEntity->jsonSerialize();
-			$orgName = $organization['naam'] ?? $organization['name'] ?? $organization['@self']['name'] ?? 'Unknown';
+			$orgName = $organization['name'] ?? $organization['@self']['name'] ?? 'Unknown';
 
 			// Get AMEF config and base objects.
 			$registerId = $this->getAmefRegisterId();
@@ -399,7 +399,7 @@ class ArchiMateService {
 							'register' => $orgRegisterId,
 							'schema' => $gebruikSchemaId,
 						],
-						'deelnemers' => $organizationUuid,
+						'participants' => $organizationUuid,
 						'_limit' => 10000,
 					];
 					$deelnamesData = $objectService->searchObjects(
@@ -2886,8 +2886,8 @@ class ArchiMateService {
 	 * This method analyzes all objects to find Referentiecomponenten and Standaarden,
 	 * then uses relationships to link them together based on Verbindingsrol property.
 	 * Each Referentiecomponent gets two properties:
-	 * - 'aanbevolenStandaarden' array for standards with Verbindingsrol = "Aanbevolen"
-	 * - 'verplichteStandaarden' array for standards with Verbindingsrol = "Verplicht"
+	 * - 'recommendedStandards' array for standards with Verbindingsrol = "Aanbevolen"
+	 * - 'verplichteStandards' array for standards with Verbindingsrol = "Verplicht"
 	 *
 	 * @param array $objects All objects from the import
 	 *
@@ -2899,8 +2899,8 @@ class ArchiMateService {
 		);
 
 		// OPTIMIZATION: Single-pass processing - collect all data types at once.
-		$referentieComponenten = [];
-		$standaarden = [];
+		$referenceComponenten = [];
+		$standards = [];
 		$gemmaRelationshipMap = [];
 
 		// Debug: Count objects and property variations.
@@ -2927,9 +2927,9 @@ class ArchiMateService {
 					$gemmaTypeVariations[$gemmaTypeValue]++;
 
 					if ($gemmaTypeValue === 'Referentiecomponent') {
-						$referentieComponenten[$object['identifier']] = $index;
+						$referenceComponenten[$object['identifier']] = $index;
 					} elseif ($gemmaTypeValue === 'Standaard') {
-						$standaarden[$object['identifier']] = $index;
+						$standards[$object['identifier']] = $index;
 					}
 				}
 			}//end if
@@ -2938,8 +2938,8 @@ class ArchiMateService {
 			if (isset($object['section']) === true && $object['section'] === 'relationship') {
 				$this->processRelationshipImmediate(
 					relationship: $object,
-					referentieComponenten: $referentieComponenten,
-					standaarden: $standaarden,
+					referenceComponenten: $referenceComponenten,
+					standards: $standards,
 					gemmaRelationshipMap: $gemmaRelationshipMap
 				);
 			}
@@ -2952,8 +2952,8 @@ class ArchiMateService {
 				'total_elements' => $elementCount,
 				'elements_with_gemma_type' => $elementsWithGemmaType,
 				'gemma_type_variations' => $gemmaTypeVariations,
-				'referentiecomponenten_count' => count($referentieComponenten),
-				'standaarden_count' => count($standaarden),
+				'referentiecomponenten_count' => count($referenceComponenten),
+				'standaarden_count' => count($standards),
 				'processed_relationships' => count($gemmaRelationshipMap),
 			]
 		);
@@ -2971,30 +2971,30 @@ class ArchiMateService {
 
 		// STEP 2: Apply the processed relationship mappings to Referentiecomponenten.
 		$enhancedCount = 0;
-		foreach ($gemmaRelationshipMap as $referentieComponentId => $standaardenMap) {
-			if (isset($referentieComponenten[$referentieComponentId]) === true) {
-				$objectIndex = $referentieComponenten[$referentieComponentId];
+		foreach ($gemmaRelationshipMap as $referenceComponentId => $standardsMap) {
+			if (isset($referenceComponenten[$referenceComponentId]) === true) {
+				$objectIndex = $referenceComponenten[$referenceComponentId];
 
 				// Remove duplicates and add the properties.
-				$aanbevolenStandaarden = array_unique($standaardenMap['aanbevolen']);
-				$verplichteStandaarden = array_unique($standaardenMap['verplicht']);
+				$recommendedStandards = array_unique($standardsMap['aanbevolen']);
+				$verplichteStandards = array_unique($standardsMap['verplicht']);
 
-				$objects[$objectIndex]['aanbevolenStandaarden'] = $aanbevolenStandaarden;
-				$objects[$objectIndex]['verplichteStandaarden'] = $verplichteStandaarden;
+				$objects[$objectIndex]['recommendedStandards'] = $recommendedStandards;
+				$objects[$objectIndex]['verplichteStandards'] = $verplichteStandards;
 
 				// Also add combined array for backward compatibility.
-				$allStandaarden = array_unique(array_merge($aanbevolenStandaarden, $verplichteStandaarden));
-				$objects[$objectIndex]['standaarden'] = $allStandaarden;
+				$allStandards = array_unique(array_merge($recommendedStandards, $verplichteStandards));
+				$objects[$objectIndex]['standards'] = $allStandards;
 
 				$this->logger->info(
 					'Enhanced Referentiecomponent with categorized standaarden',
 					[
-						'referentiecomponent_id' => $referentieComponentId,
+						'referentiecomponent_id' => $referenceComponentId,
 						'referentiecomponent_name' => $objects[$objectIndex]['name'] ?? 'Unknown',
-						'aanbevolen_count' => count($aanbevolenStandaarden),
-						'verplicht_count' => count($verplichteStandaarden),
-						'aanbevolen_ids' => $aanbevolenStandaarden,
-						'verplicht_ids' => $verplichteStandaarden,
+						'aanbevolen_count' => count($recommendedStandards),
+						'verplicht_count' => count($verplichteStandards),
+						'aanbevolen_ids' => $recommendedStandards,
+						'verplicht_ids' => $verplichteStandards,
 					]
 				);
 
@@ -3006,7 +3006,7 @@ class ArchiMateService {
 			'GEMMA Referentiecomponent-Standaard processing completed',
 			[
 				'referentiecomponenten_enhanced' => $enhancedCount,
-				'total_referentiecomponenten' => count($referentieComponenten),
+				'total_referentiecomponenten' => count($referenceComponenten),
 				'total_relationships_processed' => count($gemmaRelationshipMap),
 			]
 		);
@@ -3018,16 +3018,16 @@ class ArchiMateService {
 	 * OPTIMIZATION: Process relationship immediately when found (single-pass algorithm)
 	 *
 	 * @param array $relationship The relationship object.
-	 * @param array $referentieComponenten Array of Referentiecomponent identifiers.
-	 * @param array $standaarden Array of Standaard identifiers.
+	 * @param array $referenceComponenten Array of Referentiecomponent identifiers.
+	 * @param array $standards Array of Standaard identifiers.
 	 * @param array $gemmaRelationshipMap The relationship map to update (by reference).
 	 *
 	 * @return void
 	 */
 	private function processRelationshipImmediate(
 		array $relationship,
-		array $referentieComponenten,
-		array $standaarden,
+		array $referenceComponenten,
+		array $standards,
 		array &$gemmaRelationshipMap,
 	): void {
 		// Get source and target from relationship XML or flattened properties.
@@ -3048,19 +3048,19 @@ class ArchiMateService {
 
 		// Check if one end is a Referentiecomponent and the other is a Standaard.
 		$refCompId = null;
-		$standaardId = null;
+		$standardId = null;
 
-		if (isset($referentieComponenten[$source]) === true && isset($standaarden[$target]) === true) {
+		if (isset($referenceComponenten[$source]) === true && isset($standards[$target]) === true) {
 			// Referentiecomponent -> Standaard.
 			$refCompId = $source;
-			$standaardId = $target;
-		} elseif (isset($standaarden[$source]) === true && isset($referentieComponenten[$target]) === true) {
+			$standardId = $target;
+		} elseif (isset($standards[$source]) === true && isset($referenceComponenten[$target]) === true) {
 			// Standaard -> Referentiecomponent (reverse direction).
 			$refCompId = $target;
-			$standaardId = $source;
+			$standardId = $source;
 		}
 
-		if ($refCompId !== false && $standaardId === true) {
+		if ($refCompId !== false && $standardId === true) {
 			// Initialize arrays if not exists.
 			if (isset($gemmaRelationshipMap[$refCompId]) === false) {
 				$gemmaRelationshipMap[$refCompId] = [
@@ -3071,9 +3071,9 @@ class ArchiMateService {
 
 			// Add to appropriate array based on Verbindingsrol.
 			if (strtolower($verbindingsrol) === 'aanbevolen') {
-				$gemmaRelationshipMap[$refCompId]['aanbevolen'][] = $standaardId;
+				$gemmaRelationshipMap[$refCompId]['aanbevolen'][] = $standardId;
 			} elseif (strtolower($verbindingsrol) === 'verplicht') {
-				$gemmaRelationshipMap[$refCompId]['verplicht'][] = $standaardId;
+				$gemmaRelationshipMap[$refCompId]['verplicht'][] = $standardId;
 			}
 		}
 	}//end processRelationshipImmediate()

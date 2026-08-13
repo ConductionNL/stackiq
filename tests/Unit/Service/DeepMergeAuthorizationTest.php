@@ -109,7 +109,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 			'components' => [
 				'schemas' => [
 					'beoordeeling' => [
-						'required' => ['naam'],
+						'required' => ['name'],
 					],
 				],
 			],
@@ -119,7 +119,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 			'components' => [
 				'schemas' => [
 					'beoordeeling' => [
-						'required' => ['waardering'],
+						'required' => ['rating'],
 					],
 				],
 			],
@@ -128,7 +128,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 		$merged = $this->merge($base, $overlay);
 
 		$this->assertSame(
-			['naam', 'waardering'],
+			['name', 'rating'],
 			$merged['components']['schemas']['beoordeeling']['required']
 		);
 	}//end testNonAuthorizationListsStillConcatenate()

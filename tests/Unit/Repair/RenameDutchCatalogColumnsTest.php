@@ -167,7 +167,7 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 	 * @return void
 	 */
 	public function testRefusesAmbiguousRename(): void {
-		$columns = ['beschrijving', 'beschrijving_lang', 'naam'];
+		$columns = ['description', 'beschrijving_lang', 'name'];
 		self::assertTrue($this->call('hasCollision', ['tbl', $columns, 'description']));
 
 	}//end testRefusesAmbiguousRename()
@@ -178,7 +178,7 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 	 * @return void
 	 */
 	public function testSingleSourceIsNotACollision(): void {
-		$columns = ['beschrijving_kort', 'naam'];
+		$columns = ['beschrijving_kort', 'name'];
 		self::assertFalse($this->call('hasCollision', ['tbl', $columns, 'short_description']));
 		self::assertFalse($this->call('hasCollision', ['tbl', $columns, 'name']));
 
@@ -248,28 +248,28 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 	public function testRenameIsSafeOnlyWhenTheRegisterHasMoved(): void {
 		// The register has moved: English declared, Dutch gone. Follow it.
 		self::assertTrue(
-			$this->call('renameIsSafe', ['naam', 'name', ['name', 'description']]),
+			$this->call('renameIsSafe', ['name', 'name', ['name', 'description']]),
 			'The destination is declared and the source is not — the data should follow'
 		);
 
 		// TODAY's state: Dutch still declared, English declared nowhere.
 		// This is the case that made #492 a data-loss bug.
 		self::assertFalse(
-			$this->call('renameIsSafe', ['naam', 'name', ['naam', 'beschrijving']]),
+			$this->call('renameIsSafe', ['name', 'name', ['name', 'description']]),
 			'The register still declares the Dutch name — renaming would orphan the data'
 		);
 
 		// Ambiguous window: the register declares BOTH. Writes and reads could
 		// land on different columns, so defer rather than guess.
 		self::assertFalse(
-			$this->call('renameIsSafe', ['naam', 'name', ['naam', 'name']]),
+			$this->call('renameIsSafe', ['name', 'name', ['name', 'name']]),
 			'Both names declared is ambiguous, not a green light'
 		);
 
 		// The property was simply dropped: neither name is declared. There is
 		// no destination to move to.
 		self::assertFalse(
-			$this->call('renameIsSafe', ['naam', 'name', ['beschrijving']]),
+			$this->call('renameIsSafe', ['name', 'name', ['description']]),
 			'Neither name declared — there is nothing to move the data into'
 		);
 
@@ -305,7 +305,7 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 	 */
 	public function testSanitizeColumnNameMirrorsMagicMapper(): void {
 		$cases = [
-			'naam' => 'naam',
+			'name' => 'name',
 			'beschrijvingKort' => 'beschrijving_kort',
 			'beschrijvingLang' => 'beschrijving_lang',
 			'shortDescription' => 'short_description',

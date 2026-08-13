@@ -69,7 +69,7 @@ describe('facets store — filter/search state', () => {
 
 	it('clearFilters empties activeFilters but leaves search untouched', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'standaard', ['StUF-ZKN'])
+		store.setFilter('module', 'standard', ['StUF-ZKN'])
 		store.setSearch('module', 'zaak')
 		store.clearFilters('module')
 		expect(store.module.activeFilters).toEqual({})

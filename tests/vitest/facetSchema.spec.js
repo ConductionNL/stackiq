@@ -39,7 +39,7 @@ describe('buildFacetDimensionSchema', () => {
 		expect(filters).toHaveLength(4)
 		expect(filters.map((f) => f.key)).toEqual([
 			'referentiecomponent',
-			'standaard',
+			'standard',
 			'applicatieservice',
 			'domein',
 		])

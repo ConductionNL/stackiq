@@ -16,9 +16,9 @@
  * views) are NOT covered here, and not because they are hard: the fixtures
  * cannot be built through the object API. Measured on a live instance —
  * POSTing a module with
- *     {"standaardVersies":["StUF-ZKN-x"],"referentieComponenten":["RC-x"]}
- * returns 200 with BOTH arrays silently emptied (`"standaardVersies":[]`,
- * `"referentieComponenten":[]`). They are relation fields; OpenRegister drops
+ *     {"standardVersions":["StUF-ZKN-x"],"referenceComponenten":["RC-x"]}
+ * returns 200 with BOTH arrays silently emptied (`"standardVersions":[]`,
+ * `"referenceComponenten":[]`). They are relation fields; OpenRegister drops
  * bare strings without erroring. Seeding them needs real `element` objects in
  * the AMEF register plus `relation` rows, which is a fixture layer this file
  * deliberately does not fake — a facet test seeded with data the product
@@ -51,7 +51,7 @@ const FACETS = '/index.php/apps/softwarecatalog/api/facets'
 /** The four GEMMA dimensions the endpoint must always describe. */
 const DIMENSIONS = [
 	'referentiecomponent',
-	'standaard',
+	'standard',
 	'applicatieservice',
 	'domein',
 ] as const

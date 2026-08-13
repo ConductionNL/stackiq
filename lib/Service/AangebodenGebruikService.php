@@ -137,7 +137,7 @@ class AangebodenGebruikService {
 					'schema' => $schemaId,
 				],
 				// Filter by afnemer field instead of ownership.
-				'afnemer' => $currentOrg,
+				'consumer' => $currentOrg,
 			];
 
 			// Store original pagination parameters.
@@ -241,15 +241,15 @@ class AangebodenGebruikService {
 			// Build next/previous links.
 			$nextLink = null;
 			$prevLink = null;
-			$afnemerPath = '/index.php/apps/softwarecatalog/api/aangeboden-gebruik/afnemer';
+			$consumerPath = '/index.php/apps/softwarecatalog/api/aangeboden-gebruik/afnemer';
 			if ($currentPage < $totalPages) {
 				$nextPage = $currentPage + 1;
-				$nextLink = "{$afnemerPath}?_limit={$requestedLimit}&_source=database&page={$nextPage}";
+				$nextLink = "{$consumerPath}?_limit={$requestedLimit}&_source=database&page={$nextPage}";
 			}
 
 			if ($currentPage > 1) {
 				$prevPage = $currentPage - 1;
-				$prevLink = "{$afnemerPath}?_limit={$requestedLimit}&_source=database&page={$prevPage}";
+				$prevLink = "{$consumerPath}?_limit={$requestedLimit}&_source=database&page={$prevPage}";
 			}
 
 			$this->logger->debug(
@@ -807,7 +807,7 @@ class AangebodenGebruikService {
 							'register' => $gebruiksConfig['register_id'],
 							'schema' => $schemaId,
 						],
-						'deelnemers' => $currentOrg,
+						'participants' => $currentOrg,
 						// Search where current org is in deelnemers.
 						'_limit' => 500,
 					];
@@ -825,7 +825,7 @@ class AangebodenGebruikService {
 							$gebruikData = $gebruik->jsonSerialize();
 						}
 
-						$gebruikData['_filter_type'] = 'deelnemers';
+						$gebruikData['_filter_type'] = 'participants';
 						$gebruikData['_schema_id'] = $schemaId;
 						$allGebruiks[] = $gebruikData;
 					}
@@ -853,7 +853,7 @@ class AangebodenGebruikService {
 				'success' => true,
 				'gebruiks' => $allGebruiks,
 				'count' => count($allGebruiks),
-				'filter_type' => 'deelnemers',
+				'filter_type' => 'participants',
 				'organisation' => $currentOrg,
 			];
 		} catch (Exception $e) {
@@ -923,7 +923,7 @@ class AangebodenGebruikService {
 
 			// Find the gebruik or koppeling object across possible schemas.
 			// Register/schema context is required to search magic tables.
-			$existingGebruik = $this->findGebruikOrKoppeling(objectService: $objectService, objectId: $gebruikId);
+			$existingGebruik = $this->findGebruikOrIntegration(objectService: $objectService, objectId: $gebruikId);
 
 			if ($existingGebruik === null) {
 				return [
@@ -935,39 +935,39 @@ class AangebodenGebruikService {
 
 			// Verify that the active organization is either the afnemer or aanbieder.
 			$gebruikData = $existingGebruik->getObject();
-			$afnemerInfo = $gebruikData['afnemer'] ?? null;
-			$aanbiederInfo = $gebruikData['aanbieder'] ?? null;
+			$consumerInfo = $gebruikData['consumer'] ?? null;
+			$providerInfo = $gebruikData['provider'] ?? null;
 
 			// Check various ways the afnemer might be stored (UUID, object, or string).
-			$afnemerId = null;
-			if (is_array(value: $afnemerInfo) === true && isset($afnemerInfo['id']) === true) {
-				$afnemerId = $afnemerInfo['id'];
-			} elseif (is_string(value: $afnemerInfo) === true) {
-				$afnemerId = $afnemerInfo;
+			$consumerId = null;
+			if (is_array(value: $consumerInfo) === true && isset($consumerInfo['id']) === true) {
+				$consumerId = $consumerInfo['id'];
+			} elseif (is_string(value: $consumerInfo) === true) {
+				$consumerId = $consumerInfo;
 			}
 
 			// Check various ways the aanbieder might be stored (UUID, object, or string).
-			$aanbiederId = null;
-			if (is_array(value: $aanbiederInfo) === true && isset($aanbiederInfo['id']) === true) {
-				$aanbiederId = $aanbiederInfo['id'];
-			} elseif (is_string(value: $aanbiederInfo) === true) {
-				$aanbiederId = $aanbiederInfo;
+			$providerId = null;
+			if (is_array(value: $providerInfo) === true && isset($providerInfo['id']) === true) {
+				$providerId = $providerInfo['id'];
+			} elseif (is_string(value: $providerInfo) === true) {
+				$providerId = $providerInfo;
 			}
 
 			// Allow operation if current org is either afnemer or aanbieder.
-			$isAfnemer = ($afnemerId !== null && $afnemerId === $currentOrg);
-			$isAanbieder = ($aanbiederId !== null && $aanbiederId === $currentOrg);
+			$isConsumer = ($consumerId !== null && $consumerId === $currentOrg);
+			$isProvider = ($providerId !== null && $providerId === $currentOrg);
 
-			if ($isAfnemer === false && $isAanbieder === false) {
+			if ($isConsumer === false && $isProvider === false) {
 				return [
 					'success' => false,
 					'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
 					'gebruik' => null,
 					'debug' => [
-						'afnemer_in_object' => $afnemerInfo,
-						'resolved_afnemer_id' => $afnemerId,
-						'aanbieder_in_object' => $aanbiederInfo,
-						'resolved_aanbieder_id' => $aanbiederId,
+						'afnemer_in_object' => $consumerInfo,
+						'resolved_afnemer_id' => $consumerId,
+						'aanbieder_in_object' => $providerInfo,
+						'resolved_aanbieder_id' => $providerId,
 						'current_org' => $currentOrg,
 					],
 				];
@@ -984,7 +984,7 @@ class AangebodenGebruikService {
 			$gebruikData['@self'] = $selfData;
 
 			// Update geregistreerdDoor based on the accepting organisation's type.
-			$gebruikData = $this->updateGeregistreerdDoor(
+			$gebruikData = $this->updateGeregistreerdBy(
 				objectService: $objectService,
 				objectData: $gebruikData,
 				organisationUuid: $currentOrg
@@ -1008,10 +1008,10 @@ class AangebodenGebruikService {
 					'gebruik_id' => $gebruikId,
 					'organisation' => $currentOrg,
 					'owner' => $currentUser?->getUID(),
-					'is_afnemer' => $isAfnemer,
-					'is_aanbieder' => $isAanbieder,
-					'afnemer_id' => $afnemerId,
-					'aanbieder_id' => $aanbiederId,
+					'is_afnemer' => $isConsumer,
+					'is_aanbieder' => $isProvider,
+					'afnemer_id' => $consumerId,
+					'aanbieder_id' => $providerId,
 				]
 			);
 
@@ -1051,7 +1051,7 @@ class AangebodenGebruikService {
 	 *
 	 * @return \OCA\OpenRegister\Db\ObjectEntity|null The found object or null
 	 */
-	private function findGebruikOrKoppeling(
+	private function findGebruikOrIntegration(
 		ObjectService $objectService,
 		string $objectId,
 	): ?\OCA\OpenRegister\Db\ObjectEntity {
@@ -1538,44 +1538,44 @@ class AangebodenGebruikService {
 	 *
 	 * @return array The updated object data
 	 */
-	private function updateGeregistreerdDoor(
+	private function updateGeregistreerdBy(
 		ObjectService $objectService,
 		array $objectData,
 		string $organisationUuid,
 	): array {
 		try {
-			$organisatieSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
+			$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 			$registerId = $voorzieningenConfig['register'] ?? null;
 
-			if ($organisatieSchemaId === null || $registerId === null) {
+			if ($organisationSchemaId === null || $registerId === null) {
 				return $objectData;
 			}
 
-			$organisatieObject = $objectService->find(
+			$organisationObject = $objectService->find(
 				id: $organisationUuid,
 				register: (int)$registerId,
-				schema: (int)$organisatieSchemaId,
+				schema: (int)$organisationSchemaId,
 				_rbac: false,
 				_multitenancy: false
 			);
 
-			if ($organisatieObject === null) {
+			if ($organisationObject === null) {
 				return $objectData;
 			}
 
-			$organisatieData = $organisatieObject->getObject();
-			$orgType = $organisatieData['type'] ?? null;
+			$organisationData = $organisationObject->getObject();
+			$orgType = $organisationData['type'] ?? null;
 
 			if ($orgType !== null && isset(self::TYPE_MAP[$orgType]) === true) {
-				$objectData['geregistreerdDoor'] = self::TYPE_MAP[$orgType];
+				$objectData['geregistreerdBy'] = self::TYPE_MAP[$orgType];
 
 				$this->logger->info(
 					'Updated geregistreerdDoor during transfer',
 					[
 						'organisationUuid' => $organisationUuid,
 						'orgType' => $orgType,
-						'geregistreerdDoor' => self::TYPE_MAP[$orgType],
+						'geregistreerdBy' => self::TYPE_MAP[$orgType],
 					]
 				);
 			}
@@ -1699,7 +1699,7 @@ class AangebodenGebruikService {
 
 			// Find the gebruik or koppeling object across possible schemas.
 			// Register/schema context is required to search magic tables.
-			$existingGebruik = $this->findGebruikOrKoppeling(objectService: $objectService, objectId: $gebruikId);
+			$existingGebruik = $this->findGebruikOrIntegration(objectService: $objectService, objectId: $gebruikId);
 
 			if ($existingGebruik === null) {
 				return [
@@ -1713,39 +1713,39 @@ class AangebodenGebruikService {
 
 			// SECURITY CHECK: Verify that the active organization is either the afnemer or aanbieder.
 			// This is critical since we're bypassing RBAC.
-			$afnemerInfo = $gebruikData['afnemer'] ?? null;
-			$aanbiederInfo = $gebruikData['aanbieder'] ?? null;
+			$consumerInfo = $gebruikData['consumer'] ?? null;
+			$providerInfo = $gebruikData['provider'] ?? null;
 
 			// Check various ways the afnemer might be stored (UUID, object, or string).
-			$afnemerId = null;
-			if (is_array(value: $afnemerInfo) === true && isset($afnemerInfo['id']) === true) {
-				$afnemerId = $afnemerInfo['id'];
-			} elseif (is_string(value: $afnemerInfo) === true) {
-				$afnemerId = $afnemerInfo;
+			$consumerId = null;
+			if (is_array(value: $consumerInfo) === true && isset($consumerInfo['id']) === true) {
+				$consumerId = $consumerInfo['id'];
+			} elseif (is_string(value: $consumerInfo) === true) {
+				$consumerId = $consumerInfo;
 			}
 
 			// Check various ways the aanbieder might be stored (UUID, object, or string).
-			$aanbiederId = null;
-			if (is_array(value: $aanbiederInfo) === true && isset($aanbiederInfo['id']) === true) {
-				$aanbiederId = $aanbiederInfo['id'];
-			} elseif (is_string(value: $aanbiederInfo) === true) {
-				$aanbiederId = $aanbiederInfo;
+			$providerId = null;
+			if (is_array(value: $providerInfo) === true && isset($providerInfo['id']) === true) {
+				$providerId = $providerInfo['id'];
+			} elseif (is_string(value: $providerInfo) === true) {
+				$providerId = $providerInfo;
 			}
 
 			// Allow operation if current org is either afnemer or aanbieder.
-			$isAfnemer = ($afnemerId !== null && $afnemerId === $currentOrg);
-			$isAanbieder = ($aanbiederId !== null && $aanbiederId === $currentOrg);
+			$isConsumer = ($consumerId !== null && $consumerId === $currentOrg);
+			$isProvider = ($providerId !== null && $providerId === $currentOrg);
 
-			if ($isAfnemer === false && $isAanbieder === false) {
+			if ($isConsumer === false && $isProvider === false) {
 				$this->logger->warning(
 					'Unauthorized delete attempt - user is not afnemer or aanbieder',
 					[
 						'gebruik_id' => $gebruikId,
 						'current_org' => $currentOrg,
-						'afnemer_in_object' => $afnemerInfo,
-						'resolved_afnemer_id' => $afnemerId,
-						'aanbieder_in_object' => $aanbiederInfo,
-						'resolved_aanbieder_id' => $aanbiederId,
+						'afnemer_in_object' => $consumerInfo,
+						'resolved_afnemer_id' => $consumerId,
+						'aanbieder_in_object' => $providerInfo,
+						'resolved_aanbieder_id' => $providerId,
 					]
 				);
 
@@ -1754,10 +1754,10 @@ class AangebodenGebruikService {
 					'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
 					'deleted' => false,
 					'debug' => [
-						'afnemer_in_object' => $afnemerInfo,
-						'resolved_afnemer_id' => $afnemerId,
-						'aanbieder_in_object' => $aanbiederInfo,
-						'resolved_aanbieder_id' => $aanbiederId,
+						'afnemer_in_object' => $consumerInfo,
+						'resolved_afnemer_id' => $consumerId,
+						'aanbieder_in_object' => $providerInfo,
+						'resolved_aanbieder_id' => $providerId,
 						'current_org' => $currentOrg,
 					],
 				];
@@ -1781,10 +1781,10 @@ class AangebodenGebruikService {
 				[
 					'gebruik_id' => $gebruikId,
 					'organisation' => $currentOrg,
-					'is_afnemer' => $isAfnemer,
-					'is_aanbieder' => $isAanbieder,
-					'afnemer_id' => $afnemerId,
-					'aanbieder_id' => $aanbiederId,
+					'is_afnemer' => $isConsumer,
+					'is_aanbieder' => $isProvider,
+					'afnemer_id' => $consumerId,
+					'aanbieder_id' => $providerId,
 					'delete_result' => $deleteResult,
 				]
 			);

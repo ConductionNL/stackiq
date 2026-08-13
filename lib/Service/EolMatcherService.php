@@ -46,7 +46,7 @@ class EolMatcherService {
 	/**
 	 * Match a module version string against a set of candidate EOL cycles.
 	 *
-	 * Splits `$versie` and each candidate `cycle` value on `.` and treats a
+	 * Splits `$version` and each candidate `cycle` value on `.` and treats a
 	 * cycle as matching when one of the two segment lists is a prefix of the
 	 * other (either direction — a longer `versie` matching a shorter, more
 	 * general `cycle`, or a shorter `versie` matching a longer, more
@@ -56,7 +56,7 @@ class EolMatcherService {
 	 * greatest depth are considered; a stamp is produced only when exactly
 	 * one candidate remains at that depth.
 	 *
-	 * @param string $versie The `moduleVersie.versie` string to match.
+	 * @param string $version The `moduleVersie.versie` string to match.
 	 * @param array $cycles The mapped module's `eolCycle` rows (each an
 	 *                      array with at least a `cycle` key).
 	 *
@@ -66,9 +66,9 @@ class EolMatcherService {
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-version-matching-is-conservative-and-unambiguous-only
 	 */
-	public function matchVersion(string $versie, array $cycles): ?array {
-		$versie = trim($versie);
-		if ($versie === '') {
+	public function matchVersion(string $version, array $cycles): ?array {
+		$version = trim($version);
+		if ($version === '') {
 			return null;
 		}
 
@@ -81,7 +81,7 @@ class EolMatcherService {
 				continue;
 			}
 
-			$depth = $this->matchDepth(versie: $versie, cycle: $cycleValue);
+			$depth = $this->matchDepth(version: $version, cycle: $cycleValue);
 			if ($depth === null) {
 				continue;
 			}
@@ -113,12 +113,12 @@ class EolMatcherService {
 	 * match requires every one of the shorter list's segments to equal the
 	 * corresponding segment of the longer list.
 	 *
-	 * @param string $versie The module version string.
+	 * @param string $version The module version string.
 	 * @param string $cycle The candidate cycle label.
 	 *
 	 * @return int|null The match depth, or null when the two do not match.
 	 */
-	private function matchDepth(string $versie, string $cycle): ?int {
+	private function matchDepth(string $version, string $cycle): ?int {
 		// Reject empty input. `explode()` never returns an empty array, so the
 		// segment count below is always >= 1 and a `$depth === 0` test could
 		// never fire — the degenerate case is an empty STRING: explode('.', '')
@@ -126,17 +126,17 @@ class EolMatcherService {
 		// produce an EOL stamp from no version information at all. matchVersion()
 		// already rejects both empty inputs upstream, so this is defence in depth
 		// for any future caller.
-		if ($versie === '' || $cycle === '') {
+		if ($version === '' || $cycle === '') {
 			return null;
 		}
 
-		$versieSegments = explode('.', $versie);
+		$versionSegments = explode('.', $version);
 		$cycleSegments = explode('.', $cycle);
 
-		$depth = min(count($versieSegments), count($cycleSegments));
+		$depth = min(count($versionSegments), count($cycleSegments));
 
 		for ($i = 0; $i < $depth; $i++) {
-			if ($versieSegments[$i] !== $cycleSegments[$i]) {
+			if ($versionSegments[$i] !== $cycleSegments[$i]) {
 				return null;
 			}
 		}
@@ -148,12 +148,12 @@ class EolMatcherService {
 	 * Build the complete, PUT-semantic replacement object for a matched
 	 * `moduleVersie`.
 	 *
-	 * Copies every existing field on `$moduleVersie` forward unchanged and
+	 * Copies every existing field on `$moduleVersion` forward unchanged and
 	 * only adds/overwrites `datumEindeOndersteuning`, `eolBron`, and
 	 * `eolBijgewerktOp` — OpenRegister's `saveObject` nulls any property
 	 * omitted from the payload, so the full object must always be the base.
 	 *
-	 * @param array $moduleVersie The complete current `moduleVersie` object.
+	 * @param array $moduleVersion The complete current `moduleVersie` object.
 	 * @param array $matchedCycle The matched `eolCycle` row (must carry an
 	 *                            `eol` date string).
 	 * @param string $source The provenance source identifier (e.g.
@@ -165,11 +165,11 @@ class EolMatcherService {
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-stamping-preserves-every-other-field-and-records-provenance
 	 */
-	public function buildStamp(array $moduleVersie, array $matchedCycle, string $source, string $fetchedAt): array {
-		$stamped = $moduleVersie;
-		$stamped['datumEindeOndersteuning'] = (string)($matchedCycle['eol'] ?? '');
-		$stamped['eolBron'] = $source;
-		$stamped['eolBijgewerktOp'] = $fetchedAt;
+	public function buildStamp(array $moduleVersion, array $matchedCycle, string $source, string $fetchedAt): array {
+		$stamped = $moduleVersion;
+		$stamped['dateEndOndersteuning'] = (string)($matchedCycle['eol'] ?? '');
+		$stamped['eolSource'] = $source;
+		$stamped['eolUpdatedOn'] = $fetchedAt;
 
 		return $stamped;
 	}//end buildStamp()
@@ -183,7 +183,7 @@ class EolMatcherService {
 	 * value is empty (endoflife.date reports no scheduled EOL date yet for
 	 * that cycle — nothing informative to stamp).
 	 *
-	 * @param array $moduleVersies The module's `moduleVersie` rows.
+	 * @param array $moduleVersions The module's `moduleVersie` rows.
 	 * @param array $cycles The mapped module's `eolCycle` rows.
 	 * @param string $source The provenance source identifier.
 	 * @param string $fetchedAt The sync run's timestamp (ISO 8601).
@@ -195,25 +195,25 @@ class EolMatcherService {
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-version-matching-is-conservative-and-unambiguous-only
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-stamping-preserves-every-other-field-and-records-provenance
 	 */
-	public function matchModuleVersions(array $moduleVersies, array $cycles, string $source, string $fetchedAt): array {
+	public function matchModuleVersions(array $moduleVersions, array $cycles, string $source, string $fetchedAt): array {
 		$stamped = [];
 		$skipped = [];
 
-		foreach ($moduleVersies as $moduleVersie) {
-			$versie = (string)($moduleVersie['versie'] ?? '');
+		foreach ($moduleVersions as $moduleVersion) {
+			$version = (string)($moduleVersion['version'] ?? '');
 
 			$matchedCycle = null;
-			if ($versie !== '') {
-				$matchedCycle = $this->matchVersion(versie: $versie, cycles: $cycles);
+			if ($version !== '') {
+				$matchedCycle = $this->matchVersion(version: $version, cycles: $cycles);
 			}
 
 			if ($matchedCycle === null || trim((string)($matchedCycle['eol'] ?? '')) === '') {
-				$skipped[] = $moduleVersie;
+				$skipped[] = $moduleVersion;
 				continue;
 			}
 
 			$stamped[] = $this->buildStamp(
-				moduleVersie: $moduleVersie,
+				moduleVersion: $moduleVersion,
 				matchedCycle: $matchedCycle,
 				source: $source,
 				fetchedAt: $fetchedAt

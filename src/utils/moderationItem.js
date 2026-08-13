@@ -14,7 +14,7 @@
  */
 
 const TITLE_FIELDS = [
-	'naam',
+	'name',
 	'name',
 	'titel',
 	'title',
@@ -26,7 +26,7 @@ const SUBTITLE_FIELDS = [
 	'contactEmail',
 	'url',
 	'website',
-	'beschrijving',
+	'description',
 	'description',
 ]
 

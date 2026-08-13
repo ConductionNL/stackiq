@@ -36,7 +36,7 @@
 			:aria-label="t('softwarecatalog', 'Compliance matrix scope')">
 			<NcCheckboxRadioSwitch
 				v-model="columnSource"
-				value="standaardversie"
+				value="standardVersion"
 				name="cmv-columnSource"
 				type="radio">
 				{{ t('softwarecatalog', 'Standards') }}
@@ -376,7 +376,7 @@ export default {
 		standaardversies() {
 			const elements = objectStore.getCollection('element')?.results || []
 			return elements.filter(
-				(el) => (el.gemmaType || el.object?.gemmaType) === 'standaardversie',
+				(el) => (el.gemmaType || el.object?.gemmaType) === 'standardVersion',
 			)
 		},
 

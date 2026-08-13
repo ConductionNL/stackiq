@@ -121,7 +121,7 @@ class GebruikServiceGetApplicationIdsTest extends TestCase {
 			->willReturn(
 				[
 					'@self' => ['id' => $uuid],
-					'naam' => 'TestApplication',
+					'name' => 'TestApplication',
 				]
 			);
 
@@ -151,7 +151,7 @@ class GebruikServiceGetApplicationIdsTest extends TestCase {
 
 		$arrayResult = [
 			'@self' => ['id' => $uuid],
-			'naam' => 'TestApplication2',
+			'name' => 'TestApplication2',
 		];
 
 		$this->objectService

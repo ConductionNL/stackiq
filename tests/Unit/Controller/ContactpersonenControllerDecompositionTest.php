@@ -107,7 +107,7 @@ class ContactpersonenControllerDecompositionTest extends TestCase {
 
 	public function testValidateConvertToUserPermissionPassesForOrgAdmin(): void {
 		$user = $this->createMock(IUser::class);
-		$user->method('getUID')->willReturn('beheerder');
+		$user->method('getUID')->willReturn('maintainer');
 		$userSession = $this->createMock(IUserSession::class);
 		$userSession->method('getUser')->willReturn($user);
 
@@ -168,7 +168,7 @@ class ContactpersonenControllerDecompositionTest extends TestCase {
 		$this->assertSame('', $result['firstName']);
 		$this->assertSame('', $result['middleName']);
 		$this->assertSame('', $result['lastName']);
-		$this->assertSame('', $result['functie']);
+		$this->assertSame('', $result['role']);
 		$this->assertNull($result['organisations']['active']);
 		$this->assertSame([], $result['organisations']['all']);
 		$this->assertFalse($result['isBeheerder']);

@@ -72,15 +72,15 @@ class BioComplianceRegisterShapeTest extends TestCase {
 	 * @spec   openspec/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog
 	 */
 	public function testBioMaatregelSchemaExists(): void {
-		$bioMaatregel = $this->schema(slug: 'bioMaatregel');
-		$props = $bioMaatregel['properties'] ?? [];
+		$bioMeasure = $this->schema(slug: 'bioMaatregel');
+		$props = $bioMeasure['properties'] ?? [];
 
-		foreach (['code', 'naam', 'omschrijving', 'thema', 'bioVersie', 'bbnNiveau', 'bron'] as $field) {
+		foreach (['code', 'name', 'omschrijving', 'thema', 'bioVersion', 'bbnNiveau', 'bron'] as $field) {
 			$this->assertArrayHasKey(key: $field, array: $props, message: "bioMaatregel must declare $field");
 		}
 
 		$this->assertSame(expected: ['BBN1', 'BBN2', 'BBN3'], actual: $props['bbnNiveau']['items']['enum'] ?? null);
-		$this->assertContains(needle: 'public', haystack: $bioMaatregel['authorization']['read'] ?? []);
+		$this->assertContains(needle: 'public', haystack: $bioMeasure['authorization']['read'] ?? []);
 	}//end testBioMaatregelSchemaExists()
 
 	/**
@@ -111,7 +111,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 		foreach ($seedObjects as $object) {
 			$this->assertArrayHasKey(key: 'slug', array: $object, message: 'each seed object needs a slug for idempotent re-import');
 			$this->assertArrayHasKey(key: 'code', array: $object);
-			$this->assertArrayHasKey(key: 'naam', array: $object);
+			$this->assertArrayHasKey(key: 'name', array: $object);
 		}
 	}//end testBioMaatregelSeedDataExists()
 
@@ -132,7 +132,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 
 		$required = $compliancy['required'] ?? [];
 		$this->assertNotContains(needle: 'bioMaatregel', haystack: $required);
-		$this->assertNotContains(needle: 'standaardversie', haystack: $required);
+		$this->assertNotContains(needle: 'standardVersion', haystack: $required);
 	}//end testCompliancyHasOptionalBioMaatregelRelation()
 
 	/**
@@ -151,7 +151,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 			'bbnLevel',
 			'dpiaStatus',
 			'dpiaDate',
-			'dpiaVolgendeBeoordeling',
+			'dpiaVolgendeAssessment',
 			'dpiaDocumentRef',
 			'verwerkingsregisterRef',
 		];
@@ -166,7 +166,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 		$this->assertTrue(condition: $props['bbnLevel']['facetable'] ?? false);
 		$this->assertSame(expected: ['not required', 'required', 'executed'], actual: $props['dpiaStatus']['enum'] ?? null);
 		$this->assertSame(expected: 'date', actual: $props['dpiaDate']['format'] ?? null);
-		$this->assertSame(expected: 'date', actual: $props['dpiaVolgendeBeoordeling']['format'] ?? null);
+		$this->assertSame(expected: 'date', actual: $props['dpiaVolgendeAssessment']['format'] ?? null);
 	}//end testModuleHasOptionalBioFields()
 
 	/**
@@ -188,7 +188,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 		$this->assertSame(expected: 'equals', actual: $statusFilter['operator'] ?? null);
 		$this->assertSame(expected: 'executed', actual: $statusFilter['value'] ?? null);
 
-		$dateFilter = $rule['trigger']['filter']['dpiaVolgendeBeoordeling'] ?? [];
+		$dateFilter = $rule['trigger']['filter']['dpiaVolgendeAssessment'] ?? [];
 		$this->assertSame(expected: 'withinNext', actual: $dateFilter['operator'] ?? null);
 		$this->assertSame(expected: 'P0D', actual: $dateFilter['value'] ?? null);
 

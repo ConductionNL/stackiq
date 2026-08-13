@@ -262,7 +262,7 @@ class Application extends App implements IBootstrap {
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					eventDispatcher: $container->get(IEventDispatcher::class),
 					settingsService: $container->get(SettingsService::class),
-					organisatieService: $container->get(OrganisatieService::class),
+					organisationService: $container->get(OrganisatieService::class),
 					progressTracker: $container->get(ProgressTracker::class),
 					organizationHandler: $container->get(OrganizationHandler::class),
 				);
@@ -324,8 +324,8 @@ class Application extends App implements IBootstrap {
 			OrganizationSyncService::class,
 			function ($container) {
 				return new OrganizationSyncService(
-					organisatieService: $container->get(OrganisatieService::class),
-					contactpersoonService: $container->get(ContactpersoonService::class),
+					organisationService: $container->get(OrganisatieService::class),
+					contactPersonService: $container->get(ContactpersoonService::class),
 					emailService: $container->get(SymfonyEmailService::class),
 					config: $container->get(IAppConfig::class),
 					logger: $container->get('Psr\Log\LoggerInterface'),

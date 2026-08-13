@@ -32,7 +32,7 @@ describe('facets.FACET_DIMENSIONS', () => {
 	it('lists all four GEMMA dimensions', () => {
 		expect(FACET_DIMENSIONS).toEqual([
 			'referentiecomponent',
-			'standaard',
+			'standard',
 			'applicatieservice',
 			'domein',
 		])

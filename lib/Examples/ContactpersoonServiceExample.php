@@ -84,7 +84,7 @@ class ContactpersoonServiceExample {
 				$processedResults[] = [
 					'contactPersonId' => $contactPerson->getId(),
 					'contactPersonUuid' => $contactPerson->getUuid(),
-					'name' => $contactData['naam'] ?? 'Unknown',
+					'name' => $contactData['name'] ?? 'Unknown',
 					'email' => $contactData['email'] ?? null,
 					'username' => $contactData['username'] ?? null,
 					'hasUserDetails' => $contactData['userDetails'] !== null,
@@ -134,7 +134,7 @@ class ContactpersoonServiceExample {
 						'id' => 'contact_person_id',
 						'uuid' => 'contact_person_uuid',
 						'object' => [
-							'naam' => 'John Doe',
+							'name' => 'John Doe',
 							'email' => 'john.doe@example.com',
 							'username' => 'john.doe@example.com',
 							'userDetails' => [

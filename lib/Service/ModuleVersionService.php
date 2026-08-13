@@ -129,15 +129,15 @@ class ModuleVersionService {
 			return null;
 		}
 
-		$moduleVersieSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
+		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 
-		if ($moduleVersieSchemaId === null || $registerId === null) {
+		if ($versionSchemaId === null || $registerId === null) {
 			$this->logger->warning(
 				'ModuleVersionService: moduleVersie schema or register not configured',
 				[
-					'moduleVersieSchemaId' => $moduleVersieSchemaId,
+					'moduleVersieSchemaId' => $versionSchemaId,
 					'registerId' => $registerId,
 				]
 			);
@@ -146,7 +146,7 @@ class ModuleVersionService {
 
 		$query = [
 			'@self' => [
-				'schema' => (int)$moduleVersieSchemaId,
+				'schema' => (int)$versionSchemaId,
 				'register' => (int)$registerId,
 			],
 			'module' => $moduleUuid,
@@ -170,7 +170,7 @@ class ModuleVersionService {
 			'moduleUuid' => $moduleUuid,
 			'moduleData' => $moduleObject->getObject(),
 			'registerId' => (int)$registerId,
-			'schemaId' => (int)$moduleVersieSchemaId,
+			'schemaId' => (int)$versionSchemaId,
 			'existingVersions' => $existingVersionList,
 			'versionCount' => $versionCount,
 			'objectService' => $objectService,
@@ -206,12 +206,12 @@ class ModuleVersionService {
 	 */
 	private function updateVersionRecord(array $context): void {
 		$moduleData = $context['moduleData'];
-		$moduleName = $moduleData['voorkeurnaam'] ?? $moduleData['naam'] ?? 'Onbekende applicatie';
+		$moduleName = $moduleData['voorkeurnaam'] ?? $moduleData['name'] ?? 'Onbekende applicatie';
 		$moduleDescription = $moduleData['beschrijvingKort'] ?? '';
 
 		$versionData = [
 			'module' => $context['moduleUuid'],
-			'versie' => '1.0.0',
+			'version' => '1.0.0',
 			'beschrijvingKort' => $moduleDescription,
 			'beschrijvingLang' => '',
 			'status' => 'in gebruik',

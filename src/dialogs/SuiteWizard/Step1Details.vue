@@ -17,7 +17,7 @@
 			:label="t('softwarecatalog', 'Name') + ' *'"
 			:placeholder="t('softwarecatalog', 'e.g. Centric Leefomgeving')"
 			required
-			@update:model-value="onField('naam', $event)" />
+			@update:model-value="onField('name', $event)" />
 
 		<NcTextField
 			:model-value="payload.beschrijvingKort"

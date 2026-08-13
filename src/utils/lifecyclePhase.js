@@ -46,11 +46,11 @@ export const PHASE = Object.freeze({
  * @type {Array<{phase: string, field: string}>}
  */
 const PHASE_STEPS = [
-	{ phase: PHASE.ACQUISITION, field: 'startDatumVerwerving' },
-	{ phase: PHASE.PLANNED, field: 'startDatumGepland' },
-	{ phase: PHASE.PRODUCTION, field: 'startDatumInProductie' },
-	{ phase: PHASE.PHASING_OUT, field: 'startDatumUitTeFaseren' },
-	{ phase: PHASE.PHASED_OUT, field: 'startDatumUitGefaseerd' },
+	{ phase: PHASE.ACQUISITION, field: 'startDateVerwerving' },
+	{ phase: PHASE.PLANNED, field: 'startDatePlanned' },
+	{ phase: PHASE.PRODUCTION, field: 'startDateInProduction' },
+	{ phase: PHASE.PHASING_OUT, field: 'startDateOutTeFaseren' },
+	{ phase: PHASE.PHASED_OUT, field: 'startDateOutGefaseerd' },
 ]
 
 /**

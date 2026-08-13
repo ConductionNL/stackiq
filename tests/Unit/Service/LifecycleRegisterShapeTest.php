@@ -68,18 +68,18 @@ class LifecycleRegisterShapeTest extends TestCase {
 		$gebruik = $this->schema('gebruik');
 		$props = $gebruik['properties'] ?? [];
 
-		$this->assertArrayHasKey('geplandeVervanging', $props);
-		$this->assertArrayHasKey('geplandeVervangingsDatum', $props);
+		$this->assertArrayHasKey('plannedReplacement', $props);
+		$this->assertArrayHasKey('plannedVervangingsDate', $props);
 
 		// Optional: not listed in `required` (import-over-existing is non-destructive).
 		$required = $gebruik['required'] ?? [];
-		$this->assertNotContains('geplandeVervanging', $required);
-		$this->assertNotContains('geplandeVervangingsDatum', $required);
+		$this->assertNotContains('plannedReplacement', $required);
+		$this->assertNotContains('plannedVervangingsDate', $required);
 
 		// The replacement is a related-object reference to a module.
-		$this->assertSame('related-object', $props['geplandeVervanging']['objectConfiguration']['handling'] ?? null);
-		$this->assertStringContainsString('module', $props['geplandeVervanging']['$ref'] ?? '');
-		$this->assertSame('date', $props['geplandeVervangingsDatum']['format'] ?? null);
+		$this->assertSame('related-object', $props['plannedReplacement']['objectConfiguration']['handling'] ?? null);
+		$this->assertStringContainsString('module', $props['plannedReplacement']['$ref'] ?? '');
+		$this->assertSame('date', $props['plannedVervangingsDate']['format'] ?? null);
 	}//end testGebruikHasOptionalReplacementFields()
 
 	/**
@@ -93,7 +93,7 @@ class LifecycleRegisterShapeTest extends TestCase {
 
 		$rule = $rules['phaseout-approaching'];
 		$this->assertSame('scheduled', $rule['trigger']['type']);
-		$filter = $rule['trigger']['filter']['startDatumUitTeFaseren'] ?? [];
+		$filter = $rule['trigger']['filter']['startDateOutTeFaseren'] ?? [];
 		$this->assertSame('withinNext', $filter['operator'] ?? null);
 		$this->assertArrayHasKey('nl', $rule['subject']);
 		$this->assertArrayHasKey('en', $rule['subject']);
@@ -110,7 +110,7 @@ class LifecycleRegisterShapeTest extends TestCase {
 
 		$rule = $rules['eol-approaching'];
 		$this->assertSame('scheduled', $rule['trigger']['type']);
-		$filter = $rule['trigger']['filter']['datumEindeOndersteuning'] ?? [];
+		$filter = $rule['trigger']['filter']['dateEndOndersteuning'] ?? [];
 		$this->assertSame('withinNext', $filter['operator'] ?? null);
 	}//end testModuleVersieDeclaresEolRule()
 }//end class

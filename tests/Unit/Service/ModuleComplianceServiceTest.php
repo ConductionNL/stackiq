@@ -128,9 +128,9 @@ class ModuleComplianceServiceTest extends TestCase {
 	 */
 	public function testExtractResolvesAllRelationShapes(): void {
 		$objects = [
-			$this->complianceObject(['standaardversie' => 'uuid-string'], 1),
-			$this->complianceObject(['standaardversie' => ['uuid' => 'uuid-array']], 2),
-			$this->complianceObject(['standaardversie' => (object)['uuid' => 'uuid-object']], 3),
+			$this->complianceObject(['standardVersion' => 'uuid-string'], 1),
+			$this->complianceObject(['standardVersion' => ['uuid' => 'uuid-array']], 2),
+			$this->complianceObject(['standardVersion' => (object)['uuid' => 'uuid-object']], 3),
 		];
 
 		$result = $this->invoke('extractStandaardversieUuids', [$objects]);
@@ -146,9 +146,9 @@ class ModuleComplianceServiceTest extends TestCase {
 	 */
 	public function testExtractDeduplicates(): void {
 		$objects = [
-			$this->complianceObject(['standaardversie' => 'dup'], 1),
-			$this->complianceObject(['standaardversie' => 'dup'], 2),
-			$this->complianceObject(['standaardversie' => 'unique'], 3),
+			$this->complianceObject(['standardVersion' => 'dup'], 1),
+			$this->complianceObject(['standardVersion' => 'dup'], 2),
+			$this->complianceObject(['standardVersion' => 'unique'], 3),
 		];
 
 		$result = array_values($this->invoke('extractStandaardversieUuids', [$objects]));
@@ -165,8 +165,8 @@ class ModuleComplianceServiceTest extends TestCase {
 	 */
 	public function testExtractSkipsRecordsWithoutStandaardversie(): void {
 		$objects = [
-			$this->complianceObject(['standaardGemma' => 'GEMMA-ONLY'], 1),
-			$this->complianceObject(['standaardversie' => 'resolved'], 2),
+			$this->complianceObject(['standardGemma' => 'GEMMA-ONLY'], 1),
+			$this->complianceObject(['standardVersion' => 'resolved'], 2),
 		];
 
 		$result = array_values($this->invoke('extractStandaardversieUuids', [$objects]));

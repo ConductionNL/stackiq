@@ -75,8 +75,8 @@ class ReviewControllerContractTest extends TestCase {
 	 */
 	public function testAggregateSuccessBodyCarriesExactlyTheContractKeys(): void {
 		$items = [
-			['uuid' => 'r-1', 'waardering' => 4],
-			['uuid' => 'r-2', 'waardering' => 5],
+			['uuid' => 'r-1', 'rating' => 4],
+			['uuid' => 'r-2', 'rating' => 5],
 		];
 
 		$this->aggregateService

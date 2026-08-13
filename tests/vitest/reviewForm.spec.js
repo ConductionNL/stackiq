@@ -48,8 +48,8 @@ describe('reviewForm.buildReviewPayload', () => {
 		})
 		expect(Object.keys(payload).sort()).toEqual([
 			'beschrijvingLang',
-			'naam',
-			'waardering',
+			'name',
+			'rating',
 		])
 	})
 })

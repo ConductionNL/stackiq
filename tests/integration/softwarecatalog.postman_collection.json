@@ -1909,7 +1909,7 @@
         "api",
         "objects",
         "{{register}}",
-        "standaard"
+        "standard"
        ],
        "query": [
         {
@@ -1924,7 +1924,7 @@
        "listen": "test",
        "script": {
         "exec": [
-         "// The 'standaard' schema is now provisioned in the voorzieningen register",
+         "// The 'standard' schema is now provisioned in the voorzieningen register",
          "// (previously a documented gap that 404'd). Per the prior note, this is now",
          "// flipped to the happy-path list contract: a 200 paginated envelope.",
          "pm.test('not a server error', () => pm.expect(pm.response.code).to.be.below(500));",
@@ -2902,7 +2902,7 @@
         "exec": [
          "pm.test('200 OK', () => pm.response.to.have.status(200));",
          "const b = pm.response.json();",
-         "['referentiecomponent', 'standaard', 'applicatieservice', 'domein'].forEach((dim) => {",
+         "['referentiecomponent', 'standard', 'applicatieservice', 'domein'].forEach((dim) => {",
          "    pm.test(`has ${dim} facet array (present even when empty)`, () => pm.expect(b[dim]).to.be.an('array'));",
          "});",
          "pm.test('has _meta.totalMatched', () => pm.expect(b._meta).to.have.property('totalMatched'));",
@@ -2964,7 +2964,7 @@
         "exec": [
          "pm.test('200 OK', () => pm.response.to.have.status(200));",
          "const b = pm.response.json();",
-         "['referentiecomponent', 'standaard', 'applicatieservice', 'domein'].forEach((dim) => {",
+         "['referentiecomponent', 'standard', 'applicatieservice', 'domein'].forEach((dim) => {",
          "    pm.test(`has ${dim} facet array (present even when empty)`, () => pm.expect(b[dim]).to.be.an('array'));",
          "});"
         ],

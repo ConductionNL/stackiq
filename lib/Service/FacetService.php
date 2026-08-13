@@ -105,7 +105,7 @@ class FacetService {
 	 *
 	 * @var string[]
 	 */
-	private const DIMENSIONS = ['referentiecomponent', 'standaard', 'applicatieservice', 'domein'];
+	private const DIMENSIONS = ['referentiecomponent', 'standard', 'applicatieservice', 'domein'];
 
 	/**
 	 * Constructor for FacetService.
@@ -146,7 +146,7 @@ class FacetService {
 	 * @throws InvalidArgumentException When `$schema` is not supported.
 	 * @throws RuntimeException When OpenRegister's ObjectService is unavailable.
 	 *
-	 * @return array{referentiecomponent: array, standaard: array, applicatieservice: array,
+	 * @return array{referentiecomponent: array, standard: array, applicatieservice: array,
 	 *     domein: array, _meta: array{totalMatched: int, processingTimeMs: float, cached: bool,
 	 *     matchedObjectIds: string[]}}
 	 *
@@ -232,7 +232,7 @@ class FacetService {
 	 * @param string|null $normalizedSearch Normalized free-text query.
 	 * @param string|null $organization Optional organisation override.
 	 *
-	 * @return array{referentiecomponent: array, standaard: array, applicatieservice: array,
+	 * @return array{referentiecomponent: array, standard: array, applicatieservice: array,
 	 *     domein: array, _meta: array{totalMatched: int, processingTimeMs: float, cached: bool,
 	 *     matchedObjectIds: string[]}}
 	 */
@@ -642,18 +642,18 @@ class FacetService {
 
 		foreach ($modulesByObjectId as $objectId => $modules) {
 			$refCompIds = [];
-			$standaarden = [];
+			$standards = [];
 
 			foreach ($modules as $module) {
-				$refCompIds = array_merge($refCompIds, $this->extractRelatedIdentifiers(object: $module, field: 'referentieComponenten'));
-				$standaarden = array_merge($standaarden, $this->extractRelatedNames(object: $module, field: 'standaardVersies'));
+				$refCompIds = array_merge($refCompIds, $this->extractRelatedIdentifiers(object: $module, field: 'referenceComponenten'));
+				$standards = array_merge($standards, $this->extractRelatedNames(object: $module, field: 'standardVersions'));
 			}
 
 			$refCompIds = array_values(array_unique($refCompIds));
-			$standaarden = array_values(array_unique(array_filter($standaarden)));
+			$standards = array_values(array_unique(array_filter($standards)));
 
 			$refCompIdsByObjId[$objectId] = $refCompIds;
-			$stdValsByObjId[$objectId] = $standaarden;
+			$stdValsByObjId[$objectId] = $standards;
 			$allRefCompIds = array_merge($allRefCompIds, $refCompIds);
 		}
 
@@ -702,7 +702,7 @@ class FacetService {
 
 			$dimValsByObjId[$objectId] = [
 				'referentiecomponent' => array_values(array_unique($refCompNames)),
-				'standaard' => $stdValsByObjId[$objectId] ?? [],
+				'standard' => $stdValsByObjId[$objectId] ?? [],
 				'domein' => array_values(array_unique($domeinValues)),
 				'applicatieservice' => array_values(array_unique($appSvcValues)),
 			];

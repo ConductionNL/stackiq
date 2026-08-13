@@ -206,7 +206,7 @@ class ContractApprovalService {
 			$decisionType,
 			'',
 			['title' => $this->buildSubjectLabel(data: $data)],
-			(string)($data['contractNummer'] ?? ''),
+			(string)($data['contractNumber'] ?? ''),
 			$contractUuid
 		);
 
@@ -276,7 +276,7 @@ class ContractApprovalService {
 		}
 
 		$data = $contract->getObject();
-		$ownerOrg = (string)($data['_organisation'] ?? $data['aanbieder'] ?? '');
+		$ownerOrg = (string)($data['_organisation'] ?? $data['provider'] ?? '');
 
 		if ($activeOrgUuid === '' || $ownerOrg === '' || $activeOrgUuid !== $ownerOrg) {
 			return false;
@@ -464,7 +464,7 @@ class ContractApprovalService {
 
 		foreach ($contracts as $contract) {
 			$data = $contract->getObject();
-			if ((string)($data['contractNummer'] ?? '') === $externalReference) {
+			if ((string)($data['contractNumber'] ?? '') === $externalReference) {
 				return $contract->getUuid();
 			}
 		}
@@ -482,7 +482,7 @@ class ContractApprovalService {
 	 * @spec openspec/specs/contract-decision-delegation/spec.md
 	 */
 	private function buildSubjectLabel(array $data): string {
-		$number = (string)($data['contractNummer'] ?? '');
+		$number = (string)($data['contractNumber'] ?? '');
 		$type = (string)($data['contractType'] ?? '');
 		if ($number !== '' && $type !== '') {
 			return $number . ' — ' . $type;

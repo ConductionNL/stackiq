@@ -110,7 +110,7 @@ class ContactPersonHandler {
 
 		$voornaam = $contactData['voornaam'] ?? '';
 		$tussenvoegsel = $contactData['tussenvoegsel'] ?? '';
-		$achternaam = $contactData['achternaam'] ?? '';
+		$lastName = $contactData['achternaam'] ?? '';
 		$email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
 
 		// Strategy 1: full email address (PRIORITY).
@@ -123,16 +123,16 @@ class ContactPersonHandler {
 		}
 
 		// Strategies 2 and 3: name-based candidates.
-		[$cleanVoornaam, $cleanAchternaam] = $this->cleanNameParts(voornaam: $voornaam, achternaam: $achternaam);
-		if ($cleanVoornaam !== '' && $cleanAchternaam !== '') {
+		[$cleanVoornaam, $cleanLastName] = $this->cleanNameParts(voornaam: $voornaam, lastName: $lastName);
+		if ($cleanVoornaam !== '' && $cleanLastName !== '') {
 			// Strategy 2: firstname.lastname.
-			$candidate = $cleanVoornaam . '.' . $cleanAchternaam;
+			$candidate = $cleanVoornaam . '.' . $cleanLastName;
 			if ($this->isValidUsername(username: $candidate) === true) {
 				return $candidate;
 			}
 
 			// Strategy 3: firstnamelastname.
-			$candidate = $cleanVoornaam . $cleanAchternaam;
+			$candidate = $cleanVoornaam . $cleanLastName;
 			if ($this->isValidUsername(username: $candidate) === true) {
 				return $candidate;
 			}
@@ -281,7 +281,7 @@ class ContactPersonHandler {
 	/**
 	 * Creates a user account for a contact person.
 	 *
-	 * @param object $contactpersoonObject The contact person object.
+	 * @param object $contactPersonObject The contact person object.
 	 * @param bool $isFirstContact Whether this is the first contact.
 	 *
 	 * @return \OCP\IUser|null The created user or null if failed.
@@ -289,12 +289,13 @@ class ContactPersonHandler {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isFirstContact is a simple role-assignment toggle
 	 * @spec                                        openspec/specs/sc-handlers/spec.md
 	 */
-	public function createUserAccount(object $contactpersoonObject, bool $isFirstContact = false): ?\OCP\IUser {
+	public function createUserAccount(object $contactPersonObject, bool $isFirstContact = false): ?\OCP\IUser {
 		$startTime = microtime(true);
 
 		try {
-			$objectData = $contactpersoonObject->getObject();
-			$contactId = $contactpersoonObject->getId();
+			/* @var array<string, mixed> $objectData */
+			$objectData = $contactPersonObject->getObject();
+			$contactId = $contactPersonObject->getId();
 			$email = $objectData['email'] ?? $objectData['e-mailadres'] ?? '';
 			$organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 
@@ -491,7 +492,7 @@ class ContactPersonHandler {
 						'firstName' => $objectData['voornaam'] ?? '',
 						'middleName' => $objectData['tussenvoegsel'] ?? '',
 						'lastName' => $objectData['achternaam'] ?? '',
-						'functie' => $objectData['functie'] ?? '',
+						'role' => $objectData['role'] ?? '',
 					]
 				);
 
@@ -525,11 +526,11 @@ class ContactPersonHandler {
 				$objectData['username'] = $username;
 
 				// Populate the rollen field if a role was assigned and rollen is empty.
-				$currentRollen = $objectData['rollen'] ?? [];
+				$currentRoles = $objectData['roles'] ?? [];
 				if (empty($assignedRole) === false
-					&& (empty($currentRollen) === true || is_array($currentRollen) === false)
+					&& (empty($currentRoles) === true || is_array($currentRoles) === false)
 				) {
-					$objectData['rollen'] = [$assignedRole];
+					$objectData['roles'] = [$assignedRole];
 					$this->_logger->info(
 						'Auto-populated rollen field on contactpersoon',
 						[
@@ -539,7 +540,7 @@ class ContactPersonHandler {
 					);
 				}
 
-				$contactpersoonObject->setObject($objectData);
+				$contactPersonObject->setObject($objectData);
 
 				// Send user creation email.
 				$this->_logger->info(
@@ -585,7 +586,7 @@ class ContactPersonHandler {
 				'💥 USER CREATION EXCEPTION',
 				[
 					'app' => 'softwarecatalog',
-					'contactpersoonId' => $contactpersoonObject->getId(),
+					'contactpersoonId' => $contactPersonObject->getId(),
 					'email' => $objectData['email'] ?? $objectData['e-mailadres'] ?? 'unknown',
 					'username' => $username ?? 'unknown',
 					'exception' => $e->getMessage(),
@@ -628,7 +629,7 @@ class ContactPersonHandler {
 		$assignedRole = '';
 
 		try {
-			$roles = $objectData['rollen'] ?? $objectData['roles'] ?? [];
+			$roles = $objectData['roles'] ?? [];
 			$organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 
 			// Ensure roles is an array.
@@ -676,7 +677,7 @@ class ContactPersonHandler {
 					$this->addUserToGroupWithCheck(user: $user, groupName: $roleGroup, type: 'organization-type-role');
 
 					// Map the lowercase group name to the title-case enum value for the rollen field.
-					$assignedRole = $this->mapGroupNameToRollenEnum(groupName: $roleGroup);
+					$assignedRole = $this->mapGroupNameToRolesEnum(groupName: $roleGroup);
 
 					$this->_logger->info(
 						'Assigned role based on organization type',
@@ -733,7 +734,7 @@ class ContactPersonHandler {
 	 *
 	 * @return string The title-case enum value for the rollen field
 	 */
-	private function mapGroupNameToRollenEnum(string $groupName): string {
+	private function mapGroupNameToRolesEnum(string $groupName): string {
 		$mapping = [
 			'aanbod-beheerder' => 'Aanbod-beheerder',
 			'gebruik-beheerder' => 'Gebruik-beheerder',
@@ -970,7 +971,7 @@ class ContactPersonHandler {
 
 		// For backward compatibility, try to find the user's contact data and update based on organization type.
 		try {
-			$contactObject = $this->findContactpersoonByUsername(username: $user->getUID());
+			$contactObject = $this->findContactPersonByUsername(username: $user->getUID());
 			if (empty($contactObject) === true) {
 				$this->_logger->warning(
 					'Could not find contact person data for user - cannot update groups',
@@ -1000,16 +1001,16 @@ class ContactPersonHandler {
 	 *
 	 * @return object|null The contactpersoon object or null if not found
 	 */
-	private function findContactpersoonByUsername(string $username): ?object {
+	private function findContactPersonByUsername(string $username): ?object {
 		try {
 			$objectService = $this->getObjectService();
 			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 
 			// Get configuration values.
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
+			$contactPersonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
 
-			if ($registerId === null || $contactpersoonSchemaId === false) {
+			if ($registerId === null || $contactPersonSchemaId === false) {
 				throw new \Exception('Register or schema ID not configured for contactpersoon');
 			}
 
@@ -1018,7 +1019,7 @@ class ContactPersonHandler {
 				'username' => $username,
 			];
 
-			$results = $objectService->findAll($searchFilters, $registerId, $contactpersoonSchemaId);
+			$results = $objectService->findAll($searchFilters, $registerId, $contactPersonSchemaId);
 
 			if (empty($results) === false) {
 				return $results[0];
@@ -1056,15 +1057,15 @@ class ContactPersonHandler {
 			// Get register and schema IDs dynamically from configuration.
 			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-			if ($registerId === null || $organisatieSchemaId === false) {
+			if ($registerId === null || $organisationSchemaId === false) {
 				$this->_logger->warning('Register or schema ID not configured for organisatie');
 				return null;
 			}
 
 			// Use find() method with proper register/schema context.
-			$organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisatieSchemaId);
+			$organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisationSchemaId);
 
 			if (empty($organizationObject) === false) {
 				$organizationData = $organizationObject->getObject();
@@ -1228,7 +1229,7 @@ class ContactPersonHandler {
 			$firstName = $contactData['voornaam'] ?? '';
 			$middleName = $contactData['tussenvoegsel'] ?? '';
 			$lastName = $contactData['achternaam'] ?? '';
-			$functie = $contactData['functie'] ?? '';
+			$role = $contactData['role'] ?? '';
 
 			if (empty($firstName) === false) {
 				$this->config->setUserValue($userId, 'core', 'firstName', $firstName);
@@ -1244,7 +1245,7 @@ class ContactPersonHandler {
 
 			// Store functie in AccountManager as 'role' property.
 			// This is read by OpenRegister UserService via AccountManager.
-			if (empty($functie) === false) {
+			if (empty($role) === false) {
 				try {
 					$accountManager = $this->_container->get('OCP\Accounts\IAccountManager');
 					$account = $accountManager->getAccount($user);
@@ -1255,7 +1256,7 @@ class ContactPersonHandler {
 						// Property doesn't exist, create it.
 						$account->setProperty(
 							\OCP\Accounts\IAccountManager::PROPERTY_ROLE,
-							$functie,
+							$role,
 							\OCP\Accounts\IAccountManager::SCOPE_LOCAL,
 							\OCP\Accounts\IAccountManager::NOT_VERIFIED
 						);
@@ -1263,17 +1264,17 @@ class ContactPersonHandler {
 					}
 
 					if ($roleProperty !== null) {
-						$roleProperty->setValue($functie);
+						$roleProperty->setValue($role);
 						$accountManager->updateAccount($account);
 					}
 				} catch (\Exception $e) {
 					// Fallback: store functie in user config if AccountManager fails.
-					$this->config->setUserValue($userId, 'core', 'functie', $functie);
+					$this->config->setUserValue($userId, 'core', 'role', $role);
 					$this->_logger->warning(
 						'Failed to store functie in AccountManager, stored in user config',
 						[
 							'userId' => $userId,
-							'functie' => $functie,
+							'role' => $role,
 							'error' => $e->getMessage(),
 						]
 					);
@@ -1300,7 +1301,7 @@ class ContactPersonHandler {
 					'firstName' => $firstName,
 					'middleName' => $middleName,
 					'lastName' => $lastName,
-					'functie' => $functie,
+					'role' => $role,
 				]
 			);
 		} catch (\Exception $e) {
@@ -1332,7 +1333,7 @@ class ContactPersonHandler {
 			);
 
 			// Process the contact to ensure proper user structure.
-			$this->processContactpersoon(contactpersoonObject: $contactObject);
+			$this->processContactpersoon(contactPersonObject: $contactObject);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to handle new contact: ' . $e->getMessage(),
@@ -1362,7 +1363,7 @@ class ContactPersonHandler {
 			);
 
 			// Process the updated contact.
-			$this->processContactpersoon(contactpersoonObject: $contactObject);
+			$this->processContactpersoon(contactPersonObject: $contactObject);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to handle contact update: ' . $e->getMessage(),
@@ -1429,16 +1430,16 @@ class ContactPersonHandler {
 	/**
 	 * Assigns beheerder role to a user
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 * @param string $username The username
 	 * @param string $organizationUuid The organization UUID
 	 *
 	 * @return void
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
-	public function assignBeheerderRole(object $contactpersoonObject, string $username, string $organizationUuid): void {
+	public function assignBeheerderRole(object $contactPersonObject, string $username, string $organizationUuid): void {
 		try {
-			$objectData = $contactpersoonObject->getObject();
+			$objectData = $contactPersonObject->getObject();
 			$currentRoles = $objectData['roles'] ?? [];
 
 			if (is_array($currentRoles) === false) {
@@ -1446,12 +1447,12 @@ class ContactPersonHandler {
 			}
 
 			// Add beheerder role if not already present.
-			if (in_array('beheerder', array_map('strtolower', $currentRoles)) === false) {
-				$currentRoles[] = 'beheerder';
+			if (in_array('maintainer', array_map('strtolower', $currentRoles)) === false) {
+				$currentRoles[] = 'maintainer';
 
 				// Update the contactpersoon object (but don't save to prevent event loops).
 				$objectData['roles'] = $currentRoles;
-				$contactpersoonObject->setObject($objectData);
+				$contactPersonObject->setObject($objectData);
 
 				// Note: NOT saving the object here to prevent infinite event loops.
 				// The original API call/operation will handle persistence.
@@ -1461,20 +1462,20 @@ class ContactPersonHandler {
 						'username' => $username,
 						'organizationUuid' => $organizationUuid,
 						'updatedRoles' => $currentRoles,
-						'objectId' => $contactpersoonObject->getId(),
+						'objectId' => $contactPersonObject->getId(),
 					]
 				);
 
 				// Add user to beheerder group.
-				$beheerderGroup = $this->_groupManager->get('beheerder');
-				if ($beheerderGroup === null) {
-					$beheerderGroup = $this->_groupManager->createGroup('beheerder');
+				$maintainerGroup = $this->_groupManager->get('maintainer');
+				if ($maintainerGroup === null) {
+					$maintainerGroup = $this->_groupManager->createGroup('maintainer');
 				}
 
-				if (empty($beheerderGroup) === false) {
+				if (empty($maintainerGroup) === false) {
 					$user = $this->_userManager->get($username);
-					if ($user !== false && $beheerderGroup->inGroup($user) === false) {
-						$beheerderGroup->addUser($user);
+					if ($user !== false && $maintainerGroup->inGroup($user) === false) {
+						$maintainerGroup->addUser($user);
 					}
 				}
 
@@ -1724,9 +1725,9 @@ class ContactPersonHandler {
 					// Get register and schema IDs dynamically from configuration.
 					$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 					$registerId = $settingsService->getVoorzieningenRegisterId();
-					$organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+					$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-					if ($registerId === null || $organisatieSchemaId === false) {
+					if ($registerId === null || $organisationSchemaId === false) {
 						$this->_logger->warning('Register or schema ID not configured for organisatie');
 						return;
 					}
@@ -1736,7 +1737,7 @@ class ContactPersonHandler {
 						[],
 						false,
 						$registerId,
-						$organisatieSchemaId
+						$organisationSchemaId
 					);
 					if (empty($organizationObject) === false) {
 						$organizationData = $organizationObject->getObject();
@@ -1745,7 +1746,7 @@ class ContactPersonHandler {
 							[
 								'organizationId' => $organizationId,
 								'organizationUuid' => $organizationData['id'] ?? 'NOT_SET',
-								'organizationName' => $organizationData['naam'] ?? 'NOT_SET',
+								'organizationName' => $organizationData['name'] ?? 'NOT_SET',
 							]
 						);
 					}
@@ -1799,7 +1800,7 @@ class ContactPersonHandler {
 	 * If the contactpersoon object doesn't have a username or user,
 	 * this method will create an inactive user account and set the username property.
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object to process
+	 * @param object $contactPersonObject The contactpersoon object to process
 	 * @param bool $isUpdate Whether this is an update operation (defaults to false)
 	 *
 	 * @return bool True if processing was successful
@@ -1808,18 +1809,18 @@ class ContactPersonHandler {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
 	 * @spec                                        openspec/specs/sc-handlers/spec.md
 	 */
-	public function processContactpersoon(object $contactpersoonObject, bool $isUpdate = false): bool {
+	public function processContactpersoon(object $contactPersonObject, bool $isUpdate = false): bool {
 		try {
 			$this->_logger->info(
 				'Processing contactpersoon object',
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 					'isUpdate' => $isUpdate,
 				]
 			);
 
 			// Get object data.
-			$objectData = $contactpersoonObject->getObject();
+			$objectData = $contactPersonObject->getObject();
 
 			// Check if username exists and is filled.
 			$username = $objectData['username'] ?? '';
@@ -1839,24 +1840,24 @@ class ContactPersonHandler {
 							'Found existing user during update, skipping expensive first contact check',
 							[
 								'username' => $username,
-								'objectId' => $contactpersoonObject->getId(),
+								'objectId' => $contactPersonObject->getId(),
 							]
 						);
 
 						// Update the contactpersoon object with the username (but don't save to prevent event loops).
 						$objectData['username'] = $username;
-						$contactpersoonObject->setObject($objectData);
+						$contactPersonObject->setObject($objectData);
 
 						$this->_logger->info(
 							'Username added to contactpersoon during update, not saved to prevent event loops',
 							[
 								'username' => $username,
-								'objectId' => $contactpersoonObject->getId(),
+								'objectId' => $contactPersonObject->getId(),
 							]
 						);
 
 						// Ensure contactpersoon is added to organization.
-						$this->ensureContactpersoonInOrganization(contactpersoonObject: $contactpersoonObject);
+						$this->ensureContactpersoonInOrganization(contactPersonObject: $contactPersonObject);
 
 						return true;
 					}//end if
@@ -1864,13 +1865,13 @@ class ContactPersonHandler {
 
 				// Determine if this is the first contact for the organization (expensive operation).
 				$isFirstContact = $this->isFirstContactForOrganization(
-					contactObject: $contactpersoonObject,
+					contactObject: $contactPersonObject,
 					objectData: $objectData
 				);
 
 				// Create the user account.
 				$user = $this->createUserAccount(
-					contactpersoonObject: $contactpersoonObject,
+					contactPersonObject: $contactPersonObject,
 					isFirstContact: $isFirstContact
 				);
 
@@ -1883,7 +1884,7 @@ class ContactPersonHandler {
 
 				// Update the contactpersoon object with the username (but don't save to prevent event loops).
 				$objectData['username'] = $username;
-				$contactpersoonObject->setObject($objectData);
+				$contactPersonObject->setObject($objectData);
 
 				// Note: NOT saving the object here to prevent infinite event loops.
 				// The original API call/operation will handle persistence.
@@ -1891,17 +1892,17 @@ class ContactPersonHandler {
 					'Username added to contactpersoon object, but not saved to prevent event loops',
 					[
 						'username' => $username,
-						'objectId' => $contactpersoonObject->getId(),
+						'objectId' => $contactPersonObject->getId(),
 					]
 				);
 
 				// Ensure contactpersoon is added to organization.
-				$this->ensureContactpersoonInOrganization(contactpersoonObject: $contactpersoonObject);
+				$this->ensureContactpersoonInOrganization(contactPersonObject: $contactPersonObject);
 
 				// Also add user to organization entity (OpenRegister entity, not object).
 				$organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 				$this->addUserToOrganizationEntity(
-					contactpersoonObject: $contactpersoonObject,
+					contactPersonObject: $contactPersonObject,
 					username: $username,
 					organizationUuidOverride: $organizationUuid
 				);
@@ -1910,7 +1911,7 @@ class ContactPersonHandler {
 					'Successfully created inactive user and updated contactpersoon',
 					[
 						'username' => $username,
-						'objectId' => $contactpersoonObject->getId(),
+						'objectId' => $contactPersonObject->getId(),
 					]
 				);
 
@@ -1921,12 +1922,12 @@ class ContactPersonHandler {
 				'Username already exists, contactpersoon processed',
 				[
 					'username' => $username,
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 				]
 			);
 
 			// Ensure contactpersoon is added to organization (even for existing users).
-			$this->ensureContactpersoonInOrganization(contactpersoonObject: $contactpersoonObject);
+			$this->ensureContactpersoonInOrganization(contactPersonObject: $contactPersonObject);
 
 			return true;
 		} catch (\Exception $e) {
@@ -1934,7 +1935,7 @@ class ContactPersonHandler {
 				'Failed to process contactpersoon object: ' . $e->getMessage(),
 				[
 					'exception' => $e,
-					'objectId' => $contactpersoonObject->getId() ?? 'unknown',
+					'objectId' => $contactPersonObject->getId() ?? 'unknown',
 				]
 			);
 			throw $e;
@@ -2036,27 +2037,27 @@ class ContactPersonHandler {
 	/**
 	 * Handles contactpersoon updates, particularly role changes
 	 *
-	 * @param object $contactpersoonObject The updated contactpersoon object
-	 * @param object $oldContactpersoonObject The previous contactpersoon object
+	 * @param object $contactPersonObject The updated contactpersoon object
+	 * @param object $oldContactPersonObject The previous contactpersoon object
 	 *
 	 * @return void
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
-	public function handleContactpersoonUpdate(object $contactpersoonObject, object $oldContactpersoonObject): void {
+	public function handleContactpersoonUpdate(object $contactPersonObject, object $oldContactPersonObject): void {
 		try {
 			$this->_logger->info(
 				'Handling contactpersoon update',
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 				]
 			);
 
 			// Process the updated contactpersoon.
-			$this->processContactpersoon(contactpersoonObject: $contactpersoonObject);
+			$this->processContactpersoon(contactPersonObject: $contactPersonObject);
 
 			// Check for role changes and update groups accordingly.
-			$newData = $contactpersoonObject->getObject();
-			$oldData = $oldContactpersoonObject->getObject();
+			$newData = $contactPersonObject->getObject();
+			$oldData = $oldContactPersonObject->getObject();
 
 			$newRoles = $newData['roles'] ?? [];
 			$oldRoles = $oldData['roles'] ?? [];
@@ -2082,7 +2083,7 @@ class ContactPersonHandler {
 						$this->_logger->info(
 							'Contact person data changed, updating user groups based on organization type',
 							[
-								'contactpersoonId' => $contactpersoonObject->getId(),
+								'contactpersoonId' => $contactPersonObject->getId(),
 								'username' => $username,
 								'oldRoles' => $oldRoles,
 								'newRoles' => $newRoles,
@@ -2100,7 +2101,7 @@ class ContactPersonHandler {
 			$this->_logger->error(
 				'Failed to handle contactpersoon update: ' . $e->getMessage(),
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e,
 				]
 			);
@@ -2150,14 +2151,14 @@ class ContactPersonHandler {
 	/**
 	 * Checks if a contactpersoon username is in the organization's users list
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 *
 	 * @return bool True if the user should be added to the organization
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
-	public function shouldAddContactpersoonToOrganization(object $contactpersoonObject): bool {
+	public function shouldAddContactpersoonToOrganization(object $contactPersonObject): bool {
 		try {
-			$objectData = $contactpersoonObject->getObject();
+			$objectData = $contactPersonObject->getObject();
 			$username = $objectData['username'] ?? '';
 			$organizationUuid = $objectData['organisation'] ?? '';
 
@@ -2173,14 +2174,14 @@ class ContactPersonHandler {
 			// Get the organization object.
 			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-			if ($registerId === null || $organisatieSchemaId === false) {
+			if ($registerId === null || $organisationSchemaId === false) {
 				return false;
 			}
 
 			try {
-				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
+				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisationSchemaId);
 				$organizationData = $organizationObject->getObject();
 
 				// Check if the username is already in the organization's users.
@@ -2214,7 +2215,7 @@ class ContactPersonHandler {
 			$this->_logger->error(
 				'ContactPersonHandler: Failed to check if contactpersoon should be added to organization: ' . $e->getMessage(),
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
 				]
 			);
@@ -2225,14 +2226,14 @@ class ContactPersonHandler {
 	/**
 	 * Adds a contactpersoon username to the organization's users list
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 *
 	 * @return bool True if the user was successfully added
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
-	public function addContactpersoonToOrganization(object $contactpersoonObject): bool {
+	public function addContactpersoonToOrganization(object $contactPersonObject): bool {
 		try {
-			$objectData = $contactpersoonObject->getObject();
+			$objectData = $contactPersonObject->getObject();
 			$username = $objectData['username'] ?? '';
 			$organizationUuid = $objectData['organisation'] ?? '';
 
@@ -2256,15 +2257,15 @@ class ContactPersonHandler {
 			// Get the organization object.
 			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-			if ($registerId === null || $organisatieSchemaId === false) {
+			if ($registerId === null || $organisationSchemaId === false) {
 				$this->_logger->error('ContactPersonHandler: Register or schema not configured for organisatie');
 				return false;
 			}
 
 			try {
-				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
+				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisationSchemaId);
 				$organizationData = $organizationObject->getObject();
 
 				// Add the username to the organization's users list.
@@ -2282,7 +2283,7 @@ class ContactPersonHandler {
 						$organizationData,
 						[],
 						$registerId,
-						$organisatieSchemaId,
+						$organisationSchemaId,
 						$organizationUuid
 					);
 
@@ -2321,7 +2322,7 @@ class ContactPersonHandler {
 			$this->_logger->error(
 				'ContactPersonHandler: Failed to add contactpersoon to organization: ' . $e->getMessage(),
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
 					'line' => $e->getLine(),
@@ -2335,39 +2336,39 @@ class ContactPersonHandler {
 	/**
 	 * Ensures contactpersoon is added to organization after user creation/update
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 *
 	 * @return void
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
-	public function ensureContactpersoonInOrganization(object $contactpersoonObject): void {
+	public function ensureContactpersoonInOrganization(object $contactPersonObject): void {
 		try {
 			$this->_logger->info(
 				'ContactPersonHandler: Ensuring contactpersoon is in organization',
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 				]
 			);
 
 			// Check if user should be added to organization.
-			if ($this->shouldAddContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject) === false) {
+			if ($this->shouldAddContactpersoonToOrganization(contactPersonObject: $contactPersonObject) === false) {
 				$this->_logger->debug(
 					'ContactPersonHandler: Contactpersoon already in organization or no action needed',
 					[
-						'objectId' => $contactpersoonObject->getId(),
+						'objectId' => $contactPersonObject->getId(),
 					]
 				);
 				return;
 			}
 
 			// Add user to organization.
-			$result = $this->addContactpersoonToOrganization(contactpersoonObject: $contactpersoonObject);
+			$result = $this->addContactpersoonToOrganization(contactPersonObject: $contactPersonObject);
 
 			if ($result === true) {
 				$this->_logger->info(
 					'ContactPersonHandler: Successfully ensured contactpersoon in organization',
 					[
-						'objectId' => $contactpersoonObject->getId(),
+						'objectId' => $contactPersonObject->getId(),
 					]
 				);
 				return;
@@ -2376,14 +2377,14 @@ class ContactPersonHandler {
 			$this->_logger->warning(
 				'ContactPersonHandler: Failed to add contactpersoon to organization',
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 				]
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'ContactPersonHandler: Failed to ensure contactpersoon in organization: ' . $e->getMessage(),
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
 					'line' => $e->getLine(),
@@ -2400,7 +2401,7 @@ class ContactPersonHandler {
 	 * before adding the user to it. If the entity doesn't exist, it will be created
 	 * from the organization object data.
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 * @param string $username The username to add
 	 * @param string|null $organizationUuidOverride Optional organization UUID to use instead of extracting from object
 	 *                                              (useful when organisatie field was removed from object data)
@@ -2409,12 +2410,12 @@ class ContactPersonHandler {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function addUserToOrganizationEntity(
-		object $contactpersoonObject,
+		object $contactPersonObject,
 		string $username,
 		?string $organizationUuidOverride = null,
 	): void {
 		try {
-			$objectData = $contactpersoonObject->getObject();
+			$objectData = $contactPersonObject->getObject();
 			// Use override if provided (useful when organisatie field was removed from object).
 			$organizationUuid = $organizationUuidOverride ?? $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
 
@@ -2422,7 +2423,7 @@ class ContactPersonHandler {
 				$this->_logger->warning(
 					'ContactPersonHandler: No organization reference found for contact person',
 					[
-						'objectId' => $contactpersoonObject->getId(),
+						'objectId' => $contactPersonObject->getId(),
 						'username' => $username,
 					]
 				);
@@ -2432,7 +2433,7 @@ class ContactPersonHandler {
 			$this->_logger->info(
 				'ContactPersonHandler: Adding user to organization entity',
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 					'username' => $username,
 					'organizationUuid' => $organizationUuid,
 				]
@@ -2480,7 +2481,7 @@ class ContactPersonHandler {
 					$this->_logger->info(
 						'ContactPersonHandler: User already in organization entity',
 						[
-							'objectId' => $contactpersoonObject->getId(),
+							'objectId' => $contactPersonObject->getId(),
 							'username' => $username,
 							'organizationUuid' => $organizationUuid,
 						]
@@ -2495,7 +2496,7 @@ class ContactPersonHandler {
 				$this->_logger->info(
 					'ContactPersonHandler: Successfully added user to organization entity',
 					[
-						'objectId' => $contactpersoonObject->getId(),
+						'objectId' => $contactPersonObject->getId(),
 						'username' => $username,
 						'organizationUuid' => $organizationUuid,
 						'totalUsers' => count($currentUsers),
@@ -2505,7 +2506,7 @@ class ContactPersonHandler {
 				$this->_logger->error(
 					'ContactPersonHandler: Failed to add user to organization entity',
 					[
-						'objectId' => $contactpersoonObject->getId(),
+						'objectId' => $contactPersonObject->getId(),
 						'username' => $username,
 						'organizationUuid' => $organizationUuid,
 						'error' => $e->getMessage(),
@@ -2517,7 +2518,7 @@ class ContactPersonHandler {
 			$this->_logger->error(
 				'ContactPersonHandler: Exception in addUserToOrganizationEntity',
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 					'username' => $username,
 					'error' => $e->getMessage(),
 				]
@@ -2585,9 +2586,9 @@ class ContactPersonHandler {
 
 			// Get organization name and description.
 			// phpcs:ignore Generic.Files.LineLength.TooLong
-			$organizationName = $organizationData['naam'] ?? $organizationData['name'] ?? 'Unknown Organization';
-			$beschrijving = $organizationData['beschrijving'] ?? $organizationData['beschrijvingLang'] ?? null;
-			$organizationDescription = $beschrijving ?? $organizationData['description'] ?? '';
+			$organizationName = $organizationData['name'] ?? 'Unknown Organization';
+			$description = $organizationData['description'] ?? $organizationData['beschrijvingLang'] ?? null;
+			$organizationDescription = $description ?? $organizationData['description'] ?? '';
 
 			// Check if an entity with the same slug already exists (prevents unique constraint violation).
 			try {
@@ -2662,21 +2663,21 @@ class ContactPersonHandler {
 	 * 7.6 so the two name-based candidate strategies share the cleaning step.
 	 *
 	 * @param string $voornaam The raw first name.
-	 * @param string $achternaam The raw last name.
+	 * @param string $lastName The raw last name.
 	 *
 	 * @return array{0: string, 1: string} The cleaned pair (empty strings when
 	 *                                     no usable characters remain).
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-7
 	 */
-	private function cleanNameParts(string $voornaam, string $achternaam): array {
-		if ($voornaam === '' || $achternaam === '') {
+	private function cleanNameParts(string $voornaam, string $lastName): array {
+		if ($voornaam === '' || $lastName === '') {
 			return ['', ''];
 		}
 
 		$cleanVoornaam = (string)preg_replace('/[^a-z0-9]/', '', strtolower($voornaam));
-		$cleanAchternaam = (string)preg_replace('/[^a-z0-9]/', '', strtolower($achternaam));
+		$cleanLastName = (string)preg_replace('/[^a-z0-9]/', '', strtolower($lastName));
 
-		return [$cleanVoornaam, $cleanAchternaam];
+		return [$cleanVoornaam, $cleanLastName];
 	}//end cleanNameParts()
 }//end class

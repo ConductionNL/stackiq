@@ -58,7 +58,7 @@ class FederationMergerTest extends TestCase {
 		$plan = $this->merger->plan(
 			self::PEER,
 			self::ORG,
-			[['id' => 'p-1', 'naam' => 'Service A']],
+			[['id' => 'p-1', 'name' => 'Service A']],
 			[],
 			self::NOW
 		);
@@ -68,7 +68,7 @@ class FederationMergerTest extends TestCase {
 		$this->assertCount(0, $plan['withdraw']);
 
 		$mirror = $plan['create'][0];
-		$this->assertSame('Service A', $mirror['naam']);
+		$this->assertSame('Service A', $mirror['name']);
 		$this->assertSame(self::PEER, $mirror['_source']['instance']);
 		$this->assertSame(self::ORG, $mirror['_source']['organisation']);
 		$this->assertSame('p-1', $mirror['_source']['peerEntryId']);
@@ -88,7 +88,7 @@ class FederationMergerTest extends TestCase {
 		$plan = $this->merger->plan(
 			self::PEER,
 			self::ORG,
-			[['id' => 'p-1', 'naam' => 'X', '_source' => ['instance' => 'https://evil.example']]],
+			[['id' => 'p-1', 'name' => 'X', '_source' => ['instance' => 'https://evil.example']]],
 			[],
 			self::NOW
 		);
@@ -103,13 +103,13 @@ class FederationMergerTest extends TestCase {
 	 */
 	public function testChangedPeerEntryIsUpdated(): void {
 		$local = [
-			$this->mirror('or-uuid-1', 'p-1', ['naam' => 'Old name']),
+			$this->mirror('or-uuid-1', 'p-1', ['name' => 'Old name']),
 		];
 
 		$plan = $this->merger->plan(
 			self::PEER,
 			self::ORG,
-			[['id' => 'p-1', 'naam' => 'New name']],
+			[['id' => 'p-1', 'name' => 'New name']],
 			$local,
 			self::NOW
 		);
@@ -118,7 +118,7 @@ class FederationMergerTest extends TestCase {
 		$this->assertCount(1, $plan['update']);
 		$this->assertCount(0, $plan['withdraw']);
 		$this->assertSame('or-uuid-1', $plan['update'][0]['id']);
-		$this->assertSame('New name', $plan['update'][0]['naam']);
+		$this->assertSame('New name', $plan['update'][0]['name']);
 	}//end testChangedPeerEntryIsUpdated()
 
 	/**
@@ -128,13 +128,13 @@ class FederationMergerTest extends TestCase {
 	 */
 	public function testUnchangedRepullIsIdempotent(): void {
 		$local = [
-			$this->mirror('or-uuid-1', 'p-1', ['naam' => 'Same']),
+			$this->mirror('or-uuid-1', 'p-1', ['name' => 'Same']),
 		];
 
 		$plan = $this->merger->plan(
 			self::PEER,
 			self::ORG,
-			[['id' => 'p-1', 'naam' => 'Same']],
+			[['id' => 'p-1', 'name' => 'Same']],
 			$local,
 			'2026-06-15T13:00:00+00:00'
 		);
@@ -151,14 +151,14 @@ class FederationMergerTest extends TestCase {
 	 */
 	public function testRemovedPeerEntryIsWithdrawn(): void {
 		$local = [
-			$this->mirror('or-uuid-1', 'p-1', ['naam' => 'Gone']),
-			$this->mirror('or-uuid-2', 'p-2', ['naam' => 'Stays']),
+			$this->mirror('or-uuid-1', 'p-1', ['name' => 'Gone']),
+			$this->mirror('or-uuid-2', 'p-2', ['name' => 'Stays']),
 		];
 
 		$plan = $this->merger->plan(
 			self::PEER,
 			self::ORG,
-			[['id' => 'p-2', 'naam' => 'Stays']],
+			[['id' => 'p-2', 'name' => 'Stays']],
 			$local,
 			self::NOW
 		);
@@ -183,7 +183,7 @@ class FederationMergerTest extends TestCase {
 			[
 				'id' => 'or-uuid-9',
 				'_source' => ['instance' => 'https://other.example', 'peerEntryId' => 'x-1'],
-				'naam' => 'Other peer entry',
+				'name' => 'Other peer entry',
 			],
 		];
 
@@ -204,7 +204,7 @@ class FederationMergerTest extends TestCase {
 		$plan = $this->merger->plan(
 			self::PEER,
 			self::ORG,
-			[['naam' => 'No id']],
+			[['name' => 'No id']],
 			[],
 			self::NOW
 		);
@@ -234,7 +234,7 @@ class FederationMergerTest extends TestCase {
 	 * @return void
 	 */
 	public function testApplyStale(): void {
-		$mirror = $this->mirror('or-uuid-1', 'p-1', ['naam' => 'X']);
+		$mirror = $this->mirror('or-uuid-1', 'p-1', ['name' => 'X']);
 		$staled = $this->merger->applyStale($mirror, true);
 		$this->assertTrue($staled['_source']['stale']);
 

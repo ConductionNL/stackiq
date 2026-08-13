@@ -118,20 +118,20 @@ class PortalContributionProviderTest extends TestCase {
 		);
 
 		$this->assertSame('dienst', $byId['vendorDiensten']['schema']);
-		$this->assertSame('aanbieder', $byId['vendorDiensten']['scopeField']);
+		$this->assertSame('provider', $byId['vendorDiensten']['scopeField']);
 		$this->assertSame('organisationId', $byId['vendorDiensten']['scopeClaim']);
 		$this->assertArrayNotHasKey('via', $byId['vendorDiensten']);
 
-		$this->assertSame('aanbieder', $byId['vendorGebruik']['scopeField']);
+		$this->assertSame('provider', $byId['vendorGebruik']['scopeField']);
 
 		// contract is reached one hop via dienst and gated at substantial trust.
 		$this->assertSame('dienst', $byId['vendorContracts']['via']);
-		$this->assertSame('aanbieder', $byId['vendorContracts']['scopeField']);
+		$this->assertSame('provider', $byId['vendorContracts']['scopeField']);
 		$this->assertSame('substantial', $byId['vendorContracts']['minTrust']);
 
 		// compliancy is reached one hop via module.
 		$this->assertSame('module', $byId['vendorCompliancy']['via']);
-		$this->assertSame('aanbieder', $byId['vendorCompliancy']['scopeField']);
+		$this->assertSame('provider', $byId['vendorCompliancy']['scopeField']);
 
 		$this->assertSame([], $manifest['actions'], 'read-only wave: no create actions');
 		$this->assertSame([], $manifest['notifications']);
@@ -151,10 +151,10 @@ class PortalContributionProviderTest extends TestCase {
 		$this->assertSame(['participantGebruik', 'participantContracts'], array_keys($byId));
 
 		$this->assertSame('gebruik', $byId['participantGebruik']['schema']);
-		$this->assertSame('afnemer', $byId['participantGebruik']['scopeField']);
+		$this->assertSame('consumer', $byId['participantGebruik']['scopeField']);
 
 		$this->assertSame('gebruik', $byId['participantContracts']['via']);
-		$this->assertSame('afnemer', $byId['participantContracts']['scopeField']);
+		$this->assertSame('consumer', $byId['participantContracts']['scopeField']);
 		$this->assertSame('substantial', $byId['participantContracts']['minTrust']);
 
 		$this->assertSame([], $manifest['actions']);
@@ -171,16 +171,16 @@ class PortalContributionProviderTest extends TestCase {
 		$participant = $this->collectionsById($this->provider->getContribution(['audience' => 'participant-org']));
 
 		// Staff-only internal note never leaves either gebruik projection.
-		$this->assertNotContains('interneAantekening', $vendor['vendorGebruik']['fields']);
-		$this->assertNotContains('interneAantekening', $participant['participantGebruik']['fields']);
+		$this->assertNotContains('interneAnnotation', $vendor['vendorGebruik']['fields']);
+		$this->assertNotContains('interneAnnotation', $participant['participantGebruik']['fields']);
 
 		// Internal contract remarks are always dropped.
 		$this->assertNotContains('opmerkingen', $vendor['vendorContracts']['fields']);
 		$this->assertNotContains('opmerkingen', $participant['participantContracts']['fields']);
 
 		// Each side never sees the OTHER organisation's contactpersoon.
-		$this->assertNotContains('contactpersoonGebruiker', $vendor['vendorContracts']['fields']);
-		$this->assertNotContains('contactpersoonAanbieder', $participant['participantContracts']['fields']);
+		$this->assertNotContains('contactPersonUser', $vendor['vendorContracts']['fields']);
+		$this->assertNotContains('contactPersonProvider', $participant['participantContracts']['fields']);
 
 		// kwetsbaarheid is excluded entirely (documented >1-hop / array exclusion).
 		$allSchemas = array_merge(

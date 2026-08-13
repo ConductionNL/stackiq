@@ -80,18 +80,18 @@ class ContractStatusService {
 			return false;
 		}
 
-		$eindDatum = $contractData['eindDatum'] ?? null;
-		if (is_string($eindDatum) === false || trim($eindDatum) === '') {
+		$endDate = $contractData['endDate'] ?? null;
+		if (is_string($endDate) === false || trim($endDate) === '') {
 			return false;
 		}
 
 		try {
-			$end = new DateTimeImmutable($eindDatum);
+			$end = new DateTimeImmutable($endDate);
 		} catch (\Exception $e) {
 			// Fail-closed: an unparseable end date never triggers a transition.
 			$this->logger->debug(
 				'ContractStatusService: unparseable eindDatum, skipping',
-				['eindDatum' => $eindDatum, 'error' => $e->getMessage()]
+				['endDate' => $endDate, 'error' => $e->getMessage()]
 			);
 			return false;
 		}
@@ -166,7 +166,7 @@ class ContractStatusService {
 				$transitioned++;
 				$this->logger->info(
 					'ContractStatusService: contract expired',
-					['uuid' => $contract->getUuid(), 'eindDatum' => $data['eindDatum'] ?? null]
+					['uuid' => $contract->getUuid(), 'endDate' => $data['endDate'] ?? null]
 				);
 			} catch (\Throwable $e) {
 				$this->logger->error(

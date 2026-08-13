@@ -57,11 +57,11 @@ class PortfolioReportDerivation {
 	 */
 	public function deriveLifecyclePhase(array $gebruik, DateTimeImmutable $now): string {
 		$steps = [
-			'Uitgefaseerd' => 'startDatumUitGefaseerd',
-			'Uit te faseren' => 'startDatumUitTeFaseren',
-			'In productie' => 'startDatumInProductie',
-			'Gepland' => 'startDatumGepland',
-			'Verwerving' => 'startDatumVerwerving',
+			'Uitgefaseerd' => 'startDateOutGefaseerd',
+			'Uit te faseren' => 'startDateOutTeFaseren',
+			'In productie' => 'startDateInProduction',
+			'Gepland' => 'startDatePlanned',
+			'Verwerving' => 'startDateVerwerving',
 		];
 
 		foreach ($steps as $phase => $field) {
@@ -78,16 +78,16 @@ class PortfolioReportDerivation {
 	 * Derive end-of-support state from a moduleVersie. Mirrors
 	 * `src/utils/lifecyclePhase.js` `endOfSupportState()`.
 	 *
-	 * @param array<string,mixed>|null $moduleVersie The linked moduleVersie data bag.
+	 * @param array<string,mixed>|null $moduleVersion The linked moduleVersie data bag.
 	 * @param DateTimeImmutable $now Reference moment.
 	 *
 	 * @return array{passed: bool, withdrawn: bool, endDate: string|null, withdrawnDate: string|null}
 	 *
 	 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 	 */
-	public function deriveEolState(?array $moduleVersie, DateTimeImmutable $now): array {
-		$endRaw = $moduleVersie['datumEindeOndersteuning'] ?? null;
-		$withdrawnRaw = $moduleVersie['datumTeruggetrokken'] ?? null;
+	public function deriveEolState(?array $moduleVersion, DateTimeImmutable $now): array {
+		$endRaw = $moduleVersion['dateEndOndersteuning'] ?? null;
+		$withdrawnRaw = $moduleVersion['dateTeruggetrokken'] ?? null;
 		if (is_string($withdrawnRaw) === false || trim($withdrawnRaw) === '') {
 			$withdrawnRaw = null;
 		}
@@ -111,15 +111,15 @@ class PortfolioReportDerivation {
 	 * Whether a moduleVersie's end-of-support falls within the approaching
 	 * window. Mirrors `src/utils/lifecyclePhase.js` `isEolApproaching()`.
 	 *
-	 * @param array<string,mixed>|null $moduleVersie The linked moduleVersie data bag.
+	 * @param array<string,mixed>|null $moduleVersion The linked moduleVersie data bag.
 	 * @param DateTimeImmutable $now Reference moment.
 	 *
 	 * @return bool True when end-of-support is within `self::EOL_WINDOW_DAYS`.
 	 *
 	 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 	 */
-	public function isEolApproaching(?array $moduleVersie, DateTimeImmutable $now): bool {
-		$end = $this->parseDate(value: $moduleVersie['datumEindeOndersteuning'] ?? null);
+	public function isEolApproaching(?array $moduleVersion, DateTimeImmutable $now): bool {
+		$end = $this->parseDate(value: $moduleVersion['dateEndOndersteuning'] ?? null);
 		if ($end === null) {
 			return false;
 		}
@@ -161,14 +161,14 @@ class PortfolioReportDerivation {
 	 * @spec openspec/specs/contract-administration/spec.md
 	 */
 	public function annualisedCost(array $contract): array {
-		$amount = $contract['kosten'] ?? null;
+		$amount = $contract['cost'] ?? null;
 		if (is_numeric($amount) === false) {
 			return ['annual' => 0.0, 'oneOff' => 0.0];
 		}
 
 		$amount = (float)$amount;
 
-		return match ($contract['kostenPeriode'] ?? null) {
+		return match ($contract['costPeriod'] ?? null) {
 			'Maandelijks' => ['annual' => $amount * 12, 'oneOff' => 0.0],
 			'Jaarlijks' => ['annual' => $amount, 'oneOff' => 0.0],
 			'Eenmalig' => ['annual' => 0.0, 'oneOff' => $amount],

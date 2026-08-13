@@ -395,14 +395,14 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		$this->createObject([
 			'title' => 'Suite Gebruik by Org A',
 			'suite' => $suiteId,
-			'afnemer' => $orgAId,
+			'consumer' => $orgAId,
 			'organisation' => $orgAId,
 		], $this->voorzieningenRegisterId, $this->gebruikSchemaId);
 
 		$this->createObject([
 			'title' => 'Suite Gebruik by Org B',
 			'suite' => $suiteId,
-			'afnemer' => $orgBId,
+			'consumer' => $orgBId,
 			'organisation' => $orgBId,
 		], $this->voorzieningenRegisterId, $this->gebruikSchemaId);
 
@@ -410,14 +410,14 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		$this->createObject([
 			'title' => 'Module Gebruik by Org A',
 			'module' => $moduleId,
-			'afnemer' => $orgAId,
+			'consumer' => $orgAId,
 			'organisation' => $orgAId,
 		], $this->voorzieningenRegisterId, $this->gebruikSchemaId);
 
 		$this->createObject([
 			'title' => 'Module Gebruik by Org B',
 			'module' => $moduleId,
-			'afnemer' => $orgBId,
+			'consumer' => $orgBId,
 			'organisation' => $orgBId,
 		], $this->voorzieningenRegisterId, $this->gebruikSchemaId);
 

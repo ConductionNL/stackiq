@@ -93,8 +93,8 @@ class PortfolioReportServiceTest extends TestCase {
 
 		$result = $derivation->deriveLifecyclePhase(
 			[
-				'startDatumInProductie' => '2025-01-01',
-				'startDatumUitTeFaseren' => '2027-01-01',
+				'startDateInProduction' => '2025-01-01',
+				'startDateOutTeFaseren' => '2027-01-01',
 			],
 			$now
 		);
@@ -125,7 +125,7 @@ class PortfolioReportServiceTest extends TestCase {
 		$derivation = $this->makeDerivation();
 		$now = new \DateTimeImmutable('2026-06-01');
 
-		$result = $derivation->deriveEolState(['datumEindeOndersteuning' => '2025-01-01'], $now);
+		$result = $derivation->deriveEolState(['dateEndOndersteuning' => '2025-01-01'], $now);
 
 		$this->assertTrue($result['passed']);
 		$this->assertFalse($result['withdrawn']);
@@ -141,7 +141,7 @@ class PortfolioReportServiceTest extends TestCase {
 		$derivation = $this->makeDerivation();
 		$now = new \DateTimeImmutable('2026-06-01');
 
-		$result = $derivation->deriveEolState(['datumEindeOndersteuning' => '2030-01-01'], $now);
+		$result = $derivation->deriveEolState(['dateEndOndersteuning' => '2030-01-01'], $now);
 
 		$this->assertFalse($result['passed']);
 	}//end testDeriveEolStateDoesNotFlagFutureDate()
@@ -172,7 +172,7 @@ class PortfolioReportServiceTest extends TestCase {
 		$derivation = $this->makeDerivation();
 		$now = new \DateTimeImmutable('2026-06-01');
 
-		$result = $derivation->isEolApproaching(['datumEindeOndersteuning' => '2026-09-01'], $now);
+		$result = $derivation->isEolApproaching(['dateEndOndersteuning' => '2026-09-01'], $now);
 
 		$this->assertTrue($result);
 	}//end testIsEolApproachingWithinWindow()
@@ -186,7 +186,7 @@ class PortfolioReportServiceTest extends TestCase {
 		$derivation = $this->makeDerivation();
 		$now = new \DateTimeImmutable('2026-06-01');
 
-		$result = $derivation->isEolApproaching(['datumEindeOndersteuning' => '2025-01-01'], $now);
+		$result = $derivation->isEolApproaching(['dateEndOndersteuning' => '2025-01-01'], $now);
 
 		$this->assertFalse($result);
 	}//end testIsEolApproachingExcludesPassedDate()
@@ -200,7 +200,7 @@ class PortfolioReportServiceTest extends TestCase {
 	 */
 	public function testAnnualisedCostMonthly(): void {
 		$derivation = $this->makeDerivation();
-		$result = $derivation->annualisedCost(['kosten' => 1000, 'kostenPeriode' => 'Maandelijks']);
+		$result = $derivation->annualisedCost(['cost' => 1000, 'costPeriod' => 'Maandelijks']);
 
 		$this->assertSame(12000.0, $result['annual']);
 		$this->assertSame(0.0, $result['oneOff']);
@@ -213,7 +213,7 @@ class PortfolioReportServiceTest extends TestCase {
 	 */
 	public function testAnnualisedCostYearly(): void {
 		$derivation = $this->makeDerivation();
-		$result = $derivation->annualisedCost(['kosten' => 6000, 'kostenPeriode' => 'Jaarlijks']);
+		$result = $derivation->annualisedCost(['cost' => 6000, 'costPeriod' => 'Jaarlijks']);
 
 		$this->assertSame(6000.0, $result['annual']);
 		$this->assertSame(0.0, $result['oneOff']);
@@ -226,7 +226,7 @@ class PortfolioReportServiceTest extends TestCase {
 	 */
 	public function testAnnualisedCostOneOff(): void {
 		$derivation = $this->makeDerivation();
-		$result = $derivation->annualisedCost(['kosten' => 5000, 'kostenPeriode' => 'Eenmalig']);
+		$result = $derivation->annualisedCost(['cost' => 5000, 'costPeriod' => 'Eenmalig']);
 
 		$this->assertSame(0.0, $result['annual']);
 		$this->assertSame(5000.0, $result['oneOff']);
@@ -240,7 +240,7 @@ class PortfolioReportServiceTest extends TestCase {
 	public function testAnnualisedCostUnknownYieldsZeros(): void {
 		$derivation = $this->makeDerivation();
 
-		$result = $derivation->annualisedCost(['kosten' => 100, 'kostenPeriode' => 'Wekelijks']);
+		$result = $derivation->annualisedCost(['cost' => 100, 'costPeriod' => 'Wekelijks']);
 		$this->assertSame(0.0, $result['annual']);
 		$this->assertSame(0.0, $result['oneOff']);
 
@@ -352,7 +352,7 @@ class PortfolioReportServiceTest extends TestCase {
 						'results' => [
 							[
 								'id' => 'gebruik-1',
-								'afnemer' => 'org-a',
+								'consumer' => 'org-a',
 							],
 						],
 						'total' => 1,
@@ -423,7 +423,7 @@ class PortfolioReportServiceTest extends TestCase {
 				$schema = $query['@self']['schema'] ?? null;
 				if ($schema === 20) {
 					return [
-						'results' => [['id' => 'gebruik-1', 'afnemer' => 'org-a']],
+						'results' => [['id' => 'gebruik-1', 'consumer' => 'org-a']],
 						// Total exceeds the returned page — the ceiling truncated it.
 						'total' => 5,
 					];

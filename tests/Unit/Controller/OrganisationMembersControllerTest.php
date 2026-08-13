@@ -77,14 +77,14 @@ class OrganisationMembersControllerTest extends TestCase {
 	/**
 	 * Build the controller with the current mocks and a logged-in user.
 	 *
-	 * @param bool $isBeheerder Whether the caller is in the `beheerder` NC group.
+	 * @param bool $isMaintainer Whether the caller is in the `beheerder` NC group.
 	 * @param array $callerOrgUuids Organisation UUIDs the caller belongs to (per OpenRegister).
 	 * @param string $callerUid The caller's Nextcloud user id.
 	 *
 	 * @return OrganisationMembersController The controller under test.
 	 */
 	private function makeController(
-		bool $isBeheerder,
+		bool $isMaintainer,
 		array $callerOrgUuids,
 		string $callerUid = 'caller-uid',
 	): OrganisationMembersController {
@@ -100,7 +100,7 @@ class OrganisationMembersControllerTest extends TestCase {
 		$user->method('getUID')->willReturn($callerUid);
 		$this->userSession->method('getUser')->willReturn($user);
 
-		$this->groupManager->method('isInGroup')->with($callerUid, 'beheerder')->willReturn($isBeheerder);
+		$this->groupManager->method('isInGroup')->with($callerUid, 'maintainer')->willReturn($isMaintainer);
 
 		$callerOrgs = array_map(
 			function (string $uuid): Organisation {
@@ -133,7 +133,7 @@ class OrganisationMembersControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testGrantRefusesNonBeheerder(): void {
-		$controller = $this->makeController(isBeheerder: false, callerOrgUuids: ['org-a']);
+		$controller = $this->makeController(isMaintainer: false, callerOrgUuids: ['org-a']);
 		$this->organisationService->expects($this->never())->method('joinOrganisation');
 
 		$response = $controller->grant(uuid: 'org-a', userId: 'colleague-uid');
@@ -148,7 +148,7 @@ class OrganisationMembersControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRevokeRefusesNonBeheerder(): void {
-		$controller = $this->makeController(isBeheerder: false, callerOrgUuids: ['org-a']);
+		$controller = $this->makeController(isMaintainer: false, callerOrgUuids: ['org-a']);
 		$this->organisationService->expects($this->never())->method('leaveOrganisation');
 
 		$response = $controller->revoke(uuid: 'org-a', userId: 'colleague-uid');
@@ -164,7 +164,7 @@ class OrganisationMembersControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testGrantRefusesBeheerderOfDifferentOrganisation(): void {
-		$controller = $this->makeController(isBeheerder: true, callerOrgUuids: ['org-b']);
+		$controller = $this->makeController(isMaintainer: true, callerOrgUuids: ['org-b']);
 		$this->organisationService->expects($this->never())->method('joinOrganisation');
 
 		$response = $controller->grant(uuid: 'org-a', userId: 'colleague-uid');
@@ -179,7 +179,7 @@ class OrganisationMembersControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRevokeRefusesBeheerderOfDifferentOrganisation(): void {
-		$controller = $this->makeController(isBeheerder: true, callerOrgUuids: ['org-b']);
+		$controller = $this->makeController(isMaintainer: true, callerOrgUuids: ['org-b']);
 		$this->organisationService->expects($this->never())->method('leaveOrganisation');
 
 		$response = $controller->revoke(uuid: 'org-a', userId: 'colleague-uid');
@@ -195,7 +195,7 @@ class OrganisationMembersControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testGrantRefusesNonExistentUser(): void {
-		$controller = $this->makeController(isBeheerder: true, callerOrgUuids: ['org-a']);
+		$controller = $this->makeController(isMaintainer: true, callerOrgUuids: ['org-a']);
 		$this->userManager->method('get')->with('no-such-user')->willReturn(null);
 		$this->organisationService->expects($this->never())->method('joinOrganisation');
 
@@ -212,7 +212,7 @@ class OrganisationMembersControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testGrantAuthorizesBeheerderAndDelegatesToOpenRegister(): void {
-		$controller = $this->makeController(isBeheerder: true, callerOrgUuids: ['org-a']);
+		$controller = $this->makeController(isMaintainer: true, callerOrgUuids: ['org-a']);
 
 		$existingUser = $this->createMock(IUser::class);
 		$this->userManager->method('get')->with('colleague-uid')->willReturn($existingUser);
@@ -234,7 +234,7 @@ class OrganisationMembersControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRevokeAuthorizesBeheerderAndDelegatesToOpenRegister(): void {
-		$controller = $this->makeController(isBeheerder: true, callerOrgUuids: ['org-a']);
+		$controller = $this->makeController(isMaintainer: true, callerOrgUuids: ['org-a']);
 
 		$this->organisationService->expects($this->once())
 			->method('leaveOrganisation')
@@ -254,7 +254,7 @@ class OrganisationMembersControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testGrantSurfacesOpenRegisterExceptionAs400(): void {
-		$controller = $this->makeController(isBeheerder: true, callerOrgUuids: ['org-a']);
+		$controller = $this->makeController(isMaintainer: true, callerOrgUuids: ['org-a']);
 
 		$existingUser = $this->createMock(IUser::class);
 		$this->userManager->method('get')->with('colleague-uid')->willReturn($existingUser);

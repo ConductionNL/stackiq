@@ -344,7 +344,7 @@ class SoftwareCatalogContactSyncService {
 	 * @return array<string, mixed> The identity property set.
 	 */
 	private function organisationIdentityProperties(array $record): array {
-		$name = trim((string)($record['naam'] ?? ''));
+		$name = trim((string)($record['name'] ?? ''));
 		$properties = [
 			'FN' => $name,
 			'ORG' => $name,
@@ -375,8 +375,8 @@ class SoftwareCatalogContactSyncService {
 	private function personIdentityProperties(array $record): array {
 		$voornaam = trim((string)($record['voornaam'] ?? ''));
 		$tussenvoegsel = trim((string)($record['tussenvoegsel'] ?? ''));
-		$achternaam = trim((string)($record['achternaam'] ?? ''));
-		$family = trim(trim($tussenvoegsel . ' ' . $achternaam));
+		$lastName = trim((string)($record['achternaam'] ?? ''));
+		$family = trim(trim($tussenvoegsel . ' ' . $lastName));
 
 		$properties = [
 			'FN' => trim($voornaam . ' ' . $family),
@@ -384,9 +384,9 @@ class SoftwareCatalogContactSyncService {
 			'N' => $family . ';' . $voornaam . ';;;',
 		];
 
-		$functie = trim((string)($record['functie'] ?? ''));
-		if ($functie !== '') {
-			$properties['TITLE'] = $functie;
+		$role = trim((string)($record['role'] ?? ''));
+		if ($role !== '') {
+			$properties['TITLE'] = $role;
 		}
 
 		return $properties;

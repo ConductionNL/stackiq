@@ -159,7 +159,7 @@ class PublicationControllerTest extends TestCase {
 				[
 					'ok' => true,
 					'reason' => 'scheduled',
-					'publicatiedatum' => '2026-09-01T00:00:00+00:00',
+					'publicationDate' => '2026-09-01T00:00:00+00:00',
 				]
 			);
 

@@ -233,7 +233,7 @@ class GebruikControllerDecompositionTest extends TestCase {
 		$result = $reflection->invoke($controller, $roles, []);
 
 		$this->assertIsArray($result);
-		$this->assertSame('municipality-a', $result['afnemer']);
+		$this->assertSame('municipality-a', $result['consumer']);
 
 	}//end testGebruikBeheerderIsScopedToOwnOrganisationAfnemer()
 
@@ -260,7 +260,7 @@ class GebruikControllerDecompositionTest extends TestCase {
 			'isAmbtenaar' => false,
 			'orgUuid' => 'municipality-a',
 		];
-		$result = $reflection->invoke($controller, $roles, ['afnemer' => 'municipality-b']);
+		$result = $reflection->invoke($controller, $roles, ['consumer' => 'municipality-b']);
 
 		$this->assertNull($result);
 
@@ -284,9 +284,9 @@ class GebruikControllerDecompositionTest extends TestCase {
 			'isAmbtenaar' => false,
 			'orgUuid' => 'municipality-a',
 		];
-		$result = $reflection->invoke($controller, $roles, ['afnemer' => 'municipality-a']);
+		$result = $reflection->invoke($controller, $roles, ['consumer' => 'municipality-a']);
 
-		$this->assertSame(['afnemer' => 'municipality-a'], $result);
+		$this->assertSame(['consumer' => 'municipality-a'], $result);
 
 	}//end testGebruikBeheerderOwnAfnemerFilterIsPreserved()
 
@@ -345,7 +345,7 @@ class GebruikControllerDecompositionTest extends TestCase {
 		$result = $reflection->invoke($controller, $roles, []);
 
 		$this->assertIsArray($result);
-		$this->assertSame('org-1', $result['afnemer']);
+		$this->assertSame('org-1', $result['consumer']);
 
 	}//end testDualRoleWithoutAdminOrAmbtenaarIsStillScoped()
 

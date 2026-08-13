@@ -36,16 +36,16 @@
 const STRIPPED_FIELDS = Object.freeze([
 	'contactpersoon',
 	'contactpersonen',
-	'contactpersoonAanbieder',
-	'contactpersoonGebruiker',
-	'interneAantekening',
+	'contactPersonProvider',
+	'contactPersonUser',
+	'interneAnnotation',
 	'email',
 	'telefoonnummer',
 	'voornaam',
 	'achternaam',
 	'owner',
 	'authorization',
-	'geregistreerdDoor',
+	'geregistreerdBy',
 ])
 
 /**

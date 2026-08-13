@@ -63,7 +63,7 @@ class IntakeController extends Controller {
 	/**
 	 * Submit an anonymous organisation registration into the moderation queue.
 	 *
-	 * @param array<string,mixed> $organisatie The registration payload.
+	 * @param array<string,mixed> $organisation The registration payload.
 	 *
 	 * @return JSONResponse `{ok, uuid, status}` (202 Accepted) or a 400/429.
 	 *
@@ -74,8 +74,8 @@ class IntakeController extends Controller {
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 5, period: 3600)]
-	public function submit(array $organisatie = []): JSONResponse {
-		$result = $this->intake->submit($organisatie);
+	public function submit(array $organisation = []): JSONResponse {
+		$result = $this->intake->submit($organisation);
 		if ($result['ok'] === false) {
 			return new JSONResponse(
 				data: ['message' => $result['reason']],

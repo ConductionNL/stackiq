@@ -194,17 +194,17 @@ class EolSyncServiceTest extends TestCase {
 		);
 
 		$module = ['id' => 'module-uuid-1', 'eolProductSlug' => 'postgresql'];
-		$moduleVersie = ['id' => 'mv-uuid-1', 'module' => 'module-uuid-1', 'versie' => '16.2', 'beschrijvingKort' => 'keep me'];
+		$moduleVersion = ['id' => 'mv-uuid-1', 'module' => 'module-uuid-1', 'version' => '16.2', 'beschrijvingKort' => 'keep me'];
 		$cycle = ['product' => 'postgresql', 'cycle' => '16', 'eol' => '2028-11-09'];
 
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjects')->willReturnCallback(
-			function (array $query) use ($module, $moduleVersie): array {
+			function (array $query) use ($module, $moduleVersion): array {
 				if (($query['@self']['schema'] ?? null) === 20) {
 					return [$module];
 				}
 				if (($query['@self']['schema'] ?? null) === 21) {
-					return [$moduleVersie];
+					return [$moduleVersion];
 				}
 				return [];
 			}
@@ -244,8 +244,8 @@ class EolSyncServiceTest extends TestCase {
 		$this->assertSame($recordedStatus, $status);
 
 		$this->assertCount(1, $savedObjects);
-		$this->assertSame('2028-11-09', $savedObjects[0]['datumEindeOndersteuning']);
-		$this->assertSame('endoflife.date', $savedObjects[0]['eolBron']);
+		$this->assertSame('2028-11-09', $savedObjects[0]['dateEndOndersteuning']);
+		$this->assertSame('endoflife.date', $savedObjects[0]['eolSource']);
 		$this->assertSame('keep me', $savedObjects[0]['beschrijvingKort']);
 	}//end testSuccessfulRunMatchesStampsAndReportsStatus()
 

@@ -45,7 +45,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		'firstName' => 'voornaam',
 		'middleName' => 'tussenvoegsel',
 		'lastName' => 'achternaam',
-		'functie' => 'functie',
+		'role' => 'role',
 		'email' => 'e-mailadres',
 	];
 
@@ -98,7 +98,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 				]
 			);
 
-			$this->syncToContactpersoon(event: $event, logger: $logger);
+			$this->syncToContactPerson(event: $event, logger: $logger);
 		} catch (\Exception $e) {
 			try {
 				$logger = $this->container->get(LoggerInterface::class);
@@ -127,15 +127,15 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	private function syncToContactpersoon(UserProfileUpdatedEvent $event, LoggerInterface $logger): void {
+	private function syncToContactPerson(UserProfileUpdatedEvent $event, LoggerInterface $logger): void {
 		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		$settingsService = $this->container->get(SettingsService::class);
 
 		$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 		$register = $voorzieningenConfig['register'] ?? '';
-		$contactpersoonSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
+		$contactPersonSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
 
-		if (empty($register) === true || empty($contactpersoonSchema) === true) {
+		if (empty($register) === true || empty($contactPersonSchema) === true) {
 			$logger->warning(
 				'[UserProfileUpdatedEventListener] Voorzieningen config missing register or contactpersoon_schema'
 			);
@@ -145,10 +145,10 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		$userId = $event->getUserId();
 		$selfQuery = [
 			'register' => (int)$register,
-			'schema' => (int)$contactpersoonSchema,
+			'schema' => (int)$contactPersonSchema,
 		];
 
-		$contactpersoon = $this->findContactpersoon(
+		$contactPerson = $this->findContactPerson(
 			objectService: $objectService,
 			selfQuery: $selfQuery,
 			userId: $userId,
@@ -156,24 +156,24 @@ class UserProfileUpdatedEventListener implements IEventListener {
 			logger: $logger
 		);
 
-		if ($contactpersoon === null) {
+		if ($contactPerson === null) {
 			$logger->info(
 				'[UserProfileUpdatedEventListener] No contactpersoon found for user',
 				[
 					'userId' => $userId,
 					'register' => $register,
-					'schema' => $contactpersoonSchema,
+					'schema' => $contactPersonSchema,
 				]
 			);
 			return;
 		}
 
-		$contactData = $contactpersoon->getObject();
+		$contactData = $contactPerson->getObject();
 		$patch = $this->buildContactPatch(
 			event:       $event,
 			userId:      $userId,
 			contactData: $contactData,
-			contactpersoonId: $contactpersoon->getUuid(),
+			contactPersonId: $contactPerson->getUuid(),
 			logger:      $logger
 		);
 
@@ -191,7 +191,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 			'[UserProfileUpdatedEventListener] Patching contactpersoon object',
 			[
 				'userId' => $userId,
-				'contactpersoonId' => $contactpersoon->getUuid(),
+				'contactpersoonId' => $contactPerson->getUuid(),
 				'patch' => $patch,
 			]
 		);
@@ -199,12 +199,12 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		// Merge the patch into existing data and save directly via mapper to skip schema validation.
 		// Schema validation can reject existing data with legacy values (e.g. notificaties enum).
 		$mergedObject = array_merge($contactData, $patch);
-		$contactpersoon->setObject($mergedObject);
+		$contactPerson->setObject($mergedObject);
 
-		$this->persistContactpersoonPatch(
-			contactpersoon: $contactpersoon,
+		$this->persistContactPersonPatch(
+			contactPerson: $contactPerson,
 			register:       (int)$register,
-			schema:         (int)$contactpersoonSchema,
+			schema:         (int)$contactPersonSchema,
 			logger:         $logger
 		);
 
@@ -212,7 +212,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 			'[UserProfileUpdatedEventListener] Successfully synced user profile to contactpersoon',
 			[
 				'userId' => $userId,
-				'contactpersoonId' => $contactpersoon->getUuid(),
+				'contactpersoonId' => $contactPerson->getUuid(),
 				'patchedFields' => array_keys($patch),
 			]
 		);
@@ -227,7 +227,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 * @param UserProfileUpdatedEvent $event The dispatched event.
 	 * @param string $userId The Nextcloud user id.
 	 * @param array $contactData The current contactpersoon data.
-	 * @param string $contactpersoonId The contactpersoon UUID (for logging).
+	 * @param string $contactPersonId The contactpersoon UUID (for logging).
 	 * @param LoggerInterface $logger Logger for the backfill notice.
 	 *
 	 * @return array<string,mixed> The patch (may be empty).
@@ -236,7 +236,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		UserProfileUpdatedEvent $event,
 		string $userId,
 		array $contactData,
-		string $contactpersoonId,
+		string $contactPersonId,
 		LoggerInterface $logger,
 	): array {
 		$newData = $event->getNewData();
@@ -258,7 +258,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 				'[UserProfileUpdatedEventListener] Backfilling username on contactpersoon',
 				[
 					'userId' => $userId,
-					'contactpersoonId' => $contactpersoonId,
+					'contactpersoonId' => $contactPersonId,
 				]
 			);
 		}
@@ -270,15 +270,15 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 * Persist the patched contactpersoon entity, regenerating `_name`
 	 * metadata first when the schema is loadable.
 	 *
-	 * @param object $contactpersoon The contactpersoon entity.
+	 * @param object $contactPerson The contactpersoon entity.
 	 * @param int $register The voorzieningen register id.
 	 * @param int $schema The contactpersoon schema id.
 	 * @param LoggerInterface $logger Logger for hydration warnings.
 	 *
 	 * @return void
 	 */
-	private function persistContactpersoonPatch(
-		object $contactpersoon,
+	private function persistContactPersonPatch(
+		object $contactPerson,
 		int $register,
 		int $schema,
 		LoggerInterface $logger,
@@ -302,11 +302,11 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		}
 
 		if ($schemaEntity !== null) {
-			$metaHydrationHandler->hydrateObjectMetadata(entity: $contactpersoon, schema: $schemaEntity);
+			$metaHydrationHandler->hydrateObjectMetadata(entity: $contactPerson, schema: $schemaEntity);
 			$logger->debug(
 				'[UserProfileUpdatedEventListener] Regenerated _name metadata',
 				[
-					'newName' => $contactpersoon->getName(),
+					'newName' => $contactPerson->getName(),
 				]
 			);
 		}
@@ -314,7 +314,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		// Pass register and schema so the magic mapper route is triggered and the
 		// per-schema magic table is updated (not just the blob table).
 		$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-		$objectMapper->update(entity: $contactpersoon, register: $registerEntity, schema: $schemaEntity);
+		$objectMapper->update(entity: $contactPerson, register: $registerEntity, schema: $schemaEntity);
 
 	}//end persistContactpersoonPatch()
 
@@ -331,7 +331,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
 	 */
-	private function findContactpersoon(
+	private function findContactPerson(
 		object $objectService,
 		array $selfQuery,
 		string $userId,

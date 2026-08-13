@@ -112,7 +112,7 @@ class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 	 *
 	 * @return ObjectEntity
 	 */
-	private function makeContactpersoonEntity(string $organisationUuid): ObjectEntity {
+	private function makeContactPersonEntity(string $organisationUuid): ObjectEntity {
 		$entity = $this->createMock(ObjectEntity::class);
 		$entity->method('getObject')->willReturn(['organisation' => $organisationUuid]);
 		return $entity;
@@ -157,19 +157,19 @@ class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 		$this->userManager->method('get')->with($targetUid)->willReturn($targetUser);
 
 		// ObjectService returns contactpersonen for target and caller.
-		$targetContactpersoon = $this->makeContactpersoonEntity($targetOrgUuid);
-		$callerContactpersoon = $this->makeContactpersoonEntity($callerOrgUuid);
+		$targetContactPerson = $this->makeContactPersonEntity($targetOrgUuid);
+		$callerContactPerson = $this->makeContactPersonEntity($callerOrgUuid);
 
 		$this->objectService
 			->method('searchObjectsPaginated')
 			->willReturnCallback(
-				function (array $query) use ($targetUid, $callerUid, $targetContactpersoon, $callerContactpersoon): array {
+				function (array $query) use ($targetUid, $callerUid, $targetContactPerson, $callerContactPerson): array {
 					if (($query['username'] ?? '') === $targetUid) {
-						return ['results' => [$targetContactpersoon]];
+						return ['results' => [$targetContactPerson]];
 					}
 
 					if (($query['username'] ?? '') === $callerUid) {
-						return ['results' => [$callerContactpersoon]];
+						return ['results' => [$callerContactPerson]];
 					}
 
 					return ['results' => []];
@@ -216,11 +216,11 @@ class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 		$this->userManager->method('get')->with($targetUid)->willReturn($targetUser);
 
 		// Both belong to the same organisation.
-		$sharedContactpersoon = $this->makeContactpersoonEntity($sharedOrgUuid);
+		$sharedContactPerson = $this->makeContactPersonEntity($sharedOrgUuid);
 
 		$this->objectService
 			->method('searchObjectsPaginated')
-			->willReturn(['results' => [$sharedContactpersoon]]);
+			->willReturn(['results' => [$sharedContactPerson]]);
 
 		// getUserGroups returns an empty array so no group changes are made.
 		$this->groupManager->method('getUserGroups')->willReturn([]);

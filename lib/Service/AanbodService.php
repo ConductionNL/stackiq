@@ -126,7 +126,7 @@ class AanbodService {
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 			$registerId = $voorzieningenConfig['register'] ?? null;
 			$gebruikSchema = $voorzieningenConfig['gebruik_schema'] ?? null;
-			$koppelingSchema = $voorzieningenConfig['koppeling_schema'] ?? null;
+			$integrationSchema = $voorzieningenConfig['koppeling_schema'] ?? null;
 			$moduleSchema = $voorzieningenConfig['module_schema'] ?? null;
 			$dienstSchema = $voorzieningenConfig['dienst_schema'] ?? null;
 
@@ -139,19 +139,19 @@ class AanbodService {
 
 			// Collect all schemas we need to search.
 			if ($gebruikSchema !== null) {
-				$schemasToSearch[] = ['schema' => $gebruikSchema, 'type' => 'gebruik', 'filter_field' => 'afnemer'];
+				$schemasToSearch[] = ['schema' => $gebruikSchema, 'type' => 'gebruik', 'filter_field' => 'consumer'];
 			}
 
-			if ($koppelingSchema !== null) {
-				$schemasToSearch[] = ['schema' => $koppelingSchema, 'type' => 'koppeling', 'filter_field' => 'aanbieder'];
+			if ($integrationSchema !== null) {
+				$schemasToSearch[] = ['schema' => $integrationSchema, 'type' => 'koppeling', 'filter_field' => 'provider'];
 			}
 
 			if ($moduleSchema !== null) {
-				$schemasToSearch[] = ['schema' => $moduleSchema, 'type' => 'module', 'filter_field' => 'aanbieder'];
+				$schemasToSearch[] = ['schema' => $moduleSchema, 'type' => 'module', 'filter_field' => 'provider'];
 			}
 
 			if ($dienstSchema !== null) {
-				$schemasToSearch[] = ['schema' => $dienstSchema, 'type' => 'dienst', 'filter_field' => 'aanbieder'];
+				$schemasToSearch[] = ['schema' => $dienstSchema, 'type' => 'dienst', 'filter_field' => 'provider'];
 			}
 
 			// Search each schema type.
@@ -334,23 +334,23 @@ class AanbodService {
 
 			// Verify that the active organization is either afnemer or aanbieder.
 			$aanbodData = $existingAanbod->getObject();
-			$afnemerInfo = $aanbodData['afnemer'] ?? null;
-			$aanbiederInfo = $aanbodData['aanbieder'] ?? null;
-			$afnemerId = $this->resolvePartyId(partyInfo: $afnemerInfo);
-			$aanbiederId = $this->resolvePartyId(partyInfo: $aanbiederInfo);
-			$isAfnemer = ($afnemerId !== null && $afnemerId === $currentOrg);
-			$isAanbieder = ($aanbiederId !== null && $aanbiederId === $currentOrg);
+			$consumerInfo = $aanbodData['consumer'] ?? null;
+			$providerInfo = $aanbodData['provider'] ?? null;
+			$consumerId = $this->resolvePartyId(partyInfo: $consumerInfo);
+			$providerId = $this->resolvePartyId(partyInfo: $providerInfo);
+			$isConsumer = ($consumerId !== null && $consumerId === $currentOrg);
+			$isProvider = ($providerId !== null && $providerId === $currentOrg);
 
-			if ($isAfnemer === false && $isAanbieder === false) {
+			if ($isConsumer === false && $isProvider === false) {
 				return [
 					'success' => false,
 					'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
 					'aanbod' => null,
 					'debug' => [
-						'afnemer_in_object' => $afnemerInfo,
-						'resolved_afnemer_id' => $afnemerId,
-						'aanbieder_in_object' => $aanbiederInfo,
-						'resolved_aanbieder_id' => $aanbiederId,
+						'afnemer_in_object' => $consumerInfo,
+						'resolved_afnemer_id' => $consumerId,
+						'aanbieder_in_object' => $providerInfo,
+						'resolved_aanbieder_id' => $providerId,
 						'current_org' => $currentOrg,
 					],
 				];
@@ -367,7 +367,7 @@ class AanbodService {
 			$aanbodData['@self'] = $selfData;
 
 			// Update geregistreerdDoor based on the accepting organisation's type.
-			$aanbodData = $this->updateGeregistreerdDoor(
+			$aanbodData = $this->updateGeregistreerdBy(
 				objectService: $objectService,
 				objectData: $aanbodData,
 				organisationUuid: $currentOrg
@@ -390,8 +390,8 @@ class AanbodService {
 					'aanbod_id' => $aanbodId,
 					'organisation' => $currentOrg,
 					'owner' => $currentUser?->getUID(),
-					'is_afnemer' => $isAfnemer,
-					'is_aanbieder' => $isAanbieder,
+					'is_afnemer' => $isConsumer,
+					'is_aanbieder' => $isProvider,
 				]
 			);
 
@@ -481,23 +481,23 @@ class AanbodService {
 			$aanbodData = $existingAanbod->getObject();
 
 			// SECURITY CHECK: Verify that the active organization is either afnemer or aanbieder.
-			$afnemerInfo = $aanbodData['afnemer'] ?? null;
-			$aanbiederInfo = $aanbodData['aanbieder'] ?? null;
-			$afnemerId = $this->resolvePartyId(partyInfo: $afnemerInfo);
-			$aanbiederId = $this->resolvePartyId(partyInfo: $aanbiederInfo);
-			$isAfnemer = ($afnemerId !== null && $afnemerId === $currentOrg);
-			$isAanbieder = ($aanbiederId !== null && $aanbiederId === $currentOrg);
+			$consumerInfo = $aanbodData['consumer'] ?? null;
+			$providerInfo = $aanbodData['provider'] ?? null;
+			$consumerId = $this->resolvePartyId(partyInfo: $consumerInfo);
+			$providerId = $this->resolvePartyId(partyInfo: $providerInfo);
+			$isConsumer = ($consumerId !== null && $consumerId === $currentOrg);
+			$isProvider = ($providerId !== null && $providerId === $currentOrg);
 
-			if ($isAfnemer === false && $isAanbieder === false) {
+			if ($isConsumer === false && $isProvider === false) {
 				$this->logger->warning(
 					'Unauthorized delete attempt - user is not afnemer or aanbieder',
 					[
 						'aanbod_id' => $aanbodId,
 						'current_org' => $currentOrg,
-						'afnemer_in_object' => $afnemerInfo,
-						'resolved_afnemer_id' => $afnemerId,
-						'aanbieder_in_object' => $aanbiederInfo,
-						'resolved_aanbieder_id' => $aanbiederId,
+						'afnemer_in_object' => $consumerInfo,
+						'resolved_afnemer_id' => $consumerId,
+						'aanbieder_in_object' => $providerInfo,
+						'resolved_aanbieder_id' => $providerId,
 					]
 				);
 
@@ -506,10 +506,10 @@ class AanbodService {
 					'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
 					'deleted' => false,
 					'debug' => [
-						'afnemer_in_object' => $afnemerInfo,
-						'resolved_afnemer_id' => $afnemerId,
-						'aanbieder_in_object' => $aanbiederInfo,
-						'resolved_aanbieder_id' => $aanbiederId,
+						'afnemer_in_object' => $consumerInfo,
+						'resolved_afnemer_id' => $consumerId,
+						'aanbieder_in_object' => $providerInfo,
+						'resolved_aanbieder_id' => $providerId,
 						'current_org' => $currentOrg,
 					],
 				];
@@ -530,8 +530,8 @@ class AanbodService {
 				[
 					'aanbod_id' => $aanbodId,
 					'organisation' => $currentOrg,
-					'is_afnemer' => $isAfnemer,
-					'is_aanbieder' => $isAanbieder,
+					'is_afnemer' => $isConsumer,
+					'is_aanbieder' => $isProvider,
 				]
 			);
 
@@ -753,44 +753,44 @@ class AanbodService {
 	 *
 	 * @return array The updated object data
 	 */
-	private function updateGeregistreerdDoor(
+	private function updateGeregistreerdBy(
 		ObjectService $objectService,
 		array $objectData,
 		string $organisationUuid,
 	): array {
 		try {
-			$organisatieSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
+			$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 			$registerId = $voorzieningenConfig['register'] ?? null;
 
-			if ($organisatieSchemaId === null || $registerId === null) {
+			if ($organisationSchemaId === null || $registerId === null) {
 				return $objectData;
 			}
 
-			$organisatieObject = $objectService->find(
+			$organisationObject = $objectService->find(
 				id: $organisationUuid,
 				register: (int)$registerId,
-				schema: (int)$organisatieSchemaId,
+				schema: (int)$organisationSchemaId,
 				_rbac: false,
 				_multitenancy: false
 			);
 
-			if ($organisatieObject === null) {
+			if ($organisationObject === null) {
 				return $objectData;
 			}
 
-			$organisatieData = $organisatieObject->getObject();
-			$orgType = $organisatieData['type'] ?? null;
+			$organisationData = $organisationObject->getObject();
+			$orgType = $organisationData['type'] ?? null;
 
 			if ($orgType !== null && isset(self::TYPE_MAP[$orgType]) === true) {
-				$objectData['geregistreerdDoor'] = self::TYPE_MAP[$orgType];
+				$objectData['geregistreerdBy'] = self::TYPE_MAP[$orgType];
 
 				$this->logger->info(
 					'Updated geregistreerdDoor during transfer',
 					[
 						'organisationUuid' => $organisationUuid,
 						'orgType' => $orgType,
-						'geregistreerdDoor' => self::TYPE_MAP[$orgType],
+						'geregistreerdBy' => self::TYPE_MAP[$orgType],
 					]
 				);
 			}

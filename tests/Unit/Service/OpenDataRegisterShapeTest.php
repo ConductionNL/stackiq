@@ -31,7 +31,7 @@ class OpenDataRegisterShapeTest extends TestCase {
 	/**
 	 * @var array<string,mixed>
 	 */
-	private array $organisatie;
+	private array $organisation;
 
 	/**
 	 * Load the organisatie schema once.
@@ -42,7 +42,7 @@ class OpenDataRegisterShapeTest extends TestCase {
 		$path = __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json';
 		$decoded = json_decode((string)file_get_contents($path), true);
 		$this->assertIsArray($decoded);
-		$this->organisatie = $decoded['components']['schemas']['organisatie'];
+		$this->organisation = $decoded['components']['schemas']['organisatie'];
 	}//end setUp()
 
 	/**
@@ -51,15 +51,15 @@ class OpenDataRegisterShapeTest extends TestCase {
 	 * @return void
 	 */
 	public function testOrganisatieHasModerationField(): void {
-		$props = $this->organisatie['properties'] ?? [];
-		$this->assertArrayHasKey('registratiestatus', $props);
+		$props = $this->organisation['properties'] ?? [];
+		$this->assertArrayHasKey('registrationStatus', $props);
 
-		$field = $props['registratiestatus'];
+		$field = $props['registrationStatus'];
 		$this->assertSame('string', $field['type']);
 		$this->assertSame(['pending', 'active', 'rejected'], $field['enum']);
 
 		// Optional: not in `required` (import-over-existing is non-destructive).
-		$required = $this->organisatie['required'] ?? [];
-		$this->assertNotContains('registratiestatus', $required);
+		$required = $this->organisation['required'] ?? [];
+		$this->assertNotContains('registrationStatus', $required);
 	}//end testOrganisatieHasModerationField()
 }//end class
