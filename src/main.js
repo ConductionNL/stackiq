@@ -12,7 +12,11 @@
 
 import { createApp, h } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
+import {
+	translate as t,
+	translatePlural as n,
+	loadTranslations,
+} from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
 	defaultPageTypes,
@@ -57,7 +61,10 @@ try {
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
 	// eslint-disable-next-line no-console
-	console.warn('[softwarecatalog] registerTranslations failed; falling back to English', e)
+	console.warn(
+		'[softwarecatalog] registerTranslations failed; falling back to English',
+		e,
+	)
 }
 
 // Fire-and-forget translation load. Some Nextcloud installs (including
@@ -72,7 +79,10 @@ function tryLoadTranslations() {
 	try {
 		const result = loadTranslations('softwarecatalog', () => {})
 		if (result && typeof result.then === 'function') {
-			result.then(() => {}, () => {})
+			result.then(
+				() => {},
+				() => {},
+			)
 		}
 	} catch {
 		// no-op
@@ -80,7 +90,10 @@ function tryLoadTranslations() {
 }
 
 const fragmentCtx = require.context('./manifest.d/', false, /\.json$/)
-const fragments = fragmentCtx.keys().sort().map((key) => fragmentCtx(key))
+const fragments = fragmentCtx
+	.keys()
+	.sort()
+	.map((key) => fragmentCtx(key))
 const mergedManifest = buildManifest(bundledManifest, fragments, menuLayout)
 
 tryLoadTranslations()
@@ -119,7 +132,10 @@ const registryProp = { ...registry }
  * @return {Promise<void>}
  */
 async function bootstrap() {
-	const { manifest: resolvedManifest } = await resolveManifestSentinels(mergedManifest, 'softwarecatalog')
+	const { manifest: resolvedManifest } = await resolveManifestSentinels(
+		mergedManifest,
+		'softwarecatalog',
+	)
 
 	const router = createRouter({
 		history: createWebHashHistory(generateUrl('/apps/softwarecatalog')),

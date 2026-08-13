@@ -71,7 +71,9 @@
 					<!-- Collapse Toggle -->
 					<NcButton
 						variant="tertiary-no-background"
-						:aria-label="isExpanded ? 'Collapse section' : 'Expand section'"
+						:aria-label="
+							isExpanded ? 'Collapse section' : 'Expand section'
+						"
 						@click="toggleExpanded">
 						<template #icon>
 							<ChevronUp v-if="isExpanded" :size="20" />
@@ -129,11 +131,7 @@
  * @version 1.0.0
  */
 
-import {
-	NcSettingsSection,
-	NcButton,
-	NcLoadingIcon,
-} from '@nextcloud/vue'
+import { NcSettingsSection, NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 // Icons
 import Save from 'vue-material-design-icons/ContentSave.vue'
@@ -277,7 +275,7 @@ export default {
 	methods: {
 		/**
 		 * Toggle section expanded state
-		  * @spec openspec/specs/fe-shell-navigation/spec.md
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		toggleExpanded() {
 			this.isExpanded = !this.isExpanded
@@ -285,7 +283,7 @@ export default {
 
 		/**
 		 * Handle save button click
-		  * @spec openspec/specs/fe-shell-navigation/spec.md
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleSave() {
 			this.$emit('save')
@@ -293,7 +291,7 @@ export default {
 
 		/**
 		 * Handle refresh button click
-		  * @spec openspec/specs/fe-shell-navigation/spec.md
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleRefresh() {
 			this.$emit('refresh')

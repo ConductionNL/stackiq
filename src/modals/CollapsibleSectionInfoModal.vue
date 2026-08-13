@@ -30,9 +30,7 @@
 				<slot />
 			</div>
 			<div class="modal-footer">
-				<NcButton @click="$emit('close')">
-					Close
-				</NcButton>
+				<NcButton @click="$emit('close')"> Close </NcButton>
 			</div>
 		</div>
 	</NcModal>

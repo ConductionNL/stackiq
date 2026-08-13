@@ -12,13 +12,20 @@ Modal component for adding new contactpersoon to an organisation
 -->
 
 <template>
-	<NcDialog v-if="show"
+	<NcDialog
+		v-if="show"
 		:name="t('softwarecatalog', 'Add Contactpersoon')"
 		size="small"
 		@closing="closeModal">
 		<div class="add-contactpersoon-modal">
 			<p class="modal-description">
-				{{ t('softwarecatalog', 'Add a new contactpersoon to organisation: {name}', { name: organisation?.naam || 'Unknown' }) }}
+				{{
+					t(
+						'softwarecatalog',
+						'Add a new contactpersoon to organisation: {name}',
+						{ name: organisation?.naam || 'Unknown' },
+					)
+				}}
 			</p>
 
 			<form class="contactpersoon-form" @submit.prevent="saveContactpersoon">
@@ -54,7 +61,8 @@ Modal component for adding new contactpersoon to an organisation
 					<NcButton variant="secondary" @click="closeModal">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
-					<NcButton variant="primary"
+					<NcButton
+						variant="primary"
 						:disabled="loading || !isFormValid"
 						type="submit">
 						<template #icon>
@@ -69,12 +77,7 @@ Modal component for adding new contactpersoon to an organisation
 </template>
 
 <script>
-import {
-	NcDialog,
-	NcButton,
-	NcTextField,
-	NcLoadingIcon,
-} from '@nextcloud/vue'
+import { NcDialog, NcButton, NcTextField, NcLoadingIcon } from '@nextcloud/vue'
 
 import { showSuccess, showError } from '@nextcloud/dialogs'
 import { objectStore, navigationStore } from '../store/store.js'
@@ -118,10 +121,12 @@ export default {
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		isFormValid() {
-			return this.formData.voornaam.trim()
-				   && this.formData.achternaam.trim()
-				   && this.formData['e-mailadres'].trim()
-				   && this.isValidEmail(this.formData['e-mailadres'])
+			return (
+				this.formData.voornaam.trim()
+				&& this.formData.achternaam.trim()
+				&& this.formData['e-mailadres'].trim()
+				&& this.isValidEmail(this.formData['e-mailadres'])
+			)
 		},
 	},
 
@@ -159,7 +164,12 @@ export default {
 		 */
 		async saveContactpersoon() {
 			if (!this.isFormValid) {
-				showError(this.t('softwarecatalog', 'Please fill in all required fields with valid data'))
+				showError(
+					this.t(
+						'softwarecatalog',
+						'Please fill in all required fields with valid data',
+					),
+				)
 				return
 			}
 
@@ -167,7 +177,8 @@ export default {
 
 			try {
 				// Get schema configuration for contactpersoon
-				const contactpersoonConfig = objectStore.getSchemaConfig('contactpersoon')
+				const contactpersoonConfig =
+					objectStore.getSchemaConfig('contactpersoon')
 
 				// Create new contactpersoon object with proper structure
 				const newContactpersoonObject = {
@@ -183,12 +194,17 @@ export default {
 				}
 
 				// Save the new contactpersoon object.
-				const result = await objectStore.saveObject(newContactpersoonObject, {
-					register: contactpersoonConfig.register,
-					schema: contactpersoonConfig.schema,
-				})
+				const result = await objectStore.saveObject(
+					newContactpersoonObject,
+					{
+						register: contactpersoonConfig.register,
+						schema: contactpersoonConfig.schema,
+					},
+				)
 
-				showSuccess(this.t('softwarecatalog', 'Contactpersoon added successfully'))
+				showSuccess(
+					this.t('softwarecatalog', 'Contactpersoon added successfully'),
+				)
 
 				// Emit event to parent component.
 				this.$emit('contactpersoon-added', result.data)
@@ -200,10 +216,15 @@ export default {
 				navigationStore.setTransferData({
 					action: 'contactpersoonAdded',
 				})
-
 			} catch (error) {
 				console.error('Error adding contactpersoon:', error)
-				showError(this.t('softwarecatalog', 'Failed to add contactpersoon: {error}', { error: error.message }))
+				showError(
+					this.t(
+						'softwarecatalog',
+						'Failed to add contactpersoon: {error}',
+						{ error: error.message },
+					),
+				)
 			} finally {
 				this.loading = false
 			}
@@ -213,11 +234,14 @@ export default {
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		generateUuid() {
-			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-				const r = Math.random() * 16 | 0
-				const v = c === 'x' ? r : (r & 0x3 | 0x8)
-				return v.toString(16)
-			})
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+				/[xy]/g,
+				function (c) {
+					const r = (Math.random() * 16) | 0
+					const v = c === 'x' ? r : (r & 0x3) | 0x8
+					return v.toString(16)
+				},
+			)
 		},
 	},
 }

@@ -14,15 +14,27 @@ import {
 
 describe('suiteWizard.isDetailsStepValid', () => {
 	it('is invalid when naam is blank', () => {
-		expect(isDetailsStepValid({ naam: '', beschrijvingKort: 'Short' })).toBe(false)
+		expect(isDetailsStepValid({ naam: '', beschrijvingKort: 'Short' })).toBe(
+			false,
+		)
 	})
 
 	it('is invalid when beschrijvingKort is blank', () => {
-		expect(isDetailsStepValid({ naam: 'Centric Leefomgeving', beschrijvingKort: '  ' })).toBe(false)
+		expect(
+			isDetailsStepValid({
+				naam: 'Centric Leefomgeving',
+				beschrijvingKort: '  ',
+			}),
+		).toBe(false)
 	})
 
 	it('is valid when both required fields are filled in', () => {
-		expect(isDetailsStepValid({ naam: 'Centric Leefomgeving', beschrijvingKort: 'Bundled product' })).toBe(true)
+		expect(
+			isDetailsStepValid({
+				naam: 'Centric Leefomgeving',
+				beschrijvingKort: 'Bundled product',
+			}),
+		).toBe(true)
 	})
 
 	it('handles missing stepData gracefully', () => {
@@ -34,13 +46,15 @@ describe('suiteWizard.isApplicationsStepValid', () => {
 	const translate = (app, message) => message
 
 	it('blocks advancing with zero applications', () => {
-		expect(isApplicationsStepValid([], translate))
-			.toBe('Attach at least one existing application before continuing.')
+		expect(isApplicationsStepValid([], translate)).toBe(
+			'Attach at least one existing application before continuing.',
+		)
 	})
 
 	it('blocks advancing when applications is not an array', () => {
-		expect(isApplicationsStepValid(undefined, translate))
-			.toBe('Attach at least one existing application before continuing.')
+		expect(isApplicationsStepValid(undefined, translate)).toBe(
+			'Attach at least one existing application before continuing.',
+		)
 	})
 
 	it('allows advancing with one application', () => {
@@ -48,7 +62,9 @@ describe('suiteWizard.isApplicationsStepValid', () => {
 	})
 
 	it('allows advancing with several applications', () => {
-		expect(isApplicationsStepValid([{ id: 'mod-1' }, { id: 'mod-2' }], translate)).toBe(true)
+		expect(
+			isApplicationsStepValid([{ id: 'mod-1' }, { id: 'mod-2' }], translate),
+		).toBe(true)
 	})
 })
 
@@ -59,7 +75,10 @@ describe('suiteWizard.buildSuitePayload', () => {
 			beschrijvingKort: 'Bundled leefomgeving product',
 			beschrijvingLang: 'Long description',
 			website: 'https://example.nl/leefomgeving',
-			applications: [{ id: 'mod-1', naam: 'Module 1' }, { id: 'mod-2', naam: 'Module 2' }],
+			applications: [
+				{ id: 'mod-1', naam: 'Module 1' },
+				{ id: 'mod-2', naam: 'Module 2' },
+			],
 		})
 
 		expect(payload).toEqual({
@@ -81,7 +100,10 @@ describe('suiteWizard.buildSuitePayload', () => {
 	})
 
 	it('defaults optional fields to empty strings and applicaties to an empty array', () => {
-		const payload = buildSuitePayload({ naam: 'Suite', beschrijvingKort: 'Short' })
+		const payload = buildSuitePayload({
+			naam: 'Suite',
+			beschrijvingKort: 'Short',
+		})
 		expect(payload.beschrijvingLang).toBe('')
 		expect(payload.website).toBe('')
 		expect(payload.applicaties).toEqual([])
@@ -101,8 +123,9 @@ describe('suiteWizard.buildSuitePayload', () => {
 
 describe('suiteWizard.summarizeApplications', () => {
 	it('returns the naam of each attached application', () => {
-		expect(summarizeApplications([{ naam: 'Module A' }, { naam: 'Module B' }]))
-			.toEqual(['Module A', 'Module B'])
+		expect(
+			summarizeApplications([{ naam: 'Module A' }, { naam: 'Module B' }]),
+		).toEqual(['Module A', 'Module B'])
 	})
 
 	it('falls back to id when naam is missing', () => {
@@ -122,10 +145,18 @@ describe('suiteWizard.mapApplicationOptions', () => {
 	// suite. Found only by running the wizard in a browser (2026-07-24); no test
 	// covered the computed. These cases pin BOTH shapes.
 	it('maps the paginated envelope shape returned by getCollection()', () => {
-		const envelope = { results: [{ uuid: 'u1', naam: 'Zaaksysteem' }], total: 1, page: 1 }
+		const envelope = {
+			results: [{ uuid: 'u1', naam: 'Zaaksysteem' }],
+			total: 1,
+			page: 1,
+		}
 
 		expect(mapApplicationOptions(envelope)).toEqual([
-			{ uuid: 'u1', label: 'Zaaksysteem', raw: { uuid: 'u1', naam: 'Zaaksysteem' } },
+			{
+				uuid: 'u1',
+				label: 'Zaaksysteem',
+				raw: { uuid: 'u1', naam: 'Zaaksysteem' },
+			},
 		])
 	})
 
@@ -144,7 +175,9 @@ describe('suiteWizard.mapApplicationOptions', () => {
 	it('falls back to id and @self.id for the identifier, and to the uuid for the label', () => {
 		const envelope = { results: [{ id: 'i1' }, { '@self': { id: 's1' } }] }
 
-		expect(mapApplicationOptions(envelope).map((o) => [o.uuid, o.label])).toEqual([
+		expect(
+			mapApplicationOptions(envelope).map((o) => [o.uuid, o.label]),
+		).toEqual([
 			['i1', 'i1'],
 			['s1', 's1'],
 		])

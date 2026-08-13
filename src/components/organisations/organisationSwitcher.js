@@ -19,8 +19,14 @@
  * @param {string} fallback Text to show when no active organisation resolves.
  * @return {string} The resolved display name, or the fallback.
  */
-export function resolveActiveOrganisationName(organisations, activeOrganisationUuid, fallback) {
-	const active = (organisations || []).find((org) => org.uuid === activeOrganisationUuid)
+export function resolveActiveOrganisationName(
+	organisations,
+	activeOrganisationUuid,
+	fallback,
+) {
+	const active = (organisations || []).find(
+		(org) => org.uuid === activeOrganisationUuid,
+	)
 	return active?.naam || fallback
 }
 

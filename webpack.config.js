@@ -52,13 +52,14 @@ const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
 const localLibPkg = path.resolve(__dirname, '../nextcloud-vue/package.json')
 let useLocalLib = process.env.USE_LOCAL_LIB !== 'false' && fs.existsSync(localLib)
 if (useLocalLib && fs.existsSync(localLibPkg)) {
-	const localVersion = JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || ''
+	const localVersion =
+		JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || ''
 	if (!localVersion.startsWith('2.')) {
 		useLocalLib = false
 		// eslint-disable-next-line no-console
 		console.warn(
 			`[softwarecatalog] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
-			+ 'that is the Vue 2 line and this app is Vue 3. Building against the npm dist.',
+				+ 'that is the Vue 2 line and this app is Vue 3. Building against the npm dist.',
 		)
 	}
 }
@@ -73,21 +74,27 @@ webpackConfig.resolve = {
 		...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
 		// Deduplicate shared packages so the aliased library source uses
 		// the same instances as the app (prevents dual-Pinia / dual-Vue bugs).
-		'vue$': path.resolve(__dirname, 'node_modules/vue'),
-		'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
+		vue$: path.resolve(__dirname, 'node_modules/vue'),
+		pinia$: path.resolve(__dirname, 'node_modules/pinia'),
 		// ⚠️ @nextcloud/vue@9 ships an `exports` map with NO `main` and NO
 		// `module`. Webpack applies an exports map to a PACKAGE REQUEST, never
 		// to an already-absolutised path, so the Vue-2-era alias to the package
 		// DIRECTORY resolves to nothing and every import fails with
 		// "Can't resolve '@nextcloud/vue'". Alias to the absolute FILE.
-		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue/dist/index.mjs'),
+		'@nextcloud/vue$': path.resolve(
+			__dirname,
+			'node_modules/@nextcloud/vue/dist/index.mjs',
+		),
 		// @nextcloud/vue@9 hard-depends on vue-router ^5.1.0 while this app is
 		// on vue-router 4, so npm installs a SECOND nested copy under
 		// node_modules/@nextcloud/vue/node_modules/vue-router. Two router
 		// modules mean two injection keys: nc-vue's own RouterLink would look
 		// up a router this app never provided and navigation dies with no
 		// console error. Force every `vue-router` request onto one file.
-		'vue-router$': path.resolve(__dirname, 'node_modules/vue-router/dist/vue-router.mjs'),
+		'vue-router$': path.resolve(
+			__dirname,
+			'node_modules/vue-router/dist/vue-router.mjs',
+		),
 	},
 }
 
@@ -112,7 +119,9 @@ webpackConfig.module = {
 webpackConfig.plugins = [
 	new VueLoaderPlugin(),
 	new webpack.DefinePlugin({ appName: JSON.stringify(appId) }),
-	new webpack.DefinePlugin({ appVersion: JSON.stringify(process.env.npm_package_version) }),
+	new webpack.DefinePlugin({
+		appVersion: JSON.stringify(process.env.npm_package_version),
+	}),
 ]
 
 // Force @nextcloud/dialogs to resolve from this app's node_modules, preventing
@@ -122,8 +131,14 @@ webpackConfig.plugins = [
 // useAppInstaller) must be mapped explicitly.
 // ⚠️ dialogs v7 is the same exports-map-only shape as @nextcloud/vue@9 — the
 // bare alias must point at the absolute ENTRY FILE, not the package directory.
-webpackConfig.resolve.alias['@nextcloud/dialogs/style.css$'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs/dist/style.css')
-webpackConfig.resolve.alias['@nextcloud/dialogs$'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs/dist/index.mjs')
+webpackConfig.resolve.alias['@nextcloud/dialogs/style.css$'] = path.resolve(
+	__dirname,
+	'node_modules/@nextcloud/dialogs/dist/style.css',
+)
+webpackConfig.resolve.alias['@nextcloud/dialogs$'] = path.resolve(
+	__dirname,
+	'node_modules/@nextcloud/dialogs/dist/index.mjs',
+)
 
 // @nextcloud/dialogs drags in a FilePicker chunk that imports node's `path`, and
 // webpack 5 no longer auto-polyfills node core modules. `path-browserify` is a
@@ -142,7 +157,10 @@ webpackConfig.resolve.fallback = {
 // Aliasing the bare specifier directly at the dist entry sidesteps the
 // exports field gate. Use the $-suffixed exact-match form so subpath imports
 // (e.g. @nextcloud/axios/dist/foo) keep their normal resolution.
-webpackConfig.resolve.alias['@nextcloud/axios$'] = path.resolve(__dirname, 'node_modules/@nextcloud/axios/dist/index.js')
+webpackConfig.resolve.alias['@nextcloud/axios$'] = path.resolve(
+	__dirname,
+	'node_modules/@nextcloud/axios/dist/index.js',
+)
 
 // Shared chunks so widgets reuse Vue / Pinia / @nextcloud/vue + @conduction/nextcloud-vue
 // instead of bundling them per entry. Slashes \\/ used to match both posix and win paths.

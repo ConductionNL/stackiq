@@ -25,7 +25,12 @@
 				{{ t('softwarecatalog', 'Portfolio rationalization') }}
 			</h2>
 			<p class="pr-intro">
-				{{ t('softwarecatalog', 'TIME classification (Tolerate / Invest / Migrate / Eliminate) of an organisation\'s applications in use, combined with end-of-support exposure, cloud-transition share, and annualised contract cost.') }}
+				{{
+					t(
+						'softwarecatalog',
+						"TIME classification (Tolerate / Invest / Migrate / Eliminate) of an organisation's applications in use, combined with end-of-support exposure, cloud-transition share, and annualised contract cost.",
+					)
+				}}
 			</p>
 			<div class="pr-actions">
 				<NcButton
@@ -67,7 +72,12 @@
 		<NcEmptyContent
 			v-if="!loading && !selectedOrg"
 			:name="t('softwarecatalog', 'Select an organisation')"
-			:description="t('softwarecatalog', 'Pick an organisation above to render its portfolio rationalization report.')">
+			:description="
+				t(
+					'softwarecatalog',
+					'Pick an organisation above to render its portfolio rationalization report.',
+				)
+			">
 			<template #icon>
 				<ChartBoxOutline :size="40" />
 			</template>
@@ -85,7 +95,16 @@
 				type="warning"
 				class="pr-truncated"
 				data-testid="pr-truncated">
-				{{ t('softwarecatalog', 'Showing the first {shown} of {total} applications in use for this organisation — the report is bounded to protect performance.', { shown: report.includedGebruiken, total: report.totalGebruiken }) }}
+				{{
+					t(
+						'softwarecatalog',
+						'Showing the first {shown} of {total} applications in use for this organisation — the report is bounded to protect performance.',
+						{
+							shown: report.includedGebruiken,
+							total: report.totalGebruiken,
+						},
+					)
+				}}
 			</NcNoteCard>
 
 			<!-- TIME quadrant chart -->
@@ -110,18 +129,35 @@
 				<table class="pr-table">
 					<thead>
 						<tr>
-							<th scope="col">{{ t('softwarecatalog', 'Quadrant') }}</th>
+							<th scope="col">
+								{{ t('softwarecatalog', 'Quadrant') }}
+							</th>
 							<th scope="col">{{ t('softwarecatalog', 'Count') }}</th>
-							<th scope="col">{{ t('softwarecatalog', 'EOL exposed') }}</th>
-							<th scope="col">{{ t('softwarecatalog', 'Cloud-transition share') }}</th>
-							<th scope="col">{{ t('softwarecatalog', 'Annualised cost') }}</th>
-							<th scope="col">{{ t('softwarecatalog', 'One-off cost') }}</th>
+							<th scope="col">
+								{{ t('softwarecatalog', 'EOL exposed') }}
+							</th>
+							<th scope="col">
+								{{ t('softwarecatalog', 'Cloud-transition share') }}
+							</th>
+							<th scope="col">
+								{{ t('softwarecatalog', 'Annualised cost') }}
+							</th>
+							<th scope="col">
+								{{ t('softwarecatalog', 'One-off cost') }}
+							</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="row in quadrantSummary" :key="row.key" data-testid="pr-summary-row">
+						<tr
+							v-for="row in quadrantSummary"
+							:key="row.key"
+							data-testid="pr-summary-row">
 							<td>
-								<span class="pr-badge" :style="{ backgroundColor: quadrantColor(row.key) }">
+								<span
+									class="pr-badge"
+									:style="{
+										backgroundColor: quadrantColor(row.key),
+									}">
 									{{ quadrantLabel(row.key) }}
 								</span>
 							</td>
@@ -142,38 +178,77 @@
 				</h3>
 				<div v-for="group in groupedRows" :key="group.key" class="pr-group">
 					<h4 class="pr-groupTitle">
-						<span class="pr-badge" :style="{ backgroundColor: quadrantColor(group.key) }">
+						<span
+							class="pr-badge"
+							:style="{ backgroundColor: quadrantColor(group.key) }">
 							{{ quadrantLabel(group.key) }}
 						</span>
 						<span class="pr-count">({{ group.rows.length }})</span>
 					</h4>
 					<NcEmptyContent
 						v-if="group.rows.length === 0"
-						:name="t('softwarecatalog', 'No applications in this quadrant')" />
+						:name="
+							t('softwarecatalog', 'No applications in this quadrant')
+						" />
 					<table v-else class="pr-table">
 						<thead>
 							<tr>
-								<th scope="col">{{ t('softwarecatalog', 'Application') }}</th>
-								<th scope="col">{{ t('softwarecatalog', 'Rationale') }}</th>
-								<th scope="col">{{ t('softwarecatalog', 'Review date') }}</th>
-								<th scope="col">{{ t('softwarecatalog', 'Lifecycle phase') }}</th>
-								<th scope="col">{{ t('softwarecatalog', 'EOL status') }}</th>
-								<th scope="col">{{ t('softwarecatalog', 'Hosting model') }}</th>
-								<th scope="col">{{ t('softwarecatalog', 'Annualised cost') }}</th>
+								<th scope="col">
+									{{ t('softwarecatalog', 'Application') }}
+								</th>
+								<th scope="col">
+									{{ t('softwarecatalog', 'Rationale') }}
+								</th>
+								<th scope="col">
+									{{ t('softwarecatalog', 'Review date') }}
+								</th>
+								<th scope="col">
+									{{ t('softwarecatalog', 'Lifecycle phase') }}
+								</th>
+								<th scope="col">
+									{{ t('softwarecatalog', 'EOL status') }}
+								</th>
+								<th scope="col">
+									{{ t('softwarecatalog', 'Hosting model') }}
+								</th>
+								<th scope="col">
+									{{ t('softwarecatalog', 'Annualised cost') }}
+								</th>
 							</tr>
 						</thead>
 						<tbody>
-							<tr v-for="row in group.rows" :key="row.uuid" data-testid="pr-row">
+							<tr
+								v-for="row in group.rows"
+								:key="row.uuid"
+								data-testid="pr-row">
 								<td>{{ row.moduleName }}</td>
 								<td>{{ row.timeRationale || '—' }}</td>
 								<td>{{ row.timeReviewDate || '—' }}</td>
 								<td>{{ row.lifecyclePhase }}</td>
 								<td>
-									<span v-if="row.eol.passed" class="pr-eol pr-eol--passed">{{ t('softwarecatalog', 'Passed') }}</span>
-									<span v-else-if="row.eolApproaching" class="pr-eol pr-eol--approaching">{{ t('softwarecatalog', 'Approaching') }}</span>
-									<span v-else class="pr-eol pr-eol--ok">{{ t('softwarecatalog', 'OK') }}</span>
+									<span
+										v-if="row.eol.passed"
+										class="pr-eol pr-eol--passed"
+										>{{ t('softwarecatalog', 'Passed') }}</span
+									>
+									<span
+										v-else-if="row.eolApproaching"
+										class="pr-eol pr-eol--approaching"
+										>{{
+											t('softwarecatalog', 'Approaching')
+										}}</span
+									>
+									<span v-else class="pr-eol pr-eol--ok">{{
+										t('softwarecatalog', 'OK')
+									}}</span>
 								</td>
-								<td>{{ row.hostingModel.length ? row.hostingModel.join(', ') : '—' }}</td>
+								<td>
+									{{
+										row.hostingModel.length
+											? row.hostingModel.join(', ')
+											: '—'
+									}}
+								</td>
 								<td>{{ formatCurrency(row.annualisedCost) }}</td>
 							</tr>
 						</tbody>
@@ -185,7 +260,13 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect, NcEmptyContent, NcNoteCard } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcLoadingIcon,
+	NcSelect,
+	NcEmptyContent,
+	NcNoteCard,
+} from '@nextcloud/vue'
 import { CnChartWidget } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import axios from '@nextcloud/axios'
@@ -263,13 +344,20 @@ export default {
 		 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
 		organisationOptions() {
-			return (objectStore.getCollection('organisatie')?.results || []).map((org) => {
-				const data = org.object || org
-				return {
-					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
-					label: data.naam || data.title || resolveUuid(org.uuid ?? org.id ?? ''),
-				}
-			})
+			return (objectStore.getCollection('organisatie')?.results || []).map(
+				(org) => {
+					const data = org.object || org
+					return {
+						uuid: resolveUuid(
+							org.uuid ?? org.id ?? org['@self']?.id ?? org,
+						),
+						label:
+							data.naam
+							|| data.title
+							|| resolveUuid(org.uuid ?? org.id ?? ''),
+					}
+				},
+			)
 		},
 
 		/**
@@ -282,7 +370,13 @@ export default {
 				return []
 			}
 			return QUADRANT_ORDER.map((key) => {
-				const q = this.report.quadrants[key] || { count: 0, eolExposedCount: 0, cloudTransition: {}, annualisedCost: 0, oneOffCost: 0 }
+				const q = this.report.quadrants[key] || {
+					count: 0,
+					eolExposedCount: 0,
+					cloudTransition: {},
+					annualisedCost: 0,
+					oneOffCost: 0,
+				}
 				return {
 					key,
 					count: q.count,
@@ -300,10 +394,12 @@ export default {
 		 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
 		chartSeries() {
-			return [{
-				name: t('softwarecatalog', 'Applications'),
-				data: this.quadrantSummary.map((row) => row.count),
-			}]
+			return [
+				{
+					name: t('softwarecatalog', 'Applications'),
+					data: this.quadrantSummary.map((row) => row.count),
+				},
+			]
 		},
 
 		/**
@@ -386,23 +482,36 @@ export default {
 		 */
 		async loadOrganisations() {
 			try {
-				if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+				if (
+					!objectStore.settings
+					&& typeof objectStore.fetchSettings === 'function'
+				) {
 					await objectStore.fetchSettings()
 				}
-				const voorzieningenConfig = objectStore.settings?.voorzieningen
+				const voorzieningenConfig =
+					objectStore.settings?.voorzieningen
 					|| objectStore.settings?.voorzieningenConfig
 					|| {}
 				const registerId = voorzieningenConfig.register
-				if (typeof objectStore.registerObjectType === 'function'
+				if (
+					typeof objectStore.registerObjectType === 'function'
 					&& registerId
-					&& !objectStore.objectTypeRegistry?.organisatie) {
-					objectStore.registerObjectType('organisatie', 'organisatie', registerId, {
-						registerSlug: 'voorzieningen',
-						schemaSlug: 'organisatie',
-					})
+					&& !objectStore.objectTypeRegistry?.organisatie
+				) {
+					objectStore.registerObjectType(
+						'organisatie',
+						'organisatie',
+						registerId,
+						{
+							registerSlug: 'voorzieningen',
+							schemaSlug: 'organisatie',
+						},
+					)
 				}
 				if (typeof objectStore.fetchCollection === 'function') {
-					await objectStore.fetchCollection('organisatie', { _limit: 1000 })
+					await objectStore.fetchCollection('organisatie', {
+						_limit: 1000,
+					})
 				}
 			} catch (error) {
 				// eslint-disable-next-line no-console
@@ -428,13 +537,17 @@ export default {
 			this.loading = true
 			this.error = null
 			try {
-				const response = await axios.get(generateUrl('/apps/softwarecatalog/api/portfolio-report'), {
-					params: { organisation: this.selectedOrg.uuid },
-				})
+				const response = await axios.get(
+					generateUrl('/apps/softwarecatalog/api/portfolio-report'),
+					{
+						params: { organisation: this.selectedOrg.uuid },
+					},
+				)
 				this.report = response.data
 			} catch (error) {
 				this.report = null
-				this.error = error?.response?.data?.message
+				this.error =
+					error?.response?.data?.message
 					|| t('softwarecatalog', 'Failed to load the portfolio report.')
 			} finally {
 				this.loading = false

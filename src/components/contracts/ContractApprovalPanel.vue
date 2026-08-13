@@ -12,22 +12,35 @@
 			<CnIcon name="CheckCircleOutline" :size="20" />
 		</template>
 		<div class="contract-approval-panel">
-			<NcLoadingIcon v-if="loading" :size="32" :name="t('softwarecatalog', 'Loading approval state')" />
+			<NcLoadingIcon
+				v-if="loading"
+				:size="32"
+				:name="t('softwarecatalog', 'Loading approval state')" />
 
 			<template v-else>
 				<!-- Delegation not configured: read-only notice, NO submit action. -->
 				<NcNoteCard v-if="!configured" type="warning">
-					{{ t('softwarecatalog', 'Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it.') }}
+					{{
+						t(
+							'softwarecatalog',
+							'Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it.',
+						)
+					}}
 				</NcNoteCard>
 
 				<!-- Read-only projected approval state. -->
 				<div class="contract-approval-panel__state">
-					<span class="contract-approval-panel__label">{{ t('softwarecatalog', 'Approval state') }}</span>
-					<CnStatusBadge :status="approvalStateLabel" :variant="approvalStateVariant" />
+					<span class="contract-approval-panel__label">{{
+						t('softwarecatalog', 'Approval state')
+					}}</span>
+					<CnStatusBadge
+						:status="approvalStateLabel"
+						:variant="approvalStateVariant" />
 				</div>
 
 				<p v-if="decisionId" class="contract-approval-panel__decision">
-					{{ t('softwarecatalog', 'Decision reference') }}: <code>{{ decisionId }}</code>
+					{{ t('softwarecatalog', 'Decision reference') }}:
+					<code>{{ decisionId }}</code>
 				</p>
 
 				<NcNoteCard v-if="error" type="error">
@@ -150,8 +163,11 @@ export default {
 		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		canSubmitApproval() {
-			return this.status === 'In onderhandeling'
-				&& (this.approvalState === 'none' || this.approvalState === 'rejected')
+			return (
+				this.status === 'In onderhandeling'
+				&& (this.approvalState === 'none'
+					|| this.approvalState === 'rejected')
+			)
 		},
 		/**
 		 * Whether the contract may be submitted for renewal.
@@ -160,8 +176,7 @@ export default {
 		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		canSubmitRenewal() {
-			return this.status === 'Verlopen'
-				&& this.approvalState !== 'pending'
+			return this.status === 'Verlopen' && this.approvalState !== 'pending'
 		},
 		/**
 		 * Human-readable label for the projected approval state.
@@ -209,12 +224,17 @@ export default {
 			this.loading = true
 			this.error = ''
 			try {
-				const configUrl = generateUrl('/apps/softwarecatalog/api/contracts/approval/config')
+				const configUrl = generateUrl(
+					'/apps/softwarecatalog/api/contracts/approval/config',
+				)
 				const { data: config } = await axios.get(configUrl)
 				this.configured = Boolean(config.configured)
 				await this.loadContract()
 			} catch (e) {
-				this.error = t('softwarecatalog', 'Could not load the approval state.')
+				this.error = t(
+					'softwarecatalog',
+					'Could not load the approval state.',
+				)
 			} finally {
 				this.loading = false
 			}
@@ -231,10 +251,15 @@ export default {
 			}
 			const url = generateUrl(
 				'/apps/openregister/api/objects/{register}/{schema}/{id}',
-				{ register: this.register, schema: this.schema, id: String(this.objectId) },
+				{
+					register: this.register,
+					schema: this.schema,
+					id: String(this.objectId),
+				},
 			)
 			const { data } = await axios.get(url)
-			const obj = data && data['@self'] !== undefined ? data : (data.object || data)
+			const obj =
+				data && data['@self'] !== undefined ? data : data.object || data
 			this.status = obj.status || ''
 			this.approvalState = obj.approvalState || 'none'
 			this.decisionId = obj.approvalDecisionId || ''
@@ -259,11 +284,20 @@ export default {
 				const { data } = await axios.post(url)
 				this.approvalState = data.approvalState || 'pending'
 				this.decisionId = data.decisionId || this.decisionId
-				showSuccess(t('softwarecatalog', 'Contract submitted to decidesk for a decision.'))
+				showSuccess(
+					t(
+						'softwarecatalog',
+						'Contract submitted to decidesk for a decision.',
+					),
+				)
 			} catch (e) {
 				// Fail-closed: the contract stays In onderhandeling.
-				const msg = e?.response?.data?.message
-					|| t('softwarecatalog', 'Submitting the contract failed; it remains in negotiation.')
+				const msg =
+					e?.response?.data?.message
+					|| t(
+						'softwarecatalog',
+						'Submitting the contract failed; it remains in negotiation.',
+					)
 				this.error = msg
 				showError(msg)
 			} finally {

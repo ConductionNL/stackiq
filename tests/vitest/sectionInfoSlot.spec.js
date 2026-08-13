@@ -41,7 +41,8 @@ import { mount } from '@vue/test-utils'
 import AlwaysVisibleSection from '../../src/components/AlwaysVisibleSection.vue'
 import CollapsibleSection from '../../src/components/CollapsibleSection.vue'
 
-const INFO_CONTENT_MARKUP = '<p class="probe-info-content">Info content slot rendered</p>'
+const INFO_CONTENT_MARKUP =
+	'<p class="probe-info-content">Info content slot rendered</p>'
 const INFO_MARKUP = '<p class="probe-info">Info slot rendered</p>'
 
 /**

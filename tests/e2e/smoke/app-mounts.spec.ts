@@ -35,41 +35,55 @@ import { test, expect } from '@playwright/test'
 
 const ROUTES = [
 	{ name: 'app root', path: '/index.php/apps/softwarecatalog/' },
-	{ name: 'organisations sub-route', path: '/index.php/apps/softwarecatalog/#/organisaties' },
+	{
+		name: 'organisations sub-route',
+		path: '/index.php/apps/softwarecatalog/#/organisaties',
+	},
 ]
 
 for (const route of ROUTES) {
 	test(`the app mounts on the ${route.name}`, async ({ page }) => {
 		const fatal: string[] = []
-		page.on('pageerror', e => fatal.push(`pageerror: ${e.message}`))
+		page.on('pageerror', (e) => fatal.push(`pageerror: ${e.message}`))
 		page.on('console', (m) => {
 			if (m.type() === 'error') fatal.push(`console.error: ${m.text()}`)
 		})
 
-		const response = await page.goto(route.path, { waitUntil: 'domcontentloaded' })
+		const response = await page.goto(route.path, {
+			waitUntil: 'domcontentloaded',
+		})
 		expect(response?.status(), `HTTP status for ${route.path}`).toBeLessThan(400)
 
 		// The host element is emitted by templates/index.php. Its ABSENCE means we
 		// are not on the app page at all (login redirect / 401), which must not be
 		// reported as a boot failure.
 		const host = page.locator('#softwarecatalog')
-		await expect(host, 'app host element #softwarecatalog is missing — are we authenticated?')
-			.toBeAttached({ timeout: 30_000 })
+		await expect(
+			host,
+			'app host element #softwarecatalog is missing — are we authenticated?',
+		).toBeAttached({ timeout: 30_000 })
 
 		// A mounted app replaces the empty host with real DOM. Host present but
 		// childless is the boot-killer shape.
 		await expect
-			.poll(async () => await host.evaluate(el => el.children.length), {
-				message: '#softwarecatalog rendered NO children — the bundle did not mount (empty shell)',
+			.poll(async () => await host.evaluate((el) => el.children.length), {
+				message:
+					'#softwarecatalog rendered NO children — the bundle did not mount (empty shell)',
 				timeout: 30_000,
 			})
 			.toBeGreaterThan(0)
 
-		await expect(page.getByText(/Required apps are missing/i), 'CnAppRoot reports a missing dependency app '
-			+ '— fix the INSTANCE; do not read the resulting e2e failures as migration defects')
-			.toHaveCount(0)
+		await expect(
+			page.getByText(/Required apps are missing/i),
+			'CnAppRoot reports a missing dependency app '
+				+ '— fix the INSTANCE; do not read the resulting e2e failures as migration defects',
+		).toHaveCount(0)
 
-		const boot = fatal.filter(e => /detectLanguage is not a function|ChunkLoadError|Failed to fetch dynamically imported|Cannot read properties of undefined \(reading 'toString'\)/i.test(e))
+		const boot = fatal.filter((e) =>
+			/detectLanguage is not a function|ChunkLoadError|Failed to fetch dynamically imported|Cannot read properties of undefined \(reading 'toString'\)/i.test(
+				e,
+			),
+		)
 		expect(boot, `fatal boot errors on ${route.path}`).toEqual([])
 	})
 }

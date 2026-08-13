@@ -12,23 +12,32 @@
 -->
 <template>
 	<div class="suite-wizard-step1">
-		<NcTextField :model-value="payload.naam"
+		<NcTextField
+			:model-value="payload.naam"
 			:label="t('softwarecatalog', 'Name') + ' *'"
 			:placeholder="t('softwarecatalog', 'e.g. Centric Leefomgeving')"
 			required
 			@update:model-value="onField('naam', $event)" />
 
-		<NcTextField :model-value="payload.beschrijvingKort"
+		<NcTextField
+			:model-value="payload.beschrijvingKort"
 			:label="t('softwarecatalog', 'Short description') + ' *'"
 			:placeholder="t('softwarecatalog', 'A brief summary of the suite')"
 			required
 			@update:model-value="onField('beschrijvingKort', $event)" />
 
-		<NcTextArea v-model="beschrijvingLangModel"
+		<NcTextArea
+			v-model="beschrijvingLangModel"
 			:label="t('softwarecatalog', 'Long description')"
-			:placeholder="t('softwarecatalog', 'A detailed description of the suite and what it covers')" />
+			:placeholder="
+				t(
+					'softwarecatalog',
+					'A detailed description of the suite and what it covers',
+				)
+			" />
 
-		<NcTextField :model-value="payload.website"
+		<NcTextField
+			:model-value="payload.website"
 			:label="t('softwarecatalog', 'Website')"
 			:placeholder="t('softwarecatalog', 'https://example.com/suite')"
 			type="url"

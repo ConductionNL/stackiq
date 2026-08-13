@@ -3,12 +3,29 @@ import { objectStore, navigationStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog v-if="navigationStore.dialog === 'deleteObject'"
-		:name="t('softwarecatalog', 'Delete {name}', { name: (objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id || t('softwarecatalog', 'Publication')) })"
+	<NcDialog
+		v-if="navigationStore.dialog === 'deleteObject'"
+		:name="
+			t('softwarecatalog', 'Delete {name}', {
+				name:
+					objectStore.objectItem?.['@self']?.name
+					|| objectStore.objectItem?.name
+					|| objectStore.objectItem?.['@self']?.title
+					|| objectStore.objectItem?.id
+					|| t('softwarecatalog', 'Publication'),
+			})
+		"
 		size="normal"
 		:can-close="false">
 		<p v-if="success === null">
-			{{ t('softwarecatalog', 'Do you want to permanently delete') }} <b>{{ objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id }}</b>{{ t('softwarecatalog', '? This action cannot be undone.') }}
+			{{ t('softwarecatalog', 'Do you want to permanently delete') }}
+			<b>{{
+				objectStore.objectItem?.['@self']?.name
+				|| objectStore.objectItem?.name
+				|| objectStore.objectItem?.['@self']?.title
+				|| objectStore.objectItem?.id
+			}}</b
+			>{{ t('softwarecatalog', '? This action cannot be undone.') }}
 		</p>
 
 		<NcNoteCard v-if="success" type="success">
@@ -23,7 +40,11 @@ import { objectStore, navigationStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
+				{{
+					success === null
+						? t('softwarecatalog', 'Cancel')
+						: t('softwarecatalog', 'Close')
+				}}
 			</NcButton>
 			<NcButton
 				v-if="success === null"
@@ -41,12 +62,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcLoadingIcon,
-	NcNoteCard,
-} from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
@@ -94,7 +110,12 @@ export default {
 				this.closeModalTimeout = setTimeout(this.closeDialog, 2000)
 			} catch (error) {
 				this.success = false
-				this.error = error.message || this.t('softwarecatalog', 'An error occurred while deleting the publication')
+				this.error =
+					error.message
+					|| this.t(
+						'softwarecatalog',
+						'An error occurred while deleting the publication',
+					)
 			} finally {
 				this.loading = false
 			}

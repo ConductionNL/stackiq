@@ -32,14 +32,17 @@
 				{ key: 'settings', title: 'Settings' },
 				{ key: 'email-types', title: 'Email Types' },
 				{ key: 'testing', title: 'Testing' },
-				{ key: 'templates', title: 'Templates' }
+				{ key: 'templates', title: 'Templates' },
 			]"
 			:active-tab="activeTab"
 			@update:active-tab="activeTab = $event">
 			<div v-show="activeTab === 'settings'" class="tab-panel">
 				<div class="email-settings-section">
 					<h3>Email Settings</h3>
-					<p>Configure email notifications for organization and user events</p>
+					<p>
+						Configure email notifications for organization and user
+						events
+					</p>
 
 					<!-- Enable Email Notifications -->
 					<div class="setting-group">
@@ -60,14 +63,22 @@
 							label="Sender Email"
 							placeholder="noreply@example.com"
 							:disabled="!emailSettings.enabled"
-							:model-value="(emailSettings.senderEmail || '').toString()"
-							@update:model-value="emailSettings.senderEmail = $event" />
+							:model-value="
+								(emailSettings.senderEmail || '').toString()
+							"
+							@update:model-value="
+								emailSettings.senderEmail = $event
+							" />
 						<NcTextField
 							label="Sender Name"
 							placeholder="Software Catalog"
 							:disabled="!emailSettings.enabled"
-							:model-value="(emailSettings.senderName || '').toString()"
-							@update:model-value="emailSettings.senderName = $event" />
+							:model-value="
+								(emailSettings.senderName || '').toString()
+							"
+							@update:model-value="
+								emailSettings.senderName = $event
+							" />
 					</div>
 
 					<!-- Test Receiver Override -->
@@ -77,10 +88,15 @@
 							label="Test Receiver Override"
 							placeholder="test@example.com"
 							:disabled="!emailSettings.enabled"
-							:model-value="(emailSettings.testReceiverOverride || '').toString()"
-							@update:model-value="emailSettings.testReceiverOverride = $event" />
+							:model-value="
+								(emailSettings.testReceiverOverride || '').toString()
+							"
+							@update:model-value="
+								emailSettings.testReceiverOverride = $event
+							" />
 						<p class="setting-description">
-							If set, all emails will be sent to this address instead of the intended recipients (useful for testing)
+							If set, all emails will be sent to this address instead
+							of the intended recipients (useful for testing)
 						</p>
 					</div>
 
@@ -96,43 +112,55 @@
 						     binding became live. -->
 						<NcSelect
 							v-model="emailSettings.transportType"
-							:reduce="option => option.value"
+							:reduce="(option) => option.value"
 							:options="[
 								{ label: 'SMTP', value: 'smtp' },
 								{ label: 'Mailjet', value: 'mailjet' },
 								{ label: 'SendGrid', value: 'sendgrid' },
-								{ label: 'Local Mail', value: 'mail' }
+								{ label: 'Local Mail', value: 'mail' },
 							]"
 							input-label="Transport Type"
 							:disabled="!emailSettings.enabled" />
 					</div>
 
 					<!-- SMTP Configuration -->
-					<div v-if="emailSettings.transportType === 'smtp'" class="setting-group smtp-config">
+					<div
+						v-if="emailSettings.transportType === 'smtp'"
+						class="setting-group smtp-config">
 						<h4>SMTP Configuration</h4>
 						<div class="smtp-fields">
 							<NcTextField
 								label="SMTP Host"
 								placeholder="smtp.gmail.com"
 								:disabled="!emailSettings.enabled"
-								:model-value="(emailSettings.smtpHost || '').toString()"
-								@update:model-value="emailSettings.smtpHost = $event" />
+								:model-value="
+									(emailSettings.smtpHost || '').toString()
+								"
+								@update:model-value="
+									emailSettings.smtpHost = $event
+								" />
 							<NcTextField
 								label="SMTP Port"
 								placeholder="587"
 								type="text"
 								:disabled="!emailSettings.enabled"
-								:model-value="(emailSettings.smtpPort == null ? '' : String(emailSettings.smtpPort))"
-								@update:model-value="emailSettings.smtpPort = $event" />
+								:model-value="
+									emailSettings.smtpPort == null
+										? ''
+										: String(emailSettings.smtpPort)
+								"
+								@update:model-value="
+									emailSettings.smtpPort = $event
+								" />
 							<!-- See the transport select above: `:reduce` keeps the stored
 							     value a plain string rather than the {label,value} option. -->
 							<NcSelect
 								v-model="emailSettings.smtpEncryption"
-								:reduce="option => option.value"
+								:reduce="(option) => option.value"
 								:options="[
 									{ label: 'None', value: 'none' },
 									{ label: 'TLS', value: 'tls' },
-									{ label: 'SSL', value: 'ssl' }
+									{ label: 'SSL', value: 'ssl' },
 								]"
 								input-label="Encryption"
 								:disabled="!emailSettings.enabled" />
@@ -140,30 +168,48 @@
 								label="SMTP Username"
 								placeholder="your-email@gmail.com"
 								:disabled="!emailSettings.enabled"
-								:model-value="(emailSettings.smtpUsername || '').toString()"
-								@update:model-value="emailSettings.smtpUsername = $event" />
+								:model-value="
+									(emailSettings.smtpUsername || '').toString()
+								"
+								@update:model-value="
+									emailSettings.smtpUsername = $event
+								" />
 							<NcPasswordField
 								label="SMTP Password"
 								placeholder="Your app password"
 								:disabled="!emailSettings.enabled"
-								:model-value="(emailSettings.smtpPassword || '').toString()"
-								@update:model-value="emailSettings.smtpPassword = $event" />
+								:model-value="
+									(emailSettings.smtpPassword || '').toString()
+								"
+								@update:model-value="
+									emailSettings.smtpPassword = $event
+								" />
 						</div>
 					</div>
 
 					<!-- Mailjet Configuration -->
-					<div v-else-if="emailSettings.transportType === 'mailjet'" class="setting-group">
+					<div
+						v-else-if="emailSettings.transportType === 'mailjet'"
+						class="setting-group">
 						<h4>Mailjet Configuration</h4>
 						<NcTextField
 							label="Mailjet API Key"
 							:disabled="!emailSettings.enabled"
-							:model-value="(emailSettings.mailjetApiKey || '').toString()"
-							@update:model-value="emailSettings.mailjetApiKey = $event" />
+							:model-value="
+								(emailSettings.mailjetApiKey || '').toString()
+							"
+							@update:model-value="
+								emailSettings.mailjetApiKey = $event
+							" />
 						<NcPasswordField
 							label="Mailjet API Secret"
 							:disabled="!emailSettings.enabled"
-							:model-value="(emailSettings.mailjetApiSecret || '').toString()"
-							@update:model-value="emailSettings.mailjetApiSecret = $event" />
+							:model-value="
+								(emailSettings.mailjetApiSecret || '').toString()
+							"
+							@update:model-value="
+								emailSettings.mailjetApiSecret = $event
+							" />
 					</div>
 				</div>
 			</div>
@@ -226,7 +272,10 @@
 			<div v-show="activeTab === 'testing'" class="tab-panel">
 				<div class="email-testing-section">
 					<h3>Email Testing</h3>
-					<p>Test your email configuration to ensure emails are delivered correctly</p>
+					<p>
+						Test your email configuration to ensure emails are delivered
+						correctly
+					</p>
 
 					<!-- Connection Test -->
 					<div class="test-group">
@@ -240,11 +289,18 @@
 								<NcLoadingIcon v-if="testingConnection" :size="20" />
 								<Email v-else :size="20" />
 							</template>
-							{{ testingConnection ? 'Testing...' : 'Test Connection' }}
+							{{
+								testingConnection ? 'Testing...' : 'Test Connection'
+							}}
 						</NcButton>
 
 						<div v-if="connectionTestResult" class="test-result">
-							<NcNoteCard :type="connectionTestResult.success ? 'success' : 'error'">
+							<NcNoteCard
+								:type="
+									connectionTestResult.success
+										? 'success'
+										: 'error'
+								">
 								{{ connectionTestResult.message }}
 							</NcNoteCard>
 						</div>
@@ -260,7 +316,11 @@
 							placeholder="test@example.com" />
 						<NcButton
 							variant="primary"
-							:disabled="!emailSettings.enabled || testingEmail || !testEmailAddress"
+							:disabled="
+								!emailSettings.enabled
+								|| testingEmail
+								|| !testEmailAddress
+							"
 							@click="sendTestEmail">
 							<template #icon>
 								<NcLoadingIcon v-if="testingEmail" :size="20" />
@@ -270,7 +330,10 @@
 						</NcButton>
 
 						<div v-if="testEmailResult" class="test-result">
-							<NcNoteCard :type="testEmailResult.success ? 'success' : 'error'">
+							<NcNoteCard
+								:type="
+									testEmailResult.success ? 'success' : 'error'
+								">
 								{{ testEmailResult.message }}
 							</NcNoteCard>
 						</div>
@@ -281,14 +344,21 @@
 			<div v-show="activeTab === 'templates'" class="tab-panel">
 				<div class="email-templates-section">
 					<h3>Email Templates</h3>
-					<p>Customize email templates for different types of notifications</p>
+					<p>
+						Customize email templates for different types of
+						notifications
+					</p>
 
 					<div class="template-tabs">
 						<div class="tab-buttons">
 							<NcButton
 								v-for="template in availableTemplates"
 								:key="template.key"
-								:variant="activeTemplate === template.key ? 'primary' : 'secondary'"
+								:variant="
+									activeTemplate === template.key
+										? 'primary'
+										: 'secondary'
+								"
 								@click="activeTemplate = template.key">
 								{{ template.name }}
 							</NcButton>
@@ -307,7 +377,9 @@
 										     while it was a span (WCAG 2.1.1). type="button" keeps it
 										     from submitting the settings form. -->
 										<button
-											v-for="(description, variable) in getActiveTemplateVariables()"
+											v-for="(
+												description, variable
+											) in getActiveTemplateVariables()"
 											:key="variable"
 											type="button"
 											class="variable-tag"
@@ -324,12 +396,12 @@
 								:placeholder="'Enter your template content here...'"
 								label="Template Content"
 								rows="15"
-								@update:model-value="updateTemplateContent($event)" />
+								@update:model-value="
+									updateTemplateContent($event)
+								" />
 
 							<div class="template-actions">
-								<NcButton
-									variant="secondary"
-									@click="resetTemplate">
+								<NcButton variant="secondary" @click="resetTemplate">
 									Reset to Default
 								</NcButton>
 								<NcButton
@@ -337,7 +409,9 @@
 									:disabled="loading || savingTemplate"
 									@click="saveTemplate">
 									<template #icon>
-										<NcLoadingIcon v-if="savingTemplate" :size="20" />
+										<NcLoadingIcon
+											v-if="savingTemplate"
+											:size="20" />
 										<Save v-else :size="20" />
 									</template>
 									Save Template
@@ -345,8 +419,16 @@
 							</div>
 
 							<div v-if="templateSaveResult" class="save-results">
-								<NcNoteCard :type="templateSaveResult.success ? 'success' : 'error'">
-									{{ templateSaveResult.message || 'Template saved successfully!' }}
+								<NcNoteCard
+									:type="
+										templateSaveResult.success
+											? 'success'
+											: 'error'
+									">
+									{{
+										templateSaveResult.message
+										|| 'Template saved successfully!'
+									}}
 								</NcNoteCard>
 							</div>
 						</div>
@@ -359,24 +441,52 @@
 		<template #info-content>
 			<div class="email-config-info">
 				<h3>About Email Configuration</h3>
-				<p>Configure email notifications and templates for various system events including user registration, organization activation, and password resets.</p>
+				<p>
+					Configure email notifications and templates for various system
+					events including user registration, organization activation, and
+					password resets.
+				</p>
 
 				<h4>Email Settings</h4>
 				<p>Configure the basic email transport and sender information:</p>
 				<ul>
-					<li><strong>Transport Type</strong> - Choose between SMTP, Mailjet, or other email services</li>
-					<li><strong>Sender Information</strong> - Set the 'From' name and email address</li>
-					<li><strong>SMTP Configuration</strong> - Host, port, encryption, and authentication details</li>
-					<li><strong>Test Override</strong> - Redirect all emails to a test address during development</li>
+					<li>
+						<strong>Transport Type</strong> - Choose between SMTP,
+						Mailjet, or other email services
+					</li>
+					<li>
+						<strong>Sender Information</strong> - Set the 'From' name and
+						email address
+					</li>
+					<li>
+						<strong>SMTP Configuration</strong> - Host, port, encryption,
+						and authentication details
+					</li>
+					<li>
+						<strong>Test Override</strong> - Redirect all emails to a
+						test address during development
+					</li>
 				</ul>
 
 				<h4>Email Types</h4>
 				<p>Control which types of emails are sent automatically:</p>
 				<ul>
-					<li><strong>Organization Registration</strong> - Sent when a new organization is registered</li>
-					<li><strong>Organization Activation</strong> - Sent when an organization is activated</li>
-					<li><strong>User Creation</strong> - Sent when a new user account is created</li>
-					<li><strong>Password Reset</strong> - Sent when users request password resets</li>
+					<li>
+						<strong>Organization Registration</strong> - Sent when a new
+						organization is registered
+					</li>
+					<li>
+						<strong>Organization Activation</strong> - Sent when an
+						organization is activated
+					</li>
+					<li>
+						<strong>User Creation</strong> - Sent when a new user account
+						is created
+					</li>
+					<li>
+						<strong>Password Reset</strong> - Sent when users request
+						password resets
+					</li>
 				</ul>
 
 				<h4>Email Templates</h4>
@@ -387,19 +497,43 @@
 					     compiles them to `organization.name` / `user.email` lookups on
 					     this component, neither of which exists, and rendering the panel
 					     throws "Cannot read properties of undefined (reading 'name')". -->
-					<li v-pre><strong>Template Variables</strong> - Use placeholders like {{ organization.name }} and {{ user.email }}</li>
-					<li><strong>HTML Support</strong> - Include formatting, links, and basic styling</li>
-					<li><strong>Personalization</strong> - Templates are automatically populated with relevant data</li>
-					<li><strong>Multi-language</strong> - Support for different languages and locales</li>
+					<li v-pre>
+						<strong>Template Variables</strong> - Use placeholders like
+						{{ organization.name }} and {{ user.email }}
+					</li>
+					<li>
+						<strong>HTML Support</strong> - Include formatting, links,
+						and basic styling
+					</li>
+					<li>
+						<strong>Personalization</strong> - Templates are
+						automatically populated with relevant data
+					</li>
+					<li>
+						<strong>Multi-language</strong> - Support for different
+						languages and locales
+					</li>
 				</ul>
 
 				<h4>Testing</h4>
 				<p>Validate your email configuration:</p>
 				<ul>
-					<li><strong>Connection Test</strong> - Verify SMTP settings and connectivity</li>
-					<li><strong>Template Preview</strong> - See how emails will look with sample data</li>
-					<li><strong>Test Emails</strong> - Send actual test emails to verify delivery</li>
-					<li><strong>Override Testing</strong> - Use test receiver override during development</li>
+					<li>
+						<strong>Connection Test</strong> - Verify SMTP settings and
+						connectivity
+					</li>
+					<li>
+						<strong>Template Preview</strong> - See how emails will look
+						with sample data
+					</li>
+					<li>
+						<strong>Test Emails</strong> - Send actual test emails to
+						verify delivery
+					</li>
+					<li>
+						<strong>Override Testing</strong> - Use test receiver
+						override during development
+					</li>
 				</ul>
 
 				<h4>Gmail Configuration</h4>
@@ -436,7 +570,16 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
-import { NcButton, NcTextField, NcPasswordField, NcSelect, NcCheckboxRadioSwitch, NcTextArea, NcNoteCard, NcLoadingIcon } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcTextField,
+	NcPasswordField,
+	NcSelect,
+	NcCheckboxRadioSwitch,
+	NcTextArea,
+	NcNoteCard,
+	NcLoadingIcon,
+} from '@nextcloud/vue'
 
 // Icons
 import Save from 'vue-material-design-icons/ContentSave.vue'
@@ -518,7 +661,7 @@ export default {
 						'user.name': 'Name of the new user',
 						'user.email': 'Email of the new user',
 						'user.username': 'Username for the new account',
-						'organization.name': 'Name of the user\'s organization',
+						'organization.name': "Name of the user's organization",
 						login_url: 'URL to log into the system',
 						password_reset_url: 'URL to set initial password',
 					},
@@ -543,16 +686,22 @@ export default {
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		loading() { return this.store.loading },
+		loading() {
+			return this.store.loading
+		},
 		emailSettings: {
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			get() { return this.store.emailSettings },
+			get() {
+				return this.store.emailSettings
+			},
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			set(value) { this.store.emailSettings = value },
+			set(value) {
+				this.store.emailSettings = value
+			},
 		},
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
@@ -570,7 +719,7 @@ export default {
 	methods: {
 		/**
 		 * Save email settings using the settings store
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveEmailSettings() {
 			this.saving = true
@@ -585,7 +734,7 @@ export default {
 
 		/**
 		 * Test email connection using the settings store
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async testEmailConnection() {
 			this.testingConnection = true
@@ -607,7 +756,7 @@ export default {
 
 		/**
 		 * Send test email using the settings store
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async sendTestEmail() {
 			this.testingEmail = true
@@ -630,14 +779,16 @@ export default {
 		/**
 		 * Load email templates from settings store
 		 * Templates are loaded as part of the consolidated configuration
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadTemplates() {
 			try {
 				// Templates should be loaded from the settings store's consolidated config
 				// For now, we'll use empty templates until the backend provides this data
 				this.templates = {}
-				console.info('Email templates functionality is not yet implemented in the backend')
+				console.info(
+					'Email templates functionality is not yet implemented in the backend',
+				)
 			} catch (error) {
 				console.error('Failed to load templates:', error)
 			}
@@ -645,28 +796,34 @@ export default {
 
 		/**
 		 * Get active template name
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getActiveTemplateName() {
-			const template = this.availableTemplates.find(t => t.key === this.activeTemplate)
+			const template = this.availableTemplates.find(
+				(t) => t.key === this.activeTemplate,
+			)
 			return template ? template.name : ''
 		},
 
 		/**
 		 * Get active template description
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getActiveTemplateDescription() {
-			const template = this.availableTemplates.find(t => t.key === this.activeTemplate)
+			const template = this.availableTemplates.find(
+				(t) => t.key === this.activeTemplate,
+			)
 			return template ? template.description : ''
 		},
 
 		/**
 		 * Get active template variables
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getActiveTemplateVariables() {
-			const template = this.availableTemplates.find(t => t.key === this.activeTemplate)
+			const template = this.availableTemplates.find(
+				(t) => t.key === this.activeTemplate,
+			)
 			return template ? template.variables : {}
 		},
 
@@ -682,7 +839,7 @@ export default {
 		 *
 		 * @param {string} content Description: New template content to save for the currently active template
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateTemplateContent(content) {
 			this.templates[this.activeTemplate] = content
@@ -693,7 +850,7 @@ export default {
 		 *
 		 * @param {string} variable Description: Variable key (e.g., 'user.email') to format as a template placeholder
 		 * @return {string}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatTemplateVariable(variable) {
 			return `{{ ${variable} }}`
@@ -704,7 +861,7 @@ export default {
 		 *
 		 * @param {string} variable Description: Variable key to insert (e.g., 'organization.name')
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		insertVariable(variable) {
 			const formattedVariable = this.formatTemplateVariable(variable)
@@ -715,13 +872,17 @@ export default {
 		/**
 		 * Reset template to default
 		 * TODO: Implement template reset functionality when backend supports it
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async resetTemplate() {
 			try {
 				// Template reset functionality is not yet implemented in the backend
-				console.info('Template reset functionality is not yet implemented in the backend')
-				showSuccess('Template reset functionality will be available in a future update')
+				console.info(
+					'Template reset functionality is not yet implemented in the backend',
+				)
+				showSuccess(
+					'Template reset functionality will be available in a future update',
+				)
 			} catch (error) {
 				console.error('Failed to reset template:', error)
 				showError('Failed to reset template: ' + error.message)
@@ -731,7 +892,7 @@ export default {
 		/**
 		 * Save template
 		 * TODO: Implement template save functionality when backend supports it
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveTemplate() {
 			this.savingTemplate = true
@@ -739,9 +900,17 @@ export default {
 
 			try {
 				// Template save functionality is not yet implemented in the backend
-				console.info('Template save functionality is not yet implemented in the backend')
-				this.templateSaveResult = { success: true, message: 'Template saved locally (backend implementation pending)' }
-				showSuccess('Template save functionality will be available in a future update')
+				console.info(
+					'Template save functionality is not yet implemented in the backend',
+				)
+				this.templateSaveResult = {
+					success: true,
+					message:
+						'Template saved locally (backend implementation pending)',
+				}
+				showSuccess(
+					'Template save functionality will be available in a future update',
+				)
 			} catch (error) {
 				console.error('Failed to save template:', error)
 				this.templateSaveResult = {

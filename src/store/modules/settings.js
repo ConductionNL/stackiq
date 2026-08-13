@@ -176,7 +176,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		registerOptions: (state) => {
 			if (!state.settings.availableRegisters) return []
-			return state.settings.availableRegisters.map(register => ({
+			return state.settings.availableRegisters.map((register) => ({
 				label: register.title || register.name || `Register ${register.id}`,
 				value: register.id.toString(),
 			}))
@@ -188,8 +188,12 @@ export const useSettingsStore = defineStore('settings', {
 		 * @return {Array} Array of schema options
 		 */
 		voorzieningenSchemaOptions: (state) => {
-			if (!state.voorzieningenSchemas || !Array.isArray(state.voorzieningenSchemas)) return []
-			return state.voorzieningenSchemas.map(schema => ({
+			if (
+				!state.voorzieningenSchemas
+				|| !Array.isArray(state.voorzieningenSchemas)
+			)
+				return []
+			return state.voorzieningenSchemas.map((schema) => ({
 				label: schema.title || schema.name || `Schema ${schema.id}`,
 				value: schema.id.toString(),
 			}))
@@ -202,7 +206,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		amefSchemaOptions: (state) => {
 			if (!state.amefSchemas || !Array.isArray(state.amefSchemas)) return []
-			return state.amefSchemas.map(schema => ({
+			return state.amefSchemas.map((schema) => ({
 				label: schema.title || schema.name || `Schema ${schema.id}`,
 				value: schema.id.toString(),
 			}))
@@ -253,7 +257,8 @@ export const useSettingsStore = defineStore('settings', {
 			const stats = []
 			// Voorzieningen statistics
 			if (state.statistics.voorzieningen.configured) {
-				const voorzieningenCounts = state.statistics.voorzieningen.object_counts
+				const voorzieningenCounts =
+					state.statistics.voorzieningen.object_counts
 				const voorzieningenSchemaMap = {
 					totalOrganisatieObjects: 'Organisatie',
 					totalContactpersoonObjects: 'Contactpersoon',
@@ -274,14 +279,16 @@ export const useSettingsStore = defineStore('settings', {
 					totalModuleVersieObjects: 'Module Versie',
 					totalSectorObjects: 'Sector',
 				}
-				Object.entries(voorzieningenSchemaMap).forEach(([countKey, displayName]) => {
-					stats.push({
-						register: 'Voorzieningen',
-						type: displayName,
-						count: voorzieningenCounts[countKey] || 0,
-						configured: true,
-					})
-				})
+				Object.entries(voorzieningenSchemaMap).forEach(
+					([countKey, displayName]) => {
+						stats.push({
+							register: 'Voorzieningen',
+							type: displayName,
+							count: voorzieningenCounts[countKey] || 0,
+							configured: true,
+						})
+					},
+				)
 			}
 			// AMEF statistics
 			if (state.statistics.amef.configured) {
@@ -361,10 +368,14 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingStatistics = true
 
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/objects/counts',
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const data = await response.json()
@@ -372,7 +383,8 @@ export const useSettingsStore = defineStore('settings', {
 				if (data.success && data.counts) {
 					// Update statistics with object counts
 					if (data.counts.voorzieningen) {
-						this.statistics.voorzieningen.object_counts = data.counts.voorzieningen
+						this.statistics.voorzieningen.object_counts =
+							data.counts.voorzieningen
 						this.statistics.voorzieningen.configured = true
 					}
 					if (data.counts.amef) {
@@ -384,7 +396,6 @@ export const useSettingsStore = defineStore('settings', {
 					console.error('Statistics API error:', data.error)
 					this.setError(data.error || 'Failed to load statistics')
 				}
-
 			} catch (error) {
 				console.error('Failed to load statistics:', error)
 				this.setError('Failed to load statistics: ' + error.message)
@@ -409,9 +420,13 @@ export const useSettingsStore = defineStore('settings', {
 
 			try {
 				// Load basic settings first (minimal data)
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success !== false) {
@@ -438,13 +453,18 @@ export const useSettingsStore = defineStore('settings', {
 						this.loadVoorzieningenConfig(),
 						this.loadGeneralConfig(),
 						this.loadSyncConfig(),
-					]).then(() => {
-						// After focused loads, map register selections and schema choices from their configs
-						this.populateRegisterSelectionsFromFocused()
-						this.populateSchemaSelectionsFromFocused()
-					}).catch(error => {
-						console.error('Some focused endpoints failed to load:', error)
-					})
+					])
+						.then(() => {
+							// After focused loads, map register selections and schema choices from their configs
+							this.populateRegisterSelectionsFromFocused()
+							this.populateSchemaSelectionsFromFocused()
+						})
+						.catch((error) => {
+							console.error(
+								'Some focused endpoints failed to load:',
+								error,
+							)
+						})
 				} else {
 					this.setError(data.error || 'Failed to load settings')
 				}
@@ -468,13 +488,18 @@ export const useSettingsStore = defineStore('settings', {
 			try {
 				// Load available registers first (needed for register dropdowns)
 				this.loadingRegisters = true
-				const settingsResponse = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				const settingsResponse = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings',
+				)
 				if (!settingsResponse.ok) {
-					throw new Error(`HTTP ${settingsResponse.status}: ${settingsResponse.statusText}`)
+					throw new Error(
+						`HTTP ${settingsResponse.status}: ${settingsResponse.statusText}`,
+					)
 				}
 				const settingsData = await settingsResponse.json()
 				if (settingsData.success !== false) {
-					this.settings.availableRegisters = settingsData.availableRegisters || []
+					this.settings.availableRegisters =
+						settingsData.availableRegisters || []
 					this.versionInfo = settingsData.versionInfo || {}
 					this.initializeConfiguration()
 				}
@@ -491,10 +516,11 @@ export const useSettingsStore = defineStore('settings', {
 				// After both configs loaded, populate selections
 				this.populateRegisterSelectionsFromFocused()
 				this.populateSchemaSelectionsFromFocused()
-
 			} catch (error) {
 				console.error('Failed to load OpenRegister essentials:', error)
-				this.setError('Failed to load OpenRegister configuration: ' + error.message)
+				this.setError(
+					'Failed to load OpenRegister configuration: ' + error.message,
+				)
 			} finally {
 				this.loadingRegisters = false
 			}
@@ -507,9 +533,13 @@ export const useSettingsStore = defineStore('settings', {
 		async loadVoorzieningenConfigFocused() {
 			this.loadingVoorzieningenSchemas = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.config) {
@@ -529,9 +559,13 @@ export const useSettingsStore = defineStore('settings', {
 		async loadAmefConfigFocused() {
 			this.loadingAmefSchemas = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/amef/config')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/amef/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.config) {
@@ -585,14 +619,19 @@ export const useSettingsStore = defineStore('settings', {
 		async loadGeneralConfig() {
 			this.loadingGeneralSettings = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/general/config', {
-					headers: {
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings/general/config',
+					{
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+						},
 					},
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const data = await response.json()
@@ -615,19 +654,25 @@ export const useSettingsStore = defineStore('settings', {
 		async loadSyncConfig() {
 			this.loadingSyncSettings = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync/config', {
-					headers: {
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings/sync/config',
+					{
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+						},
 					},
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const data = await response.json()
 				if (data.success && data.config) {
-					this.settings.syncTimeWindow = parseInt(data.config.syncTimeWindow) || 10
+					this.settings.syncTimeWindow =
+						parseInt(data.config.syncTimeWindow) || 10
 				}
 			} catch (error) {
 				console.error('Failed to load sync config:', error)
@@ -643,9 +688,13 @@ export const useSettingsStore = defineStore('settings', {
 		async loadVersionInfo() {
 			this.loadingVersionInfo = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/version')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings/version',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success !== false) {
@@ -665,9 +714,13 @@ export const useSettingsStore = defineStore('settings', {
 		async loadArchiMateStatus() {
 			this.loadingArchiMateStatus = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/archimate/status',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.status) {
@@ -692,14 +745,19 @@ export const useSettingsStore = defineStore('settings', {
 		async loadObjectCounts() {
 			this.loadingObjectCounts = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/objects/counts',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.counts) {
 					if (data.counts.voorzieningen) {
-						this.statistics.voorzieningen.object_counts = data.counts.voorzieningen
+						this.statistics.voorzieningen.object_counts =
+							data.counts.voorzieningen
 					}
 					if (data.counts.amef) {
 						this.statistics.amef.object_counts = data.counts.amef
@@ -720,9 +778,13 @@ export const useSettingsStore = defineStore('settings', {
 		async loadEmailConfig() {
 			this.loadingEmailConfig = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/email/config')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/email/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.emailSettings) {
@@ -743,9 +805,13 @@ export const useSettingsStore = defineStore('settings', {
 		async loadUserGroupsConfig() {
 			this.loadingUserGroups = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/user-groups/config')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/user-groups/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.config) {
@@ -757,7 +823,9 @@ export const useSettingsStore = defineStore('settings', {
 					this.allGroups = data.config.allGroups || []
 					// Populate top-level arrays used by components
 					this.genericUserGroups = [...(data.config.generic || [])]
-					this.organizationAdminGroups = [...(data.config.organizationAdmin || [])]
+					this.organizationAdminGroups = [
+						...(data.config.organizationAdmin || []),
+					]
 					this.superUserGroups = [...(data.config.superUser || [])]
 				}
 			} catch (error) {
@@ -772,7 +840,9 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadUserGroupsOnly() {
-			const response = await fetch('/index.php/apps/softwarecatalog/api/user-groups/config')
+			const response = await fetch(
+				'/index.php/apps/softwarecatalog/api/user-groups/config',
+			)
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 			}
@@ -786,7 +856,9 @@ export const useSettingsStore = defineStore('settings', {
 				this.allGroups = data.config.allGroups || []
 				// Populate top-level arrays used by components
 				this.genericUserGroups = [...(data.config.generic || [])]
-				this.organizationAdminGroups = [...(data.config.organizationAdmin || [])]
+				this.organizationAdminGroups = [
+					...(data.config.organizationAdmin || []),
+				]
 				this.superUserGroups = [...(data.config.superUser || [])]
 			}
 		},
@@ -798,9 +870,13 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async loadAmefConfig() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/amef/config')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/amef/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.config) {
@@ -819,9 +895,13 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async loadVoorzieningenConfig() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.config) {
@@ -871,9 +951,14 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		populateRegisterSelectionsFromFocused() {
 			// Voorzieningen register
-			if (this.voorzieningenRawConfig && this.voorzieningenRawConfig.register) {
+			if (
+				this.voorzieningenRawConfig
+				&& this.voorzieningenRawConfig.register
+			) {
 				const regId = this.voorzieningenRawConfig.register.toString()
-				const reg = this.settings.availableRegisters.find(r => r.id.toString() === regId)
+				const reg = this.settings.availableRegisters.find(
+					(r) => r.id.toString() === regId,
+				)
 				if (reg) {
 					this.voorzieningenRegister = {
 						label: reg.title || reg.name || `Register ${reg.id}`,
@@ -883,9 +968,16 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			}
 			// AMEF register (singular key only; fallback kept for robustness)
-			if (this.amefRawConfig && (this.amefRawConfig.register || this.amefRawConfig.register_id)) {
-				const regId = (this.amefRawConfig.register || this.amefRawConfig.register_id).toString()
-				const reg = this.settings.availableRegisters.find(r => r.id.toString() === regId)
+			if (
+				this.amefRawConfig
+				&& (this.amefRawConfig.register || this.amefRawConfig.register_id)
+			) {
+				const regId = (
+					this.amefRawConfig.register || this.amefRawConfig.register_id
+				).toString()
+				const reg = this.settings.availableRegisters.find(
+					(r) => r.id.toString() === regId,
+				)
 				if (reg) {
 					this.amefRegister = {
 						label: reg.title || reg.name || `Register ${reg.id}`,
@@ -904,7 +996,10 @@ export const useSettingsStore = defineStore('settings', {
 			const findOption = (schemaId, options) => {
 				if (!schemaId || !options || !Array.isArray(options)) return null
 				const id = schemaId.toString()
-				return options.find(o => o && o.value && o.value.toString() === id) || null
+				return (
+					options.find((o) => o && o.value && o.value.toString() === id)
+					|| null
+				)
 			}
 
 			// Voorzieningen schemas - updated mapping to match current schema structure
@@ -926,7 +1021,10 @@ export const useSettingsStore = defineStore('settings', {
 			]
 			vMap.forEach(([cfgKey, uiKey]) => {
 				if (vc[cfgKey]) {
-					const opt = findOption(vc[cfgKey], this.voorzieningenSchemaOptions)
+					const opt = findOption(
+						vc[cfgKey],
+						this.voorzieningenSchemaOptions,
+					)
 					if (opt) {
 						this.configuration[uiKey].schema = opt
 					}
@@ -936,29 +1034,54 @@ export const useSettingsStore = defineStore('settings', {
 			// AMEF schemas - updated to match new key structure
 			const ac = this.amefRawConfig || {}
 			if (ac.organization_schema || ac.organizations_schema) {
-				const opt = findOption((ac.organization_schema || ac.organizations_schema), this.amefSchemaOptions)
+				const opt = findOption(
+					ac.organization_schema || ac.organizations_schema,
+					this.amefSchemaOptions,
+				)
 				if (opt) this.configuration.amef_organization_schema.schema = opt
 			}
 			if (ac.element_schema || ac.elements_schema) {
-				const opt = findOption((ac.element_schema || ac.elements_schema), this.amefSchemaOptions)
+				const opt = findOption(
+					ac.element_schema || ac.elements_schema,
+					this.amefSchemaOptions,
+				)
 				if (opt) this.configuration.amef_element_schema.schema = opt
 			}
 			if (ac.relation_schema || ac.relationships_schema) {
-				const opt = findOption((ac.relation_schema || ac.relationships_schema), this.amefSchemaOptions)
+				const opt = findOption(
+					ac.relation_schema || ac.relationships_schema,
+					this.amefSchemaOptions,
+				)
 				if (opt) this.configuration.amef_relation_schema.schema = opt
 			}
 			if (ac.view_schema || ac.views_schema) {
-				const opt = findOption((ac.view_schema || ac.views_schema), this.amefSchemaOptions)
+				const opt = findOption(
+					ac.view_schema || ac.views_schema,
+					this.amefSchemaOptions,
+				)
 				if (opt) this.configuration.amef_view_schema.schema = opt
 			}
 			if (ac.model_schema || ac.models_schema) {
-				const opt = findOption((ac.model_schema || ac.models_schema), this.amefSchemaOptions)
+				const opt = findOption(
+					ac.model_schema || ac.models_schema,
+					this.amefSchemaOptions,
+				)
 				if (opt) this.configuration.amef_model_schema.schema = opt
 			}
 
-			if (ac.property_definition_schema || ac['property-definition_schema'] || ac.property_definitions_schema) {
-				const opt = findOption((ac.property_definition_schema || ac['property-definition_schema'] || ac.property_definitions_schema), this.amefSchemaOptions)
-				if (opt) this.configuration.amef_property_definition_schema.schema = opt
+			if (
+				ac.property_definition_schema
+				|| ac['property-definition_schema']
+				|| ac.property_definitions_schema
+			) {
+				const opt = findOption(
+					ac.property_definition_schema
+						|| ac['property-definition_schema']
+						|| ac.property_definitions_schema,
+					this.amefSchemaOptions,
+				)
+				if (opt)
+					this.configuration.amef_property_definition_schema.schema = opt
 			}
 		},
 
@@ -995,33 +1118,37 @@ export const useSettingsStore = defineStore('settings', {
 					method: 'POST',
 					headers: { 'X-Requested-With': 'XMLHttpRequest' },
 					body: formData,
-				}).then(response => {
-					if (response.status === 500) {
-						this.stopStatusPolling()
-						this.isImportRunning = false
-						this.archimateStatus.import = {
-							status: 'failed',
-							current_step: 'Import failed',
-							progress: 0,
-							statistics: null,
-							error: 'Server error (500)',
-						}
-						showError('Import failed: Server error. Please try with a smaller file or check server logs.')
-					}
-				}).catch(error => {
-					if (error.name !== 'AbortError') {
-						this.stopStatusPolling()
-						this.isImportRunning = false
-						this.archimateStatus.import = {
-							status: 'failed',
-							current_step: 'Import failed',
-							progress: 0,
-							statistics: null,
-							error: error.message,
-						}
-						showError('Import failed: ' + error.message)
-					}
 				})
+					.then((response) => {
+						if (response.status === 500) {
+							this.stopStatusPolling()
+							this.isImportRunning = false
+							this.archimateStatus.import = {
+								status: 'failed',
+								current_step: 'Import failed',
+								progress: 0,
+								statistics: null,
+								error: 'Server error (500)',
+							}
+							showError(
+								'Import failed: Server error. Please try with a smaller file or check server logs.',
+							)
+						}
+					})
+					.catch((error) => {
+						if (error.name !== 'AbortError') {
+							this.stopStatusPolling()
+							this.isImportRunning = false
+							this.archimateStatus.import = {
+								status: 'failed',
+								current_step: 'Import failed',
+								progress: 0,
+								statistics: null,
+								error: error.message,
+							}
+							showError('Import failed: ' + error.message)
+						}
+					})
 			} catch (error) {
 				this.stopStatusPolling()
 				this.isImportRunning = false
@@ -1074,9 +1201,13 @@ export const useSettingsStore = defineStore('settings', {
 			}
 			this.isStatusPolling = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/archimate/status',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.status) {
@@ -1101,12 +1232,15 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async clearImportStatus() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status/import/clear', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/archimate/status/import/clear',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
 					},
-				})
+				)
 
 				if (response.ok) {
 					// Stop polling
@@ -1127,11 +1261,15 @@ export const useSettingsStore = defineStore('settings', {
 
 					showSuccess('ArchiMate import status cleared successfully')
 				} else {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 			} catch (error) {
 				console.error('Failed to clear import status:', error)
-				showError('Failed to clear ArchiMate import status: ' + error.message)
+				showError(
+					'Failed to clear ArchiMate import status: ' + error.message,
+				)
 			}
 		},
 
@@ -1142,12 +1280,15 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async clearExportStatus() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status/export/clear', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/archimate/status/export/clear',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
 					},
-				})
+				)
 
 				if (response.ok) {
 					// Stop polling
@@ -1168,11 +1309,15 @@ export const useSettingsStore = defineStore('settings', {
 
 					showSuccess('ArchiMate export status cleared successfully')
 				} else {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 			} catch (error) {
 				console.error('Failed to clear export status:', error)
-				showError('Failed to clear ArchiMate export status: ' + error.message)
+				showError(
+					'Failed to clear ArchiMate export status: ' + error.message,
+				)
 			}
 		},
 
@@ -1187,7 +1332,7 @@ export const useSettingsStore = defineStore('settings', {
 		handleVoorzieningenRegisterChange(register) {
 			if (register) {
 				const selectedRegister = this.settings.availableRegisters.find(
-					r => r.id.toString() === register.value,
+					(r) => r.id.toString() === register.value,
 				)
 				this.voorzieningenSchemas = selectedRegister?.schemas || []
 			} else {
@@ -1206,7 +1351,7 @@ export const useSettingsStore = defineStore('settings', {
 		handleAmefRegisterChange(register) {
 			if (register) {
 				const selectedRegister = this.settings.availableRegisters.find(
-					r => r.id.toString() === register.value,
+					(r) => r.id.toString() === register.value,
 				)
 				this.amefSchemas = selectedRegister?.schemas || []
 			} else {
@@ -1258,10 +1403,11 @@ export const useSettingsStore = defineStore('settings', {
 				if (this.amefRegister?.value) {
 					amefConfig.register = this.amefRegister.value
 				}
-				amefKeys.forEach(configKey => {
+				amefKeys.forEach((configKey) => {
 					const config = this.configuration[configKey]
 					if (config && config.schema) {
-						amefConfig[amefMap[configKey]] = config.schema.value || config.schema
+						amefConfig[amefMap[configKey]] =
+							config.schema.value || config.schema
 					}
 				})
 
@@ -1314,48 +1460,68 @@ export const useSettingsStore = defineStore('settings', {
 				if (this.voorzieningenRegister?.value) {
 					voorzieningenConfig.register = this.voorzieningenRegister.value
 				}
-				voorzieningenKeys.forEach(configKey => {
+				voorzieningenKeys.forEach((configKey) => {
 					const config = this.configuration[configKey]
 					if (config && config.schema) {
-						voorzieningenConfig[vzMap[configKey]] = config.schema.value || config.schema
+						voorzieningenConfig[vzMap[configKey]] =
+							config.schema.value || config.schema
 					}
 				})
 
 				if (Object.keys(voorzieningenConfig).length > 0) {
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
+						fetch(
+							'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+							{
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json',
+									'X-Requested-With': 'XMLHttpRequest',
+								},
+								body: JSON.stringify(voorzieningenConfig),
 							},
-							body: JSON.stringify(voorzieningenConfig),
-						}),
+						),
 					)
 				}
 
 				// Save user groups configuration
-				if (this.genericUserGroups.length > 0 || this.organizationAdminGroups.length > 0 || this.superUserGroups.length > 0) {
+				if (
+					this.genericUserGroups.length > 0
+					|| this.organizationAdminGroups.length > 0
+					|| this.superUserGroups.length > 0
+				) {
 					const userGroupsConfig = {
-						generic: this.genericUserGroups.filter(group => group && group.trim()),
-						organizationAdmin: this.organizationAdminGroups.filter(group => group && group.trim()),
-						superUser: this.superUserGroups.filter(group => group && group.trim()),
+						generic: this.genericUserGroups.filter(
+							(group) => group && group.trim(),
+						),
+						organizationAdmin: this.organizationAdminGroups.filter(
+							(group) => group && group.trim(),
+						),
+						superUser: this.superUserGroups.filter(
+							(group) => group && group.trim(),
+						),
 					}
 
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/user-groups/config', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
+						fetch(
+							'/index.php/apps/softwarecatalog/api/user-groups/config',
+							{
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json',
+									'X-Requested-With': 'XMLHttpRequest',
+								},
+								body: JSON.stringify(userGroupsConfig),
 							},
-							body: JSON.stringify(userGroupsConfig),
-						}),
+						),
 					)
 				}
 
 				// Save email settings
-				if (this.emailSettings && Object.keys(this.emailSettings).length > 0) {
+				if (
+					this.emailSettings
+					&& Object.keys(this.emailSettings).length > 0
+				) {
 					savePromises.push(
 						fetch('/index.php/apps/softwarecatalog/api/email/config', {
 							method: 'POST',
@@ -1371,32 +1537,38 @@ export const useSettingsStore = defineStore('settings', {
 				// Save general settings (catalog location)
 				if (this.settings.catalogLocation !== undefined) {
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/settings/general/config', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
+						fetch(
+							'/index.php/apps/softwarecatalog/api/settings/general/config',
+							{
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json',
+									'X-Requested-With': 'XMLHttpRequest',
+								},
+								body: JSON.stringify({
+									catalogLocation: this.settings.catalogLocation,
+								}),
 							},
-							body: JSON.stringify({
-								catalogLocation: this.settings.catalogLocation,
-							}),
-						}),
+						),
 					)
 				}
 
 				// Save organization synchronization settings
 				if (this.settings.syncTimeWindow !== undefined) {
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/settings/sync/config', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
+						fetch(
+							'/index.php/apps/softwarecatalog/api/settings/sync/config',
+							{
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json',
+									'X-Requested-With': 'XMLHttpRequest',
+								},
+								body: JSON.stringify({
+									syncTimeWindow: this.settings.syncTimeWindow,
+								}),
 							},
-							body: JSON.stringify({
-								syncTimeWindow: this.settings.syncTimeWindow,
-							}),
-						}),
+						),
 					)
 				}
 
@@ -1406,11 +1578,15 @@ export const useSettingsStore = defineStore('settings', {
 					// Check all responses
 					for (const response of responses) {
 						if (!response.ok) {
-							throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+							throw new Error(
+								`HTTP ${response.status}: ${response.statusText}`,
+							)
 						}
 						const result = await response.json()
 						if (!result.success) {
-							throw new Error(result.message || 'Unknown error occurred')
+							throw new Error(
+								result.message || 'Unknown error occurred',
+							)
 						}
 					}
 
@@ -1435,17 +1611,22 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async consolidatedAutoConfigure() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/auto-configure', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings/auto-configure',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify({ force: true }),
 					},
-					body: JSON.stringify({ force: true }),
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const result = await response.json()
@@ -1455,7 +1636,10 @@ export const useSettingsStore = defineStore('settings', {
 					await this.loadSettings()
 					showSuccess('Auto-configuration completed successfully')
 				} else {
-					showError('Auto-configuration failed: ' + (result.message || 'Unknown error'))
+					showError(
+						'Auto-configuration failed: '
+							+ (result.message || 'Unknown error'),
+					)
 				}
 
 				return result
@@ -1463,7 +1647,8 @@ export const useSettingsStore = defineStore('settings', {
 				console.error('Failed to perform auto-configuration:', error)
 				const errorResult = {
 					success: false,
-					message: 'Failed to perform auto-configuration: ' + error.message,
+					message:
+						'Failed to perform auto-configuration: ' + error.message,
 				}
 				showError(errorResult.message)
 				return errorResult
@@ -1478,16 +1663,21 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async resetAutoConfig() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/reset-auto-config', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings/reset-auto-config',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify({ resetConfiguration: false }),
 					},
-					body: JSON.stringify({ resetConfiguration: false }),
-				})
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const result = await response.json()
 				// Refresh version info after reset
@@ -1506,15 +1696,20 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async forceUpdate() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/force-update', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings/force-update',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
 					},
-				})
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const result = await response.json()
 				// Reload all settings so UI reflects the new configuration fully
@@ -1549,20 +1744,25 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async testEmailConnection() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/email/test', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/email/test',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify({
+							type: 'connection',
+							settings: this.emailSettings,
+						}),
 					},
-					body: JSON.stringify({
-						type: 'connection',
-						settings: this.emailSettings,
-					}),
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const result = await response.json()
@@ -1570,7 +1770,10 @@ export const useSettingsStore = defineStore('settings', {
 				if (result.success) {
 					showSuccess('Email connection test successful')
 				} else {
-					showError('Email connection test failed: ' + (result.message || 'Unknown error'))
+					showError(
+						'Email connection test failed: '
+							+ (result.message || 'Unknown error'),
+					)
 				}
 
 				return result
@@ -1594,21 +1797,27 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async sendTestEmail(testEmail = '') {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/email/test', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/email/test',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify({
+							type: 'send',
+							testEmail:
+								testEmail || this.emailSettings.testReceiverOverride,
+							settings: this.emailSettings,
+						}),
 					},
-					body: JSON.stringify({
-						type: 'send',
-						testEmail: testEmail || this.emailSettings.testReceiverOverride,
-						settings: this.emailSettings,
-					}),
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const result = await response.json()
@@ -1616,7 +1825,10 @@ export const useSettingsStore = defineStore('settings', {
 				if (result.success) {
 					showSuccess('Test email sent successfully')
 				} else {
-					showError('Failed to send test email: ' + (result.message || 'Unknown error'))
+					showError(
+						'Failed to send test email: '
+							+ (result.message || 'Unknown error'),
+					)
 				}
 
 				return result
@@ -1644,7 +1856,8 @@ export const useSettingsStore = defineStore('settings', {
 			try {
 				const requestData = {
 					format,
-					includeRelationships: this.exportOptions.includeRelationships ?? true,
+					includeRelationships:
+						this.exportOptions.includeRelationships ?? true,
 					includeViews: this.exportOptions.includeViews ?? true,
 					organizationSpecific: false,
 					selectedSchemas: [],
@@ -1652,29 +1865,42 @@ export const useSettingsStore = defineStore('settings', {
 				const link = document.createElement('a')
 				link.style.display = 'none'
 				document.body.appendChild(link)
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-					body: JSON.stringify(requestData),
-				})
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/archimate/export',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify(requestData),
+					},
+				)
 				if (response.status === 500) {
 					const errorData = await response.json()
 					throw new Error(errorData.message || 'Server error occurred')
 				}
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const contentType = response.headers.get('content-type')
 				if (contentType && contentType.includes('application/json')) {
 					const errorData = await response.json()
-					throw new Error(errorData.message || errorData.error || 'Export failed')
+					throw new Error(
+						errorData.message || errorData.error || 'Export failed',
+					)
 				}
 				const blob = await response.blob()
 				const url = window.URL.createObjectURL(blob)
-				const contentDisposition = response.headers.get('content-disposition')
+				const contentDisposition =
+					response.headers.get('content-disposition')
 				let fileName = `archimate_export_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.xml`
 				if (contentDisposition) {
-					const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+					const fileNameMatch = contentDisposition.match(
+						/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+					)
 					if (fileNameMatch) {
 						fileName = fileNameMatch[1].replace(/['"]/g, '')
 					}
@@ -1701,16 +1927,21 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async testRoundTrip() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/test-round-trip', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/archimate/test-round-trip',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
 					},
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const result = await response.json()
@@ -1718,7 +1949,10 @@ export const useSettingsStore = defineStore('settings', {
 				if (result.success) {
 					showSuccess('Round-trip test completed successfully')
 				} else {
-					showError('Round-trip test failed: ' + (result.message || 'Unknown error'))
+					showError(
+						'Round-trip test failed: '
+							+ (result.message || 'Unknown error'),
+					)
 				}
 
 				return result

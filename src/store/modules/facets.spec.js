@@ -16,10 +16,14 @@ import { fetchFacets } from '../../services/facets.js'
 // `virtual: true` — see facets.spec.js (services) for why: `@nextcloud/axios`
 // is ESM-only (`exports` map with no `require` condition) and unresolvable
 // by Jest's CJS resolver even for mocking purposes.
-jest.mock('@nextcloud/axios', () => ({
-	get: jest.fn(),
-	post: jest.fn(),
-}), { virtual: true })
+jest.mock(
+	'@nextcloud/axios',
+	() => ({
+		get: jest.fn(),
+		post: jest.fn(),
+	}),
+	{ virtual: true },
+)
 
 jest.mock('@nextcloud/router', () => ({
 	generateUrl: jest.fn((path) => path),
@@ -40,8 +44,12 @@ describe('facets store — filter/search state', () => {
 
 	it('setFilter adds a dimension selection', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', ['Zaakregistratiecomponent'])
-		expect(store.module.activeFilters.referentiecomponent).toEqual(['Zaakregistratiecomponent'])
+		store.setFilter('module', 'referentiecomponent', [
+			'Zaakregistratiecomponent',
+		])
+		expect(store.module.activeFilters.referentiecomponent).toEqual([
+			'Zaakregistratiecomponent',
+		])
 	})
 
 	it('setFilter with an empty array removes the dimension entirely', () => {
@@ -118,7 +126,9 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 
 	it('filtersToQuery emits _gf_-prefixed keys only for active dimensions', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', ['Zaakregistratiecomponent'])
+		store.setFilter('module', 'referentiecomponent', [
+			'Zaakregistratiecomponent',
+		])
 		store.setSearch('module', 'zaak')
 
 		const query = store.filtersToQuery('module')
@@ -167,7 +177,9 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 		const query = store.filtersToQuery('dienst')
 		store.setFiltersFromQuery('dienst', query)
 
-		expect(store.dienst.activeFilters).toEqual({ domein: ['Bedrijfsvoering', 'Dienstverlening'] })
+		expect(store.dienst.activeFilters).toEqual({
+			domein: ['Bedrijfsvoering', 'Dienstverlening'],
+		})
 		expect(store.dienst.search).toBe('stuf')
 	})
 })
@@ -179,7 +191,13 @@ describe('facets store — fetchFacets', () => {
 	})
 
 	it('populates data on success and clears loading', async () => {
-		const payload = { referentiecomponent: [], standaard: [], applicatieservice: [], domein: [], _meta: { totalMatched: 0, matchedObjectIds: [] } }
+		const payload = {
+			referentiecomponent: [],
+			standaard: [],
+			applicatieservice: [],
+			domein: [],
+			_meta: { totalMatched: 0, matchedObjectIds: [] },
+		}
 		fetchFacets.mockResolvedValue(payload)
 
 		const store = useFacetStore()
@@ -191,7 +209,13 @@ describe('facets store — fetchFacets', () => {
 	})
 
 	it('passes the schema state (filters/search) through to the API client', async () => {
-		fetchFacets.mockResolvedValue({ referentiecomponent: [], standaard: [], applicatieservice: [], domein: [], _meta: {} })
+		fetchFacets.mockResolvedValue({
+			referentiecomponent: [],
+			standaard: [],
+			applicatieservice: [],
+			domein: [],
+			_meta: {},
+		})
 
 		const store = useFacetStore()
 		store.setFilter('module', 'referentiecomponent', ['A'])
@@ -223,12 +247,24 @@ describe('facets store — saved views', () => {
 		axios.post.mockReset()
 	})
 
-	it('fetchSavedViews keeps only this feature\'s marker + matching schema', async () => {
+	it("fetchSavedViews keeps only this feature's marker + matching schema", async () => {
 		axios.get.mockResolvedValue({
 			data: {
 				results: [
-					{ id: 1, query: { marker: 'softwarecatalog-gemma-facets', gemmaSchema: 'module' } },
-					{ id: 2, query: { marker: 'softwarecatalog-gemma-facets', gemmaSchema: 'dienst' } },
+					{
+						id: 1,
+						query: {
+							marker: 'softwarecatalog-gemma-facets',
+							gemmaSchema: 'module',
+						},
+					},
+					{
+						id: 2,
+						query: {
+							marker: 'softwarecatalog-gemma-facets',
+							gemmaSchema: 'dienst',
+						},
+					},
 					{ id: 3, query: { marker: 'some-other-feature' } },
 					{ id: 4, query: null },
 				],
@@ -239,7 +275,13 @@ describe('facets store — saved views', () => {
 		await store.fetchSavedViews('module')
 
 		expect(store.module.savedViews).toEqual([
-			{ id: 1, query: { marker: 'softwarecatalog-gemma-facets', gemmaSchema: 'module' } },
+			{
+				id: 1,
+				query: {
+					marker: 'softwarecatalog-gemma-facets',
+					gemmaSchema: 'module',
+				},
+			},
 		])
 		expect(store.module.savedViewsLoading).toBe(false)
 	})
@@ -255,7 +297,11 @@ describe('facets store — saved views', () => {
 	})
 
 	it('saveCurrentAsView posts the marked payload and appends the created view', async () => {
-		const created = { id: 9, name: 'My view', query: { marker: 'softwarecatalog-gemma-facets', gemmaSchema: 'module' } }
+		const created = {
+			id: 9,
+			name: 'My view',
+			query: { marker: 'softwarecatalog-gemma-facets', gemmaSchema: 'module' },
+		}
 		axios.post.mockResolvedValue({ data: { view: created } })
 
 		const store = useFacetStore()
@@ -289,7 +335,9 @@ describe('facets store — saved views', () => {
 			},
 		})
 
-		expect(store.module.activeFilters).toEqual({ referentiecomponent: ['Zaakregistratiecomponent'] })
+		expect(store.module.activeFilters).toEqual({
+			referentiecomponent: ['Zaakregistratiecomponent'],
+		})
 		expect(store.module.search).toBe('zaak')
 	})
 

@@ -16,9 +16,13 @@ import { FACET_DIMENSIONS, buildFacetQueryParams, fetchFacets } from './facets.j
 // locate the module for mocking. `virtual: true` mocks the specifier without
 // requiring it to resolve for real, matching how the app's real webpack/
 // Babel build (not Jest) actually consumes the package at runtime.
-jest.mock('@nextcloud/axios', () => ({
-	get: jest.fn(),
-}), { virtual: true })
+jest.mock(
+	'@nextcloud/axios',
+	() => ({
+		get: jest.fn(),
+	}),
+	{ virtual: true },
+)
 
 jest.mock('@nextcloud/router', () => ({
 	generateUrl: jest.fn((path) => path),
@@ -26,25 +30,42 @@ jest.mock('@nextcloud/router', () => ({
 
 describe('facets.FACET_DIMENSIONS', () => {
 	it('lists all four GEMMA dimensions', () => {
-		expect(FACET_DIMENSIONS).toEqual(['referentiecomponent', 'standaard', 'applicatieservice', 'domein'])
+		expect(FACET_DIMENSIONS).toEqual([
+			'referentiecomponent',
+			'standaard',
+			'applicatieservice',
+			'domein',
+		])
 	})
 })
 
 describe('facets.buildFacetQueryParams', () => {
 	it('builds repeated dimension[]= params for array-valued filters', () => {
 		const params = buildFacetQueryParams({
-			filters: { referentiecomponent: ['Zaakregistratiecomponent', 'Klantcontactcomponent'] },
+			filters: {
+				referentiecomponent: [
+					'Zaakregistratiecomponent',
+					'Klantcontactcomponent',
+				],
+			},
 		})
-		expect(params.getAll('referentiecomponent[]')).toEqual(['Zaakregistratiecomponent', 'Klantcontactcomponent'])
+		expect(params.getAll('referentiecomponent[]')).toEqual([
+			'Zaakregistratiecomponent',
+			'Klantcontactcomponent',
+		])
 	})
 
 	it('omits a dimension entirely when its filter value is not an array', () => {
-		const params = buildFacetQueryParams({ filters: { referentiecomponent: 'not-an-array' } })
+		const params = buildFacetQueryParams({
+			filters: { referentiecomponent: 'not-an-array' },
+		})
 		expect(params.has('referentiecomponent[]')).toBe(false)
 	})
 
 	it('drops blank/whitespace-only values within a dimension', () => {
-		const params = buildFacetQueryParams({ filters: { standaard: ['StUF-ZKN', '', '   '] } })
+		const params = buildFacetQueryParams({
+			filters: { standaard: ['StUF-ZKN', '', '   '] },
+		})
 		expect(params.getAll('standaard[]')).toEqual(['StUF-ZKN'])
 	})
 
@@ -55,7 +76,9 @@ describe('facets.buildFacetQueryParams', () => {
 	})
 
 	it('sets organization only when non-blank', () => {
-		expect(buildFacetQueryParams({ organization: 'org-uuid' }).get('organization')).toBe('org-uuid')
+		expect(
+			buildFacetQueryParams({ organization: 'org-uuid' }).get('organization'),
+		).toBe('org-uuid')
 		expect(buildFacetQueryParams({}).has('organization')).toBe(false)
 	})
 
@@ -71,11 +94,24 @@ describe('facets.fetchFacets', () => {
 	})
 
 	it('requests GET /apps/softwarecatalog/api/facets/{schema} with the encoded schema and query params', async () => {
-		axios.get.mockResolvedValue({ data: { referentiecomponent: [], standaard: [], applicatieservice: [], domein: [], _meta: {} } })
+		axios.get.mockResolvedValue({
+			data: {
+				referentiecomponent: [],
+				standaard: [],
+				applicatieservice: [],
+				domein: [],
+				_meta: {},
+			},
+		})
 
-		await fetchFacets('module', { filters: { referentiecomponent: ['A'] }, search: 'zaak' })
+		await fetchFacets('module', {
+			filters: { referentiecomponent: ['A'] },
+			search: 'zaak',
+		})
 
-		expect(generateUrl).toHaveBeenCalledWith('/apps/softwarecatalog/api/facets/module')
+		expect(generateUrl).toHaveBeenCalledWith(
+			'/apps/softwarecatalog/api/facets/module',
+		)
 		const [calledUrl] = axios.get.mock.calls[0]
 		expect(calledUrl).toContain('/apps/softwarecatalog/api/facets/module?')
 		expect(calledUrl).toContain('referentiecomponent%5B%5D=A')
@@ -92,7 +128,13 @@ describe('facets.fetchFacets', () => {
 	})
 
 	it('returns the response body', async () => {
-		const body = { referentiecomponent: [{ value: 'A', label: 'A', count: 3 }], standaard: [], applicatieservice: [], domein: [], _meta: { totalMatched: 3 } }
+		const body = {
+			referentiecomponent: [{ value: 'A', label: 'A', count: 3 }],
+			standaard: [],
+			applicatieservice: [],
+			domein: [],
+			_meta: { totalMatched: 3 },
+		}
 		axios.get.mockResolvedValue({ data: body })
 
 		const result = await fetchFacets('module')

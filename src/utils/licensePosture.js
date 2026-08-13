@@ -80,7 +80,7 @@ export function normaliseLicenseType(value) {
  */
 export function indexModules(modules) {
 	const index = {}
-	for (const m of (modules || [])) {
+	for (const m of modules || []) {
 		const id = resolveUuid(m.uuid ?? m.id ?? m['@self']?.id ?? m)
 		if (id !== '') {
 			index[id] = dataOf(m)
@@ -112,9 +112,9 @@ export function inProductionUsages(gebruiken) {
  * @spec openspec/specs/software-license-posture/spec.md
  */
 export function deploymentCount(moduleId, gebruiken) {
-	return inProductionUsages(gebruiken)
-		.filter((g) => resolveUuid(dataOf(g).module) === moduleId)
-		.length
+	return inProductionUsages(gebruiken).filter(
+		(g) => resolveUuid(dataOf(g).module) === moduleId,
+	).length
 }
 
 /**
@@ -145,9 +145,10 @@ export function portfolioPosture(modules, gebruiken) {
 		} else {
 			acc.unknown += 1
 		}
-		const licence = (typeof mod.licentie === 'string' && mod.licentie.trim() !== '')
-			? mod.licentie
-			: LICENSE_TYPE.UNKNOWN
+		const licence =
+			typeof mod.licentie === 'string' && mod.licentie.trim() !== ''
+				? mod.licentie
+				: LICENSE_TYPE.UNKNOWN
 		acc.byLicense[licence] = (acc.byLicense[licence] || 0) + 1
 	}
 
@@ -209,7 +210,11 @@ export function perVendorRollup(modules, gebruiken, contracts) {
 			vendors[vendorId] = {
 				vendorId,
 				deployments: 0,
-				mix: { [LICENSE_TYPE.OPEN]: 0, [LICENSE_TYPE.CLOSED]: 0, [LICENSE_TYPE.UNKNOWN]: 0 },
+				mix: {
+					[LICENSE_TYPE.OPEN]: 0,
+					[LICENSE_TYPE.CLOSED]: 0,
+					[LICENSE_TYPE.UNKNOWN]: 0,
+				},
 				usageIds: new Set(),
 			}
 		}
@@ -244,7 +249,13 @@ export function perVendorRollup(modules, gebruiken, contracts) {
  */
 export function perOrganisationPosture(orgId, modules, gebruiken) {
 	const idx = indexModules(modules)
-	const acc = { total: 0, open: 0, closed: 0, unknown: 0, closedContributors: new Set() }
+	const acc = {
+		total: 0,
+		open: 0,
+		closed: 0,
+		unknown: 0,
+		closedContributors: new Set(),
+	}
 
 	for (const g of inProductionUsages(gebruiken)) {
 		const data = dataOf(g)

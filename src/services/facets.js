@@ -19,7 +19,12 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 
 /** GEMMA facet dimensions this client supports, in display order. */
-export const FACET_DIMENSIONS = ['referentiecomponent', 'standaard', 'applicatieservice', 'domein']
+export const FACET_DIMENSIONS = [
+	'referentiecomponent',
+	'standaard',
+	'applicatieservice',
+	'domein',
+]
 
 /**
  * Build the URLSearchParams for a facet request, repeating array-valued
@@ -33,7 +38,11 @@ export const FACET_DIMENSIONS = ['referentiecomponent', 'standaard', 'applicatie
  * @return {URLSearchParams} The query parameters.
  * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
  */
-export function buildFacetQueryParams({ filters = {}, search = '', organization = '' } = {}) {
+export function buildFacetQueryParams({
+	filters = {},
+	search = '',
+	organization = '',
+} = {}) {
 	const params = new URLSearchParams()
 
 	FACET_DIMENSIONS.forEach((dimension) => {
@@ -41,9 +50,11 @@ export function buildFacetQueryParams({ filters = {}, search = '', organization 
 		if (!Array.isArray(values)) {
 			return
 		}
-		values.filter((value) => typeof value === 'string' && value.trim() !== '').forEach((value) => {
-			params.append(`${dimension}[]`, value)
-		})
+		values
+			.filter((value) => typeof value === 'string' && value.trim() !== '')
+			.forEach((value) => {
+				params.append(`${dimension}[]`, value)
+			})
 	})
 
 	if (typeof search === 'string' && search.trim() !== '') {
@@ -69,7 +80,8 @@ export function buildFacetQueryParams({ filters = {}, search = '', organization 
 export async function fetchFacets(schema, options = {}) {
 	const params = buildFacetQueryParams(options)
 	const query = params.toString()
-	const url = generateUrl(`/apps/softwarecatalog/api/facets/${encodeURIComponent(schema)}`)
+	const url =
+		generateUrl(`/apps/softwarecatalog/api/facets/${encodeURIComponent(schema)}`)
 		+ (query !== '' ? `?${query}` : '')
 
 	const response = await axios.get(url)

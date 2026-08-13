@@ -35,14 +35,24 @@
  * @spec openspec/specs/eol-feed-integration/spec.md
  */
 import { test, expect, type Page } from '@playwright/test'
-import { APP_MAIN, collectAppErrors, expectNoAppErrors, navClickTo } from './_helpers'
+import {
+	APP_MAIN,
+	collectAppErrors,
+	expectNoAppErrors,
+	navClickTo,
+} from './_helpers'
 
 /**
  * The four GEMMA dimensions `FacetedCatalogIndexView` declares in
  * `DIMENSION_LABELS` and passes to `CnFacetSidebar` as its `filters` prop.
  * No other page in the app renders this set.
  */
-const GEMMA_DIMENSIONS = ['Reference component', 'Standard', 'Application service', 'Domain']
+const GEMMA_DIMENSIONS = [
+	'Reference component',
+	'Standard',
+	'Application service',
+	'Domain',
+]
 
 /** Assert the faceted index's own sidebar rendered, dimension by dimension. */
 async function expectGemmaFacetSidebar(page: Page): Promise<void> {
@@ -50,8 +60,9 @@ async function expectGemmaFacetSidebar(page: Page): Promise<void> {
 	await expect(main).toBeVisible({ timeout: 30000 })
 
 	// The sidebar's own title, which this view supplies.
-	await expect(main.getByText('GEMMA filters', { exact: false }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByText('GEMMA filters', { exact: false }).first(),
+	).toBeVisible({ timeout: 30000 })
 
 	for (const dimension of GEMMA_DIMENSIONS) {
 		await expect(
@@ -61,7 +72,9 @@ async function expectGemmaFacetSidebar(page: Page): Promise<void> {
 	}
 }
 
-test('applications index: FacetedCatalogIndexView renders its GEMMA facet sidebar', async ({ page }) => {
+test('applications index: FacetedCatalogIndexView renders its GEMMA facet sidebar', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Applications')
 
@@ -70,7 +83,9 @@ test('applications index: FacetedCatalogIndexView renders its GEMMA facet sideba
 	expectNoAppErrors(bag)
 })
 
-test('services index: FacetedCatalogIndexView renders the same sidebar for the dienst subject', async ({ page }) => {
+test('services index: FacetedCatalogIndexView renders the same sidebar for the dienst subject', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Services')
 
@@ -81,7 +96,9 @@ test('services index: FacetedCatalogIndexView renders the same sidebar for the d
 	expectNoAppErrors(bag)
 })
 
-test('suites index: SuitesIndexView renders its own New suite action', async ({ page }) => {
+test('suites index: SuitesIndexView renders its own New suite action', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Suites')
 
@@ -90,13 +107,16 @@ test('suites index: SuitesIndexView renders its own New suite action', async ({ 
 
 	// The wizard trigger lives in this view's own CnIndexPage action slot; no
 	// other index page declares it.
-	await expect(main.getByRole('button', { name: 'New suite' }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByRole('button', { name: 'New suite' }).first(),
+	).toBeVisible({ timeout: 30000 })
 
 	expectNoAppErrors(bag)
 })
 
-test('portfolio rationalization: PortfolioReport renders its report chrome', async ({ page }) => {
+test('portfolio rationalization: PortfolioReport renders its report chrome', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Portfolio rationalization')
 
@@ -110,34 +130,43 @@ test('portfolio rationalization: PortfolioReport renders its report chrome', asy
 	// `v-else-if="selectedOrg && report"`. On an instance with no organisation
 	// selected the page correctly renders its empty state instead, so asserting
 	// the summary table would be asserting on seed data, not on the page.
-	await expect(main.getByRole('button', { name: 'Refresh report' }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByRole('button', { name: 'Refresh report' }).first(),
+	).toBeVisible({ timeout: 30000 })
 
 	// …and the page is in one of its two legitimate states: the org-picker
 	// empty state, or the rendered quadrant summary. Both are this page's own
 	// markup; neither is the shell.
-	const emptyState = main.getByText('Pick an organisation above', { exact: false }).first()
+	const emptyState = main
+		.getByText('Pick an organisation above', { exact: false })
+		.first()
 	const summary = page.locator('[data-testid="pr-summary"]')
 	await expect(emptyState.or(summary)).toBeVisible({ timeout: 30000 })
 
 	expectNoAppErrors(bag)
 })
 
-test('admin settings: EolSyncSettings renders its section and sync control', async ({ page }) => {
+test('admin settings: EolSyncSettings renders its section and sync control', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	// `domcontentloaded`, not `networkidle`: Nextcloud keeps long-lived polls
 	// open so the network never goes idle (ADR-074 rule 4).
-	await page.goto('/settings/admin/softwarecatalog', { waitUntil: 'domcontentloaded' })
+	await page.goto('/settings/admin/softwarecatalog', {
+		waitUntil: 'domcontentloaded',
+	})
 
 	const host = page.locator('#softwarecatalog-settings')
 	await expect(host).toBeVisible({ timeout: 30000 })
 
 	// The section name and the manual-trigger button are both declared by
 	// EolSyncSettings.vue and by nothing else in the settings shell.
-	await expect(host.getByText('End-of-life feed sync', { exact: false }).first())
-		.toBeVisible({ timeout: 30000 })
-	await expect(host.getByRole('button', { name: 'Sync now' }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		host.getByText('End-of-life feed sync', { exact: false }).first(),
+	).toBeVisible({ timeout: 30000 })
+	await expect(host.getByRole('button', { name: 'Sync now' }).first()).toBeVisible(
+		{ timeout: 30000 },
+	)
 
 	expectNoAppErrors(bag)
 })

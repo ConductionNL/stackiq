@@ -28,11 +28,19 @@
  */
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import {
-	navClickTo, dismissSupportDialog, collectAppErrors, expectNoAppErrors, indexMain,
+	navClickTo,
+	dismissSupportDialog,
+	collectAppErrors,
+	expectNoAppErrors,
+	indexMain,
 	openCreateDialog,
 } from './_ui'
 import {
-	newApiContext, resolveConfig, createObject, cleanupByToken, RUN_ID,
+	newApiContext,
+	resolveConfig,
+	createObject,
+	cleanupByToken,
+	RUN_ID,
 	type VoorzieningenConfig,
 } from './_fixtures'
 
@@ -67,7 +75,9 @@ test.afterAll(async () => {
 	if (apiCtx && cfg) {
 		const removed = await cleanupByToken(apiCtx, cfg, RUN_ID)
 		// eslint-disable-next-line no-console
-		console.log(`[organisatie-crud] cleaned up ${removed} seeded row(s) for ${RUN_ID}`)
+		console.log(
+			`[organisatie-crud] cleaned up ${removed} seeded row(s) for ${RUN_ID}`,
+		)
 		await apiCtx.dispose()
 	}
 })
@@ -75,7 +85,9 @@ test.afterAll(async () => {
 // ---------------------------------------------------------------------------
 // Read-persistence: the seeded organisation renders as a real card.
 // ---------------------------------------------------------------------------
-test('seeded organisation renders as a card (proves the list loads real data)', async ({ page }) => {
+test('seeded organisation renders as a card (proves the list loads real data)', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Organisations')
 	const main = indexMain(page)
@@ -103,8 +115,13 @@ test('"Add organisation" opens the create modal', async ({ page }) => {
 	await dismissSupportDialog(page)
 	const main = indexMain(page)
 
-	await main.getByRole('button', { name: /Add organisation/i }).first().click()
-	const modal = page.locator('#objectModal, [role="dialog"], .modal-container').first()
+	await main
+		.getByRole('button', { name: /Add organisation/i })
+		.first()
+		.click()
+	const modal = page
+		.locator('#objectModal, [role="dialog"], .modal-container')
+		.first()
 	await expect(modal).toBeVisible({ timeout: 15000 })
 
 	// ⚠️ This used to assert the legacy ObjectModal's `Catalogus:` ->
@@ -118,7 +135,9 @@ test('"Add organisation" opens the create modal', async ({ page }) => {
 	//
 	// What the entry point is actually supposed to prove is that a create FORM
 	// mounted, so assert that: an editable field for the schema's properties.
-	await expect(modal.locator('input, textarea, select').first()).toBeVisible({ timeout: 10000 })
+	await expect(modal.locator('input, textarea, select').first()).toBeVisible({
+		timeout: 10000,
+	})
 	await page.keyboard.press('Escape')
 })
 
@@ -128,18 +147,26 @@ test('"Add organisation" opens the create modal', async ({ page }) => {
 // options, so the Register/Schema cascade can never resolve and the object
 // can't be saved. Re-enable once a catalog is provisioned in the dev dataset.
 // ---------------------------------------------------------------------------
-test.fixme('UI create -> new organisation card appears (blocked: empty catalog collection)', async ({ page }) => {
+test.fixme('UI create -> new organisation card appears (blocked: empty catalog collection)', async ({
+	page,
+}) => {
 	await navClickTo(page, 'Organisations')
 	await dismissSupportDialog(page)
 	const uiOrgName = `${RUN_ID} UI Organisatie`
 
 	const modal = await openCreateDialog(page, 'Add organisation')
 	// Select the (currently non-existent) catalogus, then register + schema.
-	const catalogSelect = modal.locator('.detail-item').filter({ hasText: 'Catalogus' }).locator('.v-select').first()
+	const catalogSelect = modal
+		.locator('.detail-item')
+		.filter({ hasText: 'Catalogus' })
+		.locator('.v-select')
+		.first()
 	await catalogSelect.click()
 	await page.locator('.vs__dropdown-option').first().click()
 	// ... register + schema cascade + JSON editor would follow here.
 	await modal.getByRole('button', { name: 'Add', exact: true }).first().click()
 	await navClickTo(page, 'Organisations')
-	await expect(indexMain(page).getByText(uiOrgName, { exact: false }).first()).toBeVisible({ timeout: 15000 })
+	await expect(
+		indexMain(page).getByText(uiOrgName, { exact: false }).first(),
+	).toBeVisible({ timeout: 15000 })
 })

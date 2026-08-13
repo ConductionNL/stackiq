@@ -124,7 +124,9 @@ export const useViewStore = defineStore('view', {
 					params.include_products = true
 				}
 
-				const url = generateUrl('/apps/softwarecatalog/api/views/' + encodeURIComponent(viewId))
+				const url = generateUrl(
+					'/apps/softwarecatalog/api/views/' + encodeURIComponent(viewId),
+				)
 				const response = await axios.get(url, { params })
 
 				this.activeView = response.data.view ?? null

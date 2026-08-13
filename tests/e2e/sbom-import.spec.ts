@@ -66,13 +66,23 @@ test.beforeAll(async () => {
 	const ctx = await newApiContext()
 	try {
 		const config = await resolveConfig(ctx)
-		const moduleId = await createObject(ctx, config.register, config.module_schema, {
-			naam: MODULE_NAME,
-		})
-		moduleVersieId = await createObject(ctx, config.register, config.moduleVersie_schema, {
-			module: moduleId,
-			versie: '1.0.0-e2e',
-		})
+		const moduleId = await createObject(
+			ctx,
+			config.register,
+			config.module_schema,
+			{
+				naam: MODULE_NAME,
+			},
+		)
+		moduleVersieId = await createObject(
+			ctx,
+			config.register,
+			config.moduleVersie_schema,
+			{
+				module: moduleId,
+				versie: '1.0.0-e2e',
+			},
+		)
 	} finally {
 		await ctx.dispose()
 	}
@@ -99,8 +109,12 @@ async function openComponentsTab(page: Page): Promise<void> {
 	// tests/e2e/base-url.ts. `domcontentloaded`, not `networkidle`: the SPA keeps
 	// a background poll alive so the network never goes idle; the app-root wait
 	// below is the real readiness signal.
-	await page.goto(`${APP_PATH}/#/moduleversies/${moduleVersieId}`, { waitUntil: 'domcontentloaded' })
-	await page.locator('.softwarecatalog-app-root').first()
+	await page.goto(`${APP_PATH}/#/moduleversies/${moduleVersieId}`, {
+		waitUntil: 'domcontentloaded',
+	})
+	await page
+		.locator('.softwarecatalog-app-root')
+		.first()
 		.waitFor({ state: 'attached', timeout: 30000 })
 	// The first-run walkthrough overlay intercepts pointer events — dismiss it
 	// before touching anything.
@@ -119,20 +133,19 @@ async function openComponentsTab(page: Page): Promise<void> {
 // Scenario: A version with no imported SBOM shows an empty state
 // @e2e sbom-import::a-version-with-no-imported-sbom-shows-an-empty-state
 // ---------------------------------------------------------------------------
-test(
-	'sbom-import empty-state: a freshly-created moduleVersie Components tab shows the empty state and upload control',
-	async ({ page }) => {
-		await openComponentsTab(page)
+test('sbom-import empty-state: a freshly-created moduleVersie Components tab shows the empty state and upload control', async ({
+	page,
+}) => {
+	await openComponentsTab(page)
 
-		await expect(page.getByTestId('sbom-empty')).toBeVisible({ timeout: 15000 })
-		await expect(page.getByTestId('sbom-file-input')).toBeVisible()
-		await expect(page.getByTestId('sbom-import-button')).toBeVisible()
+	await expect(page.getByTestId('sbom-empty')).toBeVisible({ timeout: 15000 })
+	await expect(page.getByTestId('sbom-file-input')).toBeVisible()
+	await expect(page.getByTestId('sbom-import-button')).toBeVisible()
 
-		// Summary tiles read zero — "no summary counts shown as non-zero".
-		const summary = page.getByTestId('sbom-summary')
-		await expect(summary).toContainText('0')
-	},
-)
+	// Summary tiles read zero — "no summary counts shown as non-zero".
+	const summary = page.getByTestId('sbom-summary')
+	await expect(summary).toContainText('0')
+})
 
 // ---------------------------------------------------------------------------
 // Scenario: The Components tab reflects an import
@@ -141,40 +154,43 @@ test(
 // Also exercises re-import-replaces (design Decision 3): a second upload
 // with a different fixture leaves only the new set's 2 rows, not 3+2.
 // ---------------------------------------------------------------------------
-test(
-	'sbom-import upload-and-replace: uploading a CycloneDX file renders the component list and summary counts; a second import replaces the first',
-	async ({ page }) => {
-		// Two full import round-trips (parse + persist + vulnerability match) run
-		// back-to-back here; on a shared/loaded instance each can approach the
-		// default 30s slice, so give this test the tripled budget.
-		test.slow()
+test('sbom-import upload-and-replace: uploading a CycloneDX file renders the component list and summary counts; a second import replaces the first', async ({
+	page,
+}) => {
+	// Two full import round-trips (parse + persist + vulnerability match) run
+	// back-to-back here; on a shared/loaded instance each can approach the
+	// default 30s slice, so give this test the tripled budget.
+	test.slow()
 
-		await openComponentsTab(page)
+	await openComponentsTab(page)
 
-		// First import: 3-component fixture.
-		await page.getByTestId('sbom-file-input').setInputFiles(CYCLONEDX_16)
-		await page.getByTestId('sbom-import-button').click()
-		await expect(page.getByTestId('sbom-upload-success')).toBeVisible({ timeout: 40000 })
+	// First import: 3-component fixture.
+	await page.getByTestId('sbom-file-input').setInputFiles(CYCLONEDX_16)
+	await page.getByTestId('sbom-import-button').click()
+	await expect(page.getByTestId('sbom-upload-success')).toBeVisible({
+		timeout: 40000,
+	})
 
-		const table = page.getByTestId('sbom-component-table')
-		await expect(table).toBeVisible()
-		await expect(table.getByText('lodash')).toBeVisible()
-		await expect(table.locator('tbody tr')).toHaveCount(3)
+	const table = page.getByTestId('sbom-component-table')
+	await expect(table).toBeVisible()
+	await expect(table.getByText('lodash')).toBeVisible()
+	await expect(table.locator('tbody tr')).toHaveCount(3)
 
-		const summary = page.getByTestId('sbom-summary')
-		await expect(summary).toContainText('3')
+	const summary = page.getByTestId('sbom-summary')
+	await expect(summary).toContainText('3')
 
-		// Provenance line renders after a successful import.
-		await expect(page.getByTestId('sbom-provenance')).toBeVisible()
+	// Provenance line renders after a successful import.
+	await expect(page.getByTestId('sbom-provenance')).toBeVisible()
 
-		// Second import (different fixture, 2 components) REPLACES the first —
-		// only the new set is live afterwards.
-		await page.getByTestId('sbom-file-input').setInputFiles(CYCLONEDX_15)
-		await page.getByTestId('sbom-import-button').click()
-		await expect(page.getByTestId('sbom-upload-success')).toBeVisible({ timeout: 40000 })
+	// Second import (different fixture, 2 components) REPLACES the first —
+	// only the new set is live afterwards.
+	await page.getByTestId('sbom-file-input').setInputFiles(CYCLONEDX_15)
+	await page.getByTestId('sbom-import-button').click()
+	await expect(page.getByTestId('sbom-upload-success')).toBeVisible({
+		timeout: 40000,
+	})
 
-		await expect(table.locator('tbody tr')).toHaveCount(2)
-		await expect(table.getByText('lodash')).toHaveCount(0)
-		await expect(table.getByText('express')).toBeVisible()
-	},
-)
+	await expect(table.locator('tbody tr')).toHaveCount(2)
+	await expect(table.getByText('lodash')).toHaveCount(0)
+	await expect(table.getByText('express')).toBeVisible()
+})

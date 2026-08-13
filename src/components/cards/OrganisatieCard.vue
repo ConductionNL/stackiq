@@ -1,14 +1,8 @@
-/**
- * OrganisatieCard.vue
- * Custom card component for displaying organisatie objects
- * @category Components
- * @package softwarecatalog
- * @author Ruben Linde
- * @copyright 2024
- * @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version 1.0.0
- * @link https://github.com/opencatalogi/softwarecatalog
- */
+/** * OrganisatieCard.vue * Custom card component for displaying organisatie objects
+* @category Components * @package softwarecatalog * @author Ruben Linde * @copyright
+2024 * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
+@link https://github.com/opencatalogi/softwarecatalog */
 
 <template>
 	<!-- role/tabindex/keydown rather than a click-only div: the whole card
@@ -16,7 +10,8 @@
 	     in this component and a keyboard user could not activate it at all
 	     (WCAG 2.1.1). The nested .cardHeaderActions already stops propagation,
 	     so the NcActions menu is unaffected. -->
-	<div class="organisatieCard"
+	<div
+		class="organisatieCard"
 		role="button"
 		tabindex="0"
 		:aria-label="`Open ${getOrganisatieTitle(item)}`"
@@ -55,10 +50,16 @@
 			<div v-if="currentView === 'organisatie'">
 				<!-- Organisation Type Badge -->
 				<div class="organisatieBadges">
-					<span v-if="item.type" class="typeBadge" :class="`type-${item.type.toLowerCase()}`">
+					<span
+						v-if="item.type"
+						class="typeBadge"
+						:class="`type-${item.type.toLowerCase()}`">
 						{{ item.type }}
 					</span>
-					<span v-if="item.status" class="statusBadge" :class="`status-${item.status.toLowerCase()}`">
+					<span
+						v-if="item.status"
+						class="statusBadge"
+						:class="`status-${item.status.toLowerCase()}`">
 						{{ item.status }}
 					</span>
 				</div>
@@ -80,7 +81,10 @@
 				<div class="organisatieDetails">
 					<div v-if="item.website" class="detailItem">
 						<Globe :size="16" />
-						<a :href="formatWebsiteUrl(item.website)" target="_blank" rel="noopener">
+						<a
+							:href="formatWebsiteUrl(item.website)"
+							target="_blank"
+							rel="noopener">
 							{{ item.website }}
 						</a>
 					</div>
@@ -108,20 +112,31 @@
 					</div>
 					<div class="viewToggleContainer" @click.stop>
 						<NcButton
-							:variant="currentView === 'contactpersonen' ? 'primary' : 'secondary'"
+							:variant="
+								currentView === 'contactpersonen'
+									? 'primary'
+									: 'secondary'
+							"
 							size="small"
 							@click="toggleView">
 							<template #icon>
 								<AccountMultiple :size="16" />
 							</template>
-							{{ currentView === 'contactpersonen' ? 'Bekijk organisatie' : 'Bekijk contactpersonen' }}
+							{{
+								currentView === 'contactpersonen'
+									? 'Bekijk organisatie'
+									: 'Bekijk contactpersonen'
+							}}
 						</NcButton>
 					</div>
 				</div>
 			</div>
 
 			<!-- Contactpersonen View -->
-			<div v-else-if="currentView === 'contactpersonen'" class="contactpersonenView" @click.stop>
+			<div
+				v-else-if="currentView === 'contactpersonen'"
+				class="contactpersonenView"
+				@click.stop>
 				<ContactpersonenList
 					ref="contactpersonenList"
 					:organisation-id="item.id || item.uuid"
@@ -135,13 +150,21 @@
 					</div>
 					<div class="viewToggleContainer">
 						<NcButton
-							:variant="currentView === 'organisatie' ? 'primary' : 'secondary'"
+							:variant="
+								currentView === 'organisatie'
+									? 'primary'
+									: 'secondary'
+							"
 							size="small"
 							@click="toggleView">
 							<template #icon>
 								<component :is="cardIcon" :size="16" />
 							</template>
-							{{ currentView === 'contactpersonen' ? 'Bekijk organisatie' : 'Bekijk contactpersonen' }}
+							{{
+								currentView === 'contactpersonen'
+									? 'Bekijk organisatie'
+									: 'Bekijk contactpersonen'
+							}}
 						</NcButton>
 					</div>
 				</div>
@@ -213,14 +236,27 @@ export default {
 			 */
 			async handler(newView, oldView) {
 				// Only trigger when actually switching TO contactpersonen view from a different view
-				if (newView === 'contactpersonen' && oldView && oldView !== 'contactpersonen') {
-					console.info('Switched to contactpersonen view, loading user info and groups...')
+				if (
+					newView === 'contactpersonen'
+					&& oldView
+					&& oldView !== 'contactpersonen'
+				) {
+					console.info(
+						'Switched to contactpersonen view, loading user info and groups...',
+					)
 					// Use nextTick to ensure the component is fully rendered
 					await this.$nextTick()
-					if (this.$refs.contactpersonenList && this.$refs.contactpersonenList.loadUserInfoAndGroups) {
+					if (
+						this.$refs.contactpersonenList
+						&& this.$refs.contactpersonenList.loadUserInfoAndGroups
+					) {
 						// Add a small delay to prevent rapid successive calls
 						setTimeout(async () => {
-							if (this.$refs.contactpersonenList && this.$refs.contactpersonenList.loadUserInfoAndGroups) {
+							if (
+								this.$refs.contactpersonenList
+								&& this.$refs.contactpersonenList
+									.loadUserInfoAndGroups
+							) {
 								await this.$refs.contactpersonenList.loadUserInfoAndGroups()
 							}
 						}, 100)
@@ -252,14 +288,19 @@ export default {
 		 * @return {string} The title to display
 		 */
 		getOrganisatieTitle(item) {
-			return item?.naam || item?.name || item?.['@self']?.name || 'Unknown Organisation'
+			return (
+				item?.naam
+				|| item?.name
+				|| item?.['@self']?.name
+				|| 'Unknown Organisation'
+			)
 		},
 
 		/**
 		 * Get the summary/tooltip text for the organisation
 		 * @param {object} item - The organisation object
 		 * @return {string} The summary text
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieSummary(item) {
 			if (item?.beschrijvingKort) return item.beschrijvingKort
@@ -273,7 +314,7 @@ export default {
 		 * Execute an object action
 		 * @param {object} action - The action to execute
 		 * @param {object} item - The item to execute the action on
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		executeObjectAction(action, item) {
 			if (action.handler) {
@@ -285,7 +326,7 @@ export default {
 		 * Format website URL to ensure it has protocol
 		 * @param {string} url - The website URL
 		 * @return {string} Formatted URL with protocol
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		formatWebsiteUrl(url) {
 			if (!url) return '#'
@@ -300,7 +341,7 @@ export default {
 		 * @param {string} text - Text to truncate
 		 * @param {number} maxLength - Maximum length
 		 * @return {string} Truncated text
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		truncateText(text, maxLength = 150) {
 			if (!text || text.length <= maxLength) return text
@@ -309,10 +350,13 @@ export default {
 
 		/**
 		 * Toggle between organisation and contactpersonen views
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async toggleView() {
-			const newView = this.currentView === 'organisatie' ? 'contactpersonen' : 'organisatie'
+			const newView =
+				this.currentView === 'organisatie'
+					? 'contactpersonen'
+					: 'organisatie'
 			this.currentView = newView
 
 			// Note: The watch handler will handle refreshing user data when switching to contactpersonen view
@@ -330,7 +374,7 @@ export default {
 		/**
 		 * Get the organisation address
 		 * @return {string} The organisation's address
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieAdres() {
 			const adres = this.item?.adres
@@ -349,7 +393,6 @@ export default {
 
 			return 'Geen adres beschikbaar'
 		},
-
 	},
 }
 </script>
@@ -404,7 +447,8 @@ export default {
 	flex-wrap: wrap;
 }
 
-.typeBadge, .statusBadge {
+.typeBadge,
+.statusBadge {
 	padding: 4px 8px;
 	border-radius: var(--border-radius-pill);
 	font-size: 12px;
@@ -456,7 +500,8 @@ export default {
 	line-height: 1.4;
 }
 
-.beschrijvingKort, .beschrijvingLang {
+.beschrijvingKort,
+.beschrijvingLang {
 	margin: 0;
 	color: var(--color-main-text);
 	font-size: 14px;

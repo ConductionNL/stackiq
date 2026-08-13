@@ -68,9 +68,12 @@ export const useOrganisatieStore = defineStore('organisatie', {
 			this.error = null
 
 			try {
-				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/organisation/{organisationId}', {
-					organisationId,
-				})
+				const url = generateUrl(
+					'/apps/softwarecatalog/api/contactpersonen/organisation/{organisationId}',
+					{
+						organisationId,
+					},
+				)
 
 				const response = await fetch(url, {
 					method: 'GET',
@@ -89,7 +92,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 				if (data.success) {
 					this.contactpersonen = data.contactpersonen || []
 				} else {
-					throw new Error(data.message || 'Failed to fetch contactpersonen')
+					throw new Error(
+						data.message || 'Failed to fetch contactpersonen',
+					)
 				}
 			} catch (error) {
 				console.error('Error fetching contactpersonen:', error)
@@ -112,9 +117,12 @@ export const useOrganisatieStore = defineStore('organisatie', {
 			this.error = null
 
 			try {
-				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/{contactpersoonId}/convert-to-user', {
-					contactpersoonId,
-				})
+				const url = generateUrl(
+					'/apps/softwarecatalog/api/contactpersonen/{contactpersoonId}/convert-to-user',
+					{
+						contactpersoonId,
+					},
+				)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -127,7 +135,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 				const data = await response.json()
 
 				if (!response.ok || !data.success) {
-					throw new Error(data.message || `HTTP error! status: ${response.status}`)
+					throw new Error(
+						data.message || `HTTP error! status: ${response.status}`,
+					)
 				}
 
 				// Return the full response data including the updated contactpersoon object
@@ -154,7 +164,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 			this.error = null
 
 			try {
-				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/change-password')
+				const url = generateUrl(
+					'/apps/softwarecatalog/api/contactpersonen/change-password',
+				)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -200,7 +212,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 			this.error = null
 
 			try {
-				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/update-groups')
+				const url = generateUrl(
+					'/apps/softwarecatalog/api/contactpersonen/update-groups',
+				)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -222,7 +236,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 				if (data.success) {
 					// Update the contactpersoon in the local state
-					const contactpersoon = this.contactpersonen.find(cp => cp.user.username === username)
+					const contactpersoon = this.contactpersonen.find(
+						(cp) => cp.user.username === username,
+					)
 					if (contactpersoon) {
 						contactpersoon.user.groups = data.groups || []
 					}
@@ -247,9 +263,12 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 */
 		async fetchUserInfo(contactpersoonId) {
 			try {
-				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/{contactpersoonId}/user-info', {
-					contactpersoonId,
-				})
+				const url = generateUrl(
+					'/apps/softwarecatalog/api/contactpersonen/{contactpersoonId}/user-info',
+					{
+						contactpersoonId,
+					},
+				)
 
 				const response = await fetch(url, {
 					method: 'GET',
@@ -287,7 +306,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 */
 		async fetchContactPersonsWithUserDetails(organizationUuid) {
 			try {
-				const url = generateUrl(`/apps/softwarecatalog/api/contactpersonen/organisation/${organizationUuid}/with-user-details`)
+				const url = generateUrl(
+					`/apps/softwarecatalog/api/contactpersonen/organisation/${organizationUuid}/with-user-details`,
+				)
 
 				const response = await fetch(url, {
 					method: 'GET',
@@ -304,13 +325,22 @@ export const useOrganisatieStore = defineStore('organisatie', {
 				const data = await response.json()
 
 				if (data.success) {
-					console.info('Successfully fetched contact persons with user details:', data)
+					console.info(
+						'Successfully fetched contact persons with user details:',
+						data,
+					)
 					return data.data || []
 				} else {
-					throw new Error(data.message || 'Failed to fetch contact persons with user details')
+					throw new Error(
+						data.message
+							|| 'Failed to fetch contact persons with user details',
+					)
 				}
 			} catch (error) {
-				console.error('Error fetching contact persons with user details:', error)
+				console.error(
+					'Error fetching contact persons with user details:',
+					error,
+				)
 				this.error = error.message
 				return []
 			}
@@ -323,7 +353,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 */
 		async fetchAvailableGroups() {
 			try {
-				const url = generateUrl('/apps/softwarecatalog/api/contactpersonen/available-groups')
+				const url = generateUrl(
+					'/apps/softwarecatalog/api/contactpersonen/available-groups',
+				)
 
 				const response = await fetch(url, {
 					method: 'GET',
@@ -342,7 +374,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 				if (data.success) {
 					this.availableGroups = data.groups || []
 				} else {
-					throw new Error(data.message || 'Failed to fetch available groups')
+					throw new Error(
+						data.message || 'Failed to fetch available groups',
+					)
 				}
 			} catch (error) {
 				console.error('Error fetching available groups:', error)
@@ -375,12 +409,15 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 */
 		async disableUser(contactpersoonId) {
 			try {
-				const response = await fetch(`/index.php/apps/softwarecatalog/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/disable`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
+				const response = await fetch(
+					`/index.php/apps/softwarecatalog/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/disable`,
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
 					},
-				})
+				)
 
 				if (!response.ok) {
 					const errorData = await response.json()
@@ -400,12 +437,15 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 */
 		async enableUser(contactpersoonId) {
 			try {
-				const response = await fetch(`/index.php/apps/softwarecatalog/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/enable`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
+				const response = await fetch(
+					`/index.php/apps/softwarecatalog/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/enable`,
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
 					},
-				})
+				)
 
 				if (!response.ok) {
 					const errorData = await response.json()
@@ -426,9 +466,12 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-system-shall-preview-a-merge-with-per-relation-type-counts-before-any-write
 		 */
 		async dryRunMerge(sourceUuid, targetUuid) {
-			const url = generateUrl('/apps/softwarecatalog/api/organisaties/{sourceUuid}/merge/dry-run', {
-				sourceUuid,
-			})
+			const url = generateUrl(
+				'/apps/softwarecatalog/api/organisaties/{sourceUuid}/merge/dry-run',
+				{
+					sourceUuid,
+				},
+			)
 
 			const response = await fetch(url, {
 				method: 'POST',
@@ -442,7 +485,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 			const data = await response.json()
 
 			if (!response.ok) {
-				throw new Error(data.message || `HTTP error! status: ${response.status}`)
+				throw new Error(
+					data.message || `HTTP error! status: ${response.status}`,
+				)
 			}
 
 			return data
@@ -458,9 +503,12 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
 		 */
 		async executeMerge(sourceUuid, targetUuid) {
-			const url = generateUrl('/apps/softwarecatalog/api/organisaties/{sourceUuid}/merge', {
-				sourceUuid,
-			})
+			const url = generateUrl(
+				'/apps/softwarecatalog/api/organisaties/{sourceUuid}/merge',
+				{
+					sourceUuid,
+				},
+			)
 
 			const response = await fetch(url, {
 				method: 'POST',
@@ -475,7 +523,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 			if (!response.ok) {
 				// 409 (blockers) still returns a structured body — surface its message.
-				throw new Error(data.message || `HTTP error! status: ${response.status}`)
+				throw new Error(
+					data.message || `HTTP error! status: ${response.status}`,
+				)
 			}
 
 			return data
@@ -489,24 +539,35 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 */
 		async getBulkUserInfo(contactpersoonIds) {
 			try {
-				console.info('Store: Getting bulk user info for IDs:', contactpersoonIds)
+				console.info(
+					'Store: Getting bulk user info for IDs:',
+					contactpersoonIds,
+				)
 
-				const response = await fetch('/index.php/apps/softwarecatalog/api/contactpersonen/bulk-user-info', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/contactpersonen/bulk-user-info',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							contactpersoonIds,
+						}),
 					},
-					body: JSON.stringify({
-						contactpersoonIds,
-					}),
-				})
+				)
 
-				console.info('Store: Bulk user info response status:', response.status)
+				console.info(
+					'Store: Bulk user info response status:',
+					response.status,
+				)
 
 				if (!response.ok) {
 					const errorData = await response.json()
 					console.error('Store: Bulk user info error response:', errorData)
-					throw new Error(errorData.message || 'Failed to get bulk user info')
+					throw new Error(
+						errorData.message || 'Failed to get bulk user info',
+					)
 				}
 
 				const data = await response.json()
@@ -533,7 +594,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
 		 */
 		async fetchMembers(uuid) {
-			const url = generateUrl('/apps/openregister/api/organisations/{uuid}', { uuid })
+			const url = generateUrl('/apps/openregister/api/organisations/{uuid}', {
+				uuid,
+			})
 
 			const response = await fetch(url, {
 				method: 'GET',
@@ -545,7 +608,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}))
-				throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+				throw new Error(
+					errorData.error || `HTTP error! status: ${response.status}`,
+				)
 			}
 
 			const data = await response.json()
@@ -564,7 +629,10 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
 		 */
 		async grantAccess(uuid, userId) {
-			const url = generateUrl('/apps/softwarecatalog/api/organisations/{uuid}/members', { uuid })
+			const url = generateUrl(
+				'/apps/softwarecatalog/api/organisations/{uuid}/members',
+				{ uuid },
+			)
 
 			const response = await fetch(url, {
 				method: 'POST',
@@ -578,7 +646,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 			const data = await response.json().catch(() => ({}))
 
 			if (!response.ok) {
-				throw new Error(data.error || `HTTP error! status: ${response.status}`)
+				throw new Error(
+					data.error || `HTTP error! status: ${response.status}`,
+				)
 			}
 
 			return data
@@ -593,7 +663,10 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
 		 */
 		async revokeAccess(uuid, userId) {
-			const url = generateUrl('/apps/softwarecatalog/api/organisations/{uuid}/members/{userId}', { uuid, userId })
+			const url = generateUrl(
+				'/apps/softwarecatalog/api/organisations/{uuid}/members/{userId}',
+				{ uuid, userId },
+			)
 
 			const response = await fetch(url, {
 				method: 'DELETE',
@@ -606,7 +679,9 @@ export const useOrganisatieStore = defineStore('organisatie', {
 			const data = await response.json().catch(() => ({}))
 
 			if (!response.ok) {
-				throw new Error(data.error || `HTTP error! status: ${response.status}`)
+				throw new Error(
+					data.error || `HTTP error! status: ${response.status}`,
+				)
 			}
 
 			return data

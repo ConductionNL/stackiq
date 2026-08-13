@@ -5,9 +5,13 @@ import { reactive } from 'vue'
 
 <template>
 	<NcAppSidebar
-		:name="directoryStore.listingItem?.title || 'Geen listing' "
+		:name="directoryStore.listingItem?.title || 'Geen listing'"
 		:subname="directoryStore.listingItem?.organisation?.title">
-		<NcEmptyContent v-if="!directoryStore.listingItem.id || navigationStore.selected != 'directory'"
+		<NcEmptyContent
+			v-if="
+				!directoryStore.listingItem.id
+				|| navigationStore.selected != 'directory'
+			"
 			class="detailContainer"
 			name="Geen listing"
 			description="Nog geen listing geselecteerd, listings kan je ontdekken via (externe) directories.">
@@ -15,13 +19,21 @@ import { reactive } from 'vue'
 				<LayersOutline />
 			</template>
 			<template #action>
-				<NcButton variant="primary" @click="navigationStore.setModal('addDirectory')">
+				<NcButton
+					variant="primary"
+					@click="navigationStore.setModal('addDirectory')">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
 					Directory inlezen
 				</NcButton>
-				<NcButton @click="openLink('https://conduction.gitbook.io/opencatalogi-nextcloud/beheerders/directory', '_blank')">
+				<NcButton
+					@click="
+						openLink(
+							'https://conduction.gitbook.io/opencatalogi-nextcloud/beheerders/directory',
+							'_blank',
+						)
+					">
 					<template #icon>
 						<HelpCircleOutline :size="20" />
 					</template>
@@ -29,7 +41,11 @@ import { reactive } from 'vue'
 				</NcButton>
 			</template>
 		</NcEmptyContent>
-		<NcAppSidebarTab v-if="directoryStore.listingItem.id && navigationStore.selected === 'directory'"
+		<NcAppSidebarTab
+			v-if="
+				directoryStore.listingItem.id
+				&& navigationStore.selected === 'directory'
+			"
 			id="detail-tab"
 			name="Details"
 			:order="1">
@@ -63,17 +79,25 @@ import { reactive } from 'vue'
 				</div>
 			</div>
 		</NcAppSidebarTab>
-		<NcAppSidebarTab v-if="directoryStore.listingItem.id && navigationStore.selected === 'directory'"
+		<NcAppSidebarTab
+			v-if="
+				directoryStore.listingItem.id
+				&& navigationStore.selected === 'directory'
+			"
 			id="settings-tab"
 			name="Configuratie"
 			:order="2">
 			<template #icon>
 				<CogOutline :size="20" />
 			</template>
-			<NcCheckboxRadioSwitch v-model="directoryStore.listingItem.available" type="switch">
+			<NcCheckboxRadioSwitch
+				v-model="directoryStore.listingItem.available"
+				type="switch">
 				Beschickbaar maken voor mijn zoek opdrachten
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch v-model="directoryStore.listingItem.default" type="switch">
+			<NcCheckboxRadioSwitch
+				v-model="directoryStore.listingItem.default"
+				type="switch">
 				Standaard mee nemen in de beantwoording van mijn zoekopdrachten
 			</NcCheckboxRadioSwitch>
 
@@ -90,7 +114,11 @@ import { reactive } from 'vue'
 				Synchroniseren
 			</NcButton>
 		</NcAppSidebarTab>
-		<NcAppSidebarTab v-if="directoryStore.listingItem.id && navigationStore.selected === 'directory'"
+		<NcAppSidebarTab
+			v-if="
+				directoryStore.listingItem.id
+				&& navigationStore.selected === 'directory'
+			"
 			id="metdata-tab"
 			name="Publicatie typen"
 			:order="3">
@@ -99,7 +127,9 @@ import { reactive } from 'vue'
 			</template>
 			Welke meta data typen zou u uit deze catalogus willen overnemen?
 			<div v-if="!loading">
-				<NcCheckboxRadioSwitch v-for="(metadataSingular, i) in directoryStore.listingItem.metadata"
+				<NcCheckboxRadioSwitch
+					v-for="(metadataSingular, i) in directoryStore.listingItem
+						.metadata"
 					:key="`${metadataSingular}${i}`"
 					v-model="checkedMetadata[metadataSingular]"
 					type="switch">
@@ -111,8 +141,14 @@ import { reactive } from 'vue'
 	</NcAppSidebar>
 </template>
 <script>
-
-import { NcAppSidebar, NcEmptyContent, NcButton, NcAppSidebarTab, NcCheckboxRadioSwitch, NcLoadingIcon } from '@nextcloud/vue'
+import {
+	NcAppSidebar,
+	NcEmptyContent,
+	NcButton,
+	NcAppSidebarTab,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+} from '@nextcloud/vue'
 import LayersOutline from 'vue-material-design-icons/LayersOutline.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
@@ -232,7 +268,9 @@ export default {
 			if (Array.isArray(directoryStore?.listingItem?.metadata)) {
 				directoryStore.listingItem.metadata.forEach((metadataUrl) => {
 					// Check if the metadata URL exists in the metadataStore.metaDataList
-					const exists = metadataStore.metaDataList.some(metaData => metaData.source === metadataUrl)
+					const exists = metadataStore.metaDataList.some(
+						(metaData) => metaData.source === metadataUrl,
+					)
 					// Update the checkedMetadata reactive state
 					this.checkedMetadata[metadataUrl] = exists
 				})
@@ -244,17 +282,17 @@ export default {
 		 */
 		copyMetadata(metadataUrl) {
 			this.loading = true
-			fetch(
-				metadataUrl,
-				{
-					method: 'GET',
-				},
-			)
+			fetch(metadataUrl, {
+				method: 'GET',
+			})
 				.then((response) => {
 					metadataStore.refreshMetaDataList()
 					response.json().then((data) => {
-						const metaDataSources = metadataStore.metaDataList.map((metaData) => metaData.source)
-						if (!metaDataSources.includes(data.source)) this.createMetadata(data)
+						const metaDataSources = metadataStore.metaDataList.map(
+							(metaData) => metaData.source,
+						)
+						if (!metaDataSources.includes(data.source))
+							this.createMetadata(data)
 					})
 					this.loading = false
 				})
@@ -277,16 +315,13 @@ export default {
 			delete data.id
 			delete data._id
 
-			fetch(
-				'/index.php/apps/opencatalogi/api/metadata',
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(data),
+			fetch('/index.php/apps/opencatalogi/api/metadata', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
 				},
-			)
+				body: JSON.stringify(data),
+			})
 				.then((response) => {
 					this.loading = false
 				})
@@ -302,15 +337,12 @@ export default {
 			this.loading = true
 			const metadataId = this.getMetadataId(metadataUrl)
 
-			fetch(
-				`/index.php/apps/opencatalogi/api/metadata/${metadataId}`,
-				{
-					method: 'DELETE',
-					headers: {
-						'Content-Type': 'application/json',
-					},
+			fetch(`/index.php/apps/opencatalogi/api/metadata/${metadataId}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
 				},
-			)
+			})
 				.then(() => {
 					this.loading = false
 				})

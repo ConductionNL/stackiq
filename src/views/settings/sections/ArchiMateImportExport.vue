@@ -28,7 +28,9 @@
 			<!-- Import Section -->
 			<div class="import-section">
 				<!-- File Upload (shown only when no results) -->
-				<div v-if="!importResult && !importError" class="file-upload-container">
+				<div
+					v-if="!importResult && !importError"
+					class="file-upload-container">
 					<input
 						id="archimate-file-input"
 						ref="fileInput"
@@ -36,29 +38,46 @@
 						accept=".xml,.archimate"
 						class="file-input"
 						:disabled="importing"
-						@change="handleFileSelect">
-					<label for="archimate-file-input" class="file-upload-label" :class="{ disabled: importing }">
+						@change="handleFileSelect" />
+					<label
+						for="archimate-file-input"
+						class="file-upload-label"
+						:class="{ disabled: importing }">
 						<CloudUpload :size="24" />
-						<span>{{ selectedFile ? selectedFile.name : 'Choose ArchiMate XML file' }}</span>
-						<span v-if="selectedFile" class="file-size">{{ formatFileSize(selectedFile.size) }}</span>
+						<span>{{
+							selectedFile
+								? selectedFile.name
+								: 'Choose ArchiMate XML file'
+						}}</span>
+						<span v-if="selectedFile" class="file-size">{{
+							formatFileSize(selectedFile.size)
+						}}</span>
 					</label>
 				</div>
 
 				<!-- Import Results (shown instead of upload when there are results) -->
-				<div v-else-if="importResult || importError" class="import-results-section">
+				<div
+					v-else-if="importResult || importError"
+					class="import-results-section">
 					<!-- Success Results -->
-					<div v-if="importResult && importResult.success" class="success-results">
+					<div
+						v-if="importResult && importResult.success"
+						class="success-results">
 						<!-- File Information -->
 						<div class="result-card">
 							<h5>File Information</h5>
 							<div class="info-grid">
 								<div class="info-item">
 									<span class="label">File Name:</span>
-									<span class="value">{{ importResult.file_info.name }}</span>
+									<span class="value">{{
+										importResult.file_info.name
+									}}</span>
 								</div>
 								<div class="info-item">
 									<span class="label">File Size:</span>
-									<span class="value">{{ formatFileSize(importResult.file_info.size) }}</span>
+									<span class="value">{{
+										formatFileSize(importResult.file_info.size)
+									}}</span>
 								</div>
 							</div>
 						</div>
@@ -69,35 +88,44 @@
 							<div class="metrics-grid">
 								<div class="metric-item">
 									<div class="metric-value">
-										{{ formatTime(importResult.performance_metrics.total_time_seconds) }}
+										{{
+											formatTime(
+												importResult.performance_metrics
+													.total_time_seconds,
+											)
+										}}
 									</div>
-									<div class="metric-label">
-										Total Time
-									</div>
+									<div class="metric-label">Total Time</div>
 								</div>
 								<div class="metric-item">
 									<div class="metric-value">
-										{{ importResult.performance_metrics.objects_processed.toLocaleString() }}
+										{{
+											importResult.performance_metrics.objects_processed.toLocaleString()
+										}}
 									</div>
-									<div class="metric-label">
-										Objects Processed
-									</div>
+									<div class="metric-label">Objects Processed</div>
 								</div>
 								<div class="metric-item">
 									<div class="metric-value">
-										{{ Math.round(importResult.performance_metrics.items_per_second) }}/s
+										{{
+											Math.round(
+												importResult.performance_metrics
+													.items_per_second,
+											)
+										}}/s
 									</div>
-									<div class="metric-label">
-										Items per Second
-									</div>
+									<div class="metric-label">Items per Second</div>
 								</div>
 								<div class="metric-item">
 									<div class="metric-value">
-										{{ formatMemory(importResult.performance_metrics.memory_usage.peak_memory_mb) }}
+										{{
+											formatMemory(
+												importResult.performance_metrics
+													.memory_usage.peak_memory_mb,
+											)
+										}}
 									</div>
-									<div class="metric-label">
-										Peak Memory
-									</div>
+									<div class="metric-label">Peak Memory</div>
 								</div>
 							</div>
 						</div>
@@ -108,64 +136,131 @@
 							<div class="breakdown-list">
 								<div class="breakdown-item">
 									<span class="breakdown-label">XML Parsing</span>
-									<span class="breakdown-value">{{ formatTime(importResult.performance_metrics.timing_breakdown.xml_parsing_seconds) }}</span>
-									<span class="breakdown-rate">({{ Math.round(importResult.performance_metrics.processing_rates.xml_parse_objects_per_second) }}/s)</span>
+									<span class="breakdown-value">{{
+										formatTime(
+											importResult.performance_metrics
+												.timing_breakdown
+												.xml_parsing_seconds,
+										)
+									}}</span>
+									<span class="breakdown-rate"
+										>({{
+											Math.round(
+												importResult.performance_metrics
+													.processing_rates
+													.xml_parse_objects_per_second,
+											)
+										}}/s)</span
+									>
 								</div>
 								<div class="breakdown-item">
-									<span class="breakdown-label">Data Transformation</span>
-									<span class="breakdown-value">{{ formatTime(importResult.performance_metrics.timing_breakdown.data_transformation_seconds) }}</span>
-									<span class="breakdown-rate">({{ Math.round(importResult.performance_metrics.processing_rates.transform_objects_per_second).toLocaleString() }}/s)</span>
+									<span class="breakdown-label"
+										>Data Transformation</span
+									>
+									<span class="breakdown-value">{{
+										formatTime(
+											importResult.performance_metrics
+												.timing_breakdown
+												.data_transformation_seconds,
+										)
+									}}</span>
+									<span class="breakdown-rate"
+										>({{
+											Math.round(
+												importResult.performance_metrics
+													.processing_rates
+													.transform_objects_per_second,
+											).toLocaleString()
+										}}/s)</span
+									>
 								</div>
 								<div class="breakdown-item">
-									<span class="breakdown-label">Database Save</span>
-									<span class="breakdown-value">{{ formatTime(importResult.performance_metrics.timing_breakdown.database_save_seconds) }}</span>
-									<span class="breakdown-rate">({{ Math.round(importResult.performance_metrics.processing_rates.save_objects_per_second) }}/s)</span>
+									<span class="breakdown-label"
+										>Database Save</span
+									>
+									<span class="breakdown-value">{{
+										formatTime(
+											importResult.performance_metrics
+												.timing_breakdown
+												.database_save_seconds,
+										)
+									}}</span>
+									<span class="breakdown-rate"
+										>({{
+											Math.round(
+												importResult.performance_metrics
+													.processing_rates
+													.save_objects_per_second,
+											)
+										}}/s)</span
+									>
 								</div>
 							</div>
 						</div>
 
 						<!-- Statistics Summary -->
-						<div v-if="importResult.statistics && importResult.statistics.summary" class="result-card">
+						<div
+							v-if="
+								importResult.statistics
+								&& importResult.statistics.summary
+							"
+							class="result-card">
 							<h5>Import Summary</h5>
 							<div class="summary-grid">
 								<div class="summary-item created">
 									<div class="summary-number">
-										{{ importResult.statistics.summary.total_objects_created }}
+										{{
+											importResult.statistics.summary
+												.total_objects_created
+										}}
 									</div>
-									<div class="summary-label">
-										Created
-									</div>
+									<div class="summary-label">Created</div>
 								</div>
 								<div class="summary-item updated">
 									<div class="summary-number">
-										{{ importResult.statistics.summary.total_objects_updated }}
+										{{
+											importResult.statistics.summary
+												.total_objects_updated
+										}}
 									</div>
-									<div class="summary-label">
-										Updated
-									</div>
+									<div class="summary-label">Updated</div>
 								</div>
 								<div class="summary-item unchanged">
 									<div class="summary-number">
-										{{ importResult.statistics.summary.total_objects_unchanged }}
+										{{
+											importResult.statistics.summary
+												.total_objects_unchanged
+										}}
 									</div>
-									<div class="summary-label">
-										Unchanged
-									</div>
+									<div class="summary-label">Unchanged</div>
 								</div>
 								<button
 									type="button"
 									class="summary-item errors"
-									:class="{ clickable: importResult.statistics.summary.total_errors > 0 }"
-									:disabled="importResult.statistics.summary.total_errors === 0"
+									:class="{
+										clickable:
+											importResult.statistics.summary
+												.total_errors > 0,
+									}"
+									:disabled="
+										importResult.statistics.summary.total_errors
+										=== 0
+									"
 									:aria-label="`Show details for ${importResult.statistics.summary.total_errors} import errors`"
 									@click="showErrorDetails">
 									<div class="summary-number">
-										{{ importResult.statistics.summary.total_errors }}
+										{{
+											importResult.statistics.summary
+												.total_errors
+										}}
 									</div>
-									<div class="summary-label">
-										Errors
-									</div>
-									<div v-if="importResult.statistics.summary.total_errors > 0" class="click-hint">
+									<div class="summary-label">Errors</div>
+									<div
+										v-if="
+											importResult.statistics.summary
+												.total_errors > 0
+										"
+										class="click-hint">
 										Click to view details
 									</div>
 								</button>
@@ -173,7 +268,12 @@
 						</div>
 
 						<!-- Detailed Errors Modal -->
-						<div v-if="showErrors && importResult?.detailed_errors?.total_count > 0" class="error-details-modal">
+						<div
+							v-if="
+								showErrors
+								&& importResult?.detailed_errors?.total_count > 0
+							"
+							class="error-details-modal">
 							<div class="error-details-content">
 								<div class="error-details-header">
 									<h5>Import Errors Details</h5>
@@ -191,25 +291,48 @@
 								<div class="error-summary">
 									<div class="error-stats">
 										<div class="stat-item">
-											<span class="stat-number">{{ importResult.detailed_errors.total_count }}</span>
-											<span class="stat-label">Total Errors</span>
+											<span class="stat-number">{{
+												importResult.detailed_errors
+													.total_count
+											}}</span>
+											<span class="stat-label"
+												>Total Errors</span
+											>
 										</div>
 										<div class="stat-item">
-											<span class="stat-number">{{ Object.keys(importResult.detailed_errors.by_section).length }}</span>
-											<span class="stat-label">Affected Sections</span>
+											<span class="stat-number">{{
+												Object.keys(
+													importResult.detailed_errors
+														.by_section,
+												).length
+											}}</span>
+											<span class="stat-label"
+												>Affected Sections</span
+											>
 										</div>
 									</div>
 								</div>
 
 								<!-- Most Common Errors -->
-								<div v-if="importResult.detailed_errors.summary && importResult.detailed_errors.summary.length > 0" class="common-errors-section">
+								<div
+									v-if="
+										importResult.detailed_errors.summary
+										&& importResult.detailed_errors.summary
+											.length > 0
+									"
+									class="common-errors-section">
 									<h6>Most Common Issues</h6>
 									<div class="common-errors-list">
 										<div
-											v-for="error in importResult.detailed_errors.summary.slice(0, 5)"
+											v-for="error in importResult.detailed_errors.summary.slice(
+												0,
+												5,
+											)"
 											:key="error.type"
 											class="common-error-item">
-											<div class="error-type-badge" :class="error.type">
+											<div
+												class="error-type-badge"
+												:class="error.type">
 												{{ formatErrorType(error.type) }}
 											</div>
 											<div class="error-details">
@@ -217,9 +340,26 @@
 													{{ error.message }}
 												</div>
 												<div class="error-meta">
-													<span class="error-count">{{ error.total_count }} occurrences</span>
-													<span v-if="error.affected_sections && error.affected_sections.length > 0" class="affected-sections">
-														in {{ error.affected_sections.join(', ') }}
+													<span class="error-count"
+														>{{
+															error.total_count
+														}}
+														occurrences</span
+													>
+													<span
+														v-if="
+															error.affected_sections
+															&& error
+																.affected_sections
+																.length > 0
+														"
+														class="affected-sections">
+														in
+														{{
+															error.affected_sections.join(
+																', ',
+															)
+														}}
 													</span>
 												</div>
 											</div>
@@ -232,12 +372,22 @@
 									<h6>Errors by Section</h6>
 									<div class="section-errors-list">
 										<div
-											v-for="(sectionData, sectionName) in importResult.detailed_errors.by_section"
+											v-for="(
+												sectionData, sectionName
+											) in importResult.detailed_errors
+												.by_section"
 											:key="sectionName"
 											class="section-error-group">
 											<div class="section-header">
-												<h6>{{ sectionData.section_name }}</h6>
-												<span class="section-error-count">{{ sectionData.total_errors }} errors</span>
+												<h6>
+													{{ sectionData.section_name }}
+												</h6>
+												<span class="section-error-count"
+													>{{
+														sectionData.total_errors
+													}}
+													errors</span
+												>
 											</div>
 											<div class="section-error-details">
 												<div
@@ -245,17 +395,43 @@
 													:key="errorGroup.type"
 													class="error-group">
 													<div class="error-group-header">
-														<div class="error-type-badge small" :class="errorGroup.type">
-															{{ formatErrorType(errorGroup.type) }}
+														<div
+															class="error-type-badge small"
+															:class="errorGroup.type">
+															{{
+																formatErrorType(
+																	errorGroup.type,
+																)
+															}}
 														</div>
-														<span class="error-group-count">{{ errorGroup.count }}</span>
+														<span
+															class="error-group-count"
+															>{{
+																errorGroup.count
+															}}</span
+														>
 													</div>
 													<div class="error-group-message">
 														{{ errorGroup.message }}
 													</div>
-													<div v-if="errorGroup.examples && errorGroup.examples.length > 0" class="error-examples">
-														<span class="examples-label">Examples:</span>
-														<span class="examples-list">{{ errorGroup.examples.join(', ') }}</span>
+													<div
+														v-if="
+															errorGroup.examples
+															&& errorGroup.examples
+																.length > 0
+														"
+														class="error-examples">
+														<span class="examples-label"
+															>Examples:</span
+														>
+														<span
+															class="examples-list"
+															>{{
+																errorGroup.examples.join(
+																	', ',
+																)
+															}}</span
+														>
 													</div>
 												</div>
 											</div>
@@ -275,13 +451,25 @@
 							</div>
 							<div class="error-details">
 								<!-- Configuration Error -->
-								<div v-if="isConfigurationError(importError.message)" class="configuration-error">
+								<div
+									v-if="isConfigurationError(importError.message)"
+									class="configuration-error">
 									<p><strong>Configuration Missing:</strong></p>
 									<div class="configuration-issues">
-										<p>{{ getConfigurationErrorDescription(importError.message) }}</p>
+										<p>
+											{{
+												getConfigurationErrorDescription(
+													importError.message,
+												)
+											}}
+										</p>
 										<div class="missing-items">
 											<ul>
-												<li v-for="item in getMissingConfigItems(importError.message)" :key="item">
+												<li
+													v-for="item in getMissingConfigItems(
+														importError.message,
+													)"
+													:key="item">
 													{{ item }}
 												</li>
 											</ul>
@@ -290,20 +478,48 @@
 									<div class="configuration-help">
 										<h5>How to Fix:</h5>
 										<ol>
-											<li>Go to the <strong>Registers</strong> section in these settings</li>
-											<li>Use the <strong>Auto-Configure</strong> button to automatically set up AMEF schemas</li>
-											<li>Or manually configure each schema ID in the register settings</li>
-											<li>Return here to try the import again</li>
+											<li>
+												Go to the
+												<strong>Registers</strong> section in
+												these settings
+											</li>
+											<li>
+												Use the
+												<strong>Auto-Configure</strong>
+												button to automatically set up AMEF
+												schemas
+											</li>
+											<li>
+												Or manually configure each schema ID
+												in the register settings
+											</li>
+											<li>
+												Return here to try the import again
+											</li>
 										</ol>
 									</div>
 								</div>
 
 								<!-- General Error -->
 								<div v-else>
-									<p><strong>Error:</strong> {{ importError.message || 'Unknown error occurred during import' }}</p>
-									<div v-if="importError.details" class="error-additional">
+									<p>
+										<strong>Error:</strong>
+										{{
+											importError.message
+											|| 'Unknown error occurred during import'
+										}}
+									</p>
+									<div
+										v-if="importError.details"
+										class="error-additional">
 										<h5>Additional Details:</h5>
-										<pre>{{ JSON.stringify(importError.details, null, 2) }}</pre>
+										<pre>{{
+											JSON.stringify(
+												importError.details,
+												null,
+												2,
+											)
+										}}</pre>
 									</div>
 								</div>
 							</div>
@@ -325,10 +541,7 @@
 						{{ importing ? 'Importing...' : 'Import' }}
 					</NcButton>
 
-					<NcButton
-						v-else
-						variant="primary"
-						@click="resetImport">
+					<NcButton v-else variant="primary" @click="resetImport">
 						<template #icon>
 							<Refresh :size="20" />
 						</template>
@@ -404,7 +617,10 @@
 		<template #info-content>
 			<div class="archimate-info">
 				<h3>ArchiMate Operations</h3>
-				<p>Import and export ArchiMate models with organization filtering support.</p>
+				<p>
+					Import and export ArchiMate models with organization filtering
+					support.
+				</p>
 
 				<h4>Supported Formats</h4>
 				<ul>
@@ -436,7 +652,13 @@ import { withHeartbeat } from '../../../utils/heartbeat.js'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 // Nextcloud Vue components
-import { NcButton, NcNoteCard, NcLoadingIcon, NcSelect, NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcNoteCard,
+	NcLoadingIcon,
+	NcSelect,
+	NcCheckboxRadioSwitch,
+} from '@nextcloud/vue'
 
 // Icons
 import CloudUpload from 'vue-material-design-icons/CloudUpload.vue'
@@ -484,9 +706,7 @@ export default {
 			includeModules: true,
 			includeDeelnames: false,
 			includeGebruik: false,
-			organizationOptions: [
-				{ label: 'Generic', value: null },
-			],
+			organizationOptions: [{ label: 'Generic', value: null }],
 		}
 	},
 
@@ -503,7 +723,7 @@ export default {
 		 *
 		 * @param {Event} event - File input change event
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		handleFileSelect(event) {
 			const file = event.target.files[0]
@@ -520,7 +740,7 @@ export default {
 		 *
 		 * @param {number} bytes - File size in bytes
 		 * @return {string} Formatted file size string
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatFileSize(bytes) {
 			if (bytes === 0) return '0 Bytes'
@@ -535,7 +755,7 @@ export default {
 		 *
 		 * @param {number} seconds - Time in seconds
 		 * @return {string} Formatted time string
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatTime(seconds) {
 			if (seconds < 1) {
@@ -554,7 +774,7 @@ export default {
 		 *
 		 * @param {number} megabytes - Memory size in megabytes
 		 * @return {string} Formatted memory string
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatMemory(megabytes) {
 			if (megabytes < 1024) {
@@ -569,7 +789,7 @@ export default {
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async importArchiMateFile() {
 			if (!this.selectedFile) {
@@ -590,18 +810,23 @@ export default {
 					// Make the API call
 					// Note: Do not set Content-Type header for FormData - let browser set it with boundary
 					// Also remove OCS-APIREQUEST for file uploads as it interferes with multipart form data
-					const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
-						method: 'POST',
-						headers: {
-							'X-Requested-With': 'XMLHttpRequest',
+					const response = await fetch(
+						'/index.php/apps/softwarecatalog/api/archimate/import',
+						{
+							method: 'POST',
+							headers: {
+								'X-Requested-With': 'XMLHttpRequest',
+							},
+							body: formData,
 						},
-						body: formData,
-					})
+					)
 
 					const result = await response.json()
 
 					if (!result.success) {
-						throw new Error(result.error || result.message || 'Import failed')
+						throw new Error(
+							result.error || result.message || 'Import failed',
+						)
 					}
 
 					return result
@@ -614,7 +839,6 @@ export default {
 					`Successfully imported ${result.performance_metrics.objects_processed} objects in ${this.formatTime(result.performance_metrics.total_time_seconds)}`,
 					{ type: 'success' },
 				)
-
 			} catch (error) {
 				console.error('Error importing ArchiMate file:', error)
 				this.importError = {
@@ -637,7 +861,7 @@ export default {
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async exportArchiMateFile() {
 			this.exporting = true
@@ -651,15 +875,18 @@ export default {
 				// Wrap the export operation with heartbeat to prevent 504 timeouts
 				await withHeartbeat(async () => {
 					// Make the API call
-					const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'OCS-APIREQUEST': 'true',
-							requesttoken: OC.requestToken,
+					const response = await fetch(
+						'/index.php/apps/softwarecatalog/api/archimate/export',
+						{
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'OCS-APIREQUEST': 'true',
+								requesttoken: OC.requestToken,
+							},
+							body: JSON.stringify(exportData),
 						},
-						body: JSON.stringify(exportData),
-					})
+					)
 
 					// Handle file download
 					if (response.ok) {
@@ -667,10 +894,12 @@ export default {
 						const url = window.URL.createObjectURL(blob)
 
 						// Get filename from response headers or create default
-						const contentDisposition = response.headers.get('content-disposition')
+						const contentDisposition =
+							response.headers.get('content-disposition')
 						let fileName = 'archimate_export.xml'
 						if (contentDisposition) {
-							const match = contentDisposition.match(/filename="?([^"]*)"?/)
+							const match =
+								contentDisposition.match(/filename="?([^"]*)"?/)
 							if (match) {
 								fileName = match[1]
 							}
@@ -687,7 +916,9 @@ export default {
 
 						// Show success notification
 						const orgName = this.selectedOrganization
-							? this.organizationOptions.find(opt => opt.value === this.selectedOrganization)?.label
+							? this.organizationOptions.find(
+									(opt) => opt.value === this.selectedOrganization,
+								)?.label
 							: 'Generic'
 						OC.Notification.showTemporary(
 							`ArchiMate file exported successfully for ${orgName}`,
@@ -698,15 +929,13 @@ export default {
 						throw new Error(errorData.message || 'Export failed')
 					}
 				}, 30000) // 30-second heartbeat interval
-
 			} catch (error) {
 				console.error('Error exporting ArchiMate file:', error)
 
 				// Show error notification
-				OC.Notification.showTemporary(
-					'Export failed: ' + error.message,
-					{ type: 'error' },
-				)
+				OC.Notification.showTemporary('Export failed: ' + error.message, {
+					type: 'error',
+				})
 			} finally {
 				this.exporting = false
 			}
@@ -714,14 +943,15 @@ export default {
 
 		/**
 		 * Export organization-specific ArchiMate file with enriched views
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async exportOrgArchiMateFile() {
 			if (!this.selectedOrganization) return
 			this.exportingOrg = true
 
 			try {
-				const orgUuid = this.selectedOrganization?.value ?? this.selectedOrganization
+				const orgUuid =
+					this.selectedOrganization?.value ?? this.selectedOrganization
 
 				// Build query string from checkbox states
 				const params = new URLSearchParams()
@@ -744,10 +974,12 @@ export default {
 						const blob = await response.blob()
 						const blobUrl = window.URL.createObjectURL(blob)
 
-						const contentDisposition = response.headers.get('content-disposition')
+						const contentDisposition =
+							response.headers.get('content-disposition')
 						let fileName = 'archimate_org_export.xml'
 						if (contentDisposition) {
-							const match = contentDisposition.match(/filename="?([^"]*)"?/)
+							const match =
+								contentDisposition.match(/filename="?([^"]*)"?/)
 							if (match) {
 								fileName = match[1]
 							}
@@ -761,19 +993,21 @@ export default {
 						window.URL.revokeObjectURL(blobUrl)
 						document.body.removeChild(a)
 
-						const orgLabel = this.organizationOptions.find(
-							opt => opt.value === orgUuid,
-						)?.label ?? 'Organization'
+						const orgLabel =
+							this.organizationOptions.find(
+								(opt) => opt.value === orgUuid,
+							)?.label ?? 'Organization'
 						OC.Notification.showTemporary(
 							`Organization ArchiMate file exported for ${orgLabel}`,
 							{ type: 'success' },
 						)
 					} else {
 						const errorData = await response.json()
-						throw new Error(errorData.message || 'Organization export failed')
+						throw new Error(
+							errorData.message || 'Organization export failed',
+						)
 					}
 				}, 30000)
-
 			} catch (error) {
 				console.error('Error exporting organization ArchiMate file:', error)
 				OC.Notification.showTemporary(
@@ -789,7 +1023,7 @@ export default {
 		 * Clear import results and errors
 		 *
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		clearResults() {
 			this.importResult = null
@@ -800,7 +1034,7 @@ export default {
 		 * Reset import state and show upload interface again
 		 *
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		resetImport() {
 			// Clear all import state
@@ -820,7 +1054,7 @@ export default {
 		 * Show detailed error information
 		 *
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		showErrorDetails() {
 			if (this.importResult?.statistics?.summary?.total_errors > 0) {
@@ -832,7 +1066,7 @@ export default {
 		 * Hide detailed error information
 		 *
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		hideErrorDetails() {
 			this.showErrors = false
@@ -843,7 +1077,7 @@ export default {
 		 *
 		 * @param {string} errorType - The error type to format
 		 * @return {string} Formatted error type
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatErrorType(errorType) {
 			const typeMap = {
@@ -857,7 +1091,10 @@ export default {
 				encoding: 'Encoding',
 				general: 'General',
 			}
-			return typeMap[errorType] || errorType.charAt(0).toUpperCase() + errorType.slice(1)
+			return (
+				typeMap[errorType]
+				|| errorType.charAt(0).toUpperCase() + errorType.slice(1)
+			)
 		},
 
 		/**
@@ -865,13 +1102,14 @@ export default {
 		 *
 		 * @param {string} errorMessage - Error message to check
 		 * @return {boolean} True if it's a configuration error
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		isConfigurationError(errorMessage) {
-			return errorMessage && (
-				errorMessage.includes('missing configuration')
-				|| errorMessage.includes('is not configured')
-				|| errorMessage.includes('Please configure all AMEF schema IDs')
+			return (
+				errorMessage
+				&& (errorMessage.includes('missing configuration')
+					|| errorMessage.includes('is not configured')
+					|| errorMessage.includes('Please configure all AMEF schema IDs'))
 			)
 		},
 
@@ -880,7 +1118,7 @@ export default {
 		 *
 		 * @param {string} errorMessage - Full error message
 		 * @return {string} Clean description of the error
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getConfigurationErrorDescription(errorMessage) {
 			if (!errorMessage) return ''
@@ -888,7 +1126,9 @@ export default {
 			// Handle new error format from updated validation
 			if (errorMessage.includes('is not configured')) {
 				// Extract schema type from error message
-				const schemaMatch = errorMessage.match(/Schema ID for (\w+) '([^']+)' is not configured/)
+				const schemaMatch = errorMessage.match(
+					/Schema ID for (\w+) '([^']+)' is not configured/,
+				)
 				if (schemaMatch) {
 					return `Missing configuration for ${schemaMatch[1]} schema (${schemaMatch[2]})`
 				}
@@ -897,7 +1137,7 @@ export default {
 
 			// Extract the main description before the missing items list (legacy format)
 			const lines = errorMessage.split('\n')
-			const mainLine = lines.find(line => line.includes('cannot proceed'))
+			const mainLine = lines.find((line) => line.includes('cannot proceed'))
 			if (mainLine) {
 				return mainLine.replace('ArchiMate import ', 'Import ').trim()
 			}
@@ -909,16 +1149,20 @@ export default {
 		 *
 		 * @param {string} errorMessage - Full error message
 		 * @return {Array} Array of missing configuration items
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getMissingConfigItems(errorMessage) {
 			if (!errorMessage) return []
 
 			// Handle new error format from updated validation
 			if (errorMessage.includes('is not configured')) {
-				const schemaMatch = errorMessage.match(/Schema ID for (\w+) '([^']+)' is not configured/)
+				const schemaMatch = errorMessage.match(
+					/Schema ID for (\w+) '([^']+)' is not configured/,
+				)
 				if (schemaMatch) {
-					return [`${schemaMatch[2]} schema ID (for ${schemaMatch[1]} objects)`]
+					return [
+						`${schemaMatch[2]} schema ID (for ${schemaMatch[1]} objects)`,
+					]
 				}
 
 				// Check for register ID configuration error
@@ -944,7 +1188,11 @@ export default {
 					// Clean up the item text
 					const item = line.replace(/^-\s*/, '').trim()
 					missingItems.push(item)
-				} else if (inMissingSection && !line.trim().startsWith('-') && line.trim() !== '') {
+				} else if (
+					inMissingSection
+					&& !line.trim().startsWith('-')
+					&& line.trim() !== ''
+				) {
 					// End of missing items list
 					break
 				}
@@ -958,16 +1206,19 @@ export default {
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadOrganizations() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config', {
-					headers: {
-						'OCS-APIREQUEST': 'true',
-						requesttoken: OC.requestToken,
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+					{
+						headers: {
+							'OCS-APIREQUEST': 'true',
+							requesttoken: OC.requestToken,
+						},
 					},
-				})
+				)
 				if (!response.ok) throw new Error('Failed to load config')
 				const data = await response.json()
 
@@ -975,7 +1226,9 @@ export default {
 				const voorzRegister = data?.config?.register
 				const orgSchema = data?.config?.organisatie_schema
 				if (!voorzRegister || !orgSchema) {
-					console.debug('Voorzieningen config not available, using default Generic option')
+					console.debug(
+						'Voorzieningen config not available, using default Generic option',
+					)
 					return
 				}
 
@@ -1016,11 +1269,16 @@ export default {
 				const orgs = orgData?.results || orgData || []
 				if (Array.isArray(orgs) && orgs.length > 0) {
 					this.organizationOptions = orgs
-						.map(org => ({
-							label: org['@self']?.name || org.naam || org.name || org.contactsUid || '',
+						.map((org) => ({
+							label:
+								org['@self']?.name
+								|| org.naam
+								|| org.name
+								|| org.contactsUid
+								|| '',
 							value: org.id || org['@self']?.id,
 						}))
-						.filter(option => option.label !== '' && option.value)
+						.filter((option) => option.label !== '' && option.value)
 						.sort((a, b) => a.label.localeCompare(b.label))
 				}
 			} catch (error) {
@@ -1434,7 +1692,19 @@ button.summary-item:disabled {
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
 	color: var(--color-main-text);
-	font-family: var(--font-face, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif);
+	font-family: var(
+		--font-face,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		Roboto,
+		Oxygen-Sans,
+		Ubuntu,
+		Cantarell,
+		'Helvetica Neue',
+		Arial,
+		sans-serif
+	);
 	font-size: 0.875rem;
 	border-left: 3px solid var(--color-error);
 }
@@ -1569,7 +1839,9 @@ button.summary-item:disabled {
 /* Clickable Error Tile Styles */
 .summary-item.clickable {
 	cursor: pointer;
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
 }
 
 .summary-item.clickable:hover {
@@ -1717,23 +1989,50 @@ button.summary-item:disabled {
 }
 
 /* Error type colors */
-.error-type-badge.validation { background: #ffebee; color: #c62828; }
+.error-type-badge.validation {
+	background: #ffebee;
+	color: #c62828;
+}
 
-.error-type-badge.schema { background: #e3f2fd; color: #1565c0; }
+.error-type-badge.schema {
+	background: #e3f2fd;
+	color: #1565c0;
+}
 
-.error-type-badge.reference { background: #f3e5f5; color: #7b1fa2; }
+.error-type-badge.reference {
+	background: #f3e5f5;
+	color: #7b1fa2;
+}
 
-.error-type-badge.property { background: #e8f5e8; color: #2e7d32; }
+.error-type-badge.property {
+	background: #e8f5e8;
+	color: #2e7d32;
+}
 
-.error-type-badge.constraint { background: #fff3e0; color: #ef6c00; }
+.error-type-badge.constraint {
+	background: #fff3e0;
+	color: #ef6c00;
+}
 
-.error-type-badge.relationship { background: #fce4ec; color: #ad1457; }
+.error-type-badge.relationship {
+	background: #fce4ec;
+	color: #ad1457;
+}
 
-.error-type-badge.data_type { background: #e0f2f1; color: #00695c; }
+.error-type-badge.data_type {
+	background: #e0f2f1;
+	color: #00695c;
+}
 
-.error-type-badge.encoding { background: #f1f8e9; color: #558b2f; }
+.error-type-badge.encoding {
+	background: #f1f8e9;
+	color: #558b2f;
+}
 
-.error-type-badge.general { background: #f5f5f5; color: #424242; }
+.error-type-badge.general {
+	background: #f5f5f5;
+	color: #424242;
+}
 
 .error-message {
 	font-weight: 500;

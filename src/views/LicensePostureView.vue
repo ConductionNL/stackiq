@@ -5,9 +5,17 @@
 				{{ t('softwarecatalog', 'License posture') }}
 			</h2>
 			<p class="pv-intro">
-				{{ t('softwarecatalog', 'Open-source vs closed-source posture of the applications you actually run, weighted by in-production deployment — with per-vendor and per-organisation breakdowns.') }}
+				{{
+					t(
+						'softwarecatalog',
+						'Open-source vs closed-source posture of the applications you actually run, weighted by in-production deployment — with per-vendor and per-organisation breakdowns.',
+					)
+				}}
 			</p>
-			<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
+			<NcButton
+				variant="tertiary"
+				:aria-label="t('softwarecatalog', 'Refresh data')"
+				@click="loadData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
@@ -27,19 +35,27 @@
 				<div class="pv-kpis">
 					<div class="pv-kpi">
 						<span class="pv-kpiValue">{{ openSharePct }}</span>
-						<span class="pv-kpiLabel">{{ t('softwarecatalog', 'Open-source share (in production)') }}</span>
+						<span class="pv-kpiLabel">{{
+							t('softwarecatalog', 'Open-source share (in production)')
+						}}</span>
 					</div>
 					<div class="pv-kpi">
 						<span class="pv-kpiValue">{{ portfolio.open }}</span>
-						<span class="pv-kpiLabel">{{ t('softwarecatalog', 'Open source') }}</span>
+						<span class="pv-kpiLabel">{{
+							t('softwarecatalog', 'Open source')
+						}}</span>
 					</div>
 					<div class="pv-kpi">
 						<span class="pv-kpiValue">{{ portfolio.closed }}</span>
-						<span class="pv-kpiLabel">{{ t('softwarecatalog', 'Closed source') }}</span>
+						<span class="pv-kpiLabel">{{
+							t('softwarecatalog', 'Closed source')
+						}}</span>
 					</div>
 					<div class="pv-kpi">
 						<span class="pv-kpiValue">{{ portfolio.unknown }}</span>
-						<span class="pv-kpiLabel">{{ t('softwarecatalog', 'Unknown') }}</span>
+						<span class="pv-kpiLabel">{{
+							t('softwarecatalog', 'Unknown')
+						}}</span>
 					</div>
 				</div>
 			</section>
@@ -56,15 +72,24 @@
 					<thead>
 						<tr>
 							<th scope="col">{{ t('softwarecatalog', 'Vendor') }}</th>
-							<th scope="col">{{ t('softwarecatalog', 'Deployments') }}</th>
+							<th scope="col">
+								{{ t('softwarecatalog', 'Deployments') }}
+							</th>
 							<th scope="col">{{ t('softwarecatalog', 'Open') }}</th>
 							<th scope="col">{{ t('softwarecatalog', 'Closed') }}</th>
-							<th scope="col">{{ t('softwarecatalog', 'Unknown') }}</th>
-							<th scope="col">{{ t('softwarecatalog', 'Annual cost') }}</th>
+							<th scope="col">
+								{{ t('softwarecatalog', 'Unknown') }}
+							</th>
+							<th scope="col">
+								{{ t('softwarecatalog', 'Annual cost') }}
+							</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="row in vendorRows" :key="row.vendorId" data-testid="posture-vendor-row">
+						<tr
+							v-for="row in vendorRows"
+							:key="row.vendorId"
+							data-testid="posture-vendor-row">
 							<td>{{ row.vendorName }}</td>
 							<td>{{ row.deployments }}</td>
 							<td>{{ row.mix.openCount }}</td>
@@ -79,7 +104,12 @@
 			<!-- Per-organisation report -->
 			<section class="pv-section" data-testid="posture-org">
 				<h3 class="pv-sectionTitle">
-					{{ t('softwarecatalog', 'Per-organisation open-source-first report') }}
+					{{
+						t(
+							'softwarecatalog',
+							'Per-organisation open-source-first report',
+						)
+					}}
 				</h3>
 				<div class="pv-orgSelect">
 					<NcSelect
@@ -90,23 +120,36 @@
 						track-by="uuid"
 						label="label" />
 				</div>
-				<div v-if="selectedOrg" class="pv-orgReport" data-testid="posture-org-report">
+				<div
+					v-if="selectedOrg"
+					class="pv-orgReport"
+					data-testid="posture-org-report">
 					<div class="pv-kpis">
 						<div class="pv-kpi">
 							<span class="pv-kpiValue">{{ orgSharePct }}</span>
-							<span class="pv-kpiLabel">{{ t('softwarecatalog', 'Open-source share') }}</span>
+							<span class="pv-kpiLabel">{{
+								t('softwarecatalog', 'Open-source share')
+							}}</span>
 						</div>
 						<div class="pv-kpi">
 							<span class="pv-kpiValue">{{ orgPosture.open }}</span>
-							<span class="pv-kpiLabel">{{ t('softwarecatalog', 'Open source') }}</span>
+							<span class="pv-kpiLabel">{{
+								t('softwarecatalog', 'Open source')
+							}}</span>
 						</div>
 						<div class="pv-kpi">
 							<span class="pv-kpiValue">{{ orgPosture.closed }}</span>
-							<span class="pv-kpiLabel">{{ t('softwarecatalog', 'Closed source') }}</span>
+							<span class="pv-kpiLabel">{{
+								t('softwarecatalog', 'Closed source')
+							}}</span>
 						</div>
 					</div>
 					<div v-if="orgClosedContributors.length" class="pv-contributors">
-						<span class="pv-contribLabel">{{ t('softwarecatalog', 'Closed-source applications') }}:</span>
+						<span class="pv-contribLabel"
+							>{{
+								t('softwarecatalog', 'Closed-source applications')
+							}}:</span
+						>
 						<ul>
 							<li v-for="c in orgClosedContributors" :key="c.id">
 								{{ c.name }}
@@ -170,7 +213,12 @@ export default {
 	 * @spec openspec/specs/realtime-updates-ui/spec.md
 	 */
 	setup() {
-		useLiveCollections(objectStore, ['module', 'gebruik', 'organisatie', 'contract'])
+		useLiveCollections(objectStore, [
+			'module',
+			'gebruik',
+			'organisatie',
+			'contract',
+		])
 		return {}
 	},
 
@@ -216,7 +264,8 @@ export default {
 		 */
 		organisatieIndex() {
 			const index = {}
-			for (const org of (objectStore.getCollection('organisatie')?.results || [])) {
+			for (const org of objectStore.getCollection('organisatie')?.results
+				|| []) {
 				const data = org.object || org
 				const id = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
 				if (id) {
@@ -269,17 +318,25 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		vendorRows() {
-			return perVendorRollup(this.modules, this.gebruiken, this.contracts).map((row) => ({
-				vendorId: row.vendorId,
-				vendorName: this.organisatieIndex[row.vendorId] || row.vendorId || t('softwarecatalog', 'Unknown vendor'),
-				deployments: row.deployments,
-				mix: {
-					openCount: row.mix[LICENSE_TYPE.OPEN] || 0,
-					closedCount: row.mix[LICENSE_TYPE.CLOSED] || 0,
-					unknownCount: row.mix[LICENSE_TYPE.UNKNOWN] || 0,
-				},
-				costLabel: row.annualCost === null ? '—' : this.formatCurrency(row.annualCost),
-			})).sort((a, b) => b.deployments - a.deployments)
+			return perVendorRollup(this.modules, this.gebruiken, this.contracts)
+				.map((row) => ({
+					vendorId: row.vendorId,
+					vendorName:
+						this.organisatieIndex[row.vendorId]
+						|| row.vendorId
+						|| t('softwarecatalog', 'Unknown vendor'),
+					deployments: row.deployments,
+					mix: {
+						openCount: row.mix[LICENSE_TYPE.OPEN] || 0,
+						closedCount: row.mix[LICENSE_TYPE.CLOSED] || 0,
+						unknownCount: row.mix[LICENSE_TYPE.UNKNOWN] || 0,
+					},
+					costLabel:
+						row.annualCost === null
+							? '—'
+							: this.formatCurrency(row.annualCost),
+				}))
+				.sort((a, b) => b.deployments - a.deployments)
 		},
 
 		/**
@@ -288,7 +345,10 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		organisationOptions() {
-			return Object.entries(this.organisatieIndex).map(([uuid, label]) => ({ uuid, label }))
+			return Object.entries(this.organisatieIndex).map(([uuid, label]) => ({
+				uuid,
+				label,
+			}))
 		},
 
 		/**
@@ -298,9 +358,20 @@ export default {
 		 */
 		orgPosture() {
 			if (!this.selectedOrg) {
-				return { total: 0, open: 0, closed: 0, unknown: 0, openShare: null, closedContributors: [] }
+				return {
+					total: 0,
+					open: 0,
+					closed: 0,
+					unknown: 0,
+					openShare: null,
+					closedContributors: [],
+				}
 			}
-			return perOrganisationPosture(this.selectedOrg.uuid, this.modules, this.gebruiken)
+			return perOrganisationPosture(
+				this.selectedOrg.uuid,
+				this.modules,
+				this.gebruiken,
+			)
 		},
 
 		/**
@@ -342,7 +413,10 @@ export default {
 		async loadData() {
 			this.loading = true
 			try {
-				if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+				if (
+					!objectStore.settings
+					&& typeof objectStore.fetchSettings === 'function'
+				) {
 					await objectStore.fetchSettings()
 				}
 				await Promise.all([
@@ -365,8 +439,10 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		async fetchType(type) {
-			if (typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]) {
+			if (
+				typeof objectStore.registerObjectType === 'function'
+				&& !objectStore.objectTypeRegistry?.[type]
+			) {
 				let cfg = null
 				try {
 					cfg = objectStore.getSchemaConfig?.(type)
@@ -390,7 +466,11 @@ export default {
 		 */
 		formatCurrency(amount) {
 			try {
-				return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amount)
+				return new Intl.NumberFormat('nl-NL', {
+					style: 'currency',
+					currency: 'EUR',
+					maximumFractionDigits: 0,
+				}).format(amount)
 			} catch (error) {
 				return `€ ${Math.round(amount)}`
 			}

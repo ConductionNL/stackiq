@@ -1,5 +1,8 @@
 <template>
-	<div class="published-icon" :class="{ 'published': isPublished }" :title="tooltip || defaultTooltip">
+	<div
+		class="published-icon"
+		:class="{ published: isPublished }"
+		:title="tooltip || defaultTooltip">
 		<span v-if="isPublished" class="published-icon-svg">✓</span>
 		<span v-else class="unpublished-icon-svg">✗</span>
 	</div>

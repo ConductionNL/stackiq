@@ -25,13 +25,19 @@ describe('Navigation Store', () => {
 		const store = useNavigationStore()
 
 		store.setSelectedOrganisatie('7a048bfd-210f-4e93-a1e8-5aa9261740b7')
-		expect(store.selectedOrganisatie).toBe('7a048bfd-210f-4e93-a1e8-5aa9261740b7')
+		expect(store.selectedOrganisatie).toBe(
+			'7a048bfd-210f-4e93-a1e8-5aa9261740b7',
+		)
 
 		store.setSelectedOrganisatie('dd133c51-89bc-4b06-bdbb-41f4dc07c4f1')
-		expect(store.selectedOrganisatie).toBe('dd133c51-89bc-4b06-bdbb-41f4dc07c4f1')
+		expect(store.selectedOrganisatie).toBe(
+			'dd133c51-89bc-4b06-bdbb-41f4dc07c4f1',
+		)
 
 		store.setSelectedOrganisatie('3b1cbee2-756e-4904-a157-29fb0cbe01d3')
-		expect(store.selectedOrganisatie).toBe('3b1cbee2-756e-4904-a157-29fb0cbe01d3')
+		expect(store.selectedOrganisatie).toBe(
+			'3b1cbee2-756e-4904-a157-29fb0cbe01d3',
+		)
 	})
 
 	it('set modal correctly', () => {

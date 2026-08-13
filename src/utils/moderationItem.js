@@ -13,8 +13,22 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-const TITLE_FIELDS = ['naam', 'name', 'titel', 'title', 'organisatie', 'organisation']
-const SUBTITLE_FIELDS = ['email', 'contactEmail', 'url', 'website', 'beschrijving', 'description']
+const TITLE_FIELDS = [
+	'naam',
+	'name',
+	'titel',
+	'title',
+	'organisatie',
+	'organisation',
+]
+const SUBTITLE_FIELDS = [
+	'email',
+	'contactEmail',
+	'url',
+	'website',
+	'beschrijving',
+	'description',
+]
 
 /**
  * Pick the best human-readable title for a moderation item.
@@ -48,7 +62,11 @@ export function moderationItemSubtitle(item) {
 	const title = moderationItemTitle(bag)
 	for (const field of SUBTITLE_FIELDS) {
 		const value = bag[field]
-		if (typeof value === 'string' && value.trim() !== '' && value.trim() !== title) {
+		if (
+			typeof value === 'string'
+			&& value.trim() !== ''
+			&& value.trim() !== title
+		) {
 			return value.trim()
 		}
 	}

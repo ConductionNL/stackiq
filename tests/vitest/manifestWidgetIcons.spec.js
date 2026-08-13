@@ -63,7 +63,9 @@ const APP_REGISTRY_FILE = path.join(repoRoot, 'src/icons.js')
 function readRegistry() {
 	const source = fs.readFileSync(REGISTRY_FILE, 'utf8')
 	const names = new Set()
-	for (const m of source.matchAll(/^\s*([A-Z][A-Za-z0-9]*)\s*:\s*[A-Za-z0-9]+Icon\s*,/gm)) {
+	for (const m of source.matchAll(
+		/^\s*([A-Z][A-Za-z0-9]*)\s*:\s*[A-Za-z0-9]+Icon\s*,/gm,
+	)) {
 		names.add(m[1])
 	}
 	return names
@@ -80,7 +82,9 @@ function readRegistry() {
 function readAppRegistry() {
 	const source = fs.readFileSync(APP_REGISTRY_FILE, 'utf8')
 	const names = new Set()
-	for (const m of source.matchAll(/^import\s+([A-Z][A-Za-z0-9]*)\s+from\s+'vue-material-design-icons\//gm)) {
+	for (const m of source.matchAll(
+		/^import\s+([A-Z][A-Za-z0-9]*)\s+from\s+'vue-material-design-icons\//gm,
+	)) {
 		names.add(m[1])
 	}
 	return names
@@ -120,11 +124,13 @@ function collectWidgetIcons(manifest) {
 			if (key === 'widgets' && Array.isArray(value)) {
 				for (const widget of value) {
 					const icon = widget?.icon
-					if (typeof icon === 'string'
+					if (
+						typeof icon === 'string'
 						&& icon.length > 0
 						&& !icon.startsWith('/')
 						&& !icon.startsWith('http')
-						&& !icon.startsWith('data:')) {
+						&& !icon.startsWith('data:')
+					) {
 						found.push({ page: pageId, widget: widget.id ?? '?', icon })
 					}
 				}
@@ -172,8 +178,10 @@ describe('manifest widget icons resolve in the shared registry', () => {
 			.filter(({ icon }) => !registry.has(icon))
 			.map(({ page, widget, icon }) => `${page}.${widget}: ${icon}`)
 
-		expect(unknown, 'These widget icons fall back to DEFAULT_ICON and render the wrong glyph')
-			.toEqual([])
+		expect(
+			unknown,
+			'These widget icons fall back to DEFAULT_ICON and render the wrong glyph',
+		).toEqual([])
 	})
 
 	it('reads a plausible app registry from src/icons.js', () => {
@@ -195,7 +203,9 @@ describe('manifest widget icons resolve in the shared registry', () => {
 			.filter(({ icon }) => !appRegistry.has(icon))
 			.map(({ page, widget, icon }) => `${page}.${widget}: ${icon}`)
 
-		expect(unregistered, 'These icons are not in src/icons.js and render NO icon at all, not a fallback')
-			.toEqual([])
+		expect(
+			unregistered,
+			'These icons are not in src/icons.js and render NO icon at all, not a fallback',
+		).toEqual([])
 	})
 })

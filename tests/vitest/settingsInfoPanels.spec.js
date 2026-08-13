@@ -49,7 +49,10 @@ import { compile } from '@vue/compiler-dom'
 import * as VueRuntime from 'vue'
 import { createApp } from 'vue'
 
-const SECTIONS_DIR = path.resolve(import.meta.dirname, '../../src/views/settings/sections')
+const SECTIONS_DIR = path.resolve(
+	import.meta.dirname,
+	'../../src/views/settings/sections',
+)
 
 /**
  * Pull the inner markup of every `<template #info>` / `<template #info-content>`
@@ -65,13 +68,15 @@ function extractInfoBlocks(source) {
 	}
 
 	const blocks = []
-	const isInfoSlotTemplate = (node) => node.tag === 'template'
-		&& (node.props || []).some((prop) =>
-			// 7 === DIRECTIVE
-			prop.type === 7
-			&& prop.name === 'slot'
-			&& prop.arg
-			&& ['info', 'info-content'].includes(prop.arg.content),
+	const isInfoSlotTemplate = (node) =>
+		node.tag === 'template'
+		&& (node.props || []).some(
+			(prop) =>
+				// 7 === DIRECTIVE
+				prop.type === 7
+				&& prop.name === 'slot'
+				&& prop.arg
+				&& ['info', 'info-content'].includes(prop.arg.content),
 		)
 
 	const walk = (nodes) => {
@@ -119,7 +124,10 @@ function renderFragment(markup) {
 
 const sectionFiles = readdirSync(SECTIONS_DIR)
 	.filter((file) => file.endsWith('.vue'))
-	.map((file) => ({ file, source: readFileSync(path.join(SECTIONS_DIR, file), 'utf8') }))
+	.map((file) => ({
+		file,
+		source: readFileSync(path.join(SECTIONS_DIR, file), 'utf8'),
+	}))
 	.map((entry) => ({ ...entry, blocks: extractInfoBlocks(entry.source) }))
 	.filter((entry) => entry.blocks.length > 0)
 

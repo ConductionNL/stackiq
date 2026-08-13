@@ -45,7 +45,10 @@ export function isApplicationsStepValid(applications, translate) {
 	if (Array.isArray(applications) && applications.length > 0) {
 		return true
 	}
-	return translate('softwarecatalog', 'Attach at least one existing application before continuing.')
+	return translate(
+		'softwarecatalog',
+		'Attach at least one existing application before continuing.',
+	)
 }
 
 /**
@@ -108,7 +111,9 @@ export function summarizeApplications(applications) {
  * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
  */
 export function mapApplicationOptions(collection) {
-	const modules = Array.isArray(collection) ? collection : (collection?.results || [])
+	const modules = Array.isArray(collection)
+		? collection
+		: collection?.results || []
 
 	return modules.map((mod) => {
 		const uuid = mod.uuid || mod.id || mod['@self']?.id

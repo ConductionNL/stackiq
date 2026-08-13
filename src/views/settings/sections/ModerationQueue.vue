@@ -41,7 +41,9 @@
 			<li v-for="item in items" :key="item.id" class="moderation-item">
 				<div class="moderation-info">
 					<span class="moderation-title">{{ itemTitle(item) }}</span>
-					<span v-if="itemSubtitle(item)" class="moderation-subtitle help-text">
+					<span
+						v-if="itemSubtitle(item)"
+						class="moderation-subtitle help-text">
 						{{ itemSubtitle(item) }}
 					</span>
 				</div>
@@ -51,7 +53,9 @@
 						:disabled="busyId === item.id"
 						@click="approve(item)">
 						<template #icon>
-							<NcLoadingIcon v-if="busyId === item.id && busyAction === 'approve'" :size="20" />
+							<NcLoadingIcon
+								v-if="busyId === item.id && busyAction === 'approve'"
+								:size="20" />
 							<Check v-else :size="20" />
 						</template>
 						{{ t('softwarecatalog', 'Approve') }}
@@ -61,7 +65,9 @@
 						:disabled="busyId === item.id"
 						@click="reject(item)">
 						<template #icon>
-							<NcLoadingIcon v-if="busyId === item.id && busyAction === 'reject'" :size="20" />
+							<NcLoadingIcon
+								v-if="busyId === item.id && busyAction === 'reject'"
+								:size="20" />
 							<Close v-else :size="20" />
 						</template>
 						{{ t('softwarecatalog', 'Reject') }}
@@ -76,17 +82,16 @@
 import { defineComponent } from 'vue'
 import { translate as t } from '@nextcloud/l10n'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import {
-	NcButton,
-	NcEmptyContent,
-	NcLoadingIcon,
-} from '@nextcloud/vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import Check from 'vue-material-design-icons/Check.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import { apiRequest } from '../../../utils/adminApi.js'
-import { moderationItemTitle, moderationItemSubtitle } from '../../../utils/moderationItem.js'
+import {
+	moderationItemTitle,
+	moderationItemSubtitle,
+} from '../../../utils/moderationItem.js'
 
 /**
  * Generalised moderation queue admin section — reused for BOTH the
@@ -128,7 +133,11 @@ export default defineComponent({
 		/** Section description. Defaults to the original organisatie copy. */
 		description: {
 			type: String,
-			default: () => t('softwarecatalog', 'Review anonymous catalog registrations. Approving an entry publishes it; rejecting leaves it hidden.'),
+			default: () =>
+				t(
+					'softwarecatalog',
+					'Review anonymous catalog registrations. Approving an entry publishes it; rejecting leaves it hidden.',
+				),
 		},
 		/** Loading-state copy. Defaults to the original organisatie copy. */
 		loadingText: {
@@ -138,7 +147,11 @@ export default defineComponent({
 		/** Empty-state copy. Defaults to the original organisatie copy. */
 		emptyDescription: {
 			type: String,
-			default: () => t('softwarecatalog', 'There are no pending registrations right now.'),
+			default: () =>
+				t(
+					'softwarecatalog',
+					'There are no pending registrations right now.',
+				),
 		},
 		/**
 		 * Lower-case singular noun used to build the approve/reject toast
@@ -187,10 +200,16 @@ export default defineComponent({
 		async loadPending() {
 			this.loading = true
 			try {
-				const data = await apiRequest(`moderation/pending?type=${encodeURIComponent(this.type)}`)
+				const data = await apiRequest(
+					`moderation/pending?type=${encodeURIComponent(this.type)}`,
+				)
 				this.items = Array.isArray(data.items) ? data.items : []
 			} catch (error) {
-				showError(t('softwarecatalog', 'Could not load the moderation queue') + ': ' + error.message)
+				showError(
+					t('softwarecatalog', 'Could not load the moderation queue')
+						+ ': '
+						+ error.message,
+				)
 			} finally {
 				this.loading = false
 			}
@@ -204,8 +223,13 @@ export default defineComponent({
 		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
 		async approve(item) {
-			const label = this.entityLabel.charAt(0).toUpperCase() + this.entityLabel.slice(1)
-			await this.decide(item, 'approve', t('softwarecatalog', '{label} approved and published', { label }))
+			const label =
+				this.entityLabel.charAt(0).toUpperCase() + this.entityLabel.slice(1)
+			await this.decide(
+				item,
+				'approve',
+				t('softwarecatalog', '{label} approved and published', { label }),
+			)
 		},
 
 		/**
@@ -216,8 +240,13 @@ export default defineComponent({
 		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
 		async reject(item) {
-			const label = this.entityLabel.charAt(0).toUpperCase() + this.entityLabel.slice(1)
-			await this.decide(item, 'reject', t('softwarecatalog', '{label} rejected', { label }))
+			const label =
+				this.entityLabel.charAt(0).toUpperCase() + this.entityLabel.slice(1)
+			await this.decide(
+				item,
+				'reject',
+				t('softwarecatalog', '{label} rejected', { label }),
+			)
 		},
 
 		/**
@@ -232,17 +261,32 @@ export default defineComponent({
 		async decide(item, action, successMsg) {
 			const uuid = item.id || item.uuid
 			if (!uuid) {
-				showError(t('softwarecatalog', '{label} has no identifier', { label: this.entityLabel.charAt(0).toUpperCase() + this.entityLabel.slice(1) }))
+				showError(
+					t('softwarecatalog', '{label} has no identifier', {
+						label:
+							this.entityLabel.charAt(0).toUpperCase()
+							+ this.entityLabel.slice(1),
+					}),
+				)
 				return
 			}
 			this.busyId = uuid
 			this.busyAction = action
 			try {
-				await apiRequest(`moderation/${encodeURIComponent(uuid)}/${action}?type=${encodeURIComponent(this.type)}`, { method: 'POST' })
+				await apiRequest(
+					`moderation/${encodeURIComponent(uuid)}/${action}?type=${encodeURIComponent(this.type)}`,
+					{ method: 'POST' },
+				)
 				showSuccess(successMsg)
 				await this.loadPending()
 			} catch (error) {
-				showError(t('softwarecatalog', 'Could not update the {label}', { label: this.entityLabel }) + ': ' + error.message)
+				showError(
+					t('softwarecatalog', 'Could not update the {label}', {
+						label: this.entityLabel,
+					})
+						+ ': '
+						+ error.message,
+				)
 			} finally {
 				this.busyId = null
 				this.busyAction = null

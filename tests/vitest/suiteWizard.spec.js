@@ -18,9 +18,15 @@ import {
 describe('suiteWizard.isDetailsStepValid', () => {
 	it('requires both naam and beschrijvingKort', () => {
 		expect(isDetailsStepValid({ naam: '', beschrijvingKort: '' })).toBe(false)
-		expect(isDetailsStepValid({ naam: 'Suite', beschrijvingKort: '' })).toBe(false)
-		expect(isDetailsStepValid({ naam: '', beschrijvingKort: 'Short' })).toBe(false)
-		expect(isDetailsStepValid({ naam: 'Suite', beschrijvingKort: 'Short' })).toBe(true)
+		expect(isDetailsStepValid({ naam: 'Suite', beschrijvingKort: '' })).toBe(
+			false,
+		)
+		expect(isDetailsStepValid({ naam: '', beschrijvingKort: 'Short' })).toBe(
+			false,
+		)
+		expect(
+			isDetailsStepValid({ naam: 'Suite', beschrijvingKort: 'Short' }),
+		).toBe(true)
 	})
 })
 
@@ -47,7 +53,8 @@ describe('suiteWizard.buildSuitePayload', () => {
 
 describe('suiteWizard.summarizeApplications', () => {
 	it('lists application names for the confirm step', () => {
-		expect(summarizeApplications([{ naam: 'Module A' }, { id: 'mod-2' }]))
-			.toEqual(['Module A', 'mod-2'])
+		expect(
+			summarizeApplications([{ naam: 'Module A' }, { id: 'mod-2' }]),
+		).toEqual(['Module A', 'mod-2'])
 	})
 })

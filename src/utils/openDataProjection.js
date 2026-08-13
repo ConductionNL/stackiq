@@ -65,8 +65,10 @@ function split(entry) {
 	if (!entry || typeof entry !== 'object') {
 		return { data: {}, self: {} }
 	}
-	const self = (entry['@self'] && typeof entry['@self'] === 'object') ? entry['@self'] : {}
-	const data = (entry.object && typeof entry.object === 'object') ? entry.object : entry
+	const self =
+		entry['@self'] && typeof entry['@self'] === 'object' ? entry['@self'] : {}
+	const data =
+		entry.object && typeof entry.object === 'object' ? entry.object : entry
 	return { data, self }
 }
 
@@ -78,8 +80,10 @@ function split(entry) {
  */
 function isStripped(name) {
 	const lower = String(name).toLowerCase()
-	return STRIPPED_FIELDS.some((f) => f.toLowerCase() === lower)
+	return (
+		STRIPPED_FIELDS.some((f) => f.toLowerCase() === lower)
 		|| lower.startsWith('contactpersoon')
+	)
 }
 
 /**
@@ -93,7 +97,10 @@ function isStripped(name) {
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  */
-export function projectOpenData(entry, { license = DEFAULT_LICENSE, publisherName = null } = {}) {
+export function projectOpenData(
+	entry,
+	{ license = DEFAULT_LICENSE, publisherName = null } = {},
+) {
 	const { data, self } = split(entry)
 
 	const projected = {}
@@ -136,5 +143,7 @@ export function isClean(projection) {
 	if (!projection || typeof projection !== 'object') {
 		return false
 	}
-	return Object.keys(projection).every((key) => !isStripped(key) && !key.startsWith('@self'))
+	return Object.keys(projection).every(
+		(key) => !isStripped(key) && !key.startsWith('@self'),
+	)
 }

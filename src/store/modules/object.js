@@ -17,7 +17,12 @@
  *
  * @spec openspec/specs/softwarecatalog-store-migration/spec.md#requirement-createobjectstore-for-openregister-crud-stores
  */
-import { createObjectStore, filesPlugin, auditTrailsPlugin, relationsPlugin } from '@conduction/nextcloud-vue'
+import {
+	createObjectStore,
+	filesPlugin,
+	auditTrailsPlugin,
+	relationsPlugin,
+} from '@conduction/nextcloud-vue'
 import { softwarecatalogPlugin } from '../plugins/softwarecatalogPlugin.js'
 
 export const useObjectStore = createObjectStore('object', {

@@ -23,7 +23,10 @@
  *    = POST, deleteObject = DELETE on `/api/objects/{register}/{schema}[/{id}]`).
  */
 
-import { request as playwrightRequest, type APIRequestContext } from '@playwright/test'
+import {
+	request as playwrightRequest,
+	type APIRequestContext,
+} from '@playwright/test'
 import { resolveBaseUrl } from '../base-url'
 
 // Re-exported from the single central resolver (tests/e2e/base-url.ts). These
@@ -58,14 +61,22 @@ export interface VoorzieningenConfig {
 export async function newApiContext(): Promise<APIRequestContext> {
 	return await playwrightRequest.newContext({
 		baseURL: BASE_URL,
-		httpCredentials: { username: NC_ADMIN_USER, password: NC_ADMIN_PASS, send: 'always' },
+		httpCredentials: {
+			username: NC_ADMIN_USER,
+			password: NC_ADMIN_PASS,
+			send: 'always',
+		},
 		extraHTTPHeaders: { 'OCS-APIREQUEST': 'true' },
 	})
 }
 
 /** Resolve the voorzieningen register + schema slugs from the app config endpoint. */
-export async function resolveConfig(ctx: APIRequestContext): Promise<VoorzieningenConfig> {
-	const res = await ctx.get('/index.php/apps/softwarecatalog/api/voorzieningen/config')
+export async function resolveConfig(
+	ctx: APIRequestContext,
+): Promise<VoorzieningenConfig> {
+	const res = await ctx.get(
+		'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+	)
 	if (!res.ok()) {
 		throw new Error(`voorzieningen/config returned ${res.status()}`)
 	}
@@ -92,12 +103,16 @@ export async function createObject(
 		{ data },
 	)
 	if (!res.ok()) {
-		throw new Error(`createObject(${register}/${schema}) ${res.status()}: ${await res.text()}`)
+		throw new Error(
+			`createObject(${register}/${schema}) ${res.status()}: ${await res.text()}`,
+		)
 	}
 	const body = await res.json()
 	const id = body?.id ?? body?.['@self']?.id
 	if (!id) {
-		throw new Error(`createObject returned no id: ${JSON.stringify(body).slice(0, 200)}`)
+		throw new Error(
+			`createObject returned no id: ${JSON.stringify(body).slice(0, 200)}`,
+		)
 	}
 	return String(id)
 }
@@ -115,7 +130,9 @@ export async function deleteObject(
 	if (!res.ok() && res.status() !== 404) {
 		// Non-fatal during cleanup; log only.
 		// eslint-disable-next-line no-console
-		console.warn(`deleteObject(${register}/${schema}/${id}) returned ${res.status()}`)
+		console.warn(
+			`deleteObject(${register}/${schema}/${id}) returned ${res.status()}`,
+		)
 	}
 }
 
@@ -130,8 +147,12 @@ export async function findAll(
 	schema: string,
 	search?: string,
 ): Promise<Array<Record<string, unknown>>> {
-	const q = search ? `?_search=${encodeURIComponent(search)}&_limit=200` : '?_limit=5000'
-	const res = await ctx.get(`/index.php/apps/openregister/api/objects/${register}/${schema}${q}`)
+	const q = search
+		? `?_search=${encodeURIComponent(search)}&_limit=200`
+		: '?_limit=5000'
+	const res = await ctx.get(
+		`/index.php/apps/openregister/api/objects/${register}/${schema}${q}`,
+	)
 	if (!res.ok()) return []
 	const body = await res.json()
 	const list = body?.results ?? body ?? []
@@ -140,7 +161,12 @@ export async function findAll(
 
 /** Pull a printable name off a catalog object (schemas use `naam`). */
 export function nameOf(o: Record<string, unknown>): string {
-	return String(o.naam ?? o.name ?? (o as { '@self'?: { name?: string } })['@self']?.name ?? '')
+	return String(
+		o.naam
+			?? o.name
+			?? (o as { '@self'?: { name?: string } })['@self']?.name
+			?? '',
+	)
 }
 
 /**
@@ -165,7 +191,11 @@ export async function cleanupByToken(
 		const rows = await findAll(ctx, config.register, schema)
 		for (const row of rows) {
 			if (nameOf(row).includes(token) || JSON.stringify(row).includes(token)) {
-				const id = String((row as { id?: string }).id ?? (row as { '@self'?: { id?: string } })['@self']?.id ?? '')
+				const id = String(
+					(row as { id?: string }).id
+						?? (row as { '@self'?: { id?: string } })['@self']?.id
+						?? '',
+				)
 				if (id) {
 					await deleteObject(ctx, config.register, schema, id)
 					removed++

@@ -39,34 +39,52 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="stat in formattedStatistics" :key="`${stat.register}-${stat.type}`">
+						<tr
+							v-for="stat in formattedStatistics"
+							:key="`${stat.register}-${stat.type}`">
 							<td class="register-cell">
 								{{ stat.register }}
 							</td>
 							<td class="type-cell">
 								{{ stat.type }}
 							</td>
-							<td class="count-cell" :class="{ 'high-count': stat.count > 10000 }">
+							<td
+								class="count-cell"
+								:class="{ 'high-count': stat.count > 10000 }">
 								{{ formatNumber(stat.count) }}
 							</td>
 							<td class="status-cell">
 								<span
 									class="status-badge"
-									:class="stat.configured ? 'status-configured' : 'status-not-configured'">
-									{{ stat.configured ? 'Configured' : 'Not Configured' }}
+									:class="
+										stat.configured
+											? 'status-configured'
+											: 'status-not-configured'
+									">
+									{{
+										stat.configured
+											? 'Configured'
+											: 'Not Configured'
+									}}
 								</span>
 							</td>
 							<td class="actions-cell">
 								<!-- Show sync button only for Compliancy objects -->
 								<NcButton
-									v-if="stat.type === 'Compliancy' && stat.configured"
+									v-if="
+										stat.type === 'Compliancy' && stat.configured
+									"
 									:disabled="bulkSyncLoading"
 									class="sync-button"
 									@click="showBulkSyncDialog">
 									<template #icon>
 										<SyncIcon :size="16" />
 									</template>
-									{{ bulkSyncLoading ? 'Syncing...' : 'Sync Standards' }}
+									{{
+										bulkSyncLoading
+											? 'Syncing...'
+											: 'Sync Standards'
+									}}
 								</NcButton>
 							</td>
 						</tr>
@@ -197,7 +215,9 @@ export default defineComponent({
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		complianceCount() {
-			const complianceStat = this.formattedStatistics.find(stat => stat.type === 'Compliancy')
+			const complianceStat = this.formattedStatistics.find(
+				(stat) => stat.type === 'Compliancy',
+			)
 			return complianceStat ? complianceStat.count : 0
 		},
 	},
@@ -213,7 +233,7 @@ export default defineComponent({
 	methods: {
 		/**
 		 * Refresh statistics data
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async refreshStatistics() {
 			await this.settingsStore.loadStatistics()
@@ -223,7 +243,7 @@ export default defineComponent({
 		 * Format number with thousand separators
 		 * @param {number} num - Number to format
 		 * @return {string} Formatted number
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatNumber(num) {
 			if (num === 0) return '0'
@@ -234,7 +254,7 @@ export default defineComponent({
 		 * Format timestamp for display
 		 * @param {number} timestamp - Unix timestamp
 		 * @return {string} Formatted date/time
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatTimestamp(timestamp) {
 			if (!timestamp) return 'Unknown'
@@ -244,7 +264,7 @@ export default defineComponent({
 
 		/**
 		 * Show the bulk sync dialog
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		showBulkSyncDialog() {
 			this.showSyncDialog = true

@@ -11,7 +11,10 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 			:can-close="false">
 			<div class="dialog-content">
 				<NcNoteCard v-if="success" type="success" class="note-card">
-					<p>Publication successfully {{ isNewObject ? 'created' : 'modified' }}</p>
+					<p>
+						Publication successfully
+						{{ isNewObject ? 'created' : 'modified' }}
+					</p>
 				</NcNoteCard>
 				<NcNoteCard v-if="error" type="error" class="note-card">
 					<p>{{ error }}</p>
@@ -20,74 +23,126 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<div v-if="!success">
 					<!-- Register and Schema Info with card style -->
 					<div class="detail-grid">
-						<div class="detail-item" :class="{ 'empty-value': !selectedCatalogus }">
+						<div
+							class="detail-item"
+							:class="{ 'empty-value': !selectedCatalogus }">
 							<span class="detail-label">Catalogus:</span>
-							<NcButton v-if="selectedCatalogus"
+							<NcButton
+								v-if="selectedCatalogus"
 								class="pencil-button"
 								aria-label="Change catalogue"
-								@click="() => {
-									selectedCatalogus = null;
-									selectedRegister = null;
-									selectedSchema = null
-								}">
+								@click="
+									() => {
+										selectedCatalogus = null
+										selectedRegister = null
+										selectedSchema = null
+									}
+								">
 								<Pencil :size="20" />
 							</NcButton>
 							<div class="detail-value-container">
-								<span v-if="selectedCatalogus" class="detail-value">{{ selectedCatalogus?.label || 'Not selected' }}</span>
-								<span v-if="selectedCatalogus" class="sub-detail-value">{{ selectedCatalogus?.id }}</span>
-								<NcSelect v-if="!selectedCatalogus"
+								<span
+									v-if="selectedCatalogus"
+									class="detail-value"
+									>{{
+										selectedCatalogus?.label || 'Not selected'
+									}}</span
+								>
+								<span
+									v-if="selectedCatalogus"
+									class="sub-detail-value"
+									>{{ selectedCatalogus?.id }}</span
+								>
+								<NcSelect
+									v-if="!selectedCatalogus"
 									v-model="selectedCatalogus"
 									:options="catalogOptions"
 									label-outside
-									:aria-label-combobox="t('softwarecatalog', 'Select a catalogus')"
+									:aria-label-combobox="
+										t('softwarecatalog', 'Select a catalogus')
+									"
 									:disabled="objectStore.isLoading('object')"
 									required
 									:loading="loading" />
 							</div>
 						</div>
-						<div class="detail-item" :class="{ 'empty-value': !selectedRegister }">
+						<div
+							class="detail-item"
+							:class="{ 'empty-value': !selectedRegister }">
 							<span class="detail-label">Register:</span>
-							<NcButton v-if="selectedRegister"
+							<NcButton
+								v-if="selectedRegister"
 								class="pencil-button"
 								aria-label="Change register"
-								@click="() => {
-									selectedRegister = null;
-									selectedSchema = null
-								}">
+								@click="
+									() => {
+										selectedRegister = null
+										selectedSchema = null
+									}
+								">
 								<Pencil :size="20" />
 							</NcButton>
 							<div class="detail-value-container">
-								<span v-if="selectedRegister" class="detail-value">{{ selectedRegister?.label || 'Not selected' }}</span>
-								<span v-if="selectedRegister" class="sub-detail-value">{{ selectedRegister?.id }}</span>
-								<NcSelect v-if="!selectedRegister"
+								<span v-if="selectedRegister" class="detail-value">{{
+									selectedRegister?.label || 'Not selected'
+								}}</span>
+								<span
+									v-if="selectedRegister"
+									class="sub-detail-value"
+									>{{ selectedRegister?.id }}</span
+								>
+								<NcSelect
+									v-if="!selectedRegister"
 									v-model="selectedRegister"
 									:options="registerOptions"
 									label-outside
-									:aria-label-combobox="t('softwarecatalog', 'Select a register')"
-									:disabled="objectStore.isLoading('object') || !selectedCatalogus"
+									:aria-label-combobox="
+										t('softwarecatalog', 'Select a register')
+									"
+									:disabled="
+										objectStore.isLoading('object')
+										|| !selectedCatalogus
+									"
 									required
 									:loading="loading" />
 							</div>
 						</div>
-						<div class="detail-item" :class="{ 'empty-value': !selectedSchema }">
+						<div
+							class="detail-item"
+							:class="{ 'empty-value': !selectedSchema }">
 							<span class="detail-label">Schema:</span>
-							<NcButton v-if="selectedSchema"
+							<NcButton
+								v-if="selectedSchema"
 								class="pencil-button"
 								aria-label="Change schema"
-								@click="() => {
-									selectedSchema = null
-								}">
+								@click="
+									() => {
+										selectedSchema = null
+									}
+								">
 								<Pencil :size="20" />
 							</NcButton>
 							<div class="detail-value-container">
-								<span v-if="selectedSchema" class="detail-value">{{ selectedSchema?.label || 'Not selected' }}</span>
-								<span v-if="selectedSchema" class="sub-detail-value">{{ selectedSchema?.id }}</span>
-								<NcSelect v-if="!selectedSchema"
+								<span v-if="selectedSchema" class="detail-value">{{
+									selectedSchema?.label || 'Not selected'
+								}}</span>
+								<span
+									v-if="selectedSchema"
+									class="sub-detail-value"
+									>{{ selectedSchema?.id }}</span
+								>
+								<NcSelect
+									v-if="!selectedSchema"
 									v-model="selectedSchema"
 									:options="schemaOptions"
 									label-outside
-									:aria-label-combobox="t('softwarecatalog', 'Select a schema')"
-									:disabled="objectStore.isLoading('object') || !selectedRegister"
+									:aria-label-combobox="
+										t('softwarecatalog', 'Select a schema')
+									"
+									:disabled="
+										objectStore.isLoading('object')
+										|| !selectedRegister
+									"
 									required
 									:loading="loading" />
 							</div>
@@ -116,7 +171,10 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 							@update:active-tab="activeTab = $event">
 							<div v-show="activeTab === 'form'">
 								<div v-if="fullSelectedSchema" class="form-editor">
-									<div v-for="(prop, key) in schemaProperties" :key="key" class="form-field">
+									<div
+										v-for="(prop, key) in schemaProperties"
+										:key="key"
+										class="form-field">
 										<!-- Enum-on-string fields (status, timeClassification, ...) render as a
 										     clearable NcSelect rather than free text, so the TIME quadrant
 										     (Tolerate/Invest/Migrate/Eliminate) and every other enum field can be
@@ -124,19 +182,34 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										     formData already carries the full cloned object (see initializeData()),
 										     so this PUT-semantic form only ever touches the edited key.
 										     @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-editing-time-fields-preserves-every-other-gebruik-field -->
-										<template v-if="prop.type === 'string' && Array.isArray(prop.enum)">
+										<template
+											v-if="
+												prop.type === 'string'
+												&& Array.isArray(prop.enum)
+											">
 											<NcSelect
 												:input-label="prop.title || key"
 												:options="prop.enum"
-												:model-value="getFieldValue(key) || null"
+												:model-value="
+													getFieldValue(key) || null
+												"
 												:placeholder="prop.example"
 												:clearable="true"
-												@update:model-value="value => setFieldValue(key, value)" />
-											<p v-if="prop.description" class="form-field-helper">
+												@update:model-value="
+													(value) =>
+														setFieldValue(key, value)
+												" />
+											<p
+												v-if="prop.description"
+												class="form-field-helper">
 												{{ prop.description }}
 											</p>
 										</template>
-										<template v-else-if="prop.type === 'string' && prop.format === 'date'">
+										<template
+											v-else-if="
+												prop.type === 'string'
+												&& prop.format === 'date'
+											">
 											<NcTextField
 												:label="prop.title || key"
 												:model-value="getFieldValue(key)"
@@ -144,7 +217,10 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												:helper-text="prop.description"
 												:required="prop.required"
 												type="date"
-												@update:model-value="value => setFieldValue(key, value)" />
+												@update:model-value="
+													(value) =>
+														setFieldValue(key, value)
+												" />
 										</template>
 										<template v-else-if="prop.type === 'string'">
 											<NcTextField
@@ -153,18 +229,29 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												:placeholder="prop.example"
 												:helper-text="prop.description"
 												:required="prop.required"
-												@update:model-value="value => setFieldValue(key, value)" />
+												@update:model-value="
+													(value) =>
+														setFieldValue(key, value)
+												" />
 										</template>
-										<template v-else-if="prop.type === 'boolean'">
+										<template
+											v-else-if="prop.type === 'boolean'">
 											<NcCheckboxRadioSwitch
 												:model-value="Boolean(formData[key])"
 												:helper-text="prop.description"
 												type="switch"
-												@update:model-value="value => setFieldValue(key, value)">
+												@update:model-value="
+													(value) =>
+														setFieldValue(key, value)
+												">
 												{{ prop.title || key }}
 											</NcCheckboxRadioSwitch>
 										</template>
-										<template v-else-if="prop.type === 'number' || prop.type === 'integer'">
+										<template
+											v-else-if="
+												prop.type === 'number'
+												|| prop.type === 'integer'
+											">
 											<NcTextField
 												:label="prop.title || key"
 												:model-value="getFieldValue(key)"
@@ -174,8 +261,15 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												type="number"
 												:min="prop.minimum"
 												:max="prop.maximum"
-												:step="prop.type === 'integer' ? '1' : 'any'"
-												@update:model-value="value => setFieldValue(key, value)" />
+												:step="
+													prop.type === 'integer'
+														? '1'
+														: 'any'
+												"
+												@update:model-value="
+													(value) =>
+														setFieldValue(key, value)
+												" />
 										</template>
 										<template v-else>
 											{{ prop.type }}
@@ -189,12 +283,13 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 
 							<div v-show="activeTab === 'json'">
 								<div class="json-editor">
-									<div :class="`codeMirrorContainer ${getTheme()}`">
+									<div
+										:class="`codeMirrorContainer ${getTheme()}`">
 										<CodeMirror
 											v-model="jsonData"
 											:basic="true"
 											:disabled="!fullSelectedSchema"
-											placeholder="{ &quot;key&quot;: &quot;value&quot; }"
+											placeholder='{ "key": "value" }'
 											:dark="getTheme() === 'dark'"
 											:linter="jsonParseLinter()"
 											:lang="json()"
@@ -210,7 +305,9 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 											Format JSON
 										</NcButton>
 									</div>
-									<span v-if="!isValidJson(jsonData)" class="error-message">
+									<span
+										v-if="!isValidJson(jsonData)"
+										class="error-message">
 										Invalid JSON format
 									</span>
 								</div>
@@ -229,7 +326,9 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				</NcButton>
 
 				<NcButton
-					:disabled="loading || (activeTab === 'json' && !isValidJson(jsonData))"
+					:disabled="
+						loading || (activeTab === 'json' && !isValidJson(jsonData))
+					"
 					variant="primary"
 					@click="saveObject">
 					<template #icon>
@@ -320,7 +419,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		catalogOptions() {
-			return objectStore.getCollection('catalog').results.map(catalog => ({
+			return objectStore.getCollection('catalog').results.map((catalog) => ({
 				id: catalog.id,
 				label: catalog.title,
 			}))
@@ -333,12 +432,16 @@ export default {
 				return []
 			}
 
-			const fullCatalog = objectStore.getCollection('catalog').results.find(catalog => catalog.id === this.selectedCatalogus.id)
+			const fullCatalog = objectStore
+				.getCollection('catalog')
+				.results.find((catalog) => catalog.id === this.selectedCatalogus.id)
 			const selectedCatalogRegistersIds = fullCatalog.registers
 
 			return objectStore.availableRegisters
-				.filter(register => selectedCatalogRegistersIds.includes(register.id))
-				.map(register => ({
+				.filter((register) =>
+					selectedCatalogRegistersIds.includes(register.id),
+				)
+				.map((register) => ({
 					id: register.id,
 					label: register.title,
 				}))
@@ -351,18 +454,24 @@ export default {
 				return []
 			}
 
-			const register = objectStore.availableRegisters.find(register => register.id === this.selectedRegister.id)
-			const catalog = objectStore.getCollection('catalog').results.find(catalog => catalog.id === this.selectedCatalogus.id)
+			const register = objectStore.availableRegisters.find(
+				(register) => register.id === this.selectedRegister.id,
+			)
+			const catalog = objectStore
+				.getCollection('catalog')
+				.results.find((catalog) => catalog.id === this.selectedCatalogus.id)
 
-			const registerSchemaIds = register.schemas.map(schema => schema.id)
+			const registerSchemaIds = register.schemas.map((schema) => schema.id)
 			const catalogSchemaIds = catalog.schemas
 
 			// only get schema ids where the id is in both registerSchemaIds and catalogSchemaIds
-			const validSchemaIds = registerSchemaIds.filter(id => catalogSchemaIds.includes(id))
+			const validSchemaIds = registerSchemaIds.filter((id) =>
+				catalogSchemaIds.includes(id),
+			)
 
 			return objectStore.availableSchemas
-				.filter(schema => validSchemaIds.includes(schema.id))
-				.map(schema => ({
+				.filter((schema) => validSchemaIds.includes(schema.id))
+				.map((schema) => ({
 					id: schema.id,
 					label: schema.title,
 				}))
@@ -371,7 +480,9 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		fullSelectedSchema() {
-			return objectStore.availableSchemas.find(schema => schema.id === this.selectedSchema?.id)
+			return objectStore.availableSchemas.find(
+				(schema) => schema.id === this.selectedSchema?.id,
+			)
 		},
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -383,7 +494,9 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dialogTitle() {
-			const typeName = this.objectTypeKey.charAt(0).toUpperCase() + this.objectTypeKey.slice(1)
+			const typeName =
+				this.objectTypeKey.charAt(0).toUpperCase()
+				+ this.objectTypeKey.slice(1)
 			return this.isNewObject ? `Add ${typeName}` : `Edit ${typeName}`
 		},
 	},
@@ -452,19 +565,23 @@ export default {
 
 			// Set selected catalog based on active catalog
 			const catalogMatch = activeCatalog
-				? objectStore.getCollection('catalog').results
-					.find(catalog => catalog.id === activeCatalog.id)
+				? objectStore
+						.getCollection('catalog')
+						.results.find((catalog) => catalog.id === activeCatalog.id)
 				: null
 
 			this.selectedCatalogus = catalogMatch
 				? {
-					id: catalogMatch.id,
-					label: catalogMatch.title,
-				}
+						id: catalogMatch.id,
+						label: catalogMatch.title,
+					}
 				: null
 
 			// If no catalog is selected but there's only one available, auto-select it
-			if (!this.selectedCatalogus && objectStore.getCollection('catalog').results.length === 1) {
+			if (
+				!this.selectedCatalogus
+				&& objectStore.getCollection('catalog').results.length === 1
+			) {
 				const onlyCatalog = objectStore.getCollection('catalog').results[0]
 				this.selectedCatalogus = {
 					id: onlyCatalog.id,
@@ -480,14 +597,23 @@ export default {
 
 			// Check if we're in create mode based on navigation transfer data
 			const transferData = navigationStore.getTransferData()
-			const isCreateMode = transferData === 'ignore selectedCatalogus' || transferData === 'create'
+			const isCreateMode =
+				transferData === 'ignore selectedCatalogus'
+				|| transferData === 'create'
 
 			// Force new object detection if in create mode or if activeObject is null/empty
-			if (isCreateMode || activeObject === null || activeObject === undefined || Object.keys(activeObject || {}).length === 0) {
+			if (
+				isCreateMode
+				|| activeObject === null
+				|| activeObject === undefined
+				|| Object.keys(activeObject || {}).length === 0
+			) {
 				this.isNewObject = true
 			} else {
 				// More robust detection of new vs existing objects
-				this.isNewObject = !activeObject || (!activeObject?.['@self']?.id && !activeObject?.id)
+				this.isNewObject =
+					!activeObject
+					|| (!activeObject?.['@self']?.id && !activeObject?.id)
 			}
 
 			// Temporary debug to understand the state
@@ -505,39 +631,56 @@ export default {
 				})
 			}
 
-			if (!this.isNewObject) { // is edit modal
+			if (!this.isNewObject) {
+				// is edit modal
 				// Initialize form with existing object data
 
 				this.formData = cloneDeep(activeObject)
 				this.jsonData = JSON.stringify(activeObject, null, 2)
 
 				// Set register and schema from existing object
-				const register = objectStore.availableRegisters
-					.find(register => String(register.id) === String(activeObject['@self'].register))
+				const register = objectStore.availableRegisters.find(
+					(register) =>
+						String(register.id)
+						=== String(activeObject['@self'].register),
+				)
 				this.selectedRegister = register && {
 					id: register.id,
 					label: register.title,
 				}
 
-				const schema = objectStore.availableSchemas
-					.find(schema => String(schema.id) === String(activeObject['@self'].schema))
+				const schema = objectStore.availableSchemas.find(
+					(schema) =>
+						String(schema.id) === String(activeObject['@self'].schema),
+				)
 				this.selectedSchema = schema && {
 					id: schema.id,
 					label: schema.title,
 				}
 			} else {
 				// For new objects, auto-select register/schema if catalog only has one
-				if (updatedActiveCatalog && updatedActiveCatalog.registers && updatedActiveCatalog.registers.length === 1) {
-					const register = objectStore.availableRegisters
-						.find(register => register.id === updatedActiveCatalog.registers[0])
+				if (
+					updatedActiveCatalog
+					&& updatedActiveCatalog.registers
+					&& updatedActiveCatalog.registers.length === 1
+				) {
+					const register = objectStore.availableRegisters.find(
+						(register) =>
+							register.id === updatedActiveCatalog.registers[0],
+					)
 					this.selectedRegister = register && {
 						id: register.id,
 						label: register.title,
 					}
 
-					if (updatedActiveCatalog.schemas && updatedActiveCatalog.schemas.length === 1) {
-						const schema = objectStore.availableSchemas
-							.find(schema => schema.id === updatedActiveCatalog.schemas[0])
+					if (
+						updatedActiveCatalog.schemas
+						&& updatedActiveCatalog.schemas.length === 1
+					) {
+						const schema = objectStore.availableSchemas.find(
+							(schema) =>
+								schema.id === updatedActiveCatalog.schemas[0],
+						)
 						this.selectedSchema = schema && {
 							id: schema.id,
 							label: schema.title,
@@ -598,7 +741,8 @@ export default {
 					this.success = true
 
 					if (responseData) {
-						const objectId = responseData.id || responseData['@self']?.id || null
+						const objectId =
+							responseData.id || responseData['@self']?.id || null
 						const objectData = {
 							...responseData,
 							id: objectId,
@@ -635,7 +779,9 @@ export default {
 					}
 				} else {
 					this.success = false
-					const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
+					const errorData = await response
+						.json()
+						.catch(() => ({ message: 'Unknown error' }))
 					this.error = errorData.message || 'Failed to save object'
 				}
 			} catch (e) {

@@ -18,7 +18,12 @@
 <template>
 	<AlwaysVisibleSection
 		:name="t('softwarecatalog', 'End-of-life feed sync')"
-		:description="t('softwarecatalog', 'Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Softwarecatalog never calls endoflife.date directly.')"
+		:description="
+			t(
+				'softwarecatalog',
+				'Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Softwarecatalog never calls endoflife.date directly.',
+			)
+		"
 		:loading="loading"
 		:loading-text="t('softwarecatalog', 'Loading EOL sync configuration…')"
 		:show-save-button="true"
@@ -31,10 +36,7 @@
 		@save="saveConfig"
 		@refresh="loadAll">
 		<template #header-actions>
-			<NcButton
-				variant="primary"
-				:disabled="syncing"
-				@click="triggerSync">
+			<NcButton variant="primary" :disabled="syncing" @click="triggerSync">
 				<template #icon>
 					<NcLoadingIcon v-if="syncing" :size="20" />
 					<Sync v-else :size="20" />
@@ -45,28 +47,52 @@
 
 		<!-- Status banner. -->
 		<NcNoteCard v-if="status.available" type="success">
-			{{ t('softwarecatalog', 'Last run: {matched} matched, {skipped} skipped, at {time}.', { matched: status.matched, skipped: status.skipped, time: formattedLastRunAt }) }}
+			{{
+				t(
+					'softwarecatalog',
+					'Last run: {matched} matched, {skipped} skipped, at {time}.',
+					{
+						matched: status.matched,
+						skipped: status.skipped,
+						time: formattedLastRunAt,
+					},
+				)
+			}}
 		</NcNoteCard>
 		<NcNoteCard v-else type="warning">
-			{{ t('softwarecatalog', 'Feed unavailable: {reason}. Manual end-of-support entry, the EOL-approaching filter, the roadmap, and the notification rule keep working regardless.', { reason: unavailableReasonLabel }) }}
+			{{
+				t(
+					'softwarecatalog',
+					'Feed unavailable: {reason}. Manual end-of-support entry, the EOL-approaching filter, the roadmap, and the notification rule keep working regardless.',
+					{ reason: unavailableReasonLabel },
+				)
+			}}
 		</NcNoteCard>
 
 		<div class="eol-sync-settings">
 			<div class="setting-group">
-				<NcCheckboxRadioSwitch
-					v-model="config.enabled"
-					type="switch">
+				<NcCheckboxRadioSwitch v-model="config.enabled" type="switch">
 					{{ t('softwarecatalog', 'Enable EOL feed sync') }}
 				</NcCheckboxRadioSwitch>
 				<p class="help-text">
-					{{ t('softwarecatalog', 'When disabled, the matcher never reads or writes anything — the same as the feed being unavailable.') }}
+					{{
+						t(
+							'softwarecatalog',
+							'When disabled, the matcher never reads or writes anything — the same as the feed being unavailable.',
+						)
+					}}
 				</p>
 			</div>
 
 			<div class="setting-group">
 				<h4>{{ t('softwarecatalog', 'Source register and schemas') }}</h4>
 				<p class="help-text">
-					{{ t('softwarecatalog', 'Pre-filled with the names the openconnector endoflife-date-source change provisions. Change them if your instance uses different names — no code change required.') }}
+					{{
+						t(
+							'softwarecatalog',
+							'Pre-filled with the names the openconnector endoflife-date-source change provisions. Change them if your instance uses different names — no code change required.',
+						)
+					}}
 				</p>
 				<NcTextField
 					v-model="config.register"
@@ -90,7 +116,12 @@
 					:label="t('softwarecatalog', 'Sync interval (minutes)')"
 					:disabled="!config.enabled" />
 				<p class="help-text">
-					{{ t('softwarecatalog', 'The scheduled background job re-runs the matcher at this interval; the minimum enforced interval is 5 minutes.') }}
+					{{
+						t(
+							'softwarecatalog',
+							'The scheduled background job re-runs the matcher at this interval; the minimum enforced interval is 5 minutes.',
+						)
+					}}
 				</p>
 			</div>
 		</div>
@@ -122,10 +153,17 @@ import { apiRequest } from '../../../utils/adminApi.js'
 const REASON_LABELS = {
 	disabled: () => t('softwarecatalog', 'EOL feed sync is disabled'),
 	'not-yet-run': () => t('softwarecatalog', 'not yet run'),
-	'openregister-not-installed': () => t('softwarecatalog', 'OpenRegister is not installed'),
-	'object-service-unavailable': () => t('softwarecatalog', 'OpenRegister is not currently reachable'),
-	'module-schema-not-configured': () => t('softwarecatalog', 'the module/moduleVersie schema is not configured yet'),
-	'eol-register-or-schema-not-found': () => t('softwarecatalog', 'the configured register or schema could not be found — is the openconnector endoflife-date-source change installed?'),
+	'openregister-not-installed': () =>
+		t('softwarecatalog', 'OpenRegister is not installed'),
+	'object-service-unavailable': () =>
+		t('softwarecatalog', 'OpenRegister is not currently reachable'),
+	'module-schema-not-configured': () =>
+		t('softwarecatalog', 'the module/moduleVersie schema is not configured yet'),
+	'eol-register-or-schema-not-found': () =>
+		t(
+			'softwarecatalog',
+			'the configured register or schema could not be found — is the openconnector endoflife-date-source change installed?',
+		),
 }
 
 /**
@@ -185,7 +223,12 @@ export default defineComponent({
 			 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
 			 */
 			get() {
-				return String(Math.max(1, Math.round((this.config.intervalSeconds || 86400) / 60)))
+				return String(
+					Math.max(
+						1,
+						Math.round((this.config.intervalSeconds || 86400) / 60),
+					),
+				)
 			},
 			/**
 			 * @param {string} value The new interval in minutes.
@@ -273,7 +316,11 @@ export default defineComponent({
 					this.config = { ...this.config, ...data.config }
 				}
 			} catch (error) {
-				showError(t('softwarecatalog', 'Could not load EOL sync configuration') + ': ' + error.message)
+				showError(
+					t('softwarecatalog', 'Could not load EOL sync configuration')
+						+ ': '
+						+ error.message,
+				)
 			}
 		},
 
@@ -290,7 +337,11 @@ export default defineComponent({
 					this.status = { ...this.status, ...data.status }
 				}
 			} catch (error) {
-				showError(t('softwarecatalog', 'Could not load EOL sync status') + ': ' + error.message)
+				showError(
+					t('softwarecatalog', 'Could not load EOL sync status')
+						+ ': '
+						+ error.message,
+				)
 			}
 		},
 
@@ -303,13 +354,20 @@ export default defineComponent({
 		async saveConfig() {
 			this.saving = true
 			try {
-				const data = await apiRequest('eol-sync/config', { method: 'POST', body: this.config })
+				const data = await apiRequest('eol-sync/config', {
+					method: 'POST',
+					body: this.config,
+				})
 				if (data && data.config) {
 					this.config = { ...this.config, ...data.config }
 				}
 				showSuccess(t('softwarecatalog', 'EOL sync settings saved'))
 			} catch (error) {
-				showError(t('softwarecatalog', 'Could not save EOL sync settings') + ': ' + error.message)
+				showError(
+					t('softwarecatalog', 'Could not save EOL sync settings')
+						+ ': '
+						+ error.message,
+				)
 			} finally {
 				this.saving = false
 			}
@@ -330,12 +388,27 @@ export default defineComponent({
 					this.status = { ...this.status, ...data.status }
 				}
 				if (this.status.available) {
-					showSuccess(t('softwarecatalog', 'EOL sync completed: {matched} matched, {skipped} skipped.', { matched: this.status.matched, skipped: this.status.skipped }))
+					showSuccess(
+						t(
+							'softwarecatalog',
+							'EOL sync completed: {matched} matched, {skipped} skipped.',
+							{
+								matched: this.status.matched,
+								skipped: this.status.skipped,
+							},
+						),
+					)
 				} else {
-					showError(t('softwarecatalog', 'EOL sync did not run: {reason}', { reason: this.unavailableReasonLabel }))
+					showError(
+						t('softwarecatalog', 'EOL sync did not run: {reason}', {
+							reason: this.unavailableReasonLabel,
+						}),
+					)
 				}
 			} catch (error) {
-				showError(t('softwarecatalog', 'EOL sync failed') + ': ' + error.message)
+				showError(
+					t('softwarecatalog', 'EOL sync failed') + ': ' + error.message,
+				)
 			} finally {
 				this.syncing = false
 			}

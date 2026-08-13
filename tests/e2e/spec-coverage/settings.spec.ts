@@ -36,11 +36,14 @@ import { collectAppErrors, expectNoAppErrors } from './_helpers'
  * is the real readiness signal.
  */
 async function gotoSettings(page) {
-	await page.goto('/settings/admin/softwarecatalog', { waitUntil: 'domcontentloaded' })
+	await page.goto('/settings/admin/softwarecatalog', {
+		waitUntil: 'domcontentloaded',
+	})
 	const main = page.locator('#softwarecatalog-settings')
 	// The settings shell renders the app name banner first.
-	await expect(main.getByText('SoftwareCatalog', { exact: false }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByText('SoftwareCatalog', { exact: false }).first(),
+	).toBeVisible({ timeout: 30000 })
 	return main
 }
 
@@ -56,8 +59,9 @@ test('settings: all major sections render', async ({ page }) => {
 		'User Groups Configuration',
 		'Organization Synchronization',
 	]) {
-		await expect(main.getByRole('heading', { name: heading }).first())
-			.toBeVisible({ timeout: 30000 })
+		await expect(
+			main.getByRole('heading', { name: heading }).first(),
+		).toBeVisible({ timeout: 30000 })
 	}
 
 	expectNoAppErrors(bag)
@@ -82,9 +86,15 @@ test('settings: maintenance action buttons are present', async ({ page }) => {
 	//
 	// So: assert the unconditional button, and assert that the flag-driven pair
 	// renders exactly one of its two halves. That is the real invariant.
-	await expect(main.getByRole('button', { name: 'Force Update' }).first()).toBeVisible({ timeout: 30000 })
-	const autoConfigure = main.getByRole('button', { name: 'Auto Configure' }).first()
-	const resetAutoConfig = main.getByRole('button', { name: 'Reset Auto-Config' }).first()
+	await expect(
+		main.getByRole('button', { name: 'Force Update' }).first(),
+	).toBeVisible({ timeout: 30000 })
+	const autoConfigure = main
+		.getByRole('button', { name: 'Auto Configure' })
+		.first()
+	const resetAutoConfig = main
+		.getByRole('button', { name: 'Reset Auto-Config' })
+		.first()
 	await expect(autoConfigure.or(resetAutoConfig)).toBeVisible({ timeout: 30000 })
 	expect(
 		(await autoConfigure.count()) + (await resetAutoConfig.count()),
@@ -92,19 +102,27 @@ test('settings: maintenance action buttons are present', async ({ page }) => {
 	).toBe(1)
 
 	// General Settings save + standards sync.
-	await expect(main.getByRole('button', { name: 'Sync Standards' }).first()).toBeVisible()
-	await expect(main.getByRole('button', { name: 'Save General Settings' }).first()).toBeVisible()
+	await expect(
+		main.getByRole('button', { name: 'Sync Standards' }).first(),
+	).toBeVisible()
+	await expect(
+		main.getByRole('button', { name: 'Save General Settings' }).first(),
+	).toBeVisible()
 
 	expectNoAppErrors(bag)
 })
 
-test('settings: OpenRegister Integration sub-tabs switch panels', async ({ page }) => {
+test('settings: OpenRegister Integration sub-tabs switch panels', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	const main = await gotoSettings(page)
 
 	// The OpenRegister Integration section renders a StandardTabs control with
 	// three tabs. They open on the General Configuration tab by default.
-	const generalTab = main.getByRole('button', { name: 'General Configuration' }).first()
+	const generalTab = main
+		.getByRole('button', { name: 'General Configuration' })
+		.first()
 	const voorzieningenTab = main.getByText('Voorzieningen', { exact: true }).first()
 	const amefTab = main.getByText('AMEF', { exact: true }).first()
 
@@ -113,8 +131,9 @@ test('settings: OpenRegister Integration sub-tabs switch panels', async ({ page 
 	await expect(amefTab).toBeVisible()
 
 	// Default tab exposes the register selector ("Select Voorzieningen Register").
-	await expect(main.getByText('Select Voorzieningen Register', { exact: false }).first())
-		.toBeVisible({ timeout: 15000 })
+	await expect(
+		main.getByText('Select Voorzieningen Register', { exact: false }).first(),
+	).toBeVisible({ timeout: 15000 })
 
 	// Switch to the Voorzieningen tab — its panel notes the schema mapping context
 	// (it references selecting a register in the General Configuration tab when
@@ -128,34 +147,42 @@ test('settings: OpenRegister Integration sub-tabs switch panels', async ({ page 
 	await amefTab.click()
 	await expect(amefTab).toBeVisible()
 	await generalTab.click()
-	await expect(main.getByText('Select Voorzieningen Register', { exact: false }).first())
-		.toBeVisible({ timeout: 15000 })
+	await expect(
+		main.getByText('Select Voorzieningen Register', { exact: false }).first(),
+	).toBeVisible({ timeout: 15000 })
 
 	expectNoAppErrors(bag)
 })
 
-test('settings: Object Statistics section renders aggregate counts', async ({ page }) => {
+test('settings: Object Statistics section renders aggregate counts', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	const main = await gotoSettings(page)
 
 	// The statistics section heading + its content table render.
-	await expect(main.getByRole('heading', { name: 'Object Statistics' }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByRole('heading', { name: 'Object Statistics' }).first(),
+	).toBeVisible({ timeout: 30000 })
 	// A statistics table/grid is present in the rendered settings page.
 	await expect(main.locator('table').first()).toBeVisible({ timeout: 30000 })
 
 	expectNoAppErrors(bag)
 })
 
-test('settings: Version Information shows application version status', async ({ page }) => {
+test('settings: Version Information shows application version status', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	const main = await gotoSettings(page)
 
-	await expect(main.getByRole('heading', { name: 'Version Information' }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByRole('heading', { name: 'Version Information' }).first(),
+	).toBeVisible({ timeout: 30000 })
 	// The version section renders the application name label.
-	await expect(main.getByText('Application Name', { exact: false }).first())
-		.toBeVisible({ timeout: 15000 })
+	await expect(
+		main.getByText('Application Name', { exact: false }).first(),
+	).toBeVisible({ timeout: 15000 })
 
 	expectNoAppErrors(bag)
 })

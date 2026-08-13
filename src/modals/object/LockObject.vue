@@ -3,12 +3,34 @@ import { objectStore, navigationStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog v-if="navigationStore.modal === 'lockObject'"
-		:name="t('softwarecatalog', 'Lock {name}', { name: (objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id || t('softwarecatalog', 'Publication')) })"
+	<NcDialog
+		v-if="navigationStore.modal === 'lockObject'"
+		:name="
+			t('softwarecatalog', 'Lock {name}', {
+				name:
+					objectStore.objectItem?.['@self']?.name
+					|| objectStore.objectItem?.name
+					|| objectStore.objectItem?.['@self']?.title
+					|| objectStore.objectItem?.id
+					|| t('softwarecatalog', 'Publication'),
+			})
+		"
 		size="normal"
 		:can-close="false">
 		<p v-if="success === null">
-			{{ t('softwarecatalog', 'Do you want to lock') }} <b>{{ objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id }}</b>{{ t('softwarecatalog', '? Locking an object prevents other users from modifying it until it is unlocked. You can specify an optional process name to indicate why it\'s locked and a duration after which it will automatically unlock. Only the user who locked the object or an administrator can unlock it before the duration expires.') }}
+			{{ t('softwarecatalog', 'Do you want to lock') }}
+			<b>{{
+				objectStore.objectItem?.['@self']?.name
+				|| objectStore.objectItem?.name
+				|| objectStore.objectItem?.['@self']?.title
+				|| objectStore.objectItem?.id
+			}}</b
+			>{{
+				t(
+					'softwarecatalog',
+					"? Locking an object prevents other users from modifying it until it is unlocked. You can specify an optional process name to indicate why it's locked and a duration after which it will automatically unlock. Only the user who locked the object or an administrator can unlock it before the duration expires.",
+				)
+			}}
 		</p>
 		<NcNoteCard v-if="success" type="success">
 			<p>{{ t('softwarecatalog', 'Object successfully locked') }}</p>
@@ -22,7 +44,11 @@ import { objectStore, navigationStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success ? t('softwarecatalog', 'Close') : t('softwarecatalog', 'Cancel') }}
+				{{
+					success
+						? t('softwarecatalog', 'Close')
+						: t('softwarecatalog', 'Cancel')
+				}}
 			</NcButton>
 			<NcButton
 				:disabled="loading || success"
@@ -112,7 +138,9 @@ export default {
 				this.error = null
 				this.closeModalTimeout = setTimeout(this.closeModal, 2000)
 			} catch (error) {
-				this.error = error.message || this.t('softwarecatalog', 'Failed to lock object')
+				this.error =
+					error.message
+					|| this.t('softwarecatalog', 'Failed to lock object')
 			} finally {
 				this.loading = false
 			}

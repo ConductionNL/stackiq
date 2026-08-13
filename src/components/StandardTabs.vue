@@ -165,7 +165,9 @@ export default {
 	.tab-button.active::after {
 		display: none;
 	}
-	.tab-content { border-top: 1px solid var(--color-border); }
+	.tab-content {
+		border-top: 1px solid var(--color-border);
+	}
 }
 
 /* WCAG 2.3.3 — honour a reduced-motion preference for the tab hover/active

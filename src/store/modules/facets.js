@@ -19,7 +19,10 @@
 import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { FACET_DIMENSIONS, fetchFacets as fetchFacetsFromApi } from '../../services/facets.js'
+import {
+	FACET_DIMENSIONS,
+	fetchFacets as fetchFacetsFromApi,
+} from '../../services/facets.js'
 
 /**
  * Route-query key prefix for GEMMA facet state. Deliberately DIFFERENT from
@@ -132,7 +135,9 @@ export const useFacetStore = defineStore('facets', {
 		 */
 		hasActiveFilterOrSearchFor: (state) => (schema) => {
 			const slice = state[schema] ?? emptySchemaState()
-			const hasFilters = Object.values(slice.activeFilters).some((values) => Array.isArray(values) && values.length > 0)
+			const hasFilters = Object.values(slice.activeFilters).some(
+				(values) => Array.isArray(values) && values.length > 0,
+			)
 			return hasFilters || slice.search.trim() !== ''
 		},
 
@@ -151,7 +156,9 @@ export const useFacetStore = defineStore('facets', {
 		 */
 		matchedObjectIdsFor: (state) => (schema) => {
 			const slice = state[schema] ?? emptySchemaState()
-			return Array.isArray(slice.data?._meta?.matchedObjectIds) ? slice.data._meta.matchedObjectIds : []
+			return Array.isArray(slice.data?._meta?.matchedObjectIds)
+				? slice.data._meta.matchedObjectIds
+				: []
 		},
 	},
 
@@ -186,7 +193,10 @@ export const useFacetStore = defineStore('facets', {
 			} catch (error) {
 				this[schema].error = error.message ?? 'Failed to fetch facets'
 				// eslint-disable-next-line no-console
-				console.error(`FacetStore: failed to fetch facets for "${schema}"`, error)
+				console.error(
+					`FacetStore: failed to fetch facets for "${schema}"`,
+					error,
+				)
 			} finally {
 				this[schema].loading = false
 			}
@@ -207,7 +217,9 @@ export const useFacetStore = defineStore('facets', {
 				this[schema] = emptySchemaState()
 			}
 
-			const normalized = Array.isArray(values) ? values : [values].filter(Boolean)
+			const normalized = Array.isArray(values)
+				? values
+				: [values].filter(Boolean)
 			const nextFilters = { ...this[schema].activeFilters }
 
 			if (normalized.length === 0) {
@@ -279,7 +291,10 @@ export const useFacetStore = defineStore('facets', {
 			})
 
 			this[schema].activeFilters = filters
-			this[schema].search = typeof source[ROUTE_QUERY_SEARCH_KEY] === 'string' ? source[ROUTE_QUERY_SEARCH_KEY] : ''
+			this[schema].search =
+				typeof source[ROUTE_QUERY_SEARCH_KEY] === 'string'
+					? source[ROUTE_QUERY_SEARCH_KEY]
+					: ''
 		},
 
 		/**
@@ -339,15 +354,23 @@ export const useFacetStore = defineStore('facets', {
 
 			try {
 				const response = await axios.get(generateUrl(OR_VIEWS_API_BASE))
-				const results = Array.isArray(response?.data?.results) ? response.data.results : []
+				const results = Array.isArray(response?.data?.results)
+					? response.data.results
+					: []
 				this[schema].savedViews = results.filter(
-					(view) => view?.query?.marker === VIEW_MARKER && view?.query?.gemmaSchema === schema,
+					(view) =>
+						view?.query?.marker === VIEW_MARKER
+						&& view?.query?.gemmaSchema === schema,
 				)
 			} catch (error) {
-				this[schema].savedViewsError = error.message ?? 'Failed to fetch saved views'
+				this[schema].savedViewsError =
+					error.message ?? 'Failed to fetch saved views'
 				this[schema].savedViews = []
 				// eslint-disable-next-line no-console
-				console.error(`FacetStore: failed to fetch saved views for "${schema}"`, error)
+				console.error(
+					`FacetStore: failed to fetch saved views for "${schema}"`,
+					error,
+				)
 			} finally {
 				this[schema].savedViewsLoading = false
 			}
@@ -383,7 +406,10 @@ export const useFacetStore = defineStore('facets', {
 				},
 			}
 
-			const response = await axios.post(generateUrl(OR_VIEWS_API_BASE), payload)
+			const response = await axios.post(
+				generateUrl(OR_VIEWS_API_BASE),
+				payload,
+			)
 			const created = response?.data?.view
 			if (created) {
 				this[schema].savedViews = [...this[schema].savedViews, created]
@@ -408,8 +434,19 @@ export const useFacetStore = defineStore('facets', {
 				this[schema] = emptySchemaState()
 			}
 
-			const query = (view && typeof view === 'object' && view.query && typeof view.query === 'object') ? view.query : {}
-			const filters = (query.filters && typeof query.filters === 'object' && !Array.isArray(query.filters)) ? query.filters : {}
+			const query =
+				view
+				&& typeof view === 'object'
+				&& view.query
+				&& typeof view.query === 'object'
+					? view.query
+					: {}
+			const filters =
+				query.filters
+				&& typeof query.filters === 'object'
+				&& !Array.isArray(query.filters)
+					? query.filters
+					: {}
 
 			const normalizedFilters = {}
 			FACET_DIMENSIONS.forEach((dimension) => {
@@ -420,7 +457,8 @@ export const useFacetStore = defineStore('facets', {
 			})
 
 			this[schema].activeFilters = normalizedFilters
-			this[schema].search = typeof query.search === 'string' ? query.search : ''
+			this[schema].search =
+				typeof query.search === 'string' ? query.search : ''
 		},
 	},
 })

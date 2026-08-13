@@ -20,7 +20,10 @@
  * @spec openspec/specs/catalog-ratings/spec.md
  */
 export function aggregatePath(subjectType, subjectId) {
-	const params = new URLSearchParams({ subjectType: String(subjectType || ''), subjectId: String(subjectId || '') })
+	const params = new URLSearchParams({
+		subjectType: String(subjectType || ''),
+		subjectId: String(subjectId || ''),
+	})
 	return `reviews/aggregate?${params.toString()}`
 }
 

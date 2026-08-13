@@ -22,13 +22,29 @@ import {
 // Modules: M1 open (vendor VA), M2 closed (vendor VA), M3 unknown-type (vendor VB),
 // M4 closed but NEVER deployed (vendor VB).
 const modules = [
-	{ id: 'M1', naam: 'Open App', licentietype: 'Open source', licentie: 'EUPL-1.2', aanbieder: 'VA' },
-	{ id: 'M2', naam: 'Closed App', licentietype: 'Closed source', licentie: 'Proprietary', aanbieder: 'VA' },
+	{
+		id: 'M1',
+		naam: 'Open App',
+		licentietype: 'Open source',
+		licentie: 'EUPL-1.2',
+		aanbieder: 'VA',
+	},
+	{
+		id: 'M2',
+		naam: 'Closed App',
+		licentietype: 'Closed source',
+		licentie: 'Proprietary',
+		aanbieder: 'VA',
+	},
 	{ id: 'M3', naam: 'Mystery App', licentietype: '', aanbieder: 'VB' },
 	{ id: 'M4', naam: 'Shelfware', licentietype: 'Closed source', aanbieder: 'VB' },
 ]
 
-const inProd = (extra) => ({ startDatumInProductie: '2025-01-01', startDatumUitGefaseerd: '', ...extra })
+const inProd = (extra) => ({
+	startDatumInProductie: '2025-01-01',
+	startDatumUitGefaseerd: '',
+	...extra,
+})
 
 // Usages: M1 deployed twice (O1, O2); M2 once (O1); M3 once (O1); M4 phased out (O1).
 const gebruiken = [
@@ -36,7 +52,13 @@ const gebruiken = [
 	inProd({ id: 'G2', module: 'M1', afnemer: 'O2' }),
 	inProd({ id: 'G3', module: 'M2', afnemer: 'O1' }),
 	inProd({ id: 'G4', module: 'M3', afnemer: 'O1' }),
-	{ id: 'G5', module: 'M4', afnemer: 'O1', startDatumInProductie: '2024-01-01', startDatumUitGefaseerd: '2025-06-01' },
+	{
+		id: 'G5',
+		module: 'M4',
+		afnemer: 'O1',
+		startDatumInProductie: '2024-01-01',
+		startDatumUitGefaseerd: '2025-06-01',
+	},
 ]
 
 describe('licensePosture.normaliseLicenseType', () => {
@@ -73,7 +95,10 @@ describe('licensePosture.portfolioPosture', () => {
 	})
 
 	it('openShare is null when neither open nor closed is present', () => {
-		const p = portfolioPosture([{ id: 'MX', licentietype: '' }], [inProd({ id: 'GX', module: 'MX' })])
+		const p = portfolioPosture(
+			[{ id: 'MX', licentietype: '' }],
+			[inProd({ id: 'GX', module: 'MX' })],
+		)
 		expect(p.openShare).toBeNull()
 		expect(p.unknown).toBe(1)
 	})

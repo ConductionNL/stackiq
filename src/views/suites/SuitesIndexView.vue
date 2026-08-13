@@ -18,8 +18,14 @@
 -->
 <template>
 	<div class="suites-index">
-		<CnIndexPage :title="t('softwarecatalog', 'Suites')"
-			:description="t('softwarecatalog', 'Application suites — bundled products made up of one or more existing applications.')"
+		<CnIndexPage
+			:title="t('softwarecatalog', 'Suites')"
+			:description="
+				t(
+					'softwarecatalog',
+					'Application suites — bundled products made up of one or more existing applications.',
+				)
+			"
 			:show-title="true"
 			icon="PackageVariant"
 			register="voorzieningen"
@@ -79,7 +85,9 @@ export default {
 		onRowOpen(row) {
 			const id = row && (row.id || row.uuid || row['@self']?.id)
 			if (!id) return
-			this.$router.push({ name: 'SuiteDetail', params: { id } }).catch(() => {})
+			this.$router
+				.push({ name: 'SuiteDetail', params: { id } })
+				.catch(() => {})
 		},
 
 		/**
@@ -93,7 +101,9 @@ export default {
 		onSuiteCreated(suiteId) {
 			this.showWizard = false
 			if (suiteId) {
-				this.$router.push({ name: 'SuiteDetail', params: { id: suiteId } }).catch(() => {})
+				this.$router
+					.push({ name: 'SuiteDetail', params: { id: suiteId } })
+					.catch(() => {})
 			}
 		},
 	},

@@ -32,7 +32,12 @@
  */
 import { test, expect } from '@playwright/test'
 import type { APIRequestContext } from '@playwright/test'
-import { APP_MAIN, collectAppErrors, expectNoAppErrors, navClickTo } from './_helpers'
+import {
+	APP_MAIN,
+	collectAppErrors,
+	expectNoAppErrors,
+	navClickTo,
+} from './_helpers'
 import {
 	RUN_ID,
 	createObject,
@@ -44,7 +49,12 @@ import {
 
 const FACETS = '/index.php/apps/softwarecatalog/api/facets'
 /** The four GEMMA dimensions the endpoint must always describe. */
-const DIMENSIONS = ['referentiecomponent', 'standaard', 'applicatieservice', 'domein'] as const
+const DIMENSIONS = [
+	'referentiecomponent',
+	'standaard',
+	'applicatieservice',
+	'domein',
+] as const
 
 /** Unique per run so the cache — keyed by params — is cold on first use. */
 const TOKEN = `facet${RUN_ID.replace(/[^a-z0-9]/gi, '')}`
@@ -59,7 +69,11 @@ test.beforeAll(async () => {
 	// Two modules whose names contain TOKEN, so a text query can select
 	// exactly them out of whatever else the instance holds.
 	for (const n of [1, 2]) {
-		seeded.push(await createObject(ctx, config.register, 'module', { naam: `${TOKEN} module ${n}` }))
+		seeded.push(
+			await createObject(ctx, config.register, 'module', {
+				naam: `${TOKEN} module ${n}`,
+			}),
+		)
 	}
 })
 
@@ -84,10 +98,15 @@ test('facets: the response carries all four GEMMA dimensions, empty ones as [] n
 	//
 	// The `cached === false` guard below is not decoration: without it this test
 	// would silently degrade into "some earlier response had four dimensions".
-	const res = await ctx.get(`${FACETS}/module?search=${encodeURIComponent(`${TOKEN}-dims`)}`)
+	const res = await ctx.get(
+		`${FACETS}/module?search=${encodeURIComponent(`${TOKEN}-dims`)}`,
+	)
 	expect(res.status(), `GET ${FACETS}/module returned ${res.status()}`).toBe(200)
 	const body = await res.json()
-	expect(body?._meta?.cached, 'this assertion needs a freshly computed response, but got a cached one').toBe(false)
+	expect(
+		body?._meta?.cached,
+		'this assertion needs a freshly computed response, but got a cached one',
+	).toBe(false)
 
 	// This is the load-bearing half of the scenario: "a dimension with no
 	// matching objects MUST be present as an empty array, not omitted". On this
@@ -95,23 +114,37 @@ test('facets: the response carries all four GEMMA dimensions, empty ones as [] n
 	// empty — which makes this the exact condition the scenario describes,
 	// rather than a weaker version of it.
 	for (const dim of DIMENSIONS) {
-		expect(Object.prototype.hasOwnProperty.call(body, dim), `dimension "${dim}" is missing from the response`).toBe(true)
-		expect(Array.isArray(body[dim]), `dimension "${dim}" is not an array: ${JSON.stringify(body[dim])}`).toBe(true)
+		expect(
+			Object.prototype.hasOwnProperty.call(body, dim),
+			`dimension "${dim}" is missing from the response`,
+		).toBe(true)
+		expect(
+			Array.isArray(body[dim]),
+			`dimension "${dim}" is not an array: ${JSON.stringify(body[dim])}`,
+		).toBe(true)
 	}
 	// And no extra top-level dimension keys crept in beyond the four + _meta.
-	expect(Object.keys(body).sort()).toEqual([...DIMENSIONS].sort().concat('_meta').sort())
+	expect(Object.keys(body).sort()).toEqual(
+		[...DIMENSIONS].sort().concat('_meta').sort(),
+	)
 })
 
 // @e2e gemma-faceted-search::unsupported-schema-is-rejected
 test('facets: an unsupported schema is rejected with 400 naming the supported ones', async () => {
 	const res = await ctx.get(`${FACETS}/contract`)
-	expect(res.status(), `GET ${FACETS}/contract returned ${res.status()} — expected 400`).toBe(400)
+	expect(
+		res.status(),
+		`GET ${FACETS}/contract returned ${res.status()} — expected 400`,
+	).toBe(400)
 
 	const body = await res.json()
 	const message = String(body?.message ?? '')
 	// The scenario requires the error to NAME the supported schemas, not merely
 	// to reject — so both names are asserted, not just a non-2xx.
-	expect(message, `error message did not name the supported schemas: ${message}`).toMatch(/module/)
+	expect(
+		message,
+		`error message did not name the supported schemas: ${message}`,
+	).toMatch(/module/)
 	expect(message).toMatch(/dienst/)
 
 	// The supported set is also machine-readable, and must be exactly the two.
@@ -147,16 +180,29 @@ test('facets: a text query narrows the aggregated set', async () => {
 	// is unusable as a baseline here (see the block above), so "narrows" is
 	// asserted between a broad query and a strictly-narrower one, both of which
 	// are computed fresh and therefore both accurate.
-	const broad = await ctx.get(`${FACETS}/module?search=${encodeURIComponent(TOKEN)}`)
-	expect(broad.status(), `GET with the broad search returned ${broad.status()}`).toBe(200)
+	const broad = await ctx.get(
+		`${FACETS}/module?search=${encodeURIComponent(TOKEN)}`,
+	)
+	expect(
+		broad.status(),
+		`GET with the broad search returned ${broad.status()}`,
+	).toBe(200)
 	const totalBroad = (await broad.json())?._meta?.totalMatched
-	expect(totalBroad, `the run token matched ${totalBroad}, expected the 2 seeded modules`).toBe(2)
+	expect(
+		totalBroad,
+		`the run token matched ${totalBroad}, expected the 2 seeded modules`,
+	).toBe(2)
 
 	// One character more specific — matches exactly one of the two.
-	const narrow = await ctx.get(`${FACETS}/module?search=${encodeURIComponent(`${TOKEN} module 1`)}`)
+	const narrow = await ctx.get(
+		`${FACETS}/module?search=${encodeURIComponent(`${TOKEN} module 1`)}`,
+	)
 	expect(narrow.status()).toBe(200)
 	const totalNarrow = (await narrow.json())?._meta?.totalMatched
-	expect(totalNarrow, `the narrower query matched ${totalNarrow}, expected 1`).toBe(1)
+	expect(
+		totalNarrow,
+		`the narrower query matched ${totalNarrow}, expected 1`,
+	).toBe(1)
 
 	// Strictly fewer: that is what "narrows" means, and both numbers were
 	// computed rather than served stale.
@@ -164,12 +210,17 @@ test('facets: a text query narrows the aggregated set', async () => {
 
 	// A term matching nothing narrows all the way to zero, and still returns
 	// all four dimensions rather than erroring.
-	const miss = await ctx.get(`${FACETS}/module?search=${encodeURIComponent(TOKEN)}zzzznomatch`)
+	const miss = await ctx.get(
+		`${FACETS}/module?search=${encodeURIComponent(TOKEN)}zzzznomatch`,
+	)
 	expect(miss.status()).toBe(200)
 	const missBody = await miss.json()
 	expect(missBody?._meta?.totalMatched).toBe(0)
 	for (const dim of DIMENSIONS) {
-		expect(Array.isArray(missBody[dim]), `dimension "${dim}" absent on an empty result`).toBe(true)
+		expect(
+			Array.isArray(missBody[dim]),
+			`dimension "${dim}" absent on an empty result`,
+		).toBe(true)
 	}
 })
 
@@ -196,7 +247,9 @@ test('facets: a text query narrows the aggregated set', async () => {
 // instance configures a cache backend.
 
 // @e2e gemma-faceted-search::facet-panel-renders-alongside-the-existing-index-page-toolbar
-test('facets: the GEMMA panel renders beside the search box on the module index', async ({ page }) => {
+test('facets: the GEMMA panel renders beside the search box on the module index', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Applications')
 
@@ -205,11 +258,15 @@ test('facets: the GEMMA panel renders beside the search box on the module index'
 
 	// The facet sidebar is present…
 	const sidebar = page.locator('.cn-facet-sidebar').first()
-	await expect(sidebar, 'the GEMMA facet sidebar did not render').toBeVisible({ timeout: 30000 })
+	await expect(sidebar, 'the GEMMA facet sidebar did not render').toBeVisible({
+		timeout: 30000,
+	})
 	await expect(sidebar.locator('.cn-facet-sidebar__title')).toContainText(/GEMMA/i)
 
 	// …and it lists all four dimensions as filter groups.
-	await expect(sidebar.locator('.cn-facet-sidebar__group')).toHaveCount(DIMENSIONS.length)
+	await expect(sidebar.locator('.cn-facet-sidebar__group')).toHaveCount(
+		DIMENSIONS.length,
+	)
 
 	// …AND the pre-existing toolbar still works alongside it, which is the
 	// second half of the scenario ("the existing free-text search box ... MUST
@@ -218,7 +275,9 @@ test('facets: the GEMMA panel renders beside the search box on the module index'
 	await expect(search, 'the free-text search box disappeared').toBeVisible()
 	await search.getByRole('textbox').first().fill(TOKEN)
 	// The list re-fetches and settles on this run's seeded modules.
-	await expect(main.getByText(`${TOKEN} module 1`).first()).toBeVisible({ timeout: 30000 })
+	await expect(main.getByText(`${TOKEN} module 1`).first()).toBeVisible({
+		timeout: 30000,
+	})
 
 	expectNoAppErrors(bag)
 })

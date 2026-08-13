@@ -15,7 +15,11 @@
 
 import { buildHeaders, buildQueryString } from '@conduction/nextcloud-vue'
 
-import { withLanguageParam, buildWriteHeaders, getActiveOrganisationUuid } from '../../composables/orClient.js'
+import {
+	withLanguageParam,
+	buildWriteHeaders,
+	getActiveOrganisationUuid,
+} from '../../composables/orClient.js'
 
 /**
  * Extract an ID from a value that can be either a primitive or an object.
@@ -72,7 +76,11 @@ function separateResults(results) {
 		.filter((r) => r.status === 'fulfilled' && r.value.success)
 		.map((r) => r.value)
 	const failed = results
-		.filter((r) => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success))
+		.filter(
+			(r) =>
+				r.status === 'rejected'
+				|| (r.status === 'fulfilled' && !r.value.success),
+		)
 		.map((r) => r.value || { success: false, error: 'Unknown error' })
 	return { successful, failed }
 }
@@ -111,28 +119,138 @@ export function softwarecatalogPlugin() {
 
 			// Column metadata definitions for GenericObjectTable
 			metadata: {
-				name: { label: 'Name', key: 'name', description: 'Display name of the object', enabled: true },
-				description: { label: 'Description', key: 'description', description: 'Description of the object', enabled: false },
-				objectId: { label: 'ID', key: 'id', description: 'Unique identifier of the object', enabled: false },
-				uri: { label: 'URI', key: 'uri', description: 'URI of the object', enabled: false },
-				version: { label: 'Version', key: 'version', description: 'Version of the object', enabled: false },
-				register: { label: 'Register', key: 'register', description: 'Register of the object', enabled: false },
-				schema: { label: 'Schema', key: 'schema', description: 'Schema of the object', enabled: false },
-				files: { label: 'Files', key: 'files', description: 'Attached files count', enabled: true },
-				locked: { label: 'Locked', key: 'locked', description: 'Whether the object is locked', enabled: false },
-				organization: { label: 'Organization', key: 'organization', description: 'Organization owning the object', enabled: false },
-				validation: { label: 'Validation', key: 'validation', description: 'Validation status of the object', enabled: false },
-				owner: { label: 'Owner', key: 'owner', description: 'Owner of the object', enabled: false },
-				application: { label: 'Application', key: 'application', description: 'Application of the object', enabled: false },
-				folder: { label: 'Folder', key: 'folder', description: 'Folder of the object', enabled: false },
-				geo: { label: 'Geo', key: 'geo', description: 'Geographic information', enabled: false },
-				retention: { label: 'Retention', key: 'retention', description: 'Retention policy', enabled: false },
-				size: { label: 'Size', key: 'size', description: 'Size of the object', enabled: false },
-				published: { label: 'Published', key: 'published', description: 'Publication date', enabled: false },
-				depublished: { label: 'Depublished', key: 'depublished', description: 'Depublication date', enabled: false },
-				deleted: { label: 'Deleted', key: 'deleted', description: 'Deletion date', enabled: false },
-				created: { label: 'Created', key: 'created', description: 'Creation date and time', enabled: false },
-				updated: { label: 'Updated', key: 'updated', description: 'Last update date and time', enabled: false },
+				name: {
+					label: 'Name',
+					key: 'name',
+					description: 'Display name of the object',
+					enabled: true,
+				},
+				description: {
+					label: 'Description',
+					key: 'description',
+					description: 'Description of the object',
+					enabled: false,
+				},
+				objectId: {
+					label: 'ID',
+					key: 'id',
+					description: 'Unique identifier of the object',
+					enabled: false,
+				},
+				uri: {
+					label: 'URI',
+					key: 'uri',
+					description: 'URI of the object',
+					enabled: false,
+				},
+				version: {
+					label: 'Version',
+					key: 'version',
+					description: 'Version of the object',
+					enabled: false,
+				},
+				register: {
+					label: 'Register',
+					key: 'register',
+					description: 'Register of the object',
+					enabled: false,
+				},
+				schema: {
+					label: 'Schema',
+					key: 'schema',
+					description: 'Schema of the object',
+					enabled: false,
+				},
+				files: {
+					label: 'Files',
+					key: 'files',
+					description: 'Attached files count',
+					enabled: true,
+				},
+				locked: {
+					label: 'Locked',
+					key: 'locked',
+					description: 'Whether the object is locked',
+					enabled: false,
+				},
+				organization: {
+					label: 'Organization',
+					key: 'organization',
+					description: 'Organization owning the object',
+					enabled: false,
+				},
+				validation: {
+					label: 'Validation',
+					key: 'validation',
+					description: 'Validation status of the object',
+					enabled: false,
+				},
+				owner: {
+					label: 'Owner',
+					key: 'owner',
+					description: 'Owner of the object',
+					enabled: false,
+				},
+				application: {
+					label: 'Application',
+					key: 'application',
+					description: 'Application of the object',
+					enabled: false,
+				},
+				folder: {
+					label: 'Folder',
+					key: 'folder',
+					description: 'Folder of the object',
+					enabled: false,
+				},
+				geo: {
+					label: 'Geo',
+					key: 'geo',
+					description: 'Geographic information',
+					enabled: false,
+				},
+				retention: {
+					label: 'Retention',
+					key: 'retention',
+					description: 'Retention policy',
+					enabled: false,
+				},
+				size: {
+					label: 'Size',
+					key: 'size',
+					description: 'Size of the object',
+					enabled: false,
+				},
+				published: {
+					label: 'Published',
+					key: 'published',
+					description: 'Publication date',
+					enabled: false,
+				},
+				depublished: {
+					label: 'Depublished',
+					key: 'depublished',
+					description: 'Depublication date',
+					enabled: false,
+				},
+				deleted: {
+					label: 'Deleted',
+					key: 'deleted',
+					description: 'Deletion date',
+					enabled: false,
+				},
+				created: {
+					label: 'Created',
+					key: 'created',
+					description: 'Creation date and time',
+					enabled: false,
+				},
+				updated: {
+					label: 'Updated',
+					key: 'updated',
+					description: 'Last update date and time',
+					enabled: false,
+				},
 			},
 
 			// Schema-derived property columns
@@ -218,7 +336,9 @@ export function softwarecatalogPlugin() {
 
 			isAllSelected: (state) => {
 				const organisatieCollection = state.collections?.organisatie
-				const results = Array.isArray(organisatieCollection) ? organisatieCollection : organisatieCollection?.results
+				const results = Array.isArray(organisatieCollection)
+					? organisatieCollection
+					: organisatieCollection?.results
 				if (!results?.length) return false
 				return results.every((org) =>
 					state.selectedObjects.includes(org['@self']?.id || org.id),
@@ -254,7 +374,8 @@ export function softwarecatalogPlugin() {
 						'/index.php/apps/softwarecatalog/api/settings',
 						{ headers: buildHeaders() },
 					)
-					if (!settingsResponse.ok) throw new Error('Failed to fetch settings')
+					if (!settingsResponse.ok)
+						throw new Error('Failed to fetch settings')
 					this.settings = await settingsResponse.json()
 
 					// Fetch voorzieningen-specific configuration
@@ -264,9 +385,14 @@ export function softwarecatalogPlugin() {
 							{ headers: buildHeaders() },
 						)
 						if (voorzieningenResponse.ok) {
-							const voorzieningenData = await voorzieningenResponse.json()
-							if (voorzieningenData.success && voorzieningenData.config) {
-								this.settings.voorzieningen = voorzieningenData.config
+							const voorzieningenData =
+								await voorzieningenResponse.json()
+							if (
+								voorzieningenData.success
+								&& voorzieningenData.config
+							) {
+								this.settings.voorzieningen =
+									voorzieningenData.config
 							}
 						}
 					} catch (error) {
@@ -292,9 +418,10 @@ export function softwarecatalogPlugin() {
 				try {
 					if (!this.settings?.availableRegisters) return
 
-					const voorzieningenRegister = this.settings.availableRegisters.find(
-						(register) => register.slug === 'voorzieningen',
-					)
+					const voorzieningenRegister =
+						this.settings.availableRegisters.find(
+							(register) => register.slug === 'voorzieningen',
+						)
 
 					if (!voorzieningenRegister?.schemas) return
 
@@ -306,7 +433,10 @@ export function softwarecatalogPlugin() {
 						)
 					}
 				} catch (error) {
-					console.warn('Failed to initialize voorzieningen object types:', error)
+					console.warn(
+						'Failed to initialize voorzieningen object types:',
+						error,
+					)
 				}
 			},
 
@@ -347,8 +477,14 @@ export function softwarecatalogPlugin() {
 				// surfaces register their stores even when the settings
 				// `availableRegisters` list does not include the voorzieningen
 				// register (the slug-based auto-registration then finds nothing).
-				const voorzieningenConfig = this.settings.voorzieningen || this.settings.voorzieningenConfig || {}
-				if (voorzieningenConfig.register && voorzieningenConfig[`${objectType}_schema`]) {
+				const voorzieningenConfig =
+					this.settings.voorzieningen
+					|| this.settings.voorzieningenConfig
+					|| {}
+				if (
+					voorzieningenConfig.register
+					&& voorzieningenConfig[`${objectType}_schema`]
+				) {
 					return {
 						source: 'openregister',
 						schema: voorzieningenConfig[`${objectType}_schema`],
@@ -361,7 +497,8 @@ export function softwarecatalogPlugin() {
 				// with a `<type>_schema` key under `amefConfig`. The compliance
 				// matrix and ArchiMate surfaces fetch `element`, which is not part
 				// of the voorzieningen blob.
-				const amefConfig = this.settings.amef || this.settings.amefConfig || {}
+				const amefConfig =
+					this.settings.amef || this.settings.amefConfig || {}
 				if (amefConfig.register && amefConfig[`${objectType}_schema`]) {
 					return {
 						source: 'openregister',
@@ -372,12 +509,22 @@ export function softwarecatalogPlugin() {
 
 				// Check legacy settings format
 				const config = this.settings.configuration || {}
-				const source = config[`voorzieningen_${objectType}_source`] || config[`${objectType}_source`] || 'openregister'
-				const schema = config[`voorzieningen_${objectType}_schema`] || config[`${objectType}_schema`]
-				const register = config[`voorzieningen_${objectType}_register`] || config[`${objectType}_register`] || config.voorzieningen_register
+				const source =
+					config[`voorzieningen_${objectType}_source`]
+					|| config[`${objectType}_source`]
+					|| 'openregister'
+				const schema =
+					config[`voorzieningen_${objectType}_schema`]
+					|| config[`${objectType}_schema`]
+				const register =
+					config[`voorzieningen_${objectType}_register`]
+					|| config[`${objectType}_register`]
+					|| config.voorzieningen_register
 
 				if (!schema || !register) {
-					throw new Error(`Invalid configuration for object type: ${objectType}. Schema: ${schema}, Register: ${register}`)
+					throw new Error(
+						`Invalid configuration for object type: ${objectType}. Schema: ${schema}, Register: ${register}`,
+					)
 				}
 
 				return { source, schema, register }
@@ -416,7 +563,9 @@ export function softwarecatalogPlugin() {
 					const fetchPromises = dataTypes.map((dataType) => {
 						const defaultLimit = dataType === 'files' ? 500 : 20
 						return this.fetchRelatedData(
-							type, object.id, dataType,
+							type,
+							object.id,
+							dataType,
 							{ _limit: defaultLimit, _page: 1 },
 							organisatieData,
 						)
@@ -464,10 +613,15 @@ export function softwarecatalogPlugin() {
 					headers: buildHeaders(),
 				})
 
-				if (!response.ok) throw new Error(`Failed to download object: ${response.statusText}`)
+				if (!response.ok)
+					throw new Error(
+						`Failed to download object: ${response.statusText}`,
+					)
 
 				const data = await response.json()
-				const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+				const blob = new Blob([JSON.stringify(data, null, 2)], {
+					type: 'application/json',
+				})
 				const url = URL.createObjectURL(blob)
 				const link = document.createElement('a')
 				link.href = url
@@ -489,7 +643,13 @@ export function softwarecatalogPlugin() {
 			 * @return {Promise<void>}
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
-			async fetchRelatedData(type, id, dataType, params = {}, organisatieData = null) {
+			async fetchRelatedData(
+				type,
+				id,
+				dataType,
+				params = {},
+				organisatieData = null,
+			) {
 				const loadingKey = `${type}_${id}_${dataType}`
 				this.loading = { ...this.loading, [loadingKey]: true }
 
@@ -513,10 +673,13 @@ export function softwarecatalogPlugin() {
 						queryParams._extend = params._extend || '@self.schema'
 					}
 
-					const url = withLanguageParam(`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}/${actionPath}${buildQueryString(queryParams)}`)
+					const url = withLanguageParam(
+						`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}/${actionPath}${buildQueryString(queryParams)}`,
+					)
 
 					const response = await fetch(url, { headers: buildHeaders() })
-					if (!response.ok) throw new Error(`Failed to fetch ${dataType} for ${type}`)
+					if (!response.ok)
+						throw new Error(`Failed to fetch ${dataType} for ${type}`)
 
 					const data = await response.json()
 
@@ -529,13 +692,18 @@ export function softwarecatalogPlugin() {
 						const paginationKey = `${type}_${dataType}`
 						const requestedLimit = params._limit || params.limit
 						const apiLimit = data.limit ? parseInt(data.limit, 10) : null
-						const actualLimit = apiLimit || requestedLimit || (dataType === 'files' ? 500 : 20)
+						const actualLimit =
+							apiLimit
+							|| requestedLimit
+							|| (dataType === 'files' ? 500 : 20)
 						this.pagination = {
 							...this.pagination,
 							[paginationKey]: {
 								total: data.total || 0,
 								page: data.page || 1,
-								pages: data.pages || Math.ceil((data.total || 0) / actualLimit),
+								pages:
+									data.pages
+									|| Math.ceil((data.total || 0) / actualLimit),
 								limit: actualLimit,
 								next: data.next || null,
 								prev: data.prev || null,
@@ -545,8 +713,12 @@ export function softwarecatalogPlugin() {
 
 					// Store the data
 					const relatedTypeData = { ...this.relatedData[type] }
-					relatedTypeData[dataType] = dataType === 'logs' ? (data.results || []) : data
-					this.relatedData = { ...this.relatedData, [type]: relatedTypeData }
+					relatedTypeData[dataType] =
+						dataType === 'logs' ? data.results || [] : data
+					this.relatedData = {
+						...this.relatedData,
+						[type]: relatedTypeData,
+					}
 				} catch (error) {
 					console.error(`Error fetching ${dataType} for ${type}:`, error)
 				} finally {
@@ -580,16 +752,20 @@ export function softwarecatalogPlugin() {
 					const url = this._buildUrl(type, isUpdate ? id : null)
 					const response = await fetch(url, {
 						method: isUpdate ? 'PUT' : 'POST',
-						headers: buildWriteHeaders(buildHeaders(), { organisation: getActiveOrganisationUuid() }),
+						headers: buildWriteHeaders(buildHeaders(), {
+							organisation: getActiveOrganisationUuid(),
+						}),
 						body: JSON.stringify(objectData),
 					})
 
-					if (!response.ok) throw new Error(`Failed to save ${type} object`)
+					if (!response.ok)
+						throw new Error(`Failed to save ${type} object`)
 					const result = await response.json()
 
 					// Update cache
 					if (result.id) {
-						if (!this.objects[type]) this.objects = { ...this.objects, [type]: {} }
+						if (!this.objects[type])
+							this.objects = { ...this.objects, [type]: {} }
 						this.objects[type][result.id] = result
 					}
 
@@ -606,7 +782,8 @@ export function softwarecatalogPlugin() {
 
 				const registerId = extractId(register)
 				const schemaId = extractId(schema)
-				if (!registerId || !schemaId) throw new Error('Could not extract register or schema ID')
+				if (!registerId || !schemaId)
+					throw new Error('Could not extract register or schema ID')
 
 				const isNewObject = !objectItem['@self']?.id
 				const objectId = objectItem['@self']?.id
@@ -626,7 +803,9 @@ export function softwarecatalogPlugin() {
 				})
 
 				if (!response.ok) {
-					throw new Error(`Failed to save object: ${response.status} ${response.statusText}`)
+					throw new Error(
+						`Failed to save object: ${response.status} ${response.statusText}`,
+					)
 				}
 
 				const data = await response.json()
@@ -652,7 +831,8 @@ export function softwarecatalogPlugin() {
 						method: 'DELETE',
 						headers: buildHeaders(),
 					})
-					if (!response.ok) throw new Error(`Failed to delete ${typeOrObject} object`)
+					if (!response.ok)
+						throw new Error(`Failed to delete ${typeOrObject} object`)
 					return true
 				}
 
@@ -670,17 +850,25 @@ export function softwarecatalogPlugin() {
 					})
 
 					if (!response.ok) {
-						throw new Error(`Failed to delete object: ${response.status} ${response.statusText}`)
+						throw new Error(
+							`Failed to delete object: ${response.status} ${response.statusText}`,
+						)
 					}
 
 					// Remove from selection if selected
 					const isSelected = this.selectedObjects.some(
-						(obj) => (typeof obj === 'string' ? obj : obj.id || obj['@self']?.id) === objectId,
+						(obj) =>
+							(typeof obj === 'string'
+								? obj
+								: obj.id || obj['@self']?.id) === objectId,
 					)
 					if (isSelected) {
 						this.setSelectedObjects(
 							this.selectedObjects.filter(
-								(obj) => (typeof obj === 'string' ? obj : obj.id || obj['@self']?.id) !== objectId,
+								(obj) =>
+									(typeof obj === 'string'
+										? obj
+										: obj.id || obj['@self']?.id) !== objectId,
 							),
 						)
 					}
@@ -720,21 +908,29 @@ export function softwarecatalogPlugin() {
 						`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}`,
 						{
 							method: 'PATCH',
-							headers: buildWriteHeaders(buildHeaders(), { targetLang, organisation: getActiveOrganisationUuid() }),
+							headers: buildWriteHeaders(buildHeaders(), {
+								targetLang,
+								organisation: getActiveOrganisationUuid(),
+							}),
 							body: JSON.stringify(changes),
 						},
 					)
-					if (!response.ok) throw new Error(`Failed to patch ${type} object`)
+					if (!response.ok)
+						throw new Error(`Failed to patch ${type} object`)
 
 					const updatedObject = await response.json()
 
 					// Update cache
-					if (!this.objects[type]) this.objects = { ...this.objects, [type]: {} }
+					if (!this.objects[type])
+						this.objects = { ...this.objects, [type]: {} }
 					this.objects[type][id] = updatedObject
 
 					// Update active object if it matches
 					if (this.activeObjects[type]?.id === id) {
-						this.activeObjects = { ...this.activeObjects, [type]: updatedObject }
+						this.activeObjects = {
+							...this.activeObjects,
+							[type]: updatedObject,
+						}
 					}
 
 					this.setState(type, { success: true, error: null })
@@ -758,11 +954,14 @@ export function softwarecatalogPlugin() {
 			 */
 			async copyObject(type, id) {
 				const originalObject = this.objects?.[type]?.[id]
-				if (!originalObject) throw new Error(`Object ${id} of type ${type} not found`)
+				if (!originalObject)
+					throw new Error(`Object ${id} of type ${type} not found`)
 
 				const { id: _, ...objectData } = originalObject
-				if (objectData.title) objectData.title = `Kopie van ${objectData.title}`
-				else if (objectData.name) objectData.name = `Kopie van ${objectData.name}`
+				if (objectData.title)
+					objectData.title = `Kopie van ${objectData.title}`
+				else if (objectData.name)
+					objectData.name = `Kopie van ${objectData.name}`
 
 				return this.saveObject(type, objectData)
 			},
@@ -790,12 +989,17 @@ export function softwarecatalogPlugin() {
 					})
 
 					if (!response.ok) {
-						throw new Error(`Failed to publish object: ${response.status} ${response.statusText}`)
+						throw new Error(
+							`Failed to publish object: ${response.status} ${response.statusText}`,
+						)
 					}
 
 					return await response.json()
 				} finally {
-					this.loading = { ...this.loading, [`publish_${objectId}`]: false }
+					this.loading = {
+						...this.loading,
+						[`publish_${objectId}`]: false,
+					}
 				}
 			},
 
@@ -818,12 +1022,17 @@ export function softwarecatalogPlugin() {
 					})
 
 					if (!response.ok) {
-						throw new Error(`Failed to depublish object: ${response.status} ${response.statusText}`)
+						throw new Error(
+							`Failed to depublish object: ${response.status} ${response.statusText}`,
+						)
 					}
 
 					return await response.json()
 				} finally {
-					this.loading = { ...this.loading, [`depublish_${objectId}`]: false }
+					this.loading = {
+						...this.loading,
+						[`depublish_${objectId}`]: false,
+					}
 				}
 			},
 
@@ -854,7 +1063,9 @@ export function softwarecatalogPlugin() {
 					})
 
 					if (!response.ok) {
-						throw new Error(`Failed to lock object: ${response.status} ${response.statusText}`)
+						throw new Error(
+							`Failed to lock object: ${response.status} ${response.statusText}`,
+						)
 					}
 
 					return await response.json()
@@ -882,7 +1093,9 @@ export function softwarecatalogPlugin() {
 					})
 
 					if (!response.ok) {
-						throw new Error(`Failed to unlock object: ${response.status} ${response.statusText}`)
+						throw new Error(
+							`Failed to unlock object: ${response.status} ${response.statusText}`,
+						)
 					}
 
 					return await response.json()
@@ -913,7 +1126,10 @@ export function softwarecatalogPlugin() {
 
 					return result.data
 				} finally {
-					this.loading = { ...this.loading, [`validate_${objectId}`]: false }
+					this.loading = {
+						...this.loading,
+						[`validate_${objectId}`]: false,
+					}
 				}
 			},
 
@@ -946,7 +1162,12 @@ export function softwarecatalogPlugin() {
 							const errorMessage = error.message || 'Unknown error'
 							this.setObjectError(objectId, errorMessage)
 							if (onProgress) onProgress(obj, false, errorMessage)
-							return { success: false, id: objectId, object: obj, error: errorMessage }
+							return {
+								success: false,
+								id: objectId,
+								object: obj,
+								error: errorMessage,
+							}
 						}
 					}),
 				)
@@ -957,7 +1178,9 @@ export function softwarecatalogPlugin() {
 				if (successful.length > 0) {
 					const successfulIds = successful.map((r) => r.id)
 					this.setSelectedObjects(
-						this.selectedObjects.filter((id) => !successfulIds.includes(id)),
+						this.selectedObjects.filter(
+							(id) => !successfulIds.includes(id),
+						),
 					)
 				}
 
@@ -968,42 +1191,71 @@ export function softwarecatalogPlugin() {
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massPublishObjects(objects, onProgress = null) {
-				return this._runMassOperation(objects, (obj) => this.publishObject(obj), onProgress)
+				return this._runMassOperation(
+					objects,
+					(obj) => this.publishObject(obj),
+					onProgress,
+				)
 			},
 
 			/**
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massDepublishObjects(objects, onProgress = null) {
-				return this._runMassOperation(objects, (obj) => this.depublishObject(obj), onProgress)
+				return this._runMassOperation(
+					objects,
+					(obj) => this.depublishObject(obj),
+					onProgress,
+				)
 			},
 
 			/**
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massDeleteObjects(objects, onProgress = null) {
-				return this._runMassOperation(objects, (obj) => this.deleteObject(obj), onProgress)
+				return this._runMassOperation(
+					objects,
+					(obj) => this.deleteObject(obj),
+					onProgress,
+				)
 			},
 
 			/**
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
-			async massLockObjects(objects, process = null, duration = null, onProgress = null) {
-				return this._runMassOperation(objects, (obj) => this.lockObject(obj, process, duration), onProgress)
+			async massLockObjects(
+				objects,
+				process = null,
+				duration = null,
+				onProgress = null,
+			) {
+				return this._runMassOperation(
+					objects,
+					(obj) => this.lockObject(obj, process, duration),
+					onProgress,
+				)
 			},
 
 			/**
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massUnlockObjects(objects, onProgress = null) {
-				return this._runMassOperation(objects, (obj) => this.unlockObject(obj), onProgress)
+				return this._runMassOperation(
+					objects,
+					(obj) => this.unlockObject(obj),
+					onProgress,
+				)
 			},
 
 			/**
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massValidateObjects(objects, onProgress = null) {
-				return this._runMassOperation(objects, (obj) => this.validateObject(obj), onProgress)
+				return this._runMassOperation(
+					objects,
+					(obj) => this.validateObject(obj),
+					onProgress,
+				)
 			},
 
 			// ==========================================
@@ -1019,13 +1271,17 @@ export function softwarecatalogPlugin() {
 			 */
 			toggleSelectAllObjects() {
 				const organisatieCollection = this.collections?.organisatie
-				const results = Array.isArray(organisatieCollection) ? organisatieCollection : organisatieCollection?.results
+				const results = Array.isArray(organisatieCollection)
+					? organisatieCollection
+					: organisatieCollection?.results
 				if (!results?.length) return
 
 				if (this.isAllSelected) {
 					this.selectedObjects = []
 				} else {
-					this.selectedObjects = results.map((org) => org['@self']?.id || org.id)
+					this.selectedObjects = results.map(
+						(org) => org['@self']?.id || org.id,
+					)
 				}
 			},
 
@@ -1132,17 +1388,33 @@ export function softwarecatalogPlugin() {
 			 * @return {Promise<object>} Merge result
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
-			async mergeObjects({ register, schema, sourceObjectId, target, object, fileAction, relationAction }) {
+			async mergeObjects({
+				register,
+				schema,
+				sourceObjectId,
+				target,
+				object,
+				fileAction,
+				relationAction,
+			}) {
 				const response = await fetch(
 					`/index.php/apps/openregister/api/objects/${register}/${schema}/${sourceObjectId}/merge`,
 					{
 						method: 'POST',
 						headers: buildHeaders(),
-						body: JSON.stringify({ target, object, fileAction, relationAction }),
+						body: JSON.stringify({
+							target,
+							object,
+							fileAction,
+							relationAction,
+						}),
 					},
 				)
 
-				if (!response.ok) throw new Error(`Failed to merge objects: ${response.statusText}`)
+				if (!response.ok)
+					throw new Error(
+						`Failed to merge objects: ${response.statusText}`,
+					)
 				return { data: await response.json() }
 			},
 

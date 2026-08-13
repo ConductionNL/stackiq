@@ -76,8 +76,14 @@ async function gotoAppRoute(page: Page, route: string): Promise<void> {
 	await page.goto(url, { waitUntil: 'domcontentloaded' })
 	// App.vue shell mounted (replaces #content) — the wrapper has no geometry,
 	// so check it is attached, then wait for the visible main content region.
-	await page.locator(APP_SHELL).first().waitFor({ state: 'attached', timeout: 30000 })
-	await page.locator(APP_MAIN).first().waitFor({ state: 'visible', timeout: 30000 })
+	await page
+		.locator(APP_SHELL)
+		.first()
+		.waitFor({ state: 'attached', timeout: 30000 })
+	await page
+		.locator(APP_MAIN)
+		.first()
+		.waitFor({ state: 'visible', timeout: 30000 })
 }
 
 /**
@@ -91,7 +97,9 @@ async function expectPageRendered(page: Page, title: string): Promise<void> {
 	// Scope the title match to the app's main content region: an unscoped
 	// `getByText('Dashboard')` latches onto the (hidden) global NC Apps-menu
 	// "Dashboard" entry, which is never visible in the collapsed header.
-	await expect(main.getByText(title, { exact: false }).first()).toBeVisible({ timeout: 30000 })
+	await expect(main.getByText(title, { exact: false }).first()).toBeVisible({
+		timeout: 30000,
+	})
 }
 
 /**
@@ -102,10 +110,16 @@ async function expectPageRendered(page: Page, title: string): Promise<void> {
  * NcAppContent main region is visible and the page's own navigation entry is
  * visible — both are data-independent and prove the route mounted its shell.
  */
-async function expectIndexShellRendered(page: Page, navLabel: string): Promise<void> {
+async function expectIndexShellRendered(
+	page: Page,
+	navLabel: string,
+): Promise<void> {
 	await expect(page.locator(APP_MAIN).first()).toBeVisible({ timeout: 30000 })
 	await expect(
-		page.locator('nav').getByRole('link', { name: navLabel, exact: true }).first(),
+		page
+			.locator('nav')
+			.getByRole('link', { name: navLabel, exact: true })
+			.first(),
 	).toBeVisible({ timeout: 30000 })
 }
 
@@ -114,7 +128,9 @@ async function expectIndexShellRendered(page: Page, navLabel: string): Promise<v
 // ---------------------------------------------------------------------------
 // @e2e fe-shell-navigation::open-the-dashboard
 // @e2e fe-organizations::show-concept-organisations
-test('manifest dashboard: dashboard page renders the widget grid', async ({ page }) => {
+test('manifest dashboard: dashboard page renders the widget grid', async ({
+	page,
+}) => {
 	await gotoAppRoute(page, '/')
 	await expectPageRendered(page, 'Dashboard')
 })
@@ -126,7 +142,9 @@ test('manifest dashboard: dashboard page renders the widget grid', async ({ page
 // asserting the page renders covers fe-organizations "Display an organisation
 // card" — the card list is the page body.
 // @e2e fe-organizations::display-an-organisation-card
-test('manifest index organisaties: list page renders the organisation cards', async ({ page }) => {
+test('manifest index organisaties: list page renders the organisation cards', async ({
+	page,
+}) => {
 	await gotoAppRoute(page, '/organisaties')
 	await expectIndexShellRendered(page, 'Organisations')
 })
@@ -158,12 +176,16 @@ for (const p of INDEX_PAGES) {
 // The contactpersonen index has no navigation entry (see the note above), so it
 // is proven by its own rendered surface: the CnIndexPage create action, whose
 // label nc-vue derives as `Add {schema.title}` — "Add Contact person".
-test('manifest index contactpersonen: list page renders its own index surface', async ({ page }) => {
+test('manifest index contactpersonen: list page renders its own index surface', async ({
+	page,
+}) => {
 	await gotoAppRoute(page, '/contactpersonen')
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
 	await expect(
-		main.getByRole('button', { name: 'Add Contact person', exact: true }).first(),
+		main
+			.getByRole('button', { name: 'Add Contact person', exact: true })
+			.first(),
 	).toBeVisible({ timeout: 30000 })
 })
 
@@ -178,7 +200,9 @@ test('manifest index contactpersonen: list page renders its own index surface', 
 // route is wired and renders), not a roadmap-specific title that the deployed
 // renderer does not produce. (Render parity for the roadmap page type is a
 // nextcloud-vue concern, tracked separately.)
-test('manifest roadmap features-roadmap: roadmap route mounts the SPA shell', async ({ page }) => {
+test('manifest roadmap features-roadmap: roadmap route mounts the SPA shell', async ({
+	page,
+}) => {
 	await gotoAppRoute(page, '/features-roadmap')
 	await expect(page.locator(APP_MAIN).first()).toBeVisible({ timeout: 30000 })
 })
@@ -200,7 +224,9 @@ const DETAIL_PAGES: Array<{ route: string; name: string }> = [
 ]
 
 for (const p of DETAIL_PAGES) {
-	test(`manifest detail ${p.name}: detail route mounts the SPA shell`, async ({ page }) => {
+	test(`manifest detail ${p.name}: detail route mounts the SPA shell`, async ({
+		page,
+	}) => {
 		await gotoAppRoute(page, p.route)
 		// Shell mounted; the app-content container is rendered regardless of
 		// whether the synthetic id resolves to an object.
@@ -242,7 +268,9 @@ test('admin settings: the settings section renders', async ({ page }) => {
 	const host = await gotoAdminSettings(page)
 	// Scope to the app's own settings host so the assertion can't match a
 	// transient notification toast elsewhere in the DOM.
-	await expect(host.getByText('SoftwareCatalog', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+	await expect(
+		host.getByText('SoftwareCatalog', { exact: false }).first(),
+	).toBeVisible({ timeout: 30000 })
 })
 
 // The settings shell renders the Statistics overview section (StatisticsOverview.vue),
@@ -250,7 +278,9 @@ test('admin settings: the settings section renders', async ({ page }) => {
 // @e2e fe-settings-ui::view-statistics
 test('admin settings: statistics section renders', async ({ page }) => {
 	const host = await gotoAdminSettings(page)
-	await expect(host.getByText('Statistics', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+	await expect(host.getByText('Statistics', { exact: false }).first()).toBeVisible(
+		{ timeout: 30000 },
+	)
 })
 
 // The settings shell renders the Version information section (VersionInformation.vue),
@@ -260,5 +290,7 @@ test('admin settings: version information section renders', async ({ page }) => 
 	const host = await gotoAdminSettings(page)
 	// Match the "Version Information" section heading inside the settings host,
 	// not a hidden "Application Version was updated" notification toast.
-	await expect(host.getByText('Version Information', { exact: false }).first()).toBeVisible({ timeout: 30000 })
+	await expect(
+		host.getByText('Version Information', { exact: false }).first(),
+	).toBeVisible({ timeout: 30000 })
 })
