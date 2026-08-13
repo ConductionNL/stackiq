@@ -53,7 +53,9 @@ describe('complianceMatrix.hasEvidence', () => {
 	})
 	it('returns false with no evidence', () => {
 		expect(hasEvidence({})).toBe(false)
-		expect(hasEvidence({ bewijs: '', bewijsReferentie: '  ', url: '' })).toBe(false)
+		expect(hasEvidence({ bewijs: '', bewijsReferentie: '  ', url: '' })).toBe(
+			false,
+		)
 		expect(hasEvidence(null)).toBe(false)
 	})
 })
@@ -90,7 +92,11 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 			{ module: 'mA', standaardversie: 's2' },
 			{ module: 'mB', standaardversie: 's1' },
 		]
-		const { rows, columns } = buildComplianceMatrix({ modules, standaardversies, compliancy })
+		const { rows, columns } = buildComplianceMatrix({
+			modules,
+			standaardversies,
+			compliancy,
+		})
 		expect(columns.map((c) => c.label)).toEqual(['ZGW API', 'Haal Centraal'])
 		expect(rows[0].cells.s1.state).toBe(CELL.VERIFIED)
 		expect(rows[0].cells.s2.state).toBe(CELL.CLAIMED)
@@ -113,7 +119,11 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 			{ module: 'mA', standaardversie: 's1' },
 			{ module: 'mA', standaardversie: 's1', url: 'https://proof' },
 		]
-		const { rows } = buildComplianceMatrix({ modules, standaardversies, compliancy })
+		const { rows } = buildComplianceMatrix({
+			modules,
+			standaardversies,
+			compliancy,
+		})
 		expect(rows[0].cells.s1.state).toBe(CELL.VERIFIED)
 		expect(rows[0].cells.s1.record).toBeTruthy()
 	})
@@ -139,11 +149,7 @@ describe('complianceMatrix.standardLabel', () => {
 
 describe('complianceMatrix.buildOrganisationCoverage', () => {
 	it('lists every gebruik including applications with no compliance data', () => {
-		const gebruiken = [
-			{ module: 'mA' },
-			{ module: 'mB' },
-			{ module: 'mC' },
-		]
+		const gebruiken = [{ module: 'mA' }, { module: 'mB' }, { module: 'mC' }]
 		const compliancy = [
 			{ module: 'mA', standaardversie: 's1', url: 'https://e' },
 			{ module: 'mB', standaardversie: 's1' },
@@ -180,10 +186,13 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 	]
 
 	it('partitions bioMaatregel-linked records as resolved under the bioMaatregel column source', () => {
-		const { resolved, unresolved } = partitionCompliancy([
-			{ module: 'mA', bioMaatregel: 'b1', url: 'https://e' },
-			{ module: 'mA', standaardversie: 's1' },
-		], COLUMN_SOURCE.BIO_MAATREGEL)
+		const { resolved, unresolved } = partitionCompliancy(
+			[
+				{ module: 'mA', bioMaatregel: 'b1', url: 'https://e' },
+				{ module: 'mA', standaardversie: 's1' },
+			],
+			COLUMN_SOURCE.BIO_MAATREGEL,
+		)
 		expect(resolved).toHaveLength(1)
 		expect(resolved[0].columnUuid).toBe('b1')
 		expect(resolved[0].evidenced).toBe(true)
@@ -204,7 +213,10 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 			compliancy,
 			columnSource: COLUMN_SOURCE.BIO_MAATREGEL,
 		})
-		expect(columns.map((c) => c.label)).toEqual(['Toegangsbeveiligingsbeleid', 'Cryptografisch beleid'])
+		expect(columns.map((c) => c.label)).toEqual([
+			'Toegangsbeveiligingsbeleid',
+			'Cryptografisch beleid',
+		])
 		expect(rows[0].cells.b1.state).toBe(CELL.VERIFIED)
 		expect(rows[0].cells.b2.state).toBe(CELL.CLAIMED)
 		expect(rows[1].cells.b1.state).toBe(CELL.CLAIMED)
@@ -213,7 +225,12 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 
 	it('flags a record with both standaardversie and bioMaatregel set as conflicted, matched to neither column', () => {
 		const compliancy = [
-			{ module: 'mA', standaardversie: 's1', bioMaatregel: 'b1', url: 'https://e' },
+			{
+				module: 'mA',
+				standaardversie: 's1',
+				bioMaatregel: 'b1',
+				url: 'https://e',
+			},
 		]
 		const standardsMatrix = buildComplianceMatrix({
 			modules,

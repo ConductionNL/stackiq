@@ -43,12 +43,24 @@
  */
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import {
-	navClickTo, gotoAppRoute, dismissSupportDialog, collectAppErrors, expectNoAppErrors,
-	indexMain, showTable, listTotal, openCreateDialog,
-	openRowActions, clickAction,
+	navClickTo,
+	gotoAppRoute,
+	dismissSupportDialog,
+	collectAppErrors,
+	expectNoAppErrors,
+	indexMain,
+	showTable,
+	listTotal,
+	openCreateDialog,
+	openRowActions,
+	clickAction,
 } from './_ui'
 import {
-	newApiContext, resolveConfig, cleanupByToken, RUN_ID, type VoorzieningenConfig,
+	newApiContext,
+	resolveConfig,
+	cleanupByToken,
+	RUN_ID,
+	type VoorzieningenConfig,
 } from './_fixtures'
 
 let apiCtx: APIRequestContext
@@ -63,7 +75,9 @@ test.afterAll(async () => {
 	if (apiCtx && cfg) {
 		const removed = await cleanupByToken(apiCtx, cfg, RUN_ID)
 		// eslint-disable-next-line no-console
-		console.log(`[crud-persistence] cleaned up ${removed} seeded row(s) for ${RUN_ID}`)
+		console.log(
+			`[crud-persistence] cleaned up ${removed} seeded row(s) for ${RUN_ID}`,
+		)
 		await apiCtx.dispose()
 	}
 })
@@ -102,7 +116,9 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 	const functie = `Functie ${token}`
 	const editedFunctie = `Functie ${token} EDIT`
 
-	test('create -> row appears (proves @resolve list loads real rows)', async ({ page }) => {
+	test('create -> row appears (proves @resolve list loads real rows)', async ({
+		page,
+	}) => {
 		const bag = collectAppErrors(page)
 		await gotoAppRoute(page, '/contactpersonen')
 		const main = indexMain(page)
@@ -114,9 +130,17 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		// CnFormDialog renders each property as an NcTextField whose placeholder
 		// is the property DESCRIPTION (see CnFormDialog.vue), which is how the
 		// moduleVersie test below already targets its `versie` field.
-		await dialog.locator('input[placeholder*="Verwijzing (UID)"]').first().fill(contactsUid)
-		await dialog.locator('input[placeholder*="Functie van de medewerker"]').first().fill(functie)
-		const createBtn = dialog.getByRole('button', { name: 'Create', exact: true }).first()
+		await dialog
+			.locator('input[placeholder*="Verwijzing (UID)"]')
+			.first()
+			.fill(contactsUid)
+		await dialog
+			.locator('input[placeholder*="Functie van de medewerker"]')
+			.first()
+			.fill(functie)
+		const createBtn = dialog
+			.getByRole('button', { name: 'Create', exact: true })
+			.first()
 		await expect(createBtn).toBeEnabled()
 		await createBtn.click()
 		await page.waitForTimeout(2500)
@@ -126,7 +150,9 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		// shows our value, NOT just the empty-state. This is the @resolve-fix
 		// proof: the list fetched a real register and shows rows.
 		await showTable(page)
-		await expect(main.locator('tr', { hasText: contactsUid }).first()).toBeVisible({ timeout: 15000 })
+		await expect(
+			main.locator('tr', { hasText: contactsUid }).first(),
+		).toBeVisible({ timeout: 15000 })
 
 		// And the list total grew (persistence in the rendered list). An exact
 		// +1 is unreliable on the shared dev instance: `listTotal` can read the
@@ -138,7 +164,9 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 			expect(totalAfter).toBeGreaterThanOrEqual(totalBefore + 1)
 		}
 		// No empty-state when our row is present.
-		await expect(main.getByText('No items found', { exact: false })).toHaveCount(0)
+		await expect(main.getByText('No items found', { exact: false })).toHaveCount(
+			0,
+		)
 
 		expectNoAppErrors(bag)
 	})
@@ -153,7 +181,9 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 	// pre-fill assertion below (the editor loads the row's stored values) and by
 	// the data-layer findAll cross-check. Re-enable once the deployed shell
 	// renders an object-data detail surface for the View action.
-	test.fixme('detail (View) -> shows the entered field values', async ({ page }) => {
+	test.fixme('detail (View) -> shows the entered field values', async ({
+		page,
+	}) => {
 		await gotoAppRoute(page, '/contactpersonen')
 		await dismissSupportDialog(page)
 
@@ -161,10 +191,14 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		await clickAction(page, 'View')
 
 		// The View surface should show the object's data, including the job title.
-		await expect(page.getByText(functie, { exact: false }).first()).toBeVisible({ timeout: 15000 })
+		await expect(page.getByText(functie, { exact: false }).first()).toBeVisible({
+			timeout: 15000,
+		})
 	})
 
-	test('detail read-back -> edit form pre-fills with the stored values', async ({ page }) => {
+	test('detail read-back -> edit form pre-fills with the stored values', async ({
+		page,
+	}) => {
 		await gotoAppRoute(page, '/contactpersonen')
 		await dismissSupportDialog(page)
 
@@ -175,12 +209,19 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 
 		// The editor is populated from the persisted row — the values we created
 		// read back into the form (detail read-back persistence).
-		await expect(editDialog.locator('input[placeholder*="Verwijzing (UID)"]').first())
-			.toHaveValue(contactsUid, { timeout: 10000 })
-		await expect(editDialog.locator('input[placeholder*="Functie van de medewerker"]').first())
-			.toHaveValue(functie, { timeout: 10000 })
+		await expect(
+			editDialog.locator('input[placeholder*="Verwijzing (UID)"]').first(),
+		).toHaveValue(contactsUid, { timeout: 10000 })
+		await expect(
+			editDialog
+				.locator('input[placeholder*="Functie van de medewerker"]')
+				.first(),
+		).toHaveValue(functie, { timeout: 10000 })
 		// Close without changing.
-		await editDialog.getByRole('button', { name: 'Cancel', exact: true }).first().click()
+		await editDialog
+			.getByRole('button', { name: 'Cancel', exact: true })
+			.first()
+			.click()
 	})
 
 	test('edit -> change persists in the list', async ({ page }) => {
@@ -194,19 +235,27 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		await editDialog.waitFor({ state: 'visible', timeout: 15000 })
 		// The edit form is pre-filled with the existing UID — proves the row
 		// loaded into the editor (read-back persistence).
-		await expect(editDialog.locator('input[placeholder*="Verwijzing (UID)"]').first())
-			.toHaveValue(contactsUid, { timeout: 10000 })
+		await expect(
+			editDialog.locator('input[placeholder*="Verwijzing (UID)"]').first(),
+		).toHaveValue(contactsUid, { timeout: 10000 })
 
-		await editDialog.locator('input[placeholder*="Functie van de medewerker"]').first().fill(editedFunctie)
-		await editDialog.getByRole('button', { name: /^(Save|Update)$/ }).first().click()
+		await editDialog
+			.locator('input[placeholder*="Functie van de medewerker"]')
+			.first()
+			.fill(editedFunctie)
+		await editDialog
+			.getByRole('button', { name: /^(Save|Update)$/ })
+			.first()
+			.click()
 		await page.waitForTimeout(2500)
 		await dismissSupportDialog(page)
 
 		// The edited job title is now rendered in the list (Table view) —
 		// PERSISTED. `functie` is one of the page's declared columns.
 		await showTable(page)
-		await expect(indexMain(page).locator('tr', { hasText: editedFunctie }).first())
-			.toBeVisible({ timeout: 15000 })
+		await expect(
+			indexMain(page).locator('tr', { hasText: editedFunctie }).first(),
+		).toBeVisible({ timeout: 15000 })
 
 		// Cross-check at the data layer via the OR findAll verb (read-after-write).
 		const res = await apiCtx.get(
@@ -214,7 +263,9 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		)
 		expect(res.ok()).toBeTruthy()
 		const rows = (await res.json())?.results ?? []
-		expect(rows.some((r: Record<string, unknown>) => r.functie === editedFunctie)).toBeTruthy()
+		expect(
+			rows.some((r: Record<string, unknown>) => r.functie === editedFunctie),
+		).toBeTruthy()
 	})
 
 	test('delete -> row is gone from the list', async ({ page }) => {
@@ -227,14 +278,22 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		await clickAction(page, 'Delete')
 
 		// Confirm the delete in the confirm dialog.
-		const confirm = page.locator('[role="dialog"], .modal-container').filter({ hasText: /Delete/ }).first()
-		await confirm.getByRole('button', { name: 'Delete', exact: true }).first().click()
+		const confirm = page
+			.locator('[role="dialog"], .modal-container')
+			.filter({ hasText: /Delete/ })
+			.first()
+		await confirm
+			.getByRole('button', { name: 'Delete', exact: true })
+			.first()
+			.click()
 		await page.waitForTimeout(2500)
 		await dismissSupportDialog(page)
 
 		// The row is GONE — our value no longer renders in the list (Table view).
 		await showTable(page)
-		await expect(indexMain(page).locator('tr', { hasText: contactsUid })).toHaveCount(0, { timeout: 15000 })
+		await expect(
+			indexMain(page).locator('tr', { hasText: contactsUid }),
+		).toHaveCount(0, { timeout: 15000 })
 
 		// An exact -1 is unreliable: `listTotal` can read 0 before the
 		// "Showing N of M" header settles, and prior runs leave rows behind. The
@@ -250,7 +309,9 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.contactpersoon_schema}?_search=${encodeURIComponent(contactsUid)}&_limit=20`,
 		)
 		const rows = (await res.json())?.results ?? []
-		expect(rows.some((r: Record<string, unknown>) => r.contactsUid === contactsUid)).toBeFalsy()
+		expect(
+			rows.some((r: Record<string, unknown>) => r.contactsUid === contactsUid),
+		).toBeFalsy()
 	})
 })
 
@@ -288,7 +349,13 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		// create
 		const createRes = await apiCtx.post(
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}`,
-			{ data: { naam: `Component ${token}`, type: 'Applicatie', beschrijvingKort: 'e2e seeded component' } },
+			{
+				data: {
+					naam: `Component ${token}`,
+					type: 'Applicatie',
+					beschrijvingKort: 'e2e seeded component',
+				},
+			},
 		)
 		expect(createRes.ok()).toBeTruthy()
 		const id = (await createRes.json())?.id
@@ -299,26 +366,44 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}?_search=${encodeURIComponent(token)}&_limit=20`,
 		)
 		let rows = (await res.json())?.results ?? []
-		expect(rows.some((r: Record<string, unknown>) => String(r.naam).includes(token))).toBeTruthy()
+		expect(
+			rows.some((r: Record<string, unknown>) =>
+				String(r.naam).includes(token),
+			),
+		).toBeTruthy()
 
 		// update (PUT) — change the short description, assert it persisted
 		const editedDesc = `edited ${token}`
 		const upd = await apiCtx.put(
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}/${id}`,
-			{ data: { naam: `Component ${token}`, type: 'Applicatie', beschrijvingKort: editedDesc } },
+			{
+				data: {
+					naam: `Component ${token}`,
+					type: 'Applicatie',
+					beschrijvingKort: editedDesc,
+				},
+			},
 		)
 		expect(upd.ok()).toBeTruthy()
-		res = await apiCtx.get(`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}/${id}`)
+		res = await apiCtx.get(
+			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}/${id}`,
+		)
 		expect((await res.json())?.beschrijvingKort).toBe(editedDesc)
 
 		// delete -> gone
-		const del = await apiCtx.delete(`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}/${id}`)
+		const del = await apiCtx.delete(
+			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}/${id}`,
+		)
 		expect(del.ok()).toBeTruthy()
 		res = await apiCtx.get(
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}?_search=${encodeURIComponent(token)}&_limit=20`,
 		)
 		rows = (await res.json())?.results ?? []
-		expect(rows.some((r: Record<string, unknown>) => String(r.naam).includes(token))).toBeFalsy()
+		expect(
+			rows.some((r: Record<string, unknown>) =>
+				String(r.naam).includes(token),
+			),
+		).toBeFalsy()
 	})
 
 	test('data-layer CRUD-persistence for a Moduleversie (version)', async () => {
@@ -334,9 +419,15 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		const res = await apiCtx.get(
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.moduleVersie_schema}?_search=${encodeURIComponent(versie)}&_limit=20`,
 		)
-		expect(((await res.json())?.results ?? []).some((r: Record<string, unknown>) => r.versie === versie)).toBeTruthy()
+		expect(
+			((await res.json())?.results ?? []).some(
+				(r: Record<string, unknown>) => r.versie === versie,
+			),
+		).toBeTruthy()
 
-		const del = await apiCtx.delete(`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.moduleVersie_schema}/${id}`)
+		const del = await apiCtx.delete(
+			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.moduleVersie_schema}/${id}`,
+		)
 		expect(del.ok()).toBeTruthy()
 	})
 
@@ -363,13 +454,17 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		// The `versie` field ships a default ("1.0.0"); clear it before typing so
 		// the v-model commits our unique value (a bare `.fill` on the themed
 		// NcTextField can leave the default in place).
-		const versieInput = dialog.locator('input[placeholder*="Voer de versie"]').first()
+		const versieInput = dialog
+			.locator('input[placeholder*="Voer de versie"]')
+			.first()
 		await versieInput.click()
 		await versieInput.fill('')
 		await versieInput.fill(versie)
 		await versieInput.blur()
 		// Native click — the themed Create NcButton can swallow the synthetic click.
-		await dialog.getByRole('button', { name: 'Create', exact: true }).first()
+		await dialog
+			.getByRole('button', { name: 'Create', exact: true })
+			.first()
 			.evaluate((el: HTMLElement) => el.click())
 		await page.waitForTimeout(2500)
 		await dismissSupportDialog(page)
@@ -389,6 +484,8 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		// was written against — `importFromApp(force: false)` advances the recorded
 		// configuration version WITHOUT applying it, so the instance kept serving
 		// the old schema and the "bug" was a stale environment, not code.
-		expect(rows.some((r: Record<string, unknown>) => r.versie === versie)).toBeTruthy()
+		expect(
+			rows.some((r: Record<string, unknown>) => r.versie === versie),
+		).toBeTruthy()
 	})
 })

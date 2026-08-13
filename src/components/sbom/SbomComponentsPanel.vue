@@ -5,33 +5,54 @@
 
 <template>
 	<div class="sbom-components-panel">
-		<NcLoadingIcon v-if="loading" :size="32" :name="t('softwarecatalog', 'Loading components')" />
+		<NcLoadingIcon
+			v-if="loading"
+			:size="32"
+			:name="t('softwarecatalog', 'Loading components')" />
 
 		<template v-else>
 			<!-- Summary counts (design Decision 6 / spec "summary counts"). -->
 			<div class="sbom-summary" data-testid="sbom-summary">
 				<div class="sbom-summary__tile">
 					<span class="sbom-summary__value">{{ totalComponents }}</span>
-					<span class="sbom-summary__label">{{ t('softwarecatalog', 'Components') }}</span>
+					<span class="sbom-summary__label">{{
+						t('softwarecatalog', 'Components')
+					}}</span>
 				</div>
 				<div class="sbom-summary__tile">
-					<span class="sbom-summary__value">{{ distinctLicenseCount }}</span>
-					<span class="sbom-summary__label">{{ t('softwarecatalog', 'Distinct licenses') }}</span>
+					<span class="sbom-summary__value">{{
+						distinctLicenseCount
+					}}</span>
+					<span class="sbom-summary__label">{{
+						t('softwarecatalog', 'Distinct licenses')
+					}}</span>
 				</div>
-				<div class="sbom-summary__tile" :class="{ 'sbom-summary__tile--warn': matchedVulnerabilityCount > 0 }">
-					<span class="sbom-summary__value">{{ matchedVulnerabilityCount }}</span>
-					<span class="sbom-summary__label">{{ t('softwarecatalog', 'Matched vulnerabilities') }}</span>
+				<div
+					class="sbom-summary__tile"
+					:class="{
+						'sbom-summary__tile--warn': matchedVulnerabilityCount > 0,
+					}">
+					<span class="sbom-summary__value">{{
+						matchedVulnerabilityCount
+					}}</span>
+					<span class="sbom-summary__label">{{
+						t('softwarecatalog', 'Matched vulnerabilities')
+					}}</span>
 				</div>
 			</div>
 
-			<p v-if="lastImportedLabel" class="sbom-provenance" data-testid="sbom-provenance">
+			<p
+				v-if="lastImportedLabel"
+				class="sbom-provenance"
+				data-testid="sbom-provenance">
 				{{ lastImportedLabel }}
 			</p>
 
 			<!-- Upload control — always available, so a first import and a
 			     replace-on-reimport use the same control (design Decision 3). -->
 			<div class="sbom-upload">
-				<NcSelect v-model="format"
+				<NcSelect
+					v-model="format"
 					class="sbom-upload__format"
 					:options="formatOptions"
 					:input-label="t('softwarecatalog', 'SBOM format')"
@@ -40,21 +61,32 @@
 					:clearable="false"
 					:disabled="uploading" />
 
-				<input id="sbom-file-input"
+				<input
+					id="sbom-file-input"
 					ref="fileInput"
 					type="file"
 					accept=".json,application/json"
 					class="sbom-upload__file-input"
 					:disabled="uploading"
 					data-testid="sbom-file-input"
-					@change="handleFileSelect">
-				<label for="sbom-file-input" class="sbom-upload__file-label" :class="{ 'sbom-upload__file-label--disabled': uploading }">
+					@change="handleFileSelect" />
+				<label
+					for="sbom-file-input"
+					class="sbom-upload__file-label"
+					:class="{ 'sbom-upload__file-label--disabled': uploading }">
 					<TrayArrowUp :size="20" />
-					<span>{{ selectedFile ? selectedFile.name : t('softwarecatalog', 'Choose an SBOM JSON file') }}</span>
-					<span v-if="selectedFile" class="sbom-upload__file-size">{{ formatFileSize(selectedFile.size) }}</span>
+					<span>{{
+						selectedFile
+							? selectedFile.name
+							: t('softwarecatalog', 'Choose an SBOM JSON file')
+					}}</span>
+					<span v-if="selectedFile" class="sbom-upload__file-size">{{
+						formatFileSize(selectedFile.size)
+					}}</span>
 				</label>
 
-				<NcButton variant="primary"
+				<NcButton
+					variant="primary"
 					:disabled="!selectedFile || uploading"
 					data-testid="sbom-import-button"
 					@click="importSbom">
@@ -65,25 +97,38 @@
 				</NcButton>
 			</div>
 
-			<NcNoteCard v-if="uploadError" type="error" data-testid="sbom-upload-error">
+			<NcNoteCard
+				v-if="uploadError"
+				type="error"
+				data-testid="sbom-upload-error">
 				{{ uploadError }}
 			</NcNoteCard>
-			<NcNoteCard v-if="uploadSuccessMessage" type="success" data-testid="sbom-upload-success">
+			<NcNoteCard
+				v-if="uploadSuccessMessage"
+				type="success"
+				data-testid="sbom-upload-success">
 				{{ uploadSuccessMessage }}
 			</NcNoteCard>
 
 			<!-- Empty state (spec: "no summary counts shown as non-zero" — the
 			     tiles above already read 0/0/0 since `components` is empty). -->
-			<NcEmptyContent v-if="totalComponents === 0"
+			<NcEmptyContent
+				v-if="totalComponents === 0"
 				:name="t('softwarecatalog', 'No components imported yet')"
-				:description="t('softwarecatalog', 'Import a CycloneDX or SPDX SBOM to see this version\'s components, licenses and any matching known vulnerabilities.')"
+				:description="
+					t(
+						'softwarecatalog',
+						'Import a CycloneDX or SPDX SBOM to see this version\'s components, licenses and any matching known vulnerabilities.',
+					)
+				"
 				data-testid="sbom-empty">
 				<template #icon>
 					<PackageVariantClosed :size="36" />
 				</template>
 			</NcEmptyContent>
 
-			<CnDataTable v-else
+			<CnDataTable
+				v-else
 				:rows="rows"
 				:columns="columns"
 				row-key="id"
@@ -93,12 +138,14 @@
 					<span>{{ row.licenses || '—' }}</span>
 				</template>
 				<template #column-match="{ row }">
-					<span v-if="row.confirmedCount > 0"
+					<span
+						v-if="row.confirmedCount > 0"
 						class="sbom-badge sbom-badge--confirmed"
 						data-testid="sbom-match-confirmed">
 						{{ t('softwarecatalog', 'Confirmed match') }}
 					</span>
-					<span v-if="row.possibleCount > 0"
+					<span
+						v-if="row.possibleCount > 0"
 						class="sbom-badge sbom-badge--possible"
 						data-testid="sbom-match-possible">
 						{{ t('softwarecatalog', 'Possible match') }}
@@ -110,7 +157,13 @@
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcEmptyContent,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+} from '@nextcloud/vue'
 import { CnDataTable } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
@@ -170,13 +223,24 @@ export default {
 			uploadError: null,
 			uploadSuccessMessage: null,
 			formatOptions: [
-				{ value: 'cyclonedx-json', label: t('softwarecatalog', 'CycloneDX (JSON)') },
+				{
+					value: 'cyclonedx-json',
+					label: t('softwarecatalog', 'CycloneDX (JSON)'),
+				},
 				{ value: 'spdx-json', label: t('softwarecatalog', 'SPDX (JSON)') },
 			],
 			columns: [
 				{ key: 'name', label: t('softwarecatalog', 'Name'), sortable: true },
-				{ key: 'version', label: t('softwarecatalog', 'Version'), sortable: true },
-				{ key: 'purl', label: t('softwarecatalog', 'Package URL'), cellClass: 'sbom-cell--purl' },
+				{
+					key: 'version',
+					label: t('softwarecatalog', 'Version'),
+					sortable: true,
+				},
+				{
+					key: 'purl',
+					label: t('softwarecatalog', 'Package URL'),
+					cellClass: 'sbom-cell--purl',
+				},
 				{ key: 'licenses', label: t('softwarecatalog', 'Licenses') },
 				{ key: 'match', label: t('softwarecatalog', 'Vulnerability match') },
 			],
@@ -192,14 +256,27 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
 		 */
 		moduleVersie() {
-			const active = typeof objectStore.getActiveObject === 'function'
-				? objectStore.getActiveObject('moduleVersie')
-				: null
-			if (active && resolveUuid(active.uuid ?? active.id ?? active['@self']?.id ?? active) === String(this.objectId)) {
+			const active =
+				typeof objectStore.getActiveObject === 'function'
+					? objectStore.getActiveObject('moduleVersie')
+					: null
+			if (
+				active
+				&& resolveUuid(
+					active.uuid ?? active.id ?? active['@self']?.id ?? active,
+				) === String(this.objectId)
+			) {
 				return active
 			}
-			return (objectStore.getCollection('moduleVersie')?.results || [])
-				.find((v) => resolveUuid(v.uuid ?? v.id ?? v['@self']?.id ?? v) === String(this.objectId)) || active || null
+			return (
+				(objectStore.getCollection('moduleVersie')?.results || []).find(
+					(v) =>
+						resolveUuid(v.uuid ?? v.id ?? v['@self']?.id ?? v)
+						=== String(this.objectId),
+				)
+				|| active
+				|| null
+			)
 		},
 
 		/**
@@ -235,9 +312,17 @@ export default {
 		components() {
 			const all = objectStore.getCollection('sbomComponent')?.results || []
 			return all
-				.filter((c) => resolveUuid((c.object || c).moduleVersie) === String(this.objectId))
+				.filter(
+					(c) =>
+						resolveUuid((c.object || c).moduleVersie)
+						=== String(this.objectId),
+				)
 				.slice()
-				.sort((a, b) => String((a.object || a).name || '').localeCompare(String((b.object || b).name || '')))
+				.sort((a, b) =>
+					String((a.object || a).name || '').localeCompare(
+						String((b.object || b).name || ''),
+					),
+				)
 		},
 
 		/**
@@ -258,7 +343,11 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-components-are-matched-against-existing-kwetsbaarheden-without-external-calls
 		 */
 		matches() {
-			return matchComponents(this.components, this.kwetsbaarheden, this.parentModuleId)
+			return matchComponents(
+				this.components,
+				this.kwetsbaarheden,
+				this.parentModuleId,
+			)
 		},
 
 		/**
@@ -271,11 +360,19 @@ export default {
 			return this.matches.rows.map(({ component, confirmed, possible }) => {
 				const data = component.object || component
 				return {
-					id: resolveUuid(component.uuid ?? component.id ?? component['@self']?.id ?? component) || data.name,
+					id:
+						resolveUuid(
+							component.uuid
+								?? component.id
+								?? component['@self']?.id
+								?? component,
+						) || data.name,
 					name: data.name || '',
 					version: data.version || '',
 					purl: data.purl || '',
-					licenses: Array.isArray(data.licenses) ? data.licenses.join(', ') : '',
+					licenses: Array.isArray(data.licenses)
+						? data.licenses.join(', ')
+						: '',
 					confirmedCount: confirmed.length,
 					possibleCount: possible.length,
 				}
@@ -337,12 +434,19 @@ export default {
 				return ''
 			}
 			const date = new Date(data.sbomLastImportedAt)
-			const dateLabel = Number.isNaN(date.getTime()) ? data.sbomLastImportedAt : date.toLocaleString()
-			const formatLabel = data.sbomFormat === 'spdx-json' ? 'SPDX' : 'CycloneDX'
+			const dateLabel = Number.isNaN(date.getTime())
+				? data.sbomLastImportedAt
+				: date.toLocaleString()
+			const formatLabel =
+				data.sbomFormat === 'spdx-json' ? 'SPDX' : 'CycloneDX'
 			return t(
 				'softwarecatalog',
 				'Last imported {date} from {file} ({format})',
-				{ date: dateLabel, file: data.sbomFileName || '?', format: formatLabel },
+				{
+					date: dateLabel,
+					file: data.sbomFileName || '?',
+					format: formatLabel,
+				},
 			)
 		},
 	},
@@ -363,7 +467,10 @@ export default {
 		async loadData() {
 			this.loading = true
 			try {
-				if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+				if (
+					!objectStore.settings
+					&& typeof objectStore.fetchSettings === 'function'
+				) {
 					await objectStore.fetchSettings()
 				}
 				await Promise.all([
@@ -387,8 +494,10 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-the-module-version-detail-page-shows-imported-components-with-summary-counts
 		 */
 		async fetchType(type) {
-			if (typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]) {
+			if (
+				typeof objectStore.registerObjectType === 'function'
+				&& !objectStore.objectTypeRegistry?.[type]
+			) {
 				let cfg = null
 				try {
 					cfg = objectStore.getSchemaConfig?.(type)
@@ -460,9 +569,12 @@ export default {
 				formData.append('sbomFile', this.selectedFile)
 				formData.append('format', this.format)
 
-				const url = generateUrl('/apps/softwarecatalog/api/moduleversies/{moduleVersieUuid}/sbom', {
-					moduleVersieUuid: String(this.objectId),
-				})
+				const url = generateUrl(
+					'/apps/softwarecatalog/api/moduleversies/{moduleVersieUuid}/sbom',
+					{
+						moduleVersieUuid: String(this.objectId),
+					},
+				)
 
 				// Multipart upload: no Content-Type header — the browser sets
 				// the correct boundary (mirrors ArchiMate import's upload path).
@@ -474,7 +586,9 @@ export default {
 				const result = await response.json()
 
 				if (!response.ok || result.success === false) {
-					throw new Error(result.message || t('softwarecatalog', 'SBOM import failed'))
+					throw new Error(
+						result.message || t('softwarecatalog', 'SBOM import failed'),
+					)
 				}
 
 				this.uploadSuccessMessage = t(
@@ -493,7 +607,8 @@ export default {
 					objectStore.fetchCollection('moduleVersie', { _limit: 1000 }),
 				])
 			} catch (error) {
-				this.uploadError = error.message || t('softwarecatalog', 'SBOM import failed')
+				this.uploadError =
+					error.message || t('softwarecatalog', 'SBOM import failed')
 			} finally {
 				this.uploading = false
 			}

@@ -54,7 +54,10 @@
 				{{ t('softwarecatalog', 'Manage members') }}
 			</NcActionButton>
 		</NcActions>
-		<NcNoteCard v-if="errorMessage" type="error" class="organisation-switcher__error">
+		<NcNoteCard
+			v-if="errorMessage"
+			type="error"
+			class="organisation-switcher__error">
 			{{ errorMessage }}
 		</NcNoteCard>
 		<GrantOrganisationAccessModal
@@ -66,12 +69,22 @@
 </template>
 
 <script>
-import { NcActions, NcActionButton, NcActionSeparator, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import {
+	NcActions,
+	NcActionButton,
+	NcActionSeparator,
+	NcLoadingIcon,
+	NcNoteCard,
+} from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
 import DomainIcon from 'vue-material-design-icons/Domain.vue'
 import AccountMultipleIcon from 'vue-material-design-icons/AccountMultiple.vue'
 import GrantOrganisationAccessModal from '../../modals/GrantOrganisationAccessModal.vue'
-import { resolveActiveOrganisationName, resolveOtherOrganisations, resolveSwitchError } from './organisationSwitcher.js'
+import {
+	resolveActiveOrganisationName,
+	resolveOtherOrganisations,
+	resolveSwitchError,
+} from './organisationSwitcher.js'
 
 export default {
 	name: 'OrganisationSwitcher',
@@ -154,7 +167,10 @@ export default {
 		 * @spec openspec/specs/multi-org-membership/spec.md#requirement-the-organisation-switcher-must-list-only-the-authenticated-user-s-own-organisations-req-003
 		 */
 		otherOrganisations() {
-			return resolveOtherOrganisations(this.organisations, this.activeOrganisationUuid)
+			return resolveOtherOrganisations(
+				this.organisations,
+				this.activeOrganisationUuid,
+			)
 		},
 	},
 
@@ -177,14 +193,23 @@ export default {
 			this.errorMessage = ''
 
 			try {
-				const url = generateUrl('/apps/openregister/api/organisations/{uuid}/set-active', { uuid })
+				const url = generateUrl(
+					'/apps/openregister/api/organisations/{uuid}/set-active',
+					{ uuid },
+				)
 				const response = await fetch(url, {
 					method: 'POST',
 					headers: { requesttoken: OC.requestToken },
 				})
 
-				const body = response.ok ? null : await response.json().catch(() => ({}))
-				const error = resolveSwitchError(response.ok, body, this.t('softwarecatalog', 'Failed to switch organisation'))
+				const body = response.ok
+					? null
+					: await response.json().catch(() => ({}))
+				const error = resolveSwitchError(
+					response.ok,
+					body,
+					this.t('softwarecatalog', 'Failed to switch organisation'),
+				)
 				if (error) {
 					throw new Error(error)
 				}

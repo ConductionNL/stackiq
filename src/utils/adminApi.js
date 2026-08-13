@@ -101,7 +101,8 @@ export async function apiRequest(path, options = {}, fetchImpl = undefined) {
 	}
 
 	if (!response.ok) {
-		const message = (data && data.message) ? data.message : `HTTP ${response.status}`
+		const message =
+			data && data.message ? data.message : `HTTP ${response.status}`
 		throw new Error(message)
 	}
 

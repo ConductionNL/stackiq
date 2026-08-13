@@ -1,18 +1,14 @@
-/**
- * @file MassUnlockObjects.vue
- * @module Modals/Object
- * @author Your Name
- * @copyright 2024 Your Organization
- * @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version 1.0.0
- */
+/** * @file MassUnlockObjects.vue * @module Modals/Object * @author Your Name *
+@copyright 2024 Your Organization * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
 import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog :name="dialogTitle"
+	<NcDialog
+		:name="dialogTitle"
 		:can-close="true"
 		size="normal"
 		class="mass-action-dialog"
@@ -20,16 +16,31 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="unlock-step">
 			<NcNoteCard type="warning">
-				{{ t('softwarecatalog', 'Objects will be unlocked and made available for editing by other users. Only objects that are currently locked can be unlocked.') }}
+				{{
+					t(
+						'softwarecatalog',
+						'Objects will be unlocked and made available for editing by other users. Only objects that are currently locked can be unlocked.',
+					)
+				}}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? t('softwarecatalog', 'Publication to Unlock') : t('softwarecatalog', 'Selected Publications')"
+				:title="
+					(objectStore.selectedObjects?.length || 0) === 1
+						? t('softwarecatalog', 'Publication to Unlock')
+						: t('softwarecatalog', 'Selected Publications')
+				"
 				:show-remove="true" />
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>{{ originalSelectedCount > 1 ? t('softwarecatalog', 'Publications successfully unlocked') : t('softwarecatalog', 'Publication successfully unlocked') }}</p>
+			<p>
+				{{
+					originalSelectedCount > 1
+						? t('softwarecatalog', 'Publications successfully unlocked')
+						: t('softwarecatalog', 'Publication successfully unlocked')
+				}}
+			</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -40,10 +51,17 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
+				{{
+					success === null
+						? t('softwarecatalog', 'Cancel')
+						: t('softwarecatalog', 'Close')
+				}}
 			</NcButton>
-			<NcButton v-if="success === null"
-				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
+			<NcButton
+				v-if="success === null"
+				:disabled="
+					loading || (objectStore.selectedObjects?.length || 0) === 0
+				"
 				variant="warning"
 				@click="unlockObjects()">
 				<template #icon>
@@ -57,12 +75,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcLoadingIcon,
-	NcNoteCard,
-} from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import LockOpenOutline from 'vue-material-design-icons/LockOpenOutline.vue'
@@ -100,7 +113,7 @@ export default {
 		/**
 		 * Get the objects to operate on from selected objects
 		 * @return {Array<object>} Array of objects to unlock
-		  * @spec openspec/specs/fe-object-modals/spec.md
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		objectsToUnlock() {
 			return objectStore.selectedObjects || []
@@ -109,14 +122,16 @@ export default {
 		/**
 		 * Get the dialog title based on number of objects
 		 * @return {string} Dialog title
-		  * @spec openspec/specs/fe-object-modals/spec.md
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dialogTitle() {
 			const count = this.objectsToUnlock.length
 			if (count === 1) {
 				return this.t('softwarecatalog', 'Unlock publication')
 			}
-			return this.t('softwarecatalog', 'Unlock {count} publications', { count })
+			return this.t('softwarecatalog', 'Unlock {count} publications', {
+				count,
+			})
 		},
 	},
 	mounted() {
@@ -160,7 +175,8 @@ export default {
 				const objectsToProcess = [...this.objectsToUnlock]
 
 				// Use the store's mass unlock method
-				const { successful, failed } = await objectStore.massUnlockObjects(objectsToProcess)
+				const { successful, failed } =
+					await objectStore.massUnlockObjects(objectsToProcess)
 
 				if (successful.length > 0) {
 					this.success = true
@@ -176,12 +192,20 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = this.t('softwarecatalog', 'Failed to unlock {count} objects', { count: failed.length })
+					this.error = this.t(
+						'softwarecatalog',
+						'Failed to unlock {count} objects',
+						{ count: failed.length },
+					)
 				}
-
 			} catch (error) {
 				this.success = false
-				this.error = error.message || this.t('softwarecatalog', 'An error occurred while unlocking objects')
+				this.error =
+					error.message
+					|| this.t(
+						'softwarecatalog',
+						'An error occurred while unlocking objects',
+					)
 			} finally {
 				this.loading = false
 			}

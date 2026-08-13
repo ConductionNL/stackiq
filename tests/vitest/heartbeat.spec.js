@@ -16,7 +16,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 // importing the module under test.
 beforeEach(() => {
 	global.OC = { requestToken: 'test-token' }
-	global.fetch = vi.fn(() => Promise.resolve({ ok: true, status: 200, statusText: 'OK' }))
+	global.fetch = vi.fn(() =>
+		Promise.resolve({ ok: true, status: 200, statusText: 'OK' }),
+	)
 	vi.useFakeTimers()
 })
 
@@ -50,7 +52,8 @@ describe('Heartbeat singleton', () => {
 	})
 
 	it('starts and reports running=true', async () => {
-		const { startHeartbeat, isHeartbeatRunning, stopHeartbeat } = await loadModule()
+		const { startHeartbeat, isHeartbeatRunning, stopHeartbeat } =
+			await loadModule()
 		startHeartbeat()
 		expect(isHeartbeatRunning()).toBe(true)
 		stopHeartbeat()
@@ -131,7 +134,13 @@ describe('Heartbeat singleton', () => {
 
 	it('tolerates non-2xx responses without throwing', async () => {
 		const { startHeartbeat, stopHeartbeat } = await loadModule()
-		global.fetch = vi.fn(() => Promise.resolve({ ok: false, status: 504, statusText: 'Gateway Timeout' }))
+		global.fetch = vi.fn(() =>
+			Promise.resolve({
+				ok: false,
+				status: 504,
+				statusText: 'Gateway Timeout',
+			}),
+		)
 		startHeartbeat(1000)
 		await Promise.resolve()
 		await Promise.resolve()

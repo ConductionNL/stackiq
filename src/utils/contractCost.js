@@ -88,15 +88,15 @@ export function annualisedCost(contract) {
 	}
 
 	switch (data.kostenPeriode) {
-	case PERIOD.MONTHLY:
-		return { annual: amount * 12, oneOff: 0 }
-	case PERIOD.YEARLY:
-		return { annual: amount, oneOff: 0 }
-	case PERIOD.ONEOFF:
-		return { annual: 0, oneOff: amount }
-	default:
-		// Unknown period: do not annualise an amount we can't classify.
-		return { annual: 0, oneOff: 0 }
+		case PERIOD.MONTHLY:
+			return { annual: amount * 12, oneOff: 0 }
+		case PERIOD.YEARLY:
+			return { annual: amount, oneOff: 0 }
+		case PERIOD.ONEOFF:
+			return { annual: 0, oneOff: amount }
+		default:
+			// Unknown period: do not annualise an amount we can't classify.
+			return { annual: 0, oneOff: 0 }
 	}
 }
 
@@ -109,10 +109,13 @@ export function annualisedCost(contract) {
  * @spec openspec/specs/contract-administration/spec.md
  */
 export function totalAnnualisedCost(contracts) {
-	return (contracts || []).reduce((acc, contract) => {
-		const { annual, oneOff } = annualisedCost(contract)
-		return { annual: acc.annual + annual, oneOff: acc.oneOff + oneOff }
-	}, { annual: 0, oneOff: 0 })
+	return (contracts || []).reduce(
+		(acc, contract) => {
+			const { annual, oneOff } = annualisedCost(contract)
+			return { annual: acc.annual + annual, oneOff: acc.oneOff + oneOff }
+		},
+		{ annual: 0, oneOff: 0 },
+	)
 }
 
 /**

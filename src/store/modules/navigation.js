@@ -44,7 +44,10 @@ export const useNavigationStore = defineStore('ui', {
 		setDialog(dialog, properties) {
 			this.dialog = dialog
 			this.dialogProperties = properties || null
-			console.log('Active dialog set to ' + dialog, properties ? 'with properties' : '')
+			console.log(
+				'Active dialog set to ' + dialog,
+				properties ? 'with properties' : '',
+			)
 		},
 		setTransferData(transferData) {
 			this.transferData = transferData

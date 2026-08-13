@@ -13,19 +13,29 @@
  * roadmap page renders its real content.
  */
 import { test, expect } from '@playwright/test'
-import { gotoAppRoute, collectAppErrors, expectNoAppErrors, appNav, APP_MAIN } from './_helpers'
+import {
+	gotoAppRoute,
+	collectAppErrors,
+	expectNoAppErrors,
+	appNav,
+	APP_MAIN,
+} from './_helpers'
 
-test('features-roadmap: deep-link route mounts the roadmap surface', async ({ page }) => {
+test('features-roadmap: deep-link route mounts the roadmap surface', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await gotoAppRoute(page, '/features-roadmap')
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
 	// The roadmap page renders its own surface: the "Features" heading and the
 	// "Suggest feature" primary action.
-	await expect(main.getByRole('heading', { name: 'Features', exact: true }).first())
-		.toBeVisible({ timeout: 30000 })
-	await expect(main.getByRole('button', { name: /Suggest feature/i }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByRole('heading', { name: 'Features', exact: true }).first(),
+	).toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByRole('button', { name: /Suggest feature/i }).first(),
+	).toBeVisible({ timeout: 30000 })
 	expectNoAppErrors(bag)
 })
 
@@ -36,19 +46,23 @@ test('features-roadmap: deep-link route mounts the roadmap surface', async ({ pa
 // deep-link-only here (see BUG LIST — roadmap nav entry not rendered). Asserting
 // it now means a future shell fix that adds the entry will surface as a failure
 // to revisit, rather than silently changing behaviour.
-test('features-roadmap: roadmap nav entry is rendered by the deployed shell', async ({ page }) => {
+test('features-roadmap: roadmap nav entry is rendered by the deployed shell', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await gotoAppRoute(page, '/')
 
 	const nav = appNav(page)
 	// The core list pages DO render nav links — sanity that we resolved the app nav.
-	await expect(nav.getByRole('link', { name: 'Organisations', exact: true }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		nav.getByRole('link', { name: 'Organisations', exact: true }).first(),
+	).toBeVisible({ timeout: 30000 })
 
 	// The manifest FeaturesRoadmap page is navigable (title "Features & roadmap",
 	// no hidden/menu flag), so the deployed shell renders its nav entry.
-	await expect(nav.getByRole('link', { name: 'Features & roadmap', exact: true }).first())
-		.toBeVisible({ timeout: 15000 })
+	await expect(
+		nav.getByRole('link', { name: 'Features & roadmap', exact: true }).first(),
+	).toBeVisible({ timeout: 15000 })
 
 	expectNoAppErrors(bag)
 })

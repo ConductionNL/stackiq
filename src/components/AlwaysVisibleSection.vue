@@ -248,7 +248,7 @@ export default defineComponent({
 	methods: {
 		/**
 		 * Handle save button click
-		  * @spec openspec/specs/fe-shell-navigation/spec.md
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleSave() {
 			this.$emit('save')
@@ -256,7 +256,7 @@ export default defineComponent({
 
 		/**
 		 * Handle refresh button click
-		  * @spec openspec/specs/fe-shell-navigation/spec.md
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleRefresh() {
 			this.$emit('refresh')
@@ -325,6 +325,9 @@ export default defineComponent({
 
 /* Responsive */
 @media (max-width: 768px) {
-	.title-buttons { width: 100%; justify-content: flex-end; }
+	.title-buttons {
+		width: 100%;
+		justify-content: flex-end;
+	}
 }
 </style>

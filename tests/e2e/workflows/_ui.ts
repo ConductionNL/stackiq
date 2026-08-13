@@ -16,7 +16,14 @@ import { expect, type Page, type Locator } from '@playwright/test'
 // manifest page has a navigation entry: `/contactpersonen` is routable but was
 // deliberately dropped from the menu when contact identity moved to the
 // Nextcloud addressbook, so for that page the route IS the user's real path.
-export { navClickTo, gotoAppRoute, dismissSupportDialog, collectAppErrors, expectNoAppErrors, APP_MAIN } from '../spec-coverage/_helpers'
+export {
+	navClickTo,
+	gotoAppRoute,
+	dismissSupportDialog,
+	collectAppErrors,
+	expectNoAppErrors,
+	APP_MAIN,
+} from '../spec-coverage/_helpers'
 
 /** The CnIndexPage main content region. */
 export function indexMain(page: Page): Locator {
@@ -75,8 +82,14 @@ export async function openRowActions(page: Page, token: string): Promise<void> {
  * Open the CnIndexPage create form via the primary "Add ..." button and return
  * the modal/dialog locator.
  */
-export async function openCreateDialog(page: Page, addLabel: string): Promise<Locator> {
-	await indexMain(page).getByRole('button', { name: addLabel, exact: true }).first().click()
+export async function openCreateDialog(
+	page: Page,
+	addLabel: string,
+): Promise<Locator> {
+	await indexMain(page)
+		.getByRole('button', { name: addLabel, exact: true })
+		.first()
+		.click()
 	const dialog = page.locator('[role="dialog"], .modal-container').first()
 	await dialog.waitFor({ state: 'visible', timeout: 15000 })
 	return dialog
@@ -103,7 +116,10 @@ export async function openCardActions(page: Page, token: string): Promise<void> 
  * back to a visible role=menu, so the action always targets the card whose
  * Actions button we just clicked.
  */
-export async function clickAction(page: Page, name: 'View' | 'Edit' | 'Copy' | 'Delete'): Promise<void> {
+export async function clickAction(
+	page: Page,
+	name: 'View' | 'Edit' | 'Copy' | 'Delete',
+): Promise<void> {
 	const openPopper = page.locator('.v-popper__popper--shown').last()
 	const item = openPopper.getByRole('menuitem', { name, exact: true }).first()
 	if (await item.count()) {
@@ -111,6 +127,10 @@ export async function clickAction(page: Page, name: 'View' | 'Edit' | 'Copy' | '
 		return
 	}
 	// Fallback: the visible menu only.
-	await page.locator('[role="menu"]:visible').last()
-		.getByRole('menuitem', { name, exact: true }).first().click()
+	await page
+		.locator('[role="menu"]:visible')
+		.last()
+		.getByRole('menuitem', { name, exact: true })
+		.first()
+		.click()
 }

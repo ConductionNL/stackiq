@@ -110,10 +110,13 @@ export function hasEvidence(record) {
 	}
 
 	const bewijs = record.bewijs
-	const hasBewijs = !!bewijs
+	const hasBewijs =
+		!!bewijs
 		&& (typeof bewijs === 'string'
 			? bewijs.trim() !== ''
-			: (typeof bewijs === 'object' ? Object.keys(bewijs).length > 0 : true))
+			: typeof bewijs === 'object'
+				? Object.keys(bewijs).length > 0
+				: true)
 
 	const ref = record.bewijsReferentie
 	const hasRef = typeof ref === 'string' ? ref.trim() !== '' : !!ref
@@ -162,12 +165,15 @@ export function dataOf(record) {
  * @spec openspec/specs/module-compliance-assessment/spec.md
  * @spec openspec/specs/bio-compliance-assessment/spec.md
  */
-export function partitionCompliancy(records, columnSource = COLUMN_SOURCE.STANDAARDVERSIE) {
+export function partitionCompliancy(
+	records,
+	columnSource = COLUMN_SOURCE.STANDAARDVERSIE,
+) {
 	const resolved = []
 	const unresolved = []
 	const conflicted = []
 
-	for (const record of (records || [])) {
+	for (const record of records || []) {
 		const data = dataOf(record)
 		const moduleUuid = resolveUuid(data.module)
 		const standaardversieUuid = resolveUuid(data.standaardversie)
@@ -179,13 +185,23 @@ export function partitionCompliancy(records, columnSource = COLUMN_SOURCE.STANDA
 		// assessment, "A record with both relations set is flagged, not
 		// matched").
 		if (standaardversieUuid !== '' && bioMaatregelUuid !== '') {
-			conflicted.push({ moduleUuid, standaardversieUuid, bioMaatregelUuid, record })
+			conflicted.push({
+				moduleUuid,
+				standaardversieUuid,
+				bioMaatregelUuid,
+				record,
+			})
 			continue
 		}
 
 		if (columnSource === COLUMN_SOURCE.BIO_MAATREGEL) {
 			if (bioMaatregelUuid !== '') {
-				resolved.push({ moduleUuid, columnUuid: bioMaatregelUuid, evidenced, record })
+				resolved.push({
+					moduleUuid,
+					columnUuid: bioMaatregelUuid,
+					evidenced,
+					record,
+				})
 			}
 			// A record with only a standaardversie (or neither) is not
 			// applicable to the BIO matrix — dropped, same as the inverse
@@ -194,11 +210,17 @@ export function partitionCompliancy(records, columnSource = COLUMN_SOURCE.STANDA
 		}
 
 		if (standaardversieUuid !== '') {
-			resolved.push({ moduleUuid, columnUuid: standaardversieUuid, evidenced, record })
+			resolved.push({
+				moduleUuid,
+				columnUuid: standaardversieUuid,
+				evidenced,
+				record,
+			})
 			continue
 		}
 
-		const standaardGemma = typeof data.standaardGemma === 'string' ? data.standaardGemma.trim() : ''
+		const standaardGemma =
+			typeof data.standaardGemma === 'string' ? data.standaardGemma.trim() : ''
 		if (standaardGemma !== '') {
 			unresolved.push({ moduleUuid, standaardGemma, evidenced, record })
 		}
@@ -248,9 +270,18 @@ function strongest(a, b) {
  * @spec openspec/specs/module-compliance-assessment/spec.md
  * @spec openspec/specs/bio-compliance-assessment/spec.md
  */
-export function buildComplianceMatrix({ modules = [], standaardversies, columns: columnObjectsParam, compliancy = [], columnSource = COLUMN_SOURCE.STANDAARDVERSIE } = {}) {
+export function buildComplianceMatrix({
+	modules = [],
+	standaardversies,
+	columns: columnObjectsParam,
+	compliancy = [],
+	columnSource = COLUMN_SOURCE.STANDAARDVERSIE,
+} = {}) {
 	const columnObjects = columnObjectsParam ?? standaardversies ?? []
-	const { resolved, unresolved, conflicted } = partitionCompliancy(compliancy, columnSource)
+	const { resolved, unresolved, conflicted } = partitionCompliancy(
+		compliancy,
+		columnSource,
+	)
 
 	// Index resolved records by `${moduleUuid}::${columnUuid}`.
 	const index = new Map()
@@ -263,7 +294,10 @@ export function buildComplianceMatrix({ modules = [], standaardversies, columns:
 		} else {
 			const merged = strongest(existing.state, state)
 			// Prefer to surface an evidenced record when the cell becomes verified.
-			const record = (merged === CELL.VERIFIED && entry.evidenced) ? entry.record : existing.record
+			const record =
+				merged === CELL.VERIFIED && entry.evidenced
+					? entry.record
+					: existing.record
 			index.set(key, { state: merged, record })
 		}
 	}
@@ -278,9 +312,10 @@ export function buildComplianceMatrix({ modules = [], standaardversies, columns:
 		const cells = {}
 		for (const column of columns) {
 			const hit = index.get(`${moduleUuid}::${column.uuid}`)
-			cells[column.uuid] = hit !== undefined
-				? { state: hit.state, record: hit.record }
-				: { state: CELL.NONE, record: null }
+			cells[column.uuid] =
+				hit !== undefined
+					? { state: hit.state, record: hit.record }
+					: { state: CELL.NONE, record: null }
 		}
 		return { module, moduleUuid, cells }
 	})
@@ -303,8 +338,13 @@ export function columnLabel(column) {
 	if (!column || typeof column !== 'object') {
 		return String(column || '')
 	}
-	return column.naam || column.titel || column.title || column.label
+	return (
+		column.naam
+		|| column.titel
+		|| column.title
+		|| column.label
 		|| resolveUuid(column.uuid ?? column.id ?? '')
+	)
 }
 
 /**
@@ -342,7 +382,14 @@ export function standardLabel(standard) {
  * @spec openspec/specs/module-compliance-assessment/spec.md
  * @spec openspec/specs/bio-compliance-assessment/spec.md
  */
-export function buildOrganisationCoverage({ gebruiken = [], standaardversieUuid, columnUuid, compliancy = [], columnSource = COLUMN_SOURCE.STANDAARDVERSIE, moduleIndex = {} } = {}) {
+export function buildOrganisationCoverage({
+	gebruiken = [],
+	standaardversieUuid,
+	columnUuid,
+	compliancy = [],
+	columnSource = COLUMN_SOURCE.STANDAARDVERSIE,
+	moduleIndex = {},
+} = {}) {
 	const { resolved } = partitionCompliancy(compliancy, columnSource)
 	const targetUuid = resolveUuid(columnUuid ?? standaardversieUuid ?? '')
 
@@ -353,7 +400,10 @@ export function buildOrganisationCoverage({ gebruiken = [], standaardversieUuid,
 			continue
 		}
 		const state = entry.evidenced ? CELL.VERIFIED : CELL.CLAIMED
-		moduleState.set(entry.moduleUuid, strongest(moduleState.get(entry.moduleUuid) ?? CELL.NONE, state))
+		moduleState.set(
+			entry.moduleUuid,
+			strongest(moduleState.get(entry.moduleUuid) ?? CELL.NONE, state),
+		)
 	}
 
 	return (gebruiken || []).map((gebruik) => {

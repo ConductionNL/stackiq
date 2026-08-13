@@ -27,7 +27,7 @@
 		<div class="password-dialog">
 			<p class="dialog-description">
 				{{
-					t("softwarecatalog", "Change password for user: {username}", {
+					t('softwarecatalog', 'Change password for user: {username}', {
 						username,
 					})
 				}}
@@ -44,7 +44,7 @@
 
 			<!-- Password Requirements -->
 			<div class="password-requirements">
-				<h4>{{ t("softwarecatalog", "Password Requirements:") }}</h4>
+				<h4>{{ t('softwarecatalog', 'Password Requirements:') }}</h4>
 				<ul class="requirements-list">
 					<li :class="{ 'requirement-met': passwordValidation.minLength }">
 						<CheckCircle
@@ -52,23 +52,29 @@
 							:size="16"
 							class="check-icon" />
 						<CloseCircle v-else :size="16" class="close-icon" />
-						{{ t("softwarecatalog", "At least 10 characters") }}
+						{{ t('softwarecatalog', 'At least 10 characters') }}
 					</li>
-					<li :class="{ 'requirement-met': passwordValidation.hasUppercase }">
+					<li
+						:class="{
+							'requirement-met': passwordValidation.hasUppercase,
+						}">
 						<CheckCircle
 							v-if="passwordValidation.hasUppercase"
 							:size="16"
 							class="check-icon" />
 						<CloseCircle v-else :size="16" class="close-icon" />
-						{{ t("softwarecatalog", "At least one uppercase letter") }}
+						{{ t('softwarecatalog', 'At least one uppercase letter') }}
 					</li>
-					<li :class="{ 'requirement-met': passwordValidation.hasLowercase }">
+					<li
+						:class="{
+							'requirement-met': passwordValidation.hasLowercase,
+						}">
 						<CheckCircle
 							v-if="passwordValidation.hasLowercase"
 							:size="16"
 							class="check-icon" />
 						<CloseCircle v-else :size="16" class="close-icon" />
-						{{ t("softwarecatalog", "At least one lowercase letter") }}
+						{{ t('softwarecatalog', 'At least one lowercase letter') }}
 					</li>
 					<li :class="{ 'requirement-met': passwordValidation.hasNumber }">
 						<CheckCircle
@@ -76,10 +82,12 @@
 							:size="16"
 							class="check-icon" />
 						<CloseCircle v-else :size="16" class="close-icon" />
-						{{ t("softwarecatalog", "At least one number") }}
+						{{ t('softwarecatalog', 'At least one number') }}
 					</li>
 					<li
-						:class="{ 'requirement-met': passwordValidation.hasSpecialChar }">
+						:class="{
+							'requirement-met': passwordValidation.hasSpecialChar,
+						}">
 						<CheckCircle
 							v-if="passwordValidation.hasSpecialChar"
 							:size="16"
@@ -87,8 +95,8 @@
 						<CloseCircle v-else :size="16" class="close-icon" />
 						{{
 							t(
-								"softwarecatalog",
-								"At least one special character (!@#$%^&*)"
+								'softwarecatalog',
+								'At least one special character (!@#$%^&*)',
 							)
 						}}
 					</li>
@@ -101,14 +109,11 @@
 							v-else-if="passwordValidation.notPwned"
 							:size="16"
 							class="check-icon" />
-						<CloseCircle
-							v-else
-							:size="16"
-							class="close-icon" />
+						<CloseCircle v-else :size="16" class="close-icon" />
 						{{
 							t(
-								"softwarecatalog",
-								"Password has not appeared in known data breaches"
+								'softwarecatalog',
+								'Password has not appeared in known data breaches',
 							)
 						}}
 					</li>
@@ -117,16 +122,18 @@
 
 			<div class="dialog-actions">
 				<NcButton variant="secondary" @click="$emit('close')">
-					{{ t("softwarecatalog", "Cancel") }}
+					{{ t('softwarecatalog', 'Cancel') }}
 				</NcButton>
 				<NcButton
 					variant="primary"
-					:disabled="passwordLoading || !isPasswordValid || pwnedCheckLoading"
+					:disabled="
+						passwordLoading || !isPasswordValid || pwnedCheckLoading
+					"
 					@click="savePassword">
 					<template #icon>
 						<NcLoadingIcon v-if="passwordLoading" :size="20" />
 					</template>
-					{{ t("softwarecatalog", "Save") }}
+					{{ t('softwarecatalog', 'Save') }}
 				</NcButton>
 			</div>
 		</div>
@@ -134,12 +141,7 @@
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcLoadingIcon,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
@@ -258,7 +260,7 @@ export default {
 		 * Compute SHA-1 hash of a string
 		 * @param {string} str - String to hash
 		 * @return {Promise<string>} SHA-1 hash in hexadecimal format (uppercase)
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async sha1(str) {
 			// Simple SHA-1 implementation
@@ -267,7 +269,7 @@ export default {
 			const utf8Bytes = encoder.encode(str)
 			const bytes = Array.from(utf8Bytes)
 
-			const h = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0]
+			const h = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0]
 
 			const w = []
 			const length = bytes.length * 8
@@ -280,9 +282,9 @@ export default {
 			for (let i = 0; i < bytes.length; i += 4) {
 				w.push(
 					(bytes[i] << 24)
-					| (bytes[i + 1] << 16)
-					| (bytes[i + 2] << 8)
-					| bytes[i + 3],
+						| (bytes[i + 1] << 16)
+						| (bytes[i + 2] << 8)
+						| bytes[i + 3],
 				)
 			}
 
@@ -300,7 +302,8 @@ export default {
 
 				// Expand w array for rounds 16-79
 				for (let j = 16; j < 80; j++) {
-					const wVal = wLocal[j - 3]
+					const wVal =
+						wLocal[j - 3]
 						^ wLocal[j - 8]
 						^ wLocal[j - 14]
 						^ wLocal[j - 16]
@@ -318,16 +321,16 @@ export default {
 					let k
 					if (j < 20) {
 						f = (b & c) | (~b & d)
-						k = 0x5A827999
+						k = 0x5a827999
 					} else if (j < 40) {
 						f = b ^ c ^ d
-						k = 0x6ED9EBA1
+						k = 0x6ed9eba1
 					} else if (j < 60) {
 						f = (b & c) | (b & d) | (c & d)
-						k = 0x8F1BBCDC
+						k = 0x8f1bbcdc
 					} else {
 						f = b ^ c ^ d
-						k = 0xCA62C1D6
+						k = 0xca62c1d6
 					}
 
 					const temp = (this.rotl(a, 5) + f + e + k + wLocal[j]) >>> 0
@@ -359,7 +362,7 @@ export default {
 		 * @param {number} value - Value to rotate
 		 * @param {number} amount - Amount to rotate
 		 * @return {number} Rotated value
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		rotl(value, amount) {
 			return ((value << amount) | (value >>> (32 - amount))) >>> 0
@@ -368,7 +371,7 @@ export default {
 		/**
 		 * Check if password is in Have I Been Pwned database
 		 * @param {string} password - Password to check
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async checkPasswordPwned(password) {
 			if (!password || password.length < 10) {
@@ -433,7 +436,7 @@ export default {
 		/**
 		 * Persist the new password for the selected user.
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async savePassword() {
 			if (!this.newPassword || this.newPassword.length < 10) {
@@ -472,7 +475,9 @@ export default {
 					this.username,
 					this.newPassword,
 				)
-				showSuccess(this.t('softwarecatalog', 'Password changed successfully'))
+				showSuccess(
+					this.t('softwarecatalog', 'Password changed successfully'),
+				)
 				this.$emit('saved')
 			} catch (error) {
 				showError(

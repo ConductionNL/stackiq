@@ -1,7 +1,8 @@
 <template>
 	<div>
 		<!-- Organisatie Modals -->
-		<ObjectModal v-if="navigationStore.modal === 'organisatie'"
+		<ObjectModal
+			v-if="navigationStore.modal === 'organisatie'"
 			object-type-key="organisatie" />
 		<ViewObject v-if="navigationStore.modal === 'viewOrganisatie'" />
 		<UploadObject v-if="navigationStore.modal === 'uploadOrganisatie'" />
@@ -10,7 +11,8 @@
 		<MergeObject v-if="navigationStore.modal === 'mergeOrganisatie'" />
 
 		<!-- Generic Object Edit Modal for other object types (contactpersoon, etc.) -->
-		<ObjectModal v-if="genericObjectModalType"
+		<ObjectModal
+			v-if="genericObjectModalType"
 			:object-type-key="genericObjectModalType" />
 
 		<!-- View modals for other object types -->
@@ -70,7 +72,7 @@ export default {
 		 * or null if the modal is not a generic object edit modal.
 		 *
 		 * @return {string|null} The object type key, or null
-		  * @spec exclude computed passthrough of navigation store modal type — DI getter
+		 * @spec exclude computed passthrough of navigation store modal type — DI getter
 		 */
 		genericObjectModalType() {
 			const modal = navigationStore.modal

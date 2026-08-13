@@ -3,16 +3,19 @@
 		<!-- Page info first -->
 		<div class="viewPaginationInfo">
 			<span class="viewPageInfo">
-				{{ t('softwarecatalog', 'Page {current} of {total}', { current: currentPage, total: totalPages }) }}
+				{{
+					t('softwarecatalog', 'Page {current} of {total}', {
+						current: currentPage,
+						total: totalPages,
+					})
+				}}
 			</span>
 		</div>
 
 		<!-- Page navigation in middle -->
 		<div v-if="totalPages > 1" class="viewPaginationNav">
 			<!-- First page button -->
-			<NcButton
-				:disabled="currentPage === 1"
-				@click="changePage(1)">
+			<NcButton :disabled="currentPage === 1" @click="changePage(1)">
 				{{ t('softwarecatalog', 'First') }}
 			</NcButton>
 
@@ -26,7 +29,12 @@
 			<!-- Page number buttons -->
 			<div class="viewPaginationNumbers">
 				<template v-for="page in visiblePages">
-					<span v-if="page === '...'" :key="'ellipsis-' + page" class="viewPaginationEllipsis">...</span>
+					<span
+						v-if="page === '...'"
+						:key="'ellipsis-' + page"
+						class="viewPaginationEllipsis"
+						>...</span
+					>
 					<NcButton
 						v-else
 						:key="page"
@@ -55,7 +63,9 @@
 
 		<!-- Page size selector last -->
 		<div class="viewPaginationPageSize">
-			<label for="pageSize">{{ t('softwarecatalog', 'Items per page:') }}</label>
+			<label for="pageSize">{{
+				t('softwarecatalog', 'Items per page:')
+			}}</label>
 			<NcSelect
 				id="pageSize"
 				class="pagination-page-size-select"
@@ -155,15 +165,19 @@ export default {
 		/**
 		 * Get current page size option object
 		 * @return {object} Current page size option object
-		  * @spec openspec/specs/fe-shell-navigation/spec.md
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		currentPageSizeOption() {
-			return this.pageSizeOptions.find(option => option.value === this.currentPageSize) || this.pageSizeOptions[1]
+			return (
+				this.pageSizeOptions.find(
+					(option) => option.value === this.currentPageSize,
+				) || this.pageSizeOptions[1]
+			)
 		},
 		/**
 		 * Calculate visible page numbers for pagination
 		 * @return {Array} Array of page numbers and ellipsis
-		  * @spec openspec/specs/fe-shell-navigation/spec.md
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		visiblePages() {
 			const current = this.currentPage
@@ -211,7 +225,7 @@ export default {
 		 * Change to a specific page
 		 * @param {number} page - The page number to change to
 		 * @return {void}
-		  * @spec openspec/specs/fe-shell-navigation/spec.md
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		changePage(page) {
 			if (page !== this.currentPage && page >= 1 && page <= this.totalPages) {
@@ -227,7 +241,7 @@ export default {
 		 * Change page size
 		 * @param {object} option - Selected page size option
 		 * @return {void}
-		  * @spec openspec/specs/fe-shell-navigation/spec.md
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		changePageSize(option) {
 			if (option.value !== this.currentPageSize) {

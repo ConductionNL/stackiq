@@ -17,20 +17,30 @@ describe('organisationSwitcher.resolveActiveOrganisationName', () => {
 	]
 
 	it('resolves the active organisation name', () => {
-		expect(resolveActiveOrganisationName(organisations, 'org-b', 'fallback')).toBe('Gemeente B')
+		expect(
+			resolveActiveOrganisationName(organisations, 'org-b', 'fallback'),
+		).toBe('Gemeente B')
 	})
 
 	it('falls back when no organisation matches', () => {
-		expect(resolveActiveOrganisationName(organisations, 'org-c', 'fallback')).toBe('fallback')
+		expect(
+			resolveActiveOrganisationName(organisations, 'org-c', 'fallback'),
+		).toBe('fallback')
 	})
 
 	it('falls back when the active uuid is null', () => {
-		expect(resolveActiveOrganisationName(organisations, null, 'fallback')).toBe('fallback')
+		expect(resolveActiveOrganisationName(organisations, null, 'fallback')).toBe(
+			'fallback',
+		)
 	})
 
 	it('handles an empty/undefined organisations list gracefully', () => {
-		expect(resolveActiveOrganisationName(undefined, 'org-a', 'fallback')).toBe('fallback')
-		expect(resolveActiveOrganisationName([], 'org-a', 'fallback')).toBe('fallback')
+		expect(resolveActiveOrganisationName(undefined, 'org-a', 'fallback')).toBe(
+			'fallback',
+		)
+		expect(resolveActiveOrganisationName([], 'org-a', 'fallback')).toBe(
+			'fallback',
+		)
 	})
 })
 
@@ -41,7 +51,9 @@ describe('organisationSwitcher.resolveOtherOrganisations', () => {
 	]
 
 	it('excludes the active organisation', () => {
-		expect(resolveOtherOrganisations(organisations, 'org-a')).toEqual([{ uuid: 'org-b', naam: 'Gemeente B' }])
+		expect(resolveOtherOrganisations(organisations, 'org-a')).toEqual([
+			{ uuid: 'org-b', naam: 'Gemeente B' },
+		])
 	})
 
 	it('returns every organisation when the active uuid is null', () => {
@@ -60,8 +72,13 @@ describe('organisationSwitcher.resolveSwitchError — server-side membership ver
 	})
 
 	it('surfaces the server error message when the switch is refused', () => {
-		expect(resolveSwitchError(false, { error: 'User does not belong to this organisation' }, 'fallback'))
-			.toBe('User does not belong to this organisation')
+		expect(
+			resolveSwitchError(
+				false,
+				{ error: 'User does not belong to this organisation' },
+				'fallback',
+			),
+		).toBe('User does not belong to this organisation')
 	})
 
 	it('falls back to a generic message when the refused response carries no error field', () => {
@@ -75,6 +92,12 @@ describe('organisationSwitcher.resolveSwitchError — server-side membership ver
 	it('never treats a non-ok response as a success, even with a truthy-looking body', () => {
 		// Guards against a client trusting a forged/malformed body over the
 		// actual HTTP status — REQ-001's "forged organisation id" scenario.
-		expect(resolveSwitchError(false, { activeOrganisation: { uuid: 'org-c' } }, 'fallback')).toBe('fallback')
+		expect(
+			resolveSwitchError(
+				false,
+				{ activeOrganisation: { uuid: 'org-c' } },
+				'fallback',
+			),
+		).toBe('fallback')
 	})
 })

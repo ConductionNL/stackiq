@@ -61,7 +61,8 @@ let _activeOrganisationUuid = null
  * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
  */
 export function setActiveOrganisationUuid(uuid) {
-	_activeOrganisationUuid = (typeof uuid === 'string' && uuid.length > 0) ? uuid : null
+	_activeOrganisationUuid =
+		typeof uuid === 'string' && uuid.length > 0 ? uuid : null
 }
 
 /**
@@ -136,7 +137,10 @@ export function withLanguageParam(url, lang = resolveLanguage()) {
  * @param {string|null} [options.organisation] Active tenant organisation UUID.
  * @return {object} A new headers object.
  */
-export function buildWriteHeaders(baseHeaders = {}, { targetLang = null, organisation = null } = {}) {
+export function buildWriteHeaders(
+	baseHeaders = {},
+	{ targetLang = null, organisation = null } = {},
+) {
 	const headers = { ...baseHeaders }
 
 	if (targetLang) {
@@ -161,9 +165,22 @@ export function buildWriteHeaders(baseHeaders = {}, { targetLang = null, organis
  * @param {boolean} [params.withLang]     Whether to append `_lang`. Defaults true.
  * @return {string} The constructed URL.
  */
-export function buildObjectUrl({ register, schema, uuid = null, action = null, withLang = true }) {
-	if (register === undefined || register === null || schema === undefined || schema === null) {
-		throw new Error('register and schema are required to build an OpenRegister URL')
+export function buildObjectUrl({
+	register,
+	schema,
+	uuid = null,
+	action = null,
+	withLang = true,
+}) {
+	if (
+		register === undefined
+		|| register === null
+		|| schema === undefined
+		|| schema === null
+	) {
+		throw new Error(
+			'register and schema are required to build an OpenRegister URL',
+		)
 	}
 
 	let url = `${OR_API_BASE}/objects/${register}/${schema}`

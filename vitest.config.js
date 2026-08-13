@@ -42,26 +42,43 @@ module.exports = async () => {
 			environment: 'node',
 			globals: false,
 			include: ['tests/vitest/**/*.spec.{js,ts}'],
-			exclude: ['tests/e2e/**', 'tests/integration/**', 'src/**', 'node_modules/**'],
+			exclude: [
+				'tests/e2e/**',
+				'tests/integration/**',
+				'src/**',
+				'node_modules/**',
+			],
 		},
 		resolve: {
 			alias: [
 				{ find: '@', replacement: path.resolve(__dirname, 'src') },
 				{
 					find: /^@nextcloud\/router$/,
-					replacement: path.resolve(__dirname, 'tests/vitest/stubs/nextcloud-router.js'),
+					replacement: path.resolve(
+						__dirname,
+						'tests/vitest/stubs/nextcloud-router.js',
+					),
 				},
 				{
 					find: /^@nextcloud\/dialogs$/,
-					replacement: path.resolve(__dirname, 'tests/vitest/stubs/nextcloud-dialogs.js'),
+					replacement: path.resolve(
+						__dirname,
+						'tests/vitest/stubs/nextcloud-dialogs.js',
+					),
 				},
 				{
 					find: /^@nextcloud\/l10n$/,
-					replacement: path.resolve(__dirname, 'tests/vitest/stubs/nextcloud-l10n.js'),
+					replacement: path.resolve(
+						__dirname,
+						'tests/vitest/stubs/nextcloud-l10n.js',
+					),
 				},
 				{
 					find: /^@nextcloud\/vue$/,
-					replacement: path.resolve(__dirname, 'tests/vitest/stubs/nextcloud-vue.js'),
+					replacement: path.resolve(
+						__dirname,
+						'tests/vitest/stubs/nextcloud-vue.js',
+					),
 				},
 			],
 		},

@@ -11,27 +11,36 @@ free-text search, if any) on the module/dienst index pages, then emits
 -->
 
 <template>
-	<NcDialog v-if="show"
+	<NcDialog
+		v-if="show"
 		:name="t('softwarecatalog', 'Save as view')"
 		size="small"
 		@closing="closeModal">
 		<div class="save-facet-view-modal">
 			<p class="save-facet-view-modal__description">
-				{{ t('softwarecatalog', 'Save the current filter selection so it can be reopened later.') }}
+				{{
+					t(
+						'softwarecatalog',
+						'Save the current filter selection so it can be reopened later.',
+					)
+				}}
 			</p>
 
 			<form class="save-facet-view-modal__form" @submit.prevent="save">
 				<NcTextField
 					v-model="name"
 					:label="t('softwarecatalog', 'View name')"
-					:placeholder="t('softwarecatalog', 'e.g. Zaakregistratie modules')"
+					:placeholder="
+						t('softwarecatalog', 'e.g. Zaakregistratie modules')
+					"
 					required />
 
 				<div class="save-facet-view-modal__actions">
 					<NcButton variant="secondary" @click="closeModal">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
-					<NcButton variant="primary"
+					<NcButton
+						variant="primary"
 						:disabled="saving || name.trim() === ''"
 						type="submit">
 						<template #icon>

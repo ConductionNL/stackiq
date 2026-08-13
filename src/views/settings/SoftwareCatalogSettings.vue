@@ -56,7 +56,9 @@
 				<NcTextField
 					v-model="catalogLocation"
 					:label="t('softwarecatalog', 'Software Catalog Location URL')"
-					:placeholder="t('softwarecatalog', 'https://catalog.example.com')"
+					:placeholder="
+						t('softwarecatalog', 'https://catalog.example.com')
+					"
 					:disabled="store.loading">
 					<template #icon>
 						<Web :size="16" />
@@ -65,7 +67,9 @@
 
 				<div class="catalog-location-help">
 					<p class="help-text">
-						This URL will be used for external links to your software catalog. The system will append "/beheer" to this URL for management interfaces.
+						This URL will be used for external links to your software
+						catalog. The system will append "/beheer" to this URL for
+						management interfaces.
 					</p>
 				</div>
 			</div>
@@ -97,9 +101,16 @@
 			type="beoordeeling"
 			entity-label="review"
 			:name="t('softwarecatalog', 'Review moderation')"
-			:description="t('softwarecatalog', 'Review pending ratings and testimonials. Approving a review publishes it; rejecting leaves it hidden.')"
+			:description="
+				t(
+					'softwarecatalog',
+					'Review pending ratings and testimonials. Approving a review publishes it; rejecting leaves it hidden.',
+				)
+			"
 			:loading-text="t('softwarecatalog', 'Loading pending reviews…')"
-			:empty-description="t('softwarecatalog', 'There are no pending reviews right now.')" />
+			:empty-description="
+				t('softwarecatalog', 'There are no pending reviews right now.')
+			" />
 
 		<!-- Catalog Federation Section -->
 		<FederationSettings />
@@ -117,10 +128,7 @@ import { defineComponent } from 'vue'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import { showSuccess, showError } from '@nextcloud/dialogs'
-import {
-	NcButton,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcButton, NcTextField } from '@nextcloud/vue'
 import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
 import { settingsStore } from '../../store/store.js'
 import Web from 'vue-material-design-icons/Web.vue'
@@ -203,10 +211,12 @@ export default defineComponent({
 		 * Check if catalog location has changed
 		 *
 		 * @return {boolean} True if catalog location has changed
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		catalogLocationChanged() {
-			return this.catalogLocation !== (this.store.settings.catalogLocation || '')
+			return (
+				this.catalogLocation !== (this.store.settings.catalogLocation || '')
+			)
 		},
 	},
 
@@ -240,7 +250,7 @@ export default defineComponent({
 
 	/**
 	 * Load settings data when component is created
-	  * @spec openspec/specs/fe-settings-ui/spec.md
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	async created() {
 		await this.store.loadSettings()
@@ -256,7 +266,7 @@ export default defineComponent({
 		 *
 		 * @param {string} value - New catalog location value
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		onCatalogLocationChange(value) {
 			this.catalogLocation = value
@@ -267,7 +277,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveGeneralSettings() {
 			this.savingCatalogLocation = true
@@ -289,7 +299,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async refreshGeneralSettings() {
 			try {
@@ -306,7 +316,7 @@ export default defineComponent({
 		 * Feedback is surfaced via toast notifications.
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async consolidatedAutoConfigure() {
 			this.autoConfiguring = true
@@ -330,7 +340,7 @@ export default defineComponent({
 		 * Force a full re-import and version sync via the settings store.
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleForceUpdate() {
 			this.autoConfiguring = true
@@ -338,7 +348,9 @@ export default defineComponent({
 				const result = await this.store.forceUpdate()
 				await this.store.loadVersionInfo()
 				if (result && result.success) {
-					showSuccess(result.message || 'Force update completed successfully')
+					showSuccess(
+						result.message || 'Force update completed successfully',
+					)
 				} else if (result) {
 					showError(result.message || 'Force update failed')
 				}
@@ -351,7 +363,7 @@ export default defineComponent({
 		 * Reset the auto-config completed flag via the settings store.
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleResetAutoConfig() {
 			this.autoConfiguring = true

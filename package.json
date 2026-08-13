@@ -29,7 +29,9 @@
     "test:e2e": "playwright test",
     "test:smoke": "playwright test --project smoke",
     "stylelint": "stylelint \"src/**/*.{vue,scss,css}\"",
-    "check:manifest": "node tests/validate-manifest.js"
+    "check:manifest": "node tests/validate-manifest.js",
+    "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
+    "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\""
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"
@@ -92,6 +94,7 @@
     "@nextcloud/browserslist-config": "^3.0.1",
     "@nextcloud/eslint-config": "^8.4.1",
     "@nextcloud/eslint-plugin": "^2.2.1",
+    "@nextcloud/prettier-config": "^1.2.0",
     "@nextcloud/stylelint-config": "^2.4.0",
     "@nextcloud/webpack-vue-config": "^7.0.2",
     "@pinia/testing": "^1.0.2",
@@ -111,6 +114,7 @@
     "browserslist": "^4.25.2",
     "caniuse-lite": "^1.0.30001733",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-config-standard": "^17.1.0",
     "eslint-import-resolver-alias": "^1.1.2",
     "eslint-import-resolver-exports": "^1.0.0-beta.5",
@@ -127,6 +131,7 @@
     "jest-transform-stub": "^2.0.0",
     "jsdom": "^29.1.1",
     "postcss-html": "^1.8.1",
+    "prettier": "^3.9.6",
     "stylelint": "^15.11.0",
     "stylelint-config-recommended-scss": "^13.1.0",
     "stylelint-config-recommended-vue": "^1.6.1",
@@ -136,5 +141,6 @@
     "typescript": "^5.5.4",
     "vitest": "^3.2.7",
     "vue-eslint-parser": "^10.2.0"
-  }
+  },
+  "prettier": "@nextcloud/prettier-config"
 }

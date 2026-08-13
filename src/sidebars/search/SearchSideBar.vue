@@ -11,8 +11,9 @@ import { reactive } from 'vue'
 			<template #icon>
 				<Magnify :size="20" />
 			</template>
-			Zoek snel in het voor uw beschikbare federatieve netwerk<br>
-			<NcTextField v-model="searchStore.search"
+			Zoek snel in het voor uw beschikbare federatieve netwerk<br />
+			<NcTextField
+				v-model="searchStore.search"
 				class="searchField"
 				label="Zoeken" />
 			<NcNoteCard v-if="searchStore.searchError" type="error">
@@ -23,7 +24,8 @@ import { reactive } from 'vue'
 			<template #icon>
 				<DatabaseOutline :size="20" />
 			</template>
-			<NcCheckboxRadioSwitch v-for="(catalogiItem, i) in catalogiStore.catalogiList"
+			<NcCheckboxRadioSwitch
+				v-for="(catalogiItem, i) in catalogiStore.catalogiList"
 				:key="`${catalogiItem}${i}`"
 				v-model="searchStore.catalogi[catalogiItem.id]"
 				type="switch">
@@ -34,7 +36,8 @@ import { reactive } from 'vue'
 			<template #icon>
 				<FileTreeOutline :size="20" />
 			</template>
-			<NcCheckboxRadioSwitch v-for="(metaData, i) in metadataStore.metaDataList"
+			<NcCheckboxRadioSwitch
+				v-for="(metaData, i) in metadataStore.metaDataList"
 				:key="`${metaData}${i}`"
 				v-model="searchStore.metadata[metaData.id]"
 				type="switch">
@@ -44,8 +47,13 @@ import { reactive } from 'vue'
 	</NcAppSidebar>
 </template>
 <script>
-
-import { NcAppSidebar, NcAppSidebarTab, NcTextField, NcNoteCard, NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import {
+	NcAppSidebar,
+	NcAppSidebarTab,
+	NcTextField,
+	NcNoteCard,
+	NcCheckboxRadioSwitch,
+} from '@nextcloud/vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
 import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
 import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
@@ -124,7 +132,7 @@ export default {
 		catalogiStore.refreshCatalogiList()
 	},
 	methods: {
-		debouncedSearch: debounce(function() {
+		debouncedSearch: debounce(function () {
 			searchStore.getSearchResults()
 		}, 500),
 	},

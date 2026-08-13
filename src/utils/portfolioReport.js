@@ -19,7 +19,13 @@
  *
  * @type {string[]}
  */
-export const QUADRANT_ORDER = ['Tolerate', 'Invest', 'Migrate', 'Eliminate', 'Unclassified']
+export const QUADRANT_ORDER = [
+	'Tolerate',
+	'Invest',
+	'Migrate',
+	'Eliminate',
+	'Unclassified',
+]
 
 /**
  * NL Design System token for each quadrant's accent colour — one of the four
@@ -79,7 +85,11 @@ export function formatCurrency(amount) {
 		return '—'
 	}
 	try {
-		return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amount)
+		return new Intl.NumberFormat('nl-NL', {
+			style: 'currency',
+			currency: 'EUR',
+			maximumFractionDigits: 0,
+		}).format(amount)
 	} catch (error) {
 		return `€ ${Math.round(amount)}`
 	}

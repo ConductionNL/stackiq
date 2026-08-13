@@ -21,7 +21,14 @@
  * assert it is genuinely absent alongside any other app-origin error / 5xx.
  */
 import { test, expect } from '@playwright/test'
-import { navClickTo, gotoAppRoute, collectAppErrors, expectNoAppErrors, expectIndexSurface, APP_MAIN } from './_helpers'
+import {
+	navClickTo,
+	gotoAppRoute,
+	collectAppErrors,
+	expectNoAppErrors,
+	expectIndexSurface,
+	APP_MAIN,
+} from './_helpers'
 
 interface IndexPage {
 	/** Exact app-navigation link label. */
@@ -51,11 +58,17 @@ const INDEX_PAGES: IndexPage[] = [
 	{ navLabel: 'Contracts', addLabel: 'Add Contract', name: 'contracten' },
 	{ navLabel: 'Reviews', addLabel: 'Add Assessment', name: 'reviews' },
 	{ navLabel: 'Compliance', addLabel: 'Add Compliancy', name: 'komplianties' },
-	{ navLabel: 'Module versions', addLabel: 'Add Application version', name: 'moduleversies' },
+	{
+		navLabel: 'Module versions',
+		addLabel: 'Add Application version',
+		name: 'moduleversies',
+	},
 ]
 
 for (const p of INDEX_PAGES) {
-	test(`index ${p.name}: nav entry reaches the CnIndexPage surface (toggle + add + list body)`, async ({ page }) => {
+	test(`index ${p.name}: nav entry reaches the CnIndexPage surface (toggle + add + list body)`, async ({
+		page,
+	}) => {
 		const bag = collectAppErrors(page)
 		await navClickTo(page, p.navLabel)
 		await expectIndexSurface(page, p.addLabel)
@@ -66,7 +79,9 @@ for (const p of INDEX_PAGES) {
 // The contactpersonen index is a routable page with NO menu entry (see above),
 // so the user's real path to it is the route, not a nav click. Everything else
 // about the surface contract is unchanged.
-test('index contactpersonen: the route reaches the CnIndexPage surface (toggle + add + list body)', async ({ page }) => {
+test('index contactpersonen: the route reaches the CnIndexPage surface (toggle + add + list body)', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await gotoAppRoute(page, '/contactpersonen')
 	await expectIndexSurface(page, 'Add Contact person')
@@ -84,7 +99,9 @@ test('index contactpersonen: the route reaches the CnIndexPage surface (toggle +
 // (or the Standards page is removed/repointed in the manifest). Kept as a
 // documented fixme so it re-activates once the schema gap is closed. Not a test
 // defect — the page genuinely cannot load its data.
-test.fixme('index standaarden: nav entry reaches the CnIndexPage surface (blocked: missing `standaard` schema)', async ({ page }) => {
+test.fixme('index standaarden: nav entry reaches the CnIndexPage surface (blocked: missing `standaard` schema)', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Standards')
 	await expectIndexSurface(page, 'Add Item')
@@ -98,7 +115,9 @@ test.fixme('index standaarden: nav entry reaches the CnIndexPage surface (blocke
 // assert that custom surface mounts WITHOUT an app-origin error (the register
 // sentinel now resolves, so no @resolve 404).
 // ---------------------------------------------------------------------------
-test('custom organisaties: nav entry reaches the OrganisatieIndexView surface', async ({ page }) => {
+test('custom organisaties: nav entry reaches the OrganisatieIndexView surface', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Organisations')
 	const main = page.locator(APP_MAIN).first()
@@ -118,7 +137,9 @@ test('custom organisaties: nav entry reaches the OrganisatieIndexView surface', 
 // the Contacts index — switching the toggle re-renders the list body in the
 // other mode without an app error. The view buttons are rendered DOM controls.
 // ---------------------------------------------------------------------------
-test('index contactpersonen: Cards/Table view toggle switches the list mode', async ({ page }) => {
+test('index contactpersonen: Cards/Table view toggle switches the list mode', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await gotoAppRoute(page, '/contactpersonen')
 	const main = page.locator(APP_MAIN).first()
@@ -133,7 +154,9 @@ test('index contactpersonen: Cards/Table view toggle switches the list mode', as
 	// Contacts schema now resolves a real register and may return rows, so we
 	// assert empty-state OR a populated list) and the toggle interaction must
 	// not throw an app error.
-	const body = main.getByText('No items found', { exact: false }).first()
+	const body = main
+		.getByText('No items found', { exact: false })
+		.first()
 		.or(main.getByText(/Showing\s+\d+\s+of\s+\d+/i).first())
 	await tableToggle.click()
 	await expect(body).toBeVisible({ timeout: 15000 })
@@ -149,18 +172,24 @@ test('index contactpersonen: Cards/Table view toggle switches the list mode', as
 // manifest CnIndexPage create flow). We assert a dialog surfaces, then dismiss
 // with Escape to leave the app clean. Data-independent (no save).
 // ---------------------------------------------------------------------------
-test('index contactpersonen: "Add Contact person" opens a create dialog', async ({ page }) => {
+test('index contactpersonen: "Add Contact person" opens a create dialog', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await gotoAppRoute(page, '/contactpersonen')
 	const main = page.locator(APP_MAIN).first()
 
-	const addBtn = main.getByRole('button', { name: 'Add Contact person', exact: true }).first()
+	const addBtn = main
+		.getByRole('button', { name: 'Add Contact person', exact: true })
+		.first()
 	await expect(addBtn).toBeVisible({ timeout: 30000 })
 	await addBtn.click()
 
 	// A modal/dialog surfaces for object creation. NcModal/NcDialog render with
 	// role="dialog"; assert one becomes visible.
-	const dialog = page.locator('[role="dialog"], .modal-container, .modal-wrapper').first()
+	const dialog = page
+		.locator('[role="dialog"], .modal-container, .modal-wrapper')
+		.first()
 	await expect(dialog).toBeVisible({ timeout: 15000 })
 
 	// Dismiss without saving (Escape) so no object is created.

@@ -15,11 +15,18 @@
  * @spec openspec/specs/bio-compliance-assessment/spec.md
  */
 import { test, expect } from '@playwright/test'
-import { APP_MAIN, collectAppErrors, expectNoAppErrors, navClickTo } from './_helpers'
+import {
+	APP_MAIN,
+	collectAppErrors,
+	expectNoAppErrors,
+	navClickTo,
+} from './_helpers'
 
 // @e2e module-compliance-assessment::matrix-renders-the-three-cell-states
 // @e2e module-compliance-assessment::matrix-selection-is-shareable
-test('compliance matrix: nav entry reaches the filter-first matrix surface', async ({ page }) => {
+test('compliance matrix: nav entry reaches the filter-first matrix surface', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Compliance matrix')
 
@@ -38,7 +45,9 @@ test('compliance matrix: nav entry reaches the filter-first matrix surface', asy
 
 // @e2e module-compliance-assessment::matrix-renders-bio-measure-columns
 // @e2e bio-compliance-assessment::organisation-sees-its-bio-compliance-posture
-test('compliance matrix: switching to the BIO measures scope reaches its own filter-first surface', async ({ page }) => {
+test('compliance matrix: switching to the BIO measures scope reaches its own filter-first surface', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Compliance matrix')
 

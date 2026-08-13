@@ -28,9 +28,24 @@
  *
  * @spec openspec/specs/catalog-ratings/spec.md
  */
-import { test, expect, request as playwrightRequest, type Page } from '@playwright/test'
+import {
+	test,
+	expect,
+	request as playwrightRequest,
+	type Page,
+} from '@playwright/test'
 import type { APIRequestContext } from '@playwright/test'
-import { APP_BASE, APP_MAIN, APP_SHELL, collectAppErrors, dismissSupportDialog, dismissWalkthrough, expectNoAppErrors, gotoAppRoute, navClickTo } from './_helpers'
+import {
+	APP_BASE,
+	APP_MAIN,
+	APP_SHELL,
+	collectAppErrors,
+	dismissSupportDialog,
+	dismissWalkthrough,
+	expectNoAppErrors,
+	gotoAppRoute,
+	navClickTo,
+} from './_helpers'
 import {
 	BASE_URL,
 	RUN_ID,
@@ -57,7 +72,9 @@ let moduleUuid = ''
 test.beforeAll(async () => {
 	ctx = await newApiContext()
 	config = await resolveConfig(ctx)
-	moduleUuid = await createObject(ctx, config.register, 'module', { naam: MODULE_NAME })
+	moduleUuid = await createObject(ctx, config.register, 'module', {
+		naam: MODULE_NAME,
+	})
 })
 
 test.afterAll(async () => {
@@ -66,7 +83,11 @@ test.afterAll(async () => {
 		const rows = await findAll(ctx, config.register, schema)
 		for (const row of rows) {
 			if (JSON.stringify(row).includes(RUN_ID)) {
-				const id = String(row.id ?? (row as { '@self'?: { id?: string } })['@self']?.id ?? '')
+				const id = String(
+					row.id
+						?? (row as { '@self'?: { id?: string } })['@self']?.id
+						?? '',
+				)
 				if (id) await deleteObject(ctx, config.register, schema, id)
 			}
 		}
@@ -108,49 +129,91 @@ async function newAnonymousContext(): Promise<APIRequestContext> {
 	expect(
 		whoami.status(),
 		`the "anonymous" context is authenticated (whoami returned ${whoami.status()}) — `
-		+ 'every anonymous assertion made through it would be meaningless',
+			+ 'every anonymous assertion made through it would be meaningless',
 	).toBe(401)
 	return anon
 }
 
 /** Open the seeded module's detail page and wait for the reviews panel. */
 async function openModuleReviews(page: Page): Promise<void> {
-	await page.goto(`${APP_BASE}#/modules/${moduleUuid}`, { waitUntil: 'domcontentloaded' })
-	await page.locator(APP_SHELL).first().waitFor({ state: 'attached', timeout: 30000 })
-	await page.locator(APP_MAIN).first().waitFor({ state: 'visible', timeout: 30000 })
+	await page.goto(`${APP_BASE}#/modules/${moduleUuid}`, {
+		waitUntil: 'domcontentloaded',
+	})
+	await page
+		.locator(APP_SHELL)
+		.first()
+		.waitFor({ state: 'attached', timeout: 30000 })
+	await page
+		.locator(APP_MAIN)
+		.first()
+		.waitFor({ state: 'visible', timeout: 30000 })
 	await dismissSupportDialog(page)
 	await dismissWalkthrough(page)
-	await expect(page.locator('.reviews-panel').first()).toBeVisible({ timeout: 30000 })
+	await expect(page.locator('.reviews-panel').first()).toBeVisible({
+		timeout: 30000,
+	})
 }
 
 /** Submit a review through the real modal. */
-async function submitReview(page: Page, reviewTitle: string, rating: string): Promise<void> {
-	await page.getByRole('button', { name: 'Write a review', exact: true }).first().click()
-	const dialog = page.getByRole('dialog').filter({ hasText: 'Write a review' }).first()
+async function submitReview(
+	page: Page,
+	reviewTitle: string,
+	rating: string,
+): Promise<void> {
+	await page
+		.getByRole('button', { name: 'Write a review', exact: true })
+		.first()
+		.click()
+	const dialog = page
+		.getByRole('dialog')
+		.filter({ hasText: 'Write a review' })
+		.first()
 	await expect(dialog).toBeVisible({ timeout: 15000 })
-	await dialog.getByRole('textbox', { name: /^Title/ }).first().fill(reviewTitle)
+	await dialog
+		.getByRole('textbox', { name: /^Title/ })
+		.first()
+		.fill(reviewTitle)
 	const rater = dialog.locator('.vs__search').first()
 	await rater.click()
-	await page.locator('.vs__dropdown-option', { hasText: new RegExp(`^${rating}$`) }).first().click()
-	await dialog.getByRole('textbox', { name: /^Testimonial/ }).first().fill(`Body for ${reviewTitle}`)
+	await page
+		.locator('.vs__dropdown-option', { hasText: new RegExp(`^${rating}$`) })
+		.first()
+		.click()
+	await dialog
+		.getByRole('textbox', { name: /^Testimonial/ })
+		.first()
+		.fill(`Body for ${reviewTitle}`)
 	await dialog.getByRole('button', { name: 'Submit review', exact: true }).click()
 	await expect(dialog).toBeHidden({ timeout: 30000 })
 }
 
 /** Open the admin settings page and wait for the review moderation queue. */
 async function openReviewQueue(page: Page) {
-	await page.goto('/index.php/settings/admin/softwarecatalog', { waitUntil: 'domcontentloaded' })
-	const queue = page.locator('section, .settings-section')
-		.filter({ hasText: 'Review moderation' }).first()
+	await page.goto('/index.php/settings/admin/softwarecatalog', {
+		waitUntil: 'domcontentloaded',
+	})
+	const queue = page
+		.locator('section, .settings-section')
+		.filter({ hasText: 'Review moderation' })
+		.first()
 	await expect(queue).toBeVisible({ timeout: 30000 })
 	return queue
 }
 
 /** Act on one named row in a moderation queue. */
-async function moderate(page: Page, reviewTitle: string, action: 'Approve' | 'Reject'): Promise<void> {
+async function moderate(
+	page: Page,
+	reviewTitle: string,
+	action: 'Approve' | 'Reject',
+): Promise<void> {
 	const queue = await openReviewQueue(page)
-	const row = queue.locator('li.moderation-item').filter({ hasText: reviewTitle }).first()
-	await expect(row, `no pending queue row titled "${reviewTitle}"`).toBeVisible({ timeout: 30000 })
+	const row = queue
+		.locator('li.moderation-item')
+		.filter({ hasText: reviewTitle })
+		.first()
+	await expect(row, `no pending queue row titled "${reviewTitle}"`).toBeVisible({
+		timeout: 30000,
+	})
 	await row.getByRole('button', { name: action, exact: true }).click()
 	// The row leaves the pending queue once the verdict lands.
 	await expect(row).toBeHidden({ timeout: 30000 })
@@ -158,7 +221,9 @@ async function moderate(page: Page, reviewTitle: string, action: 'Approve' | 'Re
 
 // @e2e catalog-ratings::an-authenticated-catalog-user-can-submit-a-review
 // @e2e catalog-ratings::a-submission-lands-pending-and-is-not-yet-public
-test('reviews: an authenticated submission lands pending and is not yet public', async ({ page }) => {
+test('reviews: an authenticated submission lands pending and is not yet public', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	const reviewTitle = title('pending')
 
@@ -168,12 +233,19 @@ test('reviews: an authenticated submission lands pending and is not yet public',
 	// NOT yet public: the panel re-fetches the aggregate on submit, and the
 	// new review must not be in it.
 	const panel = page.locator('.reviews-panel').first()
-	await expect(panel.locator('.reviews-panel__list').getByText(reviewTitle)).toHaveCount(0)
+	await expect(
+		panel.locator('.reviews-panel__list').getByText(reviewTitle),
+	).toHaveCount(0)
 
 	// It IS waiting in the admin moderation queue.
 	const queue = await openReviewQueue(page)
-	const row = queue.locator('li.moderation-item').filter({ hasText: reviewTitle }).first()
-	await expect(row, `submitted review is not in the pending queue`).toBeVisible({ timeout: 30000 })
+	const row = queue
+		.locator('li.moderation-item')
+		.filter({ hasText: reviewTitle })
+		.first()
+	await expect(row, `submitted review is not in the pending queue`).toBeVisible({
+		timeout: 30000,
+	})
 
 	// NOTE: the queue row shows only the title. `moderationItemSubtitle()`
 	// (src/utils/moderationItem.js) picks its subtitle from
@@ -188,7 +260,9 @@ test('reviews: an authenticated submission lands pending and is not yet public',
 // @e2e catalog-ratings::admin-approval-makes-the-review-public
 // @e2e catalog-ratings::aggregate-reflects-only-approved-reviews
 // @e2e catalog-ratings::an-approved-review-is-publicly-readable
-test('reviews: admin approval publishes the review and moves the aggregate', async ({ page }) => {
+test('reviews: admin approval publishes the review and moves the aggregate', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	const reviewTitle = title('approve')
 
@@ -202,9 +276,12 @@ test('reviews: admin approval publishes the review and moves the aggregate', asy
 	// After approval the panel lists it and the aggregate counts it.
 	await openModuleReviews(page)
 	const panel = page.locator('.reviews-panel').first()
-	await expect(panel.locator('.reviews-panel__list').getByText(reviewTitle).first())
-		.toBeVisible({ timeout: 30000 })
-	await expect(panel.locator('.reviews-panel__average-value').first()).toContainText('9')
+	await expect(
+		panel.locator('.reviews-panel__list').getByText(reviewTitle).first(),
+	).toBeVisible({ timeout: 30000 })
+	await expect(
+		panel.locator('.reviews-panel__average-value').first(),
+	).toContainText('9')
 	await expect(panel.locator('.reviews-panel__count')).toContainText('1 review')
 
 	// Publicly readable: the aggregate endpoint is #[PublicPage], so an
@@ -215,8 +292,10 @@ test('reviews: admin approval publishes the review and moves the aggregate', asy
 	)
 	expect(res.status(), `anonymous aggregate returned ${res.status()}`).toBe(200)
 	const body = await res.json()
-	expect(JSON.stringify(body), 'approved review absent from the anonymous aggregate')
-		.toContain(reviewTitle)
+	expect(
+		JSON.stringify(body),
+		'approved review absent from the anonymous aggregate',
+	).toContain(reviewTitle)
 	await anon.dispose()
 
 	expectNoAppErrors(bag)
@@ -225,7 +304,9 @@ test('reviews: admin approval publishes the review and moves the aggregate', asy
 // @e2e catalog-ratings::admin-rejection-keeps-the-review-hidden
 // @e2e catalog-ratings::a-rejected-review-is-not-publicly-readable
 // @e2e catalog-ratings::a-pending-review-is-not-publicly-readable
-test('reviews: a rejected review stays hidden, and so does a pending one', async ({ page }) => {
+test('reviews: a rejected review stays hidden, and so does a pending one', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	const rejected = title('reject')
 	const pending = title('stillpending')
@@ -237,12 +318,19 @@ test('reviews: a rejected review stays hidden, and so does a pending one', async
 	// re-opens it with the previous submission's state still in the form.
 	const seeded = await ctx.post('/index.php/apps/softwarecatalog/api/reviews', {
 		data: {
-			review: { naam: pending, waardering: 3, beschrijvingLang: 'Still pending' },
+			review: {
+				naam: pending,
+				waardering: 3,
+				beschrijvingLang: 'Still pending',
+			},
 			subjectType: 'module',
 			subjectId: moduleUuid,
 		},
 	})
-	expect(seeded.status(), `seeding the pending review returned ${seeded.status()}`).toBeLessThan(300)
+	expect(
+		seeded.status(),
+		`seeding the pending review returned ${seeded.status()}`,
+	).toBeLessThan(300)
 
 	await openModuleReviews(page)
 	await submitReview(page, rejected, '2')
@@ -262,23 +350,36 @@ test('reviews: a rejected review stays hidden, and so does a pending one', async
 	)
 	expect(res.status(), `anonymous aggregate returned ${res.status()}`).toBe(200)
 	const text = await res.text()
-	expect(text, 'rejected review leaked into the public aggregate').not.toContain(rejected)
-	expect(text, 'pending review leaked into the public aggregate').not.toContain(pending)
+	expect(text, 'rejected review leaked into the public aggregate').not.toContain(
+		rejected,
+	)
+	expect(text, 'pending review leaked into the public aggregate').not.toContain(
+		pending,
+	)
 	await anon.dispose()
 
 	expectNoAppErrors(bag)
 })
 
 // @e2e catalog-ratings::aggregate-with-no-approved-reviews
-test('reviews: a module with no approved reviews shows the empty aggregate, not a zero score', async ({ page }) => {
+test('reviews: a module with no approved reviews shows the empty aggregate, not a zero score', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	// A module of its own, so no other test's approval can reach it.
 	const isolatedName = `Unreviewed module ${RUN_ID}`
-	const uuid = await createObject(ctx, config.register, 'module', { naam: isolatedName })
+	const uuid = await createObject(ctx, config.register, 'module', {
+		naam: isolatedName,
+	})
 	expect(uuid, 'isolated module fixture has no uuid').not.toBe('')
 
-	await page.goto(`${APP_BASE}#/modules/${uuid}`, { waitUntil: 'domcontentloaded' })
-	await page.locator(APP_MAIN).first().waitFor({ state: 'visible', timeout: 30000 })
+	await page.goto(`${APP_BASE}#/modules/${uuid}`, {
+		waitUntil: 'domcontentloaded',
+	})
+	await page
+		.locator(APP_MAIN)
+		.first()
+		.waitFor({ state: 'visible', timeout: 30000 })
 	await dismissSupportDialog(page)
 	await dismissWalkthrough(page)
 
@@ -286,7 +387,9 @@ test('reviews: a module with no approved reviews shows the empty aggregate, not 
 	await expect(panel).toBeVisible({ timeout: 30000 })
 	// The average is the em-dash placeholder — NOT "0/10".
 	await expect(panel.locator('.reviews-panel__average-value--empty')).toBeVisible()
-	await expect(panel.locator('.reviews-panel__average-value')).not.toContainText('0/10')
+	await expect(panel.locator('.reviews-panel__average-value')).not.toContainText(
+		'0/10',
+	)
 	await expect(panel.getByText('No reviews yet')).toBeVisible()
 
 	expectNoAppErrors(bag)
@@ -294,40 +397,60 @@ test('reviews: a module with no approved reviews shows the empty aggregate, not 
 
 // @e2e catalog-ratings::an-admin-moderates-pending-reviews-through-the-existing-queue-ui
 // @e2e catalog-ratings::the-default-unparameterised-organisatie-moderation-path-is-unchanged
-test('reviews: moderation reuses the ONE queue component, and the organisatie queue is unchanged', async ({ page }) => {
+test('reviews: moderation reuses the ONE queue component, and the organisatie queue is unchanged', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
-	await page.goto('/index.php/settings/admin/softwarecatalog', { waitUntil: 'domcontentloaded' })
+	await page.goto('/index.php/settings/admin/softwarecatalog', {
+		waitUntil: 'domcontentloaded',
+	})
 
 	// The review queue exists…
-	const reviewQueue = page.locator('section, .settings-section')
-		.filter({ hasText: 'Review moderation' }).first()
+	const reviewQueue = page
+		.locator('section, .settings-section')
+		.filter({ hasText: 'Review moderation' })
+		.first()
 	await expect(reviewQueue).toBeVisible({ timeout: 30000 })
 	// …rendered by the SAME component as the organisatie queue: both expose the
 	// component's own "Refresh queue" affordance and its `moderation-list`/
 	// empty-state markup. A second, bespoke review-moderation mechanism would
 	// not carry these.
-	await expect(reviewQueue.getByRole('button', { name: /Refresh queue/i }).first())
-		.toBeVisible()
+	await expect(
+		reviewQueue.getByRole('button', { name: /Refresh queue/i }).first(),
+	).toBeVisible()
 
 	// The DEFAULT (organisatie) queue still renders alongside it, untouched.
-	const orgQueue = page.locator('section, .settings-section')
-		.filter({ hasText: /Organisation moderation|Organisatie moderation|Pending registrations/i })
+	const orgQueue = page
+		.locator('section, .settings-section')
+		.filter({
+			hasText:
+				/Organisation moderation|Organisatie moderation|Pending registrations/i,
+		})
 		.first()
-	await expect(orgQueue, 'the default organisatie moderation queue disappeared')
-		.toBeVisible({ timeout: 30000 })
-	await expect(orgQueue.getByRole('button', { name: /Refresh queue/i }).first())
-		.toBeVisible()
+	await expect(
+		orgQueue,
+		'the default organisatie moderation queue disappeared',
+	).toBeVisible({ timeout: 30000 })
+	await expect(
+		orgQueue.getByRole('button', { name: /Refresh queue/i }).first(),
+	).toBeVisible()
 
 	// And the unparameterised endpoint still answers for organisatie.
-	const res = await ctx.get('/index.php/apps/softwarecatalog/api/moderation/pending')
-	expect(res.status(), `default moderation/pending returned ${res.status()}`).toBe(200)
+	const res = await ctx.get(
+		'/index.php/apps/softwarecatalog/api/moderation/pending',
+	)
+	expect(res.status(), `default moderation/pending returned ${res.status()}`).toBe(
+		200,
+	)
 
 	expectNoAppErrors(bag)
 })
 
 // @e2e catalog-ratings::every-configured-column-resolves-to-a-real-schema-property
 // @e2e catalog-ratings::the-stored-review-carries-the-authenticated-users-name
-test('reviews index: each configured column renders this row\'s real value', async ({ page }) => {
+test("reviews index: each configured column renders this row's real value", async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 
 	// ⚠️ Asserting the column HEADINGS would test the manifest, not the render:
@@ -340,13 +463,19 @@ test('reviews index: each configured column renders this row\'s real value', asy
 	const reviewTitle = title('columns')
 	const created = await ctx.post('/index.php/apps/softwarecatalog/api/reviews', {
 		data: {
-			review: { naam: reviewTitle, waardering: 6, beschrijvingLang: 'Column probe' },
+			review: {
+				naam: reviewTitle,
+				waardering: 6,
+				beschrijvingLang: 'Column probe',
+			},
 			subjectType: 'module',
 			subjectId: moduleUuid,
 		},
 	})
-	expect(created.status(), `seed POST /api/reviews returned ${created.status()}: ${await created.text()}`)
-		.toBeLessThan(300)
+	expect(
+		created.status(),
+		`seed POST /api/reviews returned ${created.status()}: ${await created.text()}`,
+	).toBeLessThan(300)
 
 	await navClickTo(page, 'Reviews')
 	const main = page.locator(APP_MAIN).first()
@@ -356,8 +485,13 @@ test('reviews index: each configured column renders this row\'s real value', asy
 	// satisfy the assertion — no search box interaction needed, and none is
 	// used: a search control whose selector drifts would turn a real coverage
 	// failure into a locator timeout.
-	const row = main.locator('tr, li, [class*="card"]').filter({ hasText: reviewTitle }).first()
-	await expect(row, `no Reviews row for "${reviewTitle}"`).toBeVisible({ timeout: 30000 })
+	const row = main
+		.locator('tr, li, [class*="card"]')
+		.filter({ hasText: reviewTitle })
+		.first()
+	await expect(row, `no Reviews row for "${reviewTitle}"`).toBeVisible({
+		timeout: 30000,
+	})
 
 	// `naam` — the row's own title. `auteur` — bound server-side to the session
 	// user. `waardering` — the rating we sent. `status` — `pending`, since the
@@ -397,9 +531,14 @@ test('reviews: an anonymous POST cannot create a review', async () => {
 	await anon.dispose()
 
 	// And nothing was persisted.
-	const rows = await findAll(ctx, config.register, 'beoordeeling', `Anon review ${RUN_ID}`)
+	const rows = await findAll(
+		ctx,
+		config.register,
+		'beoordeeling',
+		`Anon review ${RUN_ID}`,
+	)
 	expect(
-		rows.filter(r => String(r.naam ?? '').includes('Anon review')).length,
+		rows.filter((r) => String(r.naam ?? '').includes('Anon review')).length,
 		'an anonymous request created a review object',
 	).toBe(0)
 })
@@ -422,14 +561,19 @@ test('reviews: a client-supplied auteur/status is stripped, not stored', async (
 			subjectId: moduleUuid,
 		},
 	})
-	expect(res.status(), `POST /api/reviews returned ${res.status()}: ${await res.text()}`).toBeLessThan(300)
+	expect(
+		res.status(),
+		`POST /api/reviews returned ${res.status()}: ${await res.text()}`,
+	).toBeLessThan(300)
 
 	const rows = await findAll(ctx, config.register, 'beoordeeling', reviewTitle)
-	const stored = rows.find(r => String(r.naam ?? '') === reviewTitle)
+	const stored = rows.find((r) => String(r.naam ?? '') === reviewTitle)
 	expect(stored, 'the review was not persisted at all').toBeTruthy()
 	// The client-supplied author was IGNORED — the session identity won.
-	expect(String(stored?.auteur ?? ''), 'client-supplied auteur was stored')
-		.not.toBe('Someone Else Entirely')
+	expect(
+		String(stored?.auteur ?? ''),
+		'client-supplied auteur was stored',
+	).not.toBe('Someone Else Entirely')
 	// …and the client-supplied `approved` status was ignored too.
 	expect(String(stored?.status ?? '')).toBe('pending')
 })

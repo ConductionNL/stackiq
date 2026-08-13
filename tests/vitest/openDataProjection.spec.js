@@ -5,11 +5,20 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { projectOpenData, isClean, DEFAULT_LICENSE } from '../../src/utils/openDataProjection.js'
+import {
+	projectOpenData,
+	isClean,
+	DEFAULT_LICENSE,
+} from '../../src/utils/openDataProjection.js'
 
 describe('openDataProjection.projectOpenData', () => {
 	const entry = {
-		'@self': { uuid: 'u-1', slug: 'app-1', updated: '2026-06-01T10:00:00Z', owner: 'admin' },
+		'@self': {
+			uuid: 'u-1',
+			slug: 'app-1',
+			updated: '2026-06-01T10:00:00Z',
+			owner: 'admin',
+		},
 		naam: 'Petstore',
 		beschrijvingKort: 'Demo app',
 		interneAantekening: 'secret internal note',
@@ -37,7 +46,10 @@ describe('openDataProjection.projectOpenData', () => {
 	})
 
 	it('carries reuse metadata (license, publisher, last-modified)', () => {
-		const p = projectOpenData(entry, { license: 'CC-BY-4.0', publisherName: 'Gemeente Test' })
+		const p = projectOpenData(entry, {
+			license: 'CC-BY-4.0',
+			publisherName: 'Gemeente Test',
+		})
 		expect(p.license).toBe('CC-BY-4.0')
 		expect(p.publisher).toBe('Gemeente Test')
 		expect(p.lastModified).toBe('2026-06-01T10:00:00Z')
@@ -48,7 +60,10 @@ describe('openDataProjection.projectOpenData', () => {
 	})
 
 	it('reads OR object envelopes with nested object bag', () => {
-		const p = projectOpenData({ '@self': { uuid: 'x' }, object: { naam: 'A', email: 'a@b.c' } })
+		const p = projectOpenData({
+			'@self': { uuid: 'x' },
+			object: { naam: 'A', email: 'a@b.c' },
+		})
 		expect(p.naam).toBe('A')
 		expect(p.email).toBeUndefined()
 		expect(p.uuid).toBe('x')

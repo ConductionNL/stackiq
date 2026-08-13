@@ -3,8 +3,18 @@ import { objectStore, navigationStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog v-if="navigationStore.modal === 'downloadObject'"
-		:name="t('softwarecatalog', 'Download {name}', { name: (objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id || t('softwarecatalog', 'Publication')) })"
+	<NcDialog
+		v-if="navigationStore.modal === 'downloadObject'"
+		:name="
+			t('softwarecatalog', 'Download {name}', {
+				name:
+					objectStore.objectItem?.['@self']?.name
+					|| objectStore.objectItem?.name
+					|| objectStore.objectItem?.['@self']?.title
+					|| objectStore.objectItem?.id
+					|| t('softwarecatalog', 'Publication'),
+			})
+		"
 		size="normal"
 		:can-close="false">
 		<NcNoteCard v-if="success" type="success">
@@ -19,7 +29,11 @@ import { objectStore, navigationStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success ? t('softwarecatalog', 'Close') : t('softwarecatalog', 'Cancel') }}
+				{{
+					success
+						? t('softwarecatalog', 'Close')
+						: t('softwarecatalog', 'Cancel')
+				}}
 			</NcButton>
 		</template>
 
@@ -27,9 +41,10 @@ import { objectStore, navigationStore } from '../../store/store.js'
 			<div class="json-editor">
 				<label>{{ t('softwarecatalog', 'Object (JSON)') }}</label>
 				<div :class="`codeMirrorContainer ${getTheme()}`">
-					<CodeMirror v-model="objectItem.object"
+					<CodeMirror
+						v-model="objectItem.object"
 						:basic="true"
-						placeholder="{ &quot;key&quot;: &quot;value&quot; }"
+						placeholder='{ "key": "value" }'
 						:dark="getTheme() === 'dark'"
 						:linter="jsonParseLinter()"
 						:lang="json()"
@@ -42,11 +57,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 
 <script>
 import { getTheme } from '../../services/getTheme.js'
-import {
-	NcDialog,
-	NcButton,
-	NcNoteCard,
-} from '@nextcloud/vue'
+import { NcDialog, NcButton, NcNoteCard } from '@nextcloud/vue'
 import { json, jsonParseLinter } from '@codemirror/lang-json'
 import CodeMirror from 'vue-codemirror6'
 
@@ -104,7 +115,9 @@ export default {
 			this.loading = true
 
 			try {
-				const response = await objectStore.downloadObject(objectStore.objectItem)
+				const response = await objectStore.downloadObject(
+					objectStore.objectItem,
+				)
 				this.success = response.ok
 				this.error = false
 				if (response.ok) {
@@ -112,7 +125,12 @@ export default {
 				}
 			} catch (error) {
 				this.success = false
-				this.error = error.message || this.t('softwarecatalog', 'An error occurred while downloading the object')
+				this.error =
+					error.message
+					|| this.t(
+						'softwarecatalog',
+						'An error occurred while downloading the object',
+					)
 			} finally {
 				this.loading = false
 			}

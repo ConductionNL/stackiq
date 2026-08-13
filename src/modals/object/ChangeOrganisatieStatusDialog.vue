@@ -1,37 +1,62 @@
-/**
- * ChangeOrganisatieStatusDialog.vue
- * Dialog for changing organisatie status with confirmation
- * @category Components
- * @package softwarecatalog
- * @author Ruben Linde
- * @copyright 2024
- * @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version 1.0.0
- * @link https://github.com/opencatalogi/softwarecatalog
- */
+/** * ChangeOrganisatieStatusDialog.vue * Dialog for changing organisatie status with
+confirmation * @category Components * @package softwarecatalog * @author Ruben Linde
+* @copyright 2024 * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
+@link https://github.com/opencatalogi/softwarecatalog */
 
 <script setup>
 import { objectStore, navigationStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog v-if="navigationStore.dialog === 'changeOrganisatieStatus'"
-		:name="navigationStore.dialogProperties?.dialogTitle || t('softwarecatalog', 'Change status')"
+	<NcDialog
+		v-if="navigationStore.dialog === 'changeOrganisatieStatus'"
+		:name="
+			navigationStore.dialogProperties?.dialogTitle
+			|| t('softwarecatalog', 'Change status')
+		"
 		size="normal"
 		:can-close="false">
 		<p v-if="success === null">
-			{{ t('softwarecatalog', 'Are you sure you want to change the status of') }} <b>{{ getOrganisatieName() }}</b> {{ t('softwarecatalog', 'to') }} <b>{{ navigationStore.dialogProperties?.newStatus }}</b>?
-			<br>
-			<span v-if="navigationStore.dialogProperties?.action === 'activeren'" class="status-change-info">
-				{{ t('softwarecatalog', 'This organisation will be activated and will be visible to users.') }}
+			{{
+				t('softwarecatalog', 'Are you sure you want to change the status of')
+			}}
+			<b>{{ getOrganisatieName() }}</b> {{ t('softwarecatalog', 'to') }}
+			<b>{{ navigationStore.dialogProperties?.newStatus }}</b
+			>?
+			<br />
+			<span
+				v-if="navigationStore.dialogProperties?.action === 'activeren'"
+				class="status-change-info">
+				{{
+					t(
+						'softwarecatalog',
+						'This organisation will be activated and will be visible to users.',
+					)
+				}}
 			</span>
-			<span v-else-if="navigationStore.dialogProperties?.action === 'deactiveren'" class="status-change-info">
-				{{ t('softwarecatalog', 'This organisation will be deactivated and will no longer be visible to users.') }}
+			<span
+				v-else-if="
+					navigationStore.dialogProperties?.action === 'deactiveren'
+				"
+				class="status-change-info">
+				{{
+					t(
+						'softwarecatalog',
+						'This organisation will be deactivated and will no longer be visible to users.',
+					)
+				}}
 			</span>
 		</p>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>{{ t('softwarecatalog', 'Status successfully changed to {status}', { status: navigationStore.dialogProperties?.newStatus }) }}</p>
+			<p>
+				{{
+					t('softwarecatalog', 'Status successfully changed to {status}', {
+						status: navigationStore.dialogProperties?.newStatus,
+					})
+				}}
+			</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -42,7 +67,11 @@ import { objectStore, navigationStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
+				{{
+					success === null
+						? t('softwarecatalog', 'Cancel')
+						: t('softwarecatalog', 'Close')
+				}}
 			</NcButton>
 			<NcButton
 				v-if="success === null"
@@ -51,22 +80,33 @@ import { objectStore, navigationStore } from '../../store/store.js'
 				@click="changeStatus()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
-					<CheckCircle v-if="!loading && navigationStore.dialogProperties?.action === 'activeren'" :size="20" />
-					<CloseCircle v-if="!loading && navigationStore.dialogProperties?.action === 'deactiveren'" :size="20" />
+					<CheckCircle
+						v-if="
+							!loading
+							&& navigationStore.dialogProperties?.action
+								=== 'activeren'
+						"
+						:size="20" />
+					<CloseCircle
+						v-if="
+							!loading
+							&& navigationStore.dialogProperties?.action
+								=== 'deactiveren'
+						"
+						:size="20" />
 				</template>
-				{{ navigationStore.dialogProperties?.action === 'activeren' ? t('softwarecatalog', 'Activate') : t('softwarecatalog', 'Deactivate') }}
+				{{
+					navigationStore.dialogProperties?.action === 'activeren'
+						? t('softwarecatalog', 'Activate')
+						: t('softwarecatalog', 'Deactivate')
+				}}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcLoadingIcon,
-	NcNoteCard,
-} from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
@@ -94,17 +134,22 @@ export default {
 		/**
 		 * Get the organisation name for display
 		 * @return {string} The organisation name
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieName() {
 			const organisatie = objectStore.getActiveObject('organisatie')
-			return organisatie?.naam || organisatie?.name || organisatie?.['@self']?.name || this.t('softwarecatalog', 'Unknown organisation')
+			return (
+				organisatie?.naam
+				|| organisatie?.name
+				|| organisatie?.['@self']?.name
+				|| this.t('softwarecatalog', 'Unknown organisation')
+			)
 		},
 
 		/**
 		 * Close the dialog
 		 * @return {void}
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closeDialog() {
 			this.success = null
@@ -116,7 +161,7 @@ export default {
 		/**
 		 * Change the organisation status.
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async changeStatus() {
 			this.loading = true
@@ -127,7 +172,12 @@ export default {
 				const newStatus = navigationStore.dialogProperties?.newStatus
 
 				if (!organisatie || !organisatie.id || !newStatus) {
-					throw new Error(this.t('softwarecatalog', 'Organisation or new status is missing'))
+					throw new Error(
+						this.t(
+							'softwarecatalog',
+							'Organisation or new status is missing',
+						),
+					)
 				}
 
 				// Prepare the patch data - only include the status property.
@@ -142,13 +192,20 @@ export default {
 				})
 
 				// Update only the status using PATCH.
-				await objectStore.patchObject('organisatie', organisatie.id, patchData)
+				await objectStore.patchObject(
+					'organisatie',
+					organisatie.id,
+					patchData,
+				)
 
 				this.success = true
 
 				// If activating an organisation, store it for search filtering.
 				if (newStatus === 'Actief') {
-					const organisatieNaam = organisatie?.naam || organisatie?.name || organisatie?.['@self']?.name
+					const organisatieNaam =
+						organisatie?.naam
+						|| organisatie?.name
+						|| organisatie?.['@self']?.name
 
 					// Store the activated organisation info in navigationStore transferData.
 					navigationStore.setTransferData({
@@ -164,10 +221,14 @@ export default {
 				setTimeout(() => {
 					this.closeDialog()
 				}, 2000)
-
 			} catch (error) {
 				console.error('Error changing organisation status:', error)
-				this.error = error.message || this.t('softwarecatalog', 'An error occurred while changing the status')
+				this.error =
+					error.message
+					|| this.t(
+						'softwarecatalog',
+						'An error occurred while changing the status',
+					)
 			} finally {
 				this.loading = false
 			}

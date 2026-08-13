@@ -1,5 +1,6 @@
 <template>
-	<NcModal v-if="show"
+	<NcModal
+		v-if="show"
 		:name="modalTitle"
 		:title="modalTitle"
 		size="normal"
@@ -22,7 +23,9 @@
 						<NcTextField
 							v-model="formData.website"
 							:label="t('softwarecatalog', 'Website')"
-							:placeholder="t('softwarecatalog', 'https://example.com')" />
+							:placeholder="
+								t('softwarecatalog', 'https://example.com')
+							" />
 					</div>
 
 					<div class="form-row">
@@ -30,7 +33,9 @@
 							v-model="selectedType"
 							:options="organisationTypes"
 							:input-label="t('softwarecatalog', 'Type')"
-							:placeholder="t('softwarecatalog', 'Select organisation type')"
+							:placeholder="
+								t('softwarecatalog', 'Select organisation type')
+							"
 							label="label"
 							track-by="value"
 							:clearable="false"
@@ -41,14 +46,21 @@
 						<NcTextField
 							v-model="formData.beschrijvingKort"
 							:label="t('softwarecatalog', 'Short Description')"
-							:placeholder="t('softwarecatalog', 'Brief description of the organisation')" />
+							:placeholder="
+								t(
+									'softwarecatalog',
+									'Brief description of the organisation',
+								)
+							" />
 					</div>
 
 					<div class="form-row">
 						<NcTextField
 							v-model="formData['e-mailadres']"
 							:label="t('softwarecatalog', 'Email')"
-							:placeholder="t('softwarecatalog', 'contact@example.com')"
+							:placeholder="
+								t('softwarecatalog', 'contact@example.com')
+							"
 							type="email" />
 					</div>
 
@@ -63,7 +75,12 @@
 						<NcTextField
 							v-model="formData.oin"
 							:label="t('softwarecatalog', 'OIN')"
-							:placeholder="t('softwarecatalog', 'Organisation Identification Number')" />
+							:placeholder="
+								t(
+									'softwarecatalog',
+									'Organisation Identification Number',
+								)
+							" />
 					</div>
 
 					<div class="form-row">
@@ -79,7 +96,13 @@
 					<CheckCircle :size="24" class="success-icon" />
 					<p>{{ successMessage }}</p>
 					<p class="auto-close-message">
-						{{ t('softwarecatalog', 'This dialog will close automatically in {seconds} seconds...', { seconds: countdown }) }}
+						{{
+							t(
+								'softwarecatalog',
+								'This dialog will close automatically in {seconds} seconds...',
+								{ seconds: countdown },
+							)
+						}}
 					</p>
 				</div>
 
@@ -87,14 +110,19 @@
 					<NcButton variant="secondary" @click="closeModal">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
-					<NcButton v-if="!success"
+					<NcButton
+						v-if="!success"
 						variant="primary"
 						:disabled="loading || !isFormValid"
 						type="submit">
 						<template #icon>
 							<NcLoadingIcon v-if="loading" :size="20" />
 						</template>
-						{{ isEditMode ? t('softwarecatalog', 'Update Organisation') : t('softwarecatalog', 'Create Organisation') }}
+						{{
+							isEditMode
+								? t('softwarecatalog', 'Update Organisation')
+								: t('softwarecatalog', 'Create Organisation')
+						}}
 					</NcButton>
 				</div>
 			</form>
@@ -267,12 +295,16 @@ export default {
 				cbs: this.organisation.cbs || '',
 				status: this.organisation.status || 'Concept',
 				deelnemers: this.organisation.deelnemers || [],
-				contactpersonen: this.isCopyMode ? [] : (this.organisation.contactpersonen || []),
+				contactpersonen: this.isCopyMode
+					? []
+					: this.organisation.contactpersonen || [],
 			}
 
 			// Set selected type
 			if (this.formData.type) {
-				this.selectedType = this.organisationTypes.find(type => type.value === this.formData.type)
+				this.selectedType = this.organisationTypes.find(
+					(type) => type.value === this.formData.type,
+				)
 			}
 		},
 		/**
@@ -291,7 +323,7 @@ export default {
 		/**
 		 * Get only the changed properties between original and current form data
 		 * @return {object} Object containing only the changed properties
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getChangedProperties() {
 			if (!this.isEditMode) {
@@ -303,14 +335,16 @@ export default {
 			const originalData = this.organisation
 
 			// Compare each form field with original data
-			Object.keys(this.formData).forEach(key => {
+			Object.keys(this.formData).forEach((key) => {
 				const formValue = this.formData[key]
 				const originalValue = originalData[key]
 
 				// Handle different types of comparisons
 				if (Array.isArray(formValue) && Array.isArray(originalValue)) {
 					// Compare arrays (for deelnemers, contactpersonen, etc.)
-					if (JSON.stringify(formValue) !== JSON.stringify(originalValue)) {
+					if (
+						JSON.stringify(formValue) !== JSON.stringify(originalValue)
+					) {
 						changes[key] = formValue
 					}
 				} else if (formValue !== originalValue) {
@@ -328,7 +362,9 @@ export default {
 		 */
 		async saveOrganisation() {
 			if (!this.isFormValid) {
-				showError(this.t('softwarecatalog', 'Please fill in all required fields'))
+				showError(
+					this.t('softwarecatalog', 'Please fill in all required fields'),
+				)
 				return
 			}
 
@@ -345,7 +381,10 @@ export default {
 
 					if (Object.keys(changes).length === 0) {
 						// No changes detected
-						this.successMessage = this.t('softwarecatalog', 'No changes to save')
+						this.successMessage = this.t(
+							'softwarecatalog',
+							'No changes to save',
+						)
 						this.success = true
 						setTimeout(() => {
 							this.closeModal()
@@ -354,8 +393,15 @@ export default {
 					}
 
 					// Update existing organisation using PATCH - only send changed properties
-					await objectStore.patchObject('organisatie', this.organisation.id, changes)
-					this.successMessage = this.t('softwarecatalog', 'Organisation updated successfully')
+					await objectStore.patchObject(
+						'organisatie',
+						this.organisation.id,
+						changes,
+					)
+					this.successMessage = this.t(
+						'softwarecatalog',
+						'Organisation updated successfully',
+					)
 
 					// Signal that an organization was updated so parent can refresh with current filters.
 					navigationStore.setTransferData({
@@ -363,12 +409,15 @@ export default {
 						organisationId: this.organisation.id,
 					})
 				} else {
-				// Create new organisation (both create and copy modes)
+					// Create new organisation (both create and copy modes)
 					await objectStore.saveObject(this.formData, {
-				  register: schemaConfig.register,
-				  schema: schemaConfig.schema,
+						register: schemaConfig.register,
+						schema: schemaConfig.schema,
 					})
-					this.successMessage = this.t('softwarecatalog', 'Organisation created successfully')
+					this.successMessage = this.t(
+						'softwarecatalog',
+						'Organisation created successfully',
+					)
 
 					// Signal that a new organization was created so parent can refresh.
 					navigationStore.setTransferData({
@@ -391,10 +440,15 @@ export default {
 						this.closeModal()
 					}
 				}, 1000)
-
 			} catch (error) {
 				console.error('Error saving organisation:', error)
-				showError(this.t('softwarecatalog', 'Failed to save organisation: {error}', { error: error.message }))
+				showError(
+					this.t(
+						'softwarecatalog',
+						'Failed to save organisation: {error}',
+						{ error: error.message },
+					),
+				)
 			} finally {
 				this.loading = false
 			}

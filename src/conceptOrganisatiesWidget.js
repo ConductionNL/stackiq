@@ -9,16 +9,19 @@ import ConceptOrganisatiesWidget from './views/widgets/ConceptOrganisatiesWidget
 // aliased packages).
 import '@conduction/nextcloud-vue/css/index.css'
 
-OCA.Dashboard.register('softwarecatalog_concept_organisaties_widget', async (el, { widget }) => {
-	const app = createApp({
-		render: () => h(ConceptOrganisatiesWidget, { title: widget.title }),
-	})
+OCA.Dashboard.register(
+	'softwarecatalog_concept_organisaties_widget',
+	async (el, { widget }) => {
+		const app = createApp({
+			render: () => h(ConceptOrganisatiesWidget, { title: widget.title }),
+		})
 
-	// Previously `Vue.mixin({ methods: { t, n } })` referenced bare `t`/`n`,
-	// which resolved to Nextcloud's globals rather than to the l10n module.
-	// Import them explicitly so the widget bundle does not depend on globals.
-	app.mixin({ methods: { t, n } })
-	app.use(pinia)
+		// Previously `Vue.mixin({ methods: { t, n } })` referenced bare `t`/`n`,
+		// which resolved to Nextcloud's globals rather than to the l10n module.
+		// Import them explicitly so the widget bundle does not depend on globals.
+		app.mixin({ methods: { t, n } })
+		app.use(pinia)
 
-	app.mount(el)
-})
+		app.mount(el)
+	},
+)

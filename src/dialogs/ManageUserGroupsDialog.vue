@@ -27,7 +27,7 @@
 		<div class="groups-dialog">
 			<p class="dialog-description">
 				{{
-					t("softwarecatalog", "Select groups for user: {username}", {
+					t('softwarecatalog', 'Select groups for user: {username}', {
 						username: contactpersoon?.user?.username,
 					})
 				}}
@@ -50,7 +50,7 @@
 
 			<div class="dialog-actions">
 				<NcButton variant="secondary" @click="$emit('close')">
-					{{ t("softwarecatalog", "Cancel") }}
+					{{ t('softwarecatalog', 'Cancel') }}
 				</NcButton>
 				<NcButton
 					variant="primary"
@@ -59,7 +59,7 @@
 					<template #icon>
 						<NcLoadingIcon v-if="groupsLoading" :size="20" />
 					</template>
-					{{ t("softwarecatalog", "Save") }}
+					{{ t('softwarecatalog', 'Save') }}
 				</NcButton>
 			</div>
 		</div>
@@ -164,7 +164,7 @@ export default {
 		/**
 		 * Save user groups.
 		 * @return {Promise<void>}
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async saveGroups() {
 			this.groupsLoading = true
@@ -181,9 +181,13 @@ export default {
 				this.$emit('saved', [...this.selectedGroups])
 			} catch (error) {
 				showError(
-					this.t('softwarecatalog', 'Failed to update user groups: {error}', {
-						error: error.message,
-					}),
+					this.t(
+						'softwarecatalog',
+						'Failed to update user groups: {error}',
+						{
+							error: error.message,
+						},
+					),
 				)
 			} finally {
 				this.groupsLoading = false

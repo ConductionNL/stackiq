@@ -20,14 +20,23 @@
 <template>
 	<NcDialog
 		:open="open"
-		:name="t('softwarecatalog', 'Manage access to {name}', { name: organisationName })"
+		:name="
+			t('softwarecatalog', 'Manage access to {name}', {
+				name: organisationName,
+			})
+		"
 		size="normal"
 		@closing="onClose">
 		<div class="grant-organisation-access">
 			<div class="grant-organisation-access__grant">
 				<NcSelectUsers
 					v-model="selectedUser"
-					:input-label="t('softwarecatalog', 'Grant access to an existing Nextcloud user')"
+					:input-label="
+						t(
+							'softwarecatalog',
+							'Grant access to an existing Nextcloud user',
+						)
+					"
 					:multiple="false" />
 				<NcButton
 					variant="primary"
@@ -60,14 +69,18 @@
 							:disabled="revokingUserId === userId"
 							@click="onRevoke(userId)">
 							<template #icon>
-								<NcLoadingIcon v-if="revokingUserId === userId" :size="20" />
+								<NcLoadingIcon
+									v-if="revokingUserId === userId"
+									:size="20" />
 								<CloseIcon v-else :size="20" />
 							</template>
 							{{ t('softwarecatalog', 'Revoke access') }}
 						</NcActionButton>
 					</template>
 				</NcListItem>
-				<li v-if="members.length === 0" class="grant-organisation-access__empty">
+				<li
+					v-if="members.length === 0"
+					class="grant-organisation-access__empty">
 					{{ t('softwarecatalog', 'No members yet.') }}
 				</li>
 			</ul>
@@ -82,7 +95,16 @@
 </template>
 
 <script>
-import { NcDialog, NcButton, NcSelectUsers, NcLoadingIcon, NcNoteCard, NcListItem, NcActionButton, NcAvatar } from '@nextcloud/vue'
+import {
+	NcDialog,
+	NcButton,
+	NcSelectUsers,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcListItem,
+	NcActionButton,
+	NcAvatar,
+} from '@nextcloud/vue'
 import CloseIcon from 'vue-material-design-icons/Close.vue'
 import { organisatieStore } from '../store/store.js'
 import { extractUserId, removeMember } from './grantOrganisationAccess.js'
@@ -161,7 +183,9 @@ export default {
 			this.loading = true
 			this.errorMessage = ''
 			try {
-				this.members = await organisatieStore.fetchMembers(this.organisationUuid)
+				this.members = await organisatieStore.fetchMembers(
+					this.organisationUuid,
+				)
 			} catch (error) {
 				this.errorMessage = error.message
 			} finally {

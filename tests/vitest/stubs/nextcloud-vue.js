@@ -32,7 +32,8 @@ function passthrough(name, tag, className) {
 	return defineComponent({
 		name,
 		setup(props, { slots }) {
-			return () => h(tag, { class: className }, slots.default ? slots.default() : [])
+			return () =>
+				h(tag, { class: className }, slots.default ? slots.default() : [])
 		},
 	})
 }
@@ -45,7 +46,12 @@ export const NcSettingsSection = defineComponent({
 		docUrl: { type: String, default: '' },
 	},
 	setup(props, { slots }) {
-		return () => h('section', { class: 'settings-section' }, slots.default ? slots.default() : [])
+		return () =>
+			h(
+				'section',
+				{ class: 'settings-section' },
+				slots.default ? slots.default() : [],
+			)
 	},
 })
 
@@ -56,14 +62,11 @@ export const NcButton = defineComponent({
 		disabled: { type: Boolean, default: false },
 	},
 	setup(props, { slots }) {
-		return () => h(
-			'button',
-			{ disabled: props.disabled },
-			[
+		return () =>
+			h('button', { disabled: props.disabled }, [
 				slots.icon ? slots.icon() : null,
 				slots.default ? slots.default() : null,
-			],
-		)
+			])
 	},
 })
 
@@ -76,17 +79,38 @@ export const NcModal = defineComponent({
 		name: { type: String, default: '' },
 	},
 	setup(props, { slots }) {
-		return () => (props.show
-			? h('div', { class: 'modal-stub', 'data-modal-title': props.title }, slots.default ? slots.default() : [])
-			: null)
+		return () =>
+			props.show
+				? h(
+						'div',
+						{ class: 'modal-stub', 'data-modal-title': props.title },
+						slots.default ? slots.default() : [],
+					)
+				: null
 	},
 })
 
-export const NcLoadingIcon = passthrough('NcLoadingIcon', 'span', 'loading-icon-stub')
+export const NcLoadingIcon = passthrough(
+	'NcLoadingIcon',
+	'span',
+	'loading-icon-stub',
+)
 export const NcNoteCard = passthrough('NcNoteCard', 'div', 'note-card-stub')
-export const NcEmptyContent = passthrough('NcEmptyContent', 'div', 'empty-content-stub')
+export const NcEmptyContent = passthrough(
+	'NcEmptyContent',
+	'div',
+	'empty-content-stub',
+)
 export const NcActions = passthrough('NcActions', 'div', 'actions-stub')
-export const NcActionButton = passthrough('NcActionButton', 'button', 'action-button-stub')
+export const NcActionButton = passthrough(
+	'NcActionButton',
+	'button',
+	'action-button-stub',
+)
 export const NcDialog = passthrough('NcDialog', 'div', 'dialog-stub')
 export const NcTextField = passthrough('NcTextField', 'input', 'text-field-stub')
-export const NcCheckboxRadioSwitch = passthrough('NcCheckboxRadioSwitch', 'label', 'checkbox-stub')
+export const NcCheckboxRadioSwitch = passthrough(
+	'NcCheckboxRadioSwitch',
+	'label',
+	'checkbox-stub',
+)

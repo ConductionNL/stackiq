@@ -1,18 +1,14 @@
-/**
- * @file MassDeleteObject.vue
- * @module Modals/Object
- * @author Your Name
- * @copyright 2024 Your Organization
- * @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version 1.0.0
- */
+/** * @file MassDeleteObject.vue * @module Modals/Object * @author Your Name *
+@copyright 2024 Your Organization * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
 import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog :name="dialogTitle"
+	<NcDialog
+		:name="dialogTitle"
 		:can-close="true"
 		size="normal"
 		class="mass-action-dialog"
@@ -20,17 +16,42 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="delete-step">
 			<NcNoteCard type="info">
-				{{ t('softwarecatalog', 'Publications will be soft deleted and moved to the') }}
-				<a href="#" class="deleted-link" @click.prevent="navigateToDeleted">{{ t('softwarecatalog', 'deleted publications section') }}</a>{{ t('softwarecatalog', '. They will be retained according to their schema\'s configured retention period and automatically permanently deleted afterwards.') }}
+				{{
+					t(
+						'softwarecatalog',
+						'Publications will be soft deleted and moved to the',
+					)
+				}}
+				<a
+					href="#"
+					class="deleted-link"
+					@click.prevent="navigateToDeleted"
+					>{{ t('softwarecatalog', 'deleted publications section') }}</a
+				>{{
+					t(
+						'softwarecatalog',
+						". They will be retained according to their schema's configured retention period and automatically permanently deleted afterwards.",
+					)
+				}}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? t('softwarecatalog', 'Publication to Delete') : t('softwarecatalog', 'Selected Publications')"
+				:title="
+					(objectStore.selectedObjects?.length || 0) === 1
+						? t('softwarecatalog', 'Publication to Delete')
+						: t('softwarecatalog', 'Selected Publications')
+				"
 				:show-remove="true" />
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>{{ originalSelectedCount > 1 ? t('softwarecatalog', 'Publications successfully deleted') : t('softwarecatalog', 'Publication successfully deleted') }}</p>
+			<p>
+				{{
+					originalSelectedCount > 1
+						? t('softwarecatalog', 'Publications successfully deleted')
+						: t('softwarecatalog', 'Publication successfully deleted')
+				}}
+			</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -41,10 +62,17 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
+				{{
+					success === null
+						? t('softwarecatalog', 'Cancel')
+						: t('softwarecatalog', 'Close')
+				}}
 			</NcButton>
-			<NcButton v-if="success === null"
-				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
+			<NcButton
+				v-if="success === null"
+				:disabled="
+					loading || (objectStore.selectedObjects?.length || 0) === 0
+				"
 				variant="error"
 				@click="deleteObject()">
 				<template #icon>
@@ -58,12 +86,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcLoadingIcon,
-	NcNoteCard,
-} from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
@@ -101,7 +124,7 @@ export default {
 		/**
 		 * Get the objects to operate on from selected objects
 		 * @return {Array<object>} Array of objects to delete
-		  * @spec openspec/specs/fe-object-modals/spec.md
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		objectsToDelete() {
 			return objectStore.selectedObjects || []
@@ -110,14 +133,16 @@ export default {
 		/**
 		 * Get the dialog title based on number of objects
 		 * @return {string} Dialog title
-		  * @spec openspec/specs/fe-object-modals/spec.md
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dialogTitle() {
 			const count = objectStore.selectedObjects?.length || 0
 			if (count === 1) {
 				return this.t('softwarecatalog', 'Delete publication')
 			}
-			return this.t('softwarecatalog', 'Delete {count} publications', { count })
+			return this.t('softwarecatalog', 'Delete {count} publications', {
+				count,
+			})
 		},
 	},
 
@@ -163,7 +188,8 @@ export default {
 				const objectsToProcess = [...(objectStore.selectedObjects || [])]
 
 				// Use the store's mass delete method
-				const { successful, failed } = await objectStore.massDeleteObjects(objectsToProcess)
+				const { successful, failed } =
+					await objectStore.massDeleteObjects(objectsToProcess)
 
 				if (successful.length > 0) {
 					this.success = true
@@ -179,12 +205,20 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = this.t('softwarecatalog', 'Failed to delete {count} objects', { count: failed.length })
+					this.error = this.t(
+						'softwarecatalog',
+						'Failed to delete {count} objects',
+						{ count: failed.length },
+					)
 				}
-
 			} catch (error) {
 				this.success = false
-				this.error = error.message || this.t('softwarecatalog', 'An error occurred while deleting objects')
+				this.error =
+					error.message
+					|| this.t(
+						'softwarecatalog',
+						'An error occurred while deleting objects',
+					)
 			} finally {
 				this.loading = false
 			}

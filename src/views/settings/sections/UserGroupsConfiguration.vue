@@ -33,25 +33,36 @@
 		<StandardTabs
 			:tabs="[
 				{ key: 'generic-groups', title: 'Generic Groups' },
-				{ key: 'organization-admin-groups', title: 'Organization Admin Groups' },
-				{ key: 'super-user-groups', title: 'Super User Groups' }
+				{
+					key: 'organization-admin-groups',
+					title: 'Organization Admin Groups',
+				},
+				{ key: 'super-user-groups', title: 'Super User Groups' },
 			]"
 			:active-tab="activeTab"
 			@update:active-tab="activeTab = $event">
 			<!-- Generic Groups Tab -->
 			<div v-show="activeTab === 'generic-groups'" class="tab-panel">
 				<h3>Generic User Groups</h3>
-				<p>Define the list of generic user groups that can be assigned to users based on their roles</p>
+				<p>
+					Define the list of generic user groups that can be assigned to
+					users based on their roles
+				</p>
 
 				<div class="groups-configuration">
 					<h4>Current Generic User Groups</h4>
 					<div class="group-list">
-						<div v-for="(group, index) in genericUserGroups" :key="index" class="group-item">
+						<div
+							v-for="(group, index) in genericUserGroups"
+							:key="index"
+							class="group-item">
 							<NcTextField
 								:model-value="(group || '').toString()"
 								:placeholder="'Group name'"
 								label="Group Name"
-								@update:model-value="updateGroupName(index, $event)" />
+								@update:model-value="
+									updateGroupName(index, $event)
+								" />
 							<NcButton
 								variant="tertiary-no-background"
 								:aria-label="'Remove group'"
@@ -64,9 +75,7 @@
 					</div>
 
 					<div class="group-actions">
-						<NcButton
-							variant="secondary"
-							@click="addGroup">
+						<NcButton variant="secondary" @click="addGroup">
 							<template #icon>
 								<Plus :size="20" />
 							</template>
@@ -74,14 +83,18 @@
 						</NcButton>
 					</div>
 
-					<div v-if="groupValidation && groupValidation.errors.length > 0" class="validation-errors">
+					<div
+						v-if="groupValidation && groupValidation.errors.length > 0"
+						class="validation-errors">
 						<NcNoteCard type="error">
 							<template #icon>
 								<Alert :size="20" />
 							</template>
 							<strong>Validation Errors:</strong>
 							<ul>
-								<li v-for="error in groupValidation.errors" :key="error">
+								<li
+									v-for="error in groupValidation.errors"
+									:key="error">
 									{{ error }}
 								</li>
 							</ul>
@@ -101,16 +114,29 @@
 						<h4>Group Information</h4>
 						<p>These groups will be used for:</p>
 						<ul>
-							<li><strong>Role-based assignment:</strong> Users will be automatically assigned to groups based on their roles</li>
-							<li><strong>Permission management:</strong> Groups can be used to control access to different parts of the system</li>
-							<li><strong>Organization structure:</strong> Special groups like 'ambtenaar' are available for manual assignment (no automatic assignment based on organization type)</li>
+							<li>
+								<strong>Role-based assignment:</strong> Users will be
+								automatically assigned to groups based on their roles
+							</li>
+							<li>
+								<strong>Permission management:</strong> Groups can be
+								used to control access to different parts of the
+								system
+							</li>
+							<li>
+								<strong>Organization structure:</strong> Special
+								groups like 'ambtenaar' are available for manual
+								assignment (no automatic assignment based on
+								organization type)
+							</li>
 						</ul>
 
 						<div class="default-groups-info">
 							<h5>Recommended Groups:</h5>
 							<ul>
 								<li v-for="group in genericUserGroups" :key="group">
-									<code>{{ group }}</code> - {{ getGroupDescription(group) }}
+									<code>{{ group }}</code> -
+									{{ getGroupDescription(group) }}
 								</li>
 							</ul>
 						</div>
@@ -119,19 +145,29 @@
 			</div>
 
 			<!-- Organization Admin Groups Tab -->
-			<div v-show="activeTab === 'organization-admin-groups'" class="tab-panel">
+			<div
+				v-show="activeTab === 'organization-admin-groups'"
+				class="tab-panel">
 				<h3>Organization Admin Groups</h3>
-				<p>Define groups that organization administrators (first contacts) are automatically assigned to</p>
+				<p>
+					Define groups that organization administrators (first contacts)
+					are automatically assigned to
+				</p>
 
 				<div class="groups-configuration">
 					<h4>Current Organization Admin Groups</h4>
 					<div class="group-list">
-						<div v-for="(group, index) in organizationAdminGroups" :key="index" class="group-item">
+						<div
+							v-for="(group, index) in organizationAdminGroups"
+							:key="index"
+							class="group-item">
 							<NcTextField
 								:model-value="group || ''"
 								:placeholder="'Group name'"
 								label="Group Name"
-								@update:model-value="updateOrganizationAdminGroupName(index, $event)" />
+								@update:model-value="
+									updateOrganizationAdminGroupName(index, $event)
+								" />
 							<NcButton
 								variant="tertiary-no-background"
 								:aria-label="'Remove group'"
@@ -154,9 +190,20 @@
 						</NcButton>
 					</div>
 
-					<div v-if="organizationAdminGroupsSaveResult" class="save-results">
-						<NcNoteCard :type="organizationAdminGroupsSaveResult.success ? 'success' : 'error'">
-							{{ organizationAdminGroupsSaveResult.success ? 'Organization admin groups saved successfully!' : organizationAdminGroupsSaveResult.error }}
+					<div
+						v-if="organizationAdminGroupsSaveResult"
+						class="save-results">
+						<NcNoteCard
+							:type="
+								organizationAdminGroupsSaveResult.success
+									? 'success'
+									: 'error'
+							">
+							{{
+								organizationAdminGroupsSaveResult.success
+									? 'Organization admin groups saved successfully!'
+									: organizationAdminGroupsSaveResult.error
+							}}
 						</NcNoteCard>
 					</div>
 
@@ -164,9 +211,18 @@
 						<h4>Organization Admin Group Information</h4>
 						<p>These groups will be assigned to:</p>
 						<ul>
-							<li><strong>First contacts:</strong> The first contact person created for an organization</li>
-							<li><strong>Organization administrators:</strong> Users designated as organization administrators</li>
-							<li><strong>Management permissions:</strong> Users who need to manage their organization's data</li>
+							<li>
+								<strong>First contacts:</strong> The first contact
+								person created for an organization
+							</li>
+							<li>
+								<strong>Organization administrators:</strong> Users
+								designated as organization administrators
+							</li>
+							<li>
+								<strong>Management permissions:</strong> Users who
+								need to manage their organization's data
+							</li>
 						</ul>
 					</div>
 				</div>
@@ -175,17 +231,25 @@
 			<!-- Super User Groups Tab -->
 			<div v-show="activeTab === 'super-user-groups'" class="tab-panel">
 				<h3>Super User Groups</h3>
-				<p>Define groups that super users (system administrators) are automatically assigned to</p>
+				<p>
+					Define groups that super users (system administrators) are
+					automatically assigned to
+				</p>
 
 				<div class="groups-configuration">
 					<h4>Current Super User Groups</h4>
 					<div class="group-list">
-						<div v-for="(group, index) in superUserGroups" :key="index" class="group-item">
+						<div
+							v-for="(group, index) in superUserGroups"
+							:key="index"
+							class="group-item">
 							<NcTextField
 								:model-value="group || ''"
 								:placeholder="'Group name'"
 								label="Group Name"
-								@update:model-value="updateSuperUserGroupName(index, $event)" />
+								@update:model-value="
+									updateSuperUserGroupName(index, $event)
+								" />
 							<NcButton
 								variant="tertiary-no-background"
 								:aria-label="'Remove group'"
@@ -198,9 +262,7 @@
 					</div>
 
 					<div class="group-actions">
-						<NcButton
-							variant="secondary"
-							@click="addSuperUserGroup">
+						<NcButton variant="secondary" @click="addSuperUserGroup">
 							<template #icon>
 								<Plus :size="20" />
 							</template>
@@ -209,8 +271,17 @@
 					</div>
 
 					<div v-if="superUserGroupsSaveResult" class="save-results">
-						<NcNoteCard :type="superUserGroupsSaveResult.success ? 'success' : 'error'">
-							{{ superUserGroupsSaveResult.success ? 'Super user groups saved successfully!' : superUserGroupsSaveResult.error }}
+						<NcNoteCard
+							:type="
+								superUserGroupsSaveResult.success
+									? 'success'
+									: 'error'
+							">
+							{{
+								superUserGroupsSaveResult.success
+									? 'Super user groups saved successfully!'
+									: superUserGroupsSaveResult.error
+							}}
 						</NcNoteCard>
 					</div>
 
@@ -218,9 +289,18 @@
 						<h4>Super User Group Information</h4>
 						<p>These groups will be assigned to:</p>
 						<ul>
-							<li><strong>System administrators:</strong> Users with full system access</li>
-							<li><strong>Platform managers:</strong> Users who manage the entire platform</li>
-							<li><strong>Advanced permissions:</strong> Users who need access to all system features</li>
+							<li>
+								<strong>System administrators:</strong> Users with
+								full system access
+							</li>
+							<li>
+								<strong>Platform managers:</strong> Users who manage
+								the entire platform
+							</li>
+							<li>
+								<strong>Advanced permissions:</strong> Users who need
+								access to all system features
+							</li>
 						</ul>
 					</div>
 				</div>
@@ -231,37 +311,67 @@
 		<template #info-content>
 			<div class="user-groups-info">
 				<h3>About User Groups</h3>
-				<p>User groups in the Software Catalog are used to organize users and control access to different parts of the system. There are three types of user groups:</p>
+				<p>
+					User groups in the Software Catalog are used to organize users
+					and control access to different parts of the system. There are
+					three types of user groups:
+				</p>
 
 				<h4>Generic User Groups</h4>
-				<p>These are general-purpose groups that can be assigned to any user based on their role or function. Common examples include:</p>
+				<p>
+					These are general-purpose groups that can be assigned to any user
+					based on their role or function. Common examples include:
+				</p>
 				<ul>
-					<li><strong>ambtenaar</strong> - For government employees (manual assignment only)</li>
+					<li>
+						<strong>ambtenaar</strong> - For government employees (manual
+						assignment only)
+					</li>
 					<li><strong>leverancier</strong> - For suppliers and vendors</li>
 					<li><strong>consultant</strong> - For external consultants</li>
 					<li><strong>beheerder</strong> - For system administrators</li>
 				</ul>
 
 				<h4>Organization Admin Groups</h4>
-				<p>These groups are automatically assigned to users who are designated as organization administrators or first contacts. They typically have elevated permissions within their organization scope.</p>
+				<p>
+					These groups are automatically assigned to users who are
+					designated as organization administrators or first contacts. They
+					typically have elevated permissions within their organization
+					scope.
+				</p>
 
 				<h4>Super User Groups</h4>
-				<p>These groups are reserved for system administrators and platform managers who need access to all system features and data across all organizations.</p>
+				<p>
+					These groups are reserved for system administrators and platform
+					managers who need access to all system features and data across
+					all organizations.
+				</p>
 
 				<h4>Group Assignment</h4>
 				<p>Users are assigned to groups based on:</p>
 				<ul>
 					<li>Their role in the organization (automatic assignment)</li>
-					<li>Whether they are the first contact for an organization (automatic assignment)</li>
+					<li>
+						Whether they are the first contact for an organization
+						(automatic assignment)
+					</li>
 					<li>Their system-level permissions (automatic assignment)</li>
-					<li>Manual assignment by administrators for special groups (e.g. 'ambtenaar')</li>
+					<li>
+						Manual assignment by administrators for special groups (e.g.
+						'ambtenaar')
+					</li>
 				</ul>
 
 				<h4>Best Practices</h4>
 				<ul>
 					<li>Keep group names descriptive and consistent</li>
-					<li>Avoid creating too many groups - this can complicate management</li>
-					<li>Use generic groups for most users, admin groups sparingly</li>
+					<li>
+						Avoid creating too many groups - this can complicate
+						management
+					</li>
+					<li>
+						Use generic groups for most users, admin groups sparingly
+					</li>
 					<li>Test group assignments after making changes</li>
 				</ul>
 			</div>
@@ -318,7 +428,7 @@ export default {
 	 * Provides access to the settings store
 	 *
 	 * @return {object} Setup object with store reference
-	  * @spec openspec/specs/fe-settings-ui/spec.md
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	setup() {
 		return {
@@ -349,48 +459,64 @@ export default {
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		loading() { return this.store.loading },
+		loading() {
+			return this.store.loading
+		},
 		genericUserGroups: {
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			get() { return this.store.genericUserGroups || [] },
+			get() {
+				return this.store.genericUserGroups || []
+			},
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			set(value) { this.store.genericUserGroups = value },
+			set(value) {
+				this.store.genericUserGroups = value
+			},
 		},
 		organizationAdminGroups: {
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			get() { return this.store.organizationAdminGroups || [] },
+			get() {
+				return this.store.organizationAdminGroups || []
+			},
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			set(value) { this.store.organizationAdminGroups = value },
+			set(value) {
+				this.store.organizationAdminGroups = value
+			},
 		},
 		superUserGroups: {
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			get() { return this.store.superUserGroups || [] },
+			get() {
+				return this.store.superUserGroups || []
+			},
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			set(value) { this.store.superUserGroups = value },
+			set(value) {
+				this.store.superUserGroups = value
+			},
 		},
 
 		/**
 		 * Check if there are any unsaved changes
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		hasChanges() {
 			// This would ideally check if the current values differ from the saved values
 			// For now, we'll just check if there are any groups defined
-			return this.genericUserGroups.length > 0
-				   || this.organizationAdminGroups.length > 0
-				   || this.superUserGroups.length > 0
+			return (
+				this.genericUserGroups.length > 0
+				|| this.organizationAdminGroups.length > 0
+				|| this.superUserGroups.length > 0
+			)
 		},
 	},
 
@@ -408,7 +534,7 @@ export default {
 		 *
 		 * @param {string} group Group name
 		 * @return {string} Group description
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getGroupDescription(group) {
 			const descriptions = {
@@ -426,7 +552,7 @@ export default {
 		 * Add a new generic user group
 		 *
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		addGroup() {
 			this.genericUserGroups.push('')
@@ -437,7 +563,7 @@ export default {
 		 *
 		 * @param {number} index Index of the group to remove
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		removeGroup(index) {
 			this.genericUserGroups.splice(index, 1)
@@ -449,7 +575,7 @@ export default {
 		 * @param {number} index Index of the group to update
 		 * @param {string} value New group name
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateGroupName(index, value) {
 			this.genericUserGroups[index] = value
@@ -460,7 +586,7 @@ export default {
 		 * Add a new organization admin group
 		 *
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		addOrganizationAdminGroup() {
 			this.organizationAdminGroups.push('')
@@ -471,7 +597,7 @@ export default {
 		 *
 		 * @param {number} index Index of the group to remove
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		removeOrganizationAdminGroup(index) {
 			this.organizationAdminGroups.splice(index, 1)
@@ -483,7 +609,7 @@ export default {
 		 * @param {number} index Index of the group to update
 		 * @param {string} value New group name
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateOrganizationAdminGroupName(index, value) {
 			this.organizationAdminGroups[index] = value
@@ -494,7 +620,7 @@ export default {
 		 * Add a new super user group
 		 *
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		addSuperUserGroup() {
 			this.superUserGroups.push('')
@@ -505,7 +631,7 @@ export default {
 		 *
 		 * @param {number} index Index of the group to remove
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		removeSuperUserGroup(index) {
 			this.superUserGroups.splice(index, 1)
@@ -517,7 +643,7 @@ export default {
 		 * @param {number} index Index of the group to update
 		 * @param {string} value New group name
 		 * @return {void}
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateSuperUserGroupName(index, value) {
 			this.superUserGroups[index] = value
@@ -525,7 +651,7 @@ export default {
 
 		/**
 		 * Save all groups using the centralized settings store
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveAllGroups() {
 			try {
@@ -540,7 +666,7 @@ export default {
 
 		/**
 		 * Load all groups from the store
-		  * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadAllGroups() {
 			try {

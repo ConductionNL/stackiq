@@ -53,9 +53,12 @@ generic route-query-to-filter passthrough never sees it (see the
 				:model-value="searchValue"
 				class="faceted-catalog-index__search"
 				:label="t('softwarecatalog', 'Search')"
-				:placeholder="t('softwarecatalog', 'Search applications and services…')"
+				:placeholder="
+					t('softwarecatalog', 'Search applications and services…')
+				"
 				@update:model-value="onSearchInput" />
-			<NcButton v-if="searchValue !== ''"
+			<NcButton
+				v-if="searchValue !== ''"
 				variant="tertiary"
 				:aria-label="t('softwarecatalog', 'Clear search')"
 				@click="onSearchInput('')">
@@ -76,7 +79,8 @@ generic route-query-to-filter passthrough never sees it (see the
 					</template>
 					{{ t('softwarecatalog', 'Save current filters as view') }}
 				</NcActionButton>
-				<NcActionCaption v-if="facetStore[schema].savedViews.length > 0"
+				<NcActionCaption
+					v-if="facetStore[schema].savedViews.length > 0"
 					:name="t('softwarecatalog', 'Saved views')" />
 				<NcActionButton
 					v-for="view in facetStore[schema].savedViews"
@@ -125,7 +129,13 @@ generic route-query-to-filter passthrough never sees it (see the
 </template>
 
 <script>
-import { NcTextField, NcButton, NcActions, NcActionButton, NcActionCaption } from '@nextcloud/vue'
+import {
+	NcTextField,
+	NcButton,
+	NcActions,
+	NcActionButton,
+	NcActionCaption,
+} from '@nextcloud/vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { CnFacetSidebar, CnIndexPage } from '@conduction/nextcloud-vue'
@@ -362,7 +372,10 @@ export default {
 				}
 			})
 
-			const nextQuery = { ...currentQuery, ...this.facetStore.filtersToQuery(this.schema) }
+			const nextQuery = {
+				...currentQuery,
+				...this.facetStore.filtersToQuery(this.schema),
+			}
 			this.$router.replace({ query: nextQuery }).catch(() => {
 				// NavigationDuplicated — same query, no-op.
 			})
@@ -403,10 +416,13 @@ export default {
 		onSearchInput(value) {
 			this.facetStore.setSearch(this.schema, value)
 			clearTimeout(this.searchDebounceTimer)
-			this.searchDebounceTimer = setTimeout(() => {
-				this.syncUrl()
-				this.refetch()
-			}, value === '' ? 0 : SEARCH_DEBOUNCE_MS)
+			this.searchDebounceTimer = setTimeout(
+				() => {
+					this.syncUrl()
+					this.refetch()
+				},
+				value === '' ? 0 : SEARCH_DEBOUNCE_MS,
+			)
 		},
 
 		/**
@@ -438,7 +454,11 @@ export default {
 				this.showSaveViewModal = false
 				showSuccess(t('softwarecatalog', 'View "{name}" saved', { name }))
 			} catch (error) {
-				showError(t('softwarecatalog', 'Failed to save view: {message}', { message: error.message ?? '' }))
+				showError(
+					t('softwarecatalog', 'Failed to save view: {message}', {
+						message: error.message ?? '',
+					}),
+				)
 			} finally {
 				this.savingView = false
 			}
@@ -449,7 +469,8 @@ export default {
 
 <style scoped>
 .faceted-catalog-index__header {
-	padding: calc(var(--default-grid-baseline, 8px) * 2) calc(var(--default-grid-baseline, 8px) * 2) 0;
+	padding: calc(var(--default-grid-baseline, 8px) * 2)
+		calc(var(--default-grid-baseline, 8px) * 2) 0;
 }
 
 .faceted-catalog-index__title {
@@ -477,7 +498,8 @@ export default {
 	display: flex;
 	align-items: flex-start;
 	gap: calc(var(--default-grid-baseline, 8px) * 2);
-	padding: 0 calc(var(--default-grid-baseline, 8px) * 2) calc(var(--default-grid-baseline, 8px) * 2);
+	padding: 0 calc(var(--default-grid-baseline, 8px) * 2)
+		calc(var(--default-grid-baseline, 8px) * 2);
 }
 
 .faceted-catalog-index__sidebar {

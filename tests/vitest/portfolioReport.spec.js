@@ -23,7 +23,13 @@ import {
 
 describe('QUADRANT_ORDER', () => {
 	it('lists the four TIME quadrants with Unclassified last', () => {
-		expect(QUADRANT_ORDER).toEqual(['Tolerate', 'Invest', 'Migrate', 'Eliminate', 'Unclassified'])
+		expect(QUADRANT_ORDER).toEqual([
+			'Tolerate',
+			'Invest',
+			'Migrate',
+			'Eliminate',
+			'Unclassified',
+		])
 	})
 })
 
@@ -35,7 +41,9 @@ describe('quadrantColor', () => {
 	})
 
 	it('falls back to the primary element colour for an unknown key', () => {
-		expect(quadrantColor('NotARealQuadrant')).toBe('var(--color-primary-element)')
+		expect(quadrantColor('NotARealQuadrant')).toBe(
+			'var(--color-primary-element)',
+		)
 	})
 })
 
@@ -98,7 +106,9 @@ describe('groupRowsByQuadrant', () => {
 
 	it('degrades to empty groups for a non-array input rather than throwing', () => {
 		expect(() => groupRowsByQuadrant(null)).not.toThrow()
-		expect(groupRowsByQuadrant(undefined).every((g) => g.rows.length === 0)).toBe(true)
+		expect(
+			groupRowsByQuadrant(undefined).every((g) => g.rows.length === 0),
+		).toBe(true)
 	})
 })
 

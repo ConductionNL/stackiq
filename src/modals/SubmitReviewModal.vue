@@ -13,13 +13,19 @@
   -->
 
 <template>
-	<NcDialog v-if="show"
+	<NcDialog
+		v-if="show"
 		:name="t('softwarecatalog', 'Write a review')"
 		size="small"
 		@closing="closeModal">
 		<div class="submit-review-modal">
 			<p class="modal-description">
-				{{ t('softwarecatalog', 'Your review will be visible to other municipalities once an administrator approves it.') }}
+				{{
+					t(
+						'softwarecatalog',
+						'Your review will be visible to other municipalities once an administrator approves it.',
+					)
+				}}
 			</p>
 
 			<form class="review-form" @submit.prevent="submitReview">
@@ -27,7 +33,12 @@
 					<NcTextField
 						v-model="formData.naam"
 						:label="t('softwarecatalog', 'Title')"
-						:placeholder="t('softwarecatalog', 'Summarise your experience in a few words')"
+						:placeholder="
+							t(
+								'softwarecatalog',
+								'Summarise your experience in a few words',
+							)
+						"
 						required />
 				</div>
 
@@ -47,7 +58,12 @@
 					<NcTextArea
 						v-model="formData.beschrijvingLang"
 						:label="t('softwarecatalog', 'Testimonial')"
-						:placeholder="t('softwarecatalog', 'What was your experience with this software?')" />
+						:placeholder="
+							t(
+								'softwarecatalog',
+								'What was your experience with this software?',
+							)
+						" />
 				</div>
 
 				<NcNoteCard v-if="error" type="error">
@@ -58,7 +74,8 @@
 					<NcButton variant="secondary" @click="closeModal">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
-					<NcButton variant="primary"
+					<NcButton
+						variant="primary"
 						:disabled="loading || !isFormValid"
 						type="submit">
 						<template #icon>
@@ -85,7 +102,11 @@ import {
 import { translate as t } from '@nextcloud/l10n'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 import { apiRequest } from '../utils/adminApi.js'
-import { ratingOptions, isReviewFormValid, buildReviewSubmission } from '../utils/reviewForm.js'
+import {
+	ratingOptions,
+	isReviewFormValid,
+	buildReviewSubmission,
+} from '../utils/reviewForm.js'
 
 /**
  * Submit-a-review modal for a module or dienst detail page.
@@ -204,12 +225,21 @@ export default {
 					this.subjectId,
 				)
 				await apiRequest('reviews', { method: 'POST', body })
-				showSuccess(t('softwarecatalog', 'Thank you — your review was submitted for moderation'))
+				showSuccess(
+					t(
+						'softwarecatalog',
+						'Thank you — your review was submitted for moderation',
+					),
+				)
 				this.$emit('review-submitted')
 				this.closeModal()
 			} catch (submitError) {
 				this.error = submitError.message
-				showError(t('softwarecatalog', 'Could not submit your review') + ': ' + submitError.message)
+				showError(
+					t('softwarecatalog', 'Could not submit your review')
+						+ ': '
+						+ submitError.message,
+				)
 			} finally {
 				this.loading = false
 			}

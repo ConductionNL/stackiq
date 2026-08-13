@@ -1,18 +1,14 @@
-/**
- * @file MassLockObjects.vue
- * @module Modals/Object
- * @author Your Name
- * @copyright 2024 Your Organization
- * @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version 1.0.0
- */
+/** * @file MassLockObjects.vue * @module Modals/Object * @author Your Name *
+@copyright 2024 Your Organization * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
 import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog :name="dialogTitle"
+	<NcDialog
+		:name="dialogTitle"
 		:can-close="true"
 		size="normal"
 		class="mass-action-dialog"
@@ -20,11 +16,20 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="lock-step">
 			<NcNoteCard type="info">
-				{{ t('softwarecatalog', 'Locking objects prevents other users from modifying them until they are unlocked. You can specify an optional process name to indicate why they\'re locked and a duration after which they will automatically unlock. Only the user who locked the objects or an administrator can unlock them before the duration expires.') }}
+				{{
+					t(
+						'softwarecatalog',
+						"Locking objects prevents other users from modifying them until they are unlocked. You can specify an optional process name to indicate why they're locked and a duration after which they will automatically unlock. Only the user who locked the objects or an administrator can unlock them before the duration expires.",
+					)
+				}}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? t('softwarecatalog', 'Publication to Lock') : t('softwarecatalog', 'Selected Publications')"
+				:title="
+					(objectStore.selectedObjects?.length || 0) === 1
+						? t('softwarecatalog', 'Publication to Lock')
+						: t('softwarecatalog', 'Selected Publications')
+				"
 				:show-remove="true" />
 
 			<div v-if="!success" class="formContainer">
@@ -41,7 +46,13 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>{{ originalSelectedCount > 1 ? t('softwarecatalog', 'Publications successfully locked') : t('softwarecatalog', 'Publication successfully locked') }}</p>
+			<p>
+				{{
+					originalSelectedCount > 1
+						? t('softwarecatalog', 'Publications successfully locked')
+						: t('softwarecatalog', 'Publication successfully locked')
+				}}
+			</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -52,10 +63,17 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? t('softwarecatalog', 'Cancel') : t('softwarecatalog', 'Close') }}
+				{{
+					success === null
+						? t('softwarecatalog', 'Cancel')
+						: t('softwarecatalog', 'Close')
+				}}
 			</NcButton>
-			<NcButton v-if="success === null"
-				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
+			<NcButton
+				v-if="success === null"
+				:disabled="
+					loading || (objectStore.selectedObjects?.length || 0) === 0
+				"
 				variant="primary"
 				@click="lockObjects()">
 				<template #icon>
@@ -116,7 +134,7 @@ export default {
 		/**
 		 * Get the objects to operate on from selected objects
 		 * @return {Array<object>} Array of objects to lock
-		  * @spec openspec/specs/fe-object-modals/spec.md
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		objectsToLock() {
 			return objectStore.selectedObjects || []
@@ -125,7 +143,7 @@ export default {
 		/**
 		 * Get the dialog title based on number of objects
 		 * @return {string} Dialog title
-		  * @spec openspec/specs/fe-object-modals/spec.md
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dialogTitle() {
 			const count = this.objectsToLock.length
@@ -196,12 +214,20 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = this.t('softwarecatalog', 'Failed to lock {count} objects', { count: failed.length })
+					this.error = this.t(
+						'softwarecatalog',
+						'Failed to lock {count} objects',
+						{ count: failed.length },
+					)
 				}
-
 			} catch (error) {
 				this.success = false
-				this.error = error.message || this.t('softwarecatalog', 'An error occurred while locking objects')
+				this.error =
+					error.message
+					|| this.t(
+						'softwarecatalog',
+						'An error occurred while locking objects',
+					)
 			} finally {
 				this.loading = false
 			}

@@ -5,9 +5,17 @@
 				{{ t('softwarecatalog', 'Portfolio roadmap') }}
 			</h2>
 			<p class="rm-intro">
-				{{ t('softwarecatalog', 'Applications in use for an organisation, grouped by lifecycle phase and ordered by nearest urgency (end-of-support, phase-out or planned replacement).') }}
+				{{
+					t(
+						'softwarecatalog',
+						'Applications in use for an organisation, grouped by lifecycle phase and ordered by nearest urgency (end-of-support, phase-out or planned replacement).',
+					)
+				}}
 			</p>
-			<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
+			<NcButton
+				variant="tertiary"
+				:aria-label="t('softwarecatalog', 'Refresh data')"
+				@click="loadData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
@@ -31,42 +39,80 @@
 		<NcEmptyContent
 			v-if="!loading && !selectedOrg"
 			:name="t('softwarecatalog', 'Select an organisation')"
-			:description="t('softwarecatalog', 'Pick an organisation above to render its lifecycle roadmap.')">
+			:description="
+				t(
+					'softwarecatalog',
+					'Pick an organisation above to render its lifecycle roadmap.',
+				)
+			">
 			<template #icon>
 				<MapClock :size="40" />
 			</template>
 		</NcEmptyContent>
 
 		<div v-else-if="!loading" class="rm-groups">
-			<section v-for="group in phaseGroups" :key="group.phase" class="rm-group">
+			<section
+				v-for="group in phaseGroups"
+				:key="group.phase"
+				class="rm-group">
 				<h3 class="rm-groupTitle">
-					{{ phaseLabel(group.phase) }} <span class="rm-count">({{ group.entries.length }})</span>
+					{{ phaseLabel(group.phase) }}
+					<span class="rm-count">({{ group.entries.length }})</span>
 				</h3>
 				<NcEmptyContent
 					v-if="group.entries.length === 0"
 					:name="t('softwarecatalog', 'No applications in this phase')" />
 				<ul v-else class="rm-list">
-					<li v-for="entry in group.entries" :key="entry.uuid" class="rm-entry">
+					<li
+						v-for="entry in group.entries"
+						:key="entry.uuid"
+						class="rm-entry">
 						<div class="rm-entryMain">
 							<span class="rm-appName">{{ entry.appName }}</span>
-							<span v-if="entry.eol.passed" class="rm-badge rm-badge--eol">
-								<AlertCircle :size="14" /> {{ t('softwarecatalog', 'End of support passed') }}
+							<span
+								v-if="entry.eol.passed"
+								class="rm-badge rm-badge--eol">
+								<AlertCircle :size="14" />
+								{{ t('softwarecatalog', 'End of support passed') }}
 							</span>
-							<span v-else-if="entry.eolApproaching" class="rm-badge rm-badge--warn">
-								<ClockAlert :size="14" /> {{ t('softwarecatalog', 'End of support approaching') }}
+							<span
+								v-else-if="entry.eolApproaching"
+								class="rm-badge rm-badge--warn">
+								<ClockAlert :size="14" />
+								{{
+									t(
+										'softwarecatalog',
+										'End of support approaching',
+									)
+								}}
 							</span>
-							<span v-if="entry.eol.withdrawn" class="rm-badge rm-badge--eol">
-								<CloseCircle :size="14" /> {{ t('softwarecatalog', 'Withdrawn') }}
+							<span
+								v-if="entry.eol.withdrawn"
+								class="rm-badge rm-badge--eol">
+								<CloseCircle :size="14" />
+								{{ t('softwarecatalog', 'Withdrawn') }}
 							</span>
 						</div>
 						<div class="rm-entryDates">
-							<span v-if="entry.eol.endDate">{{ t('softwarecatalog', 'End of support') }}: {{ entry.eol.endDate }}</span>
-							<span v-if="entry.phaseOutDate">{{ t('softwarecatalog', 'Phase-out') }}: {{ entry.phaseOutDate }}</span>
-							<span v-if="entry.replacementDate">{{ t('softwarecatalog', 'Planned replacement') }}: {{ entry.replacementDate }}</span>
+							<span v-if="entry.eol.endDate"
+								>{{ t('softwarecatalog', 'End of support') }}:
+								{{ entry.eol.endDate }}</span
+							>
+							<span v-if="entry.phaseOutDate"
+								>{{ t('softwarecatalog', 'Phase-out') }}:
+								{{ entry.phaseOutDate }}</span
+							>
+							<span v-if="entry.replacementDate"
+								>{{ t('softwarecatalog', 'Planned replacement') }}:
+								{{ entry.replacementDate }}</span
+							>
 						</div>
 						<div v-if="entry.replacementName" class="rm-replacement">
 							{{ t('softwarecatalog', 'Successor') }}:
-							<button type="button" class="rm-link" @click="openModule(entry.replacementUuid)">
+							<button
+								type="button"
+								class="rm-link"
+								@click="openModule(entry.replacementUuid)">
 								{{ entry.replacementName }}
 							</button>
 						</div>
@@ -140,7 +186,12 @@ export default {
 	 * @spec openspec/specs/realtime-updates-ui/spec.md
 	 */
 	setup() {
-		useLiveCollections(objectStore, ['gebruik', 'moduleVersie', 'module', 'organisatie'])
+		useLiveCollections(objectStore, [
+			'gebruik',
+			'moduleVersie',
+			'module',
+			'organisatie',
+		])
 		return {}
 	},
 
@@ -168,7 +219,8 @@ export default {
 		 */
 		moduleVersieIndex() {
 			const index = {}
-			for (const mv of (objectStore.getCollection('moduleVersie')?.results || [])) {
+			for (const mv of objectStore.getCollection('moduleVersie')?.results
+				|| []) {
 				const id = resolveUuid(mv.uuid ?? mv.id ?? mv['@self']?.id ?? mv)
 				if (id) {
 					index[id] = mv
@@ -184,7 +236,7 @@ export default {
 		 */
 		moduleIndex() {
 			const index = {}
-			for (const m of (objectStore.getCollection('module')?.results || [])) {
+			for (const m of objectStore.getCollection('module')?.results || []) {
 				const id = resolveUuid(m.uuid ?? m.id ?? m['@self']?.id ?? m)
 				if (id) {
 					index[id] = m
@@ -199,10 +251,15 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		organisationOptions() {
-			return (objectStore.getCollection('organisatie')?.results || []).map((org) => ({
-				uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
-				label: org.naam || org.title || resolveUuid(org.uuid ?? org.id ?? ''),
-			}))
+			return (objectStore.getCollection('organisatie')?.results || []).map(
+				(org) => ({
+					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
+					label:
+						org.naam
+						|| org.title
+						|| resolveUuid(org.uuid ?? org.id ?? ''),
+				}),
+			)
 		},
 
 		/**
@@ -211,7 +268,14 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		orderedPhases() {
-			return [PHASE.UNKNOWN, PHASE.ACQUISITION, PHASE.PLANNED, PHASE.PRODUCTION, PHASE.PHASING_OUT, PHASE.PHASED_OUT]
+			return [
+				PHASE.UNKNOWN,
+				PHASE.ACQUISITION,
+				PHASE.PLANNED,
+				PHASE.PRODUCTION,
+				PHASE.PHASING_OUT,
+				PHASE.PHASED_OUT,
+			]
 		},
 
 		/**
@@ -234,12 +298,17 @@ export default {
 				})
 				.map((g) => this.buildEntry(g, now))
 
-			return this.orderedPhases.map((phase) => ({
-				phase,
-				entries: entries
-					.filter((e) => e.phase === phase)
-					.sort((a, b) => this.urgency(a) - this.urgency(b)),
-			})).filter((group) => group.entries.length > 0 || group.phase === PHASE.UNKNOWN)
+			return this.orderedPhases
+				.map((phase) => ({
+					phase,
+					entries: entries
+						.filter((e) => e.phase === phase)
+						.sort((a, b) => this.urgency(a) - this.urgency(b)),
+				}))
+				.filter(
+					(group) =>
+						group.entries.length > 0 || group.phase === PHASE.UNKNOWN,
+				)
 		},
 	},
 
@@ -258,7 +327,10 @@ export default {
 		async loadData() {
 			this.loading = true
 			try {
-				if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+				if (
+					!objectStore.settings
+					&& typeof objectStore.fetchSettings === 'function'
+				) {
 					await objectStore.fetchSettings()
 				}
 				await Promise.all([
@@ -287,8 +359,10 @@ export default {
 			// 'voorzieningen', which is not guaranteed on every instance. Without
 			// this the nc-vue object store throws "Object type <type> is not
 			// registered".
-			if (typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]) {
+			if (
+				typeof objectStore.registerObjectType === 'function'
+				&& !objectStore.objectTypeRegistry?.[type]
+			) {
 				let cfg = null
 				try {
 					cfg = objectStore.getSchemaConfig?.(type)
@@ -323,11 +397,19 @@ export default {
 			const replacementModule = this.moduleIndex[replacementUuid]
 
 			return {
-				uuid: resolveUuid(gebruik.uuid ?? gebruik.id ?? gebruik['@self']?.id ?? gebruik),
+				uuid: resolveUuid(
+					gebruik.uuid ?? gebruik.id ?? gebruik['@self']?.id ?? gebruik,
+				),
 				phase: derivePhase(gebruik, now),
-				appName: (this.moduleIndex[moduleUuid]?.naam) || data.module?.naam || moduleUuid || t('softwarecatalog', 'Unknown application'),
+				appName:
+					this.moduleIndex[moduleUuid]?.naam
+					|| data.module?.naam
+					|| moduleUuid
+					|| t('softwarecatalog', 'Unknown application'),
 				eol,
-				eolApproaching: versie ? isEolApproaching(versie, EOL_WINDOW_DAYS, now) : false,
+				eolApproaching: versie
+					? isEolApproaching(versie, EOL_WINDOW_DAYS, now)
+					: false,
 				phaseOutDate: data.startDatumUitTeFaseren || null,
 				replacementUuid,
 				replacementName: replacementModule?.naam || replacementUuid || null,
@@ -342,7 +424,11 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		urgency(entry) {
-			const dates = [entry.eol.endDate, entry.phaseOutDate, entry.replacementDate]
+			const dates = [
+				entry.eol.endDate,
+				entry.phaseOutDate,
+				entry.replacementDate,
+			]
 				.map((d) => parseDate(d))
 				.filter((d) => d !== null)
 				.map((d) => d.getTime())

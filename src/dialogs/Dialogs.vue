@@ -3,13 +3,16 @@
 		<!-- Object Dialogs -->
 		<DeleteObject v-if="navigationStore.dialog === 'deleteObject'" />
 		<DownloadObject v-if="navigationStore.dialog === 'downloadObject'" />
-		<ChangeOrganisatieStatusDialog v-if="navigationStore.dialog === 'changeOrganisatieStatus'" />
+		<ChangeOrganisatieStatusDialog
+			v-if="navigationStore.dialog === 'changeOrganisatieStatus'" />
 		<MassDeleteObject v-if="navigationStore.dialog === 'massDeleteObjects'" />
 		<MassPublishObjects v-if="navigationStore.dialog === 'massPublishObjects'" />
-		<MassDepublishObjects v-if="navigationStore.dialog === 'massDepublishObjects'" />
+		<MassDepublishObjects
+			v-if="navigationStore.dialog === 'massDepublishObjects'" />
 		<MassLockObjects v-if="navigationStore.dialog === 'massLockObjects'" />
 		<MassUnlockObjects v-if="navigationStore.dialog === 'massUnlockObjects'" />
-		<MassValidateObjects v-if="navigationStore.dialog === 'massValidateObjects'" />
+		<MassValidateObjects
+			v-if="navigationStore.dialog === 'massValidateObjects'" />
 	</div>
 </template>
 

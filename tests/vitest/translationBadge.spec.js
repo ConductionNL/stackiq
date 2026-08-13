@@ -47,7 +47,9 @@ describe('getSourceLanguage', () => {
 	})
 
 	it('reads sourceLanguage from the @self envelope (camelCase + snake_case)', () => {
-		expect(getSourceLanguage({ '@self': { sourceLanguage: 'en_US' } })).toBe('en')
+		expect(getSourceLanguage({ '@self': { sourceLanguage: 'en_US' } })).toBe(
+			'en',
+		)
 		expect(getSourceLanguage({ '@self': { source_language: 'DE' } })).toBe('de')
 	})
 
@@ -64,7 +66,9 @@ describe('shouldShowTranslationBadge', () => {
 	})
 
 	it('is false when source equals served (case/locale-insensitive)', () => {
-		expect(shouldShowTranslationBadge({ sourceLanguage: 'EN' }, 'en_GB')).toBe(false)
+		expect(shouldShowTranslationBadge({ sourceLanguage: 'EN' }, 'en_GB')).toBe(
+			false,
+		)
 	})
 
 	it('is false when the source language is unknown (never guess)', () => {
@@ -92,7 +96,9 @@ describe('translationBadge', () => {
 	it('label() uses the provided t() with interpolation', () => {
 		const badge = translationBadge({ sourceLanguage: 'nl' }, 'en')
 		const t = (app, str, vars) => `${app}:${str}:${vars.language}`
-		expect(badge.label(t)).toBe('softwarecatalog:(translated from {language}):Dutch')
+		expect(badge.label(t)).toBe(
+			'softwarecatalog:(translated from {language}):Dutch',
+		)
 	})
 
 	it('label() falls back to a plain English string without t()', () => {

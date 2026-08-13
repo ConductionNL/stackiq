@@ -25,7 +25,10 @@
 			<CnIcon name="Star" :size="20" />
 		</template>
 		<div class="reviews-panel">
-			<NcLoadingIcon v-if="loading" :size="32" :name="t('softwarecatalog', 'Loading reviews')" />
+			<NcLoadingIcon
+				v-if="loading"
+				:size="32"
+				:name="t('softwarecatalog', 'Loading reviews')" />
 
 			<template v-else>
 				<NcNoteCard v-if="error" type="error">
@@ -34,12 +37,27 @@
 
 				<div class="reviews-panel__summary">
 					<div class="reviews-panel__average">
-						<span v-if="average !== null" class="reviews-panel__average-value">{{ average }}<span class="reviews-panel__average-max">/10</span></span>
-						<span v-else class="reviews-panel__average-value reviews-panel__average-value--empty">—</span>
+						<span
+							v-if="average !== null"
+							class="reviews-panel__average-value"
+							>{{ average
+							}}<span class="reviews-panel__average-max"
+								>/10</span
+							></span
+						>
+						<span
+							v-else
+							class="reviews-panel__average-value reviews-panel__average-value--empty"
+							>—</span
+						>
 						<span class="reviews-panel__count">
-							{{ count === 1
-								? t('softwarecatalog', '1 review')
-								: t('softwarecatalog', '{count} reviews', { count }) }}
+							{{
+								count === 1
+									? t('softwarecatalog', '1 review')
+									: t('softwarecatalog', '{count} reviews', {
+											count,
+										})
+							}}
 						</span>
 					</div>
 					<NcButton variant="secondary" @click="openSubmitModal">
@@ -53,22 +71,38 @@
 				<NcEmptyContent
 					v-if="items.length === 0"
 					:name="t('softwarecatalog', 'No reviews yet')"
-					:description="t('softwarecatalog', 'Be the first to share your experience.')">
+					:description="
+						t(
+							'softwarecatalog',
+							'Be the first to share your experience.',
+						)
+					">
 					<template #icon>
 						<Star :size="40" />
 					</template>
 				</NcEmptyContent>
 
 				<ul v-else class="reviews-panel__list">
-					<li v-for="item in items" :key="item.id" class="reviews-panel__item">
+					<li
+						v-for="item in items"
+						:key="item.id"
+						class="reviews-panel__item">
 						<div class="reviews-panel__item-header">
-							<span class="reviews-panel__item-title">{{ item.naam }}</span>
-							<span class="reviews-panel__item-rating">{{ item.waardering }}/10</span>
+							<span class="reviews-panel__item-title">{{
+								item.naam
+							}}</span>
+							<span class="reviews-panel__item-rating"
+								>{{ item.waardering }}/10</span
+							>
 						</div>
-						<p v-if="item.beschrijvingLang" class="reviews-panel__item-body">
+						<p
+							v-if="item.beschrijvingLang"
+							class="reviews-panel__item-body">
 							{{ item.beschrijvingLang }}
 						</p>
-						<span class="reviews-panel__item-author help-text">{{ item.auteur }}</span>
+						<span class="reviews-panel__item-author help-text">{{
+							item.auteur
+						}}</span>
 					</li>
 				</ul>
 			</template>
@@ -160,13 +194,18 @@ export default {
 			this.loading = true
 			this.error = ''
 			try {
-				const data = await apiRequest(aggregatePath(this.subjectType, String(this.objectId)))
+				const data = await apiRequest(
+					aggregatePath(this.subjectType, String(this.objectId)),
+				)
 				const normalised = normaliseAggregate(data)
 				this.average = normalised.average
 				this.count = normalised.count
 				this.items = normalised.items
 			} catch (fetchError) {
-				this.error = t('softwarecatalog', 'Could not load reviews') + ': ' + fetchError.message
+				this.error =
+					t('softwarecatalog', 'Could not load reviews')
+					+ ': '
+					+ fetchError.message
 			} finally {
 				this.loading = false
 			}

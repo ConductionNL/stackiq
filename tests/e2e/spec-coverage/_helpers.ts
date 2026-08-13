@@ -34,7 +34,10 @@ export const APP_MAIN = 'main'
  * the Settings section no longer calls the removed users endpoint), so those
  * filters were removed — the suites now assert those errors are absent.
  */
-export function collectAppErrors(page: Page): { errors: string[]; serverErrors: string[] } {
+export function collectAppErrors(page: Page): {
+	errors: string[]
+	serverErrors: string[]
+} {
 	const errors: string[] = []
 	const serverErrors: string[] = []
 	const isNoise = (s: string): boolean =>
@@ -50,25 +53,35 @@ export function collectAppErrors(page: Page): { errors: string[]; serverErrors: 
 		// an app fault.
 		|| /Error fetching element collection/i.test(s)
 		|| /Register not found/i.test(s)
-	page.on('console', m => {
+	page.on('console', (m) => {
 		if (m.type() !== 'error') return
 		const t = m.text()
 		if (!isNoise(t)) errors.push(t.slice(0, 300))
 	})
-	page.on('response', resp => {
+	page.on('response', (resp) => {
 		if (resp.status() < 500) return
 		const u = resp.url()
 		if (u.includes('user_status') || u.includes('heartbeat')) return
 		// Only flag 5xx that come from the softwarecatalog app surface.
-		if (u.includes('/apps/softwarecatalog/')) serverErrors.push(`${resp.status()} ${u}`)
+		if (u.includes('/apps/softwarecatalog/'))
+			serverErrors.push(`${resp.status()} ${u}`)
 	})
 	return { errors, serverErrors }
 }
 
 /** Assert the collected app-origin error/5xx lists are empty (with context). */
-export function expectNoAppErrors(bag: { errors: string[]; serverErrors: string[] }): void {
-	expect(bag.serverErrors, `softwarecatalog 5xx responses:\n${bag.serverErrors.join('\n')}`).toEqual([])
-	expect(bag.errors, `softwarecatalog console errors:\n${bag.errors.join('\n')}`).toEqual([])
+export function expectNoAppErrors(bag: {
+	errors: string[]
+	serverErrors: string[]
+}): void {
+	expect(
+		bag.serverErrors,
+		`softwarecatalog 5xx responses:\n${bag.serverErrors.join('\n')}`,
+	).toEqual([])
+	expect(
+		bag.errors,
+		`softwarecatalog console errors:\n${bag.errors.join('\n')}`,
+	).toEqual([])
 }
 
 /**
@@ -138,8 +151,11 @@ export async function dismissWalkthrough(page: Page): Promise<void> {
 	await tour.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
 	// The dim layer is what actually swallows the clicks; make sure it is gone,
 	// not merely that the dialog reports itself hidden.
-	await page.locator('.cn-walkthrough__dim').first()
-		.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {})
+	await page
+		.locator('.cn-walkthrough__dim')
+		.first()
+		.waitFor({ state: 'hidden', timeout: 10000 })
+		.catch(() => {})
 }
 
 /** Deep-link to a route and wait for the Vue shell + main region to mount. */
@@ -150,8 +166,14 @@ export async function gotoAppRoute(page: Page, route: string): Promise<void> {
 	// and the requested surface never mounts. Always navigate via the hash.
 	const url = route === '/' ? `${APP_BASE}#/` : `${APP_BASE}#${route}`
 	await page.goto(url, { waitUntil: 'domcontentloaded' })
-	await page.locator(APP_SHELL).first().waitFor({ state: 'attached', timeout: 30000 })
-	await page.locator(APP_MAIN).first().waitFor({ state: 'visible', timeout: 30000 })
+	await page
+		.locator(APP_SHELL)
+		.first()
+		.waitFor({ state: 'attached', timeout: 30000 })
+	await page
+		.locator(APP_MAIN)
+		.first()
+		.waitFor({ state: 'visible', timeout: 30000 })
 	await dismissSupportDialog(page)
 	await dismissWalkthrough(page)
 }
@@ -201,7 +223,9 @@ export async function navClickTo(page: Page, navLabel: string): Promise<void> {
 	// "Close menu", so re-querying `.first()` each pass walks through the
 	// remaining collapsed parents without re-closing the ones just opened.
 	if ((await link.isVisible().catch(() => false)) === false) {
-		const maxExpansions = await nav.locator('button[aria-label="Open menu"]').count()
+		const maxExpansions = await nav
+			.locator('button[aria-label="Open menu"]')
+			.count()
 		for (let i = 0; i < maxExpansions; i++) {
 			const toggle = nav.locator('button[aria-label="Open menu"]').first()
 			if ((await toggle.isVisible().catch(() => false)) === false) {
@@ -216,7 +240,10 @@ export async function navClickTo(page: Page, navLabel: string): Promise<void> {
 
 	await link.waitFor({ state: 'visible', timeout: 30000 })
 	await link.click()
-	await page.locator(APP_MAIN).first().waitFor({ state: 'visible', timeout: 30000 })
+	await page
+		.locator(APP_MAIN)
+		.first()
+		.waitFor({ state: 'visible', timeout: 30000 })
 }
 
 /**
@@ -234,12 +261,17 @@ export async function navClickTo(page: Page, navLabel: string): Promise<void> {
  * list — rather than hard-coding the empty-state, which would be a
  * data-dependent (and now-wrong) assumption.
  */
-export async function expectIndexSurface(page: Page, addLabel: string): Promise<void> {
+export async function expectIndexSurface(
+	page: Page,
+	addLabel: string,
+): Promise<void> {
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
 
 	// Cards / Table view toggle is part of every CnIndexPage chrome.
-	await expect(main.getByText('Cards', { exact: true }).first()).toBeVisible({ timeout: 30000 })
+	await expect(main.getByText('Cards', { exact: true }).first()).toBeVisible({
+		timeout: 30000,
+	})
 	await expect(main.getByText('Table', { exact: true }).first()).toBeVisible()
 
 	// Primary create action.

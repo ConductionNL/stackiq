@@ -20,7 +20,8 @@
  ADR-004/ADR-012: a dialog lives in its own file under src/dialogs/.
 -->
 <template>
-	<CnWizardDialog v-if="show"
+	<CnWizardDialog
+		v-if="show"
 		ref="wizard"
 		:dialog-title="t('softwarecatalog', 'New suite')"
 		:steps="wizardSteps"
@@ -51,7 +52,11 @@
 <script>
 import { CnWizardDialog } from '@conduction/nextcloud-vue'
 import { objectStore } from '../store/store.js'
-import { isDetailsStepValid, isApplicationsStepValid, buildSuitePayload } from '../utils/suiteWizard.js'
+import {
+	isDetailsStepValid,
+	isApplicationsStepValid,
+	buildSuitePayload,
+} from '../utils/suiteWizard.js'
 import Step1Details from './SuiteWizard/Step1Details.vue'
 import Step2Applications from './SuiteWizard/Step2Applications.vue'
 import Step3Confirm from './SuiteWizard/Step3Confirm.vue'
@@ -142,16 +147,22 @@ export default {
 		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-system-shall-register-the-suite-and-module-object-types-by-schema-slug
 		 */
 		async ensureSuiteTypeRegistered() {
-			if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+			if (
+				!objectStore.settings
+				&& typeof objectStore.fetchSettings === 'function'
+			) {
 				await objectStore.fetchSettings()
 			}
-			const voorzieningenConfig = objectStore.settings?.voorzieningen
+			const voorzieningenConfig =
+				objectStore.settings?.voorzieningen
 				|| objectStore.settings?.voorzieningenConfig
 				|| {}
 			const registerId = voorzieningenConfig.register
-			if (typeof objectStore.registerObjectType === 'function'
+			if (
+				typeof objectStore.registerObjectType === 'function'
 				&& registerId
-				&& !objectStore.objectTypeRegistry?.suite) {
+				&& !objectStore.objectTypeRegistry?.suite
+			) {
 				objectStore.registerObjectType('suite', 'suite', registerId, {
 					registerSlug: 'voorzieningen',
 					schemaSlug: 'suite',
@@ -181,7 +192,9 @@ export default {
 			} catch (error) {
 				// eslint-disable-next-line no-console
 				console.error('SuiteWizardDialog: failed to create suite', error)
-				const message = (error && error.message) || t('softwarecatalog', 'Failed to create the suite.')
+				const message =
+					(error && error.message)
+					|| t('softwarecatalog', 'Failed to create the suite.')
 				if (this.$refs.wizard) {
 					this.$refs.wizard.setError(message)
 				}

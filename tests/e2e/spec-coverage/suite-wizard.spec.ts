@@ -27,7 +27,12 @@
  * @spec openspec/specs/suite-wizard/spec.md
  */
 import { test, expect, type Page } from '@playwright/test'
-import { APP_MAIN, collectAppErrors, expectNoAppErrors, navClickTo } from './_helpers'
+import {
+	APP_MAIN,
+	collectAppErrors,
+	expectNoAppErrors,
+	navClickTo,
+} from './_helpers'
 import {
 	RUN_ID,
 	cleanupByToken,
@@ -87,8 +92,12 @@ function wizard(page: Page) {
 /** Open the Suites page and launch the wizard via the real "New suite" button. */
 async function openWizard(page: Page): Promise<void> {
 	await navClickTo(page, 'Suites')
-	await page.locator(APP_MAIN).first()
-		.getByRole('button', { name: 'New suite', exact: true }).first().click()
+	await page
+		.locator(APP_MAIN)
+		.first()
+		.getByRole('button', { name: 'New suite', exact: true })
+		.first()
+		.click()
 	await expect(wizard(page)).toBeVisible({ timeout: 30000 })
 }
 
@@ -103,7 +112,10 @@ async function openWizard(page: Page): Promise<void> {
 async function fillDetails(page: Page): Promise<void> {
 	const step = wizard(page).locator('.suite-wizard-step1')
 	await step.getByRole('textbox', { name: /^Name/ }).first().fill(SUITE_NAME)
-	await step.getByRole('textbox', { name: /^Short description/ }).first().fill(SUITE_SHORT)
+	await step
+		.getByRole('textbox', { name: /^Short description/ })
+		.first()
+		.fill(SUITE_SHORT)
 }
 
 /** Attach one seeded module through the real NcSelect multi-picker. */
@@ -114,12 +126,16 @@ async function attachApplication(page: Page, name: string): Promise<void> {
 	await picker.fill(name)
 	// The option list is teleported to body by vue-select, so it is queried on
 	// the page rather than inside the dialog.
-	await page.locator('.vs__dropdown-option', { hasText: name }).first()
+	await page
+		.locator('.vs__dropdown-option', { hasText: name })
+		.first()
 		.click({ timeout: 30000 })
 }
 
 // @e2e suite-wizard::opening-the-wizard-starts-on-the-details-step
-test('suite wizard: opens on the details step showing all three step labels', async ({ page }) => {
+test('suite wizard: opens on the details step showing all three step labels', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await openWizard(page)
 
@@ -129,7 +145,10 @@ test('suite wizard: opens on the details step showing all three step labels', as
 
 	// `data-step-id` is rendered on the ONE mounted step body, so this asserts
 	// which step is current — not merely that a details control exists.
-	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute('data-step-id', 'details')
+	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute(
+		'data-step-id',
+		'details',
+	)
 
 	// The progress indicator lists exactly the three specified steps, in order.
 	const labels = w.locator('.cn-wizard-dialog__progress-label')
@@ -140,14 +159,19 @@ test('suite wizard: opens on the details step showing all three step labels', as
 })
 
 // @e2e suite-wizard::the-applications-step-only-offers-modules-that-already-exist
-test('suite wizard: the applications step offers existing modules and no create control', async ({ page }) => {
+test('suite wizard: the applications step offers existing modules and no create control', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await openWizard(page)
 	await fillDetails(page)
 
 	const w = wizard(page)
 	await w.getByRole('button', { name: 'Next', exact: true }).click()
-	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute('data-step-id', 'applications')
+	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute(
+		'data-step-id',
+		'applications',
+	)
 
 	// The picker offers a module that genuinely exists in the register — the
 	// one this run seeded. If the step invented its own options, or fetched
@@ -155,33 +179,44 @@ test('suite wizard: the applications step offers existing modules and no create 
 	const picker = w.locator('.suite-wizard-step2 .vs__search').first()
 	await picker.click()
 	await picker.fill(APP_A)
-	await expect(page.locator('.vs__dropdown-option', { hasText: APP_A }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		page.locator('.vs__dropdown-option', { hasText: APP_A }).first(),
+	).toBeVisible({ timeout: 30000 })
 
 	// AND there is no control to create a new module from this step. Asserted
 	// over the step body, so a "New suite"/"Add" button elsewhere in the app
 	// chrome cannot accidentally satisfy — or accidentally fail — it.
 	const stepBody = w.locator('.cn-wizard-dialog__step-body')
-	await expect(stepBody.getByRole('button', { name: /new|add|create/i })).toHaveCount(0)
+	await expect(
+		stepBody.getByRole('button', { name: /new|add|create/i }),
+	).toHaveCount(0)
 
 	expectNoAppErrors(bag)
 })
 
 // @e2e suite-wizard::advancing-with-zero-applications-is-blocked
-test('suite wizard: Next with zero applications is blocked and explains why', async ({ page }) => {
+test('suite wizard: Next with zero applications is blocked and explains why', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await openWizard(page)
 	await fillDetails(page)
 
 	const w = wizard(page)
 	await w.getByRole('button', { name: 'Next', exact: true }).click()
-	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute('data-step-id', 'applications')
+	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute(
+		'data-step-id',
+		'applications',
+	)
 
 	// Click Next with nothing selected.
 	await w.getByRole('button', { name: 'Next', exact: true }).click()
 
 	// It MUST NOT advance…
-	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute('data-step-id', 'applications')
+	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute(
+		'data-step-id',
+		'applications',
+	)
 	// …and MUST say at least one application is required.
 	await expect(
 		w.getByText(/at least one existing application/i).first(),
@@ -191,7 +226,9 @@ test('suite wizard: Next with zero applications is blocked and explains why', as
 })
 
 // @e2e suite-wizard::advancing-with-one-or-more-applications-succeeds
-test('suite wizard: Next with an application attached reaches confirm and lists it', async ({ page }) => {
+test('suite wizard: Next with an application attached reaches confirm and lists it', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await openWizard(page)
 	await fillDetails(page)
@@ -201,16 +238,22 @@ test('suite wizard: Next with an application attached reaches confirm and lists 
 	await attachApplication(page, APP_A)
 	await w.getByRole('button', { name: 'Next', exact: true }).click()
 
-	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute('data-step-id', 'confirm')
+	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute(
+		'data-step-id',
+		'confirm',
+	)
 	// The confirm step lists the selected application BY NAME.
-	await expect(w.locator('.suite-wizard-step3__apps').getByText(APP_A, { exact: true }))
-		.toBeVisible({ timeout: 15000 })
+	await expect(
+		w.locator('.suite-wizard-step3__apps').getByText(APP_A, { exact: true }),
+	).toBeVisible({ timeout: 15000 })
 
 	expectNoAppErrors(bag)
 })
 
 // @e2e suite-wizard::successful-submission-creates-the-suite-with-its-members
-test('suite wizard: submit creates the suite with both attached modules', async ({ page }) => {
+test('suite wizard: submit creates the suite with both attached modules', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await openWizard(page)
 	await fillDetails(page)
@@ -220,7 +263,10 @@ test('suite wizard: submit creates the suite with both attached modules', async 
 	await attachApplication(page, APP_A)
 	await attachApplication(page, APP_B)
 	await w.getByRole('button', { name: 'Next', exact: true }).click()
-	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute('data-step-id', 'confirm')
+	await expect(w.locator('.cn-wizard-dialog__step-body')).toHaveAttribute(
+		'data-step-id',
+		'confirm',
+	)
 
 	await w.getByRole('button', { name: 'Create suite', exact: true }).click()
 
@@ -257,7 +303,7 @@ test('suite wizard: submit creates the suite with both attached modules', async 
 	)
 	expect(res.status(), `suite collection read: ${res.status()}`).toBe(200)
 	const rows: Array<Record<string, unknown>> = (await res.json())?.results ?? []
-	const created = rows.find(r => String(r.naam ?? '') === SUITE_NAME)
+	const created = rows.find((r) => String(r.naam ?? '') === SUITE_NAME)
 	expect(created, `no suite named "${SUITE_NAME}" was persisted`).toBeTruthy()
 	expect(String(created?.beschrijvingKort ?? '')).toBe(SUITE_SHORT)
 	// `applicaties` holds the attached modules' ids — two of them.
@@ -269,15 +315,18 @@ test('suite wizard: submit creates the suite with both attached modules', async 
 })
 
 // @e2e suite-wizard::the-suites-nav-entry-opens-the-suite-index
-test('suite wizard: the Suites nav entry opens the suite index listing suites', async ({ page }) => {
+test('suite wizard: the Suites nav entry opens the suite index listing suites', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	// Reached by CLICKING the real nav entry, not by deep-linking.
 	await navClickTo(page, 'Suites')
 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
-	await expect(main.getByRole('heading', { name: 'Suites', exact: true }).first())
-		.toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByRole('heading', { name: 'Suites', exact: true }).first(),
+	).toBeVisible({ timeout: 30000 })
 
 	// The list body mounted — the "Showing N of M" header, or the empty state.
 	// Proves the self-fetch against register=voorzieningen/schema=suite ran.
@@ -286,8 +335,9 @@ test('suite wizard: the Suites nav entry opens the suite index listing suites', 
 	await expect(populated.or(empty)).toBeVisible({ timeout: 30000 })
 
 	// The guided wizard is the page's primary creation action.
-	await expect(main.getByRole('button', { name: 'New suite', exact: true }).first())
-		.toBeVisible()
+	await expect(
+		main.getByRole('button', { name: 'New suite', exact: true }).first(),
+	).toBeVisible()
 
 	expectNoAppErrors(bag)
 })

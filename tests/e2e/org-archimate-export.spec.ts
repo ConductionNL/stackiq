@@ -75,7 +75,12 @@
  * @e2e org-archimate-export::boolean-parameters-accept-various-truthy-values
  */
 
-import { test, expect, request as playwrightRequest, type Page } from '@playwright/test'
+import {
+	test,
+	expect,
+	request as playwrightRequest,
+	type Page,
+} from '@playwright/test'
 import { APP_PATH, resolveBaseUrl } from './base-url'
 
 // ---------------------------------------------------------------------------
@@ -119,7 +124,9 @@ async function seedOrganization(): Promise<void> {
 		const register = config.register
 		const schema = config.organisatie_schema
 		if (!register || !schema) {
-			throw new Error('voorzieningen register/organisatie schema not configured')
+			throw new Error(
+				'voorzieningen register/organisatie schema not configured',
+			)
 		}
 
 		// Skip seeding if an organisation with this name already exists. Match on
@@ -136,7 +143,8 @@ async function seedOrganization(): Promise<void> {
 				o.contactsUid === SEEDED_ORG_NAME
 				|| o.naam === SEEDED_ORG_NAME
 				|| o.name === SEEDED_ORG_NAME
-				|| (o as { '@self'?: { name?: string } })['@self']?.name === SEEDED_ORG_NAME
+				|| (o as { '@self'?: { name?: string } })['@self']?.name
+					=== SEEDED_ORG_NAME
 			if (Array.isArray(list) && list.some(matches)) {
 				return
 			}
@@ -193,7 +201,9 @@ async function goToArchiMateSettings(page: Page): Promise<void> {
 	// network never goes idle and this wait can only ever time out or be
 	// satisfied by luck (ADR-074 rule 4). The real readiness signal is the
 	// heading assertion below, which waits for the SPA to actually mount.
-	await page.goto('/settings/admin/softwarecatalog', { waitUntil: 'domcontentloaded' })
+	await page.goto('/settings/admin/softwarecatalog', {
+		waitUntil: 'domcontentloaded',
+	})
 	await expect(
 		page.getByRole('heading', { name: 'ArchiMate Import/Export' }),
 	).toBeVisible({ timeout: 30000 })
@@ -204,12 +214,18 @@ async function goToArchiMateSettings(page: Page): Promise<void> {
  * Opens the combobox, waits for the listbox, and clicks the matching option.
  * Returns true if the option was found and clicked.
  */
-async function selectOrganization(page: Page, optionLabel: string): Promise<boolean> {
+async function selectOrganization(
+	page: Page,
+	optionLabel: string,
+): Promise<boolean> {
 	const orgSelect = page.locator('#organization-select')
 	await expect(orgSelect).toBeVisible()
 	// NcSelect renders a vue-select combobox; clicking opens the dropdown.
 	await orgSelect.click()
-	const option = page.locator('.vs__dropdown-option, [role="option"]').filter({ hasText: optionLabel }).first()
+	const option = page
+		.locator('.vs__dropdown-option, [role="option"]')
+		.filter({ hasText: optionLabel })
+		.first()
 	try {
 		await option.waitFor({ state: 'visible', timeout: 5000 })
 	} catch {
@@ -224,22 +240,21 @@ async function selectOrganization(page: Page, optionLabel: string): Promise<bool
 // ---------------------------------------------------------------------------
 // Scenario: SPA mounts on main app route (smoke test for fix #322)
 // ---------------------------------------------------------------------------
-test(
-	'swc-fix spa-mounts: main app dashboard renders without white-screen',
-	async ({ page }) => {
-		// `/index.php/...`, not the pretty path — see the APP_PATH docblock in
-		// tests/e2e/base-url.ts. `domcontentloaded`, not `networkidle`: the SPA
-		// keeps a background poll alive so the network never goes idle (the same
-		// reasoning manifest-pages.spec.ts and visual/_visual-helpers.ts already
-		// document). The heading assertion below is the real readiness signal.
-		await page.goto(APP_PATH, { waitUntil: 'domcontentloaded' })
-		// Two headings named "Dashboard" exist (widget + page title) — both prove
-		// Vue mounted. Using .first() avoids the strict-mode violation.
-		await expect(
-			page.getByRole('heading', { name: 'Dashboard' }).first(),
-		).toBeVisible({ timeout: 30000 })
-	},
-)
+test('swc-fix spa-mounts: main app dashboard renders without white-screen', async ({
+	page,
+}) => {
+	// `/index.php/...`, not the pretty path — see the APP_PATH docblock in
+	// tests/e2e/base-url.ts. `domcontentloaded`, not `networkidle`: the SPA
+	// keeps a background poll alive so the network never goes idle (the same
+	// reasoning manifest-pages.spec.ts and visual/_visual-helpers.ts already
+	// document). The heading assertion below is the real readiness signal.
+	await page.goto(APP_PATH, { waitUntil: 'domcontentloaded' })
+	// Two headings named "Dashboard" exist (widget + page title) — both prove
+	// Vue mounted. Using .first() avoids the strict-mode violation.
+	await expect(
+		page.getByRole('heading', { name: 'Dashboard' }).first(),
+	).toBeVisible({ timeout: 30000 })
+})
 
 // ---------------------------------------------------------------------------
 // Scenario: Default checkbox state
@@ -248,48 +263,48 @@ test(
 // Drives the real DOM: with no org selected the checkbox group is hidden
 // (v-if), and the "Organization Export" button is disabled. No $data reads.
 // ---------------------------------------------------------------------------
-test(
-	'swc-fix default-checkbox-state: checkbox group hidden and org-export disabled until an org is chosen',
-	async ({ page }) => {
-		await goToArchiMateSettings(page)
+test('swc-fix default-checkbox-state: checkbox group hidden and org-export disabled until an org is chosen', async ({
+	page,
+}) => {
+	await goToArchiMateSettings(page)
 
-		// Organization select is present.
-		const orgSelect = page.locator('#organization-select')
-		await expect(orgSelect).toBeVisible()
+	// Organization select is present.
+	const orgSelect = page.locator('#organization-select')
+	await expect(orgSelect).toBeVisible()
 
-		// The checkbox group is hidden (v-if="selectedOrganization") until an org
-		// is selected — scoped to the export section to avoid sync-table matches.
-		const exportSection = page.locator('.export-section')
-		await expect(exportSection.getByText('Modules', { exact: true })).toHaveCount(0)
-		await expect(exportSection.getByText('Deelnames', { exact: true })).toHaveCount(0)
-		await expect(exportSection.getByText('Gebruik', { exact: true })).toHaveCount(0)
+	// The checkbox group is hidden (v-if="selectedOrganization") until an org
+	// is selected — scoped to the export section to avoid sync-table matches.
+	const exportSection = page.locator('.export-section')
+	await expect(exportSection.getByText('Modules', { exact: true })).toHaveCount(0)
+	await expect(exportSection.getByText('Deelnames', { exact: true })).toHaveCount(
+		0,
+	)
+	await expect(exportSection.getByText('Gebruik', { exact: true })).toHaveCount(0)
 
-		// "Organization Export" button must be present but disabled.
-		const orgExportBtn = page.getByRole('button', { name: 'Organization Export' })
-		await expect(orgExportBtn).toBeVisible()
-		await expect(orgExportBtn).toBeDisabled()
-	},
-)
+	// "Organization Export" button must be present but disabled.
+	const orgExportBtn = page.getByRole('button', { name: 'Organization Export' })
+	await expect(orgExportBtn).toBeVisible()
+	await expect(orgExportBtn).toBeDisabled()
+})
 
 // ---------------------------------------------------------------------------
 // Scenario: No organization selected
 // @e2e org-archimate-export::no-organization-selected
 // ---------------------------------------------------------------------------
-test(
-	'swc-fix no-organization-selected: Organization Export button is disabled when no org chosen',
-	async ({ page }) => {
-		await goToArchiMateSettings(page)
+test('swc-fix no-organization-selected: Organization Export button is disabled when no org chosen', async ({
+	page,
+}) => {
+	await goToArchiMateSettings(page)
 
-		// Must be disabled when no org is selected.
-		const orgExportBtn = page.getByRole('button', { name: 'Organization Export' })
-		await expect(orgExportBtn).toBeVisible()
-		await expect(orgExportBtn).toBeDisabled()
+	// Must be disabled when no org is selected.
+	const orgExportBtn = page.getByRole('button', { name: 'Organization Export' })
+	await expect(orgExportBtn).toBeVisible()
+	await expect(orgExportBtn).toBeDisabled()
 
-		// The generic "Export Base" button is present (no org required).
-		const exportBaseBtn = page.getByRole('button', { name: 'Export Base' })
-		await expect(exportBaseBtn).toBeVisible()
-	},
-)
+	// The generic "Export Base" button is present (no org required).
+	const exportBaseBtn = page.getByRole('button', { name: 'Export Base' })
+	await expect(exportBaseBtn).toBeVisible()
+})
 
 // ---------------------------------------------------------------------------
 // Scenario: User triggers organization export with toggles
@@ -306,20 +321,26 @@ test.describe('organization export with toggles', () => {
 		await seedOrganization()
 	})
 
-	test(
-		'swc-fix user-triggers-organization-export-with-toggles: selecting an org reveals toggles and org-export fires the request',
-		async ({ page }) => {
-			await goToArchiMateSettings(page)
+	test('swc-fix user-triggers-organization-export-with-toggles: selecting an org reveals toggles and org-export fires the request', async ({
+		page,
+	}) => {
+		await goToArchiMateSettings(page)
 
-			// Select the seeded REAL organisation (truthy value) through the real
-			// combobox. This makes selectedOrganization truthy → checkbox group shows.
-			await selectOrganization(page, SEEDED_ORG_NAME)
+		// Select the seeded REAL organisation (truthy value) through the real
+		// combobox. This makes selectedOrganization truthy → checkbox group shows.
+		await selectOrganization(page, SEEDED_ORG_NAME)
 
 		// After an org is selected, the checkbox group renders in the export section.
 		const exportSection = page.locator('.export-section')
-		await expect(exportSection.getByText('Modules', { exact: true })).toBeVisible({ timeout: 8000 })
-		await expect(exportSection.getByText('Deelnames', { exact: true })).toBeVisible()
-		await expect(exportSection.getByText('Gebruik', { exact: true })).toBeVisible()
+		await expect(
+			exportSection.getByText('Modules', { exact: true }),
+		).toBeVisible({ timeout: 8000 })
+		await expect(
+			exportSection.getByText('Deelnames', { exact: true }),
+		).toBeVisible()
+		await expect(
+			exportSection.getByText('Gebruik', { exact: true }),
+		).toBeVisible()
 
 		// Toggle "Deelnames" on via the real checkbox switch and assert it checks.
 		const deelnamesSwitch = exportSection
@@ -330,21 +351,25 @@ test.describe('organization export with toggles', () => {
 
 		// Intercept the outgoing export GET so we can assert URL shape without
 		// depending on a real download.
-		const exportRequestPromise = page.waitForRequest(
-			req => req.url().includes('/api/archimate/export/organization/'),
-			{ timeout: 8000 },
-		).catch(() => null)
+		const exportRequestPromise = page
+			.waitForRequest(
+				(req) => req.url().includes('/api/archimate/export/organization/'),
+				{ timeout: 8000 },
+			)
+			.catch(() => null)
 
 		// "Organization Export" button is now enabled (org selected) — click it.
-		const orgExportBtn = page.getByRole('button', { name: 'Organization Export' })
+		const orgExportBtn = page.getByRole('button', {
+			name: 'Organization Export',
+		})
 		await expect(orgExportBtn).toBeEnabled({ timeout: 5000 })
 		await orgExportBtn.click()
 
 		// The button enters its loading state ("Exporting...") synchronously, which
 		// is rendered DOM proof that exportingOrg flipped — no Vue-internals read.
-		await expect(
-			page.getByRole('button', { name: 'Exporting...' }),
-		).toBeVisible({ timeout: 5000 })
+		await expect(page.getByRole('button', { name: 'Exporting...' })).toBeVisible(
+			{ timeout: 5000 },
+		)
 
 		const exportRequest = await exportRequestPromise
 		if (exportRequest !== null) {
@@ -352,8 +377,7 @@ test.describe('organization export with toggles', () => {
 			expect(url.searchParams.get('modules')).toBe('true')
 			expect(url.searchParams.get('deelnames')).toBe('true')
 		}
-	},
-	)
+	})
 })
 
 // ---------------------------------------------------------------------------
@@ -362,27 +386,26 @@ test.describe('organization export with toggles', () => {
 //
 // Drives the real "Export Base" button; asserts the rendered loading label.
 // ---------------------------------------------------------------------------
-test(
-	'swc-fix export-button-shows-loading-state-during-download: Export Base button shows the rendered loading label',
-	async ({ page }) => {
-		await goToArchiMateSettings(page)
+test('swc-fix export-button-shows-loading-state-during-download: Export Base button shows the rendered loading label', async ({
+	page,
+}) => {
+	await goToArchiMateSettings(page)
 
-		// Delay the export endpoint so the rendered loading state is observable
-		// before the request resolves.
-		await page.route('**/api/archimate/export*', async route => {
-			await new Promise(resolve => setTimeout(resolve, 1500))
-			await route.abort()
-		})
+	// Delay the export endpoint so the rendered loading state is observable
+	// before the request resolves.
+	await page.route('**/api/archimate/export*', async (route) => {
+		await new Promise((resolve) => setTimeout(resolve, 1500))
+		await route.abort()
+	})
 
-		const exportBaseBtn = page.getByRole('button', { name: 'Export Base' })
-		await expect(exportBaseBtn).toBeVisible()
-		await expect(exportBaseBtn).toBeEnabled()
-		await exportBaseBtn.click()
+	const exportBaseBtn = page.getByRole('button', { name: 'Export Base' })
+	await expect(exportBaseBtn).toBeVisible()
+	await expect(exportBaseBtn).toBeEnabled()
+	await exportBaseBtn.click()
 
-		// The button label switches to "Exporting..." while the request is in
-		// flight — rendered DOM proof of the loading state (no $data read).
-		await expect(
-			page.getByRole('button', { name: 'Exporting...' }),
-		).toBeVisible({ timeout: 5000 })
-	},
-)
+	// The button label switches to "Exporting..." while the request is in
+	// flight — rendered DOM proof of the loading state (no $data read).
+	await expect(page.getByRole('button', { name: 'Exporting...' })).toBeVisible({
+		timeout: 5000,
+	})
+})

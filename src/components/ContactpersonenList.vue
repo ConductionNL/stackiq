@@ -2,7 +2,7 @@
 	<div class="contactpersonen-list">
 		<div v-if="loading" class="loading">
 			<NcLoadingIcon :size="20" />
-			{{ t("softwarecatalog", "Loading contactpersonen...") }}
+			{{ t('softwarecatalog', 'Loading contactpersonen...') }}
 		</div>
 
 		<div v-else-if="error" class="error">
@@ -27,11 +27,11 @@
 			<table class="compact-table">
 				<thead>
 					<tr>
-						<th scope="col">{{ t("softwarecatalog", "Name") }}</th>
-						<th scope="col">{{ t("softwarecatalog", "Email") }}</th>
-						<th scope="col">{{ t("softwarecatalog", "Status") }}</th>
-						<th scope="col">{{ t("softwarecatalog", "Groups") }}</th>
-						<th scope="col">{{ t("softwarecatalog", "Actions") }}</th>
+						<th scope="col">{{ t('softwarecatalog', 'Name') }}</th>
+						<th scope="col">{{ t('softwarecatalog', 'Email') }}</th>
+						<th scope="col">{{ t('softwarecatalog', 'Status') }}</th>
+						<th scope="col">{{ t('softwarecatalog', 'Groups') }}</th>
+						<th scope="col">{{ t('softwarecatalog', 'Actions') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -43,39 +43,43 @@
 						</td>
 						<td class="email-cell">
 							{{
-								contactpersoon.data.email ||
-									contactpersoon.data["e-mailadres"] ||
-									"-"
+								contactpersoon.data.email
+								|| contactpersoon.data['e-mailadres']
+								|| '-'
 							}}
 						</td>
 						<td class="status-cell">
 							<span
 								v-if="
-									contactpersoon.user.hasUser && !contactpersoon.user.disabled
+									contactpersoon.user.hasUser
+									&& !contactpersoon.user.disabled
 								"
 								class="status-chip status-success">
-								{{ t("softwarecatalog", "User") }}
+								{{ t('softwarecatalog', 'User') }}
 							</span>
 							<span
 								v-else-if="
-									contactpersoon.user.hasUser && contactpersoon.user.disabled
+									contactpersoon.user.hasUser
+									&& contactpersoon.user.disabled
 								"
 								class="status-chip status-warning">
-								{{ t("softwarecatalog", "Disabled") }}
+								{{ t('softwarecatalog', 'Disabled') }}
 							</span>
 							<span v-else class="status-chip status-tertiary">
-								{{ t("softwarecatalog", "No User") }}
+								{{ t('softwarecatalog', 'No User') }}
 							</span>
 						</td>
 						<td class="groups-cell">
 							<div
 								v-if="
-									contactpersoon.user.hasUser &&
-										getFilteredGroups(contactpersoon).length > 0
+									contactpersoon.user.hasUser
+									&& getFilteredGroups(contactpersoon).length > 0
 								"
 								class="groups">
 								<span
-									v-for="group in getFilteredGroups(contactpersoon)"
+									v-for="group in getFilteredGroups(
+										contactpersoon,
+									)"
 									:key="group"
 									class="group-chip">
 									{{ formatGroupName(group) }}
@@ -92,13 +96,15 @@
 									:disabled="contactpersoon.loading"
 									@click="convertToUser(contactpersoon)">
 									<template #icon>
-										<NcLoadingIcon v-if="contactpersoon.loading" :size="20" />
+										<NcLoadingIcon
+											v-if="contactpersoon.loading"
+											:size="20" />
 										<AccountPlus v-else :size="20" />
 									</template>
 									{{
 										contactpersoon.loading
-											? t("softwarecatalog", "Converting...")
-											: t("softwarecatalog", "Convert to User")
+											? t('softwarecatalog', 'Converting...')
+											: t('softwarecatalog', 'Convert to User')
 									}}
 								</NcActionButton>
 
@@ -110,7 +116,7 @@
 									<template #icon>
 										<Key :size="20" />
 									</template>
-									{{ t("softwarecatalog", "Change Password") }}
+									{{ t('softwarecatalog', 'Change Password') }}
 								</NcActionButton>
 
 								<!-- Manage Groups Action -->
@@ -121,33 +127,35 @@
 									<template #icon>
 										<AccountGroup :size="20" />
 									</template>
-									{{ t("softwarecatalog", "Manage Groups") }}
+									{{ t('softwarecatalog', 'Manage Groups') }}
 								</NcActionButton>
 
 								<!-- Disable User Action -->
 								<NcActionButton
 									v-if="
-										contactpersoon.user.hasUser && !contactpersoon.user.disabled
+										contactpersoon.user.hasUser
+										&& !contactpersoon.user.disabled
 									"
 									:close-after-click="true"
 									@click="disableUser(contactpersoon)">
 									<template #icon>
 										<CloseCircle :size="20" />
 									</template>
-									{{ t("softwarecatalog", "Disable User") }}
+									{{ t('softwarecatalog', 'Disable User') }}
 								</NcActionButton>
 
 								<!-- Enable User Action -->
 								<NcActionButton
 									v-if="
-										contactpersoon.user.hasUser && contactpersoon.user.disabled
+										contactpersoon.user.hasUser
+										&& contactpersoon.user.disabled
 									"
 									:close-after-click="true"
 									@click="enableUser(contactpersoon)">
 									<template #icon>
 										<CheckCircle :size="20" />
 									</template>
-									{{ t("softwarecatalog", "Enable User") }}
+									{{ t('softwarecatalog', 'Enable User') }}
 								</NcActionButton>
 							</NcActions>
 						</td>
@@ -251,7 +259,7 @@ export default {
 			// Use contactpersonen from organisation data if available, otherwise fall back to store
 			if (
 				this.organisationData.contactpersonen
-        && Array.isArray(this.organisationData.contactpersonen)
+				&& Array.isArray(this.organisationData.contactpersonen)
 			) {
 				return this.processContactpersonen(
 					this.organisationData.contactpersonen,
@@ -315,7 +323,9 @@ export default {
 
 				// If no organisation data provided, fall back to fetching contactpersonen separately
 				if (!this.organisationData.contactpersonen) {
-					await this.organisatieStore.fetchContactpersonen(this.organisationId)
+					await this.organisatieStore.fetchContactpersonen(
+						this.organisationId,
+					)
 				}
 			} catch (error) {
 				console.error('Error loading contactpersonen data:', error)
@@ -326,7 +336,7 @@ export default {
 		 * Process contactpersonen data from organisation object to match expected format.
 		 * @param {Array} rawContactpersonen - Raw contactpersonen data from organisation.
 		 * @return {Array} Processed contactpersonen with user information.
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		processContactpersonen(rawContactpersonen) {
 			return rawContactpersonen.map((contactpersoon) => {
@@ -356,7 +366,8 @@ export default {
 						// Use groups from API user object if available, otherwise from data.
 						groups: contactpersoon.user?.groups || data.groups || [],
 						// Use user.disabled from API, fallback to data.disabled.
-						disabled: contactpersoon.user?.disabled || data.disabled || false,
+						disabled:
+							contactpersoon.user?.disabled || data.disabled || false,
 					},
 					// Include loading state from organisation data.
 					loading: contactpersoon.loading || false,
@@ -366,7 +377,7 @@ export default {
 
 		/**
 		 * Load user info and available groups in parallel
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async loadUserInfoAndGroups() {
 			// Prevent multiple simultaneous calls
@@ -441,52 +452,54 @@ export default {
 		 * Update contactpersonen with bulk user info.
 		 * @param {object} bulkUserInfo - User info object keyed by contactpersoon ID.
 		 * @return {void}
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		updateContactpersonenWithUserInfo(bulkUserInfo) {
 			if (!this.organisationData.contactpersonen) return
 
-			this.organisationData.contactpersonen.forEach((contactpersoon, index) => {
-				const contactpersoonId = contactpersoon.id || contactpersoon.uuid
-				const userInfo = bulkUserInfo[contactpersoonId]
+			this.organisationData.contactpersonen.forEach(
+				(contactpersoon, index) => {
+					const contactpersoonId = contactpersoon.id || contactpersoon.uuid
+					const userInfo = bulkUserInfo[contactpersoonId]
 
-				if (userInfo) {
-					console.info(
-						`Updating contactpersoon ${contactpersoonId} with user info:`,
-						userInfo,
-					)
+					if (userInfo) {
+						console.info(
+							`Updating contactpersoon ${contactpersoonId} with user info:`,
+							userInfo,
+						)
 
-					// Ensure user object exists.
-					if (!contactpersoon.user) {
-						contactpersoon.user = {}
+						// Ensure user object exists.
+						if (!contactpersoon.user) {
+							contactpersoon.user = {}
+						}
+
+						// Update user object.
+						contactpersoon.user.hasUser = userInfo.hasUser
+						contactpersoon.user.username = userInfo.username
+						contactpersoon.user.groups = userInfo.groups || []
+						contactpersoon.user.disabled = !userInfo.enabled // Map enabled to disabled.
+						contactpersoon.user.displayName = userInfo.displayName
+						contactpersoon.user.lastLogin = userInfo.lastLogin
+
+						// Update data object for consistency.
+						if (contactpersoon.data) {
+							contactpersoon.data.disabled = !userInfo.enabled // Map enabled to disabled.
+							contactpersoon.data.groups = userInfo.groups || [] // Also set groups in data.
+							contactpersoon.data.username = userInfo.username // Also set username in data.
+						}
+
+						// Force reactivity update.
+						// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
+						this.organisationData.contactpersonen[index] = contactpersoon
 					}
-
-					// Update user object.
-					contactpersoon.user.hasUser = userInfo.hasUser
-					contactpersoon.user.username = userInfo.username
-					contactpersoon.user.groups = userInfo.groups || []
-					contactpersoon.user.disabled = !userInfo.enabled // Map enabled to disabled.
-					contactpersoon.user.displayName = userInfo.displayName
-					contactpersoon.user.lastLogin = userInfo.lastLogin
-
-					// Update data object for consistency.
-					if (contactpersoon.data) {
-						contactpersoon.data.disabled = !userInfo.enabled // Map enabled to disabled.
-						contactpersoon.data.groups = userInfo.groups || [] // Also set groups in data.
-						contactpersoon.data.username = userInfo.username // Also set username in data.
-					}
-
-					// Force reactivity update.
-					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
-					this.organisationData.contactpersonen[index] = contactpersoon
-				}
-			})
+				},
+			)
 		},
 
 		/**
 		 * Refresh user statuses from Nextcloud for all contact persons
 		 * @deprecated Use loadUserInfoAndGroups() instead for better performance
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async refreshUserStatuses() {
 			console.info(
@@ -497,7 +510,7 @@ export default {
 
 		/**
 		 * Public method to refresh user statuses - can be called from parent component
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async refreshUserData() {
 			console.info('Public refreshUserData called')
@@ -508,17 +521,17 @@ export default {
 		 * Get contactperson name.
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {string} The contact person's name.
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getContactpersoonName(contactpersoon) {
 			const data = contactpersoon.data
 			return (
 				data.naam
-        || data.name
-        || data.voornaam + ' ' + data.achternaam
-        || data.email
-        || data['e-mailadres']
-        || 'Unknown'
+				|| data.name
+				|| data.voornaam + ' ' + data.achternaam
+				|| data.email
+				|| data['e-mailadres']
+				|| 'Unknown'
 			)
 		},
 
@@ -526,18 +539,21 @@ export default {
 		 * Filter groups to only show those available in the modal.
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {Array} Filtered array of group IDs.
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getFilteredGroups(contactpersoon) {
-			if (!contactpersoon.user.groups || contactpersoon.user.groups.length === 0) {
+			if (
+				!contactpersoon.user.groups
+				|| contactpersoon.user.groups.length === 0
+			) {
 				return []
 			}
 
 			// Get list of available group IDs from the store.
-			const availableGroupIds = this.availableGroups.map(g => g.id)
+			const availableGroupIds = this.availableGroups.map((g) => g.id)
 
 			// Filter user groups to only include those in availableGroups.
-			return contactpersoon.user.groups.filter(groupId =>
+			return contactpersoon.user.groups.filter((groupId) =>
 				availableGroupIds.includes(groupId),
 			)
 		},
@@ -546,7 +562,7 @@ export default {
 		 * Format group name.
 		 * @param {string} groupId - The group ID.
 		 * @return {string} Formatted group name.
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		formatGroupName(groupId) {
 			const groupMap = {
@@ -591,7 +607,10 @@ export default {
 			} else {
 				console.error('Contactpersoon is not an object:', contactObject)
 				showError(
-					this.t('softwarecatalog', 'Invalid contactpersoon data structure'),
+					this.t(
+						'softwarecatalog',
+						'Invalid contactpersoon data structure',
+					),
 				)
 				return
 			}
@@ -607,9 +626,12 @@ export default {
 				if (result.contactpersoon) {
 					// The API returns the contactpersoon object directly, we need to structure it properly
 					const updatedContactpersoon = {
-						id: result.contactpersoon.id || result.contactpersoon['@self']?.id,
+						id:
+							result.contactpersoon.id
+							|| result.contactpersoon['@self']?.id,
 						uuid:
-              result.contactpersoon.id || result.contactpersoon['@self']?.id,
+							result.contactpersoon.id
+							|| result.contactpersoon['@self']?.id,
 						data: {
 							voornaam: result.contactpersoon.voornaam,
 							achternaam: result.contactpersoon.achternaam,
@@ -647,14 +669,18 @@ export default {
 			} catch (error) {
 				console.error('Error in convertToUser:', error)
 				showError(
-					this.t('softwarecatalog', 'Failed to create user account: {error}', {
-						error: error.message,
-					}),
+					this.t(
+						'softwarecatalog',
+						'Failed to create user account: {error}',
+						{
+							error: error.message,
+						},
+					),
 				)
 
 				// Clear loading state on error - ensure it's an object first
-				const contactObject
-          = this.organisationData.contactpersonen[contactIndex]
+				const contactObject =
+					this.organisationData.contactpersonen[contactIndex]
 				if (typeof contactObject === 'object' && contactObject !== null) {
 					contactObject.loading = false
 				}
@@ -685,7 +711,7 @@ export default {
 		 * reports them back through `groups-loaded`.
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {void}
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		openGroupsDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
@@ -705,7 +731,7 @@ export default {
 		 * local data so the table shows the correct groups.
 		 * @param {Array} groups - Array of group IDs.
 		 * @return {void}
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		onGroupsLoaded(groups) {
 			if (!this.selectedContactpersoon) return
@@ -717,11 +743,14 @@ export default {
 		 * and close the dialog.
 		 * @param {Array} groups - Array of group IDs.
 		 * @return {void}
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		onGroupsSaved(groups) {
 			if (this.selectedContactpersoon) {
-				this.updateContactpersoonGroups(this.selectedContactpersoon.id, groups)
+				this.updateContactpersoonGroups(
+					this.selectedContactpersoon.id,
+					groups,
+				)
 			}
 			this.closeGroupsDialog()
 		},
@@ -729,7 +758,7 @@ export default {
 		/**
 		 * Disable a user account
 		 * @param {object} contactpersoon - The contact person object
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async disableUser(contactpersoon) {
 			try {
@@ -750,7 +779,7 @@ export default {
 		/**
 		 * Enable a user account
 		 * @param {object} contactpersoon - The contact person object
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async enableUser(contactpersoon) {
 			try {
@@ -773,19 +802,19 @@ export default {
 		 * @param {string} contactpersoonId - The ID of the contact person.
 		 * @param {boolean} disabled - Whether the user is disabled.
 		 * @return {void}
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		updateContactpersoonStatus(contactpersoonId, disabled) {
-		// Find and update the contactpersoon in the organisation data.
+			// Find and update the contactpersoon in the organisation data.
 			if (this.organisationData.contactpersonen) {
 				const contactIndex = this.organisationData.contactpersonen.findIndex(
 					(cp) => (cp.id || cp.uuid) === contactpersoonId,
 				)
 
 				if (contactIndex !== -1) {
-				// Update the disabled status in both user and data objects.
-					const contactpersoon
-          = this.organisationData.contactpersonen[contactIndex]
+					// Update the disabled status in both user and data objects.
+					const contactpersoon =
+						this.organisationData.contactpersonen[contactIndex]
 
 					// Update in the user object (primary source).
 					if (contactpersoon.user) {
@@ -799,7 +828,8 @@ export default {
 
 					// Force reactivity update.
 					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
-					this.organisationData.contactpersonen[contactIndex] = contactpersoon
+					this.organisationData.contactpersonen[contactIndex] =
+						contactpersoon
 				}
 			}
 		},
@@ -809,18 +839,19 @@ export default {
 		 * @param {string} contactpersoonId - The ID of the contact person.
 		 * @param {Array} groups - Array of group IDs.
 		 * @return {void}
-		  * @spec openspec/specs/fe-organizations/spec.md
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		updateContactpersoonGroups(contactpersoonId, groups) {
-		// Find and update the contactpersoon in the organisation data.
+			// Find and update the contactpersoon in the organisation data.
 			if (this.organisationData.contactpersonen) {
 				const contactIndex = this.organisationData.contactpersonen.findIndex(
 					(cp) => (cp.id || cp.uuid) === contactpersoonId,
 				)
 
 				if (contactIndex !== -1) {
-				// Update the groups in both user and data objects.
-					const contactpersoon = this.organisationData.contactpersonen[contactIndex]
+					// Update the groups in both user and data objects.
+					const contactpersoon =
+						this.organisationData.contactpersonen[contactIndex]
 
 					// Update in the user object (primary source).
 					if (contactpersoon.user) {
@@ -834,7 +865,8 @@ export default {
 
 					// Force reactivity update.
 					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
-					this.organisationData.contactpersonen[contactIndex] = contactpersoon
+					this.organisationData.contactpersonen[contactIndex] =
+						contactpersoon
 				}
 			}
 		},

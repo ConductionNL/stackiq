@@ -14,19 +14,32 @@
 		</template>
 
 		<div class="organisation-merge-panel">
-			<NcLoadingIcon v-if="loading" :size="32" :name="t('softwarecatalog', 'Loading merge status')" />
+			<NcLoadingIcon
+				v-if="loading"
+				:size="32"
+				:name="t('softwarecatalog', 'Loading merge status')" />
 
 			<template v-else>
 				<!-- Already merged (tombstoned) — read-only redirect notice, no controls. -->
 				<template v-if="isTombstoned">
 					<NcNoteCard type="warning">
-						{{ t('softwarecatalog', 'This organisation has been merged and is no longer active.') }}
+						{{
+							t(
+								'softwarecatalog',
+								'This organisation has been merged and is no longer active.',
+							)
+						}}
 					</NcNoteCard>
 					<NcButton v-if="mergedInto" @click="goToTarget">
 						<template #icon>
 							<ArrowRight :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Go to the organisation it was merged into') }}
+						{{
+							t(
+								'softwarecatalog',
+								'Go to the organisation it was merged into',
+							)
+						}}
 					</NcButton>
 				</template>
 
@@ -35,20 +48,34 @@
 				     that can never succeed). -->
 				<template v-else-if="isAdmin">
 					<p class="organisation-merge-panel__intro">
-						{{ t('softwarecatalog', 'Fold this organisation into another one (gemeentelijke herindeling or leveranciersovername). Every contract, usage record, contact person, offering and compliance record is re-pointed to the target; this organisation is then marked as merged, never deleted.') }}
+						{{
+							t(
+								'softwarecatalog',
+								'Fold this organisation into another one (gemeentelijke herindeling or leveranciersovername). Every contract, usage record, contact person, offering and compliance record is re-pointed to the target; this organisation is then marked as merged, never deleted.',
+							)
+						}}
 					</p>
 
-					<NcSelect v-model="selectedTarget"
+					<NcSelect
+						v-model="selectedTarget"
 						:options="targetOptions"
 						:input-label="t('softwarecatalog', 'Target organisation')"
-						:placeholder="t('softwarecatalog', 'Select the organisation to merge into')"
+						:placeholder="
+							t(
+								'softwarecatalog',
+								'Select the organisation to merge into',
+							)
+						"
 						label="label"
 						track-by="value"
 						:loading="loadingTargets"
 						:disabled="previewing || busy"
 						@open="loadTargetOptions" />
 
-					<NcNoteCard v-for="blocker in blockers" :key="blocker.type" type="error">
+					<NcNoteCard
+						v-for="blocker in blockers"
+						:key="blocker.type"
+						type="error">
 						{{ blocker.message }}
 					</NcNoteCard>
 
@@ -57,10 +84,13 @@
 					</NcNoteCard>
 
 					<NcNoteCard v-if="success" type="success">
-						{{ t('softwarecatalog', 'Organisation successfully merged.') }}
+						{{
+							t('softwarecatalog', 'Organisation successfully merged.')
+						}}
 					</NcNoteCard>
 
-					<NcButton v-if="!success"
+					<NcButton
+						v-if="!success"
 						variant="secondary"
 						:disabled="!selectedTarget || previewing || busy"
 						@click="preview">
@@ -208,11 +238,19 @@ export default {
 			try {
 				const url = generateUrl(
 					'/apps/openregister/api/objects/{register}/{schema}/{id}',
-					{ register: this.register, schema: this.schema, id: String(this.objectId) },
+					{
+						register: this.register,
+						schema: this.schema,
+						id: String(this.objectId),
+					},
 				)
 				const { data } = await axios.get(url)
-				const obj = data && data['@self'] !== undefined ? data : (data.object || data)
-				this.sourceName = obj.naam || obj.name || t('softwarecatalog', 'Unknown organisation')
+				const obj =
+					data && data['@self'] !== undefined ? data : data.object || data
+				this.sourceName =
+					obj.naam
+					|| obj.name
+					|| t('softwarecatalog', 'Unknown organisation')
 				this.status = obj.status || ''
 				this.mergedInto = obj.mergedInto || ''
 			} catch (e) {
@@ -239,23 +277,36 @@ export default {
 			}
 			this.loadingTargets = true
 			try {
-				const url = generateUrl('/apps/openregister/api/objects/{register}/{schema}', {
-					register: this.register,
-					schema: this.schema,
-				})
+				const url = generateUrl(
+					'/apps/openregister/api/objects/{register}/{schema}',
+					{
+						register: this.register,
+						schema: this.schema,
+					},
+				)
 				const { data } = await axios.get(url, { params: { _limit: 500 } })
 				const results = data?.results || data?.data || []
 				this.targetOptions = results
 					.filter((org) => {
 						const id = org.id || org['@self']?.id
-						return String(id) !== String(this.objectId) && org.status !== 'samengevoegd'
+						return (
+							String(id) !== String(this.objectId)
+							&& org.status !== 'samengevoegd'
+						)
 					})
 					.map((org) => ({
 						value: org.id || org['@self']?.id,
-						label: org.naam || org.name || org['@self']?.name || String(org.id),
+						label:
+							org.naam
+							|| org.name
+							|| org['@self']?.name
+							|| String(org.id),
 					}))
 			} catch (e) {
-				this.error = t('softwarecatalog', 'Could not load target organisations.')
+				this.error = t(
+					'softwarecatalog',
+					'Could not load target organisations.',
+				)
 			} finally {
 				this.loadingTargets = false
 			}
@@ -275,7 +326,10 @@ export default {
 			this.error = ''
 			this.blockers = []
 			try {
-				const result = await organisatieStore.dryRunMerge(String(this.objectId), String(this.selectedTarget.value))
+				const result = await organisatieStore.dryRunMerge(
+					String(this.objectId),
+					String(this.selectedTarget.value),
+				)
 				this.dryRunCounts = result.counts || {}
 				if (result.blockers && result.blockers.length > 0) {
 					this.blockers = result.blockers
@@ -284,7 +338,8 @@ export default {
 				this.confirmError = ''
 				this.showConfirm = true
 			} catch (e) {
-				this.error = e.message || t('softwarecatalog', 'Could not preview the merge.')
+				this.error =
+					e.message || t('softwarecatalog', 'Could not preview the merge.')
 			} finally {
 				this.previewing = false
 			}
@@ -302,14 +357,21 @@ export default {
 			this.busy = true
 			this.confirmError = ''
 			try {
-				await organisatieStore.executeMerge(String(this.objectId), String(this.selectedTarget.value))
+				await organisatieStore.executeMerge(
+					String(this.objectId),
+					String(this.selectedTarget.value),
+				)
 				this.showConfirm = false
 				this.success = true
 				this.status = 'samengevoegd'
 				this.mergedInto = String(this.selectedTarget.value)
-				showSuccess(t('softwarecatalog', 'Organisation successfully merged.'))
+				showSuccess(
+					t('softwarecatalog', 'Organisation successfully merged.'),
+				)
 			} catch (e) {
-				this.confirmError = e.message || t('softwarecatalog', 'Could not merge the organisations.')
+				this.confirmError =
+					e.message
+					|| t('softwarecatalog', 'Could not merge the organisations.')
 			} finally {
 				this.busy = false
 			}
@@ -324,7 +386,10 @@ export default {
 			if (!this.mergedInto) {
 				return
 			}
-			this.$router.push({ name: 'OrganisatieDetail', params: { id: this.mergedInto } })
+			this.$router.push({
+				name: 'OrganisatieDetail',
+				params: { id: this.mergedInto },
+			})
 		},
 	},
 }

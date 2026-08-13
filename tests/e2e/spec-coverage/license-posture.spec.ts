@@ -23,19 +23,30 @@
  * @spec openspec/specs/software-license-posture/spec.md
  */
 import { test, expect } from '@playwright/test'
-import { APP_MAIN, collectAppErrors, expectNoAppErrors, navClickTo } from './_helpers'
+import {
+	APP_MAIN,
+	collectAppErrors,
+	expectNoAppErrors,
+	navClickTo,
+} from './_helpers'
 
 // @e2e software-license-posture::open-source-vs-closed-source-share-reflects-deployments-not-catalogue-rows
-test('license posture: nav reaches the dashboard; portfolio share renders', async ({ page }) => {
+test('license posture: nav reaches the dashboard; portfolio share renders', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'License posture')
 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
-	await expect(main.getByText(/License posture|Portfolio posture/i).first()).toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByText(/License posture|Portfolio posture/i).first(),
+	).toBeVisible({ timeout: 30000 })
 
 	// The portfolio posture KPI block (open-source share) renders.
-	await expect(page.getByTestId('posture-portfolio')).toBeVisible({ timeout: 30000 })
+	await expect(page.getByTestId('posture-portfolio')).toBeVisible({
+		timeout: 30000,
+	})
 
 	expectNoAppErrors(bag)
 })
@@ -44,7 +55,9 @@ test('license posture: nav reaches the dashboard; portfolio share renders', asyn
 // @e2e software-license-posture::deployment-count-reflects-in-production-usages
 // @e2e software-license-posture::per-vendor-cost-reuses-contract-administrations-annualised-cost
 // @e2e software-license-posture::posture-works-without-contract-data
-test('license posture: per-vendor rollup renders deployments, mix and cost columns', async ({ page }) => {
+test('license posture: per-vendor rollup renders deployments, mix and cost columns', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'License posture')
 
@@ -60,7 +73,9 @@ test('license posture: per-vendor rollup renders deployments, mix and cost colum
 })
 
 // @e2e software-license-posture::organisation-open-source-first-report
-test('license posture: per-organisation report surface is present', async ({ page }) => {
+test('license posture: per-organisation report surface is present', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'License posture')
 

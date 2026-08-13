@@ -28,7 +28,14 @@ const fs = require('fs')
 const path = require('path')
 const { spawnSync } = require('child_process')
 
-const SHIM = path.resolve(__dirname, '..', 'node_modules', 'vue-demi', 'lib', 'index.mjs')
+const SHIM = path.resolve(
+	__dirname,
+	'..',
+	'node_modules',
+	'vue-demi',
+	'lib',
+	'index.mjs',
+)
 
 /**
  * Read the resolved vue-demi shim and report whether it is the Vue 3 variant.
@@ -58,10 +65,15 @@ if (before.isVue3) {
 	process.exit(0)
 }
 
-process.stderr.write('[softwarecatalog] vue-demi is on the Vue 2 shim — switching to Vue 3\n')
+process.stderr.write(
+	'[softwarecatalog] vue-demi is on the Vue 2 shim — switching to Vue 3\n',
+)
 
 const bin = path.resolve(
-	__dirname, '..', 'node_modules', '.bin',
+	__dirname,
+	'..',
+	'node_modules',
+	'.bin',
 	process.platform === 'win32' ? 'vue-demi-switch.cmd' : 'vue-demi-switch',
 )
 
@@ -74,10 +86,10 @@ const after = inspectShim()
 if (!after.isVue3) {
 	process.stderr.write(
 		'[softwarecatalog] FATAL: vue-demi is still on the Vue 2 shim.\n'
-		+ '  This app is Vue 3. Building now would produce a bundle whose pinia /\n'
-		+ '  vue-codemirror6 imports resolve against a Vue 2 compatibility layer.\n'
-		+ '  Fix with a clean install (postinstall hooks always re-run under `npm ci`):\n'
-		+ '    rm -rf node_modules && npm ci\n',
+			+ '  This app is Vue 3. Building now would produce a bundle whose pinia /\n'
+			+ '  vue-codemirror6 imports resolve against a Vue 2 compatibility layer.\n'
+			+ '  Fix with a clean install (postinstall hooks always re-run under `npm ci`):\n'
+			+ '    rm -rf node_modules && npm ci\n',
 	)
 	process.exit(1)
 }

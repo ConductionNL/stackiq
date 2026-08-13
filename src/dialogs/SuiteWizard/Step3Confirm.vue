@@ -25,7 +25,11 @@
 		</dl>
 
 		<h3 class="suite-wizard-step3__heading">
-			{{ t('softwarecatalog', 'Applications ({count})', { count: applicationNames.length }) }}
+			{{
+				t('softwarecatalog', 'Applications ({count})', {
+					count: applicationNames.length,
+				})
+			}}
 		</h3>
 		<ul v-if="applicationNames.length" class="suite-wizard-step3__apps">
 			<li v-for="name in applicationNames" :key="name">

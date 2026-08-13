@@ -5,10 +5,16 @@
 				{{ t('softwarecatalog', 'Vulnerabilities') }}
 			</h2>
 			<p class="vv-intro">
-				{{ t('softwarecatalog', 'Track vulnerabilities (CVE / CVSS) against the applications in your catalogue and see which in-production usages are exposed.') }}
+				{{
+					t(
+						'softwarecatalog',
+						'Track vulnerabilities (CVE / CVSS) against the applications in your catalogue and see which in-production usages are exposed.',
+					)
+				}}
 			</p>
 			<div class="vv-actions">
-				<NcButton variant="primary"
+				<NcButton
+					variant="primary"
 					:aria-label="t('softwarecatalog', 'Report a vulnerability')"
 					data-testid="vuln-report"
 					@click="reportVulnerability">
@@ -17,7 +23,10 @@
 					</template>
 					{{ t('softwarecatalog', 'Report vulnerability') }}
 				</NcButton>
-				<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
+				<NcButton
+					variant="tertiary"
+					:aria-label="t('softwarecatalog', 'Refresh data')"
+					@click="loadData">
 					<template #icon>
 						<NcLoadingIcon v-if="loading" :size="20" />
 						<Refresh v-else :size="20" />
@@ -47,7 +56,12 @@
 		<NcEmptyContent
 			v-else-if="filteredRows.length === 0"
 			:name="t('softwarecatalog', 'No vulnerabilities')"
-			:description="t('softwarecatalog', 'No vulnerabilities match the selected severity. Report one to start tracking exposure.')">
+			:description="
+				t(
+					'softwarecatalog',
+					'No vulnerabilities match the selected severity. Report one to start tracking exposure.',
+				)
+			">
 			<template #icon>
 				<ShieldAlert :size="40" />
 			</template>
@@ -60,15 +74,20 @@
 					<th scope="col">{{ t('softwarecatalog', 'CVE') }}</th>
 					<th scope="col">{{ t('softwarecatalog', 'CVSS') }}</th>
 					<th scope="col">{{ t('softwarecatalog', 'Severity') }}</th>
-					<th scope="col">{{ t('softwarecatalog', 'Affected applications') }}</th>
+					<th scope="col">
+						{{ t('softwarecatalog', 'Affected applications') }}
+					</th>
 					<th scope="col">{{ t('softwarecatalog', 'Exposed usages') }}</th>
 					<th scope="col" class="vv-actionsCol">
-						<span class="hidden-visually">{{ t('softwarecatalog', 'Actions') }}</span>
+						<span class="hidden-visually">{{
+							t('softwarecatalog', 'Actions')
+						}}</span>
 					</th>
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="row in filteredRows"
+				<tr
+					v-for="row in filteredRows"
 					:key="row.uuid"
 					class="vv-row"
 					data-testid="vuln-row"
@@ -77,21 +96,32 @@
 						{{ row.naam }}
 					</td>
 					<td>{{ row.cveCode || '—' }}</td>
-					<td>{{ row.cvssScore === null ? '—' : row.cvssScore.toFixed(1) }}</td>
 					<td>
-						<span class="vv-badge" :class="'vv-badge--' + row.band.toLowerCase()" :data-testid="'vuln-severity-' + row.band">
+						{{ row.cvssScore === null ? '—' : row.cvssScore.toFixed(1) }}
+					</td>
+					<td>
+						<span
+							class="vv-badge"
+							:class="'vv-badge--' + row.band.toLowerCase()"
+							:data-testid="'vuln-severity-' + row.band">
 							{{ severityLabel(row.band) }}
 						</span>
 					</td>
 					<td>{{ row.affectedCount }}</td>
 					<td>{{ row.exposureCount }}</td>
 					<td class="vv-actionsCol" @click.stop>
-						<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Edit')" @click="editVulnerability(row)">
+						<NcButton
+							variant="tertiary"
+							:aria-label="t('softwarecatalog', 'Edit')"
+							@click="editVulnerability(row)">
 							<template #icon>
 								<Pencil :size="18" />
 							</template>
 						</NcButton>
-						<NcButton variant="tertiary" :aria-label="t('softwarecatalog', 'Delete')" @click="deleteVulnerability(row)">
+						<NcButton
+							variant="tertiary"
+							:aria-label="t('softwarecatalog', 'Delete')"
+							@click="deleteVulnerability(row)">
 							<template #icon>
 								<Delete :size="18" />
 							</template>
@@ -109,7 +139,13 @@ import { translate as t } from '@nextcloud/l10n'
 import { objectStore, navigationStore } from '../store/store.js'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
 import { resolveUuid } from '../utils/lifecyclePhase.js'
-import { SEVERITY, deriveSeverity, parseCvss, severityOrder, matchesSeverity } from '../utils/vulnerabilitySeverity.js'
+import {
+	SEVERITY,
+	deriveSeverity,
+	parseCvss,
+	severityOrder,
+	matchesSeverity,
+} from '../utils/vulnerabilitySeverity.js'
 import { exposureCount } from '../utils/vulnerabilityExposure.js'
 
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -194,19 +230,27 @@ export default {
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
 		rows() {
-			return this.vulnerabilities.map((vuln) => {
-				const data = vuln.object || vuln
-				return {
-					uuid: resolveUuid(vuln.uuid ?? vuln.id ?? vuln['@self']?.id ?? vuln),
-					raw: vuln,
-					naam: data.naam || t('softwarecatalog', 'Unnamed vulnerability'),
-					cveCode: data.cveCode || '',
-					cvssScore: parseCvss(data.cvssScore),
-					band: deriveSeverity(vuln),
-					affectedCount: Array.isArray(data.modules) ? data.modules.length : 0,
-					exposureCount: exposureCount(vuln, this.gebruiken),
-				}
-			}).sort((a, b) => severityOrder(a.band) - severityOrder(b.band))
+			return this.vulnerabilities
+				.map((vuln) => {
+					const data = vuln.object || vuln
+					return {
+						uuid: resolveUuid(
+							vuln.uuid ?? vuln.id ?? vuln['@self']?.id ?? vuln,
+						),
+						raw: vuln,
+						naam:
+							data.naam
+							|| t('softwarecatalog', 'Unnamed vulnerability'),
+						cveCode: data.cveCode || '',
+						cvssScore: parseCvss(data.cvssScore),
+						band: deriveSeverity(vuln),
+						affectedCount: Array.isArray(data.modules)
+							? data.modules.length
+							: 0,
+						exposureCount: exposureCount(vuln, this.gebruiken),
+					}
+				})
+				.sort((a, b) => severityOrder(a.band) - severityOrder(b.band))
 		},
 
 		/**
@@ -215,7 +259,9 @@ export default {
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
 		filteredRows() {
-			return this.rows.filter((row) => matchesSeverity(row.raw, this.selectedBand))
+			return this.rows.filter((row) =>
+				matchesSeverity(row.raw, this.selectedBand),
+			)
 		},
 
 		/**
@@ -224,11 +270,18 @@ export default {
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
 		severityTabs() {
-			const bands = ['All', SEVERITY.CRITICAL, SEVERITY.HIGH, SEVERITY.MEDIUM, SEVERITY.LOW]
+			const bands = [
+				'All',
+				SEVERITY.CRITICAL,
+				SEVERITY.HIGH,
+				SEVERITY.MEDIUM,
+				SEVERITY.LOW,
+			]
 			return bands.map((band) => ({
 				band,
 				label: this.severityLabel(band),
-				count: this.rows.filter((row) => matchesSeverity(row.raw, band)).length,
+				count: this.rows.filter((row) => matchesSeverity(row.raw, band))
+					.length,
 			}))
 		},
 	},
@@ -248,7 +301,10 @@ export default {
 		async loadData() {
 			this.loading = true
 			try {
-				if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+				if (
+					!objectStore.settings
+					&& typeof objectStore.fetchSettings === 'function'
+				) {
 					await objectStore.fetchSettings()
 				}
 				await Promise.all([
@@ -269,8 +325,10 @@ export default {
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
 		async fetchType(type) {
-			if (typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]) {
+			if (
+				typeof objectStore.registerObjectType === 'function'
+				&& !objectStore.objectTypeRegistry?.[type]
+			) {
 				let cfg = null
 				try {
 					cfg = objectStore.getSchemaConfig?.(type)
@@ -334,7 +392,9 @@ export default {
 		 */
 		deleteVulnerability(row) {
 			navigationStore.setTransferData(row.raw)
-			navigationStore.setDialog('deleteObject', { objectType: 'kwetsbaarheid' })
+			navigationStore.setDialog('deleteObject', {
+				objectType: 'kwetsbaarheid',
+			})
 		},
 
 		/**

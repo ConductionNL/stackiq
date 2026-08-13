@@ -10,7 +10,12 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { ratingOptions, isReviewFormValid, buildReviewPayload, buildReviewSubmission } from '../../src/utils/reviewForm.js'
+import {
+	ratingOptions,
+	isReviewFormValid,
+	buildReviewPayload,
+	buildReviewSubmission,
+} from '../../src/utils/reviewForm.js'
 
 describe('reviewForm.ratingOptions', () => {
 	it('returns exactly 1-10', () => {
@@ -36,17 +41,35 @@ describe('reviewForm.isReviewFormValid', () => {
 describe('reviewForm.buildReviewPayload', () => {
 	it('builds exactly {naam, waardering, beschrijvingLang} — no other keys', () => {
 		const payload = buildReviewPayload('Great tool', 9, 'Worked well for us')
-		expect(payload).toEqual({ naam: 'Great tool', waardering: 9, beschrijvingLang: 'Worked well for us' })
-		expect(Object.keys(payload).sort()).toEqual(['beschrijvingLang', 'naam', 'waardering'])
+		expect(payload).toEqual({
+			naam: 'Great tool',
+			waardering: 9,
+			beschrijvingLang: 'Worked well for us',
+		})
+		expect(Object.keys(payload).sort()).toEqual([
+			'beschrijvingLang',
+			'naam',
+			'waardering',
+		])
 	})
 })
 
 describe('reviewForm.buildReviewSubmission', () => {
 	it('never includes an auteur, status, or any other privileged key', () => {
-		const body = buildReviewSubmission('Great tool', 9, 'Worked well', 'module', 'module-uuid-1')
+		const body = buildReviewSubmission(
+			'Great tool',
+			9,
+			'Worked well',
+			'module',
+			'module-uuid-1',
+		)
 
 		expect(body).toEqual({
-			review: { naam: 'Great tool', waardering: 9, beschrijvingLang: 'Worked well' },
+			review: {
+				naam: 'Great tool',
+				waardering: 9,
+				beschrijvingLang: 'Worked well',
+			},
 			subjectType: 'module',
 			subjectId: 'module-uuid-1',
 		})
@@ -57,7 +80,13 @@ describe('reviewForm.buildReviewSubmission', () => {
 	})
 
 	it('threads the subjectType/subjectId through verbatim for either subject', () => {
-		const body = buildReviewSubmission('Great service', 6, '', 'dienst', 'dienst-uuid-1')
+		const body = buildReviewSubmission(
+			'Great service',
+			6,
+			'',
+			'dienst',
+			'dienst-uuid-1',
+		)
 		expect(body.subjectType).toBe('dienst')
 		expect(body.subjectId).toBe('dienst-uuid-1')
 	})

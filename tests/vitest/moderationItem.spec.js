@@ -5,7 +5,10 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { moderationItemTitle, moderationItemSubtitle } from '../../src/utils/moderationItem.js'
+import {
+	moderationItemTitle,
+	moderationItemSubtitle,
+} from '../../src/utils/moderationItem.js'
 
 describe('moderationItemTitle', () => {
 	it('prefers naam, then name/titel, etc.', () => {
@@ -28,8 +31,12 @@ describe('moderationItemTitle', () => {
 
 describe('moderationItemSubtitle', () => {
 	it('picks a contact/url/description distinct from the title', () => {
-		expect(moderationItemSubtitle({ naam: 'Acme', email: 'info@acme.org' })).toBe('info@acme.org')
-		expect(moderationItemSubtitle({ name: 'X', url: 'https://x.org' })).toBe('https://x.org')
+		expect(
+			moderationItemSubtitle({ naam: 'Acme', email: 'info@acme.org' }),
+		).toBe('info@acme.org')
+		expect(moderationItemSubtitle({ name: 'X', url: 'https://x.org' })).toBe(
+			'https://x.org',
+		)
 	})
 
 	it('never duplicates the title and returns empty when nothing fits', () => {

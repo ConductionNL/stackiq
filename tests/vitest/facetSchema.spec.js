@@ -32,7 +32,9 @@ const DIMENSION_LABELS = {
 
 describe('buildFacetDimensionSchema', () => {
 	it('produces a document the real filtersFromSchema turns into one filter per dimension', () => {
-		const filters = filtersFromSchema(buildFacetDimensionSchema(DIMENSION_LABELS))
+		const filters = filtersFromSchema(
+			buildFacetDimensionSchema(DIMENSION_LABELS),
+		)
 
 		expect(filters).toHaveLength(4)
 		expect(filters.map((f) => f.key)).toEqual([
@@ -44,7 +46,9 @@ describe('buildFacetDimensionSchema', () => {
 	})
 
 	it('labels every filter from the dimension title, never from the raw key', () => {
-		const filters = filtersFromSchema(buildFacetDimensionSchema(DIMENSION_LABELS))
+		const filters = filtersFromSchema(
+			buildFacetDimensionSchema(DIMENSION_LABELS),
+		)
 
 		expect(filters.map((f) => f.label)).toEqual([
 			'Reference component',
@@ -55,7 +59,9 @@ describe('buildFacetDimensionSchema', () => {
 	})
 
 	it('makes every dimension a select, so live facet counts become its options', () => {
-		const filters = filtersFromSchema(buildFacetDimensionSchema(DIMENSION_LABELS))
+		const filters = filtersFromSchema(
+			buildFacetDimensionSchema(DIMENSION_LABELS),
+		)
 
 		expect(filters.every((f) => f.type === 'select')).toBe(true)
 	})

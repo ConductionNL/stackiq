@@ -19,10 +19,17 @@
  * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 import { test, expect } from '@playwright/test'
-import { APP_MAIN, collectAppErrors, expectNoAppErrors, navClickTo } from './_helpers'
+import {
+	APP_MAIN,
+	collectAppErrors,
+	expectNoAppErrors,
+	navClickTo,
+} from './_helpers'
 
 // @e2e application-lifecycle-tracking::roadmap-groups-and-orders-the-portfolio
-test('roadmap: nav entry reaches the organisation-first roadmap surface', async ({ page }) => {
+test('roadmap: nav entry reaches the organisation-first roadmap surface', async ({
+	page,
+}) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Portfolio roadmap')
 
@@ -40,7 +47,9 @@ test('roadmap: nav entry reaches the organisation-first roadmap surface', async 
 	await expect(
 		roadmap.getByRole('heading', { name: 'Portfolio roadmap', level: 2 }),
 	).toBeVisible({ timeout: 30000 })
-	await expect(roadmap.locator('.rm-intro')).toContainText(/grouped by lifecycle phase/i)
+	await expect(roadmap.locator('.rm-intro')).toContainText(
+		/grouped by lifecycle phase/i,
+	)
 
 	// The refresh control the view owns (it re-runs loadData()).
 	//
@@ -57,7 +66,9 @@ test('roadmap: nav entry reaches the organisation-first roadmap surface', async 
 	// organisation is picked, the roadmap groups are NOT rendered — the
 	// "Select an organisation" empty state stands in their place.
 	await expect(roadmap.locator('.rm-orgSelect')).toBeVisible({ timeout: 30000 })
-	await expect(roadmap.getByText('Select an organisation').first()).toBeVisible({ timeout: 30000 })
+	await expect(roadmap.getByText('Select an organisation').first()).toBeVisible({
+		timeout: 30000,
+	})
 	await expect(roadmap.locator('.rm-groups')).toHaveCount(0)
 
 	expectNoAppErrors(bag)

@@ -37,10 +37,13 @@ export function ratingOptions() {
  * @spec openspec/specs/catalog-ratings/spec.md
  */
 export function isReviewFormValid(naam, rating) {
-	return typeof naam === 'string' && naam.trim() !== ''
+	return (
+		typeof naam === 'string'
+		&& naam.trim() !== ''
 		&& Number.isInteger(rating)
 		&& rating >= 1
 		&& rating <= 10
+	)
 }
 
 /**
@@ -76,7 +79,13 @@ export function buildReviewPayload(naam, rating, beschrijvingLang) {
  * @return {{review:object, subjectType:string, subjectId:string}} The request body.
  * @spec openspec/specs/catalog-ratings/spec.md
  */
-export function buildReviewSubmission(naam, rating, beschrijvingLang, subjectType, subjectId) {
+export function buildReviewSubmission(
+	naam,
+	rating,
+	beschrijvingLang,
+	subjectType,
+	subjectId,
+) {
 	return {
 		review: buildReviewPayload(naam, rating, beschrijvingLang),
 		subjectType,

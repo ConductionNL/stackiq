@@ -18,14 +18,20 @@
 <template>
 	<div class="suite-wizard-step2">
 		<p class="suite-wizard-step2__intro">
-			{{ t('softwarecatalog', 'Attach the applications that make up this suite. Only applications already in the catalogue can be attached — creating a new application is not part of this wizard.') }}
+			{{
+				t(
+					'softwarecatalog',
+					'Attach the applications that make up this suite. Only applications already in the catalogue can be attached — creating a new application is not part of this wizard.',
+				)
+			}}
 		</p>
 
 		<NcNoteCard v-if="loadError" type="error">
 			{{ loadError }}
 		</NcNoteCard>
 
-		<NcSelect :model-value="selected"
+		<NcSelect
+			:model-value="selected"
 			:options="applicationOptions"
 			:loading="loading"
 			:multiple="true"
@@ -81,7 +87,9 @@ export default {
 			// is unit-testable against both shapes — reading the envelope as an
 			// array threw "(intermediate value).map is not a function" and left
 			// this step blank, and no test covered this computed.
-			const collection = objectStore.getCollection ? objectStore.getCollection('module') : null
+			const collection = objectStore.getCollection
+				? objectStore.getCollection('module')
+				: null
 			return mapApplicationOptions(collection)
 		},
 
@@ -94,7 +102,11 @@ export default {
 		 */
 		selected() {
 			const applications = this.payload.applications || []
-			return applications.map((app) => ({ uuid: app.id, label: app.naam || app.id, raw: app }))
+			return applications.map((app) => ({
+				uuid: app.id,
+				label: app.naam || app.id,
+				raw: app,
+			}))
 		},
 	},
 
@@ -116,16 +128,22 @@ export default {
 			this.loading = true
 			this.loadError = ''
 			try {
-				if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+				if (
+					!objectStore.settings
+					&& typeof objectStore.fetchSettings === 'function'
+				) {
 					await objectStore.fetchSettings()
 				}
-				const voorzieningenConfig = objectStore.settings?.voorzieningen
+				const voorzieningenConfig =
+					objectStore.settings?.voorzieningen
 					|| objectStore.settings?.voorzieningenConfig
 					|| {}
 				const registerId = voorzieningenConfig.register
-				if (typeof objectStore.registerObjectType === 'function'
+				if (
+					typeof objectStore.registerObjectType === 'function'
 					&& registerId
-					&& !objectStore.objectTypeRegistry?.module) {
+					&& !objectStore.objectTypeRegistry?.module
+				) {
 					objectStore.registerObjectType('module', 'module', registerId, {
 						registerSlug: 'voorzieningen',
 						schemaSlug: 'module',
@@ -136,8 +154,14 @@ export default {
 				}
 			} catch (error) {
 				// eslint-disable-next-line no-console
-				console.error('Step2Applications: failed to load applications', error)
-				this.loadError = t('softwarecatalog', 'Could not load applications. Please try again.')
+				console.error(
+					'Step2Applications: failed to load applications',
+					error,
+				)
+				this.loadError = t(
+					'softwarecatalog',
+					'Could not load applications. Please try again.',
+				)
 			} finally {
 				this.loading = false
 			}

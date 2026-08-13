@@ -17,22 +17,41 @@
  @spec openspec/specs/organisation-merge/spec.md#requirement-the-system-shall-preview-a-merge-with-per-relation-type-counts-before-any-write
 -->
 <template>
-	<NcDialog v-if="show"
+	<NcDialog
+		v-if="show"
 		:name="t('softwarecatalog', 'Confirm organisation merge')"
 		size="normal"
 		:can-close="!busy"
 		@closing="$emit('cancel')">
 		<div class="merge-confirm-dialog">
 			<p>
-				{{ t('softwarecatalog', 'This will permanently fold {source} into {target}.', { source: sourceName, target: targetName }) }}
+				{{
+					t(
+						'softwarecatalog',
+						'This will permanently fold {source} into {target}.',
+						{ source: sourceName, target: targetName },
+					)
+				}}
 			</p>
 			<p class="merge-confirm-dialog__note">
-				{{ t('softwarecatalog', '{source} will be marked as merged (not deleted) and will disappear from the organisations list.', { source: sourceName }) }}
+				{{
+					t(
+						'softwarecatalog',
+						'{source} will be marked as merged (not deleted) and will disappear from the organisations list.',
+						{ source: sourceName },
+					)
+				}}
 			</p>
 
 			<table class="merge-confirm-dialog__counts">
 				<caption class="merge-confirm-dialog__counts-caption">
-					{{ t('softwarecatalog', 'Records that will be re-pointed to {target}:', { target: targetName }) }}
+					{{
+						t(
+							'softwarecatalog',
+							'Records that will be re-pointed to {target}:',
+							{ target: targetName },
+						)
+					}}
 				</caption>
 				<tbody>
 					<tr v-for="row in countRows" :key="row.key">

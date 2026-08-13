@@ -144,10 +144,15 @@ export function resolveUuid(value) {
  */
 export function endOfSupportState(moduleVersie, now = new Date()) {
 	const data = dataOf(moduleVersie)
-	const endRaw = typeof data.datumEindeOndersteuning === 'string' ? data.datumEindeOndersteuning : null
-	const withdrawnRaw = typeof data.datumTeruggetrokken === 'string' && data.datumTeruggetrokken.trim() !== ''
-		? data.datumTeruggetrokken
-		: null
+	const endRaw =
+		typeof data.datumEindeOndersteuning === 'string'
+			? data.datumEindeOndersteuning
+			: null
+	const withdrawnRaw =
+		typeof data.datumTeruggetrokken === 'string'
+		&& data.datumTeruggetrokken.trim() !== ''
+			? data.datumTeruggetrokken
+			: null
 	const end = parseDate(endRaw)
 	return {
 		passed: end !== null && end <= now,
@@ -176,7 +181,7 @@ export function isEolApproaching(moduleVersie, windowDays, now = new Date()) {
 	if (end === null) {
 		return false
 	}
-	const horizon = new Date(now.getTime() + (windowDays * 24 * 60 * 60 * 1000))
+	const horizon = new Date(now.getTime() + windowDays * 24 * 60 * 60 * 1000)
 	return end > now && end <= horizon
 }
 

@@ -56,7 +56,9 @@ describe('lifecyclePhase.derivePhase', () => {
 	})
 
 	it('ignores future-only dates (returns Onbekend)', () => {
-		expect(derivePhase({ startDatumGepland: '2027-01-01' }, NOW)).toBe(PHASE.UNKNOWN)
+		expect(derivePhase({ startDatumGepland: '2027-01-01' }, NOW)).toBe(
+			PHASE.UNKNOWN,
+		)
 	})
 
 	it('tolerates out-of-order dates (most advanced past wins)', () => {
@@ -68,11 +70,15 @@ describe('lifecyclePhase.derivePhase', () => {
 	})
 
 	it('treats a date exactly today as past (inclusive boundary)', () => {
-		expect(derivePhase({ startDatumInProductie: '2026-06-15T00:00:00Z' }, NOW)).toBe(PHASE.PRODUCTION)
+		expect(
+			derivePhase({ startDatumInProductie: '2026-06-15T00:00:00Z' }, NOW),
+		).toBe(PHASE.PRODUCTION)
 	})
 
 	it('reads an OR object envelope', () => {
-		expect(derivePhase({ object: { startDatumInProductie: '2025-01-01' } }, NOW)).toBe(PHASE.PRODUCTION)
+		expect(
+			derivePhase({ object: { startDatumInProductie: '2025-01-01' } }, NOW),
+		).toBe(PHASE.PRODUCTION)
 	})
 })
 
@@ -89,17 +95,25 @@ describe('lifecyclePhase.endOfSupportState', () => {
 		expect(s.withdrawnDate).toBe('2026-05-01')
 	})
 	it('does not flag a future end-of-support as passed', () => {
-		expect(endOfSupportState({ datumEindeOndersteuning: '2027-01-01' }, NOW).passed).toBe(false)
+		expect(
+			endOfSupportState({ datumEindeOndersteuning: '2027-01-01' }, NOW).passed,
+		).toBe(false)
 	})
 })
 
 describe('lifecyclePhase.isEolApproaching', () => {
 	it('is true within the window and false outside', () => {
-		expect(isEolApproaching({ datumEindeOndersteuning: '2026-09-01' }, 180, NOW)).toBe(true)
-		expect(isEolApproaching({ datumEindeOndersteuning: '2027-06-01' }, 180, NOW)).toBe(false)
+		expect(
+			isEolApproaching({ datumEindeOndersteuning: '2026-09-01' }, 180, NOW),
+		).toBe(true)
+		expect(
+			isEolApproaching({ datumEindeOndersteuning: '2027-06-01' }, 180, NOW),
+		).toBe(false)
 	})
 	it('is false for a passed end-of-support (already past, not approaching)', () => {
-		expect(isEolApproaching({ datumEindeOndersteuning: '2026-01-01' }, 180, NOW)).toBe(false)
+		expect(
+			isEolApproaching({ datumEindeOndersteuning: '2026-01-01' }, 180, NOW),
+		).toBe(false)
 	})
 	it('is false when no end-of-support date', () => {
 		expect(isEolApproaching({}, 180, NOW)).toBe(false)

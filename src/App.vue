@@ -188,7 +188,10 @@ export default {
 			await settingsStore.loadSettings()
 		} catch (e) {
 			// eslint-disable-next-line no-console
-			console.warn('[softwarecatalog] settingsStore.loadSettings() failed; continuing with defaults', e)
+			console.warn(
+				'[softwarecatalog] settingsStore.loadSettings() failed; continuing with defaults',
+				e,
+			)
 		}
 
 		await this.loadOrganisations()
@@ -209,9 +212,12 @@ export default {
 		 */
 		async loadOrganisations() {
 			try {
-				const response = await fetch(generateUrl('/apps/softwarecatalog/api/me'), {
-					headers: { requesttoken: OC.requestToken },
-				})
+				const response = await fetch(
+					generateUrl('/apps/softwarecatalog/api/me'),
+					{
+						headers: { requesttoken: OC.requestToken },
+					},
+				)
 				if (!response.ok) return
 
 				const data = await response.json()
@@ -225,7 +231,10 @@ export default {
 				setActiveOrganisationUuid(this.activeOrganisationUuid)
 			} catch (e) {
 				// eslint-disable-next-line no-console
-				console.warn('[softwarecatalog] Failed to load organisations; continuing single-tenant', e)
+				console.warn(
+					'[softwarecatalog] Failed to load organisations; continuing single-tenant',
+					e,
+				)
 			}
 		},
 

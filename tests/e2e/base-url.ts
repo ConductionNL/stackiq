@@ -60,9 +60,9 @@ export function resolveBaseUrl(): string {
 
 	throw new Error(
 		'No Nextcloud target configured for the e2e suite. Set one of '
-		+ CANDIDATES.join(', ')
-		+ ' (e.g. PLAYWRIGHT_BASE_URL=http://localhost:8092). There is no default: '
-		+ 'defaulting would point this suite at the shared dev container.',
+			+ CANDIDATES.join(', ')
+			+ ' (e.g. PLAYWRIGHT_BASE_URL=http://localhost:8092). There is no default: '
+			+ 'defaulting would point this suite at the shared dev container.',
 	)
 }
 
