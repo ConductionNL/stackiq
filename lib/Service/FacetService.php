@@ -105,7 +105,7 @@ class FacetService {
 	 *
 	 * @var string[]
 	 */
-	private const DIMENSIONS = ['referentiecomponent', 'standard', 'applicatieservice', 'domein'];
+	private const DIMENSIONS = ['referentiecomponent', 'standaard', 'applicatieservice', 'domein'];
 
 	/**
 	 * Constructor for FacetService.
