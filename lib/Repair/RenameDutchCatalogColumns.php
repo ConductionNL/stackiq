@@ -43,11 +43,48 @@
  * than a column left in Dutch.
  *
  * SAFETY. Non-destructive and idempotent:
+ *   - a column is moved only when the SCHEMA ITSELF declares the English name
+ *     and no longer declares the Dutch one (see THE ORDERING GUARD below);
  *   - a column is renamed only when the OLD one exists and the NEW one does not;
  *   - where MagicMapper has already added an empty NEW column, the data is
  *     copied across and the old column is LEFT IN PLACE, so the step is
  *     reversible and a re-run is a no-op;
  *   - nothing is deleted.
+ *
+ * THE ORDERING GUARD (softwarecatalog#492). Everything above is only safe in
+ * ONE merge order, and until this guard existed nothing enforced it.
+ *
+ * `appinfo/info.xml` states the precondition in prose — "Must run AFTER the
+ * register sync that adds the English columns" — and NOTHING PERFORMS THAT
+ * SYNC. Measured on `development`: no file under `lib/` reads
+ * `lib/Settings/softwarecatalogus_register.json` at all; the only references
+ * are tests, root-level debug scripts and comments. `InitializeSettings`, the
+ * step ordered immediately before this one, writes config keys and imports
+ * nothing. The register is imported by a human through OpenRegister's
+ * configuration UI, on their own schedule.
+ *
+ * So the precondition was not merely unenforced — it was not automated either,
+ * and the step could not tell the two states apart. `run()` renamed precisely
+ * when the English column was ABSENT, which is exactly the state produced by
+ * "the register has NOT been renamed yet". Measured on the register this repo
+ * ships (220 distinct property keys as a positive control, so the extraction
+ * finds things): every in-scope schema still declares `naam`,
+ * `beschrijvingKort`, `contactpersoon`, `publicatiedatum` and friends, and the
+ * destinations `short_description` / `publication_date` / `contact_person` are
+ * declared NOWHERE in scope. Renaming under that state moves the data to a
+ * column nothing reads, MagicMapper re-adds an empty `naam` on the next sync,
+ * and every read returns null — the step's own header warning with the two
+ * halves swapped.
+ *
+ * The old `$columns`-only test could not distinguish "renamed, mapper behind"
+ * from "not renamed at all": both look identical in a column list. The schema's
+ * DECLARED properties are what tells them apart, so that is what is consulted
+ * now. `renameIsSafe()` requires BOTH halves — the destination declared AND the
+ * source no longer declared — which makes the step correct in EITHER merge
+ * order and a genuine no-op until the register moves.
+ *
+ * Fails CLOSED: a schema whose declared properties cannot be read is skipped
+ * entirely rather than migrated on an assumption.
  *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
@@ -172,54 +209,222 @@ class RenameDutchCatalogColumns implements IRepairStep {
 			return;
 		}
 
-		$renamed = 0;
-		$copied = 0;
-		$refused = 0;
+		$totals = [
+			'renamed' => 0,
+			'copied' => 0,
+			'refused' => 0,
+			'deferred' => 0,
+			'skippedTables' => 0,
+		];
 
-		foreach ($tables as $table) {
-			$columns = $this->columnsOf(table: $table);
-			$qTable = $this->quote(identifier: $table);
+		foreach ($tables as $table => $schemaId) {
+			$declared = $this->declaredColumnsOf(schemaId: $schemaId);
+			if ($declared === null) {
+				// Fail closed: without the schema's declared properties there is
+				// no way to tell "renamed, mapper behind" from "not renamed at
+				// all", and those need opposite actions.
+				$totals['skippedTables']++;
+				continue;
+			}
 
-			foreach (self::COLUMN_MAP as $old => $new) {
-				if (in_array($old, $columns, true) === false) {
-					// Already migrated, or this schema never had the property.
-					continue;
-				}
-
-				if ($this->hasCollision(table: $table, columns: $columns, target: $new) === true) {
-					$refused++;
-					continue;
-				}
-
-				$qOld = $this->quote(identifier: $old);
-				$qNew = $this->quote(identifier: $new);
-
-				if (in_array($new, $columns, true) === false) {
-					$sql = 'ALTER TABLE ' . $qTable . ' RENAME COLUMN ' . $qOld . ' TO ' . $qNew;
-					if ($this->exec(sql: $sql) === true) {
-						$renamed++;
-					}
-
-					continue;
-				}
-
-				// The mapper already added an empty English column: back-fill and
-				// leave the Dutch one, so this stays reversible.
-				$sql = 'UPDATE ' . $qTable . ' SET ' . $qNew . ' = ' . $qOld
-					. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
-				if ($this->exec(sql: $sql) === true) {
-					$copied++;
-				}
-			}//end foreach
-		}//end foreach
+			foreach ($this->migrateTable(table: $table, declared: $declared) as $key => $count) {
+				$totals[$key] += $count;
+			}
+		}
 
 		$output->info(
-			'RenameDutchCatalogColumns: ' . $renamed . ' column(s) renamed, '
-			. $copied . ' back-filled, ' . $refused . ' refused for ambiguity, across '
+			'RenameDutchCatalogColumns: ' . $totals['renamed'] . ' column(s) renamed, '
+			. $totals['copied'] . ' back-filled, ' . $totals['refused'] . ' refused for ambiguity, '
+			. $totals['deferred'] . ' deferred because the register still declares the Dutch name, '
+			. $totals['skippedTables'] . ' table(s) skipped for an unreadable schema, across '
 			. count($tables) . ' shard table(s).'
 		);
 
 	}//end run()
+
+	/**
+	 * Move every migratable column of one shard table.
+	 *
+	 * Split out of `run()` so that method stays a readable table loop and this
+	 * one carries the per-column decision. Returns counters rather than
+	 * mutating shared state, so the two levels cannot disagree about what was
+	 * done.
+	 *
+	 * @param string $table The shard table name.
+	 * @param array<int, string> $declared Snake_cased declared property names
+	 *                                     of that table's schema.
+	 *
+	 * @return array<string, int> Counts keyed `renamed`/`copied`/`refused`/`deferred`.
+	 */
+	private function migrateTable(string $table, array $declared): array {
+		$counts = ['renamed' => 0, 'copied' => 0, 'refused' => 0, 'deferred' => 0];
+
+		$columns = $this->columnsOf(table: $table);
+		$qTable = $this->quote(identifier: $table);
+
+		foreach (self::COLUMN_MAP as $old => $new) {
+			if (in_array($old, $columns, true) === false) {
+				// Already migrated, or this schema never had the property.
+				continue;
+			}
+
+			if ($this->renameIsSafe(old: $old, new: $new, declared: $declared) === false) {
+				// The register has not moved to the English name for this
+				// schema yet. Moving the data now would orphan it.
+				$counts['deferred']++;
+				continue;
+			}
+
+			if ($this->hasCollision(table: $table, columns: $columns, target: $new) === true) {
+				$counts['refused']++;
+				continue;
+			}
+
+			$qOld = $this->quote(identifier: $old);
+			$qNew = $this->quote(identifier: $new);
+
+			if (in_array($new, $columns, true) === false) {
+				$sql = 'ALTER TABLE ' . $qTable . ' RENAME COLUMN ' . $qOld . ' TO ' . $qNew;
+				if ($this->exec(sql: $sql) === true) {
+					$counts['renamed']++;
+				}
+
+				continue;
+			}
+
+			// The mapper already added an empty English column: back-fill and
+			// leave the Dutch one, so this stays reversible.
+			$sql = 'UPDATE ' . $qTable . ' SET ' . $qNew . ' = ' . $qOld
+				. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
+			if ($this->exec(sql: $sql) === true) {
+				$counts['copied']++;
+			}
+		}//end foreach
+
+		return $counts;
+	}//end migrateTable()
+
+	/**
+	 * Whether moving `$old` to `$new` is safe for a schema declaring `$declared`.
+	 *
+	 * This is the softwarecatalog#492 guard, and it is deliberately BOTH halves:
+	 *
+	 *   - the destination MUST be declared — otherwise the data lands in a
+	 *     column nothing reads, and MagicMapper will re-add the Dutch one empty;
+	 *   - the source must NO LONGER be declared — otherwise the register still
+	 *     considers the Dutch name live, MagicMapper will re-materialise it, and
+	 *     writes and reads end up on different columns.
+	 *
+	 * Requiring only the first would still fire during the window where a
+	 * register declares both names, which is the ambiguous state the collision
+	 * check exists to refuse elsewhere. Requiring only the second would fire on
+	 * a schema that has simply dropped the property.
+	 *
+	 * The predicate is pure — it takes the declared set rather than reading it —
+	 * so the decision this step turns on is unit-testable without a database.
+	 * The DDL that follows is not, which is precisely why the DECISION is.
+	 *
+	 * @param string $old The Dutch column name.
+	 * @param string $new The English column name.
+	 * @param array<int, string> $declared Snake_cased declared property names.
+	 *
+	 * @return bool True when the register has moved and the data should follow.
+	 */
+	private function renameIsSafe(string $old, string $new, array $declared): bool {
+		if (in_array($new, $declared, true) === false) {
+			return false;
+		}
+
+		return in_array($old, $declared, true) === false;
+	}//end renameIsSafe()
+
+	/**
+	 * The snake_cased column names a schema currently declares.
+	 *
+	 * Read from `oc_openregister_schemas.properties`, which is the shape
+	 * MagicMapper materialises columns from — verified first-hand against a live
+	 * instance rather than inferred: the column is `json`, `jsonb_typeof` is
+	 * `object` for all 21 softwarecatalog schemas, and it is keyed by the
+	 * camelCase property name (`properties::jsonb ? 'naam'` is true on exactly
+	 * the schemas the register JSON declares `naam` on).
+	 *
+	 * The register JSON in `lib/Settings/` would be the other candidate source
+	 * and is the WRONG one: nothing imports it automatically, so it describes
+	 * what an operator MAY import, not what this install has. The schemas table
+	 * describes what MagicMapper will actually re-materialise, which is what
+	 * decides whether a rename is orphaning.
+	 *
+	 * @param int $schemaId The schema's database id.
+	 *
+	 * @return array<int, string>|null Declared column names, or null when they
+	 *                                 could not be read (caller must fail closed).
+	 */
+	private function declaredColumnsOf(int $schemaId): ?array {
+		try {
+			// Bound as a string, not an int: IDBConnection::executeQuery()
+			// declares `array<string>` for its parameter list, and the driver
+			// casts back for the numeric comparison.
+			$raw = $this->db->executeQuery(
+				'SELECT properties FROM `*PREFIX*openregister_schemas` WHERE id = ?',
+				[(string)$schemaId]
+			)->fetchOne();
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'RenameDutchCatalogColumns: could not read a schema\'s declared properties; skipping its table.',
+				['schemaId' => $schemaId, 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		if (is_string($raw) === false || $raw === '') {
+			return null;
+		}
+
+		$decoded = json_decode($raw, true);
+		if (is_array($decoded) === false) {
+			$this->logger->warning(
+				'RenameDutchCatalogColumns: a schema\'s properties did not decode to an object; skipping its table.',
+				['schemaId' => $schemaId]
+			);
+			return null;
+		}
+
+		$columns = [];
+		foreach (array_keys($decoded) as $property) {
+			$columns[] = $this->sanitizeColumnName(name: (string)$property);
+		}
+
+		return $columns;
+	}//end declaredColumnsOf()
+
+	/**
+	 * Convert a declared property name to the column MagicMapper materialises.
+	 *
+	 * Mirrors `MagicMapper::sanitizeColumnName()` step for step, because the
+	 * comparison is only meaningful if both sides spell the name the same way:
+	 * the schema declares `beschrijvingKort` and the column is
+	 * `beschrijving_kort`, so comparing the raw property name against
+	 * COLUMN_MAP's snake_case keys would never match and the guard would defer
+	 * every rename forever — a guard that always says no is as useless as one
+	 * that always says yes, and much harder to notice.
+	 *
+	 * Kept as a private copy rather than a dependency on openregister: this step
+	 * must run during a repair pass whether or not that app's classes are
+	 * loadable, and one `extends`/`use` of another app's class is enough to
+	 * fatal the whole run.
+	 *
+	 * @param string $name A declared property name.
+	 *
+	 * @return string The snake_cased column name.
+	 */
+	private function sanitizeColumnName(string $name): string {
+		$name = preg_replace('/([a-z0-9])([A-Z])/', '$1_$2', $name);
+		$name = strtolower($name);
+		$name = preg_replace('/[^a-z0-9_]/', '_', $name);
+		$name = preg_replace('/_+/', '_', $name);
+
+		return rtrim($name, '_');
+	}//end sanitizeColumnName()
 
 	/**
 	 * Whether two Dutch columns in this table both target one English name.
@@ -259,7 +464,12 @@ class RenameDutchCatalogColumns implements IRepairStep {
 	 * Ids are looked up at runtime — both the register id and the schema ids
 	 * differ per install.
 	 *
-	 * @return array<int, string>
+	 * Returns table name => schema id. The schema id is carried through rather
+	 * than re-parsed in `run()` because the ordering guard needs it to read that
+	 * schema's declared properties, and re-deriving it from the table name in a
+	 * second place is one more thing that can drift.
+	 *
+	 * @return array<string, int>
 	 */
 	private function inScopeShardTables(): array {
 		try {
@@ -307,7 +517,7 @@ class RenameDutchCatalogColumns implements IRepairStep {
 		while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
 			$name = (string)($row['table_name'] ?? '');
 			if ($this->isMigratableShard(table: $name, marker: $marker, excluded: $excluded) === true) {
-				$tables[] = $name;
+				$tables[$name] = (int)substr($name, (strpos($name, $marker) + strlen($marker)));
 			}
 		}
 
