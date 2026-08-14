@@ -18,6 +18,7 @@ export const useNavigationStore = defineStore('ui', {
 	}),
 	actions: {
 		/**
+		 * @param selected
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		setSelected(selected) {
@@ -25,6 +26,7 @@ export const useNavigationStore = defineStore('ui', {
 			console.log('Active menu item set to ' + selected)
 		},
 		/**
+		 * @param selectedOrganisatie
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		setSelectedOrganisatie(selectedOrganisatie) {
@@ -32,6 +34,7 @@ export const useNavigationStore = defineStore('ui', {
 			console.log('Active organisatie menu set to ' + selectedOrganisatie)
 		},
 		/**
+		 * @param modal
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		setModal(modal) {
@@ -39,6 +42,8 @@ export const useNavigationStore = defineStore('ui', {
 			console.log('Active modal set to ' + modal)
 		},
 		/**
+		 * @param dialog
+		 * @param properties
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		setDialog(dialog, properties) {

@@ -117,27 +117,27 @@
 		<!-- Bulk Sync Dialog -->
 		<BulkSyncDialog
 			:open="showSyncDialog"
-			:compliance-count="complianceCount"
+			:complianceCount="complianceCount"
 			@update:open="showSyncDialog = $event"
-			@loading-change="bulkSyncLoading = $event"
+			@loadingChange="bulkSyncLoading = $event"
 			@synced="refreshStatistics" />
 	</NcSettingsSection>
 </template>
 
 <script>
-import { defineComponent } from 'vue'
 import {
-	NcSettingsSection,
 	NcButton,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
+	NcSettingsSection,
 } from '@nextcloud/vue'
-import { useSettingsStore } from '../../../store/modules/settings.js'
-import BulkSyncDialog from '../../../modals/BulkSyncDialog.vue'
-import RefreshIcon from 'vue-material-design-icons/Refresh.vue'
+import { defineComponent } from 'vue'
 import ChartLineIcon from 'vue-material-design-icons/ChartLine.vue'
+import RefreshIcon from 'vue-material-design-icons/Refresh.vue'
 import SyncIcon from 'vue-material-design-icons/Sync.vue'
+import BulkSyncDialog from '../../../modals/BulkSyncDialog.vue'
+import { useSettingsStore } from '../../../store/modules/settings.js'
 
 /**
  * Statistics Overview component
@@ -233,6 +233,7 @@ export default defineComponent({
 	methods: {
 		/**
 		 * Refresh statistics data
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async refreshStatistics() {
@@ -241,6 +242,7 @@ export default defineComponent({
 
 		/**
 		 * Format number with thousand separators
+		 *
 		 * @param {number} num - Number to format
 		 * @return {string} Formatted number
 		 * @spec openspec/specs/fe-settings-ui/spec.md
@@ -252,6 +254,7 @@ export default defineComponent({
 
 		/**
 		 * Format timestamp for display
+		 *
 		 * @param {number} timestamp - Unix timestamp
 		 * @return {string} Formatted date/time
 		 * @spec openspec/specs/fe-settings-ui/spec.md
@@ -264,6 +267,7 @@ export default defineComponent({
 
 		/**
 		 * Show the bulk sync dialog
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		showBulkSyncDialog() {

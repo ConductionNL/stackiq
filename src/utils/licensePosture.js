@@ -23,9 +23,9 @@
  * @spec openspec/specs/software-license-posture/spec.md
  */
 
+import { totalAnnualisedCost } from './contractCost.js'
 import { resolveUuid } from './lifecyclePhase.js'
 import { isInProduction } from './vulnerabilityExposure.js'
-import { totalAnnualisedCost } from './contractCost.js'
 
 /**
  * Licence-type policy axis constants. `Unknown` is the empty-licentietype bucket

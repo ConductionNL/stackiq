@@ -46,18 +46,19 @@ import { reactive } from 'vue'
 		</NcAppSidebarTab>
 	</NcAppSidebar>
 </template>
+
 <script>
 import {
 	NcAppSidebar,
 	NcAppSidebarTab,
-	NcTextField,
-	NcNoteCard,
 	NcCheckboxRadioSwitch,
+	NcNoteCard,
+	NcTextField,
 } from '@nextcloud/vue'
-import Magnify from 'vue-material-design-icons/Magnify.vue'
+import debounce from 'lodash/debounce'
 import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
 import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
-import debounce from 'lodash/debounce'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 
 // Temporary placeholder stores until they are properly implemented
 const searchStore = reactive({
@@ -84,25 +85,30 @@ export default {
 		DatabaseOutline,
 		FileTreeOutline,
 	},
+
 	props: {
 		search: {
 			type: String,
 			required: true,
 		},
+
 		metadata: {
 			type: Object,
 			required: true,
 		},
+
 		catalogi: {
 			type: Object,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			starred: false,
 		}
 	},
+
 	watch: {
 		search: 'debouncedSearch',
 		metadata: {
@@ -112,8 +118,10 @@ export default {
 			handler() {
 				this.debouncedSearch()
 			},
+
 			deep: true,
 		},
+
 		catalogi: {
 			/**
 			 * @spec openspec/specs/fe-shell-navigation/spec.md
@@ -121,9 +129,11 @@ export default {
 			handler() {
 				this.debouncedSearch()
 			},
+
 			deep: true,
 		},
 	},
+
 	/**
 	 * @spec openspec/specs/fe-shell-navigation/spec.md
 	 */
@@ -131,6 +141,7 @@ export default {
 		metadataStore.refreshMetaDataList()
 		catalogiStore.refreshCatalogiList()
 	},
+
 	methods: {
 		debouncedSearch: debounce(function () {
 			searchStore.getSearchResults()

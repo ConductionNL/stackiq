@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Unit tests for the GEMMA facet Pinia store (gemma-faceted-search).
  *
@@ -7,11 +6,10 @@
  * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
  */
 
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
-import { useFacetStore } from './facets.js'
+import { createPinia, setActivePinia } from 'pinia'
 import { fetchFacets } from '../../services/facets.js'
+import { useFacetStore } from './facets.js'
 
 // `virtual: true` — see facets.spec.js (services) for why: `@nextcloud/axios`
 // is ESM-only (`exports` map with no `require` condition) and unresolvable

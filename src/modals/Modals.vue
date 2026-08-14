@@ -3,7 +3,7 @@
 		<!-- Organisatie Modals -->
 		<ObjectModal
 			v-if="navigationStore.modal === 'organisatie'"
-			object-type-key="organisatie" />
+			objectTypeKey="organisatie" />
 		<ViewObject v-if="navigationStore.modal === 'viewOrganisatie'" />
 		<UploadObject v-if="navigationStore.modal === 'uploadOrganisatie'" />
 		<LockObject v-if="navigationStore.modal === 'lockOrganisatie'" />
@@ -13,7 +13,7 @@
 		<!-- Generic Object Edit Modal for other object types (contactpersoon, etc.) -->
 		<ObjectModal
 			v-if="genericObjectModalType"
-			:object-type-key="genericObjectModalType" />
+			:objectTypeKey="genericObjectModalType" />
 
 		<!-- View modals for other object types -->
 		<ViewObject v-if="navigationStore.modal === 'viewContactpersoon'" />
@@ -21,13 +21,13 @@
 </template>
 
 <script>
-import { navigationStore } from '../store/store.js'
-import ObjectModal from './object/ObjectModal.vue'
-import ViewObject from './object/ViewObject.vue'
-import UploadObject from './object/UploadObject.vue'
 import LockObject from './object/LockObject.vue'
-import MigrationObject from './object/MigrationObject.vue'
 import MergeObject from './object/MergeObject.vue'
+import MigrationObject from './object/MigrationObject.vue'
+import ObjectModal from './object/ObjectModal.vue'
+import UploadObject from './object/UploadObject.vue'
+import ViewObject from './object/ViewObject.vue'
+import { navigationStore } from '../store/store.js'
 
 /**
  * Object types that should use the generic ObjectModal for editing.
@@ -58,6 +58,7 @@ export default {
 		MigrationObject,
 		MergeObject,
 	},
+
 	/**
 	 * @spec exclude Pinia store wiring in setup() — bootstrap plumbing
 	 */
@@ -66,6 +67,7 @@ export default {
 			navigationStore,
 		}
 	},
+
 	computed: {
 		/**
 		 * Returns the object type if the current modal matches a generic object type,

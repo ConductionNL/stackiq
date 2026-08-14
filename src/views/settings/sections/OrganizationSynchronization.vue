@@ -21,14 +21,14 @@
 		name="Organization Synchronization"
 		description="Synchronize organization data between OpenRegister and external systems"
 		:loading="loading"
-		:show-save-button="true"
-		:show-refresh-button="true"
-		:can-save="hasTimeWindowChanges"
+		:showSaveButton="true"
+		:showRefreshButton="true"
+		:canSave="hasTimeWindowChanges"
 		:saving="savingConfig"
-		save-button-text="Save Configuration"
+		saveButtonText="Save Configuration"
 		:refreshing="loadingSyncStatus"
-		refresh-button-text="Refresh Status"
-		:has-info-content="true"
+		refreshButtonText="Refresh Status"
+		:hasInfoContent="true"
 		@save="saveConfiguration"
 		@refresh="refreshConfiguration">
 		<template #header-actions>
@@ -67,9 +67,9 @@
 							<NcSelect
 								v-model="selectedTimeWindow"
 								:options="timeWindowOptions"
-								input-label="Time Window"
+								inputLabel="Time Window"
 								:disabled="loading || loadingSyncStatus"
-								@update:model-value="handleTimeWindowChange" />
+								@update:modelValue="handleTimeWindowChange" />
 						</div>
 
 						<!-- Sync Actions in same row -->
@@ -596,21 +596,18 @@
  * @version 1.0.0
  */
 
-import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { withHeartbeat } from '../../../utils/heartbeat.js'
-
-// Components
-import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-
 // Nextcloud Vue components
-import { NcButton, NcSelect, NcNoteCard, NcLoadingIcon } from '@nextcloud/vue'
-
+import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import Alert from 'vue-material-design-icons/Alert.vue'
+import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 // Icons
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Sync from 'vue-material-design-icons/Sync.vue'
-import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
-import Alert from 'vue-material-design-icons/Alert.vue'
+// Components
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
+import { settingsStore } from '../../../store/store.js'
+import { withHeartbeat } from '../../../utils/heartbeat.js'
 
 export default {
 	name: 'OrganizationSynchronization',
@@ -666,6 +663,7 @@ export default {
 				{ value: 720, label: '12 hours' },
 				{ value: 1440, label: '24 hours' },
 			],
+
 			// Organisation sync to voorzieningen
 			performingOrgSync: false,
 			orgSyncResult: null,
@@ -684,6 +682,7 @@ export default {
 		loading() {
 			return this.store.loadingSyncSettings
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
@@ -707,6 +706,7 @@ export default {
 	watch: {
 		'settings.syncTimeWindow': {
 			/**
+			 * @param newValue
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			handler(newValue) {
@@ -714,10 +714,14 @@ export default {
 					this.loadSavedConfiguration()
 				}
 			},
+
 			immediate: true,
 		},
+
 		'store.loadingSyncSettings': {
 			/**
+			 * @param newValue
+			 * @param oldValue
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			handler(newValue, oldValue) {

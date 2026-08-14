@@ -16,9 +16,9 @@
  * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
  */
 
-import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 import {
 	FACET_DIMENSIONS,
 	fetchFacets as fetchFacetsFromApi,

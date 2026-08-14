@@ -1,9 +1,9 @@
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog name="Merge Objects" size="large" :can-close="false">
+	<NcDialog name="Merge Objects" size="large" :canClose="false">
 		<!-- Register and Schema Information -->
 		<div class="detail-grid">
 			<div class="detail-item">
@@ -46,7 +46,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					v-model="searchTerm"
 					label="Search objects"
 					placeholder="Type to search for objects..."
-					@update:model-value="searchObjects" />
+					@update:modelValue="searchObjects" />
 			</div>
 
 			<div v-if="loading" class="loading-container">
@@ -169,8 +169,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										v-model="propertySelections[property]"
 										:options="getMergeOptions(property)"
 										label="label"
-										track-by="value"
-										:input-label="
+										trackBy="value"
+										:inputLabel="
 											t(
 												'softwarecatalog',
 												'Choose value for {property}',
@@ -178,7 +178,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 											)
 										"
 										:placeholder="'Choose value for ' + property"
-										@update:model-value="
+										@update:modelValue="
 											onPropertySelectionChange(
 												property,
 												$event,
@@ -188,7 +188,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										v-if="mergedData[property] === 'custom'"
 										v-model="customValues[property]"
 										:label="'Custom value for ' + property"
-										:label-outside="false"
+										:labelOutside="false"
 										:placeholder="
 											'Enter custom value for ' + property
 										"
@@ -569,23 +569,22 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 <script>
 import {
 	NcButton,
-	NcDialog,
-	NcTextField,
 	NcCheckboxRadioSwitch,
+	NcDialog,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
+	NcTextField,
 } from '@nextcloud/vue'
-
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
+import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
 // Icons
 import Cancel from 'vue-material-design-icons/Cancel.vue'
-import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
-import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
-import Merge from 'vue-material-design-icons/Merge.vue'
-import Eye from 'vue-material-design-icons/Eye.vue'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
+import Eye from 'vue-material-design-icons/Eye.vue'
+import Merge from 'vue-material-design-icons/Merge.vue'
 
 export default {
 	name: 'MergeObject',
@@ -626,6 +625,7 @@ export default {
 			sourceRelations: [],
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -633,6 +633,7 @@ export default {
 		sourceObject() {
 			return objectStore.objectItem
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -650,6 +651,7 @@ export default {
 
 			return [...new Set([...sourceProps, ...targetProps])]
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -657,9 +659,11 @@ export default {
 			return Object.keys(this.mergedData).length > 0
 		},
 	},
+
 	mounted() {
 		this.initializeMerge()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -672,6 +676,7 @@ export default {
 			this.loadSourceData()
 			this.searchObjects()
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -698,12 +703,15 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
+		 * @param obj
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		selectTargetObject(obj) {
 			this.selectedTargetObject = obj
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -713,6 +721,7 @@ export default {
 				this.initializeMergeData()
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -721,6 +730,7 @@ export default {
 				this.step = 1
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -778,7 +788,9 @@ export default {
 				this.propertySelections,
 			)
 		},
+
 		/**
+		 * @param property
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getMergeOptions(property) {
@@ -816,6 +828,8 @@ export default {
 		},
 
 		/**
+		 * @param property
+		 * @param selectedOption
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		onPropertySelectionChange(property, selectedOption) {
@@ -842,7 +856,10 @@ export default {
 				}
 			}
 		},
+
 		/**
+		 * @param value
+		 * @param maxLength
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		displayValue(value, maxLength = 100) {
@@ -864,7 +881,10 @@ export default {
 
 			return displayText
 		},
+
 		/**
+		 * @param text
+		 * @param maxLength
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		truncateText(text, maxLength) {
@@ -872,6 +892,7 @@ export default {
 			if (text.length <= maxLength) return text
 			return text.substring(0, maxLength) + '...'
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -944,6 +965,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -954,19 +976,23 @@ export default {
 				navigationStore.setModal('viewObject')
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		toggleFileList() {
 			this.showFileList = !this.showFileList
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		toggleRelationList() {
 			this.showRelationList = !this.showRelationList
 		},
+
 		/**
+		 * @param bytes
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatFileSize(bytes) {
@@ -977,7 +1003,9 @@ export default {
 				Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i]
 			)
 		},
+
 		/**
+		 * @param filename
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getFileType(filename) {
@@ -1001,6 +1029,7 @@ export default {
 			}
 			return types[ext] || ext?.toUpperCase() || 'Unknown'
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -1028,6 +1057,7 @@ export default {
 				this.sourceRelations = []
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */

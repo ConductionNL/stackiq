@@ -34,8 +34,8 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
 import { NcModal } from '@nextcloud/vue'
+import { defineComponent } from 'vue'
 
 export default defineComponent({
 	name: 'AlwaysVisibleSectionInfoModal',

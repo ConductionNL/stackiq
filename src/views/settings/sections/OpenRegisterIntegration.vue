@@ -21,12 +21,12 @@
 		name="OpenRegister Integration"
 		description="Configure which schemas to use for organizations, contacts, and users"
 		:loading="loading"
-		loading-text="Loading OpenRegister configuration..."
-		:show-save-button="true"
-		:show-refresh-button="true"
-		:can-save="canSave"
+		loadingText="Loading OpenRegister configuration..."
+		:showSaveButton="true"
+		:showRefreshButton="true"
+		:canSave="canSave"
 		:saving="saving"
-		save-button-text="Save Configuration"
+		saveButtonText="Save Configuration"
 		@save="saveConfiguration"
 		@refresh="refreshSettings">
 		<div v-if="!loading">
@@ -50,8 +50,8 @@
 							title: `AMEF${hasAmefConfigChanges() ? ' *' : ''}`,
 						},
 					]"
-					:active-tab="activeTab"
-					@update:active-tab="activeTab = $event">
+					:activeTab="activeTab"
+					@update:activeTab="activeTab = $event">
 					<!-- General Configuration Tab -->
 					<div v-show="activeTab === 'general'" class="tab-panel">
 						<div class="tab-content">
@@ -60,10 +60,10 @@
 									<NcSelect
 										v-model="voorzieningenRegister"
 										:options="registerOptions"
-										input-label="Select Voorzieningen Register"
+										inputLabel="Select Voorzieningen Register"
 										:loading="loadingRegisters"
 										:disabled="loadingRegisters"
-										@update:model-value="
+										@update:modelValue="
 											handleVoorzieningenRegisterChange
 										" />
 								</div>
@@ -72,10 +72,10 @@
 									<NcSelect
 										v-model="amefRegister"
 										:options="registerOptions"
-										input-label="Select AMEF Register"
+										inputLabel="Select AMEF Register"
 										:loading="loadingRegisters"
 										:disabled="loadingRegisters"
-										@update:model-value="
+										@update:modelValue="
 											handleAmefRegisterChange
 										" />
 								</div>
@@ -106,10 +106,10 @@
 										<NcSelect
 											v-model="configuration[item.key].schema"
 											:options="voorzieningenSchemaOptions"
-											:input-label="item.title"
+											:inputLabel="item.title"
 											:loading="loadingVoorzieningenSchemas"
 											:disabled="loadingVoorzieningenSchemas"
-											@update:model-value="
+											@update:modelValue="
 												validateConfiguration
 											" />
 									</div>
@@ -156,10 +156,10 @@
 										<NcSelect
 											v-model="configuration[item.key].schema"
 											:options="amefSchemaOptions"
-											:input-label="item.title"
+											:inputLabel="item.title"
 											:loading="loadingAmefSchemas"
 											:disabled="loadingAmefSchemas"
-											@update:model-value="
+											@update:modelValue="
 												validateConfiguration
 											" />
 									</div>
@@ -203,15 +203,13 @@
  * @version 1.0.0
  */
 
-import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-
 // Nextcloud Vue components
-import { NcSelect, NcNoteCard } from '@nextcloud/vue'
-
+import { NcNoteCard, NcSelect } from '@nextcloud/vue'
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 // Custom components
 import StandardTabs from '../../../components/StandardTabs.vue'
-import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
+import { settingsStore } from '../../../store/store.js'
 
 export default {
 	name: 'OpenRegisterIntegration',
@@ -256,60 +254,70 @@ export default {
 		loading() {
 			return this.store.loadingOpenRegisterConfig
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingRegisters() {
 			return this.store.isLoadingRegisters
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingVoorzieningenSchemas() {
 			return this.store.isLoadingVoorzieningenSchemas
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingAmefSchemas() {
 			return this.store.isLoadingAmefSchemas
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		versionInfo() {
 			return this.store.versionInfo
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		configuration() {
 			return this.store.configuration
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		registerOptions() {
 			return this.store.registerOptions
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		voorzieningenSchemaOptions() {
 			return this.store.voorzieningenSchemaOptions
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		amefSchemaOptions() {
 			return this.store.amefSchemaOptions
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		voorzieningenSchemas() {
 			return this.store.voorzieningenSchemas
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
@@ -439,13 +447,16 @@ export default {
 			get() {
 				return this.store.voorzieningenRegister
 			},
+
 			/**
+			 * @param value
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) {
 				this.store.voorzieningenRegister = value
 			},
 		},
+
 		amefRegister: {
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
@@ -453,7 +464,9 @@ export default {
 			get() {
 				return this.store.amefRegister
 			},
+
 			/**
+			 * @param value
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) {
@@ -486,6 +499,7 @@ export default {
 	/**
 	 * Component lifecycle - load initial data
 	 * Only loads essential data needed for register/schema dropdowns
+	 *
 	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	async mounted() {

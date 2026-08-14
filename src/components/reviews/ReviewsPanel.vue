@@ -18,9 +18,9 @@
 <template>
 	<CnWidgetWrapper
 		:title="t('softwarecatalog', 'Ratings & reviews')"
-		title-icon-position="left"
-		:show-refresh="false"
-		:show-request-feature="false">
+		titleIconPosition="left"
+		:showRefresh="false"
+		:showRequestFeature="false">
 		<template #title-icon>
 			<CnIcon name="Star" :size="20" />
 		</template>
@@ -110,21 +110,21 @@
 
 		<SubmitReviewModal
 			:show="showSubmitModal"
-			:subject-type="subjectType"
-			:subject-id="objectId"
+			:subjectType="subjectType"
+			:subjectId="objectId"
 			@close="showSubmitModal = false"
-			@review-submitted="loadAggregate" />
+			@reviewSubmitted="loadAggregate" />
 	</CnWidgetWrapper>
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import { CnWidgetWrapper, CnIcon } from '@conduction/nextcloud-vue'
+import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import Star from 'vue-material-design-icons/Star.vue'
+import SubmitReviewModal from '../../modals/SubmitReviewModal.vue'
 import { apiRequest } from '../../utils/adminApi.js'
 import { aggregatePath, normaliseAggregate } from '../../utils/reviewAggregate.js'
-import SubmitReviewModal from '../../modals/SubmitReviewModal.vue'
 
 /**
  * Aggregate rating + submit-review body widget for a module/dienst detail page.
@@ -154,6 +154,7 @@ export default {
 			type: [String, Number],
 			default: '',
 		},
+
 		/** 'module' or 'dienst' — set per-page in src/manifest.json. */
 		subjectType: {
 			type: String,

@@ -13,18 +13,18 @@
 <template>
 	<div class="suite-wizard-step1">
 		<NcTextField
-			:model-value="payload.naam"
+			:modelValue="payload.naam"
 			:label="t('softwarecatalog', 'Name') + ' *'"
 			:placeholder="t('softwarecatalog', 'e.g. Centric Leefomgeving')"
 			required
-			@update:model-value="onField('naam', $event)" />
+			@update:modelValue="onField('naam', $event)" />
 
 		<NcTextField
-			:model-value="payload.beschrijvingKort"
+			:modelValue="payload.beschrijvingKort"
 			:label="t('softwarecatalog', 'Short description') + ' *'"
 			:placeholder="t('softwarecatalog', 'A brief summary of the suite')"
 			required
-			@update:model-value="onField('beschrijvingKort', $event)" />
+			@update:modelValue="onField('beschrijvingKort', $event)" />
 
 		<NcTextArea
 			v-model="beschrijvingLangModel"
@@ -37,16 +37,16 @@
 			" />
 
 		<NcTextField
-			:model-value="payload.website"
+			:modelValue="payload.website"
 			:label="t('softwarecatalog', 'Website')"
 			:placeholder="t('softwarecatalog', 'https://example.com/suite')"
 			type="url"
-			@update:model-value="onField('website', $event)" />
+			@update:modelValue="onField('website', $event)" />
 	</div>
 </template>
 
 <script>
-import { NcTextField, NcTextArea } from '@nextcloud/vue'
+import { NcTextArea, NcTextField } from '@nextcloud/vue'
 import { isDetailsStepValid } from '../../utils/suiteWizard.js'
 
 export default {
@@ -83,6 +83,7 @@ export default {
 			get() {
 				return this.payload.beschrijvingLang || ''
 			},
+
 			/**
 			 * @param {string} value The new long description.
 			 * @return {void}

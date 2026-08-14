@@ -21,13 +21,13 @@
 		name="User Groups Configuration"
 		description="Configure user groups for different access levels and permissions"
 		:loading="loading"
-		loading-text="Loading user groups..."
-		:show-save-button="true"
-		:show-refresh-button="true"
-		:can-save="hasChanges"
+		loadingText="Loading user groups..."
+		:showSaveButton="true"
+		:showRefreshButton="true"
+		:canSave="hasChanges"
 		:saving="savingGroups"
-		save-button-text="Save User Groups"
-		:has-info-content="true"
+		saveButtonText="Save User Groups"
+		:hasInfoContent="true"
 		@save="saveAllGroups"
 		@refresh="loadAllGroups">
 		<StandardTabs
@@ -39,8 +39,8 @@
 				},
 				{ key: 'super-user-groups', title: 'Super User Groups' },
 			]"
-			:active-tab="activeTab"
-			@update:active-tab="activeTab = $event">
+			:activeTab="activeTab"
+			@update:activeTab="activeTab = $event">
 			<!-- Generic Groups Tab -->
 			<div v-show="activeTab === 'generic-groups'" class="tab-panel">
 				<h3>Generic User Groups</h3>
@@ -57,15 +57,15 @@
 							:key="index"
 							class="group-item">
 							<NcTextField
-								:model-value="(group || '').toString()"
-								:placeholder="'Group name'"
+								:modelValue="(group || '').toString()"
+								placeholder="Group name"
 								label="Group Name"
-								@update:model-value="
+								@update:modelValue="
 									updateGroupName(index, $event)
 								" />
 							<NcButton
 								variant="tertiary-no-background"
-								:aria-label="'Remove group'"
+								aria-label="Remove group"
 								@click="removeGroup(index)">
 								<template #icon>
 									<Close :size="16" />
@@ -162,15 +162,15 @@
 							:key="index"
 							class="group-item">
 							<NcTextField
-								:model-value="group || ''"
-								:placeholder="'Group name'"
+								:modelValue="group || ''"
+								placeholder="Group name"
 								label="Group Name"
-								@update:model-value="
+								@update:modelValue="
 									updateOrganizationAdminGroupName(index, $event)
 								" />
 							<NcButton
 								variant="tertiary-no-background"
-								:aria-label="'Remove group'"
+								aria-label="Remove group"
 								@click="removeOrganizationAdminGroup(index)">
 								<template #icon>
 									<Close :size="16" />
@@ -244,15 +244,15 @@
 							:key="index"
 							class="group-item">
 							<NcTextField
-								:model-value="group || ''"
-								:placeholder="'Group name'"
+								:modelValue="group || ''"
+								placeholder="Group name"
 								label="Group Name"
-								@update:model-value="
+								@update:modelValue="
 									updateSuperUserGroupName(index, $event)
 								" />
 							<NcButton
 								variant="tertiary-no-background"
-								:aria-label="'Remove group'"
+								aria-label="Remove group"
 								@click="removeSuperUserGroup(index)">
 								<template #icon>
 									<Close :size="16" />
@@ -392,20 +392,17 @@
  * @version 1.0.0
  */
 
-import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-
+// Nextcloud Vue components
+import { NcButton, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import Alert from 'vue-material-design-icons/Alert.vue'
+import Close from 'vue-material-design-icons/Close.vue'
+// Icons
+import Plus from 'vue-material-design-icons/Plus.vue'
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import StandardTabs from '../../../components/StandardTabs.vue'
-
-// Nextcloud Vue components
-import { NcButton, NcTextField, NcNoteCard } from '@nextcloud/vue'
-
-// Icons
-import Plus from 'vue-material-design-icons/Plus.vue'
-import Close from 'vue-material-design-icons/Close.vue'
-import Alert from 'vue-material-design-icons/Alert.vue'
+import { settingsStore } from '../../../store/store.js'
 
 // Nextcloud Vue components
 
@@ -462,6 +459,7 @@ export default {
 		loading() {
 			return this.store.loading
 		},
+
 		genericUserGroups: {
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
@@ -469,13 +467,16 @@ export default {
 			get() {
 				return this.store.genericUserGroups || []
 			},
+
 			/**
+			 * @param value
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) {
 				this.store.genericUserGroups = value
 			},
 		},
+
 		organizationAdminGroups: {
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
@@ -483,13 +484,16 @@ export default {
 			get() {
 				return this.store.organizationAdminGroups || []
 			},
+
 			/**
+			 * @param value
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) {
 				this.store.organizationAdminGroups = value
 			},
 		},
+
 		superUserGroups: {
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
@@ -497,7 +501,9 @@ export default {
 			get() {
 				return this.store.superUserGroups || []
 			},
+
 			/**
+			 * @param value
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) {
@@ -507,6 +513,7 @@ export default {
 
 		/**
 		 * Check if there are any unsaved changes
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		hasChanges() {
@@ -651,6 +658,7 @@ export default {
 
 		/**
 		 * Save all groups using the centralized settings store
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveAllGroups() {
@@ -666,6 +674,7 @@ export default {
 
 		/**
 		 * Load all groups from the store
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadAllGroups() {

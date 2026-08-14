@@ -134,25 +134,24 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcEmptyContent } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
-import { objectStore, navigationStore } from '../store/store.js'
-import { useLiveCollections } from '../composables/useLiveCollections.js'
-import { resolveUuid } from '../utils/lifecyclePhase.js'
-import {
-	SEVERITY,
-	deriveSeverity,
-	parseCvss,
-	severityOrder,
-	matchesSeverity,
-} from '../utils/vulnerabilitySeverity.js'
-import { exposureCount } from '../utils/vulnerabilityExposure.js'
-
-import Refresh from 'vue-material-design-icons/Refresh.vue'
-import Plus from 'vue-material-design-icons/Plus.vue'
-import Pencil from 'vue-material-design-icons/Pencil.vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import ShieldAlert from 'vue-material-design-icons/ShieldAlert.vue'
+import { useLiveCollections } from '../composables/useLiveCollections.js'
+import { navigationStore, objectStore } from '../store/store.js'
+import { resolveUuid } from '../utils/lifecyclePhase.js'
+import { exposureCount } from '../utils/vulnerabilityExposure.js'
+import {
+	deriveSeverity,
+	matchesSeverity,
+	parseCvss,
+	SEVERITY,
+	severityOrder,
+} from '../utils/vulnerabilitySeverity.js'
 
 /**
  * @class KwetsbaarhedenView
@@ -182,6 +181,7 @@ export default {
 		Delete,
 		ShieldAlert,
 	},
+
 	/**
 	 * Live updates (nc-vue liveUpdatesPlugin, default-on since beta.212):
 	 * subscribe to the collection scope of every type this view renders.
@@ -208,6 +208,7 @@ export default {
 	computed: {
 		/**
 		 * All kwetsbaarheid records in the store.
+		 *
 		 * @return {Array} Vulnerability records.
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
@@ -217,6 +218,7 @@ export default {
 
 		/**
 		 * All gebruik records (usages) — the exposure join input.
+		 *
 		 * @return {Array} Gebruik records.
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
@@ -226,6 +228,7 @@ export default {
 
 		/**
 		 * Row view-models: raw fields + derived severity + affected/exposure counts.
+		 *
 		 * @return {Array} Row view-models.
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
@@ -255,6 +258,7 @@ export default {
 
 		/**
 		 * Rows filtered to the selected severity band.
+		 *
 		 * @return {Array} Filtered rows.
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
@@ -266,6 +270,7 @@ export default {
 
 		/**
 		 * Severity tabs with per-band counts (All first).
+		 *
 		 * @return {Array<{band: string, label: string, count: number}>} Tabs.
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
@@ -295,6 +300,7 @@ export default {
 
 		/**
 		 * Load vulnerabilities and usages.
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
@@ -320,6 +326,7 @@ export default {
 
 		/**
 		 * Fetch one object type collection, registering the type if needed.
+		 *
 		 * @param {string} type Object type slug.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
@@ -346,6 +353,7 @@ export default {
 
 		/**
 		 * Human label for a severity band (All included).
+		 *
 		 * @param {string} band A SEVERITY.* value or 'All'.
 		 * @return {string} Display label.
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
@@ -365,6 +373,7 @@ export default {
 		/**
 		 * Open the generic create modal for a new vulnerability (activates the
 		 * shipped vulnerability-reported notification on save).
+		 *
 		 * @return {void}
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
@@ -375,6 +384,7 @@ export default {
 
 		/**
 		 * Open the generic edit modal for an existing vulnerability.
+		 *
 		 * @param {object} row A row view-model.
 		 * @return {void}
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
@@ -386,6 +396,7 @@ export default {
 
 		/**
 		 * Open the delete confirmation dialog for a vulnerability.
+		 *
 		 * @param {object} row A row view-model.
 		 * @return {void}
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
@@ -400,6 +411,7 @@ export default {
 		/**
 		 * Open the full vulnerability record (the app's canonical "open record"
 		 * gesture) so its fields, affected applications and exposure are readable.
+		 *
 		 * @param {object} row A row view-model.
 		 * @return {void}
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md

@@ -46,10 +46,10 @@
 					<NcSelect
 						v-model="selectedRating"
 						:options="ratingOptions"
-						:input-label="t('softwarecatalog', 'Rating (1-10)')"
+						:inputLabel="t('softwarecatalog', 'Rating (1-10)')"
 						:placeholder="t('softwarecatalog', 'Select a rating')"
 						label="label"
-						track-by="value"
+						trackBy="value"
 						:reduce="(option) => option.value"
 						:clearable="false" />
 				</div>
@@ -90,22 +90,22 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { translate as t } from '@nextcloud/l10n'
 import {
-	NcDialog,
 	NcButton,
-	NcTextField,
-	NcTextArea,
-	NcSelect,
+	NcDialog,
 	NcLoadingIcon,
 	NcNoteCard,
+	NcSelect,
+	NcTextArea,
+	NcTextField,
 } from '@nextcloud/vue'
-import { translate as t } from '@nextcloud/l10n'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 import { apiRequest } from '../utils/adminApi.js'
 import {
-	ratingOptions,
-	isReviewFormValid,
 	buildReviewSubmission,
+	isReviewFormValid,
+	ratingOptions,
 } from '../utils/reviewForm.js'
 
 /**
@@ -131,11 +131,13 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		/** 'module' or 'dienst' — the type of the object being reviewed. */
 		subjectType: {
 			type: String,
 			required: true,
 		},
+
 		/** The uuid of the module/dienst being reviewed. */
 		subjectId: {
 			type: String,

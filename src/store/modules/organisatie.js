@@ -11,8 +11,8 @@
  * @see https://github.com/opencatalogi/softwarecatalog
  */
 
-import { defineStore } from 'pinia'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 
 export const useOrganisatieStore = defineStore('organisatie', {
 	state: () => ({
@@ -29,6 +29,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 	getters: {
 		/**
 		 * Get contactpersonen for current organisation
+		 *
 		 * @param {object} state - The store state
 		 * @return {Array} Array of contactpersonen
 		 */
@@ -36,6 +37,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Check if store is loading
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} Loading state
 		 */
@@ -43,6 +45,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Get current error
+		 *
 		 * @param {object} state - The store state
 		 * @return {string|null} Current error message
 		 */
@@ -50,6 +53,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Get available groups for user assignment
+		 *
 		 * @param {object} state - The store state
 		 * @return {Array} Available groups
 		 */
@@ -59,6 +63,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 	actions: {
 		/**
 		 * Fetch contactpersonen for an organisation
+		 *
 		 * @param {string} organisationId - The organisation ID
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-stores/spec.md
@@ -107,6 +112,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Convert a contactpersoon to a user account
+		 *
 		 * @param {string} contactpersoonId - The contactpersoon ID
 		 * @return {Promise<object>} Result of conversion
 		 * @spec openspec/specs/fe-stores/spec.md
@@ -154,6 +160,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Change user password
+		 *
 		 * @param {string} username - The username
 		 * @param {string} newPassword - The new password
 		 * @return {Promise<object>} Result of password change
@@ -202,6 +209,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Update user groups
+		 *
 		 * @param {string} username - The username
 		 * @param {Array} groups - Array of group names
 		 * @return {Promise<object>} Result of group update
@@ -257,6 +265,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Fetch user info and available groups for a specific contactpersoon
+		 *
 		 * @param {string} contactpersoonId - The contactpersoon ID
 		 * @return {Promise<object>} User info and available groups
 		 * @spec openspec/specs/fe-stores/spec.md
@@ -300,6 +309,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Fetch contact persons with user details for an organization
+		 *
 		 * @param {string} organizationUuid - The organization UUID
 		 * @return {Promise<Array>} Array of contact persons with user details
 		 * @spec openspec/specs/fe-stores/spec.md
@@ -348,6 +358,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Fetch available groups for user assignment (fallback method)
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
@@ -387,6 +398,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Clear error state
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		clearError() {
@@ -395,6 +407,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Clear contactpersonen data
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		clearContactpersonen() {
@@ -403,6 +416,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Disable a user account
+		 *
 		 * @param {string} contactpersoonId - The contactpersoon UUID to disable
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-stores/spec.md
@@ -431,6 +445,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Enable a user account
+		 *
 		 * @param {string} contactpersoonId - The contactpersoon UUID to enable
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-stores/spec.md
@@ -460,6 +475,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		/**
 		 * Preview an organisation merge: per-relation-type counts, no writes.
 		 * Admin-only server-side (403 surfaces as a thrown Error here).
+		 *
 		 * @param {string} sourceUuid - The source organisation UUID (merged away).
 		 * @param {string} targetUuid - The target organisation UUID (merge destination).
 		 * @return {Promise<object>} `{sourceUuid, targetUuid, counts, blockers}`.
@@ -497,6 +513,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 		 * Execute an organisation merge: re-point every relation type, migrate
 		 * NC group membership, tombstone the source. Idempotent — safe to call
 		 * again against a partially or fully completed merge.
+		 *
 		 * @param {string} sourceUuid - The source organisation UUID (merged away).
 		 * @param {string} targetUuid - The target organisation UUID (merge destination).
 		 * @return {Promise<object>} `{operationId, sourceUuid, targetUuid, status, counts}`.
@@ -533,6 +550,7 @@ export const useOrganisatieStore = defineStore('organisatie', {
 
 		/**
 		 * Get user info for multiple contactpersonen in one request
+		 *
 		 * @param {Array<string>} contactpersoonIds - Array of contactpersoon UUIDs
 		 * @return {Promise<object>} Bulk user info object keyed by contactpersoon ID
 		 * @spec openspec/specs/fe-stores/spec.md

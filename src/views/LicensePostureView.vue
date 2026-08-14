@@ -115,9 +115,9 @@
 					<NcSelect
 						v-model="selectedOrg"
 						:options="organisationOptions"
-						:input-label="t('softwarecatalog', 'Organisation')"
+						:inputLabel="t('softwarecatalog', 'Organisation')"
 						:placeholder="t('softwarecatalog', 'Select an organisation')"
-						track-by="uuid"
+						trackBy="uuid"
 						label="label" />
 				</div>
 				<div
@@ -163,19 +163,18 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect, NcEmptyContent } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
-import { objectStore } from '../store/store.js'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
-import { resolveUuid } from '../utils/lifecyclePhase.js'
+import { objectStore } from '../store/store.js'
 import {
 	LICENSE_TYPE,
-	portfolioPosture,
-	perVendorRollup,
 	perOrganisationPosture,
+	perVendorRollup,
+	portfolioPosture,
 } from '../utils/licensePosture.js'
-
-import Refresh from 'vue-material-design-icons/Refresh.vue'
+import { resolveUuid } from '../utils/lifecyclePhase.js'
 
 /**
  * @class LicensePostureView
@@ -201,6 +200,7 @@ export default {
 		NcEmptyContent,
 		Refresh,
 	},
+
 	/**
 	 * Live updates (nc-vue liveUpdatesPlugin, default-on since beta.212):
 	 * subscribe to the collection scope of every type this view renders.
@@ -232,6 +232,7 @@ export default {
 	computed: {
 		/**
 		 * All module records.
+		 *
 		 * @return {Array} Module records.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -241,6 +242,7 @@ export default {
 
 		/**
 		 * All gebruik records.
+		 *
 		 * @return {Array} Gebruik records.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -250,6 +252,7 @@ export default {
 
 		/**
 		 * All contract records (cost source; may be empty — cost degrades to empty).
+		 *
 		 * @return {Array} Contract records.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -259,6 +262,7 @@ export default {
 
 		/**
 		 * Organisation UUID → display name.
+		 *
 		 * @return {object} Lookup map.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -277,6 +281,7 @@ export default {
 
 		/**
 		 * Module UUID → display name.
+		 *
 		 * @return {object} Lookup map.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -294,6 +299,7 @@ export default {
 
 		/**
 		 * Portfolio posture summary.
+		 *
 		 * @return {object} Posture summary.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -303,6 +309,7 @@ export default {
 
 		/**
 		 * Open-source share as a percentage label.
+		 *
 		 * @return {string} e.g. "67%" or "—".
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -314,6 +321,7 @@ export default {
 
 		/**
 		 * Per-vendor rollup rows resolved to display names + cost labels.
+		 *
 		 * @return {Array} Vendor rows.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -341,6 +349,7 @@ export default {
 
 		/**
 		 * Organisation options for the per-organisation report.
+		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -353,6 +362,7 @@ export default {
 
 		/**
 		 * The selected organisation's posture.
+		 *
 		 * @return {object} Org posture.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -376,6 +386,7 @@ export default {
 
 		/**
 		 * The selected org's open-source share percentage label.
+		 *
 		 * @return {string} e.g. "50%" or "—".
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -387,6 +398,7 @@ export default {
 
 		/**
 		 * Closed-source contributors of the selected org, resolved to names.
+		 *
 		 * @return {Array<{id: string, name: string}>} Contributors.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -407,6 +419,7 @@ export default {
 
 		/**
 		 * Load the collections the posture depends on.
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
@@ -434,6 +447,7 @@ export default {
 
 		/**
 		 * Fetch one object type collection, registering the type if needed.
+		 *
 		 * @param {string} type Object type slug.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/software-license-posture/spec.md
@@ -460,6 +474,7 @@ export default {
 
 		/**
 		 * Format an annual-cost number as a euro label.
+		 *
 		 * @param {number} amount The amount.
 		 * @return {string} Currency label.
 		 * @spec openspec/specs/software-license-posture/spec.md
