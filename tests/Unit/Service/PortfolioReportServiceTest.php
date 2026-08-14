@@ -94,7 +94,7 @@ class PortfolioReportServiceTest extends TestCase {
 		$result = $derivation->deriveLifecyclePhase(
 			[
 				'startDateInProduction' => '2025-01-01',
-				'startDateOutTeFaseren' => '2027-01-01',
+				'startDateOutPhasing' => '2027-01-01',
 			],
 			$now
 		);
@@ -125,7 +125,7 @@ class PortfolioReportServiceTest extends TestCase {
 		$derivation = $this->makeDerivation();
 		$now = new \DateTimeImmutable('2026-06-01');
 
-		$result = $derivation->deriveEolState(['dateEndOndersteuning' => '2025-01-01'], $now);
+		$result = $derivation->deriveEolState(['dateEndSupport' => '2025-01-01'], $now);
 
 		$this->assertTrue($result['passed']);
 		$this->assertFalse($result['withdrawn']);
@@ -141,7 +141,7 @@ class PortfolioReportServiceTest extends TestCase {
 		$derivation = $this->makeDerivation();
 		$now = new \DateTimeImmutable('2026-06-01');
 
-		$result = $derivation->deriveEolState(['dateEndOndersteuning' => '2030-01-01'], $now);
+		$result = $derivation->deriveEolState(['dateEndSupport' => '2030-01-01'], $now);
 
 		$this->assertFalse($result['passed']);
 	}//end testDeriveEolStateDoesNotFlagFutureDate()
@@ -172,7 +172,7 @@ class PortfolioReportServiceTest extends TestCase {
 		$derivation = $this->makeDerivation();
 		$now = new \DateTimeImmutable('2026-06-01');
 
-		$result = $derivation->isEolApproaching(['dateEndOndersteuning' => '2026-09-01'], $now);
+		$result = $derivation->isEolApproaching(['dateEndSupport' => '2026-09-01'], $now);
 
 		$this->assertTrue($result);
 	}//end testIsEolApproachingWithinWindow()
@@ -186,7 +186,7 @@ class PortfolioReportServiceTest extends TestCase {
 		$derivation = $this->makeDerivation();
 		$now = new \DateTimeImmutable('2026-06-01');
 
-		$result = $derivation->isEolApproaching(['dateEndOndersteuning' => '2025-01-01'], $now);
+		$result = $derivation->isEolApproaching(['dateEndSupport' => '2025-01-01'], $now);
 
 		$this->assertFalse($result);
 	}//end testIsEolApproachingExcludesPassedDate()

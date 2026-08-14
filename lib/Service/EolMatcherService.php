@@ -167,7 +167,7 @@ class EolMatcherService {
 	 */
 	public function buildStamp(array $moduleVersion, array $matchedCycle, string $source, string $fetchedAt): array {
 		$stamped = $moduleVersion;
-		$stamped['dateEndOndersteuning'] = (string)($matchedCycle['eol'] ?? '');
+		$stamped['dateEndSupport'] = (string)($matchedCycle['eol'] ?? '');
 		$stamped['eolSource'] = $source;
 		$stamped['eolUpdatedOn'] = $fetchedAt;
 

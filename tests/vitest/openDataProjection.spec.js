@@ -24,7 +24,7 @@ describe('openDataProjection.projectOpenData', () => {
 		interneAnnotation: 'secret internal note',
 		contactpersoon: { voornaam: 'Jan', email: 'jan@example.org' },
 		contactPersonProvider: { name: 'Aanbieder' },
-		geregistreerdBy: 'someuser',
+		registeredBy: 'someuser',
 	}
 
 	it('strips PII and internal fields', () => {
@@ -32,7 +32,7 @@ describe('openDataProjection.projectOpenData', () => {
 		expect(p.interneAnnotation).toBeUndefined()
 		expect(p.contactpersoon).toBeUndefined()
 		expect(p.contactPersonProvider).toBeUndefined()
-		expect(p.geregistreerdBy).toBeUndefined()
+		expect(p.registeredBy).toBeUndefined()
 		expect(p.owner).toBeUndefined()
 	})
 

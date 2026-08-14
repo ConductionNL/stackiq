@@ -192,7 +192,7 @@ class GebruikSyncService {
 			$gebruikUuid = $gebruikObject->getUuid();
 
 			// Get the referentiecomponenten IDs.
-			$referenceComponents = $gebruikData['gebruiktForReferentiecomponenten'] ?? [];
+			$referenceComponents = $gebruikData['usedForReferenceComponents'] ?? [];
 
 			if (empty($referenceComponents) === true) {
 				$this->logger->info(
@@ -445,11 +445,11 @@ class GebruikSyncService {
 	 */
 	private function extractStatusDateMap(array $gebruikData): array {
 		return [
-			'Verwerving' => $gebruikData['startDateVerwerving'] ?? null,
+			'Verwerving' => $gebruikData['startDateAcquisition'] ?? null,
 			'Gepland' => $gebruikData['startDatePlanned'] ?? null,
 			'In productie' => $gebruikData['startDateInProduction'] ?? null,
-			'Uit te faseren' => $gebruikData['startDateOutTeFaseren'] ?? null,
-			'Uitgefaseerd' => $gebruikData['startDateOutGefaseerd'] ?? null,
+			'Uit te faseren' => $gebruikData['startDateOutPhasing'] ?? null,
+			'Uitgefaseerd' => $gebruikData['startDateOutPhased'] ?? null,
 		];
 
 	}//end extractStatusDateMap()

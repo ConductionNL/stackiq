@@ -2331,7 +2331,7 @@
               "Ambtelijke fusie"
             ]
           },
-          "geregistreerdBy": {
+          "registeredBy": {
             "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 18,
@@ -2395,7 +2395,7 @@
             {
               "group": "public",
               "match": {
-                "geregistreerdBy": "Leverancier",
+                "registeredBy": "Leverancier",
                 "status": "Actief"
               }
             },
@@ -2553,7 +2553,7 @@
         "icon": "Gauge",
         "x-openregister-notifications": {
           "phaseout-approaching": {
-            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"startDateOutTeFaseren": {"operator": "withinNext", "value": "P180D"}}},
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"startDateOutPhasing": {"operator": "withinNext", "value": "P180D"}}},
             "enabled": true,
             "channels": ["nc-notification", "email"],
             "recipients": [
@@ -2622,7 +2622,7 @@
               "$ref": "#/components/schemas/organisatie"
             }
           },
-          "startDateVerwerving": {
+          "startDateAcquisition": {
             "description": "De start datum voor het \"Verwerving\" status",
             "type": "string",
             "format": "date",
@@ -2692,7 +2692,7 @@
             "title": "Start date in production",
             "example": "Bijvoorbeeld: 2025-03-01"
           },
-          "startDateOutTeFaseren": {
+          "startDateOutPhasing": {
             "description": "De start datum voor het \"Beëindigd\" status",
             "type": "string",
             "format": "date",
@@ -2722,7 +2722,7 @@
             "title": "Phase-out start date",
             "example": "Bijvoorbeeld: 2025-12-31"
           },
-          "startDateOutGefaseerd": {
+          "startDateOutPhased": {
             "description": "De start datum voor het \"Uit gefaseerd\" status",
             "type": "string",
             "format": "date",
@@ -2871,7 +2871,7 @@
               "default": true
             }
           },
-          "gebruiktForReferentiecomponenten": {
+          "usedForReferenceComponents": {
             "description": "GEMMA referentiecomponenten waarvoor dit product wordt gebruikt",
             "type": "array",
             "visible": true,
@@ -2963,7 +2963,7 @@
             },
             "$ref": "#/components/schemas/module"
           },
-          "plannedVervangingsDate": {
+          "plannedReplacementDate": {
             "description": "De geplande datum waarop de vervanging plaatsvindt.",
             "type": "string",
             "format": "date",
@@ -3526,7 +3526,7 @@
             "title": "Date in development",
             "example": "Bijvoorbeeld: 2025-01-01"
           },
-          "dateInGebruik": {
+          "dateInUse": {
             "description": "Startdatum van gebruik",
             "type": "string",
             "format": "date",
@@ -3534,7 +3534,7 @@
             "facetable": false,
             "title": "Date in use"
           },
-          "dateEndOndersteuning": {
+          "dateEndSupport": {
             "description": "Startdatum einde ondersteuning",
             "type": "string",
             "format": "date",
@@ -3542,7 +3542,7 @@
             "facetable": false,
             "title": "End of support date"
           },
-          "dateTeruggetrokken": {
+          "dateWithdrawn": {
             "description": "Datum waarop de koppeling teruggetrokken is",
             "type": "string",
             "format": "date",
@@ -3550,7 +3550,7 @@
             "facetable": false,
             "title": "Date withdrawn"
           },
-          "gegevensuitwisselingDirection": {
+          "dataExchangeDirection": {
             "description": "Kies welke applicatie de gegevens verzendt en welke deze ontvangt.",
             "type": "string",
             "order": 8,
@@ -3624,7 +3624,7 @@
               "$ref": "#/components/schemas/element"
             }
           },
-          "gerealiseerdWithIntermediairModule": {
+          "realisedWithIntermediaryModule": {
             "description": "Kies de intermediair, bijvoorbeeld een servicebus, via welke de koppeling loopt.",
             "type": "object",
             "order": 13,
@@ -3665,7 +3665,7 @@
             "$ref": "#/components/schemas/dienst",
             "inversedBy": "koppelingen"
           },
-          "geregistreerdBy": {
+          "registeredBy": {
             "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 16,
@@ -4536,11 +4536,11 @@
               "searchable": false
             }
           },
-          "heeftSource": {
+          "hasSource": {
             "description": "Heeft bron van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "heeftSource",
+            "title": "hasSource",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -5005,7 +5005,7 @@
               "searchable": false
             }
           },
-          "verplichteStandards": {
+          "mandatoryStandards": {
             "description": "Array van verplichte standaarden voor dit referentiecomponent",
             "type": "array",
             "facetable": false,
@@ -5041,7 +5041,7 @@
               "searchable": false
             }
           },
-          "recommendedForReferentiecomponent": {
+          "recommendedForReferenceComponent": {
             "description": "UUID van het Referentiecomponent waarvoor deze standaard aanbevolen is",
             "type": "object",
             "facetable": false,
@@ -5057,7 +5057,7 @@
               "searchable": false
             }
           },
-          "verplichteForReferentiecomponent": {
+          "mandatoryForReferenceComponent": {
             "description": "UUID van het Referentiecomponent waarvoor deze standaard verplicht is",
             "type": "object",
             "facetable": false,
@@ -5108,7 +5108,7 @@
               "searchable": false
             }
           },
-          "gekoppeldeStandardVersions": {
+          "linkedStandardVersions": {
             "description": "Array van standaardversies gekoppeld aan dit referentiecomponent (via standaarden)",
             "type": "array",
             "facetable": false,
@@ -6796,7 +6796,7 @@
         "x-schema-org": "schema:SoftwareApplication",
         "x-openregister-notifications": {
           "dpia-review-overdue": {
-            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"dpiaStatus": {"operator": "equals", "value": "executed"}, "dpiaVolgendeAssessment": {"operator": "withinNext", "value": "P0D"}}},
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"dpiaStatus": {"operator": "equals", "value": "executed"}, "dpiaNextAssessment": {"operator": "withinNext", "value": "P0D"}}},
             "enabled": true,
             "channels": ["nc-notification", "email"],
             "recipients": [
@@ -7198,7 +7198,7 @@
               "$ref": "#/components/schemas/gebruik"
             }
           },
-          "geregistreerdBy": {
+          "registeredBy": {
             "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 30,
@@ -7283,7 +7283,7 @@
             "title": "DPIA date",
             "example": "Bijvoorbeeld: 2026-03-01"
           },
-          "dpiaVolgendeAssessment": {
+          "dpiaNextAssessment": {
             "description": "De datum waarop de DPIA opnieuw beoordeeld moet worden.",
             "type": "string",
             "format": "date",
@@ -7340,7 +7340,7 @@
             {
               "group": "public",
               "match": {
-                "geregistreerdBy": "Leverancier"
+                "registeredBy": "Leverancier"
               }
             }
           ]
@@ -7681,7 +7681,7 @@
             }
           },
           "eol-approaching": {
-            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"dateEndOndersteuning": {"operator": "withinNext", "value": "P180D"}}},
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"dateEndSupport": {"operator": "withinNext", "value": "P180D"}}},
             "enabled": true,
             "channels": ["nc-notification", "email"],
             "recipients": [
@@ -7760,21 +7760,21 @@
             "order": 14,
             "title": "Date in development"
           },
-          "dateInGebruik": {
+          "dateInUse": {
             "description": "Startdatum van gebruik",
             "type": "string",
             "format": "date",
             "order": 15,
             "title": "Date in use"
           },
-          "dateEndOndersteuning": {
+          "dateEndSupport": {
             "description": "Startdatum einde ondersteuning",
             "type": "string",
             "format": "date",
             "order": 16,
             "title": "End of support date"
           },
-          "dateTeruggetrokken": {
+          "dateWithdrawn": {
             "description": "Datum waarop de applicatie teruggetrokken is",
             "type": "string",
             "format": "date",
@@ -7798,7 +7798,7 @@
               "$ref": "#/components/schemas/gebruik"
             }
           },
-          "geregistreerdBy": {
+          "registeredBy": {
             "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 19,

@@ -2887,7 +2887,7 @@ class ArchiMateService {
 	 * then uses relationships to link them together based on Verbindingsrol property.
 	 * Each Referentiecomponent gets two properties:
 	 * - 'recommendedStandards' array for standards with Verbindingsrol = "Aanbevolen"
-	 * - 'verplichteStandards' array for standards with Verbindingsrol = "Verplicht"
+	 * - 'mandatoryStandards' array for standards with Verbindingsrol = "Verplicht"
 	 *
 	 * @param array $objects All objects from the import
 	 *
@@ -2977,13 +2977,13 @@ class ArchiMateService {
 
 				// Remove duplicates and add the properties.
 				$recommendedStandards = array_unique($standardsMap['aanbevolen']);
-				$verplichteStandards = array_unique($standardsMap['verplicht']);
+				$mandatoryStandards = array_unique($standardsMap['verplicht']);
 
 				$objects[$objectIndex]['recommendedStandards'] = $recommendedStandards;
-				$objects[$objectIndex]['verplichteStandards'] = $verplichteStandards;
+				$objects[$objectIndex]['mandatoryStandards'] = $mandatoryStandards;
 
 				// Also add combined array for backward compatibility.
-				$allStandards = array_unique(array_merge($recommendedStandards, $verplichteStandards));
+				$allStandards = array_unique(array_merge($recommendedStandards, $mandatoryStandards));
 				$objects[$objectIndex]['standards'] = $allStandards;
 
 				$this->logger->info(
@@ -2992,9 +2992,9 @@ class ArchiMateService {
 						'referentiecomponent_id' => $referenceComponentId,
 						'referentiecomponent_name' => $objects[$objectIndex]['name'] ?? 'Unknown',
 						'aanbevolen_count' => count($recommendedStandards),
-						'verplicht_count' => count($verplichteStandards),
+						'verplicht_count' => count($mandatoryStandards),
 						'aanbevolen_ids' => $recommendedStandards,
-						'verplicht_ids' => $verplichteStandards,
+						'verplicht_ids' => $mandatoryStandards,
 					]
 				);
 

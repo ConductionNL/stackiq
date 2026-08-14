@@ -45,7 +45,7 @@ const STRIPPED_FIELDS = Object.freeze([
 	'achternaam',
 	'owner',
 	'authorization',
-	'geregistreerdBy',
+	'registeredBy',
 ])
 
 /**

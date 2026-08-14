@@ -109,7 +109,7 @@ class EolRegisterShapeTest extends TestCase {
 	 */
 	public function testModuleVersieStillDeclaresDatumEindeOndersteuning(): void {
 		$props = $this->schema('moduleVersie')['properties'] ?? [];
-		$this->assertArrayHasKey('dateEndOndersteuning', $props);
-		$this->assertSame('date', $props['dateEndOndersteuning']['format'] ?? null);
+		$this->assertArrayHasKey('dateEndSupport', $props);
+		$this->assertSame('date', $props['dateEndSupport']['format'] ?? null);
 	}//end testModuleVersieStillDeclaresDatumEindeOndersteuning()
 }//end class

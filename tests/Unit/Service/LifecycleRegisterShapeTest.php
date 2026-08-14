@@ -69,17 +69,17 @@ class LifecycleRegisterShapeTest extends TestCase {
 		$props = $gebruik['properties'] ?? [];
 
 		$this->assertArrayHasKey('plannedReplacement', $props);
-		$this->assertArrayHasKey('plannedVervangingsDate', $props);
+		$this->assertArrayHasKey('plannedReplacementDate', $props);
 
 		// Optional: not listed in `required` (import-over-existing is non-destructive).
 		$required = $gebruik['required'] ?? [];
 		$this->assertNotContains('plannedReplacement', $required);
-		$this->assertNotContains('plannedVervangingsDate', $required);
+		$this->assertNotContains('plannedReplacementDate', $required);
 
 		// The replacement is a related-object reference to a module.
 		$this->assertSame('related-object', $props['plannedReplacement']['objectConfiguration']['handling'] ?? null);
 		$this->assertStringContainsString('module', $props['plannedReplacement']['$ref'] ?? '');
-		$this->assertSame('date', $props['plannedVervangingsDate']['format'] ?? null);
+		$this->assertSame('date', $props['plannedReplacementDate']['format'] ?? null);
 	}//end testGebruikHasOptionalReplacementFields()
 
 	/**
@@ -93,7 +93,7 @@ class LifecycleRegisterShapeTest extends TestCase {
 
 		$rule = $rules['phaseout-approaching'];
 		$this->assertSame('scheduled', $rule['trigger']['type']);
-		$filter = $rule['trigger']['filter']['startDateOutTeFaseren'] ?? [];
+		$filter = $rule['trigger']['filter']['startDateOutPhasing'] ?? [];
 		$this->assertSame('withinNext', $filter['operator'] ?? null);
 		$this->assertArrayHasKey('nl', $rule['subject']);
 		$this->assertArrayHasKey('en', $rule['subject']);
@@ -110,7 +110,7 @@ class LifecycleRegisterShapeTest extends TestCase {
 
 		$rule = $rules['eol-approaching'];
 		$this->assertSame('scheduled', $rule['trigger']['type']);
-		$filter = $rule['trigger']['filter']['dateEndOndersteuning'] ?? [];
+		$filter = $rule['trigger']['filter']['dateEndSupport'] ?? [];
 		$this->assertSame('withinNext', $filter['operator'] ?? null);
 	}//end testModuleVersieDeclaresEolRule()
 }//end class

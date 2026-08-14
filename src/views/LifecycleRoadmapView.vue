@@ -410,10 +410,10 @@ export default {
 				eolApproaching: versie
 					? isEolApproaching(versie, EOL_WINDOW_DAYS, now)
 					: false,
-				phaseOutDate: data.startDateOutTeFaseren || null,
+				phaseOutDate: data.startDateOutPhasing || null,
 				replacementUuid,
 				replacementName: replacementModule?.name || replacementUuid || null,
-				replacementDate: data.plannedVervangingsDate || null,
+				replacementDate: data.plannedReplacementDate || null,
 			}
 		},
 

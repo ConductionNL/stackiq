@@ -193,7 +193,7 @@ class EolMatcherServiceTest extends TestCase {
 		);
 
 		// Stamped fields.
-		$this->assertSame('2025-11-09', $stamped['dateEndOndersteuning']);
+		$this->assertSame('2025-11-09', $stamped['dateEndSupport']);
 		$this->assertSame('endoflife.date', $stamped['eolSource']);
 		$this->assertSame('2026-07-23T10:00:00+00:00', $stamped['eolUpdatedOn']);
 
@@ -217,7 +217,7 @@ class EolMatcherServiceTest extends TestCase {
 		$handEntered = [
 			'id' => 'mv-uuid-2',
 			'version' => '9.9.9',
-			'dateEndOndersteuning' => '2030-01-01',
+			'dateEndSupport' => '2030-01-01',
 		];
 
 		$result = $this->matcher->matchModuleVersions(
@@ -231,7 +231,7 @@ class EolMatcherServiceTest extends TestCase {
 		$this->assertCount(1, $result['skipped']);
 		$this->assertArrayNotHasKey('eolSource', $result['skipped'][0]);
 		$this->assertArrayNotHasKey('eolUpdatedOn', $result['skipped'][0]);
-		$this->assertSame('2030-01-01', $result['skipped'][0]['dateEndOndersteuning']);
+		$this->assertSame('2030-01-01', $result['skipped'][0]['dateEndSupport']);
 	}//end testUnmatchedVersionNeverGainsProvenance()
 
 	/**
@@ -263,7 +263,7 @@ class EolMatcherServiceTest extends TestCase {
 
 		$this->assertCount(1, $result['stamped']);
 		$this->assertSame('mv-match', $result['stamped'][0]['id']);
-		$this->assertSame('2025-11-09', $result['stamped'][0]['dateEndOndersteuning']);
+		$this->assertSame('2025-11-09', $result['stamped'][0]['dateEndSupport']);
 
 		$this->assertCount(3, $result['skipped']);
 		$skippedIds = array_column($result['skipped'], 'id');

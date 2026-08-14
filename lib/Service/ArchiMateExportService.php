@@ -2560,7 +2560,7 @@ XML;
 			}
 
 			// Get referentiecomponenten UUIDs.
-			$refComps = $gebruik['gebruiktForReferentiecomponenten'] ?? [];
+			$refComps = $gebruik['usedForReferenceComponents'] ?? [];
 			if (is_array($refComps) === false) {
 				continue;
 			}

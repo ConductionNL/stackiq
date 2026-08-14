@@ -3777,7 +3777,7 @@ class ArchiMateImportService {
 	 * then uses relationships to link them together based on Verbindingsrol property.
 	 * Each Referentiecomponent gets two properties:
 	 * - 'recommendedStandards' array for standards with Verbindingsrol = "Aanbevolen"
-	 * - 'verplichteStandards' array for standards with Verbindingsrol = "Verplicht"
+	 * - 'mandatoryStandards' array for standards with Verbindingsrol = "Verplicht"
 	 *
 	 * @param array $objects All objects from the import
 	 *
@@ -3876,7 +3876,7 @@ class ArchiMateImportService {
 				$verplichtStd = array_unique($standardsMap['verplicht']);
 
 				$objects[$objectIndex]['recommendedStandards'] = $recommendedStd;
-				$objects[$objectIndex]['verplichteStandards'] = $verplichtStd;
+				$objects[$objectIndex]['mandatoryStandards'] = $verplichtStd;
 
 				// Also add combined array for backward compatibility.
 				$allStandards = array_unique(array_merge($recommendedStd, $verplichtStd));
@@ -3967,9 +3967,9 @@ class ArchiMateImportService {
 			}
 
 			// Remove duplicates and add to referentiecomponent.
-			// Use 'gekoppeldeStandardVersions' to avoid conflict with inversedBy on 'standardVersions'.
+			// Use 'linkedStandardVersions' to avoid conflict with inversedBy on 'standardVersions'.
 			if (empty($stdVersionsRefComp) === false) {
-				$objects[$objectIndex]['gekoppeldeStandardVersions'] = array_values(array_unique($stdVersionsRefComp));
+				$objects[$objectIndex]['linkedStandardVersions'] = array_values(array_unique($stdVersionsRefComp));
 				$refCompVersCount++;
 			}
 		}//end foreach

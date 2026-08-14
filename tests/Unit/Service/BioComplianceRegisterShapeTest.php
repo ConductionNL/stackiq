@@ -151,7 +151,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 			'bbnLevel',
 			'dpiaStatus',
 			'dpiaDate',
-			'dpiaVolgendeAssessment',
+			'dpiaNextAssessment',
 			'dpiaDocumentRef',
 			'verwerkingsregisterRef',
 		];
@@ -166,7 +166,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 		$this->assertTrue(condition: $props['bbnLevel']['facetable'] ?? false);
 		$this->assertSame(expected: ['not required', 'required', 'executed'], actual: $props['dpiaStatus']['enum'] ?? null);
 		$this->assertSame(expected: 'date', actual: $props['dpiaDate']['format'] ?? null);
-		$this->assertSame(expected: 'date', actual: $props['dpiaVolgendeAssessment']['format'] ?? null);
+		$this->assertSame(expected: 'date', actual: $props['dpiaNextAssessment']['format'] ?? null);
 	}//end testModuleHasOptionalBioFields()
 
 	/**
@@ -188,7 +188,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 		$this->assertSame(expected: 'equals', actual: $statusFilter['operator'] ?? null);
 		$this->assertSame(expected: 'executed', actual: $statusFilter['value'] ?? null);
 
-		$dateFilter = $rule['trigger']['filter']['dpiaVolgendeAssessment'] ?? [];
+		$dateFilter = $rule['trigger']['filter']['dpiaNextAssessment'] ?? [];
 		$this->assertSame(expected: 'withinNext', actual: $dateFilter['operator'] ?? null);
 		$this->assertSame(expected: 'P0D', actual: $dateFilter['value'] ?? null);
 

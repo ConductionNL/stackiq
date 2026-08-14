@@ -51,7 +51,7 @@ const FACETS = '/index.php/apps/softwarecatalog/api/facets'
 /** The four GEMMA dimensions the endpoint must always describe. */
 const DIMENSIONS = [
 	'referentiecomponent',
-	'standaard',
+	'standard',
 	'applicatieservice',
 	'domein',
 ] as const

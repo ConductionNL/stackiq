@@ -64,11 +64,11 @@ class GebruikSyncServiceDecompositionTest extends TestCase {
 		$map = $reflection->invoke(
 			$service,
 			[
-				'startDateVerwerving' => '2026-01-01',
+				'startDateAcquisition' => '2026-01-01',
 				'startDatePlanned' => '2026-02-01',
 				'startDateInProduction' => '2026-03-01',
-				'startDateOutTeFaseren' => null,
-				'startDateOutGefaseerd' => '',
+				'startDateOutPhasing' => null,
+				'startDateOutPhased' => '',
 			]
 		);
 

@@ -57,11 +57,11 @@ class PortfolioReportDerivation {
 	 */
 	public function deriveLifecyclePhase(array $gebruik, DateTimeImmutable $now): string {
 		$steps = [
-			'Uitgefaseerd' => 'startDateOutGefaseerd',
-			'Uit te faseren' => 'startDateOutTeFaseren',
+			'Uitgefaseerd' => 'startDateOutPhased',
+			'Uit te faseren' => 'startDateOutPhasing',
 			'In productie' => 'startDateInProduction',
 			'Gepland' => 'startDatePlanned',
-			'Verwerving' => 'startDateVerwerving',
+			'Verwerving' => 'startDateAcquisition',
 		];
 
 		foreach ($steps as $phase => $field) {
@@ -86,8 +86,8 @@ class PortfolioReportDerivation {
 	 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 	 */
 	public function deriveEolState(?array $moduleVersion, DateTimeImmutable $now): array {
-		$endRaw = $moduleVersion['dateEndOndersteuning'] ?? null;
-		$withdrawnRaw = $moduleVersion['dateTeruggetrokken'] ?? null;
+		$endRaw = $moduleVersion['dateEndSupport'] ?? null;
+		$withdrawnRaw = $moduleVersion['dateWithdrawn'] ?? null;
 		if (is_string($withdrawnRaw) === false || trim($withdrawnRaw) === '') {
 			$withdrawnRaw = null;
 		}
@@ -119,7 +119,7 @@ class PortfolioReportDerivation {
 	 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 	 */
 	public function isEolApproaching(?array $moduleVersion, DateTimeImmutable $now): bool {
-		$end = $this->parseDate(value: $moduleVersion['dateEndOndersteuning'] ?? null);
+		$end = $this->parseDate(value: $moduleVersion['dateEndSupport'] ?? null);
 		if ($end === null) {
 			return false;
 		}

@@ -244,7 +244,7 @@ class EolSyncServiceTest extends TestCase {
 		$this->assertSame($recordedStatus, $status);
 
 		$this->assertCount(1, $savedObjects);
-		$this->assertSame('2028-11-09', $savedObjects[0]['dateEndOndersteuning']);
+		$this->assertSame('2028-11-09', $savedObjects[0]['dateEndSupport']);
 		$this->assertSame('endoflife.date', $savedObjects[0]['eolSource']);
 		$this->assertSame('keep me', $savedObjects[0]['beschrijvingKort']);
 	}//end testSuccessfulRunMatchesStampsAndReportsStatus()

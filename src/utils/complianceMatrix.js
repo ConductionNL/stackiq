@@ -58,7 +58,7 @@ export const CELL = Object.freeze({
 })
 
 /**
- * @typedef {('standaardversie'|'bioMaatregel')} ColumnSource
+ * @typedef {('standard_version'|'bioMaatregel')} ColumnSource
  */
 
 /**
@@ -68,7 +68,7 @@ export const CELL = Object.freeze({
  * @type {{STANDAARDVERSIE: ColumnSource, BIO_MAATREGEL: ColumnSource}}
  */
 export const COLUMN_SOURCE = Object.freeze({
-	STANDAARDVERSIE: 'standaardversie',
+	STANDAARDVERSIE: 'standard_version',
 	BIO_MAATREGEL: 'bioMaatregel',
 })
 

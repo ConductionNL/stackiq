@@ -42,7 +42,7 @@ const modules = [
 
 const inProd = (extra) => ({
 	startDateInProduction: '2025-01-01',
-	startDateOutGefaseerd: '',
+	startDateOutPhased: '',
 	...extra,
 })
 
@@ -57,7 +57,7 @@ const gebruiken = [
 		module: 'M4',
 		consumer: 'O1',
 		startDateInProduction: '2024-01-01',
-		startDateOutGefaseerd: '2025-06-01',
+		startDateOutPhased: '2025-06-01',
 	},
 ]
 

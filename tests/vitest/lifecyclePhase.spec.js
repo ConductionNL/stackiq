@@ -35,9 +35,9 @@ describe('lifecyclePhase.parseDate', () => {
 describe('lifecyclePhase.derivePhase', () => {
 	it('returns the most advanced phase whose date is in the past', () => {
 		const gebruik = {
-			startDateVerwerving: past('2025-01-01'),
+			startDateAcquisition: past('2025-01-01'),
 			startDateInProduction: past('2025-06-01'),
-			startDateOutTeFaseren: future('2027-01-01'),
+			startDateOutPhasing: future('2027-01-01'),
 		}
 		expect(derivePhase(gebruik, NOW)).toBe(PHASE.PRODUCTION)
 	})
@@ -45,7 +45,7 @@ describe('lifecyclePhase.derivePhase', () => {
 	it('advances to Uit te faseren once that date passes (no write)', () => {
 		const gebruik = {
 			startDateInProduction: '2025-06-01',
-			startDateOutTeFaseren: '2026-01-01',
+			startDateOutPhasing: '2026-01-01',
 		}
 		expect(derivePhase(gebruik, NOW)).toBe(PHASE.PHASING_OUT)
 	})
@@ -63,7 +63,7 @@ describe('lifecyclePhase.derivePhase', () => {
 
 	it('tolerates out-of-order dates (most advanced past wins)', () => {
 		const gebruik = {
-			startDateOutGefaseerd: '2025-01-01', // most advanced + past
+			startDateOutPhased: '2025-01-01', // most advanced + past
 			startDateInProduction: '2025-06-01',
 		}
 		expect(derivePhase(gebruik, NOW)).toBe(PHASE.PHASED_OUT)
@@ -84,19 +84,19 @@ describe('lifecyclePhase.derivePhase', () => {
 
 describe('lifecyclePhase.endOfSupportState', () => {
 	it('flags a passed end-of-support date', () => {
-		const s = endOfSupportState({ dateEndOndersteuning: '2026-01-01' }, NOW)
+		const s = endOfSupportState({ dateEndSupport: '2026-01-01' }, NOW)
 		expect(s.passed).toBe(true)
 		expect(s.withdrawn).toBe(false)
 		expect(s.endDate).toBe('2026-01-01')
 	})
 	it('flags a withdrawn version', () => {
-		const s = endOfSupportState({ dateTeruggetrokken: '2026-05-01' }, NOW)
+		const s = endOfSupportState({ dateWithdrawn: '2026-05-01' }, NOW)
 		expect(s.withdrawn).toBe(true)
 		expect(s.withdrawnDate).toBe('2026-05-01')
 	})
 	it('does not flag a future end-of-support as passed', () => {
 		expect(
-			endOfSupportState({ dateEndOndersteuning: '2027-01-01' }, NOW).passed,
+			endOfSupportState({ dateEndSupport: '2027-01-01' }, NOW).passed,
 		).toBe(false)
 	})
 })
@@ -104,15 +104,15 @@ describe('lifecyclePhase.endOfSupportState', () => {
 describe('lifecyclePhase.isEolApproaching', () => {
 	it('is true within the window and false outside', () => {
 		expect(
-			isEolApproaching({ dateEndOndersteuning: '2026-09-01' }, 180, NOW),
+			isEolApproaching({ dateEndSupport: '2026-09-01' }, 180, NOW),
 		).toBe(true)
 		expect(
-			isEolApproaching({ dateEndOndersteuning: '2027-06-01' }, 180, NOW),
+			isEolApproaching({ dateEndSupport: '2027-06-01' }, 180, NOW),
 		).toBe(false)
 	})
 	it('is false for a passed end-of-support (already past, not approaching)', () => {
 		expect(
-			isEolApproaching({ dateEndOndersteuning: '2026-01-01' }, 180, NOW),
+			isEolApproaching({ dateEndSupport: '2026-01-01' }, 180, NOW),
 		).toBe(false)
 	})
 	it('is false when no end-of-support date', () => {

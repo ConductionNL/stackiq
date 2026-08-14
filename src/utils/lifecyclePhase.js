@@ -46,11 +46,11 @@ export const PHASE = Object.freeze({
  * @type {Array<{phase: string, field: string}>}
  */
 const PHASE_STEPS = [
-	{ phase: PHASE.ACQUISITION, field: 'startDateVerwerving' },
+	{ phase: PHASE.ACQUISITION, field: 'startDateAcquisition' },
 	{ phase: PHASE.PLANNED, field: 'startDatePlanned' },
 	{ phase: PHASE.PRODUCTION, field: 'startDateInProduction' },
-	{ phase: PHASE.PHASING_OUT, field: 'startDateOutTeFaseren' },
-	{ phase: PHASE.PHASED_OUT, field: 'startDateOutGefaseerd' },
+	{ phase: PHASE.PHASING_OUT, field: 'startDateOutPhasing' },
+	{ phase: PHASE.PHASED_OUT, field: 'startDateOutPhased' },
 ]
 
 /**
@@ -145,13 +145,13 @@ export function resolveUuid(value) {
 export function endOfSupportState(moduleVersie, now = new Date()) {
 	const data = dataOf(moduleVersie)
 	const endRaw =
-		typeof data.dateEndOndersteuning === 'string'
-			? data.dateEndOndersteuning
+		typeof data.dateEndSupport === 'string'
+			? data.dateEndSupport
 			: null
 	const withdrawnRaw =
-		typeof data.dateTeruggetrokken === 'string'
-		&& data.dateTeruggetrokken.trim() !== ''
-			? data.dateTeruggetrokken
+		typeof data.dateWithdrawn === 'string'
+		&& data.dateWithdrawn.trim() !== ''
+			? data.dateWithdrawn
 			: null
 	const end = parseDate(endRaw)
 	return {
@@ -177,7 +177,7 @@ export function endOfSupportState(moduleVersie, now = new Date()) {
  * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function isEolApproaching(moduleVersie, windowDays, now = new Date()) {
-	const end = parseDate(dataOf(moduleVersie).dateEndOndersteuning)
+	const end = parseDate(dataOf(moduleVersie).dateEndSupport)
 	if (end === null) {
 		return false
 	}
