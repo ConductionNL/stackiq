@@ -95,25 +95,25 @@ describe('lifecyclePhase.endOfSupportState', () => {
 		expect(s.withdrawnDate).toBe('2026-05-01')
 	})
 	it('does not flag a future end-of-support as passed', () => {
-		expect(
-			endOfSupportState({ dateEndSupport: '2027-01-01' }, NOW).passed,
-		).toBe(false)
+		expect(endOfSupportState({ dateEndSupport: '2027-01-01' }, NOW).passed).toBe(
+			false,
+		)
 	})
 })
 
 describe('lifecyclePhase.isEolApproaching', () => {
 	it('is true within the window and false outside', () => {
-		expect(
-			isEolApproaching({ dateEndSupport: '2026-09-01' }, 180, NOW),
-		).toBe(true)
-		expect(
-			isEolApproaching({ dateEndSupport: '2027-06-01' }, 180, NOW),
-		).toBe(false)
+		expect(isEolApproaching({ dateEndSupport: '2026-09-01' }, 180, NOW)).toBe(
+			true,
+		)
+		expect(isEolApproaching({ dateEndSupport: '2027-06-01' }, 180, NOW)).toBe(
+			false,
+		)
 	})
 	it('is false for a passed end-of-support (already past, not approaching)', () => {
-		expect(
-			isEolApproaching({ dateEndSupport: '2026-01-01' }, 180, NOW),
-		).toBe(false)
+		expect(isEolApproaching({ dateEndSupport: '2026-01-01' }, 180, NOW)).toBe(
+			false,
+		)
 	})
 	it('is false when no end-of-support date', () => {
 		expect(isEolApproaching({}, 180, NOW)).toBe(false)

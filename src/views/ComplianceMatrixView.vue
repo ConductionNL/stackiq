@@ -376,7 +376,8 @@ export default {
 		standaardversies() {
 			const elements = objectStore.getCollection('element')?.results || []
 			return elements.filter(
-				(el) => (el.gemmaType || el.object?.gemmaType) === 'standard_version',
+				(el) =>
+					(el.gemmaType || el.object?.gemmaType) === 'standard_version',
 			)
 		},
 

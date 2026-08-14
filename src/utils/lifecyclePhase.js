@@ -145,12 +145,9 @@ export function resolveUuid(value) {
 export function endOfSupportState(moduleVersie, now = new Date()) {
 	const data = dataOf(moduleVersie)
 	const endRaw =
-		typeof data.dateEndSupport === 'string'
-			? data.dateEndSupport
-			: null
+		typeof data.dateEndSupport === 'string' ? data.dateEndSupport : null
 	const withdrawnRaw =
-		typeof data.dateWithdrawn === 'string'
-		&& data.dateWithdrawn.trim() !== ''
+		typeof data.dateWithdrawn === 'string' && data.dateWithdrawn.trim() !== ''
 			? data.dateWithdrawn
 			: null
 	const end = parseDate(endRaw)
