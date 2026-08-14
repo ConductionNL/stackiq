@@ -255,7 +255,7 @@ class OrganisatieService {
 	/**
 	 * Internal method to create organization entity.
 	 *
-	 * Restores parent-child organisation hierarchy (VNG domain: gemeente →
+	 * Restores parent-child organisation hierarchy (VNG domein: gemeente →
 	 * samenwerkingsverband, moederorganisatie → deelnemende partij) that a
 	 * prior hotfix disabled. The hotfix disabled parent assignment because a
 	 * child organisation created with a parent became inaccessible to its

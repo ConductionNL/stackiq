@@ -2589,7 +2589,7 @@ class ContactPersonHandler {
 			// Get organization name and description.
 			// phpcs:ignore Generic.Files.LineLength.TooLong
 			$organizationName = $organizationData['name'] ?? 'Unknown Organization';
-			$description = $organizationData['description'] ?? $organizationData['beschrijvingLang'] ?? null;
+			$description = $organizationData['description'] ?? $organizationData['longDescription'] ?? null;
 			$organizationDescription = $description ?? $organizationData['description'] ?? '';
 
 			// Check if an entity with the same slug already exists (prevents unique constraint violation).

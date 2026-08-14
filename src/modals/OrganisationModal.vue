@@ -44,7 +44,7 @@
 
 					<div class="form-row">
 						<NcTextField
-							v-model="formData.beschrijvingKort"
+							v-model="formData.shortDescription"
 							:label="t('softwarecatalog', 'Short Description')"
 							:placeholder="
 								t(
@@ -176,7 +176,7 @@ export default {
 				name: '',
 				website: '',
 				type: '',
-				beschrijvingKort: '',
+				shortDescription: '',
 				'e-mailadres': '',
 				telefoonnummer: '',
 				oin: '',
@@ -274,7 +274,7 @@ export default {
 				name: '',
 				website: '',
 				type: '',
-				beschrijvingKort: '',
+				shortDescription: '',
 				'e-mailadres': '',
 				telefoonnummer: '',
 				oin: '',
@@ -305,7 +305,7 @@ export default {
 				name: this.organisation.name || '',
 				website: this.organisation.website || '',
 				type: this.organisation.type || '',
-				beschrijvingKort: this.organisation.beschrijvingKort || '',
+				shortDescription: this.organisation.shortDescription || '',
 				'e-mailadres': this.organisation['e-mailadres'] || '',
 				telefoonnummer: this.organisation.telefoonnummer || '',
 				oin: this.organisation.oin || '',

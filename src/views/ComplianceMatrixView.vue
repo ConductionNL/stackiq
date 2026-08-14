@@ -399,7 +399,7 @@ export default {
 		 * @return {Array} gebruik records.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
 		 */
-		gebruiken() {
+		usages() {
 			return objectStore.getCollection('gebruik')?.results || []
 		},
 
@@ -545,7 +545,7 @@ export default {
 			}
 			const orgUuid = this.selectedOrganisation.uuid
 			const inUseModuleUuids = new Set(
-				this.gebruiken
+				this.usages
 					.map((g) => dataOf(g))
 					.filter((data) => resolveUuid(data.consumer) === orgUuid)
 					.map((data) => resolveUuid(data.module))

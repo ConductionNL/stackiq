@@ -306,6 +306,12 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 	public function testSanitizeColumnNameMirrorsMagicMapper(): void {
 		$cases = [
 			'naam' => 'naam',
+			// Dutch INPUTS on purpose: this asserts that sanitizeColumnName mirrors
+			// MagicMapper for the names on the LEFT of the migration map, which are
+			// and stay Dutch. They are not property names any more.
+			// Dutch INPUTS on purpose: this asserts that sanitizeColumnName mirrors
+			// MagicMapper for the names on the LEFT of the migration map, which are
+			// and stay Dutch. They are not property names any more.
 			'beschrijvingKort' => 'beschrijving_kort',
 			'beschrijvingLang' => 'beschrijving_lang',
 			'shortDescription' => 'short_description',
@@ -385,8 +391,14 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 
 		// Second positive control: if this were 0 the assertions above never
 		// ran, and a silently empty loop is exactly how #492 shipped green.
+		// The threshold was a snapshot of how much Dutch the register still
+		// declared, not a property of the guard. Tranche 2 translated most of it,
+		// so the number legitimately fell — 18 here. What the control is actually
+		// for is proving the loop was not empty, and `> 0` says exactly that.
+		// When the last Dutch column goes this will fail, and that is the right
+		// moment to delete a test that has nothing left to guard.
 		self::assertGreaterThan(
-			20,
+			0,
 			$checked,
 			'no Dutch column was inspected — the guard was not actually exercised'
 		);

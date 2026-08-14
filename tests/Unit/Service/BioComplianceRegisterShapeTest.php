@@ -75,11 +75,11 @@ class BioComplianceRegisterShapeTest extends TestCase {
 		$bioMeasure = $this->schema(slug: 'bioMaatregel');
 		$props = $bioMeasure['properties'] ?? [];
 
-		foreach (['code', 'name', 'omschrijving', 'thema', 'bioVersion', 'bbnNiveau', 'bron'] as $field) {
+		foreach (['code', 'name', 'omschrijving', 'thema', 'bioVersion', 'bbnLevel', 'bron'] as $field) {
 			$this->assertArrayHasKey(key: $field, array: $props, message: "bioMaatregel must declare $field");
 		}
 
-		$this->assertSame(expected: ['BBN1', 'BBN2', 'BBN3'], actual: $props['bbnNiveau']['items']['enum'] ?? null);
+		$this->assertSame(expected: ['BBN1', 'BBN2', 'BBN3'], actual: $props['bbnLevel']['items']['enum'] ?? null);
 		$this->assertContains(needle: 'public', haystack: $bioMeasure['authorization']['read'] ?? []);
 	}//end testBioMaatregelSchemaExists()
 

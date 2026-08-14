@@ -21,13 +21,13 @@
  *
  * @param {object} stepData The wizard's accumulated step data.
  * @param {string} [stepData.name] The suite name.
- * @param {string} [stepData.beschrijvingKort] The short description.
+ * @param {string} [stepData.shortDescription] The short description.
  * @return {boolean} True when both required fields are non-blank.
  * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
  */
 export function isDetailsStepValid(stepData) {
 	const naam = ((stepData && stepData.name) || '').trim()
-	const beschrijvingKort = ((stepData && stepData.beschrijvingKort) || '').trim()
+	const beschrijvingKort = ((stepData && stepData.shortDescription) || '').trim()
 	return naam.length > 0 && beschrijvingKort.length > 0
 }
 
@@ -59,11 +59,11 @@ export function isApplicationsStepValid(applications, translate) {
  *
  * @param {object} stepData The wizard's accumulated step data.
  * @param {string} [stepData.name] The suite name.
- * @param {string} [stepData.beschrijvingKort] The short description.
- * @param {string} [stepData.beschrijvingLang] The long (markdown) description.
+ * @param {string} [stepData.shortDescription] The short description.
+ * @param {string} [stepData.longDescription] The long (markdown) description.
  * @param {string} [stepData.website] The suite website URL.
  * @param {Array<object>} [stepData.applications] The attached module objects.
- * @return {{name: string, beschrijvingKort: string, beschrijvingLang: string, website: string, applications: Array<string>}} The suite payload.
+ * @return {{name: string, shortDescription: string, longDescription: string, website: string, applications: Array<string>}} The suite payload.
  * @spec openspec/specs/suite-wizard/spec.md#requirement-submitting-the-wizard-shall-create-a-suite-object-with-the-attached-applications
  */
 export function buildSuitePayload(stepData) {
@@ -71,8 +71,8 @@ export function buildSuitePayload(stepData) {
 	const applications = Array.isArray(data.applications) ? data.applications : []
 	return {
 		name: (data.name || '').trim(),
-		beschrijvingKort: (data.beschrijvingKort || '').trim(),
-		beschrijvingLang: (data.beschrijvingLang || '').trim(),
+		shortDescription: (data.shortDescription || '').trim(),
+		longDescription: (data.longDescription || '').trim(),
 		website: (data.website || '').trim(),
 		applications: applications
 			.map((app) => (app && typeof app === 'object' ? app.id : app))

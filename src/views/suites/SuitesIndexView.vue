@@ -30,7 +30,7 @@
 			icon="PackageVariant"
 			register="voorzieningen"
 			schema="suite"
-			:columns="['name', 'beschrijvingKort', 'website']"
+			:columns="['name', 'shortDescription', 'website']"
 			:showAdd="false"
 			@rowClick="onRowOpen">
 			<template #actions>

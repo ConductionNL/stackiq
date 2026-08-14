@@ -66,11 +66,11 @@ https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
 
 				<!-- Organisation Description -->
 				<div class="organisatieDescription">
-					<p v-if="item.beschrijvingKort" class="beschrijvingKort">
-						{{ item.beschrijvingKort }}
+					<p v-if="item.shortDescription" class="shortDescription">
+						{{ item.shortDescription }}
 					</p>
-					<p v-else-if="item.beschrijvingLang" class="beschrijvingLang">
-						{{ truncateText(item.beschrijvingLang, 150) }}
+					<p v-else-if="item.longDescription" class="longDescription">
+						{{ truncateText(item.longDescription, 150) }}
 					</p>
 					<p v-else class="noDescription">
 						{{ t('softwarecatalog', 'No description available') }}
@@ -313,8 +313,8 @@ export default {
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieSummary(item) {
-			if (item?.beschrijvingKort) return item.beschrijvingKort
-			if (item?.beschrijvingLang) return item.beschrijvingLang
+			if (item?.shortDescription) return item.shortDescription
+			if (item?.longDescription) return item.longDescription
 			if (item?.type && item?.name) return `${item.type} organisatie`
 			if (item?.type) return item.type
 			return ''
@@ -516,8 +516,8 @@ export default {
 	line-height: 1.4;
 }
 
-.beschrijvingKort,
-.beschrijvingLang {
+.shortDescription,
+.longDescription {
 	margin: 0;
 	color: var(--color-main-text);
 	font-size: 14px;

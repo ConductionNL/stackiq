@@ -531,8 +531,8 @@ class ArchiMateImportService {
 			$statistics = $this->calculateObjectStatistics(normalizedData: $normalizedData);
 
 			// Calculate performance metrics.
-			$created = $statistics['summary']['total_objects_created'];
-			$updated = $statistics['summary']['total_objects_updated'];
+			$created = $statistics['omschrijving']['total_objects_created'];
+			$updated = $statistics['omschrijving']['total_objects_updated'];
 			$totalObjects = $created + $updated;
 			if ($totalObjects > 0) {
 				$itemsPerSecond = round($totalObjects / max($totalTime, 0.001), 2);
@@ -569,12 +569,12 @@ class ArchiMateImportService {
 					'total_used_mb' => round(($endMemory - $startMemory) / 1024 / 1024, 1),
 				],
 				'statistics' => $statistics,
-				'summary' => [
-					'total_objects_created' => $statistics['summary']['total_objects_created'],
-					'total_objects_updated' => $statistics['summary']['total_objects_updated'],
-					'total_objects_deleted' => $statistics['summary']['total_objects_deleted'],
-					'total_objects_skipped' => $statistics['summary']['total_objects_skipped'],
-					'total_errors' => $statistics['summary']['total_errors'],
+				'omschrijving' => [
+					'total_objects_created' => $statistics['omschrijving']['total_objects_created'],
+					'total_objects_updated' => $statistics['omschrijving']['total_objects_updated'],
+					'total_objects_deleted' => $statistics['omschrijving']['total_objects_deleted'],
+					'total_objects_skipped' => $statistics['omschrijving']['total_objects_skipped'],
+					'total_errors' => $statistics['omschrijving']['total_errors'],
 				],
 				'performance_metrics' => [
 					'items_per_second' => round($itemsPerSecond, 2),
@@ -997,7 +997,7 @@ class ArchiMateImportService {
 						}
 
 						if ($docValue !== null) {
-							$object['summary'] = $docValue;
+							$object['omschrijving'] = $docValue;
 							$object['documentation'] = $docValue;
 							// Also set documentation field for schema compatibility.
 						}
@@ -2322,7 +2322,7 @@ class ArchiMateImportService {
 				'unchanged' => 0,
 				'errors' => [],
 			],
-			'summary' => [
+			'omschrijving' => [
 				'total_objects_created' => 0,
 				'total_objects_updated' => 0,
 				'total_objects_deleted' => 0,
@@ -2369,14 +2369,14 @@ class ArchiMateImportService {
 
 		// Calculate summary totals.
 		foreach ($statistics as $section => $sectionStats) {
-			if ($section === 'summary') {
+			if ($section === 'omschrijving') {
 				continue;
 			}
 
-			$statistics['summary']['total_objects_created'] += $sectionStats['created'];
-			$statistics['summary']['total_objects_updated'] += $sectionStats['updated'];
-			$statistics['summary']['total_objects_unchanged'] += $sectionStats['unchanged'];
-			$statistics['summary']['total_errors'] += count($sectionStats['errors']);
+			$statistics['omschrijving']['total_objects_created'] += $sectionStats['created'];
+			$statistics['omschrijving']['total_objects_updated'] += $sectionStats['updated'];
+			$statistics['omschrijving']['total_objects_unchanged'] += $sectionStats['unchanged'];
+			$statistics['omschrijving']['total_errors'] += count($sectionStats['errors']);
 		}
 
 		return $statistics;
@@ -2397,7 +2397,7 @@ class ArchiMateImportService {
 			'relationships' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
 			'views' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
 			'property_definitions' => ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'errors' => []],
-			'summary' => [
+			'omschrijving' => [
 				'total_objects_created' => 0,
 				'total_objects_updated' => 0,
 				'total_objects_deleted' => 0,
@@ -2446,7 +2446,7 @@ class ArchiMateImportService {
 			];
 
 			foreach ($statistics as $section => $sectionStats) {
-				if ($section !== 'summary') {
+				if ($section !== 'omschrijving') {
 					$summary['total_objects_created'] += $sectionStats['created'];
 					$summary['total_objects_updated'] += $sectionStats['updated'];
 					$summary['total_objects_unchanged'] += $sectionStats['unchanged'];
@@ -2454,7 +2454,7 @@ class ArchiMateImportService {
 				}
 			}
 
-			$statistics['summary'] = $summary;
+			$statistics['omschrijving'] = $summary;
 		}//end if
 
 		return $statistics;
@@ -2962,8 +2962,8 @@ class ArchiMateImportService {
 				}
 
 				// Set description from element documentation.
-				if (isset($element['summary']) === true) {
-					$viewNode['description'] = $element['summary'];
+				if (isset($element['omschrijving']) === true) {
+					$viewNode['description'] = $element['omschrijving'];
 				} elseif (isset($element['documentation']) === true) {
 					$viewNode['description'] = $element['documentation'];
 				}
@@ -3243,7 +3243,7 @@ class ArchiMateImportService {
 		$properties = [];
 
 		// Extract basic element properties.
-		$basicProperties = ['identifier', 'name', 'summary', 'section', 'model_identifier'];
+		$basicProperties = ['identifier', 'name', 'omschrijving', 'section', 'model_identifier'];
 		foreach ($basicProperties as $prop) {
 			if (isset($element[$prop]) === true) {
 				$properties[$prop] = $element[$prop];
@@ -4367,9 +4367,9 @@ class ArchiMateImportService {
 
 			if (isset($item['documentation']) === true) {
 				if (is_array($item['documentation']) === true && isset($item['documentation']['_value']) === true) {
-					$object['summary'] = $item['documentation']['_value'];
+					$object['omschrijving'] = $item['documentation']['_value'];
 				} elseif (is_string($item['documentation']) === true) {
-					$object['summary'] = $item['documentation'];
+					$object['omschrijving'] = $item['documentation'];
 				}
 			}
 
@@ -4527,12 +4527,12 @@ class ArchiMateImportService {
 			// Fast summary extraction.
 			if (isset($rawItem['documentation']) === true) {
 				if (is_array($rawItem['documentation']) === true && isset($rawItem['documentation']['_value']) === true) {
-					$element['summary'] = $rawItem['documentation']['_value'];
+					$element['omschrijving'] = $rawItem['documentation']['_value'];
 				} else {
 					if (is_string($rawItem['documentation']) === true) {
-						$element['summary'] = $rawItem['documentation'];
+						$element['omschrijving'] = $rawItem['documentation'];
 					} else {
-						$element['summary'] = '';
+						$element['omschrijving'] = '';
 					}
 				}
 			}
@@ -4770,9 +4770,9 @@ class ArchiMateImportService {
 			// Extract documentation from XML if it exists and set to summary.
 			if (isset($item['documentation']) === true) {
 				if (is_array($item['documentation']) === true && isset($item['documentation']['_value']) === true) {
-					$object['summary'] = $item['documentation']['_value'];
+					$object['omschrijving'] = $item['documentation']['_value'];
 				} elseif (is_string($item['documentation']) === true) {
-					$object['summary'] = $item['documentation'];
+					$object['omschrijving'] = $item['documentation'];
 				}
 			}
 
@@ -4871,7 +4871,7 @@ class ArchiMateImportService {
 								'xml',
 								'_propertyMapping',
 								'name',
-								'summary',
+								'omschrijving',
 								'viewNodes',
 								'viewRelationships',
 							]
@@ -5228,12 +5228,12 @@ class ArchiMateImportService {
 
 			if (isset($item['documentation']) === true) {
 				if (is_array($item['documentation']) === true && isset($item['documentation']['_value']) === true) {
-					$object['summary'] = $item['documentation']['_value'];
+					$object['omschrijving'] = $item['documentation']['_value'];
 				} else {
 					if (is_string($item['documentation']) === true) {
-						$object['summary'] = $item['documentation'];
+						$object['omschrijving'] = $item['documentation'];
 					} else {
-						$object['summary'] = '';
+						$object['omschrijving'] = '';
 					}
 				}
 			}
@@ -5414,12 +5414,12 @@ class ArchiMateImportService {
 
 			if (isset($item['documentation']) === true) {
 				if (is_array($item['documentation']) === true && isset($item['documentation']['_value']) === true) {
-					$object['summary'] = $item['documentation']['_value'];
+					$object['omschrijving'] = $item['documentation']['_value'];
 				} else {
 					if (is_string($item['documentation']) === true) {
-						$object['summary'] = $item['documentation'];
+						$object['omschrijving'] = $item['documentation'];
 					} else {
-						$object['summary'] = '';
+						$object['omschrijving'] = '';
 					}
 				}
 			}
@@ -5809,7 +5809,7 @@ class ArchiMateImportService {
 		];
 
 		foreach ($statistics as $section => $sectionStats) {
-			if ($section !== 'summary') {
+			if ($section !== 'omschrijving') {
 				// Skip summary section itself.
 				$summary['total_objects_created'] += $sectionStats['created'];
 				$summary['total_objects_updated'] += $sectionStats['updated'];
@@ -5818,13 +5818,13 @@ class ArchiMateImportService {
 			}
 		}
 
-		$statistics['summary'] = $summary;
+		$statistics['omschrijving'] = $summary;
 
 		// DEBUG: Log the summary statistics to help diagnose the issue.
 		$this->logger->info(
 			'[ArchiMate] Statistics summary calculated',
 			[
-				'summary' => $summary,
+				'omschrijving' => $summary,
 				'section_counts' => array_map(
 					fn ($s) => [
 						'created' => $s['created'] ?? 0,
@@ -5832,7 +5832,7 @@ class ArchiMateImportService {
 						'unchanged' => $s['unchanged'] ?? 0,
 						'errors' => count($s['errors'] ?? []),
 					],
-					array_filter($statistics, fn ($k) => $k !== 'summary', ARRAY_FILTER_USE_KEY)
+					array_filter($statistics, fn ($k) => $k !== 'omschrijving', ARRAY_FILTER_USE_KEY)
 				),
 			]
 		);
@@ -5851,7 +5851,7 @@ class ArchiMateImportService {
 		$detailedErrors = [
 			'total_count' => 0,
 			'by_section' => [],
-			'summary' => [],
+			'omschrijving' => [],
 		];
 
 		$sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
@@ -5921,7 +5921,7 @@ class ArchiMateImportService {
 
 		// Sort by frequency and take top 10.
 		uasort($allErrors, fn ($a, $b) => $b['total_count'] - $a['total_count']);
-		$detailedErrors['summary'] = array_slice(array_values($allErrors), 0, 10);
+		$detailedErrors['omschrijving'] = array_slice(array_values($allErrors), 0, 10);
 
 		return $detailedErrors;
 	}//end extractDetailedErrors()

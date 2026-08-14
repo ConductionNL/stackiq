@@ -1165,7 +1165,7 @@ class ViewService {
 				'style' => 'normal',
 				'color' => 'rgb(0, 0, 0)',
 			],
-			'description' => $module['description'] ?? $module['summary'] ?? null,
+			'description' => $module['description'] ?? $module['omschrijving'] ?? null,
 			'elementRef' => $moduleId,
 			'_isModuleExpansion' => true,
 			'_parentReferentieComponent' => $referenceComponentId,

@@ -91,8 +91,8 @@ export default {
 		defaults() {
 			return {
 				name: '',
-				beschrijvingKort: '',
-				beschrijvingLang: '',
+				shortDescription: '',
+				longDescription: '',
 				website: '',
 				applications: [],
 				_step1Valid: false,

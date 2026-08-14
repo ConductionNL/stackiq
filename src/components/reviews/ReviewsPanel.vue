@@ -96,9 +96,9 @@
 							>
 						</div>
 						<p
-							v-if="item.beschrijvingLang"
+							v-if="item.longDescription"
 							class="reviews-panel__item-body">
-							{{ item.beschrijvingLang }}
+							{{ item.longDescription }}
 						</p>
 						<span class="reviews-panel__item-author help-text">{{
 							item.auteur

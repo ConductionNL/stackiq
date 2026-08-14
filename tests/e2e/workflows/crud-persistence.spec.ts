@@ -353,7 +353,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 				data: {
 					name: `Component ${token}`,
 					type: 'Applicatie',
-					beschrijvingKort: 'e2e seeded component',
+					shortDescription: 'e2e seeded component',
 				},
 			},
 		)
@@ -380,7 +380,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 				data: {
 					name: `Component ${token}`,
 					type: 'Applicatie',
-					beschrijvingKort: editedDesc,
+					shortDescription: editedDesc,
 				},
 			},
 		)
@@ -388,7 +388,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		res = await apiCtx.get(
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}/${id}`,
 		)
-		expect((await res.json())?.beschrijvingKort).toBe(editedDesc)
+		expect((await res.json())?.shortDescription).toBe(editedDesc)
 
 		// delete -> gone
 		const del = await apiCtx.delete(

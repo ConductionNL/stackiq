@@ -321,7 +321,7 @@ test('reviews: a rejected review stays hidden, and so does a pending one', async
 			review: {
 				name: pending,
 				rating: 3,
-				beschrijvingLang: 'Still pending',
+				longDescription: 'Still pending',
 			},
 			subjectType: 'module',
 			subjectId: moduleUuid,
@@ -466,7 +466,7 @@ test("reviews index: each configured column renders this row's real value", asyn
 			review: {
 				name: reviewTitle,
 				rating: 6,
-				beschrijvingLang: 'Column probe',
+				longDescription: 'Column probe',
 			},
 			subjectType: 'module',
 			subjectId: moduleUuid,

@@ -171,8 +171,8 @@ class PortalContributionProvider {
 					'listable' => true,
 					'fields' => [
 						'name',
-						'beschrijvingKort',
-						'beschrijvingLang',
+						'shortDescription',
+						'longDescription',
 						'website',
 						'type',
 						'modules',

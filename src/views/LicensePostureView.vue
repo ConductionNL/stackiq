@@ -246,7 +246,7 @@ export default {
 		 * @return {Array} Gebruik records.
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
-		gebruiken() {
+		usages() {
 			return objectStore.getCollection('gebruik')?.results || []
 		},
 
@@ -304,7 +304,7 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		portfolio() {
-			return portfolioPosture(this.modules, this.gebruiken)
+			return portfolioPosture(this.modules, this.usages)
 		},
 
 		/**
@@ -326,7 +326,7 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		vendorRows() {
-			return perVendorRollup(this.modules, this.gebruiken, this.contracts)
+			return perVendorRollup(this.modules, this.usages, this.contracts)
 				.map((row) => ({
 					vendorId: row.vendorId,
 					vendorName:
@@ -380,7 +380,7 @@ export default {
 			return perOrganisationPosture(
 				this.selectedOrg.uuid,
 				this.modules,
-				this.gebruiken,
+				this.usages,
 			)
 		},
 
