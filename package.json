@@ -28,7 +28,7 @@
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
     "test:smoke": "playwright test --project smoke",
-    "stylelint": "stylelint \"src/**/*.{vue,scss,css}\"",
+    "stylelint": "stylelint \"{src,css}/**/*.{vue,scss,css}\"",
     "check:manifest": "node tests/validate-manifest.js",
     "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\""
