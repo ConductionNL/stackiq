@@ -20,8 +20,15 @@ import { generateUrl } from '@nextcloud/router'
 
 /** GEMMA facet dimensions this client supports, in display order. */
 export const FACET_DIMENSIONS = [
+	// WIRE NAMES, and they must stay as a SET. FacetController and FacetService
+	// both declare ['referentiecomponent', 'standaard', 'applicatieservice',
+	// 'domein'] — these strings are the query parameters and the response keys of
+	// this app's own facet endpoint. The vocabulary pass translated exactly ONE of
+	// the four, so the frontend started sending `standard[]` to a backend that
+	// only reads `standaard[]`: facet filtering by standard silently returned
+	// everything, with no error on either side.
 	'referentiecomponent',
-	'standard',
+	'standaard',
 	'applicatieservice',
 	'domein',
 ]
