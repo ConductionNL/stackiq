@@ -222,7 +222,7 @@ export default {
 		 * @return {Array} Gebruik records.
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
-		gebruiken() {
+		usages() {
 			return objectStore.getCollection('gebruik')?.results || []
 		},
 
@@ -250,7 +250,7 @@ export default {
 						affectedCount: Array.isArray(data.modules)
 							? data.modules.length
 							: 0,
-						exposureCount: exposureCount(vuln, this.gebruiken),
+						exposureCount: exposureCount(vuln, this.usages),
 					}
 				})
 				.sort((a, b) => severityOrder(a.band) - severityOrder(b.band))

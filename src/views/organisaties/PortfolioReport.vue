@@ -121,7 +121,7 @@
 					:height="260" />
 			</section>
 
-			<!-- Per-quadrant summary: EOL exposure, cloud-transition share, cost overlay -->
+			<!-- Per-quadrant omschrijving: EOL exposure, cloud-transition share, cost overlay -->
 			<section class="pr-section" data-testid="pr-summary">
 				<h3 class="pr-sectionTitle">
 					{{ t('softwarecatalog', 'Quadrant summary') }}

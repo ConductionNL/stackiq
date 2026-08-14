@@ -20,7 +20,7 @@ describe('openDataProjection.projectOpenData', () => {
 			owner: 'admin',
 		},
 		name: 'Petstore',
-		beschrijvingKort: 'Demo app',
+		shortDescription: 'Demo app',
 		interneAnnotation: 'secret internal note',
 		contactpersoon: { voornaam: 'Jan', email: 'jan@example.org' },
 		contactPersonProvider: { name: 'Aanbieder' },
@@ -42,7 +42,7 @@ describe('openDataProjection.projectOpenData', () => {
 		expect(p.slug).toBe('app-1')
 		expect(p['@id']).toBe('u-1')
 		expect(p.name).toBe('Petstore')
-		expect(p.beschrijvingKort).toBe('Demo app')
+		expect(p.shortDescription).toBe('Demo app')
 	})
 
 	it('carries reuse metadata (license, publisher, last-modified)', () => {

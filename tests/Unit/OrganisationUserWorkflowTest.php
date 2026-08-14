@@ -185,7 +185,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 			'cbs' => '',
 			'telefoonnummer' => '',
 			'rol' => '',
-			'beschrijvingKort' => '',
+			'shortDescription' => '',
 			'logo' => null,
 			'contactpersonen' => [
 				[

@@ -242,12 +242,12 @@ class PortfolioReportService {
 		];
 
 		$gebruikResult = $objectService->searchObjectsPaginated(query: $gebruikQuery, _rbac: false, _multitenancy: false);
-		$gebruiken = $this->derivation->normalizeResults(results: $gebruikResult['results'] ?? []);
-		$total = (int)($gebruikResult['total'] ?? count($gebruiken));
-		$truncated = $total > count($gebruiken);
+		$usages = $this->derivation->normalizeResults(results: $gebruikResult['results'] ?? []);
+		$total = (int)($gebruikResult['total'] ?? count($usages));
+		$truncated = $total > count($usages);
 
 		$gebruikIds = [];
-		foreach ($gebruiken as $gebruik) {
+		foreach ($usages as $gebruik) {
 			$id = $this->derivation->resolveRelationId(value: $gebruik['id'] ?? ($gebruik['@self']['id'] ?? null));
 			if ($id !== '') {
 				$gebruikIds[] = $id;
@@ -257,7 +257,7 @@ class PortfolioReportService {
 		$contractsByGebruik = $this->fetchContractsForGebruiken(gebruikIds: $gebruikIds, cfg: $cfg, ceiling: $ceiling);
 
 		$rows = [];
-		foreach ($gebruiken as $gebruik) {
+		foreach ($usages as $gebruik) {
 			$rows[] = $this->buildRow(gebruik: $gebruik, cfg: $cfg, contractsByGebruik: $contractsByGebruik, now: $now);
 		}
 

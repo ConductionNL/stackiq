@@ -3211,7 +3211,7 @@ class SettingsService {
 				return [
 					'type' => 'Mailgun API',
 					'has_api_key' => empty($emailSettings['mailgunApiKey']) === false,
-					'domain' => $emailSettings['mailgunDomain'] ?? '',
+					'domein' => $emailSettings['mailgunDomain'] ?? '',
 				];
 			case 'postmark':
 				return [

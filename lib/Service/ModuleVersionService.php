@@ -207,13 +207,13 @@ class ModuleVersionService {
 	private function updateVersionRecord(array $context): void {
 		$moduleData = $context['moduleData'];
 		$moduleName = $moduleData['voorkeurnaam'] ?? $moduleData['name'] ?? 'Onbekende applicatie';
-		$moduleDescription = $moduleData['beschrijvingKort'] ?? '';
+		$moduleDescription = $moduleData['shortDescription'] ?? '';
 
 		$versionData = [
 			'module' => $context['moduleUuid'],
 			'version' => '1.0.0',
-			'beschrijvingKort' => $moduleDescription,
-			'beschrijvingLang' => '',
+			'shortDescription' => $moduleDescription,
+			'longDescription' => '',
 			'status' => 'in gebruik',
 		];
 

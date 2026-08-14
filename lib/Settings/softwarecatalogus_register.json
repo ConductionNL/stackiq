@@ -468,7 +468,7 @@
         "theme": [
           {
             "title": "Voor 342 gemeenten",
-            "summary": "Vergelijk applicaties, vind leveranciers, versterk digitale kracht.",
+            "omschrijving": "Vergelijk applicaties, vind leveranciers, versterk digitale kracht.",
             "description": "",
             "image": "",
             "content": "",
@@ -486,7 +486,7 @@
           },
           {
             "title": "Voor 336 leveranciers",
-            "summary": "Zet uw software in de etalage voor gemeenten.",
+            "omschrijving": "Zet uw software in de etalage voor gemeenten.",
             "description": "",
             "image": "",
             "content": "",
@@ -504,7 +504,7 @@
           },
           {
             "title": "Voor 15 community's",
-            "summary": "Community's van gemeenten delen hun kennis en producten.",
+            "omschrijving": "Community's van gemeenten delen hun kennis en producten.",
             "description": "",
             "image": "",
             "content": "",
@@ -524,7 +524,7 @@
         "publication": [
           {
             "title": "Open Catalogi Platform",
-            "summary": "Een open source platform voor het publiceren en doorzoeken van overheidscatalogi",
+            "omschrijving": "Een open source platform voor het publiceren en doorzoeken van overheidscatalogi",
             "description": "Open Catalogi is een innovatief platform dat overheidsorganisaties helpt bij het publiceren, beheren en doorzoekbaar maken van hun catalogi. Het platform ondersteunt verschillende standaarden en maakt het eenvoudig om informatie te delen tussen organisaties.",
             "organization": "VNG Realisatie",
             "themes": [
@@ -541,7 +541,7 @@
           },
           {
             "title": "Common Ground",
-            "summary": "Een nieuwe manier van werken met informatiesystemen binnen de overheid",
+            "omschrijving": "Een nieuwe manier van werken met informatiesystemen binnen de overheid",
             "description": "Common Ground is een initiatief dat streeft naar een moderne, flexibele en efficiënte informatievoorziening voor gemeenten. Het principe is gebaseerd op het scheiden van data en applicaties, waardoor informatie eenvoudiger kan worden gedeeld en hergebruikt.",
             "organization": "VNG Realisatie",
             "themes": [
@@ -558,7 +558,7 @@
           },
           {
             "title": "OpenRegister",
-            "summary": "Een Nextcloud app voor het beheren van gestructureerde data in registers",
+            "omschrijving": "Een Nextcloud app voor het beheren van gestructureerde data in registers",
             "description": "OpenRegister is een krachtige Nextcloud applicatie waarmee organisaties gestructureerde data kunnen beheren in registers. Met ondersteuning voor JSON Schema validatie, Magic Mapper voor optimale performance, en uitgebreide API mogelijkheden.",
             "organization": "Conduction",
             "themes": [
@@ -575,7 +575,7 @@
           },
           {
             "title": "Softwarecatalogus",
-            "summary": "De centrale catalogus voor software binnen de Nederlandse overheid",
+            "omschrijving": "De centrale catalogus voor software binnen de Nederlandse overheid",
             "description": "De Softwarecatalogus biedt een overzicht van alle software die wordt gebruikt binnen de Nederlandse overheid. Organisaties kunnen hier software registreren, vergelijken en informatie delen over implementaties en ervaringen.",
             "organization": "VNG",
             "themes": [
@@ -592,7 +592,7 @@
           },
           {
             "title": "GEMMA Architectuur",
-            "summary": "De gemeentelijke referentiearchitectuur voor informatievoorziening",
+            "omschrijving": "De gemeentelijke referentiearchitectuur voor informatievoorziening",
             "description": "GEMMA (GEMeentelijke Model Architectuur) is de referentiearchitectuur voor gemeenten. Het biedt richtlijnen en standaarden voor de inrichting van de informatievoorziening, processen en applicatielandschap van gemeenten.",
             "organization": "VNG Realisatie",
             "themes": [
@@ -611,7 +611,7 @@
         "glossary": [
           {
             "title": "Addendum",
-            "summary": "Aanvullende afspraak bij het convenant met nadere detaillering voor één standaard",
+            "omschrijving": "Aanvullende afspraak bij het convenant met nadere detaillering voor één standaard",
             "description": "Voor elke op het convenant aanvullende afspraak die nadere detaillering behoeft, worden losse addenda (aanvullingen) aan het convenant gehangen. In een addendum wordt voor 1 standaard een realisatietermijn afgesproken. Leveranciers streven ernaar de betreffende standaard tijdig en juist in de softwareproducten in te bouwen, te implementeren en te laten gebruiken door gemeenten.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Addendum",
             "keywords": [
@@ -626,7 +626,7 @@
           },
           {
             "title": "Convenant VNG",
-            "summary": "Algemene samenwerkingsafspraken met leveranciers, gebruikersverenigingen en samenwerkingsverbanden",
+            "omschrijving": "Algemene samenwerkingsafspraken met leveranciers, gebruikersverenigingen en samenwerkingsverbanden",
             "description": "Hierin zijn algemene samenwerkingsafspraken vastgelegd met leveranciers, gebruikersverenigingen, en samenwerkingsverbanden die voor gemeenten software inkopen. De samenwerking is gericht op het gezamenlijk (door)ontwikkelen van procesmatige en technische standaarden o.a. door vakmatig kennis te delen.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Convenant%20VNG",
             "keywords": [
@@ -642,7 +642,7 @@
           },
           {
             "title": "Eindproduct-standaard",
-            "summary": "Standaard waarbij functionaliteit, services en rolverdeling scherp gedefinieerd zijn",
+            "omschrijving": "Standaard waarbij functionaliteit, services en rolverdeling scherp gedefinieerd zijn",
             "description": "Hierbij zijn de functionaliteit, de (web)services en rolverdeling tussen systemen gedetailleerd en scherp gedefinieerd. Juiste toepassing is preventief goed testbaar en daardoor is de voorspelbaarheid op goed functioneren hoog.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Eindproduct-standaard",
             "keywords": [
@@ -657,7 +657,7 @@
           },
           {
             "title": "Gegevensstandaard",
-            "summary": "Afspraken over meervoudig gebruik en uitwisseling van gegevens",
+            "omschrijving": "Afspraken over meervoudig gebruik en uitwisseling van gegevens",
             "description": "Om ervoor te zorgen dat de uitgewisselde gegevens juist zijn en op de juiste manier worden gebruikt, met de juiste betekenis, dienen er zeer goede afspraken gemaakt te worden. De afspraken over het meervoudig gebruik van gegevens en de (gemeentelijke) gegevensuitwisseling zijn vastgelegd in gegevensstandaarden. Ook hiervoor geldt dat de leverancier dient aan te geven op welke wijze hieraan wordt voldaan.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Gegevensstandaard",
             "keywords": [
@@ -673,7 +673,7 @@
           },
           {
             "title": "Grondstof-standaard",
-            "summary": "Standaard die specialistische kennis en uitgebreide specificaties vereist",
+            "omschrijving": "Standaard die specialistische kennis en uitgebreide specificaties vereist",
             "description": "Hierbij moeten nóg meer dan bij half-fabrikaten specificaties en activiteiten worden uitgevoerd om interoperabiliteit te kunnen realiseren. Dit vergt specialistische kennis.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Grondstof-standaard",
             "keywords": [
@@ -688,7 +688,7 @@
           },
           {
             "title": "Halffabrikaat-standaard",
-            "summary": "Standaard waarbij de opdrachtgever aanvullende specificaties moet toevoegen",
+            "omschrijving": "Standaard waarbij de opdrachtgever aanvullende specificaties moet toevoegen",
             "description": "Hierbij dient de opdrachtgever aanvullende specificaties toe te voegen.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Halffabrikaat-standaard",
             "keywords": [
@@ -703,7 +703,7 @@
           },
           {
             "title": "Leverancier",
-            "summary": "Aanbieder van standaard-softwarepakketten voor gemeentelijke taken",
+            "omschrijving": "Aanbieder van standaard-softwarepakketten voor gemeentelijke taken",
             "description": "Aanbieders van standaard-software(pakketten) voor gemeentelijke taken. Alleen leveranciers die het convenant met VNG ondertekend hebben, mogen hun gegevens in de Softwarecatalogus zetten.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Leverancier",
             "keywords": [
@@ -718,7 +718,7 @@
           },
           {
             "title": "Referentiecomponent",
-            "summary": "Verbinding tussen softwareaanbod van leveranciers en softwaregebruik van gemeenten",
+            "omschrijving": "Verbinding tussen softwareaanbod van leveranciers en softwaregebruik van gemeenten",
             "description": "De verbinding tussen softwareaanbod leveranciers en softwaregebruik gemeenten. Een softwarepakket kan functionaliteit bieden voor één of meerdere referentiecomponenten, daarmee krijgt u een globaal beeld van de functionaliteit.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Referentiecomponent",
             "keywords": [
@@ -733,7 +733,7 @@
           },
           {
             "title": "SaaS",
-            "summary": "Software as a Service: applicatie aangeboden vanuit de cloud door een leverancier",
+            "omschrijving": "Software as a Service: applicatie aangeboden vanuit de cloud door een leverancier",
             "description": "Bij Software as a Service maakt een gemeente of samenwerking gebruik van een applicatie die door een leverancier vanuit de cloud wordt aangeboden. De gemeente of samenwerking heeft géén toegang tot de onderliggende infrastructuur en software, oftewel het technisch beheer wordt geheel door de leverancier verzorgd.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#SaaS",
             "keywords": [
@@ -748,7 +748,7 @@
           },
           {
             "title": "Standaard",
-            "summary": "Norm of set van eisen waaraan gemeentelijke software moet voldoen",
+            "omschrijving": "Norm of set van eisen waaraan gemeentelijke software moet voldoen",
             "description": "Norm of set van eisen/voorwaarden/afspraken waaraan (gemeentelijke) software moet voldoen. (Open) Standaarden zijn opgenomen die voor gemeenten van belang zijn voor interne en externe applicatiekoppelingen, gegevensmanagement, bedrijfsvoering en digitale dienstverlening. Standaarden kunnen als producten worden getypeerd in eindproducten, halffabrikaten, grondstoffen en gegevensstandaarden. Deze typering is een indicatie wat de benodigde inspanning is om op basis van de standaard tot een werkende koppeling te komen. VNG adviseert gemeenten bij voorkeur functioneel passende eindproduct-standaarden te gebruiken en pas daarna (in aflopende prioriteit) halffabrikaat- en grondstof-standaarden, en als laatste maatwerk toe te passen.",
             "externalLink": "https://www.softwarecatalogus.nl/lexicon#Standaard",
             "keywords": [
@@ -769,7 +769,7 @@
             "name": "Toegangsbeveiligingsbeleid",
             "thema": "Toegangsbeveiliging",
             "bioVersion": "BIO 2.0",
-            "bbnNiveau": ["BBN1", "BBN2", "BBN3"],
+            "bbnLevel": ["BBN1", "BBN2", "BBN3"],
             "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
           },
           {
@@ -778,7 +778,7 @@
             "name": "Beheer van gebruikerstoegang",
             "thema": "Toegangsbeveiliging",
             "bioVersion": "BIO 2.0",
-            "bbnNiveau": ["BBN2", "BBN3"],
+            "bbnLevel": ["BBN2", "BBN3"],
             "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
           },
           {
@@ -787,7 +787,7 @@
             "name": "Cryptografisch beleid",
             "thema": "Cryptografie",
             "bioVersion": "BIO 2.0",
-            "bbnNiveau": ["BBN2", "BBN3"],
+            "bbnLevel": ["BBN2", "BBN3"],
             "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
           },
           {
@@ -796,7 +796,7 @@
             "name": "Netwerkbeveiligingsbeheer",
             "thema": "Communicatiebeveiliging",
             "bioVersion": "BIO 2.0",
-            "bbnNiveau": ["BBN1", "BBN2", "BBN3"],
+            "bbnLevel": ["BBN1", "BBN2", "BBN3"],
             "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
           },
           {
@@ -805,7 +805,7 @@
             "name": "Gegevensoverdrachtbeleid",
             "thema": "Communicatiebeveiliging",
             "bioVersion": "BIO 2.0",
-            "bbnNiveau": ["BBN2", "BBN3"],
+            "bbnLevel": ["BBN2", "BBN3"],
             "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
           }
         ]
@@ -1042,7 +1042,7 @@
         "title": "Sector",
         "description": "Schema voor sectoren binnen de softwarecatalogus",
         "version": "0.0.10",
-        "summary": "",
+        "omschrijving": "",
         "icon": "Domain",
         "required": [
           "name"
@@ -1144,11 +1144,11 @@
         "title": "Suite",
         "description": "Een suite is een verzameling van applicaties die samen een product vormen",
         "version": "0.1.4",
-        "summary": "",
+        "omschrijving": "",
         "icon": "PackageVariant",
         "required": [
           "name",
-          "beschrijvingKort"
+          "shortDescription"
         ],
         "properties": {
           "name": {
@@ -1165,7 +1165,7 @@
             },
             "example": "Bijvoorbeeld: VNG Suite"
           },
-          "beschrijvingKort": {
+          "shortDescription": {
             "type": "string",
             "title": "Short description",
             "description": "Korte beschrijving van de suite",
@@ -1177,7 +1177,7 @@
             },
             "example": "Bijvoorbeeld: Een korte samenvatting van de suite"
           },
-          "beschrijvingLang": {
+          "longDescription": {
             "description": "Uitgebreide beschrijving van de suite",
             "type": "string",
             "format": "markdown",
@@ -1312,8 +1312,8 @@
         },
         "configuration": {
           "objectNameField": "name",
-          "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang",
+          "objectSummaryField": "shortDescription",
+          "objectDescriptionField": "longDescription",
           "objectImageField": "logo",
           "allowFiles": true,
           "allowedTags": [
@@ -1333,7 +1333,7 @@
         "title": "Service",
         "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
         "version": "0.2.1",
-        "summary": "",
+        "omschrijving": "",
         "icon": "Handshake",
         "required": [
           "name",
@@ -1374,7 +1374,7 @@
             "title": "Name",
             "example": "Bijvoorbeeld: Implementatie en ondersteuning"
           },
-          "beschrijvingKort": {
+          "shortDescription": {
             "type": "string",
             "description": "Een korte beschrijving van de dienst voor o.a. in de zoekresultaten.",
             "title": "Short description",
@@ -1386,7 +1386,7 @@
             "order": 5,
             "example": "Bijvoorbeeld: Korte beschrijving van de dienst"
           },
-          "beschrijvingLang": {
+          "longDescription": {
             "description": "Een uitgebreide omschrijving van uw dienst. Dit kan met mark down opgemaakt worden.",
             "type": "string",
             "format": "markdown",
@@ -1608,8 +1608,8 @@
         },
         "configuration": {
           "objectNameField": "name",
-          "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang",
+          "objectSummaryField": "shortDescription",
+          "objectDescriptionField": "longDescription",
           "objectImageField": "logo",
           "allowFiles": true,
           "allowedTags": [
@@ -1642,11 +1642,11 @@
         "title": "Vulnerability",
         "description": "Schema voor kwetsbaarheden. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "1.0.20",
-        "summary": "",
+        "omschrijving": "",
         "icon": "ShieldAlert",
         "required": [
           "name",
-          "beschrijvingKort",
+          "shortDescription",
           "modules"
         ],
         "properties": {
@@ -1660,7 +1660,7 @@
             "maxLength": 200,
             "example": "Bijvoorbeeld: SQL Injection"
           },
-          "beschrijvingKort": {
+          "shortDescription": {
             "description": "Korte beschrijving van de kwetsbaarheid",
             "type": "string",
             "maxLength": 255,
@@ -1670,7 +1670,7 @@
             "title": "Summary",
             "example": "Bijvoorbeeld: Korte beschrijving van de kwetsbaarheid"
           },
-          "beschrijvingLang": {
+          "longDescription": {
             "description": "Uitgebreide beschrijving van de kwetsbaarheid",
             "type": "string",
             "format": "markdown",
@@ -1783,8 +1783,8 @@
         },
         "configuration": {
           "objectNameField": "name",
-          "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang",
+          "objectSummaryField": "shortDescription",
+          "objectDescriptionField": "longDescription",
           "autoPublish": false
         }
       },
@@ -1795,7 +1795,7 @@
         "title": "Contact person",
         "description": "Contactgegevens van een persoon",
         "version": "0.0.27",
-        "summary": "",
+        "omschrijving": "",
         "icon": "AccountMultiple",
         "required": [
           "contactsUid"
@@ -2029,7 +2029,7 @@
         "title": "Organisation",
         "description": "Een organisatie die voorzieningen aanbiedt",
         "version": "0.5.0",
-        "summary": "",
+        "omschrijving": "",
         "icon": "OfficeBuildingOutline",
         "required": [
           "contactsUid",
@@ -2549,7 +2549,7 @@
         "title": "Usage",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
         "version": "1.4.0",
-        "summary": "",
+        "omschrijving": "",
         "icon": "Gauge",
         "x-openregister-notifications": {
           "phaseout-approaching": {
@@ -3152,7 +3152,7 @@
         "title": "Contract",
         "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
         "version": "0.1.1",
-        "summary": "",
+        "omschrijving": "",
         "icon": "FileDocumentEdit",
         "required": [
           "dienst",
@@ -3443,7 +3443,7 @@
         "title": "Connection",
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
         "version": "0.3.0",
-        "summary": "",
+        "omschrijving": "",
         "icon": "Link",
         "required": [
           "name"
@@ -3463,7 +3463,7 @@
             },
             "example": "Bijvoorbeeld: API Koppeling"
           },
-          "beschrijvingKort": {
+          "shortDescription": {
             "description": "Een korte omschrijving van de koppeling (maximaal 256 karakters).",
             "type": "string",
             "table": {
@@ -3474,7 +3474,7 @@
             "title": "Short description",
             "example": "Bijvoorbeeld: Korte beschrijving van de koppeling"
           },
-          "beschrijvingLang": {
+          "longDescription": {
             "description": "Uitgebreide beschrijving van de koppeling",
             "type": "string",
             "format": "markdown",
@@ -3798,8 +3798,8 @@
         "configuration": {
           "autoPublish": false,
           "objectNameField": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB | buitengemeentelijkVoorziening }}",
-          "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang",
+          "objectSummaryField": "shortDescription",
+          "objectDescriptionField": "longDescription",
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "in ontwikkeling",
@@ -3854,7 +3854,7 @@
         "title": "Assessment",
         "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "0.1.3",
-        "summary": "",
+        "omschrijving": "",
         "icon": "Star",
         "required": [
           "name",
@@ -3870,7 +3870,7 @@
             "title": "Name",
             "order": 1
           },
-          "beschrijvingKort": {
+          "shortDescription": {
             "description": "Korte beschrijving van de beoordeling",
             "type": "string",
             "maxLength": 255,
@@ -3879,7 +3879,7 @@
             "title": "Summary",
             "order": 2
           },
-          "beschrijvingLang": {
+          "longDescription": {
             "description": "Uitgebreide beschrijving van de beoordeling",
             "type": "string",
             "format": "markdown",
@@ -3975,8 +3975,8 @@
         },
         "configuration": {
           "objectNameField": "name",
-          "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang",
+          "objectSummaryField": "shortDescription",
+          "objectDescriptionField": "longDescription",
           "autoPublish": false
         }
       },
@@ -3986,7 +3986,7 @@
         "title": "Element",
         "description": "AMEF Element - Architectuur elementen uit het ArchiMate model",
         "version": "0.0.11",
-        "summary": "",
+        "omschrijving": "",
         "icon": "Cube",
         "required": [
           "identifier",
@@ -4294,11 +4294,11 @@
               "searchable": false
             }
           },
-          "gemmaSortering": {
+          "gemmaSorting": {
             "description": "GEMMA sortering van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "gemmaSortering",
+            "title": "gemmaSorting",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4327,11 +4327,11 @@
               "searchable": false
             }
           },
-          "afkorting": {
+          "abbreviation": {
             "description": "Afkorting van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "afkorting",
+            "title": "abbreviation",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4393,11 +4393,11 @@
               "searchable": false
             }
           },
-          "beleidsdomein": {
+          "policyDomain": {
             "description": "Beleidsdomein van dit Element",
             "type": "string",
             "facetable": true,
-            "title": "beleidsdomein",
+            "title": "policyDomain",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4481,11 +4481,11 @@
               "searchable": false
             }
           },
-          "detailniveau": {
+          "detailLevel": {
             "description": "Detailniveau van dit Element",
             "type": "string",
             "facetable": true,
-            "title": "detailniveau",
+            "title": "detailLevel",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4496,7 +4496,7 @@
             "description": "Domein van dit Element",
             "type": "string",
             "facetable": true,
-            "title": "domein",
+            "title": "domain",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4525,11 +4525,11 @@
               "searchable": false
             }
           },
-          "groepering": {
+          "grouping": {
             "description": "Groepering van dit Element",
             "type": "string",
             "facetable": true,
-            "title": "groepering",
+            "title": "grouping",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4668,11 +4668,11 @@
               "searchable": false
             }
           },
-          "publiceren": {
+          "publish": {
             "description": "Publiceren van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "publiceren",
+            "title": "publish",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4976,7 +4976,7 @@
               "searchable": false
             }
           },
-          "summary": {
+          "omschrijving": {
             "description": "Summary van dit Element",
             "type": "string",
             "facetable": false,
@@ -5155,7 +5155,7 @@
         "title": "View",
         "description": "AMEF View - Architectuur views en diagrammen uit het ArchiMate model",
         "version": "0.0.7",
-        "summary": "",
+        "omschrijving": "",
         "icon": "Eye",
         "required": [
           "identifier",
@@ -5440,11 +5440,11 @@
             "facetable": true,
             "title": "viewtype"
           },
-          "titelViewSwc": {
+          "titleViewSwc": {
             "description": "Titel view SWC van deze View",
             "type": "string",
             "facetable": false,
-            "title": "titelViewSwc"
+            "title": "titleViewSwc"
           },
           "gemmaType": {
             "description": "GEMMA type van deze View",
@@ -5488,11 +5488,11 @@
             "facetable": false,
             "title": "layoutDirectionDo"
           },
-          "detailniveau": {
+          "detailLevel": {
             "description": "Detailniveau van deze View",
             "type": "string",
             "facetable": true,
-            "title": "detailniveau"
+            "title": "detailLevel"
           },
           "scope": {
             "description": "Scope van deze View",
@@ -5500,13 +5500,13 @@
             "facetable": true,
             "title": "scope"
           },
-          "publiceren": {
+          "publish": {
             "description": "Publiceren van deze View",
             "type": "string",
             "facetable": false,
-            "title": "publiceren"
+            "title": "publish"
           },
-          "summary": {
+          "omschrijving": {
             "description": "Summary van deze View",
             "type": "string",
             "facetable": false,
@@ -5545,7 +5545,7 @@
         "title": "Model",
         "description": "AMEF Model - Volledig ArchiMate model met alle elementen, relaties en views",
         "version": "0.0.43",
-        "summary": "",
+        "omschrijving": "",
         "icon": "Database",
         "required": [
           "xmlns",
@@ -5997,7 +5997,7 @@
         "title": "Organization",
         "description": "Organizations represent entities that publish or manage catalogs. They can be government agencies, companies, or other institutions. Each organization can have multiple catalogs and is identified by various standardized identifiers like OIN, RSIN, and PKI certificates.",
         "version": "0.0.5",
-        "summary": "An organization that publishes or manages catalogs",
+        "omschrijving": "An organization that publishes or manages catalogs",
         "icon": null,
         "required": [
           "name",
@@ -6016,7 +6016,7 @@
               "searchable": false
             }
           },
-          "summary": {
+          "omschrijving": {
             "type": "string",
             "description": "Brief description of the organization",
             "minLength": 1,
@@ -6148,7 +6148,7 @@
         "title": "Property Definition",
         "description": "AMEF Property Definition - Definitie van eigenschappen voor ArchiMate elementen",
         "version": "0.0.8",
-        "summary": "",
+        "omschrijving": "",
         "icon": "CogOutline",
         "required": [
           "identifier",
@@ -6308,7 +6308,7 @@
         "title": "Relation",
         "description": "AMEF Relation - Relaties tussen architectuur elementen uit het ArchiMate model",
         "version": "0.0.8",
-        "summary": "",
+        "omschrijving": "",
         "icon": "ArrowRight",
         "required": [
           "identifier",
@@ -6752,7 +6752,7 @@
               "searchable": false
             }
           },
-          "summary": {
+          "omschrijving": {
             "description": "Summary van deze Relation",
             "type": "string",
             "facetable": false,
@@ -6812,7 +6812,7 @@
         "title": "Application",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
         "version": "0.3.2",
-        "summary": "",
+        "omschrijving": "",
         "icon": "Package",
         "required": [
           "name"
@@ -6831,7 +6831,7 @@
             },
             "example": "Bijvoorbeeld: VNG Applicatie Suite"
           },
-          "beschrijvingKort": {
+          "shortDescription": {
             "type": "string",
             "description": "Een korte beschrijving van de applicatie voor o.a. in de zoekresultaten.",
             "title": "Short description",
@@ -6844,7 +6844,7 @@
             },
             "example": "Bijvoorbeeld: Een korte samenvatting van de applicatie"
           },
-          "beschrijvingLang": {
+          "longDescription": {
             "type": "string",
             "description": "Een uitgebreide omschrijving van uw applicatie. Dit kan met mark down opgemaakt worden.",
             "title": "Extended description",
@@ -7180,7 +7180,7 @@
               "inversedBy": "module"
             }
           },
-          "gebruiken": {
+          "usages": {
             "description": "Het gebruik van deze applicatie",
             "type": "array",
             "visible": false,
@@ -7347,8 +7347,8 @@
         },
         "configuration": {
           "objectNameField": "name",
-          "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang",
+          "objectSummaryField": "shortDescription",
+          "objectDescriptionField": "longDescription",
           "objectImageField": "logo",
           "allowFiles": true,
           "allowedTags": [
@@ -7407,7 +7407,7 @@
               },
               {
                 "type": "required",
-                "field": "beschrijvingLang",
+                "field": "longDescription",
                 "weight": 1
               }
             ],
@@ -7424,7 +7424,7 @@
         "title": "Compliancy",
         "description": "Schema voor compliancy en standaard ondersteuning",
         "version": "0.0.12",
-        "summary": "",
+        "omschrijving": "",
         "icon": "CheckCircle",
         "required": [],
         "properties": {
@@ -7543,7 +7543,7 @@
         "title": "BIO measure",
         "description": "Een BIO 2.0 (Baseline Informatiebeveiliging Overheid) maatregel uit de gepubliceerde maatregelenlijst. Wordt gebruikt als selectiebron voor compliance-registraties (compliancy.bioMaatregel) en het BIO-dekkingsrapport.",
         "version": "0.0.1",
-        "summary": "",
+        "omschrijving": "",
         "icon": "ShieldLockOutline",
         "required": [
           "code",
@@ -7608,7 +7608,7 @@
             "maxLength": 50,
             "example": "Bijvoorbeeld: BIO 2.0"
           },
-          "bbnNiveau": {
+          "bbnLevel": {
             "description": "De BBN-niveaus (Baseline Informatiebeveiliging Overheid) waarop deze maatregel van toepassing is",
             "type": "array",
             "order": 6,
@@ -7659,7 +7659,7 @@
         "configuration": {
           "objectNameField": "name",
           "objectSummaryField": "thema",
-          "objectDescriptionField": "omschrijving",
+          "objectDescriptionField": "summary",
           "autoPublish": true
         }
       },
@@ -7697,7 +7697,7 @@
         "title": "Application version",
         "description": "Schema voor applicatieversies",
         "version": "0.1.3",
-        "summary": "",
+        "omschrijving": "",
         "icon": "ViewModule",
         "required": [],
         "properties": {
@@ -7720,20 +7720,20 @@
             "title": "Version",
             "default": "1.0.0"
           },
-          "pakketversie_beschrijving": {
+          "package_version_description": {
             "description": "Beschrijving van de pakketversie",
             "type": "string",
             "order": 2,
             "title": "Package version description"
           },
-          "beschrijvingKort": {
+          "shortDescription": {
             "description": "Een korte omschrijving van de versie (256 karakters)",
             "type": "string",
             "order": 3,
             "title": "Short description",
             "maxLength": 255
           },
-          "beschrijvingLang": {
+          "longDescription": {
             "description": "Uitgebreide beschrijving van de applicatieversie",
             "type": "string",
             "order": 4,
@@ -7781,7 +7781,7 @@
             "order": 17,
             "title": "Date withdrawn"
           },
-          "gebruiken": {
+          "usages": {
             "description": "Het gebruik van deze applicatieversie",
             "type": "array",
             "visible": true,
@@ -7898,8 +7898,8 @@
         },
         "configuration": {
           "objectNameField": "version",
-          "objectSummaryField": "beschrijvingKort",
-          "objectDescriptionField": "beschrijvingLang",
+          "objectSummaryField": "shortDescription",
+          "objectDescriptionField": "longDescription",
           "autoPublish": true,
           "x-openregister-lifecycle": {
             "field": "status",
@@ -7940,7 +7940,7 @@
         "title": "SBOM component",
         "description": "Schema voor componenten die zijn geïmporteerd uit een SBOM (Software Bill of Materials, CycloneDX of SPDX) voor een applicatieversie.",
         "version": "0.0.1",
-        "summary": "",
+        "omschrijving": "",
         "icon": "PackageVariantClosed",
         "required": [
           "moduleVersie",

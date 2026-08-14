@@ -153,7 +153,7 @@ const EOL_WINDOW_DAYS = 180
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * Per-organisation portfolio roadmap: the organisation's gebruiken grouped by
+ * Per-organisation portfolio roadmap: the organisation's usages grouped by
  * derived lifecycle phase (incl. Onbekend, rendered first), ordered within a
  * group by nearest urgency date, with end-of-support badges and planned
  * replacements. The rationalisation overview.
@@ -209,7 +209,7 @@ export default {
 		 * @return {Array} Gebruik records.
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
-		gebruiken() {
+		usages() {
 			return objectStore.getCollection('gebruik')?.results || []
 		},
 
@@ -284,7 +284,7 @@ export default {
 		},
 
 		/**
-		 * The selected organisation's gebruiken, grouped by derived phase and
+		 * The selected organisation's usages, grouped by derived phase and
 		 * ordered within group by nearest urgency date.
 		 *
 		 * @return {Array<{phase: string, entries: Array}>} Grouped entries.
@@ -297,7 +297,7 @@ export default {
 			const now = new Date()
 			const orgUuid = this.selectedOrg.uuid
 
-			const entries = this.gebruiken
+			const entries = this.usages
 				.filter((g) => {
 					const data = g.object || g
 					return resolveUuid(data.consumer) === orgUuid

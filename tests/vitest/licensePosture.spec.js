@@ -47,7 +47,7 @@ const inProd = (extra) => ({
 })
 
 // Usages: M1 deployed twice (O1, O2); M2 once (O1); M3 once (O1); M4 phased out (O1).
-const gebruiken = [
+const usages = [
 	inProd({ id: 'G1', module: 'M1', consumer: 'O1' }),
 	inProd({ id: 'G2', module: 'M1', consumer: 'O2' }),
 	inProd({ id: 'G3', module: 'M2', consumer: 'O1' }),
@@ -72,15 +72,15 @@ describe('licensePosture.normaliseLicenseType', () => {
 
 describe('licensePosture.deploymentCount', () => {
 	it('counts only in-production usages', () => {
-		expect(deploymentCount('M1', gebruiken)).toBe(2)
-		expect(deploymentCount('M2', gebruiken)).toBe(1)
-		expect(deploymentCount('M4', gebruiken)).toBe(0) // phased out
+		expect(deploymentCount('M1', usages)).toBe(2)
+		expect(deploymentCount('M2', usages)).toBe(1)
+		expect(deploymentCount('M4', usages)).toBe(0) // phased out
 	})
 })
 
 describe('licensePosture.portfolioPosture', () => {
 	it('weights by deployment, excludes phased-out, buckets Unknown', () => {
-		const p = portfolioPosture(modules, gebruiken)
+		const p = portfolioPosture(modules, usages)
 		// 4 in-production usages: M1×2 (open), M2×1 (closed), M3×1 (unknown).
 		expect(p.total).toBe(4)
 		expect(p.open).toBe(2)
@@ -113,7 +113,7 @@ describe('licensePosture.perVendorRollup', () => {
 	]
 
 	it('groups by vendor with deployments, mix and consumed annual cost', () => {
-		const rows = perVendorRollup(modules, gebruiken, contracts)
+		const rows = perVendorRollup(modules, usages, contracts)
 		const va = rows.find((r) => r.vendorId === 'VA')
 		const vb = rows.find((r) => r.vendorId === 'VB')
 
@@ -131,7 +131,7 @@ describe('licensePosture.perVendorRollup', () => {
 	})
 
 	it('degrades cost to null when no contracts are supplied', () => {
-		const rows = perVendorRollup(modules, gebruiken, [])
+		const rows = perVendorRollup(modules, usages, [])
 		expect(rows.every((r) => r.annualCost === null)).toBe(true)
 		// Licence mix + deployments still present.
 		expect(rows.find((r) => r.vendorId === 'VA').deployments).toBe(3)
@@ -141,7 +141,7 @@ describe('licensePosture.perVendorRollup', () => {
 describe('licensePosture.perOrganisationPosture', () => {
 	it('reports an org open/closed share + closed-source contributors', () => {
 		// O1 in-use: M1 (open), M2 (closed), M3 (unknown); M4 phased out excluded.
-		const p = perOrganisationPosture('O1', modules, gebruiken)
+		const p = perOrganisationPosture('O1', modules, usages)
 		expect(p.total).toBe(3)
 		expect(p.open).toBe(1)
 		expect(p.closed).toBe(1)
@@ -151,7 +151,7 @@ describe('licensePosture.perOrganisationPosture', () => {
 	})
 
 	it('O2 runs only the open app', () => {
-		const p = perOrganisationPosture('O2', modules, gebruiken)
+		const p = perOrganisationPosture('O2', modules, usages)
 		expect(p.total).toBe(1)
 		expect(p.open).toBe(1)
 		expect(p.openShare).toBe(1)

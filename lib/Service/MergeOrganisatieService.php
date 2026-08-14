@@ -271,7 +271,7 @@ class MergeOrganisatieService {
 		}
 
 		$this->auditLog(
-			action: 'organisation-merge.execute.summary',
+			action: 'organisation-merge.execute.omschrijving',
 			context: [
 				'sourceUuid' => $sourceUuid,
 				'targetUuid' => $targetUuid,

@@ -56,7 +56,7 @@
 
 				<div class="form-row">
 					<NcTextArea
-						v-model="formData.beschrijvingLang"
+						v-model="formData.longDescription"
 						:label="t('softwarecatalog', 'Testimonial')"
 						:placeholder="
 							t(
@@ -154,7 +154,7 @@ export default {
 			selectedRating: 8,
 			formData: {
 				name: '',
-				beschrijvingLang: '',
+				longDescription: '',
 			},
 		}
 	},
@@ -198,7 +198,7 @@ export default {
 		 * @spec openspec/specs/catalog-ratings/spec.md
 		 */
 		resetForm() {
-			this.formData = { name: '', beschrijvingLang: '' }
+			this.formData = { name: '', longDescription: '' }
 			this.selectedRating = 8
 			this.error = ''
 		},
@@ -222,7 +222,7 @@ export default {
 				const body = buildReviewSubmission(
 					this.formData.name,
 					this.selectedRating,
-					this.formData.beschrijvingLang,
+					this.formData.longDescription,
 					this.subjectType,
 					this.subjectId,
 				)

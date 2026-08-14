@@ -20,11 +20,11 @@
 			@update:modelValue="onField('name', $event)" />
 
 		<NcTextField
-			:modelValue="payload.beschrijvingKort"
+			:modelValue="payload.shortDescription"
 			:label="t('softwarecatalog', 'Short description') + ' *'"
 			:placeholder="t('softwarecatalog', 'A brief summary of the suite')"
 			required
-			@update:modelValue="onField('beschrijvingKort', $event)" />
+			@update:modelValue="onField('shortDescription', $event)" />
 
 		<NcTextArea
 			v-model="beschrijvingLangModel"
@@ -81,7 +81,7 @@ export default {
 			 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
 			 */
 			get() {
-				return this.payload.beschrijvingLang || ''
+				return this.payload.longDescription || ''
 			},
 
 			/**
@@ -90,7 +90,7 @@ export default {
 			 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
 			 */
 			set(value) {
-				this.onField('beschrijvingLang', value)
+				this.onField('longDescription', value)
 			},
 		},
 	},

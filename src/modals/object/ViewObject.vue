@@ -2187,7 +2187,7 @@ export default {
 				return [
 					['title', ''],
 					['description', ''],
-					['summary', ''],
+					['omschrijving', ''],
 					['category', ''],
 					['status', 'draft'],
 				]

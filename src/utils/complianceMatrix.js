@@ -368,7 +368,7 @@ export function standardLabel(standard) {
 /**
  * Compute per-organisation coverage of a single column (a standard version,
  * or — since bio-compliance-assessment — a BIO measure) across the
- * organisation's in-use applications (gebruiken → modules → compliancy).
+ * organisation's in-use applications (usages → modules → compliancy).
  *
  * For each gebruik, the module's support for the column is resolved to
  * verified / claimed / none. Applications whose module has no compliancy
@@ -376,7 +376,7 @@ export function standardLabel(standard) {
  * is itself a finding).
  *
  * @param {object}        params                   Coverage input.
- * @param {Array<object>} params.gebruiken         The organisation's gebruik objects (carry `module`).
+ * @param {Array<object>} params.usages         The organisation's gebruik objects (carry `module`).
  * @param {string}        [params.standaardversieUuid] The standard to report on. Back-compat alias for `columnUuid`.
  * @param {string}        [params.columnUuid]      The standard/measure UUID to report on. Preferred over `standaardversieUuid` for new callers.
  * @param {Array<object>} params.compliancy        Compliancy records.
@@ -388,7 +388,7 @@ export function standardLabel(standard) {
  * @spec openspec/specs/bio-compliance-assessment/spec.md
  */
 export function buildOrganisationCoverage({
-	gebruiken = [],
+	usages = [],
 	standaardversieUuid,
 	columnUuid,
 	compliancy = [],
@@ -411,7 +411,7 @@ export function buildOrganisationCoverage({
 		)
 	}
 
-	return (gebruiken || []).map((gebruik) => {
+	return (usages || []).map((gebruik) => {
 		const data = dataOf(gebruik)
 		const moduleUuid = resolveUuid(data.module)
 		return {

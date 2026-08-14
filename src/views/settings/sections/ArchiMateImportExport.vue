@@ -202,7 +202,7 @@
 						<div
 							v-if="
 								importResult.statistics
-								&& importResult.statistics.summary
+								&& importResult.statistics.omschrijving
 							"
 							class="result-card">
 							<h5>Import Summary</h5>
@@ -210,7 +210,7 @@
 								<div class="summary-item created">
 									<div class="summary-number">
 										{{
-											importResult.statistics.summary
+											importResult.statistics.omschrijving
 												.total_objects_created
 										}}
 									</div>
@@ -219,7 +219,7 @@
 								<div class="summary-item updated">
 									<div class="summary-number">
 										{{
-											importResult.statistics.summary
+											importResult.statistics.omschrijving
 												.total_objects_updated
 										}}
 									</div>
@@ -228,7 +228,7 @@
 								<div class="summary-item unchanged">
 									<div class="summary-number">
 										{{
-											importResult.statistics.summary
+											importResult.statistics.omschrijving
 												.total_objects_unchanged
 										}}
 									</div>
@@ -239,25 +239,25 @@
 									class="summary-item errors"
 									:class="{
 										clickable:
-											importResult.statistics.summary
+											importResult.statistics.omschrijving
 												.total_errors > 0,
 									}"
 									:disabled="
-										importResult.statistics.summary.total_errors
-										=== 0
+										importResult.statistics.omschrijving
+											.total_errors === 0
 									"
-									:aria-label="`Show details for ${importResult.statistics.summary.total_errors} import errors`"
+									:aria-label="`Show details for ${importResult.statistics.omschrijving.total_errors} import errors`"
 									@click="showErrorDetails">
 									<div class="summary-number">
 										{{
-											importResult.statistics.summary
+											importResult.statistics.omschrijving
 												.total_errors
 										}}
 									</div>
 									<div class="summary-label">Errors</div>
 									<div
 										v-if="
-											importResult.statistics.summary
+											importResult.statistics.omschrijving
 												.total_errors > 0
 										"
 										class="click-hint">
@@ -316,15 +316,15 @@
 								<!-- Most Common Errors -->
 								<div
 									v-if="
-										importResult.detailed_errors.summary
-										&& importResult.detailed_errors.summary
+										importResult.detailed_errors.omschrijving
+										&& importResult.detailed_errors.omschrijving
 											.length > 0
 									"
 									class="common-errors-section">
 									<h6>Most Common Issues</h6>
 									<div class="common-errors-list">
 										<div
-											v-for="error in importResult.detailed_errors.summary.slice(
+											v-for="error in importResult.detailed_errors.omschrijving.slice(
 												0,
 												5,
 											)"
@@ -1055,7 +1055,7 @@ export default {
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		showErrorDetails() {
-			if (this.importResult?.statistics?.summary?.total_errors > 0) {
+			if (this.importResult?.statistics?.omschrijving?.total_errors > 0) {
 				this.showErrors = true
 			}
 		},
@@ -1530,13 +1530,13 @@ export default {
 }
 
 /* Summary Grid */
-.summary-grid {
+.omschrijving-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 	gap: 1rem;
 }
 
-.summary-item {
+.omschrijving-item {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -1553,38 +1553,38 @@ export default {
 	width: 100%;
 }
 
-button.summary-item:disabled {
+button.omschrijving-item:disabled {
 	cursor: default;
 }
 
-.summary-item.created {
+.omschrijving-item.created {
 	border-color: var(--color-success);
 	background: var(--color-success-light);
 }
 
-.summary-item.updated {
+.omschrijving-item.updated {
 	border-color: var(--color-warning);
 	background: var(--color-warning-light);
 }
 
-.summary-item.unchanged {
+.omschrijving-item.unchanged {
 	border-color: var(--color-text-lighter);
 	background: var(--color-background-hover);
 }
 
-.summary-item.errors {
+.omschrijving-item.errors {
 	border-color: var(--color-error);
 	background: var(--color-error-light);
 }
 
-.summary-number {
+.omschrijving-number {
 	font-size: 2rem;
 	font-weight: 700;
 	color: var(--color-main-text);
 	margin-bottom: 0.5rem;
 }
 
-.summary-label {
+.omschrijving-label {
 	font-size: 0.875rem;
 	font-weight: 500;
 	color: var(--color-text-maxcontrast);
@@ -1770,7 +1770,7 @@ button.summary-item:disabled {
 		grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 	}
 
-	.summary-grid {
+	.omschrijving-grid {
 		grid-template-columns: repeat(2, 1fr);
 	}
 
@@ -1835,14 +1835,14 @@ button.summary-item:disabled {
 }
 
 /* Clickable Error Tile Styles */
-.summary-item.clickable {
+.omschrijving-item.clickable {
 	cursor: pointer;
 	transition:
 		transform 0.2s ease,
 		box-shadow 0.2s ease;
 }
 
-.summary-item.clickable:hover {
+.omschrijving-item.clickable:hover {
 	transform: translateY(-2px);
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -2223,8 +2223,8 @@ button.summary-item:disabled {
    without the movement. */
 @media (prefers-reduced-motion: reduce) {
 	.file-upload-label,
-	.summary-item,
-	.summary-item.clickable {
+	.omschrijving-item,
+	.omschrijving-item.clickable {
 		transition: none;
 	}
 }

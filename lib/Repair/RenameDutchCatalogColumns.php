@@ -263,6 +263,16 @@ class RenameDutchCatalogColumns implements IRepairStep {
 		'vertrouwelijkheid' => 'confidentiality',
 		'vertrouwelijkheid(belangrijkste_reden)' => 'confidentiality_primary_reason',
 		'waardering' => 'rating',
+		'afkorting' => 'abbreviation',
+		'bbn_niveau' => 'bbn_level',
+		'beleidsdomein' => 'policy_domain',
+		'detailniveau' => 'detail_level',
+		'gebruiken' => 'usages',
+		'gemma_sortering' => 'gemma_sorting',
+		'groepering' => 'grouping',
+		'pakketversie_beschrijving' => 'package_version_description',
+		'publiceren' => 'publish',
+		'titel_view_swc' => 'title_view_swc',
 	];
 
 	/**

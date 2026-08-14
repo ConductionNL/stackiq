@@ -44,10 +44,10 @@ describe('reviewForm.buildReviewPayload', () => {
 		expect(payload).toEqual({
 			name: 'Great tool',
 			rating: 9,
-			beschrijvingLang: 'Worked well for us',
+			longDescription: 'Worked well for us',
 		})
 		expect(Object.keys(payload).sort()).toEqual([
-			'beschrijvingLang',
+			'longDescription',
 			'name',
 			'rating',
 		])
@@ -68,7 +68,7 @@ describe('reviewForm.buildReviewSubmission', () => {
 			review: {
 				name: 'Great tool',
 				rating: 9,
-				beschrijvingLang: 'Worked well',
+				longDescription: 'Worked well',
 			},
 			subjectType: 'module',
 			subjectId: 'module-uuid-1',
