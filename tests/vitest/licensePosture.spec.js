@@ -24,40 +24,40 @@ import {
 const modules = [
 	{
 		id: 'M1',
-		naam: 'Open App',
+		name: 'Open App',
 		licentietype: 'Open source',
-		licentie: 'EUPL-1.2',
-		aanbieder: 'VA',
+		licence: 'EUPL-1.2',
+		provider: 'VA',
 	},
 	{
 		id: 'M2',
-		naam: 'Closed App',
+		name: 'Closed App',
 		licentietype: 'Closed source',
-		licentie: 'Proprietary',
-		aanbieder: 'VA',
+		licence: 'Proprietary',
+		provider: 'VA',
 	},
-	{ id: 'M3', naam: 'Mystery App', licentietype: '', aanbieder: 'VB' },
-	{ id: 'M4', naam: 'Shelfware', licentietype: 'Closed source', aanbieder: 'VB' },
+	{ id: 'M3', name: 'Mystery App', licentietype: '', provider: 'VB' },
+	{ id: 'M4', name: 'Shelfware', licentietype: 'Closed source', provider: 'VB' },
 ]
 
 const inProd = (extra) => ({
-	startDatumInProductie: '2025-01-01',
-	startDatumUitGefaseerd: '',
+	startDateInProduction: '2025-01-01',
+	startDateOutPhased: '',
 	...extra,
 })
 
 // Usages: M1 deployed twice (O1, O2); M2 once (O1); M3 once (O1); M4 phased out (O1).
 const gebruiken = [
-	inProd({ id: 'G1', module: 'M1', afnemer: 'O1' }),
-	inProd({ id: 'G2', module: 'M1', afnemer: 'O2' }),
-	inProd({ id: 'G3', module: 'M2', afnemer: 'O1' }),
-	inProd({ id: 'G4', module: 'M3', afnemer: 'O1' }),
+	inProd({ id: 'G1', module: 'M1', consumer: 'O1' }),
+	inProd({ id: 'G2', module: 'M1', consumer: 'O2' }),
+	inProd({ id: 'G3', module: 'M2', consumer: 'O1' }),
+	inProd({ id: 'G4', module: 'M3', consumer: 'O1' }),
 	{
 		id: 'G5',
 		module: 'M4',
-		afnemer: 'O1',
-		startDatumInProductie: '2024-01-01',
-		startDatumUitGefaseerd: '2025-06-01',
+		consumer: 'O1',
+		startDateInProduction: '2024-01-01',
+		startDateOutPhased: '2025-06-01',
 	},
 ]
 
@@ -107,9 +107,9 @@ describe('licensePosture.portfolioPosture', () => {
 describe('licensePosture.perVendorRollup', () => {
 	const contracts = [
 		// A monthly contract on G1 (vendor VA usage) → 100 × 12 = 1200/yr.
-		{ gebruik: 'G1', kosten: 100, kostenPeriode: 'Maandelijks' },
+		{ gebruik: 'G1', cost: 100, costPeriod: 'Maandelijks' },
 		// A yearly contract on G3 (vendor VA usage) → 500/yr.
-		{ gebruik: 'G3', kosten: 500, kostenPeriode: 'Jaarlijks' },
+		{ gebruik: 'G3', cost: 500, costPeriod: 'Jaarlijks' },
 	]
 
 	it('groups by vendor with deployments, mix and consumed annual cost', () => {

@@ -16,9 +16,9 @@
  * views) are NOT covered here, and not because they are hard: the fixtures
  * cannot be built through the object API. Measured on a live instance —
  * POSTing a module with
- *     {"standaardVersies":["StUF-ZKN-x"],"referentieComponenten":["RC-x"]}
- * returns 200 with BOTH arrays silently emptied (`"standaardVersies":[]`,
- * `"referentieComponenten":[]`). They are relation fields; OpenRegister drops
+ *     {"standardVersions":["StUF-ZKN-x"],"referenceComponents":["RC-x"]}
+ * returns 200 with BOTH arrays silently emptied (`"standardVersions":[]`,
+ * `"referenceComponents":[]`). They are relation fields; OpenRegister drops
  * bare strings without erroring. Seeding them needs real `element` objects in
  * the AMEF register plus `relation` rows, which is a fixture layer this file
  * deliberately does not fake — a facet test seeded with data the product
@@ -50,6 +50,11 @@ import {
 const FACETS = '/index.php/apps/softwarecatalog/api/facets'
 /** The four GEMMA dimensions the endpoint must always describe. */
 const DIMENSIONS = [
+	// Wire names: FacetController and FacetService declare these four, and they
+	// are the query parameters and response keys of the endpoint. They move as a
+	// set or not at all — translating only `standaard` made the frontend ask for
+	// `standard[]` from a backend that reads `standaard[]`, and filtering silently
+	// returned everything.
 	'referentiecomponent',
 	'standaard',
 	'applicatieservice',
@@ -71,7 +76,7 @@ test.beforeAll(async () => {
 	for (const n of [1, 2]) {
 		seeded.push(
 			await createObject(ctx, config.register, 'module', {
-				naam: `${TOKEN} module ${n}`,
+				name: `${TOKEN} module ${n}`,
 			}),
 		)
 	}

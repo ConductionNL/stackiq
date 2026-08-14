@@ -27,7 +27,7 @@ class OrganizationHandlerDecompositionTest extends TestCase {
 	}
 
 	private function call(OrganizationHandler $h, array $row): string {
-		$ref = new ReflectionMethod($h, 'buildContactpersoonTitle');
+		$ref = new ReflectionMethod($h, 'buildContactPersonTitle');
 		$ref->setAccessible(true);
 		return $ref->invokeArgs($h, [$row]);
 	}

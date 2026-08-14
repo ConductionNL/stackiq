@@ -438,7 +438,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		// Get configuration for different object types.
 		$catalogSchemaIds = $this->resolveCatalogSchemaIds(settingsService: $settingsService);
-		$organisatieSchemaId = $catalogSchemaIds['organisatie'];
+		$organisationSchemaId = $catalogSchemaIds['organisatie'];
 		$contactSchemaId = $catalogSchemaIds['contactpersoon'];
 		$contactInfoSchemaId = $catalogSchemaIds['contactgegevens'];
 		$gebruikSchemaId = $catalogSchemaIds['gebruik'];
@@ -446,7 +446,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		$logger->debug(
 			'SoftwareCatalog: Configuration lookup results',
 			[
-				'organisatieSchemaId' => $organisatieSchemaId,
+				'organisatieSchemaId' => $organisationSchemaId,
 				'contactpersoonSchemaId' => $contactSchemaId,
 				'contactgegevensSchemaId' => $contactInfoSchemaId,
 				'gebruikSchemaId' => $gebruikSchemaId,
@@ -455,7 +455,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		);
 
 		// Check if this is an organization object.
-		if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $organisatieSchemaId) === true) {
+		if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $organisationSchemaId) === true) {
 			$objectData = $object->getObject();
 			$status = strtolower($objectData['status'] ?? '');
 
@@ -512,7 +512,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				'schemaId' => $objectSchemaIdInt,
 				'registerId' => $objectRegisterId,
 				'supportedSchemas' => [
-					'organisatie' => $organisatieSchemaId,
+					'organisatie' => $organisationSchemaId,
 					'contactpersoon' => $contactSchemaId,
 					'contactgegevens' => $contactInfoSchemaId,
 					'gebruik' => $gebruikSchemaId,
@@ -570,14 +570,14 @@ class SoftwareCatalogEventListener implements IEventListener {
 		);
 
 		// Check if this is an organization update.
-		$organisatieSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
-		$orgSchemaIdInt = (int)$organisatieSchemaId;
+		$organisationSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
+		$orgSchemaIdInt = (int)$organisationSchemaId;
 
 		$logger->debug(
 			'Got organisation schema ID',
 			[
 				'app' => 'softwarecatalog',
-				'organisatieSchemaId' => $organisatieSchemaId,
+				'organisatieSchemaId' => $organisationSchemaId,
 				'organisatieSchemaIdInt' => $orgSchemaIdInt,
 			]
 		);
@@ -588,13 +588,13 @@ class SoftwareCatalogEventListener implements IEventListener {
 				'app' => 'softwarecatalog',
 				'objectSchemaId' => $objectSchemaId,
 				'objectSchemaIdInt' => $objectSchemaIdInt,
-				'organisatieSchemaId' => $organisatieSchemaId,
+				'organisatieSchemaId' => $organisationSchemaId,
 				'organisatieSchemaIdInt' => $orgSchemaIdInt,
 				'matches' => ($objectSchemaIdInt === $orgSchemaIdInt),
 			]
 		);
 
-		if ($organisatieSchemaId !== null && $objectSchemaIdInt === $orgSchemaIdInt) {
+		if ($organisationSchemaId !== null && $objectSchemaIdInt === $orgSchemaIdInt) {
 			$objectData = $object->getObject();
 			$status = strtolower($objectData['status'] ?? '');
 
@@ -669,8 +669,8 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 			try {
 				$contactSvc->handleContactpersoonUpdate(
-					contactpersoonObject: $object,
-					oldContactpersoonObject: $oldObject
+					contactPersonObject: $object,
+					oldContactPersonObject: $oldObject
 				);
 
 				$logger->info(
@@ -713,8 +713,8 @@ class SoftwareCatalogEventListener implements IEventListener {
 			try {
 				// Handle contactgegevens as contactpersoon (backward compatibility).
 				$contactSvc->handleContactpersoonUpdate(
-					contactpersoonObject: $object,
-					oldContactpersoonObject: $oldObject
+					contactPersonObject: $object,
+					oldContactPersonObject: $oldObject
 				);
 
 				$logger->info(
@@ -768,7 +768,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				'schemaIdType' => gettype($objectSchemaId),
 				'registerId' => $objectRegisterId,
 				'handledSchemas' => [
-					'organisatie' => $organisatieSchemaId,
+					'organisatie' => $organisationSchemaId,
 					'contactpersoon' => $contactSchemaId,
 					'contactgegevens' => $contactInfoSchemaId,
 					'gebruik' => $gebruikSchemaId,
@@ -820,11 +820,11 @@ class SoftwareCatalogEventListener implements IEventListener {
 		);
 
 		// Check if this is an organization deletion.
-		$organisatieSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
-		$orgSchemaIdInt = (int)$organisatieSchemaId;
+		$organisationSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
+		$orgSchemaIdInt = (int)$organisationSchemaId;
 		$objectSchemaIdInt = (int)$objectSchemaId;
 
-		if ($organisatieSchemaId !== null && $objectSchemaIdInt === $orgSchemaIdInt) {
+		if ($organisationSchemaId !== null && $objectSchemaIdInt === $orgSchemaIdInt) {
 			$logger->info('SoftwareCatalog: Processing organization deletion', ['objectId' => $objectId]);
 			$this->runOrganizationSync(object: $object, phase: 'deletion', logger: $logger);
 			return;
@@ -923,8 +923,8 @@ class SoftwareCatalogEventListener implements IEventListener {
 					'objectId' => $objectId,
 					'schemaId' => $objectSchemaId,
 					'configuredSchemaId' => $gebruikSchemaId,
-					'afnemer' => $objectData['afnemer']['naam'] ?? 'Unknown',
-					'product' => $objectData['product']['naam'] ?? 'Unknown',
+					'consumer' => $objectData['consumer']['name'] ?? 'Unknown',
+					'product' => $objectData['product']['name'] ?? 'Unknown',
 				]
 			);
 
@@ -948,7 +948,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				'schemaId' => $objectSchemaId,
 				'registerId' => $objectRegisterId,
 				'handledSchemas' => [
-					'organisatie' => $organisatieSchemaId,
+					'organisatie' => $organisationSchemaId,
 					'contactpersoon' => $contactSchemaId,
 					'contactgegevens' => $contactInfoSchemaId,
 					'gebruik' => $gebruikSchemaId,

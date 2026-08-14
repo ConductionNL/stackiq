@@ -25,7 +25,7 @@ import { filtersFromSchema } from '../../node_modules/@conduction/nextcloud-vue/
 /** The four GEMMA dimensions FacetedCatalogIndexView declares. */
 const DIMENSION_LABELS = {
 	referentiecomponent: () => 'Reference component',
-	standaard: () => 'Standard',
+	standard: () => 'Standard',
 	applicatieservice: () => 'Application service',
 	domein: () => 'Domain',
 }
@@ -39,7 +39,7 @@ describe('buildFacetDimensionSchema', () => {
 		expect(filters).toHaveLength(4)
 		expect(filters.map((f) => f.key)).toEqual([
 			'referentiecomponent',
-			'standaard',
+			'standard',
 			'applicatieservice',
 			'domein',
 		])

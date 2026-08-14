@@ -234,7 +234,7 @@ class ReviewAggregateService {
 
 		$sum = 0.0;
 		foreach ($reviews as $review) {
-			$sum += (float)($review['waardering'] ?? 0);
+			$sum += (float)($review['rating'] ?? 0);
 		}
 
 		return round($sum / $count, 2);

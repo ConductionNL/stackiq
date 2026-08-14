@@ -1482,12 +1482,12 @@ class ArchiMateImportService {
 
 			// Step 1: Build a mapping from ArchiMate identifier to database UUID for Standaarden.
 			// The identifier field contains "id-{archimate_id}" and we need the _uuid field.
-			$standaardQuery = $connection->executeQuery(
+			$standardQuery = $connection->executeQuery(
 				"SELECT _uuid, identifier FROM {$tableName} WHERE gemma_type = 'Standaard' AND identifier IS NOT NULL"
 			);
 
 			$identifierToUuid = [];
-			while (($row = $standaardQuery->fetch()) !== false) {
+			while (($row = $standardQuery->fetch()) !== false) {
 				$identifier = $row['identifier'] ?? '';
 				$uuid = $row['_uuid'] ?? '';
 
@@ -2999,9 +2999,9 @@ class ArchiMateImportService {
 					'gemmaType',
 					'bivScoreBbn',
 					'belangrijksteReden',
-					'beschikbaarheid',
-					'integriteit',
-					'vertrouwelijkheid',
+					'availability',
+					'integrity',
+					'confidentiality',
 				];
 				foreach ($gemmaProperties as $prop) {
 					if (isset($element[$prop]) === true) {
@@ -3776,8 +3776,8 @@ class ArchiMateImportService {
 	 * This method analyzes all objects to find Referentiecomponenten and Standaarden,
 	 * then uses relationships to link them together based on Verbindingsrol property.
 	 * Each Referentiecomponent gets two properties:
-	 * - 'aanbevolenStandaarden' array for standards with Verbindingsrol = "Aanbevolen"
-	 * - 'verplichteStandaarden' array for standards with Verbindingsrol = "Verplicht"
+	 * - 'recommendedStandards' array for standards with Verbindingsrol = "Aanbevolen"
+	 * - 'mandatoryStandards' array for standards with Verbindingsrol = "Verplicht"
 	 *
 	 * @param array $objects All objects from the import
 	 *
@@ -3790,10 +3790,10 @@ class ArchiMateImportService {
 
 		// OPTIMIZATION: Single-pass processing - collect all data types at once.
 		$refComponenten = [];
-		$standaarden = [];
-		$standaardVersies = [];
+		$standards = [];
+		$standardVersions = [];
 		$gemmaRelationshipMap = [];
-		$stdVersieRelMap = [];
+		$stdVersionRelMap = [];
 		// StandaardVersie -> Standaard mappings.
 		// Debug: Count objects and property variations.
 		$elementCount = 0;
@@ -3821,9 +3821,9 @@ class ArchiMateImportService {
 					if ($gemmaTypeValue === 'Referentiecomponent') {
 						$refComponenten[$object['identifier']] = $index;
 					} elseif ($gemmaTypeValue === 'Standaard') {
-						$standaarden[$object['identifier']] = $index;
+						$standards[$object['identifier']] = $index;
 					} elseif ($gemmaTypeValue === 'Standaardversie') {
-						$standaardVersies[$object['identifier']] = $index;
+						$standardVersions[$object['identifier']] = $index;
 					}
 				}
 			}//end if
@@ -3836,16 +3836,16 @@ class ArchiMateImportService {
 				$this->processRelationshipImmediate(
 					relationship: $object,
 					refComponenten: $refComponenten,
-					standaarden: $standaarden,
+					standards: $standards,
 					gemmaRelationshipMap: $gemmaRelationshipMap
 				);
 
 				// Process StandaardVersie-Standaard relationships (Specialization type).
-				$this->processStandaardVersieRelationship(
+				$this->processStandardVersionRelationship(
 					relationship: $object,
-					standaardVersies: $standaardVersies,
-					standaarden: $standaarden,
-					stdVersieRelMap: $stdVersieRelMap
+					standardVersions: $standardVersions,
+					standards: $standards,
+					stdVersionRelMap: $stdVersionRelMap
 				);
 			}
 		}
@@ -3858,38 +3858,38 @@ class ArchiMateImportService {
 				'elements_with_gemma_type' => $gemmaElements,
 				'gemma_type_variations' => $gemmaTypeVariations,
 				'referentiecomponenten_count' => count($refComponenten),
-				'standaarden_count' => count($standaarden),
-				'standaardversies_count' => count($standaardVersies),
+				'standaarden_count' => count($standards),
+				'standaardversies_count' => count($standardVersions),
 				'processed_relationships' => count($gemmaRelationshipMap),
-				'standaardversie_relationships' => count($stdVersieRelMap),
+				'standaardversie_relationships' => count($stdVersionRelMap),
 			]
 		);
 
 		// STEP 2: Apply the processed relationship mappings to Referentiecomponenten.
 		$enhancedCount = 0;
-		foreach ($gemmaRelationshipMap as $refCompId => $standaardenMap) {
+		foreach ($gemmaRelationshipMap as $refCompId => $standardsMap) {
 			if (isset($refComponenten[$refCompId]) === true) {
 				$objectIndex = $refComponenten[$refCompId];
 
 				// Remove duplicates and add the properties.
-				$aanbevolenStd = array_unique($standaardenMap['aanbevolen']);
-				$verplichtStd = array_unique($standaardenMap['verplicht']);
+				$recommendedStd = array_unique($standardsMap['aanbevolen']);
+				$verplichtStd = array_unique($standardsMap['verplicht']);
 
-				$objects[$objectIndex]['aanbevolenStandaarden'] = $aanbevolenStd;
-				$objects[$objectIndex]['verplichteStandaarden'] = $verplichtStd;
+				$objects[$objectIndex]['recommendedStandards'] = $recommendedStd;
+				$objects[$objectIndex]['mandatoryStandards'] = $verplichtStd;
 
 				// Also add combined array for backward compatibility.
-				$allStandaarden = array_unique(array_merge($aanbevolenStd, $verplichtStd));
-				$objects[$objectIndex]['standaarden'] = $allStandaarden;
+				$allStandards = array_unique(array_merge($recommendedStd, $verplichtStd));
+				$objects[$objectIndex]['standards'] = $allStandards;
 
 				$this->logger->info(
 					'Enhanced Referentiecomponent with categorized standaarden',
 					[
 						'referentiecomponent_id' => $refCompId,
 						'referentiecomponent_name' => $objects[$objectIndex]['name'] ?? 'Unknown',
-						'aanbevolen_count' => count($aanbevolenStd),
+						'aanbevolen_count' => count($recommendedStd),
 						'verplicht_count' => count($verplichtStd),
-						'aanbevolen_ids' => $aanbevolenStd,
+						'aanbevolen_ids' => $recommendedStd,
 						'verplicht_ids' => $verplichtStd,
 					]
 				);
@@ -3908,26 +3908,26 @@ class ArchiMateImportService {
 		);
 
 		// STEP 3: Apply StandaardVersie-Standaard relationship mappings.
-		// Only store 'standaard' on StandaardVersie - use inversedBy for reverse lookup.
-		$versieEnhancedCount = 0;
+		// Only store 'standard' on StandaardVersie - use inversedBy for reverse lookup.
+		$versionEnhancedCount = 0;
 
-		foreach ($stdVersieRelMap as $versieId => $standaardId) {
+		foreach ($stdVersionRelMap as $versionId => $standardId) {
 			// Add standaard reference to StandaardVersie.
-			if (isset($standaardVersies[$versieId]) === true) {
-				$versieIndex = $standaardVersies[$versieId];
+			if (isset($standardVersions[$versionId]) === true) {
+				$versionIndex = $standardVersions[$versionId];
 				// Convert to UUID format (remove "id-" prefix).
-				$standaardUuid = str_replace('id-', '', $standaardId);
-				$objects[$versieIndex]['standaard'] = $standaardUuid;
-				$versieEnhancedCount++;
+				$standaardUuid = str_replace('id-', '', $standardId);
+				$objects[$versionIndex]['standard'] = $standaardUuid;
+				$versionEnhancedCount++;
 			}
 		}
 
 		$this->logger->info(
 			'GEMMA StandaardVersie-Standaard processing completed',
 			[
-				'standaardversies_enhanced' => $versieEnhancedCount,
-				'total_standaardversies' => count($standaardVersies),
-				'total_versie_relationships' => count($stdVersieRelMap),
+				'standaardversies_enhanced' => $versionEnhancedCount,
+				'total_standaardversies' => count($standardVersions),
+				'total_versie_relationships' => count($stdVersionRelMap),
 			]
 		);
 
@@ -3935,41 +3935,41 @@ class ArchiMateImportService {
 		// This allows querying ?gemmaType=referentiecomponent&_extend[]=gekoppeldeStandaardVersies.
 		// to get all referentiecomponenten with their related standaardVersies in one call.
 		// Build reverse map: Standaard ID -> [StandaardVersie UUIDs].
-		$stdToVersiesMap = [];
-		foreach ($stdVersieRelMap as $versieId => $standaardId) {
-			$versieUuid = str_replace('id-', '', $versieId);
-			if (isset($stdToVersiesMap[$standaardId]) === false) {
-				$stdToVersiesMap[$standaardId] = [];
+		$stdToVersionsMap = [];
+		foreach ($stdVersionRelMap as $versionId => $standardId) {
+			$versieUuid = str_replace('id-', '', $versionId);
+			if (isset($stdToVersionsMap[$standardId]) === false) {
+				$stdToVersionsMap[$standardId] = [];
 			}
 
-			$stdToVersiesMap[$standaardId][] = $versieUuid;
+			$stdToVersionsMap[$standardId][] = $versieUuid;
 		}
 
 		// Add standaardVersies to each ReferentieComponent.
 		$refCompVersCount = 0;
 		foreach ($refComponenten as $refCompId => $objectIndex) {
-			$stdVersiesRefComp = [];
+			$stdVersionsRefComp = [];
 
 			// Get all standaarden for this referentiecomponent (combined array).
-			$refCompStandaarden = $objects[$objectIndex]['standaarden'] ?? [];
+			$refCompStandards = $objects[$objectIndex]['standards'] ?? [];
 
 			// For each standaard, collect its standaardVersies.
-			foreach ($refCompStandaarden as $standaardUuid) {
+			foreach ($refCompStandards as $standaardUuid) {
 				// Convert UUID back to identifier format for lookup.
-				$standaardIdentifier = 'id-' . $standaardUuid;
+				$standardIdentifier = 'id-' . $standaardUuid;
 
-				if (isset($stdToVersiesMap[$standaardIdentifier]) === true) {
-					$stdVersiesRefComp = array_merge(
-						$stdVersiesRefComp,
-						$stdToVersiesMap[$standaardIdentifier]
+				if (isset($stdToVersionsMap[$standardIdentifier]) === true) {
+					$stdVersionsRefComp = array_merge(
+						$stdVersionsRefComp,
+						$stdToVersionsMap[$standardIdentifier]
 					);
 				}
 			}
 
 			// Remove duplicates and add to referentiecomponent.
-			// Use 'gekoppeldeStandaardVersies' to avoid conflict with inversedBy on 'standaardVersies'.
-			if (empty($stdVersiesRefComp) === false) {
-				$objects[$objectIndex]['gekoppeldeStandaardVersies'] = array_values(array_unique($stdVersiesRefComp));
+			// Use 'linkedStandardVersions' to avoid conflict with inversedBy on 'standardVersions'.
+			if (empty($stdVersionsRefComp) === false) {
+				$objects[$objectIndex]['linkedStandardVersions'] = array_values(array_unique($stdVersionsRefComp));
 				$refCompVersCount++;
 			}
 		}//end foreach
@@ -3979,7 +3979,7 @@ class ArchiMateImportService {
 			[
 				'referentiecomponenten_with_versies' => $refCompVersCount,
 				'total_referentiecomponenten' => count($refComponenten),
-				'standaard_to_versies_mappings' => count($stdToVersiesMap),
+				'standaard_to_versies_mappings' => count($stdToVersionsMap),
 			]
 		);
 
@@ -3990,17 +3990,17 @@ class ArchiMateImportService {
 	 * Process StandaardVersie-Standaard relationships (Specialization type)
 	 *
 	 * @param array $relationship The relationship object
-	 * @param array $standaardVersies Array of StandaardVersie identifiers
-	 * @param array $standaarden Array of Standaard identifiers
-	 * @param array $stdVersieRelMap Map of StandaardVersie to Standaard
+	 * @param array $standardVersions Array of StandaardVersie identifiers
+	 * @param array $standards Array of Standaard identifiers
+	 * @param array $stdVersionRelMap Map of StandaardVersie to Standaard
 	 *
 	 * @return void
 	 */
-	private function processStandaardVersieRelationship(
+	private function processStandardVersionRelationship(
 		array $relationship,
-		array $standaardVersies,
-		array $standaarden,
-		array &$stdVersieRelMap,
+		array $standardVersions,
+		array $standards,
+		array &$stdVersionRelMap,
 	): void {
 		// Get source and target from relationship.
 		$source = $this->extractRelationshipEndpoint(relationship: $relationship, endpoint: 'source');
@@ -4019,21 +4019,21 @@ class ArchiMateImportService {
 		}
 
 		// Check if one end is a StandaardVersie and the other is a Standaard.
-		$versieId = null;
-		$standaardId = null;
+		$versionId = null;
+		$standardId = null;
 
-		if (isset($standaardVersies[$source]) === true && isset($standaarden[$target]) === true) {
+		if (isset($standardVersions[$source]) === true && isset($standards[$target]) === true) {
 			// StandaardVersie -> Standaard.
-			$versieId = $source;
-			$standaardId = $target;
-		} elseif (isset($standaarden[$source]) === true && isset($standaardVersies[$target]) === true) {
+			$versionId = $source;
+			$standardId = $target;
+		} elseif (isset($standards[$source]) === true && isset($standardVersions[$target]) === true) {
 			// Standaard -> StandaardVersie (reverse direction).
-			$versieId = $target;
-			$standaardId = $source;
+			$versionId = $target;
+			$standardId = $source;
 		}
 
-		if ($versieId !== false && $standaardId === true) {
-			$stdVersieRelMap[$versieId] = $standaardId;
+		if ($versionId !== false && $standardId === true) {
+			$stdVersionRelMap[$versionId] = $standardId;
 		}
 	}//end processStandaardVersieRelationship()
 
@@ -4042,7 +4042,7 @@ class ArchiMateImportService {
 	 *
 	 * @param array $relationship The relationship object
 	 * @param array $refComponenten Array of Referentiecomponent identifiers
-	 * @param array $standaarden Array of Standaard identifiers
+	 * @param array $standards Array of Standaard identifiers
 	 * @param array $gemmaRelationshipMap The relationship map to update
 	 *
 	 * @return void
@@ -4050,7 +4050,7 @@ class ArchiMateImportService {
 	private function processRelationshipImmediate(
 		array $relationship,
 		array $refComponenten,
-		array $standaarden,
+		array $standards,
 		array &$gemmaRelationshipMap,
 	): void {
 		// Get source and target from relationship XML or flattened properties.
@@ -4071,19 +4071,19 @@ class ArchiMateImportService {
 
 		// Check if one end is a Referentiecomponent and the other is a Standaard.
 		$refCompId = null;
-		$standaardId = null;
+		$standardId = null;
 
-		if (isset($refComponenten[$source]) === true && isset($standaarden[$target]) === true) {
+		if (isset($refComponenten[$source]) === true && isset($standards[$target]) === true) {
 			// Referentiecomponent -> Standaard.
 			$refCompId = $source;
-			$standaardId = $target;
-		} elseif (isset($standaarden[$source]) === true && isset($refComponenten[$target]) === true) {
+			$standardId = $target;
+		} elseif (isset($standards[$source]) === true && isset($refComponenten[$target]) === true) {
 			// Standaard -> Referentiecomponent (reverse direction).
 			$refCompId = $target;
-			$standaardId = $source;
+			$standardId = $source;
 		}
 
-		if ($refCompId !== false && $standaardId === true) {
+		if ($refCompId !== false && $standardId === true) {
 			// Initialize arrays if not exists.
 			if (isset($gemmaRelationshipMap[$refCompId]) === false) {
 				$gemmaRelationshipMap[$refCompId] = [
@@ -4098,7 +4098,7 @@ class ArchiMateImportService {
 
 			// Add to appropriate array based on Verbindingsrol.
 			// Convert identifier to UUID format (remove "id-" prefix) for _extend compatibility.
-			$standaardUuid = str_replace('id-', '', $standaardId);
+			$standaardUuid = str_replace('id-', '', $standardId);
 			if (strtolower($verbindingsrol) === 'aanbevolen') {
 				$gemmaRelationshipMap[$refCompId]['aanbevolen'][] = $standaardUuid;
 			} elseif (strtolower($verbindingsrol) === 'verplicht') {

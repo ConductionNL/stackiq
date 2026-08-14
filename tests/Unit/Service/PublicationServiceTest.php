@@ -92,18 +92,18 @@ class PublicationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPublishSetsPublicatiedatum(): void {
-		$service = $this->makeService(['naam' => 'Mijn dienst', 'depublicatiedatum' => '2020-01-01T00:00:00+00:00']);
+		$service = $this->makeService(['name' => 'Mijn dienst', 'depublicationDate' => '2020-01-01T00:00:00+00:00']);
 
 		$result = $service->publish('dienst', 'uuid-1');
 
 		$this->assertTrue($result['ok']);
-		$this->assertNotNull($result['publicatiedatum']);
+		$this->assertNotNull($result['publicationDate']);
 		// The saved object carries publicatiedatum and a cleared depublicatiedatum.
-		$this->assertArrayHasKey('publicatiedatum', $this->savedObject);
-		$this->assertNotNull($this->savedObject['publicatiedatum']);
-		$this->assertNull($this->savedObject['depublicatiedatum']);
+		$this->assertArrayHasKey('publicationDate', $this->savedObject);
+		$this->assertNotNull($this->savedObject['publicationDate']);
+		$this->assertNull($this->savedObject['depublicationDate']);
 		// publicatiedatum is in the past/present (anonymous-visible now).
-		$this->assertLessThanOrEqual(time(), strtotime($this->savedObject['publicatiedatum']));
+		$this->assertLessThanOrEqual(time(), strtotime($this->savedObject['publicationDate']));
 	}//end testPublishSetsPublicatiedatum()
 
 	/**
@@ -112,13 +112,13 @@ class PublicationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPublishWithFutureMomentSchedules(): void {
-		$service = $this->makeService(['naam' => 'Mijn dienst']);
+		$service = $this->makeService(['name' => 'Mijn dienst']);
 		$future = gmdate('Y-m-d\TH:i:sP', (time() + 86400));
 
 		$result = $service->publish('dienst', 'uuid-1', $future);
 
 		$this->assertTrue($result['ok']);
-		$this->assertGreaterThan(time(), strtotime($this->savedObject['publicatiedatum']));
+		$this->assertGreaterThan(time(), strtotime($this->savedObject['publicationDate']));
 	}//end testPublishWithFutureMomentSchedules()
 
 	/**
@@ -128,14 +128,14 @@ class PublicationServiceTest extends TestCase {
 	 */
 	public function testDepublishClearsPublicatiedatum(): void {
 		$service = $this->makeService(
-			['naam' => 'Mijn dienst', 'publicatiedatum' => '2024-01-01T00:00:00+00:00']
+			['name' => 'Mijn dienst', 'publicationDate' => '2024-01-01T00:00:00+00:00']
 		);
 
 		$result = $service->depublish('dienst', 'uuid-1');
 
 		$this->assertTrue($result['ok']);
-		$this->assertNull($this->savedObject['publicatiedatum']);
-		$this->assertNotNull($this->savedObject['depublicatiedatum']);
+		$this->assertNull($this->savedObject['publicationDate']);
+		$this->assertNotNull($this->savedObject['depublicationDate']);
 	}//end testDepublishClearsPublicatiedatum()
 
 	/**
@@ -150,7 +150,7 @@ class PublicationServiceTest extends TestCase {
 			$this->createMock(LoggerInterface::class)
 		))->isPublishableType('contactpersoon'));
 
-		$service = $this->makeService(['naam' => 'x']);
+		$service = $this->makeService(['name' => 'x']);
 		$result = $service->publish('contactpersoon', 'uuid-1');
 		$this->assertFalse($result['ok']);
 		$this->assertNull($this->savedObject);
@@ -162,7 +162,7 @@ class PublicationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPublishableTypes(): void {
-		$service = $this->makeService(['naam' => 'x']);
+		$service = $this->makeService(['name' => 'x']);
 		foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $type) {
 			$this->assertTrue($service->isPublishableType($type), $type . ' should be publishable');
 		}

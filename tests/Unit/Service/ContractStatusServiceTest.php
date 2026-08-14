@@ -76,7 +76,7 @@ class ContractStatusServiceTest extends TestCase {
 	 */
 	public function testActiveWithPastEndDateExpires(): void {
 		$this->assertTrue(
-			$this->service->shouldExpire(['status' => 'Actief', 'eindDatum' => '2026-06-01'], $this->now())
+			$this->service->shouldExpire(['status' => 'Actief', 'endDate' => '2026-06-01'], $this->now())
 		);
 	}//end testActiveWithPastEndDateExpires()
 
@@ -87,7 +87,7 @@ class ContractStatusServiceTest extends TestCase {
 	 */
 	public function testActiveWithFutureEndDateDoesNotExpire(): void {
 		$this->assertFalse(
-			$this->service->shouldExpire(['status' => 'Actief', 'eindDatum' => '2027-01-01'], $this->now())
+			$this->service->shouldExpire(['status' => 'Actief', 'endDate' => '2027-01-01'], $this->now())
 		);
 	}//end testActiveWithFutureEndDateDoesNotExpire()
 
@@ -98,8 +98,8 @@ class ContractStatusServiceTest extends TestCase {
 	 */
 	public function testActiveWithoutEndDateDoesNotExpire(): void {
 		$this->assertFalse($this->service->shouldExpire(['status' => 'Actief'], $this->now()));
-		$this->assertFalse($this->service->shouldExpire(['status' => 'Actief', 'eindDatum' => ''], $this->now()));
-		$this->assertFalse($this->service->shouldExpire(['status' => 'Actief', 'eindDatum' => '   '], $this->now()));
+		$this->assertFalse($this->service->shouldExpire(['status' => 'Actief', 'endDate' => ''], $this->now()));
+		$this->assertFalse($this->service->shouldExpire(['status' => 'Actief', 'endDate' => '   '], $this->now()));
 	}//end testActiveWithoutEndDateDoesNotExpire()
 
 	/**
@@ -109,7 +109,7 @@ class ContractStatusServiceTest extends TestCase {
 	 */
 	public function testUnparseableEndDateDoesNotExpire(): void {
 		$this->assertFalse(
-			$this->service->shouldExpire(['status' => 'Actief', 'eindDatum' => 'not-a-date'], $this->now())
+			$this->service->shouldExpire(['status' => 'Actief', 'endDate' => 'not-a-date'], $this->now())
 		);
 	}//end testUnparseableEndDateDoesNotExpire()
 
@@ -120,7 +120,7 @@ class ContractStatusServiceTest extends TestCase {
 	 */
 	public function testNegotiationStatusNeverExpires(): void {
 		$this->assertFalse(
-			$this->service->shouldExpire(['status' => 'In onderhandeling', 'eindDatum' => '2020-01-01'], $this->now())
+			$this->service->shouldExpire(['status' => 'In onderhandeling', 'endDate' => '2020-01-01'], $this->now())
 		);
 	}//end testNegotiationStatusNeverExpires()
 
@@ -131,7 +131,7 @@ class ContractStatusServiceTest extends TestCase {
 	 */
 	public function testAlreadyExpiredIsNotReprocessed(): void {
 		$this->assertFalse(
-			$this->service->shouldExpire(['status' => 'Verlopen', 'eindDatum' => '2020-01-01'], $this->now())
+			$this->service->shouldExpire(['status' => 'Verlopen', 'endDate' => '2020-01-01'], $this->now())
 		);
 	}//end testAlreadyExpiredIsNotReprocessed()
 

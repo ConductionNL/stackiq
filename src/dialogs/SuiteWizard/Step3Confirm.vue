@@ -13,7 +13,7 @@
 	<div class="suite-wizard-step3">
 		<dl class="suite-wizard-step3__summary">
 			<dt>{{ t('softwarecatalog', 'Name') }}</dt>
-			<dd>{{ payload.naam }}</dd>
+			<dd>{{ payload.name }}</dd>
 
 			<dt>{{ t('softwarecatalog', 'Short description') }}</dt>
 			<dd>{{ payload.beschrijvingKort }}</dd>

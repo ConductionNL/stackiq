@@ -923,9 +923,9 @@ class ViewService {
 
 				// Attach source org metadata for deelnames so the UI can attribute the shared gebruik.
 				if ($type === 'deelnames') {
-					$afnemer = $gebruik['afnemer'] ?? [];
-					$gebruik['_sourceOrganizationId'] = $afnemer['@self']['id'] ?? ($afnemer['id'] ?? ($gebruik['@self']['organisation'] ?? null));
-					$gebruik['_sourceOrganization'] = $afnemer['naam'] ?? ($afnemer['name'] ?? null);
+					$consumer = $gebruik['consumer'] ?? [];
+					$gebruik['_sourceOrganizationId'] = $consumer['@self']['id'] ?? ($consumer['id'] ?? ($gebruik['@self']['organisation'] ?? null));
+					$gebruik['_sourceOrganization'] = $consumer['name'] ?? null;
 				}
 
 				$allGebruik[$elementRef][] = $gebruik;
@@ -1053,18 +1053,18 @@ class ViewService {
 		$expandedNodes = $existingNodes;
 
 		// Look for referentiecomponent relationships in the module.
-		$referentieComponenten = $this->extractReferentieComponenten(module: $module);
+		$referenceComponents = $this->extractReferenceComponenten(module: $module);
 
-		foreach ($referentieComponenten as $referentieComponentId) {
+		foreach ($referenceComponents as $referenceComponentId) {
 			// Find if there's an existing node for this referentiecomponent.
-			$parentNode = $nodesByModelId[$referentieComponentId] ?? null;
+			$parentNode = $nodesByModelId[$referenceComponentId] ?? null;
 
 			if ($parentNode !== null) {
 				// Create a new node for this module as child of the referentiecomponent.
 				$moduleNode = $this->createModuleNode(
 					module: $module,
 					parentNode: $parentNode,
-					referentieComponentId: $referentieComponentId
+					referenceComponentId: $referenceComponentId
 				);
 				$expandedNodes[] = $moduleNode;
 
@@ -1074,7 +1074,7 @@ class ViewService {
 						'module_id' => $module['id'] ?? $module['identifier'] ?? 'unknown',
 						'module_name' => $module['name'] ?? 'unnamed',
 						'parent_node_id' => $parentNode['viewNodeId'] ?? 'unknown',
-						'referentie_component_id' => $referentieComponentId,
+						'referentie_component_id' => $referenceComponentId,
 					]
 				);
 			}
@@ -1090,13 +1090,13 @@ class ViewService {
 	 *
 	 * @return array Array of referentiecomponent identifiers.
 	 */
-	private function extractReferentieComponenten(array $module): array {
-		$referentieComponenten = [];
+	private function extractReferenceComponenten(array $module): array {
+		$referenceComponents = [];
 
 		// Look for referentiecomponent relationships in various possible locations.
 		$possibleFields = [
 			'referentiecomponenten',
-			'referentieComponenten',
+			'referenceComponents',
 			'relatedComponents',
 			'components',
 			'relationships',
@@ -1110,21 +1110,21 @@ class ViewService {
 					// Handle array of components.
 					foreach ($value as $component) {
 						if (is_string(value: $component) === true) {
-							$referentieComponenten[] = $component;
+							$referenceComponents[] = $component;
 						} elseif (is_array(value: $component) === true && isset($component['id']) === true) {
-							$referentieComponenten[] = $component['id'];
+							$referenceComponents[] = $component['id'];
 						} elseif (is_array(value: $component) === true && isset($component['identifier']) === true) {
-							$referentieComponenten[] = $component['identifier'];
+							$referenceComponents[] = $component['identifier'];
 						}
 					}
 				} elseif (is_string(value: $value) === true) {
 					// Handle single component ID.
-					$referentieComponenten[] = $value;
+					$referenceComponents[] = $value;
 				}
 			}
 		}//end foreach
 
-		return array_unique($referentieComponenten);
+		return array_unique($referenceComponents);
 	}//end extractReferentieComponenten()
 
 	/**
@@ -1132,11 +1132,11 @@ class ViewService {
 	 *
 	 * @param array $module Module data.
 	 * @param array $parentNode Parent referentiecomponent node.
-	 * @param string $referentieComponentId Referentiecomponent identifier.
+	 * @param string $referenceComponentId Referentiecomponent identifier.
 	 *
 	 * @return array New module node.
 	 */
-	private function createModuleNode(array $module, array $parentNode, string $referentieComponentId): array {
+	private function createModuleNode(array $module, array $parentNode, string $referenceComponentId): array {
 		$moduleId = $module['id'] ?? $module['identifier'] ?? uniqid('module_');
 		$moduleName = $module['name'] ?? 'Unnamed Module';
 
@@ -1168,7 +1168,7 @@ class ViewService {
 			'description' => $module['description'] ?? $module['summary'] ?? null,
 			'elementRef' => $moduleId,
 			'_isModuleExpansion' => true,
-			'_parentReferentieComponent' => $referentieComponentId,
+			'_parentReferentieComponent' => $referenceComponentId,
 			'_moduleData' => $module,
 		];
 	}//end createModuleNode()
@@ -1217,7 +1217,7 @@ class ViewService {
 						'schema' => $gebruikSchemaId,
 					],
 					// Match objects where this org appears as a deelnemer.
-					'deelnemers' => $currentOrg,
+					'participants' => $currentOrg,
 					'_limit' => 500,
 				];
 
@@ -1293,7 +1293,7 @@ class ViewService {
 				[
 					'model_node_id' => $modelNodeId,
 					'product_id' => $product['id'] ?? $product['identifier'] ?? 'unknown',
-					'product_name' => $product['naam'] ?? $product['name'] ?? 'unnamed',
+					'product_name' => $product['name'] ?? 'unnamed',
 				]
 			);
 

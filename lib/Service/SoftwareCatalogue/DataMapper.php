@@ -115,12 +115,11 @@ class DataMapper {
 	 * @return array<string,mixed> Normalised data.
 	 */
 	private function normalizeOrganizationFields(array $data): array {
-		// Normalise alternative field names to canonical names.
-		if (isset($data['naam']) === false && isset($data['name']) === true) {
-			$data['naam'] = $data['name'];
-			unset($data['name']);
-		}
-
+		// The `name` alias block that used to live here mapped the incoming key
+		// `name` onto the then-canonical `naam`. The canonical property IS `name`
+		// now, so the alias and its target are the same key and the block became
+		// `false` — a
+		// contradiction that can never run. Removed rather than left as dead code.
 		if (isset($data['status']) === false && isset($data['actief']) === true) {
 			$data['status'] = 'inactief';
 			if ($data['actief'] === true) {
@@ -173,6 +172,6 @@ class DataMapper {
 			return $name;
 		}
 
-		return $data['naam'] ?? '';
+		return $data['name'] ?? '';
 	}//end buildDisplayName()
 }//end class

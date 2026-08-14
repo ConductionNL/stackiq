@@ -41,7 +41,7 @@
 				:key="organisation.uuid"
 				close-after-click
 				@click="switchTo(organisation.uuid)">
-				{{ organisation.naam }}
+				{{ organisation.name }}
 			</NcActionButton>
 			<NcActionSeparator v-if="otherOrganisations.length > 0 && isBeheerder" />
 			<NcActionButton

@@ -124,7 +124,7 @@ class SbomImportService {
 		$coordinates = $this->resolveCoordinates();
 		$objectService = $coordinates['objectService'];
 
-		$moduleVersie = $objectService->find(
+		$moduleVersion = $objectService->find(
 			id: $moduleVersieUuid,
 			register: $coordinates['registerId'],
 			schema: $coordinates['moduleVersieSchemaId'],
@@ -132,7 +132,7 @@ class SbomImportService {
 			_multitenancy: false
 		);
 
-		if ($moduleVersie === null) {
+		if ($moduleVersion === null) {
 			throw new RuntimeException('moduleVersie not found: ' . $moduleVersieUuid);
 		}
 
@@ -168,8 +168,8 @@ class SbomImportService {
 		$this->recordProvenance(
 			objectService: $objectService,
 			registerId: $coordinates['registerId'],
-			moduleVersieSchemaId: $coordinates['moduleVersieSchemaId'],
-			moduleVersie: $moduleVersie,
+			versionSchemaId: $coordinates['moduleVersieSchemaId'],
+			moduleVersion: $moduleVersion,
 			format: $format,
 			fileName: $fileName
 		);
@@ -241,7 +241,7 @@ class SbomImportService {
 	 */
 	public function resolveParentModuleUuid(string $moduleVersieUuid): ?string {
 		$coordinates = $this->resolveCoordinates();
-		$moduleVersie = $coordinates['objectService']->find(
+		$moduleVersion = $coordinates['objectService']->find(
 			id: $moduleVersieUuid,
 			register: $coordinates['registerId'],
 			schema: $coordinates['moduleVersieSchemaId'],
@@ -249,11 +249,11 @@ class SbomImportService {
 			_multitenancy: false
 		);
 
-		if ($moduleVersie === null) {
+		if ($moduleVersion === null) {
 			return null;
 		}
 
-		return $this->resolveRelationUuid(relation: $moduleVersie->getObject()['module'] ?? null);
+		return $this->resolveRelationUuid(relation: $moduleVersion->getObject()['module'] ?? null);
 	}//end resolveParentModuleUuid()
 
 	/**
@@ -299,7 +299,7 @@ class SbomImportService {
 	 */
 	public function getStatus(string $moduleVersieUuid, ?string $operationId = null): array {
 		$coordinates = $this->resolveCoordinates();
-		$moduleVersie = $coordinates['objectService']->find(
+		$moduleVersion = $coordinates['objectService']->find(
 			id: $moduleVersieUuid,
 			register: $coordinates['registerId'],
 			schema: $coordinates['moduleVersieSchemaId'],
@@ -308,8 +308,8 @@ class SbomImportService {
 		);
 
 		$data = [];
-		if ($moduleVersie !== null) {
-			$data = $moduleVersie->getObject();
+		if ($moduleVersion !== null) {
+			$data = $moduleVersion->getObject();
 		}
 
 		$progress = null;
@@ -439,8 +439,8 @@ class SbomImportService {
 	 *
 	 * @param ObjectService $objectService The OR object service.
 	 * @param int $registerId The voorzieningen register id.
-	 * @param int $moduleVersieSchemaId The moduleVersie schema id.
-	 * @param object $moduleVersie The current moduleVersie entity.
+	 * @param int $versionSchemaId The moduleVersie schema id.
+	 * @param object $moduleVersion The current moduleVersie entity.
 	 * @param string $format The import format.
 	 * @param string $fileName The uploaded file's original name.
 	 *
@@ -451,12 +451,12 @@ class SbomImportService {
 	private function recordProvenance(
 		ObjectService $objectService,
 		int $registerId,
-		int $moduleVersieSchemaId,
-		object $moduleVersie,
+		int $versionSchemaId,
+		object $moduleVersion,
 		string $format,
 		string $fileName,
 	): void {
-		$data = $moduleVersie->getObject();
+		$data = $moduleVersion->getObject();
 		$data['sbomLastImportedAt'] = (new DateTime())->format(DateTime::ATOM);
 		$data['sbomFormat'] = $format;
 		$data['sbomFileName'] = $fileName;
@@ -464,8 +464,8 @@ class SbomImportService {
 		$objectService->saveObject(
 			object: $data,
 			register: $registerId,
-			schema: $moduleVersieSchemaId,
-			uuid: $moduleVersie->getUuid(),
+			schema: $versionSchemaId,
+			uuid: $moduleVersion->getUuid(),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -589,10 +589,10 @@ class SbomImportService {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 
-		$moduleVersieSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
+		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
 		$componentSchemaId = $this->settingsService->getSchemaIdForObjectType('sbomComponent');
 
-		if ($registerId === null || $moduleVersieSchemaId === null || $componentSchemaId === null) {
+		if ($registerId === null || $versionSchemaId === null || $componentSchemaId === null) {
 			throw new RuntimeException(
 				'sbom-import: voorzieningen register or moduleVersie/sbomComponent schema not configured'
 			);
@@ -601,7 +601,7 @@ class SbomImportService {
 		return [
 			'objectService' => $objectService,
 			'registerId' => (int)$registerId,
-			'moduleVersieSchemaId' => (int)$moduleVersieSchemaId,
+			'moduleVersieSchemaId' => (int)$versionSchemaId,
 			'sbomComponentSchemaId' => (int)$componentSchemaId,
 		];
 	}//end resolveCoordinates()

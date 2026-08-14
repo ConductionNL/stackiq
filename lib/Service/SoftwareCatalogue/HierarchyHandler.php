@@ -92,7 +92,7 @@ class HierarchyHandler {
 			if (empty($organizationBeheerders) === true) {
 				// No beheerders found - make this user the beheerder.
 				$this->_contactPersonHandler->assignBeheerderRole(
-					contactpersoonObject: $contactgegevensObject,
+					contactPersonObject: $contactgegevensObject,
 					username: $username,
 					organizationUuid: $organizationUuid
 				);
@@ -207,12 +207,12 @@ class HierarchyHandler {
 			return;
 		}
 
-		foreach ($organizationBeheerders as $beheerder) {
-			if ($beheerder === $primaryManager) {
+		foreach ($organizationBeheerders as $maintainer) {
+			if ($maintainer === $primaryManager) {
 				continue;
 			}
 
-			$this->_contactPersonHandler->setUserManager(username: $beheerder, managerUsername: $primaryManager);
+			$this->_contactPersonHandler->setUserManager(username: $maintainer, managerUsername: $primaryManager);
 		}
 
 	}//end assignManagerForOtherBeheerders()
@@ -248,7 +248,7 @@ class HierarchyHandler {
 			$hierarchy['subordinates'] = $subordinates;
 
 			// Check if user is a beheerder.
-			$hierarchy['isBeheerder'] = $this->isUserBeheerder(username: $username);
+			$hierarchy['isBeheerder'] = $this->isUserMaintainer(username: $username);
 
 			// Check if user is primary manager (has subordinates and no manager).
 			$hierarchy['isPrimaryManager'] = empty($hierarchy['manager']) === true
@@ -310,12 +310,12 @@ class HierarchyHandler {
 	 *
 	 * @return bool True if user is a beheerder
 	 */
-	private function isUserBeheerder(string $username): bool {
+	private function isUserMaintainer(string $username): bool {
 		try {
 			$groupManager = $this->_groupManager;
-			$beheerderGroup = $groupManager->get('beheerder');
+			$maintainerGroup = $groupManager->get('maintainer');
 
-			if ($beheerderGroup === null) {
+			if ($maintainerGroup === null) {
 				return false;
 			}
 
@@ -326,7 +326,7 @@ class HierarchyHandler {
 				return false;
 			}
 
-			return $beheerderGroup->inGroup($user);
+			return $maintainerGroup->inGroup($user);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to check if user is beheerder: ' . $e->getMessage(),
@@ -366,8 +366,8 @@ class HierarchyHandler {
 			}
 
 			// Build hierarchy tree.
-			foreach ($beheerders as $beheerder) {
-				$hierarchy = $this->getUserHierarchy(username: $beheerder);
+			foreach ($beheerders as $maintainer) {
+				$hierarchy = $this->getUserHierarchy(username: $maintainer);
 				$structure['hierarchy'][] = $hierarchy;
 			}
 

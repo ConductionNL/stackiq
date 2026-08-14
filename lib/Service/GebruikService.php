@@ -157,7 +157,7 @@ class GebruikService {
 					$object = $object->getObject();
 				}
 
-				unset($object['interneAantekening']);
+				unset($object['interneAnnotation']);
 
 				return $object;
 			},

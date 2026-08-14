@@ -141,22 +141,22 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 	 */
 	public function testHandleGebruikerCreatedEvent(): void {
 		// Create mock ObjectEntity for gebruiker (schema ID 3)
-		$gebruiker = $this->createMock(ObjectEntity::class);
-		$gebruiker->method('getSchema')->willReturn(3);
+		$user = $this->createMock(ObjectEntity::class);
+		$user->method('getSchema')->willReturn(3);
 
 		// Create ObjectCreatedEvent
-		$event = new ObjectCreatedEvent($gebruiker);
+		$event = new ObjectCreatedEvent($user);
 
 		// Set expectations for service calls
 		$this->softwareCatalogueService
 			->expects($this->once())
 			->method('handleNewGebruiker')
-			->with($gebruiker);
+			->with($user);
 
 		$this->softwareCatalogueService
 			->expects($this->once())
 			->method('sendGebruikerWelcomeEmail')
-			->with($gebruiker);
+			->with($user);
 
 		// Handle the event
 		$this->eventListener->handle($event);
@@ -194,19 +194,19 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 	 */
 	public function testHandleGebruikerUpdatedEvent(): void {
 		// Create mock ObjectEntity for gebruiker (schema ID 3)
-		$newGebruiker = $this->createMock(ObjectEntity::class);
-		$newGebruiker->method('getSchema')->willReturn(3);
+		$newUser = $this->createMock(ObjectEntity::class);
+		$newUser->method('getSchema')->willReturn(3);
 
-		$oldGebruiker = $this->createMock(ObjectEntity::class);
+		$oldUser = $this->createMock(ObjectEntity::class);
 
 		// Create ObjectUpdatedEvent
-		$event = new ObjectUpdatedEvent($newGebruiker, $oldGebruiker);
+		$event = new ObjectUpdatedEvent($newUser, $oldUser);
 
 		// Set expectations for service calls
 		$this->softwareCatalogueService
 			->expects($this->once())
 			->method('handleGebruikerUpdate')
-			->with($newGebruiker, $oldGebruiker);
+			->with($newUser, $oldUser);
 
 		// Handle the event
 		$this->eventListener->handle($event);
@@ -242,17 +242,17 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 	 */
 	public function testHandleGebruikerDeletedEvent(): void {
 		// Create mock ObjectEntity for gebruiker (schema ID 3)
-		$gebruiker = $this->createMock(ObjectEntity::class);
-		$gebruiker->method('getSchema')->willReturn(3);
+		$user = $this->createMock(ObjectEntity::class);
+		$user->method('getSchema')->willReturn(3);
 
 		// Create ObjectDeletedEvent
-		$event = new ObjectDeletedEvent($gebruiker);
+		$event = new ObjectDeletedEvent($user);
 
 		// Set expectations for service calls
 		$this->softwareCatalogueService
 			->expects($this->once())
 			->method('blockUserForGebruiker')
-			->with($gebruiker);
+			->with($user);
 
 		// Handle the event
 		$this->eventListener->handle($event);
@@ -265,17 +265,17 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 	 */
 	public function testHandleGebruikerLockedEvent(): void {
 		// Create mock ObjectEntity for gebruiker (schema ID 3)
-		$gebruiker = $this->createMock(ObjectEntity::class);
-		$gebruiker->method('getSchema')->willReturn(3);
+		$user = $this->createMock(ObjectEntity::class);
+		$user->method('getSchema')->willReturn(3);
 
 		// Create ObjectLockedEvent
-		$event = new ObjectLockedEvent($gebruiker);
+		$event = new ObjectLockedEvent($user);
 
 		// Set expectations for service calls
 		$this->softwareCatalogueService
 			->expects($this->once())
 			->method('temporarilyBlockUserForGebruiker')
-			->with($gebruiker);
+			->with($user);
 
 		// Handle the event
 		$this->eventListener->handle($event);
@@ -288,17 +288,17 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 	 */
 	public function testHandleGebruikerUnlockedEvent(): void {
 		// Create mock ObjectEntity for gebruiker (schema ID 3)
-		$gebruiker = $this->createMock(ObjectEntity::class);
-		$gebruiker->method('getSchema')->willReturn(3);
+		$user = $this->createMock(ObjectEntity::class);
+		$user->method('getSchema')->willReturn(3);
 
 		// Create ObjectUnlockedEvent
-		$event = new ObjectUnlockedEvent($gebruiker);
+		$event = new ObjectUnlockedEvent($user);
 
 		// Set expectations for service calls
 		$this->softwareCatalogueService
 			->expects($this->once())
 			->method('restoreUserAccessForGebruiker')
-			->with($gebruiker);
+			->with($user);
 
 		// Handle the event
 		$this->eventListener->handle($event);
@@ -336,19 +336,19 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 	 */
 	public function testHandleGebruikerRevertedEvent(): void {
 		// Create mock ObjectEntity for gebruiker (schema ID 3)
-		$gebruiker = $this->createMock(ObjectEntity::class);
-		$gebruiker->method('getSchema')->willReturn(3);
+		$user = $this->createMock(ObjectEntity::class);
+		$user->method('getSchema')->willReturn(3);
 
 		$revertPoint = 'audit_123';
 
 		// Create ObjectRevertedEvent
-		$event = new ObjectRevertedEvent($gebruiker, $revertPoint);
+		$event = new ObjectRevertedEvent($user, $revertPoint);
 
 		// Set expectations for service calls
 		$this->softwareCatalogueService
 			->expects($this->once())
 			->method('updateUserFromRevertedGebruiker')
-			->with($gebruiker, $revertPoint);
+			->with($user, $revertPoint);
 
 		// Handle the event
 		$this->eventListener->handle($event);

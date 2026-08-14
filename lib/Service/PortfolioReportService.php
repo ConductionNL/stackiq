@@ -237,7 +237,7 @@ class PortfolioReportService {
 				'register' => $cfg['registerId'],
 				'schema' => $cfg['gebruikSchema'],
 			],
-			'afnemer' => $organisationUuid,
+			'consumer' => $organisationUuid,
 			'_limit' => $ceiling,
 		];
 
@@ -284,20 +284,20 @@ class PortfolioReportService {
 	private function buildRow(array $gebruik, array $cfg, array $contractsByGebruik, DateTimeImmutable $now): array {
 		$gebruikId = $this->derivation->resolveRelationId(value: $gebruik['id'] ?? ($gebruik['@self']['id'] ?? null));
 		$moduleId = $this->derivation->resolveRelationId(value: $gebruik['module'] ?? null);
-		$versieId = $this->derivation->resolveRelationId(value: $gebruik['moduleVersie'] ?? null);
+		$versionId = $this->derivation->resolveRelationId(value: $gebruik['moduleVersie'] ?? null);
 
 		$module = null;
 		if ($moduleId !== '') {
 			$module = $this->fetchRelation(id: $moduleId, schemaId: $cfg['moduleSchema']);
 		}
 
-		$moduleVersie = null;
-		if ($versieId !== '') {
-			$moduleVersie = $this->fetchRelation(id: $versieId, schemaId: $cfg['moduleVersieSchema']);
+		$moduleVersion = null;
+		if ($versionId !== '') {
+			$moduleVersion = $this->fetchRelation(id: $versionId, schemaId: $cfg['moduleVersieSchema']);
 		}
 
-		$eol = $this->derivation->deriveEolState(moduleVersie: $moduleVersie, now: $now);
-		$eolApproaching = $this->derivation->isEolApproaching(moduleVersie: $moduleVersie, now: $now);
+		$eol = $this->derivation->deriveEolState(moduleVersion: $moduleVersion, now: $now);
+		$eolApproaching = $this->derivation->isEolApproaching(moduleVersion: $moduleVersion, now: $now);
 
 		$cost = $this->sumContractCost(contracts: $contractsByGebruik[$gebruikId] ?? []);
 
@@ -313,7 +313,7 @@ class PortfolioReportService {
 		return [
 			'uuid' => $gebruikId,
 			'moduleId' => $moduleId,
-			'moduleName' => $module['naam'] ?? $module['title'] ?? $moduleId,
+			'moduleName' => $module['name'] ?? $module['title'] ?? $moduleId,
 			'timeClassification' => $classification,
 			'quadrant' => $classification ?? self::QUADRANT_UNCLASSIFIED,
 			'timeRationale' => $gebruik['timeRationale'] ?? null,

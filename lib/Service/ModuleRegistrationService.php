@@ -3,7 +3,7 @@
 /**
  * Module Registration Service.
  *
- * Service for auto-setting geregistreerdDoor on module objects
+ * Service for auto-setting registeredBy on module objects
  * based on the owning organisation's type.
  *
  * @category  Service
@@ -26,7 +26,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Service for auto-setting geregistreerdDoor on module objects
+ * Service for auto-setting registeredBy on module objects
  * based on the owning organisation's type.
  *
  * @category Service
@@ -34,7 +34,7 @@ use Psr\Log\LoggerInterface;
  */
 class ModuleRegistrationService {
 	/**
-	 * Mapping from organisatie.type to module.geregistreerdDoor.
+	 * Mapping from organisatie.type to module.registeredBy.
 	 */
 	private const TYPE_MAP = [
 		'Gemeente' => 'Gemeente',
@@ -59,7 +59,7 @@ class ModuleRegistrationService {
 
 	/**
 	 * Handle a module create/update event: look up the owning organisatie's type
-	 * and set geregistreerdDoor accordingly.
+	 * and set registeredBy accordingly.
 	 *
 	 * @param object $moduleObject The module object to process
 	 *
@@ -82,7 +82,7 @@ class ModuleRegistrationService {
 		}
 
 		$this->logger->info(
-			'ModuleRegistrationService: Processing module for geregistreerdDoor',
+			'ModuleRegistrationService: Processing module for registeredBy',
 			[
 				'moduleId' => $moduleId,
 				'organisationUuid' => $organisationUuid,
@@ -95,15 +95,15 @@ class ModuleRegistrationService {
 				return;
 			}
 
-			$geregistreerdDoor = $this->mapOrgTypeToRegisteredBy(moduleId: $moduleId, orgType: $orgType);
-			if ($geregistreerdDoor === null) {
+			$registeredBy = $this->mapOrgTypeToRegisteredBy(moduleId: $moduleId, orgType: $orgType);
+			if ($registeredBy === null) {
 				return;
 			}
 
-			$this->updateModuleRegisteredBy(moduleObject: $moduleObject, geregistreerdDoor: $geregistreerdDoor, orgType: $orgType);
+			$this->updateModuleRegisteredBy(moduleObject: $moduleObject, registeredBy: $registeredBy, orgType: $orgType);
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'ModuleRegistrationService: Failed to set geregistreerdDoor',
+				'ModuleRegistrationService: Failed to set registeredBy',
 				[
 					'moduleId' => $moduleId,
 					'exception' => $e->getMessage(),
@@ -134,15 +134,15 @@ class ModuleRegistrationService {
 			return null;
 		}
 
-		$organisatieSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
+		$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 
-		if ($organisatieSchemaId === null || $registerId === null) {
+		if ($organisationSchemaId === null || $registerId === null) {
 			$this->logger->warning(
 				'ModuleRegistrationService: Organisatie schema or register not configured',
 				[
-					'organisatieSchemaId' => $organisatieSchemaId,
+					'organisatieSchemaId' => $organisationSchemaId,
 					'registerId' => $registerId,
 				]
 			);
@@ -150,10 +150,10 @@ class ModuleRegistrationService {
 		}
 
 		try {
-			$organisatieObject = $objectService->find(
+			$organisationObject = $objectService->find(
 				id: $organisationUuid,
 				register: (int)$registerId,
-				schema: (int)$organisatieSchemaId
+				schema: (int)$organisationSchemaId
 			);
 		} catch (\Exception $e) {
 			$this->logger->debug(
@@ -166,7 +166,7 @@ class ModuleRegistrationService {
 			return null;
 		}
 
-		if ($organisatieObject === null) {
+		if ($organisationObject === null) {
 			$this->logger->debug(
 				'ModuleRegistrationService: Organisatie not found for organisation UUID',
 				[
@@ -177,8 +177,8 @@ class ModuleRegistrationService {
 			return null;
 		}
 
-		$organisatieData = $organisatieObject->getObject();
-		$orgType = $organisatieData['type'] ?? null;
+		$organisationData = $organisationObject->getObject();
+		$orgType = $organisationData['type'] ?? null;
 
 		if (empty($orgType) === true) {
 			$this->logger->debug(
@@ -195,19 +195,19 @@ class ModuleRegistrationService {
 	}//end resolveOrganisationType()
 
 	/**
-	 * Map an organisation type to the geregistreerdDoor enum value.
+	 * Map an organisation type to the registeredBy enum value.
 	 *
 	 * @param mixed $moduleId The module identifier (for logging)
 	 * @param string $orgType The organisation type
 	 *
-	 * @return string|null The geregistreerdDoor value, or null when unknown
+	 * @return string|null The registeredBy value, or null when unknown
 	 */
 	private function mapOrgTypeToRegisteredBy($moduleId, string $orgType): ?string {
-		$geregistreerdDoor = self::TYPE_MAP[$orgType] ?? null;
+		$registeredBy = self::TYPE_MAP[$orgType] ?? null;
 
-		if ($geregistreerdDoor === null) {
+		if ($registeredBy === null) {
 			$this->logger->warning(
-				'ModuleRegistrationService: Unknown org type, cannot map geregistreerdDoor',
+				'ModuleRegistrationService: Unknown org type, cannot map registeredBy',
 				[
 					'moduleId' => $moduleId,
 					'orgType' => $orgType,
@@ -216,29 +216,29 @@ class ModuleRegistrationService {
 			return null;
 		}
 
-		return $geregistreerdDoor;
+		return $registeredBy;
 	}//end mapOrgTypeToRegisteredBy()
 
 	/**
-	 * Persist geregistreerdDoor on the module object if not already correct.
+	 * Persist registeredBy on the module object if not already correct.
 	 *
 	 * @param object $moduleObject The module entity to update
-	 * @param string $geregistreerdDoor The resolved geregistreerdDoor value
+	 * @param string $registeredBy The resolved registeredBy value
 	 * @param string $orgType The originating organisation type
 	 *
 	 * @return void
 	 */
-	private function updateModuleRegisteredBy(object $moduleObject, string $geregistreerdDoor, string $orgType): void {
+	private function updateModuleRegisteredBy(object $moduleObject, string $registeredBy, string $orgType): void {
 		$moduleId = $moduleObject->getId();
 		$moduleData = $moduleObject->getObject();
-		$currentValue = $moduleData['geregistreerdDoor'] ?? null;
+		$currentValue = $moduleData['registeredBy'] ?? null;
 
-		if ($currentValue === $geregistreerdDoor) {
+		if ($currentValue === $registeredBy) {
 			$this->logger->debug(
-				'ModuleRegistrationService: geregistreerdDoor already correct',
+				'ModuleRegistrationService: registeredBy already correct',
 				[
 					'moduleId' => $moduleId,
-					'geregistreerdDoor' => $geregistreerdDoor,
+					'registeredBy' => $registeredBy,
 				]
 			);
 			return;
@@ -249,7 +249,7 @@ class ModuleRegistrationService {
 			return;
 		}
 
-		$moduleData['geregistreerdDoor'] = $geregistreerdDoor;
+		$moduleData['registeredBy'] = $registeredBy;
 
 		$objectService->saveObject(
 			object: $moduleData,
@@ -261,11 +261,11 @@ class ModuleRegistrationService {
 		);
 
 		$this->logger->info(
-			'ModuleRegistrationService: Set geregistreerdDoor on module',
+			'ModuleRegistrationService: Set registeredBy on module',
 			[
 				'moduleId' => $moduleId,
 				'orgType' => $orgType,
-				'geregistreerdDoor' => $geregistreerdDoor,
+				'registeredBy' => $registeredBy,
 			]
 		);
 	}//end updateModuleRegisteredBy()

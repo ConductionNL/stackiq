@@ -86,18 +86,18 @@ class EolRegisterShapeTest extends TestCase {
 	 * @return void
 	 */
 	public function testModuleVersieHasOptionalProvenanceFields(): void {
-		$moduleVersie = $this->schema('moduleVersie');
-		$props = $moduleVersie['properties'] ?? [];
+		$moduleVersion = $this->schema('moduleVersie');
+		$props = $moduleVersion['properties'] ?? [];
 
-		$this->assertArrayHasKey('eolBron', $props);
-		$this->assertArrayHasKey('eolBijgewerktOp', $props);
-		$this->assertSame('string', $props['eolBron']['type'] ?? null);
-		$this->assertSame('date-time', $props['eolBijgewerktOp']['format'] ?? null);
+		$this->assertArrayHasKey('eolSource', $props);
+		$this->assertArrayHasKey('eolUpdatedOn', $props);
+		$this->assertSame('string', $props['eolSource']['type'] ?? null);
+		$this->assertSame('date-time', $props['eolUpdatedOn']['format'] ?? null);
 
 		// Optional: not listed in `required`.
-		$required = $moduleVersie['required'] ?? [];
-		$this->assertNotContains('eolBron', $required);
-		$this->assertNotContains('eolBijgewerktOp', $required);
+		$required = $moduleVersion['required'] ?? [];
+		$this->assertNotContains('eolSource', $required);
+		$this->assertNotContains('eolUpdatedOn', $required);
 	}//end testModuleVersieHasOptionalProvenanceFields()
 
 	/**
@@ -109,7 +109,7 @@ class EolRegisterShapeTest extends TestCase {
 	 */
 	public function testModuleVersieStillDeclaresDatumEindeOndersteuning(): void {
 		$props = $this->schema('moduleVersie')['properties'] ?? [];
-		$this->assertArrayHasKey('datumEindeOndersteuning', $props);
-		$this->assertSame('date', $props['datumEindeOndersteuning']['format'] ?? null);
+		$this->assertArrayHasKey('dateEndSupport', $props);
+		$this->assertSame('date', $props['dateEndSupport']['format'] ?? null);
 	}//end testModuleVersieStillDeclaresDatumEindeOndersteuning()
 }//end class

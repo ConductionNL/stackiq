@@ -382,7 +382,7 @@ export default {
 				module: ApplicationCog,
 				koppeling: ApplicationCog,
 				dienst: ApplicationCog,
-				standaard: FileDocumentEdit,
+				standard: FileDocumentEdit,
 				compliancy: FileDocumentEdit,
 				kwetsbaarheid: FileDocumentEdit,
 				beoordeling: FileDocumentEdit,
@@ -422,7 +422,7 @@ export default {
 		 * Navigate to the index page that corresponds to an OR schema slug.
 		 * Covers all voorzieningen schemas so every count row is clickable.
 		 *
-		 * @param {string} slug - OR schema slug (e.g. 'organisatie', 'standaard').
+		 * @param {string} slug - OR schema slug (e.g. 'organisatie', 'standard').
 		 * @return {void}
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
@@ -431,7 +431,7 @@ export default {
 				organisatie: 'organisaties',
 				contactpersoon: 'contactpersonen',
 				contract: 'contracten',
-				standaard: 'standaarden',
+				standard: 'standards',
 				compliancy: 'komplianties',
 				moduleversie: 'moduleversies',
 			}

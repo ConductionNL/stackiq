@@ -149,7 +149,7 @@ class FederationServiceTest extends TestCase {
 	public function testIsPeerSourced(): void {
 		$service = $this->makeService(['softwarecatalog']);
 		$this->assertTrue($service->isPeerSourced(['_source' => ['instance' => 'https://peer.example']]));
-		$this->assertFalse($service->isPeerSourced(['naam' => 'local']));
+		$this->assertFalse($service->isPeerSourced(['name' => 'local']));
 		$this->assertFalse($service->isPeerSourced(['_source' => ['instance' => '']]));
 		$this->assertFalse($service->isPeerSourced(['_source' => 'not-an-array']));
 	}//end testIsPeerSourced()
@@ -331,7 +331,7 @@ class FederationServiceTest extends TestCase {
 			public function getDirectory(array $query = []): array {
 				return [
 					'organisation' => 'Gemeente Peer',
-					'results' => [['id' => 'p-1', 'naam' => 'Peer Service']],
+					'results' => [['id' => 'p-1', 'name' => 'Peer Service']],
 				];
 			}
 		};
@@ -370,14 +370,14 @@ class FederationServiceTest extends TestCase {
 	public function testPullPeerIsIdempotentAndLeavesLocalEntriesAlone(): void {
 		$directory = new class {
 			public function getDirectory(array $query = []): array {
-				return ['organisation' => 'Gemeente Peer', 'results' => [['id' => 'p-1', 'naam' => 'Same']]];
+				return ['organisation' => 'Gemeente Peer', 'results' => [['id' => 'p-1', 'name' => 'Same']]];
 			}
 		};
 
 		// Existing local mirror of this peer, identical payload.
 		$existingMirror = [
 			'id' => 'or-uuid-1',
-			'naam' => 'Same',
+			'name' => 'Same',
 			'_source' => [
 				'instance' => 'https://peer.example',
 				'organisation' => 'Gemeente Peer',
@@ -429,7 +429,7 @@ class FederationServiceTest extends TestCase {
 		$staledMirror = null;
 		$existingMirror = [
 			'id' => 'or-uuid-1',
-			'naam' => 'Service',
+			'name' => 'Service',
 			'_source' => [
 				'instance' => 'https://peer.example',
 				'peerEntryId' => 'p-1',

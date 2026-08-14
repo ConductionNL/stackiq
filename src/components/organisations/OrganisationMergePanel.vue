@@ -248,7 +248,7 @@ export default {
 				const obj =
 					data && data['@self'] !== undefined ? data : data.object || data
 				this.sourceName =
-					obj.naam
+					obj.name
 					|| obj.name
 					|| t('softwarecatalog', 'Unknown organisation')
 				this.status = obj.status || ''
@@ -297,7 +297,7 @@ export default {
 					.map((org) => ({
 						value: org.id || org['@self']?.id,
 						label:
-							org.naam
+							org.name
 							|| org.name
 							|| org['@self']?.name
 							|| String(org.id),

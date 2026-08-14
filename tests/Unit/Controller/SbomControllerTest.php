@@ -307,7 +307,7 @@ class SbomControllerTest extends TestCase {
 	 * '...' not found in any magic table") — OpenRegister's real
 	 * `ObjectService::find()` re-throws instead of returning `null` for this
 	 * shape, unlike the assumption `SbomImportService::getStatus()`'s own
-	 * `if ($moduleVersie !== null)` guard was written under.
+	 * `if ($moduleVersion !== null)` guard was written under.
 	 *
 	 * @return void
 	 */

@@ -17,15 +17,15 @@ import {
 
 describe('suiteWizard.isDetailsStepValid', () => {
 	it('requires both naam and beschrijvingKort', () => {
-		expect(isDetailsStepValid({ naam: '', beschrijvingKort: '' })).toBe(false)
-		expect(isDetailsStepValid({ naam: 'Suite', beschrijvingKort: '' })).toBe(
+		expect(isDetailsStepValid({ name: '', beschrijvingKort: '' })).toBe(false)
+		expect(isDetailsStepValid({ name: 'Suite', beschrijvingKort: '' })).toBe(
 			false,
 		)
-		expect(isDetailsStepValid({ naam: '', beschrijvingKort: 'Short' })).toBe(
+		expect(isDetailsStepValid({ name: '', beschrijvingKort: 'Short' })).toBe(
 			false,
 		)
 		expect(
-			isDetailsStepValid({ naam: 'Suite', beschrijvingKort: 'Short' }),
+			isDetailsStepValid({ name: 'Suite', beschrijvingKort: 'Short' }),
 		).toBe(true)
 	})
 })
@@ -42,19 +42,19 @@ describe('suiteWizard.isApplicationsStepValid', () => {
 describe('suiteWizard.buildSuitePayload', () => {
 	it('reduces attached module objects to a plain array of ids', () => {
 		const payload = buildSuitePayload({
-			naam: 'Centric Leefomgeving',
+			name: 'Centric Leefomgeving',
 			beschrijvingKort: 'Bundled product',
 			applications: [{ id: 'mod-1' }, { id: 'mod-2' }],
 		})
-		expect(payload.applicaties).toEqual(['mod-1', 'mod-2'])
-		expect(payload.naam).toBe('Centric Leefomgeving')
+		expect(payload.applications).toEqual(['mod-1', 'mod-2'])
+		expect(payload.name).toBe('Centric Leefomgeving')
 	})
 })
 
 describe('suiteWizard.summarizeApplications', () => {
 	it('lists application names for the confirm step', () => {
 		expect(
-			summarizeApplications([{ naam: 'Module A' }, { id: 'mod-2' }]),
+			summarizeApplications([{ name: 'Module A' }, { id: 'mod-2' }]),
 		).toEqual(['Module A', 'mod-2'])
 	})
 })

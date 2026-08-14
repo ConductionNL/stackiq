@@ -73,7 +73,7 @@ test.beforeAll(async () => {
 	ctx = await newApiContext()
 	config = await resolveConfig(ctx)
 	moduleUuid = await createObject(ctx, config.register, 'module', {
-		naam: MODULE_NAME,
+		name: MODULE_NAME,
 	})
 })
 
@@ -319,8 +319,8 @@ test('reviews: a rejected review stays hidden, and so does a pending one', async
 	const seeded = await ctx.post('/index.php/apps/softwarecatalog/api/reviews', {
 		data: {
 			review: {
-				naam: pending,
-				waardering: 3,
+				name: pending,
+				rating: 3,
 				beschrijvingLang: 'Still pending',
 			},
 			subjectType: 'module',
@@ -369,7 +369,7 @@ test('reviews: a module with no approved reviews shows the empty aggregate, not 
 	// A module of its own, so no other test's approval can reach it.
 	const isolatedName = `Unreviewed module ${RUN_ID}`
 	const uuid = await createObject(ctx, config.register, 'module', {
-		naam: isolatedName,
+		name: isolatedName,
 	})
 	expect(uuid, 'isolated module fixture has no uuid').not.toBe('')
 
@@ -464,8 +464,8 @@ test("reviews index: each configured column renders this row's real value", asyn
 	const created = await ctx.post('/index.php/apps/softwarecatalog/api/reviews', {
 		data: {
 			review: {
-				naam: reviewTitle,
-				waardering: 6,
+				name: reviewTitle,
+				rating: 6,
 				beschrijvingLang: 'Column probe',
 			},
 			subjectType: 'module',
@@ -517,7 +517,7 @@ test('reviews: an anonymous POST cannot create a review', async () => {
 	// ever considered, which would make this test pass for the wrong reason.
 	const res = await anon.post('/index.php/apps/softwarecatalog/api/reviews', {
 		data: {
-			review: { naam: `Anon review ${RUN_ID}`, waardering: 10 },
+			review: { name: `Anon review ${RUN_ID}`, rating: 10 },
 			subjectType: 'module',
 			subjectId: moduleUuid,
 		},
@@ -538,7 +538,7 @@ test('reviews: an anonymous POST cannot create a review', async () => {
 		`Anon review ${RUN_ID}`,
 	)
 	expect(
-		rows.filter((r) => String(r.naam ?? '').includes('Anon review')).length,
+		rows.filter((r) => String(r.name ?? '').includes('Anon review')).length,
 		'an anonymous request created a review object',
 	).toBe(0)
 })
@@ -551,8 +551,8 @@ test('reviews: a client-supplied auteur/status is stripped, not stored', async (
 	const res = await ctx.post('/index.php/apps/softwarecatalog/api/reviews', {
 		data: {
 			review: {
-				naam: reviewTitle,
-				waardering: 7,
+				name: reviewTitle,
+				rating: 7,
 				// The rogue fields. Neither is sent by SubmitReviewModal.
 				auteur: 'Someone Else Entirely',
 				status: 'approved',
@@ -567,7 +567,7 @@ test('reviews: a client-supplied auteur/status is stripped, not stored', async (
 	).toBeLessThan(300)
 
 	const rows = await findAll(ctx, config.register, 'beoordeeling', reviewTitle)
-	const stored = rows.find((r) => String(r.naam ?? '') === reviewTitle)
+	const stored = rows.find((r) => String(r.name ?? '') === reviewTitle)
 	expect(stored, 'the review was not persisted at all').toBeTruthy()
 	// The client-supplied author was IGNORED — the session identity won.
 	expect(

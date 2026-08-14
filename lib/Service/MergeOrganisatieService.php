@@ -109,9 +109,9 @@ class MergeOrganisatieService {
 	 * @var array<string, array{field: string, arrayField: string|null, schema?: string}>
 	 */
 	private const FIELD_RELATION_TYPES = [
-		'gebruik' => ['field' => 'afnemer', 'arrayField' => 'deelnemers'],
+		'gebruik' => ['field' => 'consumer', 'arrayField' => 'participants'],
 		'contactpersoon' => ['field' => 'organisatie', 'arrayField' => null],
-		'aanbod' => ['field' => 'aanbieder', 'arrayField' => null, 'schema' => 'koppeling'],
+		'aanbod' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'koppeling'],
 	];
 
 	/**
@@ -130,7 +130,7 @@ class MergeOrganisatieService {
 	 * @param LoggerInterface $logger Logger interface (structured audit + diagnostic entries).
 	 * @param IEventDispatcher $eventDispatcher Event dispatcher (NC's `CriticalActionPerformedEvent` audit mechanism).
 	 * @param SettingsService $settingsService Settings service (register/schema id resolution).
-	 * @param OrganisatieService $organisatieService Organisatie service (keeps the OR core Organisation.active flag in sync via mapStatus).
+	 * @param OrganisatieService $organisationService Organisatie service (keeps the OR core Organisation.active flag in sync via mapStatus).
 	 * @param ProgressTracker $progressTracker Progress tracker (SSE progress-tracking mechanism).
 	 * @param OrganizationHandler $organizationHandler Organization handler (NC group creation/lookup for the target org).
 	 */
@@ -141,7 +141,7 @@ class MergeOrganisatieService {
 		private readonly LoggerInterface $logger,
 		private readonly IEventDispatcher $eventDispatcher,
 		private readonly SettingsService $settingsService,
-		private readonly OrganisatieService $organisatieService,
+		private readonly OrganisatieService $organisationService,
 		private readonly ProgressTracker $progressTracker,
 		private readonly OrganizationHandler $organizationHandler,
 	) {
@@ -158,8 +158,8 @@ class MergeOrganisatieService {
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-system-shall-preview-a-merge-with-per-relation-type-counts-before-any-write
 	 */
 	public function dryRun(string $sourceUuid, string $targetUuid): array {
-		$sourceEntity = $this->findOrganisatie(uuid: $sourceUuid);
-		$targetEntity = $this->findOrganisatie(uuid: $targetUuid);
+		$sourceEntity = $this->findOrganisation(uuid: $sourceUuid);
+		$targetEntity = $this->findOrganisation(uuid: $targetUuid);
 		$blockers = $this->validateMergeRequest(
 			sourceUuid: $sourceUuid,
 			targetUuid: $targetUuid,
@@ -208,8 +208,8 @@ class MergeOrganisatieService {
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
 	 */
 	public function execute(string $sourceUuid, string $targetUuid, ?string $actorUid = null): array {
-		$sourceEntity = $this->findOrganisatie(uuid: $sourceUuid);
-		$targetEntity = $this->findOrganisatie(uuid: $targetUuid);
+		$sourceEntity = $this->findOrganisation(uuid: $sourceUuid);
+		$targetEntity = $this->findOrganisation(uuid: $targetUuid);
 		$blockers = $this->validateMergeRequest(
 			sourceUuid: $sourceUuid,
 			targetUuid: $targetUuid,
@@ -619,7 +619,7 @@ class MergeOrganisatieService {
 	 * @return \OCP\IGroup|null The source group, or null when unresolvable.
 	 */
 	private function resolveSourceGroup(string $sourceUuid): ?\OCP\IGroup {
-		$sourceEntity = $this->findOrganisatie(uuid: $sourceUuid);
+		$sourceEntity = $this->findOrganisation(uuid: $sourceUuid);
 		if ($sourceEntity === null) {
 			return null;
 		}
@@ -641,7 +641,7 @@ class MergeOrganisatieService {
 	 * @return \OCP\IGroup|null The target group, or null when unresolvable.
 	 */
 	private function resolveTargetGroup(string $targetUuid): ?\OCP\IGroup {
-		$targetEntity = $this->findOrganisatie(uuid: $targetUuid);
+		$targetEntity = $this->findOrganisation(uuid: $targetUuid);
 		if ($targetEntity === null) {
 			return null;
 		}
@@ -679,7 +679,7 @@ class MergeOrganisatieService {
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-source-organisation-must-be-tombstoned-never-hard-deleted
 	 */
 	private function tombstoneSource(string $sourceUuid, string $targetUuid): void {
-		$entity = $this->findOrganisatie(uuid: $sourceUuid);
+		$entity = $this->findOrganisation(uuid: $sourceUuid);
 		if ($entity === null) {
 			$this->logger->error('MergeOrganisatieService: cannot tombstone, source organisation not found', ['sourceUuid' => $sourceUuid]);
 			return;
@@ -692,7 +692,7 @@ class MergeOrganisatieService {
 		$this->saveFull(entity: $entity, data: $data, objectType: 'organisatie');
 
 		// Keep the separate OR core Organisation.active flag in sync (organisatie-service spec delta).
-		$this->organisatieService->updateOrganizationStatus(organizationUuid: $sourceUuid, objectData: ['beoordeling' => self::TOMBSTONE_STATUS]);
+		$this->organisationService->updateOrganizationStatus(organizationUuid: $sourceUuid, objectData: ['beoordeling' => self::TOMBSTONE_STATUS]);
 	}//end tombstoneSource()
 
 	/**
@@ -761,7 +761,7 @@ class MergeOrganisatieService {
 	 *
 	 * @return object|null The ObjectEntity, or null when not found/unresolvable.
 	 */
-	private function findOrganisatie(string $uuid): ?object {
+	private function findOrganisation(string $uuid): ?object {
 		$objectService = $this->getObjectService();
 		$registerId = $this->settingsService->getVoorzieningenRegisterId();
 		$schemaId = $this->settingsService->getSchemaIdForObjectType(objectType: 'organisatie');

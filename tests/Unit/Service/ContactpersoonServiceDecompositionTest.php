@@ -33,7 +33,7 @@ class ContactpersoonServiceDecompositionTest extends TestCase {
 	}
 
 	private function call(ContactpersoonService $svc, string $email, string $contactId): bool {
-		$ref = new ReflectionMethod($svc, 'isContactpersoonEmailUsable');
+		$ref = new ReflectionMethod($svc, 'isContactPersonEmailUsable');
 		$ref->setAccessible(true);
 		return $ref->invokeArgs($svc, [$email, $contactId]);
 	}

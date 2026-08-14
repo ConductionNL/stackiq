@@ -98,7 +98,7 @@ class GebruikBulkHandler {
 				continue;
 			}
 
-			if (isset($item['afnemer']) === false || isset($item['aanbieder']) === false) {
+			if (isset($item['consumer']) === false || isset($item['provider']) === false) {
 				$errors[] = sprintf('Item at index %d is missing required fields: afnemer, aanbieder.', $index);
 			}
 		}

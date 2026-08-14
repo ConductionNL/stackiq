@@ -73,7 +73,7 @@ class ReviewServiceTest extends TestCase {
 			$this->logger()
 		);
 
-		$result = $service->submit(['naam' => 'Great tool', 'waardering' => 8], 'module', 'module-uuid-1');
+		$result = $service->submit(['name' => 'Great tool', 'rating' => 8], 'module', 'module-uuid-1');
 
 		$this->assertFalse($result['ok']);
 		$this->assertSame('not authenticated', $result['reason']);
@@ -97,7 +97,7 @@ class ReviewServiceTest extends TestCase {
 		);
 
 		$result = $service->submit(
-			['naam' => 'Great tool', 'waardering' => 9, 'auteur' => 'Someone Else', 'status' => 'approved', '_owner' => 'forged'],
+			['name' => 'Great tool', 'rating' => 9, 'auteur' => 'Someone Else', 'status' => 'approved', '_owner' => 'forged'],
 			'module',
 			'module-uuid-1'
 		);
@@ -125,7 +125,7 @@ class ReviewServiceTest extends TestCase {
 		);
 
 		$result = $service->submit(
-			['naam' => 'Great tool', 'waardering' => 9, 'status' => 'approved'],
+			['name' => 'Great tool', 'rating' => 9, 'status' => 'approved'],
 			'module',
 			'module-uuid-1'
 		);
@@ -151,7 +151,7 @@ class ReviewServiceTest extends TestCase {
 		);
 
 		$service->submit(
-			['naam' => 'Great tool', 'waardering' => 7, 'modules' => ['forged-module-id']],
+			['name' => 'Great tool', 'rating' => 7, 'modules' => ['forged-module-id']],
 			'dienst',
 			'dienst-uuid-1'
 		);
@@ -174,10 +174,10 @@ class ReviewServiceTest extends TestCase {
 			$this->logger()
 		);
 
-		$result = $service->submit(['waardering' => 8], 'module', 'module-uuid-1');
+		$result = $service->submit(['rating' => 8], 'module', 'module-uuid-1');
 
 		$this->assertFalse($result['ok']);
-		$this->assertStringContainsString('naam', $result['reason']);
+		$this->assertStringContainsString('name', $result['reason']);
 		$this->assertSame([], $this->saved);
 	}//end testMissingRequiredFieldRejected()
 
@@ -194,10 +194,10 @@ class ReviewServiceTest extends TestCase {
 			$this->logger()
 		);
 
-		$result = $service->submit(['naam' => 'Great tool', 'waardering' => 11], 'module', 'module-uuid-1');
+		$result = $service->submit(['name' => 'Great tool', 'rating' => 11], 'module', 'module-uuid-1');
 
 		$this->assertFalse($result['ok']);
-		$this->assertStringContainsString('waardering', $result['reason']);
+		$this->assertStringContainsString('rating', $result['reason']);
 		$this->assertSame([], $this->saved);
 	}//end testOutOfRangeRatingRejected()
 
@@ -214,7 +214,7 @@ class ReviewServiceTest extends TestCase {
 			$this->logger()
 		);
 
-		$result = $service->submit(['naam' => 'Great tool', 'waardering' => 8], 'organisatie', 'org-uuid-1');
+		$result = $service->submit(['name' => 'Great tool', 'rating' => 8], 'organisatie', 'org-uuid-1');
 
 		$this->assertFalse($result['ok']);
 		$this->assertSame('invalid subject type', $result['reason']);

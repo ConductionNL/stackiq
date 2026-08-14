@@ -642,18 +642,18 @@ class FacetService {
 
 		foreach ($modulesByObjectId as $objectId => $modules) {
 			$refCompIds = [];
-			$standaarden = [];
+			$standards = [];
 
 			foreach ($modules as $module) {
-				$refCompIds = array_merge($refCompIds, $this->extractRelatedIdentifiers(object: $module, field: 'referentieComponenten'));
-				$standaarden = array_merge($standaarden, $this->extractRelatedNames(object: $module, field: 'standaardVersies'));
+				$refCompIds = array_merge($refCompIds, $this->extractRelatedIdentifiers(object: $module, field: 'referenceComponents'));
+				$standards = array_merge($standards, $this->extractRelatedNames(object: $module, field: 'standardVersions'));
 			}
 
 			$refCompIds = array_values(array_unique($refCompIds));
-			$standaarden = array_values(array_unique(array_filter($standaarden)));
+			$standards = array_values(array_unique(array_filter($standards)));
 
 			$refCompIdsByObjId[$objectId] = $refCompIds;
-			$stdValsByObjId[$objectId] = $standaarden;
+			$stdValsByObjId[$objectId] = $standards;
 			$allRefCompIds = array_merge($allRefCompIds, $refCompIds);
 		}
 

@@ -170,8 +170,8 @@ class ModerationService {
 			mutator: static function (array $data) use ($config): array {
 				$data[$config['statusField']] = $config['approvedValue'];
 				if ($config['stampPublication'] === true) {
-					$data['publicatiedatum'] = gmdate('Y-m-d\TH:i:sP');
-					$data['depublicatiedatum'] = null;
+					$data['publicationDate'] = gmdate('Y-m-d\TH:i:sP');
+					$data['depublicationDate'] = null;
 				}
 
 				return $data;
@@ -201,7 +201,7 @@ class ModerationService {
 			mutator: static function (array $data) use ($config): array {
 				$data[$config['statusField']] = self::STATUS_REJECTED;
 				if ($config['stampPublication'] === true) {
-					$data['publicatiedatum'] = null;
+					$data['publicationDate'] = null;
 				}
 
 				return $data;
@@ -227,7 +227,7 @@ class ModerationService {
 			return ['statusField' => 'status', 'approvedValue' => self::STATUS_APPROVED, 'stampPublication' => false];
 		}
 
-		return ['statusField' => 'registratiestatus', 'approvedValue' => self::STATUS_ACTIVE, 'stampPublication' => true];
+		return ['statusField' => 'registrationStatus', 'approvedValue' => self::STATUS_ACTIVE, 'stampPublication' => true];
 	}//end typeConfig()
 
 	/**

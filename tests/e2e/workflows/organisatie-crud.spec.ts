@@ -63,7 +63,7 @@ test.beforeAll(async () => {
 	// not-null` rejection on a fresh install. A synthetic UID satisfies the
 	// declared contract; nothing here asserts contact resolution.
 	await createObject(apiCtx, cfg.register, cfg.organisatie_schema, {
-		naam: orgName,
+		name: orgName,
 		type: 'Leverancier',
 		website: 'https://e2e-seeded-org.example.com',
 		status: 'Actief',

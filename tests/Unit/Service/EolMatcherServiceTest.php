@@ -51,7 +51,7 @@ class EolMatcherServiceTest extends TestCase {
 			['cycle' => '21', 'eol' => '2026-01-01'],
 		];
 
-		$matched = $this->matcher->matchVersion(versie: '21.3.1', cycles: $cycles);
+		$matched = $this->matcher->matchVersion(version: '21.3.1', cycles: $cycles);
 
 		$this->assertNotNull($matched);
 		$this->assertSame('21.3', $matched['cycle']);
@@ -71,7 +71,7 @@ class EolMatcherServiceTest extends TestCase {
 			['cycle' => '2.1', 'eol' => '2024-06-01'],
 		];
 
-		$matched = $this->matcher->matchVersion(versie: '2', cycles: $cycles);
+		$matched = $this->matcher->matchVersion(version: '2', cycles: $cycles);
 
 		$this->assertNull($matched);
 	}//end testAmbiguousTieIsNotMatched()
@@ -88,7 +88,7 @@ class EolMatcherServiceTest extends TestCase {
 			['cycle' => '6.0', 'eol' => '2025-01-01'],
 		];
 
-		$matched = $this->matcher->matchVersion(versie: '9.9.9', cycles: $cycles);
+		$matched = $this->matcher->matchVersion(version: '9.9.9', cycles: $cycles);
 
 		$this->assertNull($matched);
 	}//end testNoCandidateIsNotMatched()
@@ -106,7 +106,7 @@ class EolMatcherServiceTest extends TestCase {
 			['cycle' => '3.14', 'eol' => '2029-10-01'],
 		];
 
-		$matched = $this->matcher->matchVersion(versie: '3.14.2', cycles: $cycles);
+		$matched = $this->matcher->matchVersion(version: '3.14.2', cycles: $cycles);
 
 		$this->assertNotNull($matched);
 		$this->assertSame('3.14', $matched['cycle']);
@@ -122,7 +122,7 @@ class EolMatcherServiceTest extends TestCase {
 			['cycle' => '16', 'eol' => '2028-11-09'],
 		];
 
-		$matched = $this->matcher->matchVersion(versie: '16', cycles: $cycles);
+		$matched = $this->matcher->matchVersion(version: '16', cycles: $cycles);
 
 		$this->assertNotNull($matched);
 		$this->assertSame('16', $matched['cycle']);
@@ -142,7 +142,7 @@ class EolMatcherServiceTest extends TestCase {
 		];
 
 		// '1.1.0' diverges from '1.0' at the second segment ('1' !== '0').
-		$matched = $this->matcher->matchVersion(versie: '1.1.0', cycles: $cycles);
+		$matched = $this->matcher->matchVersion(version: '1.1.0', cycles: $cycles);
 
 		$this->assertNull($matched);
 	}//end testDivergingSegmentIsNeverACandidate()
@@ -156,7 +156,7 @@ class EolMatcherServiceTest extends TestCase {
 	 */
 	public function testEmptyEolDateIsSkippedNotStamped(): void {
 		$result = $this->matcher->matchModuleVersions(
-			moduleVersies: [['id' => 'mv-1', 'versie' => '3.14.1']],
+			moduleVersions: [['id' => 'mv-1', 'version' => '3.14.1']],
 			cycles: [['cycle' => '3.14', 'eol' => '']],
 			source: 'endoflife.date',
 			fetchedAt: '2026-07-23T00:00:00+00:00'
@@ -175,10 +175,10 @@ class EolMatcherServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testStampPreservesEveryOtherFieldAndAddsProvenance(): void {
-		$moduleVersie = [
+		$moduleVersion = [
 			'id' => 'mv-uuid-1',
 			'module' => 'module-uuid-1',
-			'versie' => '21.3.1',
+			'version' => '21.3.1',
 			'beschrijvingKort' => 'A short description that must survive',
 			'status' => 'in gebruik',
 			'gebruiken' => ['gebruik-1', 'gebruik-2'],
@@ -186,21 +186,21 @@ class EolMatcherServiceTest extends TestCase {
 		$matchedCycle = ['cycle' => '21.3', 'eol' => '2025-11-09'];
 
 		$stamped = $this->matcher->buildStamp(
-			moduleVersie: $moduleVersie,
+			moduleVersion: $moduleVersion,
 			matchedCycle: $matchedCycle,
 			source: 'endoflife.date',
 			fetchedAt: '2026-07-23T10:00:00+00:00'
 		);
 
 		// Stamped fields.
-		$this->assertSame('2025-11-09', $stamped['datumEindeOndersteuning']);
-		$this->assertSame('endoflife.date', $stamped['eolBron']);
-		$this->assertSame('2026-07-23T10:00:00+00:00', $stamped['eolBijgewerktOp']);
+		$this->assertSame('2025-11-09', $stamped['dateEndSupport']);
+		$this->assertSame('endoflife.date', $stamped['eolSource']);
+		$this->assertSame('2026-07-23T10:00:00+00:00', $stamped['eolUpdatedOn']);
 
 		// Every other field survives unchanged (OR saveObject is PUT-semantic).
 		$this->assertSame('mv-uuid-1', $stamped['id']);
 		$this->assertSame('module-uuid-1', $stamped['module']);
-		$this->assertSame('21.3.1', $stamped['versie']);
+		$this->assertSame('21.3.1', $stamped['version']);
 		$this->assertSame('A short description that must survive', $stamped['beschrijvingKort']);
 		$this->assertSame('in gebruik', $stamped['status']);
 		$this->assertSame(['gebruik-1', 'gebruik-2'], $stamped['gebruiken']);
@@ -216,12 +216,12 @@ class EolMatcherServiceTest extends TestCase {
 	public function testUnmatchedVersionNeverGainsProvenance(): void {
 		$handEntered = [
 			'id' => 'mv-uuid-2',
-			'versie' => '9.9.9',
-			'datumEindeOndersteuning' => '2030-01-01',
+			'version' => '9.9.9',
+			'dateEndSupport' => '2030-01-01',
 		];
 
 		$result = $this->matcher->matchModuleVersions(
-			moduleVersies: [$handEntered],
+			moduleVersions: [$handEntered],
 			cycles: [['cycle' => '1.0', 'eol' => '2020-01-01']],
 			source: 'endoflife.date',
 			fetchedAt: '2026-07-23T00:00:00+00:00'
@@ -229,9 +229,9 @@ class EolMatcherServiceTest extends TestCase {
 
 		$this->assertCount(0, $result['stamped']);
 		$this->assertCount(1, $result['skipped']);
-		$this->assertArrayNotHasKey('eolBron', $result['skipped'][0]);
-		$this->assertArrayNotHasKey('eolBijgewerktOp', $result['skipped'][0]);
-		$this->assertSame('2030-01-01', $result['skipped'][0]['datumEindeOndersteuning']);
+		$this->assertArrayNotHasKey('eolSource', $result['skipped'][0]);
+		$this->assertArrayNotHasKey('eolUpdatedOn', $result['skipped'][0]);
+		$this->assertSame('2030-01-01', $result['skipped'][0]['dateEndSupport']);
 	}//end testUnmatchedVersionNeverGainsProvenance()
 
 	/**
@@ -247,15 +247,15 @@ class EolMatcherServiceTest extends TestCase {
 			['cycle' => '2.1', 'eol' => '2024-06-01'],
 		];
 
-		$moduleVersies = [
-			['id' => 'mv-match', 'versie' => '21.3.1'],
-			['id' => 'mv-ambiguous', 'versie' => '2'],
-			['id' => 'mv-nomatch', 'versie' => '99.0'],
-			['id' => 'mv-empty', 'versie' => ''],
+		$moduleVersions = [
+			['id' => 'mv-match', 'version' => '21.3.1'],
+			['id' => 'mv-ambiguous', 'version' => '2'],
+			['id' => 'mv-nomatch', 'version' => '99.0'],
+			['id' => 'mv-empty', 'version' => ''],
 		];
 
 		$result = $this->matcher->matchModuleVersions(
-			moduleVersies: $moduleVersies,
+			moduleVersions: $moduleVersions,
 			cycles: $cycles,
 			source: 'endoflife.date',
 			fetchedAt: '2026-07-23T00:00:00+00:00'
@@ -263,7 +263,7 @@ class EolMatcherServiceTest extends TestCase {
 
 		$this->assertCount(1, $result['stamped']);
 		$this->assertSame('mv-match', $result['stamped'][0]['id']);
-		$this->assertSame('2025-11-09', $result['stamped'][0]['datumEindeOndersteuning']);
+		$this->assertSame('2025-11-09', $result['stamped'][0]['dateEndSupport']);
 
 		$this->assertCount(3, $result['skipped']);
 		$skippedIds = array_column($result['skipped'], 'id');

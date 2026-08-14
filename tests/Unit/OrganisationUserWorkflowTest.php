@@ -90,7 +90,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 	 *
 	 * @var ContactpersoonService|MockObject
 	 */
-	private ContactpersoonService|MockObject $contactpersoonService;
+	private ContactpersoonService|MockObject $contactPersonService;
 
 	/**
 	 * Mock of the LoggerInterface
@@ -144,7 +144,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->contactPersonHandler = $this->createMock(ContactPersonHandler::class);
 		$this->settingsService = $this->createMock(SettingsService::class);
-		$this->contactpersoonService = $this->createMock(ContactpersoonService::class);
+		$this->contactPersonService = $this->createMock(ContactpersoonService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
 		// Create controller
@@ -153,7 +153,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 			$this->createMock(IRequest::class),
 			$this->settingsService,
 			$this->contactPersonHandler,
-			$this->contactpersoonService,
+			$this->contactPersonService,
 			$this->userManager,
 			$this->groupManager,
 			$this->createMock(IUserSession::class),
@@ -178,7 +178,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 	public function testCompleteOrganisationUserWorkflow(): void {
 		// Step 1 & 2: Organisation exists and is active (preparation phase)
 		$organisationData = [
-			'naam' => 'test93',
+			'name' => 'test93',
 			'website' => 'www.test.nl',
 			'links' => '',
 			'oin' => '',
@@ -194,7 +194,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 					'achternaam' => '93',
 					'telefoonnummer' => '0645536677',
 					'e-mailadres' => 'test93@test.nl',
-					'functie' => 'tester'
+					'role' => 'tester'
 				]
 			],
 			'type' => 'Leverancier',
@@ -203,19 +203,19 @@ class OrganisationUserWorkflowTest extends TestCase {
 		];
 
 		// Step 3: Create contactpersoon
-		$contactpersoonData = $this->createContactpersoon(
+		$contactPersonData = $this->createContactPerson(
 			voornaam: 'test',
-			achternaam: '94',
+			lastName: '94',
 			email: 'test94@test.nl',
 			organisationType: 'Leverancier'
 		);
 
-		$this->assertNotEmpty($contactpersoonData['uuid']);
-		$this->assertEquals('test94@test.nl', $contactpersoonData['e-mailadres']);
-		$this->assertEquals($this->organisationUuid, $contactpersoonData['organisatie']);
+		$this->assertNotEmpty($contactPersonData['uuid']);
+		$this->assertEquals('test94@test.nl', $contactPersonData['e-mailadres']);
+		$this->assertEquals($this->organisationUuid, $contactPersonData['organisatie']);
 
 		// Step 4: Convert contactpersoon to user
-		$userCreationResult = $this->convertContactpersoonToUser($contactpersoonData);
+		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
 
 		$this->assertTrue($userCreationResult['success']);
 		$this->assertNotEmpty($userCreationResult['username']);
@@ -236,14 +236,14 @@ class OrganisationUserWorkflowTest extends TestCase {
 	 * @return void
 	 */
 	public function testWorkflowWithGemeenteOrganisation(): void {
-		$contactpersoonData = $this->createContactpersoon(
+		$contactPersonData = $this->createContactPerson(
 			voornaam: 'Jan',
-			achternaam: 'de Vries',
+			lastName: 'de Vries',
 			email: 'jan.devries@gemeente.nl',
 			organisationType: 'Gemeente'
 		);
 
-		$userCreationResult = $this->convertContactpersoonToUser($contactpersoonData);
+		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
 
 		$this->assertTrue($userCreationResult['success']);
 		// Gemeente should map to gebruik-beheerder
@@ -256,14 +256,14 @@ class OrganisationUserWorkflowTest extends TestCase {
 	 * @return void
 	 */
 	public function testWorkflowWithSamenwerkingOrganisation(): void {
-		$contactpersoonData = $this->createContactpersoon(
+		$contactPersonData = $this->createContactPerson(
 			voornaam: 'Maria',
-			achternaam: 'Jansen',
+			lastName: 'Jansen',
 			email: 'maria.jansen@samenwerking.nl',
 			organisationType: 'Samenwerking'
 		);
 
-		$userCreationResult = $this->convertContactpersoonToUser($contactpersoonData);
+		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
 
 		$this->assertTrue($userCreationResult['success']);
 		// Samenwerking should map to gebruik-beheerder
@@ -276,14 +276,14 @@ class OrganisationUserWorkflowTest extends TestCase {
 	 * @return void
 	 */
 	public function testWorkflowWithCommunityOrganisation(): void {
-		$contactpersoonData = $this->createContactpersoon(
+		$contactPersonData = $this->createContactPerson(
 			voornaam: 'Peter',
-			achternaam: 'Bakker',
+			lastName: 'Bakker',
 			email: 'peter.bakker@community.nl',
 			organisationType: 'Community'
 		);
 
-		$userCreationResult = $this->convertContactpersoonToUser($contactpersoonData);
+		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
 
 		$this->assertTrue($userCreationResult['success']);
 		// Community should map to aanbod-beheerder
@@ -297,20 +297,20 @@ class OrganisationUserWorkflowTest extends TestCase {
 	 */
 	public function testConvertContactpersoonWhenUserAlreadyExists(): void {
 		// Create contactpersoon with existing username
-		$contactpersoonData = [
+		$contactPersonData = [
 			'uuid' => $this->contactpersoonUuid,
 			'voornaam' => 'test',
 			'achternaam' => '95',
 			'e-mailadres' => 'test95@test.nl',
-			'naam' => 'test 95',
+			'name' => 'test 95',
 			'organisatie' => $this->organisationUuid,
 			'username' => 'test95@test.nl' // User already exists
 		];
 
 		// Mock the ObjectService to return contactpersoon with existing username
-		$contactpersoonObject = $this->createMockObjectEntity(
+		$contactPersonObject = $this->createMockObjectEntity(
 			uuid: $this->contactpersoonUuid,
-			data: $contactpersoonData,
+			data: $contactPersonData,
 			register: '1',
 			schema: '6'
 		);
@@ -318,7 +318,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 		$this->objectService->expects($this->once())
 			->method('findByUuid')
 			->with($this->contactpersoonUuid)
-			->willReturn($contactpersoonObject);
+			->willReturn($contactPersonObject);
 
 		// Attempt to convert
 		// In a real scenario, this would return an error
@@ -355,24 +355,24 @@ class OrganisationUserWorkflowTest extends TestCase {
 	 * Helper method to create a contactpersoon
 	 *
 	 * @param string $voornaam First name
-	 * @param string $achternaam Last name
+	 * @param string $lastName Last name
 	 * @param string $email Email address
 	 * @param string $organisationType Organisation type (Leverancier, Gemeente, etc.)
 	 *
 	 * @return array The created contactpersoon data
 	 */
-	private function createContactpersoon(
+	private function createContactPerson(
 		string $voornaam,
-		string $achternaam,
+		string $lastName,
 		string $email,
 		string $organisationType,
 	): array {
 		return [
 			'uuid' => $this->contactpersoonUuid,
 			'voornaam' => $voornaam,
-			'achternaam' => $achternaam,
+			'achternaam' => $lastName,
 			'e-mailadres' => $email,
-			'naam' => "$voornaam $achternaam",
+			'name' => "$voornaam $lastName",
 			'organisatie' => $this->organisationUuid,
 			'organisationType' => $organisationType
 		];
@@ -381,37 +381,37 @@ class OrganisationUserWorkflowTest extends TestCase {
 	/**
 	 * Helper method to convert contactpersoon to user
 	 *
-	 * @param array $contactpersoonData The contactpersoon data
+	 * @param array $contactPersonData The contactpersoon data
 	 *
 	 * @return array The result of user creation
 	 */
-	private function convertContactpersoonToUser(array $contactpersoonData): array {
+	private function convertContactPersonToUser(array $contactPersonData): array {
 		// Mock the ObjectService
-		$contactpersoonObject = $this->createMockObjectEntity(
-			uuid: $contactpersoonData['uuid'],
-			data: $contactpersoonData,
+		$contactPersonObject = $this->createMockObjectEntity(
+			uuid: $contactPersonData['uuid'],
+			data: $contactPersonData,
 			register: '1',
 			schema: '6'
 		);
 
 		$this->objectService->expects($this->once())
 			->method('findByUuid')
-			->with($contactpersoonData['uuid'])
-			->willReturn($contactpersoonObject);
+			->with($contactPersonData['uuid'])
+			->willReturn($contactPersonObject);
 
 		// Mock user creation
 		$mockUser = $this->createMock(IUser::class);
 		$mockUser->method('getUID')
-			->willReturn($contactpersoonData['e-mailadres']);
+			->willReturn($contactPersonData['e-mailadres']);
 
 		$this->contactPersonHandler->expects($this->once())
 			->method('createUserAccount')
-			->with($contactpersoonObject)
+			->with($contactPersonObject)
 			->willReturn($mockUser);
 
 		// Mock group assignment based on organisation type
 		$expectedGroupName = $this->getExpectedGroupForOrganisationType(
-			$contactpersoonData['organisationType']
+			$contactPersonData['organisationType']
 		);
 
 		$mockGroup = $this->createMock(IGroup::class);
@@ -426,11 +426,11 @@ class OrganisationUserWorkflowTest extends TestCase {
 		// Mock object save
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->willReturn($contactpersoonObject);
+			->willReturn($contactPersonObject);
 
 		return [
 			'success' => true,
-			'username' => $contactpersoonData['e-mailadres'],
+			'username' => $contactPersonData['e-mailadres'],
 			'groups' => [$expectedGroupName]
 		];
 	}

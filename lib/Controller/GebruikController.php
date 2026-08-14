@@ -150,7 +150,7 @@ class GebruikController extends Controller {
 		);
 
 		$isAdmin = in_array(needle: 'admin', haystack: $groupNames);
-		$isBeheerder = in_array(needle: 'gebruik-beheerder', haystack: $groupNames);
+		$isMaintainer = in_array(needle: 'gebruik-beheerder', haystack: $groupNames);
 		$isAanbod = in_array(needle: 'aanbod-beheerder', haystack: $groupNames);
 		// `ambtenaar` is the same orthogonal "sees everything" bypass group
 		// used elsewhere in this codebase (AangebodenGebruikController::
@@ -162,12 +162,12 @@ class GebruikController extends Controller {
 
 		return [
 			'isAdmin' => $isAdmin,
-			'isBeheerder' => $isBeheerder,
+			'isBeheerder' => $isMaintainer,
 			'isAanbod' => $isAanbod,
 			'isAmbtenaar' => $isAmbtenaar,
 			'hasAccess' => (
 				$isAdmin === true
-				|| $isBeheerder === true
+				|| $isMaintainer === true
 				|| $isAanbod === true
 				|| $isAmbtenaar === true
 			),
@@ -231,7 +231,7 @@ class GebruikController extends Controller {
 		// offered applications. Unchanged from pre-existing behaviour.
 		if ($roles['isAanbod'] === true && $roles['isBeheerder'] !== true) {
 			$applicatieIds = $this->gebruikService->getApplicationIds(
-				options: ['aanbieder' => $roles['orgUuid']]
+				options: ['provider' => $roles['orgUuid']]
 			);
 
 			if ($applicatieIds === []) {
@@ -257,11 +257,11 @@ class GebruikController extends Controller {
 		// Deny (return null) rather than silently widening if the caller
 		// already asked for a different organisation's afnemer filter.
 		if ($roles['isBeheerder'] === true) {
-			if (isset($options['afnemer']) === true && $options['afnemer'] !== $roles['orgUuid']) {
+			if (isset($options['consumer']) === true && $options['consumer'] !== $roles['orgUuid']) {
 				return null;
 			}
 
-			$options['afnemer'] = $roles['orgUuid'];
+			$options['consumer'] = $roles['orgUuid'];
 
 			return $options;
 		}
@@ -316,7 +316,7 @@ class GebruikController extends Controller {
 		// swapping the filter form on a working endpoint could equally break
 		// it, and an unmeasured change to a scope is not a fix.
 		$options = $this->request->getParams();
-		$options['deelnemers'] = [$orgUuid];
+		$options['participants'] = [$orgUuid];
 
 		try {
 			return new JSONResponse($this->gebruikService->getGebruiken(options: $options));

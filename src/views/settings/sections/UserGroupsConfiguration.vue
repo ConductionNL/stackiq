@@ -539,7 +539,7 @@ export default {
 		getGroupDescription(group) {
 			const descriptions = {
 				ambtenaar: 'Government employee role (manual assignment only)',
-				beheerder: 'Administrator role',
+				maintainer: 'Administrator role',
 				gebruiker: 'Standard user role',
 				organisatiebeheerder: 'Organization administrator role',
 				superuser: 'System administrator role',

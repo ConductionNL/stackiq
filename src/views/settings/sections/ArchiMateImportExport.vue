@@ -1235,7 +1235,7 @@ export default {
 				// Load organizations from OpenRegister.
 				//
 				// ⚠️ This used to request `_fields=id,naam` and then
-				// `.filter(org => org.naam || org.name)`. `naam` was DROPPED from the
+				// `.filter(org => org.name || org.name)`. `naam` was DROPPED from the
 				// organisatie schema when contact/organisation identity moved to the
 				// Nextcloud addressbook — the schema is now a relationship record
 				// (contactsUid / type / status / …) and its `objectNameField` is
@@ -1272,7 +1272,7 @@ export default {
 						.map((org) => ({
 							label:
 								org['@self']?.name
-								|| org.naam
+								|| org.name
 								|| org.name
 								|| org.contactsUid
 								|| '',

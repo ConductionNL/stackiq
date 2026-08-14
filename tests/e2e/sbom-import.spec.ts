@@ -71,7 +71,7 @@ test.beforeAll(async () => {
 			config.register,
 			config.module_schema,
 			{
-				naam: MODULE_NAME,
+				name: MODULE_NAME,
 			},
 		)
 		moduleVersieId = await createObject(
@@ -80,7 +80,7 @@ test.beforeAll(async () => {
 			config.moduleVersie_schema,
 			{
 				module: moduleId,
-				versie: '1.0.0-e2e',
+				version: '1.0.0-e2e',
 			},
 		)
 	} finally {

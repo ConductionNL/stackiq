@@ -146,19 +146,19 @@ class SchemaRbacTest extends TestCase {
 	public function testGebruikBeheerderReadOnGebruikIsAlsoAfnemerScoped(): void {
 		$authorization = $this->loadAuthorization('gebruik');
 
-		$afnemerScoped = array_values(
+		$consumerScoped = array_values(
 			array_filter(
 				$authorization['read'],
 				static function ($entry) {
 					return is_array($entry) === true
 						&& ($entry['group'] ?? null) === 'gebruik-beheerder'
-						&& ($entry['match']['afnemer'] ?? null) === '$organisation';
+						&& ($entry['match']['consumer'] ?? null) === '$organisation';
 				}
 			)
 		);
 
 		$this->assertNotEmpty(
-			$afnemerScoped,
+			$consumerScoped,
 			'gebruik-beheerder MUST have an afnemer-scoped read grant on gebruik (REQ-008, Decision 1)'
 		);
 
@@ -184,19 +184,19 @@ class SchemaRbacTest extends TestCase {
 					}
 				)
 			);
-			$aanbiederScoped = array_values(
+			$providerScoped = array_values(
 				array_filter(
 					$authorization['read'],
 					static function ($entry) {
 						return is_array($entry) === true
 							&& ($entry['group'] ?? null) === 'aanbod-beheerder'
-							&& ($entry['match']['aanbieder'] ?? null) === '$organisation';
+							&& ($entry['match']['provider'] ?? null) === '$organisation';
 					}
 				)
 			);
 
 			$this->assertNotEmpty($organisationScoped, "aanbod-beheerder _organisation grant missing on {$schemaName}");
-			$this->assertNotEmpty($aanbiederScoped, "aanbod-beheerder aanbieder grant missing on {$schemaName}");
+			$this->assertNotEmpty($providerScoped, "aanbod-beheerder aanbieder grant missing on {$schemaName}");
 		}
 
 	}//end testAanbodBeheerderGrantsAreUntouchedOnGebruikAndKoppeling()
@@ -208,12 +208,12 @@ class SchemaRbacTest extends TestCase {
 	 * @return void
 	 */
 	public function testPublicGrantsAreUntouchedOnOrganisatieAndKoppeling(): void {
-		$organisatie = $this->loadAuthorization('organisatie');
-		$koppeling = $this->loadAuthorization('koppeling');
+		$organisation = $this->loadAuthorization('organisatie');
+		$integration = $this->loadAuthorization('koppeling');
 
 		$publicEntries = array_values(
 			array_filter(
-				$organisatie['read'],
+				$organisation['read'],
 				static function ($entry) {
 					return is_array($entry) === true && ($entry['group'] ?? null) === 'public';
 				}
@@ -221,15 +221,15 @@ class SchemaRbacTest extends TestCase {
 		);
 		$this->assertCount(4, $publicEntries, 'organisatie MUST retain its 4 pre-existing public match rules');
 
-		$publicEntriesKoppeling = array_values(
+		$publicEntriesIntegration = array_values(
 			array_filter(
-				$koppeling['read'],
+				$integration['read'],
 				static function ($entry) {
 					return is_array($entry) === true && ($entry['group'] ?? null) === 'public';
 				}
 			)
 		);
-		$this->assertCount(1, $publicEntriesKoppeling, 'koppeling MUST retain its 1 pre-existing public match rule');
+		$this->assertCount(1, $publicEntriesIntegration, 'koppeling MUST retain its 1 pre-existing public match rule');
 
 	}//end testPublicGrantsAreUntouchedOnOrganisatieAndKoppeling()
 

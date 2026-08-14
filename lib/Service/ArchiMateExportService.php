@@ -186,9 +186,9 @@ class ArchiMateExportService {
 			// Skip property-like fields that should be handled by specialized property methods.
 			// These fields often appear as direct data but should only be in <properties> structure.
 			$propertyLikeFields = [
-				'beschikbaarheid',
-				'integriteit',
-				'vertrouwelijkheid',
+				'availability',
+				'integrity',
+				'confidentiality',
 				'gemmaType',
 				'objectId',
 				'bivScoreBbn',
@@ -294,7 +294,7 @@ class ArchiMateExportService {
 				$shouldSkip = true;
 			}
 
-			// Skip fields that start with problematic patterns (e.g., "beschikbaarheid(belangrijksteReden)").
+			// Skip fields that start with problematic patterns (e.g., "availabilityPrimaryReason").
 			foreach ($fieldsToRemove as $fieldPattern) {
 				if (str_starts_with($key, $fieldPattern) === true) {
 					$shouldSkip = true;
@@ -1270,8 +1270,8 @@ XML;
 		}
 
 		// XSD-required order for ViewType (Diagram): name → documentation → properties → node → connection.
-		$this->addLangTextChild(parent: $viewNode, tagName: 'name', data: $viewData['name'] ?? null);
-		$this->addLangTextChild(parent: $viewNode, tagName: 'documentation', data: $viewData['documentation'] ?? null);
+		$this->addLongTextChild(parent: $viewNode, tagName: 'name', data: $viewData['name'] ?? null);
+		$this->addLongTextChild(parent: $viewNode, tagName: 'documentation', data: $viewData['documentation'] ?? null);
 		if (isset($viewData['properties']) === true && is_array($viewData['properties']) === true) {
 			$this->addPropertiesToXml(node: $viewNode, properties: $viewData['properties']);
 		}
@@ -1469,7 +1469,7 @@ XML;
 		}//end if
 
 		// Documentation.
-		$this->addLangTextChild(parent: $itemNode, tagName: 'documentation', data: $itemData['documentation'] ?? null);
+		$this->addLongTextChild(parent: $itemNode, tagName: 'documentation', data: $itemData['documentation'] ?? null);
 
 		// Nested items.
 		if (isset($itemData['item']) === true) {
@@ -1660,8 +1660,8 @@ XML;
 
 		// Handle child elements in XSD-required order (xs:sequence):.
 		// NamedReferenceableType: name → documentation → properties.
-		$this->addLangTextChild(parent: $node, tagName: 'name', data: $data['name'] ?? null);
-		$this->addLangTextChild(parent: $node, tagName: 'documentation', data: $data['documentation'] ?? null);
+		$this->addLongTextChild(parent: $node, tagName: 'name', data: $data['name'] ?? null);
+		$this->addLongTextChild(parent: $node, tagName: 'documentation', data: $data['documentation'] ?? null);
 		if (isset($data['properties']) === true && is_array($data['properties']) === true) {
 			$this->addPropertiesToXml(node: $node, properties: $data['properties']);
 		}
@@ -1795,10 +1795,10 @@ XML;
 					}
 
 					// Add xml:lang if present in various forms (including double underscore from import service).
-					foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
-						if (isset($property['value'][$langKey]) === true) {
+					foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $longKey) {
+						if (isset($property['value'][$longKey]) === true) {
 							$xmlNs = 'http://www.w3.org/XML/1998/namespace';
-							$valueNode->addAttribute('xml:lang', $property['value'][$langKey], $xmlNs);
+							$valueNode->addAttribute('xml:lang', $property['value'][$longKey], $xmlNs);
 							break;
 						}
 					}
@@ -1820,7 +1820,7 @@ XML;
 	 *
 	 * @return void
 	 */
-	private function addLangTextChild(\SimpleXMLElement $parent, string $tagName, $data): void {
+	private function addLongTextChild(\SimpleXMLElement $parent, string $tagName, $data): void {
 		if ($data === null) {
 			return;
 		}
@@ -1831,9 +1831,9 @@ XML;
 				$childNode[0] = (string)$data['_value'];
 			}
 
-			foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
-				if (isset($data[$langKey]) === true) {
-					$childNode->addAttribute('xml:lang', $data[$langKey], 'http://www.w3.org/XML/1998/namespace');
+			foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $longKey) {
+				if (isset($data[$longKey]) === true) {
+					$childNode->addAttribute('xml:lang', $data[$longKey], 'http://www.w3.org/XML/1998/namespace');
 					break;
 				}
 			}
@@ -1882,9 +1882,9 @@ XML;
 			$nameNode = $xml->addChild('name');
 			if (is_array($nameData) === true && isset($nameData['_value']) === true) {
 				$nameNode[0] = (string)$nameData['_value'];
-				foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
-					if (isset($nameData[$langKey]) === true) {
-						$nameNode->addAttribute('xml:lang', $nameData[$langKey], 'http://www.w3.org/XML/1998/namespace');
+				foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $longKey) {
+					if (isset($nameData[$longKey]) === true) {
+						$nameNode->addAttribute('xml:lang', $nameData[$longKey], 'http://www.w3.org/XML/1998/namespace');
 						break;
 					}
 				}
@@ -1899,9 +1899,9 @@ XML;
 			$docNode = $xml->addChild('documentation');
 			if (is_array($docData) === true && isset($docData['_value']) === true) {
 				$docNode[0] = (string)$docData['_value'];
-				foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $langKey) {
-					if (isset($docData[$langKey]) === true) {
-						$docNode->addAttribute('xml:lang', $docData[$langKey], 'http://www.w3.org/XML/1998/namespace');
+				foreach (['xml:lang', '_xml:lang', '_xml__lang', 'xml_lang'] as $longKey) {
+					if (isset($docData[$longKey]) === true) {
+						$docNode->addAttribute('xml:lang', $docData[$longKey], 'http://www.w3.org/XML/1998/namespace');
 						break;
 					}
 				}
@@ -2428,7 +2428,7 @@ XML;
 		);
 
 		// Step 2: Ensure Bron property definition.
-		$bronPropDefId = $this->ensureBronPropertyDefinition(baseObjects: $baseObjects);
+		$sourcePropDefId = $this->ensureSourcePropertyDefinition(baseObjects: $baseObjects);
 
 		// Step 3: Build lookup maps and generate elements per data type.
 		$gebruiktAppElements = [];
@@ -2441,11 +2441,11 @@ XML;
 			$gebruiktAppElements = $this->generateApplicationElements(
 				moduleRefMap: $moduleRefMap,
 				moduleNameMap: $moduleNameMap,
-				bronPropDefId: $bronPropDefId
+				sourcePropDefId: $sourcePropDefId
 			);
 			$gebruiktRelationships = $this->generateSpecializationRelationships(
 				moduleRefMap: $moduleRefMap,
-				bronPropDefId: $bronPropDefId
+				sourcePropDefId: $sourcePropDefId
 			);
 		}
 
@@ -2459,12 +2459,12 @@ XML;
 			$deelnamesAppElements = $this->generateApplicationElements(
 				moduleRefMap: $deelnameRefMap,
 				moduleNameMap: $deelnameNameMap,
-				bronPropDefId: $bronPropDefId,
+				sourcePropDefId: $sourcePropDefId,
 				prefix: 'deelname'
 			);
 			$deelnamesRelationships = $this->generateSpecializationRelationships(
 				moduleRefMap: $deelnameRefMap,
-				bronPropDefId: $bronPropDefId,
+				sourcePropDefId: $sourcePropDefId,
 				prefix: 'deelname'
 			);
 		}
@@ -2479,7 +2479,7 @@ XML;
 			orgName: $orgName,
 			appElements: $allAppElements,
 			relationships: $allRelationships,
-			bronPropDefId: $bronPropDefId
+			sourcePropDefId: $sourcePropDefId
 		);
 
 		// Step 5: Build SWC organization folders with typed structure.
@@ -2498,7 +2498,7 @@ XML;
 			relationships: $allRelationships,
 			viewCopies: $viewCopies,
 			swcFolders: $swcFolders,
-			bronPropDefId: $bronPropDefId
+			sourcePropDefId: $sourcePropDefId
 		);
 
 		$totalTime = microtime(true) - $startTime;
@@ -2537,7 +2537,7 @@ XML;
 			}
 
 			$id = $module['id'] ?? $module['@self']['id'] ?? null;
-			$name = $module['naam'] ?? $module['name'] ?? $module['@self']['name'] ?? null;
+			$name = $module['name'] ?? $module['@self']['name'] ?? null;
 			if ($id !== null && $name !== null) {
 				$moduleNameMap[$id] = $name;
 			}
@@ -2560,7 +2560,7 @@ XML;
 			}
 
 			// Get referentiecomponenten UUIDs.
-			$refComps = $gebruik['gebruiktVoorReferentiecomponenten'] ?? [];
+			$refComps = $gebruik['usedForReferenceComponents'] ?? [];
 			if (is_array($refComps) === false) {
 				continue;
 			}
@@ -2606,8 +2606,8 @@ XML;
 	 *
 	 * @return string The propertyDefinition identifier for Bron.
 	 */
-	private function ensureBronPropertyDefinition(array &$baseObjects): string {
-		$bronId = 'id-swc-propdef-bron';
+	private function ensureSourcePropertyDefinition(array &$baseObjects): string {
+		$sourceId = 'id-swc-propdef-bron';
 
 		// Check if "Bron" already exists.
 		foreach ($baseObjects as $obj) {
@@ -2629,8 +2629,8 @@ XML;
 			}
 		}
 
-		$this->logger->debug('Bron property definition not found, will create', ['id' => $bronId]);
-		return $bronId;
+		$this->logger->debug('Bron property definition not found, will create', ['id' => $sourceId]);
+		return $sourceId;
 	}//end ensureBronPropertyDefinition()
 
 	/**
@@ -2638,7 +2638,7 @@ XML;
 	 *
 	 * @param array $moduleRefMap Module to ref component ID map.
 	 * @param array $moduleNameMap Module to name map.
-	 * @param string $bronPropDefId Bron property definition ID.
+	 * @param string $sourcePropDefId Bron property definition ID.
 	 * @param string $prefix Optional prefix for IDs.
 	 *
 	 * @return array Array of element data arrays ready for XML generation.
@@ -2646,7 +2646,7 @@ XML;
 	private function generateApplicationElements(
 		array $moduleRefMap,
 		array $moduleNameMap,
-		string $bronPropDefId,
+		string $sourcePropDefId,
 		string $prefix = '',
 	): array {
 		$elements = [];
@@ -2663,7 +2663,7 @@ XML;
 				'identifier' => $appIdentifier,
 				'name' => $name,
 				'xsi_type' => 'ApplicationComponent',
-				'bronPropDefId' => $bronPropDefId,
+				'bronPropDefId' => $sourcePropDefId,
 				'moduleId' => $moduleId,
 			];
 		}
@@ -2676,14 +2676,14 @@ XML;
 	 * Generate SpecializationRelationship arrays for module to refcomp mappings.
 	 *
 	 * @param array $moduleRefMap Module to ref component ID map.
-	 * @param string $bronPropDefId Bron property definition ID.
+	 * @param string $sourcePropDefId Bron property definition ID.
 	 * @param string $prefix Optional prefix for IDs.
 	 *
 	 * @return array Array of relationship data arrays.
 	 */
 	private function generateSpecializationRelationships(
 		array $moduleRefMap,
-		string $bronPropDefId,
+		string $sourcePropDefId,
 		string $prefix = '',
 	): array {
 		$relationships = [];
@@ -2708,7 +2708,7 @@ XML;
 					'xsi_type' => 'SpecializationRelationship',
 					'source' => $appIdentifier,
 					'target' => $refCompIdentifier,
-					'bronPropDefId' => $bronPropDefId,
+					'bronPropDefId' => $sourcePropDefId,
 				];
 			}
 		}
@@ -2727,7 +2727,7 @@ XML;
 	 * @param string $orgName The organization name.
 	 * @param array $appElements Application elements.
 	 * @param array $relationships Relationship data.
-	 * @param string $bronPropDefId Bron property definition ID.
+	 * @param string $sourcePropDefId Bron property definition ID.
 	 *
 	 * @return array Array of enriched view data arrays.
 	 */
@@ -2736,7 +2736,7 @@ XML;
 		string $orgName,
 		array $appElements,
 		array $relationships,
-		string $bronPropDefId,
+		string $sourcePropDefId,
 	): array {
 		$viewCopies = [];
 
@@ -2801,7 +2801,7 @@ XML;
 			$viewCopy['name'] = ['_value' => $viewName . ' ' . $orgName];
 
 			// Add Bron property to view.
-			$viewCopy = $this->addBronProperty(data: $viewCopy, bronPropDefId: $bronPropDefId);
+			$viewCopy = $this->addSourceProperty(data: $viewCopy, sourcePropDefId: $sourcePropDefId);
 
 			// Inject application nodes and connections.
 			$viewCopy = $this->injectApplicationNodesInView(viewData: $viewCopy, refCompApps: $refCompApps);
@@ -2881,27 +2881,27 @@ XML;
 	 * Add Bron=Softwarecatalogus property to an XML data array.
 	 *
 	 * @param array $data The data array.
-	 * @param string $bronPropDefId The Bron property definition ID.
+	 * @param string $sourcePropDefId The Bron property definition ID.
 	 *
 	 * @return array The updated data array.
 	 */
-	private function addBronProperty(array $data, string $bronPropDefId): array {
-		$bronProp = [
-			'_propertyDefinitionRef' => $bronPropDefId,
+	private function addSourceProperty(array $data, string $sourcePropDefId): array {
+		$sourceProp = [
+			'_propertyDefinitionRef' => $sourcePropDefId,
 			'value' => ['_value' => 'Softwarecatalogus'],
 		];
 
 		if (isset($data['properties']) === false) {
-			$data['properties'] = ['property' => [$bronProp]];
+			$data['properties'] = ['property' => [$sourceProp]];
 		} elseif (isset($data['properties']['property']) === true) {
 			if (isset($data['properties']['property']['_propertyDefinitionRef']) === true) {
 				// Single property, convert to list.
-				$data['properties']['property'] = [$data['properties']['property'], $bronProp];
+				$data['properties']['property'] = [$data['properties']['property'], $sourceProp];
 			} else {
-				$data['properties']['property'][] = $bronProp;
+				$data['properties']['property'][] = $sourceProp;
 			}
 		} else {
-			$data['properties']['property'] = [$bronProp];
+			$data['properties']['property'] = [$sourceProp];
 		}
 
 		return $data;
@@ -3125,7 +3125,7 @@ XML;
 	 * @param array $relationships Relationship data.
 	 * @param array $viewCopies View copy data.
 	 * @param array $swcFolders SWC folder data.
-	 * @param string $bronPropDefId Bron property definition ID.
+	 * @param string $sourcePropDefId Bron property definition ID.
 	 *
 	 * @return string The assembled XML string.
 	 */
@@ -3136,7 +3136,7 @@ XML;
 		array $relationships,
 		array $viewCopies,
 		array $swcFolders,
-		string $bronPropDefId,
+		string $sourcePropDefId,
 	): string {
 		// Extract model metadata.
 		$modelMetadata = $this->extractModelMetadata(objects: $baseObjects);
@@ -3258,9 +3258,9 @@ XML;
 		}
 
 		// Add Bron property definition if we created it.
-		if ($bronPropDefId === 'id-swc-propdef-bron') {
+		if ($sourcePropDefId === 'id-swc-propdef-bron') {
 			$propDefNode = $propDefsFolder->addChild('propertyDefinition');
-			$propDefNode->addAttribute('identifier', $bronPropDefId);
+			$propDefNode->addAttribute('identifier', $sourcePropDefId);
 			$propDefNode->addAttribute('type', 'string');
 			$nameChild = $propDefNode->addChild('name', 'Bron');
 			$nameChild->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');

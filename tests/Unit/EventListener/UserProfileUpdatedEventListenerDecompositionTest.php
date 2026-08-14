@@ -98,8 +98,8 @@ class UserProfileUpdatedEventListenerDecompositionTest extends TestCase {
 		$listener = $this->makeListener();
 
 		$event = $this->createMock(UserProfileUpdatedEvent::class);
-		$event->method('getNewData')->willReturn(['functie' => null]);
-		$event->method('getChanges')->willReturn(['functie']);
+		$event->method('getNewData')->willReturn(['role' => null]);
+		$event->method('getChanges')->willReturn(['role']);
 
 		$reflection = new \ReflectionMethod($listener, 'buildContactPatch');
 		$reflection->setAccessible(true);
@@ -113,7 +113,7 @@ class UserProfileUpdatedEventListenerDecompositionTest extends TestCase {
 			new NullLogger()
 		);
 
-		$this->assertSame(['functie' => ''], $patch);
+		$this->assertSame(['role' => ''], $patch);
 
 	}//end testBuildContactPatchCoercesNullToEmptyString()
 

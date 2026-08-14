@@ -99,7 +99,7 @@ test('index contactpersonen: the route reaches the CnIndexPage surface (toggle +
 // (or the Standards page is removed/repointed in the manifest). Kept as a
 // documented fixme so it re-activates once the schema gap is closed. Not a test
 // defect — the page genuinely cannot load its data.
-test.fixme('index standaarden: nav entry reaches the CnIndexPage surface (blocked: missing `standaard` schema)', async ({
+test.fixme('index standards: nav entry reaches the CnIndexPage surface (blocked: missing `standaard` schema)', async ({
 	page,
 }) => {
 	const bag = collectAppErrors(page)

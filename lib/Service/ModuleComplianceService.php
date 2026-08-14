@@ -28,7 +28,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for handling module compliance logic.
  *
- * This service handles the automatic synchronization of module 'standaarden'
+ * This service handles the automatic synchronization of module 'standards'
  * property based on linked compliance objects and their standaardversie references.
  *
  * @category Service
@@ -120,11 +120,11 @@ class ModuleComplianceService {
 			);
 
 			// Compute desired standaarden and apply if changed.
-			$this->syncStandaarden(
+			$this->syncStandards(
 				moduleObject: $moduleObject,
 				moduleId: (string)$moduleId,
 				moduleUuid: $moduleUuid,
-				currentStandaarden: $this->normaliseCurrentStandaarden(rawStandaarden: $moduleData['standaardVersies'] ?? [])
+				currentStandards: $this->normaliseCurrentStandards(rawStandards: $moduleData['standardVersions'] ?? [])
 			);
 
 			$endTime = microtime(true);
@@ -160,18 +160,18 @@ class ModuleComplianceService {
 	 * Extracted from `handleModuleComplianceUpdate()` per
 	 * `openspec/changes/method-decomposition/tasks.md` task 8.2.
 	 *
-	 * @param mixed $rawStandaarden The raw stored value (array or otherwise).
+	 * @param mixed $rawStandards The raw stored value (array or otherwise).
 	 *
 	 * @return array<int,string> A normalised array of standaardversie UUIDs.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-8-2
 	 */
-	private function normaliseCurrentStandaarden(mixed $rawStandaarden): array {
-		if (is_array($rawStandaarden) === false) {
+	private function normaliseCurrentStandards(mixed $rawStandards): array {
+		if (is_array($rawStandards) === false) {
 			return [];
 		}
 
-		return $rawStandaarden;
+		return $rawStandards;
 	}//end normaliseCurrentStandaarden()
 
 	/**
@@ -184,18 +184,18 @@ class ModuleComplianceService {
 	 * @param object $moduleObject The module entity.
 	 * @param string $moduleId The internal id, for logging.
 	 * @param string $moduleUuid The module UUID, drives the query.
-	 * @param array<string> $currentStandaarden The standaarden currently stored
-	 *                                          on the module.
+	 * @param array<string> $currentStandards The standards currently stored
+	 *                                        on the module.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-8-2
 	 */
-	private function syncStandaarden(
+	private function syncStandards(
 		object $moduleObject,
 		string $moduleId,
 		string $moduleUuid,
-		array $currentStandaarden,
+		array $currentStandards,
 	): void {
 		$complianceObjects = $this->getComplianceObjectsForModule(moduleUuid: $moduleUuid);
 
@@ -210,7 +210,7 @@ class ModuleComplianceService {
 
 		$standaardversieUuids = $this->extractStandaardversieUuids(complianceObjects: $complianceObjects);
 
-		if ($this->arraysAreDifferent(array1: $currentStandaarden, array2: $standaardversieUuids) === false) {
+		if ($this->arraysAreDifferent(array1: $currentStandards, array2: $standaardversieUuids) === false) {
 			$this->logger->debug(
 				'ModuleComplianceService: Standaarden are already up to date',
 				[
@@ -226,12 +226,12 @@ class ModuleComplianceService {
 			[
 				'moduleId' => $moduleId,
 				'moduleUuid' => $moduleUuid,
-				'oldStandaarden' => $currentStandaarden,
+				'oldStandaarden' => $currentStandards,
 				'newStandaarden' => $standaardversieUuids,
 			]
 		);
 
-		$this->updateModuleStandaarden(
+		$this->updateModuleStandards(
 			moduleObject: $moduleObject,
 			standaardversieUuids: $standaardversieUuids
 		);
@@ -241,7 +241,7 @@ class ModuleComplianceService {
 			[
 				'moduleId' => $moduleId,
 				'moduleUuid' => $moduleUuid,
-				'standaarden' => $standaardversieUuids,
+				'standards' => $standaardversieUuids,
 			]
 		);
 
@@ -346,9 +346,9 @@ class ModuleComplianceService {
 
 		foreach ($complianceObjects as $complianceObject) {
 			$complianceData = $complianceObject->getObject();
-			$standaardversie = $complianceData['standaardversie'] ?? null;
+			$standardVersion = $complianceData['standardVersion'] ?? null;
 
-			if ($standaardversie === null) {
+			if ($standardVersion === null) {
 				$tracking['withoutStandaardversie']++;
 				$this->logger->debug(
 					'ModuleComplianceService: Compliance object missing standaardversie',
@@ -363,54 +363,54 @@ class ModuleComplianceService {
 			$tracking['withStandaardversie']++;
 
 			// Handle both string UUID and object with UUID property.
-			if (is_string($standaardversie) === true) {
+			if (is_string($standardVersion) === true) {
 				$tracking['stringType']++;
-				$standaardversieUuids[] = $standaardversie;
+				$standaardversieUuids[] = $standardVersion;
 				$this->logger->debug(
 					'ModuleComplianceService: Found string standaardversie',
 					[
 						'complianceId' => $complianceObject->getId(),
-						'standaardversie' => $standaardversie,
+						'standardVersion' => $standardVersion,
 					]
 				);
-			} elseif (is_array($standaardversie) === true && isset($standaardversie['uuid']) === true) {
+			} elseif (is_array($standardVersion) === true && isset($standardVersion['uuid']) === true) {
 				$tracking['arrayType']++;
-				$standaardversieUuids[] = $standaardversie['uuid'];
+				$standaardversieUuids[] = $standardVersion['uuid'];
 				$this->logger->debug(
 					'ModuleComplianceService: Found array standaardversie',
 					[
 						'complianceId' => $complianceObject->getId(),
-						'standaardversie' => $standaardversie['uuid'],
+						'standardVersion' => $standardVersion['uuid'],
 					]
 				);
-			} elseif (is_object($standaardversie) === true && isset($standaardversie->uuid) === true) {
+			} elseif (is_object($standardVersion) === true && isset($standardVersion->uuid) === true) {
 				$tracking['objectType']++;
-				$standaardversieUuids[] = $standaardversie->uuid;
+				$standaardversieUuids[] = $standardVersion->uuid;
 				$this->logger->debug(
 					'ModuleComplianceService: Found object standaardversie',
 					[
 						'complianceId' => $complianceObject->getId(),
-						'standaardversie' => $standaardversie->uuid,
+						'standardVersion' => $standardVersion->uuid,
 					]
 				);
 			}//end if
 
-			if (is_string($standaardversie) === false
-				&& (is_array($standaardversie) === false || isset($standaardversie['uuid']) === false)
-				&& (is_object($standaardversie) === false || isset($standaardversie->uuid) === false)
+			if (is_string($standardVersion) === false
+				&& (is_array($standardVersion) === false || isset($standardVersion['uuid']) === false)
+				&& (is_object($standardVersion) === false || isset($standardVersion->uuid) === false)
 			) {
 				$tracking['invalidType']++;
-				$standaardversieValue = (string)$standaardversie;
-				if (is_array($standaardversie) === true) {
-					$standaardversieValue = json_encode($standaardversie);
+				$standardVersionValue = (string)$standardVersion;
+				if (is_array($standardVersion) === true) {
+					$standardVersionValue = json_encode($standardVersion);
 				}
 
 				$this->logger->warning(
 					'ModuleComplianceService: Invalid standaardversie type',
 					[
 						'complianceId' => $complianceObject->getId(),
-						'type' => gettype($standaardversie),
-						'value' => $standaardversieValue,
+						'type' => gettype($standardVersion),
+						'value' => $standardVersionValue,
 					]
 				);
 			}
@@ -458,7 +458,7 @@ class ModuleComplianceService {
 	 *
 	 * @throws \Exception If update fails
 	 */
-	private function updateModuleStandaarden(object $moduleObject, array $standaardversieUuids): void {
+	private function updateModuleStandards(object $moduleObject, array $standaardversieUuids): void {
 		try {
 			// Get object service.
 			$objectService = $this->getObjectService();
@@ -469,8 +469,16 @@ class ModuleComplianceService {
 			// Get current module data.
 			$moduleData = $moduleObject->getObject();
 
-			// Update standaarden property.
-			$moduleData['standaardVersies'] = $standaardversieUuids;
+			// Read every value needed BEFORE the write below. Assigning a key
+			// narrows the inferred array shape to just that key, after which
+			// phpstan reports every other offset as non-existent. A /* @var */
+			// annotation does not help: a single-asterisk comment is not a
+			// docblock, so phpstan ignores it — which is what happened when the
+			// /** */ form was changed to satisfy phpcs.
+			$moduleUuid = $moduleData['uuid'] ?? null;
+
+			// Update the standards property.
+			$moduleData['standardVersions'] = $standaardversieUuids;
 
 			// Get register ID from module object.
 			$registerId = $moduleObject->getRegister();
@@ -488,8 +496,8 @@ class ModuleComplianceService {
 				'ModuleComplianceService: Updated module standaarden',
 				[
 					'moduleId' => $moduleObject->getId(),
-					'moduleUuid' => $moduleData['uuid'] ?? null,
-					'standaarden' => $standaardversieUuids,
+					'moduleUuid' => $moduleUuid,
+					'standards' => $standaardversieUuids,
 				]
 			);
 		} catch (\Exception $e) {
@@ -599,20 +607,20 @@ class ModuleComplianceService {
 			foreach ($complianceObjects as $complianceObject) {
 				$complianceData = $complianceObject->getObject();
 				$moduleUuid = $complianceData['module'] ?? null;
-				$standaardversie = $complianceData['standaardversie'] ?? null;
+				$standardVersion = $complianceData['standardVersion'] ?? null;
 
 				// Track compliance objects with/without standaardversie (first 5 samples).
 				if ($sampleCount < 5) {
-					if ($standaardversie !== null) {
+					if ($standardVersion !== null) {
 						$results['samples']['complianceWithStandaardversie'][] = [
 							'id' => $complianceObject->getId(),
 							'uuid' => $complianceData['uuid'] ?? 'unknown',
 							'module' => $moduleUuid,
-							'standaardversie' => $standaardversie,
+							'standardVersion' => $standardVersion,
 						];
 					}
 
-					if ($standaardversie === null) {
+					if ($standardVersion === null) {
 						$results['samples']['complianceWithoutStandaardversie'][] = [
 							'id' => $complianceObject->getId(),
 							'uuid' => $complianceData['uuid'] ?? 'unknown',
@@ -719,17 +727,17 @@ class ModuleComplianceService {
 					}//end if
 
 					// Get current standaarden from module.
-					$currentStandaarden = $moduleData['standaardVersies'] ?? [];
+					$currentStandards = $moduleData['standardVersions'] ?? [];
 
 					// Ensure currentStandaarden is an array.
-					if (is_array($currentStandaarden) === false) {
-						$currentStandaarden = [];
+					if (is_array($currentStandards) === false) {
+						$currentStandards = [];
 					}
 
 					// Compare and update if different.
-					if ($this->arraysAreDifferent(array1: $currentStandaarden, array2: $standaardversieUuids) === true) {
+					if ($this->arraysAreDifferent(array1: $currentStandards, array2: $standaardversieUuids) === true) {
 						// Update the module with new standaarden.
-						$this->updateModuleStandaarden(
+						$this->updateModuleStandards(
 							moduleObject: $moduleObject,
 							standaardversieUuids: $standaardversieUuids
 						);
@@ -744,7 +752,7 @@ class ModuleComplianceService {
 							'status' => 'updated',
 							'reason' => 'Standards updated',
 							'complianceCount' => count($moduleComplianceObjects),
-							'currentStandaarden' => $currentStandaarden,
+							'currentStandaarden' => $currentStandards,
 							'newStandaarden' => $standaardversieUuids,
 							'standardsCount' => count($standaardversieUuids),
 						];
@@ -754,7 +762,7 @@ class ModuleComplianceService {
 							$results['samples']['modulesUpdated'][] = [
 								'uuid' => $moduleUuid,
 								'name' => $moduleName,
-								'oldStandaarden' => $currentStandaarden,
+								'oldStandaarden' => $currentStandards,
 								'newStandaarden' => $standaardversieUuids,
 								'complianceCount' => count($moduleComplianceObjects),
 							];
@@ -765,13 +773,13 @@ class ModuleComplianceService {
 							[
 								'moduleUuid' => $moduleUuid,
 								'moduleName' => $moduleName,
-								'standaarden' => $standaardversieUuids,
+								'standards' => $standaardversieUuids,
 								'count' => count($standaardversieUuids),
 							]
 						);
 					}//end if
 
-					if ($this->arraysAreDifferent(array1: $currentStandaarden, array2: $standaardversieUuids) === false) {
+					if ($this->arraysAreDifferent(array1: $currentStandards, array2: $standaardversieUuids) === false) {
 						$results['modulesAlreadyUpToDate']++;
 
 						// Add to full modules list.
@@ -781,9 +789,9 @@ class ModuleComplianceService {
 							'status' => 'up-to-date',
 							'reason' => 'Already up-to-date',
 							'complianceCount' => count($moduleComplianceObjects),
-							'currentStandaarden' => $currentStandaarden,
+							'currentStandaarden' => $currentStandards,
 							'newStandaarden' => $standaardversieUuids,
-							'standardsCount' => count($currentStandaarden),
+							'standardsCount' => count($currentStandards),
 						];
 
 						// Add to samples (first 5).
@@ -792,7 +800,7 @@ class ModuleComplianceService {
 								'uuid' => $moduleUuid,
 								'name' => $moduleName,
 								'reason' => 'Already up-to-date',
-								'currentStandaarden' => $currentStandaarden,
+								'currentStandaarden' => $currentStandards,
 								'extractedStandaarden' => $standaardversieUuids,
 								'complianceCount' => count($moduleComplianceObjects),
 							];

@@ -53,7 +53,7 @@ class ModuleComplianceServiceDecompositionTest extends TestCase {
 	 */
 	public function testNormaliseReturnsArrayUnchanged(): void {
 		$service = $this->makeService();
-		$reflection = new \ReflectionMethod($service, 'normaliseCurrentStandaarden');
+		$reflection = new \ReflectionMethod($service, 'normaliseCurrentStandards');
 		$reflection->setAccessible(true);
 
 		$this->assertSame(
@@ -72,7 +72,7 @@ class ModuleComplianceServiceDecompositionTest extends TestCase {
 	 */
 	public function testNormaliseCoercesNonArrayToEmpty(): void {
 		$service = $this->makeService();
-		$reflection = new \ReflectionMethod($service, 'normaliseCurrentStandaarden');
+		$reflection = new \ReflectionMethod($service, 'normaliseCurrentStandards');
 		$reflection->setAccessible(true);
 
 		$this->assertSame([], $reflection->invoke($service, null));
@@ -89,7 +89,7 @@ class ModuleComplianceServiceDecompositionTest extends TestCase {
 	public function testExtractedHelpersExistAndArePrivate(): void {
 		$reflection = new \ReflectionClass(ModuleComplianceService::class);
 
-		foreach (['normaliseCurrentStandaarden', 'syncStandaarden'] as $method) {
+		foreach (['normaliseCurrentStandards', 'syncStandards'] as $method) {
 			$this->assertTrue(
 				$reflection->hasMethod($method),
 				sprintf('Expected helper %s() on ModuleComplianceService', $method)

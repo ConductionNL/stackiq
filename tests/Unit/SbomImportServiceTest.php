@@ -72,7 +72,7 @@ class SbomImportServiceTest extends TestCase {
 	/**
 	 * @var array<string,mixed>|null The moduleVersie data bag last saved via saveObject().
 	 */
-	private ?array $savedModuleVersie = null;
+	private ?array $savedModuleVersion = null;
 
 	/**
 	 * @return void
@@ -81,7 +81,7 @@ class SbomImportServiceTest extends TestCase {
 		$this->fixturesDir = __DIR__ . '/../fixtures/sbom';
 		$this->savedBatches = [];
 		$this->deletedBatches = [];
-		$this->savedModuleVersie = null;
+		$this->savedModuleVersion = null;
 	}//end setUp()
 
 	/**
@@ -102,7 +102,7 @@ class SbomImportServiceTest extends TestCase {
 	 *
 	 * @return ObjectEntity|MockObject
 	 */
-	private function moduleVersieEntity(array $data): ObjectEntity|MockObject {
+	private function moduleVersionEntity(array $data): ObjectEntity|MockObject {
 		$entity = $this->createMock(ObjectEntity::class);
 		$entity->method('getObject')->willReturn($data);
 		$entity->method('getUuid')->willReturn('mv-uuid-1');
@@ -130,12 +130,12 @@ class SbomImportServiceTest extends TestCase {
 	 * pre-configured with a moduleVersie find() result and a previous
 	 * component set for searchObjects().
 	 *
-	 * @param array<string,mixed> $moduleVersieData Existing moduleVersie data bag.
+	 * @param array<string,mixed> $moduleVersionData Existing moduleVersie data bag.
 	 * @param array<int,string> $previousUuids Uuids of the previous live component set.
 	 *
 	 * @return SbomImportService
 	 */
-	private function makeService(array $moduleVersieData = ['versie' => '1.0.0'], array $previousUuids = []): SbomImportService {
+	private function makeService(array $moduleVersionData = ['version' => '1.0.0'], array $previousUuids = []): SbomImportService {
 		$container = $this->createMock(ContainerInterface::class);
 		$settings = $this->createMock(SettingsService::class);
 		$this->objectService = $this->createMock(ObjectService::class);
@@ -151,7 +151,7 @@ class SbomImportServiceTest extends TestCase {
 			]
 		);
 
-		$entity = $this->moduleVersieEntity($moduleVersieData);
+		$entity = $this->moduleVersionEntity($moduleVersionData);
 		$this->objectService->method('find')->willReturn($entity);
 
 		$previousEntities = array_map([$this, 'previousComponentEntity'], $previousUuids);
@@ -173,7 +173,7 @@ class SbomImportServiceTest extends TestCase {
 
 		$this->objectService->method('saveObject')->willReturnCallback(
 			function (array $object) use ($entity) {
-				$this->savedModuleVersie = $object;
+				$this->savedModuleVersion = $object;
 				return $entity;
 			}
 		);
@@ -266,7 +266,7 @@ class SbomImportServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testReimportReplacesPreviousLiveSet(): void {
-		$service = $this->makeService(['versie' => '1.0.0'], ['prev-1', 'prev-2']);
+		$service = $this->makeService(['version' => '1.0.0'], ['prev-1', 'prev-2']);
 
 		$result = $service->importForModuleVersie(
 			'mv-uuid-1',
@@ -290,7 +290,7 @@ class SbomImportServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testNoPreviousLiveSetMeansNoDeleteBatch(): void {
-		$service = $this->makeService(['versie' => '1.0.0'], []);
+		$service = $this->makeService(['version' => '1.0.0'], []);
 
 		$result = $service->importForModuleVersie(
 			'mv-uuid-1',
@@ -311,7 +311,7 @@ class SbomImportServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testImportRecordsProvenanceAndCarriesExistingFieldsForward(): void {
-		$service = $this->makeService(['versie' => '2.3.1', 'beschrijvingKort' => 'Keep me']);
+		$service = $this->makeService(['version' => '2.3.1', 'beschrijvingKort' => 'Keep me']);
 
 		$service->importForModuleVersie(
 			'mv-uuid-1',
@@ -320,12 +320,12 @@ class SbomImportServiceTest extends TestCase {
 			'my-sbom.json'
 		);
 
-		$this->assertNotNull($this->savedModuleVersie);
-		$this->assertSame('2.3.1', $this->savedModuleVersie['versie']);
-		$this->assertSame('Keep me', $this->savedModuleVersie['beschrijvingKort']);
-		$this->assertSame('cyclonedx-json', $this->savedModuleVersie['sbomFormat']);
-		$this->assertSame('my-sbom.json', $this->savedModuleVersie['sbomFileName']);
-		$this->assertNotEmpty($this->savedModuleVersie['sbomLastImportedAt']);
+		$this->assertNotNull($this->savedModuleVersion);
+		$this->assertSame('2.3.1', $this->savedModuleVersion['version']);
+		$this->assertSame('Keep me', $this->savedModuleVersion['beschrijvingKort']);
+		$this->assertSame('cyclonedx-json', $this->savedModuleVersion['sbomFormat']);
+		$this->assertSame('my-sbom.json', $this->savedModuleVersion['sbomFileName']);
+		$this->assertNotEmpty($this->savedModuleVersion['sbomLastImportedAt']);
 	}//end testImportRecordsProvenanceAndCarriesExistingFieldsForward()
 
 	/**

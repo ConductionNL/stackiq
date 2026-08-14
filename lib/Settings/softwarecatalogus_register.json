@@ -766,45 +766,45 @@
           {
             "slug": "bio-5-1-1",
             "code": "5.1.1",
-            "naam": "Toegangsbeveiligingsbeleid",
+            "name": "Toegangsbeveiligingsbeleid",
             "thema": "Toegangsbeveiliging",
-            "bioVersie": "BIO 2.0",
+            "bioVersion": "BIO 2.0",
             "bbnNiveau": ["BBN1", "BBN2", "BBN3"],
             "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
           },
           {
             "slug": "bio-9-2-1",
             "code": "9.2.1",
-            "naam": "Beheer van gebruikerstoegang",
+            "name": "Beheer van gebruikerstoegang",
             "thema": "Toegangsbeveiliging",
-            "bioVersie": "BIO 2.0",
+            "bioVersion": "BIO 2.0",
             "bbnNiveau": ["BBN2", "BBN3"],
             "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
           },
           {
             "slug": "bio-10-1-1",
             "code": "10.1.1",
-            "naam": "Cryptografisch beleid",
+            "name": "Cryptografisch beleid",
             "thema": "Cryptografie",
-            "bioVersie": "BIO 2.0",
+            "bioVersion": "BIO 2.0",
             "bbnNiveau": ["BBN2", "BBN3"],
             "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
           },
           {
             "slug": "bio-12-1-1",
             "code": "12.1.1",
-            "naam": "Netwerkbeveiligingsbeheer",
+            "name": "Netwerkbeveiligingsbeheer",
             "thema": "Communicatiebeveiliging",
-            "bioVersie": "BIO 2.0",
+            "bioVersion": "BIO 2.0",
             "bbnNiveau": ["BBN1", "BBN2", "BBN3"],
             "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
           },
           {
             "slug": "bio-13-2-1",
             "code": "13.2.1",
-            "naam": "Gegevensoverdrachtbeleid",
+            "name": "Gegevensoverdrachtbeleid",
             "thema": "Communicatiebeveiliging",
-            "bioVersie": "BIO 2.0",
+            "bioVersion": "BIO 2.0",
             "bbnNiveau": ["BBN2", "BBN3"],
             "bron": "https://www.baselineinformatiebeveiligingoverheid.nl"
           }
@@ -1045,10 +1045,10 @@
         "summary": "",
         "icon": "Domain",
         "required": [
-          "naam"
+          "name"
         ],
         "properties": {
-          "naam": {
+          "name": {
             "description": "Naam van de sector",
             "type": "string",
             "required": true,
@@ -1059,7 +1059,7 @@
             "maxLength": 200,
             "example": "Bijvoorbeeld: Overheid"
           },
-          "beschrijving": {
+          "description": {
             "description": "Beschrijving van de sector",
             "type": "string",
             "visible": true,
@@ -1132,8 +1132,8 @@
           ]
         },
         "configuration": {
-          "objectNameField": "naam",
-          "objectDescriptionField": "beschrijving",
+          "objectNameField": "name",
+          "objectDescriptionField": "description",
           "autoPublish": false
         }
       },
@@ -1147,11 +1147,11 @@
         "summary": "",
         "icon": "PackageVariant",
         "required": [
-          "naam",
+          "name",
           "beschrijvingKort"
         ],
         "properties": {
-          "naam": {
+          "name": {
             "description": "Naam van de suite",
             "type": "string",
             "required": true,
@@ -1233,7 +1233,7 @@
             },
             "$ref": "#/components/schemas/contactpersoon"
           },
-          "applicaties": {
+          "applications": {
             "description": "De applicaties die onderdeel zijn van deze suite",
             "type": "array",
             "visible": true,
@@ -1311,7 +1311,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "naam",
+          "objectNameField": "name",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang",
           "objectImageField": "logo",
@@ -1336,12 +1336,12 @@
         "summary": "",
         "icon": "Handshake",
         "required": [
-          "naam",
-          "aanbieder",
+          "name",
+          "provider",
           "type"
         ],
         "properties": {
-          "naam": {
+          "name": {
             "description": "De naam van uw dienst",
             "type": "string",
             "required": true,
@@ -1429,7 +1429,7 @@
             "facetable": false,
             "title": "Application",
             "$ref": "#/components/schemas/module",
-            "x-relation-filter": { "aanbieder": "@object.aanbieder" },
+            "x-relation-filter": { "provider": "@object.aanbieder" },
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -1438,7 +1438,7 @@
               "$ref": "#/components/schemas/module"
             }
           },
-          "aanbieder": {
+          "provider": {
             "referenceSemanticType": "https://openregister.app/ns#Vendor",
             "description": "De leverende partij die deze dienst beschikbaar stelt",
             "type": "object",
@@ -1519,7 +1519,7 @@
               "inversedBy": "dienst"
             }
           },
-          "publicatiedatum": {
+          "publicationDate": {
             "description": "Publication date as open data. Anonymous (public) readers can see this dienst only once publicatiedatum is set and not in the future. Set by the open-data publish action; cleared by depublish.",
             "type": "string",
             "format": "date-time",
@@ -1528,7 +1528,7 @@
             "facetable": false,
             "title": "Publication date"
           },
-          "depublicatiedatum": {
+          "depublicationDate": {
             "description": "Depublication date. When set (and not in the future) the dienst is withdrawn from the open-data surface. Set by the depublish action.",
             "type": "string",
             "format": "date-time",
@@ -1565,7 +1565,7 @@
             {
               "group": "public",
               "match": {
-                "publicatiedatum": {
+                "publicationDate": {
                   "$lte": "$now"
                 }
               }
@@ -1607,7 +1607,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "naam",
+          "objectNameField": "name",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang",
           "objectImageField": "logo",
@@ -1645,12 +1645,12 @@
         "summary": "",
         "icon": "ShieldAlert",
         "required": [
-          "naam",
+          "name",
           "beschrijvingKort",
           "modules"
         ],
         "properties": {
-          "naam": {
+          "name": {
             "description": "Naam van de kwetsbaarheid",
             "type": "string",
             "visible": true,
@@ -1782,7 +1782,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "naam",
+          "objectNameField": "name",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang",
           "autoPublish": false
@@ -1812,7 +1812,7 @@
             "maxLength": 255,
             "example": "Bijvoorbeeld: 3f2b0c5e-1234-4a9b-8c1d-9f0e1a2b3c4d"
           },
-          "functie": {
+          "role": {
             "description": "Functie van de medewerker",
             "type": "string",
             "visible": true,
@@ -1854,7 +1854,7 @@
             "$ref": "#/components/schemas/organisatie",
             "order": 9
           },
-          "notificaties": {
+          "notifications": {
             "type": "array",
             "title": "Notifications",
             "description": "Lijst van notificaties voor deze contactpersoon",
@@ -1867,7 +1867,7 @@
             "order": 11,
             "example": "Bijvoorbeeld: ['Nieuw in organisatie', 'Gewijzigd in de organisatie']"
           },
-          "rollen": {
+          "roles": {
             "description": "De rollen die deze contactpersoon heeft",
             "title": "Roles",
             "type": "array",
@@ -2018,7 +2018,7 @@
         },
         "configuration": {
           "objectNameField": "contactsUid",
-          "objectDescriptionField": "functie",
+          "objectDescriptionField": "role",
           "autoPublish": true
         }
       },
@@ -2126,7 +2126,7 @@
             "facetable": false,
             "title": "Participations"
           },
-          "deelnemers": {
+          "participants": {
             "description": "Deelnemers in deze organisatie",
             "type": "array",
             "visible": true,
@@ -2254,7 +2254,7 @@
             "order": 52,
             "maxLength": 255
           },
-          "registratiestatus": {
+          "registrationStatus": {
             "description": "Moderatiestatus van een (anoniem) zelf-geregistreerde organisatie. 'pending' tot een beheerder de registratie goedkeurt; pas daarna 'active'. Anoniem geregistreerde organisaties zijn 'pending' en niet zichtbaar in de open-data/federatie-laag tot goedkeuring.",
             "title": "Registration status",
             "type": "string",
@@ -2268,7 +2268,7 @@
               "rejected"
             ]
           },
-          "publicatiedatum": {
+          "publicationDate": {
             "description": "Publication date as open data. Anonymous (public) readers can see this organisation profile once publicatiedatum is set and not in the future. Set by the open-data publish action; cleared by depublish.",
             "type": "string",
             "format": "date-time",
@@ -2277,7 +2277,7 @@
             "facetable": false,
             "title": "Publication date"
           },
-          "depublicatiedatum": {
+          "depublicationDate": {
             "description": "Depublication date. When set (and not in the future) the organisation is withdrawn from the open-data surface. Set by the depublish action.",
             "type": "string",
             "format": "date-time",
@@ -2331,7 +2331,7 @@
               "Ambtelijke fusie"
             ]
           },
-          "geregistreerdDoor": {
+          "registeredBy": {
             "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 18,
@@ -2381,7 +2381,7 @@
             {
               "group": "public",
               "match": {
-                "publicatiedatum": {
+                "publicationDate": {
                   "$lte": "$now"
                 }
               }
@@ -2395,7 +2395,7 @@
             {
               "group": "public",
               "match": {
-                "geregistreerdDoor": "Leverancier",
+                "registeredBy": "Leverancier",
                 "status": "Actief"
               }
             },
@@ -2553,7 +2553,7 @@
         "icon": "Gauge",
         "x-openregister-notifications": {
           "phaseout-approaching": {
-            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"startDatumUitTeFaseren": {"operator": "withinNext", "value": "P180D"}}},
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"startDateOutPhasing": {"operator": "withinNext", "value": "P180D"}}},
             "enabled": true,
             "channels": ["nc-notification", "email"],
             "recipients": [
@@ -2567,10 +2567,10 @@
           }
         },
         "required": [
-          "afnemer"
+          "consumer"
         ],
         "properties": {
-          "afnemer": {
+          "consumer": {
             "type": "object",
             "title": "Consumer",
             "description": "De organisatie die afnemer is van de applicatie",
@@ -2582,7 +2582,7 @@
             "required": true,
             "order": 11
           },
-          "aanbieder": {
+          "provider": {
             "type": "object",
             "title": "Provider",
             "description": "De organisatie die aanbieder is van de applicatie",
@@ -2607,7 +2607,7 @@
             "title": "Contact person",
             "order": 3
           },
-          "deelnemers": {
+          "participants": {
             "description": "De organisaties die deelnemen aan dit gebruik (voor samenwerkingen)",
             "type": "array",
             "visible": true,
@@ -2622,7 +2622,7 @@
               "$ref": "#/components/schemas/organisatie"
             }
           },
-          "startDatumVerwerving": {
+          "startDateAcquisition": {
             "description": "De start datum voor het \"Verwerving\" status",
             "type": "string",
             "format": "date",
@@ -2632,7 +2632,7 @@
             "title": "Acquisition start date",
             "example": "Bijvoorbeeld: 2025-01-01"
           },
-          "startDatumGepland": {
+          "startDatePlanned": {
             "description": "De start datum voor het \"Gepland\" status",
             "type": "string",
             "format": "date",
@@ -2662,7 +2662,7 @@
             "title": "Planned start date",
             "example": "Bijvoorbeeld: 2025-02-01"
           },
-          "startDatumInProductie": {
+          "startDateInProduction": {
             "description": "De start datum voor het \"actief\" status",
             "type": "string",
             "format": "date",
@@ -2692,7 +2692,7 @@
             "title": "Start date in production",
             "example": "Bijvoorbeeld: 2025-03-01"
           },
-          "startDatumUitTeFaseren": {
+          "startDateOutPhasing": {
             "description": "De start datum voor het \"Beëindigd\" status",
             "type": "string",
             "format": "date",
@@ -2722,7 +2722,7 @@
             "title": "Phase-out start date",
             "example": "Bijvoorbeeld: 2025-12-31"
           },
-          "startDatumUitGefaseerd": {
+          "startDateOutPhased": {
             "description": "De start datum voor het \"Uit gefaseerd\" status",
             "type": "string",
             "format": "date",
@@ -2790,7 +2790,7 @@
             "title": "Status",
             "example": "Bijvoorbeeld: Gepland"
           },
-          "interneAantekening": {
+          "interneAnnotation": {
             "description": "Voeg Interne notitie toe, bijvoorbeeld over kosten of eigenaarschap.",
             "type": "string",
             "visible": true,
@@ -2871,7 +2871,7 @@
               "default": true
             }
           },
-          "gebruiktVoorReferentiecomponenten": {
+          "usedForReferenceComponents": {
             "description": "GEMMA referentiecomponenten waarvoor dit product wordt gebruikt",
             "type": "array",
             "visible": true,
@@ -2951,7 +2951,7 @@
               "default": true
             }
           },
-          "geplandeVervanging": {
+          "plannedReplacement": {
             "description": "De module die dit gebruik gepland gaat vervangen (opvolger). Wordt per gebruik vastgelegd, niet op de module zelf.",
             "type": "object",
             "visible": true,
@@ -2963,7 +2963,7 @@
             },
             "$ref": "#/components/schemas/module"
           },
-          "geplandeVervangingsDatum": {
+          "plannedReplacementDate": {
             "description": "De geplande datum waarop de vervanging plaatsvindt.",
             "type": "string",
             "format": "date",
@@ -3041,7 +3041,7 @@
             {
               "group": "gebruik-beheerder",
               "match": {
-                "afnemer": "$organisation"
+                "consumer": "$organisation"
               }
             },
             {
@@ -3053,7 +3053,7 @@
             {
               "group": "aanbod-beheerder",
               "match": {
-                "aanbieder": "$organisation"
+                "provider": "$organisation"
               }
             }
           ],
@@ -3083,7 +3083,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "afnemer",
+          "objectNameField": "consumer",
           "objectDescriptionField": "module",
           "allowFiles": true,
           "allowedTags": [
@@ -3136,7 +3136,7 @@
         "slug": "contract",
         "x-openregister-notifications": {
           "contract-expiry": {
-            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"status": {"operator": "equals", "value": "Actief"}, "eindDatum": {"operator": "withinNext", "value": "P90D"}}},
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"status": {"operator": "equals", "value": "Actief"}, "endDate": {"operator": "withinNext", "value": "P90D"}}},
             "enabled": true,
             "channels": ["nc-notification", "email"],
             "recipients": [
@@ -3157,8 +3157,8 @@
         "required": [
           "dienst",
           "gebruik",
-          "startDatum",
-          "contractNummer",
+          "startDate",
+          "contractNumber",
           "contractType",
           "status"
         ],
@@ -3187,7 +3187,7 @@
             },
             "$ref": "#/components/schemas/gebruik"
           },
-          "startDatum": {
+          "startDate": {
             "type": "string",
             "format": "date",
             "description": "De startdatum van het contract",
@@ -3197,7 +3197,7 @@
             "order": 10,
             "example": "Bijvoorbeeld: 2025-01-01"
           },
-          "eindDatum": {
+          "endDate": {
             "type": "string",
             "format": "date",
             "description": "De einddatum van het contract (indien van toepassing)",
@@ -3206,7 +3206,7 @@
             "order": 6,
             "example": "Bijvoorbeeld: 2025-12-31"
           },
-          "contractNummer": {
+          "contractNumber": {
             "type": "string",
             "description": "Het referentienummer van het contract",
             "facetable": false,
@@ -3229,7 +3229,7 @@
             "order": 4,
             "example": "Bijvoorbeeld: SLA"
           },
-          "kosten": {
+          "cost": {
             "type": "number",
             "description": "De kosten verbonden aan het contract",
             "facetable": false,
@@ -3237,7 +3237,7 @@
             "order": 7,
             "example": "Bijvoorbeeld: 1000.00"
           },
-          "kostenPeriode": {
+          "costPeriod": {
             "type": "string",
             "enum": [
               "Maandelijks",
@@ -3250,10 +3250,10 @@
             "order": 8,
             "example": "Bijvoorbeeld: Jaarlijks"
           },
-          "contactpersoonAanbieder": {
+          "contactPersonProvider": {
             "type": "object",
             "properties": {
-              "naam": {
+              "name": {
                 "type": "string",
                 "title": "Name",
                 "description": "Full name of the supplier contact person."
@@ -3272,10 +3272,10 @@
             "title": "Contact person (provider)",
             "order": 1
           },
-          "contactpersoonGebruiker": {
+          "contactPersonUser": {
             "type": "object",
             "properties": {
-              "naam": {
+              "name": {
                 "type": "string",
                 "title": "Name",
                 "description": "Full name of the user organisation contact person."
@@ -3294,7 +3294,7 @@
             "title": "Contact person (user)",
             "order": 2
           },
-          "documentReferentie": {
+          "documentReference": {
             "type": "string",
             "description": "Referentie naar het contractdocument",
             "facetable": false,
@@ -3399,7 +3399,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "contractNummer",
+          "objectNameField": "contractNumber",
           "objectDescriptionField": "contractType",
           "autoPublish": false,
           "linkedTypes": [
@@ -3446,10 +3446,10 @@
         "summary": "",
         "icon": "Link",
         "required": [
-          "naam"
+          "name"
         ],
         "properties": {
-          "naam": {
+          "name": {
             "description": "Naam van de koppeling, default waarde [AppA] [<-richting->] [AppB]",
             "type": "string",
             "order": 1,
@@ -3517,7 +3517,7 @@
               "teruggetrokken"
             ]
           },
-          "datumInOntwikkeling": {
+          "dateInDevelopment": {
             "description": "Startdatum van de ontwikkelingsfase",
             "type": "string",
             "format": "date",
@@ -3526,7 +3526,7 @@
             "title": "Date in development",
             "example": "Bijvoorbeeld: 2025-01-01"
           },
-          "datumInGebruik": {
+          "dateInUse": {
             "description": "Startdatum van gebruik",
             "type": "string",
             "format": "date",
@@ -3534,7 +3534,7 @@
             "facetable": false,
             "title": "Date in use"
           },
-          "datumEindeOndersteuning": {
+          "dateEndSupport": {
             "description": "Startdatum einde ondersteuning",
             "type": "string",
             "format": "date",
@@ -3542,7 +3542,7 @@
             "facetable": false,
             "title": "End of support date"
           },
-          "datumTeruggetrokken": {
+          "dateWithdrawn": {
             "description": "Datum waarop de koppeling teruggetrokken is",
             "type": "string",
             "format": "date",
@@ -3550,7 +3550,7 @@
             "facetable": false,
             "title": "Date withdrawn"
           },
-          "gegevensuitwisselingRichting": {
+          "dataExchangeDirection": {
             "description": "Kies welke applicatie de gegevens verzendt en welke deze ontvangt.",
             "type": "string",
             "order": 8,
@@ -3594,7 +3594,7 @@
             },
             "title": "Application B"
           },
-          "buitengemeentelijkVoorziening": {
+          "nonMunicipalProvision": {
             "description": "Buitengemeentelijke voorziening waarmee gekoppeld wordt",
             "type": "object",
             "order": 11,
@@ -3609,7 +3609,7 @@
             },
             "$ref": "#/components/schemas/element"
           },
-          "standaardversies": {
+          "standardVersions": {
             "description": "Kies de standaardversie(s) waarop de koppeling is gebaseerd.",
             "type": "array",
             "order": 12,
@@ -3624,7 +3624,7 @@
               "$ref": "#/components/schemas/element"
             }
           },
-          "gerealiseerdMetIntermediairModule": {
+          "realisedWithIntermediaryModule": {
             "description": "Kies de intermediair, bijvoorbeeld een servicebus, via welke de koppeling loopt.",
             "type": "object",
             "order": 13,
@@ -3636,7 +3636,7 @@
             "$ref": "#/components/schemas/module",
             "inversedBy": "koppeling"
           },
-          "aanbieder": {
+          "provider": {
             "referenceSemanticType": "https://openregister.app/ns#Vendor",
             "description": "De aanbieder van deze koppeling",
             "type": "object",
@@ -3665,7 +3665,7 @@
             "$ref": "#/components/schemas/dienst",
             "inversedBy": "koppelingen"
           },
-          "geregistreerdDoor": {
+          "registeredBy": {
             "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 16,
@@ -3685,7 +3685,7 @@
               "searchable": false
             }
           },
-          "koppelingType": {
+          "integrationType": {
             "description": "Afgeleid gegeven: extern als de koppeling met een buitengemeentelijke voorziening is, anders intern",
             "type": "string",
             "order": 17,
@@ -3700,7 +3700,7 @@
               "intern"
             ]
           },
-          "publicatiedatum": {
+          "publicationDate": {
             "description": "Publication date as open data. Anonymous (public) readers can see this koppeling once publicatiedatum is set and not in the future. Set by the open-data publish action; cleared by depublish.",
             "type": "string",
             "format": "date-time",
@@ -3709,7 +3709,7 @@
             "facetable": false,
             "title": "Publication date"
           },
-          "depublicatiedatum": {
+          "depublicationDate": {
             "description": "Depublication date. When set (and not in the future) the koppeling is withdrawn from the open-data surface. Set by the depublish action.",
             "type": "string",
             "format": "date-time",
@@ -3752,7 +3752,7 @@
             {
               "group": "public",
               "match": {
-                "publicatiedatum": {
+                "publicationDate": {
                   "$lte": "$now"
                 }
               }
@@ -3766,7 +3766,7 @@
             {
               "group": "aanbod-beheerder",
               "match": {
-                "aanbieder": "$organisation"
+                "provider": "$organisation"
               }
             }
           ],
@@ -3857,11 +3857,11 @@
         "summary": "",
         "icon": "Star",
         "required": [
-          "naam",
-          "waardering"
+          "name",
+          "rating"
         ],
         "properties": {
-          "naam": {
+          "name": {
             "description": "Naam van de beoordeling",
             "type": "string",
             "visible": true,
@@ -3888,7 +3888,7 @@
             "title": "Description",
             "order": 3
           },
-          "waardering": {
+          "rating": {
             "description": "Waardering van 1 tot en met 10",
             "type": "integer",
             "minimum": 1,
@@ -3974,7 +3974,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "naam",
+          "objectNameField": "name",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang",
           "autoPublish": false
@@ -4086,7 +4086,7 @@
               "searchable": false
             }
           },
-          "name-lang": {
+          "nameLong": {
             "description": "De name-language van dit Element",
             "type": "string",
             "minLength": 2,
@@ -4110,7 +4110,7 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "name-lang",
+            "title": "nameLong",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4148,7 +4148,7 @@
               "searchable": false
             }
           },
-          "documentation-lang": {
+          "documentationLong": {
             "description": "De documentation-language van dit Element",
             "type": "string",
             "minLength": 2,
@@ -4172,7 +4172,7 @@
             },
             "oneOf": [],
             "facetable": false,
-            "title": "documentation-lang",
+            "title": "documentationLong",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4305,22 +4305,22 @@
               "searchable": false
             }
           },
-          "gemma-toelichting": {
+          "gemmaNotes": {
             "description": "GEMMA toelichting van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "gemma-toelichting",
+            "title": "gemmaNotes",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "gemma-ggmStatus": {
+          "gemmaGgmStatus": {
             "description": "GEMMA-GGM status van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "gemma-ggmStatus",
+            "title": "gemmaGgmStatus",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4349,22 +4349,22 @@
               "searchable": false
             }
           },
-          "architectuurlaag": {
+          "architectureLayer": {
             "description": "Architectuurlaag van dit Element",
             "type": "string",
             "facetable": true,
-            "title": "architectuurlaag",
+            "title": "architectureLayer",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "architectuurtool": {
+          "architectureTool": {
             "description": "Architectuurtool van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "architectuurtool",
+            "title": "architectureTool",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4382,11 +4382,11 @@
               "searchable": false
             }
           },
-          "beheerder": {
+          "maintainer": {
             "description": "Beheerder van dit Element",
             "type": "string",
             "facetable": true,
-            "title": "beheerder",
+            "title": "maintainer",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4404,22 +4404,22 @@
               "searchable": false
             }
           },
-          "beschikbaarheid": {
+          "availability": {
             "description": "Beschikbaarheid van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "beschikbaarheid",
+            "title": "availability",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "beschikbaarheid(belangrijksteReden)": {
+          "availabilityPrimaryReason": {
             "description": "Beschikbaarheid belangrijkste reden van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "beschikbaarheid(belangrijksteReden)",
+            "title": "availabilityPrimaryReason",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4503,11 +4503,11 @@
               "searchable": false
             }
           },
-          "eigenaar": {
+          "owner": {
             "description": "Eigenaar van dit Element",
             "type": "string",
             "facetable": true,
-            "title": "eigenaar",
+            "title": "owner",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4536,11 +4536,11 @@
               "searchable": false
             }
           },
-          "heeftBron": {
+          "hasSource": {
             "description": "Heeft bron van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "heeftBron",
+            "title": "hasSource",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4558,33 +4558,33 @@
               "searchable": false
             }
           },
-          "implicaties": {
+          "implications": {
             "description": "Implicaties van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "implicaties",
+            "title": "implications",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "integriteit": {
+          "integrity": {
             "description": "Integriteit van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "integriteit",
+            "title": "integrity",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "integriteit(belangrijksteReden)": {
+          "integrityPrimaryReason": {
             "description": "Integriteit belangrijkste reden van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "integriteit(belangrijksteReden)",
+            "title": "integrityPrimaryReason",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4602,11 +4602,11 @@
               "searchable": false
             }
           },
-          "letOp": {
+          "letOn": {
             "description": "Let op van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "letOp",
+            "title": "letOn",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4624,22 +4624,22 @@
               "searchable": false
             }
           },
-          "noraKernwaarde": {
+          "noraCoreValue": {
             "description": "NORA kernwaarde van dit Element",
             "type": "string",
             "facetable": true,
-            "title": "noraKernwaarde",
+            "title": "noraCoreValue",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "noraKwaliteitsdoel": {
+          "noraQualityGoal": {
             "description": "NORA kwaliteitsdoel van dit Element",
             "type": "string",
             "facetable": true,
-            "title": "noraKwaliteitsdoel",
+            "title": "noraQualityGoal",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4734,11 +4734,11 @@
               "searchable": false
             }
           },
-          "toelichting": {
+          "notes": {
             "description": "Toelichting van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "toelichting",
+            "title": "notes",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4778,11 +4778,11 @@
               "searchable": false
             }
           },
-          "typeVoorziening": {
+          "typeProvision": {
             "description": "Type voorziening van dit Element",
             "type": "string",
             "facetable": true,
-            "title": "typeVoorziening",
+            "title": "typeProvision",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4822,66 +4822,66 @@
               "searchable": false
             }
           },
-          "versieaanduiding": {
+          "versionDesignation": {
             "description": "Versieaanduiding van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "versieaanduiding",
+            "title": "versionDesignation",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "vertrouwelijkheid": {
+          "confidentiality": {
             "description": "Vertrouwelijkheid van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "vertrouwelijkheid",
+            "title": "confidentiality",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "vertrouwelijkheid(belangrijksteReden)": {
+          "confidentialityPrimaryReason": {
             "description": "Vertrouwelijkheid belangrijkste reden van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "vertrouwelijkheid(belangrijksteReden)",
+            "title": "confidentialityPrimaryReason",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "ggm-bron": {
+          "ggmSource": {
             "description": "GGM bron van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "ggm-bron",
+            "title": "ggmSource",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "ggm-datum-tijd-export": {
+          "ggmDateTimeExport": {
             "description": "GGM datum tijd export van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "ggm-datum-tijd-export",
+            "title": "ggmDateTimeExport",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "ggm-definitie": {
+          "ggmDefinition": {
             "description": "GGM definitie van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "ggm-definitie",
+            "title": "ggmDefinition",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4899,33 +4899,33 @@
               "searchable": false
             }
           },
-          "ggm-naam": {
+          "ggmName": {
             "description": "GGM naam van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "ggm-naam",
+            "title": "ggmName",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "ggm-specialisaties": {
+          "ggmSpecialisations": {
             "description": "GGM specialisaties van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "ggm-specialisaties",
+            "title": "ggmSpecialisations",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "ggm-toelichting": {
+          "ggmNotes": {
             "description": "GGM toelichting van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "ggm-toelichting",
+            "title": "ggmNotes",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4954,22 +4954,22 @@
               "searchable": false
             }
           },
-          "api-portaal": {
+          "apiPortal": {
             "description": "API portaal van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "api-portaal",
+            "title": "apiPortal",
             "table": {
               "enabled": true,
               "indexed": false,
               "searchable": false
             }
           },
-          "api-portaal(url)": {
+          "apiPortalUrl": {
             "description": "API portaal URL van dit Element",
             "type": "string",
             "facetable": false,
-            "title": "api-portaal(url)",
+            "title": "apiPortalUrl",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -4987,7 +4987,7 @@
               "searchable": false
             }
           },
-          "aanbevolenStandaarden": {
+          "recommendedStandards": {
             "description": "Array van aanbevolen standaarden voor dit referentiecomponent",
             "type": "array",
             "facetable": false,
@@ -5005,7 +5005,7 @@
               "searchable": false
             }
           },
-          "verplichteStandaarden": {
+          "mandatoryStandards": {
             "description": "Array van verplichte standaarden voor dit referentiecomponent",
             "type": "array",
             "facetable": false,
@@ -5023,7 +5023,7 @@
               "searchable": false
             }
           },
-          "standaarden": {
+          "standards": {
             "description": "Array van alle standaarden (aanbevolen + verplicht) - combined inversedBy lookup",
             "type": "array",
             "facetable": false,
@@ -5041,7 +5041,7 @@
               "searchable": false
             }
           },
-          "aanbevolenVoorReferentiecomponent": {
+          "recommendedForReferenceComponent": {
             "description": "UUID van het Referentiecomponent waarvoor deze standaard aanbevolen is",
             "type": "object",
             "facetable": false,
@@ -5057,7 +5057,7 @@
               "searchable": false
             }
           },
-          "verplichteVoorReferentiecomponent": {
+          "mandatoryForReferenceComponent": {
             "description": "UUID van het Referentiecomponent waarvoor deze standaard verplicht is",
             "type": "object",
             "facetable": false,
@@ -5073,7 +5073,7 @@
               "searchable": false
             }
           },
-          "standaardVersies": {
+          "standardVersions": {
             "description": "Array van versies voor dit standaard element (inversedBy lookup)",
             "type": "array",
             "facetable": false,
@@ -5084,7 +5084,7 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "inversedBy": "standaard"
+              "inversedBy": "standard"
             },
             "table": {
               "enabled": true,
@@ -5092,7 +5092,7 @@
               "searchable": false
             }
           },
-          "standaard": {
+          "standard": {
             "description": "UUID van de Standaard waartoe deze standaardversie behoort",
             "type": "object",
             "facetable": false,
@@ -5108,7 +5108,7 @@
               "searchable": false
             }
           },
-          "gekoppeldeStandaardVersies": {
+          "linkedStandardVersions": {
             "description": "Array van standaardversies gekoppeld aan dit referentiecomponent (via standaarden)",
             "type": "array",
             "facetable": false,
@@ -5268,7 +5268,7 @@
             "facetable": false,
             "title": "name"
           },
-          "name-lang": {
+          "nameLong": {
             "description": "De name-language van deze View",
             "type": "string",
             "minLength": null,
@@ -5291,7 +5291,7 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "title": "name-lang"
+            "title": "nameLong"
           },
           "documentation": {
             "description": "De documentation van deze View",
@@ -5318,7 +5318,7 @@
             "oneOf": [],
             "title": "documentation"
           },
-          "documentation-lang": {
+          "documentationLong": {
             "description": "De documentation-language van deze View",
             "type": "string",
             "minLength": 2,
@@ -5341,7 +5341,7 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "title": "documentation-lang"
+            "title": "documentationLong"
           },
           "properties": {
             "description": "De properties van deze View",
@@ -5553,10 +5553,10 @@
           "schemaLocation",
           "identifier",
           "name",
-          "name-lang",
+          "nameLong",
           "version",
           "documentation",
-          "documentation-lang",
+          "documentationLong",
           "properties",
           "elements",
           "relationships",
@@ -5690,7 +5690,7 @@
             "oneOf": [],
             "title": "name"
           },
-          "name-lang": {
+          "nameLong": {
             "description": "De name-language van dit GEMMA Model",
             "type": "string",
             "minLength": 2,
@@ -5713,7 +5713,7 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "title": "name-lang"
+            "title": "nameLong"
           },
           "version": {
             "description": "De version van dit GEMMA Model",
@@ -5765,7 +5765,7 @@
             "oneOf": [],
             "title": "documentation"
           },
-          "documentation-lang": {
+          "documentationLong": {
             "description": "De documentation-language van dit GEMMA Model",
             "type": "string",
             "minLength": 2,
@@ -5788,7 +5788,7 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "title": "documentation-lang"
+            "title": "documentationLong"
           },
           "properties": {
             "description": "De properties van dit GEMMA Model",
@@ -6246,7 +6246,7 @@
               "searchable": false
             }
           },
-          "name-lang": {
+          "nameLong": {
             "description": "De name-language van deze Property Definition",
             "type": "string",
             "minLength": 2,
@@ -6269,7 +6269,7 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "title": "name-lang",
+            "title": "nameLong",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -6529,7 +6529,7 @@
               "searchable": false
             }
           },
-          "name-lang": {
+          "nameLong": {
             "description": "De name-language van deze Relation",
             "type": "string",
             "minLength": 2,
@@ -6552,7 +6552,7 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "title": "name-lang",
+            "title": "nameLong",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -6589,7 +6589,7 @@
               "searchable": false
             }
           },
-          "documentation-lang": {
+          "documentationLong": {
             "description": "De documentation-lang van deze Relation",
             "type": "string",
             "minLength": 2,
@@ -6612,7 +6612,7 @@
               "maxSize": 0
             },
             "oneOf": [],
-            "title": "documentation-lang",
+            "title": "documentationLong",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -6730,11 +6730,11 @@
               "searchable": false
             }
           },
-          "toelichting": {
+          "notes": {
             "description": "Toelichting van deze Relation",
             "type": "string",
             "facetable": false,
-            "title": "toelichting",
+            "title": "notes",
             "table": {
               "enabled": true,
               "indexed": false,
@@ -6796,7 +6796,7 @@
         "x-schema-org": "schema:SoftwareApplication",
         "x-openregister-notifications": {
           "dpia-review-overdue": {
-            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"dpiaStatus": {"operator": "equals", "value": "executed"}, "dpiaVolgendeBeoordeling": {"operator": "withinNext", "value": "P0D"}}},
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"dpiaStatus": {"operator": "equals", "value": "executed"}, "dpiaNextAssessment": {"operator": "withinNext", "value": "P0D"}}},
             "enabled": true,
             "channels": ["nc-notification", "email"],
             "recipients": [
@@ -6815,10 +6815,10 @@
         "summary": "",
         "icon": "Package",
         "required": [
-          "naam"
+          "name"
         ],
         "properties": {
-          "naam": {
+          "name": {
             "type": "string",
             "description": "Naam van uw applicatie",
             "title": "Name",
@@ -6904,7 +6904,7 @@
               "SaaS"
             ]
           },
-          "hostingJurisdictie": {
+          "hostingJurisdiction": {
             "description": "Kies de wetgeving die geldt voor de opgeslagen gegevens.",
             "type": "string",
             "visible": true,
@@ -6919,7 +6919,7 @@
             "title": "Jurisdiction",
             "example": "Bijvoorbeeld: NL"
           },
-          "hostingLocatie": {
+          "hostingLocation": {
             "description": "Kies het land of continent waar de applicatie wordt gehost.",
             "type": "string",
             "visible": true,
@@ -6934,7 +6934,7 @@
             "title": "Hosting location",
             "example": "Bijvoorbeeld: NL"
           },
-          "aanbieder": {
+          "provider": {
             "referenceSemanticType": "https://openregister.app/ns#Vendor",
             "description": "De aanbieder van de applicatie",
             "type": "object",
@@ -6978,7 +6978,7 @@
             "facetable": true,
             "title": "License type"
           },
-          "licentie": {
+          "licence": {
             "description": "Selecteer één van de veel gebruikte open source licenties.",
             "type": "string",
             "visible": true,
@@ -7003,10 +7003,10 @@
               "BSD Licentie (Berkeley Software Distribution)",
               "European Union Public Licence (EUPL), versie 1.2"
             ],
-            "licentie": "License",
+            "licence": "License",
             "title": "License"
           },
-          "referentieComponenten": {
+          "referenceComponents": {
             "description": "GEMMA referentiecomponenten die de applicatie implementeert",
             "type": "array",
             "visible": true,
@@ -7117,7 +7117,7 @@
               "inversedBy": "module"
             }
           },
-          "standaarden": {
+          "standards": {
             "description": "Een array van amef id's van standaarden die deze applicatie implementeert",
             "type": "array",
             "visible": false,
@@ -7129,7 +7129,7 @@
               "type": "string"
             }
           },
-          "standaardenGemma": {
+          "standardsGemma": {
             "description": "Een array van gemma id's van standaarden die deze applicatie implementeert",
             "type": "array",
             "visible": false,
@@ -7141,7 +7141,7 @@
               "type": "string"
             }
           },
-          "standaardVersies": {
+          "standardVersions": {
             "description": "De standaardversies die deze applicatie implementeert",
             "type": "array",
             "visible": true,
@@ -7161,7 +7161,7 @@
               "$ref": "#/components/schemas/element"
             }
           },
-          "moduleVersies": {
+          "moduleVersions": {
             "description": "De versies van deze applicatie",
             "type": "array",
             "visible": true,
@@ -7198,7 +7198,7 @@
               "$ref": "#/components/schemas/gebruik"
             }
           },
-          "geregistreerdDoor": {
+          "registeredBy": {
             "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 30,
@@ -7213,7 +7213,7 @@
               "Leverancier"
             ]
           },
-          "publicatiedatum": {
+          "publicationDate": {
             "description": "Publication date as open data. Anonymous (public) readers can see this module once publicatiedatum is set and not in the future. Set by the open-data publish action; cleared by depublish.",
             "type": "string",
             "format": "date-time",
@@ -7222,7 +7222,7 @@
             "facetable": false,
             "title": "Publication date"
           },
-          "depublicatiedatum": {
+          "depublicationDate": {
             "description": "Depublication date. When set (and not in the future) the module is withdrawn from the open-data surface. Set by the depublish action.",
             "type": "string",
             "format": "date-time",
@@ -7283,7 +7283,7 @@
             "title": "DPIA date",
             "example": "Bijvoorbeeld: 2026-03-01"
           },
-          "dpiaVolgendeBeoordeling": {
+          "dpiaNextAssessment": {
             "description": "De datum waarop de DPIA opnieuw beoordeeld moet worden.",
             "type": "string",
             "format": "date",
@@ -7326,7 +7326,7 @@
             {
               "group": "public",
               "match": {
-                "publicatiedatum": {
+                "publicationDate": {
                   "$lte": "$now"
                 }
               }
@@ -7340,13 +7340,13 @@
             {
               "group": "public",
               "match": {
-                "geregistreerdDoor": "Leverancier"
+                "registeredBy": "Leverancier"
               }
             }
           ]
         },
         "configuration": {
-          "objectNameField": "naam",
+          "objectNameField": "name",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang",
           "objectImageField": "logo",
@@ -7364,17 +7364,17 @@
             "blockingKeys": [],
             "matchRules": [
               {
-                "field": "naam",
+                "field": "name",
                 "method": "normalized",
                 "weight": 0.4
               },
               {
-                "field": "naam",
+                "field": "name",
                 "method": "levenshtein",
                 "weight": 0.2
               },
               {
-                "field": "aanbieder",
+                "field": "provider",
                 "method": "exact",
                 "weight": 0.3
               },
@@ -7392,17 +7392,17 @@
             "rules": [
               {
                 "type": "required",
-                "field": "naam",
+                "field": "name",
                 "weight": 2
               },
               {
                 "type": "required",
-                "field": "aanbieder",
+                "field": "provider",
                 "weight": 2
               },
               {
                 "type": "required",
-                "field": "licentie",
+                "field": "licence",
                 "weight": 1
               },
               {
@@ -7428,7 +7428,7 @@
         "icon": "CheckCircle",
         "required": [],
         "properties": {
-          "standaardversie": {
+          "standardVersion": {
             "description": "Standaardversie die door deze compliance wordt ondersteund",
             "type": "object",
             "order": 1,
@@ -7441,7 +7441,7 @@
             },
             "$ref": "#/components/schemas/element"
           },
-          "standaardGemma": {
+          "standardGemma": {
             "description": "Het gemma id van de standaardversie die door deze compliance wordt ondersteund",
             "type": "string",
             "order": 1,
@@ -7474,7 +7474,7 @@
             "$ref": "#/components/schemas/module",
             "inversedBy": "compliancy"
           },
-          "bewijs": {
+          "evidence": {
             "description": "Bewijsstuk voor de compliance (bijvoorbeeld testrapport of certificaat)",
             "type": "file",
             "format": "base64",
@@ -7502,8 +7502,8 @@
             "visible": true,
             "facetable": false
           },
-          "bewijsReferentie": {
-            "description": "Nextcloud Files-verwijzing naar het bewijsstuk (link, niet opslaan). De voorkeursmanier om nieuw bewijs te koppelen; het legacy base64-veld 'bewijs' blijft leesbaar voor bestaande records.",
+          "evidenceReference": {
+            "description": "Nextcloud Files-verwijzing naar het bewijsstuk (link, niet opslaan). De voorkeursmanier om nieuw bewijs te koppelen; het legacy base64-veld 'evidence' blijft leesbaar voor bestaande records.",
             "type": "string",
             "order": 6,
             "title": "Evidence (Nextcloud Files)",
@@ -7528,7 +7528,7 @@
         },
         "configuration": {
           "objectNameField": "module",
-          "objectSummaryField": "standaardversie",
+          "objectSummaryField": "standardVersion",
           "objectDescriptionField": "url",
           "allowFiles": true,
           "allowedTags": [
@@ -7547,7 +7547,7 @@
         "icon": "ShieldLockOutline",
         "required": [
           "code",
-          "naam"
+          "name"
         ],
         "properties": {
           "code": {
@@ -7563,7 +7563,7 @@
             },
             "example": "Bijvoorbeeld: 5.1.1"
           },
-          "naam": {
+          "name": {
             "description": "De naam van de BIO-maatregel",
             "type": "string",
             "order": 2,
@@ -7598,7 +7598,7 @@
             "maxLength": 200,
             "example": "Bijvoorbeeld: Toegangsbeveiliging"
           },
-          "bioVersie": {
+          "bioVersion": {
             "description": "De BIO-versie waarin deze maatregel is gepubliceerd",
             "type": "string",
             "order": 5,
@@ -7657,7 +7657,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "naam",
+          "objectNameField": "name",
           "objectSummaryField": "thema",
           "objectDescriptionField": "omschrijving",
           "autoPublish": true
@@ -7681,7 +7681,7 @@
             }
           },
           "eol-approaching": {
-            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"datumEindeOndersteuning": {"operator": "withinNext", "value": "P180D"}}},
+            "trigger": {"type": "scheduled", "intervalSec": 86400, "filter": {"dateEndSupport": {"operator": "withinNext", "value": "P180D"}}},
             "enabled": true,
             "channels": ["nc-notification", "email"],
             "recipients": [
@@ -7713,7 +7713,7 @@
             "$ref": "#/components/schemas/module",
             "inversedBy": "moduleVersie"
           },
-          "versie": {
+          "version": {
             "description": "Voer de versie van uw applicatie in; dit kan een nummer, tekst of combinatie daarvan zijn.",
             "type": "string",
             "order": 2,
@@ -7753,28 +7753,28 @@
             ],
             "default": "in gebruik"
           },
-          "datumInOntwikkeling": {
+          "dateInDevelopment": {
             "description": "Startdatum van de ontwikkelingsfase",
             "type": "string",
             "format": "date",
             "order": 14,
             "title": "Date in development"
           },
-          "datumInGebruik": {
+          "dateInUse": {
             "description": "Startdatum van gebruik",
             "type": "string",
             "format": "date",
             "order": 15,
             "title": "Date in use"
           },
-          "datumEindeOndersteuning": {
+          "dateEndSupport": {
             "description": "Startdatum einde ondersteuning",
             "type": "string",
             "format": "date",
             "order": 16,
             "title": "End of support date"
           },
-          "datumTeruggetrokken": {
+          "dateWithdrawn": {
             "description": "Datum waarop de applicatie teruggetrokken is",
             "type": "string",
             "format": "date",
@@ -7798,7 +7798,7 @@
               "$ref": "#/components/schemas/gebruik"
             }
           },
-          "geregistreerdDoor": {
+          "registeredBy": {
             "description": "Technische property die wordt gebruikt voor RBAC-doeleinden (toegangsbeheer op basis van partijtype)",
             "type": "string",
             "order": 19,
@@ -7813,7 +7813,7 @@
               "Leverancier"
             ]
           },
-          "eolBron": {
+          "eolSource": {
             "description": "Herkomst van de gestempelde einde-ondersteuning-datum (bijv. \"endoflife.date\"). Alleen gezet door de EOL-matcher; afwezig bij een handmatig ingevoerde datumEindeOndersteuning.",
             "type": "string",
             "order": 20,
@@ -7821,7 +7821,7 @@
             "title": "EOL source",
             "example": "endoflife.date"
           },
-          "eolBijgewerktOp": {
+          "eolUpdatedOn": {
             "description": "Tijdstip waarop de EOL-matcher deze versie voor het laatst heeft bijgewerkt vanuit de bron. Alleen gezet door de EOL-matcher; afwezig bij een handmatig ingevoerde datumEindeOndersteuning.",
             "type": "string",
             "format": "date-time",
@@ -7897,7 +7897,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "versie",
+          "objectNameField": "version",
           "objectSummaryField": "beschrijvingKort",
           "objectDescriptionField": "beschrijvingLang",
           "autoPublish": true,
@@ -8081,23 +8081,23 @@
           "slug": "gebruik-topdesk-gem-leiden-deelnemers",
           "version": "0.0.1"
         },
-        "naam": "Topdesk bij Servicecenter Rijnland (SSC)",
+        "name": "Topdesk bij Servicecenter Rijnland (SSC)",
         "status": "in-gebruik",
         "elementRef": "topdesk-ssc-rijnland",
-        "afnemer": {
-          "naam": "Servicecenter Rijnland",
+        "consumer": {
+          "name": "Servicecenter Rijnland",
           "oin": "00000001001234567890",
           "slug": "servicecenter-rijnland"
         },
         "module": "topdesk-itsm",
-        "deelnemers": [
+        "participants": [
           {
-            "naam": "Gemeente Leiden",
+            "name": "Gemeente Leiden",
             "oin": "00000001001234567891",
             "slug": "gemeente-leiden"
           },
           {
-            "naam": "Gemeente Leiderdorp",
+            "name": "Gemeente Leiderdorp",
             "oin": "00000001001234567892",
             "slug": "gemeente-leiderdorp"
           }
@@ -8110,18 +8110,18 @@
           "slug": "gebruik-key2-gem-leiden-deelnemer",
           "version": "0.0.1"
         },
-        "naam": "KEY2 Burgerzaken gedeeld via GBLT",
+        "name": "KEY2 Burgerzaken gedeeld via GBLT",
         "status": "in-gebruik",
         "elementRef": "key2-burgerzaken-gblt",
-        "afnemer": {
-          "naam": "Gemeentebelastingen Coevorden Hardenberg (GBLT)",
+        "consumer": {
+          "name": "Gemeentebelastingen Coevorden Hardenberg (GBLT)",
           "oin": "00000001001234567893",
           "slug": "gblt"
         },
         "module": "key2-burgerzaken",
-        "deelnemers": [
+        "participants": [
           {
-            "naam": "Gemeente Leiden",
+            "name": "Gemeente Leiden",
             "oin": "00000001001234567891",
             "slug": "gemeente-leiden"
           }
@@ -8134,16 +8134,16 @@
           "slug": "gebruik-suite4-gem-delft-eigenaar",
           "version": "0.0.1"
         },
-        "naam": "Suite4 Schuldhulpverlening - eigenaar Gemeente Delft",
+        "name": "Suite4 Schuldhulpverlening - eigenaar Gemeente Delft",
         "status": "in-gebruik",
         "elementRef": "suite4-schuldhulp-delft",
-        "afnemer": {
-          "naam": "Gemeente Delft",
+        "consumer": {
+          "name": "Gemeente Delft",
           "oin": "00000001001234567894",
           "slug": "gemeente-delft"
         },
         "module": "suite4-schuldhulpverlening",
-        "deelnemers": []
+        "participants": []
       }
     ]
   }
