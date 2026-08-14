@@ -410,7 +410,9 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		const versie = `v${token}`
 		const createRes = await apiCtx.post(
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.moduleVersie_schema}`,
-			{ data: { versie, status: 'In gebruik' } },
+			// `version:` explicitly, not shorthand: the local is named `versie` and a
+			// shorthand key would send the old name, which MagicMapper silently drops.
+			{ data: { version: versie, status: 'In gebruik' } },
 		)
 		expect(createRes.ok()).toBeTruthy()
 		const id = (await createRes.json())?.id

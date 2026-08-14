@@ -50,8 +50,13 @@ import {
 const FACETS = '/index.php/apps/softwarecatalog/api/facets'
 /** The four GEMMA dimensions the endpoint must always describe. */
 const DIMENSIONS = [
+	// Wire names: FacetController and FacetService declare these four, and they
+	// are the query parameters and response keys of the endpoint. They move as a
+	// set or not at all — translating only `standaard` made the frontend ask for
+	// `standard[]` from a backend that reads `standaard[]`, and filtering silently
+	// returned everything.
 	'referentiecomponent',
-	'standard',
+	'standaard',
 	'applicatieservice',
 	'domein',
 ] as const
