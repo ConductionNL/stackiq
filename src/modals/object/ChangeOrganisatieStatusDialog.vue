@@ -141,7 +141,7 @@ export default {
 		getOrganisatieName() {
 			const organisatie = objectStore.getActiveObject('organisatie')
 			return (
-				organisatie?.naam
+				organisatie?.name
 				|| organisatie?.name
 				|| organisatie?.['@self']?.name
 				|| this.t('softwarecatalog', 'Unknown organisation')
@@ -207,7 +207,7 @@ export default {
 				// If activating an organisation, store it for search filtering.
 				if (newStatus === 'Actief') {
 					const organisatieNaam =
-						organisatie?.naam
+						organisatie?.name
 						|| organisatie?.name
 						|| organisatie?.['@self']?.name
 

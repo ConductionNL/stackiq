@@ -158,9 +158,9 @@ class EolSyncService {
 
 		$moduleRegisterId = $this->settingsService->getRegisterIdForObjectType('module');
 		$moduleSchemaId = $this->settingsService->getSchemaIdForObjectType('module');
-		$moduleVersieSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
+		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
 
-		if ($moduleRegisterId === null || $moduleSchemaId === null || $moduleVersieSchemaId === null) {
+		if ($moduleRegisterId === null || $moduleSchemaId === null || $versionSchemaId === null) {
 			return $this->degrade(reason: 'module-schema-not-configured');
 		}
 
@@ -192,15 +192,15 @@ class EolSyncService {
 				productSlug: $slug
 			);
 
-			$moduleVersies = $this->fetchModuleVersions(
+			$moduleVersions = $this->fetchModuleVersions(
 				objectService: $objectService,
 				moduleRegisterId: $moduleRegisterId,
-				moduleVersieSchemaId: $moduleVersieSchemaId,
+				versionSchemaId: $versionSchemaId,
 				moduleUuid: $moduleUuid
 			);
 
 			$result = $this->matcher->matchModuleVersions(
-				moduleVersies: $moduleVersies,
+				moduleVersions: $moduleVersions,
 				cycles: $cycles,
 				source: self::SOURCE,
 				fetchedAt: $fetchedAt
@@ -210,7 +210,7 @@ class EolSyncService {
 				$this->saveStampedVersion(
 					objectService: $objectService,
 					moduleRegisterId: $moduleRegisterId,
-					moduleVersieSchemaId: $moduleVersieSchemaId,
+					versionSchemaId: $versionSchemaId,
 					stampedVersion: $stampedVersion
 				);
 				$totalStamped++;
@@ -354,7 +354,7 @@ class EolSyncService {
 	 *
 	 * @param ObjectService $objectService The OpenRegister object service.
 	 * @param int $moduleRegisterId The (softwarecatalog) module register id.
-	 * @param int $moduleVersieSchemaId The moduleVersie schema id.
+	 * @param int $versionSchemaId The moduleVersie schema id.
 	 * @param string $moduleUuid The owning module's uuid.
 	 *
 	 * @return array The module's `moduleVersie` rows (normalised arrays).
@@ -362,12 +362,12 @@ class EolSyncService {
 	private function fetchModuleVersions(
 		ObjectService $objectService,
 		int $moduleRegisterId,
-		int $moduleVersieSchemaId,
+		int $versionSchemaId,
 		string $moduleUuid,
 	): array {
 		$query = [
 			'@self' => [
-				'schema' => $moduleVersieSchemaId,
+				'schema' => $versionSchemaId,
 				'register' => $moduleRegisterId,
 			],
 			'module' => $moduleUuid,
@@ -399,7 +399,7 @@ class EolSyncService {
 	 *
 	 * @param ObjectService $objectService The OpenRegister object service.
 	 * @param int $moduleRegisterId The module register id.
-	 * @param int $moduleVersieSchemaId The moduleVersie schema id.
+	 * @param int $versionSchemaId The moduleVersie schema id.
 	 * @param array $stampedVersion The complete stamped `moduleVersie` object.
 	 *
 	 * @return void
@@ -409,7 +409,7 @@ class EolSyncService {
 	private function saveStampedVersion(
 		ObjectService $objectService,
 		int $moduleRegisterId,
-		int $moduleVersieSchemaId,
+		int $versionSchemaId,
 		array $stampedVersion,
 	): void {
 		$uuid = (string)($stampedVersion['id'] ?? '');
@@ -422,7 +422,7 @@ class EolSyncService {
 			$objectService->saveObject(
 				object: $stampedVersion,
 				register: $moduleRegisterId,
-				schema: $moduleVersieSchemaId,
+				schema: $versionSchemaId,
 				uuid: $uuid,
 				_rbac: false,
 				_multitenancy: false

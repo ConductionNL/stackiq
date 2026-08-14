@@ -306,7 +306,7 @@ class ViewServiceTest extends TestCase {
 	public function testProcessGebruikItemsSetsRegularType(): void {
 		$allGebruik = [];
 		$items = [
-			['elementRef' => 'ref-1', 'naam' => 'App A'],
+			['elementRef' => 'ref-1', 'name' => 'App A'],
 		];
 
 		$this->callPrivateMethod(
@@ -329,10 +329,10 @@ class ViewServiceTest extends TestCase {
 		$items = [
 			[
 				'elementRef' => 'ref-2',
-				'naam' => 'Shared App',
-				'afnemer' => [
+				'name' => 'Shared App',
+				'consumer' => [
 					'id' => 'org-uuid-b',
-					'naam' => 'Gemeente B',
+					'name' => 'Gemeente B',
 				],
 			],
 		];
@@ -381,7 +381,7 @@ class ViewServiceTest extends TestCase {
 	public function testProcessGebruikItemsSkipsItemsWithoutElementRef(): void {
 		$allGebruik = [];
 		$items = [
-			['naam' => 'No Ref Item'],
+			['name' => 'No Ref Item'],
 		];
 
 		$this->callPrivateMethod(
@@ -403,7 +403,7 @@ class ViewServiceTest extends TestCase {
 	 */
 	public function testGetNodeGebruikReturnsItemsForMatchingElementRef(): void {
 		$gebruikData = [
-			'ref-1' => [['naam' => 'App A', '_type' => 'regular']],
+			'ref-1' => [['name' => 'App A', '_type' => 'regular']],
 		];
 
 		$result = $this->callPrivateMethod(
@@ -412,7 +412,7 @@ class ViewServiceTest extends TestCase {
 		);
 
 		$this->assertCount(expectedCount: 1, haystack: $result);
-		$this->assertSame(expected: 'App A', actual: $result[0]['naam']);
+		$this->assertSame(expected: 'App A', actual: $result[0]['name']);
 	}//end testGetNodeGebruikReturnsItemsForMatchingElementRef()
 
 	/**
@@ -438,7 +438,7 @@ class ViewServiceTest extends TestCase {
 		$deelnamesData = [
 			'ref-2' => [
 				[
-					'naam' => 'Shared App',
+					'name' => 'Shared App',
 					'_type' => 'deelnames',
 					'_sourceOrganization' => 'Gemeente B',
 					'_sourceOrganizationId' => 'org-uuid-b',
@@ -465,15 +465,15 @@ class ViewServiceTest extends TestCase {
 	 */
 	public function testDeduplicationRemovesDeelnamesWhenOwnedExists(): void {
 		$gebruikData = [
-			'ref-owned' => [['_type' => 'regular', 'naam' => 'Topdesk']],
-			'ref-owned2' => [['_type' => 'regular', 'naam' => 'ServiceNow']],
+			'ref-owned' => [['_type' => 'regular', 'name' => 'Topdesk']],
+			'ref-owned2' => [['_type' => 'regular', 'name' => 'ServiceNow']],
 		];
 
 		$deelnamesData = [
 			// Same ref as owned — should be deduplicated.
-			'ref-owned' => [['_type' => 'deelnames', 'naam' => 'Topdesk']],
+			'ref-owned' => [['_type' => 'deelnames', 'name' => 'Topdesk']],
 			// Unique to deelnames — should survive.
-			'ref-deelnames' => [['_type' => 'deelnames', 'naam' => 'OtherApp']],
+			'ref-deelnames' => [['_type' => 'deelnames', 'name' => 'OtherApp']],
 		];
 
 		$deduplicated = array_diff_key($deelnamesData, $gebruikData);
@@ -540,8 +540,8 @@ class ViewServiceTest extends TestCase {
 		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
 		$objectService->method('searchObjects')->willReturn(
 			[
-				['elementRef' => 'node-1', 'naam' => 'Zaaksysteem'],
-				['identifier' => 'node-2', 'naam' => 'Formulieren'],
+				['elementRef' => 'node-1', 'name' => 'Zaaksysteem'],
+				['identifier' => 'node-2', 'name' => 'Formulieren'],
 			]
 		);
 		$this->container->method('get')->willReturn($objectService);
@@ -549,9 +549,9 @@ class ViewServiceTest extends TestCase {
 		$result = $this->callPrivateMethod(methodName: 'getProductsData');
 
 		$this->assertArrayHasKey('node-1', $result);
-		$this->assertSame('Zaaksysteem', $result['node-1']['naam']);
+		$this->assertSame('Zaaksysteem', $result['node-1']['name']);
 		$this->assertArrayHasKey('node-2', $result);
-		$this->assertSame('Formulieren', $result['node-2']['naam']);
+		$this->assertSame('Formulieren', $result['node-2']['name']);
 	}//end testGetProductsDataReturnsOrganisationScopedProducts()
 
 	/**
@@ -562,8 +562,8 @@ class ViewServiceTest extends TestCase {
 	 */
 	public function testGetNodeProductsMatchesLinkedProductAndExcludesOthers(): void {
 		$productsData = [
-			'node-1' => ['naam' => 'Zaaksysteem'],
-			'node-2' => ['naam' => 'Formulieren'],
+			'node-1' => ['name' => 'Zaaksysteem'],
+			'node-2' => ['name' => 'Formulieren'],
 		];
 
 		$matched = $this->callPrivateMethod(
@@ -572,7 +572,7 @@ class ViewServiceTest extends TestCase {
 		);
 
 		$this->assertCount(1, $matched);
-		$this->assertSame('Zaaksysteem', $matched[0]['naam']);
+		$this->assertSame('Zaaksysteem', $matched[0]['name']);
 	}//end testGetNodeProductsMatchesLinkedProductAndExcludesOthers()
 
 	/**
@@ -584,7 +584,7 @@ class ViewServiceTest extends TestCase {
 	 */
 	public function testGetNodeProductsReturnsEmptyWhenNoProductLinkedToNode(): void {
 		$productsData = [
-			'node-1' => ['naam' => 'Zaaksysteem'],
+			'node-1' => ['name' => 'Zaaksysteem'],
 		];
 
 		$matched = $this->callPrivateMethod(

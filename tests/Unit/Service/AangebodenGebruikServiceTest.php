@@ -177,7 +177,7 @@ class AangebodenGebruikServiceTest extends TestCase {
 		$result = $this->service->getGebruiksWhereAfnemer();
 
 		$this->assertIsArray($capturedQuery);
-		$this->assertSame('org-a', $capturedQuery['afnemer']);
+		$this->assertSame('org-a', $capturedQuery['consumer']);
 		$this->assertSame(0, $result['total']);
 
 	}//end testGetGebruiksWhereAfnemerScopesQueryToCurrentOrg()
@@ -311,7 +311,7 @@ class AangebodenGebruikServiceTest extends TestCase {
 		$result = $this->service->getGebruiksWhereDeelnemers();
 
 		$this->assertIsArray($capturedQuery);
-		$this->assertSame('org-a', $capturedQuery['deelnemers']);
+		$this->assertSame('org-a', $capturedQuery['participants']);
 		$this->assertSame(0, $result['count']);
 
 	}//end testGetGebruiksWhereDeelnemersScopesQueryToCurrentOrg()

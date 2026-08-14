@@ -36,6 +36,7 @@ use OCA\SoftwareCatalog\Service\ReviewService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
@@ -125,6 +126,12 @@ class ReviewController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// A read of already-published aggregate review scores — no credential, and
+	// the data is public by design, so a volume ceiling only. Much looser than
+	// IntakeController's 5/3600: that one accepts a SUBMISSION, this one
+	// answers a page render, and a catalogue page listing many subjects will
+	// legitimately call it repeatedly.
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function aggregate(string $subjectType = '', string $subjectId = ''): JSONResponse {
 		$result = $this->aggregate->getAggregate(subjectType: $subjectType, subjectId: $subjectId);
 		if ($result['ok'] === false) {

@@ -99,7 +99,7 @@ class ContactpersoonService {
 	 * If the contactpersoon object doesn't have a user or the user is missing,
 	 * this method will create a user account with appropriate status.
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object to process.
+	 * @param object $contactPersonObject The contactpersoon object to process.
 	 * @param bool $isUpdate Whether this is an update operation.
 	 *
 	 * @return bool True if processing was successful.
@@ -110,12 +110,12 @@ class ContactpersoonService {
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	public function processContactpersoon(object $contactpersoonObject, bool $isUpdate = false): bool {
+	public function processContactpersoon(object $contactPersonObject, bool $isUpdate = false): bool {
 		$startTime = microtime(true);
-		$contactId = $contactpersoonObject->getId();
+		$contactId = $contactPersonObject->getId();
 
 		try {
-			$contactData = $contactpersoonObject->getObject();
+			$contactData = $contactPersonObject->getObject();
 
 			// Recursion guard: saveObject triggers ObjectUpdatedEvent which re-enters here.
 			if (isset(self::$processingContacts[$contactId]) === true) {
@@ -140,7 +140,7 @@ class ContactpersoonService {
 			// Check if contactpersoon has required data.
 			// Schema uses 'e-mailadres' but some data may use 'email'.
 			$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-			if ($this->isContactpersoonEmailUsable(email: $email, contactId: (string)$contactId) === false) {
+			if ($this->isContactPersonEmailUsable(email: $email, contactId: (string)$contactId) === false) {
 				return false;
 			}
 
@@ -221,7 +221,7 @@ class ContactpersoonService {
 						if ($organisationEntity !== null && $organisationEntity->getActive() === true) {
 							// Determine if this is the first contact for the organization.
 							$isFirstContact = $this->contactPersonHandler->isFirstContactForOrganization(
-								contactObject: $contactpersoonObject,
+								contactObject: $contactPersonObject,
 								objectData: $contactData
 							);
 
@@ -237,7 +237,7 @@ class ContactpersoonService {
 							);
 
 							$success = $this->contactPersonHandler->createUserAccount(
-								contactpersoonObject: $contactpersoonObject,
+								contactPersonObject: $contactPersonObject,
 								isFirstContact: $isFirstContact
 							);
 							if ($success === false) {
@@ -246,14 +246,14 @@ class ContactpersoonService {
 
 							// Link user to organization entity.
 							$this->contactPersonHandler->addUserToOrganizationEntity(
-								contactpersoonObject: $contactpersoonObject,
+								contactPersonObject: $contactPersonObject,
 								username: $username,
 								organizationUuidOverride: $organizationUuid
 							);
 
 							// Update contactpersoon object owner to user UID.
-							$this->updateContactpersoonObjectOwner(
-								contactObject: $contactpersoonObject,
+							$this->updateContactPersonObjectOwner(
+								contactObject: $contactPersonObject,
 								userUID: $username
 							);
 
@@ -314,20 +314,20 @@ class ContactpersoonService {
 
 			// Update user groups based on contactpersoon data.
 			$this->updateUserGroups(
-				contactpersoonObject: $contactpersoonObject,
+				contactPersonObject: $contactPersonObject,
 				username: $username
 			);
 
 			// Ensure organization has at least one beheerder.
 			$this->ensureOrganizationBeheerder(
-				contactpersoonObject: $contactpersoonObject,
+				contactPersonObject: $contactPersonObject,
 				username: $username
 			);
 
 			// Update the contactpersoon object with username if not set.
 			if (empty($contactData['username']) === true) {
-				$this->updateContactpersoonUsername(
-					contactpersoonObject: $contactpersoonObject,
+				$this->updateContactPersonUsername(
+					contactPersonObject: $contactPersonObject,
 					username: $username
 				);
 			}
@@ -351,7 +351,7 @@ class ContactpersoonService {
 					'file' => $e->getFile(),
 					'line' => $e->getLine(),
 					'trace' => $e->getTraceAsString(),
-					'objectId' => ($contactpersoonObject->getId() ?? 'unknown'),
+					'objectId' => ($contactPersonObject->getId() ?? 'unknown'),
 					'processingTime' => round(((microtime(true) - $startTime) * 1000), 2) . 'ms',
 				]
 			);
@@ -365,13 +365,13 @@ class ContactpersoonService {
 	/**
 	 * Updates user groups based on contactpersoon data
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 * @param string $username The username to update groups for
 	 *
 	 * @return void
 	 * @spec   openspec/specs/contactpersoon-sync/spec.md
 	 */
-	public function updateUserGroups(object $contactpersoonObject, string $username): void {
+	public function updateUserGroups(object $contactPersonObject, string $username): void {
 		// Use the new organization type-based logic instead of old role-based logic.
 		$userManager = $this->container->get('OCP\IUserManager');
 		$user = $userManager->get($username);
@@ -380,7 +380,7 @@ class ContactpersoonService {
 			return;
 		}
 
-		$contactData = $contactpersoonObject->getObject();
+		$contactData = $contactPersonObject->getObject();
 		$this->contactPersonHandler->updateUserGroupsFromContactData(
 			user: $user,
 			contactData: $contactData
@@ -391,15 +391,15 @@ class ContactpersoonService {
 	/**
 	 * Ensures organization has at least one beheerder and manages user hierarchy
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 * @param string $username The username being processed
 	 *
 	 * @return void
 	 * @spec   openspec/specs/contactpersoon-sync/spec.md
 	 */
-	public function ensureOrganizationBeheerder(object $contactpersoonObject, string $username): void {
+	public function ensureOrganizationBeheerder(object $contactPersonObject, string $username): void {
 		$this->hierarchyHandler->ensureOrganizationBeheerder(
-			contactgegevensObject: $contactpersoonObject,
+			contactgegevensObject: $contactPersonObject,
 			username: $username
 		);
 
@@ -430,7 +430,7 @@ class ContactpersoonService {
 			'voornaam',
 			'tussenvoegsel',
 			'achternaam',
-			'functie',
+			'role',
 			'telefoonnummer',
 			'username',
 		];
@@ -447,28 +447,28 @@ class ContactpersoonService {
 	/**
 	 * Updates contactpersoon object with username.
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object.
+	 * @param object $contactPersonObject The contactpersoon object.
 	 * @param string $username The username to set.
 	 *
 	 * @return void
 	 */
-	private function updateContactpersoonUsername(object $contactpersoonObject, string $username): void {
+	private function updateContactPersonUsername(object $contactPersonObject, string $username): void {
 		try {
-			$contactData = $contactpersoonObject->getObject();
+			$contactData = $contactPersonObject->getObject();
 			$contactData['username'] = $username;
-			$contactpersoonObject->setObject($contactData);
+			$contactPersonObject->setObject($contactData);
 
 			// FIX #434: Use MagicMapper directly instead of ObjectService::saveObject().
 			// To avoid validation errors on the organisatie field (stored as UUID string but.
 			// Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
 			// That could interfere with the ongoing org activation process.
 			$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-			$objectMapper->update($contactpersoonObject);
+			$objectMapper->update($contactPersonObject);
 
 			$this->logger->info(
 				'ContactpersoonService: Updated contactpersoon with username',
 				[
-					'contactId' => $contactpersoonObject->getId(),
+					'contactId' => $contactPersonObject->getId(),
 					'username' => $username,
 				]
 			);
@@ -476,7 +476,7 @@ class ContactpersoonService {
 			$this->logger->error(
 				'ContactpersoonService: Failed to update contactpersoon username',
 				[
-					'contactId' => $contactpersoonObject->getId(),
+					'contactId' => $contactPersonObject->getId(),
 					'username' => $username,
 					'error' => $e->getMessage(),
 				]
@@ -488,44 +488,44 @@ class ContactpersoonService {
 	/**
 	 * Handles contactpersoon updates, particularly role changes
 	 *
-	 * @param object $contactpersoonObject The updated contactpersoon object
-	 * @param object|null $oldContactpersoonObject The previous contactpersoon object
+	 * @param object $contactPersonObject The updated contactpersoon object
+	 * @param object|null $oldContactPersonObject The previous contactpersoon object
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	public function handleContactpersoonUpdate(object $contactpersoonObject, ?object $oldContactpersoonObject = null): void {
+	public function handleContactpersoonUpdate(object $contactPersonObject, ?object $oldContactPersonObject = null): void {
 		try {
-			$contactData = $contactpersoonObject->getObject();
-			$contactId = $contactpersoonObject->getId();
+			$contactData = $contactPersonObject->getObject();
+			$contactId = $contactPersonObject->getId();
 
 			$this->logger->info(
 				'ContactpersoonService: Handling contactpersoon update',
 				[
 					'contactId' => $contactId,
-					'hasOldObject' => $oldContactpersoonObject !== null,
+					'hasOldObject' => $oldContactPersonObject !== null,
 				]
 			);
 
 			// Process the contactpersoon (this will handle user creation/updates).
 			$this->processContactpersoon(
-				contactpersoonObject: $contactpersoonObject,
+				contactPersonObject: $contactPersonObject,
 				isUpdate: true
 			);
 
 			// If we have old object, check for role changes.
-			if ($oldContactpersoonObject !== null) {
+			if ($oldContactPersonObject !== null) {
 				$this->handleRoleChanges(
-					newContactpersoonObject: $contactpersoonObject,
-					oldContactpersoonObject: $oldContactpersoonObject
+					newContactPersonObject: $contactPersonObject,
+					oldContactPersonObject: $oldContactPersonObject
 				);
 			}
 
 			// Sync name/functie fields back to the Nextcloud user when changed.
 			$this->syncNameFieldsToUser(
-				contactpersoonObject: $contactpersoonObject,
-				oldContactpersoonObject: $oldContactpersoonObject
+				contactPersonObject: $contactPersonObject,
+				oldContactPersonObject: $oldContactPersonObject
 			);
 
 			$this->logger->info(
@@ -536,7 +536,7 @@ class ContactpersoonService {
 			$this->logger->error(
 				'ContactpersoonService: Failed to handle contactpersoon update',
 				[
-					'contactId' => $contactpersoonObject->getId(),
+					'contactId' => $contactPersonObject->getId(),
 					'error' => $e->getMessage(),
 					'trace' => $e->getTraceAsString(),
 				]
@@ -548,16 +548,16 @@ class ContactpersoonService {
 	/**
 	 * Syncs name/functie fields from contactpersoon to the corresponding Nextcloud user.
 	 *
-	 * @param object $contactpersoonObject The updated contactpersoon object.
-	 * @param object|null $oldContactpersoonObject The previous contactpersoon object.
+	 * @param object $contactPersonObject The updated contactpersoon object.
+	 * @param object|null $oldContactPersonObject The previous contactpersoon object.
 	 *
 	 * @return void
 	 */
-	private function syncNameFieldsToUser(object $contactpersoonObject, ?object $oldContactpersoonObject): void {
-		$newData = $contactpersoonObject->getObject();
+	private function syncNameFieldsToUser(object $contactPersonObject, ?object $oldContactPersonObject): void {
+		$newData = $contactPersonObject->getObject();
 		$oldData = [];
-		if ($oldContactpersoonObject !== null) {
-			$oldData = $oldContactpersoonObject->getObject();
+		if ($oldContactPersonObject !== null) {
+			$oldData = $oldContactPersonObject->getObject();
 		}
 
 		// Check if any name/functie fields have changed.
@@ -565,7 +565,7 @@ class ContactpersoonService {
 			'voornaam',
 			'tussenvoegsel',
 			'achternaam',
-			'functie',
+			'role',
 			'e-mailadres',
 		];
 		$hasNameChanges = false;
@@ -602,7 +602,7 @@ class ContactpersoonService {
 			'ContactpersoonService: Syncing contactpersoon name fields to user',
 			[
 				'username' => $username,
-				'contactId' => $contactpersoonObject->getId(),
+				'contactId' => $contactPersonObject->getId(),
 				'changedData' => array_intersect_key(
 					$newData,
 					array_flip($nameFields)
@@ -620,14 +620,14 @@ class ContactpersoonService {
 	/**
 	 * Handles role changes between old and new contactpersoon objects
 	 *
-	 * @param object $newContactpersoonObject The new contactpersoon object
-	 * @param object $oldContactpersoonObject The old contactpersoon object
+	 * @param object $newContactPersonObject The new contactpersoon object
+	 * @param object $oldContactPersonObject The old contactpersoon object
 	 *
 	 * @return void
 	 */
-	private function handleRoleChanges(object $newContactpersoonObject, object $oldContactpersoonObject): void {
-		$newData = $newContactpersoonObject->getObject();
-		$oldData = $oldContactpersoonObject->getObject();
+	private function handleRoleChanges(object $newContactPersonObject, object $oldContactPersonObject): void {
+		$newData = $newContactPersonObject->getObject();
+		$oldData = $oldContactPersonObject->getObject();
 
 		$newRoles = ($newData['roles'] ?? []);
 		$oldRoles = ($oldData['roles'] ?? []);
@@ -639,7 +639,7 @@ class ContactpersoonService {
 				$this->logger->info(
 					'ContactpersoonService: Roles changed, updating user groups',
 					[
-						'contactId' => $newContactpersoonObject->getId(),
+						'contactId' => $newContactPersonObject->getId(),
 						'username' => $username,
 						'oldRoles' => $oldRoles,
 						'newRoles' => $newRoles,
@@ -648,7 +648,7 @@ class ContactpersoonService {
 
 				// Update user groups based on new roles.
 				$this->updateUserGroups(
-					contactpersoonObject: $newContactpersoonObject,
+					contactPersonObject: $newContactPersonObject,
 					username: $username
 				);
 			}
@@ -960,19 +960,19 @@ class ContactpersoonService {
 	 * This method retrieves user information for multiple contact persons in a single operation,
 	 * which is more efficient than individual calls.
 	 *
-	 * @param array $contactpersoonIds Array of contact person IDs/UUIDs
+	 * @param array $contactPersonIds Array of contact person IDs/UUIDs
 	 *
 	 * @return array Array of user information keyed by contact person ID
 	 *
 	 * @throws \Exception If bulk user info retrieval fails
 	 * @spec   openspec/specs/contactpersoon-sync/spec.md
 	 */
-	public function getBulkUserInfo(array $contactpersoonIds): array {
+	public function getBulkUserInfo(array $contactPersonIds): array {
 		try {
 			$this->logger->info(
 				'ContactpersoonService: Getting bulk user info',
 				[
-					'contactpersoonCount' => count($contactpersoonIds),
+					'contactpersoonCount' => count($contactPersonIds),
 				]
 			);
 
@@ -997,21 +997,21 @@ class ContactpersoonService {
 				$contactSchema = 25;
 			}
 
-			foreach ($contactpersoonIds as $contactpersoonId) {
+			foreach ($contactPersonIds as $contactPersonId) {
 				try {
 					// Get contactpersoon from OpenRegister.
 					$objectService = $this->getObjectService();
 					if ($objectService === null) {
 						$this->logger->warning(
 							'ContactpersoonService: ObjectService not available for bulk user info',
-							['contactpersoonId' => $contactpersoonId]
+							['contactpersoonId' => $contactPersonId]
 						);
 						continue;
 					}
 
 					// Find the contactpersoon object with register and schema specified.
 					$contactObject = $objectService->findSilent(
-						id: $contactpersoonId,
+						id: $contactPersonId,
 						_extend: [],
 						files: false,
 						register: $contactRegister,
@@ -1021,9 +1021,9 @@ class ContactpersoonService {
 					if ($contactObject === null) {
 						$this->logger->warning(
 							'ContactpersoonService: Contactpersoon not found for bulk user info',
-							['contactpersoonId' => $contactpersoonId]
+							['contactpersoonId' => $contactPersonId]
 						);
-						$bulkUserInfo[$contactpersoonId] = [
+						$bulkUserInfo[$contactPersonId] = [
 							'hasUser' => false,
 							'username' => null,
 							'groups' => [],
@@ -1047,7 +1047,7 @@ class ContactpersoonService {
 							$this->logger->warning(
 								'ContactpersoonService: User not found for bulk user info',
 								[
-									'contactpersoonId' => $contactpersoonId,
+									'contactpersoonId' => $contactPersonId,
 									'username' => $username,
 								]
 							);
@@ -1063,18 +1063,18 @@ class ContactpersoonService {
 						}
 					}//end if
 
-					$bulkUserInfo[$contactpersoonId] = $userInfo;
+					$bulkUserInfo[$contactPersonId] = $userInfo;
 				} catch (\Exception $e) {
 					$this->logger->error(
 						'ContactpersoonService: Failed to get user info for contactpersoon in bulk operation',
 						[
-							'contactpersoonId' => $contactpersoonId,
+							'contactpersoonId' => $contactPersonId,
 							'error' => $e->getMessage(),
 						]
 					);
 
 					// Add error entry for this contactpersoon.
-					$bulkUserInfo[$contactpersoonId] = [
+					$bulkUserInfo[$contactPersonId] = [
 						'hasUser' => false,
 						'username' => null,
 						'groups' => [],
@@ -1086,7 +1086,7 @@ class ContactpersoonService {
 			$this->logger->info(
 				'ContactpersoonService: Successfully retrieved bulk user info',
 				[
-					'totalContactpersonen' => count($contactpersoonIds),
+					'totalContactpersonen' => count($contactPersonIds),
 					'successfulRetrievals' => count(
 						array_filter(
 							$bulkUserInfo,
@@ -1103,7 +1103,7 @@ class ContactpersoonService {
 			$this->logger->error(
 				'ContactpersoonService: Failed to get bulk user info',
 				[
-					'contactpersoonIds' => $contactpersoonIds,
+					'contactpersoonIds' => $contactPersonIds,
 					'error' => $e->getMessage(),
 					'trace' => $e->getTraceAsString(),
 				]
@@ -1121,7 +1121,7 @@ class ContactpersoonService {
 	 *
 	 * @return void
 	 */
-	private function updateContactpersoonObjectOwner(object $contactObject, string $userUID): void {
+	private function updateContactPersonObjectOwner(object $contactObject, string $userUID): void {
 		try {
 			$contactId = $contactObject->getUuid();
 
@@ -1230,18 +1230,18 @@ class ContactpersoonService {
 	/**
 	 * Enable user account for a contactpersoon.
 	 *
-	 * @param string $contactpersoonId The UUID of the contactpersoon.
+	 * @param string $contactPersonId The UUID of the contactpersoon.
 	 *
 	 * @return void
 	 *
 	 * @throws \Exception If enabling fails.
 	 * @spec   openspec/specs/contactpersoon-sync/spec.md
 	 */
-	public function enableUserForContactpersoon(string $contactpersoonId): void {
+	public function enableUserForContactpersoon(string $contactPersonId): void {
 		try {
 			$this->logger->info(
 				'ContactpersoonService: Enabling user for contactpersoon',
-				['contactpersoonId' => $contactpersoonId]
+				['contactpersoonId' => $contactPersonId]
 			);
 
 			$objectService = $this->getObjectService();
@@ -1250,7 +1250,7 @@ class ContactpersoonService {
 			}
 
 			$contactObject = $objectService->find(
-				id: $contactpersoonId,
+				id: $contactPersonId,
 				register: 'voorzieningen',
 				schema: 'contactpersoon',
 				_rbac: false,
@@ -1280,7 +1280,7 @@ class ContactpersoonService {
 			$this->logger->info(
 				'ContactpersoonService: User enabled successfully',
 				[
-					'contactpersoonId' => $contactpersoonId,
+					'contactpersoonId' => $contactPersonId,
 					'username' => $username,
 				]
 			);
@@ -1288,7 +1288,7 @@ class ContactpersoonService {
 			$this->logger->error(
 				'ContactpersoonService: Failed to enable user for contactpersoon',
 				[
-					'contactpersoonId' => $contactpersoonId,
+					'contactpersoonId' => $contactPersonId,
 					'error' => $e->getMessage(),
 					'trace' => $e->getTraceAsString(),
 				]
@@ -1301,18 +1301,18 @@ class ContactpersoonService {
 	/**
 	 * Disable user account for a contactpersoon.
 	 *
-	 * @param string $contactpersoonId The UUID of the contactpersoon.
+	 * @param string $contactPersonId The UUID of the contactpersoon.
 	 *
 	 * @return void
 	 *
 	 * @throws \Exception If disabling fails.
 	 * @spec   openspec/specs/contactpersoon-sync/spec.md
 	 */
-	public function disableUserForContactpersoon(string $contactpersoonId): void {
+	public function disableUserForContactpersoon(string $contactPersonId): void {
 		try {
 			$this->logger->info(
 				'ContactpersoonService: Disabling user for contactpersoon',
-				['contactpersoonId' => $contactpersoonId]
+				['contactpersoonId' => $contactPersonId]
 			);
 
 			$objectService = $this->getObjectService();
@@ -1321,7 +1321,7 @@ class ContactpersoonService {
 			}
 
 			$contactObject = $objectService->find(
-				id: $contactpersoonId,
+				id: $contactPersonId,
 				register: 'voorzieningen',
 				schema: 'contactpersoon',
 				_rbac: false,
@@ -1351,7 +1351,7 @@ class ContactpersoonService {
 			$this->logger->info(
 				'ContactpersoonService: User disabled successfully',
 				[
-					'contactpersoonId' => $contactpersoonId,
+					'contactpersoonId' => $contactPersonId,
 					'username' => $username,
 				]
 			);
@@ -1359,7 +1359,7 @@ class ContactpersoonService {
 			$this->logger->error(
 				'ContactpersoonService: Failed to disable user for contactpersoon',
 				[
-					'contactpersoonId' => $contactpersoonId,
+					'contactpersoonId' => $contactPersonId,
 					'error' => $e->getMessage(),
 					'trace' => $e->getTraceAsString(),
 				]
@@ -1383,7 +1383,7 @@ class ContactpersoonService {
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-7
 	 */
-	private function isContactpersoonEmailUsable(string $email, string $contactId): bool {
+	private function isContactPersonEmailUsable(string $email, string $contactId): bool {
 		if (empty($email) === true) {
 			$this->logger->warning(
 				'ContactpersoonService: Contactpersoon has no email, skipping processing',

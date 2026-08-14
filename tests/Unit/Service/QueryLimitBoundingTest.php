@@ -130,7 +130,7 @@ class QueryLimitBoundingTest extends TestCase {
 		$loggerProp->setAccessible(true);
 		$loggerProp->setValue($service, $this->createMock(LoggerInterface::class));
 
-		$method = new ReflectionMethod($service, 'getOrganisatieObjectsByTimeWindow');
+		$method = new ReflectionMethod($service, 'getOrganisationObjectsByTimeWindow');
 		$method->setAccessible(true);
 		$method->invoke($service, '1', '3', 0);
 

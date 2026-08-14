@@ -70,15 +70,15 @@ class IntakeModerationTest extends TestCase {
 		$objectService = $this->objectService([]); // no existing pending duplicate
 		$intake = new IntakeService($this->container($objectService), $this->settings(), $this->logger());
 
-		$result = $intake->submit(['naam' => 'Gemeente Test', 'beschrijving' => 'hi']);
+		$result = $intake->submit(['name' => 'Gemeente Test', 'description' => 'hi']);
 
 		$this->assertTrue($result['ok']);
 		$this->assertSame('pending', $result['status']);
 		$this->assertCount(1, $this->saved);
 
 		$stored = $this->saved[0];
-		$this->assertSame('pending', $stored['registratiestatus']);
-		$this->assertNull($stored['publicatiedatum']); // invisible to the public RBAC gate
+		$this->assertSame('pending', $stored['registrationStatus']);
+		$this->assertNull($stored['publicationDate']); // invisible to the public RBAC gate
 	}//end testAnonymousSubmissionLandsPendingAndUnpublished()
 
 	/**
@@ -92,17 +92,17 @@ class IntakeModerationTest extends TestCase {
 		$intake = new IntakeService($this->container($objectService), $this->settings(), $this->logger());
 
 		$intake->submit([
-			'naam' => 'Sneaky BV',
-			'registratiestatus' => 'active',
-			'publicatiedatum' => '2020-01-01T00:00:00+00:00',
+			'name' => 'Sneaky BV',
+			'registrationStatus' => 'active',
+			'publicationDate' => '2020-01-01T00:00:00+00:00',
 			'id' => 'forced-id',
 			'_source' => ['instance' => 'https://evil.example'],
 			'beoordeling' => 'actief',
 		]);
 
 		$stored = $this->saved[0];
-		$this->assertSame('pending', $stored['registratiestatus']); // forced server-side
-		$this->assertNull($stored['publicatiedatum']);
+		$this->assertSame('pending', $stored['registrationStatus']); // forced server-side
+		$this->assertNull($stored['publicationDate']);
 		$this->assertArrayNotHasKey('_source', $stored);
 		$this->assertArrayNotHasKey('beoordeling', $stored);
 	}//end testPrivilegedKeysAreStripped()
@@ -114,9 +114,9 @@ class IntakeModerationTest extends TestCase {
 	 */
 	public function testMissingRequiredFieldRejected(): void {
 		$intake = new IntakeService($this->container($this->objectService([])), $this->settings(), $this->logger());
-		$result = $intake->submit(['beschrijving' => 'no name']);
+		$result = $intake->submit(['description' => 'no name']);
 		$this->assertFalse($result['ok']);
-		$this->assertStringContainsString('naam', $result['reason']);
+		$this->assertStringContainsString('name', $result['reason']);
 		$this->assertSame([], $this->saved);
 	}//end testMissingRequiredFieldRejected()
 
@@ -165,7 +165,7 @@ class IntakeModerationTest extends TestCase {
 	 */
 	public function testOversizedValueRejected(): void {
 		$intake = new IntakeService($this->container($this->objectService([])), $this->settings(), $this->logger());
-		$result = $intake->submit(['naam' => str_repeat('x', IntakeService::MAX_FIELD_LENGTH + 1)]);
+		$result = $intake->submit(['name' => str_repeat('x', IntakeService::MAX_FIELD_LENGTH + 1)]);
 		$this->assertFalse($result['ok']);
 		$this->assertStringContainsString('maximum length', $result['reason']);
 	}//end testOversizedValueRejected()
@@ -176,11 +176,11 @@ class IntakeModerationTest extends TestCase {
 	 * @return void
 	 */
 	public function testDuplicatePendingRefused(): void {
-		$existing = $this->entity(['id' => 'p-1', 'naam' => 'Dup BV', 'registratiestatus' => 'pending']);
+		$existing = $this->entity(['id' => 'p-1', 'name' => 'Dup BV', 'registrationStatus' => 'pending']);
 		$objectService = $this->objectService([$existing]); // duplicate exists
 		$intake = new IntakeService($this->container($objectService), $this->settings(), $this->logger());
 
-		$result = $intake->submit(['naam' => 'Dup BV']);
+		$result = $intake->submit(['name' => 'Dup BV']);
 		$this->assertFalse($result['ok']);
 		$this->assertStringContainsString('already exists', $result['reason']);
 		$this->assertSame([], $this->saved);
@@ -192,7 +192,7 @@ class IntakeModerationTest extends TestCase {
 	 * @return void
 	 */
 	public function testApprovalActivatesAndPublishes(): void {
-		$pending = $this->entity(['id' => 'uuid-1', 'naam' => 'Approve BV', 'registratiestatus' => 'pending']);
+		$pending = $this->entity(['id' => 'uuid-1', 'name' => 'Approve BV', 'registrationStatus' => 'pending']);
 		$objectService = $this->objectServiceWithFind($pending);
 		$moderation = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
 
@@ -201,8 +201,8 @@ class IntakeModerationTest extends TestCase {
 		$this->assertTrue($result['ok']);
 		$this->assertSame('active', $result['status']);
 		$stored = $this->saved[0];
-		$this->assertSame('active', $stored['registratiestatus']);
-		$this->assertNotNull($stored['publicatiedatum']); // now anonymously visible
+		$this->assertSame('active', $stored['registrationStatus']);
+		$this->assertNotNull($stored['publicationDate']); // now anonymously visible
 	}//end testApprovalActivatesAndPublishes()
 
 	/**
@@ -211,7 +211,7 @@ class IntakeModerationTest extends TestCase {
 	 * @return void
 	 */
 	public function testRejectionStaysUnpublished(): void {
-		$pending = $this->entity(['id' => 'uuid-2', 'naam' => 'Reject BV', 'registratiestatus' => 'pending']);
+		$pending = $this->entity(['id' => 'uuid-2', 'name' => 'Reject BV', 'registrationStatus' => 'pending']);
 		$objectService = $this->objectServiceWithFind($pending);
 		$moderation = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
 
@@ -220,8 +220,8 @@ class IntakeModerationTest extends TestCase {
 		$this->assertTrue($result['ok']);
 		$this->assertSame('rejected', $result['status']);
 		$stored = $this->saved[0];
-		$this->assertSame('rejected', $stored['registratiestatus']);
-		$this->assertNull($stored['publicatiedatum']);
+		$this->assertSame('rejected', $stored['registrationStatus']);
+		$this->assertNull($stored['publicationDate']);
 	}//end testRejectionStaysUnpublished()
 
 	/**
@@ -231,7 +231,7 @@ class IntakeModerationTest extends TestCase {
 	 * @return void
 	 */
 	public function testNonPendingCannotBeApproved(): void {
-		$active = $this->entity(['id' => 'uuid-3', 'naam' => 'Already', 'registratiestatus' => 'active']);
+		$active = $this->entity(['id' => 'uuid-3', 'name' => 'Already', 'registrationStatus' => 'active']);
 		$objectService = $this->objectServiceWithFind($active);
 		$moderation = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
 
@@ -249,8 +249,8 @@ class IntakeModerationTest extends TestCase {
 	public function testPeerSourcedCannotBeModerated(): void {
 		$peer = $this->entity([
 			'id' => 'uuid-4',
-			'naam' => 'Peer',
-			'registratiestatus' => 'pending',
+			'name' => 'Peer',
+			'registrationStatus' => 'pending',
 			'_source' => ['instance' => 'https://peer.example'],
 		]);
 		$objectService = $this->objectServiceWithFind($peer);
@@ -267,14 +267,14 @@ class IntakeModerationTest extends TestCase {
 	 * @return void
 	 */
 	public function testListPending(): void {
-		$one = $this->entity(['id' => 'uuid-5', 'naam' => 'Q1', 'registratiestatus' => 'pending']);
+		$one = $this->entity(['id' => 'uuid-5', 'name' => 'Q1', 'registrationStatus' => 'pending']);
 		$objectService = $this->objectService([$one]);
 		$moderation = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
 
 		$result = $moderation->listPending();
 		$this->assertTrue($result['ok']);
 		$this->assertCount(1, $result['items']);
-		$this->assertSame('Q1', $result['items'][0]['naam']);
+		$this->assertSame('Q1', $result['items'][0]['name']);
 	}//end testListPending()
 
 	/**
@@ -287,7 +287,7 @@ class IntakeModerationTest extends TestCase {
 	 * @spec openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
 	 */
 	public function testBeoordeelingApprovalSetsStatusApproved(): void {
-		$pending = $this->entity(['id' => 'rev-1', 'naam' => 'Great tool', 'status' => 'pending']);
+		$pending = $this->entity(['id' => 'rev-1', 'name' => 'Great tool', 'status' => 'pending']);
 		$objectService = $this->objectServiceWithFind($pending);
 		$moderation = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
 
@@ -297,7 +297,7 @@ class IntakeModerationTest extends TestCase {
 		$this->assertSame('approved', $result['status']);
 		$stored = $this->saved[0];
 		$this->assertSame('approved', $stored['status']);
-		$this->assertArrayNotHasKey('publicatiedatum', $stored);
+		$this->assertArrayNotHasKey('publicationDate', $stored);
 	}//end testBeoordeelingApprovalSetsStatusApproved()
 
 	/**
@@ -308,7 +308,7 @@ class IntakeModerationTest extends TestCase {
 	 * @spec openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
 	 */
 	public function testBeoordeelingRejectionSetsStatusRejected(): void {
-		$pending = $this->entity(['id' => 'rev-2', 'naam' => 'Meh tool', 'status' => 'pending']);
+		$pending = $this->entity(['id' => 'rev-2', 'name' => 'Meh tool', 'status' => 'pending']);
 		$objectService = $this->objectServiceWithFind($pending);
 		$moderation = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
 
@@ -327,14 +327,14 @@ class IntakeModerationTest extends TestCase {
 	 * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
 	 */
 	public function testBeoordeelingListPending(): void {
-		$one = $this->entity(['id' => 'rev-3', 'naam' => 'Q1 review', 'status' => 'pending']);
+		$one = $this->entity(['id' => 'rev-3', 'name' => 'Q1 review', 'status' => 'pending']);
 		$objectService = $this->objectService([$one]);
 		$moderation = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
 
 		$result = $moderation->listPending(type: ModerationService::MODERATED_TYPE_REVIEW);
 		$this->assertTrue($result['ok']);
 		$this->assertCount(1, $result['items']);
-		$this->assertSame('Q1 review', $result['items'][0]['naam']);
+		$this->assertSame('Q1 review', $result['items'][0]['name']);
 	}//end testBeoordeelingListPending()
 
 	/**
@@ -344,7 +344,7 @@ class IntakeModerationTest extends TestCase {
 	 * @return void
 	 */
 	public function testBeoordeelingNonPendingCannotBeApproved(): void {
-		$active = $this->entity(['id' => 'rev-4', 'naam' => 'Already approved', 'status' => 'approved']);
+		$active = $this->entity(['id' => 'rev-4', 'name' => 'Already approved', 'status' => 'approved']);
 		$objectService = $this->objectServiceWithFind($active);
 		$moderation = new ModerationService($this->container($objectService), $this->settings(), $this->logger());
 

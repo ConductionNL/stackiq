@@ -3,7 +3,7 @@
  *
  * "Does application X support standard Y?" is the procurement question a
  * municipal buyer asks a software catalog. This module turns the raw catalog
- * data — modules, compliancy records, and a selection of standaardversies —
+ * data — modules, compliancy records, and a selection of standard versions —
  * into a matrix whose every cell carries one of three honest states:
  *
  *  - `verified` — a compliancy record links the module to the standaardversie
@@ -18,7 +18,7 @@
  * mode of every self-reported catalog and is forbidden here.
  *
  * The `standaardversie` relation (Decision 3) is the canonical column key for
- * the standards matrix; `standaardGemma` (a free string) is consulted only
+ * the standards matrix; `standardGemma` (a free string) is consulted only
  * when the relation is unresolved, and such records are reported separately
  * as `unresolved` rather than being silently merged into a column. The
  * `bioMaatregel` relation (bio-compliance-assessment) is the parallel
@@ -58,7 +58,7 @@ export const CELL = Object.freeze({
 })
 
 /**
- * @typedef {('standaardversie'|'bioMaatregel')} ColumnSource
+ * @typedef {('standard_version'|'bioMaatregel')} ColumnSource
  */
 
 /**
@@ -68,7 +68,7 @@ export const CELL = Object.freeze({
  * @type {{STANDAARDVERSIE: ColumnSource, BIO_MAATREGEL: ColumnSource}}
  */
 export const COLUMN_SOURCE = Object.freeze({
-	STANDAARDVERSIE: 'standaardversie',
+	STANDAARDVERSIE: 'standard_version',
 	BIO_MAATREGEL: 'bioMaatregel',
 })
 
@@ -109,7 +109,7 @@ export function hasEvidence(record) {
 		return false
 	}
 
-	const bewijs = record.bewijs
+	const bewijs = record.evidence
 	const hasBewijs =
 		!!bewijs
 		&& (typeof bewijs === 'string'
@@ -118,7 +118,7 @@ export function hasEvidence(record) {
 				? Object.keys(bewijs).length > 0
 				: true)
 
-	const ref = record.bewijsReferentie
+	const ref = record.evidenceReference
 	const hasRef = typeof ref === 'string' ? ref.trim() !== '' : !!ref
 
 	const url = record.url
@@ -153,14 +153,14 @@ export function dataOf(record) {
 /**
  * Partition compliancy records for a given column source into (a) those
  * resolvable to a column UUID, (b) those that only carry an unresolved
- * `standaardGemma` string (standaardversie source only — BIO measures have
+ * `standardGemma` string (standaardversie source only — BIO measures have
  * no string-fallback field), and (c) those that carry BOTH a
  * `standaardversie` and a `bioMaatregel` relation — a data-quality conflict
  * matched to neither column regardless of the requested column source.
  *
  * @param {Array<object>} records      Compliancy records (OR objects or data bags).
  * @param {ColumnSource}  [columnSource] Which relation to key on. Defaults to standaardversie.
- * @return {{resolved: Array<{moduleUuid: string, columnUuid: string, evidenced: boolean, record: object}>, unresolved: Array<{moduleUuid: string, standaardGemma: string, evidenced: boolean, record: object}>, conflicted: Array<{moduleUuid: string, standaardversieUuid: string, bioMaatregelUuid: string, record: object}>}}
+ * @return {{resolved: Array<{moduleUuid: string, columnUuid: string, evidenced: boolean, record: object}>, unresolved: Array<{moduleUuid: string, standardGemma: string, evidenced: boolean, record: object}>, conflicted: Array<{moduleUuid: string, standaardversieUuid: string, bioMaatregelUuid: string, record: object}>}}
  *
  * @spec openspec/specs/module-compliance-assessment/spec.md
  * @spec openspec/specs/bio-compliance-assessment/spec.md
@@ -176,7 +176,7 @@ export function partitionCompliancy(
 	for (const record of records || []) {
 		const data = dataOf(record)
 		const moduleUuid = resolveUuid(data.module)
-		const standaardversieUuid = resolveUuid(data.standaardversie)
+		const standaardversieUuid = resolveUuid(data.standard_version)
 		const bioMaatregelUuid = resolveUuid(data.bioMaatregel)
 		const evidenced = hasEvidence(data)
 
@@ -219,10 +219,15 @@ export function partitionCompliancy(
 			continue
 		}
 
-		const standaardGemma =
-			typeof data.standaardGemma === 'string' ? data.standaardGemma.trim() : ''
-		if (standaardGemma !== '') {
-			unresolved.push({ moduleUuid, standaardGemma, evidenced, record })
+		// The variable name is the KEY, because the push below uses shorthand.
+		// The rename updated the read (`data.standardGemma`) and the consumers, but
+		// a shorthand property has no `name:` for a key-rewrite to match, so this
+		// object kept emitting `standaardGemma` while everything reading it had
+		// moved on.
+		const standardGemma =
+			typeof data.standardGemma === 'string' ? data.standardGemma.trim() : ''
+		if (standardGemma !== '') {
+			unresolved.push({ moduleUuid, standardGemma, evidenced, record })
 		}
 		// Records with neither a resolved relation nor a string are dropped —
 		// they cannot be placed in any column and carry no buyer-facing signal.
@@ -261,8 +266,8 @@ function strongest(a, b) {
  *
  * @param {object}        params                   Mapper input.
  * @param {Array<object>} params.modules           Module objects (need `uuid`/`id` + `naam`).
- * @param {Array<object>} [params.standaardversies] Selected column objects when columnSource is standaardversie (need `uuid`/`id` + `naam`/`titel`). Back-compat alias for `columns`.
- * @param {Array<object>} [params.columns]          Selected column objects (standaardversie or bioMaatregel, per columnSource). Preferred over `standaardversies` for new callers.
+ * @param {Array<object>} [params.standardVersions] Selected column objects when columnSource is standaardversie (need `uuid`/`id` + `naam`/`titel`). Back-compat alias for `columns`.
+ * @param {Array<object>} [params.columns]          Selected column objects (standaardversie or bioMaatregel, per columnSource). Preferred over `standardVersions` for new callers.
  * @param {Array<object>} params.compliancy        Compliancy records (OR objects or data bags).
  * @param {ColumnSource}  [params.columnSource]     Which relation to key on. Defaults to standaardversie.
  * @return {{rows: Array<{module: object, moduleUuid: string, cells: {[key: string]: {state: CellState, record: (object|null)}}}>, columns: Array<{uuid: string, label: string}>, unresolved: Array<object>, conflicted: Array<object>}}
@@ -272,12 +277,12 @@ function strongest(a, b) {
  */
 export function buildComplianceMatrix({
 	modules = [],
-	standaardversies,
+	standardVersions,
 	columns: columnObjectsParam,
 	compliancy = [],
 	columnSource = COLUMN_SOURCE.STANDAARDVERSIE,
 } = {}) {
-	const columnObjects = columnObjectsParam ?? standaardversies ?? []
+	const columnObjects = columnObjectsParam ?? standardVersions ?? []
 	const { resolved, unresolved, conflicted } = partitionCompliancy(
 		compliancy,
 		columnSource,
@@ -339,7 +344,7 @@ export function columnLabel(column) {
 		return String(column || '')
 	}
 	return (
-		column.naam
+		column.name
 		|| column.titel
 		|| column.title
 		|| column.label

@@ -40,13 +40,13 @@ class ProfileFieldMapper {
 	 */
 	private const FIELD_MAP = [
 		'email' => 'e-mailadres',
-		'displayname' => 'naam',
+		'displayname' => 'name',
 		'phone' => 'telefoonnummer',
 		'address' => 'adres',
 		'website' => 'website',
 		'twitter' => 'twitter',
 		'organisation' => 'organisatie',
-		'role' => 'functie',
+		'role' => 'role',
 		'headline' => 'aanhef',
 		'biography' => 'biografie',
 	];

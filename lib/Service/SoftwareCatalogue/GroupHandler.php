@@ -230,14 +230,14 @@ class GroupHandler {
 	/**
 	 * Updates user groups based on contactpersoon data
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 * @param string $username The username to update groups for
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	public function updateUserGroups(object $contactpersoonObject, string $username): void {
+	public function updateUserGroups(object $contactPersonObject, string $username): void {
 		try {
 			$user = $this->_userManager->get($username);
 			if ($user === null) {
@@ -245,7 +245,7 @@ class GroupHandler {
 				return;
 			}
 
-			$objectData = $contactpersoonObject->getObject();
+			$objectData = $contactPersonObject->getObject();
 
 			// Handle role-based groups.
 			$this->updateRoleBasedGroups(user: $user, objectData: $objectData);
@@ -398,14 +398,14 @@ class GroupHandler {
 		$objectService = $this->getObjectService();
 		$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 		$registerId = $settingsService->getVoorzieningenRegisterId();
-		$organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+		$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-		if ($registerId === null || $organisatieSchemaId === null) {
+		if ($registerId === null || $organisationSchemaId === null) {
 			$this->_logger->warning('Register or schema ID not configured for organisatie.');
 			return null;
 		}
 
-		$organizationObject = $objectService->find($organisationUuid, [], false, $registerId, $organisatieSchemaId);
+		$organizationObject = $objectService->find($organisationUuid, [], false, $registerId, $organisationSchemaId);
 		if ($organizationObject === null) {
 			return null;
 		}

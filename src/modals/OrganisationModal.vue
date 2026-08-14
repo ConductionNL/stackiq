@@ -13,7 +13,7 @@
 				<div class="form-grid">
 					<div class="form-row">
 						<NcTextField
-							v-model="formData.naam"
+							v-model="formData.name"
 							:label="t('softwarecatalog', 'Name')"
 							:placeholder="t('softwarecatalog', 'Organisation name')"
 							required />
@@ -173,7 +173,7 @@ export default {
 	data() {
 		return {
 			formData: {
-				naam: '',
+				name: '',
 				website: '',
 				type: '',
 				beschrijvingKort: '',
@@ -182,7 +182,7 @@ export default {
 				oin: '',
 				cbs: '',
 				status: 'Concept',
-				deelnemers: [],
+				participants: [],
 				contactpersonen: [],
 			},
 
@@ -223,7 +223,7 @@ export default {
 		},
 
 		isFormValid() {
-			return this.formData.naam.trim().length > 0
+			return this.formData.name.trim().length > 0
 		},
 	},
 
@@ -271,7 +271,7 @@ export default {
 		 */
 		resetForm() {
 			this.formData = {
-				naam: '',
+				name: '',
 				website: '',
 				type: '',
 				beschrijvingKort: '',
@@ -280,7 +280,7 @@ export default {
 				oin: '',
 				cbs: '',
 				status: 'Concept',
-				deelnemers: [],
+				participants: [],
 				contactpersonen: [],
 			}
 			this.selectedType = null
@@ -302,7 +302,7 @@ export default {
 
 			// Load organisation data into form
 			this.formData = {
-				naam: this.organisation.naam || '',
+				name: this.organisation.name || '',
 				website: this.organisation.website || '',
 				type: this.organisation.type || '',
 				beschrijvingKort: this.organisation.beschrijvingKort || '',
@@ -311,7 +311,7 @@ export default {
 				oin: this.organisation.oin || '',
 				cbs: this.organisation.cbs || '',
 				status: this.organisation.status || 'Concept',
-				deelnemers: this.organisation.deelnemers || [],
+				participants: this.organisation.participants || [],
 				contactpersonen: this.isCopyMode
 					? []
 					: this.organisation.contactpersonen || [],

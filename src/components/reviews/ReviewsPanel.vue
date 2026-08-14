@@ -89,10 +89,10 @@
 						class="reviews-panel__item">
 						<div class="reviews-panel__item-header">
 							<span class="reviews-panel__item-title">{{
-								item.naam
+								item.name
 							}}</span>
 							<span class="reviews-panel__item-rating"
-								>{{ item.waardering }}/10</span
+								>{{ item.rating }}/10</span
 							>
 						</div>
 						<p

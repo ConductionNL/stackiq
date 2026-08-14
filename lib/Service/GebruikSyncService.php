@@ -192,9 +192,9 @@ class GebruikSyncService {
 			$gebruikUuid = $gebruikObject->getUuid();
 
 			// Get the referentiecomponenten IDs.
-			$referentieComponenten = $gebruikData['gebruiktVoorReferentiecomponenten'] ?? [];
+			$referenceComponents = $gebruikData['usedForReferenceComponents'] ?? [];
 
-			if (empty($referentieComponenten) === true) {
+			if (empty($referenceComponents) === true) {
 				$this->logger->info(
 					'No referentiecomponenten found for gebruik object',
 					[
@@ -209,19 +209,19 @@ class GebruikSyncService {
 				[
 					'app' => 'softwarecatalog',
 					'gebruikId' => $gebruikUuid,
-					'referentieComponentenCount' => count($referentieComponenten),
+					'referentieComponentenCount' => count($referenceComponents),
 				]
 			);
 
 			// Extract IDs from referentiecomponenten.
-			$referentieIds = [];
-			foreach ($referentieComponenten as $component) {
+			$referenceIds = [];
+			foreach ($referenceComponents as $component) {
 				if (isset($component['id']) === true) {
-					$referentieIds[] = $component['id'];
+					$referenceIds[] = $component['id'];
 				}
 			}
 
-			if (empty($referentieIds) === true) {
+			if (empty($referenceIds) === true) {
 				$this->logger->warning(
 					'No valid IDs found in referentiecomponenten',
 					[
@@ -251,7 +251,7 @@ class GebruikSyncService {
 
 			// Search for AMEF elements.
 			$amefElements = $this->searchAmefElementsByIds(
-				ids: $referentieIds,
+				ids: $referenceIds,
 				register: $amefRegister,
 				schema: $elementSchema
 			);
@@ -445,11 +445,11 @@ class GebruikSyncService {
 	 */
 	private function extractStatusDateMap(array $gebruikData): array {
 		return [
-			'Verwerving' => $gebruikData['startDatumVerwerving'] ?? null,
-			'Gepland' => $gebruikData['startDatumGepland'] ?? null,
-			'In productie' => $gebruikData['startDatumInProductie'] ?? null,
-			'Uit te faseren' => $gebruikData['startDatumUitTeFaseren'] ?? null,
-			'Uitgefaseerd' => $gebruikData['startDatumUitGefaseerd'] ?? null,
+			'Verwerving' => $gebruikData['startDateAcquisition'] ?? null,
+			'Gepland' => $gebruikData['startDatePlanned'] ?? null,
+			'In productie' => $gebruikData['startDateInProduction'] ?? null,
+			'Uit te faseren' => $gebruikData['startDateOutPhasing'] ?? null,
+			'Uitgefaseerd' => $gebruikData['startDateOutPhased'] ?? null,
 		];
 
 	}//end extractStatusDateMap()

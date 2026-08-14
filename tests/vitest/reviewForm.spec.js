@@ -42,14 +42,14 @@ describe('reviewForm.buildReviewPayload', () => {
 	it('builds exactly {naam, waardering, beschrijvingLang} — no other keys', () => {
 		const payload = buildReviewPayload('Great tool', 9, 'Worked well for us')
 		expect(payload).toEqual({
-			naam: 'Great tool',
-			waardering: 9,
+			name: 'Great tool',
+			rating: 9,
 			beschrijvingLang: 'Worked well for us',
 		})
 		expect(Object.keys(payload).sort()).toEqual([
 			'beschrijvingLang',
-			'naam',
-			'waardering',
+			'name',
+			'rating',
 		])
 	})
 })
@@ -66,8 +66,8 @@ describe('reviewForm.buildReviewSubmission', () => {
 
 		expect(body).toEqual({
 			review: {
-				naam: 'Great tool',
-				waardering: 9,
+				name: 'Great tool',
+				rating: 9,
 				beschrijvingLang: 'Worked well',
 			},
 			subjectType: 'module',

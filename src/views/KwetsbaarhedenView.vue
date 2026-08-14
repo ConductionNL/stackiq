@@ -93,7 +93,7 @@
 					data-testid="vuln-row"
 					@click="openDetail(row)">
 					<td class="vv-name">
-						{{ row.naam }}
+						{{ row.name }}
 					</td>
 					<td>{{ row.cveCode || '—' }}</td>
 					<td>
@@ -241,8 +241,8 @@ export default {
 							vuln.uuid ?? vuln.id ?? vuln['@self']?.id ?? vuln,
 						),
 						raw: vuln,
-						naam:
-							data.naam
+						name:
+							data.name
 							|| t('softwarecatalog', 'Unnamed vulnerability'),
 						cveCode: data.cveCode || '',
 						cvssScore: parseCvss(data.cvssScore),

@@ -23,7 +23,7 @@ Modal component for adding new contactpersoon to an organisation
 					t(
 						'softwarecatalog',
 						'Add a new contactpersoon to organisation: {name}',
-						{ name: organisation?.naam || 'Unknown' },
+						{ name: organisation?.name || 'Unknown' },
 					)
 				}}
 			</p>
@@ -184,7 +184,7 @@ export default {
 				// Create new contactpersoon object with proper structure
 				const newContactpersoonObject = {
 					...this.formData,
-					naam: `${this.formData.voornaam} ${this.formData.achternaam}`.trim(),
+					name: `${this.formData.voornaam} ${this.formData.achternaam}`.trim(),
 					organisatie: this.organisation.id || this.organisation.uuid,
 					'@self': {
 						created: new Date().toISOString(),

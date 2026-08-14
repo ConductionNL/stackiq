@@ -44,11 +44,11 @@ class ReviewAggregateServiceTest extends TestCase {
 	 */
 	public function testAggregateCountsOnlyApprovedReviews(): void {
 		$approved = $this->entity([
-			'id' => 'r-1', 'naam' => 'Solid', 'waardering' => 8, 'status' => 'approved',
+			'id' => 'r-1', 'name' => 'Solid', 'rating' => 8, 'status' => 'approved',
 			'modules' => ['module-uuid-1'],
 		]);
 		$pending = $this->entity([
-			'id' => 'r-2', 'naam' => 'Meh', 'waardering' => 2, 'status' => 'pending',
+			'id' => 'r-2', 'name' => 'Meh', 'rating' => 2, 'status' => 'pending',
 			'modules' => ['module-uuid-1'],
 		]);
 		$objectService = $this->objectService([$approved, $pending]);
@@ -69,7 +69,7 @@ class ReviewAggregateServiceTest extends TestCase {
 	 */
 	public function testAggregateExcludesOtherSubjects(): void {
 		$otherModule = $this->entity([
-			'id' => 'r-3', 'naam' => 'Unrelated', 'waardering' => 10, 'status' => 'approved',
+			'id' => 'r-3', 'name' => 'Unrelated', 'rating' => 10, 'status' => 'approved',
 			'modules' => ['some-other-module'],
 		]);
 		$objectService = $this->objectService([$otherModule]);
@@ -111,7 +111,7 @@ class ReviewAggregateServiceTest extends TestCase {
 	 */
 	public function testAggregateMatchesDienstSubjectViaDienstenField(): void {
 		$review = $this->entity([
-			'id' => 'r-4', 'naam' => 'Great service', 'waardering' => 6, 'status' => 'approved',
+			'id' => 'r-4', 'name' => 'Great service', 'rating' => 6, 'status' => 'approved',
 			'diensten' => ['dienst-uuid-1'],
 		]);
 		$objectService = $this->objectService([$review]);

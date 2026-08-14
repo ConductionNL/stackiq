@@ -90,7 +90,7 @@ export default {
 		 */
 		defaults() {
 			return {
-				naam: '',
+				name: '',
 				beschrijvingKort: '',
 				beschrijvingLang: '',
 				website: '',

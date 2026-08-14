@@ -20,13 +20,13 @@
  * the `suite` schema's own `required` array) are filled in.
  *
  * @param {object} stepData The wizard's accumulated step data.
- * @param {string} [stepData.naam] The suite name.
+ * @param {string} [stepData.name] The suite name.
  * @param {string} [stepData.beschrijvingKort] The short description.
  * @return {boolean} True when both required fields are non-blank.
  * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
  */
 export function isDetailsStepValid(stepData) {
-	const naam = ((stepData && stepData.naam) || '').trim()
+	const naam = ((stepData && stepData.name) || '').trim()
 	const beschrijvingKort = ((stepData && stepData.beschrijvingKort) || '').trim()
 	return naam.length > 0 && beschrijvingKort.length > 0
 }
@@ -58,23 +58,23 @@ export function isApplicationsStepValid(applications, translate) {
  * reference fields (the referenced object's id, not a nested object).
  *
  * @param {object} stepData The wizard's accumulated step data.
- * @param {string} [stepData.naam] The suite name.
+ * @param {string} [stepData.name] The suite name.
  * @param {string} [stepData.beschrijvingKort] The short description.
  * @param {string} [stepData.beschrijvingLang] The long (markdown) description.
  * @param {string} [stepData.website] The suite website URL.
  * @param {Array<object>} [stepData.applications] The attached module objects.
- * @return {{naam: string, beschrijvingKort: string, beschrijvingLang: string, website: string, applicaties: Array<string>}} The suite payload.
+ * @return {{name: string, beschrijvingKort: string, beschrijvingLang: string, website: string, applications: Array<string>}} The suite payload.
  * @spec openspec/specs/suite-wizard/spec.md#requirement-submitting-the-wizard-shall-create-a-suite-object-with-the-attached-applications
  */
 export function buildSuitePayload(stepData) {
 	const data = stepData || {}
 	const applications = Array.isArray(data.applications) ? data.applications : []
 	return {
-		naam: (data.naam || '').trim(),
+		name: (data.name || '').trim(),
 		beschrijvingKort: (data.beschrijvingKort || '').trim(),
 		beschrijvingLang: (data.beschrijvingLang || '').trim(),
 		website: (data.website || '').trim(),
-		applicaties: applications
+		applications: applications
 			.map((app) => (app && typeof app === 'object' ? app.id : app))
 			.filter(Boolean),
 	}
@@ -91,7 +91,7 @@ export function buildSuitePayload(stepData) {
  */
 export function summarizeApplications(applications) {
 	if (!Array.isArray(applications)) return []
-	return applications.map((app) => (app && (app.naam || app.id)) || '')
+	return applications.map((app) => (app && (app.name || app.id)) || '')
 }
 
 /**
@@ -120,7 +120,7 @@ export function mapApplicationOptions(collection) {
 
 		return {
 			uuid,
-			label: mod.naam || mod.title || uuid,
+			label: mod.name || mod.title || uuid,
 			raw: mod,
 		}
 	})

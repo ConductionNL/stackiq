@@ -42,18 +42,20 @@ describe('complianceMatrix.resolveUuid', () => {
 
 describe('complianceMatrix.hasEvidence', () => {
 	it('detects a base64 bewijs file', () => {
-		expect(hasEvidence({ bewijs: 'data:application/pdf;base64,AAA' })).toBe(true)
-		expect(hasEvidence({ bewijs: { id: 1 } })).toBe(true)
+		expect(hasEvidence({ evidence: 'data:application/pdf;base64,AAA' })).toBe(
+			true,
+		)
+		expect(hasEvidence({ evidence: { id: 1 } })).toBe(true)
 	})
 	it('detects a bewijsReferentie NC Files link', () => {
-		expect(hasEvidence({ bewijsReferentie: '/Files/proof.pdf' })).toBe(true)
+		expect(hasEvidence({ evidenceReference: '/Files/proof.pdf' })).toBe(true)
 	})
 	it('detects a url', () => {
 		expect(hasEvidence({ url: 'https://example.org/proof' })).toBe(true)
 	})
 	it('returns false with no evidence', () => {
 		expect(hasEvidence({})).toBe(false)
-		expect(hasEvidence({ bewijs: '', bewijsReferentie: '  ', url: '' })).toBe(
+		expect(hasEvidence({ evidence: '', evidenceReference: '  ', url: '' })).toBe(
 			false,
 		)
 		expect(hasEvidence(null)).toBe(false)
@@ -63,14 +65,14 @@ describe('complianceMatrix.hasEvidence', () => {
 describe('complianceMatrix.partitionCompliancy', () => {
 	it('separates resolved relations from unresolved standaardGemma-only records', () => {
 		const { resolved, unresolved } = partitionCompliancy([
-			{ module: 'm1', standaardversie: 's1', url: 'https://e' },
-			{ module: 'm1', standaardGemma: 'GEMMA-ZGW' },
-			{ module: 'm2', standaardversie: { uuid: 's2' } },
+			{ module: 'm1', standard_version: 's1', url: 'https://e' },
+			{ module: 'm1', standardGemma: 'GEMMA-ZGW' },
+			{ module: 'm2', standard_version: { uuid: 's2' } },
 			{ module: 'm3' },
 		])
 		expect(resolved).toHaveLength(2)
 		expect(unresolved).toHaveLength(1)
-		expect(unresolved[0].standaardGemma).toBe('GEMMA-ZGW')
+		expect(unresolved[0].standardGemma).toBe('GEMMA-ZGW')
 		expect(resolved[0].evidenced).toBe(true)
 		expect(resolved[1].evidenced).toBe(false)
 	})
@@ -78,23 +80,23 @@ describe('complianceMatrix.partitionCompliancy', () => {
 
 describe('complianceMatrix.buildComplianceMatrix', () => {
 	const modules = [
-		{ uuid: 'mA', naam: 'App A' },
-		{ uuid: 'mB', naam: 'App B' },
+		{ uuid: 'mA', name: 'App A' },
+		{ uuid: 'mB', name: 'App B' },
 	]
-	const standaardversies = [
-		{ uuid: 's1', naam: 'ZGW API' },
-		{ uuid: 's2', naam: 'Haal Centraal' },
+	const standardVersions = [
+		{ uuid: 's1', name: 'ZGW API' },
+		{ uuid: 's2', name: 'Haal Centraal' },
 	]
 
 	it('renders the three cell states correctly', () => {
 		const compliancy = [
-			{ module: 'mA', standaardversie: 's1', url: 'https://proof' },
-			{ module: 'mA', standaardversie: 's2' },
-			{ module: 'mB', standaardversie: 's1' },
+			{ module: 'mA', standard_version: 's1', url: 'https://proof' },
+			{ module: 'mA', standard_version: 's2' },
+			{ module: 'mB', standard_version: 's1' },
 		]
 		const { rows, columns } = buildComplianceMatrix({
 			modules,
-			standaardversies,
+			standardVersions,
 			compliancy,
 		})
 		expect(columns.map((c) => c.label)).toEqual(['ZGW API', 'Haal Centraal'])
@@ -108,7 +110,7 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 	it('only produces selected standard columns (filter-first, no cartesian wall)', () => {
 		const { columns } = buildComplianceMatrix({
 			modules,
-			standaardversies: [{ uuid: 's1', naam: 'ZGW API' }],
+			standardVersions: [{ uuid: 's1', name: 'ZGW API' }],
 			compliancy: [],
 		})
 		expect(columns).toHaveLength(1)
@@ -116,12 +118,12 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 
 	it('keeps the strongest state when two records cover one pair', () => {
 		const compliancy = [
-			{ module: 'mA', standaardversie: 's1' },
-			{ module: 'mA', standaardversie: 's1', url: 'https://proof' },
+			{ module: 'mA', standard_version: 's1' },
+			{ module: 'mA', standard_version: 's1', url: 'https://proof' },
 		]
 		const { rows } = buildComplianceMatrix({
 			modules,
-			standaardversies,
+			standardVersions,
 			compliancy,
 		})
 		expect(rows[0].cells.s1.state).toBe(CELL.VERIFIED)
@@ -131,17 +133,17 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 	it('surfaces unresolved standaardGemma-only records separately', () => {
 		const { unresolved } = buildComplianceMatrix({
 			modules,
-			standaardversies,
-			compliancy: [{ module: 'mA', standaardGemma: 'GEMMA-X' }],
+			standardVersions,
+			compliancy: [{ module: 'mA', standardGemma: 'GEMMA-X' }],
 		})
 		expect(unresolved).toHaveLength(1)
-		expect(unresolved[0].standaardGemma).toBe('GEMMA-X')
+		expect(unresolved[0].standardGemma).toBe('GEMMA-X')
 	})
 })
 
 describe('complianceMatrix.standardLabel', () => {
 	it('falls back through name fields', () => {
-		expect(standardLabel({ naam: 'A' })).toBe('A')
+		expect(standardLabel({ name: 'A' })).toBe('A')
 		expect(standardLabel({ titel: 'B' })).toBe('B')
 		expect(standardLabel({ uuid: 'u' })).toBe('u')
 	})
@@ -151,8 +153,8 @@ describe('complianceMatrix.buildOrganisationCoverage', () => {
 	it('lists every gebruik including applications with no compliance data', () => {
 		const gebruiken = [{ module: 'mA' }, { module: 'mB' }, { module: 'mC' }]
 		const compliancy = [
-			{ module: 'mA', standaardversie: 's1', url: 'https://e' },
-			{ module: 'mB', standaardversie: 's1' },
+			{ module: 'mA', standard_version: 's1', url: 'https://e' },
+			{ module: 'mB', standard_version: 's1' },
 		]
 		const coverage = buildOrganisationCoverage({
 			gebruiken,
@@ -169,7 +171,7 @@ describe('complianceMatrix.buildOrganisationCoverage', () => {
 		const coverage = buildOrganisationCoverage({
 			gebruiken: [{ module: 'mA' }],
 			standaardversieUuid: 's1',
-			compliancy: [{ module: 'mA', standaardversie: 's2', url: 'https://e' }],
+			compliancy: [{ module: 'mA', standard_version: 's2', url: 'https://e' }],
 		})
 		expect(coverage[0].state).toBe(CELL.NONE)
 	})
@@ -177,19 +179,19 @@ describe('complianceMatrix.buildOrganisationCoverage', () => {
 
 describe('complianceMatrix — bioMaatregel column source (bio-compliance-assessment)', () => {
 	const modules = [
-		{ uuid: 'mA', naam: 'App A' },
-		{ uuid: 'mB', naam: 'App B' },
+		{ uuid: 'mA', name: 'App A' },
+		{ uuid: 'mB', name: 'App B' },
 	]
 	const bioMaatregelen = [
-		{ uuid: 'b1', naam: 'Toegangsbeveiligingsbeleid' },
-		{ uuid: 'b2', naam: 'Cryptografisch beleid' },
+		{ uuid: 'b1', name: 'Toegangsbeveiligingsbeleid' },
+		{ uuid: 'b2', name: 'Cryptografisch beleid' },
 	]
 
 	it('partitions bioMaatregel-linked records as resolved under the bioMaatregel column source', () => {
 		const { resolved, unresolved } = partitionCompliancy(
 			[
 				{ module: 'mA', bioMaatregel: 'b1', url: 'https://e' },
-				{ module: 'mA', standaardversie: 's1' },
+				{ module: 'mA', standard_version: 's1' },
 			],
 			COLUMN_SOURCE.BIO_MAATREGEL,
 		)
@@ -227,14 +229,14 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 		const compliancy = [
 			{
 				module: 'mA',
-				standaardversie: 's1',
+				standard_version: 's1',
 				bioMaatregel: 'b1',
 				url: 'https://e',
 			},
 		]
 		const standardsMatrix = buildComplianceMatrix({
 			modules,
-			columns: [{ uuid: 's1', naam: 'ZGW API' }],
+			columns: [{ uuid: 's1', name: 'ZGW API' }],
 			compliancy,
 			columnSource: COLUMN_SOURCE.STANDAARDVERSIE,
 		})
@@ -270,7 +272,7 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 
 describe('complianceMatrix.columnLabel', () => {
 	it('falls back through name fields (alias of standardLabel)', () => {
-		expect(columnLabel({ naam: 'A' })).toBe('A')
-		expect(standardLabel({ naam: 'A' })).toBe(columnLabel({ naam: 'A' }))
+		expect(columnLabel({ name: 'A' })).toBe('A')
+		expect(standardLabel({ name: 'A' })).toBe(columnLabel({ name: 'A' }))
 	})
 })

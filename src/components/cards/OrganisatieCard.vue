@@ -298,7 +298,7 @@ export default {
 		 */
 		getOrganisatieTitle(item) {
 			return (
-				item?.naam
+				item?.name
 				|| item?.name
 				|| item?.['@self']?.name
 				|| 'Unknown Organisation'
@@ -315,7 +315,7 @@ export default {
 		getOrganisatieSummary(item) {
 			if (item?.beschrijvingKort) return item.beschrijvingKort
 			if (item?.beschrijvingLang) return item.beschrijvingLang
-			if (item?.type && item?.naam) return `${item.type} organisatie`
+			if (item?.type && item?.name) return `${item.type} organisatie`
 			if (item?.type) return item.type
 			return ''
 		},

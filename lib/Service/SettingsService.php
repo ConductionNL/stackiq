@@ -6523,8 +6523,8 @@ class SettingsService {
 						// Also set in @self section for consistency.
 						'uuid' => $orgUuid,
 					],
-					'naam' => $organisation->getName(),
-					'beschrijving' => $organisation->getDescription() ?? '',
+					'name' => $organisation->getName(),
+					'description' => $organisation->getDescription() ?? '',
 					'type' => $this->determineOrganisationType(organisation: $organisation),
 					'status' => $statusValue,
 					'website' => '',
@@ -6532,7 +6532,7 @@ class SettingsService {
 					'telefoonnummer' => null,
 					'oin' => '',
 					'cbs' => '',
-					'deelnemers' => [],
+					'participants' => [],
 					'contactpersonen' => [],
 				];
 			}//end foreach

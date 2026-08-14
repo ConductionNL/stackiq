@@ -187,7 +187,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 			typedFixtures: [
 				'contract' => [
 					$this->entity(
-						['id' => 'c1', 'contractNummer' => 'C-100', 'kosten' => 5000, 'documentReferentie' => 'doc-ref'],
+						['id' => 'c1', 'contractNumber' => 'C-100', 'cost' => 5000, 'documentReference' => 'doc-ref'],
 						uuid: 'c1',
 						organisation: 'org-a'
 					),
@@ -201,9 +201,9 @@ class MergeOrganisatieServiceTest extends TestCase {
 		$contractSave = $this->findSave(schemaId: self::SCHEMA_IDS['contract'], uuid: 'c1');
 		$this->assertNotNull($contractSave);
 		$this->assertSame('org-b', $contractSave['object']['@self']['organisation']);
-		$this->assertSame('C-100', $contractSave['object']['contractNummer']);
-		$this->assertSame(5000, $contractSave['object']['kosten']);
-		$this->assertSame('doc-ref', $contractSave['object']['documentReferentie']);
+		$this->assertSame('C-100', $contractSave['object']['contractNumber']);
+		$this->assertSame(5000, $contractSave['object']['cost']);
+		$this->assertSame('doc-ref', $contractSave['object']['documentReference']);
 	}//end testUntouchedContractFieldsSurviveRepointing()
 
 	/**
@@ -260,7 +260,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 			typedFixtures: [
 				'contract' => [
 					$this->entity(
-						['id' => 'c1', 'contractNummer' => 'C-100', 'kosten' => 5000],
+						['id' => 'c1', 'contractNumber' => 'C-100', 'cost' => 5000],
 						uuid: 'c1',
 						organisation: 'org-a'
 					),
@@ -282,8 +282,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 		$this->assertNotNull($contractSave, 'the contract MUST be re-pointed, not silently skipped');
 		$this->assertSame('org-b', $contractSave['object']['@self']['organisation']);
 		// PUT-semantics: every unrelated field is carried forward.
-		$this->assertSame('C-100', $contractSave['object']['contractNummer']);
-		$this->assertSame(5000, $contractSave['object']['kosten']);
+		$this->assertSame('C-100', $contractSave['object']['contractNumber']);
+		$this->assertSame(5000, $contractSave['object']['cost']);
 
 		$this->assertNotNull($this->findSave(schemaId: self::SCHEMA_IDS['compliancy'], uuid: 'cp1'));
 		$this->assertNull(
@@ -344,7 +344,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 			typedFixtures: [
 				'gebruik' => [
 					$this->entity(
-						['id' => 'g1', 'afnemer' => 'org-x', 'deelnemers' => ['org-a', 'org-c', 'org-d']],
+						['id' => 'g1', 'consumer' => 'org-x', 'participants' => ['org-a', 'org-c', 'org-d']],
 						uuid: 'g1'
 					),
 				],
@@ -356,8 +356,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 
 		$save = $this->findSave(schemaId: self::SCHEMA_IDS['gebruik'], uuid: 'g1');
 		$this->assertNotNull($save);
-		$this->assertSame(['org-b', 'org-c', 'org-d'], $save['object']['deelnemers']);
-		$this->assertSame('org-x', $save['object']['afnemer'], 'afnemer was already not the source — must stay untouched');
+		$this->assertSame(['org-b', 'org-c', 'org-d'], $save['object']['participants']);
+		$this->assertSame('org-x', $save['object']['consumer'], 'afnemer was already not the source — must stay untouched');
 	}//end testGebruikDeelnemersOnlyReplacesMatchingEntry()
 
 	/**
@@ -376,11 +376,11 @@ class MergeOrganisatieServiceTest extends TestCase {
 			],
 			typedFixtures: [
 				// gebruik/contract already point at the target — nothing left to do.
-				'gebruik' => [$this->entity(['id' => 'g1', 'afnemer' => 'org-b'], uuid: 'g1')],
+				'gebruik' => [$this->entity(['id' => 'g1', 'consumer' => 'org-b'], uuid: 'g1')],
 				'contract' => [$this->entity(['id' => 'c1'], uuid: 'c1', organisation: 'org-b')],
 				// contactpersoon/koppeling/compliancy still reference the source.
 				'contactpersoon' => [$this->entity(['id' => 'p1', 'organisatie' => 'org-a'], uuid: 'p1')],
-				'koppeling' => [$this->entity(['id' => 'k1', 'aanbieder' => 'org-a'], uuid: 'k1')],
+				'koppeling' => [$this->entity(['id' => 'k1', 'provider' => 'org-a'], uuid: 'k1')],
 				'compliancy' => [$this->entity(['id' => 'cp1'], uuid: 'cp1', organisation: 'org-a')],
 			],
 			groupMembers: []
@@ -416,7 +416,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 			],
 			typedFixtures: [
 				// Everything already re-pointed to the target.
-				'gebruik' => [$this->entity(['id' => 'g1', 'afnemer' => 'org-b'], uuid: 'g1')],
+				'gebruik' => [$this->entity(['id' => 'g1', 'consumer' => 'org-b'], uuid: 'g1')],
 				'contract' => [$this->entity(['id' => 'c1'], uuid: 'c1', organisation: 'org-b')],
 			],
 			groupMembers: []
@@ -442,7 +442,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testSourceOrganisationIsTombstonedAfterSuccessfulMerge(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief', 'naam' => 'Gemeente A', 'type' => 'Gemeente']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief', 'name' => 'Gemeente A', 'type' => 'Gemeente']),
 				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
 			],
 			typedFixtures: [],
@@ -458,7 +458,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 		$this->assertSame('samengevoegd', $tombstoneSave['object']['status']);
 		$this->assertSame('org-b', $tombstoneSave['object']['mergedInto']);
 		// Pre-existing fields survive (PUT-semantic full re-save).
-		$this->assertSame('Gemeente A', $tombstoneSave['object']['naam']);
+		$this->assertSame('Gemeente A', $tombstoneSave['object']['name']);
 		$this->assertSame('Gemeente', $tombstoneSave['object']['type']);
 	}//end testSourceOrganisationIsTombstonedAfterSuccessfulMerge()
 
@@ -592,12 +592,12 @@ class MergeOrganisatieServiceTest extends TestCase {
 	private function fullFixtureSet(): array {
 		return [
 			'gebruik' => [
-				$this->entity(['id' => 'g1', 'afnemer' => 'org-a', 'deelnemers' => ['org-c']], uuid: 'g1'),
-				$this->entity(['id' => 'g2', 'afnemer' => 'org-x', 'deelnemers' => ['org-a', 'org-c', 'org-d']], uuid: 'g2'),
-				$this->entity(['id' => 'g3', 'afnemer' => 'org-y', 'deelnemers' => ['org-z']], uuid: 'g3'),
+				$this->entity(['id' => 'g1', 'consumer' => 'org-a', 'participants' => ['org-c']], uuid: 'g1'),
+				$this->entity(['id' => 'g2', 'consumer' => 'org-x', 'participants' => ['org-a', 'org-c', 'org-d']], uuid: 'g2'),
+				$this->entity(['id' => 'g3', 'consumer' => 'org-y', 'participants' => ['org-z']], uuid: 'g3'),
 			],
 			'contract' => [
-				$this->entity(['id' => 'c1', 'contractNummer' => 'C-100'], uuid: 'c1', organisation: 'org-a'),
+				$this->entity(['id' => 'c1', 'contractNumber' => 'C-100'], uuid: 'c1', organisation: 'org-a'),
 				$this->entity(['id' => 'c2'], uuid: 'c2', organisation: 'org-b'),
 			],
 			'contactpersoon' => [
@@ -605,8 +605,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 				$this->entity(['id' => 'p2', 'organisatie' => 'org-b'], uuid: 'p2'),
 			],
 			'koppeling' => [
-				$this->entity(['id' => 'k1', 'aanbieder' => 'org-a'], uuid: 'k1'),
-				$this->entity(['id' => 'k2', 'aanbieder' => 'org-b'], uuid: 'k2'),
+				$this->entity(['id' => 'k1', 'provider' => 'org-a'], uuid: 'k1'),
+				$this->entity(['id' => 'k2', 'provider' => 'org-b'], uuid: 'k2'),
 			],
 			'compliancy' => [
 				$this->entity(['id' => 'cp1'], uuid: 'cp1', organisation: 'org-a'),
@@ -723,7 +723,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 			);
 		}
 
-		$organisatieService = $this->createMock(OrganisatieService::class);
+		$organisationService = $this->createMock(OrganisatieService::class);
 		$progressTracker = $this->createMock(ProgressTracker::class);
 		$progressTracker->method('startOperation')->willReturn('op-1');
 		$organizationHandler = $this->createMock(OrganizationHandler::class);
@@ -735,7 +735,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class),
 			eventDispatcher: $this->createMock(IEventDispatcher::class),
 			settingsService: $settingsService,
-			organisatieService: $organisatieService,
+			organisationService: $organisationService,
 			progressTracker: $progressTracker,
 			organizationHandler: $organizationHandler
 		);

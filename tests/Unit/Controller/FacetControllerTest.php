@@ -46,7 +46,7 @@ class FacetControllerTest extends TestCase {
 		$facetService->method('getFacets')->willReturn(
 			[
 				'referentiecomponent' => [],
-				'standaard' => [],
+				'standard' => [],
 				'applicatieservice' => [],
 				'domein' => [],
 				'_meta' => ['totalMatched' => 0, 'processingTimeMs' => 1.0, 'cached' => false],
@@ -165,7 +165,7 @@ class FacetControllerTest extends TestCase {
 	public function testGetFacetsForwardsArrayFilterParams(): void {
 		$paramMap = [
 			'referentiecomponent' => ['A', 'B'],
-			'standaard' => null,
+			'standard' => null,
 			'applicatieservice' => null,
 			'domein' => null,
 			'search' => 'zaak',
@@ -187,7 +187,7 @@ class FacetControllerTest extends TestCase {
 				$capturedSearch = $search;
 				return [
 					'referentiecomponent' => [],
-					'standaard' => [],
+					'standard' => [],
 					'applicatieservice' => [],
 					'domein' => [],
 					'_meta' => ['totalMatched' => 0, 'processingTimeMs' => 1.0, 'cached' => false],

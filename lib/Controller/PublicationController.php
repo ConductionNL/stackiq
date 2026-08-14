@@ -200,7 +200,7 @@ class PublicationController extends Controller {
 			key: 'organisation'
 		);
 
-		$ownerOrg = (string)($data['_organisation'] ?? $data['aanbieder'] ?? '');
+		$ownerOrg = (string)($data['_organisation'] ?? $data['provider'] ?? '');
 		if ($orgUuid === '' || $ownerOrg === '' || $orgUuid !== $ownerOrg) {
 			return $this->forbidden(objectType: $objectType, uuid: $uuid, uid: $user->getUID());
 		}

@@ -68,7 +68,7 @@ class ReviewService {
 	 *
 	 * @var array<int,string>
 	 */
-	public const REQUIRED_FIELDS = ['naam', 'waardering'];
+	public const REQUIRED_FIELDS = ['name', 'rating'];
 
 	/**
 	 * Maximum number of fields accepted on a submission (anti-abuse).
@@ -295,9 +295,9 @@ class ReviewService {
 	 * @return string|null The rejection reason, or null when valid.
 	 */
 	private function validateRating(array $payload): ?string {
-		$rating = $payload['waardering'];
+		$rating = $payload['rating'];
 		if (is_numeric($rating) === false || (int)$rating < 1 || (int)$rating > 10) {
-			return 'waardering must be between 1 and 10';
+			return 'rating must be between 1 and 10';
 		}
 
 		return null;

@@ -110,13 +110,13 @@ class OrganizationHandler {
 			$objectData = $organizationObject->getObject();
 
 			// Check if organization is active (beoordeling = "actief" or "Actief").
-			$beoordeling = strtolower($objectData['beoordeling'] ?? '');
-			if ($beoordeling !== 'actief') {
+			$assessment = strtolower($objectData['beoordeling'] ?? '');
+			if ($assessment !== 'actief') {
 				$this->_logger->info(
 					'Organization not active, skipping processing',
 					[
 						'organizationId' => $organizationObject->getId(),
-						'beoordeling' => $beoordeling,
+						'beoordeling' => $assessment,
 					]
 				);
 				// Not an error, just not ready for processing.
@@ -166,7 +166,7 @@ class OrganizationHandler {
 
 		if (empty($groupProperty) === true) {
 			// Create group with organization name.
-			$organizationName = $objectData['naam'] ?? $objectData['name'] ?? 'Organization';
+			$organizationName = $objectData['name'] ?? 'Organization';
 			$groupName = $this->sanitizeGroupName(name: $organizationName);
 
 			// Ensure group name is unique.
@@ -332,7 +332,7 @@ class OrganizationHandler {
 
 			$objectService = $this->getObjectService();
 
-			foreach ($contactpersonen as $index => $contactpersoon) {
+			foreach ($contactpersonen as $index => $contactPerson) {
 				try {
 					// Get the contactgegevens schema ID from settings.
 					$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
@@ -343,7 +343,7 @@ class OrganizationHandler {
 						throw new \Exception('Voorzieningen register ID not configured');
 					}
 
-					$contactEmail = $contactpersoon['email'] ?? $contactpersoon['e-mailadres'] ?? '';
+					$contactEmail = $contactPerson['email'] ?? $contactPerson['e-mailadres'] ?? '';
 
 					// Check if contactgegevens object already exists for this email + organization.
 					$existingContactgegevens = $this->findExistingContactgegevens(
@@ -375,23 +375,23 @@ class OrganizationHandler {
 						]
 					);
 
-					$title = $this->buildContactpersoonTitle(contactpersoon: $contactpersoon);
+					$title = $this->buildContactPersonTitle(contactPerson: $contactPerson);
 
 					// Create contactgegevens object with proper schema.
-					$contactFunctie = $contactpersoon['functie'] ?? '';
-					$contactRoles = $this->mapFunctieToRoles(
-						functie: $contactFunctie,
+					$contactRole = $contactPerson['role'] ?? '';
+					$contactRoles = $this->mapRoleToRoles(
+						role: $contactRole,
 						isFirstContact: ($index === 0)
 					);
 					$contactgegevensData = [
 						// Required by OpenRegister.
 						'title' => $title,
-						'voornaam' => $contactpersoon['voornaam'] ?? '',
-						'tussenvoegsel' => $contactpersoon['tussenvoegsel'] ?? '',
-						'achternaam' => $contactpersoon['achternaam'] ?? '',
-						'telefoon' => $contactpersoon['telefoon'] ?? '',
+						'voornaam' => $contactPerson['voornaam'] ?? '',
+						'tussenvoegsel' => $contactPerson['tussenvoegsel'] ?? '',
+						'achternaam' => $contactPerson['achternaam'] ?? '',
+						'telefoon' => $contactPerson['telefoon'] ?? '',
 						'email' => $contactEmail,
-						'functie' => $contactFunctie,
+						'role' => $contactRole,
 						// Link to organization.
 						'organisation' => $organizationUuid,
 						'roles' => $contactRoles,
@@ -452,7 +452,7 @@ class OrganizationHandler {
 						[
 							'organizationId' => $organizationUuid,
 							'contactpersoonIndex' => $index,
-							'contactpersoon' => $contactpersoon,
+							'contactpersoon' => $contactPerson,
 							'exception' => $e,
 						]
 					);
@@ -550,34 +550,34 @@ class OrganizationHandler {
 			'Gebruik-raadpleger',
 			'VNG-raadpleger',
 			// Add beheerder role for group assignment.
-			'beheerder',
+			'maintainer',
 		];
 	}//end getAllAvailableRoles()
 
 	/**
 	 * Maps functie (job function) to appropriate roles.
 	 *
-	 * @param string $functie The job function
+	 * @param string $role The job function
 	 * @param bool $isFirstContact Whether this is the first contact in the organization
 	 *
 	 * @return array Array of roles
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isFirstContact is a simple role-assignment toggle
 	 */
-	private function mapFunctieToRoles(string $functie, bool $isFirstContact = false): array {
+	private function mapRoleToRoles(string $role, bool $isFirstContact = false): array {
 		// If this is the first contact, give them all available roles.
 		if ($isFirstContact === true) {
-			$this->_logger->info('Assigning all roles to first contact', ['functie' => $functie]);
+			$this->_logger->info('Assigning all roles to first contact', ['role' => $role]);
 			return $this->getAllAvailableRoles();
 		}
 
-		$functie = strtolower(trim($functie));
+		$role = strtolower(trim($role));
 
 		// Default role mappings based on common job functions.
 		$roleMapping = [
 			'ceo' => ['Functioneel-beheerder', 'Aanbod-beheerder'],
 			'manager' => ['Functioneel-beheerder', 'Gebruik-beheerder'],
-			'beheerder' => ['Gebruik-beheerder', 'beheerder'],
+			'maintainer' => ['Gebruik-beheerder', 'maintainer'],
 			'administrator' => ['Functioneel-beheerder'],
 			'inkoper' => ['Gebruik-beheerder'],
 			'procurement' => ['Gebruik-beheerder'],
@@ -588,7 +588,7 @@ class OrganizationHandler {
 
 		// Check for specific matches.
 		foreach ($roleMapping as $key => $roles) {
-			if (strpos(haystack: $functie, needle: $key) !== false) {
+			if (strpos(haystack: $role, needle: $key) !== false) {
 				return $roles;
 			}
 		}
@@ -620,9 +620,9 @@ class OrganizationHandler {
 			if ($processed === true) {
 				// Then process contactpersonen if organization is active.
 				$objectData = $organizationObject->getObject();
-				$beoordeling = strtolower($objectData['beoordeling'] ?? '');
+				$assessment = strtolower($objectData['beoordeling'] ?? '');
 
-				if ($beoordeling === 'actief') {
+				if ($assessment === 'actief') {
 					$processedContacts = $this->processContactpersonen(organizationObject: $organizationObject);
 
 					$this->_logger->info(
@@ -656,17 +656,17 @@ class OrganizationHandler {
 	public function getOrganizationBeheerders(string $organizationUuid): array {
 		try {
 			$beheerders = [];
-			$beheerderGroup = $this->_groupManager->get('beheerder');
+			$maintainerGroup = $this->_groupManager->get('maintainer');
 
-			if ($beheerderGroup === null) {
+			if ($maintainerGroup === null) {
 				return [];
 			}
 
 			// Get all users in beheerder group.
-			$beheerderUsers = $beheerderGroup->getUsers();
+			$maintainerUsers = $maintainerGroup->getUsers();
 
 			// Filter users who belong to this organization.
-			foreach ($beheerderUsers as $user) {
+			foreach ($maintainerUsers as $user) {
 				if ($this->userBelongsToOrganization(user: $user, organizationUuid: $organizationUuid) === true) {
 					$beheerders[] = $user->getUID();
 				}
@@ -770,18 +770,18 @@ class OrganizationHandler {
 	 * "Contact Person". Extracted from {@see processContactpersonen()} as part
 	 * of task 8.1.
 	 *
-	 * @param array<string, mixed> $contactpersoon The raw contactpersoon payload.
+	 * @param array<string, mixed> $contactPerson The raw contactpersoon payload.
 	 *
 	 * @return string
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-8
 	 */
-	private function buildContactpersoonTitle(array $contactpersoon): string {
+	private function buildContactPersonTitle(array $contactPerson): string {
 		$parts = array_filter(
 			[
-				$contactpersoon['voornaam'] ?? '',
-				$contactpersoon['tussenvoegsel'] ?? '',
-				$contactpersoon['achternaam'] ?? '',
+				$contactPerson['voornaam'] ?? '',
+				$contactPerson['tussenvoegsel'] ?? '',
+				$contactPerson['achternaam'] ?? '',
 			]
 		);
 
@@ -789,6 +789,6 @@ class OrganizationHandler {
 			return implode(' ', $parts);
 		}
 
-		return $contactpersoon['email'] ?? 'Contact Person';
+		return $contactPerson['email'] ?? 'Contact Person';
 	}//end buildContactpersoonTitle()
 }//end class

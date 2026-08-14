@@ -14,7 +14,7 @@
 /**
  * Resolve the display name of the active organisation.
  *
- * @param {Array<{uuid: string, naam: string}>} organisations The user's own organisations.
+ * @param {Array<{uuid: string, name: string}>} organisations The user's own organisations.
  * @param {string|null} activeOrganisationUuid The currently-active organisation's UUID.
  * @param {string} fallback Text to show when no active organisation resolves.
  * @return {string} The resolved display name, or the fallback.
@@ -27,7 +27,7 @@ export function resolveActiveOrganisationName(
 	const active = (organisations || []).find(
 		(org) => org.uuid === activeOrganisationUuid,
 	)
-	return active?.naam || fallback
+	return active?.name || fallback
 }
 
 /**

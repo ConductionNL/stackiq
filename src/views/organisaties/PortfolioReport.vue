@@ -353,7 +353,7 @@ export default {
 							org.uuid ?? org.id ?? org['@self']?.id ?? org,
 						),
 						label:
-							data.naam
+							data.name
 							|| data.title
 							|| resolveUuid(org.uuid ?? org.id ?? ''),
 					}

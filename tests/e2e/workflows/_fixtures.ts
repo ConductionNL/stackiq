@@ -162,7 +162,7 @@ export async function findAll(
 /** Pull a printable name off a catalog object (schemas use `naam`). */
 export function nameOf(o: Record<string, unknown>): string {
 	return String(
-		o.naam
+		o.name
 			?? o.name
 			?? (o as { '@self'?: { name?: string } })['@self']?.name
 			?? '',

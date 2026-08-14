@@ -3,7 +3,7 @@
 /**
  * Module Registration Subscriber.
  *
- * Event subscriber that auto-sets geregistreerdDoor on module objects
+ * Event subscriber that auto-sets registeredBy on module objects
  * based on the owning organisation's type.
  *
  * @category  EventListener
@@ -29,7 +29,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Event subscriber that auto-sets geregistreerdDoor on module objects
+ * Event subscriber that auto-sets registeredBy on module objects
  * based on the owning organisation's type.
  *
  * @category EventListener

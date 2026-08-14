@@ -82,9 +82,9 @@ class ModuleEventProcessor {
 	 */
 	public function processOrganisatieCreated(object $object, array $schemaIds): void {
 		$objectSchemaIdInt = (int)$object->getSchema();
-		$organisatieSchemaId = $schemaIds['organisatie'];
+		$organisationSchemaId = $schemaIds['organisatie'];
 
-		if ($organisatieSchemaId === null || $objectSchemaIdInt !== (int)$organisatieSchemaId) {
+		if ($organisationSchemaId === null || $objectSchemaIdInt !== (int)$organisationSchemaId) {
 			return;
 		}
 
@@ -124,9 +124,9 @@ class ModuleEventProcessor {
 	 */
 	public function processOrganisatieUpdated(object $object, ?object $oldObject, array $schemaIds): bool {
 		$objectSchemaIdInt = (int)$object->getSchema();
-		$organisatieSchemaId = $schemaIds['organisatie'];
+		$organisationSchemaId = $schemaIds['organisatie'];
 
-		if ($organisatieSchemaId === null || $objectSchemaIdInt !== (int)$organisatieSchemaId) {
+		if ($organisationSchemaId === null || $objectSchemaIdInt !== (int)$organisationSchemaId) {
 			return false;
 		}
 
@@ -139,7 +139,7 @@ class ModuleEventProcessor {
 		}
 
 		if (in_array(needle: $status, haystack: ['actief', 'active']) === true && $status !== $oldStatus) {
-			$this->processActiveOrganisatieUpdate(object: $object, status: $status);
+			$this->processActiveOrganisationUpdate(object: $object, status: $status);
 		}
 
 		return true;
@@ -157,9 +157,9 @@ class ModuleEventProcessor {
 	 */
 	public function processOrganisatieDeleted(object $object, array $schemaIds): bool {
 		$objectSchemaIdInt = (int)$object->getSchema();
-		$organisatieSchemaId = $schemaIds['organisatie'];
+		$organisationSchemaId = $schemaIds['organisatie'];
 
-		if ($organisatieSchemaId === null || $objectSchemaIdInt !== (int)$organisatieSchemaId) {
+		if ($organisationSchemaId === null || $objectSchemaIdInt !== (int)$organisationSchemaId) {
 			return false;
 		}
 
@@ -189,7 +189,7 @@ class ModuleEventProcessor {
 	 *
 	 * @return void
 	 */
-	private function processActiveOrganisatieUpdate(object $object, string $status): void {
+	private function processActiveOrganisationUpdate(object $object, string $status): void {
 		$objectId = $object->getUuid();
 
 		$this->logger->info(

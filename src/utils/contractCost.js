@@ -82,12 +82,12 @@ export function parseAmount(value) {
  */
 export function annualisedCost(contract) {
 	const data = dataOf(contract)
-	const amount = parseAmount(data.kosten)
+	const amount = parseAmount(data.cost)
 	if (amount === null) {
 		return { annual: 0, oneOff: 0 }
 	}
 
-	switch (data.kostenPeriode) {
+	switch (data.costPeriod) {
 		case PERIOD.MONTHLY:
 			return { annual: amount * 12, oneOff: 0 }
 		case PERIOD.YEARLY:
@@ -127,5 +127,5 @@ export function totalAnnualisedCost(contracts) {
  * @spec openspec/specs/contract-administration/spec.md
  */
 export function isOneOff(contract) {
-	return dataOf(contract).kostenPeriode === PERIOD.ONEOFF
+	return dataOf(contract).costPeriod === PERIOD.ONEOFF
 }

@@ -85,7 +85,7 @@ class OrganisatieService {
 				'OrganisatieService: Creating organization entity in OpenRegister',
 				[
 					'organizationUuid' => $organizationUuid,
-					'naam' => $objectData['naam'] ?? 'Unknown',
+					'name' => $objectData['name'] ?? 'Unknown',
 				]
 			);
 
@@ -209,22 +209,22 @@ class OrganisatieService {
 	 * @spec openspec/specs/organisatie-service/spec.md
 	 */
 	private function mapOrganizationDataForOpenRegister(array $objectData): array {
-		// Get the organization name - try 'naam' first, then 'name', then use UUID as fallback.
-		$naam = $objectData['naam'] ?? $objectData['name'] ?? null;
+		// Get the organization name - try 'name' first, then 'name', then use UUID as fallback.
+		$name = $objectData['name'] ?? null;
 
 		// If still no name, create a unique one using the ID to avoid slug conflicts.
-		if (empty($naam) === true || $naam === 'Unknown') {
+		if (empty($name) === true || $name === 'Unknown') {
 			$orgId = $objectData['id'] ?? uniqid(prefix: 'org-');
-			$naam = 'Organisation ' . substr($orgId, 0, 8);
+			$name = 'Organisation ' . substr($orgId, 0, 8);
 		}
 
 		return [
-			'naam' => $naam,
+			'name' => $name,
 			'type' => $objectData['type'] ?? '',
 			'website' => $objectData['website'] ?? '',
 			'active' => $this->mapStatus(status: $objectData['status'] ?? $objectData['beoordeling'] ?? 'actief'),
 			'contactpersonen' => $objectData['contactpersonen'] ?? [],
-			'deelnemers' => $objectData['deelnemers'] ?? [],
+			'participants' => $objectData['participants'] ?? [],
 		];
 	}//end mapOrganizationDataForOpenRegister()
 
@@ -293,7 +293,7 @@ class OrganisatieService {
 			'OrganisatieService: Creating organisation entity',
 			[
 				'uuid' => $organizationUuid,
-				'name' => $mappedData['naam'],
+				'name' => $mappedData['name'],
 				'active' => $mappedData['active'],
 				'parentOrganisation' => $parentOrgUuid,
 			]
@@ -302,7 +302,7 @@ class OrganisatieService {
 		// Use OrganisationService to create the entity.
 		// NOTE: Don't call save() afterwards as it causes UUID/ID issues in the mapper.
 		$organisationEntity = $organisationService->createOrganisation(
-			name: (string)$mappedData['naam'],
+			name: (string)$mappedData['name'],
 			description: (string)($mappedData['type'] ?? ''),
 			addCurrentUser: false,
 			uuid: $organizationUuid

@@ -59,7 +59,7 @@ class OrganizationSyncTest extends TestCase {
 
 		// Test organization data
 		$organizationData = [
-			'naam' => 'Test Organization',
+			'name' => 'Test Organization',
 			'type' => 'Gemeente',
 			'website' => 'https://test.org',
 			'beoordeling' => 'actief',
@@ -155,17 +155,17 @@ class OrganizationSyncTest extends TestCase {
 			->willReturn(37);
 
 		// Test contactpersoon data
-		$contactpersoonData = [
+		$contactPersonData = [
 			'username' => 'test.user@example.com',
 			'organisation' => 'test-org-uuid-123'
 		];
 
 		// Mock contactpersoon object
-		$contactpersoonObject = $this->createMock(Entity::class);
-		$contactpersoonObject->method('getId')
+		$contactPersonObject = $this->createMock(Entity::class);
+		$contactPersonObject->method('getId')
 			->willReturn('test-contact-uuid-456');
-		$contactpersoonObject->method('getObject')
-			->willReturn($contactpersoonData);
+		$contactPersonObject->method('getObject')
+			->willReturn($contactPersonData);
 
 		// Mock organization data
 		$organizationData = [
@@ -181,7 +181,7 @@ class OrganizationSyncTest extends TestCase {
 			->willReturn($organizationObject);
 
 		// Test should add to organization
-		$result = $this->shouldAddContactpersoonToOrganization($contactpersoonObject);
+		$result = $this->shouldAddContactpersoonToOrganization($contactPersonObject);
 		$this->assertTrue($result, 'Contactpersoon should be added to organization');
 	}
 
@@ -221,19 +221,19 @@ class OrganizationSyncTest extends TestCase {
 	 */
 	private function mapOrganizationDataForOpenRegister(array $objectData): array {
 		$mappedData = [
-			'naam' => $objectData['naam'] ?? $objectData['name'] ?? '',
+			'name' => $objectData['name'] ?? '',
 			'type' => $objectData['type'] ?? '',
 			'website' => $objectData['website'] ?? '',
 			'active' => false, // Default to inactive for new organizations
 			'contactpersonen' => [],
-			'deelnemers' => []
+			'participants' => []
 		];
 
 		// Map status from SoftwareCatalog to OpenRegister
-		$beoordeling = strtolower($objectData['beoordeling'] ?? '');
-		if ($beoordeling === 'actief') {
+		$assessment = strtolower($objectData['beoordeling'] ?? '');
+		if ($assessment === 'actief') {
 			$mappedData['active'] = true;
-		} elseif ($beoordeling === 'inactief' || $beoordeling === 'deactief') {
+		} elseif ($assessment === 'inactief' || $assessment === 'deactief') {
 			$mappedData['active'] = false;
 		}
 
@@ -243,12 +243,12 @@ class OrganizationSyncTest extends TestCase {
 	/**
 	 * Helper method to check if contactpersoon should be added to organization
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 *
 	 * @return bool True if the user should be added to the organization
 	 */
-	private function shouldAddContactpersoonToOrganization(object $contactpersoonObject): bool {
-		$objectData = $contactpersoonObject->getObject();
+	private function shouldAddContactpersoonToOrganization(object $contactPersonObject): bool {
+		$objectData = $contactPersonObject->getObject();
 		$username = $objectData['username'] ?? '';
 		$organizationUuid = $objectData['organisation'] ?? '';
 

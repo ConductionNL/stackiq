@@ -13,11 +13,11 @@
 <template>
 	<div class="suite-wizard-step1">
 		<NcTextField
-			:modelValue="payload.naam"
+			:modelValue="payload.name"
 			:label="t('softwarecatalog', 'Name') + ' *'"
 			:placeholder="t('softwarecatalog', 'e.g. Centric Leefomgeving')"
 			required
-			@update:modelValue="onField('naam', $event)" />
+			@update:modelValue="onField('name', $event)" />
 
 		<NcTextField
 			:modelValue="payload.beschrijvingKort"

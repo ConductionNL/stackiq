@@ -36,7 +36,7 @@
 			:aria-label="t('softwarecatalog', 'Compliance matrix scope')">
 			<NcCheckboxRadioSwitch
 				v-model="columnSource"
-				value="standaardversie"
+				value="standardVersion"
 				name="cmv-columnSource"
 				type="radio">
 				{{ t('softwarecatalog', 'Standards') }}
@@ -374,10 +374,11 @@ export default {
 		 * @return {Array} Standard version records.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
-		standaardversies() {
+		standardVersions() {
 			const elements = objectStore.getCollection('element')?.results || []
 			return elements.filter(
-				(el) => (el.gemmaType || el.object?.gemmaType) === 'standaardversie',
+				(el) =>
+					(el.gemmaType || el.object?.gemmaType) === 'standard_version',
 			)
 		},
 
@@ -423,7 +424,7 @@ export default {
 		noColumnsImported() {
 			return this.columnSource === COLUMN_SOURCE.BIO_MAATREGEL
 				? this.bioMaatregelen.length === 0
-				: this.standaardversies.length === 0
+				: this.standardVersions.length === 0
 		},
 
 		/**
@@ -433,7 +434,7 @@ export default {
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		standardOptions() {
-			return this.standaardversies.map((standard) => ({
+			return this.standardVersions.map((standard) => ({
 				uuid: resolveUuid(
 					standard.uuid
 						?? standard.id
@@ -519,7 +520,7 @@ export default {
 				return {
 					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
 					label:
-						data.naam
+						data.name
 						|| data.title
 						|| resolveUuid(org.uuid ?? org.id ?? ''),
 					raw: org,
@@ -530,7 +531,7 @@ export default {
 		/**
 		 * Modules in scope for the matrix: every module, unless an
 		 * organisation is selected — then only that organisation's in-use
-		 * applications (gebruik.afnemer === org → gebruik.module), per the
+		 * applications (gebruik.consumer === org → gebruik.module), per the
 		 * BIO coverage report requirement. Applications with no compliance
 		 * data are still included (rendered as "none"/"not set"), never
 		 * omitted.
@@ -546,7 +547,7 @@ export default {
 			const inUseModuleUuids = new Set(
 				this.gebruiken
 					.map((g) => dataOf(g))
-					.filter((data) => resolveUuid(data.afnemer) === orgUuid)
+					.filter((data) => resolveUuid(data.consumer) === orgUuid)
 					.map((data) => resolveUuid(data.module))
 					.filter(Boolean),
 			)
@@ -800,8 +801,8 @@ export default {
 		 */
 		moduleLabel(module) {
 			return (
-				module?.naam
-				|| module?.object?.naam
+				module?.name
+				|| module?.object?.name
 				|| resolveUuid(module?.uuid ?? module?.id ?? module)
 			)
 		},

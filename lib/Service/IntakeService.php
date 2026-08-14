@@ -55,7 +55,7 @@ class IntakeService {
 	 *
 	 * @var array<int,string>
 	 */
-	public const REQUIRED_FIELDS = ['naam'];
+	public const REQUIRED_FIELDS = ['name'];
 
 	/**
 	 * Maximum number of fields accepted on an anonymous payload (anti-abuse).
@@ -75,9 +75,9 @@ class IntakeService {
 	 * @var array<int,string>
 	 */
 	public const FORBIDDEN_KEYS = [
-		'registratiestatus',
-		'publicatiedatum',
-		'depublicatiedatum',
+		'registrationStatus',
+		'publicationDate',
+		'depublicationDate',
 		'_source',
 		'id',
 		'uuid',
@@ -132,7 +132,7 @@ class IntakeService {
 			return ['ok' => false, 'reason' => 'ObjectService unavailable', 'uuid' => null, 'status' => null];
 		}
 
-		if ($this->hasPendingDuplicate(objectService: $objectService, target: $target, naam: (string)$clean['naam']) === true) {
+		if ($this->hasPendingDuplicate(objectService: $objectService, target: $target, name: (string)$clean['name']) === true) {
 			return [
 				'ok' => false,
 				'reason' => 'a pending registration for this organisation already exists',
@@ -143,8 +143,8 @@ class IntakeService {
 
 		// Enforce the moderation defaults server-side (never from the caller):
 		// pending + no publicatiedatum → invisible to the public RBAC gate.
-		$clean['registratiestatus'] = self::STATUS_PENDING;
-		$clean['publicatiedatum'] = null;
+		$clean['registrationStatus'] = self::STATUS_PENDING;
+		$clean['publicationDate'] = null;
 
 		try {
 			$entity = $objectService->saveObject(
@@ -160,7 +160,7 @@ class IntakeService {
 		$uuid = $this->entityUuid(entity: $entity);
 		$this->logger->info(
 			'IntakeService: anonymous registration queued (pending)',
-			['uuid' => $uuid, 'naam' => $clean['naam']]
+			['uuid' => $uuid, 'name' => $clean['name']]
 		);
 
 		return ['ok' => true, 'reason' => 'queued for moderation', 'uuid' => $uuid, 'status' => self::STATUS_PENDING];
@@ -222,17 +222,17 @@ class IntakeService {
 	 *
 	 * @param object $objectService The OR ObjectService.
 	 * @param array{register:int,schema:int} $target The intake register/schema.
-	 * @param string $naam The organisation name.
+	 * @param string $name The organisation name.
 	 *
 	 * @return bool True when a pending duplicate exists.
 	 */
-	private function hasPendingDuplicate(object $objectService, array $target, string $naam): bool {
+	private function hasPendingDuplicate(object $objectService, array $target, string $name): bool {
 		try {
 			$matches = $objectService->searchObjects(
 				query: [
 					'@self' => ['register' => $target['register'], 'schema' => $target['schema']],
-					'naam' => $naam,
-					'registratiestatus' => self::STATUS_PENDING,
+					'name' => $name,
+					'registrationStatus' => self::STATUS_PENDING,
 					'_limit' => 1,
 				],
 				_rbac: false,

@@ -62,7 +62,7 @@ class PublishGateRbacTest extends TestCase {
 		foreach ($read as $rule) {
 			if (is_array($rule) === true
 				&& ($rule['group'] ?? null) === 'public'
-				&& isset($rule['match']['publicatiedatum']) === true
+				&& isset($rule['match']['publicationDate']) === true
 			) {
 				return $rule['match'];
 			}
@@ -110,7 +110,7 @@ class PublishGateRbacTest extends TestCase {
 		foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $schema) {
 			$match = $this->publicPublishGate($schema);
 			$this->assertNotNull($match, $schema . ' must have a public publicatiedatum gate');
-			$this->assertSame('$now', $match['publicatiedatum']['$lte'], $schema . ' gate must be $lte $now');
+			$this->assertSame('$now', $match['publicationDate']['$lte'], $schema . ' gate must be $lte $now');
 		}
 	}//end testEveryPublishableSchemaHasTheGate()
 
@@ -127,21 +127,21 @@ class PublishGateRbacTest extends TestCase {
 
 			// Not published (no publicatiedatum) → invisible to public.
 			$this->assertFalse(
-				$this->publicCanRead($match, ['naam' => 'Draft']),
+				$this->publicCanRead($match, ['name' => 'Draft']),
 				$schema . ': unpublished entry must NOT be anon-visible'
 			);
 
 			// Published in the future → still invisible until that moment.
 			$future = gmdate('Y-m-d\TH:i:sP', (time() + 86400));
 			$this->assertFalse(
-				$this->publicCanRead($match, ['publicatiedatum' => $future]),
+				$this->publicCanRead($match, ['publicationDate' => $future]),
 				$schema . ': future-dated entry must NOT be anon-visible yet'
 			);
 
 			// Published in the past → anon-visible.
 			$past = gmdate('Y-m-d\TH:i:sP', (time() - 3600));
 			$this->assertTrue(
-				$this->publicCanRead($match, ['publicatiedatum' => $past]),
+				$this->publicCanRead($match, ['publicationDate' => $past]),
 				$schema . ': past-published entry MUST be anon-visible'
 			);
 		}
@@ -155,9 +155,9 @@ class PublishGateRbacTest extends TestCase {
 	public function testPublishGateFieldsPresent(): void {
 		foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $schema) {
 			$props = $this->register['components']['schemas'][$schema]['properties'] ?? [];
-			$this->assertArrayHasKey('publicatiedatum', $props, $schema . ' needs publicatiedatum');
-			$this->assertArrayHasKey('depublicatiedatum', $props, $schema . ' needs depublicatiedatum');
-			$this->assertSame('date-time', $props['publicatiedatum']['format']);
+			$this->assertArrayHasKey('publicationDate', $props, $schema . ' needs publicatiedatum');
+			$this->assertArrayHasKey('depublicationDate', $props, $schema . ' needs depublicatiedatum');
+			$this->assertSame('date-time', $props['publicationDate']['format']);
 		}
 	}//end testPublishGateFieldsPresent()
 }//end class

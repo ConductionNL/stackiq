@@ -68,7 +68,7 @@ class OrganisationMembersController extends Controller {
 	 * Matches the group `ContactPersonHandler::assignBeheerderRole()`
 	 * already assigns.
 	 */
-	private const BEHEERDER_GROUP = 'beheerder';
+	private const BEHEERDER_GROUP = 'maintainer';
 
 	/**
 	 * Constructor.
@@ -108,7 +108,7 @@ class OrganisationMembersController extends Controller {
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function grant(string $uuid, string $userId): JSONResponse {
-		$guard = $this->authorizeBeheerder(organisationUuid: $uuid);
+		$guard = $this->authorizeMaintainer(organisationUuid: $uuid);
 		if ($guard instanceof JSONResponse) {
 			return $guard;
 		}
@@ -158,7 +158,7 @@ class OrganisationMembersController extends Controller {
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
 	public function revoke(string $uuid, string $userId): JSONResponse {
-		$guard = $this->authorizeBeheerder(organisationUuid: $uuid);
+		$guard = $this->authorizeMaintainer(organisationUuid: $uuid);
 		if ($guard instanceof JSONResponse) {
 			return $guard;
 		}
@@ -206,7 +206,7 @@ class OrganisationMembersController extends Controller {
 	 *
 	 * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
 	 */
-	private function authorizeBeheerder(string $organisationUuid): ?JSONResponse {
+	private function authorizeMaintainer(string $organisationUuid): ?JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(data: ['error' => 'Not authenticated'], statusCode: Http::STATUS_UNAUTHORIZED);

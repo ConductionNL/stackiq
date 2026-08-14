@@ -149,28 +149,28 @@ class PublicationService {
 	 *                          (defaults to now); a future value keeps
 	 *                          the entry hidden until that moment.
 	 *
-	 * @return array{ok:bool, reason:string, publicatiedatum:?string} Result.
+	 * @return array{ok:bool, reason:string, publicationDate:?string} Result.
 	 *
 	 * @spec openspec/specs/open-data-publishing/spec.md
 	 */
 	public function publish(string $objectType, string $uuid, ?string $when = null): array {
 		$entry = $this->resolveEntry(objectType: $objectType, uuid: $uuid);
 		if ($entry === null) {
-			return ['ok' => false, 'reason' => 'entry not resolvable', 'publicatiedatum' => null];
+			return ['ok' => false, 'reason' => 'entry not resolvable', 'publicationDate' => null];
 		}
 
-		$publicatiedatum = $this->normaliseDate(when: $when) ?? $this->now();
+		$publicationDate = $this->normaliseDate(when: $when) ?? $this->now();
 
 		$data = $entry['data'];
-		$data['publicatiedatum'] = $publicatiedatum;
-		$data['depublicatiedatum'] = null;
+		$data['publicationDate'] = $publicationDate;
+		$data['depublicationDate'] = null;
 
 		return $this->save(
 			objectType: $objectType,
 			uuid: $uuid,
 			entry: $entry,
 			data: $data,
-			publicatiedatum: $publicatiedatum,
+			publicationDate: $publicationDate,
 			action: 'published'
 		);
 	}//end publish()
@@ -183,26 +183,26 @@ class PublicationService {
 	 * @param string $objectType The catalog object type.
 	 * @param string $uuid The entry uuid.
 	 *
-	 * @return array{ok:bool, reason:string, publicatiedatum:?string} Result.
+	 * @return array{ok:bool, reason:string, publicationDate:?string} Result.
 	 *
 	 * @spec openspec/specs/open-data-publishing/spec.md
 	 */
 	public function depublish(string $objectType, string $uuid): array {
 		$entry = $this->resolveEntry(objectType: $objectType, uuid: $uuid);
 		if ($entry === null) {
-			return ['ok' => false, 'reason' => 'entry not resolvable', 'publicatiedatum' => null];
+			return ['ok' => false, 'reason' => 'entry not resolvable', 'publicationDate' => null];
 		}
 
 		$data = $entry['data'];
-		$data['publicatiedatum'] = null;
-		$data['depublicatiedatum'] = $this->now();
+		$data['publicationDate'] = null;
+		$data['depublicationDate'] = $this->now();
 
 		return $this->save(
 			objectType: $objectType,
 			uuid: $uuid,
 			entry: $entry,
 			data: $data,
-			publicatiedatum: null,
+			publicationDate: null,
 			action: 'depublished'
 		);
 	}//end depublish()
@@ -214,22 +214,22 @@ class PublicationService {
 	 * @param string $uuid The entry uuid.
 	 * @param array{register:int,schema:int,data:array<string,mixed>} $entry The resolved entry.
 	 * @param array<string,mixed> $data The mutated data bag.
-	 * @param string|null $publicatiedatum The resulting publicatiedatum.
+	 * @param string|null $publicationDate The resulting publicatiedatum.
 	 * @param string $action 'published'|'depublished' (logging).
 	 *
-	 * @return array{ok:bool, reason:string, publicatiedatum:?string} Result.
+	 * @return array{ok:bool, reason:string, publicationDate:?string} Result.
 	 */
 	private function save(
 		string $objectType,
 		string $uuid,
 		array $entry,
 		array $data,
-		?string $publicatiedatum,
+		?string $publicationDate,
 		string $action,
 	): array {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
-			return ['ok' => false, 'reason' => 'ObjectService unavailable', 'publicatiedatum' => null];
+			return ['ok' => false, 'reason' => 'ObjectService unavailable', 'publicationDate' => null];
 		}
 
 		try {
@@ -244,15 +244,15 @@ class PublicationService {
 				'PublicationService: save failed',
 				['objectType' => $objectType, 'uuid' => $uuid, 'error' => $e->getMessage()]
 			);
-			return ['ok' => false, 'reason' => $e->getMessage(), 'publicatiedatum' => null];
+			return ['ok' => false, 'reason' => $e->getMessage(), 'publicationDate' => null];
 		}
 
 		$this->logger->info(
 			'PublicationService: ' . $action,
-			['objectType' => $objectType, 'uuid' => $uuid, 'publicatiedatum' => $publicatiedatum]
+			['objectType' => $objectType, 'uuid' => $uuid, 'publicationDate' => $publicationDate]
 		);
 
-		return ['ok' => true, 'reason' => $action, 'publicatiedatum' => $publicatiedatum];
+		return ['ok' => true, 'reason' => $action, 'publicationDate' => $publicationDate];
 	}//end save()
 
 	/**

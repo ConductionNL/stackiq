@@ -146,7 +146,7 @@ class SoftwareCatalogueService {
 	 * If the contactpersoon object doesn't have a user or the user is missing,
 	 * this method will create an inactive user account.
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object to process
+	 * @param object $contactPersonObject The contactpersoon object to process
 	 * @param bool $isUpdate Whether this is an update operation (defaults to false)
 	 *
 	 * @return bool True if processing was successful
@@ -156,12 +156,12 @@ class SoftwareCatalogueService {
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	public function processContactpersoon(object $contactpersoonObject, bool $isUpdate = false): bool {
+	public function processContactpersoon(object $contactPersonObject, bool $isUpdate = false): bool {
 		$startTime = microtime(true);
 
 		try {
-			$objectId = $contactpersoonObject->getId();
-			$objectData = $contactpersoonObject->getObject();
+			$objectId = $contactPersonObject->getId();
+			$objectData = $contactPersonObject->getObject();
 
 			$this->_logger->info(
 				'SoftwareCatalogueService: Starting contactpersoon processing',
@@ -180,7 +180,7 @@ class SoftwareCatalogueService {
 				]
 			);
 
-			$result = $this->_contactPersonHandler->processContactpersoon($contactpersoonObject, $isUpdate);
+			$result = $this->_contactPersonHandler->processContactpersoon($contactPersonObject, $isUpdate);
 
 			$this->_logger->info(
 				'SoftwareCatalogueService: ContactPersonHandler processing completed',
@@ -193,7 +193,7 @@ class SoftwareCatalogueService {
 
 			if ($result === true) {
 				// Get the username from the processed object.
-				$updatedObjectData = $contactpersoonObject->getObject();
+				$updatedObjectData = $contactPersonObject->getObject();
 				$username = $updatedObjectData['username'] ?? '';
 
 				$this->_logger->info(
@@ -218,7 +218,7 @@ class SoftwareCatalogueService {
 						]
 					);
 
-					$this->_hierarchyHandler->ensureOrganizationBeheerder($contactpersoonObject, $username);
+					$this->_hierarchyHandler->ensureOrganizationBeheerder($contactPersonObject, $username);
 
 					// Set user to inactive initially.
 					$this->_logger->debug(
@@ -340,7 +340,7 @@ class SoftwareCatalogueService {
 					'file' => $e->getFile(),
 					'line' => $e->getLine(),
 					'trace' => $e->getTraceAsString(),
-					'objectId' => $contactpersoonObject->getId() ?? 'unknown',
+					'objectId' => $contactPersonObject->getId() ?? 'unknown',
 					'processingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms',
 				]
 			);
@@ -354,7 +354,7 @@ class SoftwareCatalogueService {
 	 * If the contactpersoon object doesn't have a username or it's empty,
 	 * this method will create a user account and set the username property.
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object to process
+	 * @param object $contactPersonObject The contactpersoon object to process
 	 *
 	 * @return bool True if processing was successful
 	 * @throws \Exception If processing fails
@@ -388,17 +388,17 @@ class SoftwareCatalogueService {
 	/**
 	 * Updates user groups based on contactpersoon data
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 * @param string $username The username to update groups for
 	 *
 	 * @return void
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function updateUserGroups(object $contactpersoonObject, string $username): void {
+	public function updateUserGroups(object $contactPersonObject, string $username): void {
 		// Use the new organization type-based logic instead of old role-based logic.
 		$user = $this->_container->get(\OCP\IUserManager::class)->get($username);
 		if (empty($user) === false) {
-			$contactData = $contactpersoonObject->getObject();
+			$contactData = $contactPersonObject->getObject();
 			$this->_contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
 		} else {
 			$this->_logger->warning('User not found for group update', ['username' => $username]);
@@ -408,15 +408,15 @@ class SoftwareCatalogueService {
 	/**
 	 * Ensures organization has at least one beheerder and manages user hierarchy
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 * @param string $username The username being processed
 	 *
 	 * @return void
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function ensureOrganizationBeheerder(object $contactpersoonObject, string $username): void {
+	public function ensureOrganizationBeheerder(object $contactPersonObject, string $username): void {
 		// Delegate to hierarchy handler.
-		$this->_hierarchyHandler->ensureOrganizationBeheerder($contactpersoonObject, $username);
+		$this->_hierarchyHandler->ensureOrganizationBeheerder($contactPersonObject, $username);
 	}//end ensureOrganizationBeheerder()
 
 	/**
@@ -487,9 +487,9 @@ class SoftwareCatalogueService {
 
 			// If organization is active, send activation email too.
 			$objectData = $organizationObject->getObject();
-			$beoordeling = strtolower($objectData['beoordeling'] ?? '');
+			$assessment = strtolower($objectData['beoordeling'] ?? '');
 
-			if ($beoordeling === 'actief') {
+			if ($assessment === 'actief') {
 				try {
 					$success = $this->_emailService->sendOrganizationActivationEmail($objectData);
 					$this->_logger->info(
@@ -640,8 +640,8 @@ class SoftwareCatalogueService {
 			$oldData = $oldOrganizationObject->getObject();
 
 			// Check both 'beoordeling' and 'status' fields (different schemas use different field names).
-			$newBeoordeling = strtolower($newData['beoordeling'] ?? $newData['status'] ?? '');
-			$oldBeoordeling = strtolower($oldData['beoordeling'] ?? $oldData['status'] ?? '');
+			$newAssessment = strtolower($newData['beoordeling'] ?? $newData['status'] ?? '');
+			$oldAssessment = strtolower($oldData['beoordeling'] ?? $oldData['status'] ?? '');
 
 			// Sync the organization with OpenRegister.
 			$syncResult = $this->syncOrganizationWithOpenRegister(organizationObject: $organizationObject);
@@ -667,8 +667,8 @@ class SoftwareCatalogueService {
 			$this->addAdminGroupUsersToOrganization(organizationUuid: $organizationUuid);
 
 			// Check if organization status changed to active.
-			if ($newBeoordeling === 'actief') {
-				$becameActive = ($oldBeoordeling !== 'actief');
+			if ($newAssessment === 'actief') {
+				$becameActive = ($oldAssessment !== 'actief');
 
 				$activeMessage = 'Organization is active';
 				if ($becameActive === true) {
@@ -679,8 +679,8 @@ class SoftwareCatalogueService {
 					$activeMessage,
 					[
 						'organizationId' => $organizationObject->getId(),
-						'oldBeoordeling' => $oldBeoordeling,
-						'newBeoordeling' => $newBeoordeling,
+						'oldBeoordeling' => $oldAssessment,
+						'newBeoordeling' => $newAssessment,
 						'becameActive' => $becameActive,
 					]
 				);
@@ -726,8 +726,8 @@ class SoftwareCatalogueService {
 			}//end if
 
 			// Check if organization status changed to inactive.
-			if ($newBeoordeling === 'inactief' || $newBeoordeling === 'deactief') {
-				$becameInactive = ($oldBeoordeling === 'actief');
+			if ($newAssessment === 'inactief' || $newAssessment === 'deactief') {
+				$becameInactive = ($oldAssessment === 'actief');
 
 				$inactiveMessage = 'Organization is inactive';
 				if ($becameInactive === true) {
@@ -738,8 +738,8 @@ class SoftwareCatalogueService {
 					$inactiveMessage,
 					[
 						'organizationId' => $organizationObject->getId(),
-						'oldBeoordeling' => $oldBeoordeling,
-						'newBeoordeling' => $newBeoordeling,
+						'oldBeoordeling' => $oldAssessment,
+						'newBeoordeling' => $newAssessment,
 						'becameInactive' => $becameInactive,
 					]
 				);
@@ -825,17 +825,17 @@ class SoftwareCatalogueService {
 	/**
 	 * Handles new gebruiker creation
 	 *
-	 * @param object $gebruikerObject The gebruiker object
+	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function handleNewGebruiker(object $gebruikerObject): void {
+	public function handleNewGebruiker(object $userObject): void {
 		// Implementation for handling new gebruiker.
 		$this->_logger->info(
 			'Handling new gebruiker',
 			[
-				'objectId' => $gebruikerObject->getId(),
+				'objectId' => $userObject->getId(),
 			]
 		);
 	}//end handleNewGebruiker()
@@ -843,17 +843,17 @@ class SoftwareCatalogueService {
 	/**
 	 * Sends welcome email to gebruiker
 	 *
-	 * @param object $gebruikerObject The gebruiker object
+	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function sendGebruikerWelcomeEmail(object $gebruikerObject): void {
+	public function sendGebruikerWelcomeEmail(object $userObject): void {
 		// Implementation for sending gebruiker welcome email.
 		$this->_logger->info(
 			'Sending gebruiker welcome email',
 			[
-				'objectId' => $gebruikerObject->getId(),
+				'objectId' => $userObject->getId(),
 			]
 		);
 	}//end sendGebruikerWelcomeEmail()
@@ -874,18 +874,18 @@ class SoftwareCatalogueService {
 	/**
 	 * Handles gebruiker update
 	 *
-	 * @param object $gebruikerObject The new gebruiker object
-	 * @param object $oldGebruikerObject The old gebruiker object
+	 * @param object $userObject The new gebruiker object
+	 * @param object $oldUserObject The old gebruiker object
 	 *
 	 * @return void
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function handleGebruikerUpdate(object $gebruikerObject, object $oldGebruikerObject): void {
+	public function handleGebruikerUpdate(object $userObject, object $oldUserObject): void {
 		// Implementation for handling gebruiker updates.
 		$this->_logger->info(
 			'Handling gebruiker update',
 			[
-				'objectId' => $gebruikerObject->getId(),
+				'objectId' => $userObject->getId(),
 			]
 		);
 	}//end handleGebruikerUpdate()
@@ -906,17 +906,17 @@ class SoftwareCatalogueService {
 	/**
 	 * Blocks user for gebruiker
 	 *
-	 * @param object $gebruikerObject The gebruiker object
+	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function blockUserForGebruiker(object $gebruikerObject): void {
+	public function blockUserForGebruiker(object $userObject): void {
 		// Implementation for blocking user.
 		$this->_logger->info(
 			'Blocking user for gebruiker',
 			[
-				'objectId' => $gebruikerObject->getId(),
+				'objectId' => $userObject->getId(),
 			]
 		);
 	}//end blockUserForGebruiker()
@@ -924,17 +924,17 @@ class SoftwareCatalogueService {
 	/**
 	 * Temporarily blocks user for gebruiker
 	 *
-	 * @param object $gebruikerObject The gebruiker object
+	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function temporarilyBlockUserForGebruiker(object $gebruikerObject): void {
+	public function temporarilyBlockUserForGebruiker(object $userObject): void {
 		// Implementation for temporarily blocking user.
 		$this->_logger->info(
 			'Temporarily blocking user for gebruiker',
 			[
-				'objectId' => $gebruikerObject->getId(),
+				'objectId' => $userObject->getId(),
 			]
 		);
 	}//end temporarilyBlockUserForGebruiker()
@@ -942,17 +942,17 @@ class SoftwareCatalogueService {
 	/**
 	 * Restores user access for gebruiker
 	 *
-	 * @param object $gebruikerObject The gebruiker object
+	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function restoreUserAccessForGebruiker(object $gebruikerObject): void {
+	public function restoreUserAccessForGebruiker(object $userObject): void {
 		// Implementation for restoring user access.
 		$this->_logger->info(
 			'Restoring user access for gebruiker',
 			[
-				'objectId' => $gebruikerObject->getId(),
+				'objectId' => $userObject->getId(),
 			]
 		);
 	}//end restoreUserAccessForGebruiker()
@@ -979,18 +979,18 @@ class SoftwareCatalogueService {
 	/**
 	 * Updates user from reverted gebruiker
 	 *
-	 * @param object $gebruikerObject The gebruiker object
+	 * @param object $userObject The gebruiker object
 	 * @param mixed $revertPoint The revert point
 	 *
 	 * @return void
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function updateUserFromRevertedGebruiker(object $gebruikerObject, mixed $revertPoint): void {
+	public function updateUserFromRevertedGebruiker(object $userObject, mixed $revertPoint): void {
 		// Implementation for updating user from reverted gebruiker.
 		$this->_logger->info(
 			'Updating user from reverted gebruiker',
 			[
-				'objectId' => $gebruikerObject->getId(),
+				'objectId' => $userObject->getId(),
 			]
 		);
 	}//end updateUserFromRevertedGebruiker()
@@ -1050,31 +1050,31 @@ class SoftwareCatalogueService {
 	/**
 	 * Handles contactpersoon updates, particularly role changes
 	 *
-	 * @param object $contactpersoonObject The updated contactpersoon object
-	 * @param object $oldContactpersoonObject The previous contactpersoon object (optional)
+	 * @param object $contactPersonObject The updated contactpersoon object
+	 * @param object $oldContactPersonObject The previous contactpersoon object (optional)
 	 *
 	 * @return void
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function handleContactpersoonUpdate(object $contactpersoonObject, ?object $oldContactpersoonObject = null): void {
+	public function handleContactpersoonUpdate(object $contactPersonObject, ?object $oldContactPersonObject = null): void {
 		$startTime = microtime(true);
 
 		try {
-			$objectId = $contactpersoonObject->getId();
+			$objectId = $contactPersonObject->getId();
 			$this->_logger->info(
 				'SoftwareCatalogueService: Starting contactpersoon update handling',
 				[
 					'objectId' => $objectId,
-					'hasOldObject' => $oldContactpersoonObject !== null,
+					'hasOldObject' => $oldContactPersonObject !== null,
 					'timestamp' => date('Y-m-d H:i:s'),
 				]
 			);
 
 			// Get current and old data for comparison.
-			$newData = $contactpersoonObject->getObject();
+			$newData = $contactPersonObject->getObject();
 			$oldData = [];
-			if ($oldContactpersoonObject !== null) {
-				$oldData = $oldContactpersoonObject->getObject();
+			if ($oldContactPersonObject !== null) {
+				$oldData = $oldContactPersonObject->getObject();
 			}
 
 			$newRoles = $newData['roles'] ?? [];
@@ -1132,9 +1132,9 @@ class SoftwareCatalogueService {
 				$username = $newData['username'] ?? '';
 				if (empty($username) === true) {
 					// Generate username and create user if needed.
-					$result = $this->_contactPersonHandler->processContactpersoon($contactpersoonObject, true);
+					$result = $this->_contactPersonHandler->processContactpersoon($contactPersonObject, true);
 					if ($result === true) {
-						$updatedData = $contactpersoonObject->getObject();
+						$updatedData = $contactPersonObject->getObject();
 						$username = $updatedData['username'] ?? '';
 					}
 				}
@@ -1143,7 +1143,7 @@ class SoftwareCatalogueService {
 					$user = $this->_container->get(\OCP\IUserManager::class)->get($username);
 					if (empty($user) === false) {
 						// Use new organization type-based logic instead of old role-based logic.
-						$contactData = $contactpersoonObject->getObject();
+						$contactData = $contactPersonObject->getObject();
 						$this->_contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
 
 						$this->_logger->info(
@@ -1182,7 +1182,7 @@ class SoftwareCatalogueService {
 					]
 				);
 
-				$result = $this->processContactpersoon(contactpersoonObject: $contactpersoonObject, isUpdate: true);
+				$result = $this->processContactpersoon(contactPersonObject: $contactPersonObject, isUpdate: true);
 
 				$this->_logger->info(
 					'SoftwareCatalogueService: Standard contactpersoon processing completed',
@@ -1205,7 +1205,7 @@ class SoftwareCatalogueService {
 			$this->_logger->error(
 				'SoftwareCatalogueService: Failed to handle contactpersoon update: ' . $e->getMessage(),
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
 					'line' => $e->getLine(),
@@ -1311,7 +1311,7 @@ class SoftwareCatalogueService {
 				'SoftwareCatalogueService: SYNC_STEP_4 - OpenRegister configuration',
 				[
 					'organizationUuid' => $organizationUuid,
-					'organizationName' => $objectData['naam'] ?? 'Unknown',
+					'organizationName' => $objectData['name'] ?? 'Unknown',
 				]
 			);
 
@@ -1423,12 +1423,12 @@ class SoftwareCatalogueService {
 
 			// Map the data.
 			$mappedData = [
-				'naam' => $objectData['naam'] ?? 'Unknown',
+				'name' => $objectData['name'] ?? 'Unknown',
 				'type' => $objectData['type'] ?? '',
 				'website' => $objectData['website'] ?? '',
 				'active' => $this->mapStatus(status: $objectData['beoordeling'] ?? 'actief'),
 				'contactpersonen' => $objectData['contactpersonen'] ?? [],
-				'deelnemers' => $objectData['deelnemers'] ?? [],
+				'participants' => $objectData['participants'] ?? [],
 			];
 
 			// Get organisation service.
@@ -1488,7 +1488,7 @@ class SoftwareCatalogueService {
 			'SoftwareCatalogueService: STEP 1 - Starting createOrganisationInOpenRegister',
 			[
 				'organizationUuid' => $organizationUuid,
-				'name' => $mappedData['naam'] ?? 'Unknown',
+				'name' => $mappedData['name'] ?? 'Unknown',
 				'mappedDataKeys' => array_keys($mappedData),
 			]
 		);
@@ -1544,7 +1544,7 @@ class SoftwareCatalogueService {
 			$this->_logger->info(
 				'SoftwareCatalogueService: STEP 3F - Setting organisation properties',
 				[
-					'name' => $mappedData['naam'] ?? 'Unknown Organization',
+					'name' => $mappedData['name'] ?? 'Unknown Organization',
 					'description' => $mappedData['website'] ?? '',
 					'uuid' => $organizationUuid,
 				]
@@ -1569,7 +1569,7 @@ class SoftwareCatalogueService {
 				]
 			);
 
-			$organisation->setName($mappedData['naam'] ?? 'Unknown Organization');
+			$organisation->setName($mappedData['name'] ?? 'Unknown Organization');
 			$organisation->setDescription($mappedData['website'] ?? '');
 			// Use website as description.
 			$organisation->setUuid($organizationUuid);
@@ -1673,7 +1673,7 @@ class SoftwareCatalogueService {
 				'organizationUuid' => $organizationUuid,
 				'uuidLength' => strlen($organizationUuid),
 				'uuidIsEmpty' => empty($organizationUuid) === true,
-				'name' => $mappedData['naam'] ?? 'Unknown Organization',
+				'name' => $mappedData['name'] ?? 'Unknown Organization',
 				'description' => $mappedData['website'] ?? '',
 				'owner' => $currentUser->getUID(),
 				'users' => $allUsernames,
@@ -1687,7 +1687,7 @@ class SoftwareCatalogueService {
 			$this->_logger->info(
 				'SoftwareCatalogueService: STEP 4F_DEBUG - Parameters for createWithUuid',
 				[
-					'name' => $mappedData['naam'] ?? 'Unknown Organization',
+					'name' => $mappedData['name'] ?? 'Unknown Organization',
 					'description' => $mappedData['website'] ?? '',
 					'uuid' => $organizationUuid,
 					'owner' => $currentUser->getUID(),
@@ -1699,7 +1699,7 @@ class SoftwareCatalogueService {
 			);
 
 			$organisation = $organisationMapper->createWithUuid(
-				$mappedData['naam'] ?? 'Unknown Organization',
+				$mappedData['name'] ?? 'Unknown Organization',
 				$mappedData['website'] ?? '',
 				// Use website as description.
 				$organizationUuid,
@@ -1878,8 +1878,8 @@ class SoftwareCatalogueService {
 
 						foreach ($allContactPersons as $contactPerson) {
 							$contactData = $contactPerson->getObject();
-							$contactOrganisatie = $contactData['organisatie'] ?? null;
-							if ($contactOrganisatie === $organizationUuid) {
+							$contactOrganisation = $contactData['organisatie'] ?? null;
+							if ($contactOrganisation === $organizationUuid) {
 								$contactPersons[] = $contactPerson;
 							}
 						}
@@ -1956,20 +1956,20 @@ class SoftwareCatalogueService {
 	 */
 	private function mapOrganizationDataForOpenRegister(array $objectData): array {
 		$mappedData = [
-			'naam' => $objectData['naam'] ?? $objectData['name'] ?? '',
+			'name' => $objectData['name'] ?? '',
 			'type' => $objectData['type'] ?? '',
 			'website' => $objectData['website'] ?? '',
 			'active' => false,
 			// Default to inactive for new organizations.
 			'contactpersonen' => [],
-			'deelnemers' => [],
+			'participants' => [],
 		];
 
 		// Map status from SoftwareCatalog to OpenRegister.
-		$beoordeling = strtolower($objectData['beoordeling'] ?? '');
-		if ($beoordeling === 'actief') {
+		$assessment = strtolower($objectData['beoordeling'] ?? '');
+		if ($assessment === 'actief') {
 			$mappedData['active'] = true;
-		} elseif ($beoordeling === 'inactief' || $beoordeling === 'deactief') {
+		} elseif ($assessment === 'inactief' || $assessment === 'deactief') {
 			$mappedData['active'] = false;
 		}
 
@@ -2026,19 +2026,19 @@ class SoftwareCatalogueService {
 			}
 
 			$registerId = $ctx['registerId'];
-			$contactpersoonSchemaId = $ctx['schemaId'];
+			$contactPersonSchemaId = $ctx['schemaId'];
 
 			$contactpersonen = $objectService->findAll(
 				['organisation' => $organizationUuid],
 				$registerId,
-				$contactpersoonSchemaId
+				$contactPersonSchemaId
 			);
 
 			$userManager = $this->_container->get(\OCP\IUserManager::class);
 			$activatedCount = 0;
 
-			foreach ($contactpersonen as $contactpersoon) {
-				$contactData = $contactpersoon->getObject();
+			foreach ($contactpersonen as $contactPerson) {
+				$contactData = $contactPerson->getObject();
 				$username = $contactData['username'] ?? '';
 
 				if (empty($username) === false) {
@@ -2109,19 +2109,19 @@ class SoftwareCatalogueService {
 			}
 
 			$registerId = $ctx['registerId'];
-			$contactpersoonSchemaId = $ctx['schemaId'];
+			$contactPersonSchemaId = $ctx['schemaId'];
 
 			$contactpersonen = $objectService->findAll(
 				['organisation' => $organizationUuid],
 				$registerId,
-				$contactpersoonSchemaId
+				$contactPersonSchemaId
 			);
 
 			$userManager = $this->_container->get(\OCP\IUserManager::class);
 			$deactivatedCount = 0;
 
-			foreach ($contactpersonen as $contactpersoon) {
-				$contactData = $contactpersoon->getObject();
+			foreach ($contactpersonen as $contactPerson) {
+				$contactData = $contactPerson->getObject();
 				$username = $contactData['username'] ?? '';
 
 				if (empty($username) === false) {
@@ -2420,14 +2420,14 @@ class SoftwareCatalogueService {
 			$softwareCatalogUsers = [];
 			$adminGroupUsers = $this->getAdminGroupUsernames();
 
-			foreach ($contactpersonen as $contactpersoonObject) {
-				$contactData = $contactpersoonObject->getObject();
-				$contactOrganisatie = $contactData['organisatie'] ?? null;
+			foreach ($contactpersonen as $contactPersonObject) {
+				$contactData = $contactPersonObject->getObject();
+				$contactOrganisation = $contactData['organisatie'] ?? null;
 
 				// Check if this contactpersoon belongs to our organization.
-				if ($contactOrganisatie === $organizationUuid) {
+				if ($contactOrganisation === $organizationUuid) {
 					// Extract username from contactpersoon object data.
-					$contactData = $contactpersoonObject->getObject();
+					$contactData = $contactPersonObject->getObject();
 					$username = $contactData['username'] ?? null;
 
 					if ($username !== false && in_array($username, $adminGroupUsers) === false) {
@@ -2437,7 +2437,7 @@ class SoftwareCatalogueService {
 							[
 								'organizationUuid' => $organizationUuid,
 								'username' => $username,
-								'contactpersoonId' => $contactpersoonObject->getId(),
+								'contactpersoonId' => $contactPersonObject->getId(),
 							]
 						);
 					}
@@ -2673,14 +2673,14 @@ class SoftwareCatalogueService {
 	/**
 	 * Checks if a contactpersoon username is in the organization's users list
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 *
 	 * @return bool True if the user should be added to the organization
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function shouldAddContactpersoonToOrganization(object $contactpersoonObject): bool {
+	public function shouldAddContactpersoonToOrganization(object $contactPersonObject): bool {
 		try {
-			$objectData = $contactpersoonObject->getObject();
+			$objectData = $contactPersonObject->getObject();
 			$username = $objectData['username'] ?? '';
 			$organizationUuid = $objectData['organisation'] ?? '';
 
@@ -2700,10 +2700,10 @@ class SoftwareCatalogueService {
 			}
 
 			$registerId = $ctx['registerId'];
-			$organisatieSchemaId = $ctx['schemaId'];
+			$organisationSchemaId = $ctx['schemaId'];
 
 			try {
-				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
+				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisationSchemaId);
 				$organizationData = $organizationObject->getObject();
 
 				// Check if the username is already in the organization's users.
@@ -2737,7 +2737,7 @@ class SoftwareCatalogueService {
 			$this->_logger->error(
 				'SoftwareCatalogueService: Failed to check contactpersoon addition to org: ' . $e->getMessage(),
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
 				]
 			);
@@ -2748,14 +2748,14 @@ class SoftwareCatalogueService {
 	/**
 	 * Adds a contactpersoon username to the organization's users list
 	 *
-	 * @param object $contactpersoonObject The contactpersoon object
+	 * @param object $contactPersonObject The contactpersoon object
 	 *
 	 * @return bool True if the user was successfully added
 	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
-	public function addContactpersoonToOrganization(object $contactpersoonObject): bool {
+	public function addContactpersoonToOrganization(object $contactPersonObject): bool {
 		try {
-			$objectData = $contactpersoonObject->getObject();
+			$objectData = $contactPersonObject->getObject();
 			$username = $objectData['username'] ?? '';
 			$organizationUuid = $objectData['organisation'] ?? '';
 
@@ -2783,10 +2783,10 @@ class SoftwareCatalogueService {
 			}
 
 			$registerId = $ctx['registerId'];
-			$organisatieSchemaId = $ctx['schemaId'];
+			$organisationSchemaId = $ctx['schemaId'];
 
 			try {
-				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisatieSchemaId);
+				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisationSchemaId);
 				$organizationData = $organizationObject->getObject();
 
 				// Add the username to the organization's users list.
@@ -2804,7 +2804,7 @@ class SoftwareCatalogueService {
 						$organizationData,
 						[],
 						$registerId,
-						$organisatieSchemaId,
+						$organisationSchemaId,
 						$organizationUuid
 					);
 
@@ -2841,7 +2841,7 @@ class SoftwareCatalogueService {
 			$this->_logger->error(
 				'SoftwareCatalogueService: Failed to add contactpersoon to organization: ' . $e->getMessage(),
 				[
-					'objectId' => $contactpersoonObject->getId(),
+					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
 					'line' => $e->getLine(),
@@ -2896,10 +2896,10 @@ class SoftwareCatalogueService {
 			// Get the primary contact person object.
 			$settingsService = $this->_container->get(SettingsService::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$contactpersoonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
-			$organisatieSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+			$contactPersonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
+			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
-			if ($registerId === null || $contactpersoonSchemaId === null || $organisatieSchemaId === false) {
+			if ($registerId === null || $contactPersonSchemaId === null || $organisationSchemaId === false) {
 				$this->_logger->error(
 					'SoftwareCatalogueService: Register or schema not configured for contactpersoon/organisatie'
 				);
@@ -2917,7 +2917,7 @@ class SoftwareCatalogueService {
 						[],
 						false,
 						$registerId,
-						$contactpersoonSchemaId
+						$contactPersonSchemaId
 					);
 					$primaryContactData = $primaryContactObject->getObject();
 					$primaryUsername = $primaryContactData['username'] ?? '';
@@ -2962,7 +2962,7 @@ class SoftwareCatalogueService {
 									[],
 									false,
 									$registerId,
-									$contactpersoonSchemaId
+									$contactPersonSchemaId
 								);
 								$contactData = $contactObject->getObject();
 								$contactUsername = $contactData['username'] ?? '';
@@ -3008,7 +3008,7 @@ class SoftwareCatalogueService {
 						$organizationData,
 						[],
 						$registerId,
-						$organisatieSchemaId,
+						$organisationSchemaId,
 						$organizationUuid
 					);
 
@@ -3020,7 +3020,7 @@ class SoftwareCatalogueService {
 						$primaryContactData,
 						[],
 						$registerId,
-						$contactpersoonSchemaId,
+						$contactPersonSchemaId,
 						$primaryContactUuid
 					);
 
@@ -3033,7 +3033,7 @@ class SoftwareCatalogueService {
 								[],
 								false,
 								$registerId,
-								$contactpersoonSchemaId
+								$contactPersonSchemaId
 							);
 							$contactData = $contactObject->getObject();
 							$contactUsername = $contactData['username'] ?? '';
@@ -3046,7 +3046,7 @@ class SoftwareCatalogueService {
 									$contactData,
 									[],
 									$registerId,
-									$contactpersoonSchemaId,
+									$contactPersonSchemaId,
 									$contactUuid
 								);
 							}

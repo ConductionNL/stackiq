@@ -160,7 +160,7 @@ test('manifest index organisaties: list page renders the organisation cards', as
 // contactpersonen route gets its own surface-based test below instead.
 const INDEX_PAGES: Array<{ route: string; title: string; name: string }> = [
 	{ route: '/contracten', title: 'Contracts', name: 'contracten' },
-	{ route: '/standaarden', title: 'Standards', name: 'standaarden' },
+	{ route: '/standaarden', title: 'Standards', name: 'standards' },
 	{ route: '/reviews', title: 'Reviews', name: 'reviews' },
 	{ route: '/komplianties', title: 'Compliance', name: 'komplianties' },
 	{ route: '/moduleversies', title: 'Module versions', name: 'moduleversies' },

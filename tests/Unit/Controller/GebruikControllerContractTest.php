@@ -194,7 +194,7 @@ class GebruikControllerContractTest extends TestCase {
 			->method('getGebruiken')
 			->with($this->callback(
 				static function (array $options): bool {
-					return ($options['afnemer'] ?? null) === 'org-alice';
+					return ($options['consumer'] ?? null) === 'org-alice';
 				}
 			))
 			->willReturn(['results' => [], 'total' => 0]);
@@ -213,7 +213,7 @@ class GebruikControllerContractTest extends TestCase {
 	 * @return void
 	 */
 	public function testGebruikBeheerderCannotReadAnotherOrganisationsAfnemer(): void {
-		$controller = $this->makeController(['afnemer' => 'org-bob']);
+		$controller = $this->makeController(['consumer' => 'org-bob']);
 		$this->withUserInGroups(['gebruik-beheerder'], 'org-alice');
 
 		$this->gebruikService->expects($this->never())->method('getGebruiken');
@@ -239,7 +239,7 @@ class GebruikControllerContractTest extends TestCase {
 			->method('getGebruiken')
 			->with($this->callback(
 				static function (array $options): bool {
-					return (array_key_exists('afnemer', $options) === false
+					return (array_key_exists('consumer', $options) === false
 						&& ($options['limit'] ?? null) === 10);
 				}
 			))
@@ -294,14 +294,14 @@ class GebruikControllerContractTest extends TestCase {
 	 * @return void
 	 */
 	public function testDeelnemerEndpointForcesTheCallersOwnOrganisation(): void {
-		$controller = $this->makeController(['deelnemers' => ['org-bob']]);
+		$controller = $this->makeController(['participants' => ['org-bob']]);
 		$this->withUserInGroups([], 'org-alice');
 
 		$this->gebruikService->expects($this->once())
 			->method('getGebruiken')
 			->with($this->callback(
 				static function (array $options): bool {
-					return ($options['deelnemers'] ?? null) === ['org-alice'];
+					return ($options['participants'] ?? null) === ['org-alice'];
 				}
 			))
 			->willReturn(['results' => [], 'total' => 0]);

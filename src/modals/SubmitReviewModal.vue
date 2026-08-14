@@ -31,7 +31,7 @@
 			<form class="review-form" @submit.prevent="submitReview">
 				<div class="form-row">
 					<NcTextField
-						v-model="formData.naam"
+						v-model="formData.name"
 						:label="t('softwarecatalog', 'Title')"
 						:placeholder="
 							t(
@@ -153,7 +153,7 @@ export default {
 			error: '',
 			selectedRating: 8,
 			formData: {
-				naam: '',
+				name: '',
 				beschrijvingLang: '',
 			},
 		}
@@ -173,7 +173,7 @@ export default {
 		 * @spec openspec/specs/catalog-ratings/spec.md
 		 */
 		isFormValid() {
-			return isReviewFormValid(this.formData.naam, this.selectedRating)
+			return isReviewFormValid(this.formData.name, this.selectedRating)
 		},
 	},
 
@@ -198,7 +198,7 @@ export default {
 		 * @spec openspec/specs/catalog-ratings/spec.md
 		 */
 		resetForm() {
-			this.formData = { naam: '', beschrijvingLang: '' }
+			this.formData = { name: '', beschrijvingLang: '' }
 			this.selectedRating = 8
 			this.error = ''
 		},
@@ -220,7 +220,7 @@ export default {
 			this.error = ''
 			try {
 				const body = buildReviewSubmission(
-					this.formData.naam,
+					this.formData.name,
 					this.selectedRating,
 					this.formData.beschrijvingLang,
 					this.subjectType,

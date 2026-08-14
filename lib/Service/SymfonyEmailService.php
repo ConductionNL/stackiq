@@ -467,13 +467,13 @@ class SymfonyEmailService {
 		$configStatus = $this->ensureEmailDeliveryReady(
 			logPrefix: 'OrganizationRegistrationEmail',
 			settingsKey: 'organizationRegistrationEnabled',
-			extraLogContext: ['organizationName' => $organization['naam'] ?? 'Unknown']
+			extraLogContext: ['organizationName' => $organization['name'] ?? 'Unknown']
 		);
 		if ($configStatus === null) {
 			return false;
 		}
 
-		$organizationName = $organization['naam'] ?? $organization['name'] ?? 'Onbekende Organisatie';
+		$organizationName = $organization['name'] ?? 'Onbekende Organisatie';
 
 		// Determine recipient email.
 		$recipientEmail = $this->getRecipientEmail(data: $organization);
@@ -554,13 +554,13 @@ class SymfonyEmailService {
 		$configStatus = $this->ensureEmailDeliveryReady(
 			logPrefix: 'OrganizationActivationEmail',
 			settingsKey: 'organizationActivationEnabled',
-			extraLogContext: ['organizationName' => $organization['naam'] ?? 'Unknown']
+			extraLogContext: ['organizationName' => $organization['name'] ?? 'Unknown']
 		);
 		if ($configStatus === null) {
 			return false;
 		}
 
-		$organizationName = ($organization['naam'] ?? $organization['name'] ?? 'Onbekende Organisatie');
+		$organizationName = ($organization['name'] ?? 'Onbekende Organisatie');
 
 		// Determine recipient email.
 		$recipientEmail = $this->getRecipientEmail(data: $organization);
@@ -649,7 +649,7 @@ class SymfonyEmailService {
 		}
 
 		$userEmail = $user['email'] ?? '';
-		$userName = $user['naam'] ?? $user['name'] ?? ($user['voornaam'] ?? '') . ' ' . ($user['achternaam'] ?? '');
+		$userName = $user['name'] ?? ($user['voornaam'] ?? '') . ' ' . ($user['achternaam'] ?? '');
 		$userName = trim($userName);
 
 		if (empty($userEmail) === true) {
@@ -668,7 +668,7 @@ class SymfonyEmailService {
 			[
 				'userName' => $userName,
 				'userEmail' => $userEmail,
-				'organizationName' => $organization['naam'] ?? $organization['name'] ?? 'Software Catalogus',
+				'organizationName' => $organization['name'] ?? 'Software Catalogus',
 				'transportType' => $configStatus['transportType'],
 			]
 		);
@@ -683,10 +683,10 @@ class SymfonyEmailService {
 			'user' => [
 				'name' => $displayName,
 				'email' => $userEmail,
-				'functie' => ($user['functie'] ?? ''),
+				'role' => ($user['role'] ?? ''),
 			],
 			'organization' => [
-				'name' => ($organization['naam'] ?? $organization['name'] ?? 'Software Catalogus'),
+				'name' => ($organization['name'] ?? 'Software Catalogus'),
 			],
 		];
 
@@ -745,7 +745,7 @@ class SymfonyEmailService {
 		}
 
 		$userEmail = $user['email'] ?? '';
-		$userName = $user['naam'] ?? $user['name'] ?? ($user['voornaam'] ?? '') . ' ' . ($user['achternaam'] ?? '');
+		$userName = $user['name'] ?? ($user['voornaam'] ?? '') . ' ' . ($user['achternaam'] ?? '');
 		$userName = trim($userName);
 
 		if (empty($userEmail) === true) {
@@ -764,7 +764,7 @@ class SymfonyEmailService {
 			[
 				'userName' => $userName,
 				'userEmail' => $userEmail,
-				'organizationName' => $organization['naam'] ?? $organization['name'] ?? 'Software Catalogus',
+				'organizationName' => $organization['name'] ?? 'Software Catalogus',
 				'transportType' => $configStatus['transportType'],
 			]
 		);
@@ -779,10 +779,10 @@ class SymfonyEmailService {
 			'user' => [
 				'name' => $displayName,
 				'email' => $userEmail,
-				'functie' => ($user['functie'] ?? ''),
+				'role' => ($user['role'] ?? ''),
 			],
 			'organization' => [
-				'name' => ($organization['naam'] ?? $organization['name'] ?? 'Software Catalogus'),
+				'name' => ($organization['name'] ?? 'Software Catalogus'),
 			],
 		];
 

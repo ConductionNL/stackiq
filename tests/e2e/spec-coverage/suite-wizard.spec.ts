@@ -56,8 +56,8 @@ test.beforeAll(async () => {
 	config = await resolveConfig(ctx)
 	// Two REAL modules for the picker to offer. `module` is resolved by slug
 	// (not by a `*_schema` config key) exactly as the wizard itself does.
-	await createObject(ctx, config.register, 'module', { naam: APP_A })
-	await createObject(ctx, config.register, 'module', { naam: APP_B })
+	await createObject(ctx, config.register, 'module', { name: APP_A })
+	await createObject(ctx, config.register, 'module', { name: APP_B })
 })
 
 test.afterAll(async () => {
@@ -303,11 +303,11 @@ test('suite wizard: submit creates the suite with both attached modules', async 
 	)
 	expect(res.status(), `suite collection read: ${res.status()}`).toBe(200)
 	const rows: Array<Record<string, unknown>> = (await res.json())?.results ?? []
-	const created = rows.find((r) => String(r.naam ?? '') === SUITE_NAME)
+	const created = rows.find((r) => String(r.name ?? '') === SUITE_NAME)
 	expect(created, `no suite named "${SUITE_NAME}" was persisted`).toBeTruthy()
 	expect(String(created?.beschrijvingKort ?? '')).toBe(SUITE_SHORT)
 	// `applicaties` holds the attached modules' ids — two of them.
-	const attached = created?.applicaties as unknown[] | undefined
+	const attached = created?.applications as unknown[] | undefined
 	expect(Array.isArray(attached), 'applicaties is not an array').toBe(true)
 	expect(attached?.length, `applicaties = ${JSON.stringify(attached)}`).toBe(2)
 

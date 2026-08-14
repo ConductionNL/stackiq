@@ -178,7 +178,7 @@
 				"schema": "organisatie",
 				"viewMode": "cards",
 				"cardComponent": "OrganisatieCard",
-				"columns": ["naam", "type", "status", "website"],
+				"columns": ["name", "type", "status", "website"],
 				"filter": { "status": ["Concept", "Actief", "Deactief"] },
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
@@ -195,13 +195,13 @@
 				"schema": "organisatie",
 				"_note": "ADR-062 rollout (round 2): this page did not exist before — organisatie objects (vendors, municipalities, collaborations) were only reachable as index cards with no detail view (codeberg softwarecatalog#76). Vendor/organisation archetype: the organisatie schema itself carries only catalogue-role fields (contactsUid, type, status, registratiestatus, samenwerkingtype, geregistreerdDoor, publicatie dates) because identity (name, website, e-mail, KvK) lives in the linked Nextcloud contact via contactsUid, not on this OR object — so the body leads with those 8 catalogue fields (2-col) rather than name/address. Top-right: a stats-block KPI card counting the organisation's own diensten, modules and contactpersonen (all FK-scoped via aanbieder/organisatie = @objectId) so a reader sees portfolio size at a glance without opening any list. Below: three FK object-lists — Services (dienst.aanbieder) and Applications (module.aanbieder) are the org's supply-side offerings; Contact persons (contactpersoon.organisatie) links to the existing ContactpersoonDetail page. Services still have no dedicated index/detail page (a real fleet gap, follow-up remains). Applications now do — bio-compliance-assessment added Modules/ModuleDetail (BBN level and DPIA tracking needed somewhere to live), so org-modules now carries `rowRoute: ModuleDetail` and a bbnLevel column; org-diensten's rowRoute stays intentionally omitted. An organisation does not communicate itself (contact happens through the linked NC contact), so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. Card-click navigation from the Organisaties index required a matching fix in OrganisatieCard.vue (the custom cardComponent never emitted the `click` event CnCardGrid/CnPageRenderer listen on for register+schema route resolution — clicking a card was previously a no-op).",
 				"widgets": [
-					{ "id": "org-data", "type": "data", "title": "Organisation", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "contactsUid", "type", "status", "registratiestatus", "samenwerkingtype", "geregistreerdDoor", "publicatiedatum", "depublicatiedatum" ] } },
-					{ "id": "org-stats-services", "type": "stats-block", "title": "Services", "icon": "ChartBar", "content": { "entries": [ { "title": "Services", "register": "@resolve:voorzieningen_register", "schema": "dienst", "metric": "count", "filter": { "aanbieder": "@objectId" } } ] } },
-					{ "id": "org-stats-applications", "type": "stats-block", "title": "Applications", "icon": "ChartBar", "content": { "entries": [ { "title": "Applications", "register": "@resolve:voorzieningen_register", "schema": "module", "metric": "count", "filter": { "aanbieder": "@objectId" } } ] } },
+					{ "id": "org-data", "type": "data", "title": "Organisation", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "contactsUid", "type", "status", "registrationStatus", "samenwerkingtype", "registeredBy", "publicationDate", "depublicationDate" ] } },
+					{ "id": "org-stats-services", "type": "stats-block", "title": "Services", "icon": "ChartBar", "content": { "entries": [ { "title": "Services", "register": "@resolve:voorzieningen_register", "schema": "dienst", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
+					{ "id": "org-stats-applications", "type": "stats-block", "title": "Applications", "icon": "ChartBar", "content": { "entries": [ { "title": "Applications", "register": "@resolve:voorzieningen_register", "schema": "module", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
 					{ "id": "org-stats-contact-persons", "type": "stats-block", "title": "Contact persons", "icon": "ChartBar", "content": { "entries": [ { "title": "Contact persons", "register": "@resolve:voorzieningen_register", "schema": "contactpersoon", "metric": "count", "filter": { "organisatie": "@objectId" } } ] } },
-					{ "id": "org-diensten", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "dienst", "filter": { "aanbieder": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
-					{ "id": "org-modules", "type": "object-list", "title": "Applications", "icon": "Package", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "aanbieder": "@objectId" }, "columns": [ { "key": "licentietype", "label": "License type" }, { "key": "bbnLevel", "label": "BBN level" } ], "limit": 25, "rowRoute": "ModuleDetail", "emptyText": "No applications registered for this organisation yet" } },
-					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactpersoon", "filter": { "organisatie": "@objectId" }, "columns": [ { "key": "functie", "label": "Function" }, { "key": "rollen", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
+					{ "id": "org-diensten", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "dienst", "filter": { "provider": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
+					{ "id": "org-modules", "type": "object-list", "title": "Applications", "icon": "Package", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "provider": "@objectId" }, "columns": [ { "key": "licentietype", "label": "License type" }, { "key": "bbnLevel", "label": "BBN level" } ], "limit": 25, "rowRoute": "ModuleDetail", "emptyText": "No applications registered for this organisation yet" } },
+					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactpersoon", "filter": { "organisatie": "@objectId" }, "columns": [ { "key": "role", "label": "Function" }, { "key": "roles", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "org-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
@@ -235,8 +235,8 @@
 				"schema": "contactpersoon",
 				"columns": [
 					"contactsUid",
-					"functie",
-					"rollen",
+					"role",
+					"roles",
 					"organisatie"
 				],
 				"sidebar": {
@@ -283,11 +283,11 @@
 				"schema": "module",
 				"_note": "bio-compliance-assessment: catalog archetype (an offered application). Body: application data 8-wide top-left (naam, descriptions, website, contactpersoon, hosting/licence fields, then the new BBN level and DPIA status/dates/document-reference/verwerkingsregister fields) with a Documentation files panel 4-wide top-right. Below, a Related panel surfaces the vendor (aanbieder) and linked services/couplings, then two object-lists: compliance claims (compliancy records — both GEMMA standards and, since this change, BIO measures — filtered by module=@objectId) and application versions (moduleVersie filtered by module=@objectId). An application does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
-					{ "id": "md-data", "type": "data", "title": "Application", "icon": "Package", "content": { "columns": 2, "include": [ "naam", "beschrijvingKort", "beschrijvingLang", "website", "aanbieder", "contactpersoon", "cloudDienstverleningsmodel", "hostingJurisdictie", "hostingLocatie", "licentietype", "licentie", "bbnLevel", "dpiaStatus", "dpiaDate", "dpiaVolgendeBeoordeling", "dpiaDocumentRef", "verwerkingsregisterRef" ] } },
+					{ "id": "md-data", "type": "data", "title": "Application", "icon": "Package", "content": { "columns": 2, "include": [ "name", "beschrijvingKort", "beschrijvingLang", "website", "provider", "contactpersoon", "cloudDienstverleningsmodel", "hostingJurisdiction", "hostingLocation", "licentietype", "licence", "bbnLevel", "dpiaStatus", "dpiaDate", "dpiaNextAssessment", "dpiaDocumentRef", "verwerkingsregisterRef" ] } },
 					{ "id": "md-files", "type": "integration", "integrationId": "files", "title": "Documentation", "icon": "BookOpenVariant" },
 					{ "id": "md-related", "type": "related", "title": "Vendor & services", "icon": "LinkVariant" },
-					{ "id": "md-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@objectId" }, "columns": [ { "key": "standaardversie", "label": "Standard" }, { "key": "bioMaatregel", "label": "BIO measure" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
-					{ "id": "md-versions", "type": "object-list", "title": "Application versions", "icon": "SourceBranch", "content": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersie", "filter": { "module": "@objectId" }, "columns": [ { "key": "versie", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ModuleversieDetail", "allowCreate": false, "emptyText": "No versions registered yet" } }
+					{ "id": "md-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@objectId" }, "columns": [ { "key": "standardVersion", "label": "Standard" }, { "key": "bioMaatregel", "label": "BIO measure" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
+					{ "id": "md-versions", "type": "object-list", "title": "Application versions", "icon": "SourceBranch", "content": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersie", "filter": { "module": "@objectId" }, "columns": [ { "key": "version", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ModuleversieDetail", "allowCreate": false, "emptyText": "No versions registered yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "md-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
@@ -318,11 +318,11 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "contract",
 				"columns": [
-					"contractNummer",
+					"contractNumber",
 					"contractType",
-					"startDatum",
-					"eindDatum",
-					"kosten",
+					"startDate",
+					"endDate",
+					"cost",
 					"status"
 				],
 				"quickFilters": [
@@ -348,7 +348,7 @@
 				"schema": "contract",
 				"_note": "Document / agreement archetype. The reader of a contract needs terms and money up front, then the paperwork. Body: contract data (number, type, start/end dates, cost + period, status, both nested contact persons, documentReferentie, remarks) spans 8-wide top-left; a Documents (files) panel spans 4-wide full-height on the right because the signed contract, addenda and evidence are the primary attachments. Below the data, a Related panel links the contract's service (dienst) and usage (gebruik). A KPI stat surfaces the contract value at a glance. The contract schema declares NO email/calendar linkedType, so per the comms hard-rule NO Emails/Meetings widgets appear on the body (circulation happens via the linked Nextcloud contacts, not the catalogue record). Per the sidebar hard rule, the ContractApprovalPanel (decidesk-delegated approval workflow — a per-record action, not primary reading) moved OUT of the sidebar into a declarative body section (config.bodyWidgets, placed after the related row) so the sidebar stays audit-only. FIX (softwarecatalog audit): the panel previously rendered bare below the grid (CnBodySections gives a section only a plain `<h3>`, no card chrome) — ContractApprovalPanel now wraps its own content in CnWidgetWrapper (title + CheckCircleOutline icon), matching the chrome every other body widget carries; the now-redundant bodyWidgets `title` was dropped so the h3 doesn't duplicate it. Layout also reworked: ct-data (Contract details) now anchors gridX0/gridY0 spanning the full grid height so no whitespace hole sits between the KPI stat and the Files panel, ct-value moved to the top of the right column above ct-files, and ct-data's height was bumped from 5 to 7 (9 scalar contract fields at 2 columns need 5 rows; height5 was clipping the last row).",
 				"widgets": [
-					{ "id": "ct-value", "type": "stat", "title": "Contract value", "icon": "CurrencyEur", "content": { "label": "Contract value", "format": "currency", "source": { "register": "@resolve:voorzieningen_register", "schema": "contract", "metric": "sum", "field": "kosten", "filter": { "id": "@objectId" } } } },
+					{ "id": "ct-value", "type": "stat", "title": "Contract value", "icon": "CurrencyEur", "content": { "label": "Contract value", "format": "currency", "source": { "register": "@resolve:voorzieningen_register", "schema": "contract", "metric": "sum", "field": "cost", "filter": { "id": "@objectId" } } } },
 					{ "id": "ct-data", "type": "data", "title": "Contract details", "icon": "FileSign", "content": { "columns": 2 } },
 					{ "id": "ct-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
 					{ "id": "ct-related", "type": "related", "title": "Service & usage", "icon": "LinkVariant" },
@@ -386,11 +386,11 @@
 				"schema": "module",
 				"description": "Browse the application (module) catalogue, filtered by GEMMA architecture dimension.",
 				"columns": [
-					"naam",
-					"aanbieder",
+					"name",
+					"provider",
 					"type",
 					"licentietype",
-					"publicatiedatum",
+					"publicationDate",
 					"bbnLevel",
 					"dpiaStatus"
 				],
@@ -441,10 +441,10 @@
 				"schema": "dienst",
 				"description": "Browse the service (dienst) catalogue, filtered by GEMMA architecture dimension.",
 				"columns": [
-					"naam",
-					"aanbieder",
+					"name",
+					"provider",
 					"type",
-					"publicatiedatum"
+					"publicationDate"
 				]
 			}
 		},
@@ -466,7 +466,7 @@
 				"schema": "suite",
 				"_note": "suite-wizard: catalog archetype (a bundled product made up of one or more existing applications). Body: suite data 8-wide (naam, beschrijvingKort, beschrijvingLang, website, logo, contactpersoon) with a Related panel 4-wide surfacing both the contact person and the attached applications (`applicaties`) — the latter via the platform's generic bidirectional relation index (the same `/uses`+`/used` mechanism `md-related` on ModuleDetail already relies on, which is also how a module's own detail page surfaces which suite(s) include it, with no ModuleDetail change needed). A suite does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
-					{ "id": "suite-data", "type": "data", "title": "Suite", "icon": "Package", "content": { "columns": 2, "include": [ "naam", "beschrijvingKort", "beschrijvingLang", "website", "logo", "contactpersoon" ] } },
+					{ "id": "suite-data", "type": "data", "title": "Suite", "icon": "Package", "content": { "columns": 2, "include": [ "name", "beschrijvingKort", "beschrijvingLang", "website", "logo", "contactpersoon" ] } },
 					{ "id": "suite-related", "type": "related", "title": "Applications & contact", "icon": "LinkVariant" }
 				],
 				"layout": [
@@ -504,7 +504,7 @@
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			},
-			"_note": "The register has NO dedicated 'standaard' schema — GEMMA standards are `element` objects (the generic ArchiMate/GEMMA model-element schema, shared with referentiecomponenten, applications, capabilities, …) discriminated by `gemmaType`. Fixed a pre-existing bug: this page previously pointed at a non-existent `schema: \"standaard\"`, which would 404 on every fetch. Scoped with `filter.gemmaType: \"standaard\"` (see lib/Service/ArchiMateImportService.php's `extractGemmaType` comparisons and its `?gemmaType=referentiecomponent` query comment) so only standard-typed elements list here."
+			"_note": "The register has NO dedicated 'standard' schema — GEMMA standards are `element` objects (the generic ArchiMate/GEMMA model-element schema, shared with referentiecomponenten, applications, capabilities, …) discriminated by `gemmaType`. Fixed a pre-existing bug: this page previously pointed at a non-existent `schema: \"standaard\"`, which would 404 on every fetch. Scoped with `filter.gemmaType: \"standaard\"` (see lib/Service/ArchiMateImportService.php's `extractGemmaType` comparisons and its `?gemmaType=referentiecomponent` query comment) so only standard-typed elements list here."
 		},
 		{
 			"id": "StandaardDetail",
@@ -514,12 +514,12 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "element",
-				"_note": "Catalog archetype (a normative GEMMA standard). What matters about a standard is (a) its definition, (b) the specification documents, and (c) the ecosystem around it: which modules implement it and what compliance records claim it. Body: standard data 8-wide top-left (name, gemmaThema, gemmaStatus, documentation, url, versieaanduiding, beschikbaarheid — the `element` schema's GEMMA-standard fields); a Specification documents (files) panel 4-wide top-right for the published spec/PDFs. Below, a Related panel surfaces the element's own FK web (standaardVersies, aanbevolenVoorReferentiecomponent, verplichteVoorReferentiecomponent, gekoppeldeStandaardVersies — all self-references into other `element` objects), then a compliancy object-list shows every compliance claim naming this standard (compliancy.standaardGemma matched to the standard's own `name`) so a reader sees adoption at a glance. FIX: the register has no dedicated 'standaard' schema — this page previously pointed at a non-existent `schema: \"standaard\"` (guaranteed fetch failure); corrected to `element` (the shared GEMMA/ArchiMate element schema, discriminated by `gemmaType`). A standard does not communicate, so per the comms hard-rule NO Emails/Meetings/Talk widgets appear. Audit trail stays a sidebar tab.",
+				"_note": "Catalog archetype (a normative GEMMA standard). What matters about a standard is (a) its definition, (b) the specification documents, and (c) the ecosystem around it: which modules implement it and what compliance records claim it. Body: standard data 8-wide top-left (name, gemmaThema, gemmaStatus, documentation, url, versieaanduiding, beschikbaarheid — the `element` schema's GEMMA-standard fields); a Specification documents (files) panel 4-wide top-right for the published spec/PDFs. Below, a Related panel surfaces the element's own FK web (standaardVersies, aanbevolenVoorReferentiecomponent, verplichteVoorReferentiecomponent, gekoppeldeStandaardVersies — all self-references into other `element` objects), then a compliancy object-list shows every compliance claim naming this standard (compliancy.standaardGemma matched to the standard's own `name`) so a reader sees adoption at a glance. FIX: the register has no dedicated 'standard' schema — this page previously pointed at a non-existent `schema: \"standaard\"` (guaranteed fetch failure); corrected to `element` (the shared GEMMA/ArchiMate element schema, discriminated by `gemmaType`). A standard does not communicate, so per the comms hard-rule NO Emails/Meetings/Talk widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
 					{ "id": "st-data", "type": "data", "title": "Standard", "icon": "ShieldCheckOutline", "content": { "columns": 2 } },
 					{ "id": "st-files", "type": "integration", "integrationId": "files", "title": "Specification documents", "icon": "FolderOutline" },
 					{ "id": "st-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
-					{ "id": "st-compliance", "type": "object-list", "title": "Compliance claims for this standard", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "standaardGemma": "@object.name" }, "columns": [ { "key": "module", "label": "Module" }, { "key": "standaardversie", "label": "Standard version" }, { "key": "url", "label": "Evidence URL" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } }
+					{ "id": "st-compliance", "type": "object-list", "title": "Compliance claims for this standard", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "standardGemma": "@object.name" }, "columns": [ { "key": "module", "label": "Module" }, { "key": "standardVersion", "label": "Standard version" }, { "key": "url", "label": "Evidence URL" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "st-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
@@ -547,9 +547,9 @@
 				"schema": "bioMaatregel",
 				"columns": [
 					"code",
-					"naam",
+					"name",
 					"thema",
-					"bioVersie",
+					"bioVersion",
 					"bbnNiveau"
 				],
 				"sidebar": {
@@ -596,9 +596,9 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "beoordeeling",
 				"columns": [
-					"naam",
+					"name",
 					"auteur",
-					"waardering",
+					"rating",
 					"status"
 				],
 				"sidebar": {
@@ -618,7 +618,7 @@
 				"schema": "beoordeeling",
 				"_note": "Review / assessment archetype (beoordeeling). A review is read for its verdict then its subject: body leads with the review data (name, short + long markdown description, score) 8-wide left, a prominent score stat (waardering) top-right, and a Related panel + supporting-evidence Files panel stacked beneath it surfacing the reviewed subjects — the beoordeeling links modules[], diensten[] and koppelingen[] (the things assessed) plus its gebruik context. A review does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. FIX (softwarecatalog audit): rv-data (Review) now anchors gridX0/gridY0 so the left column starts flush with the right column instead of a whitespace hole opening up beside the score stat; rv-score/rv-related/rv-files were re-stacked in the right column to match rv-data's height. rv-related's title shortened from 'Reviewed modules & services' (truncated to 'Reviewed modules & s…' in the widget header) to 'Reviewed modules'.",
 				"widgets": [
-					{ "id": "rv-score", "type": "stat", "title": "Rating", "icon": "Star", "content": { "label": "Rating", "icon": "Star", "source": { "register": "@resolve:voorzieningen_register", "schema": "beoordeeling", "metric": "avg", "field": "waardering", "filter": { "id": "@objectId" } } } },
+					{ "id": "rv-score", "type": "stat", "title": "Rating", "icon": "Star", "content": { "label": "Rating", "icon": "Star", "source": { "register": "@resolve:voorzieningen_register", "schema": "beoordeeling", "metric": "avg", "field": "rating", "filter": { "id": "@objectId" } } } },
 					{ "id": "rv-data", "type": "data", "title": "Review", "icon": "NoteTextOutline", "content": { "columns": 2 } },
 					{ "id": "rv-related", "type": "related", "title": "Reviewed modules", "icon": "LinkVariant" },
 					{ "id": "rv-files", "type": "integration", "integrationId": "files", "title": "Supporting evidence", "icon": "FolderOutline" }
@@ -649,8 +649,8 @@
 				"schema": "compliancy",
 				"columns": [
 					"module",
-					"standaardversie",
-					"standaardGemma",
+					"standardVersion",
+					"standardGemma",
 					"url"
 				],
 				"sidebar": {
@@ -706,9 +706,9 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "moduleVersie",
 				"columns": [
-					"versie",
+					"version",
 					"module",
-					"datumInGebruik",
+					"dateInUse",
 					"status"
 				],
 				"sidebar": {
@@ -731,7 +731,7 @@
 				"widgets": [
 					{ "id": "mv-data", "type": "data", "title": "Version details", "icon": "Package", "content": { "columns": 2 } },
 					{ "id": "mv-related", "type": "related", "title": "Module & usage", "icon": "LinkVariant" },
-					{ "id": "mv-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@object.module" }, "columns": [ { "key": "standaardGemma", "label": "Standard" }, { "key": "standaardversie", "label": "Version" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
+					{ "id": "mv-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@object.module" }, "columns": [ { "key": "standardGemma", "label": "Standard" }, { "key": "standardVersion", "label": "Version" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
 					{ "id": "mv-files", "type": "integration", "integrationId": "files", "title": "Release notes & artefacts", "icon": "FolderOutline" }
 				],
 				"layout": [

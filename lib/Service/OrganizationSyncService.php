@@ -63,14 +63,14 @@ class OrganizationSyncService {
 	 *
 	 * @var OrganisatieService The service for organization operations
 	 */
-	private OrganisatieService $organisatieService;
+	private OrganisatieService $organisationService;
 
 	/**
 	 * ContactpersoonService instance
 	 *
 	 * @var ContactpersoonService The service for contact person operations
 	 */
-	private ContactpersoonService $contactpersoonService;
+	private ContactpersoonService $contactPersonService;
 
 	/**
 	 * SymfonyEmailService instance
@@ -110,8 +110,8 @@ class OrganizationSyncService {
 	/**
 	 * Constructor for OrganizationSyncService
 	 *
-	 * @param OrganisatieService $organisatieService The organization service.
-	 * @param ContactpersoonService $contactpersoonService The contact person service.
+	 * @param OrganisatieService $organisationService The organization service.
+	 * @param ContactpersoonService $contactPersonService The contact person service.
 	 * @param SymfonyEmailService $emailService The email service.
 	 * @param IAppConfig $config The configuration service.
 	 * @param LoggerInterface $logger The logger instance.
@@ -121,8 +121,8 @@ class OrganizationSyncService {
 	 * @param ContainerInterface $container The DI container.
 	 */
 	public function __construct(
-		OrganisatieService $organisatieService,
-		ContactpersoonService $contactpersoonService,
+		OrganisatieService $organisationService,
+		ContactpersoonService $contactPersonService,
 		SymfonyEmailService $emailService,
 		IAppConfig $config,
 		LoggerInterface $logger,
@@ -131,8 +131,8 @@ class OrganizationSyncService {
 		private readonly ContactPersonHandler $contactpersonHandler,
 		ContainerInterface $container,
 	) {
-		$this->organisatieService = $organisatieService;
-		$this->contactpersoonService = $contactpersoonService;
+		$this->organisationService = $organisationService;
+		$this->contactPersonService = $contactPersonService;
 		$this->emailService = $emailService;
 		$this->config = $config;
 		$this->logger = $logger;
@@ -408,7 +408,7 @@ class OrganizationSyncService {
 					_multitenancy: false
 				);
 
-				$this->ensureOrganisationEntity(organisatieObject: $object, stats: $stats, sendEmails: false);
+				$this->ensureOrganisationEntity(organisationObject: $object, stats: $stats, sendEmails: false);
 				$stats['organizationsProcessed']++;
 			} catch (\Exception $e) {
 				$this->handleSyncError(operation: 'OrganizationSync', identifier: (string)$row['uuid'], exception: $e, stats: $stats);
@@ -619,7 +619,7 @@ class OrganizationSyncService {
 
 		foreach ($users as $user) {
 			try {
-				$this->organisatieService->addUsersToOrganization($user['organisatie'], [$user['username']]);
+				$this->organisationService->addUsersToOrganization($user['organisatie'], [$user['username']]);
 			} catch (\Exception $e) {
 				$this->logger->error(
 					'UserSync: failed to add user ' . $user['username'] . ' to org ' . $user['organisatie'],
@@ -688,7 +688,7 @@ class OrganizationSyncService {
 			}
 
 			// Get organisatie objects based on time window.
-			$organisatieObjects = $this->getOrganisatieObjectsByTimeWindow(
+			$organisationObjects = $this->getOrganisationObjectsByTimeWindow(
 				register: $register,
 				organizationSchema: $organizationSchema,
 				minutesBack: $minutesBack
@@ -701,29 +701,29 @@ class OrganizationSyncService {
 			$this->logger->info(
 				'OrganizationSyncService: Found organisatie objects',
 				[
-					'count' => count($organisatieObjects),
+					'count' => count($organisationObjects),
 					'minutesBack' => $minutesBack,
 					'syncMode' => $syncModeValue,
 				]
 			);
 
 			// Process each organisatie object.
-			foreach ($organisatieObjects as $organisatieObject) {
+			foreach ($organisationObjects as $organisationObject) {
 				try {
-					$this->processOrganisatieObject(
-						organisatieObject: $organisatieObject,
+					$this->processOrganisationObject(
+						organisationObject: $organisationObject,
 						register: $register,
 						contactSchema: $contactSchema,
 						stats: $stats
 					);
 					$stats['organizationsProcessed']++;
 				} catch (\Exception $e) {
-					$error = 'Failed to process organisatie object ' . $organisatieObject->getId() . ': ' . $e->getMessage();
+					$error = 'Failed to process organisatie object ' . $organisationObject->getId() . ': ' . $e->getMessage();
 					$this->logger->error(
 						'OrganizationSyncService: ' . $error,
 						[
 							'exception' => $e,
-							'objectId' => $organisatieObject->getId(),
+							'objectId' => $organisationObject->getId(),
 						]
 					);
 					$stats['errors'][] = $error;
@@ -760,7 +760,7 @@ class OrganizationSyncService {
 	 *
 	 * @return array Array of organisatie objects
 	 */
-	private function getOrganisatieObjectsByTimeWindow(string $register, string $organizationSchema, int $minutesBack): array {
+	private function getOrganisationObjectsByTimeWindow(string $register, string $organizationSchema, int $minutesBack): array {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
@@ -844,7 +844,7 @@ class OrganizationSyncService {
 	/**
 	 * Processes a single organisatie object
 	 *
-	 * @param object $organisatieObject The organisatie object to process
+	 * @param object $organisationObject The organisatie object to process
 	 * @param string $register The register ID
 	 * @param string $contactSchema The contact schema ID
 	 * @param array $stats Statistics array (passed by reference)
@@ -853,43 +853,43 @@ class OrganizationSyncService {
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	private function processOrganisatieObject(
-		object $organisatieObject,
+	private function processOrganisationObject(
+		object $organisationObject,
 		string $register,
 		string $contactSchema,
 		array &$stats,
 	): void {
-		$objectData = $organisatieObject->getObject();
-		$organisatieId = ($objectData['id'] ?? $organisatieObject->getId());
+		$objectData = $organisationObject->getObject();
+		$organisationId = ($objectData['id'] ?? $organisationObject->getId());
 
 		$this->logger->debug(
 			'OrganizationSyncService: Processing organisatie object',
 			[
-				'organisatieId' => $organisatieId,
-				'naam' => ($objectData['naam'] ?? 'Unknown'),
+				'organisatieId' => $organisationId,
+				'name' => ($objectData['name'] ?? 'Unknown'),
 			]
 		);
 
 		// Step 1: Ensure organisation entity exists.
-		$organisationEntity = $this->ensureOrganisationEntity(organisatieObject: $organisatieObject, stats: $stats);
+		$organisationEntity = $this->ensureOrganisationEntity(organisationObject: $organisationObject, stats: $stats);
 		if ($organisationEntity === null) {
 			$this->logger->warning(
 				'OrganizationSyncService: Could not ensure organisation entity',
-				['organisatieId' => $organisatieId]
+				['organisatieId' => $organisationId]
 			);
 			return;
 		}
 
 		// Step 2: Get all contact persons for this organisation.
 		$contactPersons = $this->getContactPersonsForOrganisation(
-			organisatieId: $organisatieId,
+			organisationId: $organisationId,
 			register: $register,
 			contactSchema: $contactSchema
 		);
 		$this->logger->debug(
 			'OrganizationSyncService: Found contact persons',
 			[
-				'organisatieId' => $organisatieId,
+				'organisatieId' => $organisationId,
 				'contactCount' => count($contactPersons),
 			]
 		);
@@ -913,7 +913,7 @@ class OrganizationSyncService {
 	 *
 	 * Used by ContactpersoonService for backup entity creation when org entity is missing.
 	 *
-	 * @param object $organisatieObject The organisatie object.
+	 * @param object $organisationObject The organisatie object.
 	 * @param array $stats Statistics array (passed by reference).
 	 * @param bool $sendEmails Whether to send registration/activation emails.
 	 *
@@ -922,9 +922,9 @@ class OrganizationSyncService {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $sendEmails is a simple notification toggle
 	 * @spec                                        openspec/specs/organization-sync/spec.md
 	 */
-	public function ensureOrganisationEntityPublic(object $organisatieObject, array &$stats, bool $sendEmails = true): ?object {
+	public function ensureOrganisationEntityPublic(object $organisationObject, array &$stats, bool $sendEmails = true): ?object {
 		return $this->ensureOrganisationEntity(
-			organisatieObject: $organisatieObject,
+			organisationObject: $organisationObject,
 			stats: $stats,
 			sendEmails: $sendEmails
 		);
@@ -934,7 +934,7 @@ class OrganizationSyncService {
 	/**
 	 * Ensures organisation entity exists for organisatie object.
 	 *
-	 * @param object $organisatieObject The organisatie object.
+	 * @param object $organisationObject The organisatie object.
 	 * @param array $stats Statistics array (passed by reference).
 	 * @param bool $sendEmails Whether to send emails.
 	 *
@@ -942,42 +942,42 @@ class OrganizationSyncService {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $sendEmails is a simple notification toggle
 	 */
-	private function ensureOrganisationEntity(object $organisatieObject, array &$stats, bool $sendEmails = true): ?object {
+	private function ensureOrganisationEntity(object $organisationObject, array &$stats, bool $sendEmails = true): ?object {
 		try {
 			// Get the full object data - the passed object might not have all fields populated.
-			$organisatieId = $organisatieObject->getUuid();
+			$organisationId = $organisationObject->getUuid();
 
 			// Fetch the complete object from the database to ensure we have all data.
 			try {
 				$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 				$fullObject = $objectService->find(
-					id: $organisatieId,
-					register: $organisatieObject->getRegister(),
-					schema: $organisatieObject->getSchema(),
+					id: $organisationId,
+					register: $organisationObject->getRegister(),
+					schema: $organisationObject->getSchema(),
 					_rbac: false,
 					_multitenancy: false
 				);
 				if (empty($fullObject) === false) {
-					$organisatieObject = $fullObject;
+					$organisationObject = $fullObject;
 				}
 			} catch (\Exception $e) {
 				$this->logger->warning(
 					'Could not fetch full organisation object, using provided object',
 					[
-						'organisatieId' => $organisatieId,
+						'organisatieId' => $organisationId,
 						'error' => $e->getMessage(),
 					]
 				);
 			}//end try
 
-			$objectData = $organisatieObject->getObject();
+			$objectData = $organisationObject->getObject();
 
 			$this->logger->debug(
 				'Ensuring organisation entity',
 				[
 					'app' => 'softwarecatalog',
-					'organisatieId' => $organisatieId,
-					'naam' => ($objectData['naam'] ?? $objectData['name'] ?? 'Unknown'),
+					'organisatieId' => $organisationId,
+					'name' => ($objectData['name'] ?? 'Unknown'),
 					'status' => ($objectData['status'] ?? 'Unknown'),
 				]
 			);
@@ -991,7 +991,7 @@ class OrganizationSyncService {
 			$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
 
 			try {
-				$organisationEntity = $organisationMapper->findByUuid($organisatieId);
+				$organisationEntity = $organisationMapper->findByUuid($organisationId);
 
 				// Entity exists - update it if needed.
 				$status = strtolower(($objectData['status'] ?? 'actief'));
@@ -1001,7 +1001,7 @@ class OrganizationSyncService {
 					'Existing entity found',
 					[
 						'app' => 'softwarecatalog',
-						'organisatieId' => $organisatieId,
+						'organisatieId' => $organisationId,
 						'entityId' => $organisationEntity->getId(),
 						'shouldBeActive' => $shouldBeActive,
 						'needsUpdate' => $organisationEntity->getActive() !== $shouldBeActive,
@@ -1013,7 +1013,7 @@ class OrganizationSyncService {
 						'Updating entity status',
 						[
 							'app' => 'softwarecatalog',
-							'organisatieId' => $organisatieId,
+							'organisatieId' => $organisationId,
 							'oldActive' => $organisationEntity->getActive(),
 							'newActive' => $shouldBeActive,
 						]
@@ -1028,28 +1028,28 @@ class OrganizationSyncService {
 					if ($sendEmails !== false && $shouldBeActive === true && $wasActive === false) {
 						$this->logger->info(
 							'[FLOW] Sending organization activation email',
-							['organisatieId' => $organisatieId]
+							['organisatieId' => $organisationId]
 						);
 						$emailSent = $this->sendOrganizationActivationEmail(organizationData: $objectData);
 						if (empty($emailSent) === false) {
 							$this->logger->info(
 								'📧 Organization activation email sent successfully',
-								['organisatieId' => $organisatieId]
+								['organisatieId' => $organisationId]
 							);
 						}
 
 						if (empty($emailSent) === true) {
 							$this->logger->info(
 								'📧 Organization activation email not sent (disabled or not configured)',
-								['organisatieId' => $organisatieId]
+								['organisatieId' => $organisationId]
 							);
 						}
 					}//end if
 				}//end if
 
 				// Update organisatie object owner to organisation entity UUID.
-				$this->updateOrganisatieObjectOwner(
-					organisatieObject: $organisatieObject,
+				$this->updateOrganisationObjectOwner(
+					organisationObject: $organisationObject,
 					organisationEntity: $organisationEntity,
 					register: $register,
 					organizationSchema: $organizationSchema
@@ -1059,7 +1059,7 @@ class OrganizationSyncService {
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 				// Entity not found by UUID — try finding by slug before creating.
 				// This handles the case where the entity exists but with a different UUID (e.g. from slug collision).
-				$orgName = ($objectData['naam'] ?? $objectData['name'] ?? '');
+				$orgName = ($objectData['name'] ?? '');
 				if (empty($orgName) === false) {
 					$slug = strtolower(preg_replace('/[^a-z0-9]+/', '-', strtolower($orgName)));
 					$slug = trim($slug, '-');
@@ -1069,20 +1069,20 @@ class OrganizationSyncService {
 							'OrganizationSyncService: Found existing entity by slug, updating UUID to match object',
 							[
 								'app' => 'softwarecatalog',
-								'organisatieId' => $organisatieId,
+								'organisatieId' => $organisationId,
 								'oldEntityUuid' => $organisationEntity->getUuid(),
 								'slug' => $slug,
 							]
 						);
 
 						// Update the entity's UUID to match the object UUID so future lookups work.
-						$organisationEntity->setUuid($organisatieId);
+						$organisationEntity->setUuid($organisationId);
 						$organisationMapper->save($organisationEntity);
 						$stats['entitiesUpdated']++;
 
 						// Update organisatie object owner to this entity.
-						$this->updateOrganisatieObjectOwner(
-							organisatieObject: $organisatieObject,
+						$this->updateOrganisationObjectOwner(
+							organisationObject: $organisationObject,
 							organisationEntity: $organisationEntity,
 							register: $register,
 							organizationSchema: $organizationSchema
@@ -1098,19 +1098,19 @@ class OrganizationSyncService {
 					'Creating new organisation entity',
 					[
 						'app' => 'softwarecatalog',
-						'organisatieId' => $organisatieId,
-						'naam' => ($objectData['naam'] ?? 'Unknown'),
+						'organisatieId' => $organisationId,
+						'name' => ($objectData['name'] ?? 'Unknown'),
 					]
 				);
 
-				$organisationEntity = $this->organisatieService->createOrganisationInOpenRegister($objectData);
+				$organisationEntity = $this->organisationService->createOrganisationInOpenRegister($objectData);
 				if (empty($organisationEntity) === false) {
 					$stats['entitiesCreated']++;
 					$this->logger->debug(
 						'New organisation entity created',
 						[
 							'app' => 'softwarecatalog',
-							'organisatieId' => $organisatieId,
+							'organisatieId' => $organisationId,
 							'entityId' => $organisationEntity->getId(),
 							'active' => $organisationEntity->getActive(),
 							'name' => $organisationEntity->getName(),
@@ -1121,27 +1121,27 @@ class OrganizationSyncService {
 					if (empty($sendEmails) === false) {
 						$this->logger->info(
 							'[FLOW] Sending organization registration email',
-							['organisatieId' => $organisatieId]
+							['organisatieId' => $organisationId]
 						);
 						$emailSent = $this->sendOrganizationRegistrationEmail(organizationData: $objectData);
 						if (empty($emailSent) === false) {
 							$this->logger->info(
 								'📧 Organization registration email sent successfully',
-								['organisatieId' => $organisatieId]
+								['organisatieId' => $organisationId]
 							);
 						}
 
 						if (empty($emailSent) === true) {
 							$this->logger->info(
 								'📧 Organization registration email not sent (disabled or not configured)',
-								['organisatieId' => $organisatieId]
+								['organisatieId' => $organisationId]
 							);
 						}
 					}//end if
 
 					// Update organisatie object owner to organisation entity UUID.
-					$this->updateOrganisatieObjectOwner(
-						organisatieObject: $organisatieObject,
+					$this->updateOrganisationObjectOwner(
+						organisationObject: $organisationObject,
 						organisationEntity: $organisationEntity,
 						register: $register,
 						organizationSchema: $organizationSchema
@@ -1153,7 +1153,7 @@ class OrganizationSyncService {
 						'❌ ORGANISATION ENTITY CREATION FAILED',
 						[
 							'app' => 'softwarecatalog',
-							'organisatieId' => $organisatieId,
+							'organisatieId' => $organisationId,
 						]
 					);
 				}
@@ -1165,7 +1165,7 @@ class OrganizationSyncService {
 				'💥 ENSURE ORGANISATION ENTITY EXCEPTION',
 				[
 					'app' => 'softwarecatalog',
-					'organisatieId' => $organisatieObject->getId(),
+					'organisatieId' => $organisationObject->getId(),
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
 					'line' => $e->getLine(),
@@ -1192,7 +1192,7 @@ class OrganizationSyncService {
 				'OrganizationSyncService: Organization registration email failed',
 				[
 					'organizationId' => ($organizationData['id'] ?? 'unknown'),
-					'organizationName' => ($organizationData['naam'] ?? 'unknown'),
+					'organizationName' => ($organizationData['name'] ?? 'unknown'),
 					'error' => $e->getMessage(),
 				]
 			);
@@ -1216,7 +1216,7 @@ class OrganizationSyncService {
 				'OrganizationSyncService: Organization activation email failed',
 				[
 					'organizationId' => ($organizationData['id'] ?? 'unknown'),
-					'organizationName' => ($organizationData['naam'] ?? 'unknown'),
+					'organizationName' => ($organizationData['name'] ?? 'unknown'),
 					'error' => $e->getMessage(),
 				]
 			);
@@ -1228,13 +1228,13 @@ class OrganizationSyncService {
 	/**
 	 * Gets all contact persons for a specific organisation
 	 *
-	 * @param string $organisatieId The organisation ID
+	 * @param string $organisationId The organisation ID
 	 * @param string $register The register ID
 	 * @param string $contactSchema The contact schema ID
 	 *
 	 * @return array Array of contact person objects
 	 */
-	private function getContactPersonsForOrganisation(string $organisatieId, string $register, string $contactSchema): array {
+	private function getContactPersonsForOrganisation(string $organisationId, string $register, string $contactSchema): array {
 		if (empty($contactSchema) === true) {
 			$this->logger->debug('OrganizationSyncService: No contact schema configured, skipping contact person lookup');
 			return [];
@@ -1249,7 +1249,7 @@ class OrganizationSyncService {
 					'register' => (int)$register,
 					'schema' => (int)$contactSchema,
 				],
-				'organisatie' => $organisatieId,
+				'organisatie' => $organisationId,
 				'_limit' => 500,
 			];
 
@@ -1258,7 +1258,7 @@ class OrganizationSyncService {
 			$this->logger->debug(
 				'OrganizationSyncService: Retrieved contact persons on-demand',
 				[
-					'organisatieId' => $organisatieId,
+					'organisatieId' => $organisationId,
 					'register' => $register,
 					'schema' => $contactSchema,
 					'count' => count($contactPersons),
@@ -1270,7 +1270,7 @@ class OrganizationSyncService {
 			$this->logger->error(
 				'OrganizationSyncService: Failed to get contact persons',
 				[
-					'organisatieId' => $organisatieId,
+					'organisatieId' => $organisationId,
 					'register' => $register,
 					'schema' => $contactSchema,
 					'exception' => $e,
@@ -1328,7 +1328,7 @@ class OrganizationSyncService {
 					]
 				);
 
-				$success = $this->contactpersoonService->processContactpersoon($contactPerson, false);
+				$success = $this->contactPersonService->processContactpersoon($contactPerson, false);
 				if (empty($success) === false) {
 					$stats['usersCreated']++;
 					$this->logger->info(
@@ -1502,14 +1502,14 @@ class OrganizationSyncService {
 			}
 
 			// Get total counts (all objects).
-			$allOrganisatieObjects = $this->getOrganisatieObjectsByTimeWindow(
+			$allOrganisationObjects = $this->getOrganisationObjectsByTimeWindow(
 				register: $register,
 				organizationSchema: $organizationSchema,
 				minutesBack: 0
 			);
 
 			// Get incremental counts (objects to be processed in next sync).
-			$incrementalOrganisatieObjects = $this->getOrganisatieObjectsByTimeWindow(
+			$incrementalOrganisationObjects = $this->getOrganisationObjectsByTimeWindow(
 				register: $register,
 				organizationSchema: $organizationSchema,
 				minutesBack: $minutesBack
@@ -1528,11 +1528,11 @@ class OrganizationSyncService {
 			// Predict contact persons to be processed.
 			$predictedContactPersonsToProcess = 0;
 			if (empty($contactSchema) === false) {
-				foreach ($incrementalOrganisatieObjects as $orgObject) {
+				foreach ($incrementalOrganisationObjects as $orgObject) {
 					$objectData = $orgObject->getObject();
-					$organisatieId = ($objectData['id'] ?? $orgObject->getId());
+					$organisationId = ($objectData['id'] ?? $orgObject->getId());
 					$contactPersons = $this->getContactPersonsForOrganisation(
-						organisatieId: $organisatieId,
+						organisationId: $organisationId,
 						register: $register,
 						contactSchema: $contactSchema
 					);
@@ -1542,8 +1542,8 @@ class OrganizationSyncService {
 
 			// Calculate efficiency metrics.
 			$efficiencyImprovement = 0;
-			if (count($allOrganisatieObjects) > 0) {
-				$ratio = count($incrementalOrganisatieObjects) / count($allOrganisatieObjects);
+			if (count($allOrganisationObjects) > 0) {
+				$ratio = count($incrementalOrganisationObjects) / count($allOrganisationObjects);
 				$efficiencyImprovement = round(((1 - $ratio) * 100), 1);
 			}
 
@@ -1554,8 +1554,8 @@ class OrganizationSyncService {
 			}
 
 			$messageValue = 'No organizations to process in the current time window';
-			if (count($incrementalOrganisatieObjects) > 0) {
-				$orgCount = $this->formatNumber(number: count($incrementalOrganisatieObjects));
+			if (count($incrementalOrganisationObjects) > 0) {
+				$orgCount = $this->formatNumber(number: count($incrementalOrganisationObjects));
 				$contactCount = $this->formatNumber(number: $predictedContactPersonsToProcess);
 				// phpcs:ignore Generic.Files.LineLength.TooLong
 				$messageValue = "Ready to process {$orgCount} organizations and {$contactCount} contact persons";
@@ -1573,16 +1573,16 @@ class OrganizationSyncService {
 				'timeWindow' => $minutesBack,
 
 				// Total counts.
-				'totalOrganizationObjects' => count($allOrganisatieObjects),
+				'totalOrganizationObjects' => count($allOrganisationObjects),
 				'totalOrganizationEntities' => $entitiesCount,
 
 				// Processing predictions.
-				'organizationsToProcess' => count($incrementalOrganisatieObjects),
+				'organizationsToProcess' => count($incrementalOrganisationObjects),
 				'contactPersonsToProcess' => $predictedContactPersonsToProcess,
 
 				// Efficiency metrics.
 				'efficiencyImprovement' => $efficiencyImprovement . '%',
-				'processingReduction' => (count($allOrganisatieObjects) - count($incrementalOrganisatieObjects)),
+				'processingReduction' => (count($allOrganisationObjects) - count($incrementalOrganisationObjects)),
 
 				// Configuration.
 				'contactSchemaConfigured' => empty($contactSchema) === false,
@@ -1688,7 +1688,7 @@ class OrganizationSyncService {
 					'app' => 'softwarecatalog',
 					'trigger' => 'ObjectCreatedEvent',
 					'organizationId' => $organizationUuid,
-					'organizationName' => ($objectData['naam'] ?? 'Unknown'),
+					'organizationName' => ($objectData['name'] ?? 'Unknown'),
 					'organizationStatus' => ($objectData['status'] ?? 'Unknown'),
 					'timestamp' => date('Y-m-d H:i:s'),
 					'microtime' => microtime(true),
@@ -1704,7 +1704,7 @@ class OrganizationSyncService {
 				]
 			);
 
-			$organisationEntity = $this->ensureOrganisationEntity(organisatieObject: $organizationObject, stats: $stats);
+			$organisationEntity = $this->ensureOrganisationEntity(organisationObject: $organizationObject, stats: $stats);
 
 			if (empty($organisationEntity) === false) {
 				$stats['organizationsProcessed']++;
@@ -2305,7 +2305,7 @@ class OrganizationSyncService {
 
 				// Temporarily remove organisatie from contactData to avoid validation error.
 				// (schema expects object type but field stores a UUID string).
-				$savedOrganisatie = $contactData['organisatie'] ?? null;
+				$savedOrganisation = $contactData['organisatie'] ?? null;
 				unset($contactData['organisatie']);
 				unset($contactData['id']);
 				unset($contactData['uuid']);
@@ -2319,9 +2319,9 @@ class OrganizationSyncService {
 				);
 
 				// Restore the organisatie field so the link to the organisation is preserved.
-				if ($contactObject !== false && $savedOrganisatie !== null) {
+				if ($contactObject !== false && $savedOrganisation !== null) {
 					$restoredData = $contactObject->getObject();
-					$restoredData['organisatie'] = $savedOrganisatie;
+					$restoredData['organisatie'] = $savedOrganisation;
 					$contactObject->setObject($restoredData);
 					$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
 					$objectMapper->update($contactObject);
@@ -2388,7 +2388,7 @@ class OrganizationSyncService {
 									'entitiesUpdated' => 0,
 								];
 								$organisationEntity = $this->ensureOrganisationEntity(
-									organisatieObject: $orgObject,
+									organisationObject: $orgObject,
 									stats: $backupStats
 								);
 							}
@@ -2486,7 +2486,7 @@ class OrganizationSyncService {
 								);
 
 								// Update contactpersoon object owner to user UID and organisation.
-								$this->updateContactpersoonObjectOwner(
+								$this->updateContactPersonObjectOwner(
 									contactObject: $contactObject,
 									userUID: $user->getUID(),
 									register: $register,
@@ -2645,7 +2645,7 @@ class OrganizationSyncService {
 								'entitiesUpdated' => 0,
 							];
 							$organisationEntity = $this->ensureOrganisationEntity(
-								organisatieObject: $orgObject,
+								organisationObject: $orgObject,
 								stats: $backupStats
 							);
 						}
@@ -2689,7 +2689,7 @@ class OrganizationSyncService {
 							// Temporarily remove organisatie field to avoid validation error.
 							// (it's stored as UUID string but schema expects object type).
 							// Save the value so we can restore it after the save.
-							$savedOrganisatie = $contactEntityObject['organisatie'] ?? null;
+							$savedOrganisation = $contactEntityObject['organisatie'] ?? null;
 							unset($contactEntityObject['organisatie']);
 
 							// Update the contact object with the username (using RBAC bypass).
@@ -2724,7 +2724,7 @@ class OrganizationSyncService {
 							);
 
 							// Update contactpersoon object owner to user UID.
-							$this->updateContactpersoonObjectOwner(
+							$this->updateContactPersonObjectOwner(
 								contactObject: $contactObject,
 								userUID: $user->getUID(),
 								register: $register,
@@ -3116,27 +3116,27 @@ class OrganizationSyncService {
 	/**
 	 * Updates the organisatie object's @self metadata to set owner to the organisation entity UUID
 	 *
-	 * @param object $organisatieObject The organisatie object to update.
+	 * @param object $organisationObject The organisatie object to update.
 	 * @param object $organisationEntity The organisation entity.
 	 * @param string $register The register ID.
 	 * @param string $organizationSchema The organization schema ID.
 	 *
 	 * @return void
 	 */
-	private function updateOrganisatieObjectOwner(
-		object $organisatieObject,
+	private function updateOrganisationObjectOwner(
+		object $organisationObject,
 		object $organisationEntity,
 		string $register,
 		string $organizationSchema,
 	): void {
 		try {
-			$organisatieId = $organisatieObject->getUuid();
+			$organisationId = $organisationObject->getUuid();
 			$organisationEntityUuid = $organisationEntity->getUuid();
 
 			$this->logger->info(
 				'OrganizationSyncService: Updating organisatie object owner and organisation',
 				[
-					'organisatieId' => $organisatieId,
+					'organisatieId' => $organisationId,
 					'organisationEntityUuid' => $organisationEntityUuid,
 					'register' => $register,
 					'schema' => $organizationSchema,
@@ -3144,7 +3144,7 @@ class OrganizationSyncService {
 			);
 
 			// Get the current object data.
-			$currentObject = $organisatieObject->jsonSerialize();
+			$currentObject = $organisationObject->jsonSerialize();
 
 			// Get current @self metadata or create new.
 			$selfMetadata = ($currentObject['@self'] ?? []);
@@ -3157,7 +3157,7 @@ class OrganizationSyncService {
 				$this->logger->debug(
 					'OrganizationSyncService: Owner and organisation already set correctly, skipping update',
 					[
-						'organisatieId' => $organisatieId,
+						'organisatieId' => $organisationId,
 						'organisationEntityUuid' => $organisationEntityUuid,
 					]
 				);
@@ -3175,21 +3175,21 @@ class OrganizationSyncService {
 
 			// Update the object with the new @self metadata.
 			$currentObject['@self'] = $selfMetadata;
-			$organisatieObject->setObject($currentObject);
+			$organisationObject->setObject($currentObject);
 
 			// Also update the entity's owner and organisation fields directly.
 			// These are separate from the object data and control multi-tenancy.
-			$organisatieObject->setOwner($organisationEntityUuid);
-			$organisatieObject->setOrganisation($organisationEntityUuid);
+			$organisationObject->setOwner($organisationEntityUuid);
+			$organisationObject->setOrganisation($organisationEntityUuid);
 
 			// Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
 			$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-			$objectMapper->update($organisatieObject);
+			$objectMapper->update($organisationObject);
 
 			$this->logger->info(
 				'OrganizationSyncService: Successfully updated organisatie object owner and organisation',
 				[
-					'organisatieId' => $organisatieId,
+					'organisatieId' => $organisationId,
 					'organisationEntityUuid' => $organisationEntityUuid,
 					'ownerSet' => $selfMetadata['owner'],
 					'organisationSet' => $currentObject['organisation'],
@@ -3199,7 +3199,7 @@ class OrganizationSyncService {
 			$this->logger->error(
 				'OrganizationSyncService: Failed to update organisatie object owner and organisation',
 				[
-					'organisatieId' => $organisatieObject->getUuid(),
+					'organisatieId' => $organisationObject->getUuid(),
 					'organisationEntityUuid' => $organisationEntity->getUuid(),
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
@@ -3221,7 +3221,7 @@ class OrganizationSyncService {
 	 *
 	 * @return void
 	 */
-	private function updateContactpersoonObjectOwner(
+	private function updateContactPersonObjectOwner(
 		object $contactObject,
 		string $userUID,
 		string $register,

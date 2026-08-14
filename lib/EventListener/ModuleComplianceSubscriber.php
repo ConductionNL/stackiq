@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  * Event subscriber for handling module compliance updates.
  *
  * This subscriber listens for module object updates and automatically
- * synchronizes the 'standaarden' property based on linked compliance objects.
+ * synchronizes the 'standards' property based on linked compliance objects.
  *
  * @category EventListener
  * @package  OCA\SoftwareCatalog\EventListener

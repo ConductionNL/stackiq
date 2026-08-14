@@ -256,7 +256,7 @@ class SbomController extends Controller {
 	 * `SbomImportService::getStatus()` calls OpenRegister's real
 	 * `ObjectService::find()`, which — despite its `?ObjectEntity` return
 	 * type suggesting `null` on a miss (and despite the local
-	 * `if ($moduleVersie !== null)` guard already inside `getStatus()`) —
+	 * `if ($moduleVersion !== null)` guard already inside `getStatus()`) —
 	 * can re-throw `OCP\AppFramework\Db\DoesNotExistException` from its
 	 * cross-table fallback lookup for a well-formed but unresolvable uuid,
 	 * rather than returning `null`. Uncaught, that propagated straight

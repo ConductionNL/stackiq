@@ -101,7 +101,7 @@ export default {
 				.map((item) => ({
 					id: item.id,
 					mainText:
-						item.naam
+						item.name
 						|| item.name
 						|| item.title
 						|| t('softwarecatalog', 'Unknown organisation'),
