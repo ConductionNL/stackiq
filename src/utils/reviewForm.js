@@ -61,7 +61,7 @@ export function isReviewFormValid(naam, rating) {
 export function buildReviewPayload(naam, rating, beschrijvingLang) {
 	return {
 		name: String(naam || ''),
-		rating: rating,
+		rating,
 		beschrijvingLang: String(beschrijvingLang || ''),
 	}
 }

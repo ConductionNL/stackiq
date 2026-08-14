@@ -42,7 +42,9 @@ describe('complianceMatrix.resolveUuid', () => {
 
 describe('complianceMatrix.hasEvidence', () => {
 	it('detects a base64 bewijs file', () => {
-		expect(hasEvidence({ evidence: 'data:application/pdf;base64,AAA' })).toBe(true)
+		expect(hasEvidence({ evidence: 'data:application/pdf;base64,AAA' })).toBe(
+			true,
+		)
 		expect(hasEvidence({ evidence: { id: 1 } })).toBe(true)
 	})
 	it('detects a bewijsReferentie NC Files link', () => {
