@@ -55,7 +55,7 @@
 					v-model="format"
 					class="sbom-upload__format"
 					:options="formatOptions"
-					:input-label="t('softwarecatalog', 'SBOM format')"
+					:inputLabel="t('softwarecatalog', 'SBOM format')"
 					label="label"
 					:reduce="(option) => option.value"
 					:clearable="false"
@@ -131,9 +131,9 @@
 				v-else
 				:rows="rows"
 				:columns="columns"
-				row-key="id"
+				rowKey="id"
 				data-testid="sbom-component-table"
-				:empty-text="t('softwarecatalog', 'No components imported yet')">
+				:emptyText="t('softwarecatalog', 'No components imported yet')">
 				<template #column-licenses="{ row }">
 					<span>{{ row.licenses || '—' }}</span>
 				</template>
@@ -157,6 +157,9 @@
 </template>
 
 <script>
+import { CnDataTable } from '@conduction/nextcloud-vue'
+import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcEmptyContent,
@@ -164,13 +167,8 @@ import {
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
-import { CnDataTable } from '@conduction/nextcloud-vue'
-import { translate as t } from '@nextcloud/l10n'
-import { generateUrl } from '@nextcloud/router'
-
-import TrayArrowUp from 'vue-material-design-icons/TrayArrowUp.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
-
+import TrayArrowUp from 'vue-material-design-icons/TrayArrowUp.vue'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
 import { matchComponents } from '../../utils/sbomVulnerabilityMatch.js'
@@ -229,6 +227,7 @@ export default {
 				},
 				{ value: 'spdx-json', label: t('softwarecatalog', 'SPDX (JSON)') },
 			],
+
 			columns: [
 				{ key: 'name', label: t('softwarecatalog', 'Name'), sortable: true },
 				{

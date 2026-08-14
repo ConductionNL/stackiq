@@ -32,14 +32,14 @@
 						<NcSelect
 							v-model="selectedType"
 							:options="organisationTypes"
-							:input-label="t('softwarecatalog', 'Type')"
+							:inputLabel="t('softwarecatalog', 'Type')"
 							:placeholder="
 								t('softwarecatalog', 'Select organisation type')
 							"
 							label="label"
-							track-by="value"
+							trackBy="value"
 							:clearable="false"
-							@update:model-value="handleTypeChange" />
+							@update:modelValue="handleTypeChange" />
 					</div>
 
 					<div class="form-row">
@@ -131,16 +131,16 @@
 </template>
 
 <script>
+import { showError } from '@nextcloud/dialogs'
 import {
-	NcModal,
-	NcTextField,
-	NcSelect,
 	NcButton,
 	NcLoadingIcon,
+	NcModal,
+	NcSelect,
+	NcTextField,
 } from '@nextcloud/vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
-import { objectStore, navigationStore } from '../store/store.js'
-import { showError } from '@nextcloud/dialogs'
+import { navigationStore, objectStore } from '../store/store.js'
 
 export default {
 	name: 'OrganisationModal',
@@ -152,20 +152,24 @@ export default {
 		NcLoadingIcon,
 		CheckCircle,
 	},
+
 	props: {
 		show: {
 			type: Boolean,
 			default: false,
 		},
+
 		organisation: {
 			type: Object,
 			default: null,
 		},
+
 		mode: {
 			type: String,
 			default: 'create', // 'create', 'edit', 'copy'
 		},
 	},
+
 	data() {
 		return {
 			formData: {
@@ -181,6 +185,7 @@ export default {
 				participants: [],
 				contactpersonen: [],
 			},
+
 			selectedType: null,
 			loading: false,
 			success: false,
@@ -195,13 +200,16 @@ export default {
 			],
 		}
 	},
+
 	computed: {
 		isEditMode() {
 			return this.mode === 'edit'
 		},
+
 		isCopyMode() {
 			return this.mode === 'copy'
 		},
+
 		/**
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -213,10 +221,12 @@ export default {
 			}
 			return this.t('softwarecatalog', 'Create Organisation')
 		},
+
 		isFormValid() {
 			return this.formData.name.trim().length > 0
 		},
 	},
+
 	watch: {
 		organisation: {
 			/**
@@ -225,10 +235,13 @@ export default {
 			handler() {
 				this.loadOrganisationData()
 			},
+
 			immediate: true,
 		},
+
 		show: {
 			/**
+			 * @param newVal
 			 * @spec openspec/specs/fe-organizations/spec.md
 			 */
 			handler(newVal) {
@@ -237,9 +250,11 @@ export default {
 					this.loadOrganisationData()
 				}
 			},
+
 			immediate: true,
 		},
 	},
+
 	/**
 	 * @spec openspec/specs/fe-organizations/spec.md
 	 */
@@ -249,6 +264,7 @@ export default {
 			clearInterval(this.countdownInterval)
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -277,6 +293,7 @@ export default {
 				this.countdownInterval = null
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -307,21 +324,26 @@ export default {
 				)
 			}
 		},
+
 		/**
+		 * @param selectedOption
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		handleTypeChange(selectedOption) {
 			console.info('Type changed:', selectedOption)
 			this.formData.type = selectedOption ? selectedOption.value : ''
 		},
+
 		/**
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closeModal() {
 			this.$emit('close')
 		},
+
 		/**
 		 * Get only the changed properties between original and current form data
+		 *
 		 * @return {object} Object containing only the changed properties
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */

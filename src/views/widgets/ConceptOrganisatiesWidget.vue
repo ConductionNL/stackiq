@@ -19,14 +19,14 @@ import { objectStore } from '../../store/store.js'
 			:rows="items"
 			:columns="columns"
 			:loading="loading"
-			row-icon="Domain"
-			hide-header
+			rowIcon="Domain"
+			hideHeader
 			borderless
-			:empty-text="t('softwarecatalog', 'No concept organisations found')">
+			:emptyText="t('softwarecatalog', 'No concept organisations found')">
 			<template #row-actions="{ row }">
 				<NcLoadingIcon v-if="processingIds.includes(row.id)" :size="20" />
 				<NcActions v-else>
-					<NcActionButton :close-after-click="true" @click="onAccept(row)">
+					<NcActionButton :closeAfterClick="true" @click="onAccept(row)">
 						<template #icon>
 							<CheckIcon :size="20" />
 						</template>
@@ -41,12 +41,11 @@ import { objectStore } from '../../store/store.js'
 <script>
 // Components
 import { CnDataTable, registerIcons } from '@conduction/nextcloud-vue'
-import { NcButton, NcActions, NcActionButton, NcLoadingIcon } from '@nextcloud/vue'
-
+import { NcActionButton, NcActions, NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import CheckIcon from 'vue-material-design-icons/Check.vue'
 // Icons
 import DomainIcon from 'vue-material-design-icons/Domain.vue'
 import RefreshIcon from 'vue-material-design-icons/Refresh.vue'
-import CheckIcon from 'vue-material-design-icons/Check.vue'
 
 // The widget ships as its own dashboard bundle (conceptOrganisatiesWidget.js),
 // so main.js' registerIcons() never runs there. Register the leading row icon
@@ -75,12 +74,14 @@ export default {
 		RefreshIcon,
 		CheckIcon,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -88,6 +89,7 @@ export default {
 			columns: COLUMNS,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -107,12 +109,15 @@ export default {
 				}))
 		},
 	},
+
 	mounted() {
 		this.fetchData()
 	},
+
 	methods: {
 		/**
 		 * Handle accepting an organisatie (change status to actief)
+		 *
 		 * @param {object} item - The organisatie item to accept
 		 * @return {void}
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -132,8 +137,10 @@ export default {
 				)
 			}
 		},
+
 		/**
 		 * Fetch the organisatie data
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */

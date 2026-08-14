@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Unit tests for the translation-badge utility.
  *
@@ -6,8 +5,8 @@
  */
 
 import {
-	languageName,
 	getSourceLanguage,
+	languageName,
 	shouldShowTranslationBadge,
 	translationBadge,
 } from './translationBadge.js'

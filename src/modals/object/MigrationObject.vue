@@ -1,12 +1,12 @@
 <script setup>
-import { objectStore, navigationStore } from '../../store/store.js'
+import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
 	<NcDialog
 		:name="`Migrate ${selectedObjects.length} object${selectedObjects.length !== 1 ? 's' : ''}`"
 		size="large"
-		:can-close="false">
+		:canClose="false">
 		<!-- Source and Target Information -->
 		<div class="migration-overview">
 			<div class="source-info">
@@ -125,10 +125,10 @@ import { objectStore, navigationStore } from '../../store/store.js'
 					v-model="targetRegister"
 					:options="availableRegisters"
 					label="title"
-					track-by="id"
-					:input-label="t('softwarecatalog', 'Target register')"
+					trackBy="id"
+					:inputLabel="t('softwarecatalog', 'Target register')"
 					placeholder="Select a register..."
-					@update:model-value="onRegisterChange" />
+					@update:modelValue="onRegisterChange" />
 			</div>
 
 			<!-- Target Schema Selection -->
@@ -138,10 +138,10 @@ import { objectStore, navigationStore } from '../../store/store.js'
 					v-model="targetSchema"
 					:options="availableSchemas"
 					label="title"
-					track-by="id"
-					:input-label="t('softwarecatalog', 'Target schema')"
+					trackBy="id"
+					:inputLabel="t('softwarecatalog', 'Target schema')"
 					placeholder="Select a schema..."
-					@update:model-value="onSchemaChange" />
+					@update:modelValue="onSchemaChange" />
 			</div>
 		</div>
 
@@ -192,17 +192,17 @@ import { objectStore, navigationStore } from '../../store/store.js'
 								v-model="uiMappings[sourceProperty.name]"
 								:options="targetPropertyOptions"
 								label="label"
-								track-by="value"
-								:input-label="
+								trackBy="value"
+								:inputLabel="
 									t(
 										'softwarecatalog',
 										'Map {property} to target property',
 										{ property: sourceProperty.name },
 									)
 								"
-								:placeholder="'Map to target property...'"
+								placeholder="Map to target property..."
 								:clearable="true"
-								@update:model-value="
+								@update:modelValue="
 									updateMappingFromUI(sourceProperty.name)
 								" />
 						</div>
@@ -293,10 +293,8 @@ import { objectStore, navigationStore } from '../../store/store.js'
 									detail.objectTitle || detail.objectId
 								}}</strong>
 								<span
-									:class="[
-										'status',
-										detail.success ? 'success' : 'error',
-									]">
+									class="status"
+									:class="[detail.success ? 'success' : 'error']">
 									{{ detail.success ? 'Success' : 'Failed' }}
 								</span>
 							</div>
@@ -403,11 +401,10 @@ import {
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
-
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
+import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
 // Icons
 import Cancel from 'vue-material-design-icons/Cancel.vue'
-import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
-import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import DatabaseExport from 'vue-material-design-icons/DatabaseExport.vue'
 import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
@@ -448,6 +445,7 @@ export default {
 			migrationResult: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -468,6 +466,7 @@ export default {
 				}
 			)
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -487,6 +486,7 @@ export default {
 				}
 			)
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -503,6 +503,7 @@ export default {
 
 			return options
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -514,9 +515,11 @@ export default {
 			return this.targetRegister && this.targetSchema && hasValidMappings
 		},
 	},
+
 	mounted() {
 		this.initializeMigration()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -530,6 +533,7 @@ export default {
 			}
 			this.loadAvailableRegisters()
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -548,6 +552,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -572,6 +577,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -581,7 +587,9 @@ export default {
 			}
 			await this.loadSchemaProperties()
 		},
+
 		/**
+		 * @param objectId
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		removeObject(objectId) {
@@ -592,6 +600,7 @@ export default {
 				this.closeModal()
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -602,6 +611,7 @@ export default {
 				this.step = 3
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -610,6 +620,7 @@ export default {
 				this.step--
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -641,7 +652,9 @@ export default {
 				console.error('Error loading schema properties:', error)
 			}
 		},
+
 		/**
+		 * @param schema
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		extractSchemaProperties(schema) {
@@ -658,6 +671,7 @@ export default {
 			}
 			return properties
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -684,6 +698,7 @@ export default {
 				}
 			})
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -735,19 +750,23 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeModal() {
 			navigationStore.setModal(false)
 		},
+
 		/**
+		 * @param sourceProperty
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		updateMappingFromUI(sourceProperty) {
 			// Convert UI mappings to our simple mapping format
 			this.convertUIToMapping()
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -763,6 +782,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */

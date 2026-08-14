@@ -21,8 +21,8 @@
 		name="ArchiMate Import/Export"
 		description="Import and export ArchiMate models to/from OpenRegister"
 		:loading="store.loading"
-		loading-text="Preparing ArchiMate tools..."
-		:has-info-content="true">
+		loadingText="Preparing ArchiMate tools..."
+		:hasInfoContent="true">
 		<!-- ArchiMate Operations Section -->
 		<div class="operations-section">
 			<!-- Import Section -->
@@ -562,7 +562,7 @@
 							id="organization-select"
 							v-model="selectedOrganization"
 							:options="organizationOptions"
-							input-label="Select Organization"
+							inputLabel="Select Organization"
 							placeholder="Generic"
 							:disabled="exporting" />
 					</div>
@@ -645,27 +645,24 @@
  * @version 2.0.0
  */
 
-import { settingsStore } from '../../../store/store.js'
-import { withHeartbeat } from '../../../utils/heartbeat.js'
-
-// Components
-import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-
 // Nextcloud Vue components
 import {
 	NcButton,
-	NcNoteCard,
-	NcLoadingIcon,
-	NcSelect,
 	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
 } from '@nextcloud/vue'
-
+import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import Close from 'vue-material-design-icons/Close.vue'
 // Icons
 import CloudUpload from 'vue-material-design-icons/CloudUpload.vue'
-import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
-import Close from 'vue-material-design-icons/Close.vue'
+// Components
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
+import { settingsStore } from '../../../store/store.js'
+import { withHeartbeat } from '../../../utils/heartbeat.js'
 
 export default {
 	name: 'ArchiMateImportExport',
@@ -943,6 +940,7 @@ export default {
 
 		/**
 		 * Export organization-specific ArchiMate file with enriched views
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async exportOrgArchiMateFile() {

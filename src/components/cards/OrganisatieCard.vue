@@ -25,14 +25,14 @@ https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
 			</h2>
 			<div class="cardHeaderActions" @click.stop>
 				<!-- Object Actions -->
-				<NcActions :primary="true" menu-name="Actions">
+				<NcActions :primary="true" menuName="Actions">
 					<template #icon>
 						<DotsHorizontal :size="20" />
 					</template>
 					<NcActionButton
 						v-for="action in objectActions"
 						:key="action.id"
-						close-after-click
+						closeAfterClick
 						:disabled="action.condition && !action.condition(item)"
 						@click="executeObjectAction(action, item)">
 						<template #icon>
@@ -139,8 +139,8 @@ https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
 				@click.stop>
 				<ContactpersonenList
 					ref="contactpersonenList"
-					:organisation-id="item.id || item.uuid"
-					:organisation-data="item" />
+					:organisationId="item.id || item.uuid"
+					:organisationData="item" />
 
 				<!-- Toggle Button Row in Contactpersonen View -->
 				<div class="contactCountRow">
@@ -174,13 +174,13 @@ https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
 </template>
 
 <script>
-import { NcActions, NcActionButton, NcButton } from '@nextcloud/vue'
+import { NcActionButton, NcActions, NcButton } from '@nextcloud/vue'
+import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
+import Certificate from 'vue-material-design-icons/Certificate.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
-import Globe from 'vue-material-design-icons/Web.vue'
 import Email from 'vue-material-design-icons/Email.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
-import Certificate from 'vue-material-design-icons/Certificate.vue'
-import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
+import Globe from 'vue-material-design-icons/Web.vue'
 import ContactpersonenList from '../ContactpersonenList.vue'
 
 export default {
@@ -197,6 +197,7 @@ export default {
 		AccountMultiple,
 		ContactpersonenList,
 	},
+
 	props: {
 		/**
 		 * The organisation item data
@@ -205,6 +206,7 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		/**
 		 * Available actions for this organisation
 		 */
@@ -212,6 +214,7 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/**
 		 * Icon component for the card
 		 */
@@ -220,6 +223,7 @@ export default {
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			currentView: 'organisatie', // 'organisatie' or 'contactpersonen'
@@ -232,6 +236,8 @@ export default {
 		 */
 		currentView: {
 			/**
+			 * @param newView
+			 * @param oldView
 			 * @spec openspec/specs/fe-organizations/spec.md
 			 */
 			async handler(newView, oldView) {
@@ -263,6 +269,7 @@ export default {
 					}
 				}
 			},
+
 			immediate: false,
 		},
 	},
@@ -275,6 +282,7 @@ export default {
 		 * default CnObjectCard wires this via CnCardGrid's cardListeners;
 		 * a custom cardComponent like this one must emit it explicitly —
 		 * without it, clicking an organisation card was a no-op.
+		 *
 		 * @return {void}
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -284,6 +292,7 @@ export default {
 
 		/**
 		 * Get the display title for the organisation
+		 *
 		 * @param {object} item - The organisation object
 		 * @return {string} The title to display
 		 */
@@ -298,6 +307,7 @@ export default {
 
 		/**
 		 * Get the summary/tooltip text for the organisation
+		 *
 		 * @param {object} item - The organisation object
 		 * @return {string} The summary text
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -312,6 +322,7 @@ export default {
 
 		/**
 		 * Execute an object action
+		 *
 		 * @param {object} action - The action to execute
 		 * @param {object} item - The item to execute the action on
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -324,6 +335,7 @@ export default {
 
 		/**
 		 * Format website URL to ensure it has protocol
+		 *
 		 * @param {string} url - The website URL
 		 * @return {string} Formatted URL with protocol
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -338,6 +350,7 @@ export default {
 
 		/**
 		 * Truncate text to specified length
+		 *
 		 * @param {string} text - Text to truncate
 		 * @param {number} maxLength - Maximum length
 		 * @return {string} Truncated text
@@ -350,6 +363,7 @@ export default {
 
 		/**
 		 * Toggle between organisation and contactpersonen views
+		 *
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async toggleView() {
@@ -365,6 +379,7 @@ export default {
 
 		/**
 		 * Get the contactpersonen count
+		 *
 		 * @return {number} The number of contactpersons
 		 */
 		getContactpersonenCount() {
@@ -373,6 +388,7 @@ export default {
 
 		/**
 		 * Get the organisation address
+		 *
 		 * @return {string} The organisation's address
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */

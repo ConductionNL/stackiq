@@ -5,11 +5,11 @@
  */
 
 import {
-	isDetailsStepValid,
-	isApplicationsStepValid,
 	buildSuitePayload,
-	summarizeApplications,
+	isApplicationsStepValid,
+	isDetailsStepValid,
 	mapApplicationOptions,
+	summarizeApplications,
 } from './suiteWizard.js'
 
 describe('suiteWizard.isDetailsStepValid', () => {

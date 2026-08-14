@@ -77,10 +77,9 @@ Modal component for adding new contactpersoon to an organisation
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextField, NcLoadingIcon } from '@nextcloud/vue'
-
-import { showSuccess, showError } from '@nextcloud/dialogs'
-import { objectStore, navigationStore } from '../store/store.js'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { navigationStore, objectStore } from '../store/store.js'
 
 export default {
 	name: 'AddContactpersoonModal',
@@ -97,6 +96,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		organisation: {
 			type: Object,
 			default: () => ({}),
@@ -152,6 +152,7 @@ export default {
 		},
 
 		/**
+		 * @param email
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		isValidEmail(email) {

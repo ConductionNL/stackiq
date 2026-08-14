@@ -21,9 +21,9 @@
 		name="Background Jobs Configuration"
 		description="Configure user and organisation context for background jobs to enable proper authorization"
 		:loading="loading"
-		loading-text="Loading cronjob configuration..."
-		:show-save-button="false"
-		:show-refresh-button="true"
+		loadingText="Loading cronjob configuration..."
+		:showSaveButton="false"
+		:showRefreshButton="true"
 		@refresh="loadConfig">
 		<div v-if="!loading" class="cronjob-configuration">
 			<!-- Information Note -->
@@ -40,9 +40,9 @@
 						<div class="cronjob-title">
 							<h4>{{ job.name }}</h4>
 							<NcCheckboxRadioSwitch
-								:model-value="job.enabled"
+								:modelValue="job.enabled"
 								type="switch"
-								@update:model-value="
+								@update:modelValue="
 									updateJobEnabled(job.id, $event)
 								">
 								{{ job.enabled ? 'Enabled' : 'Disabled' }}
@@ -69,7 +69,7 @@
 									:options="organisationOptions"
 									:loading="loadingOrganisations"
 									:disabled="!job.enabled || savingJob === job.id"
-									input-label="Select an organisation" />
+									inputLabel="Select an organisation" />
 							</div>
 						</div>
 
@@ -111,8 +111,8 @@
 
 							<!-- Status indicator -->
 							<div
+								class="config-status"
 								:class="[
-									'config-status',
 									job.organisationUuid ? 'success' : 'warning',
 								]">
 								<template v-if="job.organisationUuid">
@@ -168,30 +168,27 @@
  * @version 1.0.0
  */
 
-import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-
+import { generateUrl } from '@nextcloud/router'
 // Nextcloud Vue components
 import {
-	NcSelect,
-	NcNoteCard,
+	NcButton,
+	NcCheckboxRadioSwitch,
 	NcEmptyContent,
 	NcLoadingIcon,
-	NcCheckboxRadioSwitch,
-	NcButton,
+	NcNoteCard,
+	NcSelect,
 } from '@nextcloud/vue'
-
-// Custom components
-import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-
+import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import Check from 'vue-material-design-icons/Check.vue'
 // Icons
 import Clock from 'vue-material-design-icons/Clock.vue'
-import Check from 'vue-material-design-icons/Check.vue'
-import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
 import Play from 'vue-material-design-icons/Play.vue'
+// Custom components
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 export default {
 	name: 'CronjobConfiguration',

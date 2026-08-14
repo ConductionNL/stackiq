@@ -3,7 +3,7 @@
 		<NcSettingsSection
 			name="Software Catalog"
 			description="A central place for managing your software"
-			doc-url="https://docs.softwarecatalog.nl" />
+			docUrl="https://docs.softwarecatalog.nl" />
 
 		<NcSettingsSection
 			name="Data storage"
@@ -23,9 +23,9 @@
 					<NcSelect
 						v-model="selectedRegister"
 						:options="registerOptions"
-						input-label="Register"
+						inputLabel="Register"
 						:disabled="loading || !settings.openRegisters"
-						@update:model-value="handleRegisterChange" />
+						@update:modelValue="handleRegisterChange" />
 				</div>
 
 				<!-- Warning if selected register has no schemas -->
@@ -52,7 +52,7 @@
 						<NcSelect
 							v-model="configuration[objectType].schema"
 							:options="computedSchemaOptions"
-							input-label="Schema"
+							inputLabel="Schema"
 							:disabled="loading" />
 					</div>
 				</div>
@@ -143,15 +143,15 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
 import {
-	NcSettingsSection,
-	NcNoteCard,
-	NcSelect,
 	NcButton,
 	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
+import { defineComponent } from 'vue'
 import Save from 'vue-material-design-icons/ContentSave.vue'
 import Web from 'vue-material-design-icons/Web.vue'
 
@@ -200,6 +200,7 @@ export default defineComponent({
 				configuration: {},
 				catalogLocation: '',
 			},
+
 			selectedRegister: null,
 			configuration: {},
 			schemaOptions: [],
@@ -241,6 +242,7 @@ export default defineComponent({
 				&& register.schemas.length > 0
 			)
 		},
+
 		/**
 		 * Returns filtered schema options, excluding those that are already used
 		 *
@@ -309,6 +311,7 @@ export default defineComponent({
 
 		/**
 		 * Initializes the configuration object based on existing settings
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		initializeConfiguration() {
@@ -367,6 +370,7 @@ export default defineComponent({
 
 		/**
 		 * Automatically selects the opencatalogi register if it exists
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		autoSelectOpenCatalogiRegister() {
@@ -471,6 +475,7 @@ export default defineComponent({
 
 		/**
 		 * Handles register change event
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		handleRegisterChange() {

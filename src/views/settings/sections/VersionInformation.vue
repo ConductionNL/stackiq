@@ -21,9 +21,9 @@
 		name="Version Information"
 		description="Current application and configuration versions"
 		:loading="loadingVersionInfo"
-		:show-refresh-button="false"
-		loading-text="Loading version information..."
-		:has-info-content="true">
+		:showRefreshButton="false"
+		loadingText="Loading version information..."
+		:hasInfoContent="true">
 		<template #header-actions>
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === false"
@@ -372,14 +372,12 @@
  * @version 1.0.0
  */
 
-import { settingsStore } from '../../../store/store.js'
-import { showSuccess, showError } from '@nextcloud/dialogs'
-
+import { showError, showSuccess } from '@nextcloud/dialogs'
+// Nextcloud Vue components
+import { NcButton, NcNoteCard } from '@nextcloud/vue'
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-
-// Nextcloud Vue components
-import { NcNoteCard, NcButton } from '@nextcloud/vue'
+import { settingsStore } from '../../../store/store.js'
 
 export default {
 	name: 'VersionInformation',
@@ -424,6 +422,7 @@ export default {
 		loadingVersionInfo() {
 			return this.store.loadingVersionInfo
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */

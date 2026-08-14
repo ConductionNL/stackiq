@@ -1,5 +1,5 @@
 <script setup>
-import { objectStore, navigationStore } from '../../store/store.js'
+import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -16,7 +16,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 			})
 		"
 		size="normal"
-		:can-close="false">
+		:canClose="false">
 		<p v-if="success === null">
 			{{ t('softwarecatalog', 'Do you want to lock') }}
 			<b>{{
@@ -80,13 +80,12 @@ import { objectStore, navigationStore } from '../../store/store.js'
 import {
 	NcButton,
 	NcDialog,
-	NcTextField,
 	NcLoadingIcon,
 	NcNoteCard,
+	NcTextField,
 } from '@nextcloud/vue'
-
-import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
+import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 
 export default {
 	name: 'LockObject',
@@ -99,6 +98,7 @@ export default {
 		LockOutline,
 		Cancel,
 	},
+
 	data() {
 		return {
 			process: '',
@@ -109,6 +109,7 @@ export default {
 			closeModalTimeout: null,
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -122,6 +123,7 @@ export default {
 			this.process = ''
 			this.duration = 3600
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */

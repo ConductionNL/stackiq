@@ -62,11 +62,11 @@
 				v-model="selectedOrg"
 				class="pr-orgSelect"
 				:options="organisationOptions"
-				:input-label="t('softwarecatalog', 'Organisation')"
+				:inputLabel="t('softwarecatalog', 'Organisation')"
 				:placeholder="t('softwarecatalog', 'Select an organisation')"
-				track-by="uuid"
+				trackBy="uuid"
 				label="label"
-				@update:model-value="loadReport" />
+				@update:modelValue="loadReport" />
 		</div>
 
 		<NcEmptyContent
@@ -116,7 +116,7 @@
 					type="bar"
 					:series="chartSeries"
 					:categories="chartCategories"
-					:color-map="chartColorMap"
+					:colorMap="chartColorMap"
 					:legend="false"
 					:height="260" />
 			</section>
@@ -260,32 +260,31 @@
 </template>
 
 <script>
+import { CnChartWidget } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
-	NcLoadingIcon,
-	NcSelect,
 	NcEmptyContent,
+	NcLoadingIcon,
 	NcNoteCard,
+	NcSelect,
 } from '@nextcloud/vue'
-import { CnChartWidget } from '@conduction/nextcloud-vue'
-import { translate as t } from '@nextcloud/l10n'
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
-import { objectStore } from '../../store/store.js'
+import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
+import Download from 'vue-material-design-icons/Download.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
+import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
 import {
-	QUADRANT_ORDER,
-	quadrantColor,
+	buildCsvExportUrl,
 	cloudTransitionLabel,
 	formatCurrency,
 	groupRowsByQuadrant,
-	buildCsvExportUrl,
+	QUADRANT_ORDER,
+	quadrantColor,
 } from '../../utils/portfolioReport.js'
-
-import Refresh from 'vue-material-design-icons/Refresh.vue'
-import Download from 'vue-material-design-icons/Download.vue'
-import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 
 /**
  * @class PortfolioReport
@@ -314,6 +313,7 @@ export default {
 		Download,
 		ChartBoxOutline,
 	},
+
 	/**
 	 * Only the organisation picker reads the shared object-store collection
 	 * (an org list the user is already authorised to see); the report figures
@@ -340,6 +340,7 @@ export default {
 	computed: {
 		/**
 		 * Organisation options for the selector.
+		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
 		 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
@@ -362,6 +363,7 @@ export default {
 
 		/**
 		 * Per-quadrant summary rows, in canonical TIME order.
+		 *
 		 * @return {Array<object>} Summary rows.
 		 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
@@ -390,6 +392,7 @@ export default {
 
 		/**
 		 * Quadrant counts as ApexCharts bar series (one series, one value per category).
+		 *
 		 * @return {Array<{name: string, data: number[]}>} Chart series.
 		 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
@@ -404,6 +407,7 @@ export default {
 
 		/**
 		 * Quadrant chart x-axis categories (translated labels).
+		 *
 		 * @return {Array<string>} Categories.
 		 * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
@@ -415,6 +419,7 @@ export default {
 		 * Per-category colour map keyed by the translated label (matches
 		 * CnChartWidget's `colorMap` contract, which is keyed by the resolved
 		 * category label, not the raw quadrant key).
+		 *
 		 * @return {Record<string, string>} Label → CSS colour.
 		 * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
@@ -430,6 +435,7 @@ export default {
 		 * Report rows grouped by quadrant, in canonical TIME order —
 		 * Unclassified always rendered, even when empty. Delegates to the
 		 * pure `groupRowsByQuadrant()` util (vitest-covered).
+		 *
 		 * @return {Array<{key: string, rows: Array}>} Grouped rows.
 		 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
@@ -577,6 +583,7 @@ export default {
 		 * Translate a quadrant key to its display label. Kept as a component
 		 * method (not the `portfolioReport.js` util) because it needs `t()`
 		 * — matches `LifecycleRoadmapView.phaseLabel()`'s convention.
+		 *
 		 * @param {string} key A QUADRANT_ORDER key.
 		 * @return {string} Display label.
 		 * @spec openspec/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation

@@ -3,13 +3,13 @@
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
 	<NcDialog
 		:name="dialogTitle"
-		:can-close="true"
+		:canClose="true"
 		size="normal"
 		class="mass-action-dialog"
 		@update:open="handleDialogClose">
@@ -30,7 +30,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 						? t('softwarecatalog', 'Publication to Lock')
 						: t('softwarecatalog', 'Selected Publications')
 				"
-				:show-remove="true" />
+				:showRemove="true" />
 
 			<div v-if="!success" class="formContainer">
 				<NcTextField
@@ -94,7 +94,6 @@ import {
 	NcNoteCard,
 	NcTextField,
 } from '@nextcloud/vue'
-
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import SelectedObjectsList from '../../components/SelectedObjectsList.vue'
@@ -133,6 +132,7 @@ export default {
 	computed: {
 		/**
 		 * Get the objects to operate on from selected objects
+		 *
 		 * @return {Array<object>} Array of objects to lock
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -142,6 +142,7 @@ export default {
 
 		/**
 		 * Get the dialog title based on number of objects
+		 *
 		 * @return {string} Dialog title
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -153,9 +154,11 @@ export default {
 			return this.t('softwarecatalog', 'Lock {count} publications', { count })
 		},
 	},
+
 	mounted() {
 		this.initializeSelection()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -164,6 +167,7 @@ export default {
 			// Store the original count for success message
 			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -175,7 +179,9 @@ export default {
 			}
 			navigationStore.setDialog(false)
 		},
+
 		/**
+		 * @param isOpen
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleDialogClose(isOpen) {
@@ -183,6 +189,7 @@ export default {
 				this.closeDialog()
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */

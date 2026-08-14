@@ -1,9 +1,9 @@
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog name="Upload Object" size="normal" :can-close="false">
+	<NcDialog name="Upload Object" size="normal" :canClose="false">
 		<NcNoteCard v-if="success" type="success">
 			<p>Object successfully uploaded</p>
 		</NcNoteCard>
@@ -69,7 +69,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<NcSelect
 					v-bind="registers"
 					v-model="registers.value"
-					input-label="Register"
+					inputLabel="Register"
 					:loading="registersLoading"
 					:disabled="loading" />
 			</div>
@@ -79,7 +79,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<NcSelect
 					v-bind="schemas"
 					v-model="schemas.value"
-					input-label="Schemas"
+					inputLabel="Schemas"
 					:loading="schemasLoading"
 					:disabled="loading" />
 			</div>
@@ -89,7 +89,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<NcSelect
 					v-bind="mappings"
 					v-model="mappings.value"
-					input-label="Mappings"
+					inputLabel="Mappings"
 					:loading="mappingsLoading"
 					:disabled="loading || !mappings.options?.length" />
 
@@ -116,6 +116,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 </template>
 
 <script>
+import { json, jsonParseLinter } from '@codemirror/lang-json'
 import {
 	NcButton,
 	NcDialog,
@@ -123,14 +124,12 @@ import {
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
-import { getTheme } from '../../services/getTheme.js'
-import { json, jsonParseLinter } from '@codemirror/lang-json'
 import CodeMirror from 'vue-codemirror6'
-
-import Cancel from 'vue-material-design-icons/Cancel.vue'
-import Upload from 'vue-material-design-icons/Upload.vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import AutoFix from 'vue-material-design-icons/AutoFix.vue'
+import Cancel from 'vue-material-design-icons/Cancel.vue'
+import Upload from 'vue-material-design-icons/Upload.vue'
+import { getTheme } from '../../services/getTheme.js'
 
 export default {
 	name: 'UploadObject',
@@ -144,6 +143,7 @@ export default {
 		Cancel,
 		Upload,
 	},
+
 	data() {
 		return {
 			object: '{}',
@@ -159,6 +159,7 @@ export default {
 			hasUpdated: false,
 		}
 	},
+
 	/**
 	 * @spec openspec/specs/fe-object-modals/spec.md
 	 */
@@ -167,6 +168,7 @@ export default {
 		this.initializeSchemas()
 		this.initializeRegisters()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -191,6 +193,7 @@ export default {
 					this.mappingsLoading = false
 				})
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -214,6 +217,7 @@ export default {
 					this.schemasLoading = false
 				})
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -237,6 +241,7 @@ export default {
 					this.registersLoading = false
 				})
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -251,6 +256,7 @@ export default {
 				url: '',
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -282,13 +288,16 @@ export default {
 					this.loading = false
 				})
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		prettifyJson() {
 			this.object = JSON.stringify(JSON.parse(this.object), null, 2)
 		},
+
 		/**
+		 * @param json
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		validateJson(json) {

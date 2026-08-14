@@ -1,3 +1,4 @@
+import { useObjectSubscription } from '@conduction/nextcloud-vue'
 /**
  * useLiveCollections — collection-scoped live updates for module views.
  *
@@ -24,7 +25,6 @@
  * @spec openspec/specs/realtime-updates-ui/spec.md
  */
 import { computed } from 'vue'
-import { useObjectSubscription } from '@conduction/nextcloud-vue'
 
 /**
  * Subscribe a component to live updates for a static list of object types.

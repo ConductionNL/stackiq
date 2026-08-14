@@ -17,6 +17,7 @@
 		</NcAppSidebarTab>
 	</NcAppSidebar>
 </template>
+
 <script>
 import { NcAppSidebar, NcAppSidebarTab, NcNoteCard } from '@nextcloud/vue'
 import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'

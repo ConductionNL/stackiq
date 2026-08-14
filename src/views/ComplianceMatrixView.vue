@@ -57,8 +57,8 @@
 				class="cmv-standardSelect"
 				:options="columnOptions"
 				:multiple="true"
-				:close-on-select="false"
-				:input-label="
+				:closeOnSelect="false"
+				:inputLabel="
 					columnSource === 'bioMaatregel'
 						? t('softwarecatalog', 'BIO measures')
 						: t('softwarecatalog', 'Standards')
@@ -68,25 +68,25 @@
 						? t('softwarecatalog', 'Select one or more BIO measures')
 						: t('softwarecatalog', 'Select one or more standards')
 				"
-				track-by="uuid"
+				trackBy="uuid"
 				label="label"
-				@update:model-value="onSelectionChange" />
+				@update:modelValue="onSelectionChange" />
 			<NcSelect
 				v-model="selectedOrganisation"
 				class="cmv-orgSelect"
 				:options="organisationOptions"
 				:multiple="false"
 				:clearable="true"
-				:input-label="
+				:inputLabel="
 					t(
 						'softwarecatalog',
 						'Organisation (scope to in-use applications)',
 					)
 				"
 				:placeholder="t('softwarecatalog', 'All applications')"
-				track-by="uuid"
+				trackBy="uuid"
 				label="label"
-				@update:model-value="onSelectionChange" />
+				@update:modelValue="onSelectionChange" />
 		</div>
 
 		<NcEmptyContent
@@ -185,10 +185,8 @@
 						<td
 							v-for="column in matrix.columns"
 							:key="column.uuid"
-							:class="[
-								'cmv-cell',
-								'cmv-cell--' + row.cells[column.uuid].state,
-							]">
+							class="cmv-cell"
+							:class="['cmv-cell--' + row.cells[column.uuid].state]">
 							<button
 								v-if="row.cells[column.uuid].record"
 								type="button"
@@ -257,31 +255,30 @@
 </template>
 
 <script>
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
-	NcLoadingIcon,
-	NcSelect,
-	NcEmptyContent,
-	NcNoteCard,
 	NcCheckboxRadioSwitch,
+	NcEmptyContent,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
 } from '@nextcloud/vue'
-import { translate as t } from '@nextcloud/l10n'
-import { objectStore, navigationStore } from '../store/store.js'
-import { useLiveCollections } from '../composables/useLiveCollections.js'
-import {
-	buildComplianceMatrix,
-	resolveUuid,
-	columnLabel,
-	dataOf,
-	COLUMN_SOURCE,
-} from '../utils/complianceMatrix.js'
-
-import Refresh from 'vue-material-design-icons/Refresh.vue'
+import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarkedCircleOutline.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import HelpCircle from 'vue-material-design-icons/HelpCircle.vue'
 import MinusCircle from 'vue-material-design-icons/MinusCircle.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import TableLarge from 'vue-material-design-icons/TableLarge.vue'
-import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarkedCircleOutline.vue'
+import { useLiveCollections } from '../composables/useLiveCollections.js'
+import { navigationStore, objectStore } from '../store/store.js'
+import {
+	buildComplianceMatrix,
+	COLUMN_SOURCE,
+	columnLabel,
+	dataOf,
+	resolveUuid,
+} from '../utils/complianceMatrix.js'
 
 /**
  * @class ComplianceMatrixView
@@ -316,6 +313,7 @@ export default {
 		TableLarge,
 		CheckboxMarkedCircleOutline,
 	},
+
 	/**
 	 * Live updates (nc-vue liveUpdatesPlugin, default-on since beta.212):
 	 * subscribe to the collection scope of every type this view renders.
@@ -352,6 +350,7 @@ export default {
 	computed: {
 		/**
 		 * All compliancy records currently in the store.
+		 *
 		 * @return {Array} Compliancy records.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
@@ -361,6 +360,7 @@ export default {
 
 		/**
 		 * All module records currently in the store.
+		 *
 		 * @return {Array} Module records.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
@@ -370,6 +370,7 @@ export default {
 
 		/**
 		 * All standaardversie elements (GEMMA elements with gemmaType=standaardversie).
+		 *
 		 * @return {Array} Standard version records.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
@@ -383,6 +384,7 @@ export default {
 
 		/**
 		 * All BIO 2.0 measures currently in the store.
+		 *
 		 * @return {Array} bioMaatregel records.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog
 		 */
@@ -393,6 +395,7 @@ export default {
 		/**
 		 * All gebruik (in-use) records currently in the store — used to scope
 		 * the matrix to a single organisation's in-use applications.
+		 *
 		 * @return {Array} gebruik records.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
 		 */
@@ -403,6 +406,7 @@ export default {
 		/**
 		 * All organisatie records currently in the store — the coverage-report
 		 * organisation picker's source.
+		 *
 		 * @return {Array} organisatie records.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
 		 */
@@ -412,6 +416,7 @@ export default {
 
 		/**
 		 * Whether no columns are available to pick for the active column source.
+		 *
 		 * @return {boolean} True when the active source has no entries.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md
@@ -424,6 +429,7 @@ export default {
 
 		/**
 		 * NcSelect options for the standards picker.
+		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
@@ -442,6 +448,7 @@ export default {
 
 		/**
 		 * NcSelect options for the BIO measures picker.
+		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog
 		 */
@@ -457,6 +464,7 @@ export default {
 
 		/**
 		 * The options for the active column source.
+		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md
 		 */
@@ -471,6 +479,7 @@ export default {
 		 * selectedStandards/selectedBioMeasures matches the active column
 		 * source — so switching scope back and forth does not lose a
 		 * previously-made selection in the other scope.
+		 *
 		 * @return {Array<object>} Selected NcSelect options.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md
 		 */
@@ -484,6 +493,7 @@ export default {
 					? this.selectedBioMeasures
 					: this.selectedStandards
 			},
+
 			/**
 			 * @param {Array<object>} value The new selection for the active scope.
 			 * @return {void}
@@ -500,6 +510,7 @@ export default {
 
 		/**
 		 * NcSelect options for the organisation scope picker.
+		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
 		 */
@@ -524,6 +535,7 @@ export default {
 		 * BIO coverage report requirement. Applications with no compliance
 		 * data are still included (rendered as "none"/"not set"), never
 		 * omitted.
+		 *
 		 * @return {Array<object>} Modules to render as matrix rows.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
 		 */
@@ -548,6 +560,7 @@ export default {
 
 		/**
 		 * The computed matrix for the current selection.
+		 *
 		 * @return {object} { rows, columns, unresolved, conflicted }.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md
@@ -570,6 +583,7 @@ export default {
 		 * Re-encode the URL whenever the column-source scope changes (the
 		 * `v-model`-bound radio switches update `columnSource` directly, so
 		 * this is the only hook point for that transition).
+		 *
 		 * @return {void}
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md
 		 */
@@ -580,6 +594,7 @@ export default {
 
 	/**
 	 * Load data and restore any shared selection on mount.
+	 *
 	 * @return {Promise<void>}
 	 * @spec openspec/specs/module-compliance-assessment/spec.md
 	 */
@@ -593,6 +608,7 @@ export default {
 
 		/**
 		 * Fetch the collections the matrix depends on.
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md
@@ -623,6 +639,7 @@ export default {
 
 		/**
 		 * Fetch a single object type collection if the store exposes the action.
+		 *
 		 * @param {string} type Object type slug.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
@@ -671,6 +688,7 @@ export default {
 		 * measures, organisation scope) in the URL so the comparison is
 		 * shareable — restoring it renders the same selection without
 		 * re-picking filters.
+		 *
 		 * @return {void}
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md
@@ -710,6 +728,7 @@ export default {
 		/**
 		 * Restore the selection from the URL query parameters (`columnSource`,
 		 * `standards`, `bioMeasures`, `org`).
+		 *
 		 * @return {void}
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md
@@ -761,6 +780,7 @@ export default {
 
 		/**
 		 * Open the compliancy record behind a cell (detail navigation).
+		 *
 		 * @param {object} record The compliancy OR object.
 		 * @return {void}
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
@@ -774,6 +794,7 @@ export default {
 
 		/**
 		 * Human label for a module row header.
+		 *
 		 * @param {object} module Module object.
 		 * @return {string} Display label.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
@@ -788,6 +809,7 @@ export default {
 
 		/**
 		 * Translated label for a cell state.
+		 *
 		 * @param {string} state Cell state.
 		 * @return {string} Label.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
@@ -804,6 +826,7 @@ export default {
 
 		/**
 		 * Accessible label describing a cell for screen readers.
+		 *
 		 * @param {object} row    Matrix row.
 		 * @param {object} column Matrix column.
 		 * @return {string} Aria label.
@@ -822,6 +845,7 @@ export default {
 		/**
 		 * BBN level for a module row in the BIO coverage report. Applications
 		 * with no BBN level are shown as "Not set" — never omitted.
+		 *
 		 * @param {object} module Module object.
 		 * @return {string} Display label.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
@@ -835,6 +859,7 @@ export default {
 		 * DPIA status for a module row in the BIO coverage report, translated.
 		 * Applications with no DPIA status are shown as "Not set" — never
 		 * omitted.
+		 *
 		 * @param {object} module Module object.
 		 * @return {string} Display label.
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable

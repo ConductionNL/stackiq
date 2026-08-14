@@ -1,11 +1,11 @@
 <template>
 	<CnAdminSettingsShell
-		app-id="softwarecatalog"
-		app-name="Software Catalogus"
-		:app-version="versionInfo.appVersion || appVersion"
-		:configured-version="versionInfo.configuredVersion || ''"
-		:is-up-to-date="versionInfo.versionsMatch !== false"
-		:show-reimport="false">
+		appId="softwarecatalog"
+		appName="Software Catalogus"
+		:appVersion="versionInfo.appVersion || appVersion"
+		:configuredVersion="versionInfo.configuredVersion || ''"
+		:isUpToDate="versionInfo.versionsMatch !== false"
+		:showReimport="false">
 		<!-- Version-card maintenance actions (moved from the old VersionInformation section) -->
 		<template #actions>
 			<NcButton
@@ -40,12 +40,12 @@
 			name="General Settings"
 			description="Configure basic application settings"
 			:loading="store.loadingGeneralSettings"
-			loading-text="Loading general settings..."
-			:show-save-button="true"
-			:show-refresh-button="true"
-			:can-save="catalogLocationChanged"
+			loadingText="Loading general settings..."
+			:showSaveButton="true"
+			:showRefreshButton="true"
+			:canSave="catalogLocationChanged"
 			:saving="savingCatalogLocation"
-			save-button-text="Save General Settings"
+			saveButtonText="Save General Settings"
 			@save="saveGeneralSettings"
 			@refresh="refreshGeneralSettings">
 			<!-- Software Catalog Location -->
@@ -99,7 +99,7 @@
 		     pattern, don't invent a second mechanism" requirement. -->
 		<ModerationQueue
 			type="beoordeeling"
-			entity-label="review"
+			entityLabel="review"
 			:name="t('softwarecatalog', 'Review moderation')"
 			:description="
 				t(
@@ -107,8 +107,8 @@
 					'Review pending ratings and testimonials. Approving a review publishes it; rejecting leaves it hidden.',
 				)
 			"
-			:loading-text="t('softwarecatalog', 'Loading pending reviews…')"
-			:empty-description="
+			:loadingText="t('softwarecatalog', 'Loading pending reviews…')"
+			:emptyDescription="
 				t('softwarecatalog', 'There are no pending reviews right now.')
 			" />
 
@@ -124,25 +124,25 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 import { NcButton, NcTextField } from '@nextcloud/vue'
-import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
-import { settingsStore } from '../../store/store.js'
+import { defineComponent } from 'vue'
 import Web from 'vue-material-design-icons/Web.vue'
+import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
+import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
+import CronjobConfiguration from './sections/CronjobConfiguration.vue'
+import EmailConfiguration from './sections/EmailConfiguration.vue'
+import EolSyncSettings from './sections/EolSyncSettings.vue'
+import FederationSettings from './sections/FederationSettings.vue'
+import ModerationQueue from './sections/ModerationQueue.vue'
 import OpenRegisterIntegration from './sections/OpenRegisterIntegration.vue'
+import OrganizationSynchronization from './sections/OrganizationSynchronization.vue'
 import StatisticsOverview from './sections/StatisticsOverview.vue'
 import UserGroupsConfiguration from './sections/UserGroupsConfiguration.vue'
-import OrganizationSynchronization from './sections/OrganizationSynchronization.vue'
-import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
-import EmailConfiguration from './sections/EmailConfiguration.vue'
-import CronjobConfiguration from './sections/CronjobConfiguration.vue'
-import ModerationQueue from './sections/ModerationQueue.vue'
-import FederationSettings from './sections/FederationSettings.vue'
-import EolSyncSettings from './sections/EolSyncSettings.vue'
-import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
+import { settingsStore } from '../../store/store.js'
 
 /**
  * Software Catalog Settings component
@@ -226,6 +226,7 @@ export default defineComponent({
 	watch: {
 		'store.settings.catalogLocation': {
 			/**
+			 * @param newValue
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			handler(newValue) {
@@ -233,10 +234,14 @@ export default defineComponent({
 					this.catalogLocation = newValue
 				}
 			},
+
 			immediate: true,
 		},
+
 		'store.loadingGeneralSettings': {
 			/**
+			 * @param newValue
+			 * @param oldValue
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			handler(newValue, oldValue) {
@@ -250,6 +255,7 @@ export default defineComponent({
 
 	/**
 	 * Load settings data when component is created
+	 *
 	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	async created() {

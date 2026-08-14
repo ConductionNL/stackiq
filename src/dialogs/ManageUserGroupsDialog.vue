@@ -37,10 +37,10 @@
 				<NcCheckboxRadioSwitch
 					v-for="group in availableGroups"
 					:key="group.id"
-					:model-value="selectedGroups.includes(group.id)"
+					:modelValue="selectedGroups.includes(group.id)"
 					type="checkbox"
 					class="compact-checkbox"
-					@update:model-value="toggleGroup(group.id, $event)">
+					@update:modelValue="toggleGroup(group.id, $event)">
 					{{ group.name }}
 					<template #description>
 						{{ group.description }}
@@ -67,14 +67,13 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDialog,
 	NcLoadingIcon,
 } from '@nextcloud/vue'
-
-import { showSuccess, showError } from '@nextcloud/dialogs'
 import { useOrganisatieStore } from '../store/modules/organisatie.js'
 
 export default {
@@ -146,6 +145,8 @@ export default {
 
 	methods: {
 		/**
+		 * @param groupId
+		 * @param checked
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		toggleGroup(groupId, checked) {
@@ -163,6 +164,7 @@ export default {
 
 		/**
 		 * Save user groups.
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
