@@ -157,14 +157,18 @@ class RenameDutchCatalogColumns implements IRepairStep {
 	 * `short_description`, and a camelCase column is exactly what its
 	 * de-duplication path then drops.
 	 *
-	 * @var array<string, string>
+	 * A value may be a single target or a LIST of candidates.
+	 *
+	 * @var array<string, string|array<int, string>>
 	 */
 	private const COLUMN_MAP = [
 		'name' => 'name',
 		'description' => 'description',
 		'beschrijving_kort' => 'short_description',
 		'beschrijving_lang' => 'description',
-		'omschrijving' => 'description',
+		// TWO candidates — see firstSafeTarget(). On `organisatie` this is the
+		// BRIEF description and that schema declares `description` separately.
+		'omschrijving' => ['summary', 'description'],
 		'contactpersoon' => 'contact_person',
 		'publicationDate' => 'publication_date',
 		'depublicationDate' => 'depublication_date',
@@ -284,6 +288,7 @@ class RenameDutchCatalogColumns implements IRepairStep {
 	public function __construct(
 		private readonly IDBConnection $db,
 		private readonly LoggerInterface $logger,
+		private readonly RenameDutchCatalogDecisions $decisions = new RenameDutchCatalogDecisions(),
 	) {
 	}//end __construct()
 
@@ -367,15 +372,22 @@ class RenameDutchCatalogColumns implements IRepairStep {
 		$columns = $this->columnsOf(table: $table);
 		$qTable = $this->quote(identifier: $table);
 
-		foreach (self::COLUMN_MAP as $old => $new) {
+		foreach (self::COLUMN_MAP as $old => $target) {
 			if (in_array($old, $columns, true) === false) {
 				// Already migrated, or this schema never had the property.
 				continue;
 			}
 
-			if ($this->renameIsSafe(old: $old, new: $new, declared: $declared) === false) {
-				// The register has not moved to the English name for this
-				// schema yet. Moving the data now would orphan it.
+			// A map entry may carry SEVERAL candidate targets; the schema's own
+			// declared columns decide which applies. See firstSafeTarget().
+			$new = $this->decisions->firstSafeTarget(
+				old: $old,
+				candidates: (array)$target,
+				declared: $declared
+			);
+			if ($new === null) {
+				// No candidate is declared here yet, or the Dutch name still is.
+				// Moving the data now would orphan it.
 				$counts['deferred']++;
 				continue;
 			}
@@ -408,40 +420,6 @@ class RenameDutchCatalogColumns implements IRepairStep {
 
 		return $counts;
 	}//end migrateTable()
-
-	/**
-	 * Whether moving `$old` to `$new` is safe for a schema declaring `$declared`.
-	 *
-	 * This is the softwarecatalog#492 guard, and it is deliberately BOTH halves:
-	 *
-	 *   - the destination MUST be declared — otherwise the data lands in a
-	 *     column nothing reads, and MagicMapper will re-add the Dutch one empty;
-	 *   - the source must NO LONGER be declared — otherwise the register still
-	 *     considers the Dutch name live, MagicMapper will re-materialise it, and
-	 *     writes and reads end up on different columns.
-	 *
-	 * Requiring only the first would still fire during the window where a
-	 * register declares both names, which is the ambiguous state the collision
-	 * check exists to refuse elsewhere. Requiring only the second would fire on
-	 * a schema that has simply dropped the property.
-	 *
-	 * The predicate is pure — it takes the declared set rather than reading it —
-	 * so the decision this step turns on is unit-testable without a database.
-	 * The DDL that follows is not, which is precisely why the DECISION is.
-	 *
-	 * @param string $old The Dutch column name.
-	 * @param string $new The English column name.
-	 * @param array<int, string> $declared Snake_cased declared property names.
-	 *
-	 * @return bool True when the register has moved and the data should follow.
-	 */
-	private function renameIsSafe(string $old, string $new, array $declared): bool {
-		if (in_array($new, $declared, true) === false) {
-			return false;
-		}
-
-		return in_array($old, $declared, true) === false;
-	}//end renameIsSafe()
 
 	/**
 	 * The snake_cased column names a schema currently declares.
@@ -496,40 +474,11 @@ class RenameDutchCatalogColumns implements IRepairStep {
 
 		$columns = [];
 		foreach (array_keys($decoded) as $property) {
-			$columns[] = $this->sanitizeColumnName(name: (string)$property);
+			$columns[] = $this->decisions->sanitizeColumnName(name: (string)$property);
 		}
 
 		return $columns;
 	}//end declaredColumnsOf()
-
-	/**
-	 * Convert a declared property name to the column MagicMapper materialises.
-	 *
-	 * Mirrors `MagicMapper::sanitizeColumnName()` step for step, because the
-	 * comparison is only meaningful if both sides spell the name the same way:
-	 * the schema declares `beschrijvingKort` and the column is
-	 * `beschrijving_kort`, so comparing the raw property name against
-	 * COLUMN_MAP's snake_case keys would never match and the guard would defer
-	 * every rename forever — a guard that always says no is as useless as one
-	 * that always says yes, and much harder to notice.
-	 *
-	 * Kept as a private copy rather than a dependency on openregister: this step
-	 * must run during a repair pass whether or not that app's classes are
-	 * loadable, and one `extends`/`use` of another app's class is enough to
-	 * fatal the whole run.
-	 *
-	 * @param string $name A declared property name.
-	 *
-	 * @return string The snake_cased column name.
-	 */
-	private function sanitizeColumnName(string $name): string {
-		$name = preg_replace('/([a-z0-9])([A-Z])/', '$1_$2', $name);
-		$name = strtolower($name);
-		$name = preg_replace('/[^a-z0-9_]/', '_', $name);
-		$name = preg_replace('/_+/', '_', $name);
-
-		return rtrim($name, '_');
-	}//end sanitizeColumnName()
 
 	/**
 	 * Whether two Dutch columns in this table both target one English name.
