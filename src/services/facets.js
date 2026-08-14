@@ -21,7 +21,7 @@ import { generateUrl } from '@nextcloud/router'
 /** GEMMA facet dimensions this client supports, in display order. */
 export const FACET_DIMENSIONS = [
 	'referentiecomponent',
-	'standard',
+	'standaard',
 	'applicatieservice',
 	'domein',
 ]
