@@ -23,6 +23,7 @@ namespace OCA\SoftwareCatalog\Controller;
 use OCA\SoftwareCatalog\Service\AangebodenGebruikService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -203,6 +204,7 @@ class AangebodenGebruikController extends Controller {
 	 * @PublicPage
 	 * @spec           openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse {
 		$this->logger->info(
 			'API: Getting koppelingen and gebruiks for specific UUID',
@@ -293,6 +295,7 @@ class AangebodenGebruikController extends Controller {
 	 * @PublicPage
 	 * @spec           openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getAllGebruiksForAmbtenaar(): JSONResponse {
 		$this->logger->info(
 			'API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)',
@@ -400,6 +403,7 @@ class AangebodenGebruikController extends Controller {
 	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
 	 * @spec                                          openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getSingleGebruikForAmbtenaar(string $gebruikId): JSONResponse {
 		$this->logger->info(
 			'API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)',
@@ -570,6 +574,7 @@ class AangebodenGebruikController extends Controller {
 	 * @PublicPage
 	 * @spec           openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getGebruiksWhereDeelnemers(): JSONResponse {
 		$this->logger->info(
 			'API: Getting gebruiks where active org is in deelnemers',
@@ -857,6 +862,7 @@ class AangebodenGebruikController extends Controller {
 	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
 	 * @spec                                          openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getApiDocumentation(): JSONResponse {
 		$documentation = [
 			'api_version' => '2.0.0',
