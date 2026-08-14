@@ -29,6 +29,7 @@ use Exception;
 use OCA\OpenRegister\Db\ObjectEntity;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Service for synchronizing and processing Gebruik (Usage) objects.
@@ -86,6 +87,7 @@ class GebruikSyncService {
 		LoggerInterface $logger,
 		SettingsService $settingsService,
 		ContainerInterface $container,
+		private readonly ObjectService $objectService,
 	) {
 		$this->logger = $logger;
 		$this->settingsService = $settingsService;
@@ -324,7 +326,6 @@ class GebruikSyncService {
 	 * @return array Array of found ObjectEntity objects.
 	 */
 	private function searchAmefElementsByIds(array $ids, string $register, string $schema): array {
-		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		$foundElements = [];
 
 		foreach ($ids as $id) {
@@ -340,7 +341,7 @@ class GebruikSyncService {
 					'_limit' => 5,
 				];
 
-				$elements = $objectService->searchObjects($query);
+				$elements = $this->objectService->searchObjects($query);
 				$foundElements = array_merge($foundElements, $elements);
 			} catch (Exception $e) {
 				$this->logger->warning(
@@ -515,8 +516,6 @@ class GebruikSyncService {
 	 */
 	private function updateGebruikObject(ObjectEntity $gebruikObject, array $updatedData): void {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
 			// Get voorzieningenConfig to find the correct register and schema.
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
@@ -527,7 +526,7 @@ class GebruikSyncService {
 			}
 
 			// Update the object.
-			$objectService->saveObject(
+			$this->objectService->saveObject(
 				object: $updatedData,
 				register: (int)$register,
 				schema: (int)$gebruikSchema,

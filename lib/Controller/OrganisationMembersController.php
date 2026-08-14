@@ -52,8 +52,8 @@ use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Service\OrganisationService;
 
 /**
  * Beheerder-gated grant/revoke of organisation membership for an existing
@@ -87,8 +87,8 @@ class OrganisationMembersController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly IUserManager $userManager,
-		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly OrganisationService $organisationService,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -266,6 +266,6 @@ class OrganisationMembersController extends Controller {
 	 * @throws \Throwable When OpenRegister is unavailable.
 	 */
 	private function getOrganisationService(): \OCA\OpenRegister\Service\OrganisationService {
-		return $this->container->get('OCA\OpenRegister\Service\OrganisationService');
+		return $this->organisationService;
 	}//end getOrganisationService()
 }//end class

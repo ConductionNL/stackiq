@@ -26,6 +26,8 @@ use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\OpenRegister\Db\MagicMapper;
 
 /**
  * Service for synchronizing organizations and contact persons.
@@ -130,6 +132,9 @@ class OrganizationSyncService {
 		private IDBConnection $db,
 		private readonly ContactPersonHandler $contactpersonHandler,
 		ContainerInterface $container,
+		private readonly ObjectService $objectService,
+		private readonly OrganisationMapper $organisationMapper,
+		private readonly MagicMapper $magicMapper,
 	) {
 		$this->organisationService = $organisationService;
 		$this->contactPersonService = $contactPersonService;
@@ -380,7 +385,6 @@ class OrganizationSyncService {
 
 		$rows = $qb->executeQuery()->fetchAll();
 
-		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		if ($objectService instanceof ObjectService === false) {
 			$this->logger->error('OrganizationSync: could not resolve ObjectService');
 			return $stats;
@@ -400,7 +404,7 @@ class OrganizationSyncService {
 			}
 
 			try {
-				$object = $objectService->find(
+				$object = $this->objectService->find(
 					id: $row['uuid'],
 					register: $register,
 					schema: $organizationSchema,
@@ -505,7 +509,6 @@ class OrganizationSyncService {
 
 		$this->logger->info('ContactSync: processing ' . count($contacts) . ' contacts with existing NC accounts');
 
-		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		if ($objectService instanceof ObjectService === false) {
 			$this->logger->error('ContactSync: could not resolve ObjectService');
 			return $stats;
@@ -524,7 +527,7 @@ class OrganizationSyncService {
 			}
 
 			try {
-				$contactEntity = $objectService->find(
+				$contactEntity = $this->objectService->find(
 					id: $contact['uuid'],
 					register: $register,
 					schema: $contactSchema,
@@ -537,7 +540,7 @@ class OrganizationSyncService {
 				// persisted record. The schema validation warning for a UUID-string value is
 				// benign compared to a data-corruption window where the field is missing.
 				$contactEntity->setObject($contactEntityObject);
-				$objectService->saveObject(
+				$this->objectService->saveObject(
 					object: $contactEntity,
 					register: $register,
 					schema: $contactSchema,
@@ -762,8 +765,6 @@ class OrganizationSyncService {
 	 */
 	private function getOrganisationObjectsByTimeWindow(string $register, string $organizationSchema, int $minutesBack): array {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
 			// Build base query for register and schema. A sync tick may
 			// genuinely need "all objects" (minutesBack <= 0) — bounded at a
 			// documented safe ceiling rather than left unbounded.
@@ -811,7 +812,7 @@ class OrganizationSyncService {
 			}
 
 			// Use searchObjects method for filtering.
-			$objects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+			$objects = $this->objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
 
 			$this->logger->debug(
 				'OrganizationSyncService: Retrieved organisatie objects with searchObjects',
@@ -949,8 +950,7 @@ class OrganizationSyncService {
 
 			// Fetch the complete object from the database to ensure we have all data.
 			try {
-				$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-				$fullObject = $objectService->find(
+				$fullObject = $this->objectService->find(
 					id: $organisationId,
 					register: $organisationObject->getRegister(),
 					schema: $organisationObject->getSchema(),
@@ -988,10 +988,9 @@ class OrganizationSyncService {
 			$organizationSchema = ($voorzieningenConfig['organisatie_schema'] ?? '');
 
 			// Try to find existing organisation entity.
-			$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
 
 			try {
-				$organisationEntity = $organisationMapper->findByUuid($organisationId);
+				$organisationEntity = $this->organisationMapper->findByUuid($organisationId);
 
 				// Entity exists - update it if needed.
 				$status = strtolower(($objectData['status'] ?? 'actief'));
@@ -1021,7 +1020,7 @@ class OrganizationSyncService {
 
 					$wasActive = $organisationEntity->getActive();
 					$organisationEntity->setActive($shouldBeActive);
-					$organisationMapper->save($organisationEntity);
+					$this->organisationMapper->save($organisationEntity);
 					$stats['entitiesUpdated']++;
 
 					// Send activation email if organization became active.
@@ -1064,7 +1063,7 @@ class OrganizationSyncService {
 					$slug = strtolower(preg_replace('/[^a-z0-9]+/', '-', strtolower($orgName)));
 					$slug = trim($slug, '-');
 					try {
-						$organisationEntity = $organisationMapper->findBySlug($slug);
+						$organisationEntity = $this->organisationMapper->findBySlug($slug);
 						$this->logger->info(
 							'OrganizationSyncService: Found existing entity by slug, updating UUID to match object',
 							[
@@ -1077,7 +1076,7 @@ class OrganizationSyncService {
 
 						// Update the entity's UUID to match the object UUID so future lookups work.
 						$organisationEntity->setUuid($organisationId);
-						$organisationMapper->save($organisationEntity);
+						$this->organisationMapper->save($organisationEntity);
 						$stats['entitiesUpdated']++;
 
 						// Update organisatie object owner to this entity.
@@ -1241,8 +1240,6 @@ class OrganizationSyncService {
 		}
 
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
 			// Use searchObjects for more efficient filtering on-demand.
 			$query = [
 				'@self' => [
@@ -1253,7 +1250,7 @@ class OrganizationSyncService {
 				'_limit' => 500,
 			];
 
-			$contactPersons = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+			$contactPersons = $this->objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
 
 			$this->logger->debug(
 				'OrganizationSyncService: Retrieved contact persons on-demand',
@@ -1412,8 +1409,7 @@ class OrganizationSyncService {
 
 				$organisationEntity->setUsers($allUsernames);
 
-				$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
-				$organisationMapper->save($organisationEntity);
+				$this->organisationMapper->save($organisationEntity);
 
 				$stats['entitiesUpdated']++;
 
@@ -1516,10 +1512,9 @@ class OrganizationSyncService {
 			);
 
 			// Get organization entities count.
-			$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
 			$entitiesCount = 0;
 			try {
-				$entities = $organisationMapper->findAllWithUserCount();
+				$entities = $this->organisationMapper->findAllWithUserCount();
 				$entitiesCount = count($entities);
 			} catch (\Exception $e) {
 				// Ignore errors in count.
@@ -1857,8 +1852,7 @@ class OrganizationSyncService {
 						);
 
 						// Fetch the contact person object using the UUID.
-						$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-						$contactObject = $objectService->find(
+						$contactObject = $this->objectService->find(
 							id: $contactData,
 							register: $register,
 							schema: $contactSchema,
@@ -1976,7 +1970,6 @@ class OrganizationSyncService {
 			}
 
 			// Find all contactpersoon objects that have this organization in their organisation property.
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
 			// Search for contactpersoon objects with this organization reference.
 			// Try both 'organisatie' and 'organisation' field names.
@@ -1999,7 +1992,7 @@ class OrganizationSyncService {
 				]
 			);
 
-			$relatedContacts = $objectService->searchObjects($query);
+			$relatedContacts = $this->objectService->searchObjects($query);
 
 			// If not found, try with 'organisation' field.
 			if (empty($relatedContacts) === true) {
@@ -2014,7 +2007,7 @@ class OrganizationSyncService {
 					]
 				);
 
-				$relatedContacts = $objectService->searchObjects($query);
+				$relatedContacts = $this->objectService->searchObjects($query);
 			}
 
 			if (empty($relatedContacts) === true) {
@@ -2032,7 +2025,7 @@ class OrganizationSyncService {
 					$orgRegister = ($voorzieningenConfig2['register'] ?? '');
 					$orgSchema = ($voorzieningenConfig2['organisatie_schema'] ?? '');
 
-					$rawOrgObject = $objectService->find(
+					$rawOrgObject = $this->objectService->find(
 						id: $organizationUuid,
 						register: $orgRegister,
 						schema: $orgSchema,
@@ -2063,7 +2056,7 @@ class OrganizationSyncService {
 							}
 
 							try {
-								$contactObj = $objectService->find(
+								$contactObj = $this->objectService->find(
 									id: $contactUuid,
 									register: $register,
 									schema: $contactSchema,
@@ -2131,7 +2124,7 @@ class OrganizationSyncService {
 						);
 
 						try {
-							$fullContactObject = $objectService->find(
+							$fullContactObject = $this->objectService->find(
 								id: $contactUuid,
 								register: $register,
 								schema: $contactSchema,
@@ -2160,8 +2153,7 @@ class OrganizationSyncService {
 					if (empty($contactData['organisatie']) === true) {
 						$contactData['organisatie'] = $organizationUuid;
 						$contactObject->setObject($contactData);
-						$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-						$objectMapper->update($contactObject);
+						$this->magicMapper->update($contactObject);
 						$this->logger->info(
 							'[FLOW] Set missing organisatie field on related contact',
 							[
@@ -2241,8 +2233,6 @@ class OrganizationSyncService {
 		array &$stats,
 	): void {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
 			$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
 			if (empty($email) === true) {
 				$this->logger->warning(
@@ -2272,7 +2262,7 @@ class OrganizationSyncService {
 				);
 
 				try {
-					$contactObject = $objectService->find(
+					$contactObject = $this->objectService->find(
 						id: $existingContactId,
 						register: $register,
 						schema: $contactSchema,
@@ -2310,7 +2300,7 @@ class OrganizationSyncService {
 				unset($contactData['id']);
 				unset($contactData['uuid']);
 
-				$contactObject = $objectService->saveObject(
+				$contactObject = $this->objectService->saveObject(
 					object: $contactData,
 					register: $register,
 					schema: $contactSchema,
@@ -2323,8 +2313,7 @@ class OrganizationSyncService {
 					$restoredData = $contactObject->getObject();
 					$restoredData['organisatie'] = $savedOrganisation;
 					$contactObject->setObject($restoredData);
-					$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-					$objectMapper->update($contactObject);
+					$this->magicMapper->update($contactObject);
 				}
 			}//end if
 
@@ -2337,8 +2326,7 @@ class OrganizationSyncService {
 					$contactObjectData['organisatie'] = $organizationUuid;
 					$contactObject->setObject($contactObjectData);
 					$contactObject->setOrganisation($organizationUuid);
-					$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-					$objectMapper->update($contactObject);
+					$this->magicMapper->update($contactObject);
 					$this->logger->info(
 						'[FLOW] Set missing organisatie field on contact person',
 						[
@@ -2364,8 +2352,7 @@ class OrganizationSyncService {
 					// Check if organization exists in organisation entity table.
 					$organisationEntity = null;
 					try {
-						$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
-						$organisationEntity = $organisationMapper->findByUuid($organizationUuid);
+						$organisationEntity = $this->organisationMapper->findByUuid($organizationUuid);
 					} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 						// Backup: org entity missing — create it now so user creation can proceed.
 						$this->logger->info(
@@ -2377,7 +2364,7 @@ class OrganizationSyncService {
 						);
 						try {
 							$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-							$orgObject = $objectService->find(
+							$orgObject = $this->objectService->find(
 								id: $organizationUuid,
 								register: ($voorzieningenConfig['register'] ?? ''),
 								schema: ($voorzieningenConfig['organisatie_schema'] ?? '')
@@ -2456,8 +2443,7 @@ class OrganizationSyncService {
 								);
 
 								try {
-									$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-									$objectMapper->update($contactObject);
+									$this->magicMapper->update($contactObject);
 									$this->logger->info(
 										'Contact saved with username',
 										[
@@ -2620,8 +2606,7 @@ class OrganizationSyncService {
 				// Check if organization exists in organisation entity table.
 				$organisationEntity = null;
 				try {
-					$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
-					$organisationEntity = $organisationMapper->findByUuid($organizationUuid);
+					$organisationEntity = $this->organisationMapper->findByUuid($organizationUuid);
 				} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 					// Backup: org entity missing — create it now so user creation can proceed.
 					$this->logger->info(
@@ -2633,8 +2618,7 @@ class OrganizationSyncService {
 					);
 					try {
 						$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-						$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-						$orgObject = $objectService->find(
+						$orgObject = $this->objectService->find(
 							id: $organizationUuid,
 							register: ($voorzieningenConfig['register'] ?? ''),
 							schema: ($voorzieningenConfig['organisatie_schema'] ?? '')
@@ -2697,8 +2681,7 @@ class OrganizationSyncService {
 							// that may fail — but the user was already created successfully above.
 							try {
 								$contactObject->setObject($contactEntityObject);
-								$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-								$objectService->saveObject(
+								$this->objectService->saveObject(
 									object: $contactObject,
 									register: $register,
 									schema: $contactSchema,
@@ -3183,8 +3166,7 @@ class OrganizationSyncService {
 			$organisationObject->setOrganisation($organisationEntityUuid);
 
 			// Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
-			$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-			$objectMapper->update($organisationObject);
+			$this->magicMapper->update($organisationObject);
 
 			$this->logger->info(
 				'OrganizationSyncService: Successfully updated organisatie object owner and organisation',
@@ -3298,8 +3280,7 @@ class OrganizationSyncService {
 			}
 
 			// Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
-			$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-			$objectMapper->update($contactObject);
+			$this->magicMapper->update($contactObject);
 
 			$this->logger->info(
 				'OrganizationSyncService: Successfully updated contactpersoon object owner and organisation',

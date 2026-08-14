@@ -25,6 +25,11 @@ use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\SchemaMapper;
+use OCA\OpenRegister\Db\RegisterMapper;
+use OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler;
+use OCA\OpenRegister\Db\MagicMapper;
 
 /**
  * Syncs user profile changes to the corresponding contactpersoon object.
@@ -56,6 +61,11 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
+		private readonly ObjectService $objectService,
+		private readonly SchemaMapper $schemaMapper,
+		private readonly RegisterMapper $registerMapper,
+		private readonly MetadataHydrationHandler $metadataHydrationHandler,
+		private readonly MagicMapper $magicMapper,
 	) {
 	}//end __construct()
 
@@ -128,7 +138,6 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	private function syncToContactPerson(UserProfileUpdatedEvent $event, LoggerInterface $logger): void {
-		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		$settingsService = $this->container->get(SettingsService::class);
 
 		$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
@@ -283,15 +292,11 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		int $schema,
 		LoggerInterface $logger,
 	): void {
-		$schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
-		$registerMapper = $this->container->get('OCA\OpenRegister\Db\RegisterMapper');
-		$metaHydrationHandler = $this->container->get('OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler');
-
 		$schemaEntity = null;
 		$registerEntity = null;
 		try {
-			$schemaEntity = $schemaMapper->find(id: $schema, _rbac: false, _multitenancy: false);
-			$registerEntity = $registerMapper->find(id: $register, _rbac: false, _multitenancy: false);
+			$schemaEntity = $this->schemaMapper->find(id: $schema, _rbac: false, _multitenancy: false);
+			$registerEntity = $this->registerMapper->find(id: $register, _rbac: false, _multitenancy: false);
 		} catch (\Exception $e) {
 			$logger->warning(
 				'[UserProfileUpdatedEventListener] Could not load schema/register entities for _name hydration',
@@ -302,7 +307,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		}
 
 		if ($schemaEntity !== null) {
-			$metaHydrationHandler->hydrateObjectMetadata(entity: $contactPerson, schema: $schemaEntity);
+			$this->metadataHydrationHandler->hydrateObjectMetadata(entity: $contactPerson, schema: $schemaEntity);
 			$logger->debug(
 				'[UserProfileUpdatedEventListener] Regenerated _name metadata',
 				[
@@ -313,8 +318,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 
 		// Pass register and schema so the magic mapper route is triggered and the
 		// per-schema magic table is updated (not just the blob table).
-		$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-		$objectMapper->update(entity: $contactPerson, register: $registerEntity, schema: $schemaEntity);
+		$this->magicMapper->update(entity: $contactPerson, register: $registerEntity, schema: $schemaEntity);
 
 	}//end persistContactpersoonPatch()
 
@@ -341,7 +345,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		// 1. Search by username = userId, scoped to the user's organisation (multitenancy).
 		// This prevents updating a contactpersoon from a different organisation when.
 		// Multiple records share the same username across orgs.
-		$results = $objectService->searchObjects(
+		$results = $this->objectService->searchObjects(
 			query: ['@self' => $selfQuery, 'username' => $userId, '_limit' => 5],
 			_rbac: false,
 			_multitenancy: true
@@ -381,7 +385,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 
 			// Use _search for case-insensitive matching, then verify the email field in PHP.
 			// Scoped to user's organisation via multitenancy to avoid cross-org matches.
-			$results = $objectService->searchObjects(
+			$results = $this->objectService->searchObjects(
 				query: ['@self' => $selfQuery, '_search' => $emailCandidate, '_limit' => 5],
 				_rbac: false,
 				_multitenancy: true
