@@ -418,7 +418,7 @@ export default {
 		noColumnsImported() {
 			return this.columnSource === COLUMN_SOURCE.BIO_MAATREGEL
 				? this.bioMaatregelen.length === 0
-				: this.standaardversies.length === 0
+				: this.standard_versions.length === 0
 		},
 
 		/**
@@ -427,7 +427,7 @@ export default {
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		standardOptions() {
-			return this.standaardversies.map((standard) => ({
+			return this.standard_versions.map((standard) => ({
 				uuid: resolveUuid(
 					standard.uuid
 						?? standard.id
@@ -508,7 +508,7 @@ export default {
 				return {
 					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
 					label:
-						data.naam
+						data.name
 						|| data.title
 						|| resolveUuid(org.uuid ?? org.id ?? ''),
 					raw: org,
@@ -519,7 +519,7 @@ export default {
 		/**
 		 * Modules in scope for the matrix: every module, unless an
 		 * organisation is selected — then only that organisation's in-use
-		 * applications (gebruik.afnemer === org → gebruik.module), per the
+		 * applications (gebruik.consumer === org → gebruik.module), per the
 		 * BIO coverage report requirement. Applications with no compliance
 		 * data are still included (rendered as "none"/"not set"), never
 		 * omitted.
@@ -534,7 +534,7 @@ export default {
 			const inUseModuleUuids = new Set(
 				this.gebruiken
 					.map((g) => dataOf(g))
-					.filter((data) => resolveUuid(data.afnemer) === orgUuid)
+					.filter((data) => resolveUuid(data.consumer) === orgUuid)
 					.map((data) => resolveUuid(data.module))
 					.filter(Boolean),
 			)
@@ -779,8 +779,8 @@ export default {
 		 */
 		moduleLabel(module) {
 			return (
-				module?.naam
-				|| module?.object?.naam
+				module?.name
+				|| module?.object?.name
 				|| resolveUuid(module?.uuid ?? module?.id ?? module)
 			)
 		},

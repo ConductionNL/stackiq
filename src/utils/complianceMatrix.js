@@ -109,7 +109,7 @@ export function hasEvidence(record) {
 		return false
 	}
 
-	const bewijs = record.bewijs
+	const bewijs = record.evidence
 	const hasBewijs =
 		!!bewijs
 		&& (typeof bewijs === 'string'
@@ -118,7 +118,7 @@ export function hasEvidence(record) {
 				? Object.keys(bewijs).length > 0
 				: true)
 
-	const ref = record.bewijsReferentie
+	const ref = record.evidenceReference
 	const hasRef = typeof ref === 'string' ? ref.trim() !== '' : !!ref
 
 	const url = record.url
@@ -160,7 +160,7 @@ export function dataOf(record) {
  *
  * @param {Array<object>} records      Compliancy records (OR objects or data bags).
  * @param {ColumnSource}  [columnSource] Which relation to key on. Defaults to standaardversie.
- * @return {{resolved: Array<{moduleUuid: string, columnUuid: string, evidenced: boolean, record: object}>, unresolved: Array<{moduleUuid: string, standaardGemma: string, evidenced: boolean, record: object}>, conflicted: Array<{moduleUuid: string, standaardversieUuid: string, bioMaatregelUuid: string, record: object}>}}
+ * @return {{resolved: Array<{moduleUuid: string, columnUuid: string, evidenced: boolean, record: object}>, unresolved: Array<{moduleUuid: string, standardGemma: string, evidenced: boolean, record: object}>, conflicted: Array<{moduleUuid: string, standaardversieUuid: string, bioMaatregelUuid: string, record: object}>}}
  *
  * @spec openspec/specs/module-compliance-assessment/spec.md
  * @spec openspec/specs/bio-compliance-assessment/spec.md
@@ -176,7 +176,7 @@ export function partitionCompliancy(
 	for (const record of records || []) {
 		const data = dataOf(record)
 		const moduleUuid = resolveUuid(data.module)
-		const standaardversieUuid = resolveUuid(data.standaardversie)
+		const standaardversieUuid = resolveUuid(data.standard_version)
 		const bioMaatregelUuid = resolveUuid(data.bioMaatregel)
 		const evidenced = hasEvidence(data)
 
@@ -220,7 +220,7 @@ export function partitionCompliancy(
 		}
 
 		const standaardGemma =
-			typeof data.standaardGemma === 'string' ? data.standaardGemma.trim() : ''
+			typeof data.standardGemma === 'string' ? data.standardGemma.trim() : ''
 		if (standaardGemma !== '') {
 			unresolved.push({ moduleUuid, standaardGemma, evidenced, record })
 		}
@@ -261,7 +261,7 @@ function strongest(a, b) {
  *
  * @param {object}        params                   Mapper input.
  * @param {Array<object>} params.modules           Module objects (need `uuid`/`id` + `naam`).
- * @param {Array<object>} [params.standaardversies] Selected column objects when columnSource is standaardversie (need `uuid`/`id` + `naam`/`titel`). Back-compat alias for `columns`.
+ * @param {Array<object>} [params.standard_versions] Selected column objects when columnSource is standaardversie (need `uuid`/`id` + `naam`/`titel`). Back-compat alias for `columns`.
  * @param {Array<object>} [params.columns]          Selected column objects (standaardversie or bioMaatregel, per columnSource). Preferred over `standaardversies` for new callers.
  * @param {Array<object>} params.compliancy        Compliancy records (OR objects or data bags).
  * @param {ColumnSource}  [params.columnSource]     Which relation to key on. Defaults to standaardversie.
@@ -339,7 +339,7 @@ export function columnLabel(column) {
 		return String(column || '')
 	}
 	return (
-		column.naam
+		column.name
 		|| column.titel
 		|| column.title
 		|| column.label

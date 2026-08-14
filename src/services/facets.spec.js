@@ -32,7 +32,7 @@ describe('facets.FACET_DIMENSIONS', () => {
 	it('lists all four GEMMA dimensions', () => {
 		expect(FACET_DIMENSIONS).toEqual([
 			'referentiecomponent',
-			'standaard',
+			'standard',
 			'applicatieservice',
 			'domein',
 		])
@@ -64,7 +64,7 @@ describe('facets.buildFacetQueryParams', () => {
 
 	it('drops blank/whitespace-only values within a dimension', () => {
 		const params = buildFacetQueryParams({
-			filters: { standaard: ['StUF-ZKN', '', '   '] },
+			filters: { standard: ['StUF-ZKN', '', '   '] },
 		})
 		expect(params.getAll('standaard[]')).toEqual(['StUF-ZKN'])
 	})
@@ -97,7 +97,7 @@ describe('facets.fetchFacets', () => {
 		axios.get.mockResolvedValue({
 			data: {
 				referentiecomponent: [],
-				standaard: [],
+				standard: [],
 				applicatieservice: [],
 				domein: [],
 				_meta: {},
@@ -130,7 +130,7 @@ describe('facets.fetchFacets', () => {
 	it('returns the response body', async () => {
 		const body = {
 			referentiecomponent: [{ value: 'A', label: 'A', count: 3 }],
-			standaard: [],
+			standard: [],
 			applicatieservice: [],
 			domein: [],
 			_meta: { totalMatched: 3 },

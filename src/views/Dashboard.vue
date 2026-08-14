@@ -382,7 +382,7 @@ export default {
 				module: ApplicationCog,
 				koppeling: ApplicationCog,
 				dienst: ApplicationCog,
-				standaard: FileDocumentEdit,
+				standard: FileDocumentEdit,
 				compliancy: FileDocumentEdit,
 				kwetsbaarheid: FileDocumentEdit,
 				beoordeling: FileDocumentEdit,
@@ -431,7 +431,7 @@ export default {
 				organisatie: 'organisaties',
 				contactpersoon: 'contactpersonen',
 				contract: 'contracten',
-				standaard: 'standards',
+				standard: 'standards',
 				compliancy: 'komplianties',
 				moduleversie: 'moduleversies',
 			}

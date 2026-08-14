@@ -14,7 +14,7 @@ import {
 
 describe('suiteWizard.isDetailsStepValid', () => {
 	it('is invalid when naam is blank', () => {
-		expect(isDetailsStepValid({ naam: '', beschrijvingKort: 'Short' })).toBe(
+		expect(isDetailsStepValid({ name: '', beschrijvingKort: 'Short' })).toBe(
 			false,
 		)
 	})
@@ -22,7 +22,7 @@ describe('suiteWizard.isDetailsStepValid', () => {
 	it('is invalid when beschrijvingKort is blank', () => {
 		expect(
 			isDetailsStepValid({
-				naam: 'Centric Leefomgeving',
+				name: 'Centric Leefomgeving',
 				beschrijvingKort: '  ',
 			}),
 		).toBe(false)
@@ -31,7 +31,7 @@ describe('suiteWizard.isDetailsStepValid', () => {
 	it('is valid when both required fields are filled in', () => {
 		expect(
 			isDetailsStepValid({
-				naam: 'Centric Leefomgeving',
+				name: 'Centric Leefomgeving',
 				beschrijvingKort: 'Bundled product',
 			}),
 		).toBe(true)
@@ -71,52 +71,52 @@ describe('suiteWizard.isApplicationsStepValid', () => {
 describe('suiteWizard.buildSuitePayload', () => {
 	it('builds the suite payload with a plain array of module ids', () => {
 		const payload = buildSuitePayload({
-			naam: '  Centric Leefomgeving  ',
+			name: '  Centric Leefomgeving  ',
 			beschrijvingKort: 'Bundled leefomgeving product',
 			beschrijvingLang: 'Long description',
 			website: 'https://example.nl/leefomgeving',
 			applications: [
-				{ id: 'mod-1', naam: 'Module 1' },
-				{ id: 'mod-2', naam: 'Module 2' },
+				{ id: 'mod-1', name: 'Module 1' },
+				{ id: 'mod-2', name: 'Module 2' },
 			],
 		})
 
 		expect(payload).toEqual({
-			naam: 'Centric Leefomgeving',
+			name: 'Centric Leefomgeving',
 			beschrijvingKort: 'Bundled leefomgeving product',
 			beschrijvingLang: 'Long description',
 			website: 'https://example.nl/leefomgeving',
-			applicaties: ['mod-1', 'mod-2'],
+			applications: ['mod-1', 'mod-2'],
 		})
 	})
 
 	it('accepts plain id strings as well as module objects', () => {
 		const payload = buildSuitePayload({
-			naam: 'Suite',
+			name: 'Suite',
 			beschrijvingKort: 'Short',
 			applications: ['mod-1', 'mod-2'],
 		})
-		expect(payload.applicaties).toEqual(['mod-1', 'mod-2'])
+		expect(payload.applications).toEqual(['mod-1', 'mod-2'])
 	})
 
 	it('defaults optional fields to empty strings and applicaties to an empty array', () => {
 		const payload = buildSuitePayload({
-			naam: 'Suite',
+			name: 'Suite',
 			beschrijvingKort: 'Short',
 		})
 		expect(payload.beschrijvingLang).toBe('')
 		expect(payload.website).toBe('')
-		expect(payload.applicaties).toEqual([])
+		expect(payload.applications).toEqual([])
 	})
 
 	it('handles missing stepData gracefully', () => {
 		const payload = buildSuitePayload(undefined)
 		expect(payload).toEqual({
-			naam: '',
+			name: '',
 			beschrijvingKort: '',
 			beschrijvingLang: '',
 			website: '',
-			applicaties: [],
+			applications: [],
 		})
 	})
 })
@@ -124,7 +124,7 @@ describe('suiteWizard.buildSuitePayload', () => {
 describe('suiteWizard.summarizeApplications', () => {
 	it('returns the naam of each attached application', () => {
 		expect(
-			summarizeApplications([{ naam: 'Module A' }, { naam: 'Module B' }]),
+			summarizeApplications([{ name: 'Module A' }, { name: 'Module B' }]),
 		).toEqual(['Module A', 'Module B'])
 	})
 
@@ -146,7 +146,7 @@ describe('suiteWizard.mapApplicationOptions', () => {
 	// covered the computed. These cases pin BOTH shapes.
 	it('maps the paginated envelope shape returned by getCollection()', () => {
 		const envelope = {
-			results: [{ uuid: 'u1', naam: 'Zaaksysteem' }],
+			results: [{ uuid: 'u1', name: 'Zaaksysteem' }],
 			total: 1,
 			page: 1,
 		}
@@ -155,14 +155,14 @@ describe('suiteWizard.mapApplicationOptions', () => {
 			{
 				uuid: 'u1',
 				label: 'Zaaksysteem',
-				raw: { uuid: 'u1', naam: 'Zaaksysteem' },
+				raw: { uuid: 'u1', name: 'Zaaksysteem' },
 			},
 		])
 	})
 
 	it('still maps a bare array', () => {
-		expect(mapApplicationOptions([{ uuid: 'u2', naam: 'DMS' }])).toEqual([
-			{ uuid: 'u2', label: 'DMS', raw: { uuid: 'u2', naam: 'DMS' } },
+		expect(mapApplicationOptions([{ uuid: 'u2', name: 'DMS' }])).toEqual([
+			{ uuid: 'u2', label: 'DMS', raw: { uuid: 'u2', name: 'DMS' } },
 		])
 	})
 

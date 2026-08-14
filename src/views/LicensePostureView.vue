@@ -269,7 +269,7 @@ export default {
 				const data = org.object || org
 				const id = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
 				if (id) {
-					index[id] = data.naam || data.title || id
+					index[id] = data.name || data.title || id
 				}
 			}
 			return index
@@ -286,7 +286,7 @@ export default {
 				const data = m.object || m
 				const id = resolveUuid(m.uuid ?? m.id ?? m['@self']?.id ?? m)
 				if (id) {
-					index[id] = data.naam || data.title || id
+					index[id] = data.name || data.title || id
 				}
 			}
 			return index

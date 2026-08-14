@@ -146,8 +146,8 @@ export function portfolioPosture(modules, gebruiken) {
 			acc.unknown += 1
 		}
 		const licence =
-			typeof mod.licentie === 'string' && mod.licentie.trim() !== ''
-				? mod.licentie
+			typeof mod.licence === 'string' && mod.licence.trim() !== ''
+				? mod.licence
 				: LICENSE_TYPE.UNKNOWN
 		acc.byLicense[licence] = (acc.byLicense[licence] || 0) + 1
 	}
@@ -202,7 +202,7 @@ export function perVendorRollup(modules, gebruiken, contracts) {
 		const data = dataOf(g)
 		const moduleId = resolveUuid(data.module)
 		const mod = idx[moduleId] || {}
-		const vendorId = resolveUuid(mod.aanbieder)
+		const vendorId = resolveUuid(mod.provider)
 		if (vendorId === '') {
 			continue
 		}
@@ -259,7 +259,7 @@ export function perOrganisationPosture(orgId, modules, gebruiken) {
 
 	for (const g of inProductionUsages(gebruiken)) {
 		const data = dataOf(g)
-		if (resolveUuid(data.afnemer) !== orgId) {
+		if (resolveUuid(data.consumer) !== orgId) {
 			continue
 		}
 		const moduleId = resolveUuid(data.module)

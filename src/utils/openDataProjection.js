@@ -13,7 +13,7 @@
  * NOTE (build status, updated 2026-06-15): the anonymous READ surface is LIVE on
  * the OpenRegister RBAC publish model — an entry is anonymously visible once its
  * `publicatiedatum` is set (schema read rule `{group:public, match:
- * {publicatiedatum:{$lte:$now}}}`); "publish" = set publicatiedatum via the
+ * {publication_date:{$lte:$now}}}`); "publish" = set publicatiedatum via the
  * PublicationService (`PUT /api/publication/{objectType}/{uuid}/publish`). The
  * earlier `@self.published` gap note is stale (that predicate is removed from
  * OpenRegister). This projection is the open-data serialization the public

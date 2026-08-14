@@ -526,7 +526,7 @@ export default {
 		getContactpersoonName(contactpersoon) {
 			const data = contactpersoon.data
 			return (
-				data.naam
+				data.name
 				|| data.name
 				|| data.voornaam + ' ' + data.achternaam
 				|| data.email
@@ -636,7 +636,7 @@ export default {
 							voornaam: result.contactpersoon.voornaam,
 							achternaam: result.contactpersoon.achternaam,
 							'e-mailadres': result.contactpersoon['e-mailadres'],
-							naam: result.contactpersoon.naam,
+							name: result.contactpersoon.name,
 							organisatie: result.contactpersoon.organisatie,
 							username: result.contactpersoon.username,
 							groups: result.contactpersoon.groups || [],

@@ -151,7 +151,7 @@ import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
 const DIMENSION_LABELS = {
 	referentiecomponent: () => t('softwarecatalog', 'Reference component'),
-	standaard: () => t('softwarecatalog', 'Standard'),
+	standard: () => t('softwarecatalog', 'Standard'),
 	applicatieservice: () => t('softwarecatalog', 'Application service'),
 	domein: () => t('softwarecatalog', 'Domain'),
 }

@@ -104,7 +104,7 @@ export default {
 			const applications = this.payload.applications || []
 			return applications.map((app) => ({
 				uuid: app.id,
-				label: app.naam || app.id,
+				label: app.name || app.id,
 				raw: app,
 			}))
 		},

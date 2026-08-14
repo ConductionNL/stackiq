@@ -55,13 +55,13 @@ export function isReviewFormValid(naam, rating) {
  * @param {string} naam             - The review title.
  * @param {number} rating           - The selected rating (1-10).
  * @param {string} beschrijvingLang - The testimonial text.
- * @return {{naam:string, waardering:number, beschrijvingLang:string}} The payload.
+ * @return {{name:string, rating:number, beschrijvingLang:string}} The payload.
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-the-submitting-users-identity-must-be-bound-server-side-and-must-not-be-accepted-from-client-input
  */
 export function buildReviewPayload(naam, rating, beschrijvingLang) {
 	return {
-		naam: String(naam || ''),
-		waardering: rating,
+		name: String(naam || ''),
+		rating: rating,
 		beschrijvingLang: String(beschrijvingLang || ''),
 	}
 }

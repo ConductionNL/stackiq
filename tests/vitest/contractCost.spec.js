@@ -29,33 +29,33 @@ describe('contractCost.parseAmount', () => {
 describe('contractCost.annualisedCost', () => {
 	it('annualises a monthly contract ×12', () => {
 		expect(
-			annualisedCost({ kosten: 1000, kostenPeriode: PERIOD.MONTHLY }),
+			annualisedCost({ cost: 1000, costPeriod: PERIOD.MONTHLY }),
 		).toEqual({ annual: 12000, oneOff: 0 })
 	})
 	it('passes a yearly contract through ×1', () => {
 		expect(
-			annualisedCost({ kosten: 6000, kostenPeriode: PERIOD.YEARLY }),
+			annualisedCost({ cost: 6000, costPeriod: PERIOD.YEARLY }),
 		).toEqual({ annual: 6000, oneOff: 0 })
 	})
 	it('excludes a one-off from the annual figure', () => {
 		expect(
-			annualisedCost({ kosten: 5000, kostenPeriode: PERIOD.ONEOFF }),
+			annualisedCost({ cost: 5000, costPeriod: PERIOD.ONEOFF }),
 		).toEqual({ annual: 0, oneOff: 5000 })
 	})
 	it('yields zeros for unknown period or unparseable amount', () => {
-		expect(annualisedCost({ kosten: 100, kostenPeriode: 'Wekelijks' })).toEqual({
+		expect(annualisedCost({ cost: 100, costPeriod: 'Wekelijks' })).toEqual({
 			annual: 0,
 			oneOff: 0,
 		})
 		expect(
-			annualisedCost({ kosten: 'x', kostenPeriode: PERIOD.MONTHLY }),
+			annualisedCost({ cost: 'x', costPeriod: PERIOD.MONTHLY }),
 		).toEqual({ annual: 0, oneOff: 0 })
 		expect(annualisedCost({})).toEqual({ annual: 0, oneOff: 0 })
 	})
 	it('reads OR object envelopes', () => {
 		expect(
 			annualisedCost({
-				object: { kosten: 1000, kostenPeriode: PERIOD.MONTHLY },
+				object: { cost: 1000, costPeriod: PERIOD.MONTHLY },
 			}),
 		).toEqual({ annual: 12000, oneOff: 0 })
 	})
@@ -64,9 +64,9 @@ describe('contractCost.annualisedCost', () => {
 describe('contractCost.totalAnnualisedCost', () => {
 	it('sums annual and one-off separately across contracts', () => {
 		const contracts = [
-			{ kosten: 1000, kostenPeriode: PERIOD.MONTHLY }, // 12000 annual
-			{ kosten: 6000, kostenPeriode: PERIOD.YEARLY }, // 6000 annual
-			{ kosten: 5000, kostenPeriode: PERIOD.ONEOFF }, // 5000 one-off
+			{ cost: 1000, costPeriod: PERIOD.MONTHLY }, // 12000 annual
+			{ cost: 6000, costPeriod: PERIOD.YEARLY }, // 6000 annual
+			{ cost: 5000, costPeriod: PERIOD.ONEOFF }, // 5000 one-off
 		]
 		expect(totalAnnualisedCost(contracts)).toEqual({
 			annual: 18000,
@@ -81,7 +81,7 @@ describe('contractCost.totalAnnualisedCost', () => {
 
 describe('contractCost.isOneOff', () => {
 	it('detects Eenmalig', () => {
-		expect(isOneOff({ kostenPeriode: PERIOD.ONEOFF })).toBe(true)
-		expect(isOneOff({ kostenPeriode: PERIOD.MONTHLY })).toBe(false)
+		expect(isOneOff({ costPeriod: PERIOD.ONEOFF })).toBe(true)
+		expect(isOneOff({ costPeriod: PERIOD.MONTHLY })).toBe(false)
 	})
 })

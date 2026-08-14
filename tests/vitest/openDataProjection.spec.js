@@ -19,20 +19,20 @@ describe('openDataProjection.projectOpenData', () => {
 			updated: '2026-06-01T10:00:00Z',
 			owner: 'admin',
 		},
-		naam: 'Petstore',
+		name: 'Petstore',
 		beschrijvingKort: 'Demo app',
-		interneAantekening: 'secret internal note',
+		interneAnnotation: 'secret internal note',
 		contactpersoon: { voornaam: 'Jan', email: 'jan@example.org' },
-		contactpersoonAanbieder: { naam: 'Aanbieder' },
-		geregistreerdDoor: 'someuser',
+		contactPersonProvider: { name: 'Aanbieder' },
+		geregistreerdBy: 'someuser',
 	}
 
 	it('strips PII and internal fields', () => {
 		const p = projectOpenData(entry)
-		expect(p.interneAantekening).toBeUndefined()
+		expect(p.interneAnnotation).toBeUndefined()
 		expect(p.contactpersoon).toBeUndefined()
-		expect(p.contactpersoonAanbieder).toBeUndefined()
-		expect(p.geregistreerdDoor).toBeUndefined()
+		expect(p.contactPersonProvider).toBeUndefined()
+		expect(p.geregistreerdBy).toBeUndefined()
 		expect(p.owner).toBeUndefined()
 	})
 
@@ -41,7 +41,7 @@ describe('openDataProjection.projectOpenData', () => {
 		expect(p.uuid).toBe('u-1')
 		expect(p.slug).toBe('app-1')
 		expect(p['@id']).toBe('u-1')
-		expect(p.naam).toBe('Petstore')
+		expect(p.name).toBe('Petstore')
 		expect(p.beschrijvingKort).toBe('Demo app')
 	})
 
@@ -62,9 +62,9 @@ describe('openDataProjection.projectOpenData', () => {
 	it('reads OR object envelopes with nested object bag', () => {
 		const p = projectOpenData({
 			'@self': { uuid: 'x' },
-			object: { naam: 'A', email: 'a@b.c' },
+			object: { name: 'A', email: 'a@b.c' },
 		})
-		expect(p.naam).toBe('A')
+		expect(p.name).toBe('A')
 		expect(p.email).toBeUndefined()
 		expect(p.uuid).toBe('x')
 	})
@@ -76,10 +76,10 @@ describe('openDataProjection.projectOpenData', () => {
 
 describe('openDataProjection.isClean', () => {
 	it('rejects an object still carrying a PII field', () => {
-		expect(isClean({ naam: 'x', email: 'leak@x' })).toBe(false)
-		expect(isClean({ naam: 'x', contactpersoon: {} })).toBe(false)
+		expect(isClean({ name: 'x', email: 'leak@x' })).toBe(false)
+		expect(isClean({ name: 'x', contactpersoon: {} })).toBe(false)
 	})
 	it('accepts a clean object', () => {
-		expect(isClean({ naam: 'x', uuid: 'u', license: 'CC0-1.0' })).toBe(true)
+		expect(isClean({ name: 'x', uuid: 'u', license: 'CC0-1.0' })).toBe(true)
 	})
 })

@@ -12,8 +12,8 @@ import {
 
 describe('organisationSwitcher.resolveActiveOrganisationName', () => {
 	const organisations = [
-		{ uuid: 'org-a', naam: 'Gemeente A' },
-		{ uuid: 'org-b', naam: 'Gemeente B' },
+		{ uuid: 'org-a', name: 'Gemeente A' },
+		{ uuid: 'org-b', name: 'Gemeente B' },
 	]
 
 	it('resolves the active organisation name', () => {
@@ -46,13 +46,13 @@ describe('organisationSwitcher.resolveActiveOrganisationName', () => {
 
 describe('organisationSwitcher.resolveOtherOrganisations', () => {
 	const organisations = [
-		{ uuid: 'org-a', naam: 'Gemeente A' },
-		{ uuid: 'org-b', naam: 'Gemeente B' },
+		{ uuid: 'org-a', name: 'Gemeente A' },
+		{ uuid: 'org-b', name: 'Gemeente B' },
 	]
 
 	it('excludes the active organisation', () => {
 		expect(resolveOtherOrganisations(organisations, 'org-a')).toEqual([
-			{ uuid: 'org-b', naam: 'Gemeente B' },
+			{ uuid: 'org-b', name: 'Gemeente B' },
 		])
 	})
 
@@ -61,7 +61,7 @@ describe('organisationSwitcher.resolveOtherOrganisations', () => {
 	})
 
 	it('returns an empty array when the user has only the active organisation', () => {
-		const single = [{ uuid: 'org-a', naam: 'Gemeente A' }]
+		const single = [{ uuid: 'org-a', name: 'Gemeente A' }]
 		expect(resolveOtherOrganisations(single, 'org-a')).toEqual([])
 	})
 })

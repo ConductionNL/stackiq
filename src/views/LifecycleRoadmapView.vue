@@ -255,7 +255,7 @@ export default {
 				(org) => ({
 					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
 					label:
-						org.naam
+						org.name
 						|| org.title
 						|| resolveUuid(org.uuid ?? org.id ?? ''),
 				}),
@@ -294,7 +294,7 @@ export default {
 			const entries = this.gebruiken
 				.filter((g) => {
 					const data = g.object || g
-					return resolveUuid(data.afnemer) === orgUuid
+					return resolveUuid(data.consumer) === orgUuid
 				})
 				.map((g) => this.buildEntry(g, now))
 
@@ -393,7 +393,7 @@ export default {
 			const versieUuid = resolveUuid(data.moduleVersie)
 			const versie = this.moduleVersieIndex[versieUuid]
 			const eol = endOfSupportState(versie || {}, now)
-			const replacementUuid = resolveUuid(data.geplandeVervanging)
+			const replacementUuid = resolveUuid(data.plannedReplacement)
 			const replacementModule = this.moduleIndex[replacementUuid]
 
 			return {
@@ -402,18 +402,18 @@ export default {
 				),
 				phase: derivePhase(gebruik, now),
 				appName:
-					this.moduleIndex[moduleUuid]?.naam
-					|| data.module?.naam
+					this.moduleIndex[moduleUuid]?.name
+					|| data.module?.name
 					|| moduleUuid
 					|| t('softwarecatalog', 'Unknown application'),
 				eol,
 				eolApproaching: versie
 					? isEolApproaching(versie, EOL_WINDOW_DAYS, now)
 					: false,
-				phaseOutDate: data.startDatumUitTeFaseren || null,
+				phaseOutDate: data.startDateOutTeFaseren || null,
 				replacementUuid,
-				replacementName: replacementModule?.naam || replacementUuid || null,
-				replacementDate: data.geplandeVervangingsDatum || null,
+				replacementName: replacementModule?.name || replacementUuid || null,
+				replacementDate: data.plannedVervangingsDate || null,
 			}
 		},
 
