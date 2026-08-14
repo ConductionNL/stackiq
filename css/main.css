@@ -102,6 +102,7 @@
 .publishedIcon > svg {
 	fill: var(--color-success);
 }
+
 .warningIcon > svg {
 	fill: var(--color-warning);
 }
@@ -122,6 +123,7 @@
 .successMessage {
 	color: var(--color-success);
 }
+
 .errorMessage {
 	color: var(--color-error);
 }
@@ -154,11 +156,13 @@
 	display: flex;
 }
 
+/* Merged from two consecutive blocks with the same selector. Declaration ORDER is
+   preserved exactly — `margin` sets all four sides and the later `margin-left`
+   overrides the left one — so the computed style is unchanged. The identical pair
+   exists in larpingapp's css/main.css: this stylesheet was copy-pasted between
+   apps, and nothing linted it because css/ sat outside the stylelint glob. */
 .filesListDragDropNoticeTitle {
 	margin: 12px 0;
-}
-
-.filesListDragDropNoticeTitle {
 	margin-left: 16px;
 	color: inherit;
 }
