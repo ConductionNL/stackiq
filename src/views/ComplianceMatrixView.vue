@@ -373,7 +373,7 @@ export default {
 		 * @return {Array} Standard version records.
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
-		standaardversies() {
+		standardVersions() {
 			const elements = objectStore.getCollection('element')?.results || []
 			return elements.filter(
 				(el) =>
@@ -419,7 +419,7 @@ export default {
 		noColumnsImported() {
 			return this.columnSource === COLUMN_SOURCE.BIO_MAATREGEL
 				? this.bioMaatregelen.length === 0
-				: this.standard_versions.length === 0
+				: this.standardVersions.length === 0
 		},
 
 		/**
@@ -428,7 +428,7 @@ export default {
 		 * @spec openspec/specs/module-compliance-assessment/spec.md
 		 */
 		standardOptions() {
-			return this.standard_versions.map((standard) => ({
+			return this.standardVersions.map((standard) => ({
 				uuid: resolveUuid(
 					standard.uuid
 						?? standard.id

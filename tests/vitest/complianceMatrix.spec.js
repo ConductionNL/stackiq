@@ -83,7 +83,7 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 		{ uuid: 'mA', name: 'App A' },
 		{ uuid: 'mB', name: 'App B' },
 	]
-	const standaardversies = [
+	const standardVersions = [
 		{ uuid: 's1', name: 'ZGW API' },
 		{ uuid: 's2', name: 'Haal Centraal' },
 	]
@@ -96,7 +96,7 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 		]
 		const { rows, columns } = buildComplianceMatrix({
 			modules,
-			standaardversies,
+			standardVersions,
 			compliancy,
 		})
 		expect(columns.map((c) => c.label)).toEqual(['ZGW API', 'Haal Centraal'])
@@ -110,7 +110,7 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 	it('only produces selected standard columns (filter-first, no cartesian wall)', () => {
 		const { columns } = buildComplianceMatrix({
 			modules,
-			standard_versions: [{ uuid: 's1', name: 'ZGW API' }],
+			standardVersions: [{ uuid: 's1', name: 'ZGW API' }],
 			compliancy: [],
 		})
 		expect(columns).toHaveLength(1)
@@ -123,7 +123,7 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 		]
 		const { rows } = buildComplianceMatrix({
 			modules,
-			standaardversies,
+			standardVersions,
 			compliancy,
 		})
 		expect(rows[0].cells.s1.state).toBe(CELL.VERIFIED)
@@ -133,7 +133,7 @@ describe('complianceMatrix.buildComplianceMatrix', () => {
 	it('surfaces unresolved standaardGemma-only records separately', () => {
 		const { unresolved } = buildComplianceMatrix({
 			modules,
-			standaardversies,
+			standardVersions,
 			compliancy: [{ module: 'mA', standardGemma: 'GEMMA-X' }],
 		})
 		expect(unresolved).toHaveLength(1)
