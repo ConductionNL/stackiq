@@ -32,6 +32,7 @@ use ReflectionClass;
  * phpcs:disable CustomSniffs.Functions.NamedParameters
  *
  * @covers \OCA\SoftwareCatalog\Repair\RenameDutchCatalogValues
+ * @covers \OCA\SoftwareCatalog\Repair\RenameDutchCatalogDecisions
  */
 final class RenameDutchCatalogValuesTest extends TestCase {
 
