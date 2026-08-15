@@ -101,8 +101,9 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param IDBConnection   $db     Database connection.
-	 * @param LoggerInterface $logger Logger.
+	 * @param IDBConnection                  $db        Database connection.
+	 * @param LoggerInterface                $logger    Logger.
+	 * @param RenameDutchSchemaSlugDecisions $decisions The pure predicates.
 	 */
 	public function __construct(
 		private readonly IDBConnection $db,
