@@ -48,27 +48,45 @@ webpackConfig.output = {
 // default silently compiled Vue 2 library sources into this Vue 3 app while
 // still producing a green build.
 //
-// The version test looks for the `-vue3.` marker, NOT the semver major. The
-// previous check required `startsWith('2.')` on the theory that the Vue 2 line
-// was 1.x — true when it was written, false since. Today BOTH lines are major 2:
+// The sibling is validated against THIS app's own declared range, not a
+// hand-rolled version test. The previous check required `startsWith('2.')` on the
+// theory that the Vue 2 line was 1.x — true when written, false since. Today BOTH
+// lines are major 2:
 //
 //     Vue 2 line   2.0.5
 //     Vue 3 line   2.2.0-vue3.16
 //
-// so a major-based test passes the Vue 2 library straight through, which is
-// exactly what it existed to prevent. Only the `-vue3.` tag distinguishes them.
+// so any major-based test passes the Vue 2 library straight through, which is
+// exactly what it existed to prevent. Comparing against the declared range needs
+// no maintenance when the 3.x line ships — the range moves with it.
+//
+// Fail CLOSED: if the check cannot run (semver unresolvable, package unreadable)
+// the sibling is refused. A guard that degrades to "allow" is not a guard.
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
 const localLibPkg = path.resolve(__dirname, '../nextcloud-vue/package.json')
 let useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
-if (useLocalLib && fs.existsSync(localLibPkg)) {
-	const localVersion =
-		JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || ''
-	if (!/-vue3\./.test(localVersion)) {
+if (useLocalLib) {
+	let satisfied = false
+	let localVersion = 'unreadable'
+	try {
+		// eslint-disable-next-line n/no-extraneous-require
+		const semver = require('semver')
+		const required =
+			require('./package.json').dependencies['@conduction/nextcloud-vue']
+		localVersion = JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || ''
+		satisfied = semver.satisfies(localVersion, required, {
+			includePrerelease: true,
+		})
+	} catch (e) {
+		satisfied = false
+	}
+
+	if (!satisfied) {
 		useLocalLib = false
 		// eslint-disable-next-line no-console
 		console.warn(
 			`[softwarecatalog] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
-				+ 'that is not a -vue3 build and this app is Vue 3. Building against the npm dist.',
+				+ 'it does not satisfy this app\'s declared range. Building against the npm dist.',
 		)
 	}
 }
