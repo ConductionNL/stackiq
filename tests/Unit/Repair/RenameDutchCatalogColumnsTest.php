@@ -39,6 +39,7 @@ use ReflectionMethod;
 
 /**
  * @covers \OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns
+ * @covers \OCA\SoftwareCatalog\Repair\RenameDutchCatalogDecisions
  */
 class RenameDutchCatalogColumnsTest extends TestCase {
 	/**
