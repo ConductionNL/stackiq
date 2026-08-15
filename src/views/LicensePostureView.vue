@@ -216,7 +216,7 @@ export default {
 		useLiveCollections(objectStore, [
 			'module',
 			'usage',
-			'organisatie',
+			'organization',
 			'contract',
 		])
 		return {}
@@ -268,7 +268,7 @@ export default {
 		 */
 		organisatieIndex() {
 			const index = {}
-			for (const org of objectStore.getCollection('organisatie')?.results
+			for (const org of objectStore.getCollection('organization')?.results
 				|| []) {
 				const data = org.object || org
 				const id = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
@@ -435,7 +435,7 @@ export default {
 				await Promise.all([
 					this.fetchType('module'),
 					this.fetchType('usage'),
-					this.fetchType('organisatie'),
+					this.fetchType('organization'),
 					this.fetchType('contract'),
 				])
 			} catch (error) {

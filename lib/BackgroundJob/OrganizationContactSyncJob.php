@@ -159,7 +159,7 @@ class OrganizationContactSyncJob extends TimedJob {
 			return;
 		}
 
-		foreach (['contactPerson', 'organisatie'] as $objectType) {
+		foreach (['contactPerson', 'organization'] as $objectType) {
 			$schemaId = $this->settingsService->getSchemaIdForObjectType($objectType);
 			if ($schemaId === null) {
 				continue;

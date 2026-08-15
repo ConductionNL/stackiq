@@ -165,10 +165,10 @@ class SoftwareCatalogueServiceDecompositionTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->once())
 			->method('error')
-			->with($this->stringContains('organisatie'));
+			->with($this->stringContains('organization'));
 
 		$service = $this->buildService($settings, $logger);
-		$this->assertNull($this->callResolver($service, 'organisatie', 'organisatie'));
+		$this->assertNull($this->callResolver($service, 'organization', 'organization'));
 
 	}//end testResolveVoorzieningenContextReturnsNullWhenSchemaMissing()
 

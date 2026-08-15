@@ -59,13 +59,12 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * Targets are read off each schema's own English `title`, not invented:
 	 * `beoordeeling` was already titled "Assessment".
 	 *
-	 * `organisatie` is deliberately absent. This app declares BOTH an
-	 * `organisatie` schema (the catalogue's own organisation, in the
-	 * voorzieningen register) and an `organization` one (the ArchiMate entity,
-	 * with OIN/RSIN/PKI). They share not one property. Renaming the first onto
-	 * the second would collide on the flat `<slug>_schema` config key and
-	 * silently leave one of the two unresolvable, so that pair is a change of
-	 * its own.
+	 * `organisatie` => `organization` is here too, but the name is occupied: the
+	 * app declared a SECOND organisation schema, the ArchiMate one, carrying the
+	 * identity and statutory identifiers (name, oin, rsin, pki, tooi) and the
+	 * round-trip `xml`. The two shared not one property. They are now merged into
+	 * a single `organization` in the register JSON, and `retireArchimateOrganization()`
+	 * frees the name on the existing rows before the rename runs.
 	 *
 	 * @var array<string, string>
 	 */
@@ -78,7 +77,19 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 		'koppeling' => 'connection',
 		'kwetsbaarheid' => 'vulnerability',
 		'moduleVersie' => 'moduleVersion',
+		'organisatie' => 'organization',
 	];
+
+	/**
+	 * Slug the absorbed ArchiMate organisation schema is parked under.
+	 *
+	 * Renamed rather than DELETED. The merge is only performed when that schema
+	 * holds no rows, so nothing is lost either way — but a retired row costs
+	 * nothing and keeps the decision reversible, where a DROP does not.
+	 *
+	 * @var string
+	 */
+	private const RETIRED_ARCHIMATE_SLUG = 'archimateOrganizationLegacy';
 
 	/**
 	 * Registers whose schemas are in scope.
@@ -122,6 +133,8 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 			return;
 		}
 
+		$this->retireArchimateOrganization(schemaIds: $schemaIds, output: $output);
+
 		$existing = $this->slugsOf(schemaIds: $schemaIds);
 
 		$renamed = 0;
@@ -159,6 +172,166 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 			)
 		);
 	}//end run()
+
+	/**
+	 * Free the name `organization` by parking the absorbed ArchiMate schema.
+	 *
+	 * The register JSON now declares ONE organisation schema: the catalogue's
+	 * own, with the ArchiMate identity/statutory properties folded in. On an
+	 * existing install two rows still carry the two old slugs, and `organisatie`
+	 * cannot take a name another row holds.
+	 *
+	 * This only proceeds when the ArchiMate schema holds NO rows. Where it holds
+	 * data, merging is a decision about that data — which row wins, how the
+	 * disjoint property sets combine — and making it silently inside a repair
+	 * step is precisely the class of change this programme keeps finding after
+	 * the fact. So it refuses, loudly, and leaves both schemas alone.
+	 *
+	 * @param array<int, int> $schemaIds Schema ids in scope.
+	 * @param IOutput         $output    Repair output.
+	 *
+	 * @return void
+	 */
+	private function retireArchimateOrganization(array $schemaIds, IOutput $output): void {
+		$rows = $this->schemaRows(schemaIds: $schemaIds);
+
+		$archimate = null;
+		$catalogue = null;
+		foreach ($rows as $row) {
+			if ($row['slug'] === 'organization') {
+				$archimate = $row;
+			}
+
+			if ($row['slug'] === 'organisatie') {
+				$catalogue = $row;
+			}
+		}
+
+		// Nothing to free: either the merge already ran, or this install never
+		// had the second schema.
+		if ($archimate === null || $catalogue === null) {
+			return;
+		}
+
+		$count = $this->rowCountFor(schemaId: (int)$archimate['id']);
+		if ($count !== 0) {
+			$this->logger->warning(
+				'RenameDutchSchemaSlugs: the ArchiMate organization schema holds rows; refusing to merge. '
+				. 'Migrate them onto the catalogue organisation deliberately, then re-run repair.',
+				['schemaId' => $archimate['id'], 'rows' => $count]
+			);
+			$output->warning(
+				sprintf(
+					'RenameDutchSchemaSlugs: ArchiMate organization schema holds %d row(s) — merge refused, both schemas left as they are.',
+					$count
+				)
+			);
+			return;
+		}
+
+		try {
+			$this->db->executeStatement(
+				'UPDATE `*PREFIX*openregister_schemas` SET slug = ? WHERE id = ?',
+				[self::RETIRED_ARCHIMATE_SLUG, (int)$archimate['id']]
+			);
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'RenameDutchSchemaSlugs: could not retire the ArchiMate organization schema.',
+				['exception' => $e->getMessage()]
+			);
+			return;
+		}
+
+		$output->info('RenameDutchSchemaSlugs: absorbed ArchiMate organization schema (0 rows) parked as ' . self::RETIRED_ARCHIMATE_SLUG . '.');
+	}//end retireArchimateOrganization()
+
+	/**
+	 * Count the rows in a schema's shard table across this app's registers.
+	 *
+	 * Returns 0 when no shard table exists, which is the same answer as an empty
+	 * one for the purpose of the merge guard.
+	 *
+	 * @param int $schemaId Schema id.
+	 *
+	 * @return int Row count.
+	 */
+	private function rowCountFor(int $schemaId): int {
+		try {
+			$stmt = $this->db->prepare(
+				'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
+			);
+			$stmt->bindValue('pattern', '%openregister\_table\_%\_' . $schemaId);
+			$stmt->execute();
+			$tables = $stmt->fetchAll();
+		} catch (\Throwable $e) {
+			// Unable to look: treat as "has rows" so the merge refuses rather
+			// than proceeding on an unchecked assumption.
+			$this->logger->warning(
+				'RenameDutchSchemaSlugs: could not list shard tables; treating the schema as non-empty.',
+				['exception' => $e->getMessage()]
+			);
+			return -1;
+		}
+
+		$total = 0;
+		foreach ($tables as $table) {
+			$name = (string)($table['table_name'] ?? '');
+			// The LIKE above can also match `..._table_1_23` when looking for 3,
+			// so confirm the suffix exactly.
+			if (preg_match('/_table_\d+_' . $schemaId . '$/', $name) !== 1) {
+				continue;
+			}
+
+			try {
+				$total += (int)$this->db->executeQuery('SELECT COUNT(*) FROM ' . $this->quote(identifier: $name))->fetchOne();
+			} catch (Exception $e) {
+				$this->logger->warning(
+					'RenameDutchSchemaSlugs: could not count rows; treating the schema as non-empty.',
+					['table' => $name, 'exception' => $e->getMessage()]
+				);
+				return -1;
+			}
+		}
+
+		return $total;
+	}//end rowCountFor()
+
+	/**
+	 * Quote an identifier for the active platform.
+	 *
+	 * @param string $identifier Table or column name.
+	 *
+	 * @return string
+	 */
+	private function quote(string $identifier): string {
+		return $this->db->getDatabasePlatform()->quoteSingleIdentifier($identifier);
+	}//end quote()
+
+	/**
+	 * Read id and slug for the given schemas.
+	 *
+	 * @param array<int, int> $schemaIds Schema ids to read.
+	 *
+	 * @return array<int, array{id: int|string, slug: string}>
+	 */
+	private function schemaRows(array $schemaIds): array {
+		$placeholders = implode(',', array_fill(0, count($schemaIds), '?'));
+
+		try {
+			$rows = $this->db->executeQuery(
+				'SELECT id, slug FROM `*PREFIX*openregister_schemas` WHERE id IN (' . $placeholders . ')',
+				array_map(static fn (int $id): string => (string)$id, $schemaIds)
+			)->fetchAll();
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'RenameDutchSchemaSlugs: could not read schemas; skipping.',
+				['exception' => $e->getMessage()]
+			);
+			return [];
+		}
+
+		return $rows;
+	}//end schemaRows()
 
 	/**
 	 * Resolve the schema ids belonging to this app's registers.

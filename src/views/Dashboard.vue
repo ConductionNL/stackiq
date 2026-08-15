@@ -67,7 +67,7 @@
 							</td>
 							<td class="manageCell">
 								<NcButton
-									v-if="stat.slug === 'organisatie'"
+									v-if="stat.slug === 'organization'"
 									size="small"
 									variant="tertiary"
 									@click.stop="navigateToObjectType(stat.slug)">
@@ -120,7 +120,7 @@
 							</td>
 							<td class="manageCell">
 								<NcButton
-									v-if="stat.slug === 'organisatie'"
+									v-if="stat.slug === 'organization'"
 									size="small"
 									variant="tertiary"
 									@click.stop="navigateToObjectType(stat.slug)">
@@ -380,7 +380,7 @@ export default {
 		 */
 		getIconForObjectType(objectType) {
 			const iconMap = {
-				organisatie: OfficeBuildingOutline,
+				organization: OfficeBuildingOutline,
 				contactPerson: AccountMultiple,
 				voorziening: ApplicationCog,
 				contract: FileDocumentEdit,
@@ -406,7 +406,7 @@ export default {
 		navigateToObjectType(objectType) {
 			// Handle special cases for plural routing
 			const routeMap = {
-				organisatie: 'organisaties',
+				organization: 'organisaties',
 				contactPerson: 'contactpersonen',
 				voorziening: 'voorzieningen',
 				contract: 'contracten',
@@ -430,13 +430,13 @@ export default {
 		 * Navigate to the index page that corresponds to an OR schema slug.
 		 * Covers all voorzieningen schemas so every count row is clickable.
 		 *
-		 * @param {string} slug - OR schema slug (e.g. 'organisatie', 'standard').
+		 * @param {string} slug - OR schema slug (e.g. 'organization', 'standard').
 		 * @return {void}
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		navigateToSchema(slug) {
 			const slugToSelected = {
-				organisatie: 'organisaties',
+				organization: 'organisaties',
 				contactPerson: 'contactpersonen',
 				contract: 'contracten',
 				standard: 'standards',

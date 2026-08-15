@@ -163,7 +163,7 @@ class PublicationServiceTest extends TestCase {
 	 */
 	public function testPublishableTypes(): void {
 		$service = $this->makeService(['name' => 'x']);
-		foreach (['service', 'module', 'connection', 'organisatie'] as $type) {
+		foreach (['service', 'module', 'connection', 'organization'] as $type) {
 			$this->assertTrue($service->isPublishableType($type), $type . ' should be publishable');
 		}
 	}//end testPublishableTypes()

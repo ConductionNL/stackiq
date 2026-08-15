@@ -63,7 +63,7 @@ class ModuleEventProcessor {
 	 */
 	public function resolveSchemaIds(): array {
 		return [
-			'organisatie' => $this->settings->getSchemaIdForObjectType(objectType: 'organisatie'),
+			'organization' => $this->settings->getSchemaIdForObjectType(objectType: 'organization'),
 			'contactPerson' => $this->settings->getSchemaIdForObjectType(objectType: 'contactPerson'),
 			'contactgegevens' => $this->settings->getSchemaIdForObjectType(objectType: 'contactgegevens'),
 			'usage' => $this->settings->getSchemaIdForObjectType(objectType: 'usage'),
@@ -82,7 +82,7 @@ class ModuleEventProcessor {
 	 */
 	public function processOrganisatieCreated(object $object, array $schemaIds): void {
 		$objectSchemaIdInt = (int)$object->getSchema();
-		$organisationSchemaId = $schemaIds['organisatie'];
+		$organisationSchemaId = $schemaIds['organization'];
 
 		if ($organisationSchemaId === null || $objectSchemaIdInt !== (int)$organisationSchemaId) {
 			return;
@@ -124,7 +124,7 @@ class ModuleEventProcessor {
 	 */
 	public function processOrganisatieUpdated(object $object, ?object $oldObject, array $schemaIds): bool {
 		$objectSchemaIdInt = (int)$object->getSchema();
-		$organisationSchemaId = $schemaIds['organisatie'];
+		$organisationSchemaId = $schemaIds['organization'];
 
 		if ($organisationSchemaId === null || $objectSchemaIdInt !== (int)$organisationSchemaId) {
 			return false;
@@ -157,7 +157,7 @@ class ModuleEventProcessor {
 	 */
 	public function processOrganisatieDeleted(object $object, array $schemaIds): bool {
 		$objectSchemaIdInt = (int)$object->getSchema();
-		$organisationSchemaId = $schemaIds['organisatie'];
+		$organisationSchemaId = $schemaIds['organization'];
 
 		if ($organisationSchemaId === null || $objectSchemaIdInt !== (int)$organisationSchemaId) {
 			return false;

@@ -297,7 +297,7 @@ class ContactPersonHandler {
 			$objectData = $contactPersonObject->getObject();
 			$contactId = $contactPersonObject->getId();
 			$email = $objectData['email'] ?? $objectData['e-mailadres'] ?? '';
-			$organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+			$organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
 
 			$this->_logger->debug(
 				'User account creation started',
@@ -632,7 +632,7 @@ class ContactPersonHandler {
 
 		try {
 			$roles = $objectData['roles'] ?? [];
-			$organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+			$organizationId = $objectData['organisation'] ?? $objectData['organization'] ?? '';
 
 			// Ensure roles is an array.
 			if (is_array($roles) === false) {
@@ -882,7 +882,7 @@ class ContactPersonHandler {
 	 */
 	public function updateUserGroupsFromContactData(\OCP\IUser $user, array $contactData): void {
 		try {
-			$organizationId = $contactData['organisation'] ?? $contactData['organisatie'] ?? '';
+			$organizationId = $contactData['organisation'] ?? $contactData['organization'] ?? '';
 
 			if (empty($organizationId) === true) {
 				$this->_logger->warning(
@@ -1059,7 +1059,7 @@ class ContactPersonHandler {
 			// Get register and schema IDs dynamically from configuration.
 			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
 			if ($registerId === null || $organisationSchemaId === false) {
 				$this->_logger->warning('Register or schema ID not configured for organisatie');
@@ -1720,14 +1720,14 @@ class ContactPersonHandler {
 
 			// Get organization data if available.
 			$organizationData = [];
-			$organizationId = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+			$organizationId = $objectData['organisation'] ?? $objectData['organization'] ?? '';
 			if (empty($organizationId) === false) {
 				try {
 					$objectService = $this->getObjectService();
 					// Get register and schema IDs dynamically from configuration.
 					$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 					$registerId = $settingsService->getVoorzieningenRegisterId();
-					$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+					$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
 					if ($registerId === null || $organisationSchemaId === false) {
 						$this->_logger->warning('Register or schema ID not configured for organisatie');
@@ -1902,7 +1902,7 @@ class ContactPersonHandler {
 				$this->ensureContactpersoonInOrganization(contactPersonObject: $contactPersonObject);
 
 				// Also add user to organization entity (OpenRegister entity, not object).
-				$organizationUuid = $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+				$organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
 				$this->addUserToOrganizationEntity(
 					contactPersonObject: $contactPersonObject,
 					username: $username,
@@ -2074,8 +2074,8 @@ class ContactPersonHandler {
 			}
 
 			// Check if roles or organization have changed (organization type determines role assignment).
-			$oldOrganization = $oldData['organisation'] ?? $oldData['organisatie'] ?? '';
-			$newOrganization = $newData['organisation'] ?? $newData['organisatie'] ?? '';
+			$oldOrganization = $oldData['organisation'] ?? $oldData['organization'] ?? '';
+			$newOrganization = $newData['organisation'] ?? $newData['organization'] ?? '';
 
 			if ($newRoles !== $oldRoles || $oldOrganization !== $newOrganization) {
 				$username = $newData['username'] ?? '';
@@ -2176,7 +2176,7 @@ class ContactPersonHandler {
 			// Get the organization object.
 			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
 			if ($registerId === null || $organisationSchemaId === false) {
 				return false;
@@ -2259,7 +2259,7 @@ class ContactPersonHandler {
 			// Get the organization object.
 			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
 			if ($registerId === null || $organisationSchemaId === false) {
 				$this->_logger->error('ContactPersonHandler: Register or schema not configured for organisatie');
@@ -2419,7 +2419,7 @@ class ContactPersonHandler {
 		try {
 			$objectData = $contactPersonObject->getObject();
 			// Use override if provided (useful when organisatie field was removed from object).
-			$organizationUuid = $organizationUuidOverride ?? $objectData['organisation'] ?? $objectData['organisatie'] ?? '';
+			$organizationUuid = $organizationUuidOverride ?? $objectData['organisation'] ?? $objectData['organization'] ?? '';
 
 			if (empty($organizationUuid) === true) {
 				$this->_logger->warning(

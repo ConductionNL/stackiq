@@ -110,7 +110,7 @@ class MergeOrganisatieService {
 	 */
 	private const FIELD_RELATION_TYPES = [
 		'usage' => ['field' => 'consumer', 'arrayField' => 'participants'],
-		'contactPerson' => ['field' => 'organisatie', 'arrayField' => null],
+		'contactPerson' => ['field' => 'organization', 'arrayField' => null],
 		'aanbod' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'connection'],
 	];
 
@@ -689,7 +689,7 @@ class MergeOrganisatieService {
 		$data['status'] = self::TOMBSTONE_STATUS;
 		$data['mergedInto'] = $targetUuid;
 
-		$this->saveFull(entity: $entity, data: $data, objectType: 'organisatie');
+		$this->saveFull(entity: $entity, data: $data, objectType: 'organization');
 
 		// Keep the separate OR core Organisation.active flag in sync (organisatie-service spec delta).
 		$this->organisationService->updateOrganizationStatus(organizationUuid: $sourceUuid, objectData: ['beoordeling' => self::TOMBSTONE_STATUS]);
@@ -764,7 +764,7 @@ class MergeOrganisatieService {
 	private function findOrganisation(string $uuid): ?object {
 		$objectService = $this->getObjectService();
 		$registerId = $this->settingsService->getVoorzieningenRegisterId();
-		$schemaId = $this->settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
+		$schemaId = $this->settingsService->getSchemaIdForObjectType(objectType: 'organization');
 
 		if ($objectService === null || $registerId === null || $schemaId === null) {
 			return null;

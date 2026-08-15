@@ -189,7 +189,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 	 *
 	 * @param SettingsService $settingsService The settings service handle.
 	 *
-	 * @return array{organisatie:int|null, contactPerson:int|null, contactgegevens:int|null, usage:int|null}
+	 * @return array{organization:int|null, contactPerson:int|null, contactgegevens:int|null, usage:int|null}
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-6
 	 */
@@ -203,7 +203,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		};
 
 		return [
-			'organisatie' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'organisatie')),
+			'organization' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'organization')),
 			'contactPerson' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'contactPerson')),
 			'contactgegevens' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'contactgegevens')),
 			'usage' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'usage')),
@@ -438,7 +438,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		// Get configuration for different object types.
 		$catalogSchemaIds = $this->resolveCatalogSchemaIds(settingsService: $settingsService);
-		$organisationSchemaId = $catalogSchemaIds['organisatie'];
+		$organisationSchemaId = $catalogSchemaIds['organization'];
 		$contactSchemaId = $catalogSchemaIds['contactPerson'];
 		$contactInfoSchemaId = $catalogSchemaIds['contactgegevens'];
 		$gebruikSchemaId = $catalogSchemaIds['usage'];
@@ -512,7 +512,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				'schemaId' => $objectSchemaIdInt,
 				'registerId' => $objectRegisterId,
 				'supportedSchemas' => [
-					'organisatie' => $organisationSchemaId,
+					'organization' => $organisationSchemaId,
 					'contactPerson' => $contactSchemaId,
 					'contactgegevens' => $contactInfoSchemaId,
 					'usage' => $gebruikSchemaId,
@@ -570,7 +570,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		);
 
 		// Check if this is an organization update.
-		$organisationSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
+		$organisationSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organization');
 		$orgSchemaIdInt = (int)$organisationSchemaId;
 
 		$logger->debug(
@@ -768,7 +768,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				'schemaIdType' => gettype($objectSchemaId),
 				'registerId' => $objectRegisterId,
 				'handledSchemas' => [
-					'organisatie' => $organisationSchemaId,
+					'organization' => $organisationSchemaId,
 					'contactPerson' => $contactSchemaId,
 					'contactgegevens' => $contactInfoSchemaId,
 					'usage' => $gebruikSchemaId,
@@ -820,7 +820,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		);
 
 		// Check if this is an organization deletion.
-		$organisationSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
+		$organisationSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organization');
 		$orgSchemaIdInt = (int)$organisationSchemaId;
 		$objectSchemaIdInt = (int)$objectSchemaId;
 
@@ -948,7 +948,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				'schemaId' => $objectSchemaId,
 				'registerId' => $objectRegisterId,
 				'handledSchemas' => [
-					'organisatie' => $organisationSchemaId,
+					'organization' => $organisationSchemaId,
 					'contactPerson' => $contactSchemaId,
 					'contactgegevens' => $contactInfoSchemaId,
 					'usage' => $gebruikSchemaId,

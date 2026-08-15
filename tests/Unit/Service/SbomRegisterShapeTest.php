@@ -116,7 +116,7 @@ class SbomRegisterShapeTest extends TestCase {
 	 * @spec   openspec/specs/sbom-import/spec.md#scenario-a-successful-import-records-provenance-on-the-version
 	 */
 	public function testOrganisatieDoesNotCarrySbomProvenance(): void {
-		$props = $this->schema(slug: 'organisatie')['properties'] ?? [];
+		$props = $this->schema(slug: 'organization')['properties'] ?? [];
 		foreach (self::SBOM_PROVENANCE_PROPS as $field) {
 			$this->assertArrayNotHasKey(
 				key: $field,

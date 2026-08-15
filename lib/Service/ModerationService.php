@@ -58,7 +58,7 @@ class ModerationService {
 	/**
 	 * The moderated catalog object type (default / legacy — organisatie).
 	 */
-	public const MODERATED_TYPE = 'organisatie';
+	public const MODERATED_TYPE = 'organization';
 
 	/**
 	 * The review moderated catalog object type.

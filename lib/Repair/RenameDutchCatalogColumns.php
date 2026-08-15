@@ -281,6 +281,7 @@ class RenameDutchCatalogColumns implements IRepairStep {
 		'service' => 'service',
 		'usage' => 'usage',
 		'module_versie' => 'module_version',
+		'organisatie' => 'organization',
 	];
 
 	/**

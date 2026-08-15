@@ -3,7 +3,7 @@
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
  - Moderation queue admin section: lists entries of `type` awaiting moderation
- - (organisatie: registratiestatus=pending, default; beoordeeling:
+ - (organization: registratiestatus=pending, default; beoordeeling:
  - status=pending, softwarecatalog#375) and offers approve/reject per item.
  - Approve flips organisatie to active + publishes it (publicatiedatum=now);
  - for beoordeeling it flips status to approved (the schema's own status-
@@ -118,12 +118,12 @@ export default defineComponent({
 	props: {
 		/**
 		 * The moderated object type — matches ModerationService's `$type`
-		 * parameter. Defaults to the original 'organisatie' behavior so the
+		 * parameter. Defaults to the original 'organization' behavior so the
 		 * existing settings-page instance needs no changes.
 		 */
 		type: {
 			type: String,
-			default: 'organisatie',
+			default: 'organization',
 		},
 
 		/** Section title. Defaults to the original organisatie copy. */

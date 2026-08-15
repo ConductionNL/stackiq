@@ -53,7 +53,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 	 * @var array<string, int>
 	 */
 	private const SCHEMA_IDS = [
-		'organisatie' => 1,
+		'organization' => 1,
 		'usage' => 2,
 		'contract' => 3,
 		'contactPerson' => 4,
@@ -293,7 +293,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 
 		// The data-loss half of #490: the source is tombstoned either way, so a
 		// silent zero here leaves live objects owned by a retired organisation.
-		$tombstone = $this->findSave(schemaId: self::SCHEMA_IDS['organisatie'], uuid: 'org-a');
+		$tombstone = $this->findSave(schemaId: self::SCHEMA_IDS['organization'], uuid: 'org-a');
 		$this->assertNotNull($tombstone);
 		$this->assertSame('samengevoegd', $tombstone['object']['status']);
 	}//end testSelfOrganisationRelationsAreRepointedForMagicAccessorEntities()
@@ -379,7 +379,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 				'usage' => [$this->entity(['id' => 'g1', 'consumer' => 'org-b'], uuid: 'g1')],
 				'contract' => [$this->entity(['id' => 'c1'], uuid: 'c1', organisation: 'org-b')],
 				// contactpersoon/koppeling/compliancy still reference the source.
-				'contactPerson' => [$this->entity(['id' => 'p1', 'organisatie' => 'org-a'], uuid: 'p1')],
+				'contactPerson' => [$this->entity(['id' => 'p1', 'organization' => 'org-a'], uuid: 'p1')],
 				'connection' => [$this->entity(['id' => 'k1', 'provider' => 'org-a'], uuid: 'k1')],
 				'compliancy' => [$this->entity(['id' => 'cp1'], uuid: 'cp1', organisation: 'org-a')],
 			],
@@ -453,7 +453,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 
 		$this->assertSame('completed', $result['status']);
 
-		$tombstoneSave = $this->findSave(schemaId: self::SCHEMA_IDS['organisatie'], uuid: 'org-a');
+		$tombstoneSave = $this->findSave(schemaId: self::SCHEMA_IDS['organization'], uuid: 'org-a');
 		$this->assertNotNull($tombstoneSave);
 		$this->assertSame('samengevoegd', $tombstoneSave['object']['status']);
 		$this->assertSame('org-b', $tombstoneSave['object']['mergedInto']);
@@ -601,8 +601,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 				$this->entity(['id' => 'c2'], uuid: 'c2', organisation: 'org-b'),
 			],
 			'contactPerson' => [
-				$this->entity(['id' => 'p1', 'organisatie' => 'org-a'], uuid: 'p1'),
-				$this->entity(['id' => 'p2', 'organisatie' => 'org-b'], uuid: 'p2'),
+				$this->entity(['id' => 'p1', 'organization' => 'org-a'], uuid: 'p1'),
+				$this->entity(['id' => 'p2', 'organization' => 'org-b'], uuid: 'p2'),
 			],
 			'connection' => [
 				$this->entity(['id' => 'k1', 'provider' => 'org-a'], uuid: 'k1'),

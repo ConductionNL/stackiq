@@ -645,7 +645,7 @@ export default {
 							achternaam: result.contactPerson.achternaam,
 							'e-mailadres': result.contactPerson['e-mailadres'],
 							name: result.contactPerson.name,
-							organisatie: result.contactPerson.organisatie,
+							organization: result.contactPerson.organization,
 							username: result.contactPerson.username,
 							groups: result.contactPerson.groups || [],
 						},

@@ -185,7 +185,7 @@ export default {
 				const newContactpersoonObject = {
 					...this.formData,
 					name: `${this.formData.voornaam} ${this.formData.achternaam}`.trim(),
-					organisatie: this.organisation.id || this.organisation.uuid,
+					organization: this.organisation.id || this.organisation.uuid,
 					'@self': {
 						created: new Date().toISOString(),
 						updated: new Date().toISOString(),

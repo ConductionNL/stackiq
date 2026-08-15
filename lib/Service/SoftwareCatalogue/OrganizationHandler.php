@@ -183,7 +183,7 @@ class OrganizationHandler {
 				$objectService = $this->getObjectService();
 				$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 				$registerId = $settingsService->getVoorzieningenRegisterId();
-				$organizationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+				$organizationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
 				if ($registerId === null || $organizationSchemaId === null) {
 					$this->_logger->warning(

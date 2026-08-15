@@ -190,7 +190,7 @@ export default {
 			'usage',
 			'moduleVersion',
 			'module',
-			'organisatie',
+			'organization',
 		])
 		return {}
 	},
@@ -255,7 +255,7 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		organisationOptions() {
-			return (objectStore.getCollection('organisatie')?.results || []).map(
+			return (objectStore.getCollection('organization')?.results || []).map(
 				(org) => ({
 					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
 					label:
@@ -344,7 +344,7 @@ export default {
 					this.fetchType('usage'),
 					this.fetchType('moduleVersion'),
 					this.fetchType('module'),
-					this.fetchType('organisatie'),
+					this.fetchType('organization'),
 				])
 			} catch (error) {
 				console.error('LifecycleRoadmapView: failed to load data', error)

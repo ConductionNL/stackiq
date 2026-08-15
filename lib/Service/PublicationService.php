@@ -48,7 +48,7 @@ class PublicationService {
 	 *
 	 * @var array<int,string>
 	 */
-	public const PUBLISHABLE_TYPES = ['service', 'module', 'connection', 'organisatie'];
+	public const PUBLISHABLE_TYPES = ['service', 'module', 'connection', 'organization'];
 
 	/**
 	 * Constructor.

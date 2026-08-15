@@ -153,7 +153,7 @@ class ContactpersoonService {
 
 			if ($user === null) {
 				// Check if organization is active before creating user account.
-				$organizationUuid = ($contactData['organisation'] ?? $contactData['organisatie'] ?? '');
+				$organizationUuid = ($contactData['organisation'] ?? $contactData['organization'] ?? '');
 
 				if (empty($organizationUuid) === false) {
 					// Look up organization entity, creating backup if missing.
@@ -1164,7 +1164,7 @@ class ContactpersoonService {
 
 			// Set the organisation field in @self metadata to the organization UUID.
 			// This ensures the contact person is properly linked to their organization.
-			$organizationUuid = ($currentObject['organisation'] ?? $currentObject['organisatie'] ?? '');
+			$organizationUuid = ($currentObject['organisation'] ?? $currentObject['organization'] ?? '');
 			if (empty($organizationUuid) === true) {
 				$this->logger->warning(
 					'ContactpersoonService: No organization UUID found for contact person',

@@ -528,7 +528,7 @@ class ArchiMateService {
 
 		if (empty($register) === true || empty($schema) === true) {
 			$register = $this->settingsService->getVoorzieningenRegisterId();
-			$schema = $this->settingsService->getSchemaIdForObjectType('organisatie');
+			$schema = $this->settingsService->getSchemaIdForObjectType('organization');
 		}
 
 		return [$register, $schema];

@@ -75,7 +75,7 @@ class SchemaRbacTest extends TestCase {
 		return [
 			'usage' => ['usage'],
 			'connection' => ['connection'],
-			'organisatie' => ['organisatie'],
+			'organization' => ['organization'],
 		];
 
 	}//end schemaProvider()
@@ -208,7 +208,7 @@ class SchemaRbacTest extends TestCase {
 	 * @return void
 	 */
 	public function testPublicGrantsAreUntouchedOnOrganisatieAndKoppeling(): void {
-		$organisation = $this->loadAuthorization('organisatie');
+		$organisation = $this->loadAuthorization('organization');
 		$integration = $this->loadAuthorization('connection');
 
 		$publicEntries = array_values(

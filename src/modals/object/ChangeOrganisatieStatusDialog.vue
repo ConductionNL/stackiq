@@ -139,7 +139,7 @@ export default {
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieName() {
-			const organisatie = objectStore.getActiveObject('organisatie')
+			const organisatie = objectStore.getActiveObject('organization')
 			return (
 				organisatie?.name
 				|| organisatie?.name
@@ -172,7 +172,7 @@ export default {
 			this.error = null
 
 			try {
-				const organisatie = objectStore.getActiveObject('organisatie')
+				const organisatie = objectStore.getActiveObject('organization')
 				const newStatus = navigationStore.dialogProperties?.newStatus
 
 				if (!organisatie || !organisatie.id || !newStatus) {
@@ -197,7 +197,7 @@ export default {
 
 				// Update only the status using PATCH.
 				await objectStore.patchObject(
-					'organisatie',
+					'organization',
 					organisatie.id,
 					patchData,
 				)

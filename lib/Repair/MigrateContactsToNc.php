@@ -144,7 +144,7 @@ class MigrateContactsToNc implements IRepairStep {
 		$totalFailed = 0;
 		$totalReadFailed = 0;
 
-		foreach (['contactPerson', 'organisatie'] as $objectType) {
+		foreach (['contactPerson', 'organization'] as $objectType) {
 			$stats = $this->migrateType(output: $output, registerId: $registerId, objectType: $objectType);
 			$totalFailed += $stats['failed'];
 			$totalReadFailed += $stats['readFailed'];
@@ -176,7 +176,7 @@ class MigrateContactsToNc implements IRepairStep {
 	 *
 	 * @param IOutput $output The output for progress reporting.
 	 * @param integer $registerId The voorzieningen register id.
-	 * @param string $objectType The object type ('contactPerson'|'organisatie').
+	 * @param string $objectType The object type ('contactPerson'|'organization').
 	 *
 	 * @return array{linked:int,created:int,skipped:int,failed:int,readFailed:int} The per-type counters.
 	 *

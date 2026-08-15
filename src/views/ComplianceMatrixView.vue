@@ -332,7 +332,7 @@ export default {
 			'element',
 			'bioMeasure',
 			'usage',
-			'organisatie',
+			'organization',
 		])
 		return {}
 	},
@@ -411,7 +411,7 @@ export default {
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
 		 */
 		organisaties() {
-			return objectStore.getCollection('organisatie')?.results || []
+			return objectStore.getCollection('organization')?.results || []
 		},
 
 		/**
@@ -628,7 +628,7 @@ export default {
 					this.fetchType('element'),
 					this.fetchType('bioMeasure'),
 					this.fetchType('usage'),
-					this.fetchType('organisatie'),
+					this.fetchType('organization'),
 				])
 			} catch (error) {
 				console.error('ComplianceMatrixView: failed to load data', error)

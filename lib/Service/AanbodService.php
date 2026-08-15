@@ -759,7 +759,7 @@ class AanbodService {
 		string $organisationUuid,
 	): array {
 		try {
-			$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
+			$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organization');
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 			$registerId = $voorzieningenConfig['register'] ?? null;
 

@@ -395,7 +395,7 @@ export default {
 
 			try {
 				// Get schema configuration for organisatie
-				const schemaConfig = objectStore.getSchemaConfig('organisatie')
+				const schemaConfig = objectStore.getSchemaConfig('organization')
 
 				if (this.isEditMode) {
 					// Get only the changed properties for PATCH request
@@ -416,7 +416,7 @@ export default {
 
 					// Update existing organisation using PATCH - only send changed properties
 					await objectStore.patchObject(
-						'organisatie',
+						'organization',
 						this.organisation.id,
 						changes,
 					)

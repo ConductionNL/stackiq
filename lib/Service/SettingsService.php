@@ -268,7 +268,7 @@ class SettingsService {
 					'service',
 					'vulnerability',
 					'contactPerson',
-					'organisatie',
+					'organization',
 					'usage',
 					'contract',
 					'connection',
@@ -899,23 +899,20 @@ class SettingsService {
 			}
 		}
 
-		// Check for AMEF register specific schemas (legacy individual keys).
+		// `organisatie` and `organization` used to be two object types resolving
+		// to two schemas. They are one now, so the two branches that handled them
+		// separately are one branch — and the ORDER inverted with the merge:
+		// `amef_organization_schema` points at the ArchiMate schema, which is the
+		// one that was absorbed and is now retired, holding no rows. Preferring
+		// it would resolve every organisation lookup to an empty schema, so the
+		// merged voorzieningen schema wins and AMEF is the last resort.
 		if ($result === null && $objectType === 'organization') {
-			$schemaId = $this->config->getValueString($this->appName, 'amef_organization_schema', '');
+			$schemaId = ($voorzieningenConfig['organisatie_schema'] ?? '');
 
-			if (empty($schemaId) === false) {
-				$result = (int)$schemaId;
-			} else {
-				// Also check voorzieningen register for organization/organisatie.
-				$schemaId = $voorzieningenConfig['organisatie_schema'];
-				if (empty($schemaId) === false) {
-					$result = (int)$schemaId;
-				}
+			if (empty($schemaId) === true) {
+				$schemaId = $this->config->getValueString($this->appName, 'amef_organization_schema', '');
 			}
-		}
 
-		if ($objectType === 'organisatie' && $result === null) {
-			$schemaId = $voorzieningenConfig['organisatie_schema'];
 			if (empty($schemaId) === false) {
 				$result = (int)$schemaId;
 			}
@@ -1032,7 +1029,7 @@ class SettingsService {
 		// key map: any type with a `<type>_schema` in the voorzieningen config
 		// belongs to the voorzieningen register.
 		$voorzieningenConfig = $this->getVoorzieningenConfig();
-		$isVoorzieningenType = in_array($objectType, ['organisatie', 'organization', 'contactPerson', 'contact'], true);
+		$isVoorzieningenType = in_array($objectType, ['organization', 'organization', 'contactPerson', 'contact'], true);
 		if ($isVoorzieningenType === false) {
 			$isVoorzieningenType = isset($voorzieningenConfig[$objectType . '_schema']);
 		}
@@ -3994,7 +3991,7 @@ class SettingsService {
 				'service',
 				'vulnerability',
 				'contactPerson',
-				'organisatie',
+				'organization',
 				'usage',
 				'contract',
 				'connection',
@@ -4094,7 +4091,7 @@ class SettingsService {
 
 			// Map schema slugs to configuration keys based on actual register schemas.
 			$slugToKey = [
-				'organisatie' => 'organisatie_schema',
+				'organization' => 'organisatie_schema',
 				'contactPerson' => 'contactpersoon_schema',
 				'suite' => 'suite_schema',
 				'service' => 'dienst_schema',

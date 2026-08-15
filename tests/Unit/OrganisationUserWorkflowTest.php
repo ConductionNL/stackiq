@@ -212,7 +212,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 
 		$this->assertNotEmpty($contactPersonData['uuid']);
 		$this->assertEquals('test94@test.nl', $contactPersonData['e-mailadres']);
-		$this->assertEquals($this->organisationUuid, $contactPersonData['organisatie']);
+		$this->assertEquals($this->organisationUuid, $contactPersonData['organization']);
 
 		// Step 4: Convert contactpersoon to user
 		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
@@ -303,7 +303,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 			'achternaam' => '95',
 			'e-mailadres' => 'test95@test.nl',
 			'name' => 'test 95',
-			'organisatie' => $this->organisationUuid,
+			'organization' => $this->organisationUuid,
 			'username' => 'test95@test.nl' // User already exists
 		];
 
@@ -373,7 +373,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 			'achternaam' => $lastName,
 			'e-mailadres' => $email,
 			'name' => "$voornaam $lastName",
-			'organisatie' => $this->organisationUuid,
+			'organization' => $this->organisationUuid,
 			'organisationType' => $organisationType
 		];
 	}

@@ -134,7 +134,7 @@ class ModuleRegistrationService {
 			return null;
 		}
 
-		$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
+		$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organization');
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 
