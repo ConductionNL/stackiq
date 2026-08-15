@@ -42,9 +42,7 @@ describe('facets store — filter/search state', () => {
 
 	it('setFilter adds a dimension selection', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referenceComponent', [
-			'Zaakregistratiecomponent',
-		])
+		store.setFilter('module', 'referenceComponent', ['Zaakregistratiecomponent'])
 		expect(store.module.activeFilters.referenceComponent).toEqual([
 			'Zaakregistratiecomponent',
 		])
@@ -124,9 +122,7 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 
 	it('filtersToQuery emits _gf_-prefixed keys only for active dimensions', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referenceComponent', [
-			'Zaakregistratiecomponent',
-		])
+		store.setFilter('module', 'referenceComponent', ['Zaakregistratiecomponent'])
 		store.setSearch('module', 'zaak')
 
 		const query = store.filtersToQuery('module')
