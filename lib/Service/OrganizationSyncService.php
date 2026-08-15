@@ -2160,8 +2160,7 @@ class OrganizationSyncService {
 							schema: $contactObject->getSchema(),
 							uuid: $contactObject->getUuid(),
 							silent: true,
-				silent: true,
-			_validation: false
+							_validation: false
 						);
 						$this->logger->info(
 							'[FLOW] Set missing organisatie field on related contact',
@@ -2322,7 +2321,18 @@ class OrganizationSyncService {
 					$restoredData = $contactObject->getObject();
 					$restoredData['organisatie'] = $savedOrganisation;
 					$contactObject->setObject($restoredData);
-					$this->magicMapper->update($contactObject);
+					// Published contract instead of OpenRegister's Db layer.
+					$this->objectService->saveObject(
+						object: array_merge(
+							$contactObject->getObject(),
+							['@self' => ['organisation' => $contactObject->getOrganisation()]]
+						),
+						register: $contactObject->getRegister(),
+						schema: $contactObject->getSchema(),
+						uuid: $contactObject->getUuid(),
+						silent: true,
+						_validation: false
+					);
 				}
 			}//end if
 
@@ -2335,7 +2345,18 @@ class OrganizationSyncService {
 					$contactObjectData['organisatie'] = $organizationUuid;
 					$contactObject->setObject($contactObjectData);
 					$contactObject->setOrganisation($organizationUuid);
-					$this->magicMapper->update($contactObject);
+					// Published contract instead of OpenRegister's Db layer.
+					$this->objectService->saveObject(
+						object: array_merge(
+							$contactObject->getObject(),
+							['@self' => ['organisation' => $contactObject->getOrganisation()]]
+						),
+						register: $contactObject->getRegister(),
+						schema: $contactObject->getSchema(),
+						uuid: $contactObject->getUuid(),
+						silent: true,
+						_validation: false
+					);
 					$this->logger->info(
 						'[FLOW] Set missing organisatie field on contact person',
 						[
@@ -2452,7 +2473,18 @@ class OrganizationSyncService {
 								);
 
 								try {
-									$this->magicMapper->update($contactObject);
+									// Published contract instead of OpenRegister's Db layer.
+									$this->objectService->saveObject(
+										object: array_merge(
+											$contactObject->getObject(),
+											['@self' => ['organisation' => $contactObject->getOrganisation()]]
+										),
+										register: $contactObject->getRegister(),
+										schema: $contactObject->getSchema(),
+										uuid: $contactObject->getUuid(),
+										silent: true,
+										_validation: false
+									);
 									$this->logger->info(
 										'Contact saved with username',
 										[
@@ -3175,7 +3207,18 @@ class OrganizationSyncService {
 			$organisationObject->setOrganisation($organisationEntityUuid);
 
 			// Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
-			$this->magicMapper->update($organisationObject);
+			// Published contract instead of OpenRegister's Db layer.
+			$this->objectService->saveObject(
+				object: array_merge(
+					$organisationObject->getObject(),
+					['@self' => ['organisation' => $organisationObject->getOrganisation()]]
+				),
+				register: $organisationObject->getRegister(),
+				schema: $organisationObject->getSchema(),
+				uuid: $organisationObject->getUuid(),
+				silent: true,
+				_validation: false
+			);
 
 			$this->logger->info(
 				'OrganizationSyncService: Successfully updated organisatie object owner and organisation',
@@ -3289,7 +3332,18 @@ class OrganizationSyncService {
 			}
 
 			// Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
-			$this->magicMapper->update($contactObject);
+			// Published contract instead of OpenRegister's Db layer.
+			$this->objectService->saveObject(
+				object: array_merge(
+					$contactObject->getObject(),
+					['@self' => ['organisation' => $contactObject->getOrganisation()]]
+				),
+				register: $contactObject->getRegister(),
+				schema: $contactObject->getSchema(),
+				uuid: $contactObject->getUuid(),
+				silent: true,
+				_validation: false
+			);
 
 			$this->logger->info(
 				'OrganizationSyncService: Successfully updated contactpersoon object owner and organisation',
