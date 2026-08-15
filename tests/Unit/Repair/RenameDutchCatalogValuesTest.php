@@ -159,4 +159,53 @@ final class RenameDutchCatalogValuesTest extends TestCase {
 		}
 
 	}//end testPropertiesSnakeToRealColumnNames()
+	/**
+	 * A table only gets the rewrites for columns it actually has.
+	 *
+	 * Shard tables are per-schema, so most carry only a few of the mapped
+	 * columns — and an UPDATE against a column the table lacks is an error, not
+	 * a no-op.
+	 *
+	 * @return void
+	 */
+	public function testPlannedRewritesSkipColumnsTheTableLacks(): void {
+		$decisions = new RenameDutchCatalogDecisions();
+
+		$planned = $decisions->plannedRewrites(
+			['costPeriod' => ['Maandelijks' => 'Monthly', 'Jaarlijks' => 'Annually']],
+			['cost_period', 'name']
+		);
+		self::assertCount(2, $planned);
+		self::assertSame('cost_period', $planned[0]['column']);
+		self::assertSame('Maandelijks', $planned[0]['old']);
+		self::assertSame('Monthly', $planned[0]['new']);
+
+		$none = $decisions->plannedRewrites(
+			['costPeriod' => ['Maandelijks' => 'Monthly']],
+			['name']
+		);
+		self::assertSame([], $none, 'a column the table lacks yields no work');
+
+		self::assertSame([], $decisions->plannedRewrites([], ['cost_period']));
+
+	}//end testPlannedRewritesSkipColumnsTheTableLacks()
+
+	/**
+	 * The shipped map plans real work against a table that has its columns.
+	 *
+	 * @return void
+	 */
+	public function testShippedMapPlansWorkForKnownColumns(): void {
+		$decisions = new RenameDutchCatalogDecisions();
+		$columns = array_map(
+			static fn (string $p): string => (new RenameDutchCatalogDecisions())->sanitizeColumnName($p),
+			array_keys(RenameDutchCatalogValues::VALUE_MAP)
+		);
+
+		$planned = $decisions->plannedRewrites(RenameDutchCatalogValues::VALUE_MAP, $columns);
+
+		$expected = array_sum(array_map('count', array_values(RenameDutchCatalogValues::VALUE_MAP)));
+		self::assertCount($expected, $planned);
+
+	}//end testShippedMapPlansWorkForKnownColumns()
 }//end class

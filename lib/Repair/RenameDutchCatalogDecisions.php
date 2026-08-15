@@ -127,4 +127,40 @@ class RenameDutchCatalogDecisions {
 		return null;
 	}//end firstSafeTarget()
 
+	/**
+	 * Work out which value rewrites a table actually needs.
+	 *
+	 * Pure, and separated for the same reason as the rest of this class: the
+	 * UPDATE that follows needs a database, the decision about WHICH updates to
+	 * run does not.
+	 *
+	 * A property whose column the table does not have is skipped — shard tables
+	 * are per-schema, so most tables carry only a few of the mapped columns, and
+	 * issuing an UPDATE against a missing column is an error rather than a no-op.
+	 *
+	 * @param array<string, array<string, string>> $valueMap Property => old => new.
+	 * @param array<int, string>                   $columns  Columns the table has.
+	 *
+	 * @return array<int, array{column: string, old: string, new: string}>
+	 */
+	public function plannedRewrites(array $valueMap, array $columns): array {
+		$planned = [];
+
+		foreach ($valueMap as $property => $values) {
+			$column = $this->sanitizeColumnName(name: $property);
+			if (in_array($column, $columns, true) === false) {
+				continue;
+			}
+
+			foreach ($values as $old => $new) {
+				$planned[] = [
+					'column' => $column,
+					'old' => (string)$old,
+					'new' => $new,
+				];
+			}
+		}
+
+		return $planned;
+	}//end plannedRewrites()
 }//end class

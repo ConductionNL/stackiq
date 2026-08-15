@@ -174,16 +174,18 @@ class RenameDutchCatalogValues implements IRepairStep {
 
 		$updated = 0;
 		foreach ($tables as $table) {
-			$columns = $this->columnsOf(table: $table);
-			foreach (self::VALUE_MAP as $property => $values) {
-				$column = $this->decisions->sanitizeColumnName(name: $property);
-				if (in_array($column, $columns, true) === false) {
-					continue;
-				}
+			$planned = $this->decisions->plannedRewrites(
+				valueMap: self::VALUE_MAP,
+				columns: $this->columnsOf(table: $table)
+			);
 
-				foreach ($values as $old => $new) {
-					$updated += $this->rewrite(table: $table, column: $column, old: $old, new: $new);
-				}
+			foreach ($planned as $job) {
+				$updated += $this->rewrite(
+					table: $table,
+					column: $job['column'],
+					old: $job['old'],
+					new: $job['new']
+				);
 			}
 		}
 
