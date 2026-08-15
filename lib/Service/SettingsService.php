@@ -103,6 +103,34 @@ class SettingsService {
 	private const MIN_OPENREGISTER_VERSION = '0.1.7';
 
 	/**
+	 * Object type => the app-config key its schema id is actually stored under.
+	 *
+	 * The key was always derived from the schema SLUG. Eight slugs are now
+	 * English while the stored keys are deliberately still Dutch — renaming that
+	 * family is a migration across ~40 sites in three shapes, and doing a SUBSET
+	 * resolves some types while leaving others silently "not configured", which
+	 * is how the ratings feature died once already.
+	 *
+	 * So slug and key diverge, and every place that DERIVES the key from the
+	 * object type (`$objectType . '_schema'`) has to come through here. Missing
+	 * one is not an error: the lookup finds nothing and the caller reads it as
+	 * "not configured". `getRegisterIdForObjectType()` did exactly that.
+	 *
+	 * @var array<string, string>
+	 */
+	public const LEGACY_SCHEMA_KEY = [
+		'assessment' => 'beoordeeling_schema',
+		'bioMeasure' => 'bioMaatregel_schema',
+		'connection' => 'koppeling_schema',
+		'contactPerson' => 'contactpersoon_schema',
+		'moduleVersion' => 'moduleVersie_schema',
+		'organization' => 'organisatie_schema',
+		'service' => 'dienst_schema',
+		'usage' => 'gebruik_schema',
+		'vulnerability' => 'kwetsbaarheid_schema',
+	];
+
+	/**
 	 * SettingsService constructor
 	 *
 	 * @param IAppConfig $config App configuration interface
@@ -987,6 +1015,21 @@ class SettingsService {
 	}//end getSchemaIdForObjectType()
 
 	/**
+	 * The app-config key an object type's schema id is stored under.
+	 *
+	 * Slug and stored key diverged when the slugs were translated, so never
+	 * build the key as `$objectType . '_schema'` directly — see LEGACY_SCHEMA_KEY.
+	 *
+	 * @param string $objectType The object type (schema slug).
+	 *
+	 * @return string The app-config key.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function voorzieningenSchemaKey(string $objectType): string {
+		return (self::LEGACY_SCHEMA_KEY[$objectType] ?? $objectType . '_schema');
+	}//end voorzieningenSchemaKey()
+
+	/**
 	 * Gets the configured register ID for a specific object type
 	 *
 	 * @param string $objectType The object type (organization, contact, gebruiker)
@@ -1029,9 +1072,9 @@ class SettingsService {
 		// key map: any type with a `<type>_schema` in the voorzieningen config
 		// belongs to the voorzieningen register.
 		$voorzieningenConfig = $this->getVoorzieningenConfig();
-		$isVoorzieningenType = in_array($objectType, ['organization', 'organization', 'contactPerson', 'contact'], true);
+		$isVoorzieningenType = in_array($objectType, ['organization', 'contactPerson', 'contact'], true);
 		if ($isVoorzieningenType === false) {
-			$isVoorzieningenType = isset($voorzieningenConfig[$objectType . '_schema']);
+			$isVoorzieningenType = isset($voorzieningenConfig[$this->voorzieningenSchemaKey(objectType: $objectType)]);
 		}
 
 		if ($result === null && $isVoorzieningenType === true) {

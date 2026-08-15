@@ -210,7 +210,7 @@ class FacetServiceTest extends TestCase {
 		$service = $this->makeService(objectService: $this->createMock(ObjectService::class));
 
 		$this->expectException(\InvalidArgumentException::class);
-		$this->expectExceptionMessageMatches('/module.*dienst|dienst.*module/');
+		$this->expectExceptionMessageMatches('/module.*service|service.*module/');
 		$service->getFacets(schema: 'contract');
 
 	}//end testGetFacetsThrowsForUnsupportedSchema()

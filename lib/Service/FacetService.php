@@ -399,7 +399,17 @@ class FacetService {
 	private function fetchBaseObjects(ObjectService $objectService, string $schema, ?string $search, ?string $organization): array {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
-		$schemaId = $voorzieningenConfig[$schema . '_schema'] ?? null;
+		// NOT `$schema . '_schema'`: the slugs are English now and the stored
+		// config keys are still Dutch, so the derived key would miss and this
+		// method would log "not configured" and return an empty facet set —
+		// which renders as a page with no filters rather than as an error.
+		//
+		// Read as a CONSTANT rather than through SettingsService: this class
+		// takes that service as a collaborator and every test mocks it, so a
+		// method call here returns the mock's default and the lookup misses in
+		// exactly the tests meant to catch that.
+		$schemaKey = (SettingsService::LEGACY_SCHEMA_KEY[$schema] ?? $schema . '_schema');
+		$schemaId = ($voorzieningenConfig[$schemaKey] ?? null);
 
 		if (empty($registerId) === true || empty($schemaId) === true) {
 			$this->logger->warning(
