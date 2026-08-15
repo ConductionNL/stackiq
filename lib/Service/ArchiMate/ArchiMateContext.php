@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service\ArchiMate;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use Psr\Log\LoggerInterface;
 
@@ -40,14 +40,14 @@ class ArchiMateContext {
 	/**
 	 * Constructor.
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 * @param SettingsService $settingsService The SoftwareCatalog settings service.
 	 * @param LoggerInterface $logger The application logger.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-4
 	 */
 	public function __construct(
-		public readonly ObjectService $objectService,
+		public readonly ObjectServiceInterface $objectService,
 		public readonly SettingsService $settingsService,
 		public readonly LoggerInterface $logger,
 	) {

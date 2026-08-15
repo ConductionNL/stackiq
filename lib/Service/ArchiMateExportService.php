@@ -796,7 +796,7 @@ XML;
 	 * requires both register AND schema in the query. Without schema, the query
 	 * falls back to the generic objects table (which is empty for magic-table registers).
 	 *
-	 * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService.
+	 * @param \OCA\OpenRegister\Service\ObjectServiceInterface $objectService OpenRegister ObjectService.
 	 * @param int $registerId AMEF register ID.
 	 * @param array $schemaIdMap Mapping of schema IDs to schema types.
 	 *
@@ -806,7 +806,7 @@ XML;
 	 * @spec   openspec/specs/archimate-export/spec.md
 	 */
 	public function getObjectsFromDatabase(
-		\OCA\OpenRegister\Service\ObjectService $objectService,
+		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
 		int $registerId,
 		array $schemaIdMap = [],
 	): array {
@@ -940,7 +940,7 @@ XML;
 	 * 3. Direct XML generation without intermediate arrays
 	 * 4. No JSON serialization overhead
 	 *
-	 * @param \OCA\OpenRegister\Service\ObjectService $objectService OpenRegister ObjectService.
+	 * @param \OCA\OpenRegister\Service\ObjectServiceInterface $objectService OpenRegister ObjectService.
 	 * @param int $registerId AMEF register ID.
 	 * @param array $schemaIdMap Schema IDs to types mapping.
 	 * @param string|null $organization Organization filter.
@@ -949,7 +949,7 @@ XML;
 	 * @spec   openspec/specs/archimate-export/spec.md
 	 */
 	public function exportArchiMateXml(
-		\OCA\OpenRegister\Service\ObjectService $objectService,
+		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
 		int $registerId,
 		array $schemaIdMap,
 		?string $organization = null,
@@ -2384,7 +2384,7 @@ XML;
 	 * referentiecomponenten, copies views with applications plotted inside, and
 	 * adds SWC-specific organization folders.
 	 *
-	 * @param \OCA\OpenRegister\Service\ObjectService $objectService The object service.
+	 * @param \OCA\OpenRegister\Service\ObjectServiceInterface $objectService The object service.
 	 * @param int $registerId AMEF register ID.
 	 * @param array $schemaIdMap Schema ID to type map.
 	 * @param string $orgName Organization name.
@@ -2398,7 +2398,7 @@ XML;
 	 * @spec   openspec/specs/archimate-export/spec.md
 	 */
 	public function exportOrganizationArchiMateXml(
-		\OCA\OpenRegister\Service\ObjectService $objectService,
+		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
 		int $registerId,
 		array $schemaIdMap,
 		string $orgName,

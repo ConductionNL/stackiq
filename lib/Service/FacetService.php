@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use InvalidArgumentException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\IUserSession;
@@ -226,7 +226,7 @@ class FacetService {
 	 * values, compute disjunctive counts, and assemble the response
 	 * (including `_meta.matchedObjectIds` for the frontend's list narrowing).
 	 *
-	 * @param ObjectService $objectService OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 * @param string $schema `module` or `dienst`.
 	 * @param array<string,string[]> $normalizedFilters Normalized selected filters.
 	 * @param string|null $normalizedSearch Normalized free-text query.
@@ -237,7 +237,7 @@ class FacetService {
 	 *     matchedObjectIds: string[]}}
 	 */
 	private function computeFacetsForRequest(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		string $schema,
 		array $normalizedFilters,
 		?string $normalizedSearch,
@@ -386,7 +386,7 @@ class FacetService {
 	 * documented `MAX_BASE_PAGES` ceiling instead of ever issuing a single
 	 * unbounded `searchObjects()` call.
 	 *
-	 * @param ObjectService $objectService OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 * @param string $schema `module` or `dienst`.
 	 * @param string|null $search Free-text query.
 	 * @param string|null $organization Organisation override.
@@ -396,7 +396,7 @@ class FacetService {
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-queries-must-be-bounded
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-must-respect-the-callers-rbactenant-context
 	 */
-	private function fetchBaseObjects(ObjectService $objectService, string $schema, ?string $search, ?string $organization): array {
+	private function fetchBaseObjects(ObjectServiceInterface $objectService, string $schema, ?string $search, ?string $organization): array {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 		$schemaId = $voorzieningenConfig[$schema . '_schema'] ?? null;
@@ -512,13 +512,13 @@ class FacetService {
 	 * links are only transitive via `dienst.modules` — the linked module objects
 	 * are resolved with a single bounded batch lookup.
 	 *
-	 * @param ObjectService $objectService OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 * @param string $schema `module` or `dienst`.
 	 * @param array $baseObjects The candidate objects from `fetchBaseObjects()`.
 	 *
 	 * @return array<string,array<int,array>> Object id => list of module objects.
 	 */
-	private function resolveModulesPerObject(ObjectService $objectService, string $schema, array $baseObjects): array {
+	private function resolveModulesPerObject(ObjectServiceInterface $objectService, string $schema, array $baseObjects): array {
 		$modulesByObjectId = [];
 
 		if ($schema === 'module') {
@@ -566,14 +566,14 @@ class FacetService {
 	 * Batch-fetch module objects by their OpenRegister object id, bounded by an
 	 * explicit `_limit`.
 	 *
-	 * @param ObjectService $objectService OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 * @param array $identifiers Distinct module object identifiers to resolve.
 	 *
 	 * @return array<string,array> Module id => module object.
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-queries-must-be-bounded
 	 */
-	private function fetchModulesByIdentifiers(ObjectService $objectService, array $identifiers): array {
+	private function fetchModulesByIdentifiers(ObjectServiceInterface $objectService, array $identifiers): array {
 		if (empty($identifiers) === true) {
 			return [];
 		}
@@ -1101,7 +1101,7 @@ class FacetService {
 	/**
 	 * Get ObjectService from the container.
 	 *
-	 * @return ObjectService|null ObjectService instance or null if not available.
+	 * @return ObjectServiceInterface|null ObjectService instance or null if not available.
 	 */
 	private function getObjectService(): ?ObjectService {
 		try {

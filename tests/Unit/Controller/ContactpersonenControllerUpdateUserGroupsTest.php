@@ -20,7 +20,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -61,8 +61,8 @@ class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 	/** @var ContainerInterface|MockObject */
 	private ContainerInterface|MockObject $container;
 
-	/** @var ObjectService|MockObject */
-	private ObjectService|MockObject $objectService;
+	/** @var ObjectServiceInterface|MockObject */
+	private ObjectServiceInterface|MockObject $objectService;
 
 	/** @var LoggerInterface|MockObject */
 	private LoggerInterface|MockObject $logger;
@@ -80,7 +80,7 @@ class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->userSession = $this->createMock(IUserSession::class);
-		$this->objectService = $this->createMock(ObjectService::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->container = $this->createMock(ContainerInterface::class);
 

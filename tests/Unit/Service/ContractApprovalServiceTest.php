@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\ContractApprovalService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -194,7 +194,7 @@ class ContractApprovalServiceTest extends TestCase {
 		$this->settingsService->method('getSchemaIdForObjectType')->willReturn(3);
 		$this->settingsService->method('getRegisterIdForObjectType')->willReturn(1);
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$entity = $this->createMock(ObjectEntity::class);
 		$entity->method('getObject')->willReturn(['_organisation' => 'org-a']);
 		$objectService->method('find')->willReturn($entity);
@@ -215,7 +215,7 @@ class ContractApprovalServiceTest extends TestCase {
 		$this->settingsService->method('getSchemaIdForObjectType')->willReturn(3);
 		$this->settingsService->method('getRegisterIdForObjectType')->willReturn(1);
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$entity = $this->createMock(ObjectEntity::class);
 		$entity->method('getObject')->willReturn(['_organisation' => 'org-a']);
 		$objectService->method('find')->willReturn($entity);

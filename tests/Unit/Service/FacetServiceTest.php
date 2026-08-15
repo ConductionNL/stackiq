@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\ArchiMateService;
 use OCA\SoftwareCatalog\Service\FacetService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -91,7 +91,7 @@ class FacetServiceTest extends TestCase {
 	/**
 	 * Build a FacetService with the given (mocked) collaborators.
 	 *
-	 * @param ObjectService|null $objectService Mocked ObjectService, or null to omit from container.
+	 * @param ObjectServiceInterface|null $objectService Mocked ObjectService, or null to omit from container.
 	 * @param SettingsService|null $settingsService Mocked SettingsService (defaults to a working voorzieningen config).
 	 * @param ArchiMateService|null $archiMateService Mocked ArchiMateService (defaults to empty lookups).
 	 * @param ICache|null $cache Mocked ICache (defaults to always-miss/no-op).
@@ -100,7 +100,7 @@ class FacetServiceTest extends TestCase {
 	 * @return FacetService
 	 */
 	private function makeService(
-		?ObjectService $objectService = null,
+		?ObjectServiceInterface $objectService = null,
 		?SettingsService $settingsService = null,
 		?ArchiMateService $archiMateService = null,
 		?ICache $cache = null,
@@ -179,10 +179,10 @@ class FacetServiceTest extends TestCase {
 	 * @param array $results Objects to return.
 	 * @param array $capturedRef Reference array; every captured query is appended.
 	 *
-	 * @return ObjectService
+	 * @return ObjectServiceInterface
 	 */
 	private function makePaginatedObjectService(array $results, array &$capturedRef): ObjectService {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(
 			function (array $query) use ($results, &$capturedRef): array {
 				$capturedRef[] = $query;
@@ -207,7 +207,7 @@ class FacetServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetFacetsThrowsForUnsupportedSchema(): void {
-		$service = $this->makeService(objectService: $this->createMock(ObjectService::class));
+		$service = $this->makeService(objectService: $this->createMock(ObjectServiceInterface::class));
 
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessageMatches('/module.*dienst|dienst.*module/');
@@ -612,8 +612,8 @@ class FacetServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCacheKeyDiffersPerUser(): void {
-		$serviceAlice = $this->makeService(objectService: $this->createMock(ObjectService::class), userId: 'alice');
-		$serviceBob = $this->makeService(objectService: $this->createMock(ObjectService::class), userId: 'bob');
+		$serviceAlice = $this->makeService(objectService: $this->createMock(ObjectServiceInterface::class), userId: 'alice');
+		$serviceBob = $this->makeService(objectService: $this->createMock(ObjectServiceInterface::class), userId: 'bob');
 
 		$reflectionAlice = new \ReflectionMethod($serviceAlice, 'buildCacheKey');
 		$reflectionAlice->setAccessible(true);
@@ -648,7 +648,7 @@ class FacetServiceTest extends TestCase {
 		$cache = $this->createMock(ICache::class);
 		$cache->method('get')->willReturn($cachedPayload);
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->expects($this->never())->method('searchObjectsPaginated');
 
 		$service = $this->makeService(objectService: $objectService, cache: $cache);
@@ -667,7 +667,7 @@ class FacetServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetFacetsResolvesDienstFacetsTransitivelyViaModules(): void {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 
 		$capturedPaginated = [];
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(
@@ -719,7 +719,7 @@ class FacetServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetFacetsResolvesDienstFacetsWhenBothLookupsReturnObjectEntityInstances(): void {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 
 		$capturedPaginated = [];
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(

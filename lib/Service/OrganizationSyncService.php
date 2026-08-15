@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -132,7 +132,7 @@ class OrganizationSyncService {
 		private IDBConnection $db,
 		private readonly ContactPersonHandler $contactpersonHandler,
 		ContainerInterface $container,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly OrganisationMapper $organisationMapper,
 		private readonly MagicMapper $magicMapper,
 	) {

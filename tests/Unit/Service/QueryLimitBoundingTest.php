@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\ArchiMateService;
 use OCA\SoftwareCatalog\Service\FacetService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
@@ -62,7 +62,7 @@ class QueryLimitBoundingTest extends TestCase {
 	public function testViewServiceViewIndexQueryCarriesLimit(): void {
 		$capturedQuery = null;
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjects')->willReturnCallback(
 			function (array $query) use (&$capturedQuery): array {
 				$capturedQuery = $query;
@@ -108,7 +108,7 @@ class QueryLimitBoundingTest extends TestCase {
 	public function testOrganizationSyncServiceTimeWindowQueryCarriesLimit(): void {
 		$capturedQuery = null;
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjects')->willReturnCallback(
 			function (array $query) use (&$capturedQuery): array {
 				$capturedQuery = $query;
@@ -152,7 +152,7 @@ class QueryLimitBoundingTest extends TestCase {
 	public function testFacetServiceBaseObjectQueryCarriesLimit(): void {
 		$capturedQuery = null;
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(
 			function (array $query) use (&$capturedQuery): array {
 				$capturedQuery = $query;

@@ -38,7 +38,7 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Organisation;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\SoftwareCatalog\Service\AangebodenGebruikService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -62,8 +62,8 @@ class AangebodenGebruikServiceTest extends TestCase {
 	/** @var ContainerInterface|MockObject */
 	private ContainerInterface|MockObject $container;
 
-	/** @var ObjectService|MockObject */
-	private ObjectService|MockObject $objectService;
+	/** @var ObjectServiceInterface|MockObject */
+	private ObjectServiceInterface|MockObject $objectService;
 
 	/** @var OrganisationService|MockObject */
 	private OrganisationService|MockObject $organisationService;
@@ -88,7 +88,7 @@ class AangebodenGebruikServiceTest extends TestCase {
 	private function setUpService(?string $activeOrgUuid): void {
 		$this->appManager = $this->createMock(IAppManager::class);
 		$this->container = $this->createMock(ContainerInterface::class);
-		$this->objectService = $this->createMock(ObjectService::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->organisationService = $this->createMock(OrganisationService::class);
 		$this->settingsService = $this->createMock(SettingsService::class);
 		$this->userSession = $this->createMock(IUserSession::class);

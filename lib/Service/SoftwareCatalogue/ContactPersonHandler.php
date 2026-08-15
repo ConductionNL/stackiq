@@ -87,10 +87,10 @@ class ContactPersonHandler {
 	/**
 	 * Gets the OpenRegister ObjectService if available
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService|null ObjectService instance or null
+	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface|null ObjectService instance or null
 	 * @throws \RuntimeException If service is not available
 	 */
-	private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService {
+	private function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
 		if (in_array('openregister', $this->_appManager->getInstalledApps()) === true) {
 			return $this->_container->get('OCA\OpenRegister\Service\ObjectService');
 		}

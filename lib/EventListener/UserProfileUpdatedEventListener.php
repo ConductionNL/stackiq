@@ -25,7 +25,7 @@ use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Db\RegisterMapper;
 use OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler;
@@ -61,7 +61,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly SchemaMapper $schemaMapper,
 		private readonly RegisterMapper $registerMapper,
 		private readonly MetadataHydrationHandler $metadataHydrationHandler,

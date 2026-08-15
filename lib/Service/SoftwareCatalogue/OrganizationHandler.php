@@ -75,11 +75,11 @@ class OrganizationHandler {
 	/**
 	 * Gets the OpenRegister ObjectService if available.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService|null ObjectService instance or null
+	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface|null ObjectService instance or null
 	 *
 	 * @throws \RuntimeException If service is not available
 	 */
-	private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService {
+	private function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
 		if (in_array(needle: 'openregister', haystack: $this->_appManager->getInstalledApps()) === true) {
 			return $this->_container->get('OCA\OpenRegister\Service\ObjectService');
 		}
@@ -477,7 +477,7 @@ class OrganizationHandler {
 	 *
 	 * @param string $email The email address to search for
 	 * @param string $organizationUuid The organization UUID
-	 * @param \OCA\OpenRegister\Service\ObjectService $objectService The object service
+	 * @param \OCA\OpenRegister\Service\ObjectServiceInterface $objectService The object service
 	 * @param int $registerId The register ID
 	 * @param int $contactgegevensSchemaId The contactgegevens schema ID
 	 *
@@ -486,7 +486,7 @@ class OrganizationHandler {
 	private function findExistingContactgegevens(
 		string $email,
 		string $organizationUuid,
-		\OCA\OpenRegister\Service\ObjectService $objectService,
+		\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService,
 		int $registerId,
 		int $contactgegevensSchemaId,
 	): ?object {

@@ -162,12 +162,12 @@ class SettingsService {
 	/**
 	 * Attempts to retrieve the OpenRegister service from the container
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available
+	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface|null The OpenRegister service if available
 	 *
 	 * @throws \RuntimeException If the service is not available
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
-	public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService {
+	public function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
 		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
 			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		}

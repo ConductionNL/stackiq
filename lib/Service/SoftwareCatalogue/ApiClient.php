@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -39,13 +39,13 @@ class ApiClient {
 	/**
 	 * Constructor.
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 * @param LoggerInterface $logger Logger instance.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-2
 	 */
 	public function __construct(
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

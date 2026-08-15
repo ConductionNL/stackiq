@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogueService;
 use OCP\AppFramework\Db\Entity;
@@ -43,7 +43,7 @@ class OrganizationSyncTest extends TestCase {
 	 */
 	public function testOrganizationCreationSync(): void {
 		// Mock dependencies
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$settingsService = $this->createMock(SettingsService::class);
 		$userManager = $this->createMock(IUserManager::class);
 		$groupManager = $this->createMock(IGroupManager::class);
@@ -143,7 +143,7 @@ class OrganizationSyncTest extends TestCase {
 	 */
 	public function testContactpersoonOrganizationMembership(): void {
 		// Mock dependencies
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$settingsService = $this->createMock(SettingsService::class);
 
 		// Configure mocks

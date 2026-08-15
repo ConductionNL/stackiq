@@ -35,7 +35,7 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\MagicMapper;
 use OCA\OpenRegister\Service\OrganisationService;
 
@@ -155,7 +155,7 @@ class ContactpersonenController extends Controller {
 		ContainerInterface $container,
 		ISecureRandom $secureRandom,
 		LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly MagicMapper $magicMapper,
 		private readonly OrganisationService $organisationService,
 	) {

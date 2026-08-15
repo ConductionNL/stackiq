@@ -107,9 +107,9 @@ class SoftwareCatalogueService {
 	/**
 	 * Gets the ObjectService instance
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService|null
+	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface|null
 	 */
-	private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService {
+	private function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
 		if ($this->_appManager->isEnabledForUser(appId: 'openregister') === false) {
 			return null;
 		}

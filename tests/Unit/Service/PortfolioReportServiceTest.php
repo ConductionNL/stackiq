@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\PortfolioReportDerivation;
 use OCA\SoftwareCatalog\Service\PortfolioReportService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -340,7 +340,7 @@ class PortfolioReportServiceTest extends TestCase {
 	public function testBuildReportGebruikAndContractQueriesCarryLimit(): void {
 		$capturedQueries = [];
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(
 			function (array $query) use (&$capturedQueries): array {
 				$capturedQueries[] = $query;
@@ -417,7 +417,7 @@ class PortfolioReportServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testBuildReportDisclosesTruncation(): void {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(
 			function (array $query): array {
 				$schema = $query['@self']['schema'] ?? null;

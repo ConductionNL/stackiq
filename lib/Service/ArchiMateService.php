@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -1076,12 +1076,12 @@ class ArchiMateService {
 	 * Save objects in parallel batches for maximum performance
 	 *
 	 * @param array $objects Array of objects to save
-	 * @param ObjectService $objectService ObjectService instance
+	 * @param ObjectServiceInterface $objectService ObjectService instance
 	 * @param int $registerId Register ID
 	 *
 	 * @return array Array of saved objects
 	 */
-	private function saveObjectsInParallelBatches(array $objects, ObjectService $objectService, int $registerId): array {
+	private function saveObjectsInParallelBatches(array $objects, ObjectServiceInterface $objectService, int $registerId): array {
 		$batchSize = self::PERFORMANCE_OPTIMIZATIONS['batch_size'];
 		$parallelBatches = self::PERFORMANCE_OPTIMIZATIONS['parallel_batches'];
 
@@ -1195,12 +1195,12 @@ class ArchiMateService {
 	 * Save objects in a single batch (fallback method)
 	 *
 	 * @param array $objects Array of objects to save
-	 * @param ObjectService $objectService ObjectService instance
+	 * @param ObjectServiceInterface $objectService ObjectService instance
 	 * @param int $registerId Register ID
 	 *
 	 * @return array Array of saved objects
 	 */
-	private function saveObjectsInSingleBatch(array $objects, ObjectService $objectService, int $registerId): array {
+	private function saveObjectsInSingleBatch(array $objects, ObjectServiceInterface $objectService, int $registerId): array {
 		$this->logger->info(
 			'Using single batch processing',
 			[
@@ -1281,7 +1281,7 @@ class ArchiMateService {
 	/**
 	 * Get ObjectService from container
 	 *
-	 * @return ObjectService|null ObjectService instance or null if not available
+	 * @return ObjectServiceInterface|null ObjectService instance or null if not available
 	 */
 	private function getObjectService(): ?ObjectService {
 		if ($this->appManager->isInstalled(appId: 'openregister') === false) {

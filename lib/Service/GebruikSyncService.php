@@ -29,7 +29,7 @@ use Exception;
 use OCA\OpenRegister\Db\ObjectEntity;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for synchronizing and processing Gebruik (Usage) objects.
@@ -87,7 +87,7 @@ class GebruikSyncService {
 		LoggerInterface $logger,
 		SettingsService $settingsService,
 		ContainerInterface $container,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 		$this->logger = $logger;
 		$this->settingsService = $settingsService;
