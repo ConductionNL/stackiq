@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit\EventListener;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\SoftwareCatalog\EventListener\UserProfileUpdatedEventListener;
 use PHPUnit\Framework\TestCase;
@@ -49,7 +50,9 @@ class UserProfileUpdatedEventListenerDecompositionTest extends TestCase {
 			$this->markTestSkipped('OCA\\OpenRegister\\Event\\UserProfileUpdatedEvent is not autoloadable in this environment.');
 		}
 
-		return new UserProfileUpdatedEventListener($this->createMock(ContainerInterface::class));
+		return new UserProfileUpdatedEventListener($this->createMock(ContainerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 	}//end makeListener()
 
 	/**

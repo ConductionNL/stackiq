@@ -118,7 +118,8 @@ class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 			$this->userSession,
 			$this->container,
 			$this->createMock(ISecureRandom::class),
-			$this->logger
+			$this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 	}//end setUp()

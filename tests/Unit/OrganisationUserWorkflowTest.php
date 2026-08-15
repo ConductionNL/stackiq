@@ -160,7 +160,8 @@ class OrganisationUserWorkflowTest extends TestCase {
 			$this->createMock(IUserSession::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(ISecureRandom::class),
-			$this->logger
+			$this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}
 
