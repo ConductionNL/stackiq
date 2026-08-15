@@ -185,23 +185,12 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * @return void
 	 */
 	private function retireArchimateOrganization(array $schemaIds, IOutput $output): void {
-		$rows = $this->schemaRows(schemaIds: $schemaIds);
-
-		$archimate = null;
-		$catalogue = null;
-		foreach ($rows as $row) {
-			if ($row['slug'] === 'organization') {
-				$archimate = $row;
-			}
-
-			if ($row['slug'] === 'organisatie') {
-				$catalogue = $row;
-			}
-		}
+		$pair = $this->decisions->organisationPair(rows: $this->schemaRows(schemaIds: $schemaIds));
+		$archimate = $pair['archimate'];
 
 		// Nothing to free: either the merge already ran, or this install never
 		// had the second schema.
-		if ($archimate === null || $catalogue === null) {
+		if ($archimate === null || $pair['catalogue'] === null) {
 			return;
 		}
 

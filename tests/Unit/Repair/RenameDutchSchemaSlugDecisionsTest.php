@@ -162,6 +162,35 @@ final class RenameDutchSchemaSlugDecisionsTest extends TestCase {
 	}//end testIsShardTableForMatchesTheSuffixExactly()
 
 	/**
+	 * Both organisation schemas are found, and a missing one is not an error.
+	 *
+	 * With only one present the merge either already ran or this install never
+	 * had the second schema; in both cases there is no name to free.
+	 *
+	 * @return void
+	 */
+	public function testOrganisationPairFindsBothOrReportsAbsence(): void {
+		$rows = [
+			['id' => 39, 'slug' => 'organisatie'],
+			['id' => 5057, 'slug' => 'organization'],
+			['id' => 40, 'slug' => 'module'],
+		];
+
+		$pair = $this->decisions->organisationPair($rows);
+		self::assertSame(39, $pair['catalogue']['id']);
+		self::assertSame(5057, $pair['archimate']['id']);
+
+		$after = $this->decisions->organisationPair([['id' => 39, 'slug' => 'organization']]);
+		self::assertNull($after['catalogue'], 'the merge having already run is an ordinary outcome');
+		self::assertSame(39, $after['archimate']['id']);
+
+		$empty = $this->decisions->organisationPair([]);
+		self::assertNull($empty['archimate']);
+		self::assertNull($empty['catalogue']);
+
+	}//end testOrganisationPairFindsBothOrReportsAbsence()
+
+	/**
 	 * Every target in the shipped map is English and distinct.
 	 *
 	 * A duplicate target would mean two schemas aimed at one name; a target that

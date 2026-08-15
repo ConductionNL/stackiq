@@ -137,4 +137,37 @@ class RenameDutchSchemaSlugDecisions {
 	public function isShardTableFor(string $tableName, int $schemaId): bool {
 		return (preg_match('/_table_\d+_' . $schemaId . '$/', $tableName) === 1);
 	}//end isShardTableFor()
+
+	/**
+	 * Pick the two organisation schemas out of the install's schema rows.
+	 *
+	 * Both must be present for the merge to mean anything: with only one, either
+	 * it already ran or this install never had the second schema, and in both
+	 * cases there is no name to free. Returning nulls rather than throwing keeps
+	 * that an ordinary outcome instead of an error path.
+	 *
+	 * @param array<int, array<string, mixed>> $rows Schema rows with `id` and `slug`.
+	 *
+	 * @return array{archimate: array<string, mixed>|null, catalogue: array<string, mixed>|null}
+	 */
+	public function organisationPair(array $rows): array {
+		$archimate = null;
+		$catalogue = null;
+
+		foreach ($rows as $row) {
+			$slug = (string)($row['slug'] ?? '');
+			if ($slug === 'organization') {
+				$archimate = $row;
+			}
+
+			if ($slug === 'organisatie') {
+				$catalogue = $row;
+			}
+		}
+
+		return [
+			'archimate' => $archimate,
+			'catalogue' => $catalogue,
+		];
+	}//end organisationPair()
 }//end class
