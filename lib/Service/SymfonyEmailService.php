@@ -588,7 +588,7 @@ class SymfonyEmailService {
 		$templateData = [
 			'organization' => [
 				'name' => $organizationName,
-				'beoordeling' => ($organization['beoordeling'] ?? 'Actief'),
+				'beoordeling' => ($organization['beoordeling'] ?? 'Active'),
 				'type' => ($organization['type'] ?? 'Organisatie'),
 				'website' => ($organization['website'] ?? ''),
 			],

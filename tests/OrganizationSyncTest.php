@@ -60,7 +60,7 @@ class OrganizationSyncTest extends TestCase {
 		// Test organization data
 		$organizationData = [
 			'name' => 'Test Organization',
-			'type' => 'Gemeente',
+			'type' => 'Municipality',
 			'website' => 'https://test.org',
 			'beoordeling' => 'actief',
 			'id' => 'test-org-uuid-123'
@@ -125,7 +125,7 @@ class OrganizationSyncTest extends TestCase {
 			],
 			[
 				'input' => ['beoordeling' => 'unknown'],
-				'expected' => 'Concept'
+				'expected' => 'Draft'
 			]
 		];
 

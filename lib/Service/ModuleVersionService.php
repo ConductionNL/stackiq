@@ -214,7 +214,7 @@ class ModuleVersionService {
 			'version' => '1.0.0',
 			'shortDescription' => $moduleDescription,
 			'longDescription' => '',
-			'status' => 'in gebruik',
+			'status' => 'in use',
 		];
 
 		$savedVersion = $context['objectService']->saveObject(

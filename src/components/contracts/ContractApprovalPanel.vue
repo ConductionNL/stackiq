@@ -168,7 +168,7 @@ export default {
 		 */
 		canSubmitApproval() {
 			return (
-				this.status === 'In onderhandeling'
+				this.status === 'In negotiation'
 				&& (this.approvalState === 'none'
 					|| this.approvalState === 'rejected')
 			)
@@ -181,7 +181,7 @@ export default {
 		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		canSubmitRenewal() {
-			return this.status === 'Verlopen' && this.approvalState !== 'pending'
+			return this.status === 'Expired' && this.approvalState !== 'pending'
 		},
 
 		/**

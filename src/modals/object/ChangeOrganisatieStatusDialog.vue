@@ -205,7 +205,7 @@ export default {
 				this.success = true
 
 				// If activating an organisation, store it for search filtering.
-				if (newStatus === 'Actief') {
+				if (newStatus === 'Active') {
 					const organisatieNaam =
 						organisatie?.name
 						|| organisatie?.name
@@ -215,7 +215,7 @@ export default {
 					navigationStore.setTransferData({
 						action: 'organisationActivated',
 						organisationName: organisatieNaam,
-						status: 'Actief',
+						status: 'Active',
 					})
 				}
 				// For deactivation, don't fetch - the organisation will just disappear from

@@ -37,9 +37,9 @@ class ModuleRegistrationService {
 	 * Mapping from organisatie.type to module.registeredBy.
 	 */
 	private const TYPE_MAP = [
-		'Gemeente' => 'Gemeente',
-		'Leverancier' => 'Leverancier',
-		'Samenwerking' => 'Samenwerking',
+		'Municipality' => 'Municipality',
+		'Supplier' => 'Supplier',
+		'Collaboration' => 'Collaboration',
 		'Community' => 'Community',
 	];
 

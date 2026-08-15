@@ -197,9 +197,9 @@ class OrganisationUserWorkflowTest extends TestCase {
 					'role' => 'tester'
 				]
 			],
-			'type' => 'Leverancier',
+			'type' => 'Supplier',
 			'e-mailadres' => '',
-			'status' => 'Actief'
+			'status' => 'Active'
 		];
 
 		// Step 3: Create contactpersoon
@@ -207,7 +207,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 			voornaam: 'test',
 			lastName: '94',
 			email: 'test94@test.nl',
-			organisationType: 'Leverancier'
+			organisationType: 'Supplier'
 		);
 
 		$this->assertNotEmpty($contactPersonData['uuid']);
@@ -240,7 +240,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 			voornaam: 'Jan',
 			lastName: 'de Vries',
 			email: 'jan.devries@gemeente.nl',
-			organisationType: 'Gemeente'
+			organisationType: 'Municipality'
 		);
 
 		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
@@ -260,7 +260,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 			voornaam: 'Maria',
 			lastName: 'Jansen',
 			email: 'maria.jansen@samenwerking.nl',
-			organisationType: 'Samenwerking'
+			organisationType: 'Collaboration'
 		);
 
 		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
@@ -473,9 +473,9 @@ class OrganisationUserWorkflowTest extends TestCase {
 	 */
 	private function getExpectedGroupForOrganisationType(string $organisationType): string {
 		$mapping = [
-			'Gemeente' => 'gebruik-beheerder',
-			'Samenwerking' => 'gebruik-beheerder',
-			'Leverancier' => 'aanbod-beheerder',
+			'Municipality' => 'gebruik-beheerder',
+			'Collaboration' => 'gebruik-beheerder',
+			'Supplier' => 'aanbod-beheerder',
 			'Community' => 'aanbod-beheerder'
 		];
 

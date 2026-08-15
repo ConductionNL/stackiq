@@ -109,7 +109,7 @@ class OrganizationHandler {
 
 			$objectData = $organizationObject->getObject();
 
-			// Check if organization is active (beoordeling = "actief" or "Actief").
+			// Check if organization is active (beoordeling = "actief" or "Active").
 			$assessment = strtolower($objectData['beoordeling'] ?? '');
 			if ($assessment !== 'actief') {
 				$this->_logger->info(

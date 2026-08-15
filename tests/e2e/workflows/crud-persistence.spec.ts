@@ -319,7 +319,7 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 // Component (Applicatie `module` schema) + its Moduleversie — persistence.
 //
 // The brief's second "full-CRUD" subject is the software Component (the OR
-// `module` schema, manifest object name "Applicatie") and its versions
+// `module` schema, manifest object name "Application") and its versions
 // (`moduleVersie`). UI-DRIVEN create is NOT headlessly completable for either
 // of these surfaces in this environment, for two distinct, documented reasons:
 //
@@ -352,7 +352,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 			{
 				data: {
 					name: `Component ${token}`,
-					type: 'Applicatie',
+					type: 'Application',
 					shortDescription: 'e2e seeded component',
 				},
 			},
@@ -379,7 +379,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 			{
 				data: {
 					name: `Component ${token}`,
-					type: 'Applicatie',
+					type: 'Application',
 					shortDescription: editedDesc,
 				},
 			},

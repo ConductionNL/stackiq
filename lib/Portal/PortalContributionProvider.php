@@ -13,8 +13,8 @@
  * Catalog behaves exactly as before.
  *
  * It declares — for the `vendor-org` (software supplier / organisatie.type
- * "Leverancier") and `participant-org` (municipality / "Gemeente",
- * "Samenwerking", "Community") audiences — the OpenRegister collections a portal
+ * "Supplier") and `participant-org` (municipality / "Municipality",
+ * "Collaboration", "Community") audiences — the OpenRegister collections a portal
  * subject may READ, each scoped by the subject's organisatie UUID (claim
  * `organisationId`). Some collections reach that organisatie UUID through a
  * single `via` one-hop join (contract → dienst/gebruik, compliancy → module)
@@ -83,9 +83,9 @@ class PortalContributionProvider {
 	 * The audiences this provider contributes to (contract v2, preferred).
 	 *
 	 * The registry probes for this method first. Software Catalog serves
-	 * software suppliers (`vendor-org`, organisatie.type "Leverancier") and the
+	 * software suppliers (`vendor-org`, organisatie.type "Supplier") and the
 	 * municipalities/collaborations that consume that software (`participant-org`,
-	 * organisatie.type "Gemeente" / "Samenwerking" / "Community"). The two
+	 * organisatie.type "Municipality" / "Collaboration" / "Community"). The two
 	 * audiences exist because the same `gebruik` object is scoped by a DIFFERENT
 	 * property for each side (`aanbieder` vs `afnemer`).
 	 *

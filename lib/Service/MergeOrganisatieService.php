@@ -8,7 +8,7 @@
  * herindeling (municipal mergers) or leveranciersovername (supplier
  * takeovers). Re-points every relation that references the source
  * organisation onto the target, migrates Nextcloud group membership, and
- * soft-retires the source with a tombstone (status = 'samengevoegd' +
+ * soft-retires the source with a tombstone (status = 'merged' +
  * mergedInto) rather than deleting it.
  *
  * `walkRelations()` is the single relation-enumeration routine shared by
@@ -97,7 +97,7 @@ class MergeOrganisatieService {
 	 *
 	 * @var string
 	 */
-	private const TOMBSTONE_STATUS = 'samengevoegd';
+	private const TOMBSTONE_STATUS = 'merged';
 
 	/**
 	 * Relation types re-pointed via a business-level object field (scalar and/or array).
@@ -666,7 +666,7 @@ class MergeOrganisatieService {
 
 	/**
 	 * Tombstone the source organisation: PUT-semantic full re-save with
-	 * `status = 'samengevoegd'` and `mergedInto = targetUuid`, plus keeping
+	 * `status = 'merged'` and `mergedInto = targetUuid`, plus keeping
 	 * the OR core Organisation.active flag in sync via
 	 * `OrganisatieService::updateOrganizationStatus()` (organisatie-service
 	 * spec delta).

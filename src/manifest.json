@@ -327,9 +327,9 @@
 				],
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Active", "filter": { "status": "Actief" }, "icon": "CheckCircle" },
-					{ "label": "Expiring / expired", "filter": { "status": "Verlopen" }, "icon": "AlertCircle" },
-					{ "label": "In negotiation", "filter": { "status": "In onderhandeling" }, "icon": "Handshake" }
+					{ "label": "Active", "filter": { "status": "Active" }, "icon": "CheckCircle" },
+					{ "label": "Expiring / expired", "filter": { "status": "Expired" }, "icon": "AlertCircle" },
+					{ "label": "In negotiation", "filter": { "status": "In negotiation" }, "icon": "Handshake" }
 				],
 				"sidebar": {
 					"enabled": true,

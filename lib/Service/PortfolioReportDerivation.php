@@ -57,11 +57,11 @@ class PortfolioReportDerivation {
 	 */
 	public function deriveLifecyclePhase(array $usage, DateTimeImmutable $now): string {
 		$steps = [
-			'Uitgefaseerd' => 'startDateOutPhased',
-			'Uit te faseren' => 'startDateOutPhasing',
-			'In productie' => 'startDateInProduction',
-			'Gepland' => 'startDatePlanned',
-			'Verwerving' => 'startDateAcquisition',
+			'Phased out' => 'startDateOutPhased',
+			'To be phased out' => 'startDateOutPhasing',
+			'In production' => 'startDateInProduction',
+			'Planned' => 'startDatePlanned',
+			'Acquisition' => 'startDateAcquisition',
 		];
 
 		foreach ($steps as $phase => $field) {
@@ -169,9 +169,9 @@ class PortfolioReportDerivation {
 		$amount = (float)$amount;
 
 		return match ($contract['costPeriod'] ?? null) {
-			'Maandelijks' => ['annual' => $amount * 12, 'oneOff' => 0.0],
-			'Jaarlijks' => ['annual' => $amount, 'oneOff' => 0.0],
-			'Eenmalig' => ['annual' => 0.0, 'oneOff' => $amount],
+			'Monthly' => ['annual' => $amount * 12, 'oneOff' => 0.0],
+			'Annually' => ['annual' => $amount, 'oneOff' => 0.0],
+			'One-off' => ['annual' => 0.0, 'oneOff' => $amount],
 			default => ['annual' => 0.0, 'oneOff' => 0.0],
 		};
 	}//end annualisedCost()
