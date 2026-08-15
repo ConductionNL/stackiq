@@ -22,7 +22,7 @@ Modal component for adding new contactpersoon to an organisation
 				{{
 					t(
 						'softwarecatalog',
-						'Add a new contactpersoon to organisation: {name}',
+						'Add a new contact person to organisation: {name}',
 						{ name: organisation?.name || 'Unknown' },
 					)
 				}}
@@ -218,11 +218,11 @@ export default {
 					action: 'contactpersoonAdded',
 				})
 			} catch (error) {
-				console.error('Error adding contactPerson:', error)
+				console.error('Error adding contact person:', error)
 				showError(
 					this.t(
 						'softwarecatalog',
-						'Failed to add contactPerson: {error}',
+						'Failed to add contact person: {error}',
 						{ error: error.message },
 					),
 				)

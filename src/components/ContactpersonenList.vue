@@ -615,7 +615,7 @@ export default {
 				showError(
 					this.t(
 						'softwarecatalog',
-						'Invalid contactpersoon data structure',
+						'Invalid contact person data structure',
 					),
 				)
 				return

@@ -2839,7 +2839,7 @@ class SoftwareCatalogueService {
 			}//end try
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to add contactpersoon to organization: ' . $e->getMessage(),
+				'SoftwareCatalogueService: Failed to add contact person to organization: ' . $e->getMessage(),
 				[
 					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),

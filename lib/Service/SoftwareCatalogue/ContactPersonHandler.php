@@ -2322,7 +2322,7 @@ class ContactPersonHandler {
 			}//end try
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'ContactPersonHandler: Failed to add contactpersoon to organization: ' . $e->getMessage(),
+				'ContactPersonHandler: Failed to add contact person to organization: ' . $e->getMessage(),
 				[
 					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
@@ -2377,7 +2377,7 @@ class ContactPersonHandler {
 			}
 
 			$this->_logger->warning(
-				'ContactPersonHandler: Failed to add contactpersoon to organization',
+				'ContactPersonHandler: Failed to add contact person to organization',
 				[
 					'objectId' => $contactPersonObject->getId(),
 				]
