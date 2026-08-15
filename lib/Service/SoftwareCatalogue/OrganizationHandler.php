@@ -75,7 +75,7 @@ class OrganizationHandler {
 	/**
 	 * Gets the OpenRegister ObjectService if available.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface|null ObjectService instance or null
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null ObjectService instance or null
 	 *
 	 * @throws \RuntimeException If service is not available
 	 */
@@ -477,7 +477,7 @@ class OrganizationHandler {
 	 *
 	 * @param string $email The email address to search for
 	 * @param string $organizationUuid The organization UUID
-	 * @param \OCA\OpenRegister\Service\ObjectServiceInterface $objectService The object service
+	 * @param \OCA\OpenRegister\Contract\ObjectServiceInterface $objectService The object service
 	 * @param int $registerId The register ID
 	 * @param int $contactgegevensSchemaId The contactgegevens schema ID
 	 *

@@ -659,7 +659,7 @@ class ContactpersoonService {
 	/**
 	 * Gets the ObjectService instance
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface|null
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null
 	 */
 	private function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
 		if ($this->appManager->isEnabledForUser('openregister') === false) {

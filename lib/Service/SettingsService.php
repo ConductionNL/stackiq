@@ -162,7 +162,7 @@ class SettingsService {
 	/**
 	 * Attempts to retrieve the OpenRegister service from the container
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface|null The OpenRegister service if available
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister service if available
 	 *
 	 * @throws \RuntimeException If the service is not available
 	 * @spec   openspec/specs/settings-service/spec.md

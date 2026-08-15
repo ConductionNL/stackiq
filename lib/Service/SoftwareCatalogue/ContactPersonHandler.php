@@ -87,7 +87,7 @@ class ContactPersonHandler {
 	/**
 	 * Gets the OpenRegister ObjectService if available
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface|null ObjectService instance or null
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null ObjectService instance or null
 	 * @throws \RuntimeException If service is not available
 	 */
 	private function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
