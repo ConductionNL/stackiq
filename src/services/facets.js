@@ -21,16 +21,17 @@ import { generateUrl } from '@nextcloud/router'
 /** GEMMA facet dimensions this client supports, in display order. */
 export const FACET_DIMENSIONS = [
 	// WIRE NAMES, and they must stay as a SET. FacetController and FacetService
-	// both declare ['referentiecomponent', 'standaard', 'applicatieservice',
-	// 'domein'] — these strings are the query parameters and the response keys of
-	// this app's own facet endpoint. The vocabulary pass translated exactly ONE of
-	// the four, so the frontend started sending `standard[]` to a backend that
-	// only reads `standaard[]`: facet filtering by standard silently returned
-	// everything, with no error on either side.
-	'referentiecomponent',
-	'standaard',
-	'applicatieservice',
-	'domein',
+	// both declare ['referenceComponent', 'standard', 'applicationService',
+	// 'domain'] — these strings are the query parameters and the response keys of
+	// this app's own facet endpoint. They were Dutch until the vocabulary pass
+	// moved all four together; an earlier tranche translated exactly ONE of
+	// them, so the frontend sent `standard[]` to a backend still reading
+	// `standaard[]` and facet filtering by standard silently returned
+	// everything, with no error on either side. That is why they move as a SET.
+	'referenceComponent',
+	'standard',
+	'applicationService',
+	'domain',
 ]
 
 /**
@@ -39,7 +40,7 @@ export const FACET_DIMENSIONS = [
  * convention and the spec's documented query shape).
  *
  * @param {object} options Request options.
- * @param {object} [options.filters] Selected facet values keyed by dimension: `{ referentiecomponent: ['A', 'B'] }`.
+ * @param {object} [options.filters] Selected facet values keyed by dimension: `{ referenceComponent: ['A', 'B'] }`.
  * @param {string} [options.search] Free-text query.
  * @param {string} [options.organization] Organisation override.
  * @return {URLSearchParams} The query parameters.
@@ -80,7 +81,7 @@ export function buildFacetQueryParams({
  *
  * @param {string} schema `module` or `dienst`.
  * @param {object} [options] See `buildFacetQueryParams()`.
- * @return {Promise<object>} The facet response: `{ referentiecomponent, standaard, applicatieservice, domein, _meta }`.
+ * @return {Promise<object>} The facet response: `{ referenceComponent, standard, applicationService, domain, _meta }`.
  *
  * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
  */

@@ -42,19 +42,17 @@ describe('facets store — filter/search state', () => {
 
 	it('setFilter adds a dimension selection', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', [
-			'Zaakregistratiecomponent',
-		])
-		expect(store.module.activeFilters.referentiecomponent).toEqual([
+		store.setFilter('module', 'referenceComponent', ['Zaakregistratiecomponent'])
+		expect(store.module.activeFilters.referenceComponent).toEqual([
 			'Zaakregistratiecomponent',
 		])
 	})
 
 	it('setFilter with an empty array removes the dimension entirely', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', ['A'])
-		store.setFilter('module', 'referentiecomponent', [])
-		expect(store.module.activeFilters).not.toHaveProperty('referentiecomponent')
+		store.setFilter('module', 'referenceComponent', ['A'])
+		store.setFilter('module', 'referenceComponent', [])
+		expect(store.module.activeFilters).not.toHaveProperty('referenceComponent')
 	})
 
 	it('setSearch stores the term; non-string values coerce to empty', () => {
@@ -67,7 +65,7 @@ describe('facets store — filter/search state', () => {
 
 	it('clearFilters empties activeFilters but leaves search untouched', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'standaard', ['StUF-ZKN'])
+		store.setFilter('module', 'standard', ['StUF-ZKN'])
 		store.setSearch('module', 'zaak')
 		store.clearFilters('module')
 		expect(store.module.activeFilters).toEqual({})
@@ -76,10 +74,10 @@ describe('facets store — filter/search state', () => {
 
 	it('module and dienst state are independent', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', ['A'])
-		store.setFilter('service', 'referentiecomponent', ['B'])
-		expect(store.module.activeFilters.referentiecomponent).toEqual(['A'])
-		expect(store.service.activeFilters.referentiecomponent).toEqual(['B'])
+		store.setFilter('module', 'referenceComponent', ['A'])
+		store.setFilter('service', 'referenceComponent', ['B'])
+		expect(store.module.activeFilters.referenceComponent).toEqual(['A'])
+		expect(store.service.activeFilters.referenceComponent).toEqual(['B'])
 	})
 })
 
@@ -95,7 +93,7 @@ describe('facets store — hasActiveFilterOrSearchFor / matchedObjectIdsFor', ()
 
 	it('is true once a facet filter is set', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'domein', ['Bedrijfsvoering'])
+		store.setFilter('module', 'domain', ['Bedrijfsvoering'])
 		expect(store.hasActiveFilterOrSearchFor('module')).toBe(true)
 	})
 
@@ -124,15 +122,13 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 
 	it('filtersToQuery emits _gf_-prefixed keys only for active dimensions', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', [
-			'Zaakregistratiecomponent',
-		])
+		store.setFilter('module', 'referenceComponent', ['Zaakregistratiecomponent'])
 		store.setSearch('module', 'zaak')
 
 		const query = store.filtersToQuery('module')
 
 		expect(query).toEqual({
-			_gf_referentiecomponent: ['Zaakregistratiecomponent'],
+			_gf_referenceComponent: ['Zaakregistratiecomponent'],
 			_gf_search: 'zaak',
 		})
 	})
@@ -145,17 +141,17 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 	it('setFiltersFromQuery restores state from a _gf_-prefixed route query', () => {
 		const store = useFacetStore()
 		store.setFiltersFromQuery('module', {
-			_gf_referentiecomponent: ['Zaakregistratiecomponent'],
-			_gf_standaard: ['StUF-ZKN'],
+			_gf_referenceComponent: ['Zaakregistratiecomponent'],
+			_gf_standard: ['StUF-ZKN'],
 			_gf_search: 'zaak',
 			// A bare (unprefixed) key MUST be ignored — it is not this
 			// feature's own query param and must never leak into GEMMA state.
-			referentiecomponent: ['should-be-ignored'],
+			referenceComponent: ['should-be-ignored'],
 		})
 
 		expect(store.module.activeFilters).toEqual({
-			referentiecomponent: ['Zaakregistratiecomponent'],
-			standaard: ['StUF-ZKN'],
+			referenceComponent: ['Zaakregistratiecomponent'],
+			standard: ['StUF-ZKN'],
 		})
 		expect(store.module.search).toBe('zaak')
 	})
@@ -169,14 +165,14 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 
 	it('round-trips filtersToQuery -> setFiltersFromQuery', () => {
 		const store = useFacetStore()
-		store.setFilter('service', 'domein', ['Bedrijfsvoering', 'Dienstverlening'])
+		store.setFilter('service', 'domain', ['Bedrijfsvoering', 'Dienstverlening'])
 		store.setSearch('service', 'stuf')
 
 		const query = store.filtersToQuery('service')
 		store.setFiltersFromQuery('service', query)
 
 		expect(store.service.activeFilters).toEqual({
-			domein: ['Bedrijfsvoering', 'Dienstverlening'],
+			domain: ['Bedrijfsvoering', 'Dienstverlening'],
 		})
 		expect(store.service.search).toBe('stuf')
 	})
@@ -190,10 +186,10 @@ describe('facets store — fetchFacets', () => {
 
 	it('populates data on success and clears loading', async () => {
 		const payload = {
-			referentiecomponent: [],
-			standaard: [],
-			applicatieservice: [],
-			domein: [],
+			referenceComponent: [],
+			standard: [],
+			applicationService: [],
+			domain: [],
 			_meta: { totalMatched: 0, matchedObjectIds: [] },
 		}
 		fetchFacets.mockResolvedValue(payload)
@@ -208,20 +204,20 @@ describe('facets store — fetchFacets', () => {
 
 	it('passes the schema state (filters/search) through to the API client', async () => {
 		fetchFacets.mockResolvedValue({
-			referentiecomponent: [],
-			standaard: [],
-			applicatieservice: [],
-			domein: [],
+			referenceComponent: [],
+			standard: [],
+			applicationService: [],
+			domain: [],
 			_meta: {},
 		})
 
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', ['A'])
+		store.setFilter('module', 'referenceComponent', ['A'])
 		store.setSearch('module', 'zaak')
 		await store.fetchFacets('module', { organization: 'org-1' })
 
 		expect(fetchFacets).toHaveBeenCalledWith('module', {
-			filters: { referentiecomponent: ['A'] },
+			filters: { referenceComponent: ['A'] },
 			search: 'zaak',
 			organization: 'org-1',
 		})
@@ -303,7 +299,7 @@ describe('facets store — saved views', () => {
 		axios.post.mockResolvedValue({ data: { view: created } })
 
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', ['A'])
+		store.setFilter('module', 'referenceComponent', ['A'])
 		store.setSearch('module', 'zaak')
 
 		const result = await store.saveCurrentAsView('module', 'My view')
@@ -315,7 +311,7 @@ describe('facets store — saved views', () => {
 				query: expect.objectContaining({
 					marker: 'softwarecatalog-gemma-facets',
 					gemmaSchema: 'module',
-					filters: { referentiecomponent: ['A'] },
+					filters: { referenceComponent: ['A'] },
 					search: 'zaak',
 				}),
 			}),
@@ -328,13 +324,13 @@ describe('facets store — saved views', () => {
 		const store = useFacetStore()
 		store.applyView('module', {
 			query: {
-				filters: { referentiecomponent: ['Zaakregistratiecomponent'] },
+				filters: { referenceComponent: ['Zaakregistratiecomponent'] },
 				search: 'zaak',
 			},
 		})
 
 		expect(store.module.activeFilters).toEqual({
-			referentiecomponent: ['Zaakregistratiecomponent'],
+			referenceComponent: ['Zaakregistratiecomponent'],
 		})
 		expect(store.module.search).toBe('zaak')
 	})

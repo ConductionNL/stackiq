@@ -3,8 +3,8 @@
 /**
  * Facet Service for SoftwareCatalog
  *
- * Aggregates GEMMA-dimension facet counts (referentiecomponent, standaard,
- * applicatieservice, domein) across the `module` and `dienst` listings,
+ * Aggregates GEMMA-dimension facet counts (referenceComponent, standard,
+ * applicationService, domain) across the `module` and `dienst` listings,
  * scoped to the caller's RBAC/tenant context and combinable with the
  * existing free-text search.
  *
@@ -39,8 +39,8 @@ use RuntimeException;
  *
  * Architecture (see design.md): resolves a bounded, RBAC-scoped candidate
  * object set for the requested schema (`module` or `dienst`), builds a
- * per-object map of GEMMA dimension values (resolving `domein` and
- * `applicatieservice` via linked `element` lookups through the existing
+ * per-object map of GEMMA dimension values (resolving `domain` and
+ * `applicationService` via linked `element` lookups through the existing
  * `ArchiMateService`), then computes disjunctive ("self-count not narrowed
  * by its own selection") facet counts over that map.
  *
@@ -89,7 +89,7 @@ class FacetService {
 	private const MAX_BASE_PAGES = 5;
 
 	/**
-	 * Bounded limit for element/relation lookup queries (domein/applicatieservice resolution).
+	 * Bounded limit for element/relation lookup queries (domain/applicationService resolution).
 	 */
 	private const ELEMENT_LOOKUP_LIMIT = 1000;
 
@@ -105,7 +105,7 @@ class FacetService {
 	 *
 	 * @var string[]
 	 */
-	private const DIMENSIONS = ['referentiecomponent', 'standaard', 'applicatieservice', 'domein'];
+	private const DIMENSIONS = ['referenceComponent', 'standard', 'applicationService', 'domain'];
 
 	/**
 	 * Constructor for FacetService.
@@ -113,7 +113,7 @@ class FacetService {
 	 * @param ContainerInterface $container PSR-11 container interface (for lazy ObjectService lookup).
 	 * @param SettingsService $settingsService Settings service for voorzieningen register/schema configuration.
 	 * @param ArchiMateService $archiMateService Reused for bounded `element`/`relationship` lookups
-	 *                                           (domein/applicatieservice resolution) instead of
+	 *                                           (domain/applicationService resolution) instead of
 	 *                                           duplicating AMEF register/schema resolution logic.
 	 * @param ViewQueryBuilder $queryBuilder Reused for the `_search` query-param convention.
 	 * @param IUserSession $userSession User session service for current user/RBAC cache-key context.
@@ -138,7 +138,7 @@ class FacetService {
 	 *
 	 * @param string $schema `module` or `dienst`.
 	 * @param array $filters Currently-selected facet values keyed by dimension,
-	 *                       e.g. `['referentiecomponent' => ['Zaakregistratiecomponent']]`.
+	 *                       e.g. `['referenceComponent' => ['Zaakregistratiecomponent']]`.
 	 * @param string|null $search Free-text query narrowing the candidate set.
 	 * @param string|null $organization Optional organisation override (mirrors
 	 *                                  view-enrichment-api's `organization` parameter).
@@ -146,8 +146,8 @@ class FacetService {
 	 * @throws InvalidArgumentException When `$schema` is not supported.
 	 * @throws RuntimeException When OpenRegister's ObjectService is unavailable.
 	 *
-	 * @return array{referentiecomponent: array, standaard: array, applicatieservice: array,
-	 *     domein: array, _meta: array{totalMatched: int, processingTimeMs: float, cached: bool,
+	 * @return array{referenceComponent: array, standard: array, applicationService: array,
+	 *     domain: array, _meta: array{totalMatched: int, processingTimeMs: float, cached: bool,
 	 *     matchedObjectIds: string[]}}
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
@@ -232,8 +232,8 @@ class FacetService {
 	 * @param string|null $normalizedSearch Normalized free-text query.
 	 * @param string|null $organization Optional organisation override.
 	 *
-	 * @return array{referentiecomponent: array, standaard: array, applicatieservice: array,
-	 *     domein: array, _meta: array{totalMatched: int, processingTimeMs: float, cached: bool,
+	 * @return array{referenceComponent: array, standard: array, applicationService: array,
+	 *     domain: array, _meta: array{totalMatched: int, processingTimeMs: float, cached: bool,
 	 *     matchedObjectIds: string[]}}
 	 */
 	private function computeFacetsForRequest(
@@ -276,8 +276,8 @@ class FacetService {
 		// `matchedObjectIds` — the RBAC/filter/search-scoped object id set this
 		// response's counts describe (proposal.md's Approach: "the RBAC-filtered
 		// object IDs needed to drive the index page's existing list query").
-		// Several dimensions (`domein`, `applicatieservice`, and `referentiecomponent`/
-		// `standaard` by display NAME) are not directly filterable on the
+		// Several dimensions (`domain`, `applicationService`, and `referenceComponent`/
+		// `standard` by display NAME) are not directly filterable on the
 		// `module`/`dienst` schema itself, so the frontend narrows its own object
 		// list via `{ id: matchedObjectIds }` rather than re-deriving an
 		// equivalent filter from the facet selection. Already bounded — this id
@@ -634,8 +634,8 @@ class FacetService {
 
 	/**
 	 * Build the per-object GEMMA dimension value map: for every base object,
-	 * the set of referentiecomponent/standaard names it carries directly, and
-	 * the set of domein/applicatieservice names resolved transitively via its
+	 * the set of referenceComponent/standard names it carries directly, and
+	 * the set of domain/applicationService names resolved transitively via its
 	 * linked `element` objects.
 	 *
 	 * @param array<string,array<int,array>> $modulesByObjectId Object id => module objects.
@@ -645,7 +645,7 @@ class FacetService {
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
 	 */
 	private function buildDimensionValueMap(array $modulesByObjectId): array {
-		// Pass 1: direct fields (referentiecomponent identifiers + standaard identifiers).
+		// Pass 1: direct fields (referenceComponent identifiers + standard identifiers).
 		$refCompIdsByObjId = [];
 		$stdValsByObjId = [];
 		$allRefCompIds = [];
@@ -669,12 +669,12 @@ class FacetService {
 
 		$allRefCompIds = array_values(array_unique($allRefCompIds));
 
-		// Pass 2: resolve referentiecomponent elements themselves (for the
-		// referentiecomponent facet's display value + the `domein` field).
+		// Pass 2: resolve referenceComponent elements themselves (for the
+		// referenceComponent facet's display value + the `domain` field).
 		$elementsById = $this->resolveElementsByIdentifier(identifiers: $allRefCompIds);
 
-		// Pass 3: resolve applicatieservice elements reachable via a `relation`
-		// touching one of the referentiecomponent elements.
+		// Pass 3: resolve applicationService elements reachable via a `relation`
+		// touching one of the referenceComponent elements.
 		$appSvcNmByRefComp = $this->resolveApplicatieservicesForReferentiecomponenten(
 			refCompIds: $allRefCompIds
 		);
@@ -700,9 +700,9 @@ class FacetService {
 					fallbackIdentifier: $refCompId
 				);
 
-				$domein = $element['domein'] ?? null;
-				if (is_string($domein) === true && trim($domein) !== '') {
-					$domeinValues[] = trim($domein);
+				$domain = $element['domain'] ?? null;
+				if (is_string($domain) === true && trim($domain) !== '') {
+					$domeinValues[] = trim($domain);
 				}
 
 				foreach (($appSvcNmByRefComp[$refCompId] ?? []) as $appSvcName) {
@@ -711,10 +711,10 @@ class FacetService {
 			}
 
 			$dimValsByObjId[$objectId] = [
-				'referentiecomponent' => array_values(array_unique($refCompNames)),
-				'standaard' => $stdValsByObjId[$objectId] ?? [],
-				'domein' => array_values(array_unique($domeinValues)),
-				'applicatieservice' => array_values(array_unique($appSvcValues)),
+				'referenceComponent' => array_values(array_unique($refCompNames)),
+				'standard' => $stdValsByObjId[$objectId] ?? [],
+				'domain' => array_values(array_unique($domeinValues)),
+				'applicationService' => array_values(array_unique($appSvcValues)),
 			];
 		}//end foreach
 
@@ -764,16 +764,16 @@ class FacetService {
 	}//end resolveElementsByIdentifier()
 
 	/**
-	 * Resolve, for each referentiecomponent identifier, the distinct display
+	 * Resolve, for each referenceComponent identifier, the distinct display
 	 * names of `Applicatieservice`-typed `element` objects reachable via a
 	 * `relation` object touching it (either endpoint) — the module schema has
-	 * no direct applicatieservice link, so this two-hop lookup mirrors the
+	 * no direct applicationService link, so this two-hop lookup mirrors the
 	 * relationship-resolution pattern `ViewService`/`ArchiMateService` already
-	 * perform for referentiecomponent overlays (design.md trade-offs).
+	 * perform for referenceComponent overlays (design.md trade-offs).
 	 *
-	 * @param array $refCompIds Distinct referentiecomponent element identifiers.
+	 * @param array $refCompIds Distinct referenceComponent element identifiers.
 	 *
-	 * @return array<string,string[]> Referentiecomponent identifier => applicatieservice names.
+	 * @return array<string,string[]> Referentiecomponent identifier => applicationService names.
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-queries-must-be-bounded
@@ -791,7 +791,7 @@ class FacetService {
 			);
 		} catch (\Exception $e) {
 			$this->logger->warning(
-				message: 'FacetService: failed to resolve relationships for applicatieservice facet',
+				message: 'FacetService: failed to resolve relationships for applicationService facet',
 				context: ['error' => $e->getMessage()]
 			);
 			return [];
@@ -818,12 +818,12 @@ class FacetService {
 
 	/**
 	 * For every `relation` object, record the OTHER endpoint (source or
-	 * target) whenever one side matches a referentiecomponent identifier —
+	 * target) whenever one side matches a referenceComponent identifier —
 	 * relations are undirected for this lookup's purposes (either endpoint
 	 * order counts).
 	 *
 	 * @param array $relations Bounded relation objects.
-	 * @param array $refCompIds Distinct referentiecomponent element identifiers.
+	 * @param array $refCompIds Distinct referenceComponent element identifiers.
 	 *
 	 * @return array<string,string[]> Referentiecomponent identifier => other-endpoint identifiers.
 	 */
@@ -851,13 +851,13 @@ class FacetService {
 	}//end collectRelationEndpoints()
 
 	/**
-	 * Filter each referentiecomponent's other-endpoint identifiers down to
+	 * Filter each referenceComponent's other-endpoint identifiers down to
 	 * `Applicatieservice`-typed elements and resolve their display names.
 	 *
 	 * @param array $otherEpsByRefComp Referentiecomponent identifier => other-endpoint identifiers.
 	 * @param array $elementsById Resolved element identifier => element object.
 	 *
-	 * @return array<string,string[]> Referentiecomponent identifier => applicatieservice names.
+	 * @return array<string,string[]> Referentiecomponent identifier => applicationService names.
 	 */
 	private function mapEndpointsToApplicatieserviceNames(array $otherEpsByRefComp, array $elementsById): array {
 		$result = [];

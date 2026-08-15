@@ -62,7 +62,7 @@ class FacetController extends Controller {
 	 *
 	 * Query Parameters:
 	 * - search (string): Free-text query narrowing the candidate set.
-	 * - referentiecomponent[], standaard[], applicatieservice[], domein[] (string[]):
+	 * - referenceComponent[], standard[], applicationService[], domain[] (string[]):
 	 *   Currently-selected facet values per dimension.
 	 * - organization (string): Optional organisation override.
 	 *
@@ -144,7 +144,7 @@ class FacetController extends Controller {
 	 * @return array<string,array> Raw filters keyed by dimension.
 	 */
 	private function parseFilters(): array {
-		$dimensions = ['referentiecomponent', 'standaard', 'applicatieservice', 'domein'];
+		$dimensions = ['referenceComponent', 'standard', 'applicationService', 'domain'];
 		$filters = [];
 
 		foreach ($dimensions as $dimension) {
