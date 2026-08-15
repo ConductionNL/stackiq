@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Repair;
 
 use OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns;
+use OCA\SoftwareCatalog\Repair\RenameDutchCatalogDecisions;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use ReflectionClass;
@@ -38,6 +39,7 @@ use ReflectionMethod;
 
 /**
  * @covers \OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns
+ * @covers \OCA\SoftwareCatalog\Repair\RenameDutchCatalogDecisions
  */
 class RenameDutchCatalogColumnsTest extends TestCase {
 	/**
@@ -63,6 +65,9 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 	 *
 	 * @return void
 	 */
+	/** @var RenameDutchCatalogDecisions The pure predicates under test. */
+	private RenameDutchCatalogDecisions $decisions;
+
 	protected function setUp(): void {
 		$class = new ReflectionClass(RenameDutchCatalogColumns::class);
 		$this->step = $class->newInstanceWithoutConstructor();
@@ -70,6 +75,13 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 		$logger = $class->getProperty('logger');
 		$logger->setAccessible(true);
 		$logger->setValue($this->step, new NullLogger());
+
+		// The pure predicates moved to an injected collaborator; the step is
+		// built without a constructor here, so wire it the same way.
+		$this->decisions = new RenameDutchCatalogDecisions();
+		$decisions = $class->getProperty('decisions');
+		$decisions->setAccessible(true);
+		$decisions->setValue($this->step, $this->decisions);
 
 	}//end setUp()
 
@@ -214,12 +226,16 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 	public function testEveryDestinationIsSnakeCase(): void {
 		$map = $this->constant('COLUMN_MAP');
 		self::assertIsArray($map);
-		foreach ($map as $old => $new) {
-			self::assertSame(
-				strtolower($new),
-				$new,
-				"Destination '$new' (from '$old') must be snake_case, not camelCase"
-			);
+		foreach ($map as $old => $target) {
+			// A value may be a LIST of candidate targets; every one of them is a
+			// column name and must still be snake_case.
+			foreach ((array)$target as $new) {
+				self::assertSame(
+					strtolower($new),
+					$new,
+					"Destination '$new' (from '$old') must be snake_case, not camelCase"
+				);
+			}
 		}
 
 	}//end testEveryDestinationIsSnakeCase()
@@ -248,28 +264,28 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 	public function testRenameIsSafeOnlyWhenTheRegisterHasMoved(): void {
 		// The register has moved: English declared, Dutch gone. Follow it.
 		self::assertTrue(
-			$this->call('renameIsSafe', ['naam', 'name', ['name', 'description']]),
+			$this->decisions->renameIsSafe('naam', 'name', ['name', 'description']),
 			'The destination is declared and the source is not — the data should follow'
 		);
 
 		// TODAY's state: Dutch still declared, English declared nowhere.
 		// This is the case that made #492 a data-loss bug.
 		self::assertFalse(
-			$this->call('renameIsSafe', ['naam', 'name', ['naam', 'beschrijving']]),
+			$this->decisions->renameIsSafe('naam', 'name', ['naam', 'beschrijving']),
 			'The register still declares the Dutch name — renaming would orphan the data'
 		);
 
 		// Ambiguous window: the register declares BOTH. Writes and reads could
 		// land on different columns, so defer rather than guess.
 		self::assertFalse(
-			$this->call('renameIsSafe', ['naam', 'name', ['naam', 'name']]),
+			$this->decisions->renameIsSafe('naam', 'name', ['naam', 'name']),
 			'Both names declared is ambiguous, not a green light'
 		);
 
 		// The property was simply dropped: neither name is declared. There is
 		// no destination to move to.
 		self::assertFalse(
-			$this->call('renameIsSafe', ['naam', 'name', ['beschrijving']]),
+			$this->decisions->renameIsSafe('naam', 'name', ['beschrijving']),
 			'Neither name declared — there is nothing to move the data into'
 		);
 
@@ -284,11 +300,13 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnEmptyDeclaredSetMigratesNothing(): void {
-		foreach ($this->constant('COLUMN_MAP') as $old => $new) {
-			self::assertFalse(
-				$this->call('renameIsSafe', [$old, $new, []]),
-				"'$old' must not move when the schema declares nothing"
-			);
+		foreach ($this->constant('COLUMN_MAP') as $old => $target) {
+			foreach ((array)$target as $new) {
+				self::assertFalse(
+					$this->decisions->renameIsSafe($old, $new, []),
+					"'$old' must not move when the schema declares nothing"
+				);
+			}
 		}
 
 	}//end testAnEmptyDeclaredSetMigratesNothing()
@@ -324,7 +342,7 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 		foreach ($cases as $property => $expected) {
 			self::assertSame(
 				$expected,
-				$this->call('sanitizeColumnName', [$property]),
+				$this->decisions->sanitizeColumnName($property),
 				"'$property' must materialise as '$expected'"
 			);
 		}
@@ -373,19 +391,23 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 
 			$declared = [];
 			foreach (array_keys(($schema['properties'] ?? [])) as $property) {
-				$declared[] = $this->call('sanitizeColumnName', [(string)$property]);
+				$declared[] = $this->decisions->sanitizeColumnName((string)$property);
 			}
 
-			foreach ($map as $old => $new) {
+			foreach ($map as $old => $target) {
 				if (in_array($old, $declared, true) === false) {
 					continue;
 				}
 
 				$checked++;
+				// Every candidate must defer while the register still declares the
+				// Dutch name — a list of targets does not weaken the guard.
+				foreach ((array)$target as $new) {
 				self::assertFalse(
-					$this->call('renameIsSafe', [$old, $new, $declared]),
+					$this->decisions->renameIsSafe($old, $new, $declared),
 					"Schema '$slug' still declares '$old'; moving it to '$new' would orphan the data"
 				);
+				}
 			}
 		}
 

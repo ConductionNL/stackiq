@@ -6016,7 +6016,7 @@
               "searchable": false
             }
           },
-          "omschrijving": {
+          "summary": {
             "type": "string",
             "description": "Brief description of the organization",
             "minLength": 1,
@@ -6735,17 +6735,6 @@
             "type": "string",
             "facetable": false,
             "title": "notes",
-            "table": {
-              "enabled": true,
-              "indexed": false,
-              "searchable": false
-            }
-          },
-          "bron": {
-            "description": "Bron van deze Relation",
-            "type": "string",
-            "facetable": false,
-            "title": "bron",
             "table": {
               "enabled": true,
               "indexed": false,
