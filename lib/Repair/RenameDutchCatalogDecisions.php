@@ -11,11 +11,12 @@
  * It also keeps the repair step under phpmd's class-complexity ceiling, which it
  * was already sitting on before the candidate-target support was added.
  *
- * @category Repair
- * @package  OCA\\SoftwareCatalog\\Repair
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.conduction.nl
+ * @category  Repair
+ * @package   OCA\\SoftwareCatalog\\Repair
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://www.conduction.nl
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,11 +29,12 @@ namespace OCA\SoftwareCatalog\Repair;
 /**
  * Pure predicates for the Dutch-to-English column migration.
  *
- * @category Repair
- * @package  OCA\\SoftwareCatalog\\Repair
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.conduction.nl
+ * @category  Repair
+ * @package   OCA\\SoftwareCatalog\\Repair
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://www.conduction.nl
  */
 class RenameDutchCatalogDecisions {
 
