@@ -36,7 +36,6 @@ use OCP\Security\ISecureRandom;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Db\MagicMapper;
 use OCA\OpenRegister\Service\OrganisationService;
 
 /**
@@ -156,7 +155,6 @@ class ContactpersonenController extends Controller {
 		ISecureRandom $secureRandom,
 		LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
-		private readonly MagicMapper $magicMapper,
 		private readonly OrganisationService $organisationService,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -534,9 +532,24 @@ class ContactpersonenController extends Controller {
 				]
 			);
 
-			// Save using MagicMapper directly to bypass schema validation.
-			// This avoids "Unresolved reference" errors when schema references can't be resolved.
-			$this->magicMapper->update($contactPersonObject);
+			// Save WITHOUT schema validation, to avoid "Unresolved reference"
+			// errors when schema references cannot be resolved.
+			//
+			// This used to reach into OpenRegister's MagicMapper directly — its Db
+			// layer — which ADR-022 exists to prevent and which no leaf app can
+			// load in its own tests. The published contract already exposes the
+			// same capability as a flag, and ObjectService::saveObject() routes
+			// through that very mapper with register+schema, so the magic table is
+			// written exactly as before.
+			$this->objectService->saveObject(
+				object: $contactData,
+				register: $registerId,
+				schema: $schemaId,
+				uuid: $contactPersonObject->getUuid(),
+				silent: true,
+				silent: true,
+			_validation: false
+			);
 
 			$this->logger->info(
 				'ContactpersonenController: Updated contactpersoon with username',

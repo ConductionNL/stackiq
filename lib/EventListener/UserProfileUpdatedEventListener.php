@@ -29,7 +29,6 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Db\RegisterMapper;
 use OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler;
-use OCA\OpenRegister\Db\MagicMapper;
 
 /**
  * Syncs user profile changes to the corresponding contactpersoon object.
@@ -65,7 +64,6 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		private readonly SchemaMapper $schemaMapper,
 		private readonly RegisterMapper $registerMapper,
 		private readonly MetadataHydrationHandler $metadataHydrationHandler,
-		private readonly MagicMapper $magicMapper,
 	) {
 	}//end __construct()
 
@@ -316,9 +314,21 @@ class UserProfileUpdatedEventListener implements IEventListener {
 			);
 		}
 
-		// Pass register and schema so the magic mapper route is triggered and the
-		// per-schema magic table is updated (not just the blob table).
-		$this->magicMapper->update(entity: $contactPerson, register: $registerEntity, schema: $schemaEntity);
+		// Persist through the published contract rather than OpenRegister's Db
+		// layer. The comment this replaces worried that a plain save would touch
+		// "just the blob table" — it does not: ObjectService::saveObject() calls
+		// metaHydrationHandler->hydrateObjectMetadata() and then
+		// objectEntityMapper->update(entity:, register:, schema:), which IS the
+		// magic-mapper route. This listener was hand-rolling OpenRegister's own
+		// save pipeline, one layer too deep.
+		$this->objectService->saveObject(
+			object: $contactPerson->getObject(),
+			register: $contactPerson->getRegister(),
+			schema: $contactPerson->getSchema(),
+			uuid: $contactPerson->getUuid(),
+			silent: true,
+			_validation: false
+		);
 
 	}//end persistContactpersoonPatch()
 

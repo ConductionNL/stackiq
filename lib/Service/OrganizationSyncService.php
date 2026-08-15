@@ -28,7 +28,6 @@ use OCP\IDBConnection;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Db\OrganisationMapper;
-use OCA\OpenRegister\Db\MagicMapper;
 
 /**
  * Service for synchronizing organizations and contact persons.
@@ -135,7 +134,6 @@ class OrganizationSyncService {
 		ContainerInterface $container,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly OrganisationMapper $organisationMapper,
-		private readonly MagicMapper $magicMapper,
 	) {
 		$this->organisationService = $organisationService;
 		$this->contactPersonService = $contactPersonService;
@@ -2154,7 +2152,17 @@ class OrganizationSyncService {
 					if (empty($contactData['organisatie']) === true) {
 						$contactData['organisatie'] = $organizationUuid;
 						$contactObject->setObject($contactData);
-						$this->magicMapper->update($contactObject);
+						// Published contract instead of OpenRegister's Db layer; see
+						// ContactpersonenController for the reasoning.
+						$this->objectService->saveObject(
+							object: $contactData,
+							register: $contactObject->getRegister(),
+							schema: $contactObject->getSchema(),
+							uuid: $contactObject->getUuid(),
+							silent: true,
+				silent: true,
+			_validation: false
+						);
 						$this->logger->info(
 							'[FLOW] Set missing organisatie field on related contact',
 							[
