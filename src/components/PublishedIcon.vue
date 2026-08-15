@@ -16,11 +16,13 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		tooltip: {
 			type: String,
 			default: '',
 		},
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/fe-shell-navigation/spec.md

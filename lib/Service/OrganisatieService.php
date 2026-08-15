@@ -243,10 +243,10 @@ class OrganisatieService {
 		return match ($normalizedStatus) {
 			'actief', 'active' => true,
 			'inactief', 'inactive', 'deactief' => false,
-			// 'samengevoegd' is the organisation-merge tombstone status — a
+			// 'merged' is the organisation-merge tombstone status — a
 			// merged-away organisation MUST NOT be reported as active.
 			// @spec openspec/specs/organisation-merge/spec.md#requirement-the-source-organisation-must-be-tombstoned-never-hard-deleted
-			'samengevoegd' => false,
+			'merged' => false,
 			// Default to active for unknown statuses.
 			default => true
 		};
@@ -255,7 +255,7 @@ class OrganisatieService {
 	/**
 	 * Internal method to create organization entity.
 	 *
-	 * Restores parent-child organisation hierarchy (VNG domain: gemeente →
+	 * Restores parent-child organisation hierarchy (VNG domein: gemeente →
 	 * samenwerkingsverband, moederorganisatie → deelnemende partij) that a
 	 * prior hotfix disabled. The hotfix disabled parent assignment because a
 	 * child organisation created with a parent became inaccessible to its

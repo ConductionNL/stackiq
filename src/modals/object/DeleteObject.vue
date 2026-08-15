@@ -1,5 +1,5 @@
 <script setup>
-import { objectStore, navigationStore } from '../../store/store.js'
+import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -16,7 +16,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 			})
 		"
 		size="normal"
-		:can-close="false">
+		:canClose="false">
 		<p v-if="success === null">
 			{{ t('softwarecatalog', 'Do you want to permanently delete') }}
 			<b>{{
@@ -63,7 +63,6 @@ import { objectStore, navigationStore } from '../../store/store.js'
 
 <script>
 import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
 
@@ -78,6 +77,7 @@ export default {
 		TrashCanOutline,
 		Cancel,
 	},
+
 	data() {
 		return {
 			success: null,
@@ -86,6 +86,7 @@ export default {
 			closeModalTimeout: null,
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -97,6 +98,7 @@ export default {
 			this.loading = false
 			this.error = false
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */

@@ -29,11 +29,11 @@
 				v-model="selectedOrg"
 				class="rm-orgSelect"
 				:options="organisationOptions"
-				:input-label="t('softwarecatalog', 'Organisation')"
+				:inputLabel="t('softwarecatalog', 'Organisation')"
 				:placeholder="t('softwarecatalog', 'Select an organisation')"
-				track-by="uuid"
+				trackBy="uuid"
 				label="label"
-				@update:model-value="onOrgChange" />
+				@update:modelValue="onOrgChange" />
 		</div>
 
 		<NcEmptyContent
@@ -126,25 +126,24 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect, NcEmptyContent } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
-import { objectStore, navigationStore } from '../store/store.js'
-import { useLiveCollections } from '../composables/useLiveCollections.js'
-import {
-	PHASE,
-	derivePhase,
-	endOfSupportState,
-	isEolApproaching,
-	phaseOrder,
-	resolveUuid,
-	parseDate,
-} from '../utils/lifecyclePhase.js'
-
-import Refresh from 'vue-material-design-icons/Refresh.vue'
-import MapClock from 'vue-material-design-icons/MapClock.vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
+import MapClock from 'vue-material-design-icons/MapClock.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import { useLiveCollections } from '../composables/useLiveCollections.js'
+import { navigationStore, objectStore } from '../store/store.js'
+import {
+	derivePhase,
+	endOfSupportState,
+	isEolApproaching,
+	parseDate,
+	PHASE,
+	phaseOrder,
+	resolveUuid,
+} from '../utils/lifecyclePhase.js'
 
 const EOL_WINDOW_DAYS = 180
 
@@ -154,7 +153,7 @@ const EOL_WINDOW_DAYS = 180
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * Per-organisation portfolio roadmap: the organisation's gebruiken grouped by
+ * Per-organisation portfolio roadmap: the organisation's usages grouped by
  * derived lifecycle phase (incl. Onbekend, rendered first), ordered within a
  * group by nearest urgency date, with end-of-support badges and planned
  * replacements. The rationalisation overview.
@@ -174,6 +173,7 @@ export default {
 		ClockAlert,
 		CloseCircle,
 	},
+
 	/**
 	 * Live updates (nc-vue liveUpdatesPlugin, default-on since beta.212):
 	 * subscribe to the collection scope of every type this view renders.
@@ -187,10 +187,10 @@ export default {
 	 */
 	setup() {
 		useLiveCollections(objectStore, [
-			'gebruik',
-			'moduleVersie',
+			'usage',
+			'moduleVersion',
 			'module',
-			'organisatie',
+			'organization',
 		])
 		return {}
 	},
@@ -205,21 +205,23 @@ export default {
 	computed: {
 		/**
 		 * All gebruik records in the store.
+		 *
 		 * @return {Array} Gebruik records.
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
-		gebruiken() {
-			return objectStore.getCollection('gebruik')?.results || []
+		usages() {
+			return objectStore.getCollection('usage')?.results || []
 		},
 
 		/**
 		 * All moduleVersie records, indexed by uuid for EOL lookups.
+		 *
 		 * @return {object} UUID → moduleVersie.
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		moduleVersieIndex() {
 			const index = {}
-			for (const mv of objectStore.getCollection('moduleVersie')?.results
+			for (const mv of objectStore.getCollection('moduleVersion')?.results
 				|| []) {
 				const id = resolveUuid(mv.uuid ?? mv.id ?? mv['@self']?.id ?? mv)
 				if (id) {
@@ -231,6 +233,7 @@ export default {
 
 		/**
 		 * Module records indexed by uuid for successor labels.
+		 *
 		 * @return {object} UUID → module.
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
@@ -247,11 +250,12 @@ export default {
 
 		/**
 		 * Organisation options for the selector.
+		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		organisationOptions() {
-			return (objectStore.getCollection('organisatie')?.results || []).map(
+			return (objectStore.getCollection('organization')?.results || []).map(
 				(org) => ({
 					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
 					label:
@@ -264,6 +268,7 @@ export default {
 
 		/**
 		 * The phase order rendered top-to-bottom (Onbekend first).
+		 *
 		 * @return {Array<string>} Ordered phases.
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
@@ -279,8 +284,9 @@ export default {
 		},
 
 		/**
-		 * The selected organisation's gebruiken, grouped by derived phase and
+		 * The selected organisation's usages, grouped by derived phase and
 		 * ordered within group by nearest urgency date.
+		 *
 		 * @return {Array<{phase: string, entries: Array}>} Grouped entries.
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
@@ -291,7 +297,7 @@ export default {
 			const now = new Date()
 			const orgUuid = this.selectedOrg.uuid
 
-			const entries = this.gebruiken
+			const entries = this.usages
 				.filter((g) => {
 					const data = g.object || g
 					return resolveUuid(data.consumer) === orgUuid
@@ -321,6 +327,7 @@ export default {
 
 		/**
 		 * Load the collections the roadmap depends on.
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
@@ -334,10 +341,10 @@ export default {
 					await objectStore.fetchSettings()
 				}
 				await Promise.all([
-					this.fetchType('gebruik'),
-					this.fetchType('moduleVersie'),
+					this.fetchType('usage'),
+					this.fetchType('moduleVersion'),
 					this.fetchType('module'),
-					this.fetchType('organisatie'),
+					this.fetchType('organization'),
 				])
 			} catch (error) {
 				console.error('LifecycleRoadmapView: failed to load data', error)
@@ -348,6 +355,7 @@ export default {
 
 		/**
 		 * Fetch one object type collection if the store exposes the action.
+		 *
 		 * @param {string} type Object type slug.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
@@ -382,6 +390,7 @@ export default {
 
 		/**
 		 * Build a roadmap entry for a gebruik.
+		 *
 		 * @param {object} gebruik A gebruik record.
 		 * @param {Date}   now     Reference moment.
 		 * @return {object} The roadmap entry view-model.
@@ -390,7 +399,7 @@ export default {
 		buildEntry(gebruik, now) {
 			const data = gebruik.object || gebruik
 			const moduleUuid = resolveUuid(data.module)
-			const versieUuid = resolveUuid(data.moduleVersie)
+			const versieUuid = resolveUuid(data.moduleVersion)
 			const versie = this.moduleVersieIndex[versieUuid]
 			const eol = endOfSupportState(versie || {}, now)
 			const replacementUuid = resolveUuid(data.plannedReplacement)
@@ -400,16 +409,19 @@ export default {
 				uuid: resolveUuid(
 					gebruik.uuid ?? gebruik.id ?? gebruik['@self']?.id ?? gebruik,
 				),
+
 				phase: derivePhase(gebruik, now),
 				appName:
 					this.moduleIndex[moduleUuid]?.name
 					|| data.module?.name
 					|| moduleUuid
 					|| t('softwarecatalog', 'Unknown application'),
+
 				eol,
 				eolApproaching: versie
 					? isEolApproaching(versie, EOL_WINDOW_DAYS, now)
 					: false,
+
 				phaseOutDate: data.startDateOutPhasing || null,
 				replacementUuid,
 				replacementName: replacementModule?.name || replacementUuid || null,
@@ -419,6 +431,7 @@ export default {
 
 		/**
 		 * Nearest urgency timestamp for ordering (min of EOL, phase-out, replacement).
+		 *
 		 * @param {object} entry A roadmap entry.
 		 * @return {number} A sortable timestamp (Infinity when no dates).
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
@@ -437,6 +450,7 @@ export default {
 
 		/**
 		 * Translate a phase to a human label (Dutch domain terms preserved).
+		 *
 		 * @param {string} phase A PHASE.* value.
 		 * @return {string} Display label.
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
@@ -455,6 +469,7 @@ export default {
 
 		/**
 		 * Persist nothing; just record the org selection (kept for symmetry).
+		 *
 		 * @return {void}
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
@@ -464,6 +479,7 @@ export default {
 
 		/**
 		 * Navigate to a successor module's detail.
+		 *
 		 * @param {string} uuid The module uuid.
 		 * @return {void}
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md

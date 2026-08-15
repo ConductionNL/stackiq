@@ -1,6 +1,6 @@
 <script setup>
-import { navigationStore } from '../../store/store.js'
 import { reactive } from 'vue'
+import { navigationStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -140,22 +140,23 @@ import { reactive } from 'vue'
 		</NcAppSidebarTab>
 	</NcAppSidebar>
 </template>
+
 <script>
 import {
 	NcAppSidebar,
-	NcEmptyContent,
-	NcButton,
 	NcAppSidebarTab,
+	NcButton,
 	NcCheckboxRadioSwitch,
+	NcEmptyContent,
 	NcLoadingIcon,
 } from '@nextcloud/vue'
+import CogOutline from 'vue-material-design-icons/CogOutline.vue'
+import DatabaseSyncOutline from 'vue-material-design-icons/DatabaseSyncOutline.vue'
+import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
+import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
+import InformationSlabSymbol from 'vue-material-design-icons/InformationSlabSymbol.vue'
 import LayersOutline from 'vue-material-design-icons/LayersOutline.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
-import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
-import DatabaseSyncOutline from 'vue-material-design-icons/DatabaseSyncOutline.vue'
-import CogOutline from 'vue-material-design-icons/CogOutline.vue'
-import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
-import InformationSlabSymbol from 'vue-material-design-icons/InformationSlabSymbol.vue'
 
 // Temporary placeholder stores until they are properly implemented
 const directoryStore = reactive({
@@ -189,6 +190,7 @@ export default {
 		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 	},
+
 	data() {
 		return {
 			checkedMetadata: {},
@@ -197,6 +199,7 @@ export default {
 			syncLoading: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
@@ -205,9 +208,12 @@ export default {
 			return directoryStore.listingItem
 		},
 	},
+
 	watch: {
 		checkedMetadata: {
 			/**
+			 * @param newValue
+			 * @param oldValue
 			 * @spec openspec/specs/fe-shell-navigation/spec.md
 			 */
 			handler(newValue, oldValue) {
@@ -219,10 +225,14 @@ export default {
 					this.deleteMetadata(metadataUrl)
 				}
 			},
+
 			deep: true,
 		},
+
 		listingItem: {
 			/**
+			 * @param newValue
+			 * @param oldValue
 			 * @spec openspec/specs/fe-shell-navigation/spec.md
 			 */
 			handler(newValue, oldValue) {
@@ -231,10 +241,12 @@ export default {
 					this.checkMetadataSwitches()
 				}
 			},
+
 			deep: true, // Track changes in nested objects
 			immediate: true, // Run the handler immediately on initialization
 		},
 	},
+
 	/**
 	 * @spec openspec/specs/fe-shell-navigation/spec.md
 	 */
@@ -242,14 +254,19 @@ export default {
 		metadataStore.refreshMetaDataList()
 		this.checkMetadataSwitches()
 	},
+
 	methods: {
 		/**
+		 * @param url
+		 * @param type
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		openLink(url, type = '') {
 			window.open(url, type)
 		},
+
 		/**
+		 * @param metadataUrl
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		getMetadataId(metadataUrl) {
@@ -261,6 +278,7 @@ export default {
 			})
 			return metadataId
 		},
+
 		/**
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
@@ -277,7 +295,9 @@ export default {
 			}
 			this.loading = false
 		},
+
 		/**
+		 * @param metadataUrl
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		copyMetadata(metadataUrl) {
@@ -301,7 +321,9 @@ export default {
 					this.loading = false
 				})
 		},
+
 		/**
+		 * @param data
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		createMetadata(data) {
@@ -330,7 +352,9 @@ export default {
 					this.loading = false
 				})
 		},
+
 		/**
+		 * @param metadataUrl
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		deleteMetadata(metadataUrl) {
@@ -351,6 +375,7 @@ export default {
 					this.loading = false
 				})
 		},
+
 		/**
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */

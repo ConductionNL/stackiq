@@ -6,9 +6,9 @@
 <template>
 	<CnWidgetWrapper
 		:title="t('softwarecatalog', 'Merge organisation')"
-		title-icon-position="left"
-		:show-refresh="false"
-		:show-request-feature="false">
+		titleIconPosition="left"
+		:showRefresh="false"
+		:showRequestFeature="false">
 		<template #title-icon>
 			<CnIcon name="CallMerge" :size="20" />
 		</template>
@@ -59,7 +59,7 @@
 					<NcSelect
 						v-model="selectedTarget"
 						:options="targetOptions"
-						:input-label="t('softwarecatalog', 'Target organisation')"
+						:inputLabel="t('softwarecatalog', 'Target organisation')"
 						:placeholder="
 							t(
 								'softwarecatalog',
@@ -67,7 +67,7 @@
 							)
 						"
 						label="label"
-						track-by="value"
+						trackBy="value"
 						:loading="loadingTargets"
 						:disabled="previewing || busy"
 						@open="loadTargetOptions" />
@@ -106,8 +106,8 @@
 
 		<MergeOrganisationConfirmDialog
 			:show="showConfirm"
-			:source-name="sourceName"
-			:target-name="selectedTarget ? selectedTarget.label : ''"
+			:sourceName="sourceName"
+			:targetName="selectedTarget ? selectedTarget.label : ''"
 			:counts="dryRunCounts"
 			:busy="busy"
 			:error="confirmError"
@@ -117,18 +117,16 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
-import { CnWidgetWrapper, CnIcon } from '@conduction/nextcloud-vue'
+import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { showSuccess } from '@nextcloud/dialogs'
-import axios from '@nextcloud/axios'
-
-import Eye from 'vue-material-design-icons/Eye.vue'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
 import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
-
-import { organisatieStore, settingsStore } from '../../store/store.js'
+import Eye from 'vue-material-design-icons/Eye.vue'
 import MergeOrganisationConfirmDialog from '../../modals/object/MergeOrganisationConfirmDialog.vue'
+import { organisatieStore, settingsStore } from '../../store/store.js'
 
 /**
  * @class OrganisationMergePanel
@@ -162,23 +160,27 @@ export default {
 		ArrowRight,
 		MergeOrganisationConfirmDialog,
 	},
+
 	props: {
 		/** The organisation OR object uuid (passed by CnDetailPage as `objectId`). */
 		objectId: {
 			type: [String, Number],
 			default: '',
 		},
+
 		/** The organisation register slug. */
 		register: {
 			type: String,
 			default: 'voorzieningen',
 		},
+
 		/** The organisation schema slug. */
 		schema: {
 			type: String,
-			default: 'organisatie',
+			default: 'organization',
 		},
 	},
+
 	data() {
 		return {
 			loading: true,
@@ -198,6 +200,7 @@ export default {
 			success: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * Whether the source organisation is already tombstoned (merged away).
@@ -206,8 +209,9 @@ export default {
 		 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-source-organisation-must-be-tombstoned-never-hard-deleted
 		 */
 		isTombstoned() {
-			return this.status === 'samengevoegd'
+			return this.status === 'merged'
 		},
+
 		/**
 		 * Whether the signed-in user is an administrator (display-only gate —
 		 * the backend re-checks independently on every call).
@@ -218,9 +222,11 @@ export default {
 			return Boolean(settingsStore.getIsAdmin)
 		},
 	},
+
 	async mounted() {
 		await this.loadSource()
 	},
+
 	methods: {
 		t,
 		/**
@@ -261,6 +267,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Lazily load candidate target organisations (every organisation
 		 * except this one and any already-tombstoned source). The backend
@@ -291,7 +298,7 @@ export default {
 						const id = org.id || org['@self']?.id
 						return (
 							String(id) !== String(this.objectId)
-							&& org.status !== 'samengevoegd'
+							&& org.status !== 'merged'
 						)
 					})
 					.map((org) => ({
@@ -311,6 +318,7 @@ export default {
 				this.loadingTargets = false
 			}
 		},
+
 		/**
 		 * Run the dry-run preview and open the confirm dialog when the merge
 		 * is legal (no blockers).
@@ -344,6 +352,7 @@ export default {
 				this.previewing = false
 			}
 		},
+
 		/**
 		 * Execute the merge after confirmation.
 		 *
@@ -363,7 +372,7 @@ export default {
 				)
 				this.showConfirm = false
 				this.success = true
-				this.status = 'samengevoegd'
+				this.status = 'merged'
 				this.mergedInto = String(this.selectedTarget.value)
 				showSuccess(
 					t('softwarecatalog', 'Organisation successfully merged.'),
@@ -376,6 +385,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Navigate to the organisation this source was merged into.
 		 *

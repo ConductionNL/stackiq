@@ -39,12 +39,12 @@ class ContractStatusService {
 	/**
 	 * The active status from which a contract may expire.
 	 */
-	public const STATUS_ACTIVE = 'Actief';
+	public const STATUS_ACTIVE = 'Active';
 
 	/**
 	 * The expired status a passed-end-date active contract transitions to.
 	 */
-	public const STATUS_EXPIRED = 'Verlopen';
+	public const STATUS_EXPIRED = 'Expired';
 
 	/**
 	 * Constructor.

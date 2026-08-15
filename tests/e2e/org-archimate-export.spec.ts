@@ -171,8 +171,8 @@ async function seedOrganization(): Promise<void> {
 			{
 				data: {
 					name: SEEDED_ORG_NAME,
-					type: 'Leverancier',
-					status: 'Actief',
+					type: 'Supplier',
+					status: 'Active',
 					contactsUid: SEEDED_ORG_NAME,
 				},
 			},

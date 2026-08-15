@@ -146,7 +146,7 @@ class SbomImportServiceTest extends TestCase {
 		$settings->method('getVoorzieningenConfig')->willReturn(['register' => 1]);
 		$settings->method('getSchemaIdForObjectType')->willReturnMap(
 			[
-				['moduleVersie', 10],
+				['moduleVersion', 10],
 				['sbomComponent', 20],
 				['module', 30],
 			]
@@ -212,7 +212,7 @@ class SbomImportServiceTest extends TestCase {
 		$this->assertCount(3, $this->savedBatches[0]);
 
 		foreach ($this->savedBatches[0] as $componentData) {
-			$this->assertSame('mv-uuid-1', $componentData['moduleVersie']);
+			$this->assertSame('mv-uuid-1', $componentData['moduleVersion']);
 		}
 
 		$this->assertSame('lodash', $this->savedBatches[0][0]['name']);
@@ -312,7 +312,7 @@ class SbomImportServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testImportRecordsProvenanceAndCarriesExistingFieldsForward(): void {
-		$service = $this->makeService(['version' => '2.3.1', 'beschrijvingKort' => 'Keep me']);
+		$service = $this->makeService(['version' => '2.3.1', 'shortDescription' => 'Keep me']);
 
 		$service->importForModuleVersie(
 			'mv-uuid-1',
@@ -323,7 +323,7 @@ class SbomImportServiceTest extends TestCase {
 
 		$this->assertNotNull($this->savedModuleVersion);
 		$this->assertSame('2.3.1', $this->savedModuleVersion['version']);
-		$this->assertSame('Keep me', $this->savedModuleVersion['beschrijvingKort']);
+		$this->assertSame('Keep me', $this->savedModuleVersion['shortDescription']);
 		$this->assertSame('cyclonedx-json', $this->savedModuleVersion['sbomFormat']);
 		$this->assertSame('my-sbom.json', $this->savedModuleVersion['sbomFileName']);
 		$this->assertNotEmpty($this->savedModuleVersion['sbomLastImportedAt']);
@@ -430,7 +430,7 @@ class SbomImportServiceTest extends TestCase {
 		$settings->method('getVoorzieningenConfig')->willReturn(['register' => 1]);
 		$settings->method('getSchemaIdForObjectType')->willReturnMap(
 			[
-				['moduleVersie', 10],
+				['moduleVersion', 10],
 				['sbomComponent', 20],
 			]
 		);

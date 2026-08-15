@@ -43,7 +43,7 @@ class IntakeService {
 	/**
 	 * The catalog object type anonymous registrations create.
 	 */
-	public const INTAKE_TYPE = 'organisatie';
+	public const INTAKE_TYPE = 'organization';
 
 	/**
 	 * Moderation state of a freshly-submitted anonymous registration.

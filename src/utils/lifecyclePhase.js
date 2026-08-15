@@ -30,11 +30,11 @@
  * @type {{ACQUISITION: string, PLANNED: string, PRODUCTION: string, PHASING_OUT: string, PHASED_OUT: string, UNKNOWN: string}}
  */
 export const PHASE = Object.freeze({
-	ACQUISITION: 'Verwerving',
-	PLANNED: 'Gepland',
-	PRODUCTION: 'In productie',
-	PHASING_OUT: 'Uit te faseren',
-	PHASED_OUT: 'Uitgefaseerd',
+	ACQUISITION: 'Acquisition',
+	PLANNED: 'Planned',
+	PRODUCTION: 'In production',
+	PHASING_OUT: 'To be phased out',
+	PHASED_OUT: 'Phased out',
 	UNKNOWN: 'Onbekend',
 })
 

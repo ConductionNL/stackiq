@@ -55,6 +55,7 @@ export default {
 	props: {
 		/**
 		 * Array of tab objects with key and title
+		 *
 		 * @type {Array<{key: string, title: string}>}
 		 */
 		tabs: {
@@ -64,6 +65,7 @@ export default {
 
 		/**
 		 * Currently active tab key
+		 *
 		 * @type {string}
 		 */
 		activeTab: {

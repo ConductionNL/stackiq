@@ -351,7 +351,7 @@ class SbomImportService {
 					'schema' => $componentSchemaId,
 					'register' => $registerId,
 				],
-				'moduleVersie' => $moduleVersieUuid,
+				'moduleVersion' => $moduleVersieUuid,
 				'_limit' => 1000,
 			],
 			_rbac: false,
@@ -493,7 +493,7 @@ class SbomImportService {
 		}
 
 		return [
-			'moduleVersie' => $moduleVersieUuid,
+			'moduleVersion' => $moduleVersieUuid,
 			'name' => $component['name'] ?? '',
 			'version' => $component['version'] ?? '',
 			'purl' => $component['purl'] ?? '',
@@ -589,7 +589,7 @@ class SbomImportService {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 
-		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
+		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersion');
 		$componentSchemaId = $this->settingsService->getSchemaIdForObjectType('sbomComponent');
 
 		if ($registerId === null || $versionSchemaId === null || $componentSchemaId === null) {

@@ -13,8 +13,8 @@
  * Catalog behaves exactly as before.
  *
  * It declares — for the `vendor-org` (software supplier / organisatie.type
- * "Leverancier") and `participant-org` (municipality / "Gemeente",
- * "Samenwerking", "Community") audiences — the OpenRegister collections a portal
+ * "Supplier") and `participant-org` (municipality / "Municipality",
+ * "Collaboration", "Community") audiences — the OpenRegister collections a portal
  * subject may READ, each scoped by the subject's organisatie UUID (claim
  * `organisationId`). Some collections reach that organisatie UUID through a
  * single `via` one-hop join (contract → dienst/gebruik, compliancy → module)
@@ -83,9 +83,9 @@ class PortalContributionProvider {
 	 * The audiences this provider contributes to (contract v2, preferred).
 	 *
 	 * The registry probes for this method first. Software Catalog serves
-	 * software suppliers (`vendor-org`, organisatie.type "Leverancier") and the
+	 * software suppliers (`vendor-org`, organisatie.type "Supplier") and the
 	 * municipalities/collaborations that consume that software (`participant-org`,
-	 * organisatie.type "Gemeente" / "Samenwerking" / "Community"). The two
+	 * organisatie.type "Municipality" / "Collaboration" / "Community"). The two
 	 * audiences exist because the same `gebruik` object is scoped by a DIFFERENT
 	 * property for each side (`aanbieder` vs `afnemer`).
 	 *
@@ -164,15 +164,15 @@ class PortalContributionProvider {
 				[
 					'id' => 'vendorDiensten',
 					'register' => self::REGISTER,
-					'schema' => 'dienst',
+					'schema' => 'service',
 					'scopeField' => 'provider',
 					'scopeClaim' => self::ORG_CLAIM,
 					'label' => 'My services',
 					'listable' => true,
 					'fields' => [
 						'name',
-						'beschrijvingKort',
-						'beschrijvingLang',
+						'shortDescription',
+						'longDescription',
 						'website',
 						'type',
 						'modules',
@@ -181,7 +181,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'vendorGebruik',
 					'register' => self::REGISTER,
-					'schema' => 'gebruik',
+					'schema' => 'usage',
 					'scopeField' => 'provider',
 					'scopeClaim' => self::ORG_CLAIM,
 					'label' => 'Deployments of my offerings',
@@ -195,7 +195,7 @@ class PortalContributionProvider {
 						'startDateOutPhased',
 						'consumer',
 						'module',
-						'moduleVersie',
+						'moduleVersion',
 					],
 				],
 				[
@@ -203,14 +203,14 @@ class PortalContributionProvider {
 					'register' => self::REGISTER,
 					'schema' => 'contract',
 					'scopeField' => 'provider',
-					'via' => 'dienst',
+					'via' => 'service',
 					'scopeClaim' => self::ORG_CLAIM,
 					'minTrust' => 'substantial',
 					'label' => 'Contracts for my services',
 					'listable' => true,
 					'fields' => [
-						'dienst',
-						'gebruik',
+						'service',
+						'usage',
 						'startDate',
 						'endDate',
 						'contractNumber',
@@ -267,7 +267,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'participantGebruik',
 					'register' => self::REGISTER,
-					'schema' => 'gebruik',
+					'schema' => 'usage',
 					'scopeField' => 'consumer',
 					'scopeClaim' => self::ORG_CLAIM,
 					'label' => 'Software we use',
@@ -281,7 +281,7 @@ class PortalContributionProvider {
 						'startDateOutPhased',
 						'provider',
 						'module',
-						'moduleVersie',
+						'moduleVersion',
 						'diensten',
 					],
 				],
@@ -290,14 +290,14 @@ class PortalContributionProvider {
 					'register' => self::REGISTER,
 					'schema' => 'contract',
 					'scopeField' => 'consumer',
-					'via' => 'gebruik',
+					'via' => 'usage',
 					'scopeClaim' => self::ORG_CLAIM,
 					'minTrust' => 'substantial',
 					'label' => 'Our contracts',
 					'listable' => true,
 					'fields' => [
-						'dienst',
-						'gebruik',
+						'service',
+						'usage',
 						'startDate',
 						'endDate',
 						'contractNumber',

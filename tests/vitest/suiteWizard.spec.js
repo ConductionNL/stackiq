@@ -17,15 +17,15 @@ import {
 
 describe('suiteWizard.isDetailsStepValid', () => {
 	it('requires both naam and beschrijvingKort', () => {
-		expect(isDetailsStepValid({ name: '', beschrijvingKort: '' })).toBe(false)
-		expect(isDetailsStepValid({ name: 'Suite', beschrijvingKort: '' })).toBe(
+		expect(isDetailsStepValid({ name: '', shortDescription: '' })).toBe(false)
+		expect(isDetailsStepValid({ name: 'Suite', shortDescription: '' })).toBe(
 			false,
 		)
-		expect(isDetailsStepValid({ name: '', beschrijvingKort: 'Short' })).toBe(
+		expect(isDetailsStepValid({ name: '', shortDescription: 'Short' })).toBe(
 			false,
 		)
 		expect(
-			isDetailsStepValid({ name: 'Suite', beschrijvingKort: 'Short' }),
+			isDetailsStepValid({ name: 'Suite', shortDescription: 'Short' }),
 		).toBe(true)
 	})
 })
@@ -43,7 +43,7 @@ describe('suiteWizard.buildSuitePayload', () => {
 	it('reduces attached module objects to a plain array of ids', () => {
 		const payload = buildSuitePayload({
 			name: 'Centric Leefomgeving',
-			beschrijvingKort: 'Bundled product',
+			shortDescription: 'Bundled product',
 			applications: [{ id: 'mod-1' }, { id: 'mod-2' }],
 		})
 		expect(payload.applications).toEqual(['mod-1', 'mod-2'])

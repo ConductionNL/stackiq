@@ -1,5 +1,5 @@
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -8,7 +8,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 			id="objectModal"
 			:name="dialogTitle"
 			size="large"
-			:can-close="false">
+			:canClose="false">
 			<div class="dialog-content">
 				<NcNoteCard v-if="success" type="success" class="note-card">
 					<p>
@@ -57,7 +57,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									v-if="!selectedCatalogus"
 									v-model="selectedCatalogus"
 									:options="catalogOptions"
-									label-outside
+									labelOutside
 									:aria-label-combobox="
 										t('softwarecatalog', 'Select a catalogus')
 									"
@@ -95,7 +95,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									v-if="!selectedRegister"
 									v-model="selectedRegister"
 									:options="registerOptions"
-									label-outside
+									labelOutside
 									:aria-label-combobox="
 										t('softwarecatalog', 'Select a register')
 									"
@@ -135,7 +135,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									v-if="!selectedSchema"
 									v-model="selectedSchema"
 									:options="schemaOptions"
-									label-outside
+									labelOutside
 									:aria-label-combobox="
 										t('softwarecatalog', 'Select a schema')
 									"
@@ -167,8 +167,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 								{ key: 'form', title: 'Form Editor' },
 								{ key: 'json', title: 'JSON Editor' },
 							]"
-							:active-tab="activeTab"
-							@update:active-tab="activeTab = $event">
+							:activeTab="activeTab"
+							@update:activeTab="activeTab = $event">
 							<div v-show="activeTab === 'form'">
 								<div v-if="fullSelectedSchema" class="form-editor">
 									<div
@@ -188,14 +188,14 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												&& Array.isArray(prop.enum)
 											">
 											<NcSelect
-												:input-label="prop.title || key"
+												:inputLabel="prop.title || key"
 												:options="prop.enum"
-												:model-value="
+												:modelValue="
 													getFieldValue(key) || null
 												"
 												:placeholder="prop.example"
 												:clearable="true"
-												@update:model-value="
+												@update:modelValue="
 													(value) =>
 														setFieldValue(key, value)
 												" />
@@ -212,12 +212,12 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 											">
 											<NcTextField
 												:label="prop.title || key"
-												:model-value="getFieldValue(key)"
+												:modelValue="getFieldValue(key)"
 												:placeholder="prop.example"
-												:helper-text="prop.description"
+												:helperText="prop.description"
 												:required="prop.required"
 												type="date"
-												@update:model-value="
+												@update:modelValue="
 													(value) =>
 														setFieldValue(key, value)
 												" />
@@ -225,11 +225,11 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										<template v-else-if="prop.type === 'string'">
 											<NcTextField
 												:label="prop.title || key"
-												:model-value="getFieldValue(key)"
+												:modelValue="getFieldValue(key)"
 												:placeholder="prop.example"
-												:helper-text="prop.description"
+												:helperText="prop.description"
 												:required="prop.required"
-												@update:model-value="
+												@update:modelValue="
 													(value) =>
 														setFieldValue(key, value)
 												" />
@@ -237,10 +237,10 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										<template
 											v-else-if="prop.type === 'boolean'">
 											<NcCheckboxRadioSwitch
-												:model-value="Boolean(formData[key])"
-												:helper-text="prop.description"
+												:modelValue="Boolean(formData[key])"
+												:helperText="prop.description"
 												type="switch"
-												@update:model-value="
+												@update:modelValue="
 													(value) =>
 														setFieldValue(key, value)
 												">
@@ -254,9 +254,9 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 											">
 											<NcTextField
 												:label="prop.title || key"
-												:model-value="getFieldValue(key)"
+												:modelValue="getFieldValue(key)"
 												:placeholder="prop.example"
-												:helper-text="prop.description"
+												:helperText="prop.description"
 												:required="prop.required"
 												type="number"
 												:min="prop.minimum"
@@ -266,7 +266,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 														? '1'
 														: 'any'
 												"
-												@update:model-value="
+												@update:modelValue="
 													(value) =>
 														setFieldValue(key, value)
 												" />
@@ -294,7 +294,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 											:linter="jsonParseLinter()"
 											:lang="json()"
 											:extensions="[json()]"
-											:tab-size="2"
+											:tabSize="2"
 											style="height: 400px" />
 										<NcButton
 											class="format-json-button"
@@ -346,28 +346,26 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 </template>
 
 <script>
+import { json, jsonParseLinter } from '@codemirror/lang-json'
 import {
 	NcButton,
-	NcDialog,
-	NcTextField,
 	NcCheckboxRadioSwitch,
+	NcDialog,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
+	NcTextField,
 } from '@nextcloud/vue'
-import StandardTabs from '../../components/StandardTabs.vue'
-import { getTheme } from '../../services/getTheme.js'
-import { json, jsonParseLinter } from '@codemirror/lang-json'
-
-import CodeMirror from 'vue-codemirror6'
 import cloneDeep from 'lodash/cloneDeep'
-
+import CodeMirror from 'vue-codemirror6'
+import Cancel from 'vue-material-design-icons/Cancel.vue'
 // Icons
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
-import Cancel from 'vue-material-design-icons/Cancel.vue'
-import Plus from 'vue-material-design-icons/Plus.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
+import StandardTabs from '../../components/StandardTabs.vue'
+import { getTheme } from '../../services/getTheme.js'
 
 export default {
 	name: 'ObjectModal',
@@ -387,6 +385,7 @@ export default {
 		Plus,
 		Pencil,
 	},
+
 	props: {
 		/**
 		 * The object type key used to get/set the active object in the store.
@@ -397,6 +396,7 @@ export default {
 			default: 'publication',
 		},
 	},
+
 	data() {
 		return {
 			activeTab: 'form',
@@ -414,6 +414,7 @@ export default {
 			jsonData: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -424,6 +425,7 @@ export default {
 				label: catalog.title,
 			}))
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -446,6 +448,7 @@ export default {
 					label: register.title,
 				}))
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -476,6 +479,7 @@ export default {
 					label: schema.title,
 				}))
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -484,12 +488,14 @@ export default {
 				(schema) => schema.id === this.selectedSchema?.id,
 			)
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		schemaProperties() {
 			return this.fullSelectedSchema?.properties || {}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -500,9 +506,11 @@ export default {
 			return this.isNewObject ? `Add ${typeName}` : `Edit ${typeName}`
 		},
 	},
+
 	watch: {
 		objectStore: {
 			/**
+			 * @param newValue
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
@@ -510,10 +518,13 @@ export default {
 					this.initializeData()
 				}
 			},
+
 			deep: true,
 		},
+
 		'navigationStore.modal': {
 			/**
+			 * @param newValue
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
@@ -528,8 +539,10 @@ export default {
 				}
 			},
 		},
+
 		jsonData: {
 			/**
+			 * @param newValue
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
@@ -538,8 +551,10 @@ export default {
 				}
 			},
 		},
+
 		formData: {
 			/**
+			 * @param newValue
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
@@ -547,15 +562,19 @@ export default {
 					this.updateJsonFromForm()
 				}
 			},
+
 			deep: true,
 		},
 	},
+
 	mounted() {
 		this.initializeData()
 	},
+
 	beforeUnmount() {
 		clearTimeout(this.closeModalTimeout)
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -689,6 +708,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -791,6 +811,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -815,6 +836,7 @@ export default {
 		},
 
 		/**
+		 * @param str
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidJson(str) {
@@ -867,6 +889,8 @@ export default {
 		},
 
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		setFieldValue(key, value) {

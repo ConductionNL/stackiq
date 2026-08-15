@@ -5,16 +5,16 @@
  */
 
 import {
-	isDetailsStepValid,
-	isApplicationsStepValid,
 	buildSuitePayload,
-	summarizeApplications,
+	isApplicationsStepValid,
+	isDetailsStepValid,
 	mapApplicationOptions,
+	summarizeApplications,
 } from './suiteWizard.js'
 
 describe('suiteWizard.isDetailsStepValid', () => {
 	it('is invalid when naam is blank', () => {
-		expect(isDetailsStepValid({ name: '', beschrijvingKort: 'Short' })).toBe(
+		expect(isDetailsStepValid({ name: '', shortDescription: 'Short' })).toBe(
 			false,
 		)
 	})
@@ -23,7 +23,7 @@ describe('suiteWizard.isDetailsStepValid', () => {
 		expect(
 			isDetailsStepValid({
 				name: 'Centric Leefomgeving',
-				beschrijvingKort: '  ',
+				shortDescription: '  ',
 			}),
 		).toBe(false)
 	})
@@ -32,7 +32,7 @@ describe('suiteWizard.isDetailsStepValid', () => {
 		expect(
 			isDetailsStepValid({
 				name: 'Centric Leefomgeving',
-				beschrijvingKort: 'Bundled product',
+				shortDescription: 'Bundled product',
 			}),
 		).toBe(true)
 	})
@@ -72,8 +72,8 @@ describe('suiteWizard.buildSuitePayload', () => {
 	it('builds the suite payload with a plain array of module ids', () => {
 		const payload = buildSuitePayload({
 			name: '  Centric Leefomgeving  ',
-			beschrijvingKort: 'Bundled leefomgeving product',
-			beschrijvingLang: 'Long description',
+			shortDescription: 'Bundled leefomgeving product',
+			longDescription: 'Long description',
 			website: 'https://example.nl/leefomgeving',
 			applications: [
 				{ id: 'mod-1', name: 'Module 1' },
@@ -83,8 +83,8 @@ describe('suiteWizard.buildSuitePayload', () => {
 
 		expect(payload).toEqual({
 			name: 'Centric Leefomgeving',
-			beschrijvingKort: 'Bundled leefomgeving product',
-			beschrijvingLang: 'Long description',
+			shortDescription: 'Bundled leefomgeving product',
+			longDescription: 'Long description',
 			website: 'https://example.nl/leefomgeving',
 			applications: ['mod-1', 'mod-2'],
 		})
@@ -93,7 +93,7 @@ describe('suiteWizard.buildSuitePayload', () => {
 	it('accepts plain id strings as well as module objects', () => {
 		const payload = buildSuitePayload({
 			name: 'Suite',
-			beschrijvingKort: 'Short',
+			shortDescription: 'Short',
 			applications: ['mod-1', 'mod-2'],
 		})
 		expect(payload.applications).toEqual(['mod-1', 'mod-2'])
@@ -102,9 +102,9 @@ describe('suiteWizard.buildSuitePayload', () => {
 	it('defaults optional fields to empty strings and applicaties to an empty array', () => {
 		const payload = buildSuitePayload({
 			name: 'Suite',
-			beschrijvingKort: 'Short',
+			shortDescription: 'Short',
 		})
-		expect(payload.beschrijvingLang).toBe('')
+		expect(payload.longDescription).toBe('')
 		expect(payload.website).toBe('')
 		expect(payload.applications).toEqual([])
 	})
@@ -113,8 +113,8 @@ describe('suiteWizard.buildSuitePayload', () => {
 		const payload = buildSuitePayload(undefined)
 		expect(payload).toEqual({
 			name: '',
-			beschrijvingKort: '',
-			beschrijvingLang: '',
+			shortDescription: '',
+			longDescription: '',
 			website: '',
 			applications: [],
 		})

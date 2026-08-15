@@ -17,7 +17,7 @@
  -->
 
 <template>
-	<NcSettingsSection :name="name" :description="description" :doc-url="docUrl">
+	<NcSettingsSection :name="name" :description="description" :docUrl="docUrl">
 		<div class="collapsible-section">
 			<!-- Section Header with Controls -->
 			<div class="section-header">
@@ -131,15 +131,13 @@
  * @version 1.0.0
  */
 
-import { NcSettingsSection, NcButton, NcLoadingIcon } from '@nextcloud/vue'
-
+import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
+import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
+import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 // Icons
 import Save from 'vue-material-design-icons/ContentSave.vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Information from 'vue-material-design-icons/Information.vue'
-import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
-import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
-
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import CollapsibleSectionInfoModal from '../modals/CollapsibleSectionInfoModal.vue'
 
 export default {
@@ -275,6 +273,7 @@ export default {
 	methods: {
 		/**
 		 * Toggle section expanded state
+		 *
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		toggleExpanded() {
@@ -283,6 +282,7 @@ export default {
 
 		/**
 		 * Handle save button click
+		 *
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleSave() {
@@ -291,6 +291,7 @@ export default {
 
 		/**
 		 * Handle refresh button click
+		 *
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleRefresh() {

@@ -32,19 +32,19 @@
 						<NcSelect
 							v-model="selectedType"
 							:options="organisationTypes"
-							:input-label="t('softwarecatalog', 'Type')"
+							:inputLabel="t('softwarecatalog', 'Type')"
 							:placeholder="
 								t('softwarecatalog', 'Select organisation type')
 							"
 							label="label"
-							track-by="value"
+							trackBy="value"
 							:clearable="false"
-							@update:model-value="handleTypeChange" />
+							@update:modelValue="handleTypeChange" />
 					</div>
 
 					<div class="form-row">
 						<NcTextField
-							v-model="formData.beschrijvingKort"
+							v-model="formData.shortDescription"
 							:label="t('softwarecatalog', 'Short Description')"
 							:placeholder="
 								t(
@@ -131,16 +131,16 @@
 </template>
 
 <script>
+import { showError } from '@nextcloud/dialogs'
 import {
-	NcModal,
-	NcTextField,
-	NcSelect,
 	NcButton,
 	NcLoadingIcon,
+	NcModal,
+	NcSelect,
+	NcTextField,
 } from '@nextcloud/vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
-import { objectStore, navigationStore } from '../store/store.js'
-import { showError } from '@nextcloud/dialogs'
+import { navigationStore, objectStore } from '../store/store.js'
 
 export default {
 	name: 'OrganisationModal',
@@ -152,35 +152,40 @@ export default {
 		NcLoadingIcon,
 		CheckCircle,
 	},
+
 	props: {
 		show: {
 			type: Boolean,
 			default: false,
 		},
+
 		organisation: {
 			type: Object,
 			default: null,
 		},
+
 		mode: {
 			type: String,
 			default: 'create', // 'create', 'edit', 'copy'
 		},
 	},
+
 	data() {
 		return {
 			formData: {
 				name: '',
 				website: '',
 				type: '',
-				beschrijvingKort: '',
+				shortDescription: '',
 				'e-mailadres': '',
 				telefoonnummer: '',
 				oin: '',
 				cbs: '',
-				status: 'Concept',
+				status: 'Draft',
 				participants: [],
 				contactpersonen: [],
 			},
+
 			selectedType: null,
 			loading: false,
 			success: false,
@@ -188,20 +193,23 @@ export default {
 			countdown: 3,
 			countdownInterval: null,
 			organisationTypes: [
-				{ value: 'Gemeente', label: 'Gemeente' },
-				{ value: 'Leverancier', label: 'Leverancier' },
-				{ value: 'Samenwerking', label: 'Samenwerking' },
+				{ value: 'Municipality', label: 'Municipality' },
+				{ value: 'Supplier', label: 'Supplier' },
+				{ value: 'Collaboration', label: 'Collaboration' },
 				{ value: 'Community', label: 'Community' },
 			],
 		}
 	},
+
 	computed: {
 		isEditMode() {
 			return this.mode === 'edit'
 		},
+
 		isCopyMode() {
 			return this.mode === 'copy'
 		},
+
 		/**
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -213,10 +221,12 @@ export default {
 			}
 			return this.t('softwarecatalog', 'Create Organisation')
 		},
+
 		isFormValid() {
 			return this.formData.name.trim().length > 0
 		},
 	},
+
 	watch: {
 		organisation: {
 			/**
@@ -225,10 +235,13 @@ export default {
 			handler() {
 				this.loadOrganisationData()
 			},
+
 			immediate: true,
 		},
+
 		show: {
 			/**
+			 * @param newVal
 			 * @spec openspec/specs/fe-organizations/spec.md
 			 */
 			handler(newVal) {
@@ -237,9 +250,11 @@ export default {
 					this.loadOrganisationData()
 				}
 			},
+
 			immediate: true,
 		},
 	},
+
 	/**
 	 * @spec openspec/specs/fe-organizations/spec.md
 	 */
@@ -249,6 +264,7 @@ export default {
 			clearInterval(this.countdownInterval)
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -258,12 +274,12 @@ export default {
 				name: '',
 				website: '',
 				type: '',
-				beschrijvingKort: '',
+				shortDescription: '',
 				'e-mailadres': '',
 				telefoonnummer: '',
 				oin: '',
 				cbs: '',
-				status: 'Concept',
+				status: 'Draft',
 				participants: [],
 				contactpersonen: [],
 			}
@@ -277,6 +293,7 @@ export default {
 				this.countdownInterval = null
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -288,12 +305,12 @@ export default {
 				name: this.organisation.name || '',
 				website: this.organisation.website || '',
 				type: this.organisation.type || '',
-				beschrijvingKort: this.organisation.beschrijvingKort || '',
+				shortDescription: this.organisation.shortDescription || '',
 				'e-mailadres': this.organisation['e-mailadres'] || '',
 				telefoonnummer: this.organisation.telefoonnummer || '',
 				oin: this.organisation.oin || '',
 				cbs: this.organisation.cbs || '',
-				status: this.organisation.status || 'Concept',
+				status: this.organisation.status || 'Draft',
 				participants: this.organisation.participants || [],
 				contactpersonen: this.isCopyMode
 					? []
@@ -307,21 +324,26 @@ export default {
 				)
 			}
 		},
+
 		/**
+		 * @param selectedOption
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		handleTypeChange(selectedOption) {
 			console.info('Type changed:', selectedOption)
 			this.formData.type = selectedOption ? selectedOption.value : ''
 		},
+
 		/**
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closeModal() {
 			this.$emit('close')
 		},
+
 		/**
 		 * Get only the changed properties between original and current form data
+		 *
 		 * @return {object} Object containing only the changed properties
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -373,7 +395,7 @@ export default {
 
 			try {
 				// Get schema configuration for organisatie
-				const schemaConfig = objectStore.getSchemaConfig('organisatie')
+				const schemaConfig = objectStore.getSchemaConfig('organization')
 
 				if (this.isEditMode) {
 					// Get only the changed properties for PATCH request
@@ -394,7 +416,7 @@ export default {
 
 					// Update existing organisation using PATCH - only send changed properties
 					await objectStore.patchObject(
-						'organisatie',
+						'organization',
 						this.organisation.id,
 						changes,
 					)

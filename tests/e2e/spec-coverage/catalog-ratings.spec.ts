@@ -8,7 +8,7 @@
  *                                               ModuleDetail (/modules/:id)
  *   src/modals/SubmitReviewModal.vue            "Write a review"
  *   src/views/settings/sections/ModerationQueue.vue
- *                                               reused for type="beoordeeling"
+ *                                               reused for type="assessment"
  *                                               at /settings/admin/softwarecatalog
  *   manifest page `Reviews` (/reviews)          the reviews index
  *
@@ -79,7 +79,7 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
 	if (!ctx || !config) return
-	for (const schema of ['beoordeeling', 'module']) {
+	for (const schema of ['assessment', 'module']) {
 		const rows = await findAll(ctx, config.register, schema)
 		for (const row of rows) {
 			if (JSON.stringify(row).includes(RUN_ID)) {
@@ -321,7 +321,7 @@ test('reviews: a rejected review stays hidden, and so does a pending one', async
 			review: {
 				name: pending,
 				rating: 3,
-				beschrijvingLang: 'Still pending',
+				longDescription: 'Still pending',
 			},
 			subjectType: 'module',
 			subjectId: moduleUuid,
@@ -466,7 +466,7 @@ test("reviews index: each configured column renders this row's real value", asyn
 			review: {
 				name: reviewTitle,
 				rating: 6,
-				beschrijvingLang: 'Column probe',
+				longDescription: 'Column probe',
 			},
 			subjectType: 'module',
 			subjectId: moduleUuid,
@@ -534,7 +534,7 @@ test('reviews: an anonymous POST cannot create a review', async () => {
 	const rows = await findAll(
 		ctx,
 		config.register,
-		'beoordeeling',
+		'assessment',
 		`Anon review ${RUN_ID}`,
 	)
 	expect(
@@ -566,7 +566,7 @@ test('reviews: a client-supplied auteur/status is stripped, not stored', async (
 		`POST /api/reviews returned ${res.status()}: ${await res.text()}`,
 	).toBeLessThan(300)
 
-	const rows = await findAll(ctx, config.register, 'beoordeeling', reviewTitle)
+	const rows = await findAll(ctx, config.register, 'assessment', reviewTitle)
 	const stored = rows.find((r) => String(r.name ?? '') === reviewTitle)
 	expect(stored, 'the review was not persisted at all').toBeTruthy()
 	// The client-supplied author was IGNORED — the session identity won.

@@ -151,7 +151,7 @@ class SoftwareCatalogContactSyncService {
 	 * (and `cbsCode`/KvK for organisations) → create from identity fields.
 	 * Never bespoke HTTP — only OCP\Contacts\IManager (ADR-019, ADR-022).
 	 *
-	 * @param string $objectType The relationship type ('contactpersoon'|'organisatie').
+	 * @param string $objectType The relationship type ('contactPerson'|'organization').
 	 * @param array<string, mixed> $record The relationship record (may still carry legacy identity fields).
 	 *
 	 * @return ?string The contacts UID, or null when it could not be resolved or created.
@@ -237,7 +237,7 @@ class SoftwareCatalogContactSyncService {
 		}
 
 		// Organisations: fall back to CBS/KvK code stored in the ORG/X-KvK field.
-		if ($objectType === 'organisatie') {
+		if ($objectType === 'organization') {
 			$cbsCode = trim((string)($record['cbsCode'] ?? ''));
 			if ($cbsCode !== '') {
 				$results = $this->contactsManager->search($cbsCode, ['ORG', 'X-KVK', 'NICKNAME'], ['limit' => 25]);
@@ -258,7 +258,7 @@ class SoftwareCatalogContactSyncService {
 	 * Create a Nextcloud contact from a relationship record's legacy identity
 	 * fields, returning the new UID.
 	 *
-	 * @param string $objectType The relationship type ('contactpersoon'|'organisatie').
+	 * @param string $objectType The relationship type ('contactPerson'|'organization').
 	 * @param array<string, mixed> $record The relationship record carrying legacy identity fields.
 	 *
 	 * @return ?string The new contacts UID, or null when no writable addressbook
@@ -329,7 +329,7 @@ class SoftwareCatalogContactSyncService {
 	 * @return array<string, mixed> The identity property set.
 	 */
 	private function identityProperties(string $objectType, array $record): array {
-		if ($objectType === 'organisatie') {
+		if ($objectType === 'organization') {
 			return $this->organisationIdentityProperties(record: $record);
 		}
 

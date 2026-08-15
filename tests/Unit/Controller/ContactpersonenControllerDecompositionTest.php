@@ -134,7 +134,7 @@ class ContactpersonenControllerDecompositionTest extends TestCase {
 			'voornaam' => 'Alice',
 			'achternaam' => 12345, // non-string -> coerce
 			'telefoonnummer' => true,  // non-string -> coerce
-			'organisatie' => 'org-uuid-123',
+			'organization' => 'org-uuid-123',
 			'organisation' => 'legacy-org-uuid',
 			'unrelated' => ['keep' => 'as-is'],
 		];
@@ -144,7 +144,7 @@ class ContactpersonenControllerDecompositionTest extends TestCase {
 		$this->assertSame('Alice', $output['voornaam']);
 		$this->assertSame('12345', $output['achternaam']);
 		$this->assertSame('1', $output['telefoonnummer']);
-		$this->assertNull($output['organisatie']);
+		$this->assertNull($output['organization']);
 		$this->assertNull($output['organisation']);
 		$this->assertSame(['keep' => 'as-is'], $output['unrelated']);
 	}
@@ -154,9 +154,9 @@ class ContactpersonenControllerDecompositionTest extends TestCase {
 			'logger' => $this->createMock(LoggerInterface::class),
 		]);
 
-		$input = ['organisatie' => null, 'organisation' => null];
+		$input = ['organization' => null, 'organisation' => null];
 		$output = $this->callPrivate($controller, 'normaliseContactDataForPersist', [$input]);
-		$this->assertNull($output['organisatie']);
+		$this->assertNull($output['organization']);
 		$this->assertNull($output['organisation']);
 	}
 

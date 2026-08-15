@@ -65,9 +65,9 @@ test.beforeAll(async () => {
 	// declared contract; nothing in this workflow asserts contact resolution.
 	seededOrgId = await createObject(apiCtx, cfg.register, cfg.organisatie_schema, {
 		name: exportOrgName,
-		type: 'Leverancier',
+		type: 'Supplier',
 		website: 'https://e2e-export-org.example.com',
-		status: 'Actief',
+		status: 'Active',
 		// The UID doubles as the display name on purpose: the schema's
 		// `configuration.objectNameField` is `contactsUid`, so this is the label
 		// the Organization combobox renders for the seeded row. `naam` is no

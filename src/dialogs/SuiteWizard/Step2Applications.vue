@@ -31,21 +31,21 @@
 		</NcNoteCard>
 
 		<NcSelect
-			:model-value="selected"
+			:modelValue="selected"
 			:options="applicationOptions"
 			:loading="loading"
 			:multiple="true"
-			:close-on-select="false"
-			:input-label="t('softwarecatalog', 'Existing applications')"
+			:closeOnSelect="false"
+			:inputLabel="t('softwarecatalog', 'Existing applications')"
 			:placeholder="t('softwarecatalog', 'Select one or more applications')"
-			track-by="uuid"
+			trackBy="uuid"
 			label="label"
-			@update:model-value="onSelectionChange" />
+			@update:modelValue="onSelectionChange" />
 	</div>
 </template>
 
 <script>
-import { NcSelect, NcNoteCard } from '@nextcloud/vue'
+import { NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
 import { mapApplicationOptions } from '../../utils/suiteWizard.js'
 

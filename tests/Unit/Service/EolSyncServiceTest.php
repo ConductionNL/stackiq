@@ -189,12 +189,12 @@ class EolSyncServiceTest extends TestCase {
 		$settingsService->method('getSchemaIdForObjectType')->willReturnMap(
 			[
 				['module', 20],
-				['moduleVersie', 21],
+				['moduleVersion', 21],
 			]
 		);
 
 		$module = ['id' => 'module-uuid-1', 'eolProductSlug' => 'postgresql'];
-		$moduleVersion = ['id' => 'mv-uuid-1', 'module' => 'module-uuid-1', 'version' => '16.2', 'beschrijvingKort' => 'keep me'];
+		$moduleVersion = ['id' => 'mv-uuid-1', 'module' => 'module-uuid-1', 'version' => '16.2', 'shortDescription' => 'keep me'];
 		$cycle = ['product' => 'postgresql', 'cycle' => '16', 'eol' => '2028-11-09'];
 
 		$objectService = $this->createMock(ObjectServiceInterface::class);
@@ -246,7 +246,7 @@ class EolSyncServiceTest extends TestCase {
 		$this->assertCount(1, $savedObjects);
 		$this->assertSame('2028-11-09', $savedObjects[0]['dateEndSupport']);
 		$this->assertSame('endoflife.date', $savedObjects[0]['eolSource']);
-		$this->assertSame('keep me', $savedObjects[0]['beschrijvingKort']);
+		$this->assertSame('keep me', $savedObjects[0]['shortDescription']);
 	}//end testSuccessfulRunMatchesStampsAndReportsStatus()
 
 	/**
@@ -265,7 +265,7 @@ class EolSyncServiceTest extends TestCase {
 		$settingsService->method('getSchemaIdForObjectType')->willReturnMap(
 			[
 				['module', 20],
-				['moduleVersie', 21],
+				['moduleVersion', 21],
 			]
 		);
 

@@ -99,7 +99,7 @@ class PortfolioReportServiceTest extends TestCase {
 			$now
 		);
 
-		$this->assertSame('In productie', $result);
+		$this->assertSame('In production', $result);
 	}//end testDeriveLifecyclePhaseUsesMostAdvancedPastDate()
 
 	/**
@@ -200,7 +200,7 @@ class PortfolioReportServiceTest extends TestCase {
 	 */
 	public function testAnnualisedCostMonthly(): void {
 		$derivation = $this->makeDerivation();
-		$result = $derivation->annualisedCost(['cost' => 1000, 'costPeriod' => 'Maandelijks']);
+		$result = $derivation->annualisedCost(['cost' => 1000, 'costPeriod' => 'Monthly']);
 
 		$this->assertSame(12000.0, $result['annual']);
 		$this->assertSame(0.0, $result['oneOff']);
@@ -213,7 +213,7 @@ class PortfolioReportServiceTest extends TestCase {
 	 */
 	public function testAnnualisedCostYearly(): void {
 		$derivation = $this->makeDerivation();
-		$result = $derivation->annualisedCost(['cost' => 6000, 'costPeriod' => 'Jaarlijks']);
+		$result = $derivation->annualisedCost(['cost' => 6000, 'costPeriod' => 'Annually']);
 
 		$this->assertSame(6000.0, $result['annual']);
 		$this->assertSame(0.0, $result['oneOff']);
@@ -226,7 +226,7 @@ class PortfolioReportServiceTest extends TestCase {
 	 */
 	public function testAnnualisedCostOneOff(): void {
 		$derivation = $this->makeDerivation();
-		$result = $derivation->annualisedCost(['cost' => 5000, 'costPeriod' => 'Eenmalig']);
+		$result = $derivation->annualisedCost(['cost' => 5000, 'costPeriod' => 'One-off']);
 
 		$this->assertSame(0.0, $result['annual']);
 		$this->assertSame(5000.0, $result['oneOff']);

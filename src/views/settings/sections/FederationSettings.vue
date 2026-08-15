@@ -20,10 +20,10 @@
 			)
 		"
 		:loading="loading"
-		:loading-text="t('softwarecatalog', 'Loading federation status…')"
-		:show-refresh-button="true"
+		:loadingText="t('softwarecatalog', 'Loading federation status…')"
+		:showRefreshButton="true"
 		:refreshing="loading"
-		:refresh-button-text="t('softwarecatalog', 'Refresh status')"
+		:refreshButtonText="t('softwarecatalog', 'Refresh status')"
 		@refresh="loadStatus">
 		<template #header-actions>
 			<NcButton
@@ -86,7 +86,7 @@
 				<NcTextField
 					v-model="newPeerUrl"
 					:label="t('softwarecatalog', 'Peer catalog URL')"
-					:placeholder="'https://catalog.example.org'"
+					placeholder="https://catalog.example.org"
 					:disabled="adding"
 					@keydown.enter="addPeer" />
 				<NcButton
@@ -178,9 +178,8 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcEmptyContent,
@@ -188,10 +187,11 @@ import {
 	NcNoteCard,
 	NcTextField,
 } from '@nextcloud/vue'
-import Sync from 'vue-material-design-icons/Sync.vue'
-import Plus from 'vue-material-design-icons/Plus.vue'
+import { defineComponent } from 'vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import LanDisconnect from 'vue-material-design-icons/LanDisconnect.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
+import Sync from 'vue-material-design-icons/Sync.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import { apiRequest, normaliseFederationStatus } from '../../../utils/adminApi.js'
 

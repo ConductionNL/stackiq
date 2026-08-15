@@ -103,6 +103,18 @@ Vrij en open source onder de EUPL-licentie.
 
 	<repair-steps>
 		<post-migration>
+			<!--
+				MUST stay first. OpenRegister's import matches a schema to an
+				existing row by SLUG, so a renamed slug in the register JSON does
+				not rename anything: the import finds no match, creates a SECOND
+				schema, and every stored object keeps pointing at the old one —
+				data stranded behind a schema nothing reads, which presents as an
+				app with no records rather than as an error. Renaming the slug on
+				the existing row first makes the import recognise it and update it.
+				InitializeSettings is what triggers that import, via
+				SettingsService::initialize().
+			-->
+			<step>OCA\SoftwareCatalog\Repair\RenameDutchSchemaSlugs</step>
 			<step>OCA\SoftwareCatalog\Repair\InitializeSettings</step>
 			<step>OCA\SoftwareCatalog\Repair\MigrateContactsToNc</step>
 			<step>OCA\SoftwareCatalog\Repair\BackfillContractApprovalState</step>
@@ -114,6 +126,14 @@ Vrij en open source onder de EUPL-licentie.
 				Idempotent, non-destructive, and refuses ambiguous renames.
 			-->
 			<step>OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns</step>
+			<!--
+				After the column rename, and late for the same reason: the schema
+				edit changes the DECLARATION, but every row already written still
+				holds the Dutch string. A filter on the new value then returns
+				null rather than an error, so the feature reports "nothing found"
+				instead of failing.
+			-->
+			<step>OCA\SoftwareCatalog\Repair\RenameDutchCatalogValues</step>
 		</post-migration>
 		<!--
 			FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:

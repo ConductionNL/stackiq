@@ -92,7 +92,7 @@
 								<!-- Convert to User Action -->
 								<NcActionButton
 									v-if="!contactpersoon.user.hasUser"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									:disabled="contactpersoon.loading"
 									@click="convertToUser(contactpersoon)">
 									<template #icon>
@@ -111,7 +111,7 @@
 								<!-- Change Password Action -->
 								<NcActionButton
 									v-if="contactpersoon.user.hasUser"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									@click="openPasswordDialog(contactpersoon)">
 									<template #icon>
 										<Key :size="20" />
@@ -122,7 +122,7 @@
 								<!-- Manage Groups Action -->
 								<NcActionButton
 									v-if="contactpersoon.user.hasUser"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									@click="openGroupsDialog(contactpersoon)">
 									<template #icon>
 										<AccountGroup :size="20" />
@@ -136,7 +136,7 @@
 										contactpersoon.user.hasUser
 										&& !contactpersoon.user.disabled
 									"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									@click="disableUser(contactpersoon)">
 									<template #icon>
 										<CloseCircle :size="20" />
@@ -150,7 +150,7 @@
 										contactpersoon.user.hasUser
 										&& contactpersoon.user.disabled
 									"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									@click="enableUser(contactpersoon)">
 									<template #icon>
 										<CheckCircle :size="20" />
@@ -175,33 +175,30 @@
 		<ManageUserGroupsDialog
 			v-if="showGroupsDialog"
 			:contactpersoon="selectedContactpersoon"
-			@groups-loaded="onGroupsLoaded"
+			@groupsLoaded="onGroupsLoaded"
 			@saved="onGroupsSaved"
 			@close="closeGroupsDialog" />
 	</div>
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
-	NcActions,
 	NcActionButton,
+	NcActions,
+	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
-	NcEmptyContent,
 } from '@nextcloud/vue'
-
+import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
-import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
-import Key from 'vue-material-design-icons/Key.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
-
+import Key from 'vue-material-design-icons/Key.vue'
 import ChangePasswordDialog from '../dialogs/ChangePasswordDialog.vue'
 import ManageUserGroupsDialog from '../dialogs/ManageUserGroupsDialog.vue'
-
 import { useOrganisatieStore } from '../store/modules/organisatie.js'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'ContactpersonenList',
@@ -227,6 +224,7 @@ export default {
 			type: String,
 			required: true,
 		},
+
 		organisationData: {
 			type: Object,
 			default: () => ({}),
@@ -334,6 +332,7 @@ export default {
 
 		/**
 		 * Process contactpersonen data from organisation object to match expected format.
+		 *
 		 * @param {Array} rawContactpersonen - Raw contactpersonen data from organisation.
 		 * @return {Array} Processed contactpersonen with user information.
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -345,7 +344,7 @@ export default {
 				const hasUser = !!data.username
 
 				// Debug logging to understand the data structure.
-				console.info('Processing contactpersoon:', {
+				console.info('Processing contactPerson:', {
 					contactId,
 					data,
 					hasUser,
@@ -377,6 +376,7 @@ export default {
 
 		/**
 		 * Load user info and available groups in parallel
+		 *
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async loadUserInfoAndGroups() {
@@ -427,7 +427,6 @@ export default {
 					promises.push(Promise.resolve({}))
 				}
 
-				// eslint-disable-next-line no-unused-vars
 				const [availableGroups, bulkUserInfo] = await Promise.all(promises)
 
 				console.info('Received bulk user info:', bulkUserInfo)
@@ -450,6 +449,7 @@ export default {
 
 		/**
 		 * Update contactpersonen with bulk user info.
+		 *
 		 * @param {object} bulkUserInfo - User info object keyed by contactpersoon ID.
 		 * @return {void}
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -498,6 +498,7 @@ export default {
 
 		/**
 		 * Refresh user statuses from Nextcloud for all contact persons
+		 *
 		 * @deprecated Use loadUserInfoAndGroups() instead for better performance
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -510,6 +511,7 @@ export default {
 
 		/**
 		 * Public method to refresh user statuses - can be called from parent component
+		 *
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async refreshUserData() {
@@ -519,6 +521,7 @@ export default {
 
 		/**
 		 * Get contactperson name.
+		 *
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {string} The contact person's name.
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -537,6 +540,7 @@ export default {
 
 		/**
 		 * Filter groups to only show those available in the modal.
+		 *
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {Array} Filtered array of group IDs.
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -560,6 +564,7 @@ export default {
 
 		/**
 		 * Format group name.
+		 *
 		 * @param {string} groupId - The group ID.
 		 * @return {string} Formatted group name.
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -574,6 +579,7 @@ export default {
 		},
 
 		/**
+		 * @param contactpersoon
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async convertToUser(contactpersoon) {
@@ -609,7 +615,7 @@ export default {
 				showError(
 					this.t(
 						'softwarecatalog',
-						'Invalid contactpersoon data structure',
+						'Invalid contact person data structure',
 					),
 				)
 				return
@@ -623,24 +629,27 @@ export default {
 				console.info('Convert to user result:', result)
 
 				// Replace the contactpersoon object with the updated one from the API
-				if (result.contactpersoon) {
+				if (result.contactPerson) {
 					// The API returns the contactpersoon object directly, we need to structure it properly
 					const updatedContactpersoon = {
 						id:
-							result.contactpersoon.id
-							|| result.contactpersoon['@self']?.id,
+							result.contactPerson.id
+							|| result.contactPerson['@self']?.id,
+
 						uuid:
-							result.contactpersoon.id
-							|| result.contactpersoon['@self']?.id,
+							result.contactPerson.id
+							|| result.contactPerson['@self']?.id,
+
 						data: {
-							voornaam: result.contactpersoon.voornaam,
-							achternaam: result.contactpersoon.achternaam,
-							'e-mailadres': result.contactpersoon['e-mailadres'],
-							name: result.contactpersoon.name,
-							organisatie: result.contactpersoon.organisatie,
-							username: result.contactpersoon.username,
-							groups: result.contactpersoon.groups || [],
+							voornaam: result.contactPerson.voornaam,
+							achternaam: result.contactPerson.achternaam,
+							'e-mailadres': result.contactPerson['e-mailadres'],
+							name: result.contactPerson.name,
+							organization: result.contactPerson.organization,
+							username: result.contactPerson.username,
+							groups: result.contactPerson.groups || [],
 						},
+
 						loading: false, // Clear loading state
 					}
 
@@ -688,6 +697,7 @@ export default {
 		},
 
 		/**
+		 * @param contactpersoon
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		openPasswordDialog(contactpersoon) {
@@ -709,6 +719,7 @@ export default {
 		 * Open groups management dialog.
 		 * ManageUserGroupsDialog reads the user's CURRENT groups itself and
 		 * reports them back through `groups-loaded`.
+		 *
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {void}
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -729,6 +740,7 @@ export default {
 		/**
 		 * The groups dialog read the user's current groups — mirror them into the
 		 * local data so the table shows the correct groups.
+		 *
 		 * @param {Array} groups - Array of group IDs.
 		 * @return {void}
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -741,6 +753,7 @@ export default {
 		/**
 		 * The groups dialog saved a new membership — mirror it into the local data
 		 * and close the dialog.
+		 *
 		 * @param {Array} groups - Array of group IDs.
 		 * @return {void}
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -757,6 +770,7 @@ export default {
 
 		/**
 		 * Disable a user account
+		 *
 		 * @param {object} contactpersoon - The contact person object
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -778,6 +792,7 @@ export default {
 
 		/**
 		 * Enable a user account
+		 *
 		 * @param {object} contactpersoon - The contact person object
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -799,6 +814,7 @@ export default {
 
 		/**
 		 * Update the disabled status of a contactpersoon in the local data.
+		 *
 		 * @param {string} contactpersoonId - The ID of the contact person.
 		 * @param {boolean} disabled - Whether the user is disabled.
 		 * @return {void}
@@ -836,6 +852,7 @@ export default {
 
 		/**
 		 * Update the groups of a contactpersoon in the local data.
+		 *
 		 * @param {string} contactpersoonId - The ID of the contact person.
 		 * @param {Array} groups - Array of group IDs.
 		 * @return {void}

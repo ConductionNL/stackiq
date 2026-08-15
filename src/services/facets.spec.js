@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Unit tests for the facets.js API client (gemma-faceted-search).
  *
@@ -8,8 +7,7 @@
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-
-import { FACET_DIMENSIONS, buildFacetQueryParams, fetchFacets } from './facets.js'
+import { buildFacetQueryParams, FACET_DIMENSIONS, fetchFacets } from './facets.js'
 
 // `virtual: true` — `@nextcloud/axios` ships an ESM-only `exports` map (no
 // `require` condition), which Jest's CJS resolver cannot resolve even to
@@ -121,10 +119,10 @@ describe('facets.fetchFacets', () => {
 	it('requests the bare schema URL (no ?) when no options are given', async () => {
 		axios.get.mockResolvedValue({ data: {} })
 
-		await fetchFacets('dienst')
+		await fetchFacets('service')
 
 		const [calledUrl] = axios.get.mock.calls[0]
-		expect(calledUrl).toBe('/apps/softwarecatalog/api/facets/dienst')
+		expect(calledUrl).toBe('/apps/softwarecatalog/api/facets/service')
 	})
 
 	it('returns the response body', async () => {

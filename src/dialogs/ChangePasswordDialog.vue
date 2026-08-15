@@ -141,12 +141,10 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
-
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
-
-import { showSuccess, showError } from '@nextcloud/dialogs'
 import { useOrganisatieStore } from '../store/modules/organisatie.js'
 
 export default {
@@ -222,6 +220,7 @@ export default {
 
 	watch: {
 		/**
+		 * @param newVal
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		newPassword(newVal) {
@@ -258,6 +257,7 @@ export default {
 	methods: {
 		/**
 		 * Compute SHA-1 hash of a string
+		 *
 		 * @param {string} str - String to hash
 		 * @return {Promise<string>} SHA-1 hash in hexadecimal format (uppercase)
 		 * @spec openspec/specs/fe-organizations/spec.md
@@ -359,6 +359,7 @@ export default {
 
 		/**
 		 * Rotate left operation for SHA-1
+		 *
 		 * @param {number} value - Value to rotate
 		 * @param {number} amount - Amount to rotate
 		 * @return {number} Rotated value
@@ -370,6 +371,7 @@ export default {
 
 		/**
 		 * Check if password is in Have I Been Pwned database
+		 *
 		 * @param {string} password - Password to check
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -435,6 +437,7 @@ export default {
 
 		/**
 		 * Persist the new password for the selected user.
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */

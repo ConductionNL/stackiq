@@ -139,7 +139,7 @@ class ContactPersonHandlerTest extends TestCase {
 		$method->setAccessible(true);
 
 		// Test case 1: Gemeente -> gebruik-beheerder
-		$result = $method->invoke($handler, 'Gemeente');
+		$result = $method->invoke($handler, 'Municipality');
 		$this->assertEquals('gebruik-beheerder', $result, 'Gemeente should map to gebruik-beheerder');
 
 		// Test case 2: gemeente (lowercase) -> gebruik-beheerder
@@ -147,7 +147,7 @@ class ContactPersonHandlerTest extends TestCase {
 		$this->assertEquals('gebruik-beheerder', $result, 'gemeente (lowercase) should map to gebruik-beheerder');
 
 		// Test case 3: Leverancier -> aanbod-beheerder
-		$result = $method->invoke($handler, 'Leverancier');
+		$result = $method->invoke($handler, 'Supplier');
 		$this->assertEquals('aanbod-beheerder', $result, 'Leverancier should map to aanbod-beheerder');
 
 		// Test case 4: leverancier (lowercase) -> aanbod-beheerder
@@ -155,7 +155,7 @@ class ContactPersonHandlerTest extends TestCase {
 		$this->assertEquals('aanbod-beheerder', $result, 'leverancier (lowercase) should map to aanbod-beheerder');
 
 		// Test case 5: Samenwerking -> gebruik-beheerder
-		$result = $method->invoke($handler, 'Samenwerking');
+		$result = $method->invoke($handler, 'Collaboration');
 		$this->assertEquals('gebruik-beheerder', $result, 'Samenwerking should map to gebruik-beheerder');
 
 		// Test case 6: samenwerking (lowercase) -> gebruik-beheerder

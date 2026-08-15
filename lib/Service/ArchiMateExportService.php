@@ -2544,23 +2544,23 @@ XML;
 		}
 
 		// Build ref map from gebruik data.
-		foreach ($gebruikData as $gebruik) {
-			if (is_object($gebruik) === true && method_exists($gebruik, 'jsonSerialize') === true) {
-				$gebruik = $gebruik->jsonSerialize();
+		foreach ($gebruikData as $usage) {
+			if (is_object($usage) === true && method_exists($usage, 'jsonSerialize') === true) {
+				$usage = $usage->jsonSerialize();
 			}
 
-			$moduleId = $gebruik['module'] ?? null;
+			$moduleId = $usage['module'] ?? null;
 			if ($moduleId === null) {
 				continue;
 			}
 
 			// Get module name from gebruik if not already known.
 			if (isset($moduleNameMap[$moduleId]) === false) {
-				$moduleNameMap[$moduleId] = $gebruik['moduleName'] ?? $gebruik['@self']['name'] ?? 'Module';
+				$moduleNameMap[$moduleId] = $usage['moduleName'] ?? $usage['@self']['name'] ?? 'Module';
 			}
 
 			// Get referentiecomponenten UUIDs.
-			$refComps = $gebruik['usedForReferenceComponents'] ?? [];
+			$refComps = $usage['usedForReferenceComponents'] ?? [];
 			if (is_array($refComps) === false) {
 				continue;
 			}

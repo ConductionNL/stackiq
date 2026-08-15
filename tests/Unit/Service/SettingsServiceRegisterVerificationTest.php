@@ -114,7 +114,7 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 
 		$result = $this->verify(
 			$service,
-			['components' => ['schemas' => ['module' => [], 'gebruik' => []]]]
+			['components' => ['schemas' => ['module' => [], 'usage' => []]]]
 		);
 
 		$this->assertTrue($result['ok']);
@@ -140,11 +140,11 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 
 		$result = $this->verify(
 			$service,
-			['components' => ['schemas' => ['bioMaatregel' => []]]]
+			['components' => ['schemas' => ['bioMeasure' => []]]]
 		);
 
 		$this->assertFalse($result['ok']);
-		$this->assertSame(['bioMaatregel'], $result['missingSchemas']);
+		$this->assertSame(['bioMeasure'], $result['missingSchemas']);
 	}//end testUnresolvedSchemaSlugIsReportedAndLogged()
 
 	/**
@@ -162,7 +162,7 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 		$result = $this->verify($service, ['components' => ['schemas' => ['module' => []]]]);
 
 		$this->assertFalse($result['ok']);
-		$this->assertSame(['organization', 'contactpersoon'], $result['unresolvedObjectTypes']);
+		$this->assertSame(['organization', 'contactPerson'], $result['unresolvedObjectTypes']);
 	}//end testUnresolvedObjectTypeIsReported()
 
 	/**
@@ -223,7 +223,7 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 		$persisted = json_encode(
 			[
 				'ok' => false,
-				'missingSchemas' => ['bioMaatregel'],
+				'missingSchemas' => ['bioMeasure'],
 				'unresolvedObjectTypes' => [],
 			]
 		);
@@ -250,7 +250,7 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 
 		$this->assertFalse($status['ok']);
 		$this->assertTrue($status['checked']);
-		$this->assertSame(['bioMaatregel'], $status['missingSchemas']);
+		$this->assertSame(['bioMeasure'], $status['missingSchemas']);
 		$this->assertNotNull($status['message']);
 	}//end testGetRegisterVerificationStatusSurfacesPersistedMismatch()
 

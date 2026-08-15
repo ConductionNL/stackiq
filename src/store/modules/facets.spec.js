@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Unit tests for the GEMMA facet Pinia store (gemma-faceted-search).
  *
@@ -7,11 +6,10 @@
  * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
  */
 
-import { setActivePinia, createPinia } from 'pinia'
 import axios from '@nextcloud/axios'
-
-import { useFacetStore } from './facets.js'
+import { createPinia, setActivePinia } from 'pinia'
 import { fetchFacets } from '../../services/facets.js'
+import { useFacetStore } from './facets.js'
 
 // `virtual: true` — see facets.spec.js (services) for why: `@nextcloud/axios`
 // is ESM-only (`exports` map with no `require` condition) and unresolvable
@@ -79,9 +77,9 @@ describe('facets store — filter/search state', () => {
 	it('module and dienst state are independent', () => {
 		const store = useFacetStore()
 		store.setFilter('module', 'referentiecomponent', ['A'])
-		store.setFilter('dienst', 'referentiecomponent', ['B'])
+		store.setFilter('service', 'referentiecomponent', ['B'])
 		expect(store.module.activeFilters.referentiecomponent).toEqual(['A'])
-		expect(store.dienst.activeFilters.referentiecomponent).toEqual(['B'])
+		expect(store.service.activeFilters.referentiecomponent).toEqual(['B'])
 	})
 })
 
@@ -171,16 +169,16 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 
 	it('round-trips filtersToQuery -> setFiltersFromQuery', () => {
 		const store = useFacetStore()
-		store.setFilter('dienst', 'domein', ['Bedrijfsvoering', 'Dienstverlening'])
-		store.setSearch('dienst', 'stuf')
+		store.setFilter('service', 'domein', ['Bedrijfsvoering', 'Dienstverlening'])
+		store.setSearch('service', 'stuf')
 
-		const query = store.filtersToQuery('dienst')
-		store.setFiltersFromQuery('dienst', query)
+		const query = store.filtersToQuery('service')
+		store.setFiltersFromQuery('service', query)
 
-		expect(store.dienst.activeFilters).toEqual({
+		expect(store.service.activeFilters).toEqual({
 			domein: ['Bedrijfsvoering', 'Dienstverlening'],
 		})
-		expect(store.dienst.search).toBe('stuf')
+		expect(store.service.search).toBe('stuf')
 	})
 })
 
@@ -262,7 +260,7 @@ describe('facets store — saved views', () => {
 						id: 2,
 						query: {
 							marker: 'softwarecatalog-gemma-facets',
-							gemmaSchema: 'dienst',
+							gemmaSchema: 'service',
 						},
 					},
 					{ id: 3, query: { marker: 'some-other-feature' } },

@@ -17,7 +17,7 @@
  -->
 
 <template>
-	<NcSettingsSection :name="name" :description="description" :doc-url="docUrl">
+	<NcSettingsSection :name="name" :description="description" :docUrl="docUrl">
 		<!-- Header actions positioned at top-right of the section title area -->
 		<div class="section-header-actions">
 			<div class="header-buttons">
@@ -105,11 +105,11 @@
 </template>
 
 <script>
+import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
 import { defineComponent } from 'vue'
-import { NcSettingsSection, NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import Save from 'vue-material-design-icons/ContentSave.vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Information from 'vue-material-design-icons/Information.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import AlwaysVisibleSectionInfoModal from '../modals/AlwaysVisibleSectionInfoModal.vue'
 
 /**
@@ -248,6 +248,7 @@ export default defineComponent({
 	methods: {
 		/**
 		 * Handle save button click
+		 *
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleSave() {
@@ -256,6 +257,7 @@ export default defineComponent({
 
 		/**
 		 * Handle refresh button click
+		 *
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleRefresh() {

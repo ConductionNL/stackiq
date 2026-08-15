@@ -53,11 +53,11 @@ class MergeOrganisatieServiceTest extends TestCase {
 	 * @var array<string, int>
 	 */
 	private const SCHEMA_IDS = [
-		'organisatie' => 1,
-		'gebruik' => 2,
+		'organization' => 1,
+		'usage' => 2,
 		'contract' => 3,
-		'contactpersoon' => 4,
-		'koppeling' => 5,
+		'contactPerson' => 4,
+		'connection' => 5,
 		'compliancy' => 6,
 	];
 
@@ -87,8 +87,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testDryRunReportsCountsWithoutWriting(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief', 'group' => 'group-a']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief', 'group' => 'group-b']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active', 'group' => 'group-a']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active', 'group' => 'group-b']),
 			],
 			typedFixtures: $this->fullFixtureSet(),
 			groupMembers: ['group-a' => ['alice'], 'group-b' => ['carol']]
@@ -100,8 +100,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 		$this->assertSame(
 			[
 				'groupMembers' => 1,
-				'gebruik' => 2,
-				'contactpersoon' => 1,
+				'usage' => 2,
+				'contactPerson' => 1,
 				'aanbod' => 1,
 				'contract' => 1,
 				'compliancy' => 1,
@@ -121,8 +121,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testDryRunWithNoRelationsReportsAllZeros(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active']),
 			],
 			typedFixtures: [],
 			groupMembers: []
@@ -145,8 +145,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 	 */
 	public function testExecuteRepointsExactlyWhatDryRunCounted(): void {
 		$organisations = [
-			'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief', 'group' => 'group-a']),
-			'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief', 'group' => 'group-b']),
+			'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active', 'group' => 'group-a']),
+			'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active', 'group' => 'group-b']),
 		];
 
 		$dryRunService = $this->makeService(
@@ -181,8 +181,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testUntouchedContractFieldsSurviveRepointing(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active']),
 			],
 			typedFixtures: [
 				'contract' => [
@@ -254,8 +254,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testSelfOrganisationRelationsAreRepointedForMagicAccessorEntities(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active']),
 			],
 			typedFixtures: [
 				'contract' => [
@@ -293,9 +293,9 @@ class MergeOrganisatieServiceTest extends TestCase {
 
 		// The data-loss half of #490: the source is tombstoned either way, so a
 		// silent zero here leaves live objects owned by a retired organisation.
-		$tombstone = $this->findSave(schemaId: self::SCHEMA_IDS['organisatie'], uuid: 'org-a');
+		$tombstone = $this->findSave(schemaId: self::SCHEMA_IDS['organization'], uuid: 'org-a');
 		$this->assertNotNull($tombstone);
-		$this->assertSame('samengevoegd', $tombstone['object']['status']);
+		$this->assertSame('merged', $tombstone['object']['status']);
 	}//end testSelfOrganisationRelationsAreRepointedForMagicAccessorEntities()
 
 	/**
@@ -310,8 +310,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testDryRunCountsSelfOrganisationRelationsForMagicAccessorEntities(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active']),
 			],
 			typedFixtures: [
 				'contract' => [$this->entity(['id' => 'c1'], uuid: 'c1', organisation: 'org-a')],
@@ -338,11 +338,11 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testGebruikDeelnemersOnlyReplacesMatchingEntry(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active']),
 			],
 			typedFixtures: [
-				'gebruik' => [
+				'usage' => [
 					$this->entity(
 						['id' => 'g1', 'consumer' => 'org-x', 'participants' => ['org-a', 'org-c', 'org-d']],
 						uuid: 'g1'
@@ -354,7 +354,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 
 		$service->execute(sourceUuid: 'org-a', targetUuid: 'org-b');
 
-		$save = $this->findSave(schemaId: self::SCHEMA_IDS['gebruik'], uuid: 'g1');
+		$save = $this->findSave(schemaId: self::SCHEMA_IDS['usage'], uuid: 'g1');
 		$this->assertNotNull($save);
 		$this->assertSame(['org-b', 'org-c', 'org-d'], $save['object']['participants']);
 		$this->assertSame('org-x', $save['object']['consumer'], 'afnemer was already not the source — must stay untouched');
@@ -371,16 +371,16 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testReRunningExecuteAfterPartialCompletionOnlyFinishesRemainingTypes(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active']),
 			],
 			typedFixtures: [
 				// gebruik/contract already point at the target — nothing left to do.
-				'gebruik' => [$this->entity(['id' => 'g1', 'consumer' => 'org-b'], uuid: 'g1')],
+				'usage' => [$this->entity(['id' => 'g1', 'consumer' => 'org-b'], uuid: 'g1')],
 				'contract' => [$this->entity(['id' => 'c1'], uuid: 'c1', organisation: 'org-b')],
 				// contactpersoon/koppeling/compliancy still reference the source.
-				'contactpersoon' => [$this->entity(['id' => 'p1', 'organisatie' => 'org-a'], uuid: 'p1')],
-				'koppeling' => [$this->entity(['id' => 'k1', 'provider' => 'org-a'], uuid: 'k1')],
+				'contactPerson' => [$this->entity(['id' => 'p1', 'organization' => 'org-a'], uuid: 'p1')],
+				'connection' => [$this->entity(['id' => 'k1', 'provider' => 'org-a'], uuid: 'k1')],
 				'compliancy' => [$this->entity(['id' => 'cp1'], uuid: 'cp1', organisation: 'org-a')],
 			],
 			groupMembers: []
@@ -388,15 +388,15 @@ class MergeOrganisatieServiceTest extends TestCase {
 
 		$result = $service->execute(sourceUuid: 'org-a', targetUuid: 'org-b');
 
-		$this->assertSame(0, $result['counts']['gebruik']);
+		$this->assertSame(0, $result['counts']['usage']);
 		$this->assertSame(0, $result['counts']['contract']);
-		$this->assertSame(1, $result['counts']['contactpersoon']);
+		$this->assertSame(1, $result['counts']['contactPerson']);
 		$this->assertSame(1, $result['counts']['aanbod']);
 		$this->assertSame(1, $result['counts']['compliancy']);
 
-		$this->assertNull($this->findSave(schemaId: self::SCHEMA_IDS['gebruik'], uuid: 'g1'));
+		$this->assertNull($this->findSave(schemaId: self::SCHEMA_IDS['usage'], uuid: 'g1'));
 		$this->assertNull($this->findSave(schemaId: self::SCHEMA_IDS['contract'], uuid: 'c1'));
-		$this->assertNotNull($this->findSave(schemaId: self::SCHEMA_IDS['contactpersoon'], uuid: 'p1'));
+		$this->assertNotNull($this->findSave(schemaId: self::SCHEMA_IDS['contactPerson'], uuid: 'p1'));
 	}//end testReRunningExecuteAfterPartialCompletionOnlyFinishesRemainingTypes()
 
 	/**
@@ -411,12 +411,12 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testReRunningAFullyCompletedMergeIsASafeNoOp(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'samengevoegd', 'mergedInto' => 'org-b']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'merged', 'mergedInto' => 'org-b']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active']),
 			],
 			typedFixtures: [
 				// Everything already re-pointed to the target.
-				'gebruik' => [$this->entity(['id' => 'g1', 'consumer' => 'org-b'], uuid: 'g1')],
+				'usage' => [$this->entity(['id' => 'g1', 'consumer' => 'org-b'], uuid: 'g1')],
 				'contract' => [$this->entity(['id' => 'c1'], uuid: 'c1', organisation: 'org-b')],
 			],
 			groupMembers: []
@@ -426,7 +426,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 
 		$this->assertTrue($result['ok']);
 		$this->assertSame('already_completed', $result['status']);
-		$this->assertNull($this->findSave(schemaId: self::SCHEMA_IDS['gebruik'], uuid: 'g1'));
+		$this->assertNull($this->findSave(schemaId: self::SCHEMA_IDS['usage'], uuid: 'g1'));
 		$this->assertNull($this->findSave(schemaId: self::SCHEMA_IDS['contract'], uuid: 'c1'));
 	}//end testReRunningAFullyCompletedMergeIsASafeNoOp()
 
@@ -442,8 +442,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testSourceOrganisationIsTombstonedAfterSuccessfulMerge(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief', 'name' => 'Gemeente A', 'type' => 'Gemeente']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active', 'name' => 'Gemeente A', 'type' => 'Municipality']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active']),
 			],
 			typedFixtures: [],
 			groupMembers: []
@@ -453,13 +453,13 @@ class MergeOrganisatieServiceTest extends TestCase {
 
 		$this->assertSame('completed', $result['status']);
 
-		$tombstoneSave = $this->findSave(schemaId: self::SCHEMA_IDS['organisatie'], uuid: 'org-a');
+		$tombstoneSave = $this->findSave(schemaId: self::SCHEMA_IDS['organization'], uuid: 'org-a');
 		$this->assertNotNull($tombstoneSave);
-		$this->assertSame('samengevoegd', $tombstoneSave['object']['status']);
+		$this->assertSame('merged', $tombstoneSave['object']['status']);
 		$this->assertSame('org-b', $tombstoneSave['object']['mergedInto']);
 		// Pre-existing fields survive (PUT-semantic full re-save).
 		$this->assertSame('Gemeente A', $tombstoneSave['object']['name']);
-		$this->assertSame('Gemeente', $tombstoneSave['object']['type']);
+		$this->assertSame('Municipality', $tombstoneSave['object']['type']);
 	}//end testSourceOrganisationIsTombstonedAfterSuccessfulMerge()
 
 	/**
@@ -499,8 +499,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief', 'group' => 'group-a']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Actief', 'group' => 'group-b']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active', 'group' => 'group-a']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active', 'group' => 'group-b']),
 			],
 			typedFixtures: [],
 			groupMembers: [],
@@ -522,7 +522,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 	 */
 	public function testSelfMergeIsRejected(): void {
 		$service = $this->makeService(
-			organisations: ['org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief'])],
+			organisations: ['org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active'])],
 			typedFixtures: [],
 			groupMembers: []
 		);
@@ -544,8 +544,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testMergingIntoAnAlreadyTombstonedTargetIsRejected(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Actief']),
-				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'samengevoegd', 'mergedInto' => 'org-z']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active']),
+				'org-b' => $this->entity(['id' => 'org-b', 'status' => 'merged', 'mergedInto' => 'org-z']),
 			],
 			typedFixtures: [],
 			groupMembers: []
@@ -570,8 +570,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 	public function testReMergingAnAlreadyTombstonedSourceIntoADifferentTargetIsRejected(): void {
 		$service = $this->makeService(
 			organisations: [
-				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'samengevoegd', 'mergedInto' => 'org-b']),
-				'org-c' => $this->entity(['id' => 'org-c', 'status' => 'Actief']),
+				'org-a' => $this->entity(['id' => 'org-a', 'status' => 'merged', 'mergedInto' => 'org-b']),
+				'org-c' => $this->entity(['id' => 'org-c', 'status' => 'Active']),
 			],
 			typedFixtures: [],
 			groupMembers: []
@@ -591,7 +591,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 	 */
 	private function fullFixtureSet(): array {
 		return [
-			'gebruik' => [
+			'usage' => [
 				$this->entity(['id' => 'g1', 'consumer' => 'org-a', 'participants' => ['org-c']], uuid: 'g1'),
 				$this->entity(['id' => 'g2', 'consumer' => 'org-x', 'participants' => ['org-a', 'org-c', 'org-d']], uuid: 'g2'),
 				$this->entity(['id' => 'g3', 'consumer' => 'org-y', 'participants' => ['org-z']], uuid: 'g3'),
@@ -600,11 +600,11 @@ class MergeOrganisatieServiceTest extends TestCase {
 				$this->entity(['id' => 'c1', 'contractNumber' => 'C-100'], uuid: 'c1', organisation: 'org-a'),
 				$this->entity(['id' => 'c2'], uuid: 'c2', organisation: 'org-b'),
 			],
-			'contactpersoon' => [
-				$this->entity(['id' => 'p1', 'organisatie' => 'org-a'], uuid: 'p1'),
-				$this->entity(['id' => 'p2', 'organisatie' => 'org-b'], uuid: 'p2'),
+			'contactPerson' => [
+				$this->entity(['id' => 'p1', 'organization' => 'org-a'], uuid: 'p1'),
+				$this->entity(['id' => 'p2', 'organization' => 'org-b'], uuid: 'p2'),
 			],
-			'koppeling' => [
+			'connection' => [
 				$this->entity(['id' => 'k1', 'provider' => 'org-a'], uuid: 'k1'),
 				$this->entity(['id' => 'k2', 'provider' => 'org-b'], uuid: 'k2'),
 			],

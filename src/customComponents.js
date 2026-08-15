@@ -18,20 +18,20 @@
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
-import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
-import DashboardCustomView from './views/Dashboard.vue'
-import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
-import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
-import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
-import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
-import LicensePostureView from './views/LicensePostureView.vue'
-import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
-import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
-import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
-import SuitesIndexView from './views/suites/SuitesIndexView.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
+import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
+import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
+import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
+import DashboardCustomView from './views/Dashboard.vue'
+import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
+import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
+import LicensePostureView from './views/LicensePostureView.vue'
+import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
+import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
+import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
+import SuitesIndexView from './views/suites/SuitesIndexView.vue'
 
 export default {
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as

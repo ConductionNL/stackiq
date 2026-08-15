@@ -475,7 +475,7 @@ class ViewController extends Controller {
 					'description' => 'Adds product information to nodes with product associations',
 				],
 				[
-					'name' => 'gebruik',
+					'name' => 'usage',
 					'description' => 'Adds usage/usage statistics to view nodes',
 				],
 				[

@@ -8,9 +8,9 @@
  * @spec openspec/changes/view-products-enrichment/specs/view-enrichment-api/spec.md
  */
 
-import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 
 export const useViewStore = defineStore('view', {
 	state: () => ({

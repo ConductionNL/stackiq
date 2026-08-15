@@ -94,13 +94,13 @@ class ContractApprovalService {
 	/**
 	 * Catalog lifecycle status: in negotiation (the pre-approval state).
 	 */
-	public const STATUS_NEGOTIATION = 'In onderhandeling';
+	public const STATUS_NEGOTIATION = 'In negotiation';
 
 	/**
 	 * Catalog lifecycle status: active (only ever reached via an `approved`
 	 * decidesk outcome — never set on local authority).
 	 */
-	public const STATUS_ACTIVE = 'Actief';
+	public const STATUS_ACTIVE = 'Active';
 
 	/**
 	 * Projection state: no decision raised.

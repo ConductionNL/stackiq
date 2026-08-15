@@ -26,13 +26,13 @@
 					'Application suites — bundled products made up of one or more existing applications.',
 				)
 			"
-			:show-title="true"
+			:showTitle="true"
 			icon="PackageVariant"
 			register="voorzieningen"
 			schema="suite"
-			:columns="['name', 'beschrijvingKort', 'website']"
-			:show-add="false"
-			@row-click="onRowOpen">
+			:columns="['name', 'shortDescription', 'website']"
+			:showAdd="false"
+			@rowClick="onRowOpen">
 			<template #actions>
 				<NcButton variant="primary" @click="showWizard = true">
 					<template #icon>
@@ -48,8 +48,8 @@
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
 import { CnIndexPage } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import SuiteWizardDialog from '../../dialogs/SuiteWizardDialog.vue'
 

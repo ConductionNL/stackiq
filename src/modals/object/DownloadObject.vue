@@ -1,5 +1,5 @@
 <script setup>
-import { objectStore, navigationStore } from '../../store/store.js'
+import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -16,7 +16,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 			})
 		"
 		size="normal"
-		:can-close="false">
+		:canClose="false">
 		<NcNoteCard v-if="success" type="success">
 			<p>{{ t('softwarecatalog', 'Object successfully downloaded') }}</p>
 		</NcNoteCard>
@@ -48,7 +48,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 						:dark="getTheme() === 'dark'"
 						:linter="jsonParseLinter()"
 						:lang="json()"
-						:tab-size="2" />
+						:tabSize="2" />
 				</div>
 			</div>
 		</div>
@@ -56,12 +56,11 @@ import { objectStore, navigationStore } from '../../store/store.js'
 </template>
 
 <script>
-import { getTheme } from '../../services/getTheme.js'
-import { NcDialog, NcButton, NcNoteCard } from '@nextcloud/vue'
 import { json, jsonParseLinter } from '@codemirror/lang-json'
+import { NcButton, NcDialog, NcNoteCard } from '@nextcloud/vue'
 import CodeMirror from 'vue-codemirror6'
-
 import Cancel from 'vue-material-design-icons/Cancel.vue'
+import { getTheme } from '../../services/getTheme.js'
 
 export default {
 	name: 'DownloadObject',
@@ -74,6 +73,7 @@ export default {
 		// icons
 		Cancel,
 	},
+
 	data() {
 		return {
 			// store
@@ -86,6 +86,7 @@ export default {
 			closeModalTimeout: null,
 		}
 	},
+
 	/**
 	 * @spec openspec/specs/fe-object-modals/spec.md
 	 */
@@ -94,6 +95,7 @@ export default {
 			this.downloadObject()
 		}
 	},
+
 	methods: {
 		json,
 		jsonParseLinter,
@@ -108,6 +110,7 @@ export default {
 			this.loading = false
 			this.error = false
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */

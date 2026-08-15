@@ -23,16 +23,16 @@
 	<CnWizardDialog
 		v-if="show"
 		ref="wizard"
-		:dialog-title="t('softwarecatalog', 'New suite')"
+		:dialogTitle="t('softwarecatalog', 'New suite')"
 		:steps="wizardSteps"
 		:defaults="defaults"
 		:validate="validateStep"
-		:cancel-label="t('softwarecatalog', 'Cancel')"
-		:back-label="t('softwarecatalog', 'Back')"
-		:next-label="t('softwarecatalog', 'Next')"
-		:submit-label="t('softwarecatalog', 'Create suite')"
-		:close-label="t('softwarecatalog', 'Close')"
-		:success-text="t('softwarecatalog', 'Suite created.')"
+		:cancelLabel="t('softwarecatalog', 'Cancel')"
+		:backLabel="t('softwarecatalog', 'Back')"
+		:nextLabel="t('softwarecatalog', 'Next')"
+		:submitLabel="t('softwarecatalog', 'Create suite')"
+		:closeLabel="t('softwarecatalog', 'Close')"
+		:successText="t('softwarecatalog', 'Suite created.')"
 		@submit="onSubmit"
 		@close="onClose">
 		<template #step-details="{ stepData, setStepData }">
@@ -51,15 +51,15 @@
 
 <script>
 import { CnWizardDialog } from '@conduction/nextcloud-vue'
-import { objectStore } from '../store/store.js'
-import {
-	isDetailsStepValid,
-	isApplicationsStepValid,
-	buildSuitePayload,
-} from '../utils/suiteWizard.js'
 import Step1Details from './SuiteWizard/Step1Details.vue'
 import Step2Applications from './SuiteWizard/Step2Applications.vue'
 import Step3Confirm from './SuiteWizard/Step3Confirm.vue'
+import { objectStore } from '../store/store.js'
+import {
+	buildSuitePayload,
+	isApplicationsStepValid,
+	isDetailsStepValid,
+} from '../utils/suiteWizard.js'
 
 export default {
 	name: 'SuiteWizardDialog',
@@ -91,8 +91,8 @@ export default {
 		defaults() {
 			return {
 				name: '',
-				beschrijvingKort: '',
-				beschrijvingLang: '',
+				shortDescription: '',
+				longDescription: '',
 				website: '',
 				applications: [],
 				_step1Valid: false,

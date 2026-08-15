@@ -14,11 +14,10 @@
  */
 
 import { buildHeaders, buildQueryString } from '@conduction/nextcloud-vue'
-
 import {
-	withLanguageParam,
 	buildWriteHeaders,
 	getActiveOrganisationUuid,
+	withLanguageParam,
 } from '../../composables/orClient.js'
 
 /**
@@ -335,7 +334,7 @@ export function softwarecatalogPlugin() {
 			// -- Selection getters --
 
 			isAllSelected: (state) => {
-				const organisatieCollection = state.collections?.organisatie
+				const organisatieCollection = state.collections?.organization
 				const results = Array.isArray(organisatieCollection)
 					? organisatieCollection
 					: organisatieCollection?.results
@@ -551,7 +550,7 @@ export function softwarecatalogPlugin() {
 
 				if (object?.id) {
 					let organisatieData = null
-					if (type === 'organisatie' && object['@self']) {
+					if (type === 'organization' && object['@self']) {
 						organisatieData = {
 							source: 'openregister',
 							schema: object['@self'].schema,
@@ -1188,6 +1187,8 @@ export function softwarecatalogPlugin() {
 			},
 
 			/**
+			 * @param objects
+			 * @param onProgress
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massPublishObjects(objects, onProgress = null) {
@@ -1199,6 +1200,8 @@ export function softwarecatalogPlugin() {
 			},
 
 			/**
+			 * @param objects
+			 * @param onProgress
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massDepublishObjects(objects, onProgress = null) {
@@ -1210,6 +1213,8 @@ export function softwarecatalogPlugin() {
 			},
 
 			/**
+			 * @param objects
+			 * @param onProgress
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massDeleteObjects(objects, onProgress = null) {
@@ -1221,6 +1226,10 @@ export function softwarecatalogPlugin() {
 			},
 
 			/**
+			 * @param objects
+			 * @param process
+			 * @param duration
+			 * @param onProgress
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massLockObjects(
@@ -1237,6 +1246,8 @@ export function softwarecatalogPlugin() {
 			},
 
 			/**
+			 * @param objects
+			 * @param onProgress
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massUnlockObjects(objects, onProgress = null) {
@@ -1248,6 +1259,8 @@ export function softwarecatalogPlugin() {
 			},
 
 			/**
+			 * @param objects
+			 * @param onProgress
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async massValidateObjects(objects, onProgress = null) {
@@ -1270,7 +1283,7 @@ export function softwarecatalogPlugin() {
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			toggleSelectAllObjects() {
-				const organisatieCollection = this.collections?.organisatie
+				const organisatieCollection = this.collections?.organization
 				const results = Array.isArray(organisatieCollection)
 					? organisatieCollection
 					: organisatieCollection?.results
@@ -1294,6 +1307,7 @@ export function softwarecatalogPlugin() {
 			},
 
 			/**
+			 * @param objectId
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			clearObjectError(objectId) {
@@ -1317,6 +1331,8 @@ export function softwarecatalogPlugin() {
 			// ==========================================
 
 			/**
+			 * @param id
+			 * @param enabled
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			updateColumnFilter(id, enabled) {
@@ -1336,6 +1352,7 @@ export function softwarecatalogPlugin() {
 			},
 
 			/**
+			 * @param schema
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			initializeProperties(schema) {
@@ -1435,6 +1452,7 @@ export function softwarecatalogPlugin() {
 
 			/**
 			 * Refresh the current object list by refetching all registered types.
+			 *
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			refreshObjectList() {
@@ -1449,6 +1467,10 @@ export function softwarecatalogPlugin() {
 			// ==========================================
 
 			/**
+			 * @param type
+			 * @param root0
+			 * @param root0.success
+			 * @param root0.error
 			 * @spec exclude generic Pinia $patch passthrough — store bootstrap plumbing
 			 */
 			setState(type, { success, error }) {
@@ -1462,6 +1484,7 @@ export function softwarecatalogPlugin() {
 
 			/**
 			 * Clear the softwarecatalog sub-resources (called by base clearAllSubResources).
+			 *
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			clearSoftwarecatalog() {

@@ -21,7 +21,7 @@
 		v-if="show"
 		:name="t('softwarecatalog', 'Confirm organisation merge')"
 		size="normal"
-		:can-close="!busy"
+		:canClose="!busy"
 		@closing="$emit('cancel')">
 		<div class="merge-confirm-dialog">
 			<p>
@@ -83,8 +83,8 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 /**
  * @class MergeOrganisationConfirmDialog
@@ -102,38 +102,45 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	props: {
 		/** Whether the dialog is visible. */
 		show: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Display name of the source organisation (merged away). */
 		sourceName: {
 			type: String,
 			default: '',
 		},
+
 		/** Display name of the target organisation (merge destination). */
 		targetName: {
 			type: String,
 			default: '',
 		},
+
 		/** Dry-run `counts` object: `{gebruik, contract, contactpersoon, aanbod, compliancy, groupMembers}`. */
 		counts: {
 			type: Object,
 			default: () => ({}),
 		},
+
 		/** Whether execute is currently in flight (disables actions, shows spinner). */
 		busy: {
 			type: Boolean,
 			default: false,
 		},
+
 		/** An execute error message to surface inline, if any. */
 		error: {
 			type: String,
 			default: '',
 		},
 	},
+
 	emits: ['confirm', 'cancel'],
 	computed: {
 		/**
@@ -144,9 +151,9 @@ export default {
 		 */
 		countRows() {
 			const labels = {
-				gebruik: t('softwarecatalog', 'Usage records'),
+				usage: t('softwarecatalog', 'Usage records'),
 				contract: t('softwarecatalog', 'Contracts'),
-				contactpersoon: t('softwarecatalog', 'Contact persons'),
+				contactPerson: t('softwarecatalog', 'Contact persons'),
 				aanbod: t('softwarecatalog', 'Offerings'),
 				compliancy: t('softwarecatalog', 'Compliance records'),
 				groupMembers: t('softwarecatalog', 'Group members'),
@@ -159,6 +166,7 @@ export default {
 			}))
 		},
 	},
+
 	methods: {
 		t,
 	},

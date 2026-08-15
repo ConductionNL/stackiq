@@ -13,18 +13,18 @@
 <template>
 	<div class="suite-wizard-step1">
 		<NcTextField
-			:model-value="payload.name"
+			:modelValue="payload.name"
 			:label="t('softwarecatalog', 'Name') + ' *'"
 			:placeholder="t('softwarecatalog', 'e.g. Centric Leefomgeving')"
 			required
-			@update:model-value="onField('name', $event)" />
+			@update:modelValue="onField('name', $event)" />
 
 		<NcTextField
-			:model-value="payload.beschrijvingKort"
+			:modelValue="payload.shortDescription"
 			:label="t('softwarecatalog', 'Short description') + ' *'"
 			:placeholder="t('softwarecatalog', 'A brief summary of the suite')"
 			required
-			@update:model-value="onField('beschrijvingKort', $event)" />
+			@update:modelValue="onField('shortDescription', $event)" />
 
 		<NcTextArea
 			v-model="beschrijvingLangModel"
@@ -37,16 +37,16 @@
 			" />
 
 		<NcTextField
-			:model-value="payload.website"
+			:modelValue="payload.website"
 			:label="t('softwarecatalog', 'Website')"
 			:placeholder="t('softwarecatalog', 'https://example.com/suite')"
 			type="url"
-			@update:model-value="onField('website', $event)" />
+			@update:modelValue="onField('website', $event)" />
 	</div>
 </template>
 
 <script>
-import { NcTextField, NcTextArea } from '@nextcloud/vue'
+import { NcTextArea, NcTextField } from '@nextcloud/vue'
 import { isDetailsStepValid } from '../../utils/suiteWizard.js'
 
 export default {
@@ -81,15 +81,16 @@ export default {
 			 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
 			 */
 			get() {
-				return this.payload.beschrijvingLang || ''
+				return this.payload.longDescription || ''
 			},
+
 			/**
 			 * @param {string} value The new long description.
 			 * @return {void}
 			 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-shall-guide-suite-creation-through-details-application-attachment-and-confirmation-steps
 			 */
 			set(value) {
-				this.onField('beschrijvingLang', value)
+				this.onField('longDescription', value)
 			},
 		},
 	},

@@ -3,7 +3,7 @@
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -12,7 +12,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 			v-if="navigationStore.modal === 'viewObject'"
 			:name="getModalTitle()"
 			size="large"
-			:can-close="true"
+			:canClose="true"
 			@update:open="handleDialogClose">
 			<template #name>
 				<div class="dialog__name">
@@ -42,7 +42,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 							<NcSelect
 								v-model="selectedCatalog"
 								:options="catalogOptions"
-								input-label="Catalog"
+								inputLabel="Catalog"
 								placeholder="Select a catalog..."
 								:disabled="catalogStore.isLoading" />
 						</div>
@@ -57,7 +57,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 							<NcSelect
 								v-model="selectedRegister"
 								:options="registerOptions"
-								input-label="Register"
+								inputLabel="Register"
 								placeholder="Select a register..."
 								:disabled="catalogStore.isLoading" />
 						</div>
@@ -73,7 +73,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 							<NcSelect
 								v-model="selectedSchema"
 								:options="schemaOptions"
-								input-label="Schema"
+								inputLabel="Schema"
 								placeholder="Select a schema..."
 								:disabled="catalogStore.isLoading" />
 						</div>
@@ -246,7 +246,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 															key,
 														) === 'NcCheckboxRadioSwitch'
 													"
-													:model-value="
+													:modelValue="
 														Boolean(
 															formData[key]
 																!== undefined
@@ -255,7 +255,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 														)
 													"
 													type="switch"
-													@update:model-value="
+													@update:modelValue="
 														updatePropertyValue(
 															key,
 															$event,
@@ -272,10 +272,10 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 														) === 'NcDateTimePicker'
 													"
 													:key="`datetime-${key}-edit`"
-													:append-to-body="true"
-													:popup-class="'view-object-datepicker'"
-													:popup-style="{ zIndex: 12000 }"
-													:model-value="
+													:appendToBody="true"
+													popupClass="view-object-datepicker"
+													:popupStyle="{ zIndex: 12000 }"
+													:modelValue="
 														getDateTimePickerValue(
 															key,
 															value,
@@ -291,7 +291,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 														getPropertyDisplayName(key)
 													"
 													:clearable="true"
-													@update:model-value="
+													@update:modelValue="
 														handleDateTimeUpdate(
 															key,
 															$event,
@@ -306,7 +306,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 														) === 'NcTextArea'
 													"
 													ref="propertyValueInput"
-													:model-value="
+													:modelValue="
 														String(
 															formData[key]
 																!== undefined
@@ -318,7 +318,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 														getPropertyDisplayName(key)
 													"
 													:rows="4"
-													@update:model-value="
+													@update:modelValue="
 														updatePropertyValue(
 															key,
 															$event,
@@ -348,7 +348,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 													<NcSelect
 														v-model="themeFormData"
 														:options="themeOptions"
-														input-label="Themes"
+														inputLabel="Themes"
 														multiple
 														:placeholder="
 															getPropertyDisplayName(
@@ -371,7 +371,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																key,
 															)
 														"
-														:model-value="
+														:modelValue="
 															String(
 																formData[key]
 																	!== undefined
@@ -413,7 +413,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 															getPropertyMaximum(key)
 														"
 														:step="getPropertyStep(key)"
-														@update:model-value="
+														@update:modelValue="
 															updatePropertyValue(
 																key,
 																$event
@@ -436,7 +436,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 													:aria-label="
 														getPropertyDisplayName(key)
 													"
-													:model-value="
+													:modelValue="
 														String(
 															formData[key]
 																!== undefined
@@ -451,7 +451,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 													:min="getPropertyMinimum(key)"
 													:max="getPropertyMaximum(key)"
 													:step="getPropertyStep(key)"
-													@update:model-value="
+													@update:modelValue="
 														updatePropertyValue(
 															key,
 															$event,
@@ -834,7 +834,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																	)
 																	=== 'NcCheckboxRadioSwitch'
 																"
-																:model-value="
+																:modelValue="
 																	Boolean(
 																		formData[key]
 																			!== undefined
@@ -845,7 +845,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																	)
 																"
 																type="switch"
-																@update:model-value="
+																@update:modelValue="
 																	updatePropertyValue(
 																		key,
 																		$event,
@@ -867,14 +867,12 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																	=== 'NcDateTimePicker'
 																"
 																:key="`datetime-${key}`"
-																:append-to-body="
-																	true
-																"
-																:popup-class="'view-object-datepicker'"
-																:popup-style="{
+																:appendToBody="true"
+																popupClass="view-object-datepicker"
+																:popupStyle="{
 																	zIndex: 12000,
 																}"
-																:model-value="
+																:modelValue="
 																	getDateTimePickerValue(
 																		key,
 																		value,
@@ -896,7 +894,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																	)
 																"
 																:clearable="true"
-																@update:model-value="
+																@update:modelValue="
 																	handleDateTimeUpdate(
 																		key,
 																		$event,
@@ -913,7 +911,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																"
 																ref="propertyValueInput"
 																class="textarea-property"
-																:model-value="
+																:modelValue="
 																	String(
 																		formData[key]
 																			!== undefined
@@ -930,7 +928,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																	)
 																"
 																:rows="4"
-																@update:model-value="
+																@update:modelValue="
 																	updatePropertyValue(
 																		key,
 																		$event,
@@ -966,7 +964,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																	:options="
 																		themeOptions
 																	"
-																	input-label="Themes"
+																	inputLabel="Themes"
 																	multiple
 																	:placeholder="
 																		getPropertyDisplayName(
@@ -990,7 +988,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																			key,
 																		)
 																	"
-																	:model-value="
+																	:modelValue="
 																		String(
 																			formData[
 																				key
@@ -1044,7 +1042,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																			key,
 																		)
 																	"
-																	@update:model-value="
+																	@update:modelValue="
 																		updatePropertyValue(
 																			key,
 																			$event
@@ -1073,7 +1071,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																		key,
 																	)
 																"
-																:model-value="
+																:modelValue="
 																	String(
 																		formData[key]
 																			!== undefined
@@ -1109,7 +1107,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 																		key,
 																	)
 																"
-																@update:model-value="
+																@update:modelValue="
 																	updatePropertyValue(
 																		key,
 																		$event,
@@ -1368,7 +1366,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										)
 									"
 									title="Loading files..."
-									:description="'Loading files for this publication...'">
+									description="Loading files for this publication...">
 									<template #icon>
 										<NcLoadingIcon :size="64" />
 									</template>
@@ -1376,7 +1374,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 								<template v-else-if="paginatedFiles.length > 0">
 									<div class="multi-actions-container">
 										<NcActions
-											:force-name="true"
+											:forceName="true"
 											:disabled="
 												selectedAttachments.length === 0
 											"
@@ -1385,7 +1383,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 													? 'Select one or more files to use mass actions'
 													: `Mass actions (${selectedAttachments.length} selected)`
 											"
-											:menu-name="`Mass Actions (${selectedAttachments.length})`">
+											:menuName="`Mass Actions (${selectedAttachments.length})`">
 											<template #icon>
 												<FormatListChecks :size="20" />
 											</template>
@@ -1469,14 +1467,14 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 														scope="col"
 														class="tableColumnCheckbox">
 														<NcCheckboxRadioSwitch
-															:model-value="
+															:modelValue="
 																allFilesSelected
 															"
 															:indeterminate="
 																someFilesSelected
 															"
 															aria-label="Select all attachments"
-															@update:model-value="
+															@update:modelValue="
 																toggleSelectAllFiles
 															" />
 													</th>
@@ -1536,13 +1534,13 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 													">
 													<td class="tableColumnCheckbox">
 														<NcCheckboxRadioSwitch
-															:model-value="
+															:modelValue="
 																selectedAttachments.includes(
 																	attachment.id,
 																)
 															"
 															:aria-label="`Select ${attachment.title || attachment.name || 'attachment'}`"
-															@update:model-value="
+															@update:modelValue="
 																(checked) =>
 																	toggleFileSelection(
 																		attachment.id,
@@ -1838,18 +1836,18 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 								<!-- Files Pagination -->
 								<PaginationComponent
 									v-if="filesTotalItems > 10"
-									:current-page="
+									:currentPage="
 										objectStore.getPagination(
 											'publication_files',
 										).page
 									"
-									:total-pages="filesTotalPages"
-									:total-items="filesTotalItems"
-									:current-page-size="filesCurrentPageSize"
-									:page-size-options="pageSizeOptions"
-									:min-items-to-show="5"
-									@page-changed="onFilesPageChanged"
-									@page-size-changed="onFilesPageSizeChanged" />
+									:totalPages="filesTotalPages"
+									:totalItems="filesTotalItems"
+									:currentPageSize="filesCurrentPageSize"
+									:pageSizeOptions="pageSizeOptions"
+									:minItemsToShow="5"
+									@pageChanged="onFilesPageChanged"
+									@pageSizeChanged="onFilesPageSizeChanged" />
 							</div>
 						</div>
 					</div>
@@ -1916,54 +1914,54 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 
 <script>
 import {
-	NcDialog,
-	NcButton,
-	NcActions,
 	NcActionButton,
-	NcNoteCard,
-	NcCounterBubble,
-	NcTextField,
-	NcTextArea,
+	NcActions,
+	NcButton,
 	NcCheckboxRadioSwitch,
-	NcLoadingIcon,
+	NcCounterBubble,
 	NcDateTimePicker,
+	NcDialog,
 	NcEmptyContent,
+	NcLoadingIcon,
+	NcNoteCard,
 	NcSelect,
+	NcTextArea,
+	NcTextField,
 } from '@nextcloud/vue'
-// import { json, jsonParseLinter } from '@codemirror/lang-json'
-// import CodeMirror from 'vue-codemirror6'
-import { markRaw } from 'vue'
-import { getTheme } from '../../services/getTheme.js'
 // The Vue-2 `@toast-ui/vue-editor` wrapper is gone; the framework-agnostic core
 // editor is instantiated by hand against a plain `<div>` ref instead — see
 // createMarkdownEditor() / destroyMarkdownEditors().
 import { Editor } from '@toast-ui/editor'
-import '@toast-ui/editor/dist/toastui-editor.css'
-import Cancel from 'vue-material-design-icons/Cancel.vue'
-import FileOutline from 'vue-material-design-icons/FileOutline.vue'
-import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
-import Delete from 'vue-material-design-icons/Delete.vue'
-import Upload from 'vue-material-design-icons/Upload.vue'
-
-import ContentSave from 'vue-material-design-icons/ContentSave.vue'
-import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
-import LockOutline from 'vue-material-design-icons/LockOutline.vue'
-import Tag from 'vue-material-design-icons/Tag.vue'
-import FormatListChecks from 'vue-material-design-icons/FormatListChecks.vue'
+// import { json, jsonParseLinter } from '@codemirror/lang-json'
+// import CodeMirror from 'vue-codemirror6'
+import { markRaw } from 'vue'
 import Alert from 'vue-material-design-icons/Alert.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
+import Cancel from 'vue-material-design-icons/Cancel.vue'
+import Close from 'vue-material-design-icons/Close.vue'
+import ContentSave from 'vue-material-design-icons/ContentSave.vue'
+import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
+import Delete from 'vue-material-design-icons/Delete.vue'
+import ExclamationThick from 'vue-material-design-icons/ExclamationThick.vue'
+import Eye from 'vue-material-design-icons/Eye.vue'
+import EyeOff from 'vue-material-design-icons/EyeOff.vue'
+import FileOutline from 'vue-material-design-icons/FileOutline.vue'
+import FormatListChecks from 'vue-material-design-icons/FormatListChecks.vue'
+import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
+import LockOutline from 'vue-material-design-icons/LockOutline.vue'
+import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
-import Pencil from 'vue-material-design-icons/Pencil.vue'
-import ExclamationThick from 'vue-material-design-icons/ExclamationThick.vue'
-import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
-import Close from 'vue-material-design-icons/Close.vue'
-import Eye from 'vue-material-design-icons/Eye.vue'
-import EyeOff from 'vue-material-design-icons/EyeOff.vue'
+import Tag from 'vue-material-design-icons/Tag.vue'
+import Upload from 'vue-material-design-icons/Upload.vue'
 import PaginationComponent from '../../components/PaginationComponent.vue'
 import PublishedIcon from '../../components/PublishedIcon.vue'
-import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
+import { getTheme } from '../../services/getTheme.js'
+
+import '@toast-ui/editor/dist/toastui-editor.css'
 
 export default {
 	name: 'ViewObject',
@@ -2008,6 +2006,7 @@ export default {
 		PublishedIcon,
 		InformationOutline,
 	},
+
 	data() {
 		return {
 			activeTab: 'properties',
@@ -2040,6 +2039,7 @@ export default {
 				{ value: 500, label: '500' },
 				{ value: 1000, label: '1000' },
 			],
+
 			// Selection flow properties
 			selectedCatalog: null,
 			selectedRegister: null,
@@ -2057,9 +2057,11 @@ export default {
 				multiple: true,
 				options: [],
 			},
+
 			tagsLoading: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -2075,6 +2077,7 @@ export default {
 			const obj = objectStore.getActiveObject('publication')
 			return !obj || !obj?.['@self']?.id
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2091,7 +2094,7 @@ export default {
 				schemaProperties,
 			)) {
 				let propertyValue
-				if (Object.prototype.hasOwnProperty.call(objectData, schemaKey)) {
+				if (Object.hasOwn(objectData, schemaKey)) {
 					// Property exists in object, use its value
 					propertyValue = objectData[schemaKey]
 				} else {
@@ -2141,10 +2144,7 @@ export default {
 				if (
 					objectKey !== '@self'
 					&& objectKey !== 'id'
-					&& !Object.prototype.hasOwnProperty.call(
-						schemaProperties,
-						objectKey,
-					)
+					&& !Object.hasOwn(schemaProperties, objectKey)
 					&& !(this.formData[objectKey] === undefined)
 				) {
 					additionalProperties.push([objectKey, objectValue, null])
@@ -2187,7 +2187,7 @@ export default {
 				return [
 					['title', ''],
 					['description', ''],
-					['summary', ''],
+					['omschrijving', ''],
 					['category', ''],
 					['status', 'draft'],
 				]
@@ -2202,8 +2202,10 @@ export default {
 
 			return combinedProperties
 		},
+
 		/**
 		 * Filter out constant and immutable properties based on showConstantProperties state
+		 *
 		 * @return {Array} Filtered properties array
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2230,8 +2232,10 @@ export default {
 				return !isConstantOrImmutableProperty
 			})
 		},
+
 		/**
 		 * Check if there are any constant or immutable properties
+		 *
 		 * @return {boolean} True if there are constant/immutable properties
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2240,6 +2244,7 @@ export default {
 				return this.isConstantOrImmutable(key)
 			})
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2341,6 +2346,7 @@ export default {
 
 			return metadata
 		},
+
 		// Files tab computed properties
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -2355,6 +2361,7 @@ export default {
 			}
 			return files
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2362,6 +2369,7 @@ export default {
 			const filesPagination = objectStore.getPagination('publication_files')
 			return filesPagination.pages
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2369,6 +2377,7 @@ export default {
 			const filesPagination = objectStore.getPagination('publication_files')
 			return filesPagination.total
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2376,6 +2385,7 @@ export default {
 			const filesPagination = objectStore.getPagination('publication_files')
 			return filesPagination.limit
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2387,12 +2397,14 @@ export default {
 				)
 			)
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		someFilesSelected() {
 			return this.selectedAttachments.length > 0 && !this.allFilesSelected
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2402,6 +2414,7 @@ export default {
 				label: catalog.title,
 			}))
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2428,6 +2441,7 @@ export default {
 					label: register.title,
 				}))
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2463,9 +2477,11 @@ export default {
 					label: schema.title,
 				}))
 		},
+
 		hasSelectedSchema() {
 			return this.selectedSchema !== null && this.showProperties
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2481,6 +2497,7 @@ export default {
 		shouldShowPublishedIcon() {
 			return this.currentObject && this.currentObject['@self']
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2491,6 +2508,7 @@ export default {
 				label: theme.title || `#${theme.id}`,
 			}))
 		},
+
 		// Replace the existing themeFormData with this new version
 		themeFormData: {
 			/**
@@ -2509,7 +2527,9 @@ export default {
 						: { id: themeId, label: themeId }
 				})
 			},
+
 			/**
+			 * @param selectedThemes
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			set(selectedThemes) {
@@ -2521,9 +2541,11 @@ export default {
 			},
 		},
 	},
+
 	watch: {
 		currentObject: {
 			/**
+			 * @param newValue
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
@@ -2531,10 +2553,13 @@ export default {
 					this.initializeData()
 				}
 			},
+
 			deep: true,
 		},
+
 		jsonData: {
 			/**
+			 * @param newValue
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newValue) {
@@ -2543,10 +2568,12 @@ export default {
 				}
 			},
 		},
+
 		formData: {
 			deep: true,
 			immediate: true,
 			/**
+			 * @param obj
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(obj) {
@@ -2558,8 +2585,10 @@ export default {
 				}
 			},
 		},
+
 		selectedCatalog: {
 			/**
+			 * @param newCatalog
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newCatalog) {
@@ -2573,8 +2602,10 @@ export default {
 				}
 			},
 		},
+
 		selectedRegister: {
 			/**
+			 * @param newRegister
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newRegister) {
@@ -2587,8 +2618,10 @@ export default {
 				}
 			},
 		},
+
 		selectedSchema: {
 			/**
+			 * @param newSchema
 			 * @spec openspec/specs/fe-object-modals/spec.md
 			 */
 			handler(newSchema) {
@@ -2600,6 +2633,7 @@ export default {
 				}
 			},
 		},
+
 		/**
 		 * The Toast UI markdown editor is no longer a Vue component, so its
 		 * lifetime has to be tied by hand to the row that is currently being
@@ -2623,6 +2657,7 @@ export default {
 			},
 		},
 	},
+
 	/**
 	 * @spec openspec/specs/fe-object-modals/spec.md
 	 */
@@ -2633,12 +2668,14 @@ export default {
 		// Fetch tags for the label options dropdown
 		this.getAllTags()
 	},
+
 	/**
 	 * @spec openspec/specs/fe-object-modals/spec.md
 	 */
 	beforeUnmount() {
 		this.destroyMarkdownEditors()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -2720,7 +2757,9 @@ export default {
 			// Close modal
 			navigationStore.setModal(null)
 		},
+
 		/**
+		 * @param isOpen
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleDialogClose(isOpen) {
@@ -2728,12 +2767,14 @@ export default {
 				this.closeModal()
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		proceedToProperties() {
 			this.showProperties = true
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2810,6 +2851,7 @@ export default {
 
 			this.jsonData = JSON.stringify(filtered, null, 2)
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2908,6 +2950,7 @@ export default {
 				this.isSaving = false
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2919,7 +2962,9 @@ export default {
 				this.error = 'Invalid JSON format'
 			}
 		},
+
 		/**
+		 * @param str
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidJson(str) {
@@ -2933,6 +2978,7 @@ export default {
 				return false
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -2946,7 +2992,9 @@ export default {
 				// Keep invalid JSON as-is
 			}
 		},
+
 		/**
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidDate(value) {
@@ -2969,7 +3017,9 @@ export default {
 			const date = new Date(value)
 			return date instanceof Date && !isNaN(date) && date.getFullYear() > 1900
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isDateTimeProperty(key) {
@@ -2981,7 +3031,9 @@ export default {
 				&& ['date', 'time', 'date-time'].includes(schemaProperty.format)
 			)
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDateTimePropertyFormat(key) {
@@ -2989,7 +3041,10 @@ export default {
 			const schemaProperty = schemaProperties[key]
 			return schemaProperty?.format || 'unknown'
 		},
+
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatDateTimeValue(key, value) {
@@ -3029,14 +3084,18 @@ export default {
 				return value
 			}
 		},
+
 		/**
+		 * @param val
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatValue(val) {
 			return JSON.stringify(val, null, 2)
 		},
+
 		getTheme,
 		/**
+		 * @param text
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async copyToClipboard(text) {
@@ -3050,8 +3109,11 @@ export default {
 				// console.error('Failed to copy text:', err)
 			}
 		},
+
 		// Property validation and editing methods
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyValidationClass(key, value) {
@@ -3064,8 +3126,7 @@ export default {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
 			const existsInObject =
-				this.currentObject
-				&& Object.prototype.hasOwnProperty.call(this.currentObject, key)
+				this.currentObject && Object.hasOwn(this.currentObject, key)
 
 			if (!schemaProperty) {
 				// Property exists in object but not in schema - warning (yellow)
@@ -3089,7 +3150,10 @@ export default {
 				return 'property-invalid'
 			}
 		},
+
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyErrorMessage(key, value) {
@@ -3129,13 +3193,18 @@ export default {
 
 			return `Property '${key}' has an invalid value`
 		},
+
 		getPropertyWarningMessage(key, value) {
 			return `Property '${key}' exists in the object but is not defined in the current schema. This might happen when property names are changed in the schema.`
 		},
+
 		getPropertyNewMessage(key) {
 			return `Property '${key}' is defined in the schema but doesn't have a value yet. Click to add a value.`
 		},
+
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isPropertyEditable(key, value) {
@@ -3162,7 +3231,10 @@ export default {
 
 			return true
 		},
+
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getEditabilityWarning(key, value) {
@@ -3184,7 +3256,10 @@ export default {
 
 			return null
 		},
+
 		/**
+		 * @param key
+		 * @param event
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleRowClick(key, event) {
@@ -3213,7 +3288,9 @@ export default {
 
 			this.selectProperty(key)
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		selectProperty(key) {
@@ -3234,7 +3311,10 @@ export default {
 				}
 			})
 		},
+
 		/**
+		 * @param key
+		 * @param newValue
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		updatePropertyValue(key, newValue) {
@@ -3259,8 +3339,10 @@ export default {
 			// Update the form data
 			this.formData[key] = processedValue
 		},
+
 		// Test method to verify Vue methods are working
 		/**
+		 * @param message
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		testVueMethod(message) {
@@ -3268,7 +3350,10 @@ export default {
 				alert(`Vue method works: ${message}`)
 			}
 		},
+
 		/**
+		 * @param key
+		 * @param newValue
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleDateTimeUpdate(key, newValue) {
@@ -3322,7 +3407,10 @@ export default {
 			// Update the form data
 			this.formData[key] = processedValue
 		},
+
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		processDateTimeValue(key, value) {
@@ -3401,7 +3489,9 @@ export default {
 				return value
 			}
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyInputType(key) {
@@ -3431,7 +3521,9 @@ export default {
 					return 'text'
 			}
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyInputComponent(key) {
@@ -3471,7 +3563,9 @@ export default {
 					return 'NcTextField'
 			}
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyDisplayName(key) {
@@ -3497,7 +3591,9 @@ export default {
 
 			return key
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyTooltip(key) {
@@ -3516,7 +3612,9 @@ export default {
 			// Fallback to property key info
 			return `Property: ${key}`
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyMinimum(key) {
@@ -3524,7 +3622,9 @@ export default {
 			const schemaProperty = schemaProperties[key]
 			return schemaProperty?.minimum
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyMaximum(key) {
@@ -3532,7 +3632,9 @@ export default {
 			const schemaProperty = schemaProperties[key]
 			return schemaProperty?.maximum
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyStep(key) {
@@ -3546,7 +3648,9 @@ export default {
 			}
 			return undefined
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getMarkdownEditorOptions(key) {
@@ -3562,12 +3666,14 @@ export default {
 					['table', 'image', 'link'],
 					['code', 'codeblock'],
 				],
+
 				viewer: true, // Enable WYSIWYG mode
 				initialEditType: 'wysiwyg', // Start in WYSIWYG mode
 				// Hook into the editor events to remove borders after initialization
 				hooks: {
 					addImageBlobHook: () => false, // Disable image uploads
 				},
+
 				events: {
 					load: (editor) => {
 						// Remove borders after the editor is fully loaded
@@ -3575,6 +3681,7 @@ export default {
 							this.removeBordersFromEditor(editor)
 						})
 					},
+
 					changeMode: (editor) => {
 						// Remove borders when mode changes
 						this.$nextTick(() => {
@@ -3584,6 +3691,7 @@ export default {
 				},
 			}
 		},
+
 		/**
 		 * Initial markdown handed to a freshly created editor. Mirrors what the
 		 * template used to bind to the wrapper's `initial-value` prop: the edited
@@ -3601,6 +3709,7 @@ export default {
 			const entry = this.objectProperties.find(([k]) => k === key)
 			return String((entry ? entry[1] : '') || '')
 		},
+
 		/**
 		 * Build the Toast UI editor against the `<div>` rendered for the property
 		 * currently in edit mode. Replaces the removed `@toast-ui/vue-editor`
@@ -3636,6 +3745,7 @@ export default {
 			// a proxied Toast UI instance breaks its internal identity checks.
 			this.markdownEditors[key] = markRaw(editor)
 		},
+
 		/**
 		 * Tear down every live markdown editor. Called when the edited property
 		 * changes and from beforeUnmount(), so no editor outlives its `<div>`.
@@ -3652,7 +3762,9 @@ export default {
 				delete this.markdownEditors[key]
 			})
 		},
+
 		/**
+		 * @param editor
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		removeBordersFromEditor(editor) {
@@ -3683,7 +3795,10 @@ export default {
 				console.warn('Could not remove borders from editor:', error)
 			}
 		},
+
 		/**
+		 * @param key
+		 * @param editorInstance
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		updateMarkdownValue(key, editorInstance) {
@@ -3716,7 +3831,10 @@ export default {
 			// Update the form data
 			this.updatePropertyValue(key, content)
 		},
+
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDisplayValue(key, value) {
@@ -3798,7 +3916,10 @@ export default {
 			// Return the value as-is for everything else
 			return value
 		},
+
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDateTimeValue(key, value) {
@@ -3839,7 +3960,10 @@ export default {
 				return currentValue
 			}
 		},
+
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDateTimePickerValue(key, value) {
@@ -3897,7 +4021,9 @@ export default {
 				return null
 			}
 		},
+
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDateTimePickerType(key) {
@@ -3933,6 +4059,7 @@ export default {
 
 			return pickerType
 		},
+
 		// Publish/Depublish methods
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -3945,6 +4072,7 @@ export default {
 			}
 			this.showPublishModal = true
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -3958,6 +4086,7 @@ export default {
 			}
 			this.showDepublishModal = true
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -3966,6 +4095,7 @@ export default {
 			this.publishDate = null
 			this.isPublishing = false
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -3974,6 +4104,7 @@ export default {
 			this.depublishDate = null
 			this.isDepublishing = false
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4054,6 +4185,7 @@ export default {
 				this.isPublishing = false
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4134,9 +4266,11 @@ export default {
 				this.isDepublishing = false
 			}
 		},
+
 		// Files tab methods
 		/**
 		 * Open a file in the Nextcloud Files app
+		 *
 		 * @param {object} file - The file object to open
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4146,8 +4280,10 @@ export default {
 			const filesAppUrl = `/index.php/apps/files/files/${file.id}?dir=${encodeURIComponent(cleanPath)}&openfile=true`
 			window.open(filesAppUrl, '_blank')
 		},
+
 		/**
 		 * Format file size for display
+		 *
 		 * @param {number} bytes - The file size in bytes
 		 * @return {string} The formatted file size
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -4160,7 +4296,9 @@ export default {
 			if (i === 0) return bytes + ' ' + sizes[i]
 			return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i]
 		},
+
 		/**
+		 * @param checked
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		toggleSelectAllFiles(checked) {
@@ -4179,7 +4317,10 @@ export default {
 				)
 			}
 		},
+
 		/**
+		 * @param fileId
+		 * @param checked
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		toggleFileSelection(fileId, checked) {
@@ -4193,7 +4334,9 @@ export default {
 				)
 			}
 		},
+
 		/**
+		 * @param page
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async onFilesPageChanged(page) {
@@ -4218,7 +4361,9 @@ export default {
 				publicationData,
 			)
 		},
+
 		/**
+		 * @param pageSize
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async onFilesPageSizeChanged(pageSize) {
@@ -4243,6 +4388,7 @@ export default {
 				publicationData,
 			)
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4300,6 +4446,7 @@ export default {
 				this.publishLoading = []
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4357,6 +4504,7 @@ export default {
 				this.depublishLoading = []
 			}
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4414,7 +4562,9 @@ export default {
 				this.fileIdsLoading = []
 			}
 		},
+
 		/**
+		 * @param file
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishFile(file) {
@@ -4455,7 +4605,9 @@ export default {
 				)
 			}
 		},
+
 		/**
+		 * @param file
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async depublishFile(file) {
@@ -4498,7 +4650,9 @@ export default {
 				)
 			}
 		},
+
 		/**
+		 * @param file
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteFile(file) {
@@ -4539,13 +4693,16 @@ export default {
 				)
 			}
 		},
+
 		/**
+		 * @param file
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		editFileLabels(file) {
 			this.editingTags = file.id
 			this.editedTags = file.labels || []
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4553,6 +4710,7 @@ export default {
 			this.editingTags = null
 			this.editedTags = []
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4576,7 +4734,10 @@ export default {
 				this.tagsLoading = false
 			}
 		},
+
 		/**
+		 * @param file
+		 * @param editedTags
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async saveTags(file, editedTags) {
@@ -4634,8 +4795,10 @@ export default {
 				}, 5000)
 			}
 		},
+
 		// Utility method to get register and schema IDs from publication object
 		/**
+		 * @param publication
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getRegisterSchemaIds(publication) {
@@ -4651,6 +4814,7 @@ export default {
 					: publication['@self'].schema
 			return { registerId, schemaId }
 		},
+
 		// Action button methods
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -4659,7 +4823,9 @@ export default {
 			// Open the upload files modal (same as in PublicationDetail.vue)
 			navigationStore.setDialog('uploadFiles')
 		},
+
 		/**
+		 * @param object
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		shouldShowPublishAction(object) {
@@ -4669,7 +4835,9 @@ export default {
 				|| object['@self'].published === undefined
 			)
 		},
+
 		/**
+		 * @param object
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		shouldShowDepublishAction(object) {
@@ -4679,6 +4847,7 @@ export default {
 				&& object['@self'].published !== undefined
 			)
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4695,6 +4864,7 @@ export default {
 			// Open the mass publish dialog
 			navigationStore.setDialog('massPublishObjects')
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4711,6 +4881,7 @@ export default {
 			// Open the mass depublish dialog
 			navigationStore.setDialog('massDepublishObjects')
 		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4727,6 +4898,7 @@ export default {
 			// Open the mass delete dialog
 			navigationStore.setDialog('massDeleteObject')
 		},
+
 		// Schema handling methods
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -4767,8 +4939,10 @@ export default {
 
 			return properties
 		},
+
 		// Helper method to rebuild object with schema properties after API operations
 		/**
+		 * @param apiResult
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		rebuildObjectWithSchemaProperties(apiResult) {
@@ -4787,7 +4961,7 @@ export default {
 
 			// Add missing schema properties with default values
 			for (const [key, schemaProperty] of Object.entries(schemaProperties)) {
-				if (!Object.prototype.hasOwnProperty.call(mergedObject, key)) {
+				if (!Object.hasOwn(mergedObject, key)) {
 					// Add with appropriate default value based on type
 					let defaultValue = ''
 					switch (schemaProperty.type) {
@@ -4819,6 +4993,7 @@ export default {
 
 		/**
 		 * Clean formData to ensure it's a proper object with correct property keys
+		 *
 		 * @return {object} Cleaned form data object
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4854,6 +5029,7 @@ export default {
 
 		/**
 		 * Build complete object data including all schema properties
+		 *
 		 * @return {object} Complete object with all properties from schema and current object
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -4874,12 +5050,7 @@ export default {
 			for (const [propertyKey, schemaProperty] of Object.entries(
 				schemaProperties,
 			)) {
-				if (
-					Object.prototype.hasOwnProperty.call(
-						cleanedFormData,
-						propertyKey,
-					)
-				) {
+				if (Object.hasOwn(cleanedFormData, propertyKey)) {
 					// Check if property was marked for deletion (undefined)
 					if (cleanedFormData[propertyKey] === undefined) {
 						// For schema properties, don't include undefined values - let backend handle defaults
@@ -4889,12 +5060,7 @@ export default {
 						// Use edited value from formData
 						objectData[propertyKey] = cleanedFormData[propertyKey]
 					}
-				} else if (
-					Object.prototype.hasOwnProperty.call(
-						currentObjectData,
-						propertyKey,
-					)
-				) {
+				} else if (Object.hasOwn(currentObjectData, propertyKey)) {
 					// Keep existing value from current object
 					objectData[propertyKey] = currentObjectData[propertyKey]
 				} else {
@@ -4931,7 +5097,7 @@ export default {
 			// But only include valid property names (not numeric indices) and not undefined values
 			for (const [key, value] of Object.entries(cleanedFormData)) {
 				if (
-					!Object.prototype.hasOwnProperty.call(schemaProperties, key)
+					!Object.hasOwn(schemaProperties, key)
 					&& typeof key === 'string'
 					&& key.length > 0
 					&& !/^\d+$/.test(key)
@@ -4947,6 +5113,8 @@ export default {
 
 		// Property dropping methods
 		/**
+		 * @param key
+		 * @param value
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		canDropProperty(key, value) {
@@ -4965,13 +5133,14 @@ export default {
 			// 2. Property exists in current object or has been edited
 			const hasFormValue = this.formData[key] !== undefined
 			const hasOriginalValue =
-				this.currentObject
-				&& Object.prototype.hasOwnProperty.call(this.currentObject, key)
+				this.currentObject && Object.hasOwn(this.currentObject, key)
 
 			return hasFormValue || hasOriginalValue
 		},
+
 		/**
 		 * Check if a property is constant or immutable
+		 *
 		 * @param {string} key - Property key
 		 * @return {boolean} True if property is constant or immutable
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -5010,14 +5179,12 @@ export default {
 		},
 
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDropPropertyTooltip(key) {
 			const schemaProperties = this.getSchemaProperties()
-			const isSchemaProperty = Object.prototype.hasOwnProperty.call(
-				schemaProperties,
-				key,
-			)
+			const isSchemaProperty = Object.hasOwn(schemaProperties, key)
 
 			if (isSchemaProperty) {
 				return `Reset '${this.getPropertyDisplayName(key)}' to empty value`
@@ -5027,14 +5194,12 @@ export default {
 		},
 
 		/**
+		 * @param key
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dropProperty(key) {
 			const schemaProperties = this.getSchemaProperties()
-			const isSchemaProperty = Object.prototype.hasOwnProperty.call(
-				schemaProperties,
-				key,
-			)
+			const isSchemaProperty = Object.hasOwn(schemaProperties, key)
 
 			if (isSchemaProperty) {
 				// For schema properties, reset to appropriate default/null value
@@ -5072,10 +5237,7 @@ export default {
 
 				// If it was in the original object, we need to track its removal
 				// We'll set it to a special marker that indicates deletion
-				if (
-					this.currentObject
-					&& Object.prototype.hasOwnProperty.call(this.currentObject, key)
-				) {
+				if (this.currentObject && Object.hasOwn(this.currentObject, key)) {
 					this.formData[key] = undefined
 				}
 			}
@@ -5088,6 +5250,9 @@ export default {
 
 		// Enhanced property validation and editing methods (from openregister version)
 		/**
+		 * @param key
+		 * @param value
+		 * @param schemaProperty
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidPropertyValue(key, value, schemaProperty) {

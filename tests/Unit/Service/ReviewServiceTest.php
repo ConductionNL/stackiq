@@ -153,7 +153,7 @@ class ReviewServiceTest extends TestCase {
 
 		$service->submit(
 			['name' => 'Great tool', 'rating' => 7, 'modules' => ['forged-module-id']],
-			'dienst',
+			'service',
 			'dienst-uuid-1'
 		);
 
@@ -215,7 +215,7 @@ class ReviewServiceTest extends TestCase {
 			$this->logger()
 		);
 
-		$result = $service->submit(['name' => 'Great tool', 'rating' => 8], 'organisatie', 'org-uuid-1');
+		$result = $service->submit(['name' => 'Great tool', 'rating' => 8], 'organization', 'org-uuid-1');
 
 		$this->assertFalse($result['ok']);
 		$this->assertSame('invalid subject type', $result['reason']);

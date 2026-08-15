@@ -88,7 +88,7 @@ class SettingsServiceDecompositionTest extends TestCase {
 
 		$reflection = new \ReflectionMethod($service, 'buildObjectTypeStatusEntry');
 		$reflection->setAccessible(true);
-		$entry = $reflection->invoke($service, 'contactpersoon');
+		$entry = $reflection->invoke($service, 'contactPerson');
 
 		$this->assertFalse($entry['configured']);
 		$this->assertNull($entry['schemaId']);
@@ -112,13 +112,13 @@ class SettingsServiceDecompositionTest extends TestCase {
 		$service->method('getSchemaIdForObjectType')->willReturnMap(
 			[
 				['organization', 11],
-				['contactpersoon', 12],
+				['contactPerson', 12],
 			]
 		);
 		$service->method('getRegisterIdForObjectType')->willReturnMap(
 			[
 				['organization', 21],
-				['contactpersoon', 22],
+				['contactPerson', 22],
 			]
 		);
 		$service->method('getRegisterVerificationStatus')->willReturn(

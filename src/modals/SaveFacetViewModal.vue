@@ -55,7 +55,7 @@ free-text search, if any) on the module/dienst index pages, then emits
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextField, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'SaveFacetViewModal',
@@ -73,6 +73,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		/** Whether a save request is in flight — disables the submit button. */
 		saving: {
 			type: Boolean,

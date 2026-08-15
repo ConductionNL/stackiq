@@ -158,7 +158,7 @@ class EolSyncService {
 
 		$moduleRegisterId = $this->settingsService->getRegisterIdForObjectType('module');
 		$moduleSchemaId = $this->settingsService->getSchemaIdForObjectType('module');
-		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
+		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersion');
 
 		if ($moduleRegisterId === null || $moduleSchemaId === null || $versionSchemaId === null) {
 			return $this->degrade(reason: 'module-schema-not-configured');

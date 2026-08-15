@@ -129,7 +129,7 @@ class ModuleVersionService {
 			return null;
 		}
 
-		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
+		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersion');
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 
@@ -207,14 +207,14 @@ class ModuleVersionService {
 	private function updateVersionRecord(array $context): void {
 		$moduleData = $context['moduleData'];
 		$moduleName = $moduleData['voorkeurnaam'] ?? $moduleData['name'] ?? 'Onbekende applicatie';
-		$moduleDescription = $moduleData['beschrijvingKort'] ?? '';
+		$moduleDescription = $moduleData['shortDescription'] ?? '';
 
 		$versionData = [
 			'module' => $context['moduleUuid'],
 			'version' => '1.0.0',
-			'beschrijvingKort' => $moduleDescription,
-			'beschrijvingLang' => '',
-			'status' => 'in gebruik',
+			'shortDescription' => $moduleDescription,
+			'longDescription' => '',
+			'status' => 'in use',
 		];
 
 		$savedVersion = $context['objectService']->saveObject(

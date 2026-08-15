@@ -211,7 +211,7 @@ class ContactpersonenController extends Controller {
 			$searchParams = [
 				'organisation' => $organisationId,
 				'_limit' => 100,
-				'_schema' => 'contactpersoon',
+				'_schema' => 'contactPerson',
 				// Let ObjectService resolve the schema.
 			];
 
@@ -232,7 +232,7 @@ class ContactpersonenController extends Controller {
 
 				$contactOrg = $this->normaliseOrganisationRef(value: ($contactData['organisation'] ?? null));
 				if ($contactOrg === null) {
-					$contactOrg = $this->normaliseOrganisationRef(value: ($contactData['organisatie'] ?? null));
+					$contactOrg = $this->normaliseOrganisationRef(value: ($contactData['organization'] ?? null));
 				}
 
 				// A record with no resolvable organisation is NOT served: an
@@ -411,7 +411,7 @@ class ContactpersonenController extends Controller {
 			$contactPersonObject = $this->objectService->find(
 				id: $contactPersonId,
 				register: 'voorzieningen',
-				schema: 'contactpersoon',
+				schema: 'contactPerson',
 				_rbac: true,
 				_multitenancy: true
 			);
@@ -481,7 +481,7 @@ class ContactpersonenController extends Controller {
 			// Ensure groups are assigned based on organization type.
 			// This is a safety check in case the createUserAccount didn't assign groups properly.
 			$contactData = $contactPersonObject->getObject();
-			$organizationId = $contactData['organisatie'] ?? $contactData['organisation'] ?? '';
+			$organizationId = $contactData['organization'] ?? $contactData['organisation'] ?? '';
 
 			if (empty($organizationId) === false) {
 				$this->logger->info(
@@ -571,7 +571,7 @@ class ContactpersonenController extends Controller {
 					'success' => true,
 					'message' => 'User account created successfully',
 					'username' => $user->getUID(),
-					'contactpersoon' => array_merge(
+					'contactPerson' => array_merge(
 						$contactPersonObject->jsonSerialize(),
 						[
 							'groups' => $userGroupNames,
@@ -659,14 +659,14 @@ class ContactpersonenController extends Controller {
 			}
 		}
 
-		if (isset($contactData['organisatie']) === true && is_string($contactData['organisatie']) === true) {
+		if (isset($contactData['organization']) === true && is_string($contactData['organization']) === true) {
 			$this->logger->info(
 				'ContactpersonenController: Converting organisatie string to null for validation',
 				[
-					'originalValue' => $contactData['organisatie'],
+					'originalValue' => $contactData['organization'],
 				]
 			);
-			$contactData['organisatie'] = null;
+			$contactData['organization'] = null;
 		}
 
 		if (isset($contactData['organisation']) === true && is_string($contactData['organisation']) === true) {
@@ -1001,8 +1001,11 @@ class ContactpersonenController extends Controller {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-5
 	 */
 	private function resolveContactOrganisation(object $objectService, string $username): ?string {
-		$results = $this->objectService->searchObjectsPaginated(
-			['username' => $username, '_limit' => 1, '_schema' => 'contactpersoon']
+		// development's side on both counts: this method TAKES $objectService as a
+		// parameter (my dangling-reference pass wrongly made it a property read),
+		// and the schema slug was renamed contactpersoon -> contactPerson there.
+		$results = $objectService->searchObjectsPaginated(
+			['username' => $username, '_limit' => 1, '_schema' => 'contactPerson']
 		);
 
 		if (empty($results['results']) === true) {
@@ -1016,7 +1019,7 @@ class ContactpersonenController extends Controller {
 			return $ref;
 		}
 
-		return $this->normaliseOrganisationRef(value: ($data['organisatie'] ?? null));
+		return $this->normaliseOrganisationRef(value: ($data['organization'] ?? null));
 	}//end resolveContactOrganisation()
 
 	/**
@@ -1219,7 +1222,7 @@ class ContactpersonenController extends Controller {
 			$contactObject = $this->objectService->find(
 				id: $contactPersonId,
 				register: 'voorzieningen',
-				schema: 'contactpersoon'
+				schema: 'contactPerson'
 			);
 
 			if ($contactObject === null) {
@@ -1741,7 +1744,7 @@ class ContactpersonenController extends Controller {
 			$searchParams = [
 				'username' => $userId,
 				'_limit' => 1,
-				'_schema' => 'contactpersoon',
+				'_schema' => 'contactPerson',
 			];
 
 			$contactpersonen = $this->objectService->searchObjectsPaginated($searchParams);

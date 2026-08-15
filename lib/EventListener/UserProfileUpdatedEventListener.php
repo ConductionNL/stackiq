@@ -355,7 +355,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		// 1. Search by username = userId, scoped to the user's organisation (multitenancy).
 		// This prevents updating a contactpersoon from a different organisation when.
 		// Multiple records share the same username across orgs.
-		$results = $this->objectService->searchObjects(
+		$results = $objectService->searchObjects(
 			query: ['@self' => $selfQuery, 'username' => $userId, '_limit' => 5],
 			_rbac: false,
 			_multitenancy: true
@@ -395,7 +395,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 
 			// Use _search for case-insensitive matching, then verify the email field in PHP.
 			// Scoped to user's organisation via multitenancy to avoid cross-org matches.
-			$results = $this->objectService->searchObjects(
+			$results = $objectService->searchObjects(
 				query: ['@self' => $selfQuery, '_search' => $emailCandidate, '_limit' => 5],
 				_rbac: false,
 				_multitenancy: true

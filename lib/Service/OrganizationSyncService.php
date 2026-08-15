@@ -486,7 +486,7 @@ class OrganizationSyncService {
 
 		// Find contacts without a username that DO have a matching Nextcloud account (by email).
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('o._uuid as uuid', 'o.e_mailadres as email', 'o.organisatie', 'a.uid')
+		$qb->select('o._uuid as uuid', 'o.e_mailadres as email', 'o.organization', 'a.uid')
 			->from($contactTableName, 'o')
 			->innerJoin('o', 'accounts_data', 'a', 'o.e_mailadres = a.value')
 			->where(
@@ -494,7 +494,7 @@ class OrganizationSyncService {
 					'(o.username IS NULL OR o.username = ' . $qb->createNamedParameter('') . ')'
 				)
 			)
-			->andWhere($qb->createFunction('o.organisatie IS NOT NULL'))
+			->andWhere($qb->createFunction('o.organization IS NOT NULL'))
 			->orderBy('o._updated', 'ASC')
 			->setMaxResults($batchSize);
 
@@ -605,12 +605,12 @@ class OrganizationSyncService {
 
 		// Find contacts with a username whose username is NOT in their org's users array.
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('o._uuid as uuid', 'o.username', 'o.organisatie', 'oo.users')
+		$qb->select('o._uuid as uuid', 'o.username', 'o.organization', 'oo.users')
 			->from($contactTableName, 'o')
-			->leftJoin('o', 'openregister_organisations', 'oo', 'oo.uuid = o.organisatie')
+			->leftJoin('o', 'openregister_organisations', 'oo', 'oo.uuid = o.organization')
 			->where($qb->createFunction('o.username IS NOT NULL'))
 			->andWhere($qb->createFunction('o.username <> ' . $qb->createNamedParameter('')))
-			->andWhere($qb->createFunction('o.organisatie IS NOT NULL'))
+			->andWhere($qb->createFunction('o.organization IS NOT NULL'))
 			->andWhere($qb->createFunction($jsonContainsCheck));
 
 		$users = $qb->executeQuery()->fetchAll();
@@ -621,10 +621,10 @@ class OrganizationSyncService {
 
 		foreach ($users as $user) {
 			try {
-				$this->organisationService->addUsersToOrganization($user['organisatie'], [$user['username']]);
+				$this->organisationService->addUsersToOrganization($user['organization'], [$user['username']]);
 			} catch (\Exception $e) {
 				$this->logger->error(
-					'UserSync: failed to add user ' . $user['username'] . ' to org ' . $user['organisatie'],
+					'UserSync: failed to add user ' . $user['username'] . ' to org ' . $user['organization'],
 					[
 						'error' => $e->getMessage(),
 					]
@@ -1245,7 +1245,7 @@ class OrganizationSyncService {
 					'register' => (int)$register,
 					'schema' => (int)$contactSchema,
 				],
-				'organisatie' => $organisationId,
+				'organization' => $organisationId,
 				'_limit' => 500,
 			];
 
@@ -1971,13 +1971,13 @@ class OrganizationSyncService {
 			// Find all contactpersoon objects that have this organization in their organisation property.
 
 			// Search for contactpersoon objects with this organization reference.
-			// Try both 'organisatie' and 'organisation' field names.
+			// Try both 'organization' and 'organisation' field names.
 			$query = [
 				'@self' => [
 					'register' => (int)$register,
 					'schema' => (int)$contactSchema,
 				],
-				'organisatie' => $organizationUuid,
+				'organization' => $organizationUuid,
 				'_limit' => 500,
 			];
 
@@ -1996,7 +1996,7 @@ class OrganizationSyncService {
 			// If not found, try with 'organisation' field.
 			if (empty($relatedContacts) === true) {
 				$query['organisation'] = $organizationUuid;
-				unset($query['organisatie']);
+				unset($query['organization']);
 
 				$this->logger->info(
 					'[FLOW] Retrying search with organisation field',
@@ -2149,8 +2149,8 @@ class OrganizationSyncService {
 
 					// Ensure the contact has the organisatie field set before processing.
 					// (may be missing when contacts were linked via inversedBy from the org side).
-					if (empty($contactData['organisatie']) === true) {
-						$contactData['organisatie'] = $organizationUuid;
+					if (empty($contactData['organization']) === true) {
+						$contactData['organization'] = $organizationUuid;
 						$contactObject->setObject($contactData);
 						// Published contract instead of OpenRegister's Db layer; see
 						// ContactpersonenController for the reasoning.
@@ -2303,8 +2303,8 @@ class OrganizationSyncService {
 
 				// Temporarily remove organisatie from contactData to avoid validation error.
 				// (schema expects object type but field stores a UUID string).
-				$savedOrganisation = $contactData['organisatie'] ?? null;
-				unset($contactData['organisatie']);
+				$savedOrganisation = $contactData['organization'] ?? null;
+				unset($contactData['organization']);
 				unset($contactData['id']);
 				unset($contactData['uuid']);
 
@@ -2319,7 +2319,7 @@ class OrganizationSyncService {
 				// Restore the organisatie field so the link to the organisation is preserved.
 				if ($contactObject !== false && $savedOrganisation !== null) {
 					$restoredData = $contactObject->getObject();
-					$restoredData['organisatie'] = $savedOrganisation;
+					$restoredData['organization'] = $savedOrganisation;
 					$contactObject->setObject($restoredData);
 					// Published contract instead of OpenRegister's Db layer.
 					$this->objectService->saveObject(
@@ -2341,8 +2341,8 @@ class OrganizationSyncService {
 
 				// Ensure the contact has the organisatie field set (may be missing when linked via inversedBy).
 				$contactObjectData = $contactObject->getObject();
-				if (empty($contactObjectData['organisatie']) === true && empty($organizationUuid) === false) {
-					$contactObjectData['organisatie'] = $organizationUuid;
+				if (empty($contactObjectData['organization']) === true && empty($organizationUuid) === false) {
+					$contactObjectData['organization'] = $organizationUuid;
 					$contactObject->setObject($contactObjectData);
 					$contactObject->setOrganisation($organizationUuid);
 					// Published contract instead of OpenRegister's Db layer.
@@ -2468,7 +2468,7 @@ class OrganizationSyncService {
 										'app' => 'softwarecatalog',
 										'contactId' => $contactObject->getUuid(),
 										'username' => $user->getUID(),
-										'hasOrganisatie' => isset($contactObjectData['organisatie']) === true,
+										'hasOrganisatie' => isset($contactObjectData['organization']) === true,
 									]
 								);
 
@@ -2631,7 +2631,7 @@ class OrganizationSyncService {
 			$contactEntityObject = $contactObject->getObject();
 
 			// Skip if no organization reference.
-			$organizationUuid = $contactEntityObject['organisatie'] ?? null;
+			$organizationUuid = $contactEntityObject['organization'] ?? null;
 			if (empty($organizationUuid) === true) {
 				$this->logger->warning(
 					'[EVENT] OrganizationSyncService: Contact person has no organization reference',
@@ -2714,8 +2714,8 @@ class OrganizationSyncService {
 							// Temporarily remove organisatie field to avoid validation error.
 							// (it's stored as UUID string but schema expects object type).
 							// Save the value so we can restore it after the save.
-							$savedOrganisation = $contactEntityObject['organisatie'] ?? null;
-							unset($contactEntityObject['organisatie']);
+							$savedOrganisation = $contactEntityObject['organization'] ?? null;
+							unset($contactEntityObject['organization']);
 
 							// Update the contact object with the username (using RBAC bypass).
 							// Wrapped in its own try/catch because saveObject triggers event listeners.
@@ -3287,7 +3287,7 @@ class OrganizationSyncService {
 
 			// Set the organisation field in @self metadata to the organization UUID.
 			// Use override if provided, otherwise try to get from object data.
-			$orgUuid = $currentObject['organisation'] ?? $currentObject['organisatie'] ?? '';
+			$orgUuid = $currentObject['organisation'] ?? $currentObject['organization'] ?? '';
 			$organizationUuid = ($organizationUuidOverride ?? $orgUuid);
 			if (empty($organizationUuid) === false) {
 				$selfMetadata['organisation'] = $organizationUuid;
@@ -3309,8 +3309,8 @@ class OrganizationSyncService {
 
 			// Restore the organisatie field if it was removed during username save.
 			// This is the safety net that ensures the contact→org link is never lost.
-			if (empty($organizationUuid) === false && empty($currentObject['organisatie']) === true) {
-				$currentObject['organisatie'] = $organizationUuid;
+			if (empty($organizationUuid) === false && empty($currentObject['organization']) === true) {
+				$currentObject['organization'] = $organizationUuid;
 				$this->logger->info(
 					'OrganizationSyncService: Restored missing organisatie field on contact person',
 					[

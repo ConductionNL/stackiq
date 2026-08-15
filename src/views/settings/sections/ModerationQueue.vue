@@ -3,7 +3,7 @@
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
  - Moderation queue admin section: lists entries of `type` awaiting moderation
- - (organisatie: registratiestatus=pending, default; beoordeeling:
+ - (organization: registratiestatus=pending, default; beoordeeling:
  - status=pending, softwarecatalog#375) and offers approve/reject per item.
  - Approve flips organisatie to active + publishes it (publicatiedatum=now);
  - for beoordeeling it flips status to approved (the schema's own status-
@@ -23,10 +23,10 @@
 		:name="name"
 		:description="description"
 		:loading="loading"
-		:loading-text="loadingText"
-		:show-refresh-button="true"
+		:loadingText="loadingText"
+		:showRefreshButton="true"
 		:refreshing="loading"
-		:refresh-button-text="t('softwarecatalog', 'Refresh queue')"
+		:refreshButtonText="t('softwarecatalog', 'Refresh queue')"
 		@refresh="loadPending">
 		<NcEmptyContent
 			v-if="items.length === 0"
@@ -79,18 +79,18 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
-import { translate as t } from '@nextcloud/l10n'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import { defineComponent } from 'vue'
 import Check from 'vue-material-design-icons/Check.vue'
-import Close from 'vue-material-design-icons/Close.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import Close from 'vue-material-design-icons/Close.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import { apiRequest } from '../../../utils/adminApi.js'
 import {
-	moderationItemTitle,
 	moderationItemSubtitle,
+	moderationItemTitle,
 } from '../../../utils/moderationItem.js'
 
 /**
@@ -118,18 +118,20 @@ export default defineComponent({
 	props: {
 		/**
 		 * The moderated object type — matches ModerationService's `$type`
-		 * parameter. Defaults to the original 'organisatie' behavior so the
+		 * parameter. Defaults to the original 'organization' behavior so the
 		 * existing settings-page instance needs no changes.
 		 */
 		type: {
 			type: String,
-			default: 'organisatie',
+			default: 'organization',
 		},
+
 		/** Section title. Defaults to the original organisatie copy. */
 		name: {
 			type: String,
 			default: () => t('softwarecatalog', 'Registration moderation'),
 		},
+
 		/** Section description. Defaults to the original organisatie copy. */
 		description: {
 			type: String,
@@ -139,11 +141,13 @@ export default defineComponent({
 					'Review anonymous catalog registrations. Approving an entry publishes it; rejecting leaves it hidden.',
 				),
 		},
+
 		/** Loading-state copy. Defaults to the original organisatie copy. */
 		loadingText: {
 			type: String,
 			default: () => t('softwarecatalog', 'Loading pending registrations…'),
 		},
+
 		/** Empty-state copy. Defaults to the original organisatie copy. */
 		emptyDescription: {
 			type: String,
@@ -153,6 +157,7 @@ export default defineComponent({
 					'There are no pending registrations right now.',
 				),
 		},
+
 		/**
 		 * Lower-case singular noun used to build the approve/reject toast
 		 * messages ('registration', default — matches the original

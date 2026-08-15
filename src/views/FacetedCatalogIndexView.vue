@@ -50,13 +50,13 @@ generic route-query-to-filter passthrough never sees it (see the
 
 		<div class="faceted-catalog-index__toolbar">
 			<NcTextField
-				:model-value="searchValue"
+				:modelValue="searchValue"
 				class="faceted-catalog-index__search"
 				:label="t('softwarecatalog', 'Search')"
 				:placeholder="
 					t('softwarecatalog', 'Search applications and services…')
 				"
-				@update:model-value="onSearchInput" />
+				@update:modelValue="onSearchInput" />
 			<NcButton
 				v-if="searchValue !== ''"
 				variant="tertiary"
@@ -98,13 +98,13 @@ generic route-query-to-filter passthrough never sees it (see the
 			<CnFacetSidebar
 				:title="t('softwarecatalog', 'GEMMA filters')"
 				:schema="facetDimensionSchema"
-				:facet-data="facetStore.facetDataFor(schema)"
-				:active-filters="facetStore[schema].activeFilters"
+				:facetData="facetStore.facetDataFor(schema)"
+				:activeFilters="facetStore[schema].activeFilters"
 				:loading="facetStore[schema].loading"
-				:clear-label="t('softwarecatalog', 'Clear all')"
+				:clearLabel="t('softwarecatalog', 'Clear all')"
 				class="faceted-catalog-index__sidebar"
-				@filter-change="onFacetFilterChange"
-				@clear-all="onClearAllFacets" />
+				@filterChange="onFacetFilterChange"
+				@clearAll="onClearAllFacets" />
 
 			<div class="faceted-catalog-index__list">
 				<CnIndexPage
@@ -114,9 +114,9 @@ generic route-query-to-filter passthrough never sees it (see the
 					:schema="schema"
 					:columns="columns"
 					:filter="listFilter"
-					:quick-filters="quickFilters"
-					:quick-filter-mode="quickFilterMode"
-					:quick-filter-multiple="quickFilterMultiple" />
+					:quickFilters="quickFilters"
+					:quickFilterMode="quickFilterMode"
+					:quickFilterMultiple="quickFilterMultiple" />
 			</div>
 		</div>
 
@@ -129,24 +129,23 @@ generic route-query-to-filter passthrough never sees it (see the
 </template>
 
 <script>
+import { CnFacetSidebar, CnIndexPage } from '@conduction/nextcloud-vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { translate as t } from '@nextcloud/l10n'
 import {
-	NcTextField,
-	NcButton,
-	NcActions,
 	NcActionButton,
 	NcActionCaption,
+	NcActions,
+	NcButton,
+	NcTextField,
 } from '@nextcloud/vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
-import { translate as t } from '@nextcloud/l10n'
-import { CnFacetSidebar, CnIndexPage } from '@conduction/nextcloud-vue'
 import CloseIcon from 'vue-material-design-icons/Close.vue'
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
-
+import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 import { useFacetStore } from '../store/modules/facets.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
-import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
 const DIMENSION_LABELS = {
@@ -182,28 +181,33 @@ export default {
 		schema: {
 			type: String,
 			required: true,
-			validator: (value) => ['module', 'dienst'].includes(value),
+			validator: (value) => ['module', 'service'].includes(value),
 		},
+
 		/** OpenRegister register id/slug (resolved from the manifest's `@resolve:voorzieningen_register`). */
 		register: {
 			type: [String, Number],
 			required: true,
 		},
+
 		/** Page title (manifest `pages[].title`). */
 		title: {
 			type: String,
 			default: '',
 		},
+
 		/** Optional page description. */
 		description: {
 			type: String,
 			default: '',
 		},
+
 		/** Table column definitions, forwarded to `CnIndexPage` (manifest `config.columns`). */
 		columns: {
 			type: Array,
 			default: () => [],
 		},
+
 		/**
 		 * Clickable filter-tab strip, forwarded to `CnIndexPage` (manifest
 		 * `config.quickFilters`) — e.g. the BIO BBN-level / DPIA-status quick
@@ -222,11 +226,13 @@ export default {
 			type: Array,
 			default: null,
 		},
+
 		/** Quick-filter render mode, forwarded to `CnIndexPage` (manifest `config.quickFilterMode`). */
 		quickFilterMode: {
 			type: String,
 			default: 'chips',
 		},
+
 		/** Allow several quick filters active at once, forwarded to `CnIndexPage` (manifest `config.quickFilterMultiple`). */
 		quickFilterMultiple: {
 			type: Boolean,

@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { defineStore } from 'pinia'
 
 /**
  * Settings store for managing all settings-related state and business logic
@@ -157,6 +157,7 @@ export const useSettingsStore = defineStore('settings', {
 	getters: {
 		/**
 		 * Whether the OpenRegister app is installed
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if OpenRegister is installed
 		 */
@@ -164,6 +165,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Whether the current user is an admin
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if the user is an admin
 		 */
@@ -171,6 +173,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Get register options for dropdowns
+		 *
 		 * @param {object} state - The store state
 		 * @return {Array} Array of register options
 		 */
@@ -184,6 +187,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Get Voorzieningen schema options
+		 *
 		 * @param {object} state - The store state
 		 * @return {Array} Array of schema options
 		 */
@@ -201,6 +205,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Get AMEF schema options
+		 *
 		 * @param {object} state - The store state
 		 * @return {Array} Array of schema options
 		 */
@@ -214,6 +219,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Check if any operation is running
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if any operation is running
 		 */
@@ -223,6 +229,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Check if register dropdowns should show loading state
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if registers are loading
 		 */
@@ -232,6 +239,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Check if voorzieningen schema dropdowns should show loading state
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if voorzieningen schemas are loading
 		 */
@@ -241,6 +249,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Check if AMEF schema dropdowns should show loading state
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if AMEF schemas are loading
 		 */
@@ -250,6 +259,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Get formatted statistics for display
+		 *
 		 * @param {object} state - The store state
 		 * @return {Array} Array of formatted statistics rows
 		 */
@@ -337,6 +347,7 @@ export const useSettingsStore = defineStore('settings', {
 	actions: {
 		/**
 		 * Set loading state
+		 *
 		 * @param {boolean} loading - Loading state
 		 */
 		setLoading(loading) {
@@ -345,6 +356,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Set error message
+		 *
 		 * @param {string|null} error - Error message
 		 */
 		setError(error) {
@@ -353,6 +365,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Clear error
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		clearError() {
@@ -361,6 +374,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load statistics from the objects/counts endpoint
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
@@ -406,6 +420,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load all settings from the API
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadSettings() {
@@ -480,6 +495,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Load essential data for OpenRegister configuration dropdowns
 		 * Only loads the data needed for register/schema selection
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadOpenRegisterEssentials() {
@@ -528,6 +544,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load Voorzieningen configuration with focused loading state
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadVoorzieningenConfigFocused() {
@@ -554,6 +571,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load AMEF configuration with focused loading state
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadAmefConfigFocused() {
@@ -683,6 +701,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load version information from focused endpoint
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadVersionInfo() {
@@ -709,6 +728,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load ArchiMate status from focused endpoint
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadArchiMateStatus() {
@@ -740,6 +760,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load object counts from focused endpoint
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadObjectCounts() {
@@ -773,6 +794,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load email configuration from focused endpoint
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadEmailConfig() {
@@ -800,6 +822,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load user groups configuration from focused endpoint
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadUserGroupsConfig() {
@@ -837,6 +860,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load only user groups configuration (for individual component refresh)
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadUserGroupsOnly() {
@@ -866,6 +890,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Load AMEF configuration from focused endpoint
 		 * Used in full settings load - doesn't interfere with focused loading states
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadAmefConfig() {
@@ -891,6 +916,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Load Voorzieningen configuration from focused endpoint
 		 * Used in full settings load - doesn't interfere with focused loading states
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadVoorzieningenConfig() {
@@ -915,6 +941,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Initialize configuration object
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		initializeConfiguration() {
@@ -947,6 +974,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Populate register selections using the focused endpoint configs
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		populateRegisterSelectionsFromFocused() {
@@ -990,6 +1018,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Populate schema selections using the focused endpoint configs
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		populateSchemaSelectionsFromFocused() {
@@ -1087,6 +1116,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Import ArchiMate file with proper error handling (async approach)
+		 *
 		 * @param {('speed'|'memory')} processingMode Processing strategy
 		 * @return {void}
 		 * @spec openspec/specs/fe-stores/spec.md
@@ -1161,6 +1191,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Start status polling with more frequent initial polls
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		startStatusPolling() {
@@ -1177,6 +1208,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Stop status polling
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		stopStatusPolling() {
@@ -1227,6 +1259,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Clear ArchiMate import status
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
@@ -1275,6 +1308,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Clear ArchiMate export status
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
@@ -1658,6 +1692,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Reset auto-configuration flag and optionally schema/register keys
 		 * Calls POST /api/settings/reset-auto-config
+		 *
 		 * @return {Promise<object>} Result
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
@@ -1691,6 +1726,7 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Force update: forced import + version sync
 		 * Calls POST /api/settings/force-update
+		 *
 		 * @return {Promise<object>} Result
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
@@ -1969,6 +2005,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Cleanup method to stop polling when store is destroyed
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		cleanup() {
@@ -1978,6 +2015,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Reset store state
+		 *
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		reset() {

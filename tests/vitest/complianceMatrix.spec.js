@@ -151,13 +151,13 @@ describe('complianceMatrix.standardLabel', () => {
 
 describe('complianceMatrix.buildOrganisationCoverage', () => {
 	it('lists every gebruik including applications with no compliance data', () => {
-		const gebruiken = [{ module: 'mA' }, { module: 'mB' }, { module: 'mC' }]
+		const usages = [{ module: 'mA' }, { module: 'mB' }, { module: 'mC' }]
 		const compliancy = [
 			{ module: 'mA', standard_version: 's1', url: 'https://e' },
 			{ module: 'mB', standard_version: 's1' },
 		]
 		const coverage = buildOrganisationCoverage({
-			gebruiken,
+			usages,
 			standaardversieUuid: 's1',
 			compliancy,
 		})
@@ -169,7 +169,7 @@ describe('complianceMatrix.buildOrganisationCoverage', () => {
 
 	it('ignores compliancy for other standards', () => {
 		const coverage = buildOrganisationCoverage({
-			gebruiken: [{ module: 'mA' }],
+			usages: [{ module: 'mA' }],
 			standaardversieUuid: 's1',
 			compliancy: [{ module: 'mA', standard_version: 's2', url: 'https://e' }],
 		})
@@ -190,7 +190,7 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 	it('partitions bioMaatregel-linked records as resolved under the bioMaatregel column source', () => {
 		const { resolved, unresolved } = partitionCompliancy(
 			[
-				{ module: 'mA', bioMaatregel: 'b1', url: 'https://e' },
+				{ module: 'mA', bioMeasure: 'b1', url: 'https://e' },
 				{ module: 'mA', standard_version: 's1' },
 			],
 			COLUMN_SOURCE.BIO_MAATREGEL,
@@ -205,9 +205,9 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 
 	it('renders the three cell states for a BIO-measure matrix, same as the standards matrix', () => {
 		const compliancy = [
-			{ module: 'mA', bioMaatregel: 'b1', url: 'https://proof' },
-			{ module: 'mA', bioMaatregel: 'b2' },
-			{ module: 'mB', bioMaatregel: 'b1' },
+			{ module: 'mA', bioMeasure: 'b1', url: 'https://proof' },
+			{ module: 'mA', bioMeasure: 'b2' },
+			{ module: 'mB', bioMeasure: 'b1' },
 		]
 		const { rows, columns } = buildComplianceMatrix({
 			modules,
@@ -230,7 +230,7 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 			{
 				module: 'mA',
 				standard_version: 's1',
-				bioMaatregel: 'b1',
+				bioMeasure: 'b1',
 				url: 'https://e',
 			},
 		]
@@ -253,13 +253,13 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 	})
 
 	it('computes organisation coverage for a bioMaatregel column identically to the standards path', () => {
-		const gebruiken = [{ module: 'mA' }, { module: 'mB' }, { module: 'mC' }]
+		const usages = [{ module: 'mA' }, { module: 'mB' }, { module: 'mC' }]
 		const compliancy = [
-			{ module: 'mA', bioMaatregel: 'b1', url: 'https://e' },
-			{ module: 'mB', bioMaatregel: 'b1' },
+			{ module: 'mA', bioMeasure: 'b1', url: 'https://e' },
+			{ module: 'mB', bioMeasure: 'b1' },
 		]
 		const coverage = buildOrganisationCoverage({
-			gebruiken,
+			usages,
 			columnUuid: 'b1',
 			compliancy,
 			columnSource: COLUMN_SOURCE.BIO_MAATREGEL,

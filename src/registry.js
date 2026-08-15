@@ -17,12 +17,12 @@
 //   - nextcloud-app-template scaffold-v2 (#44) — canonical layout
 //   - procest #512 / launchpad #206 — first reference migrations
 
-import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
-import DashboardCustomView from './views/Dashboard.vue'
-import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
-import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
+import DashboardCustomView from './views/Dashboard.vue'
+import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
+import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 
 export default {
 	// --- Lib gap: settings sub-section orchestration. ---

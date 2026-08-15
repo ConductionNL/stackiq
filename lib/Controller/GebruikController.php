@@ -23,6 +23,7 @@ use Exception;
 use OCA\SoftwareCatalog\Service\GebruikService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
 use OCP\IGroup;
@@ -92,6 +93,7 @@ class GebruikController extends Controller {
 	 * @spec openspec/specs/open-data-publishing/spec.md
 	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-every-rbac-bypassing-gebruik-koppeling-contract-read-must-evaluate-its-deny-check-before-issuing-the-bypass-query-req-001
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getGebruiken(): JSONResponse {
 		// Open-data posture (open-data-publishing): gebruik is inherently
 		// organisation-scoped, so an anonymous caller receives the documented

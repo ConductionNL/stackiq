@@ -67,7 +67,7 @@
 							</td>
 							<td class="manageCell">
 								<NcButton
-									v-if="stat.slug === 'organisatie'"
+									v-if="stat.slug === 'organization'"
 									size="small"
 									variant="tertiary"
 									@click.stop="navigateToObjectType(stat.slug)">
@@ -120,7 +120,7 @@
 							</td>
 							<td class="manageCell">
 								<NcButton
-									v-if="stat.slug === 'organisatie'"
+									v-if="stat.slug === 'organization'"
 									size="small"
 									variant="tertiary"
 									@click.stop="navigateToObjectType(stat.slug)">
@@ -147,19 +147,18 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 // eslint-disable-next-line import/named
 import { CnDashboardPage } from '@conduction/nextcloud-vue'
-import { objectStore, navigationStore } from '../store/store.js'
-
-// Icons
-import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import ApplicationCog from 'vue-material-design-icons/ApplicationCog.vue'
-import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
 import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
+import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
+// Icons
+import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import { navigationStore, objectStore } from '../store/store.js'
 
 /**
  * @class Dashboard
@@ -226,6 +225,7 @@ export default {
 	computed: {
 		/**
 		 * Widget definitions for CnDashboardPage
+		 *
 		 * @return {Array} Widget definition array
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
@@ -239,6 +239,7 @@ export default {
 
 		/**
 		 * Get object statistics for the table display
+		 *
 		 * @return {Array} Array of object statistics
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
@@ -280,6 +281,7 @@ export default {
 
 		/**
 		 * Get first half of statistics for first table
+		 *
 		 * @return {Array} First half of statistics
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
@@ -291,6 +293,7 @@ export default {
 
 		/**
 		 * Get second half of statistics for second table
+		 *
 		 * @return {Array} Second half of statistics
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
@@ -308,6 +311,7 @@ export default {
 	methods: {
 		/**
 		 * Load dashboard data
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
@@ -346,6 +350,7 @@ export default {
 
 		/**
 		 * Get schema configuration for object type
+		 *
 		 * @param {string} objectType - Object type slug
 		 * @return {object | null} Schema configuration
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
@@ -368,20 +373,21 @@ export default {
 
 		/**
 		 * Get icon component for specific object type
+		 *
 		 * @param {string} objectType - Object type slug
 		 * @return {object} Vue icon component
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		getIconForObjectType(objectType) {
 			const iconMap = {
-				organisatie: OfficeBuildingOutline,
-				contactpersoon: AccountMultiple,
+				organization: OfficeBuildingOutline,
+				contactPerson: AccountMultiple,
 				voorziening: ApplicationCog,
 				contract: FileDocumentEdit,
 				suite: ApplicationCog,
 				module: ApplicationCog,
 				koppeling: ApplicationCog,
-				dienst: ApplicationCog,
+				service: ApplicationCog,
 				standard: FileDocumentEdit,
 				compliancy: FileDocumentEdit,
 				kwetsbaarheid: FileDocumentEdit,
@@ -392,6 +398,7 @@ export default {
 
 		/**
 		 * Navigate to object type management page
+		 *
 		 * @param {string} objectType - Object type slug to navigate to
 		 * @return {void}
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
@@ -399,8 +406,8 @@ export default {
 		navigateToObjectType(objectType) {
 			// Handle special cases for plural routing
 			const routeMap = {
-				organisatie: 'organisaties',
-				contactpersoon: 'contactpersonen',
+				organization: 'organisaties',
+				contactPerson: 'contactpersonen',
 				voorziening: 'voorzieningen',
 				contract: 'contracten',
 			}
@@ -411,6 +418,7 @@ export default {
 
 		/**
 		 * Navigate to organizations page
+		 *
 		 * @return {void}
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
@@ -422,14 +430,14 @@ export default {
 		 * Navigate to the index page that corresponds to an OR schema slug.
 		 * Covers all voorzieningen schemas so every count row is clickable.
 		 *
-		 * @param {string} slug - OR schema slug (e.g. 'organisatie', 'standard').
+		 * @param {string} slug - OR schema slug (e.g. 'organization', 'standard').
 		 * @return {void}
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		navigateToSchema(slug) {
 			const slugToSelected = {
-				organisatie: 'organisaties',
-				contactpersoon: 'contactpersonen',
+				organization: 'organisaties',
+				contactPerson: 'contactpersonen',
 				contract: 'contracten',
 				standard: 'standards',
 				compliancy: 'komplianties',
@@ -443,6 +451,7 @@ export default {
 
 		/**
 		 * Navigate to configuration page - opens admin settings in new tab
+		 *
 		 * @param {string} route - Route to navigate to (legacy parameter)
 		 * @return {void}
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
@@ -454,6 +463,7 @@ export default {
 
 		/**
 		 * Format object type name for display
+		 *
 		 * @param {string} objectType - The object type slug
 		 * @return {string} Formatted object type name
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
@@ -470,6 +480,7 @@ export default {
 
 		/**
 		 * Format date for display
+		 *
 		 * @param {Date} date - Date to format
 		 * @return {string} Formatted date string
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
@@ -488,6 +499,7 @@ export default {
 
 		/**
 		 * Refresh all data - force reload settings and all collections
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */

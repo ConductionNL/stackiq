@@ -27,9 +27,9 @@
  * @type {{MONTHLY: string, YEARLY: string, ONEOFF: string}}
  */
 export const PERIOD = Object.freeze({
-	MONTHLY: 'Maandelijks',
-	YEARLY: 'Jaarlijks',
-	ONEOFF: 'Eenmalig',
+	MONTHLY: 'Monthly',
+	YEARLY: 'Annually',
+	ONEOFF: 'One-off',
 })
 
 /**

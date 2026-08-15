@@ -529,7 +529,7 @@ class ArchiMateService {
 
 		if (empty($register) === true || empty($schema) === true) {
 			$register = $this->settingsService->getVoorzieningenRegisterId();
-			$schema = $this->settingsService->getSchemaIdForObjectType('organisatie');
+			$schema = $this->settingsService->getSchemaIdForObjectType('organization');
 		}
 
 		return [$register, $schema];
@@ -2347,7 +2347,7 @@ class ArchiMateService {
 		];
 
 		foreach ($statistics as $section => $sectionStats) {
-			if ($section !== 'summary') {
+			if ($section !== 'omschrijving') {
 				// Skip summary section itself.
 				$summary['total_objects_created'] += $sectionStats['created'];
 				$summary['total_objects_updated'] += $sectionStats['updated'];
@@ -2356,7 +2356,7 @@ class ArchiMateService {
 			}
 		}
 
-		$statistics['summary'] = $summary;
+		$statistics['omschrijving'] = $summary;
 
 		return $statistics;
 	}//end calculateObjectStatistics()
@@ -2586,9 +2586,9 @@ class ArchiMateService {
 			// Extract documentation from XML if it exists and set to summary.
 			if (isset($item['documentation']) === true) {
 				if (is_array($item['documentation']) === true && isset($item['documentation']['_value']) === true) {
-					$object['summary'] = $item['documentation']['_value'];
+					$object['omschrijving'] = $item['documentation']['_value'];
 				} elseif (is_string($item['documentation']) === true) {
-					$object['summary'] = $item['documentation'];
+					$object['omschrijving'] = $item['documentation'];
 				}
 			}
 
@@ -2780,7 +2780,7 @@ class ArchiMateService {
 	 */
 	private function calculateOptimizedStatistics(): array {
 		$statistics = [
-			'summary' => [
+			'omschrijving' => [
 				'total_objects_created' => 0,
 				'total_objects_updated' => 0,
 				'total_objects_deleted' => 0,
@@ -2791,7 +2791,7 @@ class ArchiMateService {
 
 		if ($this->lastSaveResult !== null) {
 			$saveResult = $this->lastSaveResult;
-			$statistics['summary'] = [
+			$statistics['omschrijving'] = [
 				'total_objects_created' => count($saveResult['saved'] ?? []),
 				'total_objects_updated' => count($saveResult['updated'] ?? []),
 				'total_objects_deleted' => 0,

@@ -139,11 +139,11 @@ class AanbodService {
 
 			// Collect all schemas we need to search.
 			if ($gebruikSchema !== null) {
-				$schemasToSearch[] = ['schema' => $gebruikSchema, 'type' => 'gebruik', 'filter_field' => 'consumer'];
+				$schemasToSearch[] = ['schema' => $gebruikSchema, 'type' => 'usage', 'filter_field' => 'consumer'];
 			}
 
 			if ($integrationSchema !== null) {
-				$schemasToSearch[] = ['schema' => $integrationSchema, 'type' => 'koppeling', 'filter_field' => 'provider'];
+				$schemasToSearch[] = ['schema' => $integrationSchema, 'type' => 'connection', 'filter_field' => 'provider'];
 			}
 
 			if ($moduleSchema !== null) {
@@ -151,7 +151,7 @@ class AanbodService {
 			}
 
 			if ($dienstSchema !== null) {
-				$schemasToSearch[] = ['schema' => $dienstSchema, 'type' => 'dienst', 'filter_field' => 'provider'];
+				$schemasToSearch[] = ['schema' => $dienstSchema, 'type' => 'service', 'filter_field' => 'provider'];
 			}
 
 			// Search each schema type.
@@ -735,9 +735,9 @@ class AanbodService {
 	 * Mapping from organisatie.type to registeredBy value.
 	 */
 	private const TYPE_MAP = [
-		'Gemeente' => 'Gemeente',
-		'Leverancier' => 'Leverancier',
-		'Samenwerking' => 'Samenwerking',
+		'Municipality' => 'Municipality',
+		'Supplier' => 'Supplier',
+		'Collaboration' => 'Collaboration',
 		'Community' => 'Community',
 	];
 
@@ -759,7 +759,7 @@ class AanbodService {
 		string $organisationUuid,
 	): array {
 		try {
-			$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
+			$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organization');
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 			$registerId = $voorzieningenConfig['register'] ?? null;
 

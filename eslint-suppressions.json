@@ -1,0 +1,556 @@
+{
+  "src/components/AlwaysVisibleSection.vue": {
+    "vue/slot-name-casing": {
+      "count": 2
+    }
+  },
+  "src/components/CollapsibleSection.vue": {
+    "vue/slot-name-casing": {
+      "count": 1
+    }
+  },
+  "src/components/ContactpersonenList.vue": {
+    "@nextcloud/l10n-enforce-ellipsis": {
+      "count": 2
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 2
+    },
+    "no-console": {
+      "count": 22
+    }
+  },
+  "src/components/PaginationComponent.vue": {
+    "vue/custom-event-name-casing": {
+      "count": 2
+    }
+  },
+  "src/components/SelectedObjectsList.vue": {
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/components/StandardTabs.vue": {
+    "vue/custom-event-name-casing": {
+      "count": 1
+    }
+  },
+  "src/components/cards/OrganisatieCard.vue": {
+    "jsdoc/require-param-type": {
+      "count": 2
+    },
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/components/contracts/ContractApprovalPanel.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/components/organisations/OrganisationMergePanel.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    }
+  },
+  "src/components/sbom/SbomComponentsPanel.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/components/vulnerabilities/VulnerabilityExposurePanel.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/composables/orClient.js": {
+    "no-unused-vars": {
+      "count": 1
+    },
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "src/dialogs/ChangePasswordDialog.vue": {
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 2
+    }
+  },
+  "src/dialogs/Dialogs.vue": {
+    "vue/multi-word-component-names": {
+      "count": 1
+    }
+  },
+  "src/dialogs/ManageUserGroupsDialog.vue": {
+    "jsdoc/require-param-type": {
+      "count": 2
+    },
+    "no-console": {
+      "count": 1
+    },
+    "vue/custom-event-name-casing": {
+      "count": 1
+    }
+  },
+  "src/dialogs/SuiteWizard/Step2Applications.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    }
+  },
+  "src/main.js": {
+    "no-undef": {
+      "count": 1
+    }
+  },
+  "src/modals/AddContactpersoonModal.vue": {
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 1
+    },
+    "vue/custom-event-name-casing": {
+      "count": 1
+    }
+  },
+  "src/modals/BulkSyncDialog.vue": {
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 1
+    },
+    "vue/custom-event-name-casing": {
+      "count": 3
+    }
+  },
+  "src/modals/Modals.vue": {
+    "vue/multi-word-component-names": {
+      "count": 1
+    }
+  },
+  "src/modals/OrganisationModal.vue": {
+    "@nextcloud/l10n-enforce-ellipsis": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 2
+    },
+    "no-console": {
+      "count": 3
+    }
+  },
+  "src/modals/SubmitReviewModal.vue": {
+    "vue/custom-event-name-casing": {
+      "count": 1
+    }
+  },
+  "src/modals/object/ChangeOrganisatieStatusDialog.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 2
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/DeleteObject.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/DownloadObject.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    },
+    "vue/prefer-separate-static-class": {
+      "count": 1
+    }
+  },
+  "src/modals/object/LockObject.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/MassDeleteObject.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/MassDepublishObjects.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/MassLockObjects.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/MassPublishObjects.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/MassUnlockObjects.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/MassValidateObjects.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/MergeObject.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 10
+    },
+    "no-console": {
+      "count": 3
+    },
+    "no-useless-assignment": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/MergeOrganisationConfirmDialog.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    }
+  },
+  "src/modals/object/MigrationObject.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 3
+    },
+    "no-console": {
+      "count": 4
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/modals/object/ObjectModal.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 4
+    },
+    "jsdoc/require-param-type": {
+      "count": 7
+    },
+    "no-console": {
+      "count": 1
+    },
+    "preserve-caught-error": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    },
+    "vue/prefer-separate-static-class": {
+      "count": 1
+    }
+  },
+  "src/modals/object/UploadObject.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-expressions": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    },
+    "vue/prefer-separate-static-class": {
+      "count": 1
+    }
+  },
+  "src/modals/object/ViewObject.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 16
+    },
+    "jsdoc/require-param-type": {
+      "count": 74
+    },
+    "no-console": {
+      "count": 16
+    },
+    "no-useless-assignment": {
+      "count": 6
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    },
+    "vue/prefer-separate-static-class": {
+      "count": 1
+    }
+  },
+  "src/sidebars/dashboard/DashboardSideBar.vue": {
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/sidebars/directory/DirectorySideBar.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 3
+    },
+    "jsdoc/require-param-type": {
+      "count": 10
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/sidebars/search/SearchSideBar.vue": {
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  },
+  "src/store/modules/organisatie.js": {
+    "no-console": {
+      "count": 15
+    }
+  },
+  "src/store/modules/settings.js": {
+    "no-console": {
+      "count": 18
+    },
+    "no-unused-vars": {
+      "count": 8
+    }
+  },
+  "src/store/modules/view.js": {
+    "no-console": {
+      "count": 2
+    }
+  },
+  "src/store/plugins/softwarecatalogPlugin.js": {
+    "no-console": {
+      "count": 5
+    },
+    "no-unused-vars": {
+      "count": 6
+    }
+  },
+  "src/utils/adminApi.js": {
+    "no-unused-vars": {
+      "count": 1
+    },
+    "no-useless-assignment": {
+      "count": 1
+    }
+  },
+  "src/utils/heartbeat.js": {
+    "no-console": {
+      "count": 5
+    }
+  },
+  "src/utils/portfolioReport.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/views/ComplianceMatrixView.vue": {
+    "@nextcloud/no-deprecated-library-props": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 2
+    }
+  },
+  "src/views/Dashboard.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "import/named": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 10
+    },
+    "vue/multi-word-component-names": {
+      "count": 1
+    }
+  },
+  "src/views/KwetsbaarhedenView.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/views/LicensePostureView.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 2
+    },
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/views/LifecycleRoadmapView.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/views/settings/Settings.vue": {
+    "no-console": {
+      "count": 5
+    },
+    "vue/multi-word-component-names": {
+      "count": 1
+    }
+  },
+  "src/views/settings/SoftwareCatalogSettings.vue": {
+    "jsdoc/require-param-type": {
+      "count": 3
+    },
+    "no-console": {
+      "count": 4
+    }
+  },
+  "src/views/settings/sections/ArchiMateImportExport.vue": {
+    "no-console": {
+      "count": 5
+    }
+  },
+  "src/views/settings/sections/CronjobConfiguration.vue": {
+    "no-console": {
+      "count": 5
+    }
+  },
+  "src/views/settings/sections/EmailConfiguration.vue": {
+    "jsdoc/require-param-type": {
+      "count": 1
+    },
+    "no-console": {
+      "count": 9
+    }
+  },
+  "src/views/settings/sections/EolSyncSettings.vue": {
+    "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/views/settings/sections/OpenRegisterIntegration.vue": {
+    "jsdoc/require-param-type": {
+      "count": 2
+    },
+    "no-console": {
+      "count": 3
+    }
+  },
+  "src/views/settings/sections/OrganizationSynchronization.vue": {
+    "jsdoc/require-param-type": {
+      "count": 3
+    },
+    "no-console": {
+      "count": 6
+    }
+  },
+  "src/views/settings/sections/UserGroupsConfiguration.vue": {
+    "jsdoc/require-param-type": {
+      "count": 3
+    },
+    "no-console": {
+      "count": 2
+    }
+  },
+  "src/views/settings/sections/VersionInformation.vue": {
+    "no-console": {
+      "count": 1
+    }
+  },
+  "src/views/widgets/ConceptOrganisatiesWidget.vue": {
+    "no-console": {
+      "count": 1
+    },
+    "vue/prefer-define-options": {
+      "count": 1
+    }
+  }
+}
