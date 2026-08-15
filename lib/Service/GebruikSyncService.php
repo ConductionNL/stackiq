@@ -445,11 +445,11 @@ class GebruikSyncService {
 	 */
 	private function extractStatusDateMap(array $gebruikData): array {
 		return [
-			'Verwerving' => $gebruikData['startDateAcquisition'] ?? null,
-			'Gepland' => $gebruikData['startDatePlanned'] ?? null,
-			'In productie' => $gebruikData['startDateInProduction'] ?? null,
-			'Uit te faseren' => $gebruikData['startDateOutPhasing'] ?? null,
-			'Uitgefaseerd' => $gebruikData['startDateOutPhased'] ?? null,
+			'Acquisition' => $gebruikData['startDateAcquisition'] ?? null,
+			'Planned' => $gebruikData['startDatePlanned'] ?? null,
+			'In production' => $gebruikData['startDateInProduction'] ?? null,
+			'To be phased out' => $gebruikData['startDateOutPhasing'] ?? null,
+			'Phased out' => $gebruikData['startDateOutPhased'] ?? null,
 		];
 
 	}//end extractStatusDateMap()

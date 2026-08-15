@@ -50,17 +50,17 @@ class OrganizationSyncTest extends TestCase {
 
 		// Configure mocks
 		$settingsService->method('getRegisterIdForObjectType')
-			->with('organisatie')
+			->with('organization')
 			->willReturn(1);
 
 		$settingsService->method('getSchemaIdForObjectType')
-			->with('organisatie')
+			->with('organization')
 			->willReturn(37);
 
 		// Test organization data
 		$organizationData = [
 			'name' => 'Test Organization',
-			'type' => 'Gemeente',
+			'type' => 'Municipality',
 			'website' => 'https://test.org',
 			'beoordeling' => 'actief',
 			'id' => 'test-org-uuid-123'
@@ -125,7 +125,7 @@ class OrganizationSyncTest extends TestCase {
 			],
 			[
 				'input' => ['beoordeling' => 'unknown'],
-				'expected' => 'Concept'
+				'expected' => 'Draft'
 			]
 		];
 
@@ -151,7 +151,7 @@ class OrganizationSyncTest extends TestCase {
 			->willReturn(1);
 
 		$settingsService->method('getSchemaIdForObjectType')
-			->with('organisatie')
+			->with('organization')
 			->willReturn(37);
 
 		// Test contactpersoon data

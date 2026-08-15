@@ -79,7 +79,7 @@ final class SettingsServiceConfigVersionTest extends TestCase {
 		// live reproduction — and with every fragment file untouched.
 		$after = $this->computeConfigVersion(
 			baseVersion: $baseVersion,
-			monolithContent: '{"info":{"version":"2.4.0"},"components":{"schemas":{"module":{},"bioMaatregel":{}}}}',
+			monolithContent: '{"info":{"version":"2.4.0"},"components":{"schemas":{"module":{},"bioMeasure":{}}}}',
 			fragmentSig: $fragmentSig
 		);
 

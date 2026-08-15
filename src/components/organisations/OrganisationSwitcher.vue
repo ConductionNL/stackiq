@@ -29,7 +29,7 @@
 <template>
 	<div class="organisation-switcher">
 		<NcActions
-			:menu-name="activeOrganisationName"
+			:menuName="activeOrganisationName"
 			:disabled="switching"
 			class="organisation-switcher__actions">
 			<template #icon>
@@ -39,14 +39,14 @@
 			<NcActionButton
 				v-for="organisation in otherOrganisations"
 				:key="organisation.uuid"
-				close-after-click
+				closeAfterClick
 				@click="switchTo(organisation.uuid)">
 				{{ organisation.name }}
 			</NcActionButton>
 			<NcActionSeparator v-if="otherOrganisations.length > 0 && isBeheerder" />
 			<NcActionButton
 				v-if="isBeheerder"
-				close-after-click
+				closeAfterClick
 				@click="manageMembersOpen = true">
 				<template #icon>
 					<AccountMultipleIcon :size="20" />
@@ -62,23 +62,23 @@
 		</NcNoteCard>
 		<GrantOrganisationAccessModal
 			:open="manageMembersOpen"
-			:organisation-uuid="activeOrganisationUuid"
-			:organisation-name="activeOrganisationName"
+			:organisationUuid="activeOrganisationUuid"
+			:organisationName="activeOrganisationName"
 			@update:open="manageMembersOpen = $event" />
 	</div>
 </template>
 
 <script>
+import { generateUrl } from '@nextcloud/router'
 import {
-	NcActions,
 	NcActionButton,
+	NcActions,
 	NcActionSeparator,
 	NcLoadingIcon,
 	NcNoteCard,
 } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
-import DomainIcon from 'vue-material-design-icons/Domain.vue'
 import AccountMultipleIcon from 'vue-material-design-icons/AccountMultiple.vue'
+import DomainIcon from 'vue-material-design-icons/Domain.vue'
 import GrantOrganisationAccessModal from '../../modals/GrantOrganisationAccessModal.vue'
 import {
 	resolveActiveOrganisationName,

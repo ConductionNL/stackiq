@@ -52,7 +52,7 @@ class FederationService {
 	 * The catalog object type peer mirrors are merged into (organisation
 	 * profiles — the federated catalog unit OpenCatalogi exposes by directory).
 	 */
-	public const PEER_MIRROR_TYPE = 'organisatie';
+	public const PEER_MIRROR_TYPE = 'organization';
 
 	/**
 	 * Constructor.

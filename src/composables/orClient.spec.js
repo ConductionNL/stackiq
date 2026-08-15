@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Unit tests for the orClient composable (i18n + tenant URL/header helpers).
  *
@@ -6,15 +5,14 @@
  */
 
 import { getLanguage } from '@nextcloud/l10n'
-
 import {
+	buildObjectUrl,
+	buildWriteHeaders,
+	getActiveOrganisationUuid,
 	OR_API_BASE,
 	resolveLanguage,
-	withLanguageParam,
-	buildWriteHeaders,
-	buildObjectUrl,
 	setActiveOrganisationUuid,
-	getActiveOrganisationUuid,
+	withLanguageParam,
 } from './orClient.js'
 
 jest.mock('@nextcloud/l10n', () => ({

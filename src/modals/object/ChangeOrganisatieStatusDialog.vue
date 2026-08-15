@@ -5,7 +5,7 @@ https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
 @link https://github.com/opencatalogi/softwarecatalog */
 
 <script setup>
-import { objectStore, navigationStore } from '../../store/store.js'
+import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -16,7 +16,7 @@ import { objectStore, navigationStore } from '../../store/store.js'
 			|| t('softwarecatalog', 'Change status')
 		"
 		size="normal"
-		:can-close="false">
+		:canClose="false">
 		<p v-if="success === null">
 			{{
 				t('softwarecatalog', 'Are you sure you want to change the status of')
@@ -107,7 +107,6 @@ import { objectStore, navigationStore } from '../../store/store.js'
 
 <script>
 import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
@@ -123,6 +122,7 @@ export default {
 		CheckCircle,
 		CloseCircle,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -130,14 +130,16 @@ export default {
 			error: null,
 		}
 	},
+
 	methods: {
 		/**
 		 * Get the organisation name for display
+		 *
 		 * @return {string} The organisation name
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieName() {
-			const organisatie = objectStore.getActiveObject('organisatie')
+			const organisatie = objectStore.getActiveObject('organization')
 			return (
 				organisatie?.name
 				|| organisatie?.name
@@ -148,6 +150,7 @@ export default {
 
 		/**
 		 * Close the dialog
+		 *
 		 * @return {void}
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -160,6 +163,7 @@ export default {
 
 		/**
 		 * Change the organisation status.
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -168,7 +172,7 @@ export default {
 			this.error = null
 
 			try {
-				const organisatie = objectStore.getActiveObject('organisatie')
+				const organisatie = objectStore.getActiveObject('organization')
 				const newStatus = navigationStore.dialogProperties?.newStatus
 
 				if (!organisatie || !organisatie.id || !newStatus) {
@@ -193,7 +197,7 @@ export default {
 
 				// Update only the status using PATCH.
 				await objectStore.patchObject(
-					'organisatie',
+					'organization',
 					organisatie.id,
 					patchData,
 				)
@@ -201,7 +205,7 @@ export default {
 				this.success = true
 
 				// If activating an organisation, store it for search filtering.
-				if (newStatus === 'Actief') {
+				if (newStatus === 'Active') {
 					const organisatieNaam =
 						organisatie?.name
 						|| organisatie?.name
@@ -211,7 +215,7 @@ export default {
 					navigationStore.setTransferData({
 						action: 'organisationActivated',
 						organisationName: organisatieNaam,
-						status: 'Actief',
+						status: 'Active',
 					})
 				}
 				// For deactivation, don't fetch - the organisation will just disappear from

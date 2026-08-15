@@ -5,9 +5,9 @@
 <template>
 	<CnWidgetWrapper
 		:title="t('softwarecatalog', 'Approval')"
-		title-icon-position="left"
-		:show-refresh="false"
-		:show-request-feature="false">
+		titleIconPosition="left"
+		:showRefresh="false"
+		:showRequestFeature="false">
 		<template #title-icon>
 			<CnIcon name="CheckCircleOutline" :size="20" />
 		</template>
@@ -77,15 +77,14 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import { CnStatusBadge, CnWidgetWrapper, CnIcon } from '@conduction/nextcloud-vue'
+import { CnIcon, CnStatusBadge, CnWidgetWrapper } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import axios from '@nextcloud/axios'
-
-import Check from 'vue-material-design-icons/Check.vue'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import Autorenew from 'vue-material-design-icons/Autorenew.vue'
+import Check from 'vue-material-design-icons/Check.vue'
 
 /**
  * @class ContractApprovalPanel
@@ -115,6 +114,7 @@ export default {
 		Check,
 		Autorenew,
 	},
+
 	props: {
 		/**
 		 * The contract OR object uuid (passed by CnObjectSidebar as `objectId`).
@@ -125,6 +125,7 @@ export default {
 			type: [String, Number],
 			default: '',
 		},
+
 		/**
 		 * The contract register slug (passed by CnObjectSidebar).
 		 *
@@ -134,6 +135,7 @@ export default {
 			type: String,
 			default: 'voorzieningen',
 		},
+
 		/**
 		 * The contract schema slug (passed by CnObjectSidebar).
 		 *
@@ -144,6 +146,7 @@ export default {
 			default: 'contract',
 		},
 	},
+
 	data() {
 		return {
 			loading: true,
@@ -155,6 +158,7 @@ export default {
 			error: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * Whether the contract may be submitted for first approval.
@@ -164,11 +168,12 @@ export default {
 		 */
 		canSubmitApproval() {
 			return (
-				this.status === 'In onderhandeling'
+				this.status === 'In negotiation'
 				&& (this.approvalState === 'none'
 					|| this.approvalState === 'rejected')
 			)
 		},
+
 		/**
 		 * Whether the contract may be submitted for renewal.
 		 *
@@ -176,8 +181,9 @@ export default {
 		 * @spec openspec/specs/contract-decision-delegation/spec.md
 		 */
 		canSubmitRenewal() {
-			return this.status === 'Verlopen' && this.approvalState !== 'pending'
+			return this.status === 'Expired' && this.approvalState !== 'pending'
 		},
+
 		/**
 		 * Human-readable label for the projected approval state.
 		 *
@@ -193,6 +199,7 @@ export default {
 			}
 			return map[this.approvalState] || this.approvalState
 		},
+
 		/**
 		 * Badge variant for the projected approval state.
 		 *
@@ -209,9 +216,11 @@ export default {
 			return map[this.approvalState] || 'default'
 		},
 	},
+
 	async mounted() {
 		await this.load()
 	},
+
 	methods: {
 		t,
 		/**
@@ -239,6 +248,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Read the contract object to pull status + projected approval fields.
 		 *
@@ -264,6 +274,7 @@ export default {
 			this.approvalState = obj.approvalState || 'none'
 			this.decisionId = obj.approvalDecisionId || ''
 		},
+
 		/**
 		 * Submit the contract for approval (false) or renewal (true). Fail-closed:
 		 * on error the contract stays In onderhandeling and a visible error shows.

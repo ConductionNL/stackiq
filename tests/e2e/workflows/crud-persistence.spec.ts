@@ -319,7 +319,7 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 // Component (Applicatie `module` schema) + its Moduleversie — persistence.
 //
 // The brief's second "full-CRUD" subject is the software Component (the OR
-// `module` schema, manifest object name "Applicatie") and its versions
+// `module` schema, manifest object name "Application") and its versions
 // (`moduleVersie`). UI-DRIVEN create is NOT headlessly completable for either
 // of these surfaces in this environment, for two distinct, documented reasons:
 //
@@ -352,8 +352,8 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 			{
 				data: {
 					name: `Component ${token}`,
-					type: 'Applicatie',
-					beschrijvingKort: 'e2e seeded component',
+					type: 'Application',
+					shortDescription: 'e2e seeded component',
 				},
 			},
 		)
@@ -379,8 +379,8 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 			{
 				data: {
 					name: `Component ${token}`,
-					type: 'Applicatie',
-					beschrijvingKort: editedDesc,
+					type: 'Application',
+					shortDescription: editedDesc,
 				},
 			},
 		)
@@ -388,7 +388,7 @@ test.describe('Component (module) + Moduleversie persistence', () => {
 		res = await apiCtx.get(
 			`/index.php/apps/openregister/api/objects/${cfg.register}/${cfg.module_schema}/${id}`,
 		)
-		expect((await res.json())?.beschrijvingKort).toBe(editedDesc)
+		expect((await res.json())?.shortDescription).toBe(editedDesc)
 
 		// delete -> gone
 		const del = await apiCtx.delete(

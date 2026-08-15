@@ -31,7 +31,7 @@
 			<div class="grant-organisation-access__grant">
 				<NcSelectUsers
 					v-model="selectedUser"
-					:input-label="
+					:inputLabel="
 						t(
 							'softwarecatalog',
 							'Grant access to an existing Nextcloud user',
@@ -60,7 +60,7 @@
 					v-for="userId in members"
 					:key="userId"
 					:name="userId"
-					:force-display-actions="true">
+					:forceDisplayActions="true">
 					<template #icon>
 						<NcAvatar :user="userId" :size="32" />
 					</template>
@@ -96,14 +96,14 @@
 
 <script>
 import {
-	NcDialog,
-	NcButton,
-	NcSelectUsers,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcListItem,
 	NcActionButton,
 	NcAvatar,
+	NcButton,
+	NcDialog,
+	NcListItem,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelectUsers,
 } from '@nextcloud/vue'
 import CloseIcon from 'vue-material-design-icons/Close.vue'
 import { organisatieStore } from '../store/store.js'

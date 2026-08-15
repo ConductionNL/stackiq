@@ -25,14 +25,14 @@
 			)
 		"
 		:loading="loading"
-		:loading-text="t('softwarecatalog', 'Loading EOL sync configuration…')"
-		:show-save-button="true"
-		:can-save="!saving"
+		:loadingText="t('softwarecatalog', 'Loading EOL sync configuration…')"
+		:showSaveButton="true"
+		:canSave="!saving"
 		:saving="saving"
-		:save-button-text="t('softwarecatalog', 'Save EOL sync settings')"
-		:show-refresh-button="true"
+		:saveButtonText="t('softwarecatalog', 'Save EOL sync settings')"
+		:showRefreshButton="true"
 		:refreshing="loading"
-		:refresh-button-text="t('softwarecatalog', 'Refresh status')"
+		:refreshButtonText="t('softwarecatalog', 'Refresh status')"
 		@save="saveConfig"
 		@refresh="loadAll">
 		<template #header-actions>
@@ -129,9 +129,8 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
-import { translate as t } from '@nextcloud/l10n'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -139,6 +138,7 @@ import {
 	NcNoteCard,
 	NcTextField,
 } from '@nextcloud/vue'
+import { defineComponent } from 'vue'
 import Sync from 'vue-material-design-icons/Sync.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import { apiRequest } from '../../../utils/adminApi.js'
@@ -199,6 +199,7 @@ export default defineComponent({
 				cycleSchema: '',
 				intervalSeconds: 86400,
 			},
+
 			status: {
 				available: false,
 				reason: 'not-yet-run',
@@ -230,6 +231,7 @@ export default defineComponent({
 					),
 				)
 			},
+
 			/**
 			 * @param {string} value The new interval in minutes.
 			 * @return {void}

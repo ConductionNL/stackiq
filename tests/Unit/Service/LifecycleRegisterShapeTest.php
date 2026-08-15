@@ -65,14 +65,14 @@ class LifecycleRegisterShapeTest extends TestCase {
 	 * @return void
 	 */
 	public function testGebruikHasOptionalReplacementFields(): void {
-		$gebruik = $this->schema('gebruik');
-		$props = $gebruik['properties'] ?? [];
+		$usage = $this->schema('usage');
+		$props = $usage['properties'] ?? [];
 
 		$this->assertArrayHasKey('plannedReplacement', $props);
 		$this->assertArrayHasKey('plannedReplacementDate', $props);
 
 		// Optional: not listed in `required` (import-over-existing is non-destructive).
-		$required = $gebruik['required'] ?? [];
+		$required = $usage['required'] ?? [];
 		$this->assertNotContains('plannedReplacement', $required);
 		$this->assertNotContains('plannedReplacementDate', $required);
 
@@ -88,7 +88,7 @@ class LifecycleRegisterShapeTest extends TestCase {
 	 * @return void
 	 */
 	public function testGebruikDeclaresPhaseoutRule(): void {
-		$rules = $this->schema('gebruik')['x-openregister-notifications'] ?? [];
+		$rules = $this->schema('usage')['x-openregister-notifications'] ?? [];
 		$this->assertArrayHasKey('phaseout-approaching', $rules);
 
 		$rule = $rules['phaseout-approaching'];
@@ -105,7 +105,7 @@ class LifecycleRegisterShapeTest extends TestCase {
 	 * @return void
 	 */
 	public function testModuleVersieDeclaresEolRule(): void {
-		$rules = $this->schema('moduleVersie')['x-openregister-notifications'] ?? [];
+		$rules = $this->schema('moduleVersion')['x-openregister-notifications'] ?? [];
 		$this->assertArrayHasKey('eol-approaching', $rules);
 
 		$rule = $rules['eol-approaching'];

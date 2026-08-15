@@ -16,7 +16,7 @@
 			<dd>{{ payload.name }}</dd>
 
 			<dt>{{ t('softwarecatalog', 'Short description') }}</dt>
-			<dd>{{ payload.beschrijvingKort }}</dd>
+			<dd>{{ payload.shortDescription }}</dd>
 
 			<template v-if="payload.website">
 				<dt>{{ t('softwarecatalog', 'Website') }}</dt>

@@ -167,8 +167,8 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
 import { NcButton, NcLoadingIcon, NcModal } from '@nextcloud/vue'
+import { defineComponent } from 'vue'
 
 /**
  * Bulk Sync Module Standards dialog
@@ -235,6 +235,7 @@ export default defineComponent({
 		/**
 		 * Watch the open prop to reset sync state when dialog opens
 		 *
+		 * @param value
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		open(value) {

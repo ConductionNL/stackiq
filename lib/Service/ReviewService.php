@@ -47,7 +47,7 @@ class ReviewService {
 	/**
 	 * The catalog object type reviews live on.
 	 */
-	public const REVIEW_TYPE = 'beoordeeling';
+	public const REVIEW_TYPE = 'assessment';
 
 	/**
 	 * Moderation state of a freshly-submitted review — mirrors
@@ -61,7 +61,7 @@ class ReviewService {
 	 *
 	 * @var array<int,string>
 	 */
-	public const SUBJECT_TYPES = ['module', 'dienst'];
+	public const SUBJECT_TYPES = ['module', 'service'];
 
 	/**
 	 * Required fields on a review submission payload.
@@ -98,7 +98,7 @@ class ReviewService {
 		'modules',
 		'diensten',
 		'koppelingen',
-		'gebruik',
+		'usage',
 	];
 
 	/**
@@ -128,7 +128,7 @@ class ReviewService {
 	 * @param array<string,mixed> $payload The review payload
 	 *                                     (naam, waardering,
 	 *                                     beschrijvingKort/Lang).
-	 * @param string $subjectType 'module' or 'dienst'.
+	 * @param string $subjectType 'module' or 'service'.
 	 * @param string $subjectId The uuid of the module/dienst being reviewed.
 	 *
 	 * @return array{ok:bool, reason:string, uuid:?string, status:?string} Result.
@@ -181,7 +181,7 @@ class ReviewService {
 	 * the cyclomatic-complexity budget.
 	 *
 	 * @param IUser|null $user The authenticated user, or null.
-	 * @param string $subjectType 'module' or 'dienst'.
+	 * @param string $subjectType 'module' or 'service'.
 	 * @param string $subjectId The uuid of the module/dienst.
 	 * @param array<string,mixed> $payload The raw review payload.
 	 *
@@ -209,7 +209,7 @@ class ReviewService {
 	 *
 	 * @param array<string,mixed> $payload The raw review payload.
 	 * @param IUser $user The authenticated user.
-	 * @param string $subjectType 'module' or 'dienst'.
+	 * @param string $subjectType 'module' or 'service'.
 	 * @param string $subjectId The uuid of the module/dienst.
 	 *
 	 * @return array<string,mixed> The object ready for ObjectService::saveObject().

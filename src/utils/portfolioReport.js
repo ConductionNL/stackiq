@@ -15,7 +15,7 @@
 /**
  * The five report groups, in canonical TIME order — Unclassified last, so it
  * stays visible rather than being dropped (spec Scenario "Unclassified
- * gebruiken are visible, not hidden").
+ * usages are visible, not hidden").
  *
  * @type {string[]}
  */

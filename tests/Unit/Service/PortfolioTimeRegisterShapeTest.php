@@ -57,8 +57,8 @@ class PortfolioTimeRegisterShapeTest extends TestCase {
 	 */
 	private function gebruikSchema(): array {
 		$schemas = $this->register['components']['schemas'] ?? [];
-		$this->assertArrayHasKey('gebruik', $schemas);
-		return $schemas['gebruik'];
+		$this->assertArrayHasKey('usage', $schemas);
+		return $schemas['usage'];
 	}//end gebruikSchema()
 
 	/**
@@ -68,14 +68,14 @@ class PortfolioTimeRegisterShapeTest extends TestCase {
 	 * @return void
 	 */
 	public function testGebruikHasOptionalTimeFields(): void {
-		$gebruik = $this->gebruikSchema();
-		$props = $gebruik['properties'] ?? [];
+		$usage = $this->gebruikSchema();
+		$props = $usage['properties'] ?? [];
 
 		$this->assertArrayHasKey('timeClassification', $props);
 		$this->assertArrayHasKey('timeRationale', $props);
 		$this->assertArrayHasKey('timeReviewDate', $props);
 
-		$required = $gebruik['required'] ?? [];
+		$required = $usage['required'] ?? [];
 		$this->assertNotContains('timeClassification', $required);
 		$this->assertNotContains('timeRationale', $required);
 		$this->assertNotContains('timeReviewDate', $required);

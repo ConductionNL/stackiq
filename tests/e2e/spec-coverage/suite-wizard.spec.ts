@@ -305,7 +305,7 @@ test('suite wizard: submit creates the suite with both attached modules', async 
 	const rows: Array<Record<string, unknown>> = (await res.json())?.results ?? []
 	const created = rows.find((r) => String(r.name ?? '') === SUITE_NAME)
 	expect(created, `no suite named "${SUITE_NAME}" was persisted`).toBeTruthy()
-	expect(String(created?.beschrijvingKort ?? '')).toBe(SUITE_SHORT)
+	expect(String(created?.shortDescription ?? '')).toBe(SUITE_SHORT)
 	// `applicaties` holds the attached modules' ids — two of them.
 	const attached = created?.applications as unknown[] | undefined
 	expect(Array.isArray(attached), 'applicaties is not an array').toBe(true)

@@ -64,9 +64,9 @@ test.beforeAll(async () => {
 	// declared contract; nothing here asserts contact resolution.
 	await createObject(apiCtx, cfg.register, cfg.organisatie_schema, {
 		name: orgName,
-		type: 'Leverancier',
+		type: 'Supplier',
 		website: 'https://e2e-seeded-org.example.com',
-		status: 'Actief',
+		status: 'Active',
 		contactsUid: `${RUN_ID}-org`,
 	})
 })

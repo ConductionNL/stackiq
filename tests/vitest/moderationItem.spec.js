@@ -14,7 +14,7 @@ describe('moderationItemTitle', () => {
 	it('prefers naam, then name/titel, etc.', () => {
 		expect(moderationItemTitle({ name: 'Acme BV' })).toBe('Acme BV')
 		expect(moderationItemTitle({ title: 'A standard' })).toBe('A standard')
-		expect(moderationItemTitle({ organisatie: 'Org X' })).toBe('Org X')
+		expect(moderationItemTitle({ organization: 'Org X' })).toBe('Org X')
 	})
 
 	it('falls back to the uuid, then a default, never blank', () => {

@@ -21,11 +21,11 @@
 		name="Email Configuration"
 		description="Configure email settings for notifications and user management"
 		:loading="loading"
-		:show-save-button="true"
-		:can-save="canSave"
+		:showSaveButton="true"
+		:canSave="canSave"
 		:saving="saving"
-		save-button-text="Save Email Settings"
-		:has-info-content="true"
+		saveButtonText="Save Email Settings"
+		:hasInfoContent="true"
 		@save="saveEmailSettings">
 		<StandardTabs
 			:tabs="[
@@ -34,8 +34,8 @@
 				{ key: 'testing', title: 'Testing' },
 				{ key: 'templates', title: 'Templates' },
 			]"
-			:active-tab="activeTab"
-			@update:active-tab="activeTab = $event">
+			:activeTab="activeTab"
+			@update:activeTab="activeTab = $event">
 			<div v-show="activeTab === 'settings'" class="tab-panel">
 				<div class="email-settings-section">
 					<h3>Email Settings</h3>
@@ -63,22 +63,18 @@
 							label="Sender Email"
 							placeholder="noreply@example.com"
 							:disabled="!emailSettings.enabled"
-							:model-value="
+							:modelValue="
 								(emailSettings.senderEmail || '').toString()
 							"
-							@update:model-value="
+							@update:modelValue="
 								emailSettings.senderEmail = $event
 							" />
 						<NcTextField
 							label="Sender Name"
 							placeholder="Software Catalog"
 							:disabled="!emailSettings.enabled"
-							:model-value="
-								(emailSettings.senderName || '').toString()
-							"
-							@update:model-value="
-								emailSettings.senderName = $event
-							" />
+							:modelValue="(emailSettings.senderName || '').toString()"
+							@update:modelValue="emailSettings.senderName = $event" />
 					</div>
 
 					<!-- Test Receiver Override -->
@@ -88,10 +84,10 @@
 							label="Test Receiver Override"
 							placeholder="test@example.com"
 							:disabled="!emailSettings.enabled"
-							:model-value="
+							:modelValue="
 								(emailSettings.testReceiverOverride || '').toString()
 							"
-							@update:model-value="
+							@update:modelValue="
 								emailSettings.testReceiverOverride = $event
 							" />
 						<p class="setting-description">
@@ -119,7 +115,7 @@
 								{ label: 'SendGrid', value: 'sendgrid' },
 								{ label: 'Local Mail', value: 'mail' },
 							]"
-							input-label="Transport Type"
+							inputLabel="Transport Type"
 							:disabled="!emailSettings.enabled" />
 					</div>
 
@@ -133,10 +129,10 @@
 								label="SMTP Host"
 								placeholder="smtp.gmail.com"
 								:disabled="!emailSettings.enabled"
-								:model-value="
+								:modelValue="
 									(emailSettings.smtpHost || '').toString()
 								"
-								@update:model-value="
+								@update:modelValue="
 									emailSettings.smtpHost = $event
 								" />
 							<NcTextField
@@ -144,12 +140,12 @@
 								placeholder="587"
 								type="text"
 								:disabled="!emailSettings.enabled"
-								:model-value="
+								:modelValue="
 									emailSettings.smtpPort == null
 										? ''
 										: String(emailSettings.smtpPort)
 								"
-								@update:model-value="
+								@update:modelValue="
 									emailSettings.smtpPort = $event
 								" />
 							<!-- See the transport select above: `:reduce` keeps the stored
@@ -162,26 +158,26 @@
 									{ label: 'TLS', value: 'tls' },
 									{ label: 'SSL', value: 'ssl' },
 								]"
-								input-label="Encryption"
+								inputLabel="Encryption"
 								:disabled="!emailSettings.enabled" />
 							<NcTextField
 								label="SMTP Username"
 								placeholder="your-email@gmail.com"
 								:disabled="!emailSettings.enabled"
-								:model-value="
+								:modelValue="
 									(emailSettings.smtpUsername || '').toString()
 								"
-								@update:model-value="
+								@update:modelValue="
 									emailSettings.smtpUsername = $event
 								" />
 							<NcPasswordField
 								label="SMTP Password"
 								placeholder="Your app password"
 								:disabled="!emailSettings.enabled"
-								:model-value="
+								:modelValue="
 									(emailSettings.smtpPassword || '').toString()
 								"
-								@update:model-value="
+								@update:modelValue="
 									emailSettings.smtpPassword = $event
 								" />
 						</div>
@@ -195,19 +191,19 @@
 						<NcTextField
 							label="Mailjet API Key"
 							:disabled="!emailSettings.enabled"
-							:model-value="
+							:modelValue="
 								(emailSettings.mailjetApiKey || '').toString()
 							"
-							@update:model-value="
+							@update:modelValue="
 								emailSettings.mailjetApiKey = $event
 							" />
 						<NcPasswordField
 							label="Mailjet API Secret"
 							:disabled="!emailSettings.enabled"
-							:model-value="
+							:modelValue="
 								(emailSettings.mailjetApiSecret || '').toString()
 							"
-							@update:model-value="
+							@update:modelValue="
 								emailSettings.mailjetApiSecret = $event
 							" />
 					</div>
@@ -392,13 +388,11 @@
 							</div>
 
 							<NcTextArea
-								:model-value="getActiveTemplateContent()"
-								:placeholder="'Enter your template content here...'"
+								:modelValue="getActiveTemplateContent()"
+								placeholder="Enter your template content here..."
 								label="Template Content"
 								rows="15"
-								@update:model-value="
-									updateTemplateContent($event)
-								" />
+								@update:modelValue="updateTemplateContent($event)" />
 
 							<div class="template-actions">
 								<NcButton variant="secondary" @click="resetTemplate">
@@ -563,30 +557,26 @@
  * @version 1.0.0
  */
 
-import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-
-// Components
-import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-
 // Nextcloud Vue components
 import {
 	NcButton,
-	NcTextField,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcNoteCard,
 	NcPasswordField,
 	NcSelect,
-	NcCheckboxRadioSwitch,
 	NcTextArea,
-	NcNoteCard,
-	NcLoadingIcon,
+	NcTextField,
 } from '@nextcloud/vue'
-
 // Icons
 import Save from 'vue-material-design-icons/ContentSave.vue'
 import Email from 'vue-material-design-icons/Email.vue'
-
+// Components
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 // Bootstrap Vue components for tabs
 import StandardTabs from '../../../components/StandardTabs.vue'
+import { settingsStore } from '../../../store/store.js'
 
 export default {
 	name: 'EmailConfiguration',
@@ -678,6 +668,7 @@ export default {
 					},
 				},
 			],
+
 			templates: {},
 		}
 	},
@@ -689,6 +680,7 @@ export default {
 		loading() {
 			return this.store.loading
 		},
+
 		emailSettings: {
 			/**
 			 * @spec openspec/specs/fe-settings-ui/spec.md
@@ -696,13 +688,16 @@ export default {
 			get() {
 				return this.store.emailSettings
 			},
+
 			/**
+			 * @param value
 			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			set(value) {
 				this.store.emailSettings = value
 			},
 		},
+
 		/**
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
@@ -719,6 +714,7 @@ export default {
 	methods: {
 		/**
 		 * Save email settings using the settings store
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveEmailSettings() {
@@ -734,6 +730,7 @@ export default {
 
 		/**
 		 * Test email connection using the settings store
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async testEmailConnection() {
@@ -756,6 +753,7 @@ export default {
 
 		/**
 		 * Send test email using the settings store
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async sendTestEmail() {
@@ -779,6 +777,7 @@ export default {
 		/**
 		 * Load email templates from settings store
 		 * Templates are loaded as part of the consolidated configuration
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadTemplates() {
@@ -796,6 +795,7 @@ export default {
 
 		/**
 		 * Get active template name
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getActiveTemplateName() {
@@ -807,6 +807,7 @@ export default {
 
 		/**
 		 * Get active template description
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getActiveTemplateDescription() {
@@ -818,6 +819,7 @@ export default {
 
 		/**
 		 * Get active template variables
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getActiveTemplateVariables() {
@@ -872,6 +874,7 @@ export default {
 		/**
 		 * Reset template to default
 		 * TODO: Implement template reset functionality when backend supports it
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async resetTemplate() {
@@ -892,6 +895,7 @@ export default {
 		/**
 		 * Save template
 		 * TODO: Implement template save functionality when backend supports it
+		 *
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveTemplate() {

@@ -446,7 +446,7 @@ parameters:
 			path: lib/Service/OrganisatieService.php
 
 		-
-			message: "#^Cannot unset offset 'organisatie' on array\\{username\\: string\\}\\.$#"
+			message: "#^Cannot unset offset 'organization' on array\\{username\\: string\\}\\.$#"
 			count: 1
 			path: lib/Service/OrganizationSyncService.php
 
@@ -461,7 +461,7 @@ parameters:
 			path: lib/Service/OrganizationSyncService.php
 
 		-
-			message: "#^Offset 'organisatie' on array\\{username\\: string\\} on left side of \\?\\? does not exist\\.$#"
+			message: "#^Offset 'organization' on array\\{username\\: string\\} on left side of \\?\\? does not exist\\.$#"
 			count: 1
 			path: lib/Service/OrganizationSyncService.php
 
@@ -536,7 +536,7 @@ parameters:
 			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
 
 		-
-			message: "#^Offset 'organisatie' on array\\{username\\: string\\} on left side of \\?\\? does not exist\\.$#"
+			message: "#^Offset 'organization' on array\\{username\\: string\\} on left side of \\?\\? does not exist\\.$#"
 			count: 1
 			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
 

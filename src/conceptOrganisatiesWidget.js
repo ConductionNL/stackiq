@@ -1,7 +1,7 @@
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { createApp, h } from 'vue'
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
-import pinia from './pinia.js'
 import ConceptOrganisatiesWidget from './views/widgets/ConceptOrganisatiesWidget.vue'
+import pinia from './pinia.js'
 
 // Library CSS (CnDataTable + cn-cell utilities). This standalone dashboard
 // bundle never runs main.js, so it must import the lib CSS itself — and the

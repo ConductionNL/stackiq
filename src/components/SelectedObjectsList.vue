@@ -50,9 +50,8 @@ import { objectStore } from '../store/store.js'
 
 <script>
 import { NcButton, NcEmptyContent } from '@nextcloud/vue'
-
-import Close from 'vue-material-design-icons/Close.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import Close from 'vue-material-design-icons/Close.vue'
 
 export default {
 	name: 'SelectedObjectsList',
@@ -62,6 +61,7 @@ export default {
 		Close,
 		AlertCircle,
 	},
+
 	props: {
 		/**
 		 * Title for the selected objects section
@@ -70,6 +70,7 @@ export default {
 			type: String,
 			default: 'Selected Publications',
 		},
+
 		/**
 		 * Title to show when no objects are selected
 		 */
@@ -77,6 +78,7 @@ export default {
 			type: String,
 			default: 'No publications selected',
 		},
+
 		/**
 		 * Description to show when no objects are selected
 		 */
@@ -84,6 +86,7 @@ export default {
 			type: String,
 			default: 'No publications are currently selected.',
 		},
+
 		/**
 		 * Array of objects to display (optional, if not provided uses selected objects from store)
 		 */
@@ -91,6 +94,7 @@ export default {
 			type: Array,
 			default: null,
 		},
+
 		/**
 		 * Whether to show remove buttons
 		 */
@@ -99,9 +103,11 @@ export default {
 			default: true,
 		},
 	},
+
 	computed: {
 		/**
 		 * Get objects to display (either from props or from store)
+		 *
 		 * @return {Array<object>} Array of publication objects
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -109,9 +115,11 @@ export default {
 			return this.objects || objectStore.selectedObjects || []
 		},
 	},
+
 	methods: {
 		/**
 		 * Remove object from selected objects in the store
+		 *
 		 * @param {string} objectId - The object ID to remove
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -129,6 +137,7 @@ export default {
 
 		/**
 		 * Get display name for an object
+		 *
 		 * @param {object} obj - The object to get name for
 		 * @return {string} The display name
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -145,6 +154,7 @@ export default {
 
 		/**
 		 * Get schema name for an object
+		 *
 		 * @param {object} obj - The object to get schema for
 		 * @return {string} The schema name or fallback text
 		 * @spec openspec/specs/fe-object-modals/spec.md
@@ -164,6 +174,7 @@ export default {
 
 		/**
 		 * Get error message for an object
+		 *
 		 * @param {object} obj - The object to get error for
 		 * @return {string|null} The error message or null if no error
 		 * @spec openspec/specs/fe-object-modals/spec.md

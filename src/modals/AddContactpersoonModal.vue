@@ -22,7 +22,7 @@ Modal component for adding new contactpersoon to an organisation
 				{{
 					t(
 						'softwarecatalog',
-						'Add a new contactpersoon to organisation: {name}',
+						'Add a new contact person to organisation: {name}',
 						{ name: organisation?.name || 'Unknown' },
 					)
 				}}
@@ -77,10 +77,9 @@ Modal component for adding new contactpersoon to an organisation
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextField, NcLoadingIcon } from '@nextcloud/vue'
-
-import { showSuccess, showError } from '@nextcloud/dialogs'
-import { objectStore, navigationStore } from '../store/store.js'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { navigationStore, objectStore } from '../store/store.js'
 
 export default {
 	name: 'AddContactpersoonModal',
@@ -97,6 +96,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		organisation: {
 			type: Object,
 			default: () => ({}),
@@ -152,6 +152,7 @@ export default {
 		},
 
 		/**
+		 * @param email
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		isValidEmail(email) {
@@ -178,13 +179,13 @@ export default {
 			try {
 				// Get schema configuration for contactpersoon
 				const contactpersoonConfig =
-					objectStore.getSchemaConfig('contactpersoon')
+					objectStore.getSchemaConfig('contactPerson')
 
 				// Create new contactpersoon object with proper structure
 				const newContactpersoonObject = {
 					...this.formData,
 					name: `${this.formData.voornaam} ${this.formData.achternaam}`.trim(),
-					organisatie: this.organisation.id || this.organisation.uuid,
+					organization: this.organisation.id || this.organisation.uuid,
 					'@self': {
 						created: new Date().toISOString(),
 						updated: new Date().toISOString(),
@@ -217,11 +218,11 @@ export default {
 					action: 'contactpersoonAdded',
 				})
 			} catch (error) {
-				console.error('Error adding contactpersoon:', error)
+				console.error('Error adding contact person:', error)
 				showError(
 					this.t(
 						'softwarecatalog',
-						'Failed to add contactpersoon: {error}',
+						'Failed to add contact person: {error}',
 						{ error: error.message },
 					),
 				)
@@ -262,7 +263,7 @@ export default {
 	line-height: 1.4;
 }
 
-.contactpersoon-form {
+.contactPerson-form {
 	width: 100%;
 }
 

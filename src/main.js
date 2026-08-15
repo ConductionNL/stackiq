@@ -10,41 +10,39 @@
  * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
  */
 
-import { createApp, h } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
 import {
-	translate as t,
-	translatePlural as n,
-	loadTranslations,
-} from '@nextcloud/l10n'
-import { generateUrl } from '@nextcloud/router'
-import {
+	buildManifest,
 	defaultPageTypes,
+	registerBuiltinDashboardWidgets,
 	registerIcons,
 	registerTranslations,
-	registerBuiltinDashboardWidgets,
-	useAppManifest,
 	resolveManifestSentinels,
-	buildManifest,
+	useAppManifest,
 } from '@conduction/nextcloud-vue'
-import pinia from './pinia.js'
+import {
+	loadTranslations,
+	translatePlural as n,
+	translate as t,
+} from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
+import { createApp, h } from 'vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
+import customComponents from './customComponents.js'
+import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
-import customComponents from './customComponents.js'
+import pinia from './pinia.js'
 import registry from './registry.js'
-import appIcons from './icons.js'
 import { routesFromManifest } from './router.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
-
 // gridstack is a peerDependency of @conduction/nextcloud-vue that no consumer
 // declares. The stylesheet is the silent half: v12 sizes dashboard items with
 // `width: var(--gs-column-width)`, so without it every widget renders 0 px wide
 // with no console error.
 import 'gridstack/dist/gridstack.min.css'
-
 // Global (unscoped) app styles
 import './assets/app.css'
 
@@ -75,6 +73,9 @@ try {
 // its callback meant boot silently failed when translations couldn't
 // load. Strings just fall back to their English source on miss; boot
 // MUST not depend on this resolving.
+/**
+ *
+ */
 function tryLoadTranslations() {
 	try {
 		const result = loadTranslations('softwarecatalog', () => {})

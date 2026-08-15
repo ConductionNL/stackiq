@@ -86,7 +86,7 @@ class EolRegisterShapeTest extends TestCase {
 	 * @return void
 	 */
 	public function testModuleVersieHasOptionalProvenanceFields(): void {
-		$moduleVersion = $this->schema('moduleVersie');
+		$moduleVersion = $this->schema('moduleVersion');
 		$props = $moduleVersion['properties'] ?? [];
 
 		$this->assertArrayHasKey('eolSource', $props);
@@ -108,7 +108,7 @@ class EolRegisterShapeTest extends TestCase {
 	 * @return void
 	 */
 	public function testModuleVersieStillDeclaresDatumEindeOndersteuning(): void {
-		$props = $this->schema('moduleVersie')['properties'] ?? [];
+		$props = $this->schema('moduleVersion')['properties'] ?? [];
 		$this->assertArrayHasKey('dateEndSupport', $props);
 		$this->assertSame('date', $props['dateEndSupport']['format'] ?? null);
 	}//end testModuleVersieStillDeclaresDatumEindeOndersteuning()

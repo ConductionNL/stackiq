@@ -72,14 +72,14 @@ class BioComplianceRegisterShapeTest extends TestCase {
 	 * @spec   openspec/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog
 	 */
 	public function testBioMaatregelSchemaExists(): void {
-		$bioMeasure = $this->schema(slug: 'bioMaatregel');
+		$bioMeasure = $this->schema(slug: 'bioMeasure');
 		$props = $bioMeasure['properties'] ?? [];
 
-		foreach (['code', 'name', 'omschrijving', 'thema', 'bioVersion', 'bbnNiveau', 'bron'] as $field) {
+		foreach (['code', 'name', 'omschrijving', 'thema', 'bioVersion', 'bbnLevel', 'bron'] as $field) {
 			$this->assertArrayHasKey(key: $field, array: $props, message: "bioMaatregel must declare $field");
 		}
 
-		$this->assertSame(expected: ['BBN1', 'BBN2', 'BBN3'], actual: $props['bbnNiveau']['items']['enum'] ?? null);
+		$this->assertSame(expected: ['BBN1', 'BBN2', 'BBN3'], actual: $props['bbnLevel']['items']['enum'] ?? null);
 		$this->assertContains(needle: 'public', haystack: $bioMeasure['authorization']['read'] ?? []);
 	}//end testBioMaatregelSchemaExists()
 
@@ -92,9 +92,9 @@ class BioComplianceRegisterShapeTest extends TestCase {
 	 */
 	public function testBioMaatregelIsRegisteredInVoorzieningen(): void {
 		$voorzieningen = $this->register['components']['registers']['voorzieningen'] ?? [];
-		$this->assertContains(needle: 'bioMaatregel', haystack: $voorzieningen['schemas'] ?? []);
-		$this->assertArrayHasKey(key: 'bioMaatregel', array: $voorzieningen['configuration']['schemas'] ?? []);
-		$this->assertTrue(condition: $voorzieningen['configuration']['schemas']['bioMaatregel']['autoCreateTable'] ?? false);
+		$this->assertContains(needle: 'bioMeasure', haystack: $voorzieningen['schemas'] ?? []);
+		$this->assertArrayHasKey(key: 'bioMeasure', array: $voorzieningen['configuration']['schemas'] ?? []);
+		$this->assertTrue(condition: $voorzieningen['configuration']['schemas']['bioMeasure']['autoCreateTable'] ?? false);
 	}//end testBioMaatregelIsRegisteredInVoorzieningen()
 
 	/**
@@ -105,7 +105,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 	 * @spec   openspec/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog
 	 */
 	public function testBioMaatregelSeedDataExists(): void {
-		$seedObjects = $this->register['x-openregister']['seedData']['objects']['bioMaatregel'] ?? [];
+		$seedObjects = $this->register['x-openregister']['seedData']['objects']['bioMeasure'] ?? [];
 		$this->assertNotEmpty(actual: $seedObjects, message: 'bioMaatregel seed data must not be empty');
 
 		foreach ($seedObjects as $object) {
@@ -126,12 +126,12 @@ class BioComplianceRegisterShapeTest extends TestCase {
 		$compliancy = $this->schema(slug: 'compliancy');
 		$props = $compliancy['properties'] ?? [];
 
-		$this->assertArrayHasKey(key: 'bioMaatregel', array: $props);
-		$this->assertSame(expected: 'related-object', actual: $props['bioMaatregel']['objectConfiguration']['handling'] ?? null);
-		$this->assertStringContainsString(needle: 'bioMaatregel', haystack: $props['bioMaatregel']['$ref'] ?? '');
+		$this->assertArrayHasKey(key: 'bioMeasure', array: $props);
+		$this->assertSame(expected: 'related-object', actual: $props['bioMeasure']['objectConfiguration']['handling'] ?? null);
+		$this->assertStringContainsString(needle: 'bioMeasure', haystack: $props['bioMeasure']['$ref'] ?? '');
 
 		$required = $compliancy['required'] ?? [];
-		$this->assertNotContains(needle: 'bioMaatregel', haystack: $required);
+		$this->assertNotContains(needle: 'bioMeasure', haystack: $required);
 		$this->assertNotContains(needle: 'standardVersion', haystack: $required);
 	}//end testCompliancyHasOptionalBioMaatregelRelation()
 

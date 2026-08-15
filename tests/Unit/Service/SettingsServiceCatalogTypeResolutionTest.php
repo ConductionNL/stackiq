@@ -106,8 +106,8 @@ class SettingsServiceCatalogTypeResolutionTest extends TestCase {
 	public function testBeoordeelingResolvesRegisterAndSchema(): void {
 		$service = $this->makeService();
 
-		$this->assertSame(43, $service->getSchemaIdForObjectType('beoordeeling'), 'schema id');
-		$this->assertSame(11, $service->getRegisterIdForObjectType('beoordeeling'), 'register id');
+		$this->assertSame(43, $service->getSchemaIdForObjectType('assessment'), 'schema id');
+		$this->assertSame(11, $service->getRegisterIdForObjectType('assessment'), 'register id');
 
 	}//end testBeoordeelingResolvesRegisterAndSchema()
 
@@ -122,16 +122,16 @@ class SettingsServiceCatalogTypeResolutionTest extends TestCase {
 
 		$types = [
 			'module' => 50,
-			'dienst' => 36,
-			'gebruik' => 40,
+			'service' => 36,
+			'usage' => 40,
 			'contract' => 41,
-			'koppeling' => 42,
+			'connection' => 42,
 			'suite' => 35,
-			'kwetsbaarheid' => 37,
+			'vulnerability' => 37,
 			'sector' => 34,
 			'compliancy' => 51,
-			'moduleVersie' => 52,
-			'beoordeeling' => 43,
+			'moduleVersion' => 52,
+			'assessment' => 43,
 		];
 
 		foreach ($types as $type => $schemaId) {

@@ -17,26 +17,26 @@
 <template>
 	<div class="softwarecatalog-app-root">
 		<CnAppRoot
-			:ai-companion="true"
+			:aiCompanion="true"
 			:manifest="manifest"
-			:custom-components="customComponents"
+			:customComponents="customComponents"
 			:registry="registry"
-			:page-types="pageTypes"
-			app-id="softwarecatalog"
+			:pageTypes="pageTypes"
+			appId="softwarecatalog"
 			:translate="translateForApp"
 			:permissions="permissions"
-			:initial-organisation-uuid="activeOrganisationUuid"
-			:initial-organisation="activeOrganisation">
+			:initialOrganisationUuid="activeOrganisationUuid"
+			:initialOrganisation="activeOrganisation">
 			<template #sidebar>
 				<CnObjectSidebar
 					v-if="objectSidebarState.active"
 					:title="objectSidebarState.title"
 					:subtitle="objectSidebarState.subtitle"
-					:object-type="objectSidebarState.objectType"
-					:object-id="objectSidebarState.objectId"
+					:objectType="objectSidebarState.objectType"
+					:objectId="objectSidebarState.objectId"
 					:register="objectSidebarState.register"
 					:schema="objectSidebarState.schema"
-					:hidden-tabs="objectSidebarState.hiddenTabs"
+					:hiddenTabs="objectSidebarState.hiddenTabs"
 					:tabs="objectSidebarState.tabs"
 					:open="objectSidebarState.open"
 					@update:open="objectSidebarState.open = $event" />
@@ -51,8 +51,8 @@
 				<OrganisationSwitcher
 					v-if="organisations.length > 0"
 					:organisations="organisations"
-					:active-organisation-uuid="activeOrganisationUuid"
-					:is-beheerder="isBeheerder" />
+					:activeOrganisationUuid="activeOrganisationUuid"
+					:isBeheerder="isBeheerder" />
 			</template>
 		</CnAppRoot>
 
@@ -63,15 +63,15 @@
 </template>
 
 <script>
-import { reactive } from 'vue'
+import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { CnAppRoot, CnObjectSidebar } from '@conduction/nextcloud-vue'
-import Modals from './modals/Modals.vue'
-import Dialogs from './dialogs/Dialogs.vue'
+import { reactive } from 'vue'
 import OrganisationSwitcher from './components/organisations/OrganisationSwitcher.vue'
-import { settingsStore } from './store/store.js'
+import Dialogs from './dialogs/Dialogs.vue'
+import Modals from './modals/Modals.vue'
 import { setActiveOrganisationUuid } from './composables/orClient.js'
+import { settingsStore } from './store/store.js'
 
 export default {
 	name: 'App',
@@ -107,6 +107,7 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		/**
 		 * Registry of consumer-injected components used by:
 		 *   - `type: "custom"` pages (`page.component`)
@@ -118,6 +119,7 @@ export default {
 			type: Object,
 			default: () => ({}),
 		},
+
 		/**
 		 * 5-kind component registry (v2 manifest pattern per hydra ADR-036).
 		 * Each entry: { kind, component, ...kindMetadata }. Replaces
@@ -128,6 +130,7 @@ export default {
 			type: Object,
 			default: () => ({}),
 		},
+
 		/**
 		 * Page-type registry — `{ index, detail, dashboard, settings, ... }`.
 		 * Wired through to descendant `CnPageRenderer` instances via
@@ -153,6 +156,7 @@ export default {
 				hiddenTabs: [],
 				tabs: undefined,
 			}),
+
 			/**
 			 * The authenticated user's organisations, and which one is
 			 * currently active — fetched once at boot from `/api/me`

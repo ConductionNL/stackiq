@@ -37,10 +37,10 @@
 				<NcCheckboxRadioSwitch
 					v-for="group in availableGroups"
 					:key="group.id"
-					:model-value="selectedGroups.includes(group.id)"
+					:modelValue="selectedGroups.includes(group.id)"
 					type="checkbox"
 					class="compact-checkbox"
-					@update:model-value="toggleGroup(group.id, $event)">
+					@update:modelValue="toggleGroup(group.id, $event)">
 					{{ group.name }}
 					<template #description>
 						{{ group.description }}
@@ -67,14 +67,13 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcDialog,
 	NcLoadingIcon,
 } from '@nextcloud/vue'
-
-import { showSuccess, showError } from '@nextcloud/dialogs'
 import { useOrganisatieStore } from '../store/modules/organisatie.js'
 
 export default {
@@ -92,7 +91,7 @@ export default {
 		 * The contact person whose user-group membership is being edited.
 		 * Needs `id` and `user.username` / `user.groups`.
 		 */
-		contactpersoon: {
+		contactPerson: {
 			type: Object,
 			required: true,
 		},
@@ -130,7 +129,7 @@ export default {
 		try {
 			// Fetch user-specific info to get current groups.
 			const userInfo = await this.organisatieStore.fetchUserInfo(
-				this.contactpersoon.id,
+				this.contactPerson.id,
 			)
 			this.selectedGroups = [...(userInfo.groups || [])]
 
@@ -139,13 +138,15 @@ export default {
 		} catch (error) {
 			console.error('Error fetching user info for groups dialog:', error)
 			// Fallback to existing groups.
-			this.selectedGroups = [...this.contactpersoon.user.groups]
+			this.selectedGroups = [...this.contactPerson.user.groups]
 			// Note: Available groups should already be loaded by the parent.
 		}
 	},
 
 	methods: {
 		/**
+		 * @param groupId
+		 * @param checked
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		toggleGroup(groupId, checked) {
@@ -163,6 +164,7 @@ export default {
 
 		/**
 		 * Save user groups.
+		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
@@ -171,7 +173,7 @@ export default {
 
 			try {
 				await this.organisatieStore.updateUserGroups(
-					this.contactpersoon.user.username,
+					this.contactPerson.user.username,
 					this.selectedGroups,
 				)
 

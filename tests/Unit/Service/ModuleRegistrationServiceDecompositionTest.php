@@ -62,9 +62,9 @@ class ModuleRegistrationServiceDecompositionTest extends TestCase {
 		$reflection = new \ReflectionMethod($service, 'mapOrgTypeToRegisteredBy');
 		$reflection->setAccessible(true);
 
-		$this->assertSame('Gemeente', $reflection->invoke($service, 'm1', 'Gemeente'));
-		$this->assertSame('Leverancier', $reflection->invoke($service, 'm1', 'Leverancier'));
-		$this->assertSame('Samenwerking', $reflection->invoke($service, 'm1', 'Samenwerking'));
+		$this->assertSame('Municipality', $reflection->invoke($service, 'm1', 'Municipality'));
+		$this->assertSame('Supplier', $reflection->invoke($service, 'm1', 'Supplier'));
+		$this->assertSame('Collaboration', $reflection->invoke($service, 'm1', 'Collaboration'));
 		$this->assertSame('Community', $reflection->invoke($service, 'm1', 'Community'));
 
 	}//end testMapOrgTypeToRegisteredByKnownTypes()

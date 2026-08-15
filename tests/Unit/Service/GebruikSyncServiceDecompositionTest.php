@@ -74,11 +74,11 @@ class GebruikSyncServiceDecompositionTest extends TestCase {
 
 		$this->assertSame(
 			[
-				'Verwerving' => '2026-01-01',
-				'Gepland' => '2026-02-01',
-				'In productie' => '2026-03-01',
-				'Uit te faseren' => null,
-				'Uitgefaseerd' => '',
+				'Acquisition' => '2026-01-01',
+				'Planned' => '2026-02-01',
+				'In production' => '2026-03-01',
+				'To be phased out' => null,
+				'Phased out' => '',
 			],
 			$map
 		);
@@ -97,16 +97,16 @@ class GebruikSyncServiceDecompositionTest extends TestCase {
 		$reflection->setAccessible(true);
 
 		$map = [
-			'Verwerving' => '2024-01-01',
-			'Gepland' => '2025-01-01',
-			'In productie' => '2026-01-01',
-			'Uit te faseren' => null,
-			'Uitgefaseerd' => '2099-01-01',
+			'Acquisition' => '2024-01-01',
+			'Planned' => '2025-01-01',
+			'In production' => '2026-01-01',
+			'To be phased out' => null,
+			'Phased out' => '2099-01-01',
 		];
 
 		[$status, $date] = $reflection->invoke($service, $map, 'gebruik-uuid');
 
-		$this->assertSame('In productie', $status);
+		$this->assertSame('In production', $status);
 		$this->assertInstanceOf(\DateTime::class, $date);
 		$this->assertSame('2026-01-01', $date->format('Y-m-d'));
 
@@ -125,7 +125,7 @@ class GebruikSyncServiceDecompositionTest extends TestCase {
 
 		[$status, $date] = $reflection->invoke(
 			$service,
-			['Verwerving' => '2099-01-01', 'Gepland' => '2099-02-01'],
+			['Acquisition' => '2099-01-01', 'Planned' => '2099-02-01'],
 			'gebruik-uuid'
 		);
 
@@ -147,11 +147,11 @@ class GebruikSyncServiceDecompositionTest extends TestCase {
 
 		[$status, $date] = $reflection->invoke(
 			$service,
-			['Verwerving' => '2024-01-01', 'Gepland' => 'not-a-date'],
+			['Acquisition' => '2024-01-01', 'Planned' => 'not-a-date'],
 			'gebruik-uuid'
 		);
 
-		$this->assertSame('Verwerving', $status);
+		$this->assertSame('Acquisition', $status);
 		$this->assertSame('2024-01-01', $date->format('Y-m-d'));
 
 	}//end testResolveLatestEligibleStatusSkipsUnparseableDates()

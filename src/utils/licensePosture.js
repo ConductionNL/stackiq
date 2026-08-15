@@ -23,9 +23,9 @@
  * @spec openspec/specs/software-license-posture/spec.md
  */
 
+import { totalAnnualisedCost } from './contractCost.js'
 import { resolveUuid } from './lifecyclePhase.js'
 import { isInProduction } from './vulnerabilityExposure.js'
-import { totalAnnualisedCost } from './contractCost.js'
 
 /**
  * Licence-type policy axis constants. `Unknown` is the empty-licentietype bucket
@@ -92,13 +92,13 @@ export function indexModules(modules) {
 /**
  * The in-production usages (weight unit of every posture aggregate).
  *
- * @param {Array<object>} gebruiken Gebruik records.
+ * @param {Array<object>} usages Gebruik records.
  * @return {Array<object>} In-production usages.
  *
  * @spec openspec/specs/software-license-posture/spec.md
  */
-export function inProductionUsages(gebruiken) {
-	return (gebruiken || []).filter((g) => isInProduction(g))
+export function inProductionUsages(usages) {
+	return (usages || []).filter((g) => isInProduction(g))
 }
 
 /**
@@ -106,13 +106,13 @@ export function inProductionUsages(gebruiken) {
  * in-production `gebruik` records referencing it.
  *
  * @param {string}        moduleId  The module UUID.
- * @param {Array<object>} gebruiken Gebruik records.
+ * @param {Array<object>} usages Gebruik records.
  * @return {number} The in-production deployment count.
  *
  * @spec openspec/specs/software-license-posture/spec.md
  */
-export function deploymentCount(moduleId, gebruiken) {
-	return inProductionUsages(gebruiken).filter(
+export function deploymentCount(moduleId, usages) {
+	return inProductionUsages(usages).filter(
 		(g) => resolveUuid(dataOf(g).module) === moduleId,
 	).length
 }
@@ -123,17 +123,17 @@ export function deploymentCount(moduleId, gebruiken) {
  * one unit). Applications with an empty `licentietype` count as Unknown.
  *
  * @param {Array<object>} modules   Module records.
- * @param {Array<object>} gebruiken Gebruik records.
+ * @param {Array<object>} usages Gebruik records.
  * @return {{total: number, open: number, closed: number, unknown: number, openShare: (number|null), byLicense: object}}
  *   Posture summary. `openShare` is open / (open + closed) or null when neither is present.
  *
  * @spec openspec/specs/software-license-posture/spec.md
  */
-export function portfolioPosture(modules, gebruiken) {
+export function portfolioPosture(modules, usages) {
 	const idx = indexModules(modules)
 	const acc = { total: 0, open: 0, closed: 0, unknown: 0, byLicense: {} }
 
-	for (const g of inProductionUsages(gebruiken)) {
+	for (const g of inProductionUsages(usages)) {
 		const moduleId = resolveUuid(dataOf(g).module)
 		const mod = idx[moduleId] || {}
 		const type = normaliseLicenseType(mod.licentietype)
@@ -171,7 +171,7 @@ export function portfolioPosture(modules, gebruiken) {
  */
 function vendorAnnualCost(vendorModuleUsageIds, contracts) {
 	const relevant = (contracts || []).filter((c) => {
-		const gebruikId = resolveUuid(dataOf(c).gebruik)
+		const gebruikId = resolveUuid(dataOf(c).usage)
 		return gebruikId !== '' && vendorModuleUsageIds.has(gebruikId)
 	})
 	if (relevant.length === 0) {
@@ -187,18 +187,18 @@ function vendorAnnualCost(vendorModuleUsageIds, contracts) {
  * reference on each deployed module.
  *
  * @param {Array<object>} modules   Module records.
- * @param {Array<object>} gebruiken Gebruik records.
+ * @param {Array<object>} usages Gebruik records.
  * @param {Array<object>} contracts Contract records (optional — cost degrades to null when absent).
  * @return {Array<{vendorId: string, deployments: number, mix: object, annualCost: (number|null)}>}
  *   One row per vendor with in-production deployments.
  *
  * @spec openspec/specs/software-license-posture/spec.md
  */
-export function perVendorRollup(modules, gebruiken, contracts) {
+export function perVendorRollup(modules, usages, contracts) {
 	const idx = indexModules(modules)
 	const vendors = {}
 
-	for (const g of inProductionUsages(gebruiken)) {
+	for (const g of inProductionUsages(usages)) {
 		const data = dataOf(g)
 		const moduleId = resolveUuid(data.module)
 		const mod = idx[moduleId] || {}
@@ -241,13 +241,13 @@ export function perVendorRollup(modules, gebruiken, contracts) {
  *
  * @param {string}        orgId     The organisation UUID.
  * @param {Array<object>} modules   Module records.
- * @param {Array<object>} gebruiken Gebruik records.
+ * @param {Array<object>} usages Gebruik records.
  * @return {{total: number, open: number, closed: number, unknown: number, openShare: (number|null), closedContributors: Array<string>}}
  *   The organisation's posture. `closedContributors` is the distinct closed-source module UUIDs.
  *
  * @spec openspec/specs/software-license-posture/spec.md
  */
-export function perOrganisationPosture(orgId, modules, gebruiken) {
+export function perOrganisationPosture(orgId, modules, usages) {
 	const idx = indexModules(modules)
 	const acc = {
 		total: 0,
@@ -257,7 +257,7 @@ export function perOrganisationPosture(orgId, modules, gebruiken) {
 		closedContributors: new Set(),
 	}
 
-	for (const g of inProductionUsages(gebruiken)) {
+	for (const g of inProductionUsages(usages)) {
 		const data = dataOf(g)
 		if (resolveUuid(data.consumer) !== orgId) {
 			continue

@@ -398,7 +398,7 @@ class GroupHandler {
 		$objectService = $this->getObjectService();
 		$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
 		$registerId = $settingsService->getVoorzieningenRegisterId();
-		$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+		$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
 		if ($registerId === null || $organisationSchemaId === null) {
 			$this->_logger->warning('Register or schema ID not configured for organisatie.');

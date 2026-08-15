@@ -37,9 +37,9 @@ class ModuleRegistrationService {
 	 * Mapping from organisatie.type to module.registeredBy.
 	 */
 	private const TYPE_MAP = [
-		'Gemeente' => 'Gemeente',
-		'Leverancier' => 'Leverancier',
-		'Samenwerking' => 'Samenwerking',
+		'Municipality' => 'Municipality',
+		'Supplier' => 'Supplier',
+		'Collaboration' => 'Collaboration',
 		'Community' => 'Community',
 	];
 
@@ -134,7 +134,7 @@ class ModuleRegistrationService {
 			return null;
 		}
 
-		$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organisatie');
+		$organisationSchemaId = $this->settingsService->getSchemaIdForObjectType('organization');
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 
