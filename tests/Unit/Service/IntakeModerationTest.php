@@ -33,6 +33,7 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\IntakeService;
 use OCA\SoftwareCatalog\Service\ModerationService;
 use OCA\SoftwareCatalog\Service\SettingsService;

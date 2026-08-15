@@ -611,7 +611,7 @@ class SbomImportService {
 	 *
 	 * @return ObjectServiceInterface|null The object service, or null if not available.
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		try {
 			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (\Exception $e) {

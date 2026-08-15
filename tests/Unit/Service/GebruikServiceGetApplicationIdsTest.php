@@ -21,6 +21,7 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\GebruikService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\App\IAppManager;

@@ -685,7 +685,7 @@ class AanbodService {
 	 *
 	 * @throws Exception When OpenRegister service is not available
 	 */
-	private function getObjectService(): ObjectService {
+	private function getObjectService(): ObjectServiceInterface {
 		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
 			throw new Exception('OpenRegister app is not installed');
 		}

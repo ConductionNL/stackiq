@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
@@ -565,11 +566,11 @@ class ContractApprovalService {
 	/**
 	 * Lazily resolve the OpenRegister ObjectService.
 	 *
-	 * @return ObjectService|null The service, or null when OpenRegister is absent.
+	 * @return ObjectServiceInterface|null The service, or null when OpenRegister is absent.
 	 *
 	 * @spec openspec/specs/contract-decision-delegation/spec.md
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		try {
 			$service = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			if ($service instanceof ObjectService) {

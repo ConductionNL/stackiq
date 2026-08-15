@@ -30,6 +30,7 @@ namespace OCA\SoftwareCatalog\Tests\Unit;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException;
 use OCA\SoftwareCatalog\Service\ProgressTracker;
 use OCA\SoftwareCatalog\Service\SbomImportService;

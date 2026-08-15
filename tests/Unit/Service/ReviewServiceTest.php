@@ -29,6 +29,7 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\ReviewService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\AppFramework\Db\Entity;

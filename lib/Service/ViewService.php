@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -1398,9 +1399,9 @@ class ViewService {
 	/**
 	 * Get ObjectService from container.
 	 *
-	 * @return ObjectService|null ObjectService instance or null if not available.
+	 * @return ObjectServiceInterface|null ObjectService instance or null if not available.
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		if ($this->appManager->isInstalled('openregister') === false) {
 			return null;
 		}

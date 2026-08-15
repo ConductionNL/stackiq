@@ -39,6 +39,7 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\SoftwareCatalog\Service\AangebodenGebruikService;
 use OCA\SoftwareCatalog\Service\SettingsService;

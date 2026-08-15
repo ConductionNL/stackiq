@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroup;
@@ -82,11 +82,11 @@ class GroupHandler {
 	/**
 	 * Gets the OpenRegister ObjectService if available
 	 *
-	 * @return ObjectService|null ObjectService instance or null
+	 * @return ObjectServiceInterface|null ObjectService instance or null
 	 *
 	 * @throws RuntimeException If service is not available
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		if (in_array(needle: 'openregister', haystack: $this->_appManager->getInstalledApps()) === true) {
 			return $this->_container->get('OCA\OpenRegister\Service\ObjectService');
 		}

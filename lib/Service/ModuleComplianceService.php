@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -846,9 +846,9 @@ class ModuleComplianceService {
 	/**
 	 * Get the object service
 	 *
-	 * @return ObjectService|null The object service or null if not available
+	 * @return ObjectServiceInterface|null The object service or null if not available
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		try {
 			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (\Exception $e) {

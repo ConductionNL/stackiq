@@ -27,6 +27,7 @@ namespace OCA\SoftwareCatalog\Service;
 
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\IUserSession;
@@ -1103,7 +1104,7 @@ class FacetService {
 	 *
 	 * @return ObjectServiceInterface|null ObjectService instance or null if not available.
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		try {
 			return $this->container->get(ObjectService::class);
 		} catch (\Exception $e) {

@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
@@ -1814,7 +1815,7 @@ class ArchiMateImportService {
 	 *
 	 * @return ObjectServiceInterface|null ObjectService instance or null if not available
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		if ($this->appManager->isInstalled(appId: 'openregister') === false) {
 			return null;
 		}

@@ -26,6 +26,7 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\PublicationService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use PHPUnit\Framework\MockObject\MockObject;
