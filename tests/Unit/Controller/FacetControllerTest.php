@@ -45,10 +45,10 @@ class FacetControllerTest extends TestCase {
 		$facetService = $this->createMock(FacetService::class);
 		$facetService->method('getFacets')->willReturn(
 			[
-				'referentiecomponent' => [],
+				'referenceComponent' => [],
 				'standard' => [],
-				'applicatieservice' => [],
-				'domein' => [],
+				'applicationService' => [],
+				'domain' => [],
 				'_meta' => ['totalMatched' => 0, 'processingTimeMs' => 1.0, 'cached' => false],
 			]
 		);
@@ -164,10 +164,10 @@ class FacetControllerTest extends TestCase {
 	 */
 	public function testGetFacetsForwardsArrayFilterParams(): void {
 		$paramMap = [
-			'referentiecomponent' => ['A', 'B'],
+			'referenceComponent' => ['A', 'B'],
 			'standard' => null,
-			'applicatieservice' => null,
-			'domein' => null,
+			'applicationService' => null,
+			'domain' => null,
 			'search' => 'zaak',
 			'organization' => null,
 		];
@@ -186,10 +186,10 @@ class FacetControllerTest extends TestCase {
 				$capturedFilters = $filters;
 				$capturedSearch = $search;
 				return [
-					'referentiecomponent' => [],
+					'referenceComponent' => [],
 					'standard' => [],
-					'applicatieservice' => [],
-					'domein' => [],
+					'applicationService' => [],
+					'domain' => [],
 					'_meta' => ['totalMatched' => 0, 'processingTimeMs' => 1.0, 'cached' => false],
 				];
 			}
@@ -204,7 +204,7 @@ class FacetControllerTest extends TestCase {
 
 		$controller->getFacets('module');
 
-		$this->assertSame(['A', 'B'], $capturedFilters['referentiecomponent']);
+		$this->assertSame(['A', 'B'], $capturedFilters['referenceComponent']);
 		$this->assertSame('zaak', $capturedSearch);
 
 	}//end testGetFacetsForwardsArrayFilterParams()

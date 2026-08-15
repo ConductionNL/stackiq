@@ -55,10 +55,10 @@ const DIMENSIONS = [
 	// set or not at all — translating only `standaard` made the frontend ask for
 	// `standard[]` from a backend that reads `standaard[]`, and filtering silently
 	// returned everything.
-	'referentiecomponent',
-	'standaard',
-	'applicatieservice',
-	'domein',
+	'referenceComponent',
+	'standard',
+	'applicationService',
+	'domain',
 ] as const
 
 /** Unique per run so the cache — keyed by params — is cold on first use. */

@@ -31,7 +31,7 @@ export function buildFacetDimensionSchema(dimensionLabels) {
 		properties[key] = {
 			type: 'string',
 			// `filtersFromSchema` labels a filter from `title`, falling back to
-			// the raw key — a missing title degrades to "referentiecomponent".
+			// the raw key — a missing title degrades to "referenceComponent".
 			title: dimensionLabels[key](),
 			// Without this the property is filtered out entirely.
 			facetable: true,

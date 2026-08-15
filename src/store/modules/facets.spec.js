@@ -42,7 +42,7 @@ describe('facets store — filter/search state', () => {
 
 	it('setFilter adds a dimension selection', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', [
+		store.setFilter('module', 'referenceComponent', [
 			'Zaakregistratiecomponent',
 		])
 		expect(store.module.activeFilters.referentiecomponent).toEqual([
@@ -52,9 +52,9 @@ describe('facets store — filter/search state', () => {
 
 	it('setFilter with an empty array removes the dimension entirely', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', ['A'])
-		store.setFilter('module', 'referentiecomponent', [])
-		expect(store.module.activeFilters).not.toHaveProperty('referentiecomponent')
+		store.setFilter('module', 'referenceComponent', ['A'])
+		store.setFilter('module', 'referenceComponent', [])
+		expect(store.module.activeFilters).not.toHaveProperty('referenceComponent')
 	})
 
 	it('setSearch stores the term; non-string values coerce to empty', () => {
@@ -67,7 +67,7 @@ describe('facets store — filter/search state', () => {
 
 	it('clearFilters empties activeFilters but leaves search untouched', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'standaard', ['StUF-ZKN'])
+		store.setFilter('module', 'standard', ['StUF-ZKN'])
 		store.setSearch('module', 'zaak')
 		store.clearFilters('module')
 		expect(store.module.activeFilters).toEqual({})
@@ -76,8 +76,8 @@ describe('facets store — filter/search state', () => {
 
 	it('module and dienst state are independent', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', ['A'])
-		store.setFilter('service', 'referentiecomponent', ['B'])
+		store.setFilter('module', 'referenceComponent', ['A'])
+		store.setFilter('service', 'referenceComponent', ['B'])
 		expect(store.module.activeFilters.referentiecomponent).toEqual(['A'])
 		expect(store.service.activeFilters.referentiecomponent).toEqual(['B'])
 	})
@@ -95,7 +95,7 @@ describe('facets store — hasActiveFilterOrSearchFor / matchedObjectIdsFor', ()
 
 	it('is true once a facet filter is set', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'domein', ['Bedrijfsvoering'])
+		store.setFilter('module', 'domain', ['Bedrijfsvoering'])
 		expect(store.hasActiveFilterOrSearchFor('module')).toBe(true)
 	})
 
@@ -124,7 +124,7 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 
 	it('filtersToQuery emits _gf_-prefixed keys only for active dimensions', () => {
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', [
+		store.setFilter('module', 'referenceComponent', [
 			'Zaakregistratiecomponent',
 		])
 		store.setSearch('module', 'zaak')
@@ -169,7 +169,7 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 
 	it('round-trips filtersToQuery -> setFiltersFromQuery', () => {
 		const store = useFacetStore()
-		store.setFilter('service', 'domein', ['Bedrijfsvoering', 'Dienstverlening'])
+		store.setFilter('service', 'domain', ['Bedrijfsvoering', 'Dienstverlening'])
 		store.setSearch('service', 'stuf')
 
 		const query = store.filtersToQuery('service')
@@ -216,7 +216,7 @@ describe('facets store — fetchFacets', () => {
 		})
 
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', ['A'])
+		store.setFilter('module', 'referenceComponent', ['A'])
 		store.setSearch('module', 'zaak')
 		await store.fetchFacets('module', { organization: 'org-1' })
 
@@ -303,7 +303,7 @@ describe('facets store — saved views', () => {
 		axios.post.mockResolvedValue({ data: { view: created } })
 
 		const store = useFacetStore()
-		store.setFilter('module', 'referentiecomponent', ['A'])
+		store.setFilter('module', 'referenceComponent', ['A'])
 		store.setSearch('module', 'zaak')
 
 		const result = await store.saveCurrentAsView('module', 'My view')

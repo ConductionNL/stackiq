@@ -105,7 +105,7 @@ class FacetService {
 	 *
 	 * @var string[]
 	 */
-	private const DIMENSIONS = ['referentiecomponent', 'standaard', 'applicatieservice', 'domein'];
+	private const DIMENSIONS = ['referenceComponent', 'standard', 'applicationService', 'domain'];
 
 	/**
 	 * Constructor for FacetService.
@@ -138,7 +138,7 @@ class FacetService {
 	 *
 	 * @param string $schema `module` or `dienst`.
 	 * @param array $filters Currently-selected facet values keyed by dimension,
-	 *                       e.g. `['referentiecomponent' => ['Zaakregistratiecomponent']]`.
+	 *                       e.g. `['referenceComponent' => ['Zaakregistratiecomponent']]`.
 	 * @param string|null $search Free-text query narrowing the candidate set.
 	 * @param string|null $organization Optional organisation override (mirrors
 	 *                                  view-enrichment-api's `organization` parameter).
@@ -700,7 +700,7 @@ class FacetService {
 					fallbackIdentifier: $refCompId
 				);
 
-				$domein = $element['domein'] ?? null;
+				$domein = $element['domain'] ?? null;
 				if (is_string($domein) === true && trim($domein) !== '') {
 					$domeinValues[] = trim($domein);
 				}
@@ -711,10 +711,10 @@ class FacetService {
 			}
 
 			$dimValsByObjId[$objectId] = [
-				'referentiecomponent' => array_values(array_unique($refCompNames)),
-				'standaard' => $stdValsByObjId[$objectId] ?? [],
-				'domein' => array_values(array_unique($domeinValues)),
-				'applicatieservice' => array_values(array_unique($appSvcValues)),
+				'referenceComponent' => array_values(array_unique($refCompNames)),
+				'standard' => $stdValsByObjId[$objectId] ?? [],
+				'domain' => array_values(array_unique($domeinValues)),
+				'applicationService' => array_values(array_unique($appSvcValues)),
 			];
 		}//end foreach
 

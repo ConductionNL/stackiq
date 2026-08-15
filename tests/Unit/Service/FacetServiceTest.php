@@ -242,7 +242,7 @@ class FacetServiceTest extends TestCase {
 
 		$result = $service->getFacets(schema: 'module');
 
-		foreach (['referentiecomponent', 'standaard', 'applicatieservice', 'domein'] as $dimension) {
+		foreach (['referenceComponent', 'standard', 'applicationService', 'domain'] as $dimension) {
 			$this->assertArrayHasKey($dimension, $result);
 			$this->assertSame([], $result[$dimension]);
 		}
@@ -285,8 +285,8 @@ class FacetServiceTest extends TestCase {
 		$archiMateService = $this->createMock(ArchiMateService::class);
 		$archiMateService->method('getElementObjects')->willReturn(
 			[
-				['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domein' => 'Bedrijfsvoering'],
-				['identifier' => 'rc-2', 'name' => 'Klantcontactcomponent', 'domein' => 'Dienstverlening'],
+				['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domain' => 'Bedrijfsvoering'],
+				['identifier' => 'rc-2', 'name' => 'Klantcontactcomponent', 'domain' => 'Dienstverlening'],
 			]
 		);
 		$archiMateService->method('getRelationshipObjects')->willReturn([]);
@@ -295,14 +295,14 @@ class FacetServiceTest extends TestCase {
 
 		$result = $service->getFacets(schema: 'module');
 
-		$refCompByValue = array_column($result['referentiecomponent'], 'count', 'value');
+		$refCompByValue = array_column($result['referenceComponent'], 'count', 'value');
 		$this->assertSame(2, $refCompByValue['Zaakregistratiecomponent']);
 		$this->assertSame(1, $refCompByValue['Klantcontactcomponent']);
 
-		$standardByValue = array_column($result['standaard'], 'count', 'value');
+		$standardByValue = array_column($result['standard'], 'count', 'value');
 		$this->assertSame(2, $standardByValue['StUF-ZKN']);
 
-		$domeinByValue = array_column($result['domein'], 'count', 'value');
+		$domeinByValue = array_column($result['domain'], 'count', 'value');
 		$this->assertSame(2, $domeinByValue['Bedrijfsvoering']);
 		$this->assertSame(1, $domeinByValue['Dienstverlening']);
 
@@ -356,8 +356,8 @@ class FacetServiceTest extends TestCase {
 		$archiMateService = $this->createMock(ArchiMateService::class);
 		$archiMateService->method('getElementObjects')->willReturn(
 			[
-				['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domein' => 'Bedrijfsvoering'],
-				['identifier' => 'rc-2', 'name' => 'Klantcontactcomponent', 'domein' => 'Dienstverlening'],
+				['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domain' => 'Bedrijfsvoering'],
+				['identifier' => 'rc-2', 'name' => 'Klantcontactcomponent', 'domain' => 'Dienstverlening'],
 			]
 		);
 		$archiMateService->method('getRelationshipObjects')->willReturn([]);
@@ -366,14 +366,14 @@ class FacetServiceTest extends TestCase {
 
 		$result = $service->getFacets(schema: 'module');
 
-		$refCompByValue = array_column($result['referentiecomponent'], 'count', 'value');
+		$refCompByValue = array_column($result['referenceComponent'], 'count', 'value');
 		$this->assertSame(2, $refCompByValue['Zaakregistratiecomponent']);
 		$this->assertSame(1, $refCompByValue['Klantcontactcomponent']);
 
-		$standardByValue = array_column($result['standaard'], 'count', 'value');
+		$standardByValue = array_column($result['standard'], 'count', 'value');
 		$this->assertSame(2, $standardByValue['StUF-ZKN']);
 
-		$domeinByValue = array_column($result['domein'], 'count', 'value');
+		$domeinByValue = array_column($result['domain'], 'count', 'value');
 		$this->assertSame(2, $domeinByValue['Bedrijfsvoering']);
 		$this->assertSame(1, $domeinByValue['Dienstverlening']);
 
@@ -402,7 +402,7 @@ class FacetServiceTest extends TestCase {
 			function (array $query) {
 				$ids = $query['identifier'] ?? [];
 				$all = [
-					'rc-1' => ['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domein' => 'Bedrijfsvoering'],
+					'rc-1' => ['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domain' => 'Bedrijfsvoering'],
 					'as-1' => ['identifier' => 'as-1', 'name' => 'Zaakservice', 'gemmaType' => 'Applicatieservice'],
 				];
 				return array_values(array_intersect_key($all, array_flip($ids)));
@@ -418,7 +418,7 @@ class FacetServiceTest extends TestCase {
 
 		$result = $service->getFacets(schema: 'module');
 
-		$applicatieserviceByValue = array_column($result['applicatieservice'], 'count', 'value');
+		$applicatieserviceByValue = array_column($result['applicationService'], 'count', 'value');
 		$this->assertArrayHasKey('Zaakservice', $applicatieserviceByValue);
 		$this->assertSame(1, $applicatieserviceByValue['Zaakservice']);
 
@@ -456,17 +456,17 @@ class FacetServiceTest extends TestCase {
 
 		$result = $service->getFacets(
 			schema: 'module',
-			filters: ['referentiecomponent' => ['Zaakregistratiecomponent']]
+			filters: ['referenceComponent' => ['Zaakregistratiecomponent']]
 		);
 
 		// `standaard` is narrowed to the 2 modules carrying "Zaakregistratiecomponent" —
 		// only m1 of those also carries "StUF-ZKN".
-		$standardByValue = array_column($result['standaard'], 'count', 'value');
+		$standardByValue = array_column($result['standard'], 'count', 'value');
 		$this->assertSame(1, $standardByValue['StUF-ZKN']);
 
 		// `referentiecomponent`'s OWN count is NOT narrowed by its own selection —
 		// it still reflects the full 2-object set carrying "Zaakregistratiecomponent".
-		$refCompByValue = array_column($result['referentiecomponent'], 'count', 'value');
+		$refCompByValue = array_column($result['referenceComponent'], 'count', 'value');
 		$this->assertSame(2, $refCompByValue['Zaakregistratiecomponent']);
 
 		$this->assertSame(2, $result['_meta']['totalMatched']);
@@ -503,15 +503,15 @@ class FacetServiceTest extends TestCase {
 		$service = $this->makeService(objectService: $objectService, archiMateService: $archiMateService);
 
 		// OR within a dimension: A or B -> m1 + m2.
-		$orResult = $service->getFacets(schema: 'module', filters: ['referentiecomponent' => ['A', 'B']]);
+		$orResult = $service->getFacets(schema: 'module', filters: ['referenceComponent' => ['A', 'B']]);
 		$this->assertSame(2, $orResult['_meta']['totalMatched']);
 
 		// AND across dimensions: A (referentiecomponent) AND StUF-ZKN (standaard) -> only m1.
 		$andResult = $service->getFacets(
 			schema: 'module',
 			filters: [
-				'referentiecomponent' => ['A'],
-				'standaard' => ['StUF-ZKN'],
+				'referenceComponent' => ['A'],
+				'standard' => ['StUF-ZKN'],
 			]
 		);
 		$this->assertSame(1, $andResult['_meta']['totalMatched']);
@@ -638,10 +638,10 @@ class FacetServiceTest extends TestCase {
 	 */
 	public function testGetFacetsServesFromCacheOnHit(): void {
 		$cachedPayload = [
-			'referentiecomponent' => [],
-			'standaard' => [],
-			'applicatieservice' => [],
-			'domein' => [],
+			'referenceComponent' => [],
+			'standard' => [],
+			'applicationService' => [],
+			'domain' => [],
 			'_meta' => ['totalMatched' => 0, 'processingTimeMs' => 5.0, 'cached' => false],
 		];
 
@@ -699,7 +699,7 @@ class FacetServiceTest extends TestCase {
 
 		$result = $service->getFacets(schema: 'service');
 
-		$refCompByValue = array_column($result['referentiecomponent'], 'count', 'value');
+		$refCompByValue = array_column($result['referenceComponent'], 'count', 'value');
 		$this->assertSame(1, $refCompByValue['Zaakregistratiecomponent']);
 
 	}//end testGetFacetsResolvesDienstFacetsTransitivelyViaModules()
@@ -754,7 +754,7 @@ class FacetServiceTest extends TestCase {
 
 		$result = $service->getFacets(schema: 'service');
 
-		$refCompByValue = array_column($result['referentiecomponent'], 'count', 'value');
+		$refCompByValue = array_column($result['referenceComponent'], 'count', 'value');
 		$this->assertSame(1, $refCompByValue['Zaakregistratiecomponent']);
 		$this->assertSame(1, $result['_meta']['totalMatched']);
 

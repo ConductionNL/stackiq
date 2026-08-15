@@ -144,7 +144,7 @@ class FacetController extends Controller {
 	 * @return array<string,array> Raw filters keyed by dimension.
 	 */
 	private function parseFilters(): array {
-		$dimensions = ['referentiecomponent', 'standaard', 'applicatieservice', 'domein'];
+		$dimensions = ['referenceComponent', 'standard', 'applicationService', 'domain'];
 		$filters = [];
 
 		foreach ($dimensions as $dimension) {
