@@ -152,7 +152,7 @@ class ReviewServiceTest extends TestCase {
 
 		$service->submit(
 			['name' => 'Great tool', 'rating' => 7, 'modules' => ['forged-module-id']],
-			'dienst',
+			'service',
 			'dienst-uuid-1'
 		);
 

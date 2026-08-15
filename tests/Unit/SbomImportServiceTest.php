@@ -145,7 +145,7 @@ class SbomImportServiceTest extends TestCase {
 		$settings->method('getVoorzieningenConfig')->willReturn(['register' => 1]);
 		$settings->method('getSchemaIdForObjectType')->willReturnMap(
 			[
-				['moduleVersie', 10],
+				['moduleVersion', 10],
 				['sbomComponent', 20],
 				['module', 30],
 			]
@@ -211,7 +211,7 @@ class SbomImportServiceTest extends TestCase {
 		$this->assertCount(3, $this->savedBatches[0]);
 
 		foreach ($this->savedBatches[0] as $componentData) {
-			$this->assertSame('mv-uuid-1', $componentData['moduleVersie']);
+			$this->assertSame('mv-uuid-1', $componentData['moduleVersion']);
 		}
 
 		$this->assertSame('lodash', $this->savedBatches[0][0]['name']);
@@ -429,7 +429,7 @@ class SbomImportServiceTest extends TestCase {
 		$settings->method('getVoorzieningenConfig')->willReturn(['register' => 1]);
 		$settings->method('getSchemaIdForObjectType')->willReturnMap(
 			[
-				['moduleVersie', 10],
+				['moduleVersion', 10],
 				['sbomComponent', 20],
 			]
 		);

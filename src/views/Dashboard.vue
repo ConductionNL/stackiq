@@ -381,13 +381,13 @@ export default {
 		getIconForObjectType(objectType) {
 			const iconMap = {
 				organisatie: OfficeBuildingOutline,
-				contactpersoon: AccountMultiple,
+				contactPerson: AccountMultiple,
 				voorziening: ApplicationCog,
 				contract: FileDocumentEdit,
 				suite: ApplicationCog,
 				module: ApplicationCog,
 				koppeling: ApplicationCog,
-				dienst: ApplicationCog,
+				service: ApplicationCog,
 				standard: FileDocumentEdit,
 				compliancy: FileDocumentEdit,
 				kwetsbaarheid: FileDocumentEdit,
@@ -407,7 +407,7 @@ export default {
 			// Handle special cases for plural routing
 			const routeMap = {
 				organisatie: 'organisaties',
-				contactpersoon: 'contactpersonen',
+				contactPerson: 'contactpersonen',
 				voorziening: 'voorzieningen',
 				contract: 'contracten',
 			}
@@ -437,7 +437,7 @@ export default {
 		navigateToSchema(slug) {
 			const slugToSelected = {
 				organisatie: 'organisaties',
-				contactpersoon: 'contactpersonen',
+				contactPerson: 'contactpersonen',
 				contract: 'contracten',
 				standard: 'standards',
 				compliancy: 'komplianties',

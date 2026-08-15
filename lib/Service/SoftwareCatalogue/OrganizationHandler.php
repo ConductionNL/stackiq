@@ -448,11 +448,11 @@ class OrganizationHandler {
 					}//end if
 				} catch (\Exception $e) {
 					$this->_logger->error(
-						'Failed to process contactpersoon: ' . $e->getMessage(),
+						'Failed to process contactPerson: ' . $e->getMessage(),
 						[
 							'organizationId' => $organizationUuid,
 							'contactpersoonIndex' => $index,
-							'contactpersoon' => $contactPerson,
+							'contactPerson' => $contactPerson,
 							'exception' => $e,
 						]
 					);

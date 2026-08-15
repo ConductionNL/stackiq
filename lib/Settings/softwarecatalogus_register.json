@@ -762,7 +762,7 @@
             }
           }
         ],
-        "bioMaatregel": [
+        "bioMeasure": [
           {
             "slug": "bio-5-1-1",
             "code": "5.1.1",
@@ -824,18 +824,18 @@
           "sector",
           "suite",
           "module",
-          "dienst",
-          "kwetsbaarheid",
-          "contactpersoon",
+          "service",
+          "vulnerability",
+          "contactPerson",
           "organisatie",
-          "gebruik",
+          "usage",
           "contract",
-          "koppeling",
-          "beoordeeling",
+          "connection",
+          "assessment",
           "compliancy",
-          "moduleVersie",
+          "moduleVersion",
           "sbomComponent",
-          "bioMaatregel"
+          "bioMeasure"
         ],
         "source": "internal",
         "tablePrefix": "",
@@ -862,15 +862,15 @@
               "magicMapping": true,
               "autoCreateTable": true
             },
-            "dienst": {
+            "service": {
               "magicMapping": true,
               "autoCreateTable": true
             },
-            "kwetsbaarheid": {
+            "vulnerability": {
               "magicMapping": true,
               "autoCreateTable": true
             },
-            "contactpersoon": {
+            "contactPerson": {
               "magicMapping": true,
               "autoCreateTable": true
             },
@@ -878,7 +878,7 @@
               "magicMapping": true,
               "autoCreateTable": true
             },
-            "gebruik": {
+            "usage": {
               "magicMapping": true,
               "autoCreateTable": true
             },
@@ -886,11 +886,11 @@
               "magicMapping": true,
               "autoCreateTable": true
             },
-            "koppeling": {
+            "connection": {
               "magicMapping": true,
               "autoCreateTable": true
             },
-            "beoordeeling": {
+            "assessment": {
               "magicMapping": true,
               "autoCreateTable": true
             },
@@ -898,7 +898,7 @@
               "magicMapping": true,
               "autoCreateTable": true
             },
-            "moduleVersie": {
+            "moduleVersion": {
               "magicMapping": true,
               "autoCreateTable": true
             },
@@ -906,7 +906,7 @@
               "magicMapping": true,
               "autoCreateTable": true
             },
-            "bioMaatregel": {
+            "bioMeasure": {
               "magicMapping": true,
               "autoCreateTable": true
             }
@@ -1221,7 +1221,7 @@
             "title": "Website",
             "example": "https://voorbeeld.nl/suite"
           },
-          "contactpersoon": {
+          "contactPerson": {
             "description": "Contactpersoon voor de suite",
             "type": "object",
             "visible": true,
@@ -1231,7 +1231,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/contactpersoon"
+            "$ref": "#/components/schemas/contactPerson"
           },
           "applications": {
             "description": "De applicaties die onderdeel zijn van deze suite",
@@ -1326,9 +1326,9 @@
           }
         }
       },
-      "dienst": {
+      "service": {
         "uri": null,
-        "slug": "dienst",
+        "slug": "service",
         "x-schema-org": "schema:Service",
         "title": "Service",
         "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
@@ -1408,7 +1408,7 @@
             "maxLength": 500,
             "example": "https://dienst.voorbeeld.nl"
           },
-          "contactpersoon": {
+          "contactPerson": {
             "description": "Selecteer de contactpersoon voor deze dienst",
             "type": "object",
             "visible": true,
@@ -1418,7 +1418,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/contactpersoon",
+            "$ref": "#/components/schemas/contactPerson",
             "x-relation-filter": { "organisatie": "@object.aanbieder" }
           },
           "modules": {
@@ -1508,15 +1508,15 @@
             "order": 8,
             "facetable": false,
             "title": "Connections",
-            "$ref": "#/components/schemas/koppeling",
-            "x-relation-filter": { "dienst": "@objectId" },
+            "$ref": "#/components/schemas/connection",
+            "x-relation-filter": { "service": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/koppeling",
-              "inversedBy": "dienst"
+              "$ref": "#/components/schemas/connection",
+              "inversedBy": "service"
             }
           },
           "publicationDate": {
@@ -1621,9 +1621,9 @@
           "autoPublish": true
         }
       },
-      "kwetsbaarheid": {
+      "vulnerability": {
         "uri": null,
-        "slug": "kwetsbaarheid",
+        "slug": "vulnerability",
         "x-openregister-notifications": {
           "vulnerability-reported": {
             "trigger": {"type": "created"},
@@ -1716,7 +1716,7 @@
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/module",
-              "inversedBy": "kwetsbaarheid"
+              "inversedBy": "vulnerability"
             }
           }
         },
@@ -1788,9 +1788,9 @@
           "autoPublish": false
         }
       },
-      "contactpersoon": {
+      "contactPerson": {
         "uri": null,
-        "slug": "contactpersoon",
+        "slug": "contactPerson",
         "x-schema-org": "schema:Person",
         "title": "Contact person",
         "description": "Contactgegevens van een persoon",
@@ -2060,11 +2060,11 @@
             "minItems": null,
             "maxItems": null,
             "inversedBy": "",
-            "$ref": "#/components/schemas/contactpersoon",
+            "$ref": "#/components/schemas/contactPerson",
             "x-relation-filter": { "organisatie": "@objectId" },
             "items": {
               "cascadeDelete": false,
-              "$ref": "#/components/schemas/contactpersoon",
+              "$ref": "#/components/schemas/contactPerson",
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
@@ -2543,9 +2543,9 @@
           }
         }
       },
-      "gebruik": {
+      "usage": {
         "uri": null,
-        "slug": "gebruik",
+        "slug": "usage",
         "title": "Usage",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
         "version": "1.4.0",
@@ -2595,7 +2595,7 @@
             "required": false,
             "order": 12
           },
-          "contactpersoon": {
+          "contactPerson": {
             "type": "object",
             "description": "De contactpersoon voor dit gebruik",
             "facetable": false,
@@ -2603,7 +2603,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/contactpersoon",
+            "$ref": "#/components/schemas/contactPerson",
             "title": "Contact person",
             "order": 3
           },
@@ -2849,12 +2849,12 @@
               "handling": "related-object"
             },
             "$ref": "#/components/schemas/module",
-            "inversedBy": "gebruik",
+            "inversedBy": "usage",
             "table": {
               "default": true
             }
           },
-          "moduleVersie": {
+          "moduleVersion": {
             "description": "Selecteer de versie (on-premisse - default nieuwste versie, SaaS - default versie 'Cloud')",
             "type": "object",
             "visible": true,
@@ -2864,8 +2864,8 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/moduleVersie",
-            "inversedBy": "gebruik",
+            "$ref": "#/components/schemas/moduleVersion",
+            "inversedBy": "usage",
             "x-relation-filter": { "module": "@object.module" },
             "table": {
               "default": true
@@ -2913,7 +2913,7 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/koppeling"
+              "$ref": "#/components/schemas/connection"
             }
           },
           "diensten": {
@@ -2928,7 +2928,7 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/dienst"
+              "$ref": "#/components/schemas/service"
             }
           },
           "cloudDienstverleningsmodel": {
@@ -3155,15 +3155,15 @@
         "omschrijving": "",
         "icon": "FileDocumentEdit",
         "required": [
-          "dienst",
-          "gebruik",
+          "service",
+          "usage",
           "startDate",
           "contractNumber",
           "contractType",
           "status"
         ],
         "properties": {
-          "dienst": {
+          "service": {
             "description": "De dienst waarop dit contract betrekking heeft",
             "type": "object",
             "facetable": false,
@@ -3173,9 +3173,9 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/dienst"
+            "$ref": "#/components/schemas/service"
           },
-          "gebruik": {
+          "usage": {
             "description": "Het gebruik van de voorziening waarop dit contract betrekking heeft",
             "type": "object",
             "facetable": false,
@@ -3185,7 +3185,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/gebruik"
+            "$ref": "#/components/schemas/usage"
           },
           "startDate": {
             "type": "string",
@@ -3437,9 +3437,9 @@
           }
         }
       },
-      "koppeling": {
+      "connection": {
         "uri": null,
-        "slug": "koppeling",
+        "slug": "connection",
         "title": "Connection",
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
         "version": "0.3.0",
@@ -3577,7 +3577,7 @@
               "handling": "related-object"
             },
             "$ref": "#/components/schemas/module",
-            "inversedBy": "koppeling"
+            "inversedBy": "connection"
           },
           "moduleB": {
             "description": "Kies de applicatie waarmee gekoppeld wordt.",
@@ -3634,7 +3634,7 @@
               "handling": "related-object"
             },
             "$ref": "#/components/schemas/module",
-            "inversedBy": "koppeling"
+            "inversedBy": "connection"
           },
           "provider": {
             "referenceSemanticType": "https://openregister.app/ns#Vendor",
@@ -3652,7 +3652,7 @@
             },
             "$ref": "#/components/schemas/organisatie"
           },
-          "dienst": {
+          "service": {
             "description": "De dienst die deze koppeling gebruikt",
             "type": "object",
             "visible": false,
@@ -3662,7 +3662,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/dienst",
+            "$ref": "#/components/schemas/service",
             "inversedBy": "koppelingen"
           },
           "registeredBy": {
@@ -3833,9 +3833,9 @@
           }
         }
       },
-      "beoordeeling": {
+      "assessment": {
         "uri": null,
-        "slug": "beoordeeling",
+        "slug": "assessment",
         "x-openregister-notifications": {
           "review-submitted": {
             "trigger": {"type": "created"},
@@ -3912,7 +3912,7 @@
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/module",
-              "inversedBy": "beoordeeling"
+              "inversedBy": "assessment"
             }
           },
           "diensten": {
@@ -3927,7 +3927,7 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/dienst"
+              "$ref": "#/components/schemas/service"
             }
           },
           "koppelingen": {
@@ -3942,10 +3942,10 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/koppeling"
+              "$ref": "#/components/schemas/connection"
             }
           },
-          "gebruik": {
+          "usage": {
             "description": "Optioneel: het specifieke gebruik dat beoordeeld wordt",
             "type": "object",
             "visible": true,
@@ -3955,7 +3955,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/gebruik"
+            "$ref": "#/components/schemas/usage"
           }
         },
         "archive": [],
@@ -6858,7 +6858,7 @@
             "title": "Website",
             "example": "https://voorbeeld.nl/applicatie"
           },
-          "contactpersoon": {
+          "contactPerson": {
             "description": "Selecteer de contactpersoon voor deze applicatie",
             "type": "object",
             "visible": true,
@@ -6868,7 +6868,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/contactpersoon",
+            "$ref": "#/components/schemas/contactPerson",
             "x-relation-filter": { "organisatie": "@object.aanbieder" }
           },
           "cloudDienstverleningsmodel": {
@@ -7063,7 +7063,7 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/dienst",
+              "$ref": "#/components/schemas/service",
               "inversedBy": "modules"
             }
           },
@@ -7080,7 +7080,7 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/koppeling",
+              "$ref": "#/components/schemas/connection",
               "inversedBy": [
                 "moduleA",
                 "moduleB"
@@ -7158,14 +7158,14 @@
             "facetable": false,
             "title": "Application versions",
             "hideOnForm": true,
-            "$ref": "#/components/schemas/moduleVersie",
+            "$ref": "#/components/schemas/moduleVersion",
             "x-relation-filter": { "module": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/moduleVersie",
+              "$ref": "#/components/schemas/moduleVersion",
               "inversedBy": "module"
             }
           },
@@ -7177,14 +7177,14 @@
             "facetable": false,
             "title": "Usage",
             "hideOnForm": true,
-            "$ref": "#/components/schemas/gebruik",
+            "$ref": "#/components/schemas/usage",
             "x-relation-filter": { "module": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/gebruik"
+              "$ref": "#/components/schemas/usage"
             }
           },
           "registeredBy": {
@@ -7438,7 +7438,7 @@
             "visible": true,
             "facetable": false
           },
-          "bioMaatregel": {
+          "bioMeasure": {
             "description": "BIO-maatregel die door deze compliance wordt ondersteund. Een compliancy record koppelt aan precies een van standaardversie of bioMaatregel, nooit beide.",
             "type": "object",
             "order": 2,
@@ -7448,7 +7448,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/bioMaatregel"
+            "$ref": "#/components/schemas/bioMeasure"
           },
           "module": {
             "description": "De applicatie waarvan de compliance wordt geregistreerd",
@@ -7526,9 +7526,9 @@
           "autoPublish": true
         }
       },
-      "bioMaatregel": {
+      "bioMeasure": {
         "uri": null,
-        "slug": "bioMaatregel",
+        "slug": "bioMeasure",
         "title": "BIO measure",
         "description": "Een BIO 2.0 (Baseline Informatiebeveiliging Overheid) maatregel uit de gepubliceerde maatregelenlijst. Wordt gebruikt als selectiebron voor compliance-registraties (compliancy.bioMaatregel) en het BIO-dekkingsrapport.",
         "version": "0.0.1",
@@ -7652,9 +7652,9 @@
           "autoPublish": true
         }
       },
-      "moduleVersie": {
+      "moduleVersion": {
         "uri": null,
-        "slug": "moduleVersie",
+        "slug": "moduleVersion",
         "x-openregister-notifications": {
           "module-version-published": {
             "trigger": {"type": "created"},
@@ -7700,7 +7700,7 @@
               "handling": "related-object"
             },
             "$ref": "#/components/schemas/module",
-            "inversedBy": "moduleVersie"
+            "inversedBy": "moduleVersion"
           },
           "version": {
             "description": "Voer de versie van uw applicatie in; dit kan een nummer, tekst of combinatie daarvan zijn.",
@@ -7777,14 +7777,14 @@
             "order": 18,
             "facetable": false,
             "title": "Usage",
-            "$ref": "#/components/schemas/gebruik",
-            "x-relation-filter": { "moduleVersie": "@objectId" },
+            "$ref": "#/components/schemas/usage",
+            "x-relation-filter": { "moduleVersion": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/gebruik"
+              "$ref": "#/components/schemas/usage"
             }
           },
           "registeredBy": {
@@ -7859,14 +7859,14 @@
             "title": "SBOM components",
             "hideOnForm": true,
             "$ref": "#/components/schemas/sbomComponent",
-            "x-relation-filter": { "moduleVersie": "@objectId" },
+            "x-relation-filter": { "moduleVersion": "@objectId" },
             "items": {
               "type": "object",
               "objectConfiguration": {
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/sbomComponent",
-              "inversedBy": "moduleVersie"
+              "inversedBy": "moduleVersion"
             }
           }
         },
@@ -7932,11 +7932,11 @@
         "omschrijving": "",
         "icon": "PackageVariantClosed",
         "required": [
-          "moduleVersie",
+          "moduleVersion",
           "name"
         ],
         "properties": {
-          "moduleVersie": {
+          "moduleVersion": {
             "description": "De applicatieversie waarvan dit component onderdeel is",
             "type": "object",
             "order": 1,
@@ -7946,7 +7946,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/moduleVersie",
+            "$ref": "#/components/schemas/moduleVersion",
             "inversedBy": "sbomComponents"
           },
           "name": {
@@ -8066,7 +8066,7 @@
       {
         "@self": {
           "register": "voorzieningen",
-          "schema": "gebruik",
+          "schema": "usage",
           "slug": "gebruik-topdesk-gem-leiden-deelnemers",
           "version": "0.0.1"
         },
@@ -8095,7 +8095,7 @@
       {
         "@self": {
           "register": "voorzieningen",
-          "schema": "gebruik",
+          "schema": "usage",
           "slug": "gebruik-key2-gem-leiden-deelnemer",
           "version": "0.0.1"
         },
@@ -8119,7 +8119,7 @@
       {
         "@self": {
           "register": "voorzieningen",
-          "schema": "gebruik",
+          "schema": "usage",
           "slug": "gebruik-suite4-gem-delft-eigenaar",
           "version": "0.0.1"
         },

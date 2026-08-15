@@ -187,8 +187,8 @@ export default {
 	 */
 	setup() {
 		useLiveCollections(objectStore, [
-			'gebruik',
-			'moduleVersie',
+			'usage',
+			'moduleVersion',
 			'module',
 			'organisatie',
 		])
@@ -210,7 +210,7 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		usages() {
-			return objectStore.getCollection('gebruik')?.results || []
+			return objectStore.getCollection('usage')?.results || []
 		},
 
 		/**
@@ -221,7 +221,7 @@ export default {
 		 */
 		moduleVersieIndex() {
 			const index = {}
-			for (const mv of objectStore.getCollection('moduleVersie')?.results
+			for (const mv of objectStore.getCollection('moduleVersion')?.results
 				|| []) {
 				const id = resolveUuid(mv.uuid ?? mv.id ?? mv['@self']?.id ?? mv)
 				if (id) {
@@ -341,8 +341,8 @@ export default {
 					await objectStore.fetchSettings()
 				}
 				await Promise.all([
-					this.fetchType('gebruik'),
-					this.fetchType('moduleVersie'),
+					this.fetchType('usage'),
+					this.fetchType('moduleVersion'),
 					this.fetchType('module'),
 					this.fetchType('organisatie'),
 				])
@@ -399,7 +399,7 @@ export default {
 		buildEntry(gebruik, now) {
 			const data = gebruik.object || gebruik
 			const moduleUuid = resolveUuid(data.module)
-			const versieUuid = resolveUuid(data.moduleVersie)
+			const versieUuid = resolveUuid(data.moduleVersion)
 			const versie = this.moduleVersieIndex[versieUuid]
 			const eol = endOfSupportState(versie || {}, now)
 			const replacementUuid = resolveUuid(data.plannedReplacement)

@@ -129,7 +129,7 @@ class ModuleVersionService {
 			return null;
 		}
 
-		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersie');
+		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersion');
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 

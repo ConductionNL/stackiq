@@ -344,7 +344,7 @@ export default {
 				const hasUser = !!data.username
 
 				// Debug logging to understand the data structure.
-				console.info('Processing contactpersoon:', {
+				console.info('Processing contactPerson:', {
 					contactId,
 					data,
 					hasUser,
@@ -629,25 +629,25 @@ export default {
 				console.info('Convert to user result:', result)
 
 				// Replace the contactpersoon object with the updated one from the API
-				if (result.contactpersoon) {
+				if (result.contactPerson) {
 					// The API returns the contactpersoon object directly, we need to structure it properly
 					const updatedContactpersoon = {
 						id:
-							result.contactpersoon.id
-							|| result.contactpersoon['@self']?.id,
+							result.contactPerson.id
+							|| result.contactPerson['@self']?.id,
 
 						uuid:
-							result.contactpersoon.id
-							|| result.contactpersoon['@self']?.id,
+							result.contactPerson.id
+							|| result.contactPerson['@self']?.id,
 
 						data: {
-							voornaam: result.contactpersoon.voornaam,
-							achternaam: result.contactpersoon.achternaam,
-							'e-mailadres': result.contactpersoon['e-mailadres'],
-							name: result.contactpersoon.name,
-							organisatie: result.contactpersoon.organisatie,
-							username: result.contactpersoon.username,
-							groups: result.contactpersoon.groups || [],
+							voornaam: result.contactPerson.voornaam,
+							achternaam: result.contactPerson.achternaam,
+							'e-mailadres': result.contactPerson['e-mailadres'],
+							name: result.contactPerson.name,
+							organisatie: result.contactPerson.organisatie,
+							username: result.contactPerson.username,
+							groups: result.contactPerson.groups || [],
 						},
 
 						loading: false, // Clear loading state

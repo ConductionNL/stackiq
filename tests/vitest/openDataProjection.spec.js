@@ -22,7 +22,7 @@ describe('openDataProjection.projectOpenData', () => {
 		name: 'Petstore',
 		shortDescription: 'Demo app',
 		interneAnnotation: 'secret internal note',
-		contactpersoon: { voornaam: 'Jan', email: 'jan@example.org' },
+		contactPerson: { voornaam: 'Jan', email: 'jan@example.org' },
 		contactPersonProvider: { name: 'Aanbieder' },
 		registeredBy: 'someuser',
 	}
@@ -30,7 +30,7 @@ describe('openDataProjection.projectOpenData', () => {
 	it('strips PII and internal fields', () => {
 		const p = projectOpenData(entry)
 		expect(p.interneAnnotation).toBeUndefined()
-		expect(p.contactpersoon).toBeUndefined()
+		expect(p.contactPerson).toBeUndefined()
 		expect(p.contactPersonProvider).toBeUndefined()
 		expect(p.registeredBy).toBeUndefined()
 		expect(p.owner).toBeUndefined()
@@ -77,7 +77,7 @@ describe('openDataProjection.projectOpenData', () => {
 describe('openDataProjection.isClean', () => {
 	it('rejects an object still carrying a PII field', () => {
 		expect(isClean({ name: 'x', email: 'leak@x' })).toBe(false)
-		expect(isClean({ name: 'x', contactpersoon: {} })).toBe(false)
+		expect(isClean({ name: 'x', contactPerson: {} })).toBe(false)
 	})
 	it('accepts a clean object', () => {
 		expect(isClean({ name: 'x', uuid: 'u', license: 'CC0-1.0' })).toBe(true)

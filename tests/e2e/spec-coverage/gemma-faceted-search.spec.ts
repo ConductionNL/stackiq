@@ -153,7 +153,7 @@ test('facets: an unsupported schema is rejected with 400 naming the supported on
 	expect(message).toMatch(/dienst/)
 
 	// The supported set is also machine-readable, and must be exactly the two.
-	expect(body?.supportedSchemas?.sort?.()).toEqual(['dienst', 'module'])
+	expect(body?.supportedSchemas?.sort?.()).toEqual(['service', 'module'])
 
 	// Control: the same endpoint shape with a SUPPORTED schema is a 200, so the
 	// 400 above is about the schema and not about the route being broken.

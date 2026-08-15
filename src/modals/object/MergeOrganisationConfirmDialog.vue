@@ -151,9 +151,9 @@ export default {
 		 */
 		countRows() {
 			const labels = {
-				gebruik: t('softwarecatalog', 'Usage records'),
+				usage: t('softwarecatalog', 'Usage records'),
 				contract: t('softwarecatalog', 'Contracts'),
-				contactpersoon: t('softwarecatalog', 'Contact persons'),
+				contactPerson: t('softwarecatalog', 'Contact persons'),
 				aanbod: t('softwarecatalog', 'Offerings'),
 				compliancy: t('softwarecatalog', 'Compliance records'),
 				groupMembers: t('softwarecatalog', 'Group members'),

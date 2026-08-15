@@ -744,7 +744,7 @@ class AangebodenGebruikService {
 				'pages' => 0,
 				'limit' => 20,
 				'offset' => 0,
-				'error' => 'Failed to retrieve gebruik: ' . $e->getMessage(),
+				'error' => 'Failed to retrieve usage: ' . $e->getMessage(),
 			];
 		}//end try
 	}//end getSingleGebruikForAmbtenaar()
@@ -819,10 +819,10 @@ class AangebodenGebruikService {
 					$gebruikItems = $objectService->searchObjects($query, _rbac: false);
 
 					// Process and add to results.
-					foreach ($gebruikItems as $gebruik) {
-						$gebruikData = $gebruik;
-						if (is_array(value: $gebruik) === false) {
-							$gebruikData = $gebruik->jsonSerialize();
+					foreach ($gebruikItems as $usage) {
+						$gebruikData = $usage;
+						if (is_array(value: $usage) === false) {
+							$gebruikData = $usage->jsonSerialize();
 						}
 
 						$gebruikData['_filter_type'] = 'participants';
@@ -904,7 +904,7 @@ class AangebodenGebruikService {
 				return [
 					'success' => false,
 					'error' => 'Gebruik ID is required',
-					'gebruik' => null,
+					'usage' => null,
 				];
 			}
 
@@ -917,7 +917,7 @@ class AangebodenGebruikService {
 				return [
 					'success' => false,
 					'error' => 'No current organization available',
-					'gebruik' => null,
+					'usage' => null,
 				];
 			}
 
@@ -929,7 +929,7 @@ class AangebodenGebruikService {
 				return [
 					'success' => false,
 					'error' => 'Gebruik object not found',
-					'gebruik' => null,
+					'usage' => null,
 				];
 			}
 
@@ -962,7 +962,7 @@ class AangebodenGebruikService {
 				return [
 					'success' => false,
 					'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
-					'gebruik' => null,
+					'usage' => null,
 					'debug' => [
 						'afnemer_in_object' => $consumerInfo,
 						'resolved_afnemer_id' => $consumerId,
@@ -1018,7 +1018,7 @@ class AangebodenGebruikService {
 			return [
 				'success' => true,
 				'message' => 'Gebruik @self property updated successfully',
-				'gebruik' => $updatedGebruik->getObject(),
+				'usage' => $updatedGebruik->getObject(),
 				'updated_fields' => ['@self.organisation', '@self.owner'],
 			];
 		} catch (Exception $e) {
@@ -1033,8 +1033,8 @@ class AangebodenGebruikService {
 
 			return [
 				'success' => false,
-				'error' => 'Failed to update gebruik: ' . $e->getMessage(),
-				'gebruik' => null,
+				'error' => 'Failed to update usage: ' . $e->getMessage(),
+				'usage' => null,
 			];
 		}//end try
 	}//end setGebruikSelfToActiveOrg()
@@ -1808,7 +1808,7 @@ class AangebodenGebruikService {
 
 			return [
 				'success' => false,
-				'error' => 'Failed to delete gebruik: ' . $e->getMessage(),
+				'error' => 'Failed to delete usage: ' . $e->getMessage(),
 				'deleted' => false,
 			];
 		}//end try

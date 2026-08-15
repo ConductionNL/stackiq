@@ -208,7 +208,7 @@ class ContactpersonenController extends Controller {
 			$searchParams = [
 				'organisation' => $organisationId,
 				'_limit' => 100,
-				'_schema' => 'contactpersoon',
+				'_schema' => 'contactPerson',
 				// Let ObjectService resolve the schema.
 			];
 
@@ -410,7 +410,7 @@ class ContactpersonenController extends Controller {
 			$contactPersonObject = $objectService->find(
 				id: $contactPersonId,
 				register: 'voorzieningen',
-				schema: 'contactpersoon',
+				schema: 'contactPerson',
 				_rbac: true,
 				_multitenancy: true
 			);
@@ -556,7 +556,7 @@ class ContactpersonenController extends Controller {
 					'success' => true,
 					'message' => 'User account created successfully',
 					'username' => $user->getUID(),
-					'contactpersoon' => array_merge(
+					'contactPerson' => array_merge(
 						$contactPersonObject->jsonSerialize(),
 						[
 							'groups' => $userGroupNames,
@@ -989,7 +989,7 @@ class ContactpersonenController extends Controller {
 	 */
 	private function resolveContactOrganisation(object $objectService, string $username): ?string {
 		$results = $objectService->searchObjectsPaginated(
-			['username' => $username, '_limit' => 1, '_schema' => 'contactpersoon']
+			['username' => $username, '_limit' => 1, '_schema' => 'contactPerson']
 		);
 
 		if (empty($results['results']) === true) {
@@ -1207,7 +1207,7 @@ class ContactpersonenController extends Controller {
 			$contactObject = $objectService->find(
 				id: $contactPersonId,
 				register: 'voorzieningen',
-				schema: 'contactpersoon'
+				schema: 'contactPerson'
 			);
 
 			if ($contactObject === null) {
@@ -1733,7 +1733,7 @@ class ContactpersonenController extends Controller {
 			$searchParams = [
 				'username' => $userId,
 				'_limit' => 1,
-				'_schema' => 'contactpersoon',
+				'_schema' => 'contactPerson',
 			];
 
 			$contactpersonen = $objectService->searchObjectsPaginated($searchParams);

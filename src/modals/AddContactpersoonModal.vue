@@ -179,7 +179,7 @@ export default {
 			try {
 				// Get schema configuration for contactpersoon
 				const contactpersoonConfig =
-					objectStore.getSchemaConfig('contactpersoon')
+					objectStore.getSchemaConfig('contactPerson')
 
 				// Create new contactpersoon object with proper structure
 				const newContactpersoonObject = {
@@ -218,11 +218,11 @@ export default {
 					action: 'contactpersoonAdded',
 				})
 			} catch (error) {
-				console.error('Error adding contactpersoon:', error)
+				console.error('Error adding contactPerson:', error)
 				showError(
 					this.t(
 						'softwarecatalog',
-						'Failed to add contactpersoon: {error}',
+						'Failed to add contactPerson: {error}',
 						{ error: error.message },
 					),
 				)
@@ -263,7 +263,7 @@ export default {
 	line-height: 1.4;
 }
 
-.contactpersoon-form {
+.contactPerson-form {
 	width: 100%;
 }
 

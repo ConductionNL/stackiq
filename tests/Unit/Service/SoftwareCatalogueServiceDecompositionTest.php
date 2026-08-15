@@ -111,13 +111,13 @@ class SoftwareCatalogueServiceDecompositionTest extends TestCase {
 	public function testResolveVoorzieningenContextReturnsTupleWhenConfigured(): void {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getVoorzieningenRegisterId')->willReturn(3);
-		$settings->method('getSchemaIdForObjectType')->with('contactpersoon')->willReturn(11);
+		$settings->method('getSchemaIdForObjectType')->with('contactPerson')->willReturn(11);
 
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->never())->method('error');
 
 		$service = $this->buildService($settings, $logger);
-		$result = $this->callResolver($service, 'contactpersoon', 'contactpersonen');
+		$result = $this->callResolver($service, 'contactPerson', 'contactpersonen');
 
 		$this->assertSame(
 			[
@@ -146,7 +146,7 @@ class SoftwareCatalogueServiceDecompositionTest extends TestCase {
 			->with($this->stringContains('Register or schema not configured for contactpersonen'));
 
 		$service = $this->buildService($settings, $logger);
-		$this->assertNull($this->callResolver($service, 'contactpersoon', 'contactpersonen'));
+		$this->assertNull($this->callResolver($service, 'contactPerson', 'contactpersonen'));
 
 	}//end testResolveVoorzieningenContextReturnsNullWhenRegisterMissing()
 
@@ -195,7 +195,7 @@ class SoftwareCatalogueServiceDecompositionTest extends TestCase {
 			->with($this->stringContains('aangeboden gebruik'));
 
 		$service = $this->buildService($settings, $logger);
-		$this->assertNull($this->callResolver($service, 'gebruik', 'aangeboden gebruik'));
+		$this->assertNull($this->callResolver($service, 'usage', 'aangeboden gebruik'));
 
 	}//end testResolveVoorzieningenContextLogsContextLabelOnFailure()
 

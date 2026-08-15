@@ -98,7 +98,7 @@ class FacetService {
 	 *
 	 * @var string[]
 	 */
-	private const SUPPORTED_SCHEMAS = ['module', 'dienst'];
+	private const SUPPORTED_SCHEMAS = ['module', 'service'];
 
 	/**
 	 * GEMMA dimensions always present in the response (even when empty).
@@ -530,14 +530,14 @@ class FacetService {
 			return $modulesByObjectId;
 		}
 
-		// $schema === 'dienst': collect every referenced module identifier across
+		// $schema === 'service': collect every referenced module identifier across
 		// the bounded candidate set, then resolve them with one batch lookup.
 		$moduleIdsByDienstId = [];
 		$allModuleIds = [];
 
-		foreach ($baseObjects as $dienst) {
-			$dienstId = $this->objectIdentifier(object: $dienst);
-			$moduleIds = $this->extractRelatedIdentifiers(object: $dienst, field: 'modules');
+		foreach ($baseObjects as $service) {
+			$dienstId = $this->objectIdentifier(object: $service);
+			$moduleIds = $this->extractRelatedIdentifiers(object: $service, field: 'modules');
 
 			$moduleIdsByDienstId[$dienstId] = $moduleIds;
 			$allModuleIds = array_merge($allModuleIds, $moduleIds);

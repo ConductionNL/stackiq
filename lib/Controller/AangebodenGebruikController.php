@@ -672,7 +672,7 @@ class AangebodenGebruikController extends Controller {
 					[
 						'success' => false,
 						'error' => 'Gebruik ID is required',
-						'gebruik' => null,
+						'usage' => null,
 					],
 					400
 				);
@@ -732,7 +732,7 @@ class AangebodenGebruikController extends Controller {
 				[
 					'success' => false,
 					'error' => 'Internal server error: ' . $e->getMessage(),
-					'gebruik' => null,
+					'usage' => null,
 				],
 				500
 			);

@@ -63,7 +63,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 		$base = [
 			'components' => [
 				'schemas' => [
-					'beoordeeling' => [
+					'assessment' => [
 						'authorization' => [
 							'read' => ['public'],
 						],
@@ -75,7 +75,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 		$overlay = [
 			'components' => [
 				'schemas' => [
-					'beoordeeling' => [
+					'assessment' => [
 						'authorization' => [
 							'read' => [['group' => 'public', 'match' => ['status' => 'approved']]],
 							'create' => ['software-catalog-users'],
@@ -86,13 +86,13 @@ class DeepMergeAuthorizationTest extends TestCase {
 		];
 
 		$merged = $this->merge($base, $overlay);
-		$read = $merged['components']['schemas']['beoordeeling']['authorization']['read'];
+		$read = $merged['components']['schemas']['assessment']['authorization']['read'];
 
 		$this->assertSame([['group' => 'public', 'match' => ['status' => 'approved']]], $read);
 		$this->assertNotContains('public', $read, 'the merged read rule MUST NOT contain the bare "public" entry');
 		$this->assertSame(
 			['software-catalog-users'],
-			$merged['components']['schemas']['beoordeeling']['authorization']['create']
+			$merged['components']['schemas']['assessment']['authorization']['create']
 		);
 	}//end testAuthorizationListReplacesNotConcatenates()
 
@@ -108,7 +108,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 		$base = [
 			'components' => [
 				'schemas' => [
-					'beoordeeling' => [
+					'assessment' => [
 						'required' => ['name'],
 					],
 				],
@@ -118,7 +118,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 		$overlay = [
 			'components' => [
 				'schemas' => [
-					'beoordeeling' => [
+					'assessment' => [
 						'required' => ['rating'],
 					],
 				],
@@ -129,7 +129,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 
 		$this->assertSame(
 			['name', 'rating'],
-			$merged['components']['schemas']['beoordeeling']['required']
+			$merged['components']['schemas']['assessment']['required']
 		);
 	}//end testNonAuthorizationListsStillConcatenate()
 
@@ -148,7 +148,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 		$base = [
 			'components' => [
 				'schemas' => [
-					'beoordeeling' => [
+					'assessment' => [
 						'authorization' => [
 							'read' => ['public'],
 						],
@@ -162,7 +162,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 		$this->assertIsArray($fragment, 'catalog-ratings.json fragment MUST be valid JSON');
 
 		$merged = $this->merge($base, $fragment);
-		$auth = $merged['components']['schemas']['beoordeeling']['authorization'];
+		$auth = $merged['components']['schemas']['assessment']['authorization'];
 
 		$this->assertArrayHasKey('create', $auth);
 		$this->assertNotEmpty($auth['create']);
@@ -188,7 +188,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 	public function testUpdateAuthorizationExcludesBroadCatalogUserGroup(): void {
 		$fragmentPath = __DIR__ . '/../../../lib/Settings/register.d/catalog-ratings.json';
 		$fragment = json_decode((string)file_get_contents($fragmentPath), true);
-		$update = $fragment['components']['schemas']['beoordeeling']['authorization']['update'];
+		$update = $fragment['components']['schemas']['assessment']['authorization']['update'];
 
 		$this->assertNotContains('software-catalog-users', $update);
 		$this->assertNotContains('aanbod-beheerder', $update);
@@ -207,7 +207,7 @@ class DeepMergeAuthorizationTest extends TestCase {
 	public function testDeleteAuthorizationIsAdminOnly(): void {
 		$fragmentPath = __DIR__ . '/../../../lib/Settings/register.d/catalog-ratings.json';
 		$fragment = json_decode((string)file_get_contents($fragmentPath), true);
-		$delete = $fragment['components']['schemas']['beoordeeling']['authorization']['delete'];
+		$delete = $fragment['components']['schemas']['assessment']['authorization']['delete'];
 
 		$this->assertSame(['software-catalog-admins'], $delete);
 	}//end testDeleteAuthorizationIsAdminOnly()

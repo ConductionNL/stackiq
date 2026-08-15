@@ -48,9 +48,9 @@ class SoftwareCatalogEventListenerDecompositionTest extends TestCase {
 			static function (string $objectType): ?int {
 				return match ($objectType) {
 					'organisatie' => 12,
-					'contactpersoon' => 34,
+					'contactPerson' => 34,
 					'contactgegevens' => null,
-					'gebruik' => 56,
+					'usage' => 56,
 					default => null,
 				};
 			}
@@ -63,9 +63,9 @@ class SoftwareCatalogEventListenerDecompositionTest extends TestCase {
 		$this->assertSame(
 			[
 				'organisatie' => 12,
-				'contactpersoon' => 34,
+				'contactPerson' => 34,
 				'contactgegevens' => null,
-				'gebruik' => 56,
+				'usage' => 56,
 			],
 			$result
 		);
@@ -85,9 +85,9 @@ class SoftwareCatalogEventListenerDecompositionTest extends TestCase {
 		$this->assertSame(
 			[
 				'organisatie' => null,
-				'contactpersoon' => null,
+				'contactPerson' => null,
 				'contactgegevens' => null,
-				'gebruik' => null,
+				'usage' => null,
 			],
 			$result
 		);

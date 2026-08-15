@@ -2020,7 +2020,7 @@ class SoftwareCatalogueService {
 			}
 
 			// Get all contactpersonen for this organization.
-			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'contactpersoon', logContext: 'contactpersonen');
+			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'contactPerson', logContext: 'contactpersonen');
 			if ($ctx === null) {
 				return;
 			}
@@ -2103,7 +2103,7 @@ class SoftwareCatalogueService {
 			}
 
 			// Get all contactpersonen for this organization.
-			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'contactpersoon', logContext: 'contactpersonen');
+			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'contactPerson', logContext: 'contactpersonen');
 			if ($ctx === null) {
 				return;
 			}
@@ -2896,7 +2896,7 @@ class SoftwareCatalogueService {
 			// Get the primary contact person object.
 			$settingsService = $this->_container->get(SettingsService::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$contactPersonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
+			$contactPersonSchemaId = $settingsService->getSchemaIdForObjectType('contactPerson');
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
 
 			if ($registerId === null || $contactPersonSchemaId === null || $organisationSchemaId === false) {

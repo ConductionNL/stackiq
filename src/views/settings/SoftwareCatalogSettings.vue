@@ -98,7 +98,7 @@
 		     beoordeeling type, per catalog-ratings spec's "reuse the
 		     pattern, don't invent a second mechanism" requirement. -->
 		<ModerationQueue
-			type="beoordeeling"
+			type="assessment"
 			entityLabel="review"
 			:name="t('softwarecatalog', 'Review moderation')"
 			:description="

@@ -257,7 +257,7 @@ export default {
 		moduleVersie() {
 			const active =
 				typeof objectStore.getActiveObject === 'function'
-					? objectStore.getActiveObject('moduleVersie')
+					? objectStore.getActiveObject('moduleVersion')
 					: null
 			if (
 				active
@@ -268,7 +268,7 @@ export default {
 				return active
 			}
 			return (
-				(objectStore.getCollection('moduleVersie')?.results || []).find(
+				(objectStore.getCollection('moduleVersion')?.results || []).find(
 					(v) =>
 						resolveUuid(v.uuid ?? v.id ?? v['@self']?.id ?? v)
 						=== String(this.objectId),
@@ -285,10 +285,10 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-imported-components-persist-as-openregister-objects-scoped-to-a-moduleversie
 		 */
 		moduleVersieData() {
-			if (!this.moduleVersie) {
+			if (!this.moduleVersion) {
 				return {}
 			}
-			return this.moduleVersie.object || this.moduleVersie
+			return this.moduleVersion.object || this.moduleVersion
 		},
 
 		/**
@@ -313,7 +313,7 @@ export default {
 			return all
 				.filter(
 					(c) =>
-						resolveUuid((c.object || c).moduleVersie)
+						resolveUuid((c.object || c).moduleVersion)
 						=== String(this.objectId),
 				)
 				.slice()
@@ -331,7 +331,7 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-components-are-matched-against-existing-kwetsbaarheden-without-external-calls
 		 */
 		kwetsbaarheden() {
-			return objectStore.getCollection('kwetsbaarheid')?.results || []
+			return objectStore.getCollection('vulnerability')?.results || []
 		},
 
 		/**
@@ -474,8 +474,8 @@ export default {
 				}
 				await Promise.all([
 					this.fetchType('sbomComponent'),
-					this.fetchType('kwetsbaarheid'),
-					this.fetchType('moduleVersie'),
+					this.fetchType('vulnerability'),
+					this.fetchType('moduleVersion'),
 				])
 			} catch (error) {
 				// eslint-disable-next-line no-console
@@ -603,7 +603,7 @@ export default {
 				// Re-fetch so the replaced set (and provenance) render immediately.
 				await Promise.all([
 					objectStore.fetchCollection('sbomComponent', { _limit: 1000 }),
-					objectStore.fetchCollection('moduleVersie', { _limit: 1000 }),
+					objectStore.fetchCollection('moduleVersion', { _limit: 1000 }),
 				])
 			} catch (error) {
 				this.uploadError =

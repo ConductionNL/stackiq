@@ -26,8 +26,8 @@
  * `saveObject()` is PUT-semantic (omitting a field nulls it).
  *
  * Relation-field mapping (design.md "Database Changes"):
- * - gebruik: `afnemer` (scalar) and `deelnemers` (array) business fields.
- * - contactpersoon: `organisatie` (scalar) business field.
+ * - usage: `afnemer` (scalar) and `deelnemers` (array) business fields.
+ * - contactPerson: `organisatie` (scalar) business field.
  * - aanbod/koppeling: `koppeling.aanbieder` (scalar) business field. The
  *   `aanbod` bucket name is the domain umbrella term (see
  *   AanbodController); `koppeling` is the schema that actually carries an
@@ -109,9 +109,9 @@ class MergeOrganisatieService {
 	 * @var array<string, array{field: string, arrayField: string|null, schema?: string}>
 	 */
 	private const FIELD_RELATION_TYPES = [
-		'gebruik' => ['field' => 'consumer', 'arrayField' => 'participants'],
-		'contactpersoon' => ['field' => 'organisatie', 'arrayField' => null],
-		'aanbod' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'koppeling'],
+		'usage' => ['field' => 'consumer', 'arrayField' => 'participants'],
+		'contactPerson' => ['field' => 'organisatie', 'arrayField' => null],
+		'aanbod' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'connection'],
 	];
 
 	/**

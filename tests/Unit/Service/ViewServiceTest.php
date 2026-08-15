@@ -262,7 +262,7 @@ class ViewServiceTest extends TestCase {
 		);
 
 		$this->assertContains(needle: 'deelnames_gebruik', haystack: $result);
-		$this->assertNotContains(needle: 'gebruik', haystack: $result);
+		$this->assertNotContains(needle: 'usage', haystack: $result);
 	}//end testGetAppliedEnrichmentsIncludesDeelnamesWhenFlagSet()
 
 	/**
@@ -276,7 +276,7 @@ class ViewServiceTest extends TestCase {
 			args: [['include_gebruik' => true]]
 		);
 
-		$this->assertContains(needle: 'gebruik', haystack: $result);
+		$this->assertContains(needle: 'usage', haystack: $result);
 		$this->assertNotContains(needle: 'deelnames_gebruik', haystack: $result);
 	}//end testGetAppliedEnrichmentsIncludesGebruikWhenFlagSet()
 

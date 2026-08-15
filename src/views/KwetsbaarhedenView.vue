@@ -194,7 +194,7 @@ export default {
 	 * @spec openspec/specs/realtime-updates-ui/spec.md
 	 */
 	setup() {
-		useLiveCollections(objectStore, ['kwetsbaarheid', 'gebruik'])
+		useLiveCollections(objectStore, ['vulnerability', 'usage'])
 		return {}
 	},
 
@@ -213,7 +213,7 @@ export default {
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
 		vulnerabilities() {
-			return objectStore.getCollection('kwetsbaarheid')?.results || []
+			return objectStore.getCollection('vulnerability')?.results || []
 		},
 
 		/**
@@ -223,7 +223,7 @@ export default {
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
 		usages() {
-			return objectStore.getCollection('gebruik')?.results || []
+			return objectStore.getCollection('usage')?.results || []
 		},
 
 		/**
@@ -314,8 +314,8 @@ export default {
 					await objectStore.fetchSettings()
 				}
 				await Promise.all([
-					this.fetchType('kwetsbaarheid'),
-					this.fetchType('gebruik'),
+					this.fetchType('vulnerability'),
+					this.fetchType('usage'),
 				])
 			} catch (error) {
 				console.error('KwetsbaarhedenView: failed to load data', error)
@@ -379,7 +379,7 @@ export default {
 		 */
 		reportVulnerability() {
 			navigationStore.setTransferData('create')
-			navigationStore.setModal('kwetsbaarheid')
+			navigationStore.setModal('vulnerability')
 		},
 
 		/**
@@ -391,7 +391,7 @@ export default {
 		 */
 		editVulnerability(row) {
 			navigationStore.setTransferData(row.raw)
-			navigationStore.setModal('kwetsbaarheid')
+			navigationStore.setModal('vulnerability')
 		},
 
 		/**
@@ -404,7 +404,7 @@ export default {
 		deleteVulnerability(row) {
 			navigationStore.setTransferData(row.raw)
 			navigationStore.setDialog('deleteObject', {
-				objectType: 'kwetsbaarheid',
+				objectType: 'vulnerability',
 			})
 		},
 
@@ -418,10 +418,10 @@ export default {
 		 */
 		openDetail(row) {
 			if (typeof objectStore.setActiveObject === 'function') {
-				objectStore.setActiveObject('kwetsbaarheid', row.raw)
+				objectStore.setActiveObject('vulnerability', row.raw)
 			}
 			navigationStore.setTransferData(row.raw)
-			navigationStore.setModal('kwetsbaarheid')
+			navigationStore.setModal('vulnerability')
 		},
 	},
 }

@@ -189,7 +189,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 	 *
 	 * @param SettingsService $settingsService The settings service handle.
 	 *
-	 * @return array{organisatie:int|null, contactpersoon:int|null, contactgegevens:int|null, gebruik:int|null}
+	 * @return array{organisatie:int|null, contactPerson:int|null, contactgegevens:int|null, usage:int|null}
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-6
 	 */
@@ -204,9 +204,9 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		return [
 			'organisatie' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'organisatie')),
-			'contactpersoon' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'contactpersoon')),
+			'contactPerson' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'contactPerson')),
 			'contactgegevens' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'contactgegevens')),
-			'gebruik' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'gebruik')),
+			'usage' => $cast($settingsService->getSchemaIdForObjectType(objectType: 'usage')),
 		];
 	}//end resolveCatalogSchemaIds()
 
@@ -439,9 +439,9 @@ class SoftwareCatalogEventListener implements IEventListener {
 		// Get configuration for different object types.
 		$catalogSchemaIds = $this->resolveCatalogSchemaIds(settingsService: $settingsService);
 		$organisationSchemaId = $catalogSchemaIds['organisatie'];
-		$contactSchemaId = $catalogSchemaIds['contactpersoon'];
+		$contactSchemaId = $catalogSchemaIds['contactPerson'];
 		$contactInfoSchemaId = $catalogSchemaIds['contactgegevens'];
-		$gebruikSchemaId = $catalogSchemaIds['gebruik'];
+		$gebruikSchemaId = $catalogSchemaIds['usage'];
 
 		$logger->debug(
 			'SoftwareCatalog: Configuration lookup results',
@@ -513,9 +513,9 @@ class SoftwareCatalogEventListener implements IEventListener {
 				'registerId' => $objectRegisterId,
 				'supportedSchemas' => [
 					'organisatie' => $organisationSchemaId,
-					'contactpersoon' => $contactSchemaId,
+					'contactPerson' => $contactSchemaId,
 					'contactgegevens' => $contactInfoSchemaId,
-					'gebruik' => $gebruikSchemaId,
+					'usage' => $gebruikSchemaId,
 				],
 			]
 		);
@@ -654,7 +654,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		}//end if
 
 		// Handle contactpersoon updates.
-		$contactSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'contactpersoon');
+		$contactSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'contactPerson');
 		$cntSchemaIdInt = (int)$contactSchemaId;
 
 		if ($contactSchemaId !== null && $objectSchemaIdInt === $cntSchemaIdInt) {
@@ -741,7 +741,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		}//end if
 
 		// Handle gebruik updates.
-		$gebruikSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'gebruik');
+		$gebruikSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'usage');
 		$gebruikSchemaIdInt = (int)$gebruikSchemaId;
 
 		if ($gebruikSchemaId !== null && $objectSchemaIdInt === $gebruikSchemaIdInt) {
@@ -769,9 +769,9 @@ class SoftwareCatalogEventListener implements IEventListener {
 				'registerId' => $objectRegisterId,
 				'handledSchemas' => [
 					'organisatie' => $organisationSchemaId,
-					'contactpersoon' => $contactSchemaId,
+					'contactPerson' => $contactSchemaId,
 					'contactgegevens' => $contactInfoSchemaId,
-					'gebruik' => $gebruikSchemaId,
+					'usage' => $gebruikSchemaId,
 				],
 			]
 		);
@@ -831,7 +831,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		}//end if
 
 		// Handle contactpersoon deletion.
-		$contactSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'contactpersoon');
+		$contactSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'contactPerson');
 		$cntSchemaIdInt = (int)$contactSchemaId;
 
 		if ($contactSchemaId !== null && $objectSchemaIdInt === $cntSchemaIdInt) {
@@ -911,7 +911,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		}//end if
 
 		// Handle gebruik deletion.
-		$gebruikSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'gebruik');
+		$gebruikSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'usage');
 		$gebruikSchemaIdInt = (int)$gebruikSchemaId;
 
 		if ($gebruikSchemaId !== null && $objectSchemaIdInt === $gebruikSchemaIdInt) {
@@ -949,9 +949,9 @@ class SoftwareCatalogEventListener implements IEventListener {
 				'registerId' => $objectRegisterId,
 				'handledSchemas' => [
 					'organisatie' => $organisationSchemaId,
-					'contactpersoon' => $contactSchemaId,
+					'contactPerson' => $contactSchemaId,
 					'contactgegevens' => $contactInfoSchemaId,
-					'gebruik' => $gebruikSchemaId,
+					'usage' => $gebruikSchemaId,
 				],
 			]
 		);

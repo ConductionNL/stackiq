@@ -64,9 +64,9 @@ class ModuleEventProcessor {
 	public function resolveSchemaIds(): array {
 		return [
 			'organisatie' => $this->settings->getSchemaIdForObjectType(objectType: 'organisatie'),
-			'contactpersoon' => $this->settings->getSchemaIdForObjectType(objectType: 'contactpersoon'),
+			'contactPerson' => $this->settings->getSchemaIdForObjectType(objectType: 'contactPerson'),
 			'contactgegevens' => $this->settings->getSchemaIdForObjectType(objectType: 'contactgegevens'),
-			'gebruik' => $this->settings->getSchemaIdForObjectType(objectType: 'gebruik'),
+			'usage' => $this->settings->getSchemaIdForObjectType(objectType: 'usage'),
 		];
 	}//end resolveSchemaIds()
 

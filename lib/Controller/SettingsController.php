@@ -1684,7 +1684,7 @@ class SettingsController extends Controller {
 			$options = [
 				'modules' => $this->request->getParam('modules', 'true') === 'true',
 				'deelnames' => $this->request->getParam('deelnames', 'false') === 'true',
-				'gebruik' => $this->request->getParam('gebruik', 'false') === 'true',
+				'usage' => $this->request->getParam('usage', 'false') === 'true',
 			];
 
 			$result = $this->archiMateService->exportOrgArchiMate(organizationUuid: $organizationUuid, options: $options);

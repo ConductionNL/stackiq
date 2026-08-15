@@ -87,7 +87,7 @@ class SbomRegisterShapeTest extends TestCase {
 	 * @spec   openspec/specs/sbom-import/spec.md#scenario-a-successful-import-records-provenance-on-the-version
 	 */
 	public function testModuleVersieCarriesSbomProvenance(): void {
-		$props = $this->schema(slug: 'moduleVersie')['properties'] ?? [];
+		$props = $this->schema(slug: 'moduleVersion')['properties'] ?? [];
 		foreach (self::SBOM_PROVENANCE_PROPS as $field) {
 			$this->assertArrayHasKey(
 				key: $field,
@@ -134,7 +134,7 @@ class SbomRegisterShapeTest extends TestCase {
 	 * @spec   openspec/specs/sbom-import/spec.md#scenario-existing-versions-are-unaffected-by-the-schema-addition
 	 */
 	public function testSbomProvenanceIsOptional(): void {
-		$required = $this->schema(slug: 'moduleVersie')['required'] ?? [];
+		$required = $this->schema(slug: 'moduleVersion')['required'] ?? [];
 		foreach (self::SBOM_PROVENANCE_PROPS as $field) {
 			$this->assertNotContains(
 				needle: $field,
@@ -154,7 +154,7 @@ class SbomRegisterShapeTest extends TestCase {
 	public function testSbomComponentIsRegisteredInVoorzieningen(): void {
 		$sbomComponent = $this->schema(slug: 'sbomComponent');
 		$props = $sbomComponent['properties'] ?? [];
-		$this->assertArrayHasKey(key: 'moduleVersie', array: $props, message: 'sbomComponent must relate back to its moduleVersie');
+		$this->assertArrayHasKey(key: 'moduleVersion', array: $props, message: 'sbomComponent must relate back to its moduleVersie');
 
 		$voorzieningen = $this->register['components']['registers']['voorzieningen'] ?? [];
 		$this->assertContains(

@@ -1010,7 +1010,7 @@ class ContactPersonHandler {
 
 			// Get configuration values.
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$contactPersonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
+			$contactPersonSchemaId = $settingsService->getSchemaIdForObjectType('contactPerson');
 
 			if ($registerId === null || $contactPersonSchemaId === false) {
 				throw new \Exception('Register or schema ID not configured for contactpersoon');

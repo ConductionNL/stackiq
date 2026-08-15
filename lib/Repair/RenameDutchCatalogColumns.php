@@ -169,7 +169,7 @@ class RenameDutchCatalogColumns implements IRepairStep {
 		// TWO candidates — see firstSafeTarget(). On `organisatie` this is the
 		// BRIEF description and that schema declares `description` separately.
 		'omschrijving' => ['summary', 'description'],
-		'contactpersoon' => 'contact_person',
+		'contactPerson' => 'contact_person',
 		'publicationDate' => 'publication_date',
 		'depublicationDate' => 'depublication_date',
 		// Fleet vocabulary batch — snake_case, no rename chains, ambiguous
@@ -277,6 +277,10 @@ class RenameDutchCatalogColumns implements IRepairStep {
 		'pakketversie_beschrijving' => 'package_version_description',
 		'publiceren' => 'publish',
 		'titel_view_swc' => 'title_view_swc',
+		'bio_maatregel' => 'bio_measure',
+		'service' => 'service',
+		'usage' => 'usage',
+		'module_versie' => 'module_version',
 	];
 
 	/**

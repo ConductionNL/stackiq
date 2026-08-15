@@ -34,17 +34,17 @@ import { navigationStore } from '../store/store.js'
  * 'organisatie' is excluded because it has its own dedicated condition above.
  */
 const GENERIC_MODAL_OBJECT_TYPES = [
-	'contactpersoon',
-	'gebruik',
+	'contactPerson',
+	'usage',
 	'contract',
-	'koppeling',
+	'connection',
 	'module',
 	'suite',
-	'dienst',
-	'kwetsbaarheid',
-	'beoordeeling',
+	'service',
+	'vulnerability',
+	'assessment',
 	'compliancy',
-	'moduleVersie',
+	'moduleVersion',
 	'sector',
 ]
 

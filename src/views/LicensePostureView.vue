@@ -215,7 +215,7 @@ export default {
 	setup() {
 		useLiveCollections(objectStore, [
 			'module',
-			'gebruik',
+			'usage',
 			'organisatie',
 			'contract',
 		])
@@ -247,7 +247,7 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		usages() {
-			return objectStore.getCollection('gebruik')?.results || []
+			return objectStore.getCollection('usage')?.results || []
 		},
 
 		/**
@@ -434,7 +434,7 @@ export default {
 				}
 				await Promise.all([
 					this.fetchType('module'),
-					this.fetchType('gebruik'),
+					this.fetchType('usage'),
 					this.fetchType('organisatie'),
 					this.fetchType('contract'),
 				])

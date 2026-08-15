@@ -196,12 +196,12 @@
 				"_note": "ADR-062 rollout (round 2): this page did not exist before — organisatie objects (vendors, municipalities, collaborations) were only reachable as index cards with no detail view (codeberg softwarecatalog#76). Vendor/organisation archetype: the organisatie schema itself carries only catalogue-role fields (contactsUid, type, status, registratiestatus, samenwerkingtype, geregistreerdDoor, publicatie dates) because identity (name, website, e-mail, KvK) lives in the linked Nextcloud contact via contactsUid, not on this OR object — so the body leads with those 8 catalogue fields (2-col) rather than name/address. Top-right: a stats-block KPI card counting the organisation's own diensten, modules and contactpersonen (all FK-scoped via aanbieder/organisatie = @objectId) so a reader sees portfolio size at a glance without opening any list. Below: three FK object-lists — Services (dienst.aanbieder) and Applications (module.aanbieder) are the org's supply-side offerings; Contact persons (contactpersoon.organisatie) links to the existing ContactpersoonDetail page. Services still have no dedicated index/detail page (a real fleet gap, follow-up remains). Applications now do — bio-compliance-assessment added Modules/ModuleDetail (BBN level and DPIA tracking needed somewhere to live), so org-modules now carries `rowRoute: ModuleDetail` and a bbnLevel column; org-diensten's rowRoute stays intentionally omitted. An organisation does not communicate itself (contact happens through the linked NC contact), so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. Card-click navigation from the Organisaties index required a matching fix in OrganisatieCard.vue (the custom cardComponent never emitted the `click` event CnCardGrid/CnPageRenderer listen on for register+schema route resolution — clicking a card was previously a no-op).",
 				"widgets": [
 					{ "id": "org-data", "type": "data", "title": "Organisation", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "contactsUid", "type", "status", "registrationStatus", "samenwerkingtype", "registeredBy", "publicationDate", "depublicationDate" ] } },
-					{ "id": "org-stats-services", "type": "stats-block", "title": "Services", "icon": "ChartBar", "content": { "entries": [ { "title": "Services", "register": "@resolve:voorzieningen_register", "schema": "dienst", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
+					{ "id": "org-stats-services", "type": "stats-block", "title": "Services", "icon": "ChartBar", "content": { "entries": [ { "title": "Services", "register": "@resolve:voorzieningen_register", "schema": "service", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
 					{ "id": "org-stats-applications", "type": "stats-block", "title": "Applications", "icon": "ChartBar", "content": { "entries": [ { "title": "Applications", "register": "@resolve:voorzieningen_register", "schema": "module", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
-					{ "id": "org-stats-contact-persons", "type": "stats-block", "title": "Contact persons", "icon": "ChartBar", "content": { "entries": [ { "title": "Contact persons", "register": "@resolve:voorzieningen_register", "schema": "contactpersoon", "metric": "count", "filter": { "organisatie": "@objectId" } } ] } },
-					{ "id": "org-diensten", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "dienst", "filter": { "provider": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
+					{ "id": "org-stats-contact-persons", "type": "stats-block", "title": "Contact persons", "icon": "ChartBar", "content": { "entries": [ { "title": "Contact persons", "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "metric": "count", "filter": { "organisatie": "@objectId" } } ] } },
+					{ "id": "org-diensten", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "service", "filter": { "provider": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
 					{ "id": "org-modules", "type": "object-list", "title": "Applications", "icon": "Package", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "provider": "@objectId" }, "columns": [ { "key": "licentietype", "label": "License type" }, { "key": "bbnLevel", "label": "BBN level" } ], "limit": 25, "rowRoute": "ModuleDetail", "emptyText": "No applications registered for this organisation yet" } },
-					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactpersoon", "filter": { "organisatie": "@objectId" }, "columns": [ { "key": "role", "label": "Function" }, { "key": "roles", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
+					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "filter": { "organisatie": "@objectId" }, "columns": [ { "key": "role", "label": "Function" }, { "key": "roles", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "org-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
@@ -232,7 +232,7 @@
 			"title": "Contact roles",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "contactpersoon",
+				"schema": "contactPerson",
 				"columns": [
 					"contactsUid",
 					"role",
@@ -253,7 +253,7 @@
 			"title": "Contact role",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "contactpersoon",
+				"schema": "contactPerson",
 				"_note": "Person archetype (a contact ROLE at an organisation). Body leads with the person's role data (function, roles, notification preferences, the linked Nextcloud contactsUid) 8-wide, with a Related panel 4-wide surfacing the owning organisation and any records that reference this person. The contactpersoon schema declares NO email/calendar linkedType (communication is handled through the linked Nextcloud contact via contactsUid, not stored on this catalogue role), so per the comms hard-rule NO Emails/Meetings widgets are placed on the body. Audit trail is rarely consulted for a contact role, so it stays as a sidebar tab.",
 				"widgets": [
 					{ "id": "cp-data", "type": "data", "title": "Contact role", "icon": "AccountBoxOutline", "content": { "columns": 2 } },
@@ -287,7 +287,7 @@
 					{ "id": "md-files", "type": "integration", "integrationId": "files", "title": "Documentation", "icon": "BookOpenVariant" },
 					{ "id": "md-related", "type": "related", "title": "Vendor & services", "icon": "LinkVariant" },
 					{ "id": "md-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@objectId" }, "columns": [ { "key": "standardVersion", "label": "Standard" }, { "key": "bioMaatregel", "label": "BIO measure" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
-					{ "id": "md-versions", "type": "object-list", "title": "Application versions", "icon": "SourceBranch", "content": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersie", "filter": { "module": "@objectId" }, "columns": [ { "key": "version", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ModuleversieDetail", "allowCreate": false, "emptyText": "No versions registered yet" } }
+					{ "id": "md-versions", "type": "object-list", "title": "Application versions", "icon": "SourceBranch", "content": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersion", "filter": { "module": "@objectId" }, "columns": [ { "key": "version", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ModuleversieDetail", "allowCreate": false, "emptyText": "No versions registered yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "md-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
@@ -438,7 +438,7 @@
 			"_note": "Faceted index page (gemma-faceted-search) — see the Modules page's _note; identical component, schema: dienst. GEMMA links are transitive via dienst.modules (FacetService resolves them server-side).",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "dienst",
+				"schema": "service",
 				"description": "Browse the service (dienst) catalogue, filtered by GEMMA architecture dimension.",
 				"columns": [
 					"name",
@@ -544,7 +544,7 @@
 			"title": "BIO measures",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "bioMaatregel",
+				"schema": "bioMeasure",
 				"columns": [
 					"code",
 					"name",
@@ -567,11 +567,11 @@
 			"title": "BIO measure",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "bioMaatregel",
+				"schema": "bioMeasure",
 				"_note": "Catalog archetype (a BIO 2.0 measure), mirroring StandaardDetail's shape for the parallel bioMaatregel relation (design.md Decision 1: compliancy links to a standaardversie OR a bioMaatregel, never a third parallel model). Body: measure data 8-wide (code, naam, omschrijving, thema, bioVersie, bbnNiveau, bron). Below, a compliancy object-list shows every compliance claim referencing this measure (compliancy.bioMaatregel = @objectId), mirroring how StandaardDetail's st-compliance widget shows claims for a standard.",
 				"widgets": [
 					{ "id": "bm-data", "type": "data", "title": "BIO measure", "icon": "ShieldCheckOutline", "content": { "columns": 2 } },
-					{ "id": "bm-compliance", "type": "object-list", "title": "Compliance claims for this measure", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "bioMaatregel": "@objectId" }, "columns": [ { "key": "module", "label": "Module" }, { "key": "url", "label": "Evidence URL" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } }
+					{ "id": "bm-compliance", "type": "object-list", "title": "Compliance claims for this measure", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "bioMeasure": "@objectId" }, "columns": [ { "key": "module", "label": "Module" }, { "key": "url", "label": "Evidence URL" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "bm-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 4 },
@@ -594,7 +594,7 @@
 			"title": "Reviews",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "beoordeeling",
+				"schema": "assessment",
 				"columns": [
 					"name",
 					"auteur",
@@ -615,10 +615,10 @@
 			"title": "Review",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "beoordeeling",
+				"schema": "assessment",
 				"_note": "Review / assessment archetype (beoordeeling). A review is read for its verdict then its subject: body leads with the review data (name, short + long markdown description, score) 8-wide left, a prominent score stat (waardering) top-right, and a Related panel + supporting-evidence Files panel stacked beneath it surfacing the reviewed subjects — the beoordeeling links modules[], diensten[] and koppelingen[] (the things assessed) plus its gebruik context. A review does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. FIX (softwarecatalog audit): rv-data (Review) now anchors gridX0/gridY0 so the left column starts flush with the right column instead of a whitespace hole opening up beside the score stat; rv-score/rv-related/rv-files were re-stacked in the right column to match rv-data's height. rv-related's title shortened from 'Reviewed modules & services' (truncated to 'Reviewed modules & s…' in the widget header) to 'Reviewed modules'.",
 				"widgets": [
-					{ "id": "rv-score", "type": "stat", "title": "Rating", "icon": "Star", "content": { "label": "Rating", "icon": "Star", "source": { "register": "@resolve:voorzieningen_register", "schema": "beoordeeling", "metric": "avg", "field": "rating", "filter": { "id": "@objectId" } } } },
+					{ "id": "rv-score", "type": "stat", "title": "Rating", "icon": "Star", "content": { "label": "Rating", "icon": "Star", "source": { "register": "@resolve:voorzieningen_register", "schema": "assessment", "metric": "avg", "field": "rating", "filter": { "id": "@objectId" } } } },
 					{ "id": "rv-data", "type": "data", "title": "Review", "icon": "NoteTextOutline", "content": { "columns": 2 } },
 					{ "id": "rv-related", "type": "related", "title": "Reviewed modules", "icon": "LinkVariant" },
 					{ "id": "rv-files", "type": "integration", "integrationId": "files", "title": "Supporting evidence", "icon": "FolderOutline" }
@@ -704,7 +704,7 @@
 			"title": "Module versions",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "moduleVersie",
+				"schema": "moduleVersion",
 				"columns": [
 					"version",
 					"module",
@@ -726,7 +726,7 @@
 			"title": "Module version",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "moduleVersie",
+				"schema": "moduleVersion",
 				"_note": "Catalog / release archetype (moduleVersie — a released version of a module). Two questions dominate: what is this release and where is it in its lifecycle. Body: version data 8-wide (versie, package description, short + long markdown, status, geregistreerdDoor and the four lifecycle dates: in ontwikkeling / in gebruik / einde ondersteuning / teruggetrokken) with a Related panel 4-wide surfacing the parent module and its usages (gebruiken). Below, a compliancy object-list shows every compliance claim recorded against the parent module (compliance is tracked at module level via module.compliancy), and a release-notes / package Files panel holds changelogs and artefacts. A module version does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
 					{ "id": "mv-data", "type": "data", "title": "Version details", "icon": "Package", "content": { "columns": 2 } },
@@ -766,7 +766,7 @@
 			"title": "Vulnerability",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "kwetsbaarheid",
+				"schema": "vulnerability",
 				"_note": "Vulnerability detail. Body: the vulnerability data (naam, cveCode, cvssScore, short + long description) 8-wide with a Related panel 4-wide surfacing the affected applications (kwetsbaarheid.modules). An Exposure sidebar tab renders VulnerabilityExposurePanel — the read-time join to the in-production usages exposed to this CVE, each with its consuming organisation (afnemer) and deployed version (computed on demand, never stored). A vulnerability does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
 					{ "id": "kw-data", "type": "data", "title": "Vulnerability", "content": { "columns": 2 } },

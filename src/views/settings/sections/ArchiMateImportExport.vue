@@ -955,7 +955,7 @@ export default {
 				const params = new URLSearchParams()
 				params.set('modules', String(this.includeModules))
 				params.set('deelnames', String(this.includeDeelnames))
-				params.set('gebruik', String(this.includeGebruik))
+				params.set('usage', String(this.includeGebruik))
 
 				const url = `/index.php/apps/softwarecatalog/api/archimate/export/organization/${encodeURIComponent(orgUuid)}?${params.toString()}`
 

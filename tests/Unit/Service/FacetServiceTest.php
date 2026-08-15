@@ -697,7 +697,7 @@ class FacetServiceTest extends TestCase {
 
 		$service = $this->makeService(objectService: $objectService, archiMateService: $archiMateService);
 
-		$result = $service->getFacets(schema: 'dienst');
+		$result = $service->getFacets(schema: 'service');
 
 		$refCompByValue = array_column($result['referentiecomponent'], 'count', 'value');
 		$this->assertSame(1, $refCompByValue['Zaakregistratiecomponent']);
@@ -752,7 +752,7 @@ class FacetServiceTest extends TestCase {
 
 		$service = $this->makeService(objectService: $objectService, archiMateService: $archiMateService);
 
-		$result = $service->getFacets(schema: 'dienst');
+		$result = $service->getFacets(schema: 'service');
 
 		$refCompByValue = array_column($result['referentiecomponent'], 'count', 'value');
 		$this->assertSame(1, $refCompByValue['Zaakregistratiecomponent']);

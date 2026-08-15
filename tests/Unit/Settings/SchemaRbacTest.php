@@ -73,8 +73,8 @@ class SchemaRbacTest extends TestCase {
 	 */
 	public static function schemaProvider(): array {
 		return [
-			'gebruik' => ['gebruik'],
-			'koppeling' => ['koppeling'],
+			'usage' => ['usage'],
+			'connection' => ['connection'],
 			'organisatie' => ['organisatie'],
 		];
 
@@ -144,7 +144,7 @@ class SchemaRbacTest extends TestCase {
 	 * @return void
 	 */
 	public function testGebruikBeheerderReadOnGebruikIsAlsoAfnemerScoped(): void {
-		$authorization = $this->loadAuthorization('gebruik');
+		$authorization = $this->loadAuthorization('usage');
 
 		$consumerScoped = array_values(
 			array_filter(
@@ -171,7 +171,7 @@ class SchemaRbacTest extends TestCase {
 	 * @return void
 	 */
 	public function testAanbodBeheerderGrantsAreUntouchedOnGebruikAndKoppeling(): void {
-		foreach (['gebruik', 'koppeling'] as $schemaName) {
+		foreach (['usage', 'connection'] as $schemaName) {
 			$authorization = $this->loadAuthorization($schemaName);
 
 			$organisationScoped = array_values(
@@ -209,7 +209,7 @@ class SchemaRbacTest extends TestCase {
 	 */
 	public function testPublicGrantsAreUntouchedOnOrganisatieAndKoppeling(): void {
 		$organisation = $this->loadAuthorization('organisatie');
-		$integration = $this->loadAuthorization('koppeling');
+		$integration = $this->loadAuthorization('connection');
 
 		$publicEntries = array_values(
 			array_filter(

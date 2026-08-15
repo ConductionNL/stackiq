@@ -34,7 +34,7 @@
  * @type {Array<string>}
  */
 const STRIPPED_FIELDS = Object.freeze([
-	'contactpersoon',
+	'contactPerson',
 	'contactpersonen',
 	'contactPersonProvider',
 	'contactPersonUser',
@@ -82,7 +82,7 @@ function isStripped(name) {
 	const lower = String(name).toLowerCase()
 	return (
 		STRIPPED_FIELDS.some((f) => f.toLowerCase() === lower)
-		|| lower.startsWith('contactpersoon')
+		|| lower.startsWith('contactPerson')
 	)
 }
 

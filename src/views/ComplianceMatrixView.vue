@@ -6,7 +6,7 @@
 			</h2>
 			<p class="cmv-intro">
 				{{
-					columnSource === 'bioMaatregel'
+					columnSource === 'bioMeasure'
 						? t(
 								'softwarecatalog',
 								"Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.",
@@ -43,7 +43,7 @@
 			</NcCheckboxRadioSwitch>
 			<NcCheckboxRadioSwitch
 				v-model="columnSource"
-				value="bioMaatregel"
+				value="bioMeasure"
 				name="cmv-columnSource"
 				type="radio">
 				{{ t('softwarecatalog', 'BIO measures') }}
@@ -59,12 +59,12 @@
 				:multiple="true"
 				:closeOnSelect="false"
 				:inputLabel="
-					columnSource === 'bioMaatregel'
+					columnSource === 'bioMeasure'
 						? t('softwarecatalog', 'BIO measures')
 						: t('softwarecatalog', 'Standards')
 				"
 				:placeholder="
-					columnSource === 'bioMaatregel'
+					columnSource === 'bioMeasure'
 						? t('softwarecatalog', 'Select one or more BIO measures')
 						: t('softwarecatalog', 'Select one or more standards')
 				"
@@ -92,12 +92,12 @@
 		<NcEmptyContent
 			v-if="!loading && noColumnsImported"
 			:name="
-				columnSource === 'bioMaatregel'
+				columnSource === 'bioMeasure'
 					? t('softwarecatalog', 'No BIO measures seeded')
 					: t('softwarecatalog', 'No standards imported')
 			"
 			:description="
-				columnSource === 'bioMaatregel'
+				columnSource === 'bioMeasure'
 					? t(
 							'softwarecatalog',
 							'The BIO measures catalog is seeded on install/upgrade. Refresh, or check the BIO measures catalog.',
@@ -115,7 +115,7 @@
 		<NcEmptyContent
 			v-else-if="!loading && selectedColumns.length === 0"
 			:name="
-				columnSource === 'bioMaatregel'
+				columnSource === 'bioMeasure'
 					? t('softwarecatalog', 'Select BIO measures to compare')
 					: t('softwarecatalog', 'Select standards to compare')
 			"
@@ -153,10 +153,10 @@
 						<th scope="col">
 							{{ t('softwarecatalog', 'Module') }}
 						</th>
-						<th v-if="columnSource === 'bioMaatregel'" scope="col">
+						<th v-if="columnSource === 'bioMeasure'" scope="col">
 							{{ t('softwarecatalog', 'BBN level') }}
 						</th>
-						<th v-if="columnSource === 'bioMaatregel'" scope="col">
+						<th v-if="columnSource === 'bioMeasure'" scope="col">
 							{{ t('softwarecatalog', 'DPIA status') }}
 						</th>
 						<th
@@ -173,12 +173,12 @@
 							{{ moduleLabel(row.module) }}
 						</th>
 						<td
-							v-if="columnSource === 'bioMaatregel'"
+							v-if="columnSource === 'bioMeasure'"
 							class="cmv-cell cmv-cell--meta">
 							{{ bbnLevelLabel(row.module) }}
 						</td>
 						<td
-							v-if="columnSource === 'bioMaatregel'"
+							v-if="columnSource === 'bioMeasure'"
 							class="cmv-cell cmv-cell--meta">
 							{{ dpiaStatusLabel(row.module) }}
 						</td>
@@ -330,8 +330,8 @@ export default {
 			'module',
 			'compliancy',
 			'element',
-			'bioMaatregel',
-			'gebruik',
+			'bioMeasure',
+			'usage',
 			'organisatie',
 		])
 		return {}
@@ -389,7 +389,7 @@ export default {
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog
 		 */
 		bioMaatregelen() {
-			return objectStore.getCollection('bioMaatregel')?.results || []
+			return objectStore.getCollection('bioMeasure')?.results || []
 		},
 
 		/**
@@ -400,7 +400,7 @@ export default {
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md#requirement-organisation-bio-coverage-is-reportable
 		 */
 		usages() {
-			return objectStore.getCollection('gebruik')?.results || []
+			return objectStore.getCollection('usage')?.results || []
 		},
 
 		/**
@@ -626,8 +626,8 @@ export default {
 					this.fetchType('module'),
 					this.fetchType('compliancy'),
 					this.fetchType('element'),
-					this.fetchType('bioMaatregel'),
-					this.fetchType('gebruik'),
+					this.fetchType('bioMeasure'),
+					this.fetchType('usage'),
 					this.fetchType('organisatie'),
 				])
 			} catch (error) {
