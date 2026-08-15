@@ -49,16 +49,20 @@ webpackConfig.output = {
 // still producing a green build.
 //
 // The sibling is validated against THIS app's own declared range, not a
-// hand-rolled version test. The previous check required `startsWith('2.')` on the
-// theory that the Vue 2 line was 1.x — true when written, false since. Today BOTH
-// lines are major 2:
+// hand-rolled version test. The previous check required `startsWith('2.')`, on
+// the premise that a bad sibling would be 1.x. The sibling checkout today is
+// 2.0.5 while this app declares 2.2.0-vue3.16 — both start with "2.", so the test
+// waved through a version the app never asked for.
 //
-//     Vue 2 line   2.0.5
-//     Vue 3 line   2.2.0-vue3.16
+// The failure that skew produces is not obvious from the version alone. Building
+// against the sibling also pulls packages out of the SIBLING's node_modules, and
+// a stale vue-demi shim there (its postinstall picks v2/v2.7/v3 and does not
+// re-run on `npm install`) yields 13 errors of the form
+//   export 'default' (imported as 'Vue') was not found in 'vue'
+// — a Vue-2-shaped failure from a library that is itself Vue 3.
 //
-// so any major-based test passes the Vue 2 library straight through, which is
-// exactly what it existed to prevent. Comparing against the declared range needs
-// no maintenance when the 3.x line ships — the range moves with it.
+// Comparing against the declared range sidesteps the whole question: a sibling
+// the app did not ask for is refused, whatever is wrong with it.
 //
 // Fail CLOSED: if the check cannot run (semver unresolvable, package unreadable)
 // the sibling is refused. A guard that degrades to "allow" is not a guard.
