@@ -1456,12 +1456,12 @@
             "items": {
               "type": "string",
               "enum": [
-                "Functioneel beheer",
-                "Applicatiebeheer",
-                "Technisch beheer",
-                "Implementatieondersteuning",
-                "Opleidingen",
-                "Licentiereseller"
+                "Functional management",
+                "Application management",
+                "Technical management",
+                "Implementation support",
+                "Training",
+                "Licence reseller"
               ]
             },
             "required": true,
@@ -2307,9 +2307,9 @@
             },
             "oneOf": [],
             "enum": [
-              "Gemeente",
-              "Leverancier",
-              "Samenwerking",
+              "Municipality",
+              "Supplier",
+              "Collaboration",
               "Community"
             ],
             "hideOnCollection": true
@@ -2344,10 +2344,10 @@
             },
             "oneOf": [],
             "enum": [
-              "Concept",
-              "Actief",
-              "Deactief",
-              "samengevoegd"
+              "Draft",
+              "Active",
+              "Inactive",
+              "merged"
             ]
           },
           "mergedInto": {
@@ -2421,21 +2421,21 @@
             },
             "oneOf": [],
             "enum": [
-              "Uitvoeringsorganisatie",
-              "Sociaal Domein samenwerking",
+              "Implementing organisation",
+              "Social Domain collaboration",
               "Shared Service Center",
               "samenwerkingtype",
-              "Omgevingsdienst",
-              "ICT (bijvoorbeeld Shared Service Center)",
-              "Gemeentelijke herindeling (gepland)",
-              "Gemeenschappelijke Regeling (samenwerking meerdere domeinen)",
-              "Gemeenschappelijke Regeling",
+              "Environmental agency",
+              "ICT (for example Shared Service Center)",
+              "Municipal reorganisation (planned)",
+              "Joint Arrangement (collaboration across multiple domains)",
+              "Joint Arrangement",
               "DVO",
-              "Centrumgemeenteregeling",
-              "Belastingsamenwerking",
-              "Bedrijfsvoeringsorganisatie",
-              "Archiefdienst (regionaal)",
-              "Ambtelijke fusie"
+              "Central municipality arrangement",
+              "Tax collaboration",
+              "Operations organisation",
+              "Archive service (regional)",
+              "Administrative merger"
             ]
           },
           "registeredBy": {
@@ -2447,10 +2447,10 @@
             "visible": false,
             "hideOnForm": true,
             "enum": [
-              "Gemeente",
-              "Applicatie",
-              "Samenwerking",
-              "Leverancier"
+              "Municipality",
+              "Application",
+              "Collaboration",
+              "Supplier"
             ]
           }
         },
@@ -2502,22 +2502,22 @@
             {
               "group": "public",
               "match": {
-                "registeredBy": "Leverancier",
-                "status": "Actief"
+                "registeredBy": "Supplier",
+                "status": "Active"
               }
             },
             {
               "group": "public",
               "match": {
-                "type": "Gemeente",
-                "status": "Actief"
+                "type": "Municipality",
+                "status": "Active"
               }
             },
             {
               "group": "public",
               "match": {
-                "type": "Samenwerking",
-                "status": "Actief"
+                "type": "Collaboration",
+                "status": "Active"
               }
             }
           ],
@@ -2887,11 +2887,11 @@
             },
             "oneOf": [],
             "enum": [
-              "Verwerving",
-              "Gepland",
-              "In productie",
-              "Uit te faseren",
-              "Uitgefaseerd"
+              "Acquisition",
+              "Planned",
+              "In production",
+              "To be phased out",
+              "Phased out"
             ],
             "facetable": false,
             "title": "Status",
@@ -3326,8 +3326,8 @@
             "type": "string",
             "enum": [
               "SLA",
-              "Licentie",
-              "Onderhoud"
+              "Licence",
+              "Maintenance"
             ],
             "description": "Het type contract",
             "facetable": false,
@@ -3347,9 +3347,9 @@
           "costPeriod": {
             "type": "string",
             "enum": [
-              "Maandelijks",
-              "Jaarlijks",
-              "Eenmalig"
+              "Monthly",
+              "Annually",
+              "One-off"
             ],
             "description": "De periode waarop de kosten betrekking hebben",
             "facetable": false,
@@ -3412,9 +3412,9 @@
           "status": {
             "type": "string",
             "enum": [
-              "Actief",
-              "Verlopen",
-              "In onderhandeling"
+              "Active",
+              "Expired",
+              "In negotiation"
             ],
             "description": "De status van het contract",
             "facetable": false,
@@ -3597,11 +3597,11 @@
             "facetable": false,
             "title": "Transport protocol",
             "enum": [
-              "n.v.t.",
-              "bestandsoverdracht",
+              "n/a",
+              "file transfer",
               "digikoppeling",
               "message que",
-              "upload naar portaal",
+              "upload to portal",
               "webservices",
               "api"
             ],
@@ -3618,10 +3618,10 @@
               "default": true
             },
             "enum": [
-              "in ontwikkeling",
-              "in gebruik",
-              "einde ondersteuning",
-              "teruggetrokken"
+              "in development",
+              "in use",
+              "end of support",
+              "withdrawn"
             ]
           },
           "dateInDevelopment": {
@@ -3665,9 +3665,9 @@
             "facetable": false,
             "required": true,
             "enum": [
-              "AnaarB",
-              "BnaarA",
-              "bi-directioneel"
+              "AtoB",
+              "BtoA",
+              "bi-directional"
             ]
           },
           "moduleA": {
@@ -3781,10 +3781,10 @@
             "visible": false,
             "hideOnForm": true,
             "enum": [
-              "Gemeente",
-              "Applicatie",
-              "Samenwerking",
-              "Leverancier"
+              "Municipality",
+              "Application",
+              "Collaboration",
+              "Supplier"
             ],
             "table": {
               "enabled": true,
@@ -3803,8 +3803,8 @@
             "default": "{{ buitengemeentelijkVoorziening | ifFilled: extern, intern }}",
             "defaultBehavior": "always",
             "enum": [
-              "extern",
-              "intern"
+              "external",
+              "internal"
             ]
           },
           "publicationDate": {
@@ -6857,7 +6857,7 @@
               "NL",
               "EU",
               "US",
-              "Elders"
+              "Elsewhere"
             ],
             "facetable": true,
             "title": "Jurisdiction",
@@ -6872,7 +6872,7 @@
               "NL",
               "EU",
               "US",
-              "Elders"
+              "Elsewhere"
             ],
             "facetable": true,
             "title": "Hosting location",
@@ -6944,8 +6944,8 @@
               "MIT License",
               "GNU General Public License (GPL)",
               "Apache License 2.0",
-              "BSD Licentie (Berkeley Software Distribution)",
-              "European Union Public Licence (EUPL), versie 1.2"
+              "BSD License (Berkeley Software Distribution)",
+              "European Union Public Licence (EUPL), version 1.2"
             ],
             "licence": "License",
             "title": "License"
@@ -6976,8 +6976,8 @@
             "title": "Type",
             "default": "Applicatie",
             "enum": [
-              "Applicatie",
-              "Systeemsoftware"
+              "Application",
+              "System software"
             ]
           },
           "logo": {
@@ -7151,10 +7151,10 @@
             "visible": false,
             "hideOnForm": true,
             "enum": [
-              "Gemeente",
-              "Applicatie",
-              "Samenwerking",
-              "Leverancier"
+              "Municipality",
+              "Application",
+              "Collaboration",
+              "Supplier"
             ]
           },
           "publicationDate": {
@@ -7284,7 +7284,7 @@
             {
               "group": "public",
               "match": {
-                "registeredBy": "Leverancier"
+                "registeredBy": "Supplier"
               }
             }
           ]
@@ -7690,10 +7690,10 @@
             "order": 13,
             "title": "Status",
             "enum": [
-              "in ontwikkeling",
-              "in gebruik",
-              "einde ondersteuning",
-              "teruggetrokken"
+              "in development",
+              "in use",
+              "end of support",
+              "withdrawn"
             ],
             "default": "in gebruik"
           },
@@ -7751,10 +7751,10 @@
             "visible": false,
             "hideOnForm": true,
             "enum": [
-              "Gemeente",
-              "Applicatie",
-              "Samenwerking",
-              "Leverancier"
+              "Municipality",
+              "Application",
+              "Collaboration",
+              "Supplier"
             ]
           },
           "eolSource": {

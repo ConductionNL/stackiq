@@ -199,6 +199,6 @@ class SoftwareCatalogEventListenerDecompositionTest extends TestCase {
 		$this->assertFalse($method->invoke($this->listener, 'pending'));
 		$this->assertFalse($method->invoke($this->listener, ''));
 		// Caller is expected to lowercase first; helper does not.
-		$this->assertFalse($method->invoke($this->listener, 'Actief'));
+		$this->assertFalse($method->invoke($this->listener, 'Active'));
 	}
 }

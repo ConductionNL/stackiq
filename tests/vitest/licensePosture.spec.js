@@ -107,9 +107,9 @@ describe('licensePosture.portfolioPosture', () => {
 describe('licensePosture.perVendorRollup', () => {
 	const contracts = [
 		// A monthly contract on G1 (vendor VA usage) → 100 × 12 = 1200/yr.
-		{ usage: 'G1', cost: 100, costPeriod: 'Maandelijks' },
+		{ usage: 'G1', cost: 100, costPeriod: 'Monthly' },
 		// A yearly contract on G3 (vendor VA usage) → 500/yr.
-		{ usage: 'G3', cost: 500, costPeriod: 'Jaarlijks' },
+		{ usage: 'G3', cost: 500, costPeriod: 'Annually' },
 	]
 
 	it('groups by vendor with deployments, mix and consumed annual cost', () => {

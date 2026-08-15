@@ -3,7 +3,7 @@
 /**
  * Unit tests for OrganisatieService::mapStatus() — organisation-merge tombstone status.
  *
- * Covers the organisatie-service spec delta: `mapStatus('samengevoegd')`
+ * Covers the organisatie-service spec delta: `mapStatus('merged')`
  * MUST return `false` (a merged-away organisation is never reported as
  * active on the OR core Organisation entity), while existing
  * actief/inactief/unknown behaviour is unchanged.
@@ -66,7 +66,7 @@ class OrganisatieServiceMapStatusMergeTest extends TestCase {
 	}//end makeService()
 
 	/**
-	 * `mapStatus('samengevoegd')` MUST return false — a merged-away
+	 * `mapStatus('merged')` MUST return false — a merged-away
 	 * organisation is never reported as active.
 	 *
 	 * @return void
@@ -77,7 +77,7 @@ class OrganisatieServiceMapStatusMergeTest extends TestCase {
 		$method = new ReflectionMethod($service, 'mapStatus');
 		$method->setAccessible(true);
 
-		$this->assertFalse($method->invoke($service, 'samengevoegd'));
+		$this->assertFalse($method->invoke($service, 'merged'));
 	}//end testMapStatusMergedReturnsFalse()
 
 	/**
@@ -91,7 +91,7 @@ class OrganisatieServiceMapStatusMergeTest extends TestCase {
 		$method = new ReflectionMethod($service, 'mapStatus');
 		$method->setAccessible(true);
 
-		$this->assertTrue($method->invoke($service, 'Actief'));
+		$this->assertTrue($method->invoke($service, 'Active'));
 		$this->assertFalse($method->invoke($service, ' inactief '));
 		$this->assertFalse($method->invoke($service, 'deactief'));
 		$this->assertTrue($method->invoke($service, 'pending'));
@@ -99,7 +99,7 @@ class OrganisatieServiceMapStatusMergeTest extends TestCase {
 
 	/**
 	 * Tombstoning via merge (`updateOrganizationStatus(..., ['beoordeling' =>
-	 * 'samengevoegd'])`) also deactivates the OR core Organisation entity.
+	 * 'merged'])`) also deactivates the OR core Organisation entity.
 	 *
 	 * @return void
 	 */
@@ -121,7 +121,7 @@ class OrganisatieServiceMapStatusMergeTest extends TestCase {
 
 		$service = $this->makeService($container, new NullLogger());
 
-		$result = $service->updateOrganizationStatus('uuid-1', ['beoordeling' => 'samengevoegd']);
+		$result = $service->updateOrganizationStatus('uuid-1', ['beoordeling' => 'merged']);
 
 		$this->assertTrue($result);
 		$this->assertFalse($entity->isActive());

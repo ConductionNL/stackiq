@@ -126,6 +126,14 @@ Vrij en open source onder de EUPL-licentie.
 				Idempotent, non-destructive, and refuses ambiguous renames.
 			-->
 			<step>OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns</step>
+			<!--
+				After the column rename, and late for the same reason: the schema
+				edit changes the DECLARATION, but every row already written still
+				holds the Dutch string. A filter on the new value then returns
+				null rather than an error, so the feature reports "nothing found"
+				instead of failing.
+			-->
+			<step>OCA\SoftwareCatalog\Repair\RenameDutchCatalogValues</step>
 		</post-migration>
 		<!--
 			FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:

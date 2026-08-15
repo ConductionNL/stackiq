@@ -209,7 +209,7 @@ export default {
 		 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-source-organisation-must-be-tombstoned-never-hard-deleted
 		 */
 		isTombstoned() {
-			return this.status === 'samengevoegd'
+			return this.status === 'merged'
 		},
 
 		/**
@@ -298,7 +298,7 @@ export default {
 						const id = org.id || org['@self']?.id
 						return (
 							String(id) !== String(this.objectId)
-							&& org.status !== 'samengevoegd'
+							&& org.status !== 'merged'
 						)
 					})
 					.map((org) => ({
@@ -372,7 +372,7 @@ export default {
 				)
 				this.showConfirm = false
 				this.success = true
-				this.status = 'samengevoegd'
+				this.status = 'merged'
 				this.mergedInto = String(this.selectedTarget.value)
 				showSuccess(
 					t('softwarecatalog', 'Organisation successfully merged.'),

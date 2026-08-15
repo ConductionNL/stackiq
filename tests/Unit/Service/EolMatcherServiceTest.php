@@ -180,7 +180,7 @@ class EolMatcherServiceTest extends TestCase {
 			'module' => 'module-uuid-1',
 			'version' => '21.3.1',
 			'shortDescription' => 'A short description that must survive',
-			'status' => 'in gebruik',
+			'status' => 'in use',
 			'usages' => ['gebruik-1', 'gebruik-2'],
 		];
 		$matchedCycle = ['cycle' => '21.3', 'eol' => '2025-11-09'];
@@ -202,7 +202,7 @@ class EolMatcherServiceTest extends TestCase {
 		$this->assertSame('module-uuid-1', $stamped['module']);
 		$this->assertSame('21.3.1', $stamped['version']);
 		$this->assertSame('A short description that must survive', $stamped['shortDescription']);
-		$this->assertSame('in gebruik', $stamped['status']);
+		$this->assertSame('in use', $stamped['status']);
 		$this->assertSame(['gebruik-1', 'gebruik-2'], $stamped['usages']);
 	}//end testStampPreservesEveryOtherFieldAndAddsProvenance()
 

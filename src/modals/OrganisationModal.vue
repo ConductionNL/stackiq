@@ -181,7 +181,7 @@ export default {
 				telefoonnummer: '',
 				oin: '',
 				cbs: '',
-				status: 'Concept',
+				status: 'Draft',
 				participants: [],
 				contactpersonen: [],
 			},
@@ -193,9 +193,9 @@ export default {
 			countdown: 3,
 			countdownInterval: null,
 			organisationTypes: [
-				{ value: 'Gemeente', label: 'Gemeente' },
-				{ value: 'Leverancier', label: 'Leverancier' },
-				{ value: 'Samenwerking', label: 'Samenwerking' },
+				{ value: 'Municipality', label: 'Municipality' },
+				{ value: 'Supplier', label: 'Supplier' },
+				{ value: 'Collaboration', label: 'Collaboration' },
 				{ value: 'Community', label: 'Community' },
 			],
 		}
@@ -279,7 +279,7 @@ export default {
 				telefoonnummer: '',
 				oin: '',
 				cbs: '',
-				status: 'Concept',
+				status: 'Draft',
 				participants: [],
 				contactpersonen: [],
 			}
@@ -310,7 +310,7 @@ export default {
 				telefoonnummer: this.organisation.telefoonnummer || '',
 				oin: this.organisation.oin || '',
 				cbs: this.organisation.cbs || '',
-				status: this.organisation.status || 'Concept',
+				status: this.organisation.status || 'Draft',
 				participants: this.organisation.participants || [],
 				contactpersonen: this.isCopyMode
 					? []

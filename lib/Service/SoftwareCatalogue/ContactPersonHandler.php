@@ -1675,9 +1675,9 @@ class ContactPersonHandler {
 		$normalizedType = strtolower(trim($organizationType));
 
 		// Define the mapping based on requirements:.
-		// "Gemeente" -> "gebruik-beheerder".
-		// "Leverancier" -> "aanbod-beheerder".
-		// "Samenwerking" -> "gebruik-beheerder".
+		// "Municipality" -> "gebruik-beheerder".
+		// "Supplier" -> "aanbod-beheerder".
+		// "Collaboration" -> "gebruik-beheerder".
 		// "Community" -> "aanbod-beheerder".
 		$typeToRoleMapping = [
 			'gemeente' => 'gebruik-beheerder',

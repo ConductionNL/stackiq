@@ -6560,7 +6560,7 @@ class SettingsService {
 				// Prepare organisatie data with forced UUID.
 				$statusValue = 'Inactief';
 				if ($organisation->getActive() === true) {
-					$statusValue = 'Actief';
+					$statusValue = 'Active';
 				}
 
 				$organisationsToCreate[] = [
@@ -6739,7 +6739,7 @@ class SettingsService {
 		$name = strtolower($organisation->getName());
 
 		if (strpos($name, 'gemeente') !== false) {
-			return 'Gemeente';
+			return 'Municipality';
 		}
 
 		if (strpos($name, 'provincie') !== false) {
@@ -6749,7 +6749,7 @@ class SettingsService {
 		if (strpos($name, 'ministerie') !== false) {
 			return 'Ministerie';
 		} else {
-			return 'Leverancier';
+			return 'Supplier';
 			// Default.
 		}
 	}//end determineOrganisationType()
