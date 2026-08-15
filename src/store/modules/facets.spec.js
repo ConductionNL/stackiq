@@ -45,7 +45,7 @@ describe('facets store — filter/search state', () => {
 		store.setFilter('module', 'referenceComponent', [
 			'Zaakregistratiecomponent',
 		])
-		expect(store.module.activeFilters.referentiecomponent).toEqual([
+		expect(store.module.activeFilters.referenceComponent).toEqual([
 			'Zaakregistratiecomponent',
 		])
 	})
@@ -78,8 +78,8 @@ describe('facets store — filter/search state', () => {
 		const store = useFacetStore()
 		store.setFilter('module', 'referenceComponent', ['A'])
 		store.setFilter('service', 'referenceComponent', ['B'])
-		expect(store.module.activeFilters.referentiecomponent).toEqual(['A'])
-		expect(store.service.activeFilters.referentiecomponent).toEqual(['B'])
+		expect(store.module.activeFilters.referenceComponent).toEqual(['A'])
+		expect(store.service.activeFilters.referenceComponent).toEqual(['B'])
 	})
 })
 
@@ -132,7 +132,7 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 		const query = store.filtersToQuery('module')
 
 		expect(query).toEqual({
-			_gf_referentiecomponent: ['Zaakregistratiecomponent'],
+			_gf_referenceComponent: ['Zaakregistratiecomponent'],
 			_gf_search: 'zaak',
 		})
 	})
@@ -145,17 +145,17 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 	it('setFiltersFromQuery restores state from a _gf_-prefixed route query', () => {
 		const store = useFacetStore()
 		store.setFiltersFromQuery('module', {
-			_gf_referentiecomponent: ['Zaakregistratiecomponent'],
-			_gf_standaard: ['StUF-ZKN'],
+			_gf_referenceComponent: ['Zaakregistratiecomponent'],
+			_gf_standard: ['StUF-ZKN'],
 			_gf_search: 'zaak',
 			// A bare (unprefixed) key MUST be ignored — it is not this
 			// feature's own query param and must never leak into GEMMA state.
-			referentiecomponent: ['should-be-ignored'],
+			referenceComponent: ['should-be-ignored'],
 		})
 
 		expect(store.module.activeFilters).toEqual({
-			referentiecomponent: ['Zaakregistratiecomponent'],
-			standaard: ['StUF-ZKN'],
+			referenceComponent: ['Zaakregistratiecomponent'],
+			standard: ['StUF-ZKN'],
 		})
 		expect(store.module.search).toBe('zaak')
 	})
@@ -176,7 +176,7 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 		store.setFiltersFromQuery('service', query)
 
 		expect(store.service.activeFilters).toEqual({
-			domein: ['Bedrijfsvoering', 'Dienstverlening'],
+			domain: ['Bedrijfsvoering', 'Dienstverlening'],
 		})
 		expect(store.service.search).toBe('stuf')
 	})
@@ -190,10 +190,10 @@ describe('facets store — fetchFacets', () => {
 
 	it('populates data on success and clears loading', async () => {
 		const payload = {
-			referentiecomponent: [],
-			standaard: [],
-			applicatieservice: [],
-			domein: [],
+			referenceComponent: [],
+			standard: [],
+			applicationService: [],
+			domain: [],
 			_meta: { totalMatched: 0, matchedObjectIds: [] },
 		}
 		fetchFacets.mockResolvedValue(payload)
@@ -208,10 +208,10 @@ describe('facets store — fetchFacets', () => {
 
 	it('passes the schema state (filters/search) through to the API client', async () => {
 		fetchFacets.mockResolvedValue({
-			referentiecomponent: [],
-			standaard: [],
-			applicatieservice: [],
-			domein: [],
+			referenceComponent: [],
+			standard: [],
+			applicationService: [],
+			domain: [],
 			_meta: {},
 		})
 
@@ -221,7 +221,7 @@ describe('facets store — fetchFacets', () => {
 		await store.fetchFacets('module', { organization: 'org-1' })
 
 		expect(fetchFacets).toHaveBeenCalledWith('module', {
-			filters: { referentiecomponent: ['A'] },
+			filters: { referenceComponent: ['A'] },
 			search: 'zaak',
 			organization: 'org-1',
 		})
@@ -315,7 +315,7 @@ describe('facets store — saved views', () => {
 				query: expect.objectContaining({
 					marker: 'softwarecatalog-gemma-facets',
 					gemmaSchema: 'module',
-					filters: { referentiecomponent: ['A'] },
+					filters: { referenceComponent: ['A'] },
 					search: 'zaak',
 				}),
 			}),
@@ -328,13 +328,13 @@ describe('facets store — saved views', () => {
 		const store = useFacetStore()
 		store.applyView('module', {
 			query: {
-				filters: { referentiecomponent: ['Zaakregistratiecomponent'] },
+				filters: { referenceComponent: ['Zaakregistratiecomponent'] },
 				search: 'zaak',
 			},
 		})
 
 		expect(store.module.activeFilters).toEqual({
-			referentiecomponent: ['Zaakregistratiecomponent'],
+			referenceComponent: ['Zaakregistratiecomponent'],
 		})
 		expect(store.module.search).toBe('zaak')
 	})

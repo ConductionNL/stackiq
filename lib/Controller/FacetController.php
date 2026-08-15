@@ -62,7 +62,7 @@ class FacetController extends Controller {
 	 *
 	 * Query Parameters:
 	 * - search (string): Free-text query narrowing the candidate set.
-	 * - referentiecomponent[], standaard[], applicatieservice[], domein[] (string[]):
+	 * - referenceComponent[], standard[], applicationService[], domain[] (string[]):
 	 *   Currently-selected facet values per dimension.
 	 * - organization (string): Optional organisation override.
 	 *

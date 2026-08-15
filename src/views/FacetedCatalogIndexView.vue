@@ -14,8 +14,8 @@ Why the facet sidebar is NOT `CnIndexPage`'s own embedded
 every active-filter key as a LITERAL, directly-filterable schema field and
 applies it straight to the object-list fetch (`useListView`'s
 `onFilterChange` → `activeFilters.value[key] = values`, merged verbatim into
-the OpenRegister query). Two of the four GEMMA dimensions (`domein`,
-`applicatieservice`) are not module/dienst fields at all — they only exist
+the OpenRegister query). Two of the four GEMMA dimensions (`domain`,
+`applicationService`) are not module/dienst fields at all — they only exist
 on the LINKED `element` object — and the other two are exposed here by
 display NAME, not the `referentieComponenten`/`standaardVersies` identifiers
 the schema actually stores. Feeding GEMMA facet keys through that path would
@@ -149,10 +149,10 @@ import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
 const DIMENSION_LABELS = {
-	referentiecomponent: () => t('softwarecatalog', 'Reference component'),
+	referenceComponent: () => t('softwarecatalog', 'Reference component'),
 	standard: () => t('softwarecatalog', 'Standard'),
-	applicatieservice: () => t('softwarecatalog', 'Application service'),
-	domein: () => t('softwarecatalog', 'Domain'),
+	applicationService: () => t('softwarecatalog', 'Application service'),
+	domain: () => t('softwarecatalog', 'Domain'),
 }
 
 /** Debounce delay (ms) between search keystrokes and the facets/list refetch. */

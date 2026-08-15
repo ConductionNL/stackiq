@@ -26,12 +26,12 @@ import {
 
 /**
  * Route-query key prefix for GEMMA facet state. Deliberately DIFFERENT from
- * the bare dimension names (`referentiecomponent`, `standaard`, …) used on
+ * the bare dimension names (`referenceComponent`, `standard`, …) used on
  * the wire to `FacetController` — CnIndexPage's self-fetch mode reads EVERY
  * non-underscore-prefixed `$route.query` key as a literal object-list filter
  * (`useSelfFetchList.resolveQueryFilters()`), and the `module`/`dienst`
- * schema has no field named `referentiecomponent`/`standaard`/`domein`/
- * `applicatieservice` (the real fields are `referentieComponenten`,
+ * schema has no field named `referenceComponent`/`standard`/`domain`/
+ * `applicationService` (the real fields are `referentieComponenten`,
  * `standaardVersies`, … — see design.md). Letting the bare dimension name
  * leak into `$route.query` would make CnIndexPage attempt an incorrect
  * direct-field filter (near-guaranteed zero results) IN ADDITION to this
@@ -147,8 +147,8 @@ export const useFacetStore = defineStore('facets', {
 		 * schema's own object-list query via `{ id: [...] }` (see
 		 * `FacetService::computeFacetsForRequest()`'s docblock for why an
 		 * id-based filter is used instead of re-deriving one from the facet
-		 * selection: `domein`/`applicatieservice` are not module/dienst
-		 * fields at all, and `referentiecomponent`/`standaard` values are
+		 * selection: `domain`/`applicationService` are not module/dienst
+		 * fields at all, and `referenceComponent`/`standard` values are
 		 * display NAMES, not the identifiers the schema actually stores).
 		 *
 		 * @param {object} state Store state.

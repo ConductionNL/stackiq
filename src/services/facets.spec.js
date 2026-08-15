@@ -41,13 +41,13 @@ describe('facets.buildFacetQueryParams', () => {
 	it('builds repeated dimension[]= params for array-valued filters', () => {
 		const params = buildFacetQueryParams({
 			filters: {
-				referentiecomponent: [
+				referenceComponent: [
 					'Zaakregistratiecomponent',
 					'Klantcontactcomponent',
 				],
 			},
 		})
-		expect(params.getAll('referentiecomponent[]')).toEqual([
+		expect(params.getAll('referenceComponent[]')).toEqual([
 			'Zaakregistratiecomponent',
 			'Klantcontactcomponent',
 		])
@@ -55,16 +55,16 @@ describe('facets.buildFacetQueryParams', () => {
 
 	it('omits a dimension entirely when its filter value is not an array', () => {
 		const params = buildFacetQueryParams({
-			filters: { referentiecomponent: 'not-an-array' },
+			filters: { referenceComponent: 'not-an-array' },
 		})
-		expect(params.has('referentiecomponent[]')).toBe(false)
+		expect(params.has('referenceComponent[]')).toBe(false)
 	})
 
 	it('drops blank/whitespace-only values within a dimension', () => {
 		const params = buildFacetQueryParams({
-			filters: { standaard: ['StUF-ZKN', '', '   '] },
+			filters: { standard: ['StUF-ZKN', '', '   '] },
 		})
-		expect(params.getAll('standaard[]')).toEqual(['StUF-ZKN'])
+		expect(params.getAll('standard[]')).toEqual(['StUF-ZKN'])
 	})
 
 	it('sets search only when non-blank', () => {
@@ -94,16 +94,16 @@ describe('facets.fetchFacets', () => {
 	it('requests GET /apps/softwarecatalog/api/facets/{schema} with the encoded schema and query params', async () => {
 		axios.get.mockResolvedValue({
 			data: {
-				referentiecomponent: [],
-				standaard: [],
-				applicatieservice: [],
-				domein: [],
+				referenceComponent: [],
+				standard: [],
+				applicationService: [],
+				domain: [],
 				_meta: {},
 			},
 		})
 
 		await fetchFacets('module', {
-			filters: { referentiecomponent: ['A'] },
+			filters: { referenceComponent: ['A'] },
 			search: 'zaak',
 		})
 
@@ -112,7 +112,7 @@ describe('facets.fetchFacets', () => {
 		)
 		const [calledUrl] = axios.get.mock.calls[0]
 		expect(calledUrl).toContain('/apps/softwarecatalog/api/facets/module?')
-		expect(calledUrl).toContain('referentiecomponent%5B%5D=A')
+		expect(calledUrl).toContain('referenceComponent%5B%5D=A')
 		expect(calledUrl).toContain('search=zaak')
 	})
 
@@ -127,10 +127,10 @@ describe('facets.fetchFacets', () => {
 
 	it('returns the response body', async () => {
 		const body = {
-			referentiecomponent: [{ value: 'A', label: 'A', count: 3 }],
-			standaard: [],
-			applicatieservice: [],
-			domein: [],
+			referenceComponent: [{ value: 'A', label: 'A', count: 3 }],
+			standard: [],
+			applicationService: [],
+			domain: [],
 			_meta: { totalMatched: 3 },
 		}
 		axios.get.mockResolvedValue({ data: body })

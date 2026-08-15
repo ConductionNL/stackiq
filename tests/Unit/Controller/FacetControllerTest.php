@@ -157,7 +157,7 @@ class FacetControllerTest extends TestCase {
 	}//end testGetFacetsReturns500OnUnexpectedException()
 
 	/**
-	 * Array-shaped facet query parameters (`referentiecomponent[]=A&referentiecomponent[]=B`)
+	 * Array-shaped facet query parameters (`referenceComponent[]=A&referenceComponent[]=B`)
 	 * are forwarded to `FacetService::getFacets()` as filters.
 	 *
 	 * @return void

@@ -4,7 +4,7 @@
  * Unit tests for FacetService.
  *
  * Covers gemma-faceted-search tasks 1–6: direct-field aggregation, linked
- * `element` resolution (domein/applicatieservice), narrowing (facet-on-facet
+ * `element` resolution (domain/applicationService), narrowing (facet-on-facet
  * AND/OR + disjunctive self-count), free-text search combination, RBAC/tenant
  * scoping parity, and distributed caching + invalidation-key isolation.
  *
@@ -254,7 +254,7 @@ class FacetServiceTest extends TestCase {
 
 	/**
 	 * Direct module fields (referentieComponenten / standaardVersies) aggregate
-	 * into referentiecomponent/standaard counts.
+	 * into referenceComponent/standard counts.
 	 *
 	 * @spec openspec/changes/gemma-faceted-search/tasks.md#task-1
 	 *
@@ -382,7 +382,7 @@ class FacetServiceTest extends TestCase {
 	}//end testGetFacetsAggregatesDirectModuleFieldsWhenResultsAreObjectEntityInstances()
 
 	/**
-	 * `applicatieservice` is resolved via a `relation` connecting a referentiecomponent
+	 * `applicationService` is resolved via a `relation` connecting a referenceComponent
 	 * element to an element with gemmaType === 'Applicatieservice'.
 	 *
 	 * @spec openspec/changes/gemma-faceted-search/tasks.md#task-2
@@ -459,12 +459,12 @@ class FacetServiceTest extends TestCase {
 			filters: ['referenceComponent' => ['Zaakregistratiecomponent']]
 		);
 
-		// `standaard` is narrowed to the 2 modules carrying "Zaakregistratiecomponent" —
+		// `standard` is narrowed to the 2 modules carrying "Zaakregistratiecomponent" —
 		// only m1 of those also carries "StUF-ZKN".
 		$standardByValue = array_column($result['standard'], 'count', 'value');
 		$this->assertSame(1, $standardByValue['StUF-ZKN']);
 
-		// `referentiecomponent`'s OWN count is NOT narrowed by its own selection —
+		// `referenceComponent`'s OWN count is NOT narrowed by its own selection —
 		// it still reflects the full 2-object set carrying "Zaakregistratiecomponent".
 		$refCompByValue = array_column($result['referenceComponent'], 'count', 'value');
 		$this->assertSame(2, $refCompByValue['Zaakregistratiecomponent']);
@@ -506,7 +506,7 @@ class FacetServiceTest extends TestCase {
 		$orResult = $service->getFacets(schema: 'module', filters: ['referenceComponent' => ['A', 'B']]);
 		$this->assertSame(2, $orResult['_meta']['totalMatched']);
 
-		// AND across dimensions: A (referentiecomponent) AND StUF-ZKN (standaard) -> only m1.
+		// AND across dimensions: A (referenceComponent) AND StUF-ZKN (standard) -> only m1.
 		$andResult = $service->getFacets(
 			schema: 'module',
 			filters: [

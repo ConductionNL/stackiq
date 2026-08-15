@@ -11,7 +11,7 @@
  *
  * ⚠️ SCOPE OF THIS FILE — READ BEFORE ADDING TO IT.
  *
- * The scenarios about facet VALUES (counts per referentiecomponent, OR-within-
+ * The scenarios about facet VALUES (counts per referenceComponent, OR-within-
  * a-dimension, AND-across-dimensions, URL round-tripping of a selection, saved
  * views) are NOT covered here, and not because they are hard: the fixtures
  * cannot be built through the object API. Measured on a live instance —
@@ -52,8 +52,8 @@ const FACETS = '/index.php/apps/softwarecatalog/api/facets'
 const DIMENSIONS = [
 	// Wire names: FacetController and FacetService declare these four, and they
 	// are the query parameters and response keys of the endpoint. They move as a
-	// set or not at all — translating only `standaard` made the frontend ask for
-	// `standard[]` from a backend that reads `standaard[]`, and filtering silently
+	// set or not at all — translating only `standard` made the frontend ask for
+	// `standard[]` from a backend that reads `standard[]`, and filtering silently
 	// returned everything.
 	'referenceComponent',
 	'standard',
