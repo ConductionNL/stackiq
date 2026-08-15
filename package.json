@@ -39,7 +39,7 @@
   "dependencies": {
     "@babel/core": "^7.29.0",
     "@codemirror/lang-json": "^6.0.0",
-    "@conduction/nextcloud-vue": "2.2.0-vue3.16",
+    "@conduction/nextcloud-vue": "^2.3.0",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/capabilities": "^1.2.1",
@@ -82,10 +82,7 @@
     "fast-xml-parser": ">=4.5.4",
     "immutable": ">=5.1.5",
     "json5": ">=1.0.2",
-    "serialize-javascript": ">=7.0.3",
-    "@conduction/nextcloud-vue": {
-      "eslint": "$eslint"
-    }
+    "serialize-javascript": ">=7.0.3"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.29.5",
