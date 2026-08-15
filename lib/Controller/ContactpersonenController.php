@@ -993,7 +993,7 @@ class ContactpersonenController extends Controller {
 	 * made a nested reference compare unequal to a plain UUID, which both this
 	 * method's callers treat as "different tenant" (GH#459).
 	 *
-	 * @param object $this->objectService The OpenRegister ObjectService.
+	 * @param object $objectService The OpenRegister ObjectService.
 	 * @param string $username The username to look up.
 	 *
 	 * @return string|null The organisation UUID or null when not found.
