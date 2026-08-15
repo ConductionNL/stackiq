@@ -93,7 +93,10 @@ class OrganizationSyncTest extends TestCase {
 			$this->createMock(\OCA\SoftwareCatalog\Service\SymfonyEmailService::class),
 			$this->createMock(\Psr\Log\LoggerInterface::class),
 			$this->createMock(\Psr\Container\ContainerInterface::class),
-			$this->createMock(\OCP\App\IAppManager::class)
+			$this->createMock(\OCP\App\IAppManager::class),
+			_userSession: $this->createMock(IUserSession::class),
+			_userManager: $this->createMock(IUserManager::class),
+			_groupManager: $this->createMock(IGroupManager::class),
 		);
 
 		// Test synchronization

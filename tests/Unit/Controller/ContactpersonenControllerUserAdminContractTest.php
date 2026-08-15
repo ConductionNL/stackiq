@@ -31,6 +31,8 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\MagicMapper;
+use OCA\OpenRegister\Service\OrganisationService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -117,6 +119,8 @@ class ContactpersonenControllerUserAdminContractTest extends TestCase {
 			$this->createMock(ISecureRandom::class),
 			$this->createMock(LoggerInterface::class),
 			objectService: $this->createMock(ObjectServiceInterface::class),
+			magicMapper: $this->createMock(MagicMapper::class),
+			organisationService: $this->createMock(OrganisationService::class),
 		);
 
 	}//end makeController()
