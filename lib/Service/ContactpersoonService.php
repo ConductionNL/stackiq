@@ -458,12 +458,28 @@ class ContactpersoonService {
 			$contactData['username'] = $username;
 			$contactPersonObject->setObject($contactData);
 
-			// FIX #434: Use MagicMapper directly instead of ObjectService::saveObject().
-			// To avoid validation errors on the organisatie field (stored as UUID string but.
-			// Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
-			// That could interfere with the ongoing org activation process.
-			$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-			$objectMapper->update($contactPersonObject);
+			// FIX #434, through the PUBLISHED contract instead of OpenRegister's Db
+			// layer. Both reasons the original gave are flags on saveObject():
+			//
+			//   _validation: false  the organisatie field holds a UUID string where
+			//                       the schema expects an object
+			//   silent: true        no ObjectUpdatedEvent, so the cascade cannot
+			//                       interfere with an in-flight org activation
+			//
+			// saveObject() is not a lesser route: OpenRegister's SaveObject calls
+			// objectEntityMapper->update(entity:, register:, schema:) itself, which
+			// IS the magic-mapper path this used to reach for directly.
+			$objectService = $this->getObjectService();
+			if ($objectService !== null) {
+				$objectService->saveObject(
+					object: $contactData,
+					register: $contactPersonObject->getRegister(),
+					schema: $contactPersonObject->getSchema(),
+					uuid: $contactPersonObject->getUuid(),
+					silent: true,
+					_validation: false
+				);
+			}
 
 			$this->logger->info(
 				'ContactpersoonService: Updated contactpersoon with username',
@@ -1197,11 +1213,34 @@ class ContactpersoonService {
 				$contactObject->setOrganisation($organizationUuid);
 			}
 
-			// FIX #434: Use MagicMapper directly instead of ObjectService::saveObject().
-			// To avoid validation errors on the organisatie field (stored as UUID string but.
-			// Schema expects object type) and to avoid triggering ObjectUpdatedEvent cascades.
-			$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-			$objectMapper->update($contactObject);
+			// FIX #434, through the PUBLISHED contract. Same two flags as the other
+			// site (_validation: false, silent: true), plus the two pieces of
+			// entity METADATA this call exists to set, which the payload API
+			// expresses differently:
+			//
+			//   organisation  travels in `@self`, which SaveObject reads and applies
+			//                 via setOrganisation() — behind an access check, so an
+			//                 organisation the caller may not use is refused rather
+			//                 than written, which the direct mapper call bypassed
+			//   owner         is NOT settable from the payload; SaveObject derives it
+			//                 from the acting user, so it is passed as `currentUser`
+			$objectService = $this->getObjectService();
+			$userManager = $this->container->get('OCP\IUserManager');
+			$actingUser = $userManager->get($userUID);
+			if ($objectService !== null && $actingUser !== null) {
+				$payload = $contactObject->getObject();
+				$payload['@self'] = ['organisation' => $organizationUuid];
+
+				$objectService->saveObject(
+					object: $payload,
+					register: $contactObject->getRegister(),
+					schema: $contactObject->getSchema(),
+					uuid: $contactObject->getUuid(),
+					silent: true,
+					_validation: false,
+					currentUser: $actingUser
+				);
+			}
 
 			$this->logger->info(
 				'ContactpersoonService: Successfully updated contactpersoon object owner and organisation',
