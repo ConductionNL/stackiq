@@ -43,23 +43,32 @@ webpackConfig.output = {
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package.
 //
-// ⚠️ USE_LOCAL_LIB is opt-OUT, and the shared `apps-extra/nextcloud-vue`
-// checkout sits on the Vue 2 (1.x / beta.*) line. Defaulting to "on" would
-// silently compile Vue 2 library sources into this Vue 3 app and still produce
-// a green build, so the major version is checked rather than the default
-// trusted: a 1.x sibling is the Vue 2 line and must be ignored.
+// ⚠️ USE_LOCAL_LIB is opt-IN (ADR-090). Building against a developer's working
+// checkout is the wrong default for a build that can ship, and the old opt-OUT
+// default silently compiled Vue 2 library sources into this Vue 3 app while
+// still producing a green build.
+//
+// The version test looks for the `-vue3.` marker, NOT the semver major. The
+// previous check required `startsWith('2.')` on the theory that the Vue 2 line
+// was 1.x — true when it was written, false since. Today BOTH lines are major 2:
+//
+//     Vue 2 line   2.0.5
+//     Vue 3 line   2.2.0-vue3.16
+//
+// so a major-based test passes the Vue 2 library straight through, which is
+// exactly what it existed to prevent. Only the `-vue3.` tag distinguishes them.
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
 const localLibPkg = path.resolve(__dirname, '../nextcloud-vue/package.json')
-let useLocalLib = process.env.USE_LOCAL_LIB !== 'false' && fs.existsSync(localLib)
+let useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
 if (useLocalLib && fs.existsSync(localLibPkg)) {
 	const localVersion =
 		JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || ''
-	if (!localVersion.startsWith('2.')) {
+	if (!/-vue3\./.test(localVersion)) {
 		useLocalLib = false
 		// eslint-disable-next-line no-console
 		console.warn(
 			`[softwarecatalog] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
-				+ 'that is the Vue 2 line and this app is Vue 3. Building against the npm dist.',
+				+ 'that is not a -vue3 build and this app is Vue 3. Building against the npm dist.',
 		)
 	}
 }
