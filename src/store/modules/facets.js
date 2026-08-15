@@ -104,7 +104,7 @@ function emptySchemaState() {
 export const useFacetStore = defineStore('facets', {
 	state: () => ({
 		module: emptySchemaState(),
-		dienst: emptySchemaState(),
+		service: emptySchemaState(),
 	}),
 
 	getters: {

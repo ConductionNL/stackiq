@@ -190,7 +190,7 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 	it('partitions bioMaatregel-linked records as resolved under the bioMaatregel column source', () => {
 		const { resolved, unresolved } = partitionCompliancy(
 			[
-				{ module: 'mA', bioMaatregel: 'b1', url: 'https://e' },
+				{ module: 'mA', bioMeasure: 'b1', url: 'https://e' },
 				{ module: 'mA', standard_version: 's1' },
 			],
 			COLUMN_SOURCE.BIO_MAATREGEL,
@@ -205,9 +205,9 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 
 	it('renders the three cell states for a BIO-measure matrix, same as the standards matrix', () => {
 		const compliancy = [
-			{ module: 'mA', bioMaatregel: 'b1', url: 'https://proof' },
-			{ module: 'mA', bioMaatregel: 'b2' },
-			{ module: 'mB', bioMaatregel: 'b1' },
+			{ module: 'mA', bioMeasure: 'b1', url: 'https://proof' },
+			{ module: 'mA', bioMeasure: 'b2' },
+			{ module: 'mB', bioMeasure: 'b1' },
 		]
 		const { rows, columns } = buildComplianceMatrix({
 			modules,
@@ -230,7 +230,7 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 			{
 				module: 'mA',
 				standard_version: 's1',
-				bioMaatregel: 'b1',
+				bioMeasure: 'b1',
 				url: 'https://e',
 			},
 		]
@@ -255,8 +255,8 @@ describe('complianceMatrix — bioMaatregel column source (bio-compliance-assess
 	it('computes organisation coverage for a bioMaatregel column identically to the standards path', () => {
 		const usages = [{ module: 'mA' }, { module: 'mB' }, { module: 'mC' }]
 		const compliancy = [
-			{ module: 'mA', bioMaatregel: 'b1', url: 'https://e' },
-			{ module: 'mB', bioMaatregel: 'b1' },
+			{ module: 'mA', bioMeasure: 'b1', url: 'https://e' },
+			{ module: 'mB', bioMeasure: 'b1' },
 		]
 		const coverage = buildOrganisationCoverage({
 			usages,

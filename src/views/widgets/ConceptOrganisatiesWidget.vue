@@ -96,7 +96,7 @@ export default {
 		 */
 		items() {
 			return objectStore
-				.getCollection('organisatie')
+				.getCollection('organization')
 				.results.filter((item) => item.status?.toLowerCase() === 'concept')
 				.map((item) => ({
 					id: item.id,
@@ -125,12 +125,12 @@ export default {
 		async onAccept(item) {
 			this.processingIds.push(item.id)
 			try {
-				await objectStore.patchObject('organisatie', item.id, {
+				await objectStore.patchObject('organization', item.id, {
 					status: 'actief',
 				})
 				await this.fetchData()
 			} catch (error) {
-				console.error('Error accepting organisatie:', error)
+				console.error('Error accepting organization:', error)
 			} finally {
 				this.processingIds = this.processingIds.filter(
 					(id) => id !== item.id,
@@ -146,7 +146,7 @@ export default {
 		 */
 		async fetchData() {
 			this.loading = true
-			await objectStore.fetchCollection('organisatie')
+			await objectStore.fetchCollection('organization')
 			this.loading = false
 		},
 	},

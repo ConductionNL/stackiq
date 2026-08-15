@@ -464,7 +464,7 @@ class ViewService {
 				}
 
 				if ($this->shouldIncludeGebruik(options: $options) === true) {
-					$enrichedNode['gebruik'] = $this->getNodeGebruik(
+					$enrichedNode['usage'] = $this->getNodeGebruik(
 						modelNodeId: $modelNodeId,
 						gebruikData: $gebruikData
 					);
@@ -547,7 +547,7 @@ class ViewService {
 		}
 
 		if ($this->shouldIncludeGebruik(options: $options) === true) {
-			$enrichments[] = 'gebruik';
+			$enrichments[] = 'usage';
 		}
 
 		if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
@@ -909,26 +909,26 @@ class ViewService {
 	 * @spec openspec/changes/deelnames-gebruik/tasks.md#task-3
 	 */
 	private function processGebruikItems(array $gebruikItems, array &$allGebruik, string $currentOrg, string $type): void {
-		foreach ($gebruikItems as $gebruik) {
+		foreach ($gebruikItems as $usage) {
 			// Group by elementRef for quick lookup.
-			$elementRef = $gebruik['elementRef'] ?? $gebruik['componentRef'] ?? $gebruik['moduleRef'] ?? null;
+			$elementRef = $usage['elementRef'] ?? $usage['componentRef'] ?? $usage['moduleRef'] ?? null;
 
 			if ($elementRef !== null) {
 				if (isset($allGebruik[$elementRef]) === false) {
 					$allGebruik[$elementRef] = [];
 				}
 
-				$gebruik['_type'] = $type;
-				$gebruik['_processed_for_org'] = $currentOrg;
+				$usage['_type'] = $type;
+				$usage['_processed_for_org'] = $currentOrg;
 
 				// Attach source org metadata for deelnames so the UI can attribute the shared gebruik.
 				if ($type === 'deelnames') {
-					$consumer = $gebruik['consumer'] ?? [];
-					$gebruik['_sourceOrganizationId'] = $consumer['@self']['id'] ?? ($consumer['id'] ?? ($gebruik['@self']['organisation'] ?? null));
-					$gebruik['_sourceOrganization'] = $consumer['name'] ?? null;
+					$consumer = $usage['consumer'] ?? [];
+					$usage['_sourceOrganizationId'] = $consumer['@self']['id'] ?? ($consumer['id'] ?? ($usage['@self']['organisation'] ?? null));
+					$usage['_sourceOrganization'] = $consumer['name'] ?? null;
 				}
 
-				$allGebruik[$elementRef][] = $gebruik;
+				$allGebruik[$elementRef][] = $usage;
 			}//end if
 		}//end foreach
 	}//end processGebruikItems()
@@ -952,14 +952,14 @@ class ViewService {
 				$module = $modulesData[$elementRef];
 
 				// Add module data to each gebruik item for this elementRef.
-				foreach ($gebruikList as &$gebruik) {
-					$gebruik['_linked_module'] = $module;
+				foreach ($gebruikList as &$usage) {
+					$usage['_linked_module'] = $module;
 
 					$this->logger->debug(
 						'Linked module to gebruik',
 						[
 							'element_ref' => $elementRef,
-							'gebruik_id' => $gebruik['id'] ?? $gebruik['identifier'] ?? 'unknown',
+							'gebruik_id' => $usage['id'] ?? $usage['identifier'] ?? 'unknown',
 							'module_id' => $module['id'] ?? $module['identifier'] ?? 'unknown',
 							'module_name' => $module['name'] ?? 'unnamed',
 						]
@@ -967,7 +967,7 @@ class ViewService {
 				}
 
 				// Clean up reference.
-				unset($gebruik);
+				unset($usage);
 			}//end if
 		}//end foreach
 

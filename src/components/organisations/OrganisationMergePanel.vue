@@ -177,7 +177,7 @@ export default {
 		/** The organisation schema slug. */
 		schema: {
 			type: String,
-			default: 'organisatie',
+			default: 'organization',
 		},
 	},
 

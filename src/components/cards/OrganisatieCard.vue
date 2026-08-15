@@ -47,7 +47,7 @@ https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
 		<!-- Custom Organisation Content -->
 		<div class="organisatieContent">
 			<!-- Organisation View -->
-			<div v-if="currentView === 'organisatie'">
+			<div v-if="currentView === 'organization'">
 				<!-- Organisation Type Badge -->
 				<div class="organisatieBadges">
 					<span
@@ -151,7 +151,7 @@ https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
 					<div class="viewToggleContainer">
 						<NcButton
 							:variant="
-								currentView === 'organisatie'
+								currentView === 'organization'
 									? 'primary'
 									: 'secondary'
 							"
@@ -226,7 +226,7 @@ export default {
 
 	data() {
 		return {
-			currentView: 'organisatie', // 'organisatie' or 'contactpersonen'
+			currentView: 'organization', // 'organization' or 'contactpersonen'
 		}
 	},
 
@@ -368,9 +368,9 @@ export default {
 		 */
 		async toggleView() {
 			const newView =
-				this.currentView === 'organisatie'
+				this.currentView === 'organization'
 					? 'contactpersonen'
-					: 'organisatie'
+					: 'organization'
 			this.currentView = newView
 
 			// Note: The watch handler will handle refreshing user data when switching to contactpersonen view

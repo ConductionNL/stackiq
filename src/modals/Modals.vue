@@ -2,8 +2,8 @@
 	<div>
 		<!-- Organisatie Modals -->
 		<ObjectModal
-			v-if="navigationStore.modal === 'organisatie'"
-			objectTypeKey="organisatie" />
+			v-if="navigationStore.modal === 'organization'"
+			objectTypeKey="organization" />
 		<ViewObject v-if="navigationStore.modal === 'viewOrganisatie'" />
 		<UploadObject v-if="navigationStore.modal === 'uploadOrganisatie'" />
 		<LockObject v-if="navigationStore.modal === 'lockOrganisatie'" />
@@ -31,20 +31,20 @@ import { navigationStore } from '../store/store.js'
 
 /**
  * Object types that should use the generic ObjectModal for editing.
- * 'organisatie' is excluded because it has its own dedicated condition above.
+ * 'organization' is excluded because it has its own dedicated condition above.
  */
 const GENERIC_MODAL_OBJECT_TYPES = [
-	'contactpersoon',
-	'gebruik',
+	'contactPerson',
+	'usage',
 	'contract',
-	'koppeling',
+	'connection',
 	'module',
 	'suite',
-	'dienst',
-	'kwetsbaarheid',
-	'beoordeeling',
+	'service',
+	'vulnerability',
+	'assessment',
 	'compliancy',
-	'moduleVersie',
+	'moduleVersion',
 	'sector',
 ]
 

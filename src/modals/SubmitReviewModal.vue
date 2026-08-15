@@ -132,7 +132,7 @@ export default {
 			default: false,
 		},
 
-		/** 'module' or 'dienst' — the type of the object being reviewed. */
+		/** 'module' or 'service' — the type of the object being reviewed. */
 		subjectType: {
 			type: String,
 			required: true,

@@ -47,10 +47,10 @@ class SoftwareCatalogEventListenerDecompositionTest extends TestCase {
 		$settings->method('getSchemaIdForObjectType')->willReturnCallback(
 			static function (string $objectType): ?int {
 				return match ($objectType) {
-					'organisatie' => 12,
-					'contactpersoon' => 34,
+					'organization' => 12,
+					'contactPerson' => 34,
 					'contactgegevens' => null,
-					'gebruik' => 56,
+					'usage' => 56,
 					default => null,
 				};
 			}
@@ -62,10 +62,10 @@ class SoftwareCatalogEventListenerDecompositionTest extends TestCase {
 
 		$this->assertSame(
 			[
-				'organisatie' => 12,
-				'contactpersoon' => 34,
+				'organization' => 12,
+				'contactPerson' => 34,
 				'contactgegevens' => null,
-				'gebruik' => 56,
+				'usage' => 56,
 			],
 			$result
 		);
@@ -84,10 +84,10 @@ class SoftwareCatalogEventListenerDecompositionTest extends TestCase {
 
 		$this->assertSame(
 			[
-				'organisatie' => null,
-				'contactpersoon' => null,
+				'organization' => null,
+				'contactPerson' => null,
 				'contactgegevens' => null,
-				'gebruik' => null,
+				'usage' => null,
 			],
 			$result
 		);

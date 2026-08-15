@@ -120,7 +120,7 @@ class ReviewControllerContractTest extends TestCase {
 				]
 			);
 
-		$body = $this->controller->aggregate('dienst', 'dienst-uuid')->getData();
+		$body = $this->controller->aggregate('service', 'dienst-uuid')->getData();
 
 		$this->assertArrayNotHasKey('ok', $body);
 		$this->assertArrayNotHasKey('reason', $body);
@@ -193,7 +193,7 @@ class ReviewControllerContractTest extends TestCase {
 		$this->aggregateService
 			->expects($this->once())
 			->method('getAggregate')
-			->with('dienst', 'the-subject-uuid')
+			->with('service', 'the-subject-uuid')
 			->willReturn(
 				[
 					'ok' => true,
@@ -204,7 +204,7 @@ class ReviewControllerContractTest extends TestCase {
 				]
 			);
 
-		$this->controller->aggregate('dienst', 'the-subject-uuid');
+		$this->controller->aggregate('service', 'the-subject-uuid');
 
 	}//end testAggregatePassesTheSubjectThroughToTheService()
 

@@ -91,7 +91,7 @@ export default {
 		 * The contact person whose user-group membership is being edited.
 		 * Needs `id` and `user.username` / `user.groups`.
 		 */
-		contactpersoon: {
+		contactPerson: {
 			type: Object,
 			required: true,
 		},
@@ -129,7 +129,7 @@ export default {
 		try {
 			// Fetch user-specific info to get current groups.
 			const userInfo = await this.organisatieStore.fetchUserInfo(
-				this.contactpersoon.id,
+				this.contactPerson.id,
 			)
 			this.selectedGroups = [...(userInfo.groups || [])]
 
@@ -138,7 +138,7 @@ export default {
 		} catch (error) {
 			console.error('Error fetching user info for groups dialog:', error)
 			// Fallback to existing groups.
-			this.selectedGroups = [...this.contactpersoon.user.groups]
+			this.selectedGroups = [...this.contactPerson.user.groups]
 			// Note: Available groups should already be loaded by the parent.
 		}
 	},
@@ -173,7 +173,7 @@ export default {
 
 			try {
 				await this.organisatieStore.updateUserGroups(
-					this.contactpersoon.user.username,
+					this.contactPerson.user.username,
 					this.selectedGroups,
 				)
 

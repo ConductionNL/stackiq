@@ -26,8 +26,8 @@
  * `saveObject()` is PUT-semantic (omitting a field nulls it).
  *
  * Relation-field mapping (design.md "Database Changes"):
- * - gebruik: `afnemer` (scalar) and `deelnemers` (array) business fields.
- * - contactpersoon: `organisatie` (scalar) business field.
+ * - usage: `afnemer` (scalar) and `deelnemers` (array) business fields.
+ * - contactPerson: `organisatie` (scalar) business field.
  * - aanbod/koppeling: `koppeling.aanbieder` (scalar) business field. The
  *   `aanbod` bucket name is the domain umbrella term (see
  *   AanbodController); `koppeling` is the schema that actually carries an
@@ -109,9 +109,9 @@ class MergeOrganisatieService {
 	 * @var array<string, array{field: string, arrayField: string|null, schema?: string}>
 	 */
 	private const FIELD_RELATION_TYPES = [
-		'gebruik' => ['field' => 'consumer', 'arrayField' => 'participants'],
-		'contactpersoon' => ['field' => 'organisatie', 'arrayField' => null],
-		'aanbod' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'koppeling'],
+		'usage' => ['field' => 'consumer', 'arrayField' => 'participants'],
+		'contactPerson' => ['field' => 'organization', 'arrayField' => null],
+		'aanbod' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'connection'],
 	];
 
 	/**
@@ -689,7 +689,7 @@ class MergeOrganisatieService {
 		$data['status'] = self::TOMBSTONE_STATUS;
 		$data['mergedInto'] = $targetUuid;
 
-		$this->saveFull(entity: $entity, data: $data, objectType: 'organisatie');
+		$this->saveFull(entity: $entity, data: $data, objectType: 'organization');
 
 		// Keep the separate OR core Organisation.active flag in sync (organisatie-service spec delta).
 		$this->organisationService->updateOrganizationStatus(organizationUuid: $sourceUuid, objectData: ['beoordeling' => self::TOMBSTONE_STATUS]);
@@ -764,7 +764,7 @@ class MergeOrganisatieService {
 	private function findOrganisation(string $uuid): ?object {
 		$objectService = $this->getObjectService();
 		$registerId = $this->settingsService->getVoorzieningenRegisterId();
-		$schemaId = $this->settingsService->getSchemaIdForObjectType(objectType: 'organisatie');
+		$schemaId = $this->settingsService->getSchemaIdForObjectType(objectType: 'organization');
 
 		if ($objectService === null || $registerId === null || $schemaId === null) {
 			return null;

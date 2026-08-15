@@ -45,7 +45,7 @@ class ProfileFieldMapper {
 		'address' => 'adres',
 		'website' => 'website',
 		'twitter' => 'twitter',
-		'organisation' => 'organisatie',
+		'organisation' => 'organization',
 		'role' => 'role',
 		'headline' => 'aanhef',
 		'biography' => 'biografie',

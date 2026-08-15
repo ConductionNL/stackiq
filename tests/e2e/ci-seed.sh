@@ -115,11 +115,15 @@ path, kind = sys.argv[1], sys.argv[2]
 required = {
     'registers': ['voorzieningen'],
     # The schemas the e2e fixtures create/read through, per _fixtures.ts
-    # (organisatie, contactpersoon, module, contract, moduleVersie) plus the
+    # (organization, contactPerson, module, contract, moduleVersion) plus the
     # ones the spec-coverage index pages render.
+    #
+    # These are SLUGS, so they move with a slug rename. This list is the only
+    # place that names them outside the register JSON, and it is checked after
+    # the import — which is what caught the rename here rather than in a spec.
     'schemas': [
-        'organisatie', 'contactpersoon', 'module', 'contract',
-        'moduleVersie', 'kwetsbaarheid', 'compliancy', 'suite',
+        'organization', 'contactPerson', 'module', 'contract',
+        'moduleVersion', 'vulnerability', 'compliancy', 'suite',
     ],
 }[kind]
 with open(path) as fh:

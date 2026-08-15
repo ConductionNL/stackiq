@@ -324,7 +324,7 @@ export default {
 	 * @spec openspec/specs/realtime-updates-ui/spec.md
 	 */
 	setup() {
-		useLiveCollections(objectStore, ['organisatie'])
+		useLiveCollections(objectStore, ['organization'])
 		return {}
 	},
 
@@ -345,7 +345,7 @@ export default {
 		 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 		 */
 		organisationOptions() {
-			return (objectStore.getCollection('organisatie')?.results || []).map(
+			return (objectStore.getCollection('organization')?.results || []).map(
 				(org) => {
 					const data = org.object || org
 					return {
@@ -457,7 +457,7 @@ export default {
 		/**
 		 * Load the organisation collection the picker depends on.
 		 *
-		 * `getSchemaConfig('organisatie')` cannot be used here: it only
+		 * `getSchemaConfig('organization')` cannot be used here: it only
 		 * resolves a type from the `voorzieningenConfig` blob when that
 		 * blob's `<type>_schema` key holds a NUMERIC schema id, and
 		 * `organisatie_schema` is unset on instances where the voorzieningen
@@ -475,7 +475,7 @@ export default {
 		 * shared library's self-fetch path
 		 * (`node_modules/@conduction/nextcloud-vue/src/components/CnIndexPage/useSelfFetchList.js`)
 		 * calls `registerObjectType(type, props.schema, props.register, ...)`
-		 * using the SCHEMA SLUG itself (`'organisatie'`) as the id — which
+		 * using the SCHEMA SLUG itself (`'organization'`) as the id — which
 		 * OpenRegister's `/api/objects/{register}/{schemaSlugOrId}` accepts
 		 * interchangeably with a numeric id — rather than resolving a numeric
 		 * schema id from a config blob first. This mirrors that proven path:
@@ -502,20 +502,20 @@ export default {
 				if (
 					typeof objectStore.registerObjectType === 'function'
 					&& registerId
-					&& !objectStore.objectTypeRegistry?.organisatie
+					&& !objectStore.objectTypeRegistry?.organization
 				) {
 					objectStore.registerObjectType(
-						'organisatie',
-						'organisatie',
+						'organization',
+						'organization',
 						registerId,
 						{
 							registerSlug: 'voorzieningen',
-							schemaSlug: 'organisatie',
+							schemaSlug: 'organization',
 						},
 					)
 				}
 				if (typeof objectStore.fetchCollection === 'function') {
-					await objectStore.fetchCollection('organisatie', {
+					await objectStore.fetchCollection('organization', {
 						_limit: 1000,
 					})
 				}

@@ -171,7 +171,7 @@ export function portfolioPosture(modules, usages) {
  */
 function vendorAnnualCost(vendorModuleUsageIds, contracts) {
 	const relevant = (contracts || []).filter((c) => {
-		const gebruikId = resolveUuid(dataOf(c).gebruik)
+		const gebruikId = resolveUuid(dataOf(c).usage)
 		return gebruikId !== '' && vendorModuleUsageIds.has(gebruikId)
 	})
 	if (relevant.length === 0) {

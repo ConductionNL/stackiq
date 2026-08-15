@@ -334,7 +334,7 @@ export function softwarecatalogPlugin() {
 			// -- Selection getters --
 
 			isAllSelected: (state) => {
-				const organisatieCollection = state.collections?.organisatie
+				const organisatieCollection = state.collections?.organization
 				const results = Array.isArray(organisatieCollection)
 					? organisatieCollection
 					: organisatieCollection?.results
@@ -550,7 +550,7 @@ export function softwarecatalogPlugin() {
 
 				if (object?.id) {
 					let organisatieData = null
-					if (type === 'organisatie' && object['@self']) {
+					if (type === 'organization' && object['@self']) {
 						organisatieData = {
 							source: 'openregister',
 							schema: object['@self'].schema,
@@ -1283,7 +1283,7 @@ export function softwarecatalogPlugin() {
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			toggleSelectAllObjects() {
-				const organisatieCollection = this.collections?.organisatie
+				const organisatieCollection = this.collections?.organization
 				const results = Array.isArray(organisatieCollection)
 					? organisatieCollection
 					: organisatieCollection?.results

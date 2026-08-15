@@ -50,11 +50,11 @@ class OrganizationSyncTest extends TestCase {
 
 		// Configure mocks
 		$settingsService->method('getRegisterIdForObjectType')
-			->with('organisatie')
+			->with('organization')
 			->willReturn(1);
 
 		$settingsService->method('getSchemaIdForObjectType')
-			->with('organisatie')
+			->with('organization')
 			->willReturn(37);
 
 		// Test organization data
@@ -151,7 +151,7 @@ class OrganizationSyncTest extends TestCase {
 			->willReturn(1);
 
 		$settingsService->method('getSchemaIdForObjectType')
-			->with('organisatie')
+			->with('organization')
 			->willReturn(37);
 
 		// Test contactpersoon data

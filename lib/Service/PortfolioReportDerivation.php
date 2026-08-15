@@ -48,14 +48,14 @@ class PortfolioReportDerivation {
 	 * whose start date is in the past. Mirrors `src/utils/lifecyclePhase.js`
 	 * `derivePhase()`.
 	 *
-	 * @param array<string,mixed> $gebruik The gebruik data bag.
+	 * @param array<string,mixed> $usage The gebruik data bag.
 	 * @param DateTimeImmutable $now Reference moment.
 	 *
 	 * @return string The derived phase.
 	 *
 	 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 	 */
-	public function deriveLifecyclePhase(array $gebruik, DateTimeImmutable $now): string {
+	public function deriveLifecyclePhase(array $usage, DateTimeImmutable $now): string {
 		$steps = [
 			'Uitgefaseerd' => 'startDateOutPhased',
 			'Uit te faseren' => 'startDateOutPhasing',
@@ -65,7 +65,7 @@ class PortfolioReportDerivation {
 		];
 
 		foreach ($steps as $phase => $field) {
-			$date = $this->parseDate(value: $gebruik[$field] ?? null);
+			$date = $this->parseDate(value: $usage[$field] ?? null);
 			if ($date !== null && $date <= $now) {
 				return $phase;
 			}

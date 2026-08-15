@@ -189,7 +189,7 @@ class EolSyncServiceTest extends TestCase {
 		$settingsService->method('getSchemaIdForObjectType')->willReturnMap(
 			[
 				['module', 20],
-				['moduleVersie', 21],
+				['moduleVersion', 21],
 			]
 		);
 
@@ -265,7 +265,7 @@ class EolSyncServiceTest extends TestCase {
 		$settingsService->method('getSchemaIdForObjectType')->willReturnMap(
 			[
 				['module', 20],
-				['moduleVersie', 21],
+				['moduleVersion', 21],
 			]
 		);
 

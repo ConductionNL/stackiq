@@ -18,7 +18,7 @@ const TITLE_FIELDS = [
 	'name',
 	'titel',
 	'title',
-	'organisatie',
+	'organization',
 	'organisation',
 ]
 const SUBTITLE_FIELDS = [

@@ -14,7 +14,7 @@
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
 
-export const useOrganisatieStore = defineStore('organisatie', {
+export const useOrganisatieStore = defineStore('organization', {
 	state: () => ({
 		/** @type {Array} */
 		contactpersonen: [],

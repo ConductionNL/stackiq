@@ -105,7 +105,7 @@ class FacetController extends Controller {
 			return new JSONResponse(
 				[
 					'message' => $e->getMessage(),
-					'supportedSchemas' => ['module', 'dienst'],
+					'supportedSchemas' => ['module', 'service'],
 				],
 				400
 			);

@@ -147,7 +147,7 @@ class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 	 * @return ObjectEntity
 	 */
 	private function makeContact(string $organisation, ?string $username = null): ObjectEntity {
-		$data = ['organisatie' => $organisation];
+		$data = ['organization' => $organisation];
 		if ($username !== null) {
 			$data['username'] = $username;
 		}
@@ -309,7 +309,7 @@ class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 		$this->authenticate(uid: 'plain@a.example', isAdmin: false);
 
 		$entity = $this->createMock(ObjectEntity::class);
-		$entity->method('getObject')->willReturn(['organisatie' => ['@self' => ['uuid' => self::CALLER_ORG]]]);
+		$entity->method('getObject')->willReturn(['organization' => ['@self' => ['uuid' => self::CALLER_ORG]]]);
 		$entity->method('getId')->willReturn(2);
 		$entity->method('getUuid')->willReturn('contact-uuid-2');
 

@@ -103,6 +103,34 @@ class SettingsService {
 	private const MIN_OPENREGISTER_VERSION = '0.1.7';
 
 	/**
+	 * Object type => the app-config key its schema id is actually stored under.
+	 *
+	 * The key was always derived from the schema SLUG. Eight slugs are now
+	 * English while the stored keys are deliberately still Dutch — renaming that
+	 * family is a migration across ~40 sites in three shapes, and doing a SUBSET
+	 * resolves some types while leaving others silently "not configured", which
+	 * is how the ratings feature died once already.
+	 *
+	 * So slug and key diverge, and every place that DERIVES the key from the
+	 * object type (`$objectType . '_schema'`) has to come through here. Missing
+	 * one is not an error: the lookup finds nothing and the caller reads it as
+	 * "not configured". `getRegisterIdForObjectType()` did exactly that.
+	 *
+	 * @var array<string, string>
+	 */
+	public const LEGACY_SCHEMA_KEY = [
+		'assessment' => 'beoordeeling_schema',
+		'bioMeasure' => 'bioMaatregel_schema',
+		'connection' => 'koppeling_schema',
+		'contactPerson' => 'contactpersoon_schema',
+		'moduleVersion' => 'moduleVersie_schema',
+		'organization' => 'organisatie_schema',
+		'service' => 'dienst_schema',
+		'usage' => 'gebruik_schema',
+		'vulnerability' => 'kwetsbaarheid_schema',
+	];
+
+	/**
 	 * SettingsService constructor
 	 *
 	 * @param IAppConfig $config App configuration interface
@@ -265,17 +293,17 @@ class SettingsService {
 				'objectTypes' => [
 					'sector',
 					'suite',
-					'dienst',
-					'kwetsbaarheid',
-					'contactpersoon',
-					'organisatie',
-					'gebruik',
+					'service',
+					'vulnerability',
+					'contactPerson',
+					'organization',
+					'usage',
 					'contract',
-					'koppeling',
-					'beoordeeling',
+					'connection',
+					'assessment',
 					'module',
 					'compliancy',
-					'moduleVersie',
+					'moduleVersion',
 					'sbomComponent',
 				],
 			],
@@ -864,20 +892,28 @@ class SettingsService {
 		$voorzieningenKeyMap = [
 			'module' => 'module_schema',
 			'compliancy' => 'compliancy_schema',
-			'moduleVersie' => 'moduleVersie_schema',
+			'moduleVersion' => 'moduleVersie_schema',
 			'sbomComponent' => 'sbomComponent_schema',
 			// Every catalog object type stored in the voorzieningen register must
 			// be mapped here, or getSchemaIdForObjectType() returns null for it
 			// even though its `<type>_schema` id is present in the config — which
 			// silently killed the ratings feature (`beoordeeling` was unmapped, so
 			// ReviewService/ReviewAggregateService read "not configured" forever).
-			'beoordeeling' => 'beoordeeling_schema',
-			'dienst' => 'dienst_schema',
-			'gebruik' => 'gebruik_schema',
+			// The object type on the LEFT is the schema slug and moves with it.
+			// The config KEY on the right is a stored app-config key and does NOT:
+			// renaming it is a data migration across roughly forty sites in this
+			// class alone, including differently-prefixed families
+			// (`voorzieningen_contactpersoon_schema`) and compound keys
+			// (`koppeling_gebruik_schema`). Renaming a subset would resolve some
+			// types and silently leave others reporting "not configured", which is
+			// how the ratings feature died once already. Tracked as its own change.
+			'assessment' => 'beoordeeling_schema',
+			'service' => 'dienst_schema',
+			'usage' => 'gebruik_schema',
 			'contract' => 'contract_schema',
-			'koppeling' => 'koppeling_schema',
+			'connection' => 'koppeling_schema',
 			'suite' => 'suite_schema',
-			'kwetsbaarheid' => 'kwetsbaarheid_schema',
+			'vulnerability' => 'kwetsbaarheid_schema',
 			'sector' => 'sector_schema',
 		];
 
@@ -891,29 +927,26 @@ class SettingsService {
 			}
 		}
 
-		// Check for AMEF register specific schemas (legacy individual keys).
+		// `organisatie` and `organization` used to be two object types resolving
+		// to two schemas. They are one now, so the two branches that handled them
+		// separately are one branch — and the ORDER inverted with the merge:
+		// `amef_organization_schema` points at the ArchiMate schema, which is the
+		// one that was absorbed and is now retired, holding no rows. Preferring
+		// it would resolve every organisation lookup to an empty schema, so the
+		// merged voorzieningen schema wins and AMEF is the last resort.
 		if ($result === null && $objectType === 'organization') {
-			$schemaId = $this->config->getValueString($this->appName, 'amef_organization_schema', '');
+			$schemaId = ($voorzieningenConfig['organisatie_schema'] ?? '');
 
-			if (empty($schemaId) === false) {
-				$result = (int)$schemaId;
-			} else {
-				// Also check voorzieningen register for organization/organisatie.
-				$schemaId = $voorzieningenConfig['organisatie_schema'];
-				if (empty($schemaId) === false) {
-					$result = (int)$schemaId;
-				}
+			if (empty($schemaId) === true) {
+				$schemaId = $this->config->getValueString($this->appName, 'amef_organization_schema', '');
 			}
-		}
 
-		if ($objectType === 'organisatie' && $result === null) {
-			$schemaId = $voorzieningenConfig['organisatie_schema'];
 			if (empty($schemaId) === false) {
 				$result = (int)$schemaId;
 			}
 		}
 
-		if ($objectType === 'contactpersoon' && $result === null) {
+		if ($objectType === 'contactPerson' && $result === null) {
 			$schemaId = $voorzieningenConfig['contactpersoon_schema'];
 			if (empty($schemaId) === false) {
 				$result = (int)$schemaId;
@@ -982,6 +1015,21 @@ class SettingsService {
 	}//end getSchemaIdForObjectType()
 
 	/**
+	 * The app-config key an object type's schema id is stored under.
+	 *
+	 * Slug and stored key diverged when the slugs were translated, so never
+	 * build the key as `$objectType . '_schema'` directly — see LEGACY_SCHEMA_KEY.
+	 *
+	 * @param string $objectType The object type (schema slug).
+	 *
+	 * @return string The app-config key.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function voorzieningenSchemaKey(string $objectType): string {
+		return (self::LEGACY_SCHEMA_KEY[$objectType] ?? $objectType . '_schema');
+	}//end voorzieningenSchemaKey()
+
+	/**
 	 * Gets the configured register ID for a specific object type
 	 *
 	 * @param string $objectType The object type (organization, contact, gebruiker)
@@ -1024,9 +1072,9 @@ class SettingsService {
 		// key map: any type with a `<type>_schema` in the voorzieningen config
 		// belongs to the voorzieningen register.
 		$voorzieningenConfig = $this->getVoorzieningenConfig();
-		$isVoorzieningenType = in_array($objectType, ['organisatie', 'organization', 'contactpersoon', 'contact'], true);
+		$isVoorzieningenType = in_array($objectType, ['organization', 'contactPerson', 'contact'], true);
 		if ($isVoorzieningenType === false) {
-			$isVoorzieningenType = isset($voorzieningenConfig[$objectType . '_schema']);
+			$isVoorzieningenType = isset($voorzieningenConfig[$this->voorzieningenSchemaKey(objectType: $objectType)]);
 		}
 
 		if ($result === null && $isVoorzieningenType === true) {
@@ -1229,7 +1277,7 @@ class SettingsService {
 	 */
 	public function isFullyConfigured(): bool {
 		// Use contactpersoon instead of contact to match the actual schema naming.
-		$objectTypes = ['organization', 'contactpersoon'];
+		$objectTypes = ['organization', 'contactPerson'];
 
 		foreach ($objectTypes as $type) {
 			$schemaId = $this->getSchemaIdForObjectType(objectType: $type);
@@ -1250,7 +1298,7 @@ class SettingsService {
 	public function getConfigurationStatus(): array {
 		return [
 			'organization' => $this->buildObjectTypeStatusEntry(objectType: 'organization'),
-			'contact' => $this->buildObjectTypeStatusEntry(objectType: 'contactpersoon'),
+			'contact' => $this->buildObjectTypeStatusEntry(objectType: 'contactPerson'),
 			'registerVerification' => $this->getRegisterVerificationStatus(),
 		];
 	}//end getConfigurationStatus()
@@ -1327,7 +1375,7 @@ class SettingsService {
 	 * was repeated per object type.
 	 *
 	 * @param string $objectType Schema object type slug ('organization',
-	 *                           'contactpersoon', etc.)
+	 *                           'contactPerson', etc.)
 	 *
 	 * @return array{configured: bool, schemaId: ?int, registerId: ?int}
 	 *
@@ -1906,7 +1954,7 @@ class SettingsService {
 
 		// Also confirm the object types this app's own status reporting tracks
 		// (see getConfigurationStatus()) resolve to a schema id post-import.
-		foreach (['organization', 'contactpersoon'] as $objectType) {
+		foreach (['organization', 'contactPerson'] as $objectType) {
 			if ($this->getSchemaIdForObjectType(objectType: $objectType) === null) {
 				$verification['ok'] = false;
 				$verification['unresolvedObjectTypes'][] = $objectType;
@@ -3983,18 +4031,18 @@ class SettingsService {
 			$expectedSlugs = [
 				'sector',
 				'suite',
-				'dienst',
-				'kwetsbaarheid',
-				'contactpersoon',
-				'organisatie',
-				'gebruik',
+				'service',
+				'vulnerability',
+				'contactPerson',
+				'organization',
+				'usage',
 				'contract',
-				'koppeling',
-				'beoordeeling',
+				'connection',
+				'assessment',
 				'module',
 				'compliancy',
 				'moduleversie',
-				'moduleVersie',
+				'moduleVersion',
 			];
 
 			foreach ($registers as $register) {
@@ -4086,20 +4134,20 @@ class SettingsService {
 
 			// Map schema slugs to configuration keys based on actual register schemas.
 			$slugToKey = [
-				'organisatie' => 'organisatie_schema',
-				'contactpersoon' => 'contactpersoon_schema',
+				'organization' => 'organisatie_schema',
+				'contactPerson' => 'contactpersoon_schema',
 				'suite' => 'suite_schema',
-				'dienst' => 'dienst_schema',
-				'kwetsbaarheid' => 'kwetsbaarheid_schema',
-				'gebruik' => 'gebruik_schema',
+				'service' => 'dienst_schema',
+				'vulnerability' => 'kwetsbaarheid_schema',
+				'usage' => 'gebruik_schema',
 				'contract' => 'contract_schema',
-				'koppeling' => 'koppeling_schema',
-				'beoordeeling' => 'beoordeeling_schema',
+				'connection' => 'koppeling_schema',
+				'assessment' => 'beoordeeling_schema',
 				'module' => 'module_schema',
 				'compliancy' => 'compliancy_schema',
 				'moduleversie' => 'moduleVersie_schema',
 				// Handle both moduleversie and moduleVersie.
-				'moduleVersie' => 'moduleVersie_schema',
+				'moduleVersion' => 'moduleVersie_schema',
 				'sector' => 'sector_schema',
 				'sbomComponent' => 'sbomComponent_schema',
 			];

@@ -215,8 +215,8 @@ export default {
 	setup() {
 		useLiveCollections(objectStore, [
 			'module',
-			'gebruik',
-			'organisatie',
+			'usage',
+			'organization',
 			'contract',
 		])
 		return {}
@@ -247,7 +247,7 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		usages() {
-			return objectStore.getCollection('gebruik')?.results || []
+			return objectStore.getCollection('usage')?.results || []
 		},
 
 		/**
@@ -268,7 +268,7 @@ export default {
 		 */
 		organisatieIndex() {
 			const index = {}
-			for (const org of objectStore.getCollection('organisatie')?.results
+			for (const org of objectStore.getCollection('organization')?.results
 				|| []) {
 				const data = org.object || org
 				const id = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
@@ -434,8 +434,8 @@ export default {
 				}
 				await Promise.all([
 					this.fetchType('module'),
-					this.fetchType('gebruik'),
-					this.fetchType('organisatie'),
+					this.fetchType('usage'),
+					this.fetchType('organization'),
 					this.fetchType('contract'),
 				])
 			} catch (error) {

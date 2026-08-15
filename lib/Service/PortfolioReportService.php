@@ -247,8 +247,8 @@ class PortfolioReportService {
 		$truncated = $total > count($usages);
 
 		$gebruikIds = [];
-		foreach ($usages as $gebruik) {
-			$id = $this->derivation->resolveRelationId(value: $gebruik['id'] ?? ($gebruik['@self']['id'] ?? null));
+		foreach ($usages as $usage) {
+			$id = $this->derivation->resolveRelationId(value: $usage['id'] ?? ($usage['@self']['id'] ?? null));
 			if ($id !== '') {
 				$gebruikIds[] = $id;
 			}
@@ -257,8 +257,8 @@ class PortfolioReportService {
 		$contractsByGebruik = $this->fetchContractsForGebruiken(gebruikIds: $gebruikIds, cfg: $cfg, ceiling: $ceiling);
 
 		$rows = [];
-		foreach ($usages as $gebruik) {
-			$rows[] = $this->buildRow(gebruik: $gebruik, cfg: $cfg, contractsByGebruik: $contractsByGebruik, now: $now);
+		foreach ($usages as $usage) {
+			$rows[] = $this->buildRow(usage: $usage, cfg: $cfg, contractsByGebruik: $contractsByGebruik, now: $now);
 		}
 
 		return [
@@ -272,7 +272,7 @@ class PortfolioReportService {
 	/**
 	 * Build one report row for a single gebruik.
 	 *
-	 * @param array<string,mixed> $gebruik The gebruik data bag.
+	 * @param array<string,mixed> $usage The gebruik data bag.
 	 * @param array<string,int> $cfg Resolved register/schema ids.
 	 * @param array<string,array<int,array>> $contractsByGebruik Contract rows indexed by gebruik uuid.
 	 * @param DateTimeImmutable $now Reference moment.
@@ -281,10 +281,10 @@ class PortfolioReportService {
 	 *
 	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
 	 */
-	private function buildRow(array $gebruik, array $cfg, array $contractsByGebruik, DateTimeImmutable $now): array {
-		$gebruikId = $this->derivation->resolveRelationId(value: $gebruik['id'] ?? ($gebruik['@self']['id'] ?? null));
-		$moduleId = $this->derivation->resolveRelationId(value: $gebruik['module'] ?? null);
-		$versionId = $this->derivation->resolveRelationId(value: $gebruik['moduleVersie'] ?? null);
+	private function buildRow(array $usage, array $cfg, array $contractsByGebruik, DateTimeImmutable $now): array {
+		$gebruikId = $this->derivation->resolveRelationId(value: $usage['id'] ?? ($usage['@self']['id'] ?? null));
+		$moduleId = $this->derivation->resolveRelationId(value: $usage['module'] ?? null);
+		$versionId = $this->derivation->resolveRelationId(value: $usage['moduleVersion'] ?? null);
 
 		$module = null;
 		if ($moduleId !== '') {
@@ -301,14 +301,14 @@ class PortfolioReportService {
 
 		$cost = $this->sumContractCost(contracts: $contractsByGebruik[$gebruikId] ?? []);
 
-		$hostingModel = $gebruik['cloudDienstverleningsmodel'] ?? [];
+		$hostingModel = $usage['cloudDienstverleningsmodel'] ?? [];
 		if (is_array($hostingModel) === false) {
 			// A scalar (non-array) stored value — normalise to a one-element
 			// list so the row/aggregate code always iterates an array.
 			$hostingModel = [$hostingModel];
 		}
 
-		$classification = $this->normalizeClassification(value: $gebruik['timeClassification'] ?? null);
+		$classification = $this->normalizeClassification(value: $usage['timeClassification'] ?? null);
 
 		return [
 			'uuid' => $gebruikId,
@@ -316,9 +316,9 @@ class PortfolioReportService {
 			'moduleName' => $module['name'] ?? $module['title'] ?? $moduleId,
 			'timeClassification' => $classification,
 			'quadrant' => $classification ?? self::QUADRANT_UNCLASSIFIED,
-			'timeRationale' => $gebruik['timeRationale'] ?? null,
-			'timeReviewDate' => $gebruik['timeReviewDate'] ?? null,
-			'lifecyclePhase' => $this->derivation->deriveLifecyclePhase(gebruik: $gebruik, now: $now),
+			'timeRationale' => $usage['timeRationale'] ?? null,
+			'timeReviewDate' => $usage['timeReviewDate'] ?? null,
+			'lifecyclePhase' => $this->derivation->deriveLifecyclePhase(usage: $usage, now: $now),
 			'eol' => $eol,
 			'eolApproaching' => $eolApproaching,
 			'hostingModel' => array_values(array_filter($hostingModel, static fn ($v) => is_string($v) === true && $v !== '')),
@@ -447,7 +447,7 @@ class PortfolioReportService {
 				'register' => $cfg['registerId'],
 				'schema' => $cfg['contractSchema'],
 			],
-			'gebruik' => $gebruikIds,
+			'usage' => $gebruikIds,
 			'_limit' => min($ceiling * self::CONTRACT_LIMIT_MULTIPLIER, 5000),
 		];
 
@@ -460,7 +460,7 @@ class PortfolioReportService {
 
 		$indexed = [];
 		foreach ($this->derivation->normalizeResults(results: $result['results'] ?? []) as $contract) {
-			$gebruikId = $this->derivation->resolveRelationId(value: $contract['gebruik'] ?? null);
+			$gebruikId = $this->derivation->resolveRelationId(value: $contract['usage'] ?? null);
 			if ($gebruikId === '') {
 				continue;
 			}

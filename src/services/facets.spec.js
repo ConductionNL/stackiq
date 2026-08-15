@@ -119,10 +119,10 @@ describe('facets.fetchFacets', () => {
 	it('requests the bare schema URL (no ?) when no options are given', async () => {
 		axios.get.mockResolvedValue({ data: {} })
 
-		await fetchFacets('dienst')
+		await fetchFacets('service')
 
 		const [calledUrl] = axios.get.mock.calls[0]
-		expect(calledUrl).toBe('/apps/softwarecatalog/api/facets/dienst')
+		expect(calledUrl).toBe('/apps/softwarecatalog/api/facets/service')
 	})
 
 	it('returns the response body', async () => {

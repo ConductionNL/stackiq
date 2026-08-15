@@ -42,7 +42,7 @@ class OpenDataRegisterShapeTest extends TestCase {
 		$path = __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json';
 		$decoded = json_decode((string)file_get_contents($path), true);
 		$this->assertIsArray($decoded);
-		$this->organisation = $decoded['components']['schemas']['organisatie'];
+		$this->organisation = $decoded['components']['schemas']['organization'];
 	}//end setUp()
 
 	/**

@@ -241,20 +241,20 @@ class SoftwareCatalogueService {
 					);
 
 					// Add the newly created user to the organization entity.
-					$organisatie = $objectData['organisatie'] ?? null;
-					if (empty($organisatie) === false) {
+					$organization = $objectData['organization'] ?? null;
+					if (empty($organization) === false) {
 						$this->_logger->info(
 							'SoftwareCatalogueService: Adding user to organization entity',
 							[
 								'objectId' => $objectId,
 								'username' => $username,
-								'organisatie' => $organisatie,
+								'organization' => $organization,
 							]
 						);
 
 						try {
 							$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
-							$organisation = $organisationMapper->findByUuid($organisatie);
+							$organisation = $organisationMapper->findByUuid($organization);
 
 							if (empty($organisation) === false) {
 								$currentUsers = $organisation->getUsers() ?? [];
@@ -268,7 +268,7 @@ class SoftwareCatalogueService {
 										[
 											'objectId' => $objectId,
 											'username' => $username,
-											'organisatie' => $organisatie,
+											'organization' => $organization,
 											'totalUsers' => count($currentUsers),
 										]
 									);
@@ -278,7 +278,7 @@ class SoftwareCatalogueService {
 										[
 											'objectId' => $objectId,
 											'username' => $username,
-											'organisatie' => $organisatie,
+											'organization' => $organization,
 										]
 									);
 								}//end if
@@ -288,7 +288,7 @@ class SoftwareCatalogueService {
 									[
 										'objectId' => $objectId,
 										'username' => $username,
-										'organisatie' => $organisatie,
+										'organization' => $organization,
 									]
 								);
 							}//end if
@@ -298,7 +298,7 @@ class SoftwareCatalogueService {
 								[
 									'objectId' => $objectId,
 									'username' => $username,
-									'organisatie' => $organisatie,
+									'organization' => $organization,
 									'error' => $e->getMessage(),
 								]
 							);
@@ -1850,7 +1850,7 @@ class SoftwareCatalogueService {
 							'filters' => [
 								'register' => $objectData['register'] ?? '6',
 								'schema' => $contactSchemaId,
-								'organisatie' => $organizationUuid,
+								'organization' => $organizationUuid,
 							],
 						]
 					);
@@ -1878,7 +1878,7 @@ class SoftwareCatalogueService {
 
 						foreach ($allContactPersons as $contactPerson) {
 							$contactData = $contactPerson->getObject();
-							$contactOrganisation = $contactData['organisatie'] ?? null;
+							$contactOrganisation = $contactData['organization'] ?? null;
 							if ($contactOrganisation === $organizationUuid) {
 								$contactPersons[] = $contactPerson;
 							}
@@ -2020,7 +2020,7 @@ class SoftwareCatalogueService {
 			}
 
 			// Get all contactpersonen for this organization.
-			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'contactpersoon', logContext: 'contactpersonen');
+			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'contactPerson', logContext: 'contactpersonen');
 			if ($ctx === null) {
 				return;
 			}
@@ -2103,7 +2103,7 @@ class SoftwareCatalogueService {
 			}
 
 			// Get all contactpersonen for this organization.
-			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'contactpersoon', logContext: 'contactpersonen');
+			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'contactPerson', logContext: 'contactpersonen');
 			if ($ctx === null) {
 				return;
 			}
@@ -2422,7 +2422,7 @@ class SoftwareCatalogueService {
 
 			foreach ($contactpersonen as $contactPersonObject) {
 				$contactData = $contactPersonObject->getObject();
-				$contactOrganisation = $contactData['organisatie'] ?? null;
+				$contactOrganisation = $contactData['organization'] ?? null;
 
 				// Check if this contactpersoon belongs to our organization.
 				if ($contactOrganisation === $organizationUuid) {
@@ -2694,7 +2694,7 @@ class SoftwareCatalogueService {
 			}
 
 			// Get the organization object.
-			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'organisatie', logContext: 'organisatie');
+			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'organization', logContext: 'organization');
 			if ($ctx === null) {
 				return false;
 			}
@@ -2777,7 +2777,7 @@ class SoftwareCatalogueService {
 			}
 
 			// Get the organization object.
-			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'organisatie', logContext: 'organisatie');
+			$ctx = $this->resolveVoorzieningenContext(schemaSlug: 'organization', logContext: 'organization');
 			if ($ctx === null) {
 				return false;
 			}
@@ -2839,7 +2839,7 @@ class SoftwareCatalogueService {
 			}//end try
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to add contactpersoon to organization: ' . $e->getMessage(),
+				'SoftwareCatalogueService: Failed to add contact person to organization: ' . $e->getMessage(),
 				[
 					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
@@ -2896,8 +2896,8 @@ class SoftwareCatalogueService {
 			// Get the primary contact person object.
 			$settingsService = $this->_container->get(SettingsService::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$contactPersonSchemaId = $settingsService->getSchemaIdForObjectType('contactpersoon');
-			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organisatie');
+			$contactPersonSchemaId = $settingsService->getSchemaIdForObjectType('contactPerson');
+			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
 			if ($registerId === null || $contactPersonSchemaId === null || $organisationSchemaId === false) {
 				$this->_logger->error(
@@ -3014,7 +3014,7 @@ class SoftwareCatalogueService {
 
 					// Update primary contact person object ownership and organization reference.
 					$primaryContactData['owner'] = $primaryUsername;
-					$primaryContactData['organisatie'] = $organisationEntityUuid;
+					$primaryContactData['organization'] = $organisationEntityUuid;
 
 					$updatedPrimaryContact = $objectService->saveObject(
 						$primaryContactData,
@@ -3040,7 +3040,7 @@ class SoftwareCatalogueService {
 
 							if (empty($contactUsername) === false) {
 								$contactData['owner'] = $contactUsername;
-								$contactData['organisatie'] = $organisationEntityUuid;
+								$contactData['organization'] = $organisationEntityUuid;
 
 								$objectService->saveObject(
 									$contactData,
@@ -3161,7 +3161,7 @@ class SoftwareCatalogueService {
 					'filters' => [
 						'register' => (string)$registerId,
 						'schema' => $contactSchemaId,
-						'organisatie' => $organizationUuid,
+						'organization' => $organizationUuid,
 					],
 				]
 			);
@@ -3267,15 +3267,15 @@ class SoftwareCatalogueService {
 	private function ensureContactPersonInOrganization(object $contactPersonObject): void {
 		$contactData = $contactPersonObject->getObject();
 		$email = $contactData['email'] ?? null;
-		$organisatie = $contactData['organisatie'] ?? null;
+		$organization = $contactData['organization'] ?? null;
 
-		if ($email === null || $organisatie === false) {
+		if ($email === null || $organization === false) {
 			$this->_logger->info(
 				'SoftwareCatalogueService: Contact person missing email or organisation',
 				[
 					'contactPersonId' => $contactPersonObject->getId(),
 					'hasEmail' => empty($email) === false,
-					'hasOrganisatie' => empty($organisatie) === false,
+					'hasOrganisatie' => empty($organization) === false,
 				]
 			);
 			return;
@@ -3299,21 +3299,21 @@ class SoftwareCatalogueService {
 			[
 				'contactPersonId' => $contactPersonObject->getId(),
 				'username' => $email,
-				'organisatie' => $organisatie,
+				'organization' => $organization,
 			]
 		);
 
 		try {
 			// Get the organization entity.
 			$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
-			$organisation = $organisationMapper->findByUuid($organisatie);
+			$organisation = $organisationMapper->findByUuid($organization);
 
 			if ($organisation === null) {
 				$this->_logger->error(
 					'SoftwareCatalogueService: Organization entity not found for contact person',
 					[
 						'contactPersonId' => $contactPersonObject->getId(),
-						'organisatie' => $organisatie,
+						'organization' => $organization,
 					]
 				);
 				return;
@@ -3327,7 +3327,7 @@ class SoftwareCatalogueService {
 					[
 						'contactPersonId' => $contactPersonObject->getId(),
 						'username' => $email,
-						'organisatie' => $organisatie,
+						'organization' => $organization,
 					]
 				);
 				return;
@@ -3343,7 +3343,7 @@ class SoftwareCatalogueService {
 				[
 					'contactPersonId' => $contactPersonObject->getId(),
 					'username' => $email,
-					'organisatie' => $organisatie,
+					'organization' => $organization,
 					'totalUsers' => count($currentUsers),
 				]
 			);
@@ -3355,7 +3355,7 @@ class SoftwareCatalogueService {
 				[
 					'contactPersonId' => $contactPersonObject->getId(),
 					'username' => $email,
-					'organisatie' => $organisatie,
+					'organization' => $organization,
 					'message' => 'Expected during anonymous registration - org entity created after contacts',
 				]
 			);
@@ -3435,7 +3435,7 @@ class SoftwareCatalogueService {
 				uuid: $organizationObject->getUuid()
 			);
 
-			// Update contact person objects' @self.organisatie field.
+			// Update contact person objects' @self.organization field.
 			$contactpersonen = $objectData['contactpersonen'] ?? [];
 			foreach ($contactpersonen as $contactUuid) {
 				$this->_logger->info(
@@ -3474,7 +3474,7 @@ class SoftwareCatalogueService {
 					if (empty($contactObject) === false) {
 						// Get the current object data and update the organisatie field.
 						$contactObjectData = $contactObject->getObject();
-						$contactObjectData['@self']['organisatie'] = $organisationEntityUuid;
+						$contactObjectData['@self']['organization'] = $organisationEntityUuid;
 
 						// Update the contact person object using the ObjectService.
 						// Don't update version, not a patch, no extend.

@@ -335,7 +335,7 @@ class AangebodenGebruikControllerEndpointContractTest extends TestCase {
 		$this->gebruikSvc->expects($this->once())
 			->method('setGebruikSelfToActiveOrg')
 			->with('g-1', ['note' => 'x'])
-			->willReturn(['success' => true, 'gebruik' => ['id' => 'g-1']]);
+			->willReturn(['success' => true, 'usage' => ['id' => 'g-1']]);
 
 		$this->assertSame(Http::STATUS_OK, $controller->setGebruikSelfToActiveOrg('g-1')->getStatus());
 

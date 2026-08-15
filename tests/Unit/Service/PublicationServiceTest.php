@@ -94,7 +94,7 @@ class PublicationServiceTest extends TestCase {
 	public function testPublishSetsPublicatiedatum(): void {
 		$service = $this->makeService(['name' => 'Mijn dienst', 'depublicationDate' => '2020-01-01T00:00:00+00:00']);
 
-		$result = $service->publish('dienst', 'uuid-1');
+		$result = $service->publish('service', 'uuid-1');
 
 		$this->assertTrue($result['ok']);
 		$this->assertNotNull($result['publicationDate']);
@@ -115,7 +115,7 @@ class PublicationServiceTest extends TestCase {
 		$service = $this->makeService(['name' => 'Mijn dienst']);
 		$future = gmdate('Y-m-d\TH:i:sP', (time() + 86400));
 
-		$result = $service->publish('dienst', 'uuid-1', $future);
+		$result = $service->publish('service', 'uuid-1', $future);
 
 		$this->assertTrue($result['ok']);
 		$this->assertGreaterThan(time(), strtotime($this->savedObject['publicationDate']));
@@ -131,7 +131,7 @@ class PublicationServiceTest extends TestCase {
 			['name' => 'Mijn dienst', 'publicationDate' => '2024-01-01T00:00:00+00:00']
 		);
 
-		$result = $service->depublish('dienst', 'uuid-1');
+		$result = $service->depublish('service', 'uuid-1');
 
 		$this->assertTrue($result['ok']);
 		$this->assertNull($this->savedObject['publicationDate']);
@@ -148,10 +148,10 @@ class PublicationServiceTest extends TestCase {
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(SettingsService::class),
 			$this->createMock(LoggerInterface::class)
-		))->isPublishableType('contactpersoon'));
+		))->isPublishableType('contactPerson'));
 
 		$service = $this->makeService(['name' => 'x']);
-		$result = $service->publish('contactpersoon', 'uuid-1');
+		$result = $service->publish('contactPerson', 'uuid-1');
 		$this->assertFalse($result['ok']);
 		$this->assertNull($this->savedObject);
 	}//end testNonPublishableTypeRejected()
@@ -163,7 +163,7 @@ class PublicationServiceTest extends TestCase {
 	 */
 	public function testPublishableTypes(): void {
 		$service = $this->makeService(['name' => 'x']);
-		foreach (['dienst', 'module', 'koppeling', 'organisatie'] as $type) {
+		foreach (['service', 'module', 'connection', 'organization'] as $type) {
 			$this->assertTrue($service->isPublishableType($type), $type . ' should be publishable');
 		}
 	}//end testPublishableTypes()

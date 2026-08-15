@@ -58,7 +58,7 @@ export const CELL = Object.freeze({
 })
 
 /**
- * @typedef {('standard_version'|'bioMaatregel')} ColumnSource
+ * @typedef {('standard_version'|'bioMeasure')} ColumnSource
  */
 
 /**
@@ -69,7 +69,7 @@ export const CELL = Object.freeze({
  */
 export const COLUMN_SOURCE = Object.freeze({
 	STANDAARDVERSIE: 'standard_version',
-	BIO_MAATREGEL: 'bioMaatregel',
+	BIO_MAATREGEL: 'bioMeasure',
 })
 
 /**
@@ -177,7 +177,7 @@ export function partitionCompliancy(
 		const data = dataOf(record)
 		const moduleUuid = resolveUuid(data.module)
 		const standaardversieUuid = resolveUuid(data.standard_version)
-		const bioMaatregelUuid = resolveUuid(data.bioMaatregel)
+		const bioMaatregelUuid = resolveUuid(data.bioMeasure)
 		const evidenced = hasEvidence(data)
 
 		// A record naming both a standard and a BIO measure is a data-quality
@@ -382,7 +382,7 @@ export function standardLabel(standard) {
  * @param {Array<object>} params.compliancy        Compliancy records.
  * @param {ColumnSource}  [params.columnSource]     Which relation to key on. Defaults to standaardversie.
  * @param {{[key: string]: object}} [params.moduleIndex] Optional UUID→module lookup for labels.
- * @return {Array<{gebruik: object, moduleUuid: string, module: (object|null), state: CellState}>}
+ * @return {Array<{usage: object, moduleUuid: string, module: (object|null), state: CellState}>}
  *
  * @spec openspec/specs/module-compliance-assessment/spec.md
  * @spec openspec/specs/bio-compliance-assessment/spec.md

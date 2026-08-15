@@ -118,7 +118,7 @@ class ReviewAggregateServiceTest extends TestCase {
 
 		$service = new ReviewAggregateService($this->container($objectService), $this->settings(), $this->logger());
 
-		$result = $service->getAggregate('dienst', 'dienst-uuid-1');
+		$result = $service->getAggregate('service', 'dienst-uuid-1');
 
 		$this->assertTrue($result['ok']);
 		$this->assertSame(1, $result['count']);
@@ -133,7 +133,7 @@ class ReviewAggregateServiceTest extends TestCase {
 	public function testInvalidSubjectTypeRejected(): void {
 		$service = new ReviewAggregateService($this->container($this->objectService([])), $this->settings(), $this->logger());
 
-		$result = $service->getAggregate('organisatie', 'org-uuid-1');
+		$result = $service->getAggregate('organization', 'org-uuid-1');
 
 		$this->assertFalse($result['ok']);
 		$this->assertSame('invalid subject type', $result['reason']);

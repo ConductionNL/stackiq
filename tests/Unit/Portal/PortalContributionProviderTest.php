@@ -117,7 +117,7 @@ class PortalContributionProviderTest extends TestCase {
 			array_keys($byId)
 		);
 
-		$this->assertSame('dienst', $byId['vendorDiensten']['schema']);
+		$this->assertSame('service', $byId['vendorDiensten']['schema']);
 		$this->assertSame('provider', $byId['vendorDiensten']['scopeField']);
 		$this->assertSame('organisationId', $byId['vendorDiensten']['scopeClaim']);
 		$this->assertArrayNotHasKey('via', $byId['vendorDiensten']);
@@ -125,7 +125,7 @@ class PortalContributionProviderTest extends TestCase {
 		$this->assertSame('provider', $byId['vendorGebruik']['scopeField']);
 
 		// contract is reached one hop via dienst and gated at substantial trust.
-		$this->assertSame('dienst', $byId['vendorContracts']['via']);
+		$this->assertSame('service', $byId['vendorContracts']['via']);
 		$this->assertSame('provider', $byId['vendorContracts']['scopeField']);
 		$this->assertSame('substantial', $byId['vendorContracts']['minTrust']);
 
@@ -150,10 +150,10 @@ class PortalContributionProviderTest extends TestCase {
 		$byId = $this->collectionsById($manifest);
 		$this->assertSame(['participantGebruik', 'participantContracts'], array_keys($byId));
 
-		$this->assertSame('gebruik', $byId['participantGebruik']['schema']);
+		$this->assertSame('usage', $byId['participantGebruik']['schema']);
 		$this->assertSame('consumer', $byId['participantGebruik']['scopeField']);
 
-		$this->assertSame('gebruik', $byId['participantContracts']['via']);
+		$this->assertSame('usage', $byId['participantContracts']['via']);
 		$this->assertSame('consumer', $byId['participantContracts']['scopeField']);
 		$this->assertSame('substantial', $byId['participantContracts']['minTrust']);
 
@@ -187,7 +187,7 @@ class PortalContributionProviderTest extends TestCase {
 			array_column($vendor, 'schema'),
 			array_column($participant, 'schema')
 		);
-		$this->assertNotContains('kwetsbaarheid', $allSchemas);
+		$this->assertNotContains('vulnerability', $allSchemas);
 	}
 
 	/**
