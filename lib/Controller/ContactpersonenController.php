@@ -311,7 +311,7 @@ class ContactpersonenController extends Controller {
 
 		$callerOrgUuid = null;
 		try {
-			$callerOrgUuid = $this->resolveContactOrganisation(objectService: $objectService, username: $currentUser->getUID());
+			$callerOrgUuid = $this->resolveContactOrganisation(objectService: $this->objectService, username: $currentUser->getUID());
 		} catch (\Exception $e) {
 			$this->logger->warning(
 				'ContactpersonenController: could not resolve the caller organisation, denying contact read',
@@ -957,8 +957,8 @@ class ContactpersonenController extends Controller {
 	 */
 	private function verifyCrossTenantScope(\OCP\IUser $currentUser, string $username): ?JSONResponse {
 		try {
-			$targetOrgUuid = $this->resolveContactOrganisation(objectService: $objectService, username: $username);
-			$callerOrgUuid = $this->resolveContactOrganisation(objectService: $objectService, username: $currentUser->getUID());
+			$targetOrgUuid = $this->resolveContactOrganisation(objectService: $this->objectService, username: $username);
+			$callerOrgUuid = $this->resolveContactOrganisation(objectService: $this->objectService, username: $currentUser->getUID());
 
 			if ($targetOrgUuid !== null && $callerOrgUuid !== null && $targetOrgUuid !== $callerOrgUuid) {
 				$this->logger->warning(
@@ -993,7 +993,7 @@ class ContactpersonenController extends Controller {
 	 * made a nested reference compare unequal to a plain UUID, which both this
 	 * method's callers treat as "different tenant" (GH#459).
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param object $this->objectService The OpenRegister ObjectService.
 	 * @param string $username The username to look up.
 	 *
 	 * @return string|null The organisation UUID or null when not found.

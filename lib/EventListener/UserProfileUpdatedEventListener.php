@@ -156,7 +156,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		];
 
 		$contactPerson = $this->findContactPerson(
-			objectService: $objectService,
+			objectService: $this->objectService,
 			selfQuery: $selfQuery,
 			userId: $userId,
 			event: $event,
@@ -335,7 +335,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	/**
 	 * Find a contactpersoon by username, falling back to a case-insensitive email search.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
+	 * @param object $this->objectService The OpenRegister ObjectService.
 	 * @param array $selfQuery The @self register/schema filter.
 	 * @param string $userId The Nextcloud user ID.
 	 * @param UserProfileUpdatedEvent $event The profile updated event.

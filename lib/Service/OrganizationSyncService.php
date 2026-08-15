@@ -384,7 +384,7 @@ class OrganizationSyncService {
 
 		$rows = $qb->executeQuery()->fetchAll();
 
-		if ($objectService instanceof ObjectService === false) {
+		if ($this->objectService instanceof ObjectService === false) {
 			$this->logger->error('OrganizationSync: could not resolve ObjectService');
 			return $stats;
 		}
@@ -508,7 +508,7 @@ class OrganizationSyncService {
 
 		$this->logger->info('ContactSync: processing ' . count($contacts) . ' contacts with existing NC accounts');
 
-		if ($objectService instanceof ObjectService === false) {
+		if ($this->objectService instanceof ObjectService === false) {
 			$this->logger->error('ContactSync: could not resolve ObjectService');
 			return $stats;
 		}
