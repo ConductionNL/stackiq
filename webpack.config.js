@@ -43,23 +43,54 @@ webpackConfig.output = {
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package.
 //
-// ⚠️ USE_LOCAL_LIB is opt-OUT, and the shared `apps-extra/nextcloud-vue`
-// checkout sits on the Vue 2 (1.x / beta.*) line. Defaulting to "on" would
-// silently compile Vue 2 library sources into this Vue 3 app and still produce
-// a green build, so the major version is checked rather than the default
-// trusted: a 1.x sibling is the Vue 2 line and must be ignored.
+// ⚠️ USE_LOCAL_LIB is opt-IN (ADR-090). Building against a developer's working
+// checkout is the wrong default for a build that can ship, and the old opt-OUT
+// default silently compiled Vue 2 library sources into this Vue 3 app while
+// still producing a green build.
+//
+// The sibling is validated against THIS app's own declared range, not a
+// hand-rolled version test. The previous check required `startsWith('2.')`, on
+// the premise that a bad sibling would be 1.x. The sibling checkout today is
+// 2.0.5 while this app declares 2.2.0-vue3.16 — both start with "2.", so the test
+// waved through a version the app never asked for.
+//
+// The failure that skew produces is not obvious from the version alone. Building
+// against the sibling also pulls packages out of the SIBLING's node_modules, and
+// a stale vue-demi shim there (its postinstall picks v2/v2.7/v3 and does not
+// re-run on `npm install`) yields 13 errors of the form
+//   export 'default' (imported as 'Vue') was not found in 'vue'
+// — a Vue-2-shaped failure from a library that is itself Vue 3.
+//
+// Comparing against the declared range sidesteps the whole question: a sibling
+// the app did not ask for is refused, whatever is wrong with it.
+//
+// Fail CLOSED: if the check cannot run (semver unresolvable, package unreadable)
+// the sibling is refused. A guard that degrades to "allow" is not a guard.
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
 const localLibPkg = path.resolve(__dirname, '../nextcloud-vue/package.json')
-let useLocalLib = process.env.USE_LOCAL_LIB !== 'false' && fs.existsSync(localLib)
-if (useLocalLib && fs.existsSync(localLibPkg)) {
-	const localVersion =
-		JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || ''
-	if (!localVersion.startsWith('2.')) {
+let useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
+if (useLocalLib) {
+	let satisfied = false
+	let localVersion = 'unreadable'
+	try {
+		// eslint-disable-next-line n/no-extraneous-require
+		const semver = require('semver')
+		const required =
+			require('./package.json').dependencies['@conduction/nextcloud-vue']
+		localVersion = JSON.parse(fs.readFileSync(localLibPkg, 'utf8')).version || ''
+		satisfied = semver.satisfies(localVersion, required, {
+			includePrerelease: true,
+		})
+	} catch (e) {
+		satisfied = false
+	}
+
+	if (!satisfied) {
 		useLocalLib = false
 		// eslint-disable-next-line no-console
 		console.warn(
 			`[softwarecatalog] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
-				+ 'that is the Vue 2 line and this app is Vue 3. Building against the npm dist.',
+				+ "it does not satisfy this app's declared range. Building against the npm dist.",
 		)
 	}
 }
