@@ -107,6 +107,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	public function __construct(
 		private readonly IDBConnection $db,
 		private readonly LoggerInterface $logger,
+		private readonly RenameDutchSchemaSlugDecisions $decisions = new RenameDutchSchemaSlugDecisions(),
 	) {
 	}//end __construct()
 
@@ -137,30 +138,20 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 
 		$existing = $this->slugsOf(schemaIds: $schemaIds);
 
+		$plan = $this->decisions->plan(map: self::SLUG_MAP, existing: $existing);
+
+		foreach ($plan['refused'] as $old => $why) {
+			$this->logger->warning(
+				'RenameDutchSchemaSlugs: ' . $why . '; renaming neither.',
+				['old' => $old]
+			);
+		}
+
 		$renamed = 0;
-		$refused = 0;
-		foreach (self::SLUG_MAP as $old => $new) {
-			if (in_array($old, $existing, true) === false) {
-				continue;
-			}
-
-			// Two schemas cannot share a slug. If the target is already present
-			// the safe move is to leave both alone: merging them is a decision
-			// about data, not a rename, and doing it here would be silent.
-			if (in_array($new, $existing, true) === true) {
-				$this->logger->warning(
-					'RenameDutchSchemaSlugs: target slug already exists; renaming neither.',
-					['old' => $old, 'new' => $new]
-				);
-				$refused++;
-				continue;
-			}
-
+		$refused = count($plan['refused']);
+		foreach ($plan['renames'] as $old => $new) {
 			if ($this->renameSlug(old: $old, new: $new, schemaIds: $schemaIds) === true) {
 				$renamed++;
-				// Keep the local view current so a later entry in the map sees
-				// this rename when it checks for a collision.
-				$existing[] = $new;
 			}
 		}
 
@@ -214,7 +205,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 		}
 
 		$count = $this->rowCountFor(schemaId: (int)$archimate['id']);
-		if ($count !== 0) {
+		if ($this->decisions->mayRetire(rowCount: $count) === false) {
 			$this->logger->warning(
 				'RenameDutchSchemaSlugs: the ArchiMate organization schema holds rows; refusing to merge. '
 				. 'Migrate them onto the catalogue organisation deliberately, then re-run repair.',
@@ -276,9 +267,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 		$total = 0;
 		foreach ($tables as $table) {
 			$name = (string)($table['table_name'] ?? '');
-			// The LIKE above can also match `..._table_1_23` when looking for 3,
-			// so confirm the suffix exactly.
-			if (preg_match('/_table_\d+_' . $schemaId . '$/', $name) !== 1) {
+			if ($this->decisions->isShardTableFor(tableName: $name, schemaId: $schemaId) === false) {
 				continue;
 			}
 
@@ -354,21 +343,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 			return [];
 		}
 
-		$ids = [];
-		foreach ($rows as $row) {
-			$decoded = json_decode((string)($row['schemas'] ?? '[]'), true);
-			if (is_array($decoded) === false) {
-				continue;
-			}
-
-			foreach ($decoded as $id) {
-				if (is_numeric($id) === true) {
-					$ids[] = (int)$id;
-				}
-			}
-		}
-
-		return array_values(array_unique($ids));
+		return $this->decisions->schemaIdsFrom(rows: $rows);
 	}//end inScopeSchemaIds()
 
 	/**
