@@ -78,8 +78,12 @@ class CompositionRootArgumentsTest extends TestCase {
 		$this->applicationPhp = dirname(__DIR__, 3) . '/lib/AppInfo/Application.php';
 		self::assertFileExists($this->applicationPhp, 'the composition root must exist');
 
-		$source          = file_get_contents($this->applicationPhp);
-		$this->callSites = $this->parseNewCalls($source, $this->buildUseMap($source));
+		$source = file_get_contents($this->applicationPhp);
+		$this->callSites = $this->parseNewCalls(
+			$source,
+			$this->buildUseMap($source),
+			$this->currentNamespace($source)
+		);
 
 	}//end setUp()
 
@@ -294,15 +298,14 @@ class CompositionRootArgumentsTest extends TestCase {
 		sort($unresolvable);
 
 		// Classes belonging to other apps or to PHP itself, which a unit-test
-		// autoloader cannot resolve. Anything new appearing here is a factory
-		// this file is NOT checking — add a stub, or accept it deliberately.
-		$expected = [
-			'OCA\OpenRegister\Db\ObjectEntity',
-			'OCA\OpenRegister\Service\ObjectService',
-		];
+		// autoloader cannot resolve. Currently EMPTY: every factory target in
+		// the composition root is reflected, so the check above covers all of
+		// them. Anything appearing here is a factory this file is NOT
+		// checking — add a stub, or accept the entry deliberately.
+		$expected = [];
 
 		self::assertSame(
-			array_values(array_intersect($expected, $unresolvable)),
+			$expected,
 			$unresolvable,
 			'Composition-root factory targets that cannot be reflected in a '
 			. 'unit-test run have changed. Unreflectable targets are unchecked, '
@@ -311,6 +314,28 @@ class CompositionRootArgumentsTest extends TestCase {
 		);
 
 	}//end testUnresolvableFactoryTargetsAreDeclared()
+
+
+	/**
+	 * The namespace the composition root is declared in.
+	 *
+	 * An unqualified class name in a namespaced file resolves to the current
+	 * namespace, not to the global one. Without this, a factory for a class
+	 * that is simply a neighbour of `Application` looks unresolvable — and
+	 * unresolvable reads as unchecked.
+	 *
+	 * @param string $source The PHP source of the composition root.
+	 *
+	 * @return string
+	 */
+	private function currentNamespace(string $source): string {
+		if (preg_match('/^namespace\s+([A-Za-z0-9_\\\\]+)\s*;/m', $source, $match) === 1) {
+			return $match[1];
+		}
+
+		return '';
+
+	}//end currentNamespace()
 
 
 	/**
@@ -351,12 +376,13 @@ class CompositionRootArgumentsTest extends TestCase {
 	 * Uses PHP's own tokeniser, so comments and string literals cannot be
 	 * mistaken for code.
 	 *
-	 * @param string                $source The PHP source of the composition root.
-	 * @param array<string, string> $useMap Alias => FQN, from buildUseMap().
+	 * @param string                $source    The PHP source of the composition root.
+	 * @param array<string, string> $useMap    Alias => FQN, from buildUseMap().
+	 * @param string                $namespace The file's own namespace.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function parseNewCalls(string $source, array $useMap): array {
+	private function parseNewCalls(string $source, array $useMap, string $namespace): array {
 		$tokens = token_get_all($source);
 		$sites  = [];
 		$count  = count($tokens);
@@ -387,7 +413,9 @@ class CompositionRootArgumentsTest extends TestCase {
 				continue;
 			}
 
-			$name = ltrim($tokens[$j][1], '\\');
+			$name       = $tokens[$j][1];
+			$isAbsolute = (str_starts_with($name, '\\') === true);
+			$name       = ltrim($name, '\\');
 
 			// The argument list must open immediately.
 			$k = ($j + 1);
@@ -403,19 +431,21 @@ class CompositionRootArgumentsTest extends TestCase {
 
 			[$named, $positional, $end] = $this->readArgumentList($tokens, $k);
 
-			$base = $name;
-			if (str_contains($name, '\\') === true) {
-				$parts = explode('\\', $name);
-				$base  = $parts[0];
-			}
-
-			$fqn = $name;
-			if (isset($useMap[$base]) === true) {
-				$fqn = $useMap[$base] . substr($name, strlen($base));
+			// Resolve `use ... as Alias` FIRST, then fall back to the file's
+			// own namespace. An aliased class resolved the other way round
+			// looks unresolvable, and unresolvable reads as unchecked.
+			$head = explode('\\', $name)[0];
+			$fqn  = $name;
+			if (isset($useMap[$head]) === true) {
+				$fqn = $useMap[$head] . substr($name, strlen($head));
+			} else if ($isAbsolute === false && $namespace !== '') {
+				// Not imported and not fully qualified: PHP resolves it
+				// relative to the file's own namespace.
+				$fqn = $namespace . '\\' . $name;
 			}
 
 			$sites[] = [
-				'class'      => $fqn,
+				'class'      => ltrim($fqn, '\\'),
 				'line'       => $line,
 				'named'      => $named,
 				'positional' => $positional,
