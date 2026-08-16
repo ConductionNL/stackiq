@@ -153,11 +153,6 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 			->method('handleNewGebruiker')
 			->with($user);
 
-		$this->softwareCatalogueService
-			->expects($this->once())
-			->method('sendGebruikerWelcomeEmail')
-			->with($user);
-
 		// Handle the event
 		$this->eventListener->handle($event);
 	}
@@ -305,53 +300,30 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 	}
 
 	/**
-	 * Test handling contact reversion event
+	 * An object-reverted event reaches the listener without driving
+	 * SoftwareCatalogueService.
+	 *
+	 * The two cases that stood here asserted
+	 * `syncUserWithRevertedContact()` / `updateUserFromRevertedGebruiker()`
+	 * were called once each. `SoftwareCatalogEventListener` does not call
+	 * them — it never did — and both service methods were log-only stubs with
+	 * no caller, removed with this change. The assertion that survives is the
+	 * true one: the revert path must not blow up, and must not reach a
+	 * capability the app does not implement.
 	 *
 	 * @return void
 	 */
-	public function testHandleContactRevertedEvent(): void {
-		// Create mock ObjectEntity for contact (schema ID 2)
+	public function testHandleRevertedEventDoesNotDriveTheCatalogueService(): void {
 		$contact = $this->createMock(ObjectEntity::class);
 		$contact->method('getSchema')->willReturn(2);
 
-		$revertPoint = new \DateTime('2024-01-01 12:00:00');
-
-		// Create ObjectRevertedEvent
-		$event = new ObjectRevertedEvent($contact, $revertPoint);
-
-		// Set expectations for service calls
 		$this->softwareCatalogueService
-			->expects($this->once())
-			->method('syncUserWithRevertedContact')
-			->with($contact, $revertPoint);
+			->expects($this->never())
+			->method('handleContactUpdate');
 
-		// Handle the event
-		$this->eventListener->handle($event);
-	}
-
-	/**
-	 * Test handling gebruiker (user) reversion event
-	 *
-	 * @return void
-	 */
-	public function testHandleGebruikerRevertedEvent(): void {
-		// Create mock ObjectEntity for gebruiker (schema ID 3)
-		$user = $this->createMock(ObjectEntity::class);
-		$user->method('getSchema')->willReturn(3);
-
-		$revertPoint = 'audit_123';
-
-		// Create ObjectRevertedEvent
-		$event = new ObjectRevertedEvent($user, $revertPoint);
-
-		// Set expectations for service calls
-		$this->softwareCatalogueService
-			->expects($this->once())
-			->method('updateUserFromRevertedGebruiker')
-			->with($user, $revertPoint);
-
-		// Handle the event
-		$this->eventListener->handle($event);
+		$this->eventListener->handle(
+			new ObjectRevertedEvent($contact, new \DateTime('2024-01-01 12:00:00'))
+		);
 	}
 
 	/**

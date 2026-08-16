@@ -950,51 +950,17 @@ class ContactPersonHandler {
 		}//end try
 	}//end updateUserGroupsFromContactData()
 
-	/**
-	 * Legacy method for backward compatibility - now redirects to organization type-based logic
+	/*
+	 * NO updateUserGroupsFromRoles() HERE.
 	 *
-	 * @param \OCP\IUser $user The user to update
-	 * @param array $newRoles The new roles (ignored - kept for compatibility)
-	 * @param array $oldRoles The old roles (ignored - kept for compatibility)
-	 *
-	 * @return void
-	 * @deprecated Use updateUserGroupsFromContactData instead
-	 * @spec       openspec/specs/sc-handlers/spec.md
+	 * It was already `@deprecated`, logged "role assignment now based on
+	 * organization type" on every call, ignored both of its `$newRoles` /
+	 * `$oldRoles` arguments, and forwarded to
+	 * `updateUserGroupsFromContactData()` — the live method. It had no caller,
+	 * so the backward compatibility it existed for had no consumer either.
+	 * Group membership is a permission fact; a second, role-shaped entry point
+	 * into it is a surface, not a convenience.
 	 */
-	public function updateUserGroupsFromRoles(\OCP\IUser $user, array $newRoles, array $oldRoles = []): void {
-		$this->_logger->info(
-			'updateUserGroupsFromRoles is deprecated - role assignment now based on organization type',
-			[
-				'username' => $user->getUID(),
-				'newRoles' => $newRoles,
-				'oldRoles' => $oldRoles,
-			]
-		);
-
-		// For backward compatibility, try to find the user's contact data and update based on organization type.
-		try {
-			$contactObject = $this->findContactPersonByUsername(username: $user->getUID());
-			if (empty($contactObject) === true) {
-				$this->_logger->warning(
-					'Could not find contact person data for user - cannot update groups',
-					['username' => $user->getUID()]
-				);
-			}
-
-			if (empty($contactObject) === false) {
-				$contactData = $contactObject->getObject();
-				$this->updateUserGroupsFromContactData(user: $user, contactData: $contactData);
-			}
-		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to update user groups via legacy method: ' . $e->getMessage(),
-				[
-					'username' => $user->getUID(),
-					'exception' => $e,
-				]
-			);
-		}//end try
-	}//end updateUserGroupsFromRoles()
 
 	/**
 	 * Finds contactpersoon object by username

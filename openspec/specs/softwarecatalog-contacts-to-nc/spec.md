@@ -47,9 +47,12 @@ catalog fields and dropping all embedded identity properties.
 
 The system SHALL provide a `SoftwareCatalogContactSyncService` modeled on the
 canonical `pipelinq/lib/Service/ContactSyncService.php`, exposing
-`searchContacts`, `importContact`, `syncToContacts(objectType, objectId)`
-returning a `contactsUid`, and `findContactByUid`, using `OCP\Contacts\IManager`
+`searchContacts`, `syncToContacts(objectType, objectId)` returning a
+`contactsUid`, and `findContactByUid`, using `OCP\Contacts\IManager`
 and never bespoke HTTP, per ADR-019 and ADR-022.
+
+There SHALL be no separate `importContact` entry point: resolving a UID to a
+Contact is `findContactByUid`, and resolve-or-create is `syncToContacts`.
 
 #### Scenario: A relationship record is linked to a Contact via the sync service
 

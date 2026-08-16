@@ -113,35 +113,18 @@ class SoftwareCatalogContactSyncService {
 		return $contacts;
 	}//end searchContacts()
 
-	/**
-	 * Import (resolve) a Nextcloud contact UID into a catalog relationship
-	 * record's `contactsUid`. Idempotent: an already-known UID is returned
-	 * unchanged. An unknown UID raises a RuntimeException.
+	/*
+	 * NO importContact() HERE.
 	 *
-	 * @param string $uid The contact UID to import.
-	 * @param ?string $addressBookKey Optional addressbook key (kept for parity
-	 *                                with the canonical signature; unused here).
-	 *
-	 * @return string The resolved contacts UID.
-	 *
-	 * @throws RuntimeException When Contacts is disabled or the UID is unknown.
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $addressBookKey kept for canonical-signature parity.
-	 *
-	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * It validated that a UID resolved and returned that same UID unchanged —
+	 * no import, no write. It had no caller: the two live consumers,
+	 * `BackgroundJob\OrganizationContactSyncJob` and `Repair\MigrateContactsToNc`,
+	 * use `isAvailable()`, `findContactByUid()`, `findContactForRecord()` and
+	 * `syncToContacts()`, which together already serve the capability
+	 * ("resolve or create the Nextcloud Contact for a record and return its
+	 * UID"). A third entry point would have duplicated `syncToContacts()`
+	 * without its create path.
 	 */
-	public function importContact(string $uid, ?string $addressBookKey = null): string {
-		if ($this->isAvailable() === false) {
-			throw new RuntimeException('Nextcloud Contacts is not available');
-		}
-
-		$contact = $this->findContactByUid(uid: $uid);
-		if ($contact === null) {
-			throw new RuntimeException('Contact not found in any accessible addressbook');
-		}
-
-		return $uid;
-	}//end importContact()
 
 	/**
 	 * Resolve (or create) the Nextcloud Contact for a catalog relationship
