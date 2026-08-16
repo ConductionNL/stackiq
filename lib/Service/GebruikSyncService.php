@@ -82,6 +82,7 @@ class GebruikSyncService {
 	 * @param LoggerInterface $logger Logger for debugging and error reporting
 	 * @param SettingsService $settingsService Service for retrieving configuration settings
 	 * @param ContainerInterface $container DI container for lazy service resolution
+	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-084 contract)
 	 */
 	public function __construct(
 		LoggerInterface $logger,

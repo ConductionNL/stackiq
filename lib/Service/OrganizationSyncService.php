@@ -120,6 +120,8 @@ class OrganizationSyncService {
 	 * @param IDBConnection $db The database connection.
 	 * @param ContactPersonHandler $contactpersonHandler The contact person handler.
 	 * @param ContainerInterface $container The DI container.
+	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-084 contract).
+	 * @param OrganisationMapper $organisationMapper Resolves the acting organisation for sync writes.
 	 */
 	public function __construct(
 		OrganisatieService $organisationService,

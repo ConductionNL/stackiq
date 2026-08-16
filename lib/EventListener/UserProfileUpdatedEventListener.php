@@ -57,6 +57,10 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 * Constructor for UserProfileUpdatedEventListener.
 	 *
 	 * @param ContainerInterface $container DI container for lazy service resolution.
+	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-084 contract).
+	 * @param SchemaMapper $schemaMapper Resolves the contactpersoon schema.
+	 * @param RegisterMapper $registerMapper Resolves the register the schema lives in.
+	 * @param MetadataHydrationHandler $metadataHydrationHandler Hydrates `@self` metadata on read.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,

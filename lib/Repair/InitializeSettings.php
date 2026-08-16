@@ -111,7 +111,9 @@ class InitializeSettings implements IRepairStep {
 				$this->config->setValueInt(Application::APP_ID, 'eol_warning_window_days', 180);
 			}
 
-			// @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-report-aggregation-queries-are-bounded
+			// @spec openspec/changes/portfolio-rationalization-time/specs
+			//       /portfolio-rationalization-time/spec.md
+			//       #requirement-report-aggregation-queries-are-bounded
 			// Seed the portfolio-report page-size ceiling default only when
 			// unset, so an operator's chosen bound survives upgrades.
 			if ($this->config->hasKey(Application::APP_ID, 'portfolio_report_page_size_ceiling') === false) {
