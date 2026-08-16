@@ -147,7 +147,6 @@
 </template>
 
 <script>
-// eslint-disable-next-line import/named
 import { CnDashboardPage } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'

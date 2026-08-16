@@ -90,6 +90,12 @@ function tryLoadTranslations() {
 	}
 }
 
+// `require.context` is a WEBPACK build-time API, not CommonJS `require`: the
+// bundler rewrites this call at compile time and no `require` exists at
+// runtime. eslint's browser globals therefore report `no-undef` correctly —
+// the code is right and the linter is right. Scoped to this one identifier so
+// a genuinely undefined name elsewhere in the file still fails.
+/* global require */
 const fragmentCtx = require.context('./manifest.d/', false, /\.json$/)
 const fragments = fragmentCtx
 	.keys()

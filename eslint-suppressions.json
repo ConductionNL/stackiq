@@ -106,11 +106,6 @@
       "count": 1
     }
   },
-  "src/main.js": {
-    "no-undef": {
-      "count": 1
-    }
-  },
   "src/modals/AddContactpersoonModal.vue": {
     "jsdoc/require-param-type": {
       "count": 1
@@ -310,9 +305,6 @@
     "no-console": {
       "count": 1
     },
-    "preserve-caught-error": {
-      "count": 1
-    },
     "vue/prefer-define-options": {
       "count": 1
     },
@@ -441,9 +433,6 @@
   },
   "src/views/Dashboard.vue": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    },
-    "import/named": {
       "count": 1
     },
     "no-console": {
