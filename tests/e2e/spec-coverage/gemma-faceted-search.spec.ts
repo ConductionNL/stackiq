@@ -162,10 +162,7 @@ test('facets: an unsupported schema is rejected with 400 naming the supported on
 	// so the expected literal has to be sorted too — comparing a sorted actual
 	// against `['service', 'module']` could never have held whichever names the
 	// service used. Copy before sorting so the response body is not mutated.
-	expect([...(body?.supportedSchemas ?? [])].sort()).toEqual([
-		'module',
-		'service',
-	])
+	expect([...(body?.supportedSchemas ?? [])].sort()).toEqual(['module', 'service'])
 
 	// Control: the same endpoint shape with a SUPPORTED schema is a 200, so the
 	// 400 above is about the schema and not about the route being broken.

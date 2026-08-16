@@ -30,9 +30,7 @@ export function translate(app, text, vars) {
 		return String(text)
 	}
 	return String(text).replace(/\{(\w+)\}/g, (match, key) =>
-		Object.prototype.hasOwnProperty.call(vars, key)
-			? String(vars[key])
-			: match,
+		Object.hasOwn(vars, key) ? String(vars[key]) : match,
 	)
 }
 

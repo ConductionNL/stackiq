@@ -29,8 +29,8 @@
  * that makes a green gate worthless.
  */
 import { describe, expect, it } from 'vitest'
-import manifest from '../../src/manifest.json'
 import register from '../../lib/Settings/softwarecatalogus_register.json'
+import manifest from '../../src/manifest.json'
 
 const SCHEMAS = register?.components?.schemas ?? {}
 
