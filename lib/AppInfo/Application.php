@@ -740,7 +740,14 @@ class Application extends App implements IBootstrap {
 					userSession: $container->get('OCP\IUserSession'),
 					container: $container,
 					secureRandom: $container->get('OCP\Security\ISecureRandom'),
-					logger: $container->get('Psr\Log\LoggerInterface')
+					logger: $container->get('Psr\Log\LoggerInterface'),
+					// ADR-084 added these two to the constructor; this hand-written
+					// factory bypasses Nextcloud's autowiring, so it does not gain
+					// them automatically. Omitting them is an ArgumentCountError at
+					// request time and nothing catches it before then — see
+					// tests/Unit/AppInfo/CompositionRootArgumentsTest.php.
+					objectService: $container->get(ObjectServiceInterface::class),
+					organisationService: $container->get(OpenRegisterOrganisationService::class)
 				);
 			}
 		);
