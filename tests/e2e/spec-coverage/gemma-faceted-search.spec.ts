@@ -146,19 +146,28 @@ test('facets: an unsupported schema is rejected with 400 naming the supported on
 	const message = String(body?.message ?? '')
 	// The scenario requires the error to NAME the supported schemas, not merely
 	// to reject — so both names are asserted, not just a non-2xx.
+	//
+	// ⚠️ The supported set is `FacetService::SUPPORTED_SCHEMAS = ['module',
+	// 'service']`. This assertion used to look for `dienst`, the pre-#518 Dutch
+	// slug, and so did the 200 control below — a slug rename moved the API and
+	// left the test naming a schema the service has never heard of.
 	expect(
 		message,
 		`error message did not name the supported schemas: ${message}`,
 	).toMatch(/module/)
-	expect(message).toMatch(/dienst/)
+	expect(message).toMatch(/service/)
 
 	// The supported set is also machine-readable, and must be exactly the two.
-	expect(body?.supportedSchemas?.sort?.()).toEqual(['service', 'module'])
+	// ⚠️ `Array.prototype.sort()` sorts IN PLACE and returns the sorted array,
+	// so the expected literal has to be sorted too — comparing a sorted actual
+	// against `['service', 'module']` could never have held whichever names the
+	// service used. Copy before sorting so the response body is not mutated.
+	expect([...(body?.supportedSchemas ?? [])].sort()).toEqual(['module', 'service'])
 
 	// Control: the same endpoint shape with a SUPPORTED schema is a 200, so the
 	// 400 above is about the schema and not about the route being broken.
-	const ok = await ctx.get(`${FACETS}/dienst`)
-	expect(ok.status(), `GET ${FACETS}/dienst returned ${ok.status()}`).toBe(200)
+	const ok = await ctx.get(`${FACETS}/service`)
+	expect(ok.status(), `GET ${FACETS}/service returned ${ok.status()}`).toBe(200)
 })
 
 // ⚠️ `no-text-query-returns-facets-over-the-full-rbac-scoped-set` IS DELIBERATELY

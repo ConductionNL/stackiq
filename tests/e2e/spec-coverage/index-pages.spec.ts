@@ -40,9 +40,10 @@ interface IndexPage {
 }
 
 // True manifest `type: index` pages (CnIndexPage against a voorzieningen
-// schema). NOTE: "Organisations" is intentionally NOT here — it is a
-// `type: custom` page (component OrganisatieIndexView) with its own surface,
-// covered by a dedicated test below.
+// schema). NOTE: "Organisations" IS one of these now (it was decomposed from a
+// bespoke `type: custom` view), but its create label spells one word
+// differently depending on which schema title an environment carries, and this
+// list matches labels exactly — so it keeps a dedicated test below.
 // ⚠️ `addLabel` is not free text. nc-vue's CnIndexPage derives its primary
 // create action as `'Add ' + schema.title` (CnIndexPage.vue), and the
 // softwarecatalog schema titles were rewritten from Dutch to English on
@@ -88,34 +89,83 @@ test('index contactpersonen: the route reaches the CnIndexPage surface (toggle +
 	expectNoAppErrors(bag)
 })
 
-// BUG (pre-existing, app config/manifest): the "Standards" index page is wired
-// to the schema slug `standaard`, but NO `standaard` schema exists in the
-// softwarecatalog voorzieningen register/config (the app config exposes
-// organisatie/contactpersoon/contract/beoordeeling/compliancy/moduleVersie/...
-// schemas but never a `standaard` one). So the page's list fetch fails with a
-// console error: "Error fetching 11-standaard collection: {status: undefined,
-// ...}", and the CnIndexPage list body never loads. Driving this page can
-// therefore never be app-error-free until the `standaard` schema is provisioned
-// (or the Standards page is removed/repointed in the manifest). Kept as a
-// documented fixme so it re-activates once the schema gap is closed. Not a test
-// defect — the page genuinely cannot load its data.
-test.fixme('index standards: nav entry reaches the CnIndexPage surface (blocked: missing `standaard` schema)', async ({
+// ⚠️ THIS TEST'S SKIP REASON WAS NO LONGER TRUE, so it was an invisible pass.
+// It was a `test.fixme` "blocked: missing `standaard` schema", on the stated
+// grounds that the Standards page is wired to the schema slug `standaard` and
+// no such schema exists. It is not: `src/manifest.json` binds the Standaarden
+// page to `"schema": "element"`, and `element` IS provisioned — the CI seed
+// enumerates it among the 36 schemas present on the instance. Verified on a
+// running instance as well: /standaarden renders the index chrome and its
+// create action resolves to "Add Element" (not the "Add Item" fallback the
+// skipped body asserted), with zero app-origin console errors.
+//
+// A skip whose reason has stopped being true reads exactly like a passing
+// test, so the reason is not repaired here — the test is put back to work.
+//
+// 🔴 IT IS RED, AND THE CAUSE IS MEASURED — DO NOT RE-SKIP IT.
+// Un-skipping it produced a real, previously invisible defect. The surface
+// assertions all hold (chrome, "Add Element", list body), and the failure is
+// `expectNoAppErrors`:
+//
+//     Error fetching 14-element collection
+//
+// The page config is `register: "@resolve:voorzieningen_register"` +
+// `schema: "element"` — but `element` is NOT attached to the voorzieningen
+// register. `lib/Settings/softwarecatalogus_register.json` binds it to the
+// SECOND register in the same file:
+//
+//     components.registers.voorzieningen.schemas  (15) — no `element`
+//     components.registers.vng-gemma.schemas      (5)  — element, model,
+//                                                        property-definition,
+//                                                        relation, view
+//
+// So the page addresses schema `element` under a register that does not carry
+// it. Same family as openconnector#1275's `synchronization_run`: declaring a
+// schema does not attach it, and only an attached schema is fetchable through
+// /api/objects/{register}/{schema}.
+//
+// ⚠️ THE OBVIOUS FIX IS THE WRONG ONE. Adding `element` to
+// `registers.voorzieningen.schemas` would make the request succeed and return
+// NOTHING — objects live per register, and the GEMMA elements were imported
+// under vng-gemma. That converts a visible error into an empty list, i.e. an
+// invisible pass, which is worse than this red.
+//
+// The honest fix is to point the page at the register that holds the data,
+// and that needs a second `@resolve:` sentinel: `voorzieningen_register` is
+// currently the ONLY one (34 uses), it is provisioned in
+// lib/AppInfo/Application.php::boot() from the `voorzieningen_config` blob,
+// and NO app-config key holds a vng-gemma register id — nor does
+// tests/e2e/ci-seed.sh provision that register at all. Choosing where that id
+// lives is a config-ownership decision, not an E2E repair, so it is escalated
+// on the fleet board rather than guessed at here.
+test('index standards: nav entry reaches the CnIndexPage surface (toggle + add + list body)', async ({
 	page,
 }) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Standards')
-	await expectIndexSurface(page, 'Add Item')
+	await expectIndexSurface(page, 'Add Element')
 	expectNoAppErrors(bag)
 })
 
 // ---------------------------------------------------------------------------
-// Organisations is a `type: custom` page (OrganisatieIndexView), not a
-// CnIndexPage. Its surface is the custom organisations view: the primary
-// "Add organisation" create action, reached by clicking the nav entry. We
-// assert that custom surface mounts WITHOUT an app-origin error (the register
-// sentinel now resolves, so no @resolve 404).
+// Organisations. ⚠️ THIS TEST DESCRIBED A SURFACE THAT NO LONGER EXISTS: it
+// asserted the bespoke `type: custom` OrganisatieIndexView and its
+// "Add organisation" button. src/manifest.json decomposed that view into a
+// standard `type: index` page (its own `_note` records the change), so the page
+// is a CnIndexPage like every entry in INDEX_PAGES above — heading, Cards/Table
+// toggle, create action, list body.
+//
+// It is kept as a dedicated test rather than folded into INDEX_PAGES for one
+// reason: `expectIndexSurface` matches the create label EXACTLY, and this is
+// the one page whose label spelling is not stable across environments.
+// CnIndexPage derives it as `'Add ' + schema.title`; the repo authors that
+// title "Organization" while the rest of the app is British, and a deployed
+// instance can still serve the older "Organisation" because OpenRegister skips
+// importing a schema whose deployed version is not older, and its
+// schemaContentDiffers() escape hatch compares properties/required/
+// authorization — never the title. Accept either spelling of that one word.
 // ---------------------------------------------------------------------------
-test('custom organisaties: nav entry reaches the OrganisatieIndexView surface', async ({
+test('index organisaties: nav entry reaches the CnIndexPage surface (toggle + add + list body)', async ({
 	page,
 }) => {
 	const bag = collectAppErrors(page)
@@ -123,11 +173,23 @@ test('custom organisaties: nav entry reaches the OrganisatieIndexView surface', 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
 
-	// The custom view exposes a primary create action. Its empty-state button
-	// reads "Add organisation"; assert the create affordance is present.
+	// Index chrome — the view toggle is what separates "this is the index" from
+	// "this is any page that happens to have a create button".
+	await expect(main.getByText('Cards', { exact: true }).first()).toBeVisible({
+		timeout: 30000,
+	})
+	await expect(main.getByText('Table', { exact: true }).first()).toBeVisible()
+
+	// Primary create action.
 	await expect(
-		main.getByRole('button', { name: /Add organisation/i }).first(),
+		main.getByRole('button', { name: /^Add Organi[sz]ation$/i }).first(),
 	).toBeVisible({ timeout: 30000 })
+
+	// List body mounted — empty-state OR a populated list. Proves the data layer
+	// ran (the `@resolve` register sentinel resolved), not just the chrome.
+	const emptyState = main.getByText('No items found', { exact: false }).first()
+	const populated = main.getByText(/Showing\s+\d+\s+of\s+\d+/i).first()
+	await expect(emptyState.or(populated)).toBeVisible({ timeout: 30000 })
 
 	expectNoAppErrors(bag)
 })
