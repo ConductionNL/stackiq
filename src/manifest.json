@@ -179,11 +179,11 @@
 				"viewMode": "cards",
 				"cardComponent": "OrganisatieCard",
 				"columns": ["name", "type", "status", "website"],
-				"filter": { "status": ["Concept", "Actief", "Deactief"] },
+				"filter": { "status": ["Draft", "Active", "Inactive"] },
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			},
-			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs. config.filter excludes organisation-merge tombstones (status='samengevoegd') from the default listing per the organisation-merge spec — a merged-away source stays readable by direct UUID lookup (OrganisatieDetail route) but never appears in this index."
+			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs. config.filter excludes organisation-merge tombstones (status='merged') from the default listing per the organisation-merge spec — a merged-away source stays readable by direct UUID lookup (OrganisatieDetail route) but never appears in this index. 🔴 THIS FILTER IS COUPLED TO THE SCHEMA'S status ENUM AND WENT STALE: #520 translated the stored enum values and migrated the rows (Concept/Actief/Deactief/samengevoegd -> Draft/Active/Inactive/merged) but did NOT translate this list, so the index filtered on three values no row can hold any more. A value filter that matches nothing is not an error — OpenRegister answers 200 with total=0 — so the Organisations index rendered 'No items found' for every user and read as an empty catalogue. Measured on the running instance: ?status[]=Draft&status[]=Active returns the seeded row, ?status[]=Concept&status[]=Actief&status[]=Deactief returns total=0. Any future enum rename must move this list in the same commit."
 		},
 		{
 			"id": "OrganisatieDetail",

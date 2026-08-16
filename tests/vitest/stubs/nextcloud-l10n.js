@@ -11,12 +11,29 @@
  *
  * Tests mutate `__setLanguage('nl')` between cases; the stub returns the
  * current value from each `getLanguage()` call.
+ *
+ * `translate()` is the other export components pull in (`import { translate as
+ * t }`). Without it `t` is `undefined` and any component computed that builds a
+ * label throws a TypeError — which is NOT the failure mode under test, so the
+ * stub returns the source string with `{placeholder}` substitution, exactly the
+ * shape the real package produces for an untranslated (English) string.
  */
 
 let currentLanguage = 'en'
 
 export function getLanguage() {
 	return currentLanguage
+}
+
+export function translate(app, text, vars) {
+	if (!vars || typeof vars !== 'object') {
+		return String(text)
+	}
+	return String(text).replace(/\{(\w+)\}/g, (match, key) =>
+		Object.prototype.hasOwnProperty.call(vars, key)
+			? String(vars[key])
+			: match,
+	)
 }
 
 export function __setLanguage(lang) {
@@ -29,4 +46,5 @@ export function __resetLanguage() {
 
 export default {
 	getLanguage,
+	translate,
 }

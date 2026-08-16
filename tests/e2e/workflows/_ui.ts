@@ -81,15 +81,23 @@ export async function openRowActions(page: Page, token: string): Promise<void> {
 /**
  * Open the CnIndexPage create form via the primary "Add ..." button and return
  * the modal/dialog locator.
+ *
+ * `addLabel` accepts a RegExp as well as a string: CnIndexPage derives the
+ * label as `'Add ' + schema.title`, and at least one schema title differs
+ * between the repo and an already-deployed instance (OpenRegister skips
+ * importing a schema whose deployed version is not older, and its
+ * schemaContentDiffers() escape hatch never compares the title). `exact` is
+ * meaningless for a RegExp, so it is only passed for a string.
  */
 export async function openCreateDialog(
 	page: Page,
-	addLabel: string,
+	addLabel: string | RegExp,
 ): Promise<Locator> {
-	await indexMain(page)
-		.getByRole('button', { name: addLabel, exact: true })
-		.first()
-		.click()
+	const byName =
+		typeof addLabel === 'string'
+			? { name: addLabel, exact: true }
+			: { name: addLabel }
+	await indexMain(page).getByRole('button', byName).first().click()
 	const dialog = page.locator('[role="dialog"], .modal-container').first()
 	await dialog.waitFor({ state: 'visible', timeout: 15000 })
 	return dialog

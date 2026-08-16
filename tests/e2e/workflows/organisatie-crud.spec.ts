@@ -1,27 +1,26 @@
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
- * DEEP, data-dependent persistence workflow for the ORGANISATIE entity, driven
- * through the bespoke `type: custom` OrganisatieIndexView (a card grid, not a
- * CnIndexPage).
+ * DEEP, data-dependent persistence workflow for the ORGANISATION entity, driven
+ * through the `/organisaties` index. That page is a standard manifest
+ * `type: index` (CnIndexPage rendering OrganisatieCard as its card component);
+ * it used to be a bespoke `type: custom` OrganisatieIndexView and this file
+ * still described that removed surface, which is why three of its assertions
+ * named strings the product no longer renders.
  *
  * What is proven through the UI:
  *   - read-persistence: an organisation SEEDED via the OpenRegister API
- *     RENDERS as a real card in the custom organisations view (NOT the
- *     "No organisations" empty-state) — direct proof the list now fetches a
- *     real register (the `@resolve` sentinel fix) and the bespoke view binds
- *     the collection;
+ *     RENDERS as a real card in the index (NOT the "No items found"
+ *     empty-state) — direct proof the list fetches a real register (the
+ *     `@resolve` sentinel) AND that the page's `config.filter` still selects
+ *     values the rows can actually hold;
  *   - the seeded card shows the organisation's name + type;
- *   - the "Add organisation" affordance opens the create modal.
+ *   - the primary create action opens the create dialog.
  *
- * What is NOT headlessly drivable here (documented test.fixme):
- *   - UI-driven CREATE of an organisation. "Add organisation" opens the generic
- *     ObjectModal whose first step is a Catalogus -> Register -> Schema cascade.
- *     The Catalogus select is populated from the `catalog` collection, which is
- *     EMPTY in this dev container (no catalog object is provisioned), so the
- *     cascade can never be completed and the object cannot be saved through the
- *     modal. This is a dev-env data gap, not an app bug. (Create + cleanup are
- *     exercised here via the OR API instead.)
+ * What is NOT verified here: see the `test.fixme` at the bottom — its old
+ * reason (an ObjectModal Catalogus cascade) describes a surface that no longer
+ * exists, and the leg has not been re-authored against the dialog that replaced
+ * it. (Create + cleanup are exercised here via the OR API instead.)
  *
  * Cleanup: the seeded org carries the RUN_ID token; afterAll deletes it via the
  * OR deleteObject verb.
@@ -98,7 +97,16 @@ test('seeded organisation renders as a card (proves the list loads real data)', 
 	// prior runs leave rows behind, so the freshly-seeded org may land on a later
 	// page — assert that real cards render (proving the @resolve list loaded data)
 	// rather than requiring our specific seeded row to be on the first page.
-	await expect(main.getByText('No organisations', { exact: false })).toHaveCount(0)
+	//
+	// ⚠️ THE EMPTY-STATE ASSERTION USED TO NAME A STRING THAT NEVER RENDERS.
+	// It looked for "No organisations", which was the bespoke
+	// OrganisatieIndexView's wording; the page is a CnIndexPage now and its
+	// empty state reads "No items found". `toHaveCount(0)` against a string
+	// nothing ever renders passes unconditionally — so when this list really
+	// was empty (the manifest filter named three status values #520 had
+	// translated out of existence), the guard that was supposed to catch it
+	// said nothing and the failure surfaced one line later as a missing card.
+	await expect(main.getByText('No items found', { exact: false })).toHaveCount(0)
 	const cards = main.locator('[class*=organisatie], [class*=card]')
 	await expect(cards.first()).toBeVisible({ timeout: 30000 })
 	expect(await cards.count()).toBeGreaterThan(0)
@@ -110,13 +118,20 @@ test('seeded organisation renders as a card (proves the list loads real data)', 
 // The create affordance opens the create modal (the modal itself cannot be
 // completed here — see fixme below — but the entry point works).
 // ---------------------------------------------------------------------------
-test('"Add organisation" opens the create modal', async ({ page }) => {
+test('the create action opens the create dialog', async ({ page }) => {
 	await navClickTo(page, 'Organisations')
 	await dismissSupportDialog(page)
 	const main = indexMain(page)
 
+	// CnIndexPage derives this label as `'Add ' + schema.title`. The repo
+	// authors that title "Organization" while the rest of the app is British,
+	// and an already-deployed instance can still carry "Organisation" —
+	// OpenRegister skips importing a schema whose deployed version is not older,
+	// and its schemaContentDiffers() escape hatch never compares the title. So
+	// accept either spelling of the one word rather than pin the test to
+	// whichever an environment happens to hold.
 	await main
-		.getByRole('button', { name: /Add organisation/i })
+		.getByRole('button', { name: /^Add Organi[sz]ation$/i })
 		.first()
 		.click()
 	const modal = page
@@ -142,20 +157,42 @@ test('"Add organisation" opens the create modal', async ({ page }) => {
 })
 
 // ---------------------------------------------------------------------------
-// UI-driven CREATE — blocked by the empty `catalog` collection in this dev
-// container. The ObjectModal's first step is a Catalogus select with zero
-// options, so the Register/Schema cascade can never resolve and the object
-// can't be saved. Re-enable once a catalog is provisioned in the dev dataset.
+// UI-driven CREATE. ⚠️ THIS SKIP'S REASON WAS UNTRUE AND HAS BEEN CORRECTED
+// RATHER THAN RE-STATED.
+//
+// It read "blocked: empty catalog collection", on the grounds that the create
+// affordance opens the legacy ObjectModal whose first step is a Catalogus ->
+// Register -> Schema cascade that cannot resolve in a dev container with no
+// catalog object. That surface is gone: src/manifest.json decomposed the
+// bespoke OrganisatieIndexView into a standard `type: index` page, so the
+// create action opens nc-vue's CnIndexPage form dialog, which is already bound
+// to the register and schema from the page config and asks for no cascade at
+// all — as the sibling test above records, and as a running instance confirms
+// (the dialog opens on "Create Organisation" with the schema's own fields and
+// a disabled Create button until the required ones are filled).
+//
+// So this leg is NOT blocked. It is UNVERIFIED: the body below still drives the
+// removed cascade and has never been re-authored against the dialog the product
+// actually renders, and the assertion it ends on ("the new card appears by
+// name") cannot simply be ported, because which fields the dialog exposes is
+// governed by the schema's own `visible` flags and that has to be measured
+// against the CI instance rather than guessed.
+//
+// Recorded on the fleet board for an owner. It is deliberately NOT dressed up
+// as an environment gap again — a skip whose stated reason is false reads
+// exactly like a passing test, and this one hid the fact that the whole create
+// path had moved.
 // ---------------------------------------------------------------------------
-test.fixme('UI create -> new organisation card appears (blocked: empty catalog collection)', async ({
+test.fixme('UI create -> new organisation card appears (unverified: body still drives the removed ObjectModal cascade)', async ({
 	page,
 }) => {
 	await navClickTo(page, 'Organisations')
 	await dismissSupportDialog(page)
 	const uiOrgName = `${RUN_ID} UI Organisatie`
 
-	const modal = await openCreateDialog(page, 'Add organisation')
-	// Select the (currently non-existent) catalogus, then register + schema.
+	const modal = await openCreateDialog(page, /^Add Organi[sz]ation$/i)
+	// ⚠️ Stale body — the cascade below no longer exists. Kept verbatim so the
+	// re-author is obvious rather than silently deleted.
 	const catalogSelect = modal
 		.locator('.detail-item')
 		.filter({ hasText: 'Catalogus' })
@@ -163,7 +200,6 @@ test.fixme('UI create -> new organisation card appears (blocked: empty catalog c
 		.first()
 	await catalogSelect.click()
 	await page.locator('.vs__dropdown-option').first().click()
-	// ... register + schema cascade + JSON editor would follow here.
 	await modal.getByRole('button', { name: 'Add', exact: true }).first().click()
 	await navClickTo(page, 'Organisations')
 	await expect(

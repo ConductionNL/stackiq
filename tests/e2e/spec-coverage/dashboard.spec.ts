@@ -99,19 +99,40 @@ test('dashboard: "Ga naar Organisaties" quick-nav button is clickable and error-
 
 // The organisaties index is genuinely reachable via the real app nav entry
 // "Organisations" — this is the user's actual navigation path and lands on the
-// CnIndexPage list surface (Add Organisatie + Cards/Table toggle).
+// CnIndexPage list surface (Add button + Cards/Table toggle).
 test('dashboard: "Organisations" nav entry reaches the organisaties index', async ({
 	page,
 }) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Organisations')
 	const main = page.locator(APP_MAIN).first()
-	// Organisations is a `type: custom` page (OrganisatieIndexView), not a
-	// CnIndexPage — its create action reads "Add organisation" and it has no
-	// Cards/Table toggle. Assert the custom surface's primary create action.
+
+	// ⚠️ THIS USED TO ASSERT A SURFACE THE PRODUCT NO LONGER RENDERS. The
+	// comment here claimed Organisations was a `type: custom` page
+	// (OrganisatieIndexView) "with no Cards/Table toggle" whose create action
+	// read "Add organisation". src/manifest.json decomposed it into a standard
+	// `type: index` page (its own `_note` records the change), so the surface
+	// is CnIndexPage: a heading, a Cards/Table view toggle, and an Add button
+	// whose label CnIndexPage derives as `'Add ' + schema.title`.
+	//
+	// The schema title is authored "Organization" while every other string in
+	// this app is British ("Organisations" nav entry, "Organisation
+	// relationships" page title) — and a deployed instance can still carry the
+	// older "Organisation" title, because OpenRegister's import skips a schema
+	// whose deployed version is not older and its escape hatch never compares
+	// the title. Accept either spelling of the one word rather than pin the
+	// test to whichever an environment happens to hold; the assertion still
+	// names the action and the entity, so it cannot match another page.
 	await expect(
-		main.getByRole('button', { name: /Add organisation/i }).first(),
+		main.getByRole('heading', { name: 'Organisation relationships' }).first(),
 	).toBeVisible({ timeout: 30000 })
+	await expect(
+		main.getByRole('button', { name: /^Add Organi[sz]ation$/i }).first(),
+	).toBeVisible({ timeout: 30000 })
+	// The view toggle exists only on the index surface — it is what
+	// distinguishes "landed on the index" from "landed on any page with a
+	// create button".
+	await expect(main.getByRole('button', { name: 'Table' }).first()).toBeVisible()
 	expectNoAppErrors(bag)
 })
 
