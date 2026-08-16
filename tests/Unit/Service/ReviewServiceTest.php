@@ -280,7 +280,7 @@ class ReviewServiceTest extends TestCase {
 	 *
 	 * @return ObjectServiceInterface The mock.
 	 */
-	private function objectService(array $found): ObjectService {
+	private function objectService(array $found): ObjectServiceInterface {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjects')->willReturn($found);
 		$objectService->method('saveObject')->willReturnCallback(
