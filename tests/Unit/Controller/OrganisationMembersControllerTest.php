@@ -121,8 +121,8 @@ class OrganisationMembersControllerTest extends TestCase {
 			$this->userSession,
 			$this->groupManager,
 			$this->userManager,
-			$this->container,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->organisationService
 		);
 	}//end makeController()
 

@@ -21,7 +21,6 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -384,10 +383,13 @@ class OrganizationSyncService {
 
 		$rows = $qb->executeQuery()->fetchAll();
 
-		if ($this->objectService instanceof ObjectService === false) {
-			$this->logger->error('OrganizationSync: could not resolve ObjectService');
-			return $stats;
-		}
+		// No resolution guard here any more. $objectService is a promoted,
+		// readonly, non-nullable ObjectServiceInterface, so it cannot be
+		// unresolved by the time this runs. The old check asked
+		// `instanceof ObjectService` — the CONCRETE class — against a property
+		// typed as the interface, so any implementation other than that one
+		// class made it return $stats and log "could not resolve", silently
+		// skipping the whole batch rather than syncing it.
 
 		foreach ($rows as $row) {
 			if ((time() - $startTime) >= $maxExecutionSeconds) {
@@ -508,10 +510,9 @@ class OrganizationSyncService {
 
 		$this->logger->info('ContactSync: processing ' . count($contacts) . ' contacts with existing NC accounts');
 
-		if ($this->objectService instanceof ObjectService === false) {
-			$this->logger->error('ContactSync: could not resolve ObjectService');
-			return $stats;
-		}
+		// Same as above: the promoted readonly ObjectServiceInterface cannot be
+		// unresolved, and the old `instanceof ObjectService` check against the
+		// concrete class made this skip every contact instead.
 
 		foreach ($contacts as $contact) {
 			if ((time() - $startTime) >= $maxExecutionSeconds) {

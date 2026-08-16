@@ -147,17 +147,15 @@ abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityIn
 	/** @return int */
 	abstract public function getId();
 
-	// The five declarations below MUST carry the return types
-	// `OCA\OpenRegister\Contract\ObjectEntityInterface` declares. This stub
-	// implements that interface (ADR-084), and PHP refuses to declare a class
-	// whose abstract method is less specific than the interface it satisfies:
-	//
-	//   Fatal error: Declaration of OCA\OpenRegister\Db\ObjectEntity::getUuid()
-	//   must be compatible with ObjectEntityInterface::getUuid(): ?string
-	//
-	// That fatal aborts the whole unit suite, not one test. `getId()` and
-	// `setObject()` below are deliberately left untyped: they are NOT on the
-	// contract, so nothing constrains them.
+	// These four carry the CONTRACT's return types, not looser ones. A
+	// return type may be narrowed by an implementor but never widened, and
+	// an omitted type is the widest there is — so declaring these untyped
+	// against ObjectEntityInterface's `?string` / `array` is a fatal at
+	// class load, which is what it was:
+	//   Declaration of ...\Db\ObjectEntity::getUuid() must be compatible
+	//   with ...\Contract\ObjectEntityInterface::getUuid(): ?string
+	// That kills the whole suite before a single test runs, which is why
+	// all six PHPUnit cells and all four quality tools went red together.
 
 	/** @return string|null */
 	abstract public function getUuid(): ?string;

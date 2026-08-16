@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -1407,7 +1406,13 @@ class ViewService {
 		}
 
 		try {
-			return $this->container->get(ObjectService::class);
+			// Ask for the CONTRACT, not the concrete class. This method
+			// declares `?ObjectServiceInterface`, and resolving the concrete
+			// ObjectService returns something that only satisfies it by
+			// coincidence — under test it is a double of the concrete class,
+			// which does not implement the interface, so the declared return
+			// type rejected it.
+			return $this->container->get(ObjectServiceInterface::class);
 		} catch (\Exception $e) {
 			$this->logger->warning(
 				'Failed to get ObjectService',
