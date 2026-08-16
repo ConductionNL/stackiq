@@ -101,6 +101,43 @@ test('index contactpersonen: the route reaches the CnIndexPage surface (toggle +
 //
 // A skip whose reason has stopped being true reads exactly like a passing
 // test, so the reason is not repaired here — the test is put back to work.
+//
+// 🔴 IT IS RED, AND THE CAUSE IS MEASURED — DO NOT RE-SKIP IT.
+// Un-skipping it produced a real, previously invisible defect. The surface
+// assertions all hold (chrome, "Add Element", list body), and the failure is
+// `expectNoAppErrors`:
+//
+//     Error fetching 14-element collection
+//
+// The page config is `register: "@resolve:voorzieningen_register"` +
+// `schema: "element"` — but `element` is NOT attached to the voorzieningen
+// register. `lib/Settings/softwarecatalogus_register.json` binds it to the
+// SECOND register in the same file:
+//
+//     components.registers.voorzieningen.schemas  (15) — no `element`
+//     components.registers.vng-gemma.schemas      (5)  — element, model,
+//                                                        property-definition,
+//                                                        relation, view
+//
+// So the page addresses schema `element` under a register that does not carry
+// it. Same family as openconnector#1275's `synchronization_run`: declaring a
+// schema does not attach it, and only an attached schema is fetchable through
+// /api/objects/{register}/{schema}.
+//
+// ⚠️ THE OBVIOUS FIX IS THE WRONG ONE. Adding `element` to
+// `registers.voorzieningen.schemas` would make the request succeed and return
+// NOTHING — objects live per register, and the GEMMA elements were imported
+// under vng-gemma. That converts a visible error into an empty list, i.e. an
+// invisible pass, which is worse than this red.
+//
+// The honest fix is to point the page at the register that holds the data,
+// and that needs a second `@resolve:` sentinel: `voorzieningen_register` is
+// currently the ONLY one (34 uses), it is provisioned in
+// lib/AppInfo/Application.php::boot() from the `voorzieningen_config` blob,
+// and NO app-config key holds a vng-gemma register id — nor does
+// tests/e2e/ci-seed.sh provision that register at all. Choosing where that id
+// lives is a config-ownership decision, not an E2E repair, so it is escalated
+// on the fleet board rather than guessed at here.
 test('index standards: nav entry reaches the CnIndexPage surface (toggle + add + list body)', async ({
 	page,
 }) => {
