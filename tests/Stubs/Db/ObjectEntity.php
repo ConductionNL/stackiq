@@ -147,17 +147,27 @@ abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityIn
 	/** @return int */
 	abstract public function getId();
 
-	/** @return string */
-	abstract public function getUuid();
+	// These four carry the CONTRACT's return types, not looser ones. A
+	// return type may be narrowed by an implementor but never widened, and
+	// an omitted type is the widest there is — so declaring these untyped
+	// against ObjectEntityInterface's `?string` / `array` is a fatal at
+	// class load, which is what it was:
+	//   Declaration of ...\Db\ObjectEntity::getUuid() must be compatible
+	//   with ...\Contract\ObjectEntityInterface::getUuid(): ?string
+	// That kills the whole suite before a single test runs, which is why
+	// all six PHPUnit cells and all four quality tools went red together.
+
+	/** @return string|null */
+	abstract public function getUuid(): ?string;
 
 	/** @return array<string,mixed> */
-	abstract public function getObject();
+	abstract public function getObject(): array;
 
-	/** @return mixed */
-	abstract public function getRegister();
+	/** @return string|null */
+	abstract public function getRegister(): ?string;
 
-	/** @return mixed */
-	abstract public function getSchema();
+	/** @return string|null */
+	abstract public function getSchema(): ?string;
 
 	/**
 	 * @param array<string,mixed>|null $object
