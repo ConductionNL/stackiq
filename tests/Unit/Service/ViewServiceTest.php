@@ -537,7 +537,11 @@ class ViewServiceTest extends TestCase {
 
 		$this->userSession->method('getUser')->willReturn(null);
 
-		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+		// Mock the CONTRACT, not the concrete service. `getObjectService()`
+		// declares `?ObjectServiceInterface`, and a double of the concrete class
+		// does not implement it — the declared return type rejected it with a
+		// TypeError before a single assertion ran.
+		$objectService = $this->createMock(\OCA\OpenRegister\Contract\ObjectServiceInterface::class);
 		$objectService->method('searchObjects')->willReturn(
 			[
 				['elementRef' => 'node-1', 'name' => 'Zaaksysteem'],

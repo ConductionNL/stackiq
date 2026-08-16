@@ -36,7 +36,6 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -60,9 +59,6 @@ class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 	/** @var IUserSession|MockObject */
 	private IUserSession|MockObject $userSession;
 
-	/** @var ContainerInterface|MockObject */
-	private ContainerInterface|MockObject $container;
-
 	/** @var ObjectServiceInterface|MockObject */
 	private ObjectServiceInterface|MockObject $objectService;
 
@@ -84,13 +80,13 @@ class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->container = $this->createMock(ContainerInterface::class);
 
-		$this->container
-			->method('get')
-			->with('OCA\OpenRegister\Service\ObjectService')
-			->willReturn($this->objectService);
-
+		// The controller reaches OpenRegister through the INJECTED contract
+		// (ADR-084), not through a container lookup. Wiring the fixture into a
+		// ContainerInterface double left the subject holding a different,
+		// unconfigured mock: every lookup returned "nothing", every guard read
+		// that as "no organisation to compare", and a cross-tenant test passed
+		// straight through the check it exists to prove.
 		$this->controller = new ContactpersonenController(
 			'softwarecatalog',
 			$this->createMock(IRequest::class),
@@ -100,10 +96,9 @@ class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 			$this->userManager,
 			$this->groupManager,
 			$this->userSession,
-			$this->container,
 			$this->createMock(ISecureRandom::class),
 			$this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->objectService,
 			organisationService: $this->createMock(OrganisationService::class),
 		);
 

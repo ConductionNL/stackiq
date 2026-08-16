@@ -193,12 +193,24 @@ class OrganizationHandler {
 							'organizationSchemaId' => $organizationSchemaId,
 						]
 					);
-					$objectService->saveObject($organizationObject);
+					// Fall back to the entity's OWN coordinates. Handing the entity
+					// itself relied on an OpenRegister-only widening of the first
+					// parameter (`array|ObjectEntity`) that ADR-084's published
+					// contract does not carry, and supplying no register/schema at
+					// all left the write to whatever the service happened to be
+					// scoped to at that moment.
+					$objectService->saveObject(
+						object: $objectData,
+						extend: [],
+						register: $organizationObject->getRegister(),
+						schema: $organizationObject->getSchema(),
+						uuid: $organizationObject->getUuid()
+					);
 				}
 
 				if ($registerId !== null && $organizationSchemaId !== null) {
 					$objectService->saveObject(
-						object: $organizationObject,
+						object: $objectData,
 						extend: [],
 						register: (int)$registerId,
 						schema: (int)$organizationSchemaId,
@@ -439,7 +451,10 @@ class OrganizationHandler {
 							$actionLogMessage,
 							[
 								'organizationId' => $organizationUuid,
-								'contactgegevensId' => $contactgegevensObject->getId(),
+								// UUID, not getId(): `getId()` is not on
+								// ObjectEntityInterface (ADR-084), and the UUID is
+								// the identifier every other log line here carries.
+								'contactgegevensId' => $contactgegevensObject->getUuid(),
 								'contactpersoonIndex' => $index,
 								'email' => $contactgegevensData['email'],
 								'action' => $actionValue,

@@ -33,7 +33,6 @@ use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\OrganisationService;
@@ -112,13 +111,6 @@ class ContactpersonenController extends Controller {
 	private IUserSession $userSession;
 
 	/**
-	 * Container for dependency injection.
-	 *
-	 * @var ContainerInterface
-	 */
-	private ContainerInterface $container;
-
-	/**
 	 * Contactpersoon service for business logic.
 	 *
 	 * @var ContactpersoonService
@@ -136,7 +128,6 @@ class ContactpersonenController extends Controller {
 	 * @param IUserManager $userManager User manager
 	 * @param IGroupManager $groupManager Group manager
 	 * @param IUserSession $userSession User session
-	 * @param ContainerInterface $container Container for DI
 	 * @param ISecureRandom $secureRandom Secure random generator
 	 * @param LoggerInterface $logger Logger instance
 	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-022/ADR-084 —
@@ -154,7 +145,6 @@ class ContactpersonenController extends Controller {
 		IUserManager $userManager,
 		IGroupManager $groupManager,
 		IUserSession $userSession,
-		ContainerInterface $container,
 		ISecureRandom $secureRandom,
 		LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
@@ -167,7 +157,6 @@ class ContactpersonenController extends Controller {
 		$this->userManager = $userManager;
 		$this->groupManager = $groupManager;
 		$this->userSession = $userSession;
-		$this->container = $container;
 		$this->secureRandom = $secureRandom;
 		$this->logger = $logger;
 	}//end __construct()
@@ -515,7 +504,12 @@ class ContactpersonenController extends Controller {
 
 			$contactData = $this->normaliseContactDataForPersist(contactData: $contactData);
 
-			$contactPersonObject->setObject($contactData);
+			// No local `setObject()` on the entity here. `setObject()` is not on
+			// the published ObjectEntityInterface (ADR-084) — it is an
+			// implementation-only accessor reached through Entity::__call() — and
+			// mutating the in-memory copy changed nothing anyway: the save below
+			// sends `$contactData` itself, and the entity is only read again for
+			// its UUID.
 
 			// Debug logging to understand data types before save.
 			$lastNameValue = $contactData['achternaam'] ?? 'not set';
@@ -550,8 +544,7 @@ class ContactpersonenController extends Controller {
 				schema: $schemaId,
 				uuid: $contactPersonObject->getUuid(),
 				silent: true,
-				silent: true,
-			_validation: false
+				_validation: false
 			);
 
 			$this->logger->info(

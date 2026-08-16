@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\EventListener;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\SoftwareCatalog\EventListener\UserProfileUpdatedEventListener;
 use PHPUnit\Framework\TestCase;
@@ -53,9 +52,6 @@ class UserProfileUpdatedEventListenerDecompositionTest extends TestCase {
 
 		return new UserProfileUpdatedEventListener($this->createMock(ContainerInterface::class),
 			objectService: $this->createMock(ObjectServiceInterface::class),
-			schemaMapper: $this->createMock(SchemaMapper::class),
-			registerMapper: $this->createMock(RegisterMapper::class),
-			metadataHydrationHandler: $this->createMock(MetadataHydrationHandler::class),
 		);
 	}//end makeListener()
 

@@ -122,6 +122,19 @@ class OrganizationSyncService {
 	 * @param ContainerInterface $container The DI container.
 	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-084 contract).
 	 * @param OrganisationMapper $organisationMapper Resolves the acting organisation for sync writes.
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 *
+	 * Eleven collaborators, one over the threshold. Suppressed rather than
+	 * shaved because the two cheap-looking reductions both make it worse:
+	 * `$container` is not dead weight — it resolves `IUserManager` and
+	 * `IGroupManager` lazily — so replacing it with those two takes the count
+	 * to twelve, and folding any pair behind a parameter object hides a
+	 * dependency the composition root has to state anyway
+	 * (`tests/Unit/AppInfo/CompositionRootArgumentsTest.php` checks it does).
+	 * The real remedy is splitting this 2,700-line service, which is a
+	 * refactor, not a quality-gate change. Same annotation, same reasoning as
+	 * ContactpersonenController::__construct().
 	 */
 	public function __construct(
 		OrganisatieService $organisationService,
@@ -541,11 +554,16 @@ class OrganizationSyncService {
 				// Keep organisatie in the object so it is never temporarily absent from the
 				// persisted record. The schema validation warning for a UUID-string value is
 				// benign compared to a data-corruption window where the field is missing.
-				$contactEntity->setObject($contactEntityObject);
+				//
+				// The full PAYLOAD is what is sent. `setObject()` is not on the
+				// published ObjectEntityInterface (ADR-084) and the mutated entity
+				// was never read back; `saveObject()` is PUT-semantic, so
+				// $contactEntityObject already carries every unchanged field.
 				$this->objectService->saveObject(
-					object: $contactEntity,
+					object: $contactEntityObject,
 					register: $register,
 					schema: $contactSchema,
+					uuid: $contactEntity->getUuid(),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -1873,20 +1891,16 @@ class OrganizationSyncService {
 							continue;
 						}
 
-						// Get the object data as array.
-						$contactData = [];
-						if (is_array($contactObject) === true) {
-							$contactData = $contactObject;
-						}
-
-						if ($contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity) {
-							$contactData = $contactObject->getObject();
-						}
+						// Read it through the published contract. `find()` returns
+						// an ObjectEntityInterface or null — never a bare array —
+						// so the `is_array()` arm this replaces could not fire, and
+						// the `instanceof Db\ObjectEntity` narrowing was reaching
+						// past the contract at a concrete class this app must not
+						// depend on (ADR-022/ADR-084).
+						$contactData = $contactObject->getObject();
 
 						// Add the UUID if not present.
-						if (isset($contactData['id']) === false
-							&& $contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity
-						) {
+						if (isset($contactData['id']) === false) {
 							$contactData['id'] = $contactObject->getUuid();
 						}
 					}//end if
@@ -2320,14 +2334,19 @@ class OrganizationSyncService {
 				);
 
 				// Restore the organisatie field so the link to the organisation is preserved.
-				if ($contactObject !== false && $savedOrganisation !== null) {
+				if ($savedOrganisation !== null) {
 					$restoredData = $contactObject->getObject();
 					$restoredData['organization'] = $savedOrganisation;
-					$contactObject->setObject($restoredData);
-					// Published contract instead of OpenRegister's Db layer.
+					// Published contract instead of OpenRegister's Db layer. The
+					// payload is threaded through explicitly rather than pushed
+					// into the entity with `setObject()` and read back out:
+					// `setObject()` is not on ObjectEntityInterface (ADR-084).
+					// The `$contactObject !== false` half of this guard also went:
+					// `saveObject()` declares a non-nullable entity, so it could
+					// never be false.
 					$this->objectService->saveObject(
 						object: array_merge(
-							$contactObject->getObject(),
+							$restoredData,
 							['@self' => ['organisation' => $contactObject->getOrganisation()]]
 						),
 						register: $contactObject->getRegister(),
@@ -2339,20 +2358,22 @@ class OrganizationSyncService {
 				}
 			}//end if
 
-			if (empty($contactObject) === false) {
+			if ($contactObject !== null) {
 				$stats['contactPersonsProcessed']++;
 
 				// Ensure the contact has the organisatie field set (may be missing when linked via inversedBy).
 				$contactObjectData = $contactObject->getObject();
 				if (empty($contactObjectData['organization']) === true && empty($organizationUuid) === false) {
 					$contactObjectData['organization'] = $organizationUuid;
-					$contactObject->setObject($contactObjectData);
-					$contactObject->setOrganisation($organizationUuid);
 					// Published contract instead of OpenRegister's Db layer.
+					// `setObject()`/`setOrganisation()` are implementation-only
+					// accessors reached through Entity::__call() and are not on
+					// ObjectEntityInterface (ADR-084); the values they staged are
+					// carried in the payload sent below instead.
 					$this->objectService->saveObject(
 						object: array_merge(
-							$contactObject->getObject(),
-							['@self' => ['organisation' => $contactObject->getOrganisation()]]
+							$contactObjectData,
+							['@self' => ['organisation' => $organizationUuid]]
 						),
 						register: $contactObject->getRegister(),
 						schema: $contactObject->getSchema(),
@@ -2463,7 +2484,9 @@ class OrganizationSyncService {
 								// processContactpersoon() with missing organisatie field, causing.
 								// the org lookup to fail.
 								// 3. Potential data loss from stale variables.
-								$contactObject->setObject($contactObjectData);
+								// The staged payload travels in $contactObjectData
+								// rather than through `setObject()`, which is not on
+								// ObjectEntityInterface (ADR-084).
 
 								$this->logger->debug(
 									'Saving contact with username via direct mapper update',
@@ -2479,7 +2502,7 @@ class OrganizationSyncService {
 									// Published contract instead of OpenRegister's Db layer.
 									$this->objectService->saveObject(
 										object: array_merge(
-											$contactObject->getObject(),
+											$contactObjectData,
 											['@self' => ['organisation' => $contactObject->getOrganisation()]]
 										),
 										register: $contactObject->getRegister(),
@@ -2724,11 +2747,15 @@ class OrganizationSyncService {
 							// Wrapped in its own try/catch because saveObject triggers event listeners.
 							// that may fail — but the user was already created successfully above.
 							try {
-								$contactObject->setObject($contactEntityObject);
+								// The PAYLOAD is sent — `setObject()` is not on
+								// ObjectEntityInterface (ADR-084), and `saveObject()`
+								// is PUT-semantic so $contactEntityObject already
+								// carries every unchanged field.
 								$this->objectService->saveObject(
-									object: $contactObject,
+									object: $contactEntityObject,
 									register: $register,
 									schema: $contactSchema,
+									uuid: $contactObject->getUuid(),
 									_rbac: false,
 									_multitenancy: false
 								);

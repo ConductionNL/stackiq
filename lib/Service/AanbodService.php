@@ -374,9 +374,12 @@ class AanbodService {
 			);
 
 			// Save the updated object with RBAC and multitenancy disabled.
-			$existingAanbod->setObject($aanbodData);
+			// The PAYLOAD is what is sent — `setObject()` on the entity is not on
+			// the published ObjectEntityInterface (ADR-084) and the mutated copy
+			// was never read back anyway; `saveObject()` is PUT-semantic, so
+			// $aanbodData already carries every unchanged field forward.
 			$updatedAanbod = $objectService->saveObject(
-				object: $existingAanbod,
+				object: $aanbodData,
 				register: $existingAanbod->getRegister(),
 				schema: $existingAanbod->getSchema(),
 				uuid: $aanbodId,
@@ -593,12 +596,12 @@ class AanbodService {
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param string $aanbodId The UUID of the aanbod object
 	 *
-	 * @return \OCA\OpenRegister\Db\ObjectEntity|null The found object or null
+	 * @return \OCA\OpenRegister\Contract\ObjectEntityInterface|null The found object or null
 	 */
 	private function findAanbodObject(
 		ObjectServiceInterface $objectService,
 		string $aanbodId,
-	): ?\OCA\OpenRegister\Db\ObjectEntity {
+	): ?\OCA\OpenRegister\Contract\ObjectEntityInterface {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 

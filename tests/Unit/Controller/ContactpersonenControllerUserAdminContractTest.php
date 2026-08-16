@@ -46,7 +46,6 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -84,11 +83,16 @@ class ContactpersonenControllerUserAdminContractTest extends TestCase {
 	private ContactpersoonService|MockObject $contactSvc;
 
 	/**
-	 * The mocked DI container (used to reach OpenRegister's ObjectService).
+	 * The mocked OpenRegister object access (ADR-084 published contract).
 	 *
-	 * @var ContainerInterface|MockObject
+	 * The controller holds this INJECTED, not resolved from a container, so it
+	 * is also the instrument for "the endpoint refused without looking
+	 * anything up": a `never()` on `find()` is the observation that the guard
+	 * ran before the read.
+	 *
+	 * @var ObjectServiceInterface|MockObject
 	 */
-	private ContainerInterface|MockObject $container;
+	private ObjectServiceInterface|MockObject $objectService;
 
 	/**
 	 * Build the controller under test with fresh mocks.
@@ -103,7 +107,7 @@ class ContactpersonenControllerUserAdminContractTest extends TestCase {
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->contactSvc = $this->createMock(ContactpersoonService::class);
-		$this->container = $this->createMock(ContainerInterface::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 
 		return new ContactpersonenController(
 			'softwarecatalog',
@@ -114,10 +118,9 @@ class ContactpersonenControllerUserAdminContractTest extends TestCase {
 			$this->userManager,
 			$this->groupManager,
 			$this->userSession,
-			$this->container,
 			$this->createMock(ISecureRandom::class),
 			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->objectService,
 			organisationService: $this->createMock(OrganisationService::class),
 		);
 
@@ -174,7 +177,7 @@ class ContactpersonenControllerUserAdminContractTest extends TestCase {
 		$this->userManager->expects($this->never())->method('get');
 		$this->userManager->expects($this->never())->method('checkPassword');
 		$this->contactSvc->expects($this->never())->method($this->anything());
-		$this->container->expects($this->never())->method('get');
+		$this->objectService->expects($this->never())->method('find');
 
 		$response = $controller->$method(...$args);
 
@@ -384,7 +387,7 @@ class ContactpersonenControllerUserAdminContractTest extends TestCase {
 		$controller = $this->makeController();
 		$this->withUser('alice', false, false);
 
-		$this->container->expects($this->never())->method('get');
+		$this->objectService->expects($this->never())->method('find');
 
 		$response = $controller->getUserInfo('cp-1');
 
@@ -403,27 +406,10 @@ class ContactpersonenControllerUserAdminContractTest extends TestCase {
 		$controller = $this->makeController();
 		$this->withUser('alice', false, true);
 
-		// Past the gate the OpenRegister lookup happens. Stand in for it with
-		// an object store that reports "no such contactpersoon", so the
-		// response distinguishes "you may not ask" (403) from "there is
-		// nothing to show" (404).
-		$objectService = new class {
-
-			/**
-			 * Stand-in for OpenRegister's ObjectService::find().
-			 *
-			 * @param string $id The object id.
-			 * @param string $register The register slug.
-			 * @param string $schema The schema slug.
-			 *
-			 * @return null Always "not found" for this test.
-			 */
-			public function find(string $id, string $register, string $schema) {
-				return null;
-			}//end find()
-		};
-
-		$this->container->expects($this->once())->method('get')->willReturn($objectService);
+		// Past the gate the OpenRegister lookup happens. Make it report "no such
+		// contactpersoon", so the response distinguishes "you may not ask" (403)
+		// from "there is nothing to show" (404).
+		$this->objectService->expects($this->once())->method('find')->willReturn(null);
 
 		$response = $controller->getUserInfo('cp-1');
 
