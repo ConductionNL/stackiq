@@ -38,7 +38,6 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -159,7 +158,6 @@ class OrganisationUserWorkflowTest extends TestCase {
 			$this->userManager,
 			$this->groupManager,
 			$this->createMock(IUserSession::class),
-			$this->createMock(ContainerInterface::class),
 			$this->createMock(ISecureRandom::class),
 			$this->logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),

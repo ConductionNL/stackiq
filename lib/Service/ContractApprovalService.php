@@ -38,7 +38,6 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -501,7 +500,7 @@ class ContractApprovalService {
 	 *
 	 * @param string $contractUuid The contract uuid.
 	 *
-	 * @return \OCA\OpenRegister\Db\ObjectEntity|null The object, or null.
+	 * @return \OCA\OpenRegister\Contract\ObjectEntityInterface|null The object, or null.
 	 *
 	 * @spec openspec/specs/contract-decision-delegation/spec.md
 	 */
@@ -540,7 +539,7 @@ class ContractApprovalService {
 	/**
 	 * Persist a mutated contract object back to the OR store.
 	 *
-	 * @param \OCA\OpenRegister\Db\ObjectEntity $contract The contract entity.
+	 * @param \OCA\OpenRegister\Contract\ObjectEntityInterface $contract The contract entity.
 	 * @param array $data The mutated object data.
 	 *
 	 * @return void
@@ -572,8 +571,14 @@ class ContractApprovalService {
 	 */
 	private function getObjectService(): ?ObjectServiceInterface {
 		try {
-			$service = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			if ($service instanceof ObjectService) {
+			// Ask for the CONTRACT and narrow on the CONTRACT (ADR-084). Asking
+			// for the concrete class and gating on `instanceof ObjectService`
+			// made this method return null for anything that satisfies the
+			// published interface without being that exact class — which is
+			// every double a leaf app can build, so the ownership check silently
+			// fell through to its fail-closed arm and refused an owner.
+			$service = $this->container->get(ObjectServiceInterface::class);
+			if ($service instanceof ObjectServiceInterface) {
 				return $service;
 			}
 		} catch (\Throwable $e) {

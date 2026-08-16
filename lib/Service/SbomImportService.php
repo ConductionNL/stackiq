@@ -575,7 +575,13 @@ class SbomImportService {
 	 * Resolve the register/schema coordinates + ObjectService this service
 	 * needs for every operation.
 	 *
-	 * @return array{objectService: ObjectService, registerId: int, moduleVersieSchemaId: int, sbomComponentSchemaId: int}
+	 * The `objectService` key carries the PUBLISHED contract. It said
+	 * `ObjectService` before — an unimported name, so it resolved inside this
+	 * app's own namespace to a class that does not exist. Every `find()` on the
+	 * value went unchecked, and each of the three helpers it is handed to
+	 * reported a parameter-type mismatch it did not have.
+	 *
+	 * @return array{objectService: ObjectServiceInterface, registerId: int, moduleVersieSchemaId: int, sbomComponentSchemaId: int}
 	 *
 	 * @throws RuntimeException When ObjectService or required schema/register
 	 *                          configuration is not available.
@@ -613,7 +619,9 @@ class SbomImportService {
 	 */
 	private function getObjectService(): ?ObjectServiceInterface {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			// Ask for the CONTRACT (ADR-084); the app's composition root aliases
+			// it onto OpenRegister's concrete service.
+			return $this->container->get(ObjectServiceInterface::class);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'SbomImportService: Failed to get ObjectService',

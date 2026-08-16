@@ -127,6 +127,15 @@ class QueryLimitBoundingTest extends TestCase {
 		$containerProp->setAccessible(true);
 		$containerProp->setValue($service, $container);
 
+		// ADR-084: the subject reads OpenRegister through the INJECTED contract,
+		// not through the container. `newInstanceWithoutConstructor()` leaves a
+		// typed property uninitialised, and touching it is an Error — not a
+		// null — so seeding only `container` made this test die before it could
+		// observe the query it exists to observe.
+		$objectServiceProp = new ReflectionProperty(OrganizationSyncService::class, 'objectService');
+		$objectServiceProp->setAccessible(true);
+		$objectServiceProp->setValue($service, $objectService);
+
 		$loggerProp = new ReflectionProperty(OrganizationSyncService::class, 'logger');
 		$loggerProp->setAccessible(true);
 		$loggerProp->setValue($service, $this->createMock(LoggerInterface::class));

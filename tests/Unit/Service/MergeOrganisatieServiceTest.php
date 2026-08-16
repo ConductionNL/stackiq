@@ -207,34 +207,51 @@ class MergeOrganisatieServiceTest extends TestCase {
 	}//end testUntouchedContractFieldsSurviveRepointing()
 
 	/**
-	 * The `entity()` double asserts its own premise: the real
-	 * OpenRegister `ObjectEntity` declares `getOrganisation()` only as an
-	 * `@method` docblock tag over `protected ?string $organisation`, so it is
-	 * reached through `Entity::__call()`. That makes `method_exists()` FALSE
-	 * and `property_exists()` TRUE on the property the framework itself keys
-	 * on (`Entity::getter()` does exactly this check).
+	 * The `entity()` double asserts its own premise, against the shape the real
+	 * OpenRegister `ObjectEntity` has TODAY.
 	 *
-	 * Without this test the fixture could silently drift back to the concrete
-	 * shape of `tests/Stubs/Db/ObjectEntity.php` — which is precisely how the
-	 * defect this file now covers stayed green for its entire life.
+	 * When softwarecatalog#490 was written, `getOrganisation()` existed on the
+	 * real entity only as an `@method` docblock tag over
+	 * `protected ?string $organisation`, i.e. reached through
+	 * `Entity::__call()`, so `method_exists()` was FALSE there and TRUE on a
+	 * naive double — which is exactly how a `method_exists()` probe stayed
+	 * green here while re-pointing nothing in production.
+	 *
+	 * ADR-084 changed that: `OCA\OpenRegister\Db\ObjectEntity` now implements
+	 * `ObjectEntityInterface`, and that interface DECLARES
+	 * `getOrganisation(): ?string`, so the real class declares it concretely
+	 * (openregister `lib/Db/ObjectEntity.php:833`). An implementor cannot leave
+	 * an interface method to `__call()`. This test therefore pins BOTH halves
+	 * of the current shape, because `readOwningOrganisation()` still probes the
+	 * property first and the accessor second, and either arm going missing puts
+	 * the #490 data-loss path back:
+	 *
+	 *   - the accessor is declared (the published contract requires it), and
+	 *   - the backing property is still there, which is what
+	 *     `Entity::getter()` — and the service's primary probe — keys on.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
 	 */
-	public function testTheMagicEntityDoubleMatchesTheRealObjectEntityAccessorShape(): void {
+	public function testTheEntityDoubleMatchesTheRealObjectEntityAccessorShape(): void {
 		$entity = $this->entity(['id' => 'c1'], uuid: 'c1', organisation: 'org-a');
 
-		$this->assertFalse(
+		$this->assertInstanceOf(
+			\OCA\OpenRegister\Contract\ObjectEntityInterface::class,
+			$entity,
+			'the double must satisfy the contract OpenRegister publishes, as the real entity does'
+		);
+		$this->assertTrue(
 			method_exists($entity, 'getOrganisation'),
-			'the double must reach getOrganisation() through __call, like the real ObjectEntity'
+			'ObjectEntityInterface declares getOrganisation(), so every implementor declares it concretely'
 		);
 		$this->assertTrue(
 			property_exists($entity, 'organisation'),
-			'property_exists() is the instrument Entity::getter() itself uses'
+			'property_exists() is the instrument Entity::getter() — and readOwningOrganisation() — keys on'
 		);
 		$this->assertSame('org-a', $entity->getOrganisation());
-	}//end testTheMagicEntityDoubleMatchesTheRealObjectEntityAccessorShape()
+	}//end testTheEntityDoubleMatchesTheRealObjectEntityAccessorShape()
 
 	/**
 	 * Objects owned through the system-level `@self.organisation` field
@@ -669,8 +686,22 @@ class MergeOrganisatieServiceTest extends TestCase {
 			}
 		);
 
+		// The callback's parameter LIST must mirror
+		// `ObjectServiceInterface::saveObject()` position for position. PHPUnit
+		// resolves the subject's named arguments against the generated mock's own
+		// signature and then invokes this callback POSITIONALLY, so a callback
+		// that omits `$extend` — the contract's second parameter — silently
+		// receives register in `$schema` and schema in `$uuid`. Nothing throws:
+		// the capture just records the wrong coordinates, and every assertion
+		// that looks a save up by (schema, uuid) reports "no such save".
 		$objectService->method('saveObject')->willReturnCallback(
-			function (array|ObjectEntity $object, $register = null, $schema = null, $uuid = null) {
+			function (
+				array|ObjectEntity $object,
+				?array $extend = [],
+				$register = null,
+				$schema = null,
+				$uuid = null,
+			) {
 				$data = ($object instanceof ObjectEntity) === true ? $object->getObject() : $object;
 				$this->savedCalls[] = [
 					'object' => $data,

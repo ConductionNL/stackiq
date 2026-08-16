@@ -24,7 +24,6 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\GebruikSyncService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -47,7 +46,6 @@ class GebruikSyncServiceDecompositionTest extends TestCase {
 		return new GebruikSyncService(
 			new NullLogger(),
 			$this->createMock(SettingsService::class),
-			$this->createMock(ContainerInterface::class),
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 

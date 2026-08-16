@@ -962,50 +962,22 @@ class ContactPersonHandler {
 	 * into it is a surface, not a convenience.
 	 */
 
-	/**
-	 * Finds contactpersoon object by username
+	/*
+	 * `findContactPersonByUsername()` was REMOVED here.
 	 *
-	 * @param string $username The username to search for
+	 * It was `private` and had no caller anywhere in the app — phpstan reported
+	 * it as unused. It was also broken in a way no caller could have survived:
+	 * it invoked `findAll($searchFilters, $registerId, $contactPersonSchemaId)`
+	 * POSITIONALLY against a contract whose signature is
+	 * `findAll(array $config, bool $_rbac, bool $_multitenancy)`, so the
+	 * register id would have landed in `$_rbac` and the schema id in
+	 * `$_multitenancy`, and the search would have run unscoped. It also read
+	 * `$contactPersonSchemaId === false` on a method that returns `?int`.
 	 *
-	 * @return object|null The contactpersoon object or null if not found
+	 * Deleted rather than repaired: reviving it means designing the lookup, and
+	 * `ContactpersoonService` already owns username→contactpersoon resolution
+	 * through the published contract.
 	 */
-	private function findContactPersonByUsername(string $username): ?object {
-		try {
-			$objectService = $this->getObjectService();
-			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
-
-			// Get configuration values.
-			$registerId = $settingsService->getVoorzieningenRegisterId();
-			$contactPersonSchemaId = $settingsService->getSchemaIdForObjectType('contactPerson');
-
-			if ($registerId === null || $contactPersonSchemaId === false) {
-				throw new \Exception('Register or schema ID not configured for contactpersoon');
-			}
-
-			// Search for contactpersoon with the given username.
-			$searchFilters = [
-				'username' => $username,
-			];
-
-			$results = $objectService->findAll($searchFilters, $registerId, $contactPersonSchemaId);
-
-			if (empty($results) === false) {
-				return $results[0];
-				// Return the first match.
-			}
-
-			return null;
-		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to find contactpersoon by username: ' . $e->getMessage(),
-				[
-					'username' => $username,
-					'exception' => $e,
-				]
-			);
-			return null;
-		}//end try
-	}//end findContactpersoonByUsername()
 
 	/**
 	 * Gets the organization group for a given organization ID

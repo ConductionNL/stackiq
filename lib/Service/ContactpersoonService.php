@@ -25,6 +25,7 @@ use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
 use OCP\App\IAppManager;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -1026,15 +1027,24 @@ class ContactpersoonService {
 					}
 
 					// Find the contactpersoon object with register and schema specified.
-					$contactObject = $objectService->findSilent(
-						id: $contactPersonId,
-						_extend: [],
-						files: false,
-						register: $contactRegister,
-						schema: $contactSchema
-					);
-
-					if ($contactObject === null) {
+					//
+					// A MISS RAISES, it does not return null: `findSilent()` is
+					// declared `ObjectEntityInterface` (non-nullable) on the
+					// published contract and OpenRegister lets the mapper's
+					// DoesNotExistException out. The `=== null` test this replaces
+					// could therefore never be true — the distinct "not found"
+					// entry below was unreachable, and every missing contactpersoon
+					// fell through to the generic error arm and came back carrying
+					// an `error` key instead.
+					try {
+						$contactObject = $objectService->findSilent(
+							id: $contactPersonId,
+							_extend: [],
+							files: false,
+							register: $contactRegister,
+							schema: $contactSchema
+						);
+					} catch (DoesNotExistException $e) {
 						$this->logger->warning(
 							'ContactpersoonService: Contactpersoon not found for bulk user info',
 							['contactpersoonId' => $contactPersonId]
@@ -1045,7 +1055,7 @@ class ContactpersoonService {
 							'groups' => [],
 						];
 						continue;
-					}
+					}//end try
 
 					$contactData = $contactObject->getObject();
 					$username = $contactData['username'] ?? null;

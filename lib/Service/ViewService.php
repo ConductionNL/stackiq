@@ -329,11 +329,11 @@ class ViewService {
 				_multitenancy: false
 			);
 
-			// Serialize ObjectEntity to array if needed.
-			if (is_array(value: $view) === false
-				&& $view !== null
-				&& method_exists(object_or_class: $view, method: 'jsonSerialize') === true
-			) {
+			// Serialise the entity to an array. No `is_array()` / `method_exists()`
+			// probes: `find()` returns `?ObjectEntityInterface`, never a bare
+			// array, and `ObjectEntityInterface extends JsonSerializable`, so both
+			// guards were answers already known at compile time.
+			if ($view !== null) {
 				$view = $view->jsonSerialize();
 			}
 

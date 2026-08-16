@@ -27,7 +27,6 @@ namespace OCA\SoftwareCatalog\Service;
 use DateTime;
 use Exception;
 use OCA\OpenRegister\Db\ObjectEntity;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
@@ -70,29 +69,19 @@ class GebruikSyncService {
 	private SettingsService $settingsService;
 
 	/**
-	 * Container for lazy service resolution.
-	 *
-	 * @var ContainerInterface
-	 */
-	private ContainerInterface $container;
-
-	/**
 	 * Constructor for GebruikSyncService.
 	 *
 	 * @param LoggerInterface $logger Logger for debugging and error reporting
 	 * @param SettingsService $settingsService Service for retrieving configuration settings
-	 * @param ContainerInterface $container DI container for lazy service resolution
 	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-084 contract)
 	 */
 	public function __construct(
 		LoggerInterface $logger,
 		SettingsService $settingsService,
-		ContainerInterface $container,
 		private readonly ObjectServiceInterface $objectService,
 	) {
 		$this->logger = $logger;
 		$this->settingsService = $settingsService;
-		$this->container = $container;
 	}//end __construct()
 
 	/**
@@ -531,7 +520,7 @@ class GebruikSyncService {
 				object: $updatedData,
 				register: (int)$register,
 				schema: (int)$gebruikSchema,
-				id: $gebruikObject->getUuid()
+				uuid: $gebruikObject->getUuid()
 			);
 
 			$this->logger->info(

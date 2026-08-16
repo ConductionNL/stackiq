@@ -28,7 +28,6 @@ namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
@@ -43,7 +42,6 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -73,9 +71,6 @@ class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 	/** @var IUserSession|MockObject */
 	private IUserSession|MockObject $userSession;
 
-	/** @var ContainerInterface|MockObject */
-	private ContainerInterface|MockObject $container;
-
 	/** @var ObjectServiceInterface|MockObject */
 	private ObjectServiceInterface|MockObject $objectService;
 
@@ -101,13 +96,12 @@ class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->contactSvc = $this->createMock(ContactpersoonService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->container = $this->createMock(ContainerInterface::class);
 
-		$this->container
-			->method('get')
-			->with('OCA\OpenRegister\Service\ObjectService')
-			->willReturn($this->objectService);
-
+		// The controller reaches OpenRegister through the INJECTED contract
+		// (ADR-084), not through a container lookup. Wiring the fixture into a
+		// ContainerInterface double left the subject holding a different,
+		// unconfigured mock — so every read returned an empty set and the
+		// organisation guard refused a caller reading their OWN organisation.
 		$this->controller = new ContactpersonenController(
 			'softwarecatalog',
 			$this->createMock(IRequest::class),
@@ -117,10 +111,9 @@ class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 			$this->userManager,
 			$this->groupManager,
 			$this->userSession,
-			$this->container,
 			$this->createMock(ISecureRandom::class),
 			$this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->objectService,
 			organisationService: $this->createMock(OrganisationService::class),
 		);
 

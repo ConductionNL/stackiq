@@ -334,10 +334,9 @@ class EolSyncService {
 			return [];
 		}
 
-		if (is_array($rows) === false) {
-			return [];
-		}
-
+		// No `is_array($rows)` guard: `ObjectServiceInterface::findAll()` declares
+		// `array`, and the only non-array outcome — a throw — is already handled
+		// above. The check could never be true.
 		$cycles = [];
 		foreach ($rows as $row) {
 			$data = $this->normalizeRow(row: $row);

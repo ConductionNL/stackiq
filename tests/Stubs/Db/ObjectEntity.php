@@ -9,20 +9,28 @@
  * via the `OCA\OpenRegister\ => tests/Stubs/` autoload-dev mapping.
  *
  * ⚠️ KNOWN UNFAITHFULNESS — read before adding a declaration here.
- * Every accessor below is magic on the REAL ObjectEntity, so declaring it here
- * makes `method_exists()` TRUE in the suite and FALSE in production. A test
- * built on this stub therefore CANNOT detect a `method_exists()` probe against
- * an OpenRegister entity — that is exactly how softwarecatalog#490 (the
- * organisation merge re-pointing nothing while still tombstoning the source)
- * stayed green for its entire life. `getOrganisation()`/`setOrganisation()`
- * were removed from this stub for that reason.
+ * Anything declared here that is MAGIC on the real ObjectEntity makes
+ * `method_exists()` TRUE in the suite and FALSE in production. A test built on
+ * such a stub cannot detect a `method_exists()` probe against an OpenRegister
+ * entity — that is exactly how softwarecatalog#490 (the organisation merge
+ * re-pointing nothing while still tombstoning the source) stayed green for its
+ * entire life.
  *
- * If your subject probes for an accessor, do NOT add it here. Declare the
- * attribute as a `protected` PROPERTY instead (as `organisation` is below) and
- * build the double as a concrete subclass of this stub rather than a
- * `createMock()`, so `__call()` serves the accessor exactly as it does in
- * production. `tests/Unit/Service/MergeOrganisatieServiceTest::entity()` is
- * the worked example.
+ * The six accessors of `ObjectEntityInterface` are the exception, and they are
+ * NOT unfaithful: ADR-084 made the real
+ * `OCA\OpenRegister\Db\ObjectEntity implements ObjectEntityInterface`, and a
+ * class cannot satisfy an interface method through `__call()`, so the real
+ * class declares all six concretely (`openregister lib/Db/ObjectEntity.php`).
+ * Declaring them here mirrors it. `organisation` additionally keeps its
+ * `protected` PROPERTY below, because that is what `Entity::getter()` keys on
+ * and what `MergeOrganisatieService::readOwningOrganisation()` probes first.
+ *
+ * If your subject probes for an accessor that is NOT on the published
+ * contract, do NOT add it here. Declare the attribute as a `protected`
+ * PROPERTY instead and build the double as a concrete subclass of this stub
+ * rather than a `createMock()`, so `__call()` serves the accessor exactly as it
+ * does in production. `tests/Unit/Service/MergeOrganisatieServiceTest::entity()`
+ * is the worked example.
  *
  * A faithful double must be a SUBCLASS of this stub, not of some other base:
  * `ObjectService::find()` declares `?ObjectEntity`, and an incompatible return
@@ -58,29 +66,40 @@ use BadFunctionCallException;
  * Stub for ObjectEntity with the surface used by SoftwareCatalog tests.
  */
 abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityInterface {
-		/**
-		 * @return ?string
-		 */
-		public function getOrganisation(): ?string {
-			return $this->organisation ?? null;
-		}
 
-		/**
-		 * @return ?string
-		 */
-		public function getOwner(): ?string {
-			return $this->owner ?? null;
-		}
+	/**
+	 * The owning Nextcloud user id (`@self.owner`).
+	 *
+	 * @var string|null
+	 */
+	protected ?string $owner = null;
 
+	/**
+	 * The system-level owning organisation.
+	 *
+	 * @return string|null
+	 */
+	public function getOrganisation(): ?string {
+		return $this->organisation;
+	}//end getOrganisation()
+
+	/**
+	 * The owning Nextcloud user id.
+	 *
+	 * @return string|null
+	 */
+	public function getOwner(): ?string {
+		return $this->owner;
+	}//end getOwner()
 
 	/**
 	 * The system-level owning organisation (`@self.organisation`).
 	 *
-	 * A PROPERTY, not a declared accessor — on the real ObjectEntity this is
-	 * `protected ?string $organisation` reached through `Entity::__call()`, so
-	 * `method_exists($entity, 'getOrganisation')` is FALSE and
-	 * `property_exists($entity, 'organisation')` is TRUE. Declaring it this way
-	 * is what lets a test tell the two apart. See softwarecatalog#490.
+	 * Kept as a `protected` PROPERTY alongside the declared accessor above,
+	 * mirroring the real entity: `Entity::getter()` resolves on
+	 * `property_exists()`, and `MergeOrganisatieService::readOwningOrganisation()`
+	 * probes the property first. Deleting it would leave the service's primary
+	 * probe untested. See softwarecatalog#490.
 	 *
 	 * @var string|null
 	 */

@@ -28,7 +28,6 @@ namespace OCA\SoftwareCatalog\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -189,8 +188,11 @@ class ContractStatusService {
 	 */
 	private function getObjectService(): ?ObjectServiceInterface {
 		try {
-			$service = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			if ($service instanceof ObjectService) {
+			// Ask for the CONTRACT and narrow on the CONTRACT (ADR-084) — see
+			// ContractApprovalService::getObjectService() for why gating on the
+			// concrete class is a silent fail-closed.
+			$service = $this->container->get(ObjectServiceInterface::class);
+			if ($service instanceof ObjectServiceInterface) {
 				return $service;
 			}
 		} catch (\Throwable $e) {
