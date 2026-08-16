@@ -794,9 +794,9 @@ class MergeOrganisatieServiceTest extends TestCase {
 			/**
 			 * The object uuid.
 			 *
-			 * @return string
+			 * @return string|null
 			 */
-			public function getUuid() {
+			public function getUuid(): ?string {
 				return (string)$this->uuid;
 			}//end getUuid()
 
@@ -806,25 +806,25 @@ class MergeOrganisatieServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function getObject() {
+			public function getObject(): array {
 				return array_merge(['id' => $this->uuid], ($this->object ?? []));
 			}//end getObject()
 
 			/**
 			 * The register id — unused by these tests.
 			 *
-			 * @return mixed
+			 * @return string|null
 			 */
-			public function getRegister() {
+			public function getRegister(): ?string {
 				return null;
 			}//end getRegister()
 
 			/**
 			 * The schema id — unused by these tests.
 			 *
-			 * @return mixed
+			 * @return string|null
 			 */
-			public function getSchema() {
+			public function getSchema(): ?string {
 				return null;
 			}//end getSchema()
 
