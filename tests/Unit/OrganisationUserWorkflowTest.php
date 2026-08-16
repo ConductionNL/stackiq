@@ -22,7 +22,9 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Service\OrganisationService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -53,9 +55,9 @@ class OrganisationUserWorkflowTest extends TestCase {
 	/**
 	 * Mock of the ObjectService
 	 *
-	 * @var ObjectService|MockObject
+	 * @var ObjectServiceInterface|MockObject
 	 */
-	private ObjectService|MockObject $objectService;
+	private ObjectServiceInterface|MockObject $objectService;
 
 	/**
 	 * Mock of the IUserManager service
@@ -139,7 +141,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 		);
 
 		// Create mocks
-		$this->objectService = $this->createMock(ObjectService::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->contactPersonHandler = $this->createMock(ContactPersonHandler::class);
@@ -159,7 +161,9 @@ class OrganisationUserWorkflowTest extends TestCase {
 			$this->createMock(IUserSession::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(ISecureRandom::class),
-			$this->logger
+			$this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+			organisationService: $this->createMock(OrganisationService::class),
 		);
 	}
 
@@ -386,7 +390,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 	 * @return array The result of user creation
 	 */
 	private function convertContactPersonToUser(array $contactPersonData): array {
-		// Mock the ObjectService
+		// Mock the ObjectServiceInterface
 		$contactPersonObject = $this->createMockObjectEntity(
 			uuid: $contactPersonData['uuid'],
 			data: $contactPersonData,

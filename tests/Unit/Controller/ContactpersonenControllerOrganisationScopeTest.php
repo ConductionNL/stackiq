@@ -27,7 +27,9 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Service\OrganisationService;
 use OCA\SoftwareCatalog\Controller\ContactpersonenController;
 use OCA\SoftwareCatalog\Service\ContactpersoonService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -74,8 +76,8 @@ class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 	/** @var ContainerInterface|MockObject */
 	private ContainerInterface|MockObject $container;
 
-	/** @var ObjectService|MockObject */
-	private ObjectService|MockObject $objectService;
+	/** @var ObjectServiceInterface|MockObject */
+	private ObjectServiceInterface|MockObject $objectService;
 
 	/** @var ContactpersoonService|MockObject */
 	private ContactpersoonService|MockObject $contactSvc;
@@ -96,7 +98,7 @@ class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 		$this->userManager = $this->createMock(IUserManager::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->userSession = $this->createMock(IUserSession::class);
-		$this->objectService = $this->createMock(ObjectService::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->contactSvc = $this->createMock(ContactpersoonService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->container = $this->createMock(ContainerInterface::class);
@@ -117,7 +119,9 @@ class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 			$this->userSession,
 			$this->container,
 			$this->createMock(ISecureRandom::class),
-			$this->logger
+			$this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+			organisationService: $this->createMock(OrganisationService::class),
 		);
 
 	}//end setUp()

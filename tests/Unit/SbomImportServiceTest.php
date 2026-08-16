@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException;
 use OCA\SoftwareCatalog\Service\ProgressTracker;
@@ -50,9 +51,9 @@ class SbomImportServiceTest extends TestCase {
 	private string $fixturesDir;
 
 	/**
-	 * @var ObjectService|MockObject
+	 * @var ObjectServiceInterface|MockObject
 	 */
-	private ObjectService|MockObject $objectService;
+	private ObjectServiceInterface|MockObject $objectService;
 
 	/**
 	 * @var ProgressTracker|MockObject
@@ -138,7 +139,7 @@ class SbomImportServiceTest extends TestCase {
 	private function makeService(array $moduleVersionData = ['version' => '1.0.0'], array $previousUuids = []): SbomImportService {
 		$container = $this->createMock(ContainerInterface::class);
 		$settings = $this->createMock(SettingsService::class);
-		$this->objectService = $this->createMock(ObjectService::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->progressTracker = $this->createMock(ProgressTracker::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
@@ -422,7 +423,7 @@ class SbomImportServiceTest extends TestCase {
 	public function testModuleVersieNotFoundThrows(): void {
 		$container = $this->createMock(ContainerInterface::class);
 		$settings = $this->createMock(SettingsService::class);
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$progressTracker = $this->createMock(ProgressTracker::class);
 		$logger = $this->createMock(LoggerInterface::class);
 

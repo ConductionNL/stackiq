@@ -25,7 +25,7 @@
 namespace OCA\SoftwareCatalog\Controller;
 
 use OCA\OpenRegister\Service\ConfigurationService;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\ArchiMateService;
 use OCA\SoftwareCatalog\Service\EolSyncService;
 use OCA\SoftwareCatalog\Service\OrganizationSyncService;
@@ -64,7 +64,7 @@ class SettingsController extends Controller {
 	/**
 	 * The OpenRegister object service.
 	 *
-	 * @var ObjectService|null The OpenRegister object service.
+	 * @var ObjectServiceInterface|null The OpenRegister object service.
 	 */
 	private $objectService;
 
@@ -109,11 +109,11 @@ class SettingsController extends Controller {
 	/**
 	 * Attempts to retrieve the OpenRegister service from the container.
 	 *
-	 * @return ObjectService|null The OpenRegister service if available, null otherwise.
+	 * @return ObjectServiceInterface|null The OpenRegister service if available, null otherwise.
 	 * @throws RuntimeException If the service is not available.
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
-	public function getObjectService(): ?ObjectService {
+	public function getObjectService(): ?ObjectServiceInterface {
 		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
 			$this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			return $this->objectService;

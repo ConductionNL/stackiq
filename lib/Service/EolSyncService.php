@@ -33,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
 
@@ -236,12 +236,12 @@ class EolSyncService {
 	 * on the given `ObjectService` context. Returns false (never throws)
 	 * when the register or either schema cannot be found.
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 * @param array $config The EOL sync configuration.
 	 *
 	 * @return bool True when the register/schemas resolved successfully.
 	 */
-	private function resolveEolContext(ObjectService $objectService, array $config): bool {
+	private function resolveEolContext(ObjectServiceInterface $objectService, array $config): bool {
 		try {
 			$objectService->setRegister($config['register']);
 			$objectService->setSchema($config['productSchema']);
@@ -270,13 +270,13 @@ class EolSyncService {
 	 * write only happen for mapped modules (design.md non-functional
 	 * performance note).
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 * @param int $moduleRegisterId The module register id.
 	 * @param int $moduleSchemaId The module schema id.
 	 *
 	 * @return array The mapped module rows (normalised arrays).
 	 */
-	private function findMappedModules(ObjectService $objectService, int $moduleRegisterId, int $moduleSchemaId): array {
+	private function findMappedModules(ObjectServiceInterface $objectService, int $moduleRegisterId, int $moduleSchemaId): array {
 		$query = [
 			'@self' => [
 				'schema' => $moduleSchemaId,
@@ -308,13 +308,13 @@ class EolSyncService {
 	 * match — matching must never cross into another product's cycles
 	 * (design.md Decision 2 mitigation).
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 * @param array $config The EOL sync configuration.
 	 * @param string $productSlug The mapped module's `eolProductSlug`.
 	 *
 	 * @return array The matching `eolCycle` rows (normalised arrays).
 	 */
-	private function fetchCycles(ObjectService $objectService, array $config, string $productSlug): array {
+	private function fetchCycles(ObjectServiceInterface $objectService, array $config, string $productSlug): array {
 		try {
 			$objectService->setRegister($config['register']);
 			$objectService->setSchema($config['cycleSchema']);
@@ -352,7 +352,7 @@ class EolSyncService {
 	/**
 	 * Fetch the `moduleVersie` rows belonging to one module.
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 * @param int $moduleRegisterId The (softwarecatalog) module register id.
 	 * @param int $versionSchemaId The moduleVersie schema id.
 	 * @param string $moduleUuid The owning module's uuid.
@@ -360,7 +360,7 @@ class EolSyncService {
 	 * @return array The module's `moduleVersie` rows (normalised arrays).
 	 */
 	private function fetchModuleVersions(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		int $moduleRegisterId,
 		int $versionSchemaId,
 		string $moduleUuid,
@@ -397,7 +397,7 @@ class EolSyncService {
 	 * existing uuid is supplied so this is an update, never a duplicate
 	 * create.
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 * @param int $moduleRegisterId The module register id.
 	 * @param int $versionSchemaId The moduleVersie schema id.
 	 * @param array $stampedVersion The complete stamped `moduleVersie` object.
@@ -407,7 +407,7 @@ class EolSyncService {
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-stamping-preserves-every-other-field-and-records-provenance
 	 */
 	private function saveStampedVersion(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		int $moduleRegisterId,
 		int $versionSchemaId,
 		array $stampedVersion,

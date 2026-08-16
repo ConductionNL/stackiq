@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\ReviewAggregateService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -144,10 +145,10 @@ class ReviewAggregateServiceTest extends TestCase {
 	 *
 	 * @param array<int,mixed> $found The search result.
 	 *
-	 * @return ObjectService The mock.
+	 * @return ObjectServiceInterface The mock.
 	 */
 	private function objectService(array $found): ObjectService {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjects')->willReturn($found);
 		return $objectService;
 	}//end objectService()
@@ -169,11 +170,11 @@ class ReviewAggregateServiceTest extends TestCase {
 	/**
 	 * Build a container resolving the OR ObjectService.
 	 *
-	 * @param ObjectService $objectService The OR ObjectService.
+	 * @param ObjectServiceInterface $objectService The OR ObjectService.
 	 *
 	 * @return ContainerInterface The container.
 	 */
-	private function container(ObjectService $objectService): ContainerInterface {
+	private function container(ObjectServiceInterface $objectService): ContainerInterface {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			function (string $id) use ($objectService) {

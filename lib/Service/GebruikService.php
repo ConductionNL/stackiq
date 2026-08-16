@@ -17,7 +17,7 @@
 namespace OCA\SoftwareCatalog\Service;
 
 use Exception;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -101,11 +101,11 @@ class GebruikService {
 	/**
 	 * Get ObjectService from OpenRegister app.
 	 *
-	 * @return ObjectService The OpenRegister object service.
+	 * @return ObjectServiceInterface The OpenRegister object service.
 	 *
 	 * @throws Exception When OpenRegister service is not available.
 	 */
-	private function getObjectService(): ObjectService {
+	private function getObjectService(): ObjectServiceInterface {
 		if (in_array('openregister', $this->appManager->getInstalledApps()) === false) {
 			throw new Exception('OpenRegister app is not installed');
 		}

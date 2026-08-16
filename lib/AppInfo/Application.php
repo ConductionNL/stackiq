@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\AppInfo;
 
 use OCA\Decidesk\Event\DecisionConcludedEvent;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
@@ -127,6 +128,22 @@ class Application extends App implements IBootstrap {
 	 * @spec openspec/specs/settings-service/spec.md
 	 */
 	public function register(IRegistrationContext $context): void {
+
+		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never its
+		// concrete class, so this app's unit tests can mock a type they are able to
+		// load. Nextcloud autowires concrete classes across apps but not interfaces,
+		// so the binding has to be stated — and the composition root is where this
+		// app says how it is wired.
+		//
+		// An ALIAS, not a factory: it resolves when something actually asks for the
+		// interface, so an instance without OpenRegister fails at the route that
+		// needed the data rather than at registration. Both names are strings and
+		// neither triggers an autoload, which is what keeps ADR-083 rule 3's promise
+		// that the start screen still boots.
+		$context->registerServiceAlias(
+			ObjectServiceInterface::class,
+			'OCA\OpenRegister\Service\ObjectService'
+		);
 		include_once __DIR__ . '/../../vendor/autoload.php';
 
 		$this->registerHandlerServices(context: $context);
@@ -333,6 +350,10 @@ class Application extends App implements IBootstrap {
 					db: $container->get(IDBConnection::class),
 					contactpersonHandler: $container->get(ContactPersonHandler::class),
 					container: $container,
+					// ADR-084: the published contract, resolved through the alias
+					// registered above, not the concrete OpenRegister class.
+					objectService: $container->get(ObjectServiceInterface::class),
+					organisationMapper: $container->get('OCA\OpenRegister\Db\OrganisationMapper'),
 				);
 			}
 		);
@@ -356,7 +377,8 @@ class Application extends App implements IBootstrap {
 				return new GebruikSyncService(
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					settingsService: $container->get(SettingsService::class),
-					container: $container
+					container: $container,
+					objectService: $container->get(ObjectServiceInterface::class),
 				);
 			}
 		);

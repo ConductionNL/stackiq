@@ -23,7 +23,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use Exception;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -590,13 +590,13 @@ class AanbodService {
 	 * an aanbod can be any of these types. Register/schema context is
 	 * required to find objects stored in magic tables.
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param string $aanbodId The UUID of the aanbod object
 	 *
 	 * @return \OCA\OpenRegister\Db\ObjectEntity|null The found object or null
 	 */
 	private function findAanbodObject(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		string $aanbodId,
 	): ?\OCA\OpenRegister\Db\ObjectEntity {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
@@ -681,11 +681,11 @@ class AanbodService {
 	/**
 	 * Get ObjectService from OpenRegister app.
 	 *
-	 * @return ObjectService The OpenRegister object service
+	 * @return ObjectServiceInterface The OpenRegister object service
 	 *
 	 * @throws Exception When OpenRegister service is not available
 	 */
-	private function getObjectService(): ObjectService {
+	private function getObjectService(): ObjectServiceInterface {
 		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
 			throw new Exception('OpenRegister app is not installed');
 		}
@@ -747,14 +747,14 @@ class AanbodService {
 	 * Looks up the organisation object by UUID, reads its type, and maps it
 	 * to the appropriate registeredBy value using TYPE_MAP.
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param array $objectData The object data to update
 	 * @param string $organisationUuid The UUID of the organisation to look up
 	 *
 	 * @return array The updated object data
 	 */
 	private function updateRegisteredBy(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		array $objectData,
 		string $organisationUuid,
 	): array {

@@ -35,6 +35,8 @@ use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\OrganisationService;
 
 /**
  * Controller for managing contactpersonen and their user accounts.
@@ -152,6 +154,8 @@ class ContactpersonenController extends Controller {
 		ContainerInterface $container,
 		ISecureRandom $secureRandom,
 		LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
+		private readonly OrganisationService $organisationService,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 		$this->settingsService = $settingsService;
@@ -201,7 +205,6 @@ class ContactpersonenController extends Controller {
 
 		try {
 			// Get object service.
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
 			// Search for contactpersonen belonging to this organisation.
 			// Use a more generic search that doesn't require specific register/schema.
@@ -212,7 +215,7 @@ class ContactpersonenController extends Controller {
 				// Let ObjectService resolve the schema.
 			];
 
-			$contactpersonen = $objectService->searchObjectsPaginated($searchParams);
+			$contactpersonen = $this->objectService->searchObjectsPaginated($searchParams);
 
 			// Enhance with user information.
 			//
@@ -308,8 +311,7 @@ class ContactpersonenController extends Controller {
 
 		$callerOrgUuid = null;
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$callerOrgUuid = $this->resolveContactOrganisation(objectService: $objectService, username: $currentUser->getUID());
+			$callerOrgUuid = $this->resolveContactOrganisation(objectService: $this->objectService, username: $currentUser->getUID());
 		} catch (\Exception $e) {
 			$this->logger->warning(
 				'ContactpersonenController: could not resolve the caller organisation, denying contact read',
@@ -404,10 +406,9 @@ class ContactpersonenController extends Controller {
 
 		try {
 			// Get object service.
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 
 			// Find the contactpersoon object — bind to current tenant.
-			$contactPersonObject = $objectService->find(
+			$contactPersonObject = $this->objectService->find(
 				id: $contactPersonId,
 				register: 'voorzieningen',
 				schema: 'contactPerson',
@@ -531,10 +532,24 @@ class ContactpersonenController extends Controller {
 				]
 			);
 
-			// Save using MagicMapper directly to bypass schema validation.
-			// This avoids "Unresolved reference" errors when schema references can't be resolved.
-			$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-			$objectMapper->update($contactPersonObject);
+			// Save WITHOUT schema validation, to avoid "Unresolved reference"
+			// errors when schema references cannot be resolved.
+			//
+			// This used to reach into OpenRegister's MagicMapper directly — its Db
+			// layer — which ADR-022 exists to prevent and which no leaf app can
+			// load in its own tests. The published contract already exposes the
+			// same capability as a flag, and ObjectService::saveObject() routes
+			// through that very mapper with register+schema, so the magic table is
+			// written exactly as before.
+			$this->objectService->saveObject(
+				object: $contactData,
+				register: $registerId,
+				schema: $schemaId,
+				uuid: $contactPersonObject->getUuid(),
+				silent: true,
+				silent: true,
+			_validation: false
+			);
 
 			$this->logger->info(
 				'ContactpersonenController: Updated contactpersoon with username',
@@ -942,10 +957,8 @@ class ContactpersonenController extends Controller {
 	 */
 	private function verifyCrossTenantScope(\OCP\IUser $currentUser, string $username): ?JSONResponse {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
-			$targetOrgUuid = $this->resolveContactOrganisation(objectService: $objectService, username: $username);
-			$callerOrgUuid = $this->resolveContactOrganisation(objectService: $objectService, username: $currentUser->getUID());
+			$targetOrgUuid = $this->resolveContactOrganisation(objectService: $this->objectService, username: $username);
+			$callerOrgUuid = $this->resolveContactOrganisation(objectService: $this->objectService, username: $currentUser->getUID());
 
 			if ($targetOrgUuid !== null && $callerOrgUuid !== null && $targetOrgUuid !== $callerOrgUuid) {
 				$this->logger->warning(
@@ -988,6 +1001,9 @@ class ContactpersonenController extends Controller {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-5
 	 */
 	private function resolveContactOrganisation(object $objectService, string $username): ?string {
+		// development's side on both counts: this method TAKES $objectService as a
+		// parameter (my dangling-reference pass wrongly made it a property read),
+		// and the schema slug was renamed contactpersoon -> contactPerson there.
 		$results = $objectService->searchObjectsPaginated(
 			['username' => $username, '_limit' => 1, '_schema' => 'contactPerson']
 		);
@@ -1203,8 +1219,7 @@ class ContactpersonenController extends Controller {
 		}
 
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$contactObject = $objectService->find(
+			$contactObject = $this->objectService->find(
 				id: $contactPersonId,
 				register: 'voorzieningen',
 				schema: 'contactPerson'
@@ -1597,10 +1612,8 @@ class ContactpersonenController extends Controller {
 
 			// Get organisation data from OpenRegister.
 			try {
-				$organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
-
 				// Get active organisation.
-				$activeOrg = $organisationService->getActiveOrganisation();
+				$activeOrg = $this->organisationService->getActiveOrganisation();
 				if ($activeOrg !== null) {
 					$response['organisations']['active'] = [
 						'uuid' => $activeOrg->getUuid(),
@@ -1611,7 +1624,7 @@ class ContactpersonenController extends Controller {
 				}
 
 				// Get all user organisations.
-				$userOrgs = $organisationService->getUserOrganisations();
+				$userOrgs = $this->organisationService->getUserOrganisations();
 				foreach ($userOrgs as $org) {
 					$response['organisations']['all'][] = [
 						'uuid' => $org->getUuid(),
@@ -1728,15 +1741,13 @@ class ContactpersonenController extends Controller {
 		string $userEmail,
 	): void {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-
 			$searchParams = [
 				'username' => $userId,
 				'_limit' => 1,
 				'_schema' => 'contactPerson',
 			];
 
-			$contactpersonen = $objectService->searchObjectsPaginated($searchParams);
+			$contactpersonen = $this->objectService->searchObjectsPaginated($searchParams);
 
 			if (empty($contactpersonen['results']) === false) {
 				$contactPerson = $contactpersonen['results'][0];

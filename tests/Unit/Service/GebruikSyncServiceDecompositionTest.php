@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\GebruikSyncService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
@@ -47,6 +48,7 @@ class GebruikSyncServiceDecompositionTest extends TestCase {
 			new NullLogger(),
 			$this->createMock(SettingsService::class),
 			$this->createMock(ContainerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 	}//end makeService()

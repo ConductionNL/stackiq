@@ -62,7 +62,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -806,9 +806,9 @@ class MergeOrganisatieService {
 	/**
 	 * Gets the OpenRegister ObjectService if available.
 	 *
-	 * @return ObjectService|null ObjectService instance or null when openregister is not installed.
+	 * @return ObjectServiceInterface|null ObjectService instance or null when openregister is not installed.
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
 			return null;
 		}

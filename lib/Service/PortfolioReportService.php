@@ -34,7 +34,7 @@ namespace OCA\SoftwareCatalog\Service;
 
 use DateTimeImmutable;
 use Exception;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\AppInfo\Application;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -558,11 +558,11 @@ class PortfolioReportService {
 	/**
 	 * Lazily resolve the OpenRegister ObjectService.
 	 *
-	 * @return ObjectService The service.
+	 * @return ObjectServiceInterface The service.
 	 *
 	 * @throws Exception When OpenRegister is not installed or unresolvable.
 	 */
-	private function getObjectService(): ObjectService {
+	private function getObjectService(): ObjectServiceInterface {
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
 			throw new Exception('OpenRegister app is not installed');
 		}

@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCP\App\IAppManager;
@@ -1546,12 +1547,12 @@ class ArchiMateImportService {
 	 * Lets ObjectService handle all batching, throttling, and optimization internally
 	 *
 	 * @param array $objects Array of objects to save
-	 * @param ObjectService $objectService ObjectService instance
+	 * @param ObjectServiceInterface $objectService ObjectService instance
 	 * @param int $registerId Register ID
 	 *
 	 * @return array Array of saved objects
 	 */
-	private function saveObjectsDirectToService(array $objects, ObjectService $objectService, int $registerId): array {
+	private function saveObjectsDirectToService(array $objects, ObjectServiceInterface $objectService, int $registerId): array {
 		try {
 			// GROUP BY SCHEMA: For magic mapping support, save objects schema by schema.
 			// This ensures each batch has a single schema so UnifiedObjectMapper can route to the correct table.
@@ -1654,12 +1655,12 @@ class ArchiMateImportService {
 	 * Save objects in parallel batches for maximum performance (DEPRECATED)
 	 *
 	 * @param array $objects Array of objects to save
-	 * @param ObjectService $objectService ObjectService instance
+	 * @param ObjectServiceInterface $objectService ObjectService instance
 	 * @param int $registerId Register ID
 	 *
 	 * @return array Array of saved objects
 	 */
-	private function saveObjectsInParallelBatches(array $objects, ObjectService $objectService, int $registerId): array {
+	private function saveObjectsInParallelBatches(array $objects, ObjectServiceInterface $objectService, int $registerId): array {
 		$batchSize = self::PERFORMANCE_OPTIMIZATIONS['batch_size'];
 		$parallelBatches = self::PERFORMANCE_OPTIMIZATIONS['parallel_batches'];
 
@@ -1769,12 +1770,12 @@ class ArchiMateImportService {
 	 * Save objects in a single batch (fallback method)
 	 *
 	 * @param array $objects Array of objects to save
-	 * @param ObjectService $objectService ObjectService instance
+	 * @param ObjectServiceInterface $objectService ObjectService instance
 	 * @param int $registerId Register ID
 	 *
 	 * @return array Array of saved objects
 	 */
-	private function saveObjectsInSingleBatch(array $objects, ObjectService $objectService, int $registerId): array {
+	private function saveObjectsInSingleBatch(array $objects, ObjectServiceInterface $objectService, int $registerId): array {
 		// Using single batch processing.
 		// Disable RBAC for bulk import when the performance optimisation flag is set.
 		if (self::PERFORMANCE_OPTIMIZATIONS['disable_rbac'] === true) {
@@ -1812,9 +1813,9 @@ class ArchiMateImportService {
 	/**
 	 * Get ObjectService from container
 	 *
-	 * @return ObjectService|null ObjectService instance or null if not available
+	 * @return ObjectServiceInterface|null ObjectService instance or null if not available
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		if ($this->appManager->isInstalled(appId: 'openregister') === false) {
 			return null;
 		}

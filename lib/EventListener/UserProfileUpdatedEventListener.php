@@ -25,6 +25,10 @@ use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\SchemaMapper;
+use OCA\OpenRegister\Db\RegisterMapper;
+use OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler;
 
 /**
  * Syncs user profile changes to the corresponding contactpersoon object.
@@ -56,6 +60,10 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
+		private readonly SchemaMapper $schemaMapper,
+		private readonly RegisterMapper $registerMapper,
+		private readonly MetadataHydrationHandler $metadataHydrationHandler,
 	) {
 	}//end __construct()
 
@@ -128,7 +136,6 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	private function syncToContactPerson(UserProfileUpdatedEvent $event, LoggerInterface $logger): void {
-		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		$settingsService = $this->container->get(SettingsService::class);
 
 		$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
@@ -149,7 +156,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		];
 
 		$contactPerson = $this->findContactPerson(
-			objectService: $objectService,
+			objectService: $this->objectService,
 			selfQuery: $selfQuery,
 			userId: $userId,
 			event: $event,
@@ -283,15 +290,11 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		int $schema,
 		LoggerInterface $logger,
 	): void {
-		$schemaMapper = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
-		$registerMapper = $this->container->get('OCA\OpenRegister\Db\RegisterMapper');
-		$metaHydrationHandler = $this->container->get('OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler');
-
 		$schemaEntity = null;
 		$registerEntity = null;
 		try {
-			$schemaEntity = $schemaMapper->find(id: $schema, _rbac: false, _multitenancy: false);
-			$registerEntity = $registerMapper->find(id: $register, _rbac: false, _multitenancy: false);
+			$schemaEntity = $this->schemaMapper->find(id: $schema, _rbac: false, _multitenancy: false);
+			$registerEntity = $this->registerMapper->find(id: $register, _rbac: false, _multitenancy: false);
 		} catch (\Exception $e) {
 			$logger->warning(
 				'[UserProfileUpdatedEventListener] Could not load schema/register entities for _name hydration',
@@ -302,7 +305,7 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		}
 
 		if ($schemaEntity !== null) {
-			$metaHydrationHandler->hydrateObjectMetadata(entity: $contactPerson, schema: $schemaEntity);
+			$this->metadataHydrationHandler->hydrateObjectMetadata(entity: $contactPerson, schema: $schemaEntity);
 			$logger->debug(
 				'[UserProfileUpdatedEventListener] Regenerated _name metadata',
 				[
@@ -311,10 +314,21 @@ class UserProfileUpdatedEventListener implements IEventListener {
 			);
 		}
 
-		// Pass register and schema so the magic mapper route is triggered and the
-		// per-schema magic table is updated (not just the blob table).
-		$objectMapper = $this->container->get('OCA\OpenRegister\Db\MagicMapper');
-		$objectMapper->update(entity: $contactPerson, register: $registerEntity, schema: $schemaEntity);
+		// Persist through the published contract rather than OpenRegister's Db
+		// layer. The comment this replaces worried that a plain save would touch
+		// "just the blob table" — it does not: ObjectService::saveObject() calls
+		// metaHydrationHandler->hydrateObjectMetadata() and then
+		// objectEntityMapper->update(entity:, register:, schema:), which IS the
+		// magic-mapper route. This listener was hand-rolling OpenRegister's own
+		// save pipeline, one layer too deep.
+		$this->objectService->saveObject(
+			object: $contactPerson->getObject(),
+			register: $contactPerson->getRegister(),
+			schema: $contactPerson->getSchema(),
+			uuid: $contactPerson->getUuid(),
+			silent: true,
+			_validation: false
+		);
 
 	}//end persistContactpersoonPatch()
 

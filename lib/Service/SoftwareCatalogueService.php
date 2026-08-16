@@ -107,9 +107,9 @@ class SoftwareCatalogueService {
 	/**
 	 * Gets the ObjectService instance
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService|null
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null
 	 */
-	private function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService {
+	private function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
 		if ($this->_appManager->isEnabledForUser(appId: 'openregister') === false) {
 			return null;
 		}
@@ -2028,10 +2028,19 @@ class SoftwareCatalogueService {
 			$registerId = $ctx['registerId'];
 			$contactPersonSchemaId = $ctx['schemaId'];
 
+			// findAll() takes ($config, bool $_rbac, bool $_multitenancy). The
+			// register and schema belong inside the config's filters, as the
+			// sibling call above does -- passed positionally they landed on the
+			// two booleans, so this ran unscoped across every register with
+			// $_rbac set to a register id.
 			$contactpersonen = $objectService->findAll(
-				['organisation' => $organizationUuid],
-				$registerId,
-				$contactPersonSchemaId
+				[
+					'filters' => [
+						'register' => $registerId,
+						'schema' => $contactPersonSchemaId,
+						'organisation' => $organizationUuid,
+					],
+				]
 			);
 
 			$userManager = $this->_container->get(\OCP\IUserManager::class);
@@ -2111,10 +2120,19 @@ class SoftwareCatalogueService {
 			$registerId = $ctx['registerId'];
 			$contactPersonSchemaId = $ctx['schemaId'];
 
+			// findAll() takes ($config, bool $_rbac, bool $_multitenancy). The
+			// register and schema belong inside the config's filters, as the
+			// sibling call above does -- passed positionally they landed on the
+			// two booleans, so this ran unscoped across every register with
+			// $_rbac set to a register id.
 			$contactpersonen = $objectService->findAll(
-				['organisation' => $organizationUuid],
-				$registerId,
-				$contactPersonSchemaId
+				[
+					'filters' => [
+						'register' => $registerId,
+						'schema' => $contactPersonSchemaId,
+						'organisation' => $organizationUuid,
+					],
+				]
 			);
 
 			$userManager = $this->_container->get(\OCP\IUserManager::class);

@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\MergeOrganisatieService;
 use OCA\SoftwareCatalog\Service\OrganisatieService;
 use OCA\SoftwareCatalog\Service\ProgressTracker;
@@ -648,7 +648,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 		array $groupMembers,
 		?IGroupManager $groupManagerOverride = null,
 	): MergeOrganisatieService {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 
 		$objectService->method('find')->willReturnCallback(
 			function (string|int $id) use ($organisations) {

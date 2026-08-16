@@ -57,7 +57,21 @@ use BadFunctionCallException;
 /**
  * Stub for ObjectEntity with the surface used by SoftwareCatalog tests.
  */
-abstract class ObjectEntity {
+abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityInterface {
+		/**
+		 * @return ?string
+		 */
+		public function getOrganisation(): ?string {
+			return $this->organisation ?? null;
+		}
+
+		/**
+		 * @return ?string
+		 */
+		public function getOwner(): ?string {
+			return $this->owner ?? null;
+		}
+
 
 	/**
 	 * The system-level owning organisation (`@self.organisation`).

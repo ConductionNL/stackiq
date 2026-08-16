@@ -21,7 +21,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use Exception;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -1046,13 +1046,13 @@ class AangebodenGebruikService {
 	 * either type. Register/schema context is required to find objects
 	 * stored in magic tables.
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param string $objectId The UUID of the object to find
 	 *
 	 * @return \OCA\OpenRegister\Db\ObjectEntity|null The found object or null
 	 */
 	private function findGebruikOrIntegration(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		string $objectId,
 	): ?\OCA\OpenRegister\Db\ObjectEntity {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
@@ -1135,10 +1135,10 @@ class AangebodenGebruikService {
 	/**
 	 * Get ObjectService from OpenRegister app
 	 *
-	 * @return ObjectService The OpenRegister object service
+	 * @return ObjectServiceInterface The OpenRegister object service
 	 * @throws Exception When OpenRegister service is not available
 	 */
-	private function getObjectService(): ObjectService {
+	private function getObjectService(): ObjectServiceInterface {
 		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
 			throw new Exception('OpenRegister app is not installed');
 		}
@@ -1241,7 +1241,7 @@ class AangebodenGebruikService {
 	 *
 	 * Uses ObjectService's buildSearchQuery() for proper query construction
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param string $registerId The register ID
 	 * @param string $schemaId The schema ID
 	 * @param array $options Query options (includes request parameters for buildSearchQuery)
@@ -1252,7 +1252,7 @@ class AangebodenGebruikService {
 	 * @throws Exception When query fails
 	 */
 	private function getAllObjectsForSchema(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		string $registerId,
 		string $schemaId,
 		array $options = [],
@@ -1297,7 +1297,7 @@ class AangebodenGebruikService {
 	/**
 	 * Get all applications/modules owned by an organization
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param string $organisationUuid The organization UUID
 	 *
 	 * @return array Array of application/module UUIDs
@@ -1305,7 +1305,7 @@ class AangebodenGebruikService {
 	 * @throws Exception When query fails
 	 */
 	private function getApplicationsOwnedByOrganisation(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		string $organisationUuid,
 	): array {
 		try {
@@ -1403,7 +1403,7 @@ class AangebodenGebruikService {
 	 *
 	 * Uses ObjectService's buildSearchQuery() for proper query construction
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param string $registerId The register ID
 	 * @param string $schemaId The schema ID
 	 * @param string $relatedUuid The UUID to find relationships for
@@ -1415,7 +1415,7 @@ class AangebodenGebruikService {
 	 * @throws Exception When query fails
 	 */
 	private function getObjectsRelatedToUuid(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		string $registerId,
 		string $schemaId,
 		string $relatedUuid,
@@ -1463,14 +1463,14 @@ class AangebodenGebruikService {
 	/**
 	 * Check if an organization owns a specific application/module
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param string $appUuid The application/module UUID
 	 * @param string $organisationUuid The organization UUID
 	 *
 	 * @return bool True if organization owns the application/module
 	 */
 	private function checkOrganisationOwnership(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		string $appUuid,
 		string $organisationUuid,
 	): bool {
@@ -1532,14 +1532,14 @@ class AangebodenGebruikService {
 	 * Looks up the organisation object by UUID, reads its type, and maps it
 	 * to the appropriate registeredBy value using TYPE_MAP.
 	 *
-	 * @param ObjectService $objectService The OpenRegister object service
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param array $objectData The object data to update
 	 * @param string $organisationUuid The UUID of the organisation to look up
 	 *
 	 * @return array The updated object data
 	 */
 	private function updateRegisteredBy(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		array $objectData,
 		string $organisationUuid,
 	): array {

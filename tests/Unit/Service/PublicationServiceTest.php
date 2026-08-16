@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\PublicationService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -38,9 +39,9 @@ use Psr\Log\LoggerInterface;
  */
 class PublicationServiceTest extends TestCase {
 	/**
-	 * @var ObjectService|MockObject
+	 * @var ObjectServiceInterface|MockObject
 	 */
-	private ObjectService|MockObject $objectService;
+	private ObjectServiceInterface|MockObject $objectService;
 
 	/**
 	 * @var SettingsService|MockObject
@@ -63,7 +64,7 @@ class PublicationServiceTest extends TestCase {
 	private function makeService(array $entryData): PublicationService {
 		$container = $this->createMock(ContainerInterface::class);
 		$this->settings = $this->createMock(SettingsService::class);
-		$this->objectService = $this->createMock(ObjectService::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$this->settings->method('getSchemaIdForObjectType')->willReturn(3);

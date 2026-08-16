@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\EolMatcherService;
 use OCA\SoftwareCatalog\Service\EolSyncService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -129,7 +129,7 @@ class EolSyncServiceTest extends TestCase {
 		$settingsService->method('getRegisterIdForObjectType')->willReturn(1);
 		$settingsService->method('getSchemaIdForObjectType')->willReturn(2);
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('setRegister')->willThrowException(new \RuntimeException('register not found'));
 		$settingsService->method('getObjectService')->willReturn($objectService);
 
@@ -158,7 +158,7 @@ class EolSyncServiceTest extends TestCase {
 		$settingsService = $this->createMock(SettingsService::class);
 		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
 		$settingsService->method('isOpenRegisterInstalled')->willReturn(true);
-		$settingsService->method('getObjectService')->willReturn($this->createMock(ObjectService::class));
+		$settingsService->method('getObjectService')->willReturn($this->createMock(ObjectServiceInterface::class));
 		$settingsService->method('getRegisterIdForObjectType')->willReturn(null);
 
 		$service = new EolSyncService(
@@ -197,7 +197,7 @@ class EolSyncServiceTest extends TestCase {
 		$moduleVersion = ['id' => 'mv-uuid-1', 'module' => 'module-uuid-1', 'version' => '16.2', 'shortDescription' => 'keep me'];
 		$cycle = ['product' => 'postgresql', 'cycle' => '16', 'eol' => '2028-11-09'];
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjects')->willReturnCallback(
 			function (array $query) use ($module, $moduleVersion): array {
 				if (($query['@self']['schema'] ?? null) === 20) {
@@ -271,7 +271,7 @@ class EolSyncServiceTest extends TestCase {
 
 		$unmappedModule = ['id' => 'module-uuid-2', 'eolProductSlug' => ''];
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjects')->willReturnCallback(
 			function (array $query) use ($unmappedModule): array {
 				if (($query['@self']['schema'] ?? null) === 20) {

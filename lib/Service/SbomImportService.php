@@ -39,7 +39,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use DateTime;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -330,7 +330,7 @@ class SbomImportService {
 	 * in bounded batches. OR's search already excludes `_deleted` rows by
 	 * default, so a prior replace's trashed rows are never re-queried.
 	 *
-	 * @param ObjectService $objectService The OR object service.
+	 * @param ObjectServiceInterface $objectService The OR object service.
 	 * @param int $registerId The voorzieningen register id.
 	 * @param int $componentSchemaId The sbomComponent schema id.
 	 * @param string $moduleVersieUuid The target moduleVersie uuid.
@@ -340,7 +340,7 @@ class SbomImportService {
 	 * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
 	 */
 	private function replacePreviousComponentSet(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		int $registerId,
 		int $componentSchemaId,
 		string $moduleVersieUuid,
@@ -378,7 +378,7 @@ class SbomImportService {
 	 * Bulk-save the newly parsed component set in bounded batches, reporting
 	 * progress per batch when tracking is active.
 	 *
-	 * @param ObjectService $objectService The OR object service.
+	 * @param ObjectServiceInterface $objectService The OR object service.
 	 * @param int $registerId The voorzieningen register id.
 	 * @param int $componentSchemaId The sbomComponent schema id.
 	 * @param string $moduleVersieUuid The target moduleVersie uuid.
@@ -391,7 +391,7 @@ class SbomImportService {
 	 * @spec openspec/specs/sbom-import/spec.md#requirement-large-imports-run-in-bounded-batches-with-progress-reporting
 	 */
 	private function createComponentSet(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		int $registerId,
 		int $componentSchemaId,
 		string $moduleVersieUuid,
@@ -437,7 +437,7 @@ class SbomImportService {
 	 * provenance fields are changed (an omitted field would otherwise be
 	 * nulled by `saveObject()`).
 	 *
-	 * @param ObjectService $objectService The OR object service.
+	 * @param ObjectServiceInterface $objectService The OR object service.
 	 * @param int $registerId The voorzieningen register id.
 	 * @param int $versionSchemaId The moduleVersie schema id.
 	 * @param object $moduleVersion The current moduleVersie entity.
@@ -449,7 +449,7 @@ class SbomImportService {
 	 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
 	 */
 	private function recordProvenance(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		int $registerId,
 		int $versionSchemaId,
 		object $moduleVersion,
@@ -609,9 +609,9 @@ class SbomImportService {
 	/**
 	 * Get the OpenRegister ObjectService from the DI container.
 	 *
-	 * @return ObjectService|null The object service, or null if not available.
+	 * @return ObjectServiceInterface|null The object service, or null if not available.
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		try {
 			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (\Exception $e) {

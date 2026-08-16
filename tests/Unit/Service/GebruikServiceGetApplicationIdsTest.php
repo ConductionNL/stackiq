@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\GebruikService;
 use OCA\SoftwareCatalog\Service\SettingsService;
@@ -50,8 +51,8 @@ class GebruikServiceGetApplicationIdsTest extends TestCase {
 	/** @var ContainerInterface|MockObject */
 	private ContainerInterface|MockObject $container;
 
-	/** @var ObjectService|MockObject */
-	private ObjectService|MockObject $objectService;
+	/** @var ObjectServiceInterface|MockObject */
+	private ObjectServiceInterface|MockObject $objectService;
 
 	/** @var LoggerInterface|MockObject */
 	private LoggerInterface|MockObject $logger;
@@ -68,7 +69,7 @@ class GebruikServiceGetApplicationIdsTest extends TestCase {
 
 		$this->settingsService = $this->createMock(SettingsService::class);
 		$this->appManager = $this->createMock(IAppManager::class);
-		$this->objectService = $this->createMock(ObjectService::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->container = $this->createMock(ContainerInterface::class);
 

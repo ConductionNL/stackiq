@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -182,11 +183,11 @@ class ContractStatusService {
 	/**
 	 * Lazily resolve the OpenRegister ObjectService.
 	 *
-	 * @return ObjectService|null The service, or null when OpenRegister is absent.
+	 * @return ObjectServiceInterface|null The service, or null when OpenRegister is absent.
 	 *
 	 * @spec openspec/specs/contract-administration/spec.md
 	 */
-	private function getObjectService(): ?ObjectService {
+	private function getObjectService(): ?ObjectServiceInterface {
 		try {
 			$service = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			if ($service instanceof ObjectService) {
