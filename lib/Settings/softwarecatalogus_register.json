@@ -1414,7 +1414,7 @@
               "handling": "related-object"
             },
             "$ref": "#/components/schemas/contactPerson",
-            "x-relation-filter": { "organization": "@object.aanbieder" }
+            "x-relation-filter": { "organization": "@object.provider" }
           },
           "modules": {
             "description": "Zoek de applicaties op waar deze dienst van toepassing is.",
@@ -1424,7 +1424,7 @@
             "facetable": false,
             "title": "Application",
             "$ref": "#/components/schemas/module",
-            "x-relation-filter": { "provider": "@object.aanbieder" },
+            "x-relation-filter": { "provider": "@object.provider" },
             "items": {
               "type": "object",
               "objectConfiguration": {
@@ -6824,7 +6824,7 @@
               "handling": "related-object"
             },
             "$ref": "#/components/schemas/contactPerson",
-            "x-relation-filter": { "organization": "@object.aanbieder" }
+            "x-relation-filter": { "organization": "@object.provider" }
           },
           "cloudDienstverleningsmodel": {
             "description": "Kies één of meerdere hosting typen waarmee de applicatie wordt aangeboden.",
