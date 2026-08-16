@@ -5643,7 +5643,7 @@
         "configuration": {
           "autoPublish": false,
           "objectNameField": "name",
-          "objectDescriptionField": "summary"
+          "objectDescriptionField": "omschrijving"
         }
       },
       "model": {
@@ -7603,7 +7603,7 @@
         "configuration": {
           "objectNameField": "name",
           "objectSummaryField": "thema",
-          "objectDescriptionField": "summary",
+          "objectDescriptionField": "omschrijving",
           "autoPublish": true
         }
       },
