@@ -147,17 +147,29 @@ abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityIn
 	/** @return int */
 	abstract public function getId();
 
-	/** @return string */
-	abstract public function getUuid();
+	// The five declarations below MUST carry the return types
+	// `OCA\OpenRegister\Contract\ObjectEntityInterface` declares. This stub
+	// implements that interface (ADR-084), and PHP refuses to declare a class
+	// whose abstract method is less specific than the interface it satisfies:
+	//
+	//   Fatal error: Declaration of OCA\OpenRegister\Db\ObjectEntity::getUuid()
+	//   must be compatible with ObjectEntityInterface::getUuid(): ?string
+	//
+	// That fatal aborts the whole unit suite, not one test. `getId()` and
+	// `setObject()` below are deliberately left untyped: they are NOT on the
+	// contract, so nothing constrains them.
+
+	/** @return string|null */
+	abstract public function getUuid(): ?string;
 
 	/** @return array<string,mixed> */
-	abstract public function getObject();
+	abstract public function getObject(): array;
 
-	/** @return mixed */
-	abstract public function getRegister();
+	/** @return string|null */
+	abstract public function getRegister(): ?string;
 
-	/** @return mixed */
-	abstract public function getSchema();
+	/** @return string|null */
+	abstract public function getSchema(): ?string;
 
 	/**
 	 * @param array<string,mixed>|null $object
