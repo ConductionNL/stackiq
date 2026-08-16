@@ -21,6 +21,7 @@ import {
 	expectNoAppErrors,
 	navClickTo,
 } from './_helpers'
+import { ComplianceMatrixView } from './page-components'
 
 // @e2e module-compliance-assessment::matrix-renders-the-three-cell-states
 // @e2e module-compliance-assessment::matrix-selection-is-shareable
@@ -28,7 +29,7 @@ test('compliance matrix: nav entry reaches the filter-first matrix surface', asy
 	page,
 }) => {
 	const bag = collectAppErrors(page)
-	await navClickTo(page, 'Compliance matrix')
+	await navClickTo(page, ComplianceMatrixView)
 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
@@ -49,7 +50,7 @@ test('compliance matrix: switching to the BIO measures scope reaches its own fil
 	page,
 }) => {
 	const bag = collectAppErrors(page)
-	await navClickTo(page, 'Compliance matrix')
+	await navClickTo(page, ComplianceMatrixView)
 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })

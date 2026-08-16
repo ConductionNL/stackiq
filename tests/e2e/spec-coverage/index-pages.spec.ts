@@ -109,13 +109,14 @@ test.fixme('index standards: nav entry reaches the CnIndexPage surface (blocked:
 })
 
 // ---------------------------------------------------------------------------
-// Organisations is a `type: custom` page (OrganisatieIndexView), not a
-// CnIndexPage. Its surface is the custom organisations view: the primary
-// "Add organisation" create action, reached by clicking the nav entry. We
-// assert that custom surface mounts WITHOUT an app-origin error (the register
-// sentinel now resolves, so no @resolve 404).
+// Organisations is a standard `type: index` page — src/manifest.json
+// decomposed the bespoke OrganisatieIndexView in Phase 8 (see its `_note`),
+// so the surface is a CnIndexPage rendering OrganisatieCard. Its primary
+// create action is named from the schema TITLE ("Organization"), reached by
+// clicking the nav entry. We assert that surface mounts WITHOUT an app-origin
+// error (the register sentinel now resolves, so no @resolve 404).
 // ---------------------------------------------------------------------------
-test('custom organisaties: nav entry reaches the OrganisatieIndexView surface', async ({
+test('custom organisaties: nav entry reaches the organisaties index surface', async ({
 	page,
 }) => {
 	const bag = collectAppErrors(page)
@@ -123,10 +124,10 @@ test('custom organisaties: nav entry reaches the OrganisatieIndexView surface', 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
 
-	// The custom view exposes a primary create action. Its empty-state button
-	// reads "Add organisation"; assert the create affordance is present.
+	// The index exposes a primary create action named from the schema title:
+	// "Add Organization". Assert the create affordance is present.
 	await expect(
-		main.getByRole('button', { name: /Add organisation/i }).first(),
+		main.getByRole('button', { name: /Add Organization/i }).first(),
 	).toBeVisible({ timeout: 30000 })
 
 	expectNoAppErrors(bag)

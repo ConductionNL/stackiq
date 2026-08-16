@@ -29,13 +29,14 @@ import {
 	expectNoAppErrors,
 	navClickTo,
 } from './_helpers'
+import { LicensePostureView } from './page-components'
 
 // @e2e software-license-posture::open-source-vs-closed-source-share-reflects-deployments-not-catalogue-rows
 test('license posture: nav reaches the dashboard; portfolio share renders', async ({
 	page,
 }) => {
 	const bag = collectAppErrors(page)
-	await navClickTo(page, 'License posture')
+	await navClickTo(page, LicensePostureView)
 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
@@ -59,7 +60,7 @@ test('license posture: per-vendor rollup renders deployments, mix and cost colum
 	page,
 }) => {
 	const bag = collectAppErrors(page)
-	await navClickTo(page, 'License posture')
+	await navClickTo(page, LicensePostureView)
 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
@@ -77,7 +78,7 @@ test('license posture: per-organisation report surface is present', async ({
 	page,
 }) => {
 	const bag = collectAppErrors(page)
-	await navClickTo(page, 'License posture')
+	await navClickTo(page, LicensePostureView)
 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })

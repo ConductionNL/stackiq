@@ -106,11 +106,14 @@ test('dashboard: "Organisations" nav entry reaches the organisaties index', asyn
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Organisations')
 	const main = page.locator(APP_MAIN).first()
-	// Organisations is a `type: custom` page (OrganisatieIndexView), not a
-	// CnIndexPage — its create action reads "Add organisation" and it has no
-	// Cards/Table toggle. Assert the custom surface's primary create action.
+	// ⚠️ This comment used to say Organisations is a `type: custom` page
+	// (OrganisatieIndexView) with no Cards/Table toggle. src/manifest.json
+	// decomposed it into a standard `type: index` in Phase 8 — its own `_note`
+	// records the change — so the surface IS a CnIndexPage, and its create
+	// action is named from the schema TITLE: "Add Organization". The old
+	// `/Add organisation/i` differed by one letter (s/z) and matched nothing.
 	await expect(
-		main.getByRole('button', { name: /Add organisation/i }).first(),
+		main.getByRole('button', { name: /Add Organization/i }).first(),
 	).toBeVisible({ timeout: 30000 })
 	expectNoAppErrors(bag)
 })

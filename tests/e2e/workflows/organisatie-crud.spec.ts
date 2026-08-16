@@ -2,20 +2,26 @@
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
  * DEEP, data-dependent persistence workflow for the ORGANISATIE entity, driven
- * through the bespoke `type: custom` OrganisatieIndexView (a card grid, not a
- * CnIndexPage).
+ * through the Organisaties index — a standard `type: index` page rendering
+ * OrganisatieCard in a card grid. (It WAS a bespoke `type: custom`
+ * OrganisatieIndexView; src/manifest.json decomposed it in Phase 8 and its
+ * `_note` records the change.)
  *
  * What is proven through the UI:
  *   - read-persistence: an organisation SEEDED via the OpenRegister API
- *     RENDERS as a real card in the custom organisations view (NOT the
- *     "No organisations" empty-state) — direct proof the list now fetches a
- *     real register (the `@resolve` sentinel fix) and the bespoke view binds
- *     the collection;
+ *     RENDERS as a real card in the organisations index (NOT the
+ *     "No items found" empty-state) — direct proof the list fetches a real
+ *     register (the `@resolve` sentinel fix) and the index binds the
+ *     collection. ⚠️ This depends on the page's `config.filter.status`
+ *     allow-list containing the seed's status: the filter listed the
+ *     pre-#520 Dutch values, so the index was empty for EVERY organisation
+ *     and this assertion was the only thing reporting it;
  *   - the seeded card shows the organisation's name + type;
- *   - the "Add organisation" affordance opens the create modal.
+ *   - the "Add Organization" affordance opens the create modal (the button is
+ *     named from the schema TITLE, which is "Organization").
  *
  * What is NOT headlessly drivable here (documented test.fixme):
- *   - UI-driven CREATE of an organisation. "Add organisation" opens the generic
+ *   - UI-driven CREATE of an organisation. "Add Organization" opens the generic
  *     ObjectModal whose first step is a Catalogus -> Register -> Schema cascade.
  *     The Catalogus select is populated from the `catalog` collection, which is
  *     EMPTY in this dev container (no catalog object is provisioned), so the
@@ -98,7 +104,12 @@ test('seeded organisation renders as a card (proves the list loads real data)', 
 	// prior runs leave rows behind, so the freshly-seeded org may land on a later
 	// page — assert that real cards render (proving the @resolve list loaded data)
 	// rather than requiring our specific seeded row to be on the first page.
-	await expect(main.getByText('No organisations', { exact: false })).toHaveCount(0)
+	// ⚠️ This asserted the absence of "No organisations", a string the page has
+	// never rendered since it became a CnIndexPage — so it was satisfied by
+	// every possible DOM, including the empty one it exists to catch. The
+	// index's real empty-state is "No items found"; asserting THAT is what
+	// makes this line load-bearing.
+	await expect(main.getByText('No items found', { exact: false })).toHaveCount(0)
 	const cards = main.locator('[class*=organisatie], [class*=card]')
 	await expect(cards.first()).toBeVisible({ timeout: 30000 })
 	expect(await cards.count()).toBeGreaterThan(0)
@@ -110,13 +121,13 @@ test('seeded organisation renders as a card (proves the list loads real data)', 
 // The create affordance opens the create modal (the modal itself cannot be
 // completed here — see fixme below — but the entry point works).
 // ---------------------------------------------------------------------------
-test('"Add organisation" opens the create modal', async ({ page }) => {
+test('"Add Organization" opens the create modal', async ({ page }) => {
 	await navClickTo(page, 'Organisations')
 	await dismissSupportDialog(page)
 	const main = indexMain(page)
 
 	await main
-		.getByRole('button', { name: /Add organisation/i })
+		.getByRole('button', { name: /Add Organization/i })
 		.first()
 		.click()
 	const modal = page
@@ -154,7 +165,7 @@ test.fixme('UI create -> new organisation card appears (blocked: empty catalog c
 	await dismissSupportDialog(page)
 	const uiOrgName = `${RUN_ID} UI Organisatie`
 
-	const modal = await openCreateDialog(page, 'Add organisation')
+	const modal = await openCreateDialog(page, 'Add Organization')
 	// Select the (currently non-existent) catalogus, then register + schema.
 	const catalogSelect = modal
 		.locator('.detail-item')

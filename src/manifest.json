@@ -179,11 +179,11 @@
 				"viewMode": "cards",
 				"cardComponent": "OrganisatieCard",
 				"columns": ["name", "type", "status", "website"],
-				"filter": { "status": ["Concept", "Actief", "Deactief"] },
+				"filter": { "status": ["Draft", "Active", "Inactive"] },
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			},
-			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs. config.filter excludes organisation-merge tombstones (status='samengevoegd') from the default listing per the organisation-merge spec — a merged-away source stays readable by direct UUID lookup (OrganisatieDetail route) but never appears in this index."
+			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs. config.filter excludes organisation-merge tombstones (status='merged') from the default listing per the organisation-merge spec — a merged-away source stays readable by direct UUID lookup (OrganisatieDetail route) but never appears in this index. ⚠️ The allow-list must be the organization schema's status enum VERBATIM (Draft/Active/Inactive/merged, softwarecatalogus_register.json). It held the pre-#520 Dutch values Concept/Actief/Deactief, which no row can carry after that migration, so this index rendered 'No items found' for every organisation on every instance — a filter that matches nothing looks exactly like an empty install."
 		},
 		{
 			"id": "OrganisatieDetail",

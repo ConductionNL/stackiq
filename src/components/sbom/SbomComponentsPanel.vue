@@ -248,13 +248,22 @@ export default {
 
 	computed: {
 		/**
-		 * The moduleVersie being inspected: the active object, else looked up
+		 * The module version being inspected: the active object, else looked up
 		 * by objectId in the fetched collection.
 		 *
-		 * @return {object|null} The moduleVersie record.
+		 * ⚠️ THIS WAS DECLARED `moduleVersie` WHILE ITS ONLY READER ASKED FOR
+		 * `this.moduleVersion`. Vue resolves a missing computed to `undefined`
+		 * and says nothing, so `moduleVersionData` below returned `{}` on every
+		 * render — which made `lastImportedLabel` permanently '' and the
+		 * `sbom-provenance` line permanently absent, and left `parentModuleId`
+		 * empty so the module-scoped vulnerability heuristic matched nothing.
+		 * The declaration is the half that moved during the Dutch→English
+		 * vocabulary work; the reader was already correct.
+		 *
+		 * @return {object|null} The module version record.
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
 		 */
-		moduleVersie() {
+		moduleVersion() {
 			const active =
 				typeof objectStore.getActiveObject === 'function'
 					? objectStore.getActiveObject('moduleVersion')
@@ -279,12 +288,12 @@ export default {
 		},
 
 		/**
-		 * The moduleVersie's raw data bag.
+		 * The module version's raw data bag.
 		 *
 		 * @return {object} The property bag.
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-imported-components-persist-as-openregister-objects-scoped-to-a-moduleversie
 		 */
-		moduleVersieData() {
+		moduleVersionData() {
 			if (!this.moduleVersion) {
 				return {}
 			}
@@ -292,14 +301,14 @@ export default {
 		},
 
 		/**
-		 * The moduleVersie's parent module uuid — scopes the possible-match
+		 * The module version's parent module uuid — scopes the possible-match
 		 * heuristic (design Decision 6, never a catalogue-wide scan).
 		 *
 		 * @return {string} The parent module uuid, or ''.
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-components-are-matched-against-existing-kwetsbaarheden-without-external-calls
 		 */
 		parentModuleId() {
-			return resolveUuid(this.moduleVersieData.module)
+			return resolveUuid(this.moduleVersionData.module)
 		},
 
 		/**
@@ -428,7 +437,7 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
 		 */
 		lastImportedLabel() {
-			const data = this.moduleVersieData
+			const data = this.moduleVersionData
 			if (!data.sbomLastImportedAt) {
 				return ''
 			}

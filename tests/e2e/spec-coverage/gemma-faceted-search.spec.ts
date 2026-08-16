@@ -150,15 +150,20 @@ test('facets: an unsupported schema is rejected with 400 naming the supported on
 		message,
 		`error message did not name the supported schemas: ${message}`,
 	).toMatch(/module/)
-	expect(message).toMatch(/dienst/)
+	// `dienst` until the schema slugs were translated to English (#520);
+	// FacetService::SUPPORTED_SCHEMAS is now ['module', 'service'] and the
+	// message quotes that constant verbatim.
+	expect(message).toMatch(/service/)
 
 	// The supported set is also machine-readable, and must be exactly the two.
-	expect(body?.supportedSchemas?.sort?.()).toEqual(['service', 'module'])
+	// `.sort()` is applied to BOTH sides — the expectation used to be written
+	// unsorted, so it could only ever have matched by accident.
+	expect(body?.supportedSchemas?.sort?.()).toEqual(['module', 'service'])
 
 	// Control: the same endpoint shape with a SUPPORTED schema is a 200, so the
 	// 400 above is about the schema and not about the route being broken.
-	const ok = await ctx.get(`${FACETS}/dienst`)
-	expect(ok.status(), `GET ${FACETS}/dienst returned ${ok.status()}`).toBe(200)
+	const ok = await ctx.get(`${FACETS}/service`)
+	expect(ok.status(), `GET ${FACETS}/service returned ${ok.status()}`).toBe(200)
 })
 
 // ⚠️ `no-text-query-returns-facets-over-the-full-rbac-scoped-set` IS DELIBERATELY
