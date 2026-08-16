@@ -180,7 +180,7 @@ import { matchComponents } from '../../utils/sbomVulnerabilityMatch.js'
  * @license EUPL-1.2
  *
  * ModuleversieDetail "Components" sidebar tab: renders the imported
- * `sbomComponent` set for a `moduleVersie` (name/version/purl/licenses) with
+ * `sbomComponent` set for a `moduleVersion` (name/version/purl/licenses) with
  * summary counts (total, distinct licenses, matched vulnerabilities) and an
  * upload control that posts a CycloneDX/SPDX JSON file to `SbomController`.
  * Re-importing REPLACES the previous set server-side (design Decision 3);
@@ -205,7 +205,7 @@ export default {
 	},
 
 	props: {
-		/** The moduleVersie OR object uuid (passed by CnObjectSidebar as `objectId`). */
+		/** The moduleVersion OR object uuid (passed by CnObjectSidebar as `objectId`). */
 		objectId: {
 			type: [String, Number],
 			default: null,
@@ -251,14 +251,19 @@ export default {
 		 * The module version being inspected: the active object, else looked up
 		 * by objectId in the fetched collection.
 		 *
-		 * ⚠️ THIS WAS DECLARED `moduleVersie` WHILE ITS ONLY READER ASKED FOR
-		 * `this.moduleVersion`. Vue resolves a missing computed to `undefined`
-		 * and says nothing, so `moduleVersionData` below returned `{}` on every
-		 * render — which made `lastImportedLabel` permanently '' and the
-		 * `sbom-provenance` line permanently absent, and left `parentModuleId`
-		 * empty so the module-scoped vulnerability heuristic matched nothing.
-		 * The declaration is the half that moved during the Dutch→English
-		 * vocabulary work; the reader was already correct.
+		 * ⚠️ THE NAME IS A CONTRACT. `moduleVersionData` below reads this
+		 * property by name. When the schema slug `moduleVersie` was translated
+		 * to `moduleVersion` the consumer was renamed and this producer was not,
+		 * so the consumer resolved `undefined`, returned an empty data bag, and
+		 * every derived value went quietly empty — no error, no warning, and the
+		 * provenance line simply never rendered. Renaming one half of a
+		 * producer/consumer pair is a silent break; `tests/vitest/
+		 * sbomProvenanceLabel.spec.js` fails when the pair drifts again.
+		 *
+		 * The provenance line was the VISIBLE half. `parentModuleId` reads the
+		 * same empty bag, so the module-scoped vulnerability heuristic was
+		 * scoped to '' and matched nothing — silent, untested, and rendered as
+		 * a legitimate "no matches" rather than as a fault.
 		 *
 		 * @return {object|null} The module version record.
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
@@ -312,7 +317,7 @@ export default {
 		},
 
 		/**
-		 * The imported `sbomComponent` set for this moduleVersie, sorted by name.
+		 * The imported `sbomComponent` set for this moduleVersion, sorted by name.
 		 *
 		 * @return {Array<object>} The component records.
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-imported-components-persist-as-openregister-objects-scoped-to-a-moduleversie
@@ -556,7 +561,7 @@ export default {
 
 		/**
 		 * Upload the selected file to `SbomController::importSbom`. On success,
-		 * refetches the sbomComponent and moduleVersie collections so the
+		 * refetches the sbomComponent and moduleVersion collections so the
 		 * table/summary/provenance reflect the REPLACED set (design Decision
 		 * 3) with no page reload.
 		 *

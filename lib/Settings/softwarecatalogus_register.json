@@ -3,8 +3,8 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.4.3",
-    "changelog": "2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
+    "version": "2.4.4",
+    "changelog": "2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
   },
   "x-openregister": {
     "type": "application",
@@ -2618,32 +2618,33 @@
               "fair": 0.5
             }
           },
+          "$comment-lifecycle": "🔴 THE STATE NAMES HERE ARE THE ENUM'S VALUES, NOT LABELS. #520 translated the status enum (Concept/Actief/Deactief -> Draft/Active/Inactive) and migrated the stored rows, but left this block in Dutch, so `initial`, `final` and every `from`/`to` named a value no row can hold: the initial state wrote an out-of-enum value and no transition could ever match. Nothing errors — a transition whose `from` matches nothing is simply never offered — so it reads as a lifecycle nobody uses.",
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "Concept",
+            "initial": "Draft",
             "final": [
-              "Deactief"
+              "Inactive"
             ],
             "transitions": {
               "activate": {
                 "from": [
-                  "Concept"
+                  "Draft"
                 ],
-                "to": "Actief",
+                "to": "Active",
                 "description": "Activate the organisation."
               },
               "deactivate": {
                 "from": [
-                  "Actief"
+                  "Active"
                 ],
-                "to": "Deactief",
+                "to": "Inactive",
                 "description": "Deactivate the organisation."
               },
               "reactivate": {
                 "from": [
-                  "Deactief"
+                  "Inactive"
                 ],
-                "to": "Actief",
+                "to": "Active",
                 "description": "Re-activate a deactivated organisation."
               }
             }

@@ -146,19 +146,23 @@ test('facets: an unsupported schema is rejected with 400 naming the supported on
 	const message = String(body?.message ?? '')
 	// The scenario requires the error to NAME the supported schemas, not merely
 	// to reject — so both names are asserted, not just a non-2xx.
+	//
+	// ⚠️ The supported set is `FacetService::SUPPORTED_SCHEMAS = ['module',
+	// 'service']`. This assertion used to look for `dienst`, the pre-#518 Dutch
+	// slug, and so did the 200 control below — a slug rename moved the API and
+	// left the test naming a schema the service has never heard of.
 	expect(
 		message,
 		`error message did not name the supported schemas: ${message}`,
 	).toMatch(/module/)
-	// `dienst` until the schema slugs were translated to English (#520);
-	// FacetService::SUPPORTED_SCHEMAS is now ['module', 'service'] and the
-	// message quotes that constant verbatim.
 	expect(message).toMatch(/service/)
 
 	// The supported set is also machine-readable, and must be exactly the two.
-	// `.sort()` is applied to BOTH sides — the expectation used to be written
-	// unsorted, so it could only ever have matched by accident.
-	expect(body?.supportedSchemas?.sort?.()).toEqual(['module', 'service'])
+	// ⚠️ `Array.prototype.sort()` sorts IN PLACE and returns the sorted array,
+	// so the expected literal has to be sorted too — comparing a sorted actual
+	// against `['service', 'module']` could never have held whichever names the
+	// service used. Copy before sorting so the response body is not mutated.
+	expect([...(body?.supportedSchemas ?? [])].sort()).toEqual(['module', 'service'])
 
 	// Control: the same endpoint shape with a SUPPORTED schema is a 200, so the
 	// 400 above is about the schema and not about the route being broken.
