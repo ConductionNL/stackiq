@@ -840,23 +840,15 @@ class SoftwareCatalogueService {
 		);
 	}//end handleNewGebruiker()
 
-	/**
-	 * Sends welcome email to gebruiker
+	/*
+	 * NO sendGebruikerWelcomeEmail() HERE.
 	 *
-	 * @param object $userObject The gebruiker object
-	 *
-	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * Its whole body was a `logger->info('Sending gebruiker welcome email')`
+	 * — it never sent anything — and no caller reached it:
+	 * `SoftwareCatalogEventListener` does not invoke it on the
+	 * gebruiker-created path. Wiring a method that sends no mail would have
+	 * bought nothing; implementing one is a feature, not dead-code removal.
 	 */
-	public function sendGebruikerWelcomeEmail(object $userObject): void {
-		// Implementation for sending gebruiker welcome email.
-		$this->_logger->info(
-			'Sending gebruiker welcome email',
-			[
-				'objectId' => $userObject->getId(),
-			]
-		);
-	}//end sendGebruikerWelcomeEmail()
 
 	/**
 	 * Handles contact update
@@ -957,43 +949,18 @@ class SoftwareCatalogueService {
 		);
 	}//end restoreUserAccessForGebruiker()
 
-	/**
-	 * Syncs user with reverted contact
+	/*
+	 * NO REVERT-SYNC METHODS HERE.
 	 *
-	 * @param object $contactObject The contact object
-	 * @param mixed $revertPoint The revert point
-	 *
-	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * `syncUserWithRevertedContact()` and `updateUserFromRevertedGebruiker()`
+	 * were the same shape as `sendGebruikerWelcomeEmail()` above: a single
+	 * `logger->info()` and nothing else, with no caller —
+	 * `SoftwareCatalogEventListener` handles `ObjectRevertedEvent` without
+	 * touching this service. They named a capability (reconcile the Nextcloud
+	 * user after an object revert) that has never been implemented; a log line
+	 * is not that capability, and wiring one in would have made the gap
+	 * invisible instead of removing it.
 	 */
-	public function syncUserWithRevertedContact(object $contactObject, mixed $revertPoint): void {
-		// Implementation for syncing user with reverted contact.
-		$this->_logger->info(
-			'Syncing user with reverted contact',
-			[
-				'objectId' => $contactObject->getId(),
-			]
-		);
-	}//end syncUserWithRevertedContact()
-
-	/**
-	 * Updates user from reverted gebruiker
-	 *
-	 * @param object $userObject The gebruiker object
-	 * @param mixed $revertPoint The revert point
-	 *
-	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
-	 */
-	public function updateUserFromRevertedGebruiker(object $userObject, mixed $revertPoint): void {
-		// Implementation for updating user from reverted gebruiker.
-		$this->_logger->info(
-			'Updating user from reverted gebruiker',
-			[
-				'objectId' => $userObject->getId(),
-			]
-		);
-	}//end updateUserFromRevertedGebruiker()
 
 	/**
 	 * Gets the list of generic user groups
@@ -2028,8 +1995,8 @@ class SoftwareCatalogueService {
 			$registerId = $ctx['registerId'];
 			$contactPersonSchemaId = $ctx['schemaId'];
 
-			// findAll() takes ($config, bool $_rbac, bool $_multitenancy). The
-			// register and schema belong inside the config's filters, as the
+			// The findAll() signature is ($config, bool $_rbac, bool $_multitenancy).
+			// Register and schema belong inside the config's filters, as the
 			// sibling call above does -- passed positionally they landed on the
 			// two booleans, so this ran unscoped across every register with
 			// $_rbac set to a register id.
@@ -2120,8 +2087,8 @@ class SoftwareCatalogueService {
 			$registerId = $ctx['registerId'];
 			$contactPersonSchemaId = $ctx['schemaId'];
 
-			// findAll() takes ($config, bool $_rbac, bool $_multitenancy). The
-			// register and schema belong inside the config's filters, as the
+			// The findAll() signature is ($config, bool $_rbac, bool $_multitenancy).
+			// Register and schema belong inside the config's filters, as the
 			// sibling call above does -- passed positionally they landed on the
 			// two booleans, so this ran unscoped across every register with
 			// $_rbac set to a register id.
