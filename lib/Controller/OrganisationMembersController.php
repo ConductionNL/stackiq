@@ -77,9 +77,8 @@ class OrganisationMembersController extends Controller {
 	 * @param IUserSession $userSession The user session (auth guard).
 	 * @param IGroupManager $groupManager Group membership (beheerder guard).
 	 * @param IUserManager $userManager User lookup (existing-user-only guard).
-	 *                                      `OrganisationService` without a hard compile-time
-	 *                                      dependency on another app's class.
 	 * @param LoggerInterface $logger Logger.
+	 * @param OrganisationService $organisationService Resolves and updates organisation membership.
 	 */
 	public function __construct(
 		IRequest $request,

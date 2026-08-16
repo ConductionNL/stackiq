@@ -139,6 +139,9 @@ class ContactpersonenController extends Controller {
 	 * @param ContainerInterface $container Container for DI
 	 * @param ISecureRandom $secureRandom Secure random generator
 	 * @param LoggerInterface $logger Logger instance
+	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-022/ADR-084 —
+	 *                                              the published contract, not the concrete service)
+	 * @param OrganisationService $organisationService Resolves the organisation a contactpersoon belongs to
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 */
@@ -1001,7 +1004,7 @@ class ContactpersonenController extends Controller {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-5
 	 */
 	private function resolveContactOrganisation(object $objectService, string $username): ?string {
-		// development's side on both counts: this method TAKES $objectService as a
+		// Development's side on both counts: this method TAKES $objectService as a
 		// parameter (my dangling-reference pass wrongly made it a property read),
 		// and the schema slug was renamed contactpersoon -> contactPerson there.
 		$results = $objectService->searchObjectsPaginated(

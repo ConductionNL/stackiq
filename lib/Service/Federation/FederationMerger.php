@@ -63,10 +63,13 @@ class FederationMerger {
 	 * @param array<int,array<string,mixed>> $localMirrors The locally-stored mirrors of THIS peer.
 	 * @param string $syncedAt The ISO-8601 sync moment.
 	 *
-	 * @return array{create:array<int,array<string,mixed>>, update:array<int,array<string,mixed>>, withdraw:array<int,array<string,mixed>>}
-	 *                                                                                                                                      The reconciliation plan. Each create/update item is a full
-	 *                                                                                                                                      mirror data bag (with `_source`); each withdraw item is the
-	 *                                                                                                                                      existing local mirror data bag, marked withdrawn + stale.
+	 * The reconciliation plan. Each create/update item is a full mirror data bag
+	 * (with `_source`); each withdraw item is the existing local mirror data bag,
+	 * marked withdrawn + stale.
+	 *
+	 * @return array{create:array<int,array<string,mixed>>,
+	 *               update:array<int,array<string,mixed>>,
+	 *               withdraw:array<int,array<string,mixed>>}
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 *
