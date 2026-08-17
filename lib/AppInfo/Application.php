@@ -856,7 +856,64 @@ class Application extends App implements IBootstrap {
 		}
 
 		$initialState->provideInitialState('voorzieningen_register', $provisioned);
+
+		// The SECOND register this app owns. lib/Settings/softwarecatalogus_register.json
+		// declares two: `voorzieningen` (15 schemas) and `vng-gemma` / AMEF
+		// (element, model, property-definition, relation, view). A schema is only
+		// fetchable through /api/objects/{register}/{schema} from a register that
+		// ATTACHES it — OpenRegister's ObjectService::setSchema() resolves a slug
+		// register-scoped and, since its 2026-08-16 change, THROWS on a scoped miss
+		// instead of falling back to a global lookup. So the manifest pages whose
+		// schema lives in the AMEF register (Standaarden / StandaardDetail, both
+		// `schema: element`) need their OWN sentinel; pointing them at
+		// `voorzieningen_register` yields `404 {"message":"Schema not found:
+		// 'element'"}` on every fetch.
+		//
+		// Its canonical home is the `amef_config` JSON blob written by
+		// SettingsService::configureAmef(), exactly as `voorzieningen_config` is for
+		// the register above. configureAmef() detects the register by the PRESENCE of
+		// the AMEF core schemas rather than by slug, which is the property this
+		// sentinel needs — whatever it selects is by construction a register that
+		// carries `element`.
+		$amefRegisterId = $this->resolveAmefRegisterId(appConfig: $appConfig);
+		$amefProvisioned = null;
+		if ($amefRegisterId !== '') {
+			$amefProvisioned = $amefRegisterId;
+		}
+
+		$initialState->provideInitialState('amef_register', $amefProvisioned);
 	}//end boot()
+
+	/**
+	 * Resolve the numeric AMEF (vng-gemma) register id from the canonical config.
+	 *
+	 * Mirrors resolveVoorzieningenRegisterId() below, over the AMEF key family.
+	 * Resolution order:
+	 *  1. `amef_config` JSON blob's `register` field — the canonical home written
+	 *     by SettingsService::setAmefConfig() from configureAmef().
+	 *  2. The same blob's `register_id` field — the legacy shape
+	 *     SettingsService::getAmefConfig() assembles when the blob is absent.
+	 *  3. The flat `amef_register_id` scalar key — legacy fallback.
+	 *
+	 * @param IAppConfig $appConfig The app config service.
+	 *
+	 * @return string The numeric register id, or '' when none is configured.
+	 */
+	private function resolveAmefRegisterId(IAppConfig $appConfig): string {
+		$configJson = $appConfig->getValueString(self::APP_ID, 'amef_config', '');
+		if ($configJson !== '') {
+			$decoded = json_decode($configJson, true);
+			if (is_array($decoded) === true) {
+				foreach (['register', 'register_id'] as $key) {
+					if (isset($decoded[$key]) === true && $decoded[$key] !== '') {
+						return (string)$decoded[$key];
+					}
+				}
+			}
+		}
+
+		return $appConfig->getValueString(self::APP_ID, 'amef_register_id', '');
+	}//end resolveAmefRegisterId()
 
 	/**
 	 * Resolve the numeric voorzieningen register id from the canonical config.
