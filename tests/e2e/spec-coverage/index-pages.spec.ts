@@ -19,6 +19,13 @@
  * Application::boot), so the list object-fetch hits a real register and no
  * longer 404s. collectAppErrors no longer filters that 404, so these suites
  * assert it is genuinely absent alongside any other app-origin error / 5xx.
+ *
+ * There are now TWO such sentinels. The Standards pages read `schema: element`,
+ * which lib/Settings/softwarecatalogus_register.json attaches to the `vng-gemma`
+ * (AMEF) register rather than to `voorzieningen`, and they resolve it through
+ * `@resolve:amef_register` — provisioned the same way, from the `amef_config`
+ * blob. See the block above the standards test for why repointing the page was
+ * the right fix and attaching the schema to `voorzieningen` was not.
  */
 import { test, expect } from '@playwright/test'
 import {
@@ -102,14 +109,18 @@ test('index contactpersonen: the route reaches the CnIndexPage surface (toggle +
 // A skip whose reason has stopped being true reads exactly like a passing
 // test, so the reason is not repaired here — the test is put back to work.
 //
-// 🔴 IT IS RED, AND THE CAUSE IS MEASURED — DO NOT RE-SKIP IT.
+// ✅ THE RED IT EXPOSED IS NOW FIXED, AND THE FIX IS NOT THE OBVIOUS ONE.
 // Un-skipping it produced a real, previously invisible defect. The surface
-// assertions all hold (chrome, "Add Element", list body), and the failure is
-// `expectNoAppErrors`:
+// assertions all held (chrome, "Add Element", list body); the failure was
+// `expectNoAppErrors`, on:
 //
-//     Error fetching 14-element collection
+//     Error fetching 14-element collection: Proxy(Object)
 //
-// The page config is `register: "@resolve:voorzieningen_register"` +
+// The console message names neither the status nor the cause. The Playwright
+// trace does — `GET /api/objects/14/element?…` returned
+// `404 {"message":"Schema not found: 'element'"}` (run 31981873526).
+//
+// The page config was `register: "@resolve:voorzieningen_register"` +
 // `schema: "element"` — but `element` is NOT attached to the voorzieningen
 // register. `lib/Settings/softwarecatalogus_register.json` binds it to the
 // SECOND register in the same file:
@@ -119,31 +130,67 @@ test('index contactpersonen: the route reaches the CnIndexPage surface (toggle +
 //                                                        property-definition,
 //                                                        relation, view
 //
-// So the page addresses schema `element` under a register that does not carry
-// it. Same family as openconnector#1275's `synchronization_run`: declaring a
-// schema does not attach it, and only an attached schema is fetchable through
-// /api/objects/{register}/{schema}.
+// Same family as openconnector#1275's `synchronization_run`: declaring a schema
+// does not attach it, and only an attached schema is fetchable through
+// /api/objects/{register}/{schema}. ⚠️ This only became a HARD failure on
+// 2026-08-16: OpenRegister's `ObjectService::setSchema()` used to fall back to a
+// global slug lookup after a register-scoped miss, and now THROWS instead. An
+// instance running an older openregister still serves this page, so "it works
+// here" is not evidence — check the version you are measuring against.
 //
 // ⚠️ THE OBVIOUS FIX IS THE WRONG ONE. Adding `element` to
 // `registers.voorzieningen.schemas` would make the request succeed and return
-// NOTHING — objects live per register, and the GEMMA elements were imported
-// under vng-gemma. That converts a visible error into an empty list, i.e. an
-// invisible pass, which is worse than this red.
+// NOTHING — objects live per register, and AMEF elements are written to the AMEF
+// one. That converts a visible error into an empty list, i.e. an invisible pass,
+// which is worse than the red.
 //
-// The honest fix is to point the page at the register that holds the data,
-// and that needs a second `@resolve:` sentinel: `voorzieningen_register` is
-// currently the ONLY one (34 uses), it is provisioned in
-// lib/AppInfo/Application.php::boot() from the `voorzieningen_config` blob,
-// and NO app-config key holds a vng-gemma register id — nor does
-// tests/e2e/ci-seed.sh provision that register at all. Choosing where that id
-// lives is a config-ownership decision, not an E2E repair, so it is escalated
-// on the fleet board rather than guessed at here.
+// The fix taken instead points the page at the register that carries the schema,
+// through a SECOND `@resolve:` sentinel — `@resolve:amef_register`, provisioned
+// in lib/AppInfo/Application.php::boot() from the `amef_config` blob exactly as
+// `voorzieningen_register` is from `voorzieningen_config`.
+//
+// 🔑 AND THE ASSERTIONS BELOW GO PAST "THE ERROR IS GONE". A repointed page with
+// no rows is quiet, renders "No items found", and passes every surface check —
+// the exact invisible pass the fix above was chosen to avoid. So the page must
+// be shown to LIST something. tests/e2e/ci-seed.sh seeds two `element` objects
+// into the AMEF register and verifies them through the page's own query with a
+// positive and a negative control: `Digikoppeling` (gemmaType `standaard`) and
+// `Zaakregistratiecomponent` (gemmaType `referentiecomponent`). The second one
+// is the discriminator: it exists, in the same register and schema, and the page
+// must NOT show it. Without it, `filter.gemmaType` could be deleted outright and
+// every assertion here would still hold.
 test('index standards: nav entry reaches the CnIndexPage surface (toggle + add + list body)', async ({
 	page,
 }) => {
 	const bag = collectAppErrors(page)
 	await navClickTo(page, 'Standards')
 	await expectIndexSurface(page, 'Add Element')
+
+	const main = page.locator(APP_MAIN).first()
+
+	// A POPULATED list, not `emptyState.or(populated)`. CnIndexPage renders this
+	// header only once a non-empty collection has loaded, so it fails on both an
+	// empty register and a failed fetch.
+	await expect(
+		main.getByText(/Showing\s+\d+\s+of\s+\d+/i).first(),
+		'the Standards index rendered no rows — the AMEF register resolved but carries no gemmaType=standaard element',
+	).toBeVisible({ timeout: 30000 })
+
+	// The seeded standard itself, by name.
+	await expect(
+		main.getByText('Digikoppeling', { exact: false }).first(),
+	).toBeVisible({ timeout: 30000 })
+
+	// …and the seeded NON-standard must be absent. This is an absence assertion
+	// whose subject the product really does emit: `Zaakregistratiecomponent` is a
+	// live row in the same register + schema, listed by an unfiltered page, and
+	// ci-seed.sh fails the job if it is missing. So a zero here means the filter
+	// worked, not that the string never existed.
+	await expect(
+		main.getByText('Zaakregistratiecomponent', { exact: false }),
+		'a referentiecomponent is listed on the Standards index — config.filter.gemmaType is not being applied',
+	).toHaveCount(0)
+
 	expectNoAppErrors(bag)
 })
 

@@ -113,7 +113,12 @@ verify() {
 import json, sys
 path, kind = sys.argv[1], sys.argv[2]
 required = {
-    'registers': ['voorzieningen'],
+    # `vng-gemma` (title "AMEF") is the SECOND register this app declares. It
+    # carries element / model / property-definition / relation / view, and the
+    # Standaarden + StandaardDetail manifest pages read `element` from it via the
+    # `@resolve:amef_register` sentinel. It was previously unchecked here, so an
+    # import that produced only `voorzieningen` reported a clean seed.
+    'registers': ['voorzieningen', 'vng-gemma'],
     # The schemas the e2e fixtures create/read through, per _fixtures.ts
     # (organization, contactPerson, module, contract, moduleVersion) plus the
     # ones the spec-coverage index pages render.
@@ -190,6 +195,177 @@ if missing:
           'every e2e fixture would fail with "voorzieningen register not configured".')
     sys.exit(1)
 print('[ci-seed] app-level voorzieningen mapping OK.')
+PY
+
+# ── 3b. The AMEF register: resolve it, PROBE IT, and give it rows ────────────
+# The Standaarden / StandaardDetail manifest pages read `schema: element`, which
+# lib/Settings/softwarecatalogus_register.json attaches to the `vng-gemma` (AMEF)
+# register and NOT to `voorzieningen`. They resolve it through the
+# `@resolve:amef_register` sentinel that lib/AppInfo/Application.php::boot()
+# provisions from the `amef_config` blob.
+#
+# ⚠️ THE CHECK ABOVE CANNOT CATCH THE FAILURE THIS ONE EXISTS FOR. Verifying that
+# a schema slug is PRESENT in /api/schemas is a different question from whether it
+# is ATTACHED to the register you are about to address, and only the second one
+# decides whether /api/objects/{register}/{schema} answers. OpenRegister used to
+# fall back to a global slug lookup on a scoped miss; since 2026-08-16 it throws,
+# so an unattached slug returns `404 {"message":"Schema not found: 'element'"}`.
+# The only honest probe is the request the page itself makes — so we make it.
+#
+# And a 200 is still not enough. An empty list renders as a legitimate "No items
+# found", i.e. a page that is broken and quiet looks exactly like a page that is
+# healthy and unpopulated. GEMMA elements normally arrive via the ArchiMate import
+# of a multi-megabyte GEMMA_release.xml, which no CI job runs, so we seed two
+# `element` fixtures here — one `gemmaType: standaard` (which the page MUST list)
+# and one `gemmaType: referentiecomponent` (which it must NOT). The pair makes the
+# page's own `filter.gemmaType` falsifiable in both directions.
+AMEF_BODY="$(mktemp)"
+curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${BASE}/index.php/apps/softwarecatalog/api/amef/config" -o "$AMEF_BODY"
+
+AMEF_REGISTER="$(
+	python3 - "$AMEF_BODY" <<'PY'
+import json, sys
+with open(sys.argv[1]) as fh:
+    raw = fh.read()
+try:
+    body = json.loads(raw)
+except json.JSONDecodeError:
+    print('::error::amef/config did not return JSON. First 500 bytes:', file=sys.stderr)
+    print(raw[:500], file=sys.stderr)
+    sys.exit(1)
+config = (body or {}).get('config') or {}
+print(f'[ci-seed] amef config: {json.dumps(config)[:400]}', file=sys.stderr)
+register = str(config.get('register') or config.get('register_id') or '')
+if not register:
+    print('::error::softwarecatalog has no AMEF register mapping — the '
+          '@resolve:amef_register sentinel would resolve to null and the '
+          'Standards pages would fetch /api/objects/@resolve:amef_register/element.',
+          file=sys.stderr)
+    sys.exit(1)
+if not config.get('element_schema'):
+    print('::error::the AMEF config names a register but no element schema.', file=sys.stderr)
+    sys.exit(1)
+print(register)
+PY
+)"
+echo "[ci-seed] amef register id: ${AMEF_REGISTER}"
+
+# The page's own request, verbatim. A non-200 here is the whole defect this
+# section guards, so report the status AND the body — "Schema not found" and
+# "Register not found" are different faults with different fixes.
+ELEM_BODY="$(mktemp)"
+ELEM_CODE="$(
+	curl -sS -o "$ELEM_BODY" -w '%{http_code}' \
+		-u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+		"${BASE}/index.php/apps/openregister/api/objects/${AMEF_REGISTER}/element?_limit=1" || echo 000
+)"
+echo "[ci-seed] GET /api/objects/${AMEF_REGISTER}/element -> ${ELEM_CODE}"
+if [ "$ELEM_CODE" != "200" ]; then
+	head -c 500 "$ELEM_BODY"; echo
+	echo "::error::The AMEF register does not carry the 'element' schema (HTTP ${ELEM_CODE})."
+	echo "::error::Declaring a schema does not attach it — check components.registers.vng-gemma.schemas in lib/Settings/softwarecatalogus_register.json."
+	exit 1
+fi
+
+# Seed the two fixtures, idempotently. `identifier` is a declared property, so it
+# is addressable as a bare query filter (the HTTP list API takes bare property
+# names; `filters[identifier]=…` matches nothing). Verified with a negative
+# control: an unknown identifier returns total 0, so a hit really is a hit.
+python3 - "$BASE" "$USER_NAME" "$USER_PASS" "$AMEF_REGISTER" <<'PY'
+import base64, json, sys, urllib.error, urllib.parse, urllib.request
+
+base, user, password, register = sys.argv[1:5]
+auth = base64.b64encode(f'{user}:{password}'.encode()).decode()
+collection = f'{base}/index.php/apps/openregister/api/objects/{register}/element'
+
+# `identifier`, `type` and `properties` are the element schema's required fields
+# and it runs with hardValidation on, so all three must be present or the create
+# is refused.
+FIXTURES = [
+    {
+        'identifier': 'e2e-gemma-standaard-digikoppeling',
+        'type': 'Standard',
+        'properties': [],
+        'name': 'Digikoppeling',
+        'gemmaType': 'standaard',
+        'gemmaThema': 'Gegevensuitwisseling',
+        'gemmaStatus': 'In gebruik',
+        'url': 'https://gemmaonline.nl/index.php/Digikoppeling',
+    },
+    {
+        # The discriminator control. Same register, same schema, different
+        # gemmaType — so it is listed by an unfiltered page and hidden by a
+        # correctly filtered one. Without it, `filter.gemmaType` could be dropped
+        # entirely and every assertion would still pass.
+        'identifier': 'e2e-gemma-referentiecomponent-zaakregistratie',
+        'type': 'ApplicationComponent',
+        'properties': [],
+        'name': 'Zaakregistratiecomponent',
+        'gemmaType': 'referentiecomponent',
+        'gemmaThema': 'Zaakgericht werken',
+    },
+]
+
+
+def request(url, method='GET', payload=None):
+    data = None
+    headers = {'Authorization': f'Basic {auth}', 'OCS-APIRequest': 'true'}
+    if payload is not None:
+        data = json.dumps(payload).encode()
+        headers['Content-Type'] = 'application/json'
+    req = urllib.request.Request(url, data=data, headers=headers, method=method)
+    with urllib.request.urlopen(req) as resp:
+        return resp.status, json.loads(resp.read().decode() or '{}')
+
+
+def count(query):
+    url = f'{collection}?{urllib.parse.urlencode(query)}'
+    _, body = request(url)
+    return body.get('total', 0), body
+
+
+for fixture in FIXTURES:
+    existing, _ = count({'_limit': 1, 'identifier': fixture['identifier']})
+    if existing:
+        print(f"[ci-seed] element fixture already present: {fixture['identifier']}")
+        continue
+    try:
+        status, _ = request(collection, method='POST', payload=fixture)
+    except urllib.error.HTTPError as exc:
+        print(f"::error::Creating element fixture {fixture['identifier']} failed "
+              f'(HTTP {exc.code}): {exc.read()[:300]!r}')
+        sys.exit(1)
+    print(f"[ci-seed] created element fixture {fixture['identifier']} (HTTP {status})")
+
+# Verify with a FRESH read, never with the create response — OpenRegister echoes
+# back properties it discarded, so a save response cannot tell you what was
+# stored. Three assertions, of which the middle one is the point: the filtered
+# query must be strictly smaller than the unfiltered one.
+total_all, _ = count({'_limit': 50})
+total_std, listed = count({'_limit': 50, 'gemmaType': 'standaard'})
+total_none, _ = count({'_limit': 50, 'gemmaType': 'NO-SUCH-GEMMA-TYPE'})
+
+names = sorted(str(r.get('name') or '') for r in listed.get('results', []))
+print(f'[ci-seed] element objects: {total_all} total, {total_std} with '
+      f'gemmaType=standaard, {total_none} with a nonsense gemmaType')
+print(f'[ci-seed] standards the index page will list: {names}')
+
+if total_std < 1:
+    print('::error::No element object carries gemmaType=standaard, so the '
+          'Standards index would render its empty state. A quiet empty page is '
+          'the failure this seed exists to prevent.')
+    sys.exit(1)
+if total_none != 0:
+    print('::error::A nonsense gemmaType still matched rows — the bare-property '
+          'filter is not filtering, so "the page lists standards" would be '
+          'satisfied by any element at all.')
+    sys.exit(1)
+if total_all <= total_std:
+    print('::error::Every element carries gemmaType=standaard, so the page\'s '
+          'filter has nothing to exclude and cannot be shown to work.')
+    sys.exit(1)
+print('[ci-seed] AMEF element fixtures verified (positive + negative control).')
 PY
 
 echo "[ci-seed] SoftwareCatalog registers + schemas provisioned."
