@@ -44,6 +44,14 @@ updates:
   # composer had no entry at all, so the only composer PRs this repo ever saw
   # were security updates against `main` (e.g. #369, which bumped twig to
   # 3.27.0 — a version `development` already had).
+  #
+  # default-days corrected 1 -> 2 and exclude added: this entry had a cooldown
+  # window but no first-party exclusion, so a fresh conduction/* release would
+  # have waited the same one day as any third-party package instead of being
+  # exempt — the fleet-wide floor gate-93 (composer-cooldown-config) enforces
+  # is 2 days plus a conduction/* exclude, matching the npm entry above's
+  # exclude and the fleet's `conduction/hydra-gates` / `conduction/coding-standard`
+  # first-party dependencies.
   - package-ecosystem: "composer"
     directory: "/"
     target-branch: "development"
@@ -51,9 +59,11 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 10
     cooldown:
-      default-days: 1
+      default-days: 2
       include:
         - "*"
+      exclude:
+        - "conduction/*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
