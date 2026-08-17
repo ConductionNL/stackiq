@@ -2656,7 +2656,7 @@
         "slug": "usage",
         "title": "Usage",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.4.0",
+        "version": "1.4.1",
         "omschrijving": "",
         "icon": "Gauge",
         "x-openregister-notifications": {
@@ -2863,7 +2863,7 @@
           "status": {
             "description": "Selecteer de status van de versie in uw landschap (default status \"in productie\")",
             "type": "string",
-            "default": "In productie",
+            "default": "In production",
             "required": true,
             "visible": true,
             "order": 17,
@@ -3550,7 +3550,7 @@
         "slug": "connection",
         "title": "Connection",
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
-        "version": "0.3.0",
+        "version": "0.3.1",
         "omschrijving": "",
         "icon": "Link",
         "required": [
@@ -3614,7 +3614,7 @@
             "order": 3,
             "facetable": false,
             "title": "Status",
-            "default": "in gebruik",
+            "default": "in use",
             "table": {
               "default": true
             },
@@ -3801,7 +3801,7 @@
             "title": "Connection type",
             "visible": false,
             "hideOnForm": true,
-            "default": "{{ buitengemeentelijkVoorziening | ifFilled: extern, intern }}",
+            "default": "{{ buitengemeentelijkVoorziening | ifFilled: external, internal }}",
             "defaultBehavior": "always",
             "enum": [
               "external",
@@ -6756,7 +6756,7 @@
         },
         "title": "Application",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.3.2",
+        "version": "0.3.3",
         "omschrijving": "",
         "icon": "Package",
         "required": [
@@ -6975,7 +6975,7 @@
             "order": 11,
             "facetable": false,
             "title": "Type",
-            "default": "Applicatie",
+            "default": "Application",
             "enum": [
               "Application",
               "System software"
@@ -7641,7 +7641,7 @@
         },
         "title": "Application version",
         "description": "Schema voor applicatieversies",
-        "version": "0.1.3",
+        "version": "0.1.4",
         "omschrijving": "",
         "icon": "ViewModule",
         "required": [],
@@ -7696,7 +7696,7 @@
               "end of support",
               "withdrawn"
             ],
-            "default": "in gebruik"
+            "default": "in use"
           },
           "dateInDevelopment": {
             "description": "Startdatum van de ontwikkelingsfase",

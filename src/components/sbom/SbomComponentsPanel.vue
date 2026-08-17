@@ -260,6 +260,11 @@ export default {
 		 * producer/consumer pair is a silent break; `tests/vitest/
 		 * sbomProvenanceLabel.spec.js` fails when the pair drifts again.
 		 *
+		 * The provenance line was the VISIBLE half. `parentModuleId` reads the
+		 * same empty bag, so the module-scoped vulnerability heuristic was
+		 * scoped to '' and matched nothing — silent, untested, and rendered as
+		 * a legitimate "no matches" rather than as a fault.
+		 *
 		 * @return {object|null} The module version record.
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
 		 */

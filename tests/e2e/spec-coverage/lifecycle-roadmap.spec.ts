@@ -25,13 +25,14 @@ import {
 	expectNoAppErrors,
 	navClickTo,
 } from './_helpers'
+import { LifecycleRoadmapView } from './page-components'
 
 // @e2e application-lifecycle-tracking::roadmap-groups-and-orders-the-portfolio
 test('roadmap: nav entry reaches the organisation-first roadmap surface', async ({
 	page,
 }) => {
 	const bag = collectAppErrors(page)
-	await navClickTo(page, 'Portfolio roadmap')
+	await navClickTo(page, LifecycleRoadmapView)
 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })

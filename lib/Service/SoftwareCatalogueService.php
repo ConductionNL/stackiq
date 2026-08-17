@@ -30,6 +30,7 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Service for handling software catalog operations.
@@ -139,6 +140,31 @@ class SoftwareCatalogueService {
 			return null;
 		}
 	}//end getOrganisationService()
+
+	/**
+	 * Gets the OrganisationMapper instance
+	 *
+	 * OpenRegister is an optional capability for this service (ADR-083 rule 1),
+	 * so the mapper is reached the same way the two services above are: the app
+	 * is asked whether OpenRegister is available, and a failed resolution
+	 * degrades to null with a logged error rather than escaping as a raw
+	 * container exception. Callers must treat null as "OpenRegister is not
+	 * available" and take their own not-available branch.
+	 *
+	 * @return \OCA\OpenRegister\Db\OrganisationMapper|null
+	 */
+	private function getOrganisationMapper(): ?\OCA\OpenRegister\Db\OrganisationMapper {
+		if ($this->_appManager->isEnabledForUser(appId: 'openregister') === false) {
+			return null;
+		}
+
+		try {
+			return $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+		} catch (\Exception $e) {
+			$this->_logger->error('Failed to get OrganisationMapper: ' . $e->getMessage());
+			return null;
+		}
+	}//end getOrganisationMapper()
 
 	/**
 	 * Processes a contactpersoon object to create an inactive user
@@ -253,7 +279,21 @@ class SoftwareCatalogueService {
 						);
 
 						try {
-							$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+							$organisationMapper = $this->getOrganisationMapper();
+							if ($organisationMapper === null) {
+								$this->_logger->warning(
+									'SoftwareCatalogueService: OpenRegister OrganisationMapper not available, skipping organization membership',
+									[
+										'objectId' => $objectId,
+										'username' => $username,
+										'organization' => $organization,
+									]
+								);
+								// Nothing follows this block but `return $result;`, so this is the
+								// same exit the method would take after skipping the membership work.
+								return $result;
+							}
+
 							$organisation = $organisationMapper->findByUuid($organization);
 
 							if (empty($organisation) === false) {
@@ -534,7 +574,14 @@ class SoftwareCatalogueService {
 						return;
 					}
 
-					$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+					$organisationMapper = $this->getOrganisationMapper();
+					if ($organisationMapper === null) {
+						$this->_logger->warning(
+							'SoftwareCatalogueService: OpenRegister OrganisationMapper not available, skipping contact person membership'
+						);
+						return;
+					}
+
 					$organisation = $organisationMapper->findByUuid($organizationUuid);
 
 					if (empty($organisation) === false) {
@@ -1286,7 +1333,14 @@ class SoftwareCatalogueService {
 			$this->_logger->info('SoftwareCatalogueService: SYNC_STEP_5 - Checking if organization exists in OpenRegister');
 			try {
 				$this->_logger->info('SoftwareCatalogueService: SYNC_STEP_5A - Getting OrganisationMapper for lookup');
-				$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+				$organisationMapper = $this->getOrganisationMapper();
+				if ($organisationMapper === null) {
+					$this->_logger->error(
+						'SoftwareCatalogueService: OpenRegister OrganisationMapper not available, cannot sync organization'
+					);
+					return false;
+				}
+
 				$this->_logger->info(
 					'SoftwareCatalogueService: SYNC_STEP_5B - Calling findByUuid',
 					[
@@ -1496,7 +1550,14 @@ class SoftwareCatalogueService {
 
 			// Create organization directly via mapper to avoid user context requirements.
 			$this->_logger->info('SoftwareCatalogueService: STEP 3C - Getting OrganisationMapper from container');
-			$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+			$organisationMapper = $this->getOrganisationMapper();
+			if ($organisationMapper === null) {
+				// This method's return type is non-nullable and its caller already
+				// holds an OpenRegister OrganisationService, so "unavailable" here
+				// escapes exactly as the raw container exception used to.
+				throw new RuntimeException('OpenRegister OrganisationMapper is not available');
+			}
+
 			$this->_logger->info(
 				'SoftwareCatalogueService: STEP 3D - OrganisationMapper retrieved',
 				[
@@ -1615,7 +1676,12 @@ class SoftwareCatalogueService {
 
 		// Create organization directly via mapper to avoid service issues.
 		$this->_logger->info('SoftwareCatalogueService: STEP 4C - Getting OrganisationMapper from container');
-		$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+		$organisationMapper = $this->getOrganisationMapper();
+		if ($organisationMapper === null) {
+			// Non-nullable return type, same reasoning as the anonymous branch above.
+			throw new RuntimeException('OpenRegister OrganisationMapper is not available');
+		}
+
 		$this->_logger->info(
 			'SoftwareCatalogueService: STEP 4D - OrganisationMapper retrieved',
 			[
@@ -1742,7 +1808,13 @@ class SoftwareCatalogueService {
 		// Note: OpenRegister Organisation entity doesn't have status or type fields.
 		// These are managed in the SoftwareCatalog object, not in the OpenRegister organisation.
 		// Save the updated organization.
-		$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+		$organisationMapper = $this->getOrganisationMapper();
+		if ($organisationMapper === null) {
+			// Non-nullable return type; the caller already holds an OpenRegister
+			// OrganisationService, so this escapes as the container lookup used to.
+			throw new RuntimeException('OpenRegister OrganisationMapper is not available');
+		}
+
 		$updatedOrganisation = $organisationMapper->save($existingOrganisation);
 
 		$this->_logger->info(
@@ -3177,7 +3249,17 @@ class SoftwareCatalogueService {
 			}
 
 			// Get the organization entity.
-			$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+			$organisationMapper = $this->getOrganisationMapper();
+			if ($organisationMapper === null) {
+				$this->_logger->error(
+					'SoftwareCatalogueService: OpenRegister OrganisationMapper not available for synchronization',
+					[
+						'organizationUuid' => $organizationUuid,
+					]
+				);
+				return;
+			}
+
 			$organisation = $organisationMapper->findByUuid($organizationUuid);
 
 			if ($organisation === null) {
@@ -3290,7 +3372,18 @@ class SoftwareCatalogueService {
 
 		try {
 			// Get the organization entity.
-			$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
+			$organisationMapper = $this->getOrganisationMapper();
+			if ($organisationMapper === null) {
+				$this->_logger->error(
+					'SoftwareCatalogueService: OpenRegister OrganisationMapper not available for contact person',
+					[
+						'contactPersonId' => $contactPersonObject->getId(),
+						'organization' => $organization,
+					]
+				);
+				return;
+			}
+
 			$organisation = $organisationMapper->findByUuid($organization);
 
 			if ($organisation === null) {

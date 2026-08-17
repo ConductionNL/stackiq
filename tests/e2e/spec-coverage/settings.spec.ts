@@ -27,6 +27,7 @@
  */
 import { test, expect } from '@playwright/test'
 import { collectAppErrors, expectNoAppErrors } from './_helpers'
+import { VersionInformation } from './page-components'
 
 /**
  * Open the app's Nextcloud admin settings section and return its host element.
@@ -52,7 +53,7 @@ test('settings: all major sections render', async ({ page }) => {
 	const main = await gotoSettings(page)
 
 	for (const heading of [
-		'Version Information',
+		VersionInformation,
 		'Object Statistics',
 		'General Settings',
 		'OpenRegister Integration',
@@ -177,7 +178,7 @@ test('settings: Version Information shows application version status', async ({
 	const main = await gotoSettings(page)
 
 	await expect(
-		main.getByRole('heading', { name: 'Version Information' }).first(),
+		main.getByRole('heading', { name: VersionInformation }).first(),
 	).toBeVisible({ timeout: 30000 })
 	// The version section renders the application name label.
 	await expect(
