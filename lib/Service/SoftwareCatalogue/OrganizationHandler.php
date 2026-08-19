@@ -176,8 +176,11 @@ class OrganizationHandler {
 
 			if ($group !== null) {
 				// Set the group ID in the organization object.
+				// $objectData is by-reference and is what gets persisted below.
+				// ObjectEntityInterface is read-only by design (ADR-084), so the
+				// setObject() push that used to mirror this onto the entity is gone;
+				// nothing between here and the save reads the entity's body.
 				$objectData['group'] = $group->getGID();
-				$organizationObject->setObject($objectData);
 
 				// Save the updated organization with correct register/schema IDs.
 				$objectService = $this->getObjectService();
@@ -193,12 +196,20 @@ class OrganizationHandler {
 							'organizationSchemaId' => $organizationSchemaId,
 						]
 					);
-					$objectService->saveObject($organizationObject);
+					// ⚠️ `uuid:` is explicit and load-bearing here. Passing the ENTITY
+					// used to supply the identity implicitly; passing the BODY does
+					// not, and an array with no uuid and no `@self.id` makes
+					// saveObject take the CREATE branch — a duplicate organisation
+					// rather than the group assignment we intend.
+					$objectService->saveObject(
+						object: $objectData,
+						uuid: $organizationObject->getUuid()
+					);
 				}
 
 				if ($registerId !== null && $organizationSchemaId !== null) {
 					$objectService->saveObject(
-						object: $organizationObject,
+						object: $objectData,
 						extend: [],
 						register: (int)$registerId,
 						schema: (int)$organizationSchemaId,
@@ -439,7 +450,11 @@ class OrganizationHandler {
 							$actionLogMessage,
 							[
 								'organizationId' => $organizationUuid,
-								'contactgegevensId' => $contactgegevensObject->getId(),
+								// The UUID, not the numeric row id: the published contract
+								// (ADR-084) exposes getUuid() and deliberately not getId(),
+								// and the UUID is the identifier every other log line and
+								// every API path in this app uses.
+								'contactgegevensId' => $contactgegevensObject->getUuid(),
 								'contactpersoonIndex' => $index,
 								'email' => $contactgegevensData['email'],
 								'action' => $actionValue,

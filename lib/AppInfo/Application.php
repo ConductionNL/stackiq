@@ -349,7 +349,6 @@ class Application extends App implements IBootstrap {
 					settingsService: $container->get(SettingsService::class),
 					db: $container->get(IDBConnection::class),
 					contactpersonHandler: $container->get(ContactPersonHandler::class),
-					container: $container,
 					// ADR-084: the published contract, resolved through the alias
 					// registered above, not the concrete OpenRegister class.
 					objectService: $container->get(ObjectServiceInterface::class),
@@ -377,7 +376,6 @@ class Application extends App implements IBootstrap {
 				return new GebruikSyncService(
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					settingsService: $container->get(SettingsService::class),
-					container: $container,
 					objectService: $container->get(ObjectServiceInterface::class),
 				);
 			}
@@ -738,9 +736,10 @@ class Application extends App implements IBootstrap {
 					userManager: $container->get('OCP\IUserManager'),
 					groupManager: $container->get('OCP\IGroupManager'),
 					userSession: $container->get('OCP\IUserSession'),
-					container: $container,
 					secureRandom: $container->get('OCP\Security\ISecureRandom'),
-					logger: $container->get('Psr\Log\LoggerInterface')
+					logger: $container->get('Psr\Log\LoggerInterface'),
+					objectService: $container->get(ObjectServiceInterface::class),
+					organisationService: $container->get(OpenRegisterOrganisationService::class)
 				);
 			}
 		);

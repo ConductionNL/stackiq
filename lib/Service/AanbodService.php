@@ -374,9 +374,11 @@ class AanbodService {
 			);
 
 			// Save the updated object with RBAC and multitenancy disabled.
-			$existingAanbod->setObject($aanbodData);
+			// The body is passed straight to the contract: ObjectEntityInterface is
+			// read-only (ADR-084), and pushing $aanbodData onto the entity first only
+			// ever moved the same array across one extra statement.
 			$updatedAanbod = $objectService->saveObject(
-				object: $existingAanbod,
+				object: $aanbodData,
 				register: $existingAanbod->getRegister(),
 				schema: $existingAanbod->getSchema(),
 				uuid: $aanbodId,
@@ -593,12 +595,12 @@ class AanbodService {
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param string $aanbodId The UUID of the aanbod object
 	 *
-	 * @return \OCA\OpenRegister\Db\ObjectEntity|null The found object or null
+	 * @return \OCA\OpenRegister\Contract\ObjectEntityInterface|null The found object or null
 	 */
 	private function findAanbodObject(
 		ObjectServiceInterface $objectService,
 		string $aanbodId,
-	): ?\OCA\OpenRegister\Db\ObjectEntity {
+	): ?\OCA\OpenRegister\Contract\ObjectEntityInterface {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 

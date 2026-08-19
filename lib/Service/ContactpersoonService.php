@@ -1026,6 +1026,15 @@ class ContactpersoonService {
 					}
 
 					// Find the contactpersoon object with register and schema specified.
+					//
+					// findSilent() is declared `: ObjectEntityInterface` — NOT nullable
+					// (ADR-084) — and OpenRegister's GetObject::findSilent() signals a
+					// miss by THROWING DoesNotExistException, never by returning null.
+					// The `=== null` guard that used to stand here could therefore never
+					// run. It is deleted rather than converted because the miss is
+					// already handled: DoesNotExistException is an \Exception, so this
+					// loop's own catch below records the same
+					// hasUser/username/groups entry for that contactpersoon and moves on.
 					$contactObject = $objectService->findSilent(
 						id: $contactPersonId,
 						_extend: [],
@@ -1033,19 +1042,6 @@ class ContactpersoonService {
 						register: $contactRegister,
 						schema: $contactSchema
 					);
-
-					if ($contactObject === null) {
-						$this->logger->warning(
-							'ContactpersoonService: Contactpersoon not found for bulk user info',
-							['contactpersoonId' => $contactPersonId]
-						);
-						$bulkUserInfo[$contactPersonId] = [
-							'hasUser' => false,
-							'username' => null,
-							'groups' => [],
-						];
-						continue;
-					}
 
 					$contactData = $contactObject->getObject();
 					$username = $contactData['username'] ?? null;

@@ -85,6 +85,48 @@ class ContactPersonHandler {
 	}//end __construct()
 
 	/**
+	 * Look up a Nextcloud account by username.
+	 *
+	 * This handler already owns the IUserManager it needs for account creation,
+	 * so callers that only want to know whether an account exists ask it here
+	 * rather than resolving IUserManager out of the DI container themselves —
+	 * the container hop ADR-083 exists to remove.
+	 *
+	 * @param string $username The Nextcloud user id to look up.
+	 *
+	 * @return \OCP\IUser|null The account, or null when there is none.
+	 *
+	 * @spec openspec/specs/sc-handlers/spec.md
+	 */
+	public function findUser(string $username): ?\OCP\IUser {
+		return $this->_userManager->get($username);
+	}//end findUser()
+
+	/**
+	 * List the usernames in the Nextcloud `admin` group.
+	 *
+	 * Same reasoning as {@see findUser()}: this handler already holds the
+	 * IGroupManager, so callers do not need a container hop of their own.
+	 *
+	 * @return array The admin usernames, empty when the group does not exist.
+	 *
+	 * @spec openspec/specs/sc-handlers/spec.md
+	 */
+	public function getAdminUsernames(): array {
+		$adminGroup = $this->_groupManager->get('admin');
+		if ($adminGroup === null) {
+			return [];
+		}
+
+		$adminUsernames = [];
+		foreach ($adminGroup->getUsers() as $adminUser) {
+			$adminUsernames[] = $adminUser->getUID();
+		}
+
+		return $adminUsernames;
+	}//end getAdminUsernames()
+
+	/**
 	 * Gets the OpenRegister ObjectService if available
 	 *
 	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null ObjectService instance or null

@@ -73,13 +73,12 @@ class OrganisationMembersController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest $request The request.
-	 * @param IUserSession $userSession The user session (auth guard).
-	 * @param IGroupManager $groupManager Group membership (beheerder guard).
-	 * @param IUserManager $userManager User lookup (existing-user-only guard).
-	 *                                      `OrganisationService` without a hard compile-time
-	 *                                      dependency on another app's class.
-	 * @param LoggerInterface $logger Logger.
+	 * @param IRequest            $request             The request.
+	 * @param IUserSession        $userSession         The user session (auth guard).
+	 * @param IGroupManager       $groupManager        Group membership (beheerder guard).
+	 * @param IUserManager        $userManager         User lookup (existing-user-only guard).
+	 * @param LoggerInterface     $logger              Logger.
+	 * @param OrganisationService $organisationService OpenRegister's organisation service, which owns the membership mutation.
 	 */
 	public function __construct(
 		IRequest $request,

@@ -27,7 +27,6 @@ namespace OCA\SoftwareCatalog\Service;
 use DateTime;
 use Exception;
 use OCA\OpenRegister\Db\ObjectEntity;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
@@ -70,28 +69,19 @@ class GebruikSyncService {
 	private SettingsService $settingsService;
 
 	/**
-	 * Container for lazy service resolution.
-	 *
-	 * @var ContainerInterface
-	 */
-	private ContainerInterface $container;
-
-	/**
 	 * Constructor for GebruikSyncService.
 	 *
-	 * @param LoggerInterface $logger Logger for debugging and error reporting
-	 * @param SettingsService $settingsService Service for retrieving configuration settings
-	 * @param ContainerInterface $container DI container for lazy service resolution
+	 * @param LoggerInterface        $logger          Logger for debugging and error reporting
+	 * @param SettingsService        $settingsService Service for retrieving configuration settings
+	 * @param ObjectServiceInterface $objectService   OpenRegister's published data-access contract (ADR-084)
 	 */
 	public function __construct(
 		LoggerInterface $logger,
 		SettingsService $settingsService,
-		ContainerInterface $container,
 		private readonly ObjectServiceInterface $objectService,
 	) {
 		$this->logger = $logger;
 		$this->settingsService = $settingsService;
-		$this->container = $container;
 	}//end __construct()
 
 	/**
@@ -525,12 +515,14 @@ class GebruikSyncService {
 				throw new Exception('Register or gebruik schema not configured');
 			}
 
-			// Update the object.
+			// Update the object. The published contract names the identifier
+			// `uuid`, not `id` (ADR-084) — and it really is the UUID that is
+			// passed here, so this was a wrong argument NAME, not a wrong value.
 			$this->objectService->saveObject(
 				object: $updatedData,
 				register: (int)$register,
 				schema: (int)$gebruikSchema,
-				id: $gebruikObject->getUuid()
+				uuid: $gebruikObject->getUuid()
 			);
 
 			$this->logger->info(

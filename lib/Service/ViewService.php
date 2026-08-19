@@ -330,11 +330,12 @@ class ViewService {
 				_multitenancy: false
 			);
 
-			// Serialize ObjectEntity to array if needed.
-			if (is_array(value: $view) === false
-				&& $view !== null
-				&& method_exists(object_or_class: $view, method: 'jsonSerialize') === true
-			) {
+			// Serialize the entity to an array. find() is declared
+			// `: ?ObjectEntityInterface` on the published contract (ADR-084) and that
+			// interface extends JsonSerializable, so the old `is_array()` /
+			// `method_exists()` probing could only ever answer one way; only the
+			// null case is a real branch.
+			if ($view !== null) {
 				$view = $view->jsonSerialize();
 			}
 

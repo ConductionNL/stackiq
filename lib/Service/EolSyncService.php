@@ -334,9 +334,10 @@ class EolSyncService {
 			return [];
 		}
 
-		if (is_array($rows) === false) {
-			return [];
-		}
+		// No `is_array($rows)` guard: findAll() is declared `: array` on the
+		// published contract (ADR-084), so the check could never be false. The
+		// failure mode it was defending against — a read that does not produce
+		// rows — is the catch above, which already returns [].
 
 		$cycles = [];
 		foreach ($rows as $row) {

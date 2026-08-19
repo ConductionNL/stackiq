@@ -575,7 +575,7 @@ class SbomImportService {
 	 * Resolve the register/schema coordinates + ObjectService this service
 	 * needs for every operation.
 	 *
-	 * @return array{objectService: ObjectService, registerId: int, moduleVersieSchemaId: int, sbomComponentSchemaId: int}
+	 * @return array{objectService: ObjectServiceInterface, registerId: int, moduleVersieSchemaId: int, sbomComponentSchemaId: int}
 	 *
 	 * @throws RuntimeException When ObjectService or required schema/register
 	 *                          configuration is not available.

@@ -38,7 +38,6 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -501,7 +500,7 @@ class ContractApprovalService {
 	 *
 	 * @param string $contractUuid The contract uuid.
 	 *
-	 * @return \OCA\OpenRegister\Db\ObjectEntity|null The object, or null.
+	 * @return \OCA\OpenRegister\Contract\ObjectEntityInterface|null The object, or null.
 	 *
 	 * @spec openspec/specs/contract-decision-delegation/spec.md
 	 */
@@ -540,8 +539,8 @@ class ContractApprovalService {
 	/**
 	 * Persist a mutated contract object back to the OR store.
 	 *
-	 * @param \OCA\OpenRegister\Db\ObjectEntity $contract The contract entity.
-	 * @param array $data The mutated object data.
+	 * @param \OCA\OpenRegister\Contract\ObjectEntityInterface $contract The contract entity.
+	 * @param array                                            $data     The mutated object data.
 	 *
 	 * @return void
 	 *
@@ -573,7 +572,12 @@ class ContractApprovalService {
 	private function getObjectService(): ?ObjectServiceInterface {
 		try {
 			$service = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			if ($service instanceof ObjectService) {
+
+			// Narrow on the PUBLISHED CONTRACT, not the concrete class (ADR-084).
+			// The declared return type is the interface, so testing the concrete
+			// class was both the wrong question and unprovable to static analysis,
+			// which cannot load another Nextcloud app's classes.
+			if ($service instanceof ObjectServiceInterface) {
 				return $service;
 			}
 		} catch (\Throwable $e) {

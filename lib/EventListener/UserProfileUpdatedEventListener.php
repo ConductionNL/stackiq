@@ -26,9 +26,6 @@ use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Db\SchemaMapper;
-use OCA\OpenRegister\Db\RegisterMapper;
-use OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler;
 
 /**
  * Syncs user profile changes to the corresponding contactpersoon object.
@@ -56,14 +53,12 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	/**
 	 * Constructor for UserProfileUpdatedEventListener.
 	 *
-	 * @param ContainerInterface $container DI container for lazy service resolution.
+	 * @param ContainerInterface     $container     DI container for lazy service resolution.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published data-access contract (ADR-084).
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly ObjectServiceInterface $objectService,
-		private readonly SchemaMapper $schemaMapper,
-		private readonly RegisterMapper $registerMapper,
-		private readonly MetadataHydrationHandler $metadataHydrationHandler,
 	) {
 	}//end __construct()
 
@@ -203,16 +198,17 @@ class UserProfileUpdatedEventListener implements IEventListener {
 			]
 		);
 
-		// Merge the patch into existing data and save directly via mapper to skip schema validation.
+		// Merge the patch into existing data and save without schema validation.
 		// Schema validation can reject existing data with legacy values (e.g. notificaties enum).
-		$mergedObject = array_merge($contactData, $patch);
-		$contactPerson->setObject($mergedObject);
-
+		//
+		// The merged data is PASSED to the save rather than pushed back onto the
+		// entity first: ObjectEntityInterface is read-only by design (ADR-084), and
+		// mutating-then-reading-back was only ever a way of smuggling the payload
+		// across two statements.
 		$this->persistContactPersonPatch(
 			contactPerson: $contactPerson,
-			register:       (int)$register,
-			schema:         (int)$contactPersonSchema,
-			logger:         $logger
+			objectData:    array_merge($contactData, $patch),
+			logger:        $logger
 		);
 
 		$logger->info(
@@ -274,46 +270,19 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	}//end buildContactPatch()
 
 	/**
-	 * Persist the patched contactpersoon entity, regenerating `_name`
-	 * metadata first when the schema is loadable.
+	 * Persist the patched contactpersoon entity.
 	 *
-	 * @param object $contactPerson The contactpersoon entity.
-	 * @param int $register The voorzieningen register id.
-	 * @param int $schema The contactpersoon schema id.
-	 * @param LoggerInterface $logger Logger for hydration warnings.
+	 * @param object          $contactPerson The contactpersoon entity being patched.
+	 * @param array           $objectData    The merged object body to persist.
+	 * @param LoggerInterface $logger        Logger for persistence warnings.
 	 *
 	 * @return void
 	 */
 	private function persistContactPersonPatch(
 		object $contactPerson,
-		int $register,
-		int $schema,
+		array $objectData,
 		LoggerInterface $logger,
 	): void {
-		$schemaEntity = null;
-		$registerEntity = null;
-		try {
-			$schemaEntity = $this->schemaMapper->find(id: $schema, _rbac: false, _multitenancy: false);
-			$registerEntity = $this->registerMapper->find(id: $register, _rbac: false, _multitenancy: false);
-		} catch (\Exception $e) {
-			$logger->warning(
-				'[UserProfileUpdatedEventListener] Could not load schema/register entities for _name hydration',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-		}
-
-		if ($schemaEntity !== null) {
-			$this->metadataHydrationHandler->hydrateObjectMetadata(entity: $contactPerson, schema: $schemaEntity);
-			$logger->debug(
-				'[UserProfileUpdatedEventListener] Regenerated _name metadata',
-				[
-					'newName' => $contactPerson->getName(),
-				]
-			);
-		}
-
 		// Persist through the published contract rather than OpenRegister's Db
 		// layer. The comment this replaces worried that a plain save would touch
 		// "just the blob table" — it does not: ObjectService::saveObject() calls
@@ -321,13 +290,28 @@ class UserProfileUpdatedEventListener implements IEventListener {
 		// objectEntityMapper->update(entity:, register:, schema:), which IS the
 		// magic-mapper route. This listener was hand-rolling OpenRegister's own
 		// save pipeline, one layer too deep.
+		//
+		// That is also why the hand-rolled `_name` hydration that used to run here
+		// is gone rather than merely unreachable: OpenRegister calls
+		// hydrateObjectMetadata() itself from prepareObjectForCreation() and
+		// prepareObjectForUpdate() (SaveObject.php:3692 and :3873), so doing it
+		// again in the leaf app re-derived the same value one layer too deep — and
+		// it reached MetadataHydrationHandler, an OpenRegister INTERNAL that is not
+		// on the published contract and that no leaf app can load in its own tests.
 		$this->objectService->saveObject(
-			object: $contactPerson->getObject(),
+			object: $objectData,
 			register: $contactPerson->getRegister(),
 			schema: $contactPerson->getSchema(),
 			uuid: $contactPerson->getUuid(),
 			silent: true,
 			_validation: false
+		);
+
+		$logger->debug(
+			'[UserProfileUpdatedEventListener] Persisted contactpersoon patch',
+			[
+				'contactpersoonId' => $contactPerson->getUuid(),
+			]
 		);
 
 	}//end persistContactpersoonPatch()

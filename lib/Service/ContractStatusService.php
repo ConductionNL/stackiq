@@ -28,7 +28,6 @@ namespace OCA\SoftwareCatalog\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -190,7 +189,12 @@ class ContractStatusService {
 	private function getObjectService(): ?ObjectServiceInterface {
 		try {
 			$service = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			if ($service instanceof ObjectService) {
+
+			// Narrow on the PUBLISHED CONTRACT, not the concrete class (ADR-084).
+			// The declared return type is the interface, so testing the concrete
+			// class was both the wrong question and unprovable to static analysis,
+			// which cannot load another Nextcloud app's classes.
+			if ($service instanceof ObjectServiceInterface) {
 				return $service;
 			}
 		} catch (\Throwable $e) {

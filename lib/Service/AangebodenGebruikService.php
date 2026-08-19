@@ -992,9 +992,11 @@ class AangebodenGebruikService {
 
 			// Save the updated object with RBAC and multitenancy disabled.
 			// Use register/schema from the found entity for correct table routing.
-			$existingGebruik->setObject($gebruikData);
+			// The body is passed straight to the contract: ObjectEntityInterface is
+			// read-only (ADR-084), and pushing $gebruikData onto the entity first only
+			// ever moved the same array across one extra statement.
 			$updatedGebruik = $objectService->saveObject(
-				object: $existingGebruik,
+				object: $gebruikData,
 				register: $existingGebruik->getRegister(),
 				schema: $existingGebruik->getSchema(),
 				uuid: $gebruikId,
@@ -1049,12 +1051,12 @@ class AangebodenGebruikService {
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service
 	 * @param string $objectId The UUID of the object to find
 	 *
-	 * @return \OCA\OpenRegister\Db\ObjectEntity|null The found object or null
+	 * @return \OCA\OpenRegister\Contract\ObjectEntityInterface|null The found object or null
 	 */
 	private function findGebruikOrIntegration(
 		ObjectServiceInterface $objectService,
 		string $objectId,
-	): ?\OCA\OpenRegister\Db\ObjectEntity {
+	): ?\OCA\OpenRegister\Contract\ObjectEntityInterface {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 

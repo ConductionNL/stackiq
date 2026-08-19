@@ -33,7 +33,6 @@ use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\OrganisationService;
@@ -112,13 +111,6 @@ class ContactpersonenController extends Controller {
 	private IUserSession $userSession;
 
 	/**
-	 * Container for dependency injection.
-	 *
-	 * @var ContainerInterface
-	 */
-	private ContainerInterface $container;
-
-	/**
 	 * Contactpersoon service for business logic.
 	 *
 	 * @var ContactpersoonService
@@ -128,17 +120,18 @@ class ContactpersonenController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app name
-	 * @param IRequest $request The request object
-	 * @param SettingsService $settingsService Settings service
-	 * @param ContactPersonHandler $contactPersonHandler Contact person handler
-	 * @param ContactpersoonService $contactSvc Contactpersoon service
-	 * @param IUserManager $userManager User manager
-	 * @param IGroupManager $groupManager Group manager
-	 * @param IUserSession $userSession User session
-	 * @param ContainerInterface $container Container for DI
-	 * @param ISecureRandom $secureRandom Secure random generator
-	 * @param LoggerInterface $logger Logger instance
+	 * @param string                 $appName              The app name
+	 * @param IRequest               $request              The request object
+	 * @param SettingsService        $settingsService      Settings service
+	 * @param ContactPersonHandler   $contactPersonHandler Contact person handler
+	 * @param ContactpersoonService  $contactSvc           Contactpersoon service
+	 * @param IUserManager           $userManager          User manager
+	 * @param IGroupManager          $groupManager         Group manager
+	 * @param IUserSession           $userSession          User session
+	 * @param ISecureRandom          $secureRandom         Secure random generator
+	 * @param LoggerInterface        $logger               Logger instance
+	 * @param ObjectServiceInterface $objectService        OpenRegister's published data-access contract (ADR-084)
+	 * @param OrganisationService    $organisationService  Resolves the caller's active organisation
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 */
@@ -151,7 +144,6 @@ class ContactpersonenController extends Controller {
 		IUserManager $userManager,
 		IGroupManager $groupManager,
 		IUserSession $userSession,
-		ContainerInterface $container,
 		ISecureRandom $secureRandom,
 		LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
@@ -164,7 +156,6 @@ class ContactpersonenController extends Controller {
 		$this->userManager = $userManager;
 		$this->groupManager = $groupManager;
 		$this->userSession = $userSession;
-		$this->container = $container;
 		$this->secureRandom = $secureRandom;
 		$this->logger = $logger;
 	}//end __construct()
@@ -512,8 +503,6 @@ class ContactpersonenController extends Controller {
 
 			$contactData = $this->normaliseContactDataForPersist(contactData: $contactData);
 
-			$contactPersonObject->setObject($contactData);
-
 			// Debug logging to understand data types before save.
 			$lastNameValue = $contactData['achternaam'] ?? 'not set';
 			$lastNameType = 'not set';
@@ -541,14 +530,20 @@ class ContactpersonenController extends Controller {
 			// same capability as a flag, and ObjectService::saveObject() routes
 			// through that very mapper with register+schema, so the magic table is
 			// written exactly as before.
-			$this->objectService->saveObject(
+			//
+			// The saved entity REPLACES the one we found: ObjectEntityInterface is
+			// read-only by design (ADR-084), so the pre-contract `setObject()` that
+			// used to keep the in-memory copy in step is gone. Taking saveObject()'s
+			// return value is not a workaround for that — it is strictly better,
+			// because the response below now carries what was actually persisted
+			// rather than what we hoped would be.
+			$contactPersonObject = $this->objectService->saveObject(
 				object: $contactData,
 				register: $registerId,
 				schema: $schemaId,
 				uuid: $contactPersonObject->getUuid(),
 				silent: true,
-				silent: true,
-			_validation: false
+				_validation: false
 			);
 
 			$this->logger->info(
@@ -1001,9 +996,9 @@ class ContactpersonenController extends Controller {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-5
 	 */
 	private function resolveContactOrganisation(object $objectService, string $username): ?string {
-		// development's side on both counts: this method TAKES $objectService as a
-		// parameter (my dangling-reference pass wrongly made it a property read),
-		// and the schema slug was renamed contactpersoon -> contactPerson there.
+		// The service is the PARAMETER, not $this->objectService: callers pass the
+		// instance they already hold. The schema slug is `contactPerson` (renamed
+		// from `contactpersoon`).
 		$results = $objectService->searchObjectsPaginated(
 			['username' => $username, '_limit' => 1, '_schema' => 'contactPerson']
 		);

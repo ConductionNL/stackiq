@@ -21,11 +21,9 @@ declare(strict_types=1);
 namespace OCA\SoftwareCatalog\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
 use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Db\OrganisationMapper;
 
@@ -103,24 +101,27 @@ class OrganizationSyncService {
 	private LoggerInterface $logger;
 
 	/**
-	 * Container instance for lazy service resolution.
-	 *
-	 * @var ContainerInterface
-	 */
-	private ContainerInterface $container;
-
-	/**
 	 * Constructor for OrganizationSyncService
 	 *
-	 * @param OrganisatieService $organisationService The organization service.
-	 * @param ContactpersoonService $contactPersonService The contact person service.
-	 * @param SymfonyEmailService $emailService The email service.
-	 * @param IAppConfig $config The configuration service.
-	 * @param LoggerInterface $logger The logger instance.
-	 * @param SettingsService $settingsService The settings service.
-	 * @param IDBConnection $db The database connection.
-	 * @param ContactPersonHandler $contactpersonHandler The contact person handler.
-	 * @param ContainerInterface $container The DI container.
+	 * ADR-084 added $objectService and $organisationMapper here, which took an
+	 * already-nine-parameter constructor to eleven and tripped PHPMD's
+	 * ExcessiveParameterList (threshold 10). The parameter removed to make room
+	 * is the RIGHT one: the DI container, whose only two uses were resolving
+	 * IUserManager and IGroupManager — hops that ADR-083 exists to remove.
+	 * ContactPersonHandler already owns both managers, so those two lookups now
+	 * go through its findUser()/getAdminUsernames() instead. No suppression and
+	 * no baseline entry: the count is genuinely ten.
+	 *
+	 * @param OrganisatieService     $organisationService  The organization service.
+	 * @param ContactpersoonService  $contactPersonService The contact person service.
+	 * @param SymfonyEmailService    $emailService         The email service.
+	 * @param IAppConfig             $config               The configuration service.
+	 * @param LoggerInterface        $logger               The logger instance.
+	 * @param SettingsService        $settingsService      The settings service.
+	 * @param IDBConnection          $db                   The database connection.
+	 * @param ContactPersonHandler   $contactpersonHandler The contact person handler.
+	 * @param ObjectServiceInterface $objectService        OpenRegister's published data-access contract (ADR-084).
+	 * @param OrganisationMapper     $organisationMapper   The organisation entity mapper.
 	 */
 	public function __construct(
 		OrganisatieService $organisationService,
@@ -131,7 +132,6 @@ class OrganizationSyncService {
 		SettingsService $settingsService,
 		private IDBConnection $db,
 		private readonly ContactPersonHandler $contactpersonHandler,
-		ContainerInterface $container,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly OrganisationMapper $organisationMapper,
 	) {
@@ -141,7 +141,6 @@ class OrganizationSyncService {
 		$this->config = $config;
 		$this->logger = $logger;
 		$this->settingsService = $settingsService;
-		$this->container = $container;
 
 	}//end __construct()
 
@@ -384,11 +383,15 @@ class OrganizationSyncService {
 
 		$rows = $qb->executeQuery()->fetchAll();
 
-		if ($this->objectService instanceof ObjectService === false) {
-			$this->logger->error('OrganizationSync: could not resolve ObjectService');
-			return $stats;
-		}
-
+		// No `instanceof` guard: $objectService is a non-nullable promoted
+		// ObjectServiceInterface (ADR-084), so PHP has already guaranteed it and
+		// the class cannot be constructed at all when OpenRegister is absent —
+		// the DI alias registered in Application::register() fails first.
+		// ⚠️ The guard this replaces named the CONCRETE class, and once the
+		// concrete class stopped being imported here that name resolved into
+		// THIS app's namespace, where it does not exist: `instanceof` on an
+		// unknown class is false, so `=== false` was true and the whole sync
+		// would have returned early, silently doing nothing.
 		foreach ($rows as $row) {
 			if ((time() - $startTime) >= $maxExecutionSeconds) {
 				$stats['timeoutReached'] = true;
@@ -508,11 +511,10 @@ class OrganizationSyncService {
 
 		$this->logger->info('ContactSync: processing ' . count($contacts) . ' contacts with existing NC accounts');
 
-		if ($this->objectService instanceof ObjectService === false) {
-			$this->logger->error('ContactSync: could not resolve ObjectService');
-			return $stats;
-		}
-
+		// No `instanceof` guard — see the note in the organisation sync above:
+		// the promoted ObjectServiceInterface is non-nullable, and the guard's
+		// concrete class name resolved into this app's namespace once the
+		// concrete import went away, which would have made it fire every time.
 		foreach ($contacts as $contact) {
 			if ((time() - $startTime) >= $maxExecutionSeconds) {
 				$stats['timeoutReached'] = true;
@@ -538,11 +540,16 @@ class OrganizationSyncService {
 				// Keep organisatie in the object so it is never temporarily absent from the
 				// persisted record. The schema validation warning for a UUID-string value is
 				// benign compared to a data-corruption window where the field is missing.
-				$contactEntity->setObject($contactEntityObject);
+				// ⚠️ `uuid:` is explicit and load-bearing. Passing the ENTITY used to
+				// supply the identity implicitly (ObjectService::extractUuidAndNormalizeObject
+				// reads $object->getUuid()); passing the BODY does not, and an array
+				// with no uuid and no `@self.id` makes saveObject take the CREATE
+				// branch — i.e. it would duplicate the contact instead of updating it.
 				$this->objectService->saveObject(
-					object: $contactEntity,
+					object: $contactEntityObject,
 					register: $register,
 					schema: $contactSchema,
+					uuid: $contactEntity->getUuid(),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -1303,7 +1310,6 @@ class OrganizationSyncService {
 			}
 
 			// Check if user already exists.
-			$userManager = $this->container->get('OCP\IUserManager');
 			// Use the stored username when available, otherwise fall back to email as username.
 			if (empty($existingUsername) === false) {
 				$username = $existingUsername;
@@ -1311,7 +1317,7 @@ class OrganizationSyncService {
 				$username = $email;
 			}
 
-			$user = $userManager->get($username);
+			$user = $this->contactpersonHandler->findUser($username);
 
 			if ($user === null) {
 				// Create user account.
@@ -1449,20 +1455,7 @@ class OrganizationSyncService {
 	 */
 	private function getAdminUsers(): array {
 		try {
-			$groupManager = $this->container->get('OCP\IGroupManager');
-			$adminGroup = $groupManager->get('admin');
-
-			if (empty($adminGroup) === false) {
-				$adminUsers = $adminGroup->getUsers();
-				$adminUsernames = [];
-				foreach ($adminUsers as $user) {
-					$adminUsernames[] = $user->getUID();
-				}
-
-				return $adminUsernames;
-			}
-
-			return [];
+			return $this->contactpersonHandler->getAdminUsernames();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'OrganizationSyncService: Failed to get admin users',
@@ -1870,20 +1863,16 @@ class OrganizationSyncService {
 							continue;
 						}
 
-						// Get the object data as array.
-						$contactData = [];
-						if (is_array($contactObject) === true) {
-							$contactData = $contactObject;
-						}
-
-						if ($contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity) {
-							$contactData = $contactObject->getObject();
-						}
+						// Get the object data as array. find() is declared
+						// `: ?ObjectEntityInterface` on the published contract (ADR-084)
+						// and the null case returned above, so the value here is always
+						// an entity — the old `is_array()` arm could never run, and
+						// narrowing on the concrete Db\ObjectEntity asked a question the
+						// contract no longer answers.
+						$contactData = $contactObject->getObject();
 
 						// Add the UUID if not present.
-						if (isset($contactData['id']) === false
-							&& $contactObject instanceof \OCA\OpenRegister\Db\ObjectEntity
-						) {
+						if (isset($contactData['id']) === false) {
 							$contactData['id'] = $contactObject->getUuid();
 						}
 					}//end if
@@ -2317,14 +2306,19 @@ class OrganizationSyncService {
 				);
 
 				// Restore the organisatie field so the link to the organisation is preserved.
-				if ($contactObject !== false && $savedOrganisation !== null) {
+				// saveObject() is declared `: ObjectEntityInterface` on the published
+				// contract (ADR-084) — it never returns false — so the `!== false` arm
+				// that used to stand here could not fail.
+				if ($savedOrganisation !== null) {
 					$restoredData = $contactObject->getObject();
 					$restoredData['organization'] = $savedOrganisation;
-					$contactObject->setObject($restoredData);
-					// Published contract instead of OpenRegister's Db layer.
+
+					// The payload is BUILT here rather than pushed onto the entity and
+					// read back: ObjectEntityInterface is read-only by design, and the
+					// round-trip through setObject() only ever moved the same array.
 					$this->objectService->saveObject(
 						object: array_merge(
-							$contactObject->getObject(),
+							$restoredData,
 							['@self' => ['organisation' => $contactObject->getOrganisation()]]
 						),
 						register: $contactObject->getRegister(),
@@ -2336,20 +2330,25 @@ class OrganizationSyncService {
 				}
 			}//end if
 
-			if (empty($contactObject) === false) {
+			// $contactObject is an entity by this point (both branches above assign
+			// one, and saveObject()/find() cannot return a falsy value), so the
+			// `empty()` guard that used to wrap this block was always true.
+			{
 				$stats['contactPersonsProcessed']++;
 
 				// Ensure the contact has the organisatie field set (may be missing when linked via inversedBy).
 				$contactObjectData = $contactObject->getObject();
 				if (empty($contactObjectData['organization']) === true && empty($organizationUuid) === false) {
 					$contactObjectData['organization'] = $organizationUuid;
-					$contactObject->setObject($contactObjectData);
-					$contactObject->setOrganisation($organizationUuid);
-					// Published contract instead of OpenRegister's Db layer.
+
+					// `@self.organisation` carries the tenancy assignment that
+					// setOrganisation() used to make on the in-memory entity; passing it
+					// in the payload is how the read-only contract expresses the same
+					// write, and it is the value that actually gets persisted.
 					$this->objectService->saveObject(
 						object: array_merge(
-							$contactObject->getObject(),
-							['@self' => ['organisation' => $contactObject->getOrganisation()]]
+							$contactObjectData,
+							['@self' => ['organisation' => $organizationUuid]]
 						),
 						register: $contactObject->getRegister(),
 						schema: $contactObject->getSchema(),
@@ -2460,8 +2459,11 @@ class OrganizationSyncService {
 								// processContactpersoon() with missing organisatie field, causing.
 								// the org lookup to fail.
 								// 3. Potential data loss from stale variables.
-								$contactObject->setObject($contactObjectData);
-
+								//
+								// The username now travels in $contactObjectData and is passed
+								// to saveObject() below; ObjectEntityInterface is read-only by
+								// design (ADR-084), so the setObject() round-trip that used to
+								// carry it here is neither possible nor needed.
 								$this->logger->debug(
 									'Saving contact with username via direct mapper update',
 									[
@@ -2476,7 +2478,7 @@ class OrganizationSyncService {
 									// Published contract instead of OpenRegister's Db layer.
 									$this->objectService->saveObject(
 										object: array_merge(
-											$contactObject->getObject(),
+											$contactObjectData,
 											['@self' => ['organisation' => $contactObject->getOrganisation()]]
 										),
 										register: $contactObject->getRegister(),
@@ -2721,11 +2723,17 @@ class OrganizationSyncService {
 							// Wrapped in its own try/catch because saveObject triggers event listeners.
 							// that may fail — but the user was already created successfully above.
 							try {
-								$contactObject->setObject($contactEntityObject);
+								// ⚠️ `uuid:` is explicit and load-bearing. Passing the ENTITY
+								// used to supply the identity implicitly (saveObject() reads
+								// $object->getUuid() via extractUuidAndNormalizeObject);
+								// passing the BODY does not, and an array with no uuid and no
+								// `@self.id` makes saveObject take the CREATE branch — it
+								// would duplicate the contact instead of writing the username.
 								$this->objectService->saveObject(
-									object: $contactObject,
+									object: $contactEntityObject,
 									register: $register,
 									schema: $contactSchema,
+									uuid: $contactObject->getUuid(),
 									_rbac: false,
 									_multitenancy: false
 								);

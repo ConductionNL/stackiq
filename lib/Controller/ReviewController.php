@@ -123,14 +123,18 @@ class ReviewController extends Controller {
 	 *      OpenRegister's enforcement of the predicate. So an arbitrary
 	 *      `subjectId` can only ever select from already-approved reviews.
 	 * @spec           openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
+	 *
+	 * The `AnonRateLimit(120, 60)` below is a read of already-published
+	 * aggregate review scores — no credential, and the data is public by
+	 * design, so a volume ceiling only. Much looser than IntakeController's
+	 * 5/3600: that one accepts a SUBMISSION, this one answers a page render,
+	 * and a catalogue page listing many subjects will legitimately call it
+	 * repeatedly. (This rationale lives in the docblock rather than as a `//`
+	 * comment between the attributes, where phpcs reads the last comment before
+	 * the signature as the function comment.)
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// A read of already-published aggregate review scores — no credential, and
-	// the data is public by design, so a volume ceiling only. Much looser than
-	// IntakeController's 5/3600: that one accepts a SUBMISSION, this one
-	// answers a page render, and a catalogue page listing many subjects will
-	// legitimately call it repeatedly.
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function aggregate(string $subjectType = '', string $subjectId = ''): JSONResponse {
 		$result = $this->aggregate->getAggregate(subjectType: $subjectType, subjectId: $subjectId);

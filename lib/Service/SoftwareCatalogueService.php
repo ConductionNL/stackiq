@@ -2028,11 +2028,11 @@ class SoftwareCatalogueService {
 			$registerId = $ctx['registerId'];
 			$contactPersonSchemaId = $ctx['schemaId'];
 
-			// findAll() takes ($config, bool $_rbac, bool $_multitenancy). The
-			// register and schema belong inside the config's filters, as the
-			// sibling call above does -- passed positionally they landed on the
-			// two booleans, so this ran unscoped across every register with
-			// $_rbac set to a register id.
+			// The register and schema belong INSIDE the config's filters:
+			// findAll() takes ($config, bool $_rbac, bool $_multitenancy), so
+			// passing them positionally landed a register id on $_rbac and a
+			// schema id on $_multitenancy — the read then ran unscoped across
+			// every register. Keep them in 'filters', as the sibling call does.
 			$contactpersonen = $objectService->findAll(
 				[
 					'filters' => [
@@ -2120,11 +2120,11 @@ class SoftwareCatalogueService {
 			$registerId = $ctx['registerId'];
 			$contactPersonSchemaId = $ctx['schemaId'];
 
-			// findAll() takes ($config, bool $_rbac, bool $_multitenancy). The
-			// register and schema belong inside the config's filters, as the
-			// sibling call above does -- passed positionally they landed on the
-			// two booleans, so this ran unscoped across every register with
-			// $_rbac set to a register id.
+			// The register and schema belong INSIDE the config's filters:
+			// findAll() takes ($config, bool $_rbac, bool $_multitenancy), so
+			// passing them positionally landed a register id on $_rbac and a
+			// schema id on $_multitenancy — the read then ran unscoped across
+			// every register. Keep them in 'filters', as the sibling call does.
 			$contactpersonen = $objectService->findAll(
 				[
 					'filters' => [

@@ -287,8 +287,9 @@ class RenameDutchCatalogColumns implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param IDBConnection $db Database connection.
-	 * @param LoggerInterface $logger Logger.
+	 * @param IDBConnection                $db        Database connection.
+	 * @param LoggerInterface             $logger    Logger.
+	 * @param RenameDutchCatalogDecisions $decisions The per-column rename decisions this step applies.
 	 */
 	public function __construct(
 		private readonly IDBConnection $db,

@@ -14,8 +14,17 @@
  * built on this stub therefore CANNOT detect a `method_exists()` probe against
  * an OpenRegister entity — that is exactly how softwarecatalog#490 (the
  * organisation merge re-pointing nothing while still tombstoning the source)
- * stayed green for its entire life. `getOrganisation()`/`setOrganisation()`
- * were removed from this stub for that reason.
+ * stayed green for its entire life.
+ *
+ * ⚠️ THAT WARNING NO LONGER APPLIES TO THE SIX CONTRACT ACCESSORS.
+ * ADR-084 §5 made `getUuid()/getObject()/getRegister()/getSchema()/
+ * getOrganisation()/getOwner()` DECLARED methods on the real ObjectEntity
+ * (`openregister/lib/Db/ObjectEntity.php:767-842`), because `implements`
+ * cannot be satisfied by a `@method` annotation over `Entity::__call()`. For
+ * those six, stub and production now agree that `method_exists()` is TRUE.
+ * `getOrganisation()` is declared below again for that reason — it was removed
+ * when it was magic in production, and the reason has since gone away.
+ * The warning still stands for every OTHER accessor.
  *
  * If your subject probes for an accessor, do NOT add it here. Declare the
  * attribute as a `protected` PROPERTY instead (as `organisation` is below) and
@@ -58,33 +67,60 @@ use BadFunctionCallException;
  * Stub for ObjectEntity with the surface used by SoftwareCatalog tests.
  */
 abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityInterface {
-		/**
-		 * @return ?string
-		 */
-		public function getOrganisation(): ?string {
-			return $this->organisation ?? null;
-		}
+	/**
+	 * The system-level owning organisation.
+	 *
+	 * DECLARED, not magic — and that is no longer the unfaithfulness the class
+	 * docblock warns about. ADR-084 §5 made the real ObjectEntity's contract
+	 * getters explicit (`openregister/lib/Db/ObjectEntity.php:833`), because
+	 * `implements` cannot be satisfied by a `@method` annotation over
+	 * `Entity::__call()`. So `method_exists($entity, 'getOrganisation')` is now
+	 * TRUE in production as well as here, and the divergence that let
+	 * softwarecatalog#490 stay green is closed at the source rather than
+	 * papered over in the double.
+	 *
+	 * @return ?string The organisation UUID, or null.
+	 */
+	public function getOrganisation(): ?string {
+		return $this->organisation ?? null;
+	}//end getOrganisation()
 
-		/**
-		 * @return ?string
-		 */
-		public function getOwner(): ?string {
-			return $this->owner ?? null;
-		}
+	/**
+	 * The owning user.
+	 *
+	 * Declared for the same reason as {@see getOrganisation()}.
+	 *
+	 * @return ?string The owner UID, or null.
+	 */
+	public function getOwner(): ?string {
+		return $this->owner ?? null;
+	}//end getOwner()
 
 
 	/**
 	 * The system-level owning organisation (`@self.organisation`).
 	 *
-	 * A PROPERTY, not a declared accessor — on the real ObjectEntity this is
-	 * `protected ?string $organisation` reached through `Entity::__call()`, so
-	 * `method_exists($entity, 'getOrganisation')` is FALSE and
-	 * `property_exists($entity, 'organisation')` is TRUE. Declaring it this way
-	 * is what lets a test tell the two apart. See softwarecatalog#490.
+	 * Kept as a declared PROPERTY so `property_exists($entity, 'organisation')`
+	 * is TRUE and the `__call()` route below serves `setOrganisation()` exactly
+	 * as `Entity::__call()` does in production. (The accessor above is now also
+	 * declared, because ADR-084 §5 declared it on the real entity too — see the
+	 * class docblock; that is a change in production, not a divergence here.)
 	 *
 	 * @var string|null
 	 */
 	protected ?string $organisation = null;
+
+	/**
+	 * The owning Nextcloud user (`@self.owner`).
+	 *
+	 * Declared for the same reason as {@see $organisation}: without it,
+	 * `getOwner()` would read an undeclared property and `setOwner()` would
+	 * raise `BadFunctionCallException` from `setter()`, neither of which is
+	 * what the real entity does.
+	 *
+	 * @var string|null
+	 */
+	protected ?string $owner = null;
 
 	/**
 	 * Magic accessor dispatch, mirroring `OCP\AppFramework\Db\Entity::__call()`.
@@ -144,20 +180,30 @@ abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityIn
 		$this->$name = ($args[0] ?? null);
 	}//end setter()
 
+	// ⚠️ The five accessors below and jsonSerialize() carry NATIVE return types
+	// on purpose, copied from OCA\OpenRegister\Contract\ObjectEntityInterface
+	// (ADR-084). PHP return types are COVARIANT, so "no declared type" is WIDER
+	// than the interface's and is a fatal at class-declaration time, not a
+	// warning — `Declaration of ObjectEntity::getUuid() must be compatible with
+	// ObjectEntityInterface::getUuid(): ?string`. That single incompatibility
+	// killed all six PHPUnit matrix cells the moment this stub started
+	// implementing the interface.
+	//
+	// If the published contract ever changes one of these, change it here to
+	// MATCH — never widen it back. `getId()` and `setObject()` are deliberately
+	// untyped because they are NOT on the contract; see the class docblock.
+
 	/** @return int */
 	abstract public function getId();
 
-	/** @return string */
-	abstract public function getUuid();
+	abstract public function getUuid(): ?string;
 
 	/** @return array<string,mixed> */
-	abstract public function getObject();
+	abstract public function getObject(): array;
 
-	/** @return mixed */
-	abstract public function getRegister();
+	abstract public function getRegister(): ?string;
 
-	/** @return mixed */
-	abstract public function getSchema();
+	abstract public function getSchema(): ?string;
 
 	/**
 	 * @param array<string,mixed>|null $object
@@ -165,7 +211,6 @@ abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityIn
 	 */
 	abstract public function setObject($object = null);
 
-	/** @return array<string,mixed> */
-	abstract public function jsonSerialize();
+	abstract public function jsonSerialize(): mixed;
 
 }//end class
