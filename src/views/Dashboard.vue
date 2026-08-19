@@ -480,20 +480,32 @@ export default {
 		/**
 		 * Format date for display
 		 *
+		 * Renders as `17/08/2026, 08:33`. `toLocaleDateString` is correct here
+		 * even though the result carries a time: explicit `hour`/`minute`
+		 * options are honoured (ECMA-402 ToDateTimeOptions only supplies
+		 * date-part DEFAULTS when none are given), so this is not the
+		 * "toLocaleDateString silently drops the time" trap it resembles.
+		 *
+		 * A trailing `.replace(',', ',')` was removed here. It replaced the
+		 * comma with itself — a no-op, flagged as js/identity-replacement.
+		 * It was born in that identical form (5c33f0b, "Working on the detail
+		 * pages"), so no working behaviour was ever lost and no intent is
+		 * recorded anywhere to recover. Deleting it is byte-for-byte
+		 * output-preserving, verified against the string above; guessing at
+		 * `.replace(',', '')` would have invented a UI change nothing asked for.
+		 *
 		 * @param {Date} date - Date to format
 		 * @return {string} Formatted date string
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		formatDate(date) {
-			return date
-				.toLocaleDateString('en-GB', {
-					day: '2-digit',
-					month: '2-digit',
-					year: 'numeric',
-					hour: '2-digit',
-					minute: '2-digit',
-				})
-				.replace(',', ',')
+			return date.toLocaleDateString('en-GB', {
+				day: '2-digit',
+				month: '2-digit',
+				year: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+			})
 		},
 
 		/**
