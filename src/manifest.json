@@ -489,7 +489,7 @@
 			"type": "index",
 			"title": "Standards",
 			"config": {
-				"register": "@resolve:voorzieningen_register",
+				"register": "@resolve:amef_register",
 				"schema": "element",
 				"filter": { "gemmaType": "standaard" },
 				"columns": [
@@ -504,7 +504,7 @@
 				},
 				"documentationUrl": "https://softwarecatalog.conduction.nl"
 			},
-			"_note": "The register has NO dedicated 'standard' schema — GEMMA standards are `element` objects (the generic ArchiMate/GEMMA model-element schema, shared with referentiecomponenten, applications, capabilities, …) discriminated by `gemmaType`. Fixed a pre-existing bug: this page previously pointed at a non-existent `schema: \"standaard\"`, which would 404 on every fetch. Scoped with `filter.gemmaType: \"standaard\"` (see lib/Service/ArchiMateImportService.php's `extractGemmaType` comparisons and its `?gemmaType=referentiecomponent` query comment) so only standard-typed elements list here."
+			"_note": "The register has NO dedicated 'standard' schema — GEMMA standards are `element` objects (the generic ArchiMate/GEMMA model-element schema, shared with referentiecomponenten, applications, capabilities, …) discriminated by `gemmaType`. Fixed a pre-existing bug: this page previously pointed at a non-existent `schema: \"standaard\"`, which would 404 on every fetch. Scoped with `filter.gemmaType: \"standaard\"` (see lib/Service/ArchiMateImportService.php's `extractGemmaType` comparisons and its `?gemmaType=referentiecomponent` query comment) so only standard-typed elements list here. REGISTER FIX (measured): `element` is declared under `components.registers.vng-gemma.schemas`, NOT under `voorzieningen`, so `@resolve:voorzieningen_register` produced `GET /api/objects/<voorzieningen>/element -> 404 {\"message\":\"Schema not found: 'element'\"}` on every load (CI trace, run 31981873526). Attaching `element` to `voorzieningen` was rejected deliberately: the request would then succeed and return an EMPTY list, because objects live per register and the AMEF elements are written to the AMEF one — a visible error traded for an invisible pass. Repointed at `@resolve:amef_register`, the second sentinel, provisioned in lib/AppInfo/Application.php::boot() from the `amef_config` blob exactly as `voorzieningen_register` is from `voorzieningen_config`."
 		},
 		{
 			"id": "StandaardDetail",
@@ -512,9 +512,9 @@
 			"type": "detail",
 			"title": "Standard",
 			"config": {
-				"register": "@resolve:voorzieningen_register",
+				"register": "@resolve:amef_register",
 				"schema": "element",
-				"_note": "Catalog archetype (a normative GEMMA standard). What matters about a standard is (a) its definition, (b) the specification documents, and (c) the ecosystem around it: which modules implement it and what compliance records claim it. Body: standard data 8-wide top-left (name, gemmaThema, gemmaStatus, documentation, url, versieaanduiding, beschikbaarheid — the `element` schema's GEMMA-standard fields); a Specification documents (files) panel 4-wide top-right for the published spec/PDFs. Below, a Related panel surfaces the element's own FK web (standaardVersies, aanbevolenVoorReferentiecomponent, verplichteVoorReferentiecomponent, gekoppeldeStandaardVersies — all self-references into other `element` objects), then a compliancy object-list shows every compliance claim naming this standard (compliancy.standaardGemma matched to the standard's own `name`) so a reader sees adoption at a glance. FIX: the register has no dedicated 'standard' schema — this page previously pointed at a non-existent `schema: \"standaard\"` (guaranteed fetch failure); corrected to `element` (the shared GEMMA/ArchiMate element schema, discriminated by `gemmaType`). A standard does not communicate, so per the comms hard-rule NO Emails/Meetings/Talk widgets appear. Audit trail stays a sidebar tab.",
+				"_note": "Catalog archetype (a normative GEMMA standard). What matters about a standard is (a) its definition, (b) the specification documents, and (c) the ecosystem around it: which modules implement it and what compliance records claim it. Body: standard data 8-wide top-left (name, gemmaThema, gemmaStatus, documentation, url, versieaanduiding, beschikbaarheid — the `element` schema's GEMMA-standard fields); a Specification documents (files) panel 4-wide top-right for the published spec/PDFs. Below, a Related panel surfaces the element's own FK web (standaardVersies, aanbevolenVoorReferentiecomponent, verplichteVoorReferentiecomponent, gekoppeldeStandaardVersies — all self-references into other `element` objects), then a compliancy object-list shows every compliance claim naming this standard (compliancy.standaardGemma matched to the standard's own `name`) so a reader sees adoption at a glance. FIX: the register has no dedicated 'standard' schema — this page previously pointed at a non-existent `schema: \"standaard\"` (guaranteed fetch failure); corrected to `element` (the shared GEMMA/ArchiMate element schema, discriminated by `gemmaType`). A standard does not communicate, so per the comms hard-rule NO Emails/Meetings/Talk widgets appear. Audit trail stays a sidebar tab. REGISTER FIX: the page-level register moved from `@resolve:voorzieningen_register` to `@resolve:amef_register` for the same reason as the Standaarden index — `element` is attached to the AMEF register, not to voorzieningen, and an unattached slug now throws rather than resolving globally. The nested `st-compliance` object-list deliberately KEEPS `@resolve:voorzieningen_register`: `compliancy` really does live in voorzieningen, and a detail page's widgets carry their own register.",
 				"widgets": [
 					{ "id": "st-data", "type": "data", "title": "Standard", "icon": "ShieldCheckOutline", "content": { "columns": 2 } },
 					{ "id": "st-files", "type": "integration", "integrationId": "files", "title": "Specification documents", "icon": "FolderOutline" },
