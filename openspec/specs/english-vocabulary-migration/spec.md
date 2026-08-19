@@ -26,8 +26,6 @@ evidence recorded in the change that no rows exist.
 
 #### Scenario: A property rename lands without its migration
 
-<!-- @e2e exclude covered by tests/Unit/Repair/RenameDutchCatalogColumnsTest.php::testMatchesAnOrdinaryShard and ::testDoesNotMatchDerivedOrNonShardTables — this is a review-time and upgrade-time rule about which shard tables a repair step selects; it has no browser surface to drive, so a Playwright test could only re-assert the unit test through a slower harness -->
-
 - **WHEN** a register fragment renames a property that has a materialised column
 - **THEN** the change SHALL NOT be merged until a repair step covers that column
   or the change records a measured zero-row count for it
@@ -45,8 +43,6 @@ external standard names inside the adapter layer.
 
 #### Scenario: The exempt set cannot be resolved
 
-<!-- @e2e exclude covered by tests/Unit/Repair/RenameDutchCatalogColumnsTest.php::testDoesNotMigrateWireExemptSchemas and ::testWireSchemasAreExempt — the fail-closed path is reached only when a runtime id lookup fails during an upgrade, a state no browser session can induce -->
-
 - **WHEN** the repair step cannot resolve the ids of the exempt schemas
 - **THEN** it SHALL fail closed and migrate nothing, rather than risk rewriting
   the import contract
@@ -62,8 +58,6 @@ pair, and a silent merge would destroy one of the two values.
 
 #### Scenario: Two Dutch columns target one English name
 
-<!-- @e2e exclude covered by tests/Unit/Repair/RenameDutchCatalogColumnsTest.php::testRefusesAmbiguousRename and ::testSingleSourceIsNotACollision — the collision is a property of the column set at upgrade time; reproducing it through the UI would mean shipping a deliberately broken schema to a live instance -->
-
 - **WHEN** a shard table holds both `beschrijving` and `beschrijving_lang`
 - **THEN** the step SHALL migrate neither and SHALL log the table, both sources,
   and the destination
@@ -74,8 +68,6 @@ The migration SHALL leave every original column readable and SHALL be safe to
 re-run.
 
 #### Scenario: The English column already exists and is empty
-
-<!-- @e2e exclude covered by tests/Unit/Repair/RenameDutchCatalogColumnsTest.php::testEveryDestinationIsSnakeCase, with the back-fill branch asserted there against a synthetic column set — the branch is chosen by DDL state during an upgrade, which a browser cannot observe or control -->
 
 - **WHEN** MagicMapper has already added the English column before the step runs
 - **THEN** the step SHALL copy the values across and SHALL leave the Dutch column
