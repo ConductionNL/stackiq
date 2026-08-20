@@ -9,6 +9,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | Feature | Description |
 |---------|-------------|
 | [Software Registration](#software-registration) | Register and manage applications (voorzieningen) in the landscape |
+| [GEMMA Faceted Search](#gemma-faceted-search) | Filter the application/service catalogue by GEMMA architecture dimension, with live counts |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
 | [Connection Mapping](#connection-mapping) | Map integrations (koppelingen) between applications and modules |
 | [Organisation and Contact Management](#organisation-and-contact-management) | Manage organisations and their contact persons |
@@ -34,6 +35,22 @@ The dashboard displays totals and recent changes across all registered software.
 
 **Key service:** `lib/Service/AanbodService.php`
 **Controller:** `lib/Controller/AanbodController.php`
+
+## GEMMA Faceted Search
+
+The **Applications** (`/modules`) and **Services** (`/diensten`) index pages offer faceted filtering by GEMMA architecture dimension, alongside free-text search:
+
+- **Referentiecomponent** and **Standaard** — read directly off the module's own `referentieComponenten`/`standaardVersies` links.
+- **Domein** and **Applicatieservice** — resolved transitively via the module's linked GEMMA `element` objects (an application has no direct field for either; domein comes from the linked referentiecomponent element, applicatieservice from a `relation` object connecting that element to an `Applicatieservice`-typed element).
+- Counts update live as other facets are applied — a facet's own count is never narrowed by its own selection, so it always reads "how many results if I also add this filter". Multiple values within one dimension combine with OR; selections across different dimensions combine with AND.
+- Free-text search narrows the candidate set before facet counts are computed, so search and facets are always consistent with each other and with the object list.
+- The filter selection is reflected in the URL (`_gf_`-prefixed query parameters) so a filtered view is shareable, bookmarkable, and survives a page reload.
+- A filter selection can be saved as a named view (via OpenRegister's generic saved-search Views API) and reopened later from the page's "Saved views" menu.
+- Facet counts are computed through the same RBAC/tenant-scoped query path as the page's own object list — a restricted user's counts never reflect objects outside their visible scope.
+
+**Key service:** `lib/Service/FacetService.php`
+**Controller:** `lib/Controller/FacetController.php`
+**Endpoint:** `GET /apps/softwarecatalog/api/facets/{schema}` (`schema`: `module` or `dienst`)
 
 ## Module Tracking
 

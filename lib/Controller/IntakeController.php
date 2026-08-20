@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Anonymous registration intake controller.
  *
@@ -19,13 +20,13 @@
  * @package   OCA\SoftwareCatalog\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
- * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -45,54 +46,52 @@ use OCP\IRequest;
 /**
  * Public, write-only anonymous registration intake.
  */
-class IntakeController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest      $request The request.
-     * @param IntakeService $intake  The intake service.
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly IntakeService $intake,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class IntakeController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param IntakeService $intake The intake service.
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly IntakeService $intake,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * Submit an anonymous organisation registration into the moderation queue.
-     *
-     * @param array<string,mixed> $organisatie The registration payload.
-     *
-     * @return JSONResponse `{ok, uuid, status}` (202 Accepted) or a 400/429.
-     *
-     * @PublicPage
-     * @NoCSRFRequired
-     * @spec           openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
-     */
-    #[PublicPage]
-    #[NoCSRFRequired]
-    #[AnonRateLimit(limit: 5, period: 3600)]
-    public function submit(array $organisatie=[]): JSONResponse
-    {
-        $result = $this->intake->submit($organisatie);
-        if ($result['ok'] === false) {
-            return new JSONResponse(
-                data: ['message' => $result['reason']],
-                statusCode: Http::STATUS_BAD_REQUEST
-            );
-        }
+	/**
+	 * Submit an anonymous organisation registration into the moderation queue.
+	 *
+	 * @param array<string,mixed> $organisation The registration payload.
+	 *
+	 * @return JSONResponse `{ok, uuid, status}` (202 Accepted) or a 400/429.
+	 *
+	 * @PublicPage
+	 * @NoCSRFRequired
+	 * @spec           openspec/specs/open-data-publishing/spec.md
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 5, period: 3600)]
+	public function submit(array $organisation = []): JSONResponse {
+		$result = $this->intake->submit($organisation);
+		if ($result['ok'] === false) {
+			return new JSONResponse(
+				data: ['message' => $result['reason']],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
 
-        // Acknowledge only — never echo the stored object back to the anonymous caller.
-        return new JSONResponse(
-            data: [
-                'ok'      => true,
-                'uuid'    => $result['uuid'],
-                'status'  => $result['status'],
-                'message' => 'Registration received and queued for moderation',
-            ],
-            statusCode: Http::STATUS_ACCEPTED
-        );
-    }//end submit()
+		// Acknowledge only — never echo the stored object back to the anonymous caller.
+		return new JSONResponse(
+			data: [
+				'ok' => true,
+				'uuid' => $result['uuid'],
+				'status' => $result['status'],
+				'message' => 'Registration received and queued for moderation',
+			],
+			statusCode: Http::STATUS_ACCEPTED
+		);
+	}//end submit()
 }//end class

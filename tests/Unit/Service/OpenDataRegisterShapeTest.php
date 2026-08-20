@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Register-shape tests for open-data-publishing.
  *
@@ -11,7 +12,7 @@
  * @package   OCA\SoftwareCatalog\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
- * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
@@ -26,42 +27,39 @@ use PHPUnit\Framework\TestCase;
 /**
  * Validates the organisatie schema gains the moderation field.
  */
-class OpenDataRegisterShapeTest extends TestCase
-{
-    /**
-     * @var array<string,mixed>
-     */
-    private array $organisatie;
+class OpenDataRegisterShapeTest extends TestCase {
+	/**
+	 * @var array<string,mixed>
+	 */
+	private array $organisation;
 
-    /**
-     * Load the organisatie schema once.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $path    = __DIR__.'/../../../lib/Settings/softwarecatalogus_register.json';
-        $decoded = json_decode((string) file_get_contents($path), true);
-        $this->assertIsArray($decoded);
-        $this->organisatie = $decoded['components']['schemas']['organisatie'];
-    }//end setUp()
+	/**
+	 * Load the organisatie schema once.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$path = __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json';
+		$decoded = json_decode((string)file_get_contents($path), true);
+		$this->assertIsArray($decoded);
+		$this->organisation = $decoded['components']['schemas']['organization'];
+	}//end setUp()
 
-    /**
-     * The moderation field is present, optional, and enumerates the states.
-     *
-     * @return void
-     */
-    public function testOrganisatieHasModerationField(): void
-    {
-        $props = $this->organisatie['properties'] ?? [];
-        $this->assertArrayHasKey('registratiestatus', $props);
+	/**
+	 * The moderation field is present, optional, and enumerates the states.
+	 *
+	 * @return void
+	 */
+	public function testOrganisatieHasModerationField(): void {
+		$props = $this->organisation['properties'] ?? [];
+		$this->assertArrayHasKey('registrationStatus', $props);
 
-        $field = $props['registratiestatus'];
-        $this->assertSame('string', $field['type']);
-        $this->assertSame(['pending', 'active', 'rejected'], $field['enum']);
+		$field = $props['registrationStatus'];
+		$this->assertSame('string', $field['type']);
+		$this->assertSame(['pending', 'active', 'rejected'], $field['enum']);
 
-        // Optional: not in `required` (import-over-existing is non-destructive).
-        $required = $this->organisatie['required'] ?? [];
-        $this->assertNotContains('registratiestatus', $required);
-    }//end testOrganisatieHasModerationField()
+		// Optional: not in `required` (import-over-existing is non-destructive).
+		$required = $this->organisation['required'] ?? [];
+		$this->assertNotContains('registrationStatus', $required);
+	}//end testOrganisatieHasModerationField()
 }//end class

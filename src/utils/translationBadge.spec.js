@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Unit tests for the translation-badge utility.
  *
@@ -6,8 +5,8 @@
  */
 
 import {
-	languageName,
 	getSourceLanguage,
+	languageName,
 	shouldShowTranslationBadge,
 	translationBadge,
 } from './translationBadge.js'
@@ -38,7 +37,9 @@ describe('translationBadge.getSourceLanguage', () => {
 	})
 
 	it('reads sourceLanguage from the @self envelope', () => {
-		expect(getSourceLanguage({ '@self': { sourceLanguage: 'en_US' } })).toBe('en')
+		expect(getSourceLanguage({ '@self': { sourceLanguage: 'en_US' } })).toBe(
+			'en',
+		)
 	})
 
 	it('reads the snake_case @self variant', () => {
@@ -57,7 +58,9 @@ describe('translationBadge.shouldShowTranslationBadge', () => {
 	})
 
 	it('is false when source equals served', () => {
-		expect(shouldShowTranslationBadge({ sourceLanguage: 'nl' }, 'nl_NL')).toBe(false)
+		expect(shouldShowTranslationBadge({ sourceLanguage: 'nl' }, 'nl_NL')).toBe(
+			false,
+		)
 	})
 
 	it('is false when the source language is unknown', () => {
@@ -87,9 +90,15 @@ describe('translationBadge.translationBadge', () => {
 	})
 
 	it('uses the provided translate function and interpolates the language', () => {
-		const t = jest.fn((app, text, vars) => text.replace('{language}', vars.language))
+		const t = jest.fn((app, text, vars) =>
+			text.replace('{language}', vars.language),
+		)
 		const badge = translationBadge({ sourceLanguage: 'nl' }, 'en')
 		expect(badge.label(t)).toBe('(translated from Dutch)')
-		expect(t).toHaveBeenCalledWith('softwarecatalog', '(translated from {language})', { language: 'Dutch' })
+		expect(t).toHaveBeenCalledWith(
+			'softwarecatalog',
+			'(translated from {language})',
+			{ language: 'Dutch' },
+		)
 	})
 })

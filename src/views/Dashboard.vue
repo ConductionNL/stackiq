@@ -6,7 +6,7 @@
 		:layout="dashboardLayout"
 		:loading="loading">
 		<template #header-actions>
-			<NcButton type="secondary" @click="refreshAllData">
+			<NcButton variant="secondary" @click="refreshAllData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
@@ -19,16 +19,15 @@
 		<template #widget-info-box>
 			<NcNoteCard type="info" class="infoBox">
 				<div class="infoBoxContent">
-					<h3 class="infoBoxTitle">
-						Beheer van Organisaties
-					</h3>
+					<h3 class="infoBoxTitle">Beheer van Organisaties</h3>
 					<p class="infoBoxText">
-						Organisaties kunnen worden geaccepteerd en beheerd via de organisaties pagina. Het aanmaken en bewerken van gebruikers gaat ook via de organisatie pagina, omdat deze onderdeel zijn van organisaties.
+						Organisaties kunnen worden geaccepteerd en beheerd via de
+						organisaties pagina. Het aanmaken en bewerken van gebruikers
+						gaat ook via de organisatie pagina, omdat deze onderdeel zijn
+						van organisaties.
 					</p>
 					<div class="infoBoxActions">
-						<NcButton
-							type="primary"
-							@click="navigateToOrganizations">
+						<NcButton variant="primary" @click="navigateToOrganizations">
 							<template #icon>
 								<OfficeBuildingOutline :size="16" />
 							</template>
@@ -43,41 +42,47 @@
 		<template #widget-stats-table-1>
 			<div class="statisticsTableContainer">
 				<div class="statisticsTableHeader">
-					<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
+					<span class="lastUpdated"
+						>Laatst bijgewerkt: {{ formatDate(new Date()) }}</span
+					>
 				</div>
 
 				<table class="objectStatisticsTable">
 					<thead>
 						<tr>
-							<th>Object Type</th>
-							<th class="countHeader">
-								Aantal
-							</th>
-							<th class="manageHeader">
-								Beheren
-							</th>
+							<th scope="col">Object Type</th>
+							<th scope="col" class="countHeader">Count</th>
+							<th scope="col" class="manageHeader">Manage</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="stat in firstTableStats" :key="stat.objectType">
+						<tr
+							v-for="stat in firstTableStats"
+							:key="stat.objectType"
+							style="cursor: pointer"
+							@click="navigateToSchema(stat.slug)">
 							<td>{{ stat.objectType }}</td>
 							<td class="countCell">
 								{{ stat.count.toLocaleString() }}
 							</td>
 							<td class="manageCell">
 								<NcButton
-									v-if="stat.slug === 'organisatie'"
+									v-if="stat.slug === 'organization'"
 									size="small"
-									type="tertiary"
-									@click="navigateToObjectType(stat.slug)">
+									variant="tertiary"
+									@click.stop="navigateToObjectType(stat.slug)">
 									<template #icon>
-										<component :is="getIconForObjectType(stat.slug)" :size="16" />
+										<component
+											:is="getIconForObjectType(stat.slug)"
+											:size="16" />
 									</template>
-									Beheren
+									Manage
 								</NcButton>
 								<span v-else class="disabledManage">
-									<component :is="getIconForObjectType(stat.slug)" :size="16" />
-									<span class="strikethrough">Beheren</span>
+									<component
+										:is="getIconForObjectType(stat.slug)"
+										:size="16" />
+									<span class="strikethrough">Manage</span>
 								</span>
 							</td>
 						</tr>
@@ -90,41 +95,47 @@
 		<template #widget-stats-table-2>
 			<div class="statisticsTableContainer">
 				<div class="statisticsTableHeader">
-					<span class="lastUpdated">Laatst bijgewerkt: {{ formatDate(new Date()) }}</span>
+					<span class="lastUpdated"
+						>Laatst bijgewerkt: {{ formatDate(new Date()) }}</span
+					>
 				</div>
 
 				<table class="objectStatisticsTable">
 					<thead>
 						<tr>
-							<th>Object Type</th>
-							<th class="countHeader">
-								Aantal
-							</th>
-							<th class="manageHeader">
-								Beheren
-							</th>
+							<th scope="col">Object Type</th>
+							<th scope="col" class="countHeader">Count</th>
+							<th scope="col" class="manageHeader">Manage</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="stat in secondTableStats" :key="stat.objectType">
+						<tr
+							v-for="stat in secondTableStats"
+							:key="stat.objectType"
+							style="cursor: pointer"
+							@click="navigateToSchema(stat.slug)">
 							<td>{{ stat.objectType }}</td>
 							<td class="countCell">
 								{{ stat.count.toLocaleString() }}
 							</td>
 							<td class="manageCell">
 								<NcButton
-									v-if="stat.slug === 'organisatie'"
+									v-if="stat.slug === 'organization'"
 									size="small"
-									type="tertiary"
-									@click="navigateToObjectType(stat.slug)">
+									variant="tertiary"
+									@click.stop="navigateToObjectType(stat.slug)">
 									<template #icon>
-										<component :is="getIconForObjectType(stat.slug)" :size="16" />
+										<component
+											:is="getIconForObjectType(stat.slug)"
+											:size="16" />
 									</template>
-									Beheren
+									Manage
 								</NcButton>
 								<span v-else class="disabledManage">
-									<component :is="getIconForObjectType(stat.slug)" :size="16" />
-									<span class="strikethrough">Beheren</span>
+									<component
+										:is="getIconForObjectType(stat.slug)"
+										:size="16" />
+									<span class="strikethrough">Manage</span>
 								</span>
 							</td>
 						</tr>
@@ -136,19 +147,17 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-// eslint-disable-next-line import/named
 import { CnDashboardPage } from '@conduction/nextcloud-vue'
-import { objectStore, navigationStore } from '../store/store.js'
-
-// Icons
-import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import ApplicationCog from 'vue-material-design-icons/ApplicationCog.vue'
-import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
 import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
+import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
+// Icons
+import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import { navigationStore, objectStore } from '../store/store.js'
 
 /**
  * @class Dashboard
@@ -184,9 +193,30 @@ export default {
 		return {
 			loading: true,
 			dashboardLayout: [
-				{ id: 1, widgetId: 'info-box', gridX: 0, gridY: 0, gridWidth: 12, showTitle: false },
-				{ id: 2, widgetId: 'stats-table-1', gridX: 0, gridY: 1, gridWidth: 6, showTitle: false },
-				{ id: 3, widgetId: 'stats-table-2', gridX: 6, gridY: 1, gridWidth: 6, showTitle: false },
+				{
+					id: 1,
+					widgetId: 'info-box',
+					gridX: 0,
+					gridY: 0,
+					gridWidth: 12,
+					showTitle: false,
+				},
+				{
+					id: 2,
+					widgetId: 'stats-table-1',
+					gridX: 0,
+					gridY: 1,
+					gridWidth: 6,
+					showTitle: false,
+				},
+				{
+					id: 3,
+					widgetId: 'stats-table-2',
+					gridX: 6,
+					gridY: 1,
+					gridWidth: 6,
+					showTitle: false,
+				},
 			],
 		}
 	},
@@ -194,8 +224,9 @@ export default {
 	computed: {
 		/**
 		 * Widget definitions for CnDashboardPage
+		 *
 		 * @return {Array} Widget definition array
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		widgetDefs() {
 			return [
@@ -207,8 +238,9 @@ export default {
 
 		/**
 		 * Get object statistics for the table display
+		 *
 		 * @return {Array} Array of object statistics
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		objectStatistics() {
 			const stats = []
@@ -218,16 +250,17 @@ export default {
 				return stats
 			}
 
-			const voorzieningenRegister = objectStore.settings.availableRegisters.find(
-				register => register.slug === 'voorzieningen',
-			)
+			const voorzieningenRegister =
+				objectStore.settings.availableRegisters.find(
+					(register) => register.slug === 'voorzieningen',
+				)
 
 			if (!voorzieningenRegister?.schemas) {
 				return stats
 			}
 
 			// Create statistics for each schema in the voorzieningen register
-			voorzieningenRegister.schemas.forEach(schema => {
+			voorzieningenRegister.schemas.forEach((schema) => {
 				const collection = objectStore.getCollection(schema.slug)
 				const count = collection?.results?.length || 0
 				const pagination = objectStore.getPagination(schema.slug)
@@ -247,8 +280,9 @@ export default {
 
 		/**
 		 * Get first half of statistics for first table
+		 *
 		 * @return {Array} First half of statistics
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		firstTableStats() {
 			const stats = this.objectStatistics
@@ -258,15 +292,15 @@ export default {
 
 		/**
 		 * Get second half of statistics for second table
+		 *
 		 * @return {Array} Second half of statistics
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		secondTableStats() {
 			const stats = this.objectStatistics
 			const midPoint = Math.ceil(stats.length / 2)
 			return stats.slice(midPoint)
 		},
-
 	},
 
 	async mounted() {
@@ -276,8 +310,9 @@ export default {
 	methods: {
 		/**
 		 * Load dashboard data
+		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		async loadDashboardData() {
 			this.loading = true
@@ -288,13 +323,20 @@ export default {
 				}
 
 				// Load data for all registered object types
-				const registeredTypes = Object.keys(objectStore.objectTypeRegistry || {})
+				const registeredTypes = Object.keys(
+					objectStore.objectTypeRegistry || {},
+				)
 				await Promise.all(
 					registeredTypes.map(async (objectType) => {
 						try {
-							await objectStore.fetchCollection(objectType, { _limit: 1 }) // Just get pagination info
+							await objectStore.fetchCollection(objectType, {
+								_limit: 1,
+							}) // Just get pagination info
 						} catch (error) {
-							console.warn(`Failed to fetch ${objectType} collection:`, error)
+							console.warn(
+								`Failed to fetch ${objectType} collection:`,
+								error,
+							)
 						}
 					}),
 				)
@@ -307,9 +349,10 @@ export default {
 
 		/**
 		 * Get schema configuration for object type
+		 *
 		 * @param {string} objectType - Object type slug
 		 * @return {object | null} Schema configuration
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		getSchemaConfig(objectType) {
 			if (!objectStore.settings?.schemaConfigurations) {
@@ -329,21 +372,22 @@ export default {
 
 		/**
 		 * Get icon component for specific object type
+		 *
 		 * @param {string} objectType - Object type slug
 		 * @return {object} Vue icon component
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		getIconForObjectType(objectType) {
 			const iconMap = {
-				organisatie: OfficeBuildingOutline,
-				contactpersoon: AccountMultiple,
+				organization: OfficeBuildingOutline,
+				contactPerson: AccountMultiple,
 				voorziening: ApplicationCog,
 				contract: FileDocumentEdit,
 				suite: ApplicationCog,
 				module: ApplicationCog,
 				koppeling: ApplicationCog,
-				dienst: ApplicationCog,
-				standaard: FileDocumentEdit,
+				service: ApplicationCog,
+				standard: FileDocumentEdit,
 				compliancy: FileDocumentEdit,
 				kwetsbaarheid: FileDocumentEdit,
 				beoordeling: FileDocumentEdit,
@@ -353,15 +397,16 @@ export default {
 
 		/**
 		 * Navigate to object type management page
+		 *
 		 * @param {string} objectType - Object type slug to navigate to
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		navigateToObjectType(objectType) {
 			// Handle special cases for plural routing
 			const routeMap = {
-				organisatie: 'organisaties',
-				contactpersoon: 'contactpersonen',
+				organization: 'organisaties',
+				contactPerson: 'contactpersonen',
 				voorziening: 'voorzieningen',
 				contract: 'contracten',
 			}
@@ -372,18 +417,43 @@ export default {
 
 		/**
 		 * Navigate to organizations page
+		 *
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		navigateToOrganizations() {
 			navigationStore.setSelected('organisaties')
 		},
 
 		/**
+		 * Navigate to the index page that corresponds to an OR schema slug.
+		 * Covers all voorzieningen schemas so every count row is clickable.
+		 *
+		 * @param {string} slug - OR schema slug (e.g. 'organization', 'standard').
+		 * @return {void}
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
+		navigateToSchema(slug) {
+			const slugToSelected = {
+				organization: 'organisaties',
+				contactPerson: 'contactpersonen',
+				contract: 'contracten',
+				standard: 'standards',
+				compliancy: 'komplianties',
+				moduleversie: 'moduleversies',
+			}
+			const selected = slugToSelected[slug]
+			if (selected) {
+				navigationStore.setSelected(selected)
+			}
+		},
+
+		/**
 		 * Navigate to configuration page - opens admin settings in new tab
+		 *
 		 * @param {string} route - Route to navigate to (legacy parameter)
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		navigateToConfiguration(route) {
 			const settingsUrl = `${window.location.protocol}//${window.location.host}/index.php/settings/admin/softwarecatalog`
@@ -392,9 +462,10 @@ export default {
 
 		/**
 		 * Format object type name for display
+		 *
 		 * @param {string} objectType - The object type slug
 		 * @return {string} Formatted object type name
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		formatObjectTypeName(objectType) {
 			// Convert camelCase/kebab-case to proper case
@@ -402,15 +473,30 @@ export default {
 				.replace(/([a-z])([A-Z])/g, '$1 $2')
 				.replace(/[-_]/g, ' ')
 				.split(' ')
-				.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+				.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 				.join(' ')
 		},
 
 		/**
 		 * Format date for display
+		 *
+		 * Renders as `17/08/2026, 08:33`. `toLocaleDateString` is correct here
+		 * even though the result carries a time: explicit `hour`/`minute`
+		 * options are honoured (ECMA-402 ToDateTimeOptions only supplies
+		 * date-part DEFAULTS when none are given), so this is not the
+		 * "toLocaleDateString silently drops the time" trap it resembles.
+		 *
+		 * A trailing `.replace(',', ',')` was removed here. It replaced the
+		 * comma with itself — a no-op, flagged as js/identity-replacement.
+		 * It was born in that identical form (5c33f0b, "Working on the detail
+		 * pages"), so no working behaviour was ever lost and no intent is
+		 * recorded anywhere to recover. Deleting it is byte-for-byte
+		 * output-preserving, verified against the string above; guessing at
+		 * `.replace(',', '')` would have invented a UI change nothing asked for.
+		 *
 		 * @param {Date} date - Date to format
 		 * @return {string} Formatted date string
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		formatDate(date) {
 			return date.toLocaleDateString('en-GB', {
@@ -419,13 +505,14 @@ export default {
 				year: 'numeric',
 				hour: '2-digit',
 				minute: '2-digit',
-			}).replace(',', ',')
+			})
 		},
 
 		/**
 		 * Refresh all data - force reload settings and all collections
+		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-1
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		async refreshAllData() {
 			console.info('Dashboard: Refreshing all data...')
@@ -437,25 +524,39 @@ export default {
 				await objectStore.fetchSettings(true) // Force refresh
 
 				// Wait for object types to be registered
-				await new Promise(resolve => setTimeout(resolve, 500))
+				await new Promise((resolve) => setTimeout(resolve, 500))
 
 				// Refresh all registered object collections
-				const registeredTypes = Object.keys(objectStore.objectTypeRegistry || {})
-				console.info('Dashboard: Refreshing collections for:', registeredTypes)
+				const registeredTypes = Object.keys(
+					objectStore.objectTypeRegistry || {},
+				)
+				console.info(
+					'Dashboard: Refreshing collections for:',
+					registeredTypes,
+				)
 
 				if (registeredTypes.length > 0) {
 					await Promise.all(
 						registeredTypes.map(async (objectType) => {
 							try {
-								console.info(`Dashboard: Refreshing ${objectType} collection...`)
-								await objectStore.fetchCollection(objectType, { _limit: 1 }) // Just get pagination info
+								console.info(
+									`Dashboard: Refreshing ${objectType} collection...`,
+								)
+								await objectStore.fetchCollection(objectType, {
+									_limit: 1,
+								}) // Just get pagination info
 							} catch (error) {
-								console.warn(`Failed to refresh ${objectType} collection:`, error)
+								console.warn(
+									`Failed to refresh ${objectType} collection:`,
+									error,
+								)
 							}
 						}),
 					)
 				} else {
-					console.warn('Dashboard: No object types registered after settings refresh')
+					console.warn(
+						'Dashboard: No object types registered after settings refresh',
+					)
 				}
 
 				console.info('Dashboard: All data refreshed successfully')

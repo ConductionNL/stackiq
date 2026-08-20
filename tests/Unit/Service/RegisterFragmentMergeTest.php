@@ -12,7 +12,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/modular-register-manifest-fragments/specs/modular-config/spec.md
+ * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-merge-adr-037-register-fragments-so-disjoint-fragments-never-collide-req-007
  */
 
 declare(strict_types=1);
@@ -27,71 +27,69 @@ use ReflectionMethod;
  * Verifies that disjoint register fragments union cleanly so concurrent
  * OpenSpec change builds never collide on the shared register file (ADR-037).
  */
-final class RegisterFragmentMergeTest extends TestCase
-{
-    /**
-     * Invoke the private static SettingsService::deepMergeConfig().
-     *
-     * @param array<mixed> $base    Base config.
-     * @param array<mixed> $overlay Fragment.
-     *
-     * @return array<mixed> Merged config.
-     */
-    private function merge(array $base, array $overlay): array
-    {
-        $m = new ReflectionMethod(SettingsService::class, 'deepMergeConfig');
-        $m->setAccessible(true);
-        return $m->invoke(null, $base, $overlay);
-    }//end merge()
+final class RegisterFragmentMergeTest extends TestCase {
+	/**
+	 * Invoke the private static SettingsService::deepMergeConfig().
+	 *
+	 * @param array<mixed> $base Base config.
+	 * @param array<mixed> $overlay Fragment.
+	 *
+	 * @return array<mixed> Merged config.
+	 */
+	private function merge(array $base, array $overlay): array {
+		$m = new ReflectionMethod(SettingsService::class, 'deepMergeConfig');
+		$m->setAccessible(true);
+		return $m->invoke(null, $base, $overlay);
+	}//end merge()
 
-    /**
-     * Two fragments adding disjoint OpenAPI schemas/paths union by key.
-     *
-     * @return void
-     */
-    public function testDisjointFragmentsUnionSchemasAndPaths(): void
-    {
-        $base = [
-            'components' => ['schemas' => ['Existing' => ['type' => 'object']]],
-            'paths'      => ['/existing' => ['get' => []]],
-        ];
+	/**
+	 * Two fragments adding disjoint OpenAPI schemas/paths union by key.
+	 *
+	 * @return void
+	 * @spec   openspec/specs/settings-service/spec.md#scenario-disjoint-fragments-union-their-schemas-and-paths
+	 */
+	public function testDisjointFragmentsUnionSchemasAndPaths(): void {
+		$base = [
+			'components' => ['schemas' => ['Existing' => ['type' => 'object']]],
+			'paths' => ['/existing' => ['get' => []]],
+		];
 
-        $base = $this->merge(
-                base: $base,
-                overlay: [
-                    'components' => ['schemas' => ['AlphaComponent' => ['type' => 'object']]],
-                    'paths'      => ['/alpha' => ['get' => []]],
-                ]
-                );
-        $base = $this->merge(
-                base: $base,
-                overlay: [
-                    'components' => ['schemas' => ['BetaService' => ['type' => 'object']]],
-                    'paths'      => ['/beta' => ['post' => []]],
-                ]
-                );
+		$base = $this->merge(
+			base: $base,
+			overlay: [
+				'components' => ['schemas' => ['AlphaComponent' => ['type' => 'object']]],
+				'paths' => ['/alpha' => ['get' => []]],
+			]
+		);
+		$base = $this->merge(
+			base: $base,
+			overlay: [
+				'components' => ['schemas' => ['BetaService' => ['type' => 'object']]],
+				'paths' => ['/beta' => ['post' => []]],
+			]
+		);
 
-        $this->assertArrayHasKey(key: 'Existing', array: $base['components']['schemas']);
-        $this->assertArrayHasKey(key: 'AlphaComponent', array: $base['components']['schemas']);
-        $this->assertArrayHasKey(key: 'BetaService', array: $base['components']['schemas']);
-        $this->assertCount(expectedCount: 3, haystack: $base['components']['schemas']);
-        $this->assertArrayHasKey(key: '/existing', array: $base['paths']);
-        $this->assertArrayHasKey(key: '/alpha', array: $base['paths']);
-        $this->assertArrayHasKey(key: '/beta', array: $base['paths']);
-    }//end testDisjointFragmentsUnionSchemasAndPaths()
+		$this->assertArrayHasKey(key: 'Existing', array: $base['components']['schemas']);
+		$this->assertArrayHasKey(key: 'AlphaComponent', array: $base['components']['schemas']);
+		$this->assertArrayHasKey(key: 'BetaService', array: $base['components']['schemas']);
+		$this->assertCount(expectedCount: 3, haystack: $base['components']['schemas']);
+		$this->assertArrayHasKey(key: '/existing', array: $base['paths']);
+		$this->assertArrayHasKey(key: '/alpha', array: $base['paths']);
+		$this->assertArrayHasKey(key: '/beta', array: $base['paths']);
+	}//end testDisjointFragmentsUnionSchemasAndPaths()
 
-    /**
-     * List arrays are concatenated; scalars overwrite.
-     *
-     * @return void
-     */
-    public function testListsConcatenateAndScalarsOverwrite(): void
-    {
-        $merged = $this->merge(
-            base: ['required' => ['a', 'b'], 'info' => ['version' => '0.1.0']],
-            overlay: ['required' => ['c'], 'info' => ['version' => '0.2.0']]
-        );
-        $this->assertSame(expected: ['a', 'b', 'c'], actual: $merged['required']);
-        $this->assertSame(expected: '0.2.0', actual: $merged['info']['version']);
-    }//end testListsConcatenateAndScalarsOverwrite()
+	/**
+	 * List arrays are concatenated; scalars overwrite.
+	 *
+	 * @return void
+	 * @spec   openspec/specs/settings-service/spec.md#scenario-lists-concatenate-and-scalars-overwrite
+	 */
+	public function testListsConcatenateAndScalarsOverwrite(): void {
+		$merged = $this->merge(
+			base: ['required' => ['a', 'b'], 'info' => ['version' => '0.1.0']],
+			overlay: ['required' => ['c'], 'info' => ['version' => '0.2.0']]
+		);
+		$this->assertSame(expected: ['a', 'b', 'c'], actual: $merged['required']);
+		$this->assertSame(expected: '0.2.0', actual: $merged['info']['version']);
+	}//end testListsConcatenateAndScalarsOverwrite()
 }//end class

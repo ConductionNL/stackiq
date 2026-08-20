@@ -11,9 +11,10 @@ import { reactive } from 'vue'
 			<template #icon>
 				<Magnify :size="20" />
 			</template>
-			Zoek snel in het voor uw beschikbare federatieve netwerk<br>
-			<NcTextField class="searchField"
-				:value.sync="searchStore.search"
+			Zoek snel in het voor uw beschikbare federatieve netwerk<br />
+			<NcTextField
+				v-model="searchStore.search"
+				class="searchField"
 				label="Zoeken" />
 			<NcNoteCard v-if="searchStore.searchError" type="error">
 				<p>{{ searchStore.searchError }}</p>
@@ -23,10 +24,11 @@ import { reactive } from 'vue'
 			<template #icon>
 				<DatabaseOutline :size="20" />
 			</template>
-			<NcCheckboxRadioSwitch v-for="(catalogiItem, i) in catalogiStore.catalogiList"
+			<NcCheckboxRadioSwitch
+				v-for="(catalogiItem, i) in catalogiStore.catalogiList"
 				:key="`${catalogiItem}${i}`"
-				type="switch"
-				:checked.sync="searchStore.catalogi[catalogiItem.id]">
+				v-model="searchStore.catalogi[catalogiItem.id]"
+				type="switch">
 				{{ catalogiItem.title || 'Geen titel' }}
 			</NcCheckboxRadioSwitch>
 		</NcAppSidebarTab>
@@ -34,22 +36,29 @@ import { reactive } from 'vue'
 			<template #icon>
 				<FileTreeOutline :size="20" />
 			</template>
-			<NcCheckboxRadioSwitch v-for="(metaData, i) in metadataStore.metaDataList"
+			<NcCheckboxRadioSwitch
+				v-for="(metaData, i) in metadataStore.metaDataList"
 				:key="`${metaData}${i}`"
-				type="switch"
-				:checked.sync="searchStore.metadata[metaData.id]">
+				v-model="searchStore.metadata[metaData.id]"
+				type="switch">
 				{{ metaData.title || 'Geen titel' }}
 			</NcCheckboxRadioSwitch>
 		</NcAppSidebarTab>
 	</NcAppSidebar>
 </template>
-<script>
 
-import { NcAppSidebar, NcAppSidebarTab, NcTextField, NcNoteCard, NcCheckboxRadioSwitch } from '@nextcloud/vue'
-import Magnify from 'vue-material-design-icons/Magnify.vue'
+<script>
+import {
+	NcAppSidebar,
+	NcAppSidebarTab,
+	NcCheckboxRadioSwitch,
+	NcNoteCard,
+	NcTextField,
+} from '@nextcloud/vue'
+import debounce from 'lodash/debounce'
 import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
 import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
-import { debounce } from 'lodash'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 
 // Temporary placeholder stores until they are properly implemented
 const searchStore = reactive({
@@ -76,55 +85,65 @@ export default {
 		DatabaseOutline,
 		FileTreeOutline,
 	},
+
 	props: {
 		search: {
 			type: String,
 			required: true,
 		},
+
 		metadata: {
 			type: Object,
 			required: true,
 		},
+
 		catalogi: {
 			type: Object,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			starred: false,
 		}
 	},
+
 	watch: {
 		search: 'debouncedSearch',
 		metadata: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+			 * @spec openspec/specs/fe-shell-navigation/spec.md
 			 */
 			handler() {
 				this.debouncedSearch()
 			},
+
 			deep: true,
 		},
+
 		catalogi: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+			 * @spec openspec/specs/fe-shell-navigation/spec.md
 			 */
 			handler() {
 				this.debouncedSearch()
 			},
+
 			deep: true,
 		},
 	},
+
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-2
+	 * @spec openspec/specs/fe-shell-navigation/spec.md
 	 */
 	mounted() {
 		metadataStore.refreshMetaDataList()
 		catalogiStore.refreshCatalogiList()
 	},
+
 	methods: {
-		debouncedSearch: debounce(function() {
+		debouncedSearch: debounce(function () {
 			searchStore.getSearchResults()
 		}, 500),
 	},

@@ -20,10 +20,10 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\GebruikSyncService;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -35,136 +35,125 @@ use Psr\Log\NullLogger;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-8-7
  */
-class GebruikSyncServiceDecompositionTest extends TestCase
-{
+class GebruikSyncServiceDecompositionTest extends TestCase {
 
-    /**
-     * Build the service with stub collaborators.
-     *
-     * @return GebruikSyncService
-     */
-    private function makeService(): GebruikSyncService
-    {
-        return new GebruikSyncService(
-            new NullLogger(),
-            $this->createMock(SettingsService::class),
-            $this->createMock(ContainerInterface::class),
-        );
+	/**
+	 * Build the service with stub collaborators.
+	 *
+	 * @return GebruikSyncService
+	 */
+	private function makeService(): GebruikSyncService {
+		return new GebruikSyncService(
+			new NullLogger(),
+			$this->createMock(SettingsService::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 
-    }//end makeService()
+	}//end makeService()
 
+	/**
+	 * extractStatusDateMap projects the five canonical status-start fields.
+	 *
+	 * @return void
+	 */
+	public function testExtractStatusDateMapProjectsAllStatuses(): void {
+		$service = $this->makeService();
+		$reflection = new \ReflectionMethod($service, 'extractStatusDateMap');
+		$reflection->setAccessible(true);
 
-    /**
-     * extractStatusDateMap projects the five canonical status-start fields.
-     *
-     * @return void
-     */
-    public function testExtractStatusDateMapProjectsAllStatuses(): void
-    {
-        $service    = $this->makeService();
-        $reflection = new \ReflectionMethod($service, 'extractStatusDateMap');
-        $reflection->setAccessible(true);
+		$map = $reflection->invoke(
+			$service,
+			[
+				'startDateAcquisition' => '2026-01-01',
+				'startDatePlanned' => '2026-02-01',
+				'startDateInProduction' => '2026-03-01',
+				'startDateOutPhasing' => null,
+				'startDateOutPhased' => '',
+			]
+		);
 
-        $map = $reflection->invoke(
-            $service,
-            [
-                'startDatumVerwerving'    => '2026-01-01',
-                'startDatumGepland'       => '2026-02-01',
-                'startDatumInProductie'   => '2026-03-01',
-                'startDatumUitTeFaseren'  => null,
-                'startDatumUitGefaseerd'  => '',
-            ]
-        );
+		$this->assertSame(
+			[
+				'Acquisition' => '2026-01-01',
+				'Planned' => '2026-02-01',
+				'In production' => '2026-03-01',
+				'To be phased out' => null,
+				'Phased out' => '',
+			],
+			$map
+		);
 
-        $this->assertSame(
-            [
-                'Verwerving'     => '2026-01-01',
-                'Gepland'        => '2026-02-01',
-                'In productie'   => '2026-03-01',
-                'Uit te faseren' => null,
-                'Uitgefaseerd'   => '',
-            ],
-            $map
-        );
+	}//end testExtractStatusDateMapProjectsAllStatuses()
 
-    }//end testExtractStatusDateMapProjectsAllStatuses()
+	/**
+	 * resolveLatestEligibleStatus returns the status with the latest
+	 * non-future date.
+	 *
+	 * @return void
+	 */
+	public function testResolveLatestEligibleStatusPicksLatestPastDate(): void {
+		$service = $this->makeService();
+		$reflection = new \ReflectionMethod($service, 'resolveLatestEligibleStatus');
+		$reflection->setAccessible(true);
 
+		$map = [
+			'Acquisition' => '2024-01-01',
+			'Planned' => '2025-01-01',
+			'In production' => '2026-01-01',
+			'To be phased out' => null,
+			'Phased out' => '2099-01-01',
+		];
 
-    /**
-     * resolveLatestEligibleStatus returns the status with the latest
-     * non-future date.
-     *
-     * @return void
-     */
-    public function testResolveLatestEligibleStatusPicksLatestPastDate(): void
-    {
-        $service    = $this->makeService();
-        $reflection = new \ReflectionMethod($service, 'resolveLatestEligibleStatus');
-        $reflection->setAccessible(true);
+		[$status, $date] = $reflection->invoke($service, $map, 'gebruik-uuid');
 
-        $map = [
-            'Verwerving'     => '2024-01-01',
-            'Gepland'        => '2025-01-01',
-            'In productie'   => '2026-01-01',
-            'Uit te faseren' => null,
-            'Uitgefaseerd'   => '2099-01-01',
-        ];
+		$this->assertSame('In production', $status);
+		$this->assertInstanceOf(\DateTime::class, $date);
+		$this->assertSame('2026-01-01', $date->format('Y-m-d'));
 
-        [$status, $date] = $reflection->invoke($service, $map, 'gebruik-uuid');
+	}//end testResolveLatestEligibleStatusPicksLatestPastDate()
 
-        $this->assertSame('In productie', $status);
-        $this->assertInstanceOf(\DateTime::class, $date);
-        $this->assertSame('2026-01-01', $date->format('Y-m-d'));
+	/**
+	 * resolveLatestEligibleStatus returns [null, null] when no dates are
+	 * non-future.
+	 *
+	 * @return void
+	 */
+	public function testResolveLatestEligibleStatusAllFutureReturnsNulls(): void {
+		$service = $this->makeService();
+		$reflection = new \ReflectionMethod($service, 'resolveLatestEligibleStatus');
+		$reflection->setAccessible(true);
 
-    }//end testResolveLatestEligibleStatusPicksLatestPastDate()
+		[$status, $date] = $reflection->invoke(
+			$service,
+			['Acquisition' => '2099-01-01', 'Planned' => '2099-02-01'],
+			'gebruik-uuid'
+		);
 
+		$this->assertNull($status);
+		$this->assertNull($date);
 
-    /**
-     * resolveLatestEligibleStatus returns [null, null] when no dates are
-     * non-future.
-     *
-     * @return void
-     */
-    public function testResolveLatestEligibleStatusAllFutureReturnsNulls(): void
-    {
-        $service    = $this->makeService();
-        $reflection = new \ReflectionMethod($service, 'resolveLatestEligibleStatus');
-        $reflection->setAccessible(true);
+	}//end testResolveLatestEligibleStatusAllFutureReturnsNulls()
 
-        [$status, $date] = $reflection->invoke(
-            $service,
-            ['Verwerving' => '2099-01-01', 'Gepland' => '2099-02-01'],
-            'gebruik-uuid'
-        );
+	/**
+	 * resolveLatestEligibleStatus silently skips entries with unparseable
+	 * date strings.
+	 *
+	 * @return void
+	 */
+	public function testResolveLatestEligibleStatusSkipsUnparseableDates(): void {
+		$service = $this->makeService();
+		$reflection = new \ReflectionMethod($service, 'resolveLatestEligibleStatus');
+		$reflection->setAccessible(true);
 
-        $this->assertNull($status);
-        $this->assertNull($date);
+		[$status, $date] = $reflection->invoke(
+			$service,
+			['Acquisition' => '2024-01-01', 'Planned' => 'not-a-date'],
+			'gebruik-uuid'
+		);
 
-    }//end testResolveLatestEligibleStatusAllFutureReturnsNulls()
+		$this->assertSame('Acquisition', $status);
+		$this->assertSame('2024-01-01', $date->format('Y-m-d'));
 
-
-    /**
-     * resolveLatestEligibleStatus silently skips entries with unparseable
-     * date strings.
-     *
-     * @return void
-     */
-    public function testResolveLatestEligibleStatusSkipsUnparseableDates(): void
-    {
-        $service    = $this->makeService();
-        $reflection = new \ReflectionMethod($service, 'resolveLatestEligibleStatus');
-        $reflection->setAccessible(true);
-
-        [$status, $date] = $reflection->invoke(
-            $service,
-            ['Verwerving' => '2024-01-01', 'Gepland' => 'not-a-date'],
-            'gebruik-uuid'
-        );
-
-        $this->assertSame('Verwerving', $status);
-        $this->assertSame('2024-01-01', $date->format('Y-m-d'));
-
-    }//end testResolveLatestEligibleStatusSkipsUnparseableDates()
-
+	}//end testResolveLatestEligibleStatusSkipsUnparseableDates()
 
 }//end class

@@ -3,21 +3,22 @@
 </script>
 
 <template>
-	<NcAppSidebar
-		name="Software Catalog"
-		subname="Quick navigation">
+	<NcAppSidebar name="Software Catalog" subname="Quick navigation">
 		<NcAppSidebarTab id="info-tab" name="Information" :order="1">
 			<template #icon>
 				<InformationOutline :size="20" />
 			</template>
 			<NcNoteCard type="info">
-				<p>Welcome to the Software Catalog dashboard. Use the main navigation to access different features.</p>
+				<p>
+					Welcome to the Software Catalog dashboard. Use the main
+					navigation to access different features.
+				</p>
 			</NcNoteCard>
 		</NcAppSidebarTab>
 	</NcAppSidebar>
 </template>
-<script>
 
+<script>
 import { NcAppSidebar, NcAppSidebarTab, NcNoteCard } from '@nextcloud/vue'
 import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
 

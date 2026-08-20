@@ -3,10 +3,8 @@
 </template>
 
 <script>
-
 export default {
 	name: 'SideBars',
-	components: {
-	},
+	components: {},
 }
 </script>

@@ -1,19 +1,19 @@
 <!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
- - @license AGPL-3.0-or-later
+ - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - This program is free software: you can redistribute it and/or modify
- - it under the terms of the GNU Affero General Public License as
- - published by the Free Software Foundation, either version 3 of the
- - License, or (at your option) any later version.
+ - Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+ - the European Commission – subsequent versions of the EUPL (the "Licence");
+ - You may not use this work except in compliance with the Licence.
+ - You may obtain a copy of the Licence at:
  -
- - This program is distributed in the hope that it will be useful,
- - but WITHOUT ANY WARRANTY; without even the implied warranty of
- - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- - GNU Affero General Public License for more details.
+ - https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - You should have received a copy of the GNU Affero General Public License
- - along with this program. If not, see <http://www.gnu.org/licenses/>.
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the Licence is distributed on an "AS IS" basis,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the Licence for the specific language governing permissions and
+ - limitations under the Licence.
  -->
 
 <template>
@@ -21,20 +21,20 @@
 		name="Version Information"
 		description="Current application and configuration versions"
 		:loading="loadingVersionInfo"
-		:show-refresh-button="false"
-		loading-text="Loading version information..."
-		:has-info-content="true">
+		:showRefreshButton="false"
+		loadingText="Loading version information..."
+		:hasInfoContent="true">
 		<template #header-actions>
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === false"
-				type="secondary"
+				variant="secondary"
 				:disabled="autoConfiguring"
 				@click="consolidatedAutoConfigure">
 				Auto Configure
 			</NcButton>
 			<NcButton
 				class="ml-8"
-				type="error"
+				variant="error"
 				:disabled="autoConfiguring"
 				@click="handleForceUpdate">
 				Force Update
@@ -42,7 +42,7 @@
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === true"
 				class="ml-8"
-				type="tertiary"
+				variant="tertiary"
 				:disabled="autoConfiguring"
 				@click="handleResetAutoConfig">
 				Reset Auto-Config
@@ -52,78 +52,173 @@
 		<div class="version-info">
 			<div class="version-details">
 				<div class="version-item">
-					<strong>Application:</strong> {{ versionInfo.appName }} v{{ versionInfo.appVersion }}
+					<strong>Application:</strong> {{ versionInfo.appName }} v{{
+						versionInfo.appVersion
+					}}
 				</div>
 				<div class="version-item">
 					<strong>Configured Version:</strong>
-					<span v-if="versionInfo.configuredVersion">{{ versionInfo.configuredVersion }}</span>
+					<span v-if="versionInfo.configuredVersion">{{
+						versionInfo.configuredVersion
+					}}</span>
 					<span v-else class="no-version">Not configured</span>
 				</div>
 				<div class="version-item">
 					<strong>Status:</strong>
-					<span v-if="versionInfo.versionsMatch" class="status-ok">✓ Up to date</span>
-					<span v-else-if="versionInfo.needsUpdate" class="status-warning">⚠ Update needed</span>
+					<span v-if="versionInfo.versionsMatch" class="status-ok"
+						>✓ Up to date</span
+					>
+					<span v-else-if="versionInfo.needsUpdate" class="status-warning"
+						>⚠ Update needed</span
+					>
 					<span v-else class="status-error">✗ Version mismatch</span>
 				</div>
 				<div class="version-item">
 					<strong>Open Register:</strong>
-					<span v-if="versionInfo.openRegisterEnabled" class="status-ok">✓ Installed and active</span>
-					<span v-else-if="versionInfo.openRegisterInstalled" class="status-warning">⚠ Installed but not enabled</span>
+					<span v-if="versionInfo.openRegisterEnabled" class="status-ok"
+						>✓ Installed and active</span
+					>
+					<span
+						v-else-if="versionInfo.openRegisterInstalled"
+						class="status-warning"
+						>⚠ Installed but not enabled</span
+					>
 					<span v-else class="status-error">✗ Not installed</span>
 				</div>
 			</div>
 
 			<!-- Configuration Results -->
 			<div v-if="consolidatedResult" class="config-result">
-				<NcNoteCard
-					v-if="consolidatedResult.success"
-					type="success">
+				<NcNoteCard v-if="consolidatedResult.success" type="success">
 					{{ consolidatedResult.message }}
 
 					<!-- Configuration Steps Details -->
 					<div v-if="consolidatedResult.steps" class="config-steps">
 						<h4>Configuration Steps:</h4>
 						<ul>
-							<li v-if="consolidatedResult.steps.configurationLoad?.success">
-								✅ Configuration Loading: {{ consolidatedResult.steps.configurationLoad.message }}
+							<li
+								v-if="
+									consolidatedResult.steps.configurationLoad
+										?.success
+								">
+								✅ Configuration Loading:
+								{{
+									consolidatedResult.steps.configurationLoad
+										.message
+								}}
 							</li>
-							<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.success">
-								🇳🇱 Voorzieningen: {{ consolidatedResult.steps.voorzieningenConfiguration.message }}
+							<li
+								v-if="
+									consolidatedResult.steps
+										.voorzieningenConfiguration?.success
+								">
+								🇳🇱 Voorzieningen:
+								{{
+									consolidatedResult.steps
+										.voorzieningenConfiguration.message
+								}}
 							</li>
-							<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.register">
-								📋 Voorzieningen Register: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.register }}
+							<li
+								v-if="
+									consolidatedResult.steps
+										.voorzieningenConfiguration?.configured
+										?.register
+								">
+								📋 Voorzieningen Register:
+								{{
+									consolidatedResult.steps
+										.voorzieningenConfiguration.configured
+										.register
+								}}
 							</li>
-							<li v-if="consolidatedResult.steps.voorzieningenConfiguration?.configured?.organisatieSchema">
-								📊 Organisatie Schema: {{ consolidatedResult.steps.voorzieningenConfiguration.configured.organisatieSchema }}
+							<li
+								v-if="
+									consolidatedResult.steps
+										.voorzieningenConfiguration?.configured
+										?.organisatieSchema
+								">
+								📊 Organisatie Schema:
+								{{
+									consolidatedResult.steps
+										.voorzieningenConfiguration.configured
+										.organisatieSchema
+								}}
 							</li>
-							<li v-if="consolidatedResult.steps.amefConfiguration?.success">
-								🏗️ AMEF: {{ consolidatedResult.steps.amefConfiguration.message }}
+							<li
+								v-if="
+									consolidatedResult.steps.amefConfiguration
+										?.success
+								">
+								🏗️ AMEF:
+								{{
+									consolidatedResult.steps.amefConfiguration
+										.message
+								}}
 							</li>
-							<li v-if="consolidatedResult.steps.amefConfiguration?.configured?.registerId">
-								📋 AMEF Register: {{ consolidatedResult.steps.amefConfiguration.configured.registerId }}
+							<li
+								v-if="
+									consolidatedResult.steps.amefConfiguration
+										?.configured?.registerId
+								">
+								📋 AMEF Register:
+								{{
+									consolidatedResult.steps.amefConfiguration
+										.configured.registerId
+								}}
 							</li>
-							<li v-if="consolidatedResult.steps.groupsConfiguration?.success">
-								👥 User Groups: {{ consolidatedResult.steps.groupsConfiguration.message }}
+							<li
+								v-if="
+									consolidatedResult.steps.groupsConfiguration
+										?.success
+								">
+								👥 User Groups:
+								{{
+									consolidatedResult.steps.groupsConfiguration
+										.message
+								}}
 							</li>
-							<li v-if="consolidatedResult.steps.groupsConfiguration?.created?.length > 0">
-								➕ Created Groups: {{ consolidatedResult.steps.groupsConfiguration.created.join(', ') }}
+							<li
+								v-if="
+									consolidatedResult.steps.groupsConfiguration
+										?.created?.length > 0
+								">
+								➕ Created Groups:
+								{{
+									consolidatedResult.steps.groupsConfiguration.created.join(
+										', ',
+									)
+								}}
 							</li>
-							<li v-if="consolidatedResult.steps.groupsConfiguration?.existing?.length > 0">
-								✓ Existing Groups: {{ consolidatedResult.steps.groupsConfiguration.existing.length }} groups already exist
+							<li
+								v-if="
+									consolidatedResult.steps.groupsConfiguration
+										?.existing?.length > 0
+								">
+								✓ Existing Groups:
+								{{
+									consolidatedResult.steps.groupsConfiguration
+										.existing.length
+								}}
+								groups already exist
 							</li>
 						</ul>
 					</div>
 				</NcNoteCard>
-				<NcNoteCard
-					v-else
-					type="error">
+				<NcNoteCard v-else type="error">
 					{{ consolidatedResult.message }}
 
 					<!-- Show errors if any -->
-					<div v-if="consolidatedResult.errors && consolidatedResult.errors.length > 0" class="config-errors">
+					<div
+						v-if="
+							consolidatedResult.errors
+							&& consolidatedResult.errors.length > 0
+						"
+						class="config-errors">
 						<h4>Errors:</h4>
 						<ul>
-							<li v-for="error in consolidatedResult.errors" :key="error">
+							<li
+								v-for="error in consolidatedResult.errors"
+								:key="error">
 								{{ error }}
 							</li>
 						</ul>
@@ -133,14 +228,10 @@
 
 			<!-- Reset Auto-Config Results -->
 			<div v-if="resetAutoConfigResult" class="reset-result">
-				<NcNoteCard
-					v-if="resetAutoConfigResult.success"
-					type="success">
+				<NcNoteCard v-if="resetAutoConfigResult.success" type="success">
 					{{ resetAutoConfigResult.message }}
 				</NcNoteCard>
-				<NcNoteCard
-					v-else
-					type="error">
+				<NcNoteCard v-else type="error">
 					{{ resetAutoConfigResult.message }}
 				</NcNoteCard>
 			</div>
@@ -150,53 +241,105 @@
 		<template #info>
 			<div class="version-info-help">
 				<h3>About Version Information</h3>
-				<p>This section displays version information for the Software Catalog application and its configuration status.</p>
+				<p>
+					This section displays version information for the Software
+					Catalog application and its configuration status.
+				</p>
 
 				<h4>Application Version</h4>
-				<p>Shows the currently installed version of the Software Catalog app. This should match the version in your app store or deployment.</p>
+				<p>
+					Shows the currently installed version of the Software Catalog
+					app. This should match the version in your app store or
+					deployment.
+				</p>
 
 				<h4>Configured Version</h4>
-				<p>Indicates which version of the configuration schema is currently active. This helps track when configuration updates are needed.</p>
+				<p>
+					Indicates which version of the configuration schema is currently
+					active. This helps track when configuration updates are needed.
+				</p>
 
 				<h4>Status Indicators</h4>
 				<ul>
-					<li><strong>✓ Up to date</strong> - Configuration matches the current application version</li>
-					<li><strong>⚠ Update needed</strong> - Configuration needs to be updated for optimal functionality</li>
-					<li><strong>✗ Version mismatch</strong> - Significant version differences detected</li>
+					<li>
+						<strong>✓ Up to date</strong> - Configuration matches the
+						current application version
+					</li>
+					<li>
+						<strong>⚠ Update needed</strong> - Configuration needs to be
+						updated for optimal functionality
+					</li>
+					<li>
+						<strong>✗ Version mismatch</strong> - Significant version
+						differences detected
+					</li>
 				</ul>
 
 				<h4>OpenRegister Status</h4>
 				<ul>
-					<li><strong>✓ Installed and active</strong> - OpenRegister app is properly installed and enabled</li>
-					<li><strong>⚠ Installed but not enabled</strong> - App is installed but needs to be activated</li>
-					<li><strong>✗ Not installed</strong> - OpenRegister app is missing and needs to be installed</li>
+					<li>
+						<strong>✓ Installed and active</strong> - OpenRegister app is
+						properly installed and enabled
+					</li>
+					<li>
+						<strong>⚠ Installed but not enabled</strong> - App is
+						installed but needs to be activated
+					</li>
+					<li>
+						<strong>✗ Not installed</strong> - OpenRegister app is
+						missing and needs to be installed
+					</li>
 				</ul>
 
 				<h4>Actions</h4>
-				<p>Three maintenance actions are available here. They map to backend operations in <code>SettingsService.php</code>:</p>
+				<p>
+					Three maintenance actions are available here. They map to backend
+					operations in <code>SettingsService.php</code>:
+				</p>
 				<ul>
 					<li>
-						<strong>Auto Configure</strong> — Calls the consolidated auto-config routine (<code>performConsolidatedAutoConfiguration</code>). It:
+						<strong>Auto Configure</strong> — Calls the consolidated
+						auto-config routine
+						(<code>performConsolidatedAutoConfiguration</code>). It:
 						<ul>
-							<li>Loads/Imports the bundled register configuration when needed</li>
-							<li>Configures the Voorzieningen register (register + organisatie/contactpersoon schemas)</li>
-							<li>Configures AMEF (VNG-GEMMA register and required schemas)</li>
+							<li>
+								Loads/Imports the bundled register configuration when
+								needed
+							</li>
+							<li>
+								Configures the Voorzieningen register (register +
+								organisatie/contactpersoon schemas)
+							</li>
+							<li>
+								Configures AMEF (VNG-GEMMA register and required
+								schemas)
+							</li>
 							<li>Creates/configures required user groups</li>
 						</ul>
 						Use this after install or when configuration is incomplete.
 					</li>
 					<li>
-						<strong>Force Update</strong> — Triggers a full forced import and version sync (<code>forceUpdate</code>):
+						<strong>Force Update</strong> — Triggers a full forced import
+						and version sync (<code>forceUpdate</code>):
 						<ul>
 							<li>Resets the auto-config completed flag</li>
-							<li>Forces re-import of the bundled configuration (same as <code>manualImport(true)</code>)</li>
+							<li>
+								Forces re-import of the bundled configuration (same
+								as <code>manualImport(true)</code>)
+							</li>
 							<li>Runs post-import auto-configuration</li>
 							<li>Refreshes version info and configuration status</li>
 						</ul>
-						Use this if config drift occurred or you want to fully re-apply the shipped configuration.
+						Use this if config drift occurred or you want to fully
+						re-apply the shipped configuration.
 					</li>
 					<li>
-						<strong>Reset Auto‑Config</strong> — Only clears the <code>auto_config_completed</code> flag and can optionally clear schema/register keys (<code>resetAutoConfiguration</code>). The UI triggers a safe reset (flag only). After resetting, you can run Auto Configure again.
+						<strong>Reset Auto‑Config</strong> — Only clears the
+						<code>auto_config_completed</code> flag and can optionally
+						clear schema/register keys
+						(<code>resetAutoConfiguration</code>). The UI triggers a safe
+						reset (flag only). After resetting, you can run Auto
+						Configure again.
 					</li>
 				</ul>
 
@@ -207,7 +350,10 @@
 					<li>User group creation and assignment</li>
 					<li>Default email settings</li>
 				</ul>
-				<p>Use Auto Configure when setting up the application for the first time or after major updates.</p>
+				<p>
+					Use Auto Configure when setting up the application for the first
+					time or after major updates.
+				</p>
 			</div>
 		</template>
 	</AlwaysVisibleSection>
@@ -222,18 +368,16 @@
  *
  * @author Ruben Linde <info@conduction.nl>
  * @copyright 2023 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  * @version 1.0.0
  */
 
-import { settingsStore } from '../../../store/store.js'
-import { showSuccess, showError } from '@nextcloud/dialogs'
-
+import { showError, showSuccess } from '@nextcloud/dialogs'
+// Nextcloud Vue components
+import { NcButton, NcNoteCard } from '@nextcloud/vue'
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-
-// Nextcloud Vue components
-import { NcNoteCard, NcButton } from '@nextcloud/vue'
+import { settingsStore } from '../../../store/store.js'
 
 export default {
 	name: 'VersionInformation',
@@ -249,7 +393,7 @@ export default {
 	 * Provides access to the settings store
 	 *
 	 * @return {object} Setup object with store reference
-	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	setup() {
 		return {
@@ -273,13 +417,18 @@ export default {
 	computed: {
 		// Store-connected computed properties
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		loadingVersionInfo() { return this.store.loadingVersionInfo },
+		loadingVersionInfo() {
+			return this.store.loadingVersionInfo
+		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		versionInfo() { return this.store.versionInfo },
+		versionInfo() {
+			return this.store.versionInfo
+		},
 	},
 
 	methods: {
@@ -287,7 +436,7 @@ export default {
 		 * Perform consolidated auto-configuration using the settings store
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async consolidatedAutoConfigure() {
 			this.autoConfiguring = true
@@ -305,7 +454,8 @@ export default {
 				console.error('Failed to perform auto-configuration:', error)
 				this.consolidatedResult = {
 					success: false,
-					message: 'Failed to perform auto-configuration: ' + error.message,
+					message:
+						'Failed to perform auto-configuration: ' + error.message,
 				}
 				showError('Failed to perform auto-configuration: ' + error.message)
 			} finally {
@@ -314,7 +464,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleResetAutoConfig() {
 			this.autoConfiguring = true
@@ -322,10 +472,19 @@ export default {
 			try {
 				this.resetAutoConfigResult = await this.store.resetAutoConfig()
 				await this.store.loadVersionInfo()
-				if (this.resetAutoConfigResult && this.resetAutoConfigResult.success) {
-					showSuccess(this.resetAutoConfigResult.message || 'Auto-config reset successfully')
+				if (
+					this.resetAutoConfigResult
+					&& this.resetAutoConfigResult.success
+				) {
+					showSuccess(
+						this.resetAutoConfigResult.message
+							|| 'Auto-config reset successfully',
+					)
 				} else if (this.resetAutoConfigResult) {
-					showError(this.resetAutoConfigResult.message || 'Failed to reset auto-config')
+					showError(
+						this.resetAutoConfigResult.message
+							|| 'Failed to reset auto-config',
+					)
 				}
 			} finally {
 				this.autoConfiguring = false
@@ -333,7 +492,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleForceUpdate() {
 			this.autoConfiguring = true
@@ -342,9 +501,14 @@ export default {
 				this.consolidatedResult = await this.store.forceUpdate()
 				await this.store.loadVersionInfo()
 				if (this.consolidatedResult && this.consolidatedResult.success) {
-					showSuccess(this.consolidatedResult.message || 'Force update completed successfully')
+					showSuccess(
+						this.consolidatedResult.message
+							|| 'Force update completed successfully',
+					)
 				} else if (this.consolidatedResult) {
-					showError(this.consolidatedResult.message || 'Force update failed')
+					showError(
+						this.consolidatedResult.message || 'Force update failed',
+					)
 				}
 			} finally {
 				this.autoConfiguring = false

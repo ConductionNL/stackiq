@@ -1,23 +1,23 @@
 <template>
 	<CnAdminSettingsShell
-		app-id="softwarecatalog"
-		app-name="Software Catalogus"
-		:app-version="versionInfo.appVersion || appVersion"
-		:configured-version="versionInfo.configuredVersion || ''"
-		:is-up-to-date="versionInfo.versionsMatch !== false"
-		:show-reimport="false">
+		appId="softwarecatalog"
+		appName="Software Catalogus"
+		:appVersion="versionInfo.appVersion || appVersion"
+		:configuredVersion="versionInfo.configuredVersion || ''"
+		:isUpToDate="versionInfo.versionsMatch !== false"
+		:showReimport="false">
 		<!-- Version-card maintenance actions (moved from the old VersionInformation section) -->
 		<template #actions>
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === false"
-				type="secondary"
+				variant="secondary"
 				:disabled="autoConfiguring"
 				@click="consolidatedAutoConfigure">
 				Auto Configure
 			</NcButton>
 			<NcButton
 				class="ml-8"
-				type="error"
+				variant="error"
 				:disabled="autoConfiguring"
 				@click="handleForceUpdate">
 				Force Update
@@ -25,7 +25,7 @@
 			<NcButton
 				v-if="versionInfo.autoConfigCompleted === true"
 				class="ml-8"
-				type="tertiary"
+				variant="tertiary"
 				:disabled="autoConfiguring"
 				@click="handleResetAutoConfig">
 				Reset Auto-Config
@@ -40,12 +40,12 @@
 			name="General Settings"
 			description="Configure basic application settings"
 			:loading="store.loadingGeneralSettings"
-			loading-text="Loading general settings..."
-			:show-save-button="true"
-			:show-refresh-button="true"
-			:can-save="catalogLocationChanged"
+			loadingText="Loading general settings..."
+			:showSaveButton="true"
+			:showRefreshButton="true"
+			:canSave="catalogLocationChanged"
 			:saving="savingCatalogLocation"
-			save-button-text="Save General Settings"
+			saveButtonText="Save General Settings"
 			@save="saveGeneralSettings"
 			@refresh="refreshGeneralSettings">
 			<!-- Software Catalog Location -->
@@ -54,11 +54,12 @@
 				<p>Set the base URL for your software catalog interface</p>
 
 				<NcTextField
-					:value="catalogLocation"
+					v-model="catalogLocation"
 					:label="t('softwarecatalog', 'Software Catalog Location URL')"
-					:placeholder="t('softwarecatalog', 'https://catalog.example.com')"
-					:disabled="store.loading"
-					@update:value="onCatalogLocationChange">
+					:placeholder="
+						t('softwarecatalog', 'https://catalog.example.com')
+					"
+					:disabled="store.loading">
 					<template #icon>
 						<Web :size="16" />
 					</template>
@@ -66,7 +67,9 @@
 
 				<div class="catalog-location-help">
 					<p class="help-text">
-						This URL will be used for external links to your software catalog. The system will append "/beheer" to this URL for management interfaces.
+						This URL will be used for external links to your software
+						catalog. The system will append "/beheer" to this URL for
+						management interfaces.
 					</p>
 				</div>
 			</div>
@@ -90,8 +93,30 @@
 		<!-- Registration Moderation Queue Section -->
 		<ModerationQueue />
 
+		<!-- Review Moderation Queue Section (softwarecatalog#375) — the
+		     same ModerationQueue.vue component, parameterised for the
+		     beoordeeling type, per catalog-ratings spec's "reuse the
+		     pattern, don't invent a second mechanism" requirement. -->
+		<ModerationQueue
+			type="assessment"
+			entityLabel="review"
+			:name="t('softwarecatalog', 'Review moderation')"
+			:description="
+				t(
+					'softwarecatalog',
+					'Review pending ratings and testimonials. Approving a review publishes it; rejecting leaves it hidden.',
+				)
+			"
+			:loadingText="t('softwarecatalog', 'Loading pending reviews…')"
+			:emptyDescription="
+				t('softwarecatalog', 'There are no pending reviews right now.')
+			" />
+
 		<!-- Catalog Federation Section -->
 		<FederationSettings />
+
+		<!-- End-of-life Feed Sync Section -->
+		<EolSyncSettings />
 
 		<!-- Background Jobs Configuration Section -->
 		<CronjobConfiguration />
@@ -99,32 +124,31 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
-import { loadState } from '@nextcloud/initial-state'
-import { showSuccess, showError } from '@nextcloud/dialogs'
-import {
-	NcButton,
-	NcTextField,
-} from '@nextcloud/vue'
 import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
-import { settingsStore } from '../../store/store.js'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { loadState } from '@nextcloud/initial-state'
+import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcTextField } from '@nextcloud/vue'
+import { defineComponent } from 'vue'
 import Web from 'vue-material-design-icons/Web.vue'
+import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
+import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
+import CronjobConfiguration from './sections/CronjobConfiguration.vue'
+import EmailConfiguration from './sections/EmailConfiguration.vue'
+import EolSyncSettings from './sections/EolSyncSettings.vue'
+import FederationSettings from './sections/FederationSettings.vue'
+import ModerationQueue from './sections/ModerationQueue.vue'
 import OpenRegisterIntegration from './sections/OpenRegisterIntegration.vue'
+import OrganizationSynchronization from './sections/OrganizationSynchronization.vue'
 import StatisticsOverview from './sections/StatisticsOverview.vue'
 import UserGroupsConfiguration from './sections/UserGroupsConfiguration.vue'
-import OrganizationSynchronization from './sections/OrganizationSynchronization.vue'
-import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
-import EmailConfiguration from './sections/EmailConfiguration.vue'
-import CronjobConfiguration from './sections/CronjobConfiguration.vue'
-import ModerationQueue from './sections/ModerationQueue.vue'
-import FederationSettings from './sections/FederationSettings.vue'
-import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
+import { settingsStore } from '../../store/store.js'
 
 /**
  * Software Catalog Settings component
  *
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2
  * @version  1.0.0
  */
 export default defineComponent({
@@ -142,12 +166,13 @@ export default defineComponent({
 		CronjobConfiguration,
 		ModerationQueue,
 		FederationSettings,
+		EolSyncSettings,
 		AlwaysVisibleSection,
 		Web,
 	},
 
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	setup() {
 		// Use the settings store
@@ -176,7 +201,7 @@ export default defineComponent({
 		 * (configured version + up-to-date badge) and the maintenance action buttons.
 		 *
 		 * @return {object} Version information
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		versionInfo() {
 			return this.store.versionInfo || {}
@@ -186,10 +211,12 @@ export default defineComponent({
 		 * Check if catalog location has changed
 		 *
 		 * @return {boolean} True if catalog location has changed
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		catalogLocationChanged() {
-			return this.catalogLocation !== (this.store.settings.catalogLocation || '')
+			return (
+				this.catalogLocation !== (this.store.settings.catalogLocation || '')
+			)
 		},
 	},
 
@@ -199,18 +226,23 @@ export default defineComponent({
 	watch: {
 		'store.settings.catalogLocation': {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+			 * @param newValue
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			handler(newValue) {
 				if (newValue !== undefined && newValue !== null) {
 					this.catalogLocation = newValue
 				}
 			},
+
 			immediate: true,
 		},
+
 		'store.loadingGeneralSettings': {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+			 * @param newValue
+			 * @param oldValue
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
 			handler(newValue, oldValue) {
 				// When loading finishes, update the catalog location
@@ -223,7 +255,8 @@ export default defineComponent({
 
 	/**
 	 * Load settings data when component is created
-	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+	 *
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	async created() {
 		await this.store.loadSettings()
@@ -232,12 +265,14 @@ export default defineComponent({
 	},
 
 	methods: {
+		t,
+
 		/**
 		 * Handle catalog location input change
 		 *
 		 * @param {string} value - New catalog location value
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		onCatalogLocationChange(value) {
 			this.catalogLocation = value
@@ -248,7 +283,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveGeneralSettings() {
 			this.savingCatalogLocation = true
@@ -270,7 +305,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async refreshGeneralSettings() {
 			try {
@@ -287,7 +322,7 @@ export default defineComponent({
 		 * Feedback is surfaced via toast notifications.
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async consolidatedAutoConfigure() {
 			this.autoConfiguring = true
@@ -311,7 +346,7 @@ export default defineComponent({
 		 * Force a full re-import and version sync via the settings store.
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleForceUpdate() {
 			this.autoConfiguring = true
@@ -319,7 +354,9 @@ export default defineComponent({
 				const result = await this.store.forceUpdate()
 				await this.store.loadVersionInfo()
 				if (result && result.success) {
-					showSuccess(result.message || 'Force update completed successfully')
+					showSuccess(
+						result.message || 'Force update completed successfully',
+					)
 				} else if (result) {
 					showError(result.message || 'Force update failed')
 				}
@@ -332,7 +369,7 @@ export default defineComponent({
 		 * Reset the auto-config completed flag via the settings store.
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-9
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleResetAutoConfig() {
 			this.autoConfiguring = true

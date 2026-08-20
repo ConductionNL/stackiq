@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
 // 5-kind component registry for v2 manifest (per hydra ADR-036).
@@ -17,11 +17,12 @@
 //   - nextcloud-app-template scaffold-v2 (#44) — canonical layout
 //   - procest #512 / launchpad #206 — first reference migrations
 
-import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
+import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
+import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import DashboardCustomView from './views/Dashboard.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
-import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
-import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
+import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
 
 export default {
 	// --- Lib gap: settings sub-section orchestration. ---
@@ -56,5 +57,14 @@ export default {
 	ContractApprovalPanel: {
 		kind: 'page',
 		component: ContractApprovalPanel,
+	},
+
+	// --- Admin-triggered organisation-merge (VNG Softwarecatalogus #141). ---
+	// Resolved by CnDetailPage as an OrganisatieDetail bodyWidget. Dry-run
+	// preview + confirm dialog + execute; no built-in widget expresses a
+	// cross-object relation re-pointing action.
+	OrganisationMergePanel: {
+		kind: 'page',
+		component: OrganisationMergePanel,
 	},
 }

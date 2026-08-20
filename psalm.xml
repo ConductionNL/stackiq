@@ -16,6 +16,18 @@
     </projectFiles>
     <stubs>
         <file name="vendor/nextcloud/ocp/OCP/Capabilities/ICapability.php" preloadClasses="true" />
+        <!-- decidesk decision-event contract (DecisionRequestedEvent +
+             DecisionConcludedEvent). decidesk is a sibling Nextcloud app, not a
+             Composer dependency, so it is absent from the analysis path. The
+             stub mirrors the real signatures in decidesk/lib/Event/ and supplies
+             real type information instead of silencing the diagnostic — which is
+             what also resolves the isHandled()/getDecisionId() calls on the
+             dispatched event. Analysis-only; never loaded at runtime. -->
+        <file name="tests/analysis-stubs/decidesk-events.stub.php" preloadClasses="true" />
+        <!-- OpenRegister RegisterResolverService. Same cross-app situation; this
+             stub already existed for PHPUnit mock generation and mirrors the real
+             signature in openregister/lib/Service/RegisterResolverService.php. -->
+        <file name="tests/Stubs/Service/RegisterResolverService.php" preloadClasses="true" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>

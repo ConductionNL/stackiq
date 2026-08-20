@@ -1,47 +1,58 @@
-/**
- * @file MassLockObjects.vue
- * @module Modals/Object
- * @author Your Name
- * @copyright 2024 Your Organization
- * @license AGPL-3.0-or-later
- * @version 1.0.0
- */
+/** * @file MassLockObjects.vue * @module Modals/Object * @author Your Name *
+@copyright 2024 Your Organization * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog :name="dialogTitle"
-		:can-close="true"
+	<NcDialog
+		:name="dialogTitle"
+		:canClose="true"
 		size="normal"
 		class="mass-action-dialog"
 		@update:open="handleDialogClose">
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="lock-step">
 			<NcNoteCard type="info">
-				Locking objects prevents other users from modifying them until they are unlocked. You can specify an optional process name to indicate why they're locked and a duration after which they will automatically unlock. Only the user who locked the objects or an administrator can unlock them before the duration expires.
+				{{
+					t(
+						'softwarecatalog',
+						"Locking objects prevents other users from modifying them until they are unlocked. You can specify an optional process name to indicate why they're locked and a duration after which they will automatically unlock. Only the user who locked the objects or an administrator can unlock them before the duration expires.",
+					)
+				}}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? 'Publication to Lock' : 'Selected Publications'"
-				:show-remove="true" />
+				:title="
+					(objectStore.selectedObjects?.length || 0) === 1
+						? t('softwarecatalog', 'Publication to Lock')
+						: t('softwarecatalog', 'Selected Publications')
+				"
+				:showRemove="true" />
 
 			<div v-if="!success" class="formContainer">
 				<NcTextField
 					v-model="process"
-					label="Process Name (optional)"
+					:label="t('softwarecatalog', 'Process Name (optional)')"
 					:disabled="loading" />
 				<NcTextField
 					v-model="duration"
 					type="number"
-					label="Duration in seconds (optional)"
+					:label="t('softwarecatalog', 'Duration in seconds (optional)')"
 					:disabled="loading" />
 			</div>
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Publication{{ originalSelectedCount > 1 ? 's' : '' }} successfully locked</p>
+			<p>
+				{{
+					originalSelectedCount > 1
+						? t('softwarecatalog', 'Publications successfully locked')
+						: t('softwarecatalog', 'Publication successfully locked')
+				}}
+			</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -52,17 +63,24 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Cancel' : 'Close' }}
+				{{
+					success === null
+						? t('softwarecatalog', 'Cancel')
+						: t('softwarecatalog', 'Close')
+				}}
 			</NcButton>
-			<NcButton v-if="success === null"
-				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
-				type="primary"
+			<NcButton
+				v-if="success === null"
+				:disabled="
+					loading || (objectStore.selectedObjects?.length || 0) === 0
+				"
+				variant="primary"
 				@click="lockObjects()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<LockOutline v-if="!loading" :size="20" />
 				</template>
-				Lock
+				{{ t('softwarecatalog', 'Lock') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -76,7 +94,6 @@ import {
 	NcNoteCard,
 	NcTextField,
 } from '@nextcloud/vue'
-
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import SelectedObjectsList from '../../components/SelectedObjectsList.vue'
@@ -115,8 +132,9 @@ export default {
 	computed: {
 		/**
 		 * Get the objects to operate on from selected objects
+		 *
 		 * @return {Array<object>} Array of objects to lock
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		objectsToLock() {
 			return objectStore.selectedObjects || []
@@ -124,30 +142,34 @@ export default {
 
 		/**
 		 * Get the dialog title based on number of objects
+		 *
 		 * @return {string} Dialog title
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dialogTitle() {
 			const count = this.objectsToLock.length
 			if (count === 1) {
-				return 'Lock publication'
+				return this.t('softwarecatalog', 'Lock publication')
 			}
-			return `Lock ${count} publication${count !== 1 ? 's' : ''}`
+			return this.t('softwarecatalog', 'Lock {count} publications', { count })
 		},
 	},
+
 	mounted() {
 		this.initializeSelection()
 	},
+
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeSelection() {
 			// Store the original count for success message
 			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeDialog() {
 			// Clear any pending timeout that might reopen the dialog
@@ -157,16 +179,19 @@ export default {
 			}
 			navigationStore.setDialog(false)
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @param isOpen
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleDialogClose(isOpen) {
 			if (!isOpen) {
 				this.closeDialog()
 			}
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async lockObjects() {
 			this.loading = true
@@ -196,12 +221,20 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = `Failed to lock ${failed.length} object${failed.length > 1 ? 's' : ''}`
+					this.error = this.t(
+						'softwarecatalog',
+						'Failed to lock {count} objects',
+						{ count: failed.length },
+					)
 				}
-
 			} catch (error) {
 				this.success = false
-				this.error = error.message || 'An error occurred while locking objects'
+				this.error =
+					error.message
+					|| this.t(
+						'softwarecatalog',
+						'An error occurred while locking objects',
+					)
 			} finally {
 				this.loading = false
 			}

@@ -103,20 +103,47 @@
       "auth": {
        "type": "basic",
        "basic": [
-        { "key": "username", "value": "{{adminUser}}", "type": "string" },
-        { "key": "password", "value": "{{adminPass}}", "type": "string" }
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
        ]
       },
       "method": "GET",
       "header": [
-       { "key": "OCS-APIRequest", "value": "true" },
-       { "key": "Accept", "value": "application/json" }
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
       ],
       "url": {
        "raw": "{{baseUrl}}/index.php/apps/openregister/api/registers?_limit=300",
-       "host": [ "{{baseUrl}}" ],
-       "path": [ "index.php", "apps", "openregister", "api", "registers" ],
-       "query": [ { "key": "_limit", "value": "300" } ]
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "registers"
+       ],
+       "query": [
+        {
+         "key": "_limit",
+         "value": "300"
+        }
+       ]
       }
      },
      "event": [
@@ -1882,7 +1909,7 @@
         "api",
         "objects",
         "{{register}}",
-        "standaard"
+        "standard"
        ],
        "query": [
         {
@@ -1897,7 +1924,7 @@
        "listen": "test",
        "script": {
         "exec": [
-         "// The 'standaard' schema is now provisioned in the voorzieningen register",
+         "// The 'standard' schema is now provisioned in the voorzieningen register",
          "// (previously a documented gap that 404'd). Per the prior note, this is now",
          "// flipped to the happy-path list contract: a 200 paginated envelope.",
          "pm.test('not a server error', () => pm.expect(pm.response.code).to.be.below(500));",
@@ -2813,6 +2840,323 @@
        "script": {
         "exec": [
          "pm.test('401 without credentials', () => pm.response.to.have.status(401));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "10. Facets API (gemma-faceted-search)",
+   "item": [
+    {
+     "name": "get facets for module (happy: 200, all 4 dimensions present)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/module",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "facets",
+        "module"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "['referentiecomponent', 'standard', 'applicatieservice', 'domein'].forEach((dim) => {",
+         "    pm.test(`has ${dim} facet array (present even when empty)`, () => pm.expect(b[dim]).to.be.an('array'));",
+         "});",
+         "pm.test('has _meta.totalMatched', () => pm.expect(b._meta).to.have.property('totalMatched'));",
+         "pm.test('has _meta.cached', () => pm.expect(b._meta).to.have.property('cached'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "get facets for dienst (happy: 200, all 4 dimensions present)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/dienst",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "facets",
+        "dienst"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "['referentiecomponent', 'standard', 'applicatieservice', 'domein'].forEach((dim) => {",
+         "    pm.test(`has ${dim} facet array (present even when empty)`, () => pm.expect(b[dim]).to.be.an('array'));",
+         "});"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "get facets for unsupported schema (400, names supported schemas)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/contract",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "facets",
+        "contract"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+         "const b = pm.response.json();",
+         "pm.test('names module in supportedSchemas', () => pm.expect(b.supportedSchemas).to.include('module'));",
+         "pm.test('names dienst in supportedSchemas', () => pm.expect(b.supportedSchemas).to.include('dienst'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "get facets for module with referentiecomponent filter (narrowed set)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/module?referentiecomponent[]=Zaakregistratiecomponent",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "facets",
+        "module"
+       ],
+       "query": [
+        {
+         "key": "referentiecomponent[]",
+         "value": "Zaakregistratiecomponent"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "// Narrowing is functional even against an unseeded/empty register: a",
+         "// filtered request must still succeed and return the standard shape,",
+         "// with totalMatched never exceeding the unfiltered baseline.",
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('has _meta.totalMatched as a number', () => pm.expect(b._meta.totalMatched).to.be.a('number'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "get facets for module with free-text search (combines with facets)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/module?search=zaak",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "facets",
+        "module"
+       ],
+       "query": [
+        {
+         "key": "search",
+         "value": "zaak"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('has referentiecomponent facet array', () => pm.expect(b.referentiecomponent).to.be.an('array'));"
         ],
         "type": "text/javascript"
        }

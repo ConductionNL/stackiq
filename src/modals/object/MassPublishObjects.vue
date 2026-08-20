@@ -1,35 +1,46 @@
-/**
- * @file MassPublishObjects.vue
- * @module Modals/Object
- * @author Your Name
- * @copyright 2024 Your Organization
- * @license AGPL-3.0-or-later
- * @version 1.0.0
- */
+/** * @file MassPublishObjects.vue * @module Modals/Object * @author Your Name *
+@copyright 2024 Your Organization * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog :name="dialogTitle"
-		:can-close="true"
+	<NcDialog
+		:name="dialogTitle"
+		:canClose="true"
 		size="normal"
 		class="mass-action-dialog"
 		@update:open="handleDialogClose">
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="publish-step">
 			<NcNoteCard type="info">
-				Objects will be published with the current date and time. If any objects have a depublication date set, it will be removed to make them fully published.
+				{{
+					t(
+						'softwarecatalog',
+						'Objects will be published with the current date and time. If any objects have a depublication date set, it will be removed to make them fully published.',
+					)
+				}}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? 'Publication to Publish' : 'Selected Publications'"
-				:show-remove="true" />
+				:title="
+					(objectStore.selectedObjects?.length || 0) === 1
+						? t('softwarecatalog', 'Publication to Publish')
+						: t('softwarecatalog', 'Selected Publications')
+				"
+				:showRemove="true" />
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Object{{ originalSelectedCount > 1 ? 's' : '' }} successfully published</p>
+			<p>
+				{{
+					originalSelectedCount > 1
+						? t('softwarecatalog', 'Objects successfully published')
+						: t('softwarecatalog', 'Object successfully published')
+				}}
+			</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -40,30 +51,31 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Cancel' : 'Close' }}
+				{{
+					success === null
+						? t('softwarecatalog', 'Cancel')
+						: t('softwarecatalog', 'Close')
+				}}
 			</NcButton>
-			<NcButton v-if="success === null"
-				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
-				type="primary"
+			<NcButton
+				v-if="success === null"
+				:disabled="
+					loading || (objectStore.selectedObjects?.length || 0) === 0
+				"
+				variant="primary"
 				@click="publishObjects()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Publish v-if="!loading" :size="20" />
 				</template>
-				Publish
+				{{ t('softwarecatalog', 'Publish') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcLoadingIcon,
-	NcNoteCard,
-} from '@nextcloud/vue'
-
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
 import SelectedObjectsList from '../../components/SelectedObjectsList.vue'
@@ -99,8 +111,9 @@ export default {
 	computed: {
 		/**
 		 * Get the objects to operate on from selected objects
+		 *
 		 * @return {Array<object>} Array of objects to publish
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		objectsToPublish() {
 			return objectStore.selectedObjects || []
@@ -108,30 +121,36 @@ export default {
 
 		/**
 		 * Get the dialog title based on number of objects
+		 *
 		 * @return {string} Dialog title
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dialogTitle() {
 			const count = objectStore.selectedObjects?.length || 0
 			if (count === 1) {
-				return 'Publish publication'
+				return this.t('softwarecatalog', 'Publish publication')
 			}
-			return `Publish ${count} publication${count !== 1 ? 's' : ''}`
+			return this.t('softwarecatalog', 'Publish {count} publications', {
+				count,
+			})
 		},
 	},
+
 	mounted() {
 		this.initializeSelection()
 	},
+
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeSelection() {
 			// Store the original count for success message
 			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeDialog() {
 			// Clear any pending timeout that might reopen the dialog
@@ -141,16 +160,19 @@ export default {
 			}
 			navigationStore.setDialog(false)
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @param isOpen
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleDialogClose(isOpen) {
 			if (!isOpen) {
 				this.closeDialog()
 			}
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishObjects() {
 			this.loading = true
@@ -160,7 +182,8 @@ export default {
 				const objectsToProcess = [...(objectStore.selectedObjects || [])]
 
 				// Use the store's mass publish method
-				const { successful, failed } = await objectStore.massPublishObjects(objectsToProcess)
+				const { successful, failed } =
+					await objectStore.massPublishObjects(objectsToProcess)
 
 				if (successful.length > 0) {
 					this.success = true
@@ -176,12 +199,20 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = `Failed to publish ${failed.length} object${failed.length > 1 ? 's' : ''}`
+					this.error = this.t(
+						'softwarecatalog',
+						'Failed to publish {count} objects',
+						{ count: failed.length },
+					)
 				}
-
 			} catch (error) {
 				this.success = false
-				this.error = error.message || 'An error occurred while publishing objects'
+				this.error =
+					error.message
+					|| this.t(
+						'softwarecatalog',
+						'An error occurred while publishing objects',
+					)
 			} finally {
 				this.loading = false
 			}

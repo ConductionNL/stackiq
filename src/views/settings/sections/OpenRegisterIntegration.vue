@@ -1,19 +1,19 @@
 <!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
- - @license AGPL-3.0-or-later
+ - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - This program is free software: you can redistribute it and/or modify
- - it under the terms of the GNU Affero General Public License as
- - published by the Free Software Foundation, either version 3 of the
- - License, or (at your option) any later version.
+ - Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+ - the European Commission – subsequent versions of the EUPL (the "Licence");
+ - You may not use this work except in compliance with the Licence.
+ - You may obtain a copy of the Licence at:
  -
- - This program is distributed in the hope that it will be useful,
- - but WITHOUT ANY WARRANTY; without even the implied warranty of
- - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- - GNU Affero General Public License for more details.
+ - https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - You should have received a copy of the GNU Affero General Public License
- - along with this program. If not, see <http://www.gnu.org/licenses/>.
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the Licence is distributed on an "AS IS" basis,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the Licence for the specific language governing permissions and
+ - limitations under the Licence.
  -->
 
 <template>
@@ -21,18 +21,19 @@
 		name="OpenRegister Integration"
 		description="Configure which schemas to use for organizations, contacts, and users"
 		:loading="loading"
-		loading-text="Loading OpenRegister configuration..."
-		:show-save-button="true"
-		:show-refresh-button="true"
-		:can-save="canSave"
+		loadingText="Loading OpenRegister configuration..."
+		:showSaveButton="true"
+		:showRefreshButton="true"
+		:canSave="canSave"
 		:saving="saving"
-		save-button-text="Save Configuration"
+		saveButtonText="Save Configuration"
 		@save="saveConfiguration"
 		@refresh="refreshSettings">
 		<div v-if="!loading">
 			<!-- Warning if OpenRegister is not installed -->
 			<NcNoteCard v-if="!versionInfo.openRegisterEnabled" type="warning">
-				OpenRegister is not installed or not available. Please install it to use the Software Catalog with full functionality.
+				OpenRegister is not installed or not available. Please install it to
+				use the Software Catalog with full functionality.
 			</NcNoteCard>
 
 			<!-- Tabs for OpenRegister Configuration -->
@@ -40,11 +41,17 @@
 				<StandardTabs
 					:tabs="[
 						{ key: 'general', title: 'General Configuration' },
-						{ key: 'voorzieningen', title: `Voorzieningen${hasVoorzieningenConfigChanges() ? ' *' : ''}` },
-						{ key: 'amef', title: `AMEF${hasAmefConfigChanges() ? ' *' : ''}` },
+						{
+							key: 'voorzieningen',
+							title: `Voorzieningen${hasVoorzieningenConfigChanges() ? ' *' : ''}`,
+						},
+						{
+							key: 'amef',
+							title: `AMEF${hasAmefConfigChanges() ? ' *' : ''}`,
+						},
 					]"
-					:active-tab="activeTab"
-					@update:active-tab="activeTab = $event">
+					:activeTab="activeTab"
+					@update:activeTab="activeTab = $event">
 					<!-- General Configuration Tab -->
 					<div v-show="activeTab === 'general'" class="tab-panel">
 						<div class="tab-content">
@@ -53,20 +60,24 @@
 									<NcSelect
 										v-model="voorzieningenRegister"
 										:options="registerOptions"
-										input-label="Select Voorzieningen Register"
+										inputLabel="Select Voorzieningen Register"
 										:loading="loadingRegisters"
 										:disabled="loadingRegisters"
-										@change="handleVoorzieningenRegisterChange" />
+										@update:modelValue="
+											handleVoorzieningenRegisterChange
+										" />
 								</div>
 
 								<div class="register-selection-item">
 									<NcSelect
 										v-model="amefRegister"
 										:options="registerOptions"
-										input-label="Select AMEF Register"
+										inputLabel="Select AMEF Register"
 										:loading="loadingRegisters"
 										:disabled="loadingRegisters"
-										@change="handleAmefRegisterChange" />
+										@update:modelValue="
+											handleAmefRegisterChange
+										" />
 								</div>
 							</div>
 						</div>
@@ -76,7 +87,11 @@
 					<div v-show="activeTab === 'voorzieningen'" class="tab-panel">
 						<div class="tab-content">
 							<!-- Voorzieningen Schema Configuration -->
-							<div v-if="voorzieningenRegister && voorzieningenSchemas.length > 0">
+							<div
+								v-if="
+									voorzieningenRegister
+									&& voorzieningenSchemas.length > 0
+								">
 								<div class="schema-configuration-grid">
 									<div
 										v-for="item in voorzieningenItems"
@@ -84,29 +99,39 @@
 										class="object-type-section">
 										<div class="object-type-header">
 											<h5>{{ item.title }}</h5>
-											<span class="object-type-description">{{ item.description }}</span>
+											<span class="object-type-description">{{
+												item.description
+											}}</span>
 										</div>
 										<NcSelect
 											v-model="configuration[item.key].schema"
 											:options="voorzieningenSchemaOptions"
-											:input-label="item.title"
+											:inputLabel="item.title"
 											:loading="loadingVoorzieningenSchemas"
 											:disabled="loadingVoorzieningenSchemas"
-											@change="validateConfiguration" />
+											@update:modelValue="
+												validateConfiguration
+											" />
 									</div>
 								</div>
 							</div>
 
 							<!-- Voorzieningen Empty State -->
-							<div v-else-if="voorzieningenRegister && voorzieningenSchemas.length === 0">
+							<div
+								v-else-if="
+									voorzieningenRegister
+									&& voorzieningenSchemas.length === 0
+								">
 								<NcNoteCard type="warning">
-									The selected Voorzieningen register has no schemas. Please create schemas in this register.
+									The selected Voorzieningen register has no
+									schemas. Please create schemas in this register.
 								</NcNoteCard>
 							</div>
 							<!-- No Register Selected -->
 							<div v-else>
 								<NcNoteCard type="info">
-									Please select a Voorzieningen register in the General Configuration tab first.
+									Please select a Voorzieningen register in the
+									General Configuration tab first.
 								</NcNoteCard>
 							</div>
 						</div>
@@ -124,29 +149,36 @@
 										class="object-type-section">
 										<div class="object-type-header">
 											<h5>{{ item.title }}</h5>
-											<span class="object-type-description">{{ item.description }}</span>
+											<span class="object-type-description">{{
+												item.description
+											}}</span>
 										</div>
 										<NcSelect
 											v-model="configuration[item.key].schema"
 											:options="amefSchemaOptions"
-											:input-label="item.title"
+											:inputLabel="item.title"
 											:loading="loadingAmefSchemas"
 											:disabled="loadingAmefSchemas"
-											@change="validateConfiguration" />
+											@update:modelValue="
+												validateConfiguration
+											" />
 									</div>
 								</div>
 							</div>
 
 							<!-- AMEF Empty State -->
-							<div v-else-if="amefRegister && amefSchemas.length === 0">
+							<div
+								v-else-if="amefRegister && amefSchemas.length === 0">
 								<NcNoteCard type="warning">
-									The selected AMEF register has no schemas. Please create schemas in this register.
+									The selected AMEF register has no schemas. Please
+									create schemas in this register.
 								</NcNoteCard>
 							</div>
 							<!-- No Register Selected -->
 							<div v-else>
 								<NcNoteCard type="info">
-									Please select an AMEF register in the General Configuration tab first.
+									Please select an AMEF register in the General
+									Configuration tab first.
 								</NcNoteCard>
 							</div>
 						</div>
@@ -167,20 +199,17 @@
  *
  * @author Ruben Linde <info@conduction.nl>
  * @copyright 2023 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  * @version 1.0.0
  */
 
-import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-
 // Nextcloud Vue components
-import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-
+import { NcNoteCard, NcSelect } from '@nextcloud/vue'
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 // Custom components
 import StandardTabs from '../../../components/StandardTabs.vue'
-import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
+import { settingsStore } from '../../../store/store.js'
 
 export default {
 	name: 'OpenRegisterIntegration',
@@ -197,7 +226,7 @@ export default {
 	 * Provides access to the settings store
 	 *
 	 * @return {object} Setup object with store reference
-	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	setup() {
 		return {
@@ -220,92 +249,192 @@ export default {
 	computed: {
 		// Store-connected computed properties
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loading() {
 			return this.store.loadingOpenRegisterConfig
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingRegisters() {
 			return this.store.isLoadingRegisters
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingVoorzieningenSchemas() {
 			return this.store.isLoadingVoorzieningenSchemas
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingAmefSchemas() {
 			return this.store.isLoadingAmefSchemas
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		versionInfo() { return this.store.versionInfo },
+		versionInfo() {
+			return this.store.versionInfo
+		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		configuration() { return this.store.configuration },
+		configuration() {
+			return this.store.configuration
+		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		registerOptions() { return this.store.registerOptions },
+		registerOptions() {
+			return this.store.registerOptions
+		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		voorzieningenSchemaOptions() { return this.store.voorzieningenSchemaOptions },
+		voorzieningenSchemaOptions() {
+			return this.store.voorzieningenSchemaOptions
+		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		amefSchemaOptions() { return this.store.amefSchemaOptions },
+		amefSchemaOptions() {
+			return this.store.amefSchemaOptions
+		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		voorzieningenSchemas() { return this.store.voorzieningenSchemas },
+		voorzieningenSchemas() {
+			return this.store.voorzieningenSchemas
+		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
-		amefSchemas() { return this.store.amefSchemas },
+		amefSchemas() {
+			return this.store.amefSchemas
+		},
 
 		// Dynamic list of all voorzieningen schema config entries
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		voorzieningenItems() {
 			return [
-				{ key: 'voorzieningen_organisatie_schema', title: 'Organisatie Schema', description: 'Schema for organizations' },
-				{ key: 'voorzieningen_contactpersoon_schema', title: 'Contactpersoon Schema', description: 'Schema for contact persons' },
-				{ key: 'voorzieningen_suite_schema', title: 'Suite Schema', description: 'Schema for suites' },
-				{ key: 'voorzieningen_dienst_schema', title: 'Dienst Schema', description: 'Schema for services' },
-				{ key: 'voorzieningen_kwetsbaarheid_schema', title: 'Kwetsbaarheid Schema', description: 'Schema for vulnerabilities' },
-				{ key: 'voorzieningen_gebruik_schema', title: 'Gebruik Schema', description: 'Schema for usage' },
-				{ key: 'voorzieningen_contract_schema', title: 'Contract Schema', description: 'Schema for contracts' },
-				{ key: 'voorzieningen_koppeling_schema', title: 'Koppeling Schema', description: 'Schema for connections/links' },
-				{ key: 'voorzieningen_beoordeeling_schema', title: 'Beoordeeling Schema', description: 'Schema for assessments' },
-				{ key: 'voorzieningen_module_schema', title: 'Module Schema', description: 'Schema for modules' },
-				{ key: 'voorzieningen_compliancy_schema', title: 'Compliancy Schema', description: 'Schema for compliance records' },
-				{ key: 'voorzieningen_moduleVersie_schema', title: 'Module Versie Schema', description: 'Schema for module versions' },
-				{ key: 'voorzieningen_sector_schema', title: 'Sector Schema', description: 'Schema for sectors' },
+				{
+					key: 'voorzieningen_organisatie_schema',
+					title: 'Organisatie Schema',
+					description: 'Schema for organizations',
+				},
+				{
+					key: 'voorzieningen_contactpersoon_schema',
+					title: 'Contactpersoon Schema',
+					description: 'Schema for contact persons',
+				},
+				{
+					key: 'voorzieningen_suite_schema',
+					title: 'Suite Schema',
+					description: 'Schema for suites',
+				},
+				{
+					key: 'voorzieningen_dienst_schema',
+					title: 'Dienst Schema',
+					description: 'Schema for services',
+				},
+				{
+					key: 'voorzieningen_kwetsbaarheid_schema',
+					title: 'Kwetsbaarheid Schema',
+					description: 'Schema for vulnerabilities',
+				},
+				{
+					key: 'voorzieningen_gebruik_schema',
+					title: 'Gebruik Schema',
+					description: 'Schema for usage',
+				},
+				{
+					key: 'voorzieningen_contract_schema',
+					title: 'Contract Schema',
+					description: 'Schema for contracts',
+				},
+				{
+					key: 'voorzieningen_koppeling_schema',
+					title: 'Koppeling Schema',
+					description: 'Schema for connections/links',
+				},
+				{
+					key: 'voorzieningen_beoordeeling_schema',
+					title: 'Beoordeeling Schema',
+					description: 'Schema for assessments',
+				},
+				{
+					key: 'voorzieningen_module_schema',
+					title: 'Module Schema',
+					description: 'Schema for modules',
+				},
+				{
+					key: 'voorzieningen_compliancy_schema',
+					title: 'Compliancy Schema',
+					description: 'Schema for compliance records',
+				},
+				{
+					key: 'voorzieningen_moduleVersie_schema',
+					title: 'Module Versie Schema',
+					description: 'Schema for module versions',
+				},
+				{
+					key: 'voorzieningen_sector_schema',
+					title: 'Sector Schema',
+					description: 'Schema for sectors',
+				},
 			]
 		},
 
 		// Dynamic list of all AMEF schema config entries
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		amefItems() {
 			return [
-				{ key: 'amef_element_schema', title: 'Element Schema', description: 'Schema for ArchiMate elements' },
-				{ key: 'amef_model_schema', title: 'Model Schema', description: 'Schema for ArchiMate models' },
-				{ key: 'amef_organization_schema', title: 'Organization Schema', description: 'Schema for organizations in AMEF' },
-				{ key: 'amef_property_definition_schema', title: 'Property Definition Schema', description: 'Schema for property definitions' },
-				{ key: 'amef_relation_schema', title: 'Relation Schema', description: 'Schema for ArchiMate relationships' },
-				{ key: 'amef_view_schema', title: 'View Schema', description: 'Schema for ArchiMate views' },
+				{
+					key: 'amef_element_schema',
+					title: 'Element Schema',
+					description: 'Schema for ArchiMate elements',
+				},
+				{
+					key: 'amef_model_schema',
+					title: 'Model Schema',
+					description: 'Schema for ArchiMate models',
+				},
+				{
+					key: 'amef_organization_schema',
+					title: 'Organization Schema',
+					description: 'Schema for organizations in AMEF',
+				},
+				{
+					key: 'amef_property_definition_schema',
+					title: 'Property Definition Schema',
+					description: 'Schema for property definitions',
+				},
+				{
+					key: 'amef_relation_schema',
+					title: 'Relation Schema',
+					description: 'Schema for ArchiMate relationships',
+				},
+				{
+					key: 'amef_view_schema',
+					title: 'View Schema',
+					description: 'Schema for ArchiMate views',
+				},
 				// NOTE: 'amef_property_schema' removed - properties are never root-level AMEF objects, only nested within other elements
 			]
 		},
@@ -313,30 +442,43 @@ export default {
 		// Two-way computed properties for register selections
 		voorzieningenRegister: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			get() { return this.store.voorzieningenRegister },
+			get() {
+				return this.store.voorzieningenRegister
+			},
+
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 * @param value
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			set(value) { this.store.voorzieningenRegister = value },
+			set(value) {
+				this.store.voorzieningenRegister = value
+			},
 		},
+
 		amefRegister: {
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			get() { return this.store.amefRegister },
+			get() {
+				return this.store.amefRegister
+			},
+
 			/**
-			 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+			 * @param value
+			 * @spec openspec/specs/fe-settings-ui/spec.md
 			 */
-			set(value) { this.store.amefRegister = value },
+			set(value) {
+				this.store.amefRegister = value
+			},
 		},
 
 		/**
 		 * Determines if configuration can be saved
 		 *
 		 * @return {boolean} True if configuration is valid and can be saved
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		canSave() {
 			// Check if any register is selected
@@ -348,14 +490,17 @@ export default {
 			// Check if Voorzieningen configuration has been modified
 			const voorzieningenConfigModified = this.hasVoorzieningenConfigChanges()
 
-			return hasRegisters && (amefConfigModified || voorzieningenConfigModified)
+			return (
+				hasRegisters && (amefConfigModified || voorzieningenConfigModified)
+			)
 		},
 	},
 
 	/**
 	 * Component lifecycle - load initial data
 	 * Only loads essential data needed for register/schema dropdowns
-	  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+	 *
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	async mounted() {
 		// Load only essential data for OpenRegister configuration dropdowns
@@ -374,7 +519,7 @@ export default {
 		 *
 		 * @param {object} register Selected register object
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		handleVoorzieningenRegisterChange(register) {
 			this.store.handleVoorzieningenRegisterChange(register)
@@ -386,7 +531,7 @@ export default {
 		 *
 		 * @param {object} register Selected register object
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		handleAmefRegisterChange(register) {
 			this.store.handleAmefRegisterChange(register)
@@ -397,7 +542,7 @@ export default {
 		 * Triggers validation in the store
 		 *
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		validateConfiguration() {
 			this.store.validateConfiguration()
@@ -408,7 +553,7 @@ export default {
 		 * Compares current configuration with original values
 		 *
 		 * @return {boolean} True if AMEF configuration has changed
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		hasAmefConfigChanges() {
 			if (!this.amefRegister) return false
@@ -423,7 +568,7 @@ export default {
 				// NOTE: 'amef_property_schema' removed - properties are never root-level AMEF objects
 			]
 
-			return amefKeys.some(key => {
+			return amefKeys.some((key) => {
 				const config = this.configuration[key]
 				return config && config.schema && config.schema.value !== undefined
 			})
@@ -434,7 +579,7 @@ export default {
 		 * Compares current configuration with original values
 		 *
 		 * @return {boolean} True if Voorzieningen configuration has changed
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		hasVoorzieningenConfigChanges() {
 			if (!this.voorzieningenRegister) return false
@@ -455,7 +600,7 @@ export default {
 				'voorzieningen_sector_schema',
 			]
 
-			return voorzieningenKeys.some(key => {
+			return voorzieningenKeys.some((key) => {
 				const config = this.configuration[key]
 				return config && config.schema && config.schema.value !== undefined
 			})
@@ -466,7 +611,7 @@ export default {
 		 * Saves the current configuration to the backend
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveConfiguration() {
 			this.saving = true
@@ -475,7 +620,9 @@ export default {
 				showSuccess('OpenRegister configuration saved successfully')
 			} catch (error) {
 				console.error('Failed to save OpenRegister configuration:', error)
-				showError('Failed to save OpenRegister configuration: ' + error.message)
+				showError(
+					'Failed to save OpenRegister configuration: ' + error.message,
+				)
 			} finally {
 				this.saving = false
 			}
@@ -486,7 +633,7 @@ export default {
 		 * Reloads only essential data needed for the dropdowns
 		 *
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-2
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async refreshSettings() {
 			try {
@@ -495,7 +642,9 @@ export default {
 				showSuccess('OpenRegister configuration refreshed successfully')
 			} catch (error) {
 				console.error('Failed to refresh OpenRegister configuration:', error)
-				showError('Failed to refresh OpenRegister configuration: ' + error.message)
+				showError(
+					'Failed to refresh OpenRegister configuration: ' + error.message,
+				)
 			}
 		},
 	},
@@ -573,5 +722,4 @@ export default {
 	padding-top: 20px;
 	border-top: 1px solid var(--color-border);
 }
-
 </style>

@@ -1,11 +1,6 @@
-/**
- * @file SelectedObjectsList.vue
- * @module Components
- * @author Your Name
- * @copyright 2024 Your Organization
- * @license AGPL-3.0-or-later
- * @version 1.0.0
- */
+/** * @file SelectedObjectsList.vue * @module Components * @author Your Name *
+@copyright 2024 Your Organization * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
 import { objectStore } from '../store/store.js'
@@ -17,7 +12,8 @@ import { objectStore } from '../store/store.js'
 
 		<div v-if="selectedObjects.length" class="selected-objects-list">
 			<TransitionGroup name="list" tag="div">
-				<div v-for="obj in selectedObjects"
+				<div
+					v-for="obj in selectedObjects"
 					:key="obj.id"
 					class="selected-object-item"
 					:class="{ 'has-error': getObjectError(obj) }">
@@ -31,8 +27,9 @@ import { objectStore } from '../store/store.js'
 							{{ getObjectError(obj) }}
 						</p>
 					</div>
-					<NcButton v-if="showRemove"
-						type="tertiary"
+					<NcButton
+						v-if="showRemove"
+						variant="tertiary"
 						:aria-label="`Remove ${getObjectName(obj)}`"
 						@click="removeObject(obj.id || obj['@self']?.id)">
 						<template #icon>
@@ -52,13 +49,9 @@ import { objectStore } from '../store/store.js'
 </template>
 
 <script>
-import {
-	NcButton,
-	NcEmptyContent,
-} from '@nextcloud/vue'
-
-import Close from 'vue-material-design-icons/Close.vue'
+import { NcButton, NcEmptyContent } from '@nextcloud/vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import Close from 'vue-material-design-icons/Close.vue'
 
 export default {
 	name: 'SelectedObjectsList',
@@ -68,6 +61,7 @@ export default {
 		Close,
 		AlertCircle,
 	},
+
 	props: {
 		/**
 		 * Title for the selected objects section
@@ -76,6 +70,7 @@ export default {
 			type: String,
 			default: 'Selected Publications',
 		},
+
 		/**
 		 * Title to show when no objects are selected
 		 */
@@ -83,6 +78,7 @@ export default {
 			type: String,
 			default: 'No publications selected',
 		},
+
 		/**
 		 * Description to show when no objects are selected
 		 */
@@ -90,6 +86,7 @@ export default {
 			type: String,
 			default: 'No publications are currently selected.',
 		},
+
 		/**
 		 * Array of objects to display (optional, if not provided uses selected objects from store)
 		 */
@@ -97,6 +94,7 @@ export default {
 			type: Array,
 			default: null,
 		},
+
 		/**
 		 * Whether to show remove buttons
 		 */
@@ -105,27 +103,31 @@ export default {
 			default: true,
 		},
 	},
+
 	computed: {
 		/**
 		 * Get objects to display (either from props or from store)
+		 *
 		 * @return {Array<object>} Array of publication objects
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-8
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		selectedObjects() {
 			return this.objects || objectStore.selectedObjects || []
 		},
 	},
+
 	methods: {
 		/**
 		 * Remove object from selected objects in the store
+		 *
 		 * @param {string} objectId - The object ID to remove
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-8
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		removeObject(objectId) {
 			// Always remove from store - the store is the source of truth
 			const currentSelected = [...objectStore.selectedObjects]
-			const index = currentSelected.findIndex(obj =>
-				(obj.id || obj['@self']?.id) === objectId,
+			const index = currentSelected.findIndex(
+				(obj) => (obj.id || obj['@self']?.id) === objectId,
 			)
 			if (index > -1) {
 				currentSelected.splice(index, 1)
@@ -135,23 +137,27 @@ export default {
 
 		/**
 		 * Get display name for an object
+		 *
 		 * @param {object} obj - The object to get name for
 		 * @return {string} The display name
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-8
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getObjectName(obj) {
-			return obj['@self']?.name
+			return (
+				obj['@self']?.name
 				|| obj.name
 				|| obj.title
 				|| obj['@self']?.title
 				|| `Unnamed ${this.title.includes('Publication') ? 'Publication' : 'Object'}`
+			)
 		},
 
 		/**
 		 * Get schema name for an object
+		 *
 		 * @param {object} obj - The object to get schema for
 		 * @return {string} The schema name or fallback text
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-8
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getObjectSchema(obj) {
 			// Try to get schema name from various possible locations
@@ -168,9 +174,10 @@ export default {
 
 		/**
 		 * Get error message for an object
+		 *
 		 * @param {object} obj - The object to get error for
 		 * @return {string|null} The error message or null if no error
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-8
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getObjectError(obj) {
 			const objectId = obj.id || obj['@self']?.id
@@ -249,5 +256,14 @@ export default {
 	position: absolute;
 	right: 0;
 	left: 0;
+}
+
+/* WCAG 2.3.3 — the item hover transition and the list leave animation are
+   decorative; a reduced-motion user gets the end state directly. */
+@media (prefers-reduced-motion: reduce) {
+	.selected-object-item,
+	.list-leave-active {
+		transition: none;
+	}
 }
 </style>

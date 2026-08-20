@@ -5,9 +5,17 @@
 				{{ t('softwarecatalog', 'Portfolio roadmap') }}
 			</h2>
 			<p class="rm-intro">
-				{{ t('softwarecatalog', 'Applications in use for an organisation, grouped by lifecycle phase and ordered by nearest urgency (end-of-support, phase-out or planned replacement).') }}
+				{{
+					t(
+						'softwarecatalog',
+						'Applications in use for an organisation, grouped by lifecycle phase and ordered by nearest urgency (end-of-support, phase-out or planned replacement).',
+					)
+				}}
 			</p>
-			<NcButton type="tertiary" :aria-label="t('softwarecatalog', 'Refresh data')" @click="loadData">
+			<NcButton
+				variant="tertiary"
+				:aria-label="t('softwarecatalog', 'Refresh data')"
+				@click="loadData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
@@ -21,52 +29,90 @@
 				v-model="selectedOrg"
 				class="rm-orgSelect"
 				:options="organisationOptions"
-				:input-label="t('softwarecatalog', 'Organisation')"
+				:inputLabel="t('softwarecatalog', 'Organisation')"
 				:placeholder="t('softwarecatalog', 'Select an organisation')"
-				track-by="uuid"
+				trackBy="uuid"
 				label="label"
-				@input="onOrgChange" />
+				@update:modelValue="onOrgChange" />
 		</div>
 
 		<NcEmptyContent
 			v-if="!loading && !selectedOrg"
 			:name="t('softwarecatalog', 'Select an organisation')"
-			:description="t('softwarecatalog', 'Pick an organisation above to render its lifecycle roadmap.')">
+			:description="
+				t(
+					'softwarecatalog',
+					'Pick an organisation above to render its lifecycle roadmap.',
+				)
+			">
 			<template #icon>
 				<MapClock :size="40" />
 			</template>
 		</NcEmptyContent>
 
 		<div v-else-if="!loading" class="rm-groups">
-			<section v-for="group in phaseGroups" :key="group.phase" class="rm-group">
+			<section
+				v-for="group in phaseGroups"
+				:key="group.phase"
+				class="rm-group">
 				<h3 class="rm-groupTitle">
-					{{ phaseLabel(group.phase) }} <span class="rm-count">({{ group.entries.length }})</span>
+					{{ phaseLabel(group.phase) }}
+					<span class="rm-count">({{ group.entries.length }})</span>
 				</h3>
 				<NcEmptyContent
 					v-if="group.entries.length === 0"
 					:name="t('softwarecatalog', 'No applications in this phase')" />
 				<ul v-else class="rm-list">
-					<li v-for="entry in group.entries" :key="entry.uuid" class="rm-entry">
+					<li
+						v-for="entry in group.entries"
+						:key="entry.uuid"
+						class="rm-entry">
 						<div class="rm-entryMain">
 							<span class="rm-appName">{{ entry.appName }}</span>
-							<span v-if="entry.eol.passed" class="rm-badge rm-badge--eol">
-								<AlertCircle :size="14" /> {{ t('softwarecatalog', 'End of support passed') }}
+							<span
+								v-if="entry.eol.passed"
+								class="rm-badge rm-badge--eol">
+								<AlertCircle :size="14" />
+								{{ t('softwarecatalog', 'End of support passed') }}
 							</span>
-							<span v-else-if="entry.eolApproaching" class="rm-badge rm-badge--warn">
-								<ClockAlert :size="14" /> {{ t('softwarecatalog', 'End of support approaching') }}
+							<span
+								v-else-if="entry.eolApproaching"
+								class="rm-badge rm-badge--warn">
+								<ClockAlert :size="14" />
+								{{
+									t(
+										'softwarecatalog',
+										'End of support approaching',
+									)
+								}}
 							</span>
-							<span v-if="entry.eol.withdrawn" class="rm-badge rm-badge--eol">
-								<CloseCircle :size="14" /> {{ t('softwarecatalog', 'Withdrawn') }}
+							<span
+								v-if="entry.eol.withdrawn"
+								class="rm-badge rm-badge--eol">
+								<CloseCircle :size="14" />
+								{{ t('softwarecatalog', 'Withdrawn') }}
 							</span>
 						</div>
 						<div class="rm-entryDates">
-							<span v-if="entry.eol.endDate">{{ t('softwarecatalog', 'End of support') }}: {{ entry.eol.endDate }}</span>
-							<span v-if="entry.phaseOutDate">{{ t('softwarecatalog', 'Phase-out') }}: {{ entry.phaseOutDate }}</span>
-							<span v-if="entry.replacementDate">{{ t('softwarecatalog', 'Planned replacement') }}: {{ entry.replacementDate }}</span>
+							<span v-if="entry.eol.endDate"
+								>{{ t('softwarecatalog', 'End of support') }}:
+								{{ entry.eol.endDate }}</span
+							>
+							<span v-if="entry.phaseOutDate"
+								>{{ t('softwarecatalog', 'Phase-out') }}:
+								{{ entry.phaseOutDate }}</span
+							>
+							<span v-if="entry.replacementDate"
+								>{{ t('softwarecatalog', 'Planned replacement') }}:
+								{{ entry.replacementDate }}</span
+							>
 						</div>
 						<div v-if="entry.replacementName" class="rm-replacement">
 							{{ t('softwarecatalog', 'Successor') }}:
-							<button type="button" class="rm-link" @click="openModule(entry.replacementUuid)">
+							<button
+								type="button"
+								class="rm-link"
+								@click="openModule(entry.replacementUuid)">
 								{{ entry.replacementName }}
 							</button>
 						</div>
@@ -80,24 +126,24 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect, NcEmptyContent } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
-import { objectStore, navigationStore } from '../store/store.js'
-import {
-	PHASE,
-	derivePhase,
-	endOfSupportState,
-	isEolApproaching,
-	phaseOrder,
-	resolveUuid,
-	parseDate,
-} from '../utils/lifecyclePhase.js'
-
-import Refresh from 'vue-material-design-icons/Refresh.vue'
-import MapClock from 'vue-material-design-icons/MapClock.vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
+import MapClock from 'vue-material-design-icons/MapClock.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import { useLiveCollections } from '../composables/useLiveCollections.js'
+import { navigationStore, objectStore } from '../store/store.js'
+import {
+	derivePhase,
+	endOfSupportState,
+	isEolApproaching,
+	parseDate,
+	PHASE,
+	phaseOrder,
+	resolveUuid,
+} from '../utils/lifecyclePhase.js'
 
 const EOL_WINDOW_DAYS = 180
 
@@ -105,14 +151,14 @@ const EOL_WINDOW_DAYS = 180
  * @class LifecycleRoadmapView
  * @module Views
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
- * Per-organisation portfolio roadmap: the organisation's gebruiken grouped by
+ * Per-organisation portfolio roadmap: the organisation's usages grouped by
  * derived lifecycle phase (incl. Onbekend, rendered first), ordered within a
  * group by nearest urgency date, with end-of-support badges and planned
  * replacements. The rationalisation overview.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export default {
 	name: 'LifecycleRoadmapView',
@@ -128,6 +174,27 @@ export default {
 		CloseCircle,
 	},
 
+	/**
+	 * Live updates (nc-vue liveUpdatesPlugin, default-on since beta.212):
+	 * subscribe to the collection scope of every type this view renders.
+	 * Events are refetch hints — the plugin re-runs fetchCollection into
+	 * the same getCollection() state the computeds read, so the view
+	 * re-renders without extra bridging. Subscriptions are gated on the
+	 * lazy type registration in loadData() and released on unmount.
+	 *
+	 * @return {object} Empty — the subscriptions are side-effect only
+	 * @spec openspec/specs/realtime-updates-ui/spec.md
+	 */
+	setup() {
+		useLiveCollections(objectStore, [
+			'usage',
+			'moduleVersion',
+			'module',
+			'organization',
+		])
+		return {}
+	},
+
 	data() {
 		return {
 			loading: true,
@@ -138,21 +205,24 @@ export default {
 	computed: {
 		/**
 		 * All gebruik records in the store.
+		 *
 		 * @return {Array} Gebruik records.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
-		gebruiken() {
-			return objectStore.getCollection('gebruik')?.results || []
+		usages() {
+			return objectStore.getCollection('usage')?.results || []
 		},
 
 		/**
 		 * All moduleVersie records, indexed by uuid for EOL lookups.
+		 *
 		 * @return {object} UUID → moduleVersie.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		moduleVersieIndex() {
 			const index = {}
-			for (const mv of (objectStore.getCollection('moduleVersie')?.results || [])) {
+			for (const mv of objectStore.getCollection('moduleVersion')?.results
+				|| []) {
 				const id = resolveUuid(mv.uuid ?? mv.id ?? mv['@self']?.id ?? mv)
 				if (id) {
 					index[id] = mv
@@ -163,12 +233,13 @@ export default {
 
 		/**
 		 * Module records indexed by uuid for successor labels.
+		 *
 		 * @return {object} UUID → module.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		moduleIndex() {
 			const index = {}
-			for (const m of (objectStore.getCollection('module')?.results || [])) {
+			for (const m of objectStore.getCollection('module')?.results || []) {
 				const id = resolveUuid(m.uuid ?? m.id ?? m['@self']?.id ?? m)
 				if (id) {
 					index[id] = m
@@ -179,30 +250,45 @@ export default {
 
 		/**
 		 * Organisation options for the selector.
+		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		organisationOptions() {
-			return (objectStore.getCollection('organisatie')?.results || []).map((org) => ({
-				uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
-				label: org.naam || org.title || resolveUuid(org.uuid ?? org.id ?? ''),
-			}))
+			return (objectStore.getCollection('organization')?.results || []).map(
+				(org) => ({
+					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
+					label:
+						org.name
+						|| org.title
+						|| resolveUuid(org.uuid ?? org.id ?? ''),
+				}),
+			)
 		},
 
 		/**
 		 * The phase order rendered top-to-bottom (Onbekend first).
+		 *
 		 * @return {Array<string>} Ordered phases.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		orderedPhases() {
-			return [PHASE.UNKNOWN, PHASE.ACQUISITION, PHASE.PLANNED, PHASE.PRODUCTION, PHASE.PHASING_OUT, PHASE.PHASED_OUT]
+			return [
+				PHASE.UNKNOWN,
+				PHASE.ACQUISITION,
+				PHASE.PLANNED,
+				PHASE.PRODUCTION,
+				PHASE.PHASING_OUT,
+				PHASE.PHASED_OUT,
+			]
 		},
 
 		/**
-		 * The selected organisation's gebruiken, grouped by derived phase and
+		 * The selected organisation's usages, grouped by derived phase and
 		 * ordered within group by nearest urgency date.
+		 *
 		 * @return {Array<{phase: string, entries: Array}>} Grouped entries.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		phaseGroups() {
 			if (!this.selectedOrg) {
@@ -211,19 +297,24 @@ export default {
 			const now = new Date()
 			const orgUuid = this.selectedOrg.uuid
 
-			const entries = this.gebruiken
+			const entries = this.usages
 				.filter((g) => {
 					const data = g.object || g
-					return resolveUuid(data.afnemer) === orgUuid
+					return resolveUuid(data.consumer) === orgUuid
 				})
 				.map((g) => this.buildEntry(g, now))
 
-			return this.orderedPhases.map((phase) => ({
-				phase,
-				entries: entries
-					.filter((e) => e.phase === phase)
-					.sort((a, b) => this.urgency(a) - this.urgency(b)),
-			})).filter((group) => group.entries.length > 0 || group.phase === PHASE.UNKNOWN)
+			return this.orderedPhases
+				.map((phase) => ({
+					phase,
+					entries: entries
+						.filter((e) => e.phase === phase)
+						.sort((a, b) => this.urgency(a) - this.urgency(b)),
+				}))
+				.filter(
+					(group) =>
+						group.entries.length > 0 || group.phase === PHASE.UNKNOWN,
+				)
 		},
 	},
 
@@ -236,20 +327,24 @@ export default {
 
 		/**
 		 * Load the collections the roadmap depends on.
+		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		async loadData() {
 			this.loading = true
 			try {
-				if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+				if (
+					!objectStore.settings
+					&& typeof objectStore.fetchSettings === 'function'
+				) {
 					await objectStore.fetchSettings()
 				}
 				await Promise.all([
-					this.fetchType('gebruik'),
-					this.fetchType('moduleVersie'),
+					this.fetchType('usage'),
+					this.fetchType('moduleVersion'),
 					this.fetchType('module'),
-					this.fetchType('organisatie'),
+					this.fetchType('organization'),
 				])
 			} catch (error) {
 				console.error('LifecycleRoadmapView: failed to load data', error)
@@ -260,9 +355,10 @@ export default {
 
 		/**
 		 * Fetch one object type collection if the store exposes the action.
+		 *
 		 * @param {string} type Object type slug.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		async fetchType(type) {
 			// Register the object type from the resolved config before fetching —
@@ -271,8 +367,10 @@ export default {
 			// 'voorzieningen', which is not guaranteed on every instance. Without
 			// this the nc-vue object store throws "Object type <type> is not
 			// registered".
-			if (typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]) {
+			if (
+				typeof objectStore.registerObjectType === 'function'
+				&& !objectStore.objectTypeRegistry?.[type]
+			) {
 				let cfg = null
 				try {
 					cfg = objectStore.getSchemaConfig?.(type)
@@ -292,41 +390,58 @@ export default {
 
 		/**
 		 * Build a roadmap entry for a gebruik.
+		 *
 		 * @param {object} gebruik A gebruik record.
 		 * @param {Date}   now     Reference moment.
 		 * @return {object} The roadmap entry view-model.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		buildEntry(gebruik, now) {
 			const data = gebruik.object || gebruik
 			const moduleUuid = resolveUuid(data.module)
-			const versieUuid = resolveUuid(data.moduleVersie)
+			const versieUuid = resolveUuid(data.moduleVersion)
 			const versie = this.moduleVersieIndex[versieUuid]
 			const eol = endOfSupportState(versie || {}, now)
-			const replacementUuid = resolveUuid(data.geplandeVervanging)
+			const replacementUuid = resolveUuid(data.plannedReplacement)
 			const replacementModule = this.moduleIndex[replacementUuid]
 
 			return {
-				uuid: resolveUuid(gebruik.uuid ?? gebruik.id ?? gebruik['@self']?.id ?? gebruik),
+				uuid: resolveUuid(
+					gebruik.uuid ?? gebruik.id ?? gebruik['@self']?.id ?? gebruik,
+				),
+
 				phase: derivePhase(gebruik, now),
-				appName: (this.moduleIndex[moduleUuid]?.naam) || data.module?.naam || moduleUuid || t('softwarecatalog', 'Unknown application'),
+				appName:
+					this.moduleIndex[moduleUuid]?.name
+					|| data.module?.name
+					|| moduleUuid
+					|| t('softwarecatalog', 'Unknown application'),
+
 				eol,
-				eolApproaching: versie ? isEolApproaching(versie, EOL_WINDOW_DAYS, now) : false,
-				phaseOutDate: data.startDatumUitTeFaseren || null,
+				eolApproaching: versie
+					? isEolApproaching(versie, EOL_WINDOW_DAYS, now)
+					: false,
+
+				phaseOutDate: data.startDateOutPhasing || null,
 				replacementUuid,
-				replacementName: replacementModule?.naam || replacementUuid || null,
-				replacementDate: data.geplandeVervangingsDatum || null,
+				replacementName: replacementModule?.name || replacementUuid || null,
+				replacementDate: data.plannedReplacementDate || null,
 			}
 		},
 
 		/**
 		 * Nearest urgency timestamp for ordering (min of EOL, phase-out, replacement).
+		 *
 		 * @param {object} entry A roadmap entry.
 		 * @return {number} A sortable timestamp (Infinity when no dates).
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		urgency(entry) {
-			const dates = [entry.eol.endDate, entry.phaseOutDate, entry.replacementDate]
+			const dates = [
+				entry.eol.endDate,
+				entry.phaseOutDate,
+				entry.replacementDate,
+			]
 				.map((d) => parseDate(d))
 				.filter((d) => d !== null)
 				.map((d) => d.getTime())
@@ -335,9 +450,10 @@ export default {
 
 		/**
 		 * Translate a phase to a human label (Dutch domain terms preserved).
+		 *
 		 * @param {string} phase A PHASE.* value.
 		 * @return {string} Display label.
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		phaseLabel(phase) {
 			const map = {
@@ -353,8 +469,9 @@ export default {
 
 		/**
 		 * Persist nothing; just record the org selection (kept for symmetry).
+		 *
 		 * @return {void}
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		onOrgChange() {
 			// Selection is reactive via v-model; no extra fetch needed.
@@ -362,9 +479,10 @@ export default {
 
 		/**
 		 * Navigate to a successor module's detail.
+		 *
 		 * @param {string} uuid The module uuid.
 		 * @return {void}
-		 * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		openModule(uuid) {
 			if (uuid && typeof navigationStore.setSelected === 'function') {

@@ -14,7 +14,7 @@
  * @module utils/translationBadge
  * @author Ruben Linde
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
  * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#3.5
  */
@@ -66,7 +66,8 @@ export function languageName(code) {
  */
 export function getSourceLanguage(object) {
 	if (!object || typeof object !== 'object') return ''
-	const raw = object.sourceLanguage
+	const raw =
+		object.sourceLanguage
 		?? object['@self']?.sourceLanguage
 		?? object['@self']?.source_language
 		?? ''
@@ -120,7 +121,9 @@ export function translationBadge(object, servedLang) {
 		 */
 		label(t) {
 			if (typeof t === 'function') {
-				return t('softwarecatalog', '(translated from {language})', { language: sourceLanguageName })
+				return t('softwarecatalog', '(translated from {language})', {
+					language: sourceLanguageName,
+				})
 			}
 			return `(translated from ${sourceLanguageName})`
 		},

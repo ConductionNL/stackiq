@@ -1,35 +1,57 @@
-/**
- * @file MassDeleteObject.vue
- * @module Modals/Object
- * @author Your Name
- * @copyright 2024 Your Organization
- * @license AGPL-3.0-or-later
- * @version 1.0.0
- */
+/** * @file MassDeleteObject.vue * @module Modals/Object * @author Your Name *
+@copyright 2024 Your Organization * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog :name="dialogTitle"
-		:can-close="true"
+	<NcDialog
+		:name="dialogTitle"
+		:canClose="true"
 		size="normal"
 		class="mass-action-dialog"
 		@update:open="handleDialogClose">
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="delete-step">
 			<NcNoteCard type="info">
-				Publications will be soft deleted and moved to the <a href="#" class="deleted-link" @click.prevent="navigateToDeleted">deleted publications section</a>. They will be retained according to their schema's configured retention period and automatically permanently deleted after wards.
+				{{
+					t(
+						'softwarecatalog',
+						'Publications will be soft deleted and moved to the',
+					)
+				}}
+				<a
+					href="#"
+					class="deleted-link"
+					@click.prevent="navigateToDeleted"
+					>{{ t('softwarecatalog', 'deleted publications section') }}</a
+				>{{
+					t(
+						'softwarecatalog',
+						". They will be retained according to their schema's configured retention period and automatically permanently deleted afterwards.",
+					)
+				}}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? 'Publication to Delete' : 'Selected Publications'"
-				:show-remove="true" />
+				:title="
+					(objectStore.selectedObjects?.length || 0) === 1
+						? t('softwarecatalog', 'Publication to Delete')
+						: t('softwarecatalog', 'Selected Publications')
+				"
+				:showRemove="true" />
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Publication{{ originalSelectedCount > 1 ? 's' : '' }} successfully deleted</p>
+			<p>
+				{{
+					originalSelectedCount > 1
+						? t('softwarecatalog', 'Publications successfully deleted')
+						: t('softwarecatalog', 'Publication successfully deleted')
+				}}
+			</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -40,30 +62,31 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Cancel' : 'Close' }}
+				{{
+					success === null
+						? t('softwarecatalog', 'Cancel')
+						: t('softwarecatalog', 'Close')
+				}}
 			</NcButton>
-			<NcButton v-if="success === null"
-				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
-				type="error"
+			<NcButton
+				v-if="success === null"
+				:disabled="
+					loading || (objectStore.selectedObjects?.length || 0) === 0
+				"
+				variant="error"
 				@click="deleteObject()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<TrashCanOutline v-if="!loading" :size="20" />
 				</template>
-				Delete
+				{{ t('softwarecatalog', 'Delete') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcLoadingIcon,
-	NcNoteCard,
-} from '@nextcloud/vue'
-
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
 import SelectedObjectsList from '../../components/SelectedObjectsList.vue'
@@ -99,8 +122,9 @@ export default {
 	computed: {
 		/**
 		 * Get the objects to operate on from selected objects
+		 *
 		 * @return {Array<object>} Array of objects to delete
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		objectsToDelete() {
 			return objectStore.selectedObjects || []
@@ -108,31 +132,36 @@ export default {
 
 		/**
 		 * Get the dialog title based on number of objects
+		 *
 		 * @return {string} Dialog title
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dialogTitle() {
 			const count = objectStore.selectedObjects?.length || 0
 			if (count === 1) {
-				return 'Delete publication'
+				return this.t('softwarecatalog', 'Delete publication')
 			}
-			return `Delete ${count} publication${count !== 1 ? 's' : ''}`
+			return this.t('softwarecatalog', 'Delete {count} publications', {
+				count,
+			})
 		},
 	},
 
 	mounted() {
 		this.initializeSelection()
 	},
+
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		initializeSelection() {
 			// Store the original count for success message
 			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		closeDialog() {
 			// Clear any pending timeout that might reopen the dialog
@@ -142,8 +171,9 @@ export default {
 			}
 			navigationStore.setDialog(false)
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		navigateToDeleted() {
 			// Close the dialog first
@@ -151,8 +181,9 @@ export default {
 			// Navigate to the deleted objects section
 			navigationStore.setSelected('deleted')
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteObject() {
 			this.loading = true
@@ -162,7 +193,8 @@ export default {
 				const objectsToProcess = [...(objectStore.selectedObjects || [])]
 
 				// Use the store's mass delete method
-				const { successful, failed } = await objectStore.massDeleteObjects(objectsToProcess)
+				const { successful, failed } =
+					await objectStore.massDeleteObjects(objectsToProcess)
 
 				if (successful.length > 0) {
 					this.success = true
@@ -178,18 +210,28 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = `Failed to delete ${failed.length} object${failed.length > 1 ? 's' : ''}`
+					this.error = this.t(
+						'softwarecatalog',
+						'Failed to delete {count} objects',
+						{ count: failed.length },
+					)
 				}
-
 			} catch (error) {
 				this.success = false
-				this.error = error.message || 'An error occurred while deleting objects'
+				this.error =
+					error.message
+					|| this.t(
+						'softwarecatalog',
+						'An error occurred while deleting objects',
+					)
 			} finally {
 				this.loading = false
 			}
 		},
+
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-object-modals/tasks.md#task-7
+		 * @param isOpen
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		handleDialogClose(isOpen) {
 			if (!isOpen) {

@@ -10,7 +10,7 @@
  * @package   OCA\SoftwareCatalog\Service\ArchiMate
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-4
@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Service\ArchiMate;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\SoftwareCatalog\Service\SettingsService;
 use Psr\Log\LoggerInterface;
 
@@ -36,21 +36,20 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-4
  */
-class ArchiMateContext
-{
-    /**
-     * Constructor.
-     *
-     * @param ObjectService   $objectService   The OpenRegister object service.
-     * @param SettingsService $settingsService The SoftwareCatalog settings service.
-     * @param LoggerInterface $logger          The application logger.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-4
-     */
-    public function __construct(
-        public readonly ObjectService $objectService,
-        public readonly SettingsService $settingsService,
-        public readonly LoggerInterface $logger
-    ) {
-    }//end __construct()
+class ArchiMateContext {
+	/**
+	 * Constructor.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param SettingsService $settingsService The SoftwareCatalog settings service.
+	 * @param LoggerInterface $logger The application logger.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-4
+	 */
+	public function __construct(
+		public readonly ObjectServiceInterface $objectService,
+		public readonly SettingsService $settingsService,
+		public readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 }//end class

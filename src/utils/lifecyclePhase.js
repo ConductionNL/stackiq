@@ -19,9 +19,9 @@
  * @module utils/lifecyclePhase
  * @author Ruben Linde
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 
 /**
@@ -30,11 +30,11 @@
  * @type {{ACQUISITION: string, PLANNED: string, PRODUCTION: string, PHASING_OUT: string, PHASED_OUT: string, UNKNOWN: string}}
  */
 export const PHASE = Object.freeze({
-	ACQUISITION: 'Verwerving',
-	PLANNED: 'Gepland',
-	PRODUCTION: 'In productie',
-	PHASING_OUT: 'Uit te faseren',
-	PHASED_OUT: 'Uitgefaseerd',
+	ACQUISITION: 'Acquisition',
+	PLANNED: 'Planned',
+	PRODUCTION: 'In production',
+	PHASING_OUT: 'To be phased out',
+	PHASED_OUT: 'Phased out',
 	UNKNOWN: 'Onbekend',
 })
 
@@ -46,11 +46,11 @@ export const PHASE = Object.freeze({
  * @type {Array<{phase: string, field: string}>}
  */
 const PHASE_STEPS = [
-	{ phase: PHASE.ACQUISITION, field: 'startDatumVerwerving' },
-	{ phase: PHASE.PLANNED, field: 'startDatumGepland' },
-	{ phase: PHASE.PRODUCTION, field: 'startDatumInProductie' },
-	{ phase: PHASE.PHASING_OUT, field: 'startDatumUitTeFaseren' },
-	{ phase: PHASE.PHASED_OUT, field: 'startDatumUitGefaseerd' },
+	{ phase: PHASE.ACQUISITION, field: 'startDateAcquisition' },
+	{ phase: PHASE.PLANNED, field: 'startDatePlanned' },
+	{ phase: PHASE.PRODUCTION, field: 'startDateInProduction' },
+	{ phase: PHASE.PHASING_OUT, field: 'startDateOutPhasing' },
+	{ phase: PHASE.PHASED_OUT, field: 'startDateOutPhased' },
 ]
 
 /**
@@ -75,7 +75,7 @@ function dataOf(gebruik) {
  * @param {*} value A date string.
  * @return {Date|null} The parsed date, or null.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function parseDate(value) {
 	if (typeof value !== 'string' || value.trim() === '') {
@@ -96,7 +96,7 @@ export function parseDate(value) {
  * @param {Date}   [now]   Reference moment (defaults to now).
  * @return {string} The derived phase (one of PHASE.*).
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function derivePhase(gebruik, now = new Date()) {
 	const data = dataOf(gebruik)
@@ -115,7 +115,7 @@ export function derivePhase(gebruik, now = new Date()) {
  * @param {*} value A relation value.
  * @return {string} The resolved UUID, or ''.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function resolveUuid(value) {
 	if (typeof value === 'string') {
@@ -140,14 +140,16 @@ export function resolveUuid(value) {
  * @param {Date}   [now]        Reference moment.
  * @return {{passed: boolean, withdrawn: boolean, endDate: (string|null), withdrawnDate: (string|null)}} EOL state.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function endOfSupportState(moduleVersie, now = new Date()) {
 	const data = dataOf(moduleVersie)
-	const endRaw = typeof data.datumEindeOndersteuning === 'string' ? data.datumEindeOndersteuning : null
-	const withdrawnRaw = typeof data.datumTeruggetrokken === 'string' && data.datumTeruggetrokken.trim() !== ''
-		? data.datumTeruggetrokken
-		: null
+	const endRaw =
+		typeof data.dateEndSupport === 'string' ? data.dateEndSupport : null
+	const withdrawnRaw =
+		typeof data.dateWithdrawn === 'string' && data.dateWithdrawn.trim() !== ''
+			? data.dateWithdrawn
+			: null
 	const end = parseDate(endRaw)
 	return {
 		passed: end !== null && end <= now,
@@ -169,14 +171,14 @@ export function endOfSupportState(moduleVersie, now = new Date()) {
  * @param {Date}   [now]        Reference moment.
  * @return {boolean} True when end-of-support is within the window.
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function isEolApproaching(moduleVersie, windowDays, now = new Date()) {
-	const end = parseDate(dataOf(moduleVersie).datumEindeOndersteuning)
+	const end = parseDate(dataOf(moduleVersie).dateEndSupport)
 	if (end === null) {
 		return false
 	}
-	const horizon = new Date(now.getTime() + (windowDays * 24 * 60 * 60 * 1000))
+	const horizon = new Date(now.getTime() + windowDays * 24 * 60 * 60 * 1000)
 	return end > now && end <= horizon
 }
 
@@ -186,7 +188,7 @@ export function isEolApproaching(moduleVersie, windowDays, now = new Date()) {
  * @param {string} phase A PHASE.* value.
  * @return {number} A sortable index (0 = unknown, then phase order).
  *
- * @spec openspec/changes/application-lifecycle-tracking/specs/application-lifecycle-tracking/spec.md
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
 export function phaseOrder(phase) {
 	if (phase === PHASE.UNKNOWN) {

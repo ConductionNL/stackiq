@@ -23,7 +23,7 @@
  * @module composables/orClient
  * @author Ruben Linde
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
  * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#3.1
  */
@@ -36,6 +36,44 @@ import { getLanguage } from '@nextcloud/l10n'
  * @type {string}
  */
 export const OR_API_BASE = '/index.php/apps/openregister/api'
+
+/**
+ * Module-level active-organisation UUID (multi-org-membership).
+ *
+ * A plain module-level value rather than a Vue reactive/injected one —
+ * SoftwareCatalog reloads the page on every organisation switch (see
+ * `OrganisationSwitcher.vue`), so the active organisation is stable for the
+ * lifetime of a single page load and does not need cross-component
+ * reactivity. Set once at boot from `App.vue`'s `/api/me` fetch via
+ * {@link setActiveOrganisationUuid}; read by `softwarecatalogPlugin.js`'s
+ * write paths via {@link getActiveOrganisationUuid}.
+ *
+ * @type {string|null}
+ */
+let _activeOrganisationUuid = null
+
+/**
+ * Set the module-level active-organisation UUID used to stamp
+ * `X-OpenRegister-Organisation` on writes.
+ *
+ * @param {string|null} uuid The active organisation UUID, or null/empty to clear.
+ * @return {void}
+ * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
+ */
+export function setActiveOrganisationUuid(uuid) {
+	_activeOrganisationUuid =
+		typeof uuid === 'string' && uuid.length > 0 ? uuid : null
+}
+
+/**
+ * Read the module-level active-organisation UUID.
+ *
+ * @return {string|null} The active organisation UUID, or null when none is set.
+ * @spec openspec/specs/multi-org-membership/spec.md#requirement-membership-mutations-must-be-delegated-to-openregister-s-organisationservice-not-reimplemented-req-006
+ */
+export function getActiveOrganisationUuid() {
+	return _activeOrganisationUuid
+}
 
 /**
  * Resolve the active user's language code (BCP-47 region tag stripped).
@@ -99,7 +137,10 @@ export function withLanguageParam(url, lang = resolveLanguage()) {
  * @param {string|null} [options.organisation] Active tenant organisation UUID.
  * @return {object} A new headers object.
  */
-export function buildWriteHeaders(baseHeaders = {}, { targetLang = null, organisation = null } = {}) {
+export function buildWriteHeaders(
+	baseHeaders = {},
+	{ targetLang = null, organisation = null } = {},
+) {
 	const headers = { ...baseHeaders }
 
 	if (targetLang) {
@@ -124,9 +165,22 @@ export function buildWriteHeaders(baseHeaders = {}, { targetLang = null, organis
  * @param {boolean} [params.withLang]     Whether to append `_lang`. Defaults true.
  * @return {string} The constructed URL.
  */
-export function buildObjectUrl({ register, schema, uuid = null, action = null, withLang = true }) {
-	if (register === undefined || register === null || schema === undefined || schema === null) {
-		throw new Error('register and schema are required to build an OpenRegister URL')
+export function buildObjectUrl({
+	register,
+	schema,
+	uuid = null,
+	action = null,
+	withLang = true,
+}) {
+	if (
+		register === undefined
+		|| register === null
+		|| schema === undefined
+		|| schema === null
+	) {
+		throw new Error(
+			'register and schema are required to build an OpenRegister URL',
+		)
 	}
 
 	let url = `${OR_API_BASE}/objects/${register}/${schema}`

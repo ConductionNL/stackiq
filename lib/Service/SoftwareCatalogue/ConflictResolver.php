@@ -10,7 +10,7 @@
  * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-2
@@ -33,149 +33,140 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-2
  */
-class ConflictResolver
-{
-    /**
-     * Constructor.
-     *
-     * @param LoggerInterface $logger Logger instance.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-2
-     */
-    public function __construct(
-        private readonly LoggerInterface $logger
-    ) {
-    }//end __construct()
+class ConflictResolver {
+	/**
+	 * Constructor.
+	 *
+	 * @param LoggerInterface $logger Logger instance.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-2
+	 */
+	public function __construct(
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Detect whether two object data arrays represent the same logical entity.
-     *
-     * Compares canonical identity fields (uuid, kvkNummer, oin) to determine
-     * whether an incoming record would duplicate an existing one.
-     *
-     * @param array<string,mixed> $existing The existing data record.
-     * @param array<string,mixed> $incoming The incoming data record to check.
-     *
-     * @return bool True when the records are considered duplicates.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-2
-     */
-    public function isDuplicate(array $existing, array $incoming): bool
-    {
-        // UUID match is definitive.
-        if ($this->matchesOnField(a: $existing, b: $incoming, field: 'uuid') === true) {
-            return true;
-        }
+	/**
+	 * Detect whether two object data arrays represent the same logical entity.
+	 *
+	 * Compares canonical identity fields (uuid, kvkNummer, oin) to determine
+	 * whether an incoming record would duplicate an existing one.
+	 *
+	 * @param array<string,mixed> $existing The existing data record.
+	 * @param array<string,mixed> $incoming The incoming data record to check.
+	 *
+	 * @return bool True when the records are considered duplicates.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-2
+	 */
+	public function isDuplicate(array $existing, array $incoming): bool {
+		// UUID match is definitive.
+		if ($this->matchesOnField(a: $existing, b: $incoming, field: 'uuid') === true) {
+			return true;
+		}
 
-        // KVK number match (Dutch company registry).
-        if ($this->matchesOnField(a: $existing, b: $incoming, field: 'kvkNummer') === true) {
-            return true;
-        }
+		// KVK number match (Dutch company registry).
+		if ($this->matchesOnField(a: $existing, b: $incoming, field: 'kvkNummer') === true) {
+			return true;
+		}
 
-        // OIN match (Dutch government unique identifier).
-        if ($this->matchesOnField(a: $existing, b: $incoming, field: 'oin') === true) {
-            return true;
-        }
+		// OIN match (Dutch government unique identifier).
+		if ($this->matchesOnField(a: $existing, b: $incoming, field: 'oin') === true) {
+			return true;
+		}
 
-        return false;
+		return false;
+	}//end isDuplicate()
 
-    }//end isDuplicate()
+	/**
+	 * Resolve a conflict between an existing and an incoming record.
+	 *
+	 * When both records have the same identity but different data, the incoming
+	 * record's non-null fields are merged on top of the existing record (last-write-wins
+	 * per field).
+	 *
+	 * @param array<string,mixed> $existing The existing record.
+	 * @param array<string,mixed> $incoming The incoming (newer) record.
+	 *
+	 * @return array<string,mixed> The merged record.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-2
+	 */
+	public function resolve(array $existing, array $incoming): array {
+		$merged = $existing;
 
-    /**
-     * Resolve a conflict between an existing and an incoming record.
-     *
-     * When both records have the same identity but different data, the incoming
-     * record's non-null fields are merged on top of the existing record (last-write-wins
-     * per field).
-     *
-     * @param array<string,mixed> $existing The existing record.
-     * @param array<string,mixed> $incoming The incoming (newer) record.
-     *
-     * @return array<string,mixed> The merged record.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-2
-     */
-    public function resolve(array $existing, array $incoming): array
-    {
-        $merged = $existing;
+		foreach ($incoming as $key => $value) {
+			// Prefer incoming non-null values.
+			if ($value !== null) {
+				$merged[$key] = $value;
+			}
+		}
 
-        foreach ($incoming as $key => $value) {
-            // Prefer incoming non-null values.
-            if ($value !== null) {
-                $merged[$key] = $value;
-            }
-        }
+		$this->logger->debug(
+			'ConflictResolver: Resolved conflict between existing and incoming record',
+			['changedFields' => array_keys(array_diff_assoc($merged, $existing))]
+		);
 
-        $this->logger->debug(
-            'ConflictResolver: Resolved conflict between existing and incoming record',
-            ['changedFields' => array_keys(array_diff_assoc($merged, $existing))]
-        );
+		return $merged;
+	}//end resolve()
 
-        return $merged;
+	/**
+	 * Deduplicate a list of data records using isDuplicate().
+	 *
+	 * The first occurrence of each identity is kept; subsequent duplicates
+	 * are merged into it using resolve().
+	 *
+	 * @param array<int,array<string,mixed>> $records The list of records to deduplicate.
+	 *
+	 * @return array<int,array<string,mixed>> Deduplicated record list.
+	 *
+	 * @spec openspec/changes/method-decomposition/tasks.md#task-2
+	 */
+	public function deduplicate(array $records): array {
+		$unique = [];
 
-    }//end resolve()
+		foreach ($records as $record) {
+			$found = false;
+			foreach ($unique as &$existing) {
+				if ($this->isDuplicate(existing: $existing, incoming: $record) === true) {
+					$existing = $this->resolve(existing: $existing, incoming: $record);
+					$found = true;
+					break;
+				}
+			}
 
-    /**
-     * Deduplicate a list of data records using isDuplicate().
-     *
-     * The first occurrence of each identity is kept; subsequent duplicates
-     * are merged into it using resolve().
-     *
-     * @param array<int,array<string,mixed>> $records The list of records to deduplicate.
-     *
-     * @return array<int,array<string,mixed>> Deduplicated record list.
-     *
-     * @spec openspec/changes/method-decomposition/tasks.md#task-2
-     */
-    public function deduplicate(array $records): array
-    {
-        $unique = [];
+			unset($existing);
 
-        foreach ($records as $record) {
-            $found = false;
-            foreach ($unique as &$existing) {
-                if ($this->isDuplicate(existing: $existing, incoming: $record) === true) {
-                    $existing = $this->resolve(existing: $existing, incoming: $record);
-                    $found    = true;
-                    break;
-                }
-            }
+			if ($found === false) {
+				$unique[] = $record;
+			}
+		}
 
-            unset($existing);
+		$this->logger->debug(
+			'ConflictResolver: Deduplicated records',
+			['before' => count($records), 'after' => count($unique)]
+		);
 
-            if ($found === false) {
-                $unique[] = $record;
-            }
-        }
+		return $unique;
+	}//end deduplicate()
 
-        $this->logger->debug(
-            'ConflictResolver: Deduplicated records',
-            ['before' => count($records), 'after' => count($unique)]
-        );
+	/**
+	 * Check whether two records share the same value for a given field.
+	 *
+	 * @param array<string,mixed> $a First record.
+	 * @param array<string,mixed> $b Second record.
+	 * @param string $field The field name to compare.
+	 *
+	 * @return bool True when both records have the same non-empty value for the field.
+	 */
+	private function matchesOnField(array $a, array $b, string $field): bool {
+		$valA = $a[$field] ?? null;
+		$valB = $b[$field] ?? null;
 
-        return $unique;
+		if ($valA === null || $valB === null || $valA === '' || $valB === '') {
+			return false;
+		}
 
-    }//end deduplicate()
-
-    /**
-     * Check whether two records share the same value for a given field.
-     *
-     * @param array<string,mixed> $a     First record.
-     * @param array<string,mixed> $b     Second record.
-     * @param string              $field The field name to compare.
-     *
-     * @return bool True when both records have the same non-empty value for the field.
-     */
-    private function matchesOnField(array $a, array $b, string $field): bool
-    {
-        $valA = $a[$field] ?? null;
-        $valB = $b[$field] ?? null;
-
-        if ($valA === null || $valB === null || $valA === '' || $valB === '') {
-            return false;
-        }
-
-        return $valA === $valB;
-
-    }//end matchesOnField()
+		return $valA === $valB;
+	}//end matchesOnField()
 }//end class

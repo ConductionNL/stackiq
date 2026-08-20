@@ -31,42 +31,60 @@
 				<table>
 					<thead>
 						<tr>
-							<th>Register</th>
-							<th>Object Type</th>
-							<th>Count</th>
-							<th>Status</th>
-							<th>Actions</th>
+							<th scope="col">Register</th>
+							<th scope="col">Object Type</th>
+							<th scope="col">Count</th>
+							<th scope="col">Status</th>
+							<th scope="col">Actions</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="stat in formattedStatistics" :key="`${stat.register}-${stat.type}`">
+						<tr
+							v-for="stat in formattedStatistics"
+							:key="`${stat.register}-${stat.type}`">
 							<td class="register-cell">
 								{{ stat.register }}
 							</td>
 							<td class="type-cell">
 								{{ stat.type }}
 							</td>
-							<td class="count-cell" :class="{ 'high-count': stat.count > 10000 }">
+							<td
+								class="count-cell"
+								:class="{ 'high-count': stat.count > 10000 }">
 								{{ formatNumber(stat.count) }}
 							</td>
 							<td class="status-cell">
 								<span
 									class="status-badge"
-									:class="stat.configured ? 'status-configured' : 'status-not-configured'">
-									{{ stat.configured ? 'Configured' : 'Not Configured' }}
+									:class="
+										stat.configured
+											? 'status-configured'
+											: 'status-not-configured'
+									">
+									{{
+										stat.configured
+											? 'Configured'
+											: 'Not Configured'
+									}}
 								</span>
 							</td>
 							<td class="actions-cell">
 								<!-- Show sync button only for Compliancy objects -->
 								<NcButton
-									v-if="stat.type === 'Compliancy' && stat.configured"
+									v-if="
+										stat.type === 'Compliancy' && stat.configured
+									"
 									:disabled="bulkSyncLoading"
 									class="sync-button"
 									@click="showBulkSyncDialog">
 									<template #icon>
 										<SyncIcon :size="16" />
 									</template>
-									{{ bulkSyncLoading ? 'Syncing...' : 'Sync Standards' }}
+									{{
+										bulkSyncLoading
+											? 'Syncing...'
+											: 'Sync Standards'
+									}}
 								</NcButton>
 							</td>
 						</tr>
@@ -99,34 +117,34 @@
 		<!-- Bulk Sync Dialog -->
 		<BulkSyncDialog
 			:open="showSyncDialog"
-			:compliance-count="complianceCount"
+			:complianceCount="complianceCount"
 			@update:open="showSyncDialog = $event"
-			@loading-change="bulkSyncLoading = $event"
+			@loadingChange="bulkSyncLoading = $event"
 			@synced="refreshStatistics" />
 	</NcSettingsSection>
 </template>
 
 <script>
-import { defineComponent } from 'vue'
 import {
-	NcSettingsSection,
 	NcButton,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
+	NcSettingsSection,
 } from '@nextcloud/vue'
-import { useSettingsStore } from '../../../store/modules/settings.js'
-import BulkSyncDialog from '../../../modals/BulkSyncDialog.vue'
-import RefreshIcon from 'vue-material-design-icons/Refresh.vue'
+import { defineComponent } from 'vue'
 import ChartLineIcon from 'vue-material-design-icons/ChartLine.vue'
+import RefreshIcon from 'vue-material-design-icons/Refresh.vue'
 import SyncIcon from 'vue-material-design-icons/Sync.vue'
+import BulkSyncDialog from '../../../modals/BulkSyncDialog.vue'
+import { useSettingsStore } from '../../../store/modules/settings.js'
 
 /**
  * Statistics Overview component
  * Displays object counts for all configured registers
  *
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2
  * @version  1.0.0
  */
 export default defineComponent({
@@ -145,7 +163,7 @@ export default defineComponent({
 	},
 
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	setup() {
 		const settingsStore = useSettingsStore()
@@ -165,28 +183,28 @@ export default defineComponent({
 
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		statistics() {
 			return this.settingsStore.statistics
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formattedStatistics() {
 			return this.settingsStore.formattedStatistics
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		loadingStats() {
 			return this.settingsStore.loadingStatistics
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		error() {
 			return this.settingsStore.error
@@ -194,16 +212,18 @@ export default defineComponent({
 
 		// Get compliance count for the dialog
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		complianceCount() {
-			const complianceStat = this.formattedStatistics.find(stat => stat.type === 'Compliancy')
+			const complianceStat = this.formattedStatistics.find(
+				(stat) => stat.type === 'Compliancy',
+			)
 			return complianceStat ? complianceStat.count : 0
 		},
 	},
 
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	async mounted() {
 		// Load statistics when component mounts
@@ -213,7 +233,8 @@ export default defineComponent({
 	methods: {
 		/**
 		 * Refresh statistics data
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 *
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async refreshStatistics() {
 			await this.settingsStore.loadStatistics()
@@ -221,9 +242,10 @@ export default defineComponent({
 
 		/**
 		 * Format number with thousand separators
+		 *
 		 * @param {number} num - Number to format
 		 * @return {string} Formatted number
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatNumber(num) {
 			if (num === 0) return '0'
@@ -232,9 +254,10 @@ export default defineComponent({
 
 		/**
 		 * Format timestamp for display
+		 *
 		 * @param {number} timestamp - Unix timestamp
 		 * @return {string} Formatted date/time
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatTimestamp(timestamp) {
 			if (!timestamp) return 'Unknown'
@@ -244,7 +267,8 @@ export default defineComponent({
 
 		/**
 		 * Show the bulk sync dialog
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 *
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		showBulkSyncDialog() {
 			this.showSyncDialog = true

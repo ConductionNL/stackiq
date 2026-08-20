@@ -66,11 +66,15 @@ describe('withLanguageParam', () => {
 	})
 
 	it('appends &_lang when the URL already has a query string', () => {
-		expect(withLanguageParam('/api/objects?_limit=5')).toBe('/api/objects?_limit=5&_lang=nl')
+		expect(withLanguageParam('/api/objects?_limit=5')).toBe(
+			'/api/objects?_limit=5&_lang=nl',
+		)
 	})
 
 	it('does not overwrite an explicit _lang already on the URL', () => {
-		expect(withLanguageParam('/api/objects?_lang=en')).toBe('/api/objects?_lang=en')
+		expect(withLanguageParam('/api/objects?_lang=en')).toBe(
+			'/api/objects?_lang=en',
+		)
 	})
 
 	it('accepts an explicit lang override', () => {
@@ -121,7 +125,10 @@ describe('buildWriteHeaders', () => {
 	})
 
 	it('stamps both headers when both supplied', () => {
-		const headers = buildWriteHeaders({}, { targetLang: 'nl', organisation: 'uuid-2' })
+		const headers = buildWriteHeaders(
+			{},
+			{ targetLang: 'nl', organisation: 'uuid-2' },
+		)
 		expect(headers['X-Translation-Target-Language']).toBe('nl')
 		expect(headers['X-OpenRegister-Organisation']).toBe('uuid-2')
 	})
@@ -143,18 +150,38 @@ describe('buildObjectUrl', () => {
 	})
 
 	it('builds a single-object URL when uuid is present', () => {
-		const url = buildObjectUrl({ register: 'reg-a', schema: 'sch-b', uuid: 'abc-123' })
-		expect(url).toBe('/index.php/apps/openregister/api/objects/reg-a/sch-b/abc-123?_lang=en')
+		const url = buildObjectUrl({
+			register: 'reg-a',
+			schema: 'sch-b',
+			uuid: 'abc-123',
+		})
+		expect(url).toBe(
+			'/index.php/apps/openregister/api/objects/reg-a/sch-b/abc-123?_lang=en',
+		)
 	})
 
 	it('maps the "logs" action to /audit-trails', () => {
-		const url = buildObjectUrl({ register: 1, schema: 2, uuid: 'x', action: 'logs' })
-		expect(url).toBe('/index.php/apps/openregister/api/objects/1/2/x/audit-trails?_lang=en')
+		const url = buildObjectUrl({
+			register: 1,
+			schema: 2,
+			uuid: 'x',
+			action: 'logs',
+		})
+		expect(url).toBe(
+			'/index.php/apps/openregister/api/objects/1/2/x/audit-trails?_lang=en',
+		)
 	})
 
 	it('appends a non-logs action verbatim', () => {
-		const url = buildObjectUrl({ register: 1, schema: 2, uuid: 'x', action: 'publish' })
-		expect(url).toBe('/index.php/apps/openregister/api/objects/1/2/x/publish?_lang=en')
+		const url = buildObjectUrl({
+			register: 1,
+			schema: 2,
+			uuid: 'x',
+			action: 'publish',
+		})
+		expect(url).toBe(
+			'/index.php/apps/openregister/api/objects/1/2/x/publish?_lang=en',
+		)
 	})
 
 	it('omits _lang when withLang is false', () => {
@@ -163,14 +190,20 @@ describe('buildObjectUrl', () => {
 	})
 
 	it('throws when register is missing', () => {
-		expect(() => buildObjectUrl({ schema: 2 })).toThrow(/register and schema are required/)
+		expect(() => buildObjectUrl({ schema: 2 })).toThrow(
+			/register and schema are required/,
+		)
 	})
 
 	it('throws when schema is missing', () => {
-		expect(() => buildObjectUrl({ register: 1 })).toThrow(/register and schema are required/)
+		expect(() => buildObjectUrl({ register: 1 })).toThrow(
+			/register and schema are required/,
+		)
 	})
 
 	it('throws when register is null', () => {
-		expect(() => buildObjectUrl({ register: null, schema: 1 })).toThrow(/register and schema are required/)
+		expect(() => buildObjectUrl({ register: null, schema: 1 })).toThrow(
+			/register and schema are required/,
+		)
 	})
 })

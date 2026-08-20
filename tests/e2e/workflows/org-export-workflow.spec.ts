@@ -34,8 +34,14 @@
  */
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
 import {
-	newApiContext, resolveConfig, createObject, deleteObject, findAll, nameOf,
-	RUN_ID, type VoorzieningenConfig,
+	newApiContext,
+	resolveConfig,
+	createObject,
+	deleteObject,
+	findAll,
+	nameOf,
+	RUN_ID,
+	type VoorzieningenConfig,
 } from './_fixtures'
 
 let apiCtx: APIRequestContext
@@ -50,11 +56,23 @@ test.beforeAll(async () => {
 	cfg = await resolveConfig(apiCtx)
 	// Seed a real organisation so the combobox offers a truthy-value option that
 	// flips `selectedOrganization` truthy and reveals the toggle group.
+	//
+	// `contactsUid` is REQUIRED on the organisatie schema (identity lives in
+	// Nextcloud Contacts; this record holds only the catalog-side relation).
+	// Omitting it is silently survivable on an instance whose magic-mapper table
+	// predates the requirement, and a hard `SQLSTATE[23502] ... contacts_uid ...
+	// not-null` rejection on a fresh install. A synthetic UID satisfies the
+	// declared contract; nothing in this workflow asserts contact resolution.
 	seededOrgId = await createObject(apiCtx, cfg.register, cfg.organisatie_schema, {
-		naam: exportOrgName,
-		type: 'Leverancier',
+		name: exportOrgName,
+		type: 'Supplier',
 		website: 'https://e2e-export-org.example.com',
-		status: 'Actief',
+		status: 'Active',
+		// The UID doubles as the display name on purpose: the schema's
+		// `configuration.objectNameField` is `contactsUid`, so this is the label
+		// the Organization combobox renders for the seeded row. `naam` is no
+		// longer a property of the organisatie schema.
+		contactsUid: exportOrgName,
 	})
 })
 
@@ -67,7 +85,14 @@ test.afterAll(async () => {
 
 /** Open the ArchiMate Import/Export admin section and wait for it to mount. */
 async function goToArchiMateSettings(page: Page): Promise<void> {
-	await page.goto('/settings/admin/softwarecatalog', { waitUntil: 'networkidle' })
+	// `domcontentloaded`, not `networkidle`: Nextcloud keeps long-lived
+	// connections open (notifications polling, dashboard widgets), so the
+	// network never goes idle and this wait can only ever time out or be
+	// satisfied by luck (ADR-074 rule 4). The real readiness signal is the
+	// heading assertion below, which waits for the SPA to actually mount.
+	await page.goto('/settings/admin/softwarecatalog', {
+		waitUntil: 'domcontentloaded',
+	})
 	await expect(
 		page.getByRole('heading', { name: 'ArchiMate Import/Export' }),
 	).toBeVisible({ timeout: 30000 })
@@ -78,7 +103,10 @@ async function selectOrganization(page: Page, label: string): Promise<void> {
 	const orgSelect = page.locator('#organization-select')
 	await expect(orgSelect).toBeVisible({ timeout: 15000 })
 	await orgSelect.click()
-	const option = page.locator('.vs__dropdown-option, [role="option"]').filter({ hasText: label }).first()
+	const option = page
+		.locator('.vs__dropdown-option, [role="option"]')
+		.filter({ hasText: label })
+		.first()
 	try {
 		await option.waitFor({ state: 'visible', timeout: 5000 })
 	} catch {
@@ -92,7 +120,9 @@ async function selectOrganization(page: Page, label: string): Promise<void> {
 // Workflow: select the seeded org -> toggle group reveals -> export fires with
 // the org UUID + chosen layer params.
 // ---------------------------------------------------------------------------
-test('export workflow: select a real org, toggle layers, run export -> request fires with the org + layers', async ({ page }) => {
+test('export workflow: select a real org, toggle layers, run export -> request fires with the org + layers', async ({
+	page,
+}) => {
 	await goToArchiMateSettings(page)
 
 	// Before any org is selected the org-export button is disabled.
@@ -105,7 +135,9 @@ test('export workflow: select a real org, toggle layers, run export -> request f
 
 	// The data-layer toggle group now renders (selectedOrganization is truthy).
 	const exportSection = page.locator('.export-section')
-	await expect(exportSection.getByText('Modules', { exact: true })).toBeVisible({ timeout: 8000 })
+	await expect(exportSection.getByText('Modules', { exact: true })).toBeVisible({
+		timeout: 8000,
+	})
 	await expect(exportSection.getByText('Deelnames', { exact: true })).toBeVisible()
 	await expect(exportSection.getByText('Gebruik', { exact: true })).toBeVisible()
 
@@ -117,16 +149,20 @@ test('export workflow: select a real org, toggle layers, run export -> request f
 	await deelnamesSwitch.click()
 
 	// Capture the outgoing export GET to assert its URL shape (org UUID + layers).
-	const exportRequestPromise = page.waitForRequest(
-		req => req.url().includes('/api/archimate/export/organization/'),
-		{ timeout: 10000 },
-	).catch(() => null)
+	const exportRequestPromise = page
+		.waitForRequest(
+			(req) => req.url().includes('/api/archimate/export/organization/'),
+			{ timeout: 10000 },
+		)
+		.catch(() => null)
 
 	await expect(orgExportBtn).toBeEnabled({ timeout: 5000 })
 	await orgExportBtn.click()
 
 	// Rendered loading state — DOM proof the export workflow started.
-	await expect(page.getByRole('button', { name: 'Exporting...' })).toBeVisible({ timeout: 5000 })
+	await expect(page.getByRole('button', { name: 'Exporting...' })).toBeVisible({
+		timeout: 5000,
+	})
 
 	const exportRequest = await exportRequestPromise
 	expect(exportRequest, 'the organisation export request must fire').not.toBeNull()
@@ -146,7 +182,7 @@ test('export workflow: select a real org, toggle layers, run export -> request f
 // ---------------------------------------------------------------------------
 test('export workflow: the seeded export org is retrievable via findAll', async () => {
 	const rows = await findAll(apiCtx, cfg.register, cfg.organisatie_schema, RUN_ID)
-	expect(rows.some(r => nameOf(r) === exportOrgName)).toBeTruthy()
+	expect(rows.some((r) => nameOf(r) === exportOrgName)).toBeTruthy()
 })
 
 // ---------------------------------------------------------------------------

@@ -29,6 +29,7 @@ use OCA\SoftwareCatalog\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -46,263 +47,252 @@ use Psr\Log\LoggerInterface;
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  */
-class SettingsServiceResolverWiringTest extends TestCase
-{
+class SettingsServiceResolverWiringTest extends TestCase {
 
-    /** @var IAppConfig|MockObject */
-    private IAppConfig|MockObject $config;
+	/** @var IAppConfig|MockObject */
+	private IAppConfig|MockObject $config;
 
-    /** @var IRequest|MockObject */
-    private IRequest|MockObject $request;
+	/** @var IRequest|MockObject */
+	private IRequest|MockObject $request;
 
-    /** @var ContainerInterface|MockObject */
-    private ContainerInterface|MockObject $container;
+	/** @var ContainerInterface|MockObject */
+	private ContainerInterface|MockObject $container;
 
-    /** @var IAppManager|MockObject */
-    private IAppManager|MockObject $appManager;
+	/** @var IAppManager|MockObject */
+	private IAppManager|MockObject $appManager;
 
-    /** @var LoggerInterface|MockObject */
-    private LoggerInterface|MockObject $logger;
+	/** @var LoggerInterface|MockObject */
+	private LoggerInterface|MockObject $logger;
 
-    /** @var IGroupManager|MockObject */
-    private IGroupManager|MockObject $groupManager;
+	/** @var IGroupManager|MockObject */
+	private IGroupManager|MockObject $groupManager;
 
+	/** @var IL10N|MockObject */
+	private IL10N|MockObject $l10n;
 
-    /**
-     * Build collaborator mocks shared across cases.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->config       = $this->createMock(IAppConfig::class);
-        $this->request      = $this->createMock(IRequest::class);
-        $this->container    = $this->createMock(ContainerInterface::class);
-        $this->appManager   = $this->createMock(IAppManager::class);
-        $this->logger       = $this->createMock(LoggerInterface::class);
-        $this->groupManager = $this->createMock(IGroupManager::class);
+	/**
+	 * Build collaborator mocks shared across cases.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->config = $this->createMock(IAppConfig::class);
+		$this->request = $this->createMock(IRequest::class);
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->appManager = $this->createMock(IAppManager::class);
+		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->groupManager = $this->createMock(IGroupManager::class);
+		$this->l10n = $this->createMock(IL10N::class);
 
-    }//end setUp()
+	}//end setUp()
 
+	/**
+	 * Build a SettingsService under test wired against the mocks.
+	 *
+	 * @return SettingsService
+	 */
+	private function makeService(): SettingsService {
+		return new SettingsService(
+			$this->config,
+			$this->request,
+			$this->container,
+			$this->appManager,
+			$this->logger,
+			$this->groupManager,
+			$this->l10n,
+		);
 
-    /**
-     * Build a SettingsService under test wired against the mocks.
-     *
-     * @return SettingsService
-     */
-    private function makeService(): SettingsService
-    {
-        return new SettingsService(
-            $this->config,
-            $this->request,
-            $this->container,
-            $this->appManager,
-            $this->logger,
-            $this->groupManager,
-        );
+	}//end makeService()
 
-    }//end makeService()
+	/**
+	 * Stub voorzieningen + amef config to a known empty shape so the schema/register
+	 * lookup falls through to the resolver branch.
+	 *
+	 * @return void
+	 */
+	private function expectEmptyKnownConfigs(): void {
+		$emptyVoorzieningen = json_encode(
+			[
+				'register' => null,
+				'organisatie_schema' => null,
+				'contactpersoon_schema' => null,
+				'module_schema' => null,
+				'compliancy_schema' => null,
+				'moduleVersie_schema' => null,
+			]
+		);
 
+		$this->config->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($emptyVoorzieningen): string {
+				if ($key === 'voorzieningen_config') {
+					return $emptyVoorzieningen;
+				}
 
-    /**
-     * Stub voorzieningen + amef config to a known empty shape so the schema/register
-     * lookup falls through to the resolver branch.
-     *
-     * @return void
-     */
-    private function expectEmptyKnownConfigs(): void
-    {
-        $emptyVoorzieningen = json_encode(
-            [
-                'register'              => null,
-                'organisatie_schema'    => null,
-                'contactpersoon_schema' => null,
-                'module_schema'         => null,
-                'compliancy_schema'     => null,
-                'moduleVersie_schema'   => null,
-            ]
-        );
+				if ($key === 'amef_config') {
+					return '{}';
+				}
 
-        $this->config->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default = '') use ($emptyVoorzieningen): string {
-                if ($key === 'voorzieningen_config') {
-                    return $emptyVoorzieningen;
-                }
+				if ($key === 'amef_organization_schema') {
+					return '';
+				}
 
-                if ($key === 'amef_config') {
-                    return '{}';
-                }
+				// Legacy fallback reads — return empty so the resolver branch is the
+				// visible signal, unless a test overrides via partial mock.
+				return $default;
+			}
+		);
 
-                if ($key === 'amef_organization_schema') {
-                    return '';
-                }
+	}//end expectEmptyKnownConfigs()
 
-                // Legacy fallback reads — return empty so the resolver branch is the
-                // visible signal, unless a test overrides via partial mock.
-                return $default;
-            }
-        );
+	/**
+	 * Resolver returns a value → that value is preferred over the legacy
+	 * IAppConfig fallback for getSchemaIdForObjectType.
+	 *
+	 * @return void
+	 */
+	public function testGetSchemaIdRoutesThroughResolverWhenAvailable(): void {
+		$this->expectEmptyKnownConfigs();
 
-    }//end expectEmptyKnownConfigs()
+		$this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
+		$resolver = $this->createMock(RegisterResolverService::class);
+		$resolver->expects($this->once())
+			->method('resolveSchemaId')
+			->willReturnCallback(
+				function (string $appId, string $configKey, ?string $default = null, ?string $organisationUuid = null): string {
+					$this->assertSame('softwarecatalog', $appId);
+					$this->assertSame('wijktypeXyz_schema', $configKey);
+					return '42';
+				}
+			);
 
-    /**
-     * Resolver returns a value → that value is preferred over the legacy
-     * IAppConfig fallback for getSchemaIdForObjectType.
-     *
-     * @return void
-     */
-    public function testGetSchemaIdRoutesThroughResolverWhenAvailable(): void
-    {
-        $this->expectEmptyKnownConfigs();
+		$this->container->method('get')->willReturnCallback(
+			function (string $id) use ($resolver) {
+				if ($id === 'OCA\OpenRegister\Service\RegisterResolverService') {
+					return $resolver;
+				}
 
-        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
+				throw new \RuntimeException('unexpected container id: ' . $id);
+			}
+		);
 
-        $resolver = $this->createMock(RegisterResolverService::class);
-        $resolver->expects($this->once())
-            ->method('resolveSchemaId')
-            ->willReturnCallback(
-                function (string $appId, string $configKey, ?string $default = null, ?string $organisationUuid = null): string {
-                    $this->assertSame('softwarecatalog', $appId);
-                    $this->assertSame('wijktypeXyz_schema', $configKey);
-                    return '42';
-                }
-            );
+		$service = $this->makeService();
+		$this->assertSame(42, $service->getSchemaIdForObjectType('wijktypeXyz'));
 
-        $this->container->method('get')->willReturnCallback(
-            function (string $id) use ($resolver) {
-                if ($id === 'OCA\OpenRegister\Service\RegisterResolverService') {
-                    return $resolver;
-                }
+	}//end testGetSchemaIdRoutesThroughResolverWhenAvailable()
 
-                throw new \RuntimeException('unexpected container id: '.$id);
-            }
-        );
+	/**
+	 * Resolver returns empty → falls back to legacy IAppConfig read.
+	 *
+	 * @return void
+	 */
+	public function testGetSchemaIdFallsBackToLegacyConfigWhenResolverEmpty(): void {
+		$this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
-        $service = $this->makeService();
-        $this->assertSame(42, $service->getSchemaIdForObjectType('wijktypeXyz'));
+		$resolver = $this->createMock(RegisterResolverService::class);
+		$resolver->method('resolveSchemaId')->willReturn('');
 
-    }//end testGetSchemaIdRoutesThroughResolverWhenAvailable()
+		$this->container->method('get')->willReturn($resolver);
 
+		// Legacy fallback path: getValueString('softwarecatalog', 'legacyOnly_schema', '') returns "99".
+		$emptyVoorzieningen = '{}';
+		$this->config->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($emptyVoorzieningen): string {
+				if ($key === 'voorzieningen_config') {
+					return $emptyVoorzieningen;
+				}
 
-    /**
-     * Resolver returns empty → falls back to legacy IAppConfig read.
-     *
-     * @return void
-     */
-    public function testGetSchemaIdFallsBackToLegacyConfigWhenResolverEmpty(): void
-    {
-        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
+				if ($key === 'amef_config') {
+					return '{}';
+				}
 
-        $resolver = $this->createMock(RegisterResolverService::class);
-        $resolver->method('resolveSchemaId')->willReturn('');
+				if ($key === 'legacyOnly_schema') {
+					return '99';
+				}
 
-        $this->container->method('get')->willReturn($resolver);
+				return $default;
+			}
+		);
 
-        // Legacy fallback path: getValueString('softwarecatalog', 'legacyOnly_schema', '') returns "99".
-        $emptyVoorzieningen = '{}';
-        $this->config->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default = '') use ($emptyVoorzieningen): string {
-                if ($key === 'voorzieningen_config') {
-                    return $emptyVoorzieningen;
-                }
+		$service = $this->makeService();
+		$this->assertSame(99, $service->getSchemaIdForObjectType('legacyOnly'));
 
-                if ($key === 'amef_config') {
-                    return '{}';
-                }
+	}//end testGetSchemaIdFallsBackToLegacyConfigWhenResolverEmpty()
 
-                if ($key === 'legacyOnly_schema') {
-                    return '99';
-                }
+	/**
+	 * Resolver returns a value → that value is preferred over the legacy
+	 * IAppConfig fallback for getRegisterIdForObjectType.
+	 *
+	 * @return void
+	 */
+	public function testGetRegisterIdRoutesThroughResolverWhenAvailable(): void {
+		$this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
-                return $default;
-            }
-        );
+		$resolver = $this->createMock(RegisterResolverService::class);
+		$resolver->expects($this->once())
+			->method('resolveRegisterId')
+			->willReturnCallback(
+				function (string $appId, string $configKey, ?string $default = null, ?string $organisationUuid = null): string {
+					$this->assertSame('softwarecatalog', $appId);
+					$this->assertSame('wijktype_register', $configKey);
+					return '7';
+				}
+			);
 
-        $service = $this->makeService();
-        $this->assertSame(99, $service->getSchemaIdForObjectType('legacyOnly'));
+		$this->container->method('get')->willReturn($resolver);
 
-    }//end testGetSchemaIdFallsBackToLegacyConfigWhenResolverEmpty()
+		$this->config->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = ''): string {
+				if ($key === 'voorzieningen_config') {
+					return '{}';
+				}
 
+				if ($key === 'amef_config') {
+					return '{}';
+				}
 
-    /**
-     * Resolver returns a value → that value is preferred over the legacy
-     * IAppConfig fallback for getRegisterIdForObjectType.
-     *
-     * @return void
-     */
-    public function testGetRegisterIdRoutesThroughResolverWhenAvailable(): void
-    {
-        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
+				return $default;
+			}
+		);
 
-        $resolver = $this->createMock(RegisterResolverService::class);
-        $resolver->expects($this->once())
-            ->method('resolveRegisterId')
-            ->willReturnCallback(
-                function (string $appId, string $configKey, ?string $default = null, ?string $organisationUuid = null): string {
-                    $this->assertSame('softwarecatalog', $appId);
-                    $this->assertSame('wijktype_register', $configKey);
-                    return '7';
-                }
-            );
+		$service = $this->makeService();
+		$this->assertSame(7, $service->getRegisterIdForObjectType('wijktype'));
 
-        $this->container->method('get')->willReturn($resolver);
+	}//end testGetRegisterIdRoutesThroughResolverWhenAvailable()
 
-        $this->config->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default = ''): string {
-                if ($key === 'voorzieningen_config') {
-                    return '{}';
-                }
+	/**
+	 * OR not installed → resolver is never consulted, legacy fallback owns the read.
+	 *
+	 * @return void
+	 */
+	public function testGetSchemaIdSkipsResolverWhenOpenRegisterAbsent(): void {
+		$this->appManager->method('getInstalledApps')->willReturn([]);
 
-                if ($key === 'amef_config') {
-                    return '{}';
-                }
+		// container->get must NEVER be called when OR is absent.
+		$this->container->expects($this->never())->method('get');
 
-                return $default;
-            }
-        );
+		$this->config->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = ''): string {
+				if ($key === 'voorzieningen_config') {
+					return '{}';
+				}
 
-        $service = $this->makeService();
-        $this->assertSame(7, $service->getRegisterIdForObjectType('wijktype'));
+				if ($key === 'amef_config') {
+					return '{}';
+				}
 
-    }//end testGetRegisterIdRoutesThroughResolverWhenAvailable()
+				if ($key === 'noOr_schema') {
+					return '13';
+				}
 
+				return $default;
+			}
+		);
 
-    /**
-     * OR not installed → resolver is never consulted, legacy fallback owns the read.
-     *
-     * @return void
-     */
-    public function testGetSchemaIdSkipsResolverWhenOpenRegisterAbsent(): void
-    {
-        $this->appManager->method('getInstalledApps')->willReturn([]);
+		$service = $this->makeService();
+		$this->assertSame(13, $service->getSchemaIdForObjectType('noOr'));
 
-        // container->get must NEVER be called when OR is absent.
-        $this->container->expects($this->never())->method('get');
-
-        $this->config->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default = ''): string {
-                if ($key === 'voorzieningen_config') {
-                    return '{}';
-                }
-
-                if ($key === 'amef_config') {
-                    return '{}';
-                }
-
-                if ($key === 'noOr_schema') {
-                    return '13';
-                }
-
-                return $default;
-            }
-        );
-
-        $service = $this->makeService();
-        $this->assertSame(13, $service->getSchemaIdForObjectType('noOr'));
-
-    }//end testGetSchemaIdSkipsResolverWhenOpenRegisterAbsent()
-
+	}//end testGetSchemaIdSkipsResolverWhenOpenRegisterAbsent()
 
 }//end class

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Federation Sync Background Job.
  *
@@ -11,13 +12,13 @@
  * @package   OCA\SoftwareCatalog\BackgroundJob
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
- * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/federated-catalog-sync/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -33,57 +34,55 @@ use Psr\Log\LoggerInterface;
 /**
  * Scheduled federation announce/pull job.
  */
-class FederationSyncJob extends TimedJob
-{
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory      $timeFactory The time factory for scheduling.
-     * @param FederationService $federation  The federation service.
-     * @param FederationConfig  $config      The federation config (interval).
-     * @param LoggerInterface   $logger      The logger.
-     */
-    public function __construct(
-        ITimeFactory $timeFactory,
-        private readonly FederationService $federation,
-        FederationConfig $config,
-        private readonly LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $timeFactory);
-        $this->setInterval(seconds: $config->getSyncInterval());
-    }//end __construct()
+class FederationSyncJob extends TimedJob {
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $timeFactory The time factory for scheduling.
+	 * @param FederationService $federation The federation service.
+	 * @param FederationConfig $config The federation config (interval).
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		ITimeFactory $timeFactory,
+		private readonly FederationService $federation,
+		FederationConfig $config,
+		private readonly LoggerInterface $logger,
+	) {
+		parent::__construct(time: $timeFactory);
+		$this->setInterval(seconds: $config->getSyncInterval());
+	}//end __construct()
 
-    /**
-     * Run the federation pass (announce; peer-pull lands with the OR predicate fix).
-     *
-     * @param mixed $argument Job arguments (not used).
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     * @spec                                          openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
-     */
-    protected function run($argument): void
-    {
-        if ($this->federation->isAvailable() === false) {
-            $this->logger->info('[FederationSyncJob] OpenCatalogi unavailable, skipping run');
-            return;
-        }
+	/**
+	 * Run the federation pass (announce; peer-pull lands with the OR predicate fix).
+	 *
+	 * @param mixed $argument Job arguments (not used).
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 * @spec                                          openspec/specs/federated-catalog-sync/spec.md
+	 */
+	protected function run($argument): void {
+		if ($this->federation->isAvailable() === false) {
+			$this->logger->info('[FederationSyncJob] OpenCatalogi unavailable, skipping run');
+			return;
+		}
 
-        try {
-            $result = $this->federation->announce();
-            $this->logger->info('[FederationSyncJob] Announce pass complete', ['result' => $result]);
+		try {
+			$result = $this->federation->announce();
+			$this->logger->info('[FederationSyncJob] Announce pass complete', ['result' => $result]);
 
-            // Pull subscribed peers (each peer is isolated — one unreachable
-            // peer cannot block the rest; failures mark mirrors stale, never
-            // silently delete them).
-            $pull = $this->federation->pullAllPeers();
-            $this->logger->info('[FederationSyncJob] Peer-pull pass complete', ['result' => $pull]);
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                '[FederationSyncJob] Fatal error during federation pass — cron pass protected',
-                ['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]
-            );
-        }
-    }//end run()
+			// Pull subscribed peers (each peer is isolated — one unreachable
+			// peer cannot block the rest; failures mark mirrors stale, never
+			// silently delete them).
+			$pull = $this->federation->pullAllPeers();
+			$this->logger->info('[FederationSyncJob] Peer-pull pass complete', ['result' => $pull]);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'[FederationSyncJob] Fatal error during federation pass — cron pass protected',
+				['error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]
+			);
+		}
+	}//end run()
 }//end class

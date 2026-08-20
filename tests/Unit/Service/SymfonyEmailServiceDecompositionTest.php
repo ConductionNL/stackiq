@@ -34,256 +34,237 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-7-5
  */
-class SymfonyEmailServiceDecompositionTest extends TestCase
-{
+class SymfonyEmailServiceDecompositionTest extends TestCase {
 
-    /**
-     * Build a service with stub collaborators. SettingsService is a real
-     * partial-mock so the helpers can ask it for email settings.
-     *
-     * @param array $emailSettings Settings returned from getEmailSettings()
-     *
-     * @return SymfonyEmailService
-     */
-    private function makeService(array $emailSettings): SymfonyEmailService
-    {
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getEmailSettings')->willReturn($emailSettings);
+	/**
+	 * Build a service with stub collaborators. SettingsService is a real
+	 * partial-mock so the helpers can ask it for email settings.
+	 *
+	 * @param array $emailSettings Settings returned from getEmailSettings()
+	 *
+	 * @return SymfonyEmailService
+	 */
+	private function makeService(array $emailSettings): SymfonyEmailService {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getEmailSettings')->willReturn($emailSettings);
 
-        return new SymfonyEmailService(
-            $this->createMock(IAppConfig::class),
-            $this->createMock(LoggerInterface::class),
-            $settings,
-        );
+		return new SymfonyEmailService(
+			$this->createMock(IAppConfig::class),
+			$this->createMock(LoggerInterface::class),
+			$settings,
+		);
 
-    }//end makeService()
+	}//end makeService()
 
+	/**
+	 * renderTemplate prefers a custom template override from email
+	 * settings over the built-in default and substitutes variables in.
+	 *
+	 * @return void
+	 */
+	public function testRenderTemplateUsesCustomOverride(): void {
+		$service = $this->makeService(
+			[
+				'templates' => [
+					'organization_registration' => '<p>Welcome, {{ organization.name }}.</p>',
+				],
+			]
+		);
 
-    /**
-     * renderTemplate prefers a custom template override from email
-     * settings over the built-in default and substitutes variables in.
-     *
-     * @return void
-     */
-    public function testRenderTemplateUsesCustomOverride(): void
-    {
-        $service = $this->makeService(
-            [
-                'templates' => [
-                    'organization_registration' => '<p>Welcome, {{ organization.name }}.</p>',
-                ],
-            ]
-        );
+		$reflection = new \ReflectionMethod($service, 'renderTemplate');
+		$reflection->setAccessible(true);
 
-        $reflection = new \ReflectionMethod($service, 'renderTemplate');
-        $reflection->setAccessible(true);
+		$rendered = $reflection->invoke(
+			$service,
+			'organization_registration',
+			['organization' => ['name' => 'Acme BV']]
+		);
 
-        $rendered = $reflection->invoke(
-            $service,
-            'organization_registration',
-            ['organization' => ['name' => 'Acme BV']]
-        );
+		$this->assertStringContainsString('Acme BV', $rendered);
+		$this->assertStringStartsWith('<p>Welcome,', $rendered);
 
-        $this->assertStringContainsString('Acme BV', $rendered);
-        $this->assertStringStartsWith('<p>Welcome,', $rendered);
+	}//end testRenderTemplateUsesCustomOverride()
 
-    }//end testRenderTemplateUsesCustomOverride()
+	/**
+	 * renderTemplate falls through to the built-in default template when
+	 * no override is configured.
+	 *
+	 * @return void
+	 */
+	public function testRenderTemplateFallsBackToDefault(): void {
+		$service = $this->makeService(['templates' => []]);
+		$reflection = new \ReflectionMethod($service, 'renderTemplate');
+		$reflection->setAccessible(true);
 
+		$rendered = $reflection->invoke($service, 'organization_registration', []);
 
-    /**
-     * renderTemplate falls through to the built-in default template when
-     * no override is configured.
-     *
-     * @return void
-     */
-    public function testRenderTemplateFallsBackToDefault(): void
-    {
-        $service    = $this->makeService(['templates' => []]);
-        $reflection = new \ReflectionMethod($service, 'renderTemplate');
-        $reflection->setAccessible(true);
+		// The default templates are non-empty HTML — just assert we got
+		// something resembling HTML back, not an exception.
+		$this->assertNotSame('', $rendered);
+		$this->assertIsString($rendered);
 
-        $rendered = $reflection->invoke($service, 'organization_registration', []);
+	}//end testRenderTemplateFallsBackToDefault()
 
-        // The default templates are non-empty HTML — just assert we got
-        // something resembling HTML back, not an exception.
-        $this->assertNotSame('', $rendered);
-        $this->assertIsString($rendered);
+	/**
+	 * resolveSender returns the configured sender details and transport
+	 * type as a tuple.
+	 *
+	 * @return void
+	 */
+	public function testResolveSenderReturnsConfiguredTuple(): void {
+		$service = $this->makeService(
+			[
+				'senderEmail' => 'no-reply@example.org',
+				'senderName' => 'Catalog Bot',
+				'transportType' => 'sendgrid',
+			]
+		);
 
-    }//end testRenderTemplateFallsBackToDefault()
+		$reflection = new \ReflectionMethod($service, 'resolveSender');
+		$reflection->setAccessible(true);
 
+		[$senderEmail, $senderName, $transport] = $reflection->invoke($service);
 
-    /**
-     * resolveSender returns the configured sender details and transport
-     * type as a tuple.
-     *
-     * @return void
-     */
-    public function testResolveSenderReturnsConfiguredTuple(): void
-    {
-        $service = $this->makeService(
-            [
-                'senderEmail'   => 'no-reply@example.org',
-                'senderName'    => 'Catalog Bot',
-                'transportType' => 'sendgrid',
-            ]
-        );
+		$this->assertSame('no-reply@example.org', $senderEmail);
+		$this->assertSame('Catalog Bot', $senderName);
+		$this->assertSame('sendgrid', $transport);
 
-        $reflection = new \ReflectionMethod($service, 'resolveSender');
-        $reflection->setAccessible(true);
+	}//end testResolveSenderReturnsConfiguredTuple()
 
-        [$senderEmail, $senderName, $transport] = $reflection->invoke($service);
+	/**
+	 * resolveSender falls back to defaults when settings are empty.
+	 *
+	 * @return void
+	 */
+	public function testResolveSenderUsesDefaultsWhenSettingsEmpty(): void {
+		$service = $this->makeService([]);
+		$reflection = new \ReflectionMethod($service, 'resolveSender');
+		$reflection->setAccessible(true);
 
-        $this->assertSame('no-reply@example.org', $senderEmail);
-        $this->assertSame('Catalog Bot', $senderName);
-        $this->assertSame('sendgrid', $transport);
+		[$senderEmail, $senderName, $transport] = $reflection->invoke($service);
 
-    }//end testResolveSenderReturnsConfiguredTuple()
+		$this->assertNotSame('', $senderEmail);
+		$this->assertNotSame('', $senderName);
+		$this->assertSame('smtp', $transport);
 
+	}//end testResolveSenderUsesDefaultsWhenSettingsEmpty()
 
-    /**
-     * resolveSender falls back to defaults when settings are empty.
-     *
-     * @return void
-     */
-    public function testResolveSenderUsesDefaultsWhenSettingsEmpty(): void
-    {
-        $service    = $this->makeService([]);
-        $reflection = new \ReflectionMethod($service, 'resolveSender');
-        $reflection->setAccessible(true);
+	/**
+	 * ensureEmailDeliveryReady returns null when the configured
+	 * isEmailSystemConfigured() check fails.
+	 *
+	 * @return void
+	 */
+	public function testEnsureEmailDeliveryReadySkipsWhenUnconfigured(): void {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getEmailSettings')->willReturn([]);
 
-        [$senderEmail, $senderName, $transport] = $reflection->invoke($service);
+		$service = new SymfonyEmailService(
+			$this->createMock(IAppConfig::class),
+			$this->createMock(LoggerInterface::class),
+			$settings,
+		);
 
-        $this->assertNotSame('', $senderEmail);
-        $this->assertNotSame('', $senderName);
-        $this->assertSame('smtp', $transport);
+		// Override isEmailSystemConfigured via a subclass partial mock would
+		// require generator surgery; instead we accept that an unconfigured
+		// service (no DSN, no credentials) reports `configured: false` and
+		// returns null straight away.
+		$ref = new \ReflectionMethod($service, 'ensureEmailDeliveryReady');
+		$ref->setAccessible(true);
 
-    }//end testResolveSenderUsesDefaultsWhenSettingsEmpty()
+		$result = $ref->invokeArgs(
+			$service,
+			['OrganizationRegistrationEmail', 'organizationRegistrationEnabled', ['organizationName' => 'Acme']]
+		);
 
+		$this->assertNull($result);
 
-    /**
-     * ensureEmailDeliveryReady returns null when the configured
-     * isEmailSystemConfigured() check fails.
-     *
-     * @return void
-     */
-    public function testEnsureEmailDeliveryReadySkipsWhenUnconfigured(): void
-    {
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getEmailSettings')->willReturn([]);
+	}//end testEnsureEmailDeliveryReadySkipsWhenUnconfigured()
 
-        $service = new SymfonyEmailService(
-            $this->createMock(IAppConfig::class),
-            $this->createMock(LoggerInterface::class),
-            $settings,
-        );
+	/**
+	 * ensureEmailDeliveryReady returns null + emits an info log when the
+	 * configured per-type "enabled" flag is false.
+	 *
+	 * @return void
+	 */
+	public function testEnsureEmailDeliveryReadySkipsWhenTypeDisabled(): void {
+		// We mock the call to isEmailSystemConfigured by making the
+		// upstream configuration sufficient to pass it. The simplest path:
+		// verify that even when isEmailSystemConfigured passes, a false
+		// settings flag short-circuits. Since wiring full configuration is
+		// expensive, instead invoke the helper with a partial mock that
+		// returns `configured: true` directly.
+		$service = $this->getMockBuilder(SymfonyEmailService::class)
+			->setConstructorArgs([
+				$this->createMock(IAppConfig::class),
+				$this->createMock(LoggerInterface::class),
+				$this->makeSettingsReturning(['organizationRegistrationEnabled' => false]),
+			])
+			->onlyMethods(['isEmailSystemConfigured'])
+			->getMock();
+		$service->method('isEmailSystemConfigured')->willReturn([
+			'configured' => true,
+			'reason' => null,
+			'hasCredentials' => true,
+			'hasTemplates' => true,
+			'transportType' => 'smtp',
+		]);
 
-        // Override isEmailSystemConfigured via a subclass partial mock would
-        // require generator surgery; instead we accept that an unconfigured
-        // service (no DSN, no credentials) reports `configured: false` and
-        // returns null straight away.
-        $ref = new \ReflectionMethod($service, 'ensureEmailDeliveryReady');
-        $ref->setAccessible(true);
+		$ref = new \ReflectionMethod($service, 'ensureEmailDeliveryReady');
+		$ref->setAccessible(true);
 
-        $result = $ref->invokeArgs(
-            $service,
-            ['OrganizationRegistrationEmail', 'organizationRegistrationEnabled', ['organizationName' => 'Acme']]
-        );
+		$result = $ref->invokeArgs(
+			$service,
+			['OrganizationRegistrationEmail', 'organizationRegistrationEnabled', ['organizationName' => 'Acme']]
+		);
 
-        $this->assertNull($result);
+		$this->assertNull($result);
 
-    }//end testEnsureEmailDeliveryReadySkipsWhenUnconfigured()
+	}//end testEnsureEmailDeliveryReadySkipsWhenTypeDisabled()
 
+	/**
+	 * ensureEmailDeliveryReady returns the configStatus when both checks pass.
+	 *
+	 * @return void
+	 */
+	public function testEnsureEmailDeliveryReadyPasses(): void {
+		$service = $this->getMockBuilder(SymfonyEmailService::class)
+			->setConstructorArgs([
+				$this->createMock(IAppConfig::class),
+				$this->createMock(LoggerInterface::class),
+				$this->makeSettingsReturning(['organizationRegistrationEnabled' => true]),
+			])
+			->onlyMethods(['isEmailSystemConfigured'])
+			->getMock();
+		$service->method('isEmailSystemConfigured')->willReturn([
+			'configured' => true,
+			'reason' => null,
+			'hasCredentials' => true,
+			'hasTemplates' => true,
+			'transportType' => 'smtp',
+		]);
 
-    /**
-     * ensureEmailDeliveryReady returns null + emits an info log when the
-     * configured per-type "enabled" flag is false.
-     *
-     * @return void
-     */
-    public function testEnsureEmailDeliveryReadySkipsWhenTypeDisabled(): void
-    {
-        // We mock the call to isEmailSystemConfigured by making the
-        // upstream configuration sufficient to pass it. The simplest path:
-        // verify that even when isEmailSystemConfigured passes, a false
-        // settings flag short-circuits. Since wiring full configuration is
-        // expensive, instead invoke the helper with a partial mock that
-        // returns `configured: true` directly.
-        $service = $this->getMockBuilder(SymfonyEmailService::class)
-            ->setConstructorArgs([
-                $this->createMock(IAppConfig::class),
-                $this->createMock(LoggerInterface::class),
-                $this->makeSettingsReturning(['organizationRegistrationEnabled' => false]),
-            ])
-            ->onlyMethods(['isEmailSystemConfigured'])
-            ->getMock();
-        $service->method('isEmailSystemConfigured')->willReturn([
-            'configured'     => true,
-            'reason'         => null,
-            'hasCredentials' => true,
-            'hasTemplates'   => true,
-            'transportType'  => 'smtp',
-        ]);
+		$ref = new \ReflectionMethod($service, 'ensureEmailDeliveryReady');
+		$ref->setAccessible(true);
 
-        $ref = new \ReflectionMethod($service, 'ensureEmailDeliveryReady');
-        $ref->setAccessible(true);
+		$result = $ref->invokeArgs(
+			$service,
+			['OrganizationRegistrationEmail', 'organizationRegistrationEnabled', []]
+		);
 
-        $result = $ref->invokeArgs(
-            $service,
-            ['OrganizationRegistrationEmail', 'organizationRegistrationEnabled', ['organizationName' => 'Acme']]
-        );
+		$this->assertIsArray($result);
+		$this->assertSame('smtp', $result['transportType']);
 
-        $this->assertNull($result);
+	}//end testEnsureEmailDeliveryReadyPasses()
 
-    }//end testEnsureEmailDeliveryReadySkipsWhenTypeDisabled()
-
-
-    /**
-     * ensureEmailDeliveryReady returns the configStatus when both checks pass.
-     *
-     * @return void
-     */
-    public function testEnsureEmailDeliveryReadyPasses(): void
-    {
-        $service = $this->getMockBuilder(SymfonyEmailService::class)
-            ->setConstructorArgs([
-                $this->createMock(IAppConfig::class),
-                $this->createMock(LoggerInterface::class),
-                $this->makeSettingsReturning(['organizationRegistrationEnabled' => true]),
-            ])
-            ->onlyMethods(['isEmailSystemConfigured'])
-            ->getMock();
-        $service->method('isEmailSystemConfigured')->willReturn([
-            'configured'     => true,
-            'reason'         => null,
-            'hasCredentials' => true,
-            'hasTemplates'   => true,
-            'transportType'  => 'smtp',
-        ]);
-
-        $ref = new \ReflectionMethod($service, 'ensureEmailDeliveryReady');
-        $ref->setAccessible(true);
-
-        $result = $ref->invokeArgs(
-            $service,
-            ['OrganizationRegistrationEmail', 'organizationRegistrationEnabled', []]
-        );
-
-        $this->assertIsArray($result);
-        $this->assertSame('smtp', $result['transportType']);
-
-    }//end testEnsureEmailDeliveryReadyPasses()
-
-
-    /**
-     * Internal helper: build a SettingsService mock returning the supplied
-     * email settings.
-     */
-    private function makeSettingsReturning(array $emailSettings): SettingsService
-    {
-        $settings = $this->createMock(SettingsService::class);
-        $settings->method('getEmailSettings')->willReturn($emailSettings);
-        return $settings;
-    }
-
+	/**
+	 * Internal helper: build a SettingsService mock returning the supplied
+	 * email settings.
+	 */
+	private function makeSettingsReturning(array $emailSettings): SettingsService {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getEmailSettings')->willReturn($emailSettings);
+		return $settings;
+	}
 
 }//end class

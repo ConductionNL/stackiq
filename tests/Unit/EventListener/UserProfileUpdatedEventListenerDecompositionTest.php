@@ -21,11 +21,11 @@ declare(strict_types=1);
 
 namespace OCA\SoftwareCatalog\Tests\Unit\EventListener;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\SoftwareCatalog\EventListener\UserProfileUpdatedEventListener;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -37,155 +37,145 @@ use Psr\Log\NullLogger;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-8-4
  */
-class UserProfileUpdatedEventListenerDecompositionTest extends TestCase
-{
+class UserProfileUpdatedEventListenerDecompositionTest extends TestCase {
 
-    /**
-     * Build a listener with a stub container, skipping the test when the
-     * OpenRegister event class isn't autoloadable in this environment.
-     *
-     * @return UserProfileUpdatedEventListener
-     */
-    private function makeListener(): UserProfileUpdatedEventListener
-    {
-        if (class_exists('OCA\\OpenRegister\\Event\\UserProfileUpdatedEvent') === false) {
-            $this->markTestSkipped('OCA\\OpenRegister\\Event\\UserProfileUpdatedEvent is not autoloadable in this environment.');
-        }
+	/**
+	 * Build a listener with a stub container, skipping the test when the
+	 * OpenRegister event class isn't autoloadable in this environment.
+	 *
+	 * @return UserProfileUpdatedEventListener
+	 */
+	private function makeListener(): UserProfileUpdatedEventListener {
+		if (class_exists('OCA\\OpenRegister\\Event\\UserProfileUpdatedEvent') === false) {
+			$this->markTestSkipped('OCA\\OpenRegister\\Event\\UserProfileUpdatedEvent is not autoloadable in this environment.');
+		}
 
-        return new UserProfileUpdatedEventListener($this->createMock(ContainerInterface::class));
+		return new UserProfileUpdatedEventListener($this->createMock(ContainerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
+	}//end makeListener()
 
-    }//end makeListener()
+	/**
+	 * buildContactPatch maps changed fields via FIELD_MAP and returns only
+	 * the relevant entries.
+	 *
+	 * @return void
+	 */
+	public function testBuildContactPatchMapsChangedFields(): void {
+		$listener = $this->makeListener();
 
+		$event = $this->createMock(UserProfileUpdatedEvent::class);
+		$event->method('getNewData')->willReturn(
+			[
+				'firstName' => 'Alice',
+				'lastName' => 'Doe',
+				'email' => 'alice@example.com',
+				'unrelated' => 'ignored',
+			]
+		);
+		$event->method('getChanges')->willReturn(['firstName', 'lastName']);
 
-    /**
-     * buildContactPatch maps changed fields via FIELD_MAP and returns only
-     * the relevant entries.
-     *
-     * @return void
-     */
-    public function testBuildContactPatchMapsChangedFields(): void
-    {
-        $listener = $this->makeListener();
+		$reflection = new \ReflectionMethod($listener, 'buildContactPatch');
+		$reflection->setAccessible(true);
 
-        $event = $this->createMock(UserProfileUpdatedEvent::class);
-        $event->method('getNewData')->willReturn(
-            [
-                'firstName' => 'Alice',
-                'lastName'  => 'Doe',
-                'email'     => 'alice@example.com',
-                'unrelated' => 'ignored',
-            ]
-        );
-        $event->method('getChanges')->willReturn(['firstName', 'lastName']);
+		$patch = $reflection->invoke(
+			$listener,
+			$event,
+			'alice',
+			['username' => 'alice'],
+			'contact-uuid',
+			new NullLogger()
+		);
 
-        $reflection = new \ReflectionMethod($listener, 'buildContactPatch');
-        $reflection->setAccessible(true);
+		$this->assertSame(['voornaam' => 'Alice', 'achternaam' => 'Doe'], $patch);
 
-        $patch = $reflection->invoke(
-            $listener,
-            $event,
-            'alice',
-            ['username' => 'alice'],
-            'contact-uuid',
-            new NullLogger()
-        );
+	}//end testBuildContactPatchMapsChangedFields()
 
-        $this->assertSame(['voornaam' => 'Alice', 'achternaam' => 'Doe'], $patch);
+	/**
+	 * buildContactPatch falls back to empty string when a changed field
+	 * has a null new-value.
+	 *
+	 * @return void
+	 */
+	public function testBuildContactPatchCoercesNullToEmptyString(): void {
+		$listener = $this->makeListener();
 
-    }//end testBuildContactPatchMapsChangedFields()
+		$event = $this->createMock(UserProfileUpdatedEvent::class);
+		$event->method('getNewData')->willReturn(['role' => null]);
+		$event->method('getChanges')->willReturn(['role']);
 
+		$reflection = new \ReflectionMethod($listener, 'buildContactPatch');
+		$reflection->setAccessible(true);
 
-    /**
-     * buildContactPatch falls back to empty string when a changed field
-     * has a null new-value.
-     *
-     * @return void
-     */
-    public function testBuildContactPatchCoercesNullToEmptyString(): void
-    {
-        $listener = $this->makeListener();
+		$patch = $reflection->invoke(
+			$listener,
+			$event,
+			'bob',
+			['username' => 'bob'],
+			'contact-uuid',
+			new NullLogger()
+		);
 
-        $event = $this->createMock(UserProfileUpdatedEvent::class);
-        $event->method('getNewData')->willReturn(['functie' => null]);
-        $event->method('getChanges')->willReturn(['functie']);
+		$this->assertSame(['role' => ''], $patch);
 
-        $reflection = new \ReflectionMethod($listener, 'buildContactPatch');
-        $reflection->setAccessible(true);
+	}//end testBuildContactPatchCoercesNullToEmptyString()
 
-        $patch = $reflection->invoke(
-            $listener,
-            $event,
-            'bob',
-            ['username' => 'bob'],
-            'contact-uuid',
-            new NullLogger()
-        );
+	/**
+	 * buildContactPatch backfills the username when the contactpersoon
+	 * was found via the email-fallback and currently has no username.
+	 *
+	 * @return void
+	 */
+	public function testBuildContactPatchBackfillsUsername(): void {
+		$listener = $this->makeListener();
 
-        $this->assertSame(['functie' => ''], $patch);
+		$event = $this->createMock(UserProfileUpdatedEvent::class);
+		$event->method('getNewData')->willReturn([]);
+		$event->method('getChanges')->willReturn([]);
 
-    }//end testBuildContactPatchCoercesNullToEmptyString()
+		$reflection = new \ReflectionMethod($listener, 'buildContactPatch');
+		$reflection->setAccessible(true);
 
+		$patch = $reflection->invoke(
+			$listener,
+			$event,
+			'carol',
+			[],
+			'contact-uuid',
+			new NullLogger()
+		);
 
-    /**
-     * buildContactPatch backfills the username when the contactpersoon
-     * was found via the email-fallback and currently has no username.
-     *
-     * @return void
-     */
-    public function testBuildContactPatchBackfillsUsername(): void
-    {
-        $listener = $this->makeListener();
+		$this->assertSame(['username' => 'carol'], $patch);
 
-        $event = $this->createMock(UserProfileUpdatedEvent::class);
-        $event->method('getNewData')->willReturn([]);
-        $event->method('getChanges')->willReturn([]);
+	}//end testBuildContactPatchBackfillsUsername()
 
-        $reflection = new \ReflectionMethod($listener, 'buildContactPatch');
-        $reflection->setAccessible(true);
+	/**
+	 * buildContactPatch returns an empty array when no fields changed and
+	 * the contactpersoon already has a username.
+	 *
+	 * @return void
+	 */
+	public function testBuildContactPatchEmptyWhenNothingToChange(): void {
+		$listener = $this->makeListener();
 
-        $patch = $reflection->invoke(
-            $listener,
-            $event,
-            'carol',
-            [],
-            'contact-uuid',
-            new NullLogger()
-        );
+		$event = $this->createMock(UserProfileUpdatedEvent::class);
+		$event->method('getNewData')->willReturn([]);
+		$event->method('getChanges')->willReturn([]);
 
-        $this->assertSame(['username' => 'carol'], $patch);
+		$reflection = new \ReflectionMethod($listener, 'buildContactPatch');
+		$reflection->setAccessible(true);
 
-    }//end testBuildContactPatchBackfillsUsername()
+		$patch = $reflection->invoke(
+			$listener,
+			$event,
+			'dave',
+			['username' => 'dave'],
+			'contact-uuid',
+			new NullLogger()
+		);
 
+		$this->assertSame([], $patch);
 
-    /**
-     * buildContactPatch returns an empty array when no fields changed and
-     * the contactpersoon already has a username.
-     *
-     * @return void
-     */
-    public function testBuildContactPatchEmptyWhenNothingToChange(): void
-    {
-        $listener = $this->makeListener();
-
-        $event = $this->createMock(UserProfileUpdatedEvent::class);
-        $event->method('getNewData')->willReturn([]);
-        $event->method('getChanges')->willReturn([]);
-
-        $reflection = new \ReflectionMethod($listener, 'buildContactPatch');
-        $reflection->setAccessible(true);
-
-        $patch = $reflection->invoke(
-            $listener,
-            $event,
-            'dave',
-            ['username' => 'dave'],
-            'contact-uuid',
-            new NullLogger()
-        );
-
-        $this->assertSame([], $patch);
-
-    }//end testBuildContactPatchEmptyWhenNothingToChange()
-
+	}//end testBuildContactPatchEmptyWhenNothingToChange()
 
 }//end class

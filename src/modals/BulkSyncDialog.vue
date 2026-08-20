@@ -11,9 +11,17 @@
 					<h3>What will happen:</h3>
 					<ul class="preview-list">
 						<li>Scan all {{ complianceCount }} compliance objects</li>
-						<li>Extract standaardversie references from each compliance object</li>
-						<li>Find the corresponding module for each compliance object</li>
-						<li>Update module standaarden arrays with extracted standaardversie IDs</li>
+						<li>
+							Extract standaardversie references from each compliance
+							object
+						</li>
+						<li>
+							Find the corresponding module for each compliance object
+						</li>
+						<li>
+							Update module standaarden arrays with extracted
+							standaardversie IDs
+						</li>
 						<li>Save modules only if changes are needed</li>
 					</ul>
 
@@ -21,7 +29,10 @@
 						<NcLoadingIcon :size="24" />
 						<p>Processing compliance objects...</p>
 						<div class="progress-info">
-							<p>Processed: {{ syncProgress.processed }} / {{ syncProgress.total }}</p>
+							<p>
+								Processed: {{ syncProgress.processed }} /
+								{{ syncProgress.total }}
+							</p>
 							<p>Modules updated: {{ syncProgress.modulesUpdated }}</p>
 						</div>
 					</div>
@@ -32,43 +43,65 @@
 					<h3>Sync Results:</h3>
 					<div class="results-stats">
 						<div class="stat-item">
-							<span class="stat-label">Compliance objects processed:</span>
-							<span class="stat-value">{{ syncResults.totalProcessed }}</span>
+							<span class="stat-label"
+								>Compliance objects processed:</span
+							>
+							<span class="stat-value">{{
+								syncResults.totalProcessed
+							}}</span>
 						</div>
 						<div class="stat-item">
 							<span class="stat-label">Modules found:</span>
-							<span class="stat-value">{{ syncResults.modulesFound }}</span>
+							<span class="stat-value">{{
+								syncResults.modulesFound
+							}}</span>
 						</div>
 						<div class="stat-item">
 							<span class="stat-label">Modules updated:</span>
-							<span class="stat-value success-value">{{ syncResults.modulesUpdated }}</span>
+							<span class="stat-value success-value">{{
+								syncResults.modulesUpdated
+							}}</span>
 						</div>
 						<div class="stat-item">
-							<span class="stat-label">Modules already up-to-date:</span>
-							<span class="stat-value">{{ syncResults.modulesAlreadyUpToDate || 0 }}</span>
+							<span class="stat-label"
+								>Modules already up-to-date:</span
+							>
+							<span class="stat-value">{{
+								syncResults.modulesAlreadyUpToDate || 0
+							}}</span>
 						</div>
 						<div class="stat-item">
-							<span class="stat-label">Modules with no standards:</span>
-							<span class="stat-value warning-value">{{ syncResults.modulesWithNoStandards || 0 }}</span>
+							<span class="stat-label"
+								>Modules with no standards:</span
+							>
+							<span class="stat-value warning-value">{{
+								syncResults.modulesWithNoStandards || 0
+							}}</span>
 						</div>
 						<div class="stat-item">
 							<span class="stat-label">Standards added:</span>
-							<span class="stat-value">{{ syncResults.standardsAdded }}</span>
+							<span class="stat-value">{{
+								syncResults.standardsAdded
+							}}</span>
 						</div>
 					</div>
 
 					<!-- Modules Table -->
-					<div v-if="syncResults.modules && syncResults.modules.length > 0" class="modules-table-section">
-						<h4>Processed Modules ({{ syncResults.modules.length }}):</h4>
+					<div
+						v-if="syncResults.modules && syncResults.modules.length > 0"
+						class="modules-table-section">
+						<h4>
+							Processed Modules ({{ syncResults.modules.length }}):
+						</h4>
 						<div class="modules-table-container">
 							<table class="modules-table">
 								<thead>
 									<tr>
-										<th>Module Name</th>
-										<th>Status</th>
-										<th>Reason</th>
-										<th>Compliance Count</th>
-										<th>Standards Count</th>
+										<th scope="col">Module Name</th>
+										<th scope="col">Status</th>
+										<th scope="col">Reason</th>
+										<th scope="col">Compliance Count</th>
+										<th scope="col">Standards Count</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -78,7 +111,9 @@
 										:class="'status-' + module.status">
 										<td class="module-name">
 											{{ module.name }}
-											<span class="module-uuid">{{ module.uuid }}</span>
+											<span class="module-uuid">{{
+												module.uuid
+											}}</span>
 										</td>
 										<td class="module-status">
 											<span
@@ -105,7 +140,9 @@
 					<div v-if="syncResults.errors.length > 0" class="errors-section">
 						<h4>Errors:</h4>
 						<ul class="error-list">
-							<li v-for="errorMsg in syncResults.errors" :key="errorMsg">
+							<li
+								v-for="errorMsg in syncResults.errors"
+								:key="errorMsg">
 								{{ errorMsg }}
 							</li>
 						</ul>
@@ -117,7 +154,7 @@
 				<NcButton
 					v-if="!syncCompleted"
 					:disabled="bulkSyncLoading"
-					type="primary"
+					variant="primary"
 					@click="startBulkSync">
 					{{ bulkSyncLoading ? 'Syncing...' : 'Start Sync' }}
 				</NcButton>
@@ -130,12 +167,8 @@
 </template>
 
 <script>
+import { NcButton, NcLoadingIcon, NcModal } from '@nextcloud/vue'
 import { defineComponent } from 'vue'
-import {
-	NcButton,
-	NcLoadingIcon,
-	NcModal,
-} from '@nextcloud/vue'
 
 /**
  * Bulk Sync Module Standards dialog
@@ -143,7 +176,7 @@ import {
  *
  * @author   Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2
  * @version  1.0.0
  */
 export default defineComponent({
@@ -202,7 +235,8 @@ export default defineComponent({
 		/**
 		 * Watch the open prop to reset sync state when dialog opens
 		 *
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @param value
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		open(value) {
 			if (value === true) {
@@ -216,7 +250,7 @@ export default defineComponent({
 		/**
 		 * Close the bulk sync dialog
 		 *
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		closeBulkSyncDialog() {
 			this.syncCompleted = false
@@ -229,7 +263,7 @@ export default defineComponent({
 		/**
 		 * Reset sync state
 		 *
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		resetSyncState() {
 			this.syncProgress = {
@@ -249,7 +283,7 @@ export default defineComponent({
 		/**
 		 * Start the bulk sync process
 		 *
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async startBulkSync() {
 			this.bulkSyncLoading = true
@@ -266,7 +300,6 @@ export default defineComponent({
 
 				// Notify parent so it can refresh statistics
 				this.$emit('synced')
-
 			} catch (error) {
 				console.error('Bulk sync failed:', error)
 				this.syncResults.errors.push(`Sync failed: ${error.message}`)
@@ -281,17 +314,20 @@ export default defineComponent({
 		 * Perform the bulk sync API call
 		 *
 		 * @return {Promise} API response
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-8
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async performBulkSync() {
-			const response = await fetch('/index.php/apps/softwarecatalog/api/bulk-sync-standards', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-Requested-With': 'XMLHttpRequest',
+			const response = await fetch(
+				'/index.php/apps/softwarecatalog/api/bulk-sync-standards',
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Requested-With': 'XMLHttpRequest',
+					},
+					body: JSON.stringify({}),
 				},
-				body: JSON.stringify({}),
-			})
+			)
 
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`)

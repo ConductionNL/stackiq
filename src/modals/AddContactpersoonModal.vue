@@ -6,60 +6,65 @@ Modal component for adding new contactpersoon to an organisation
 @package softwarecatalog
 @author Ruben Linde
 @copyright 2024
-@license AGPL-3.0-or-later
+@license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
 @version 1.0.0
 @link https://github.com/opencatalogi/softwarecatalog
 -->
 
 <template>
-	<NcDialog v-if="show"
+	<NcDialog
+		v-if="show"
 		:name="t('softwarecatalog', 'Add Contactpersoon')"
 		size="small"
 		@closing="closeModal">
 		<div class="add-contactpersoon-modal">
 			<p class="modal-description">
-				{{ t('softwarecatalog', 'Add a new contactpersoon to organisation: {name}', { name: organisation?.naam || 'Unknown' }) }}
+				{{
+					t(
+						'softwarecatalog',
+						'Add a new contact person to organisation: {name}',
+						{ name: organisation?.name || 'Unknown' },
+					)
+				}}
 			</p>
 
 			<form class="contactpersoon-form" @submit.prevent="saveContactpersoon">
 				<div class="form-row">
 					<NcTextField
-						:value="formData.voornaam"
+						v-model="formData.voornaam"
 						:label="t('softwarecatalog', 'First Name')"
 						:placeholder="t('softwarecatalog', 'Enter first name')"
 						class="compact-field"
-						required
-						@update:value="formData.voornaam = $event" />
+						required />
 				</div>
 
 				<div class="form-row">
 					<NcTextField
-						:value="formData.achternaam"
+						v-model="formData.achternaam"
 						:label="t('softwarecatalog', 'Last Name')"
 						:placeholder="t('softwarecatalog', 'Enter last name')"
 						class="compact-field"
-						required
-						@update:value="formData.achternaam = $event" />
+						required />
 				</div>
 
 				<div class="form-row">
 					<NcTextField
-						:value="formData['e-mailadres']"
+						v-model="formData['e-mailadres']"
 						type="email"
 						:label="t('softwarecatalog', 'Email Address')"
 						:placeholder="t('softwarecatalog', 'Enter email address')"
 						class="compact-field"
-						required
-						@update:value="formData['e-mailadres'] = $event" />
+						required />
 				</div>
 
 				<div class="dialog-actions">
-					<NcButton type="secondary" @click="closeModal">
+					<NcButton variant="secondary" @click="closeModal">
 						{{ t('softwarecatalog', 'Cancel') }}
 					</NcButton>
-					<NcButton type="primary"
+					<NcButton
+						variant="primary"
 						:disabled="loading || !isFormValid"
-						native-type="submit">
+						type="submit">
 						<template #icon>
 							<NcLoadingIcon v-if="loading" :size="20" />
 						</template>
@@ -72,15 +77,9 @@ Modal component for adding new contactpersoon to an organisation
 </template>
 
 <script>
-import {
-	NcDialog,
-	NcButton,
-	NcTextField,
-	NcLoadingIcon,
-} from '@nextcloud/vue'
-
-import { showSuccess, showError } from '@nextcloud/dialogs'
-import { objectStore, navigationStore } from '../store/store.js'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { navigationStore, objectStore } from '../store/store.js'
 
 export default {
 	name: 'AddContactpersoonModal',
@@ -97,6 +96,7 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		organisation: {
 			type: Object,
 			default: () => ({}),
@@ -118,19 +118,21 @@ export default {
 
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		isFormValid() {
-			return this.formData.voornaam.trim()
-				   && this.formData.achternaam.trim()
-				   && this.formData['e-mailadres'].trim()
-				   && this.isValidEmail(this.formData['e-mailadres'])
+			return (
+				this.formData.voornaam.trim()
+				&& this.formData.achternaam.trim()
+				&& this.formData['e-mailadres'].trim()
+				&& this.isValidEmail(this.formData['e-mailadres'])
+			)
 		},
 	},
 
 	methods: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closeModal() {
 			this.resetForm()
@@ -138,7 +140,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		resetForm() {
 			this.formData = {
@@ -150,7 +152,8 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @param email
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		isValidEmail(email) {
 			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -158,11 +161,16 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async saveContactpersoon() {
 			if (!this.isFormValid) {
-				showError(this.t('softwarecatalog', 'Please fill in all required fields with valid data'))
+				showError(
+					this.t(
+						'softwarecatalog',
+						'Please fill in all required fields with valid data',
+					),
+				)
 				return
 			}
 
@@ -170,13 +178,14 @@ export default {
 
 			try {
 				// Get schema configuration for contactpersoon
-				const contactpersoonConfig = objectStore.getSchemaConfig('contactpersoon')
+				const contactpersoonConfig =
+					objectStore.getSchemaConfig('contactPerson')
 
 				// Create new contactpersoon object with proper structure
 				const newContactpersoonObject = {
 					...this.formData,
-					naam: `${this.formData.voornaam} ${this.formData.achternaam}`.trim(),
-					organisatie: this.organisation.id || this.organisation.uuid,
+					name: `${this.formData.voornaam} ${this.formData.achternaam}`.trim(),
+					organization: this.organisation.id || this.organisation.uuid,
 					'@self': {
 						created: new Date().toISOString(),
 						updated: new Date().toISOString(),
@@ -186,12 +195,17 @@ export default {
 				}
 
 				// Save the new contactpersoon object.
-				const result = await objectStore.saveObject(newContactpersoonObject, {
-					register: contactpersoonConfig.register,
-					schema: contactpersoonConfig.schema,
-				})
+				const result = await objectStore.saveObject(
+					newContactpersoonObject,
+					{
+						register: contactpersoonConfig.register,
+						schema: contactpersoonConfig.schema,
+					},
+				)
 
-				showSuccess(this.t('softwarecatalog', 'Contactpersoon added successfully'))
+				showSuccess(
+					this.t('softwarecatalog', 'Contactpersoon added successfully'),
+				)
 
 				// Emit event to parent component.
 				this.$emit('contactpersoon-added', result.data)
@@ -203,24 +217,32 @@ export default {
 				navigationStore.setTransferData({
 					action: 'contactpersoonAdded',
 				})
-
 			} catch (error) {
-				console.error('Error adding contactpersoon:', error)
-				showError(this.t('softwarecatalog', 'Failed to add contactpersoon: {error}', { error: error.message }))
+				console.error('Error adding contact person:', error)
+				showError(
+					this.t(
+						'softwarecatalog',
+						'Failed to add contact person: {error}',
+						{ error: error.message },
+					),
+				)
 			} finally {
 				this.loading = false
 			}
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-1
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		generateUuid() {
-			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-				const r = Math.random() * 16 | 0
-				const v = c === 'x' ? r : (r & 0x3 | 0x8)
-				return v.toString(16)
-			})
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+				/[xy]/g,
+				function (c) {
+					const r = (Math.random() * 16) | 0
+					const v = c === 'x' ? r : (r & 0x3) | 0x8
+					return v.toString(16)
+				},
+			)
 		},
 	},
 }
@@ -241,7 +263,7 @@ export default {
 	line-height: 1.4;
 }
 
-.contactpersoon-form {
+.contactPerson-form {
 	width: 100%;
 }
 

@@ -3,7 +3,7 @@
 		<NcSettingsSection
 			name="Software Catalog"
 			description="A central place for managing your software"
-			doc-url="https://docs.softwarecatalog.nl" />
+			docUrl="https://docs.softwarecatalog.nl" />
 
 		<NcSettingsSection
 			name="Data storage"
@@ -11,7 +11,8 @@
 			<div v-if="!loading">
 				<!-- Warning if OpenRegister is not installed -->
 				<NcNoteCard v-if="!settings.openRegisters" type="warning">
-					Open Register is not installed. Please install it to use the Open Catalogi app with full functionality.
+					Open Register is not installed. Please install it to use the Open
+					Catalogi app with full functionality.
 				</NcNoteCard>
 
 				<!-- Register Selection -->
@@ -22,22 +23,28 @@
 					<NcSelect
 						v-model="selectedRegister"
 						:options="registerOptions"
-						input-label="Register"
+						inputLabel="Register"
 						:disabled="loading || !settings.openRegisters"
-						@change="handleRegisterChange" />
+						@update:modelValue="handleRegisterChange" />
 				</div>
 
 				<!-- Warning if selected register has no schemas -->
 				<NcNoteCard v-if="selectedRegister && !hasSchemas" type="warning">
-					The selected register has no schemas. Please create schemas in this register or select a different register.
+					The selected register has no schemas. Please create schemas in
+					this register or select a different register.
 				</NcNoteCard>
 
 				<!-- Object Type Schema Configuration -->
-				<div v-if="selectedRegister && hasSchemas" class="schema-configuration">
+				<div
+					v-if="selectedRegister && hasSchemas"
+					class="schema-configuration">
 					<h3>Schema Configuration</h3>
 					<p>Select which schema to use for each object type</p>
 
-					<div v-for="objectType in settings.objectTypes" :key="objectType" class="object-type-section">
+					<div
+						v-for="objectType in settings.objectTypes"
+						:key="objectType"
+						class="object-type-section">
 						<div class="object-type-header">
 							<h4>{{ formatTitle(objectType) }}</h4>
 						</div>
@@ -45,7 +52,7 @@
 						<NcSelect
 							v-model="configuration[objectType].schema"
 							:options="computedSchemaOptions"
-							input-label="Schema"
+							inputLabel="Schema"
 							:disabled="loading" />
 					</div>
 				</div>
@@ -53,8 +60,10 @@
 				<!-- Save Buttons -->
 				<div class="button-container">
 					<NcButton
-						type="primary"
-						:disabled="loading || saving || !selectedRegister || !hasSchemas"
+						variant="primary"
+						:disabled="
+							loading || saving || !selectedRegister || !hasSchemas
+						"
 						@click="saveAll">
 						<template #icon>
 							<NcLoadingIcon v-if="saving" :size="20" />
@@ -66,7 +75,8 @@
 			</div>
 
 			<!-- Loading State -->
-			<NcLoadingIcon v-else
+			<NcLoadingIcon
+				v-else
 				class="loading-icon"
 				:size="64"
 				appearance="dark" />
@@ -82,11 +92,12 @@
 					<p>Set the base URL for your catalog interface</p>
 
 					<NcTextField
-						:value.sync="catalogLocation"
+						v-model="catalogLocation"
 						:label="t('softwarecatalog', 'Catalog Location URL')"
-						:placeholder="t('softwarecatalog', 'https://catalog.example.com')"
-						:disabled="loading || savingCatalogLocation"
-						@update:value="onCatalogLocationChange">
+						:placeholder="
+							t('softwarecatalog', 'https://catalog.example.com')
+						"
+						:disabled="loading || savingCatalogLocation">
 						<template #icon>
 							<Web :size="16" />
 						</template>
@@ -94,18 +105,25 @@
 
 					<div class="catalog-location-help">
 						<p class="help-text">
-							This URL will be used for "Go to organisation" links. The system will append "/beheer" to this URL.
+							This URL will be used for "Go to organisation" links. The
+							system will append "/beheer" to this URL.
 						</p>
 					</div>
 
 					<!-- Save Catalog Location Button -->
 					<div class="button-container">
 						<NcButton
-							type="secondary"
-							:disabled="loading || savingCatalogLocation || !catalogLocationChanged"
+							variant="secondary"
+							:disabled="
+								loading
+								|| savingCatalogLocation
+								|| !catalogLocationChanged
+							"
 							@click="saveCatalogLocation">
 							<template #icon>
-								<NcLoadingIcon v-if="savingCatalogLocation" :size="20" />
+								<NcLoadingIcon
+									v-if="savingCatalogLocation"
+									:size="20" />
 								<Save v-else :size="20" />
 							</template>
 							Save Catalog Location
@@ -115,7 +133,8 @@
 			</div>
 
 			<!-- Loading State -->
-			<NcLoadingIcon v-else
+			<NcLoadingIcon
+				v-else
 				class="loading-icon"
 				:size="64"
 				appearance="dark" />
@@ -124,15 +143,15 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
 import {
-	NcSettingsSection,
-	NcNoteCard,
-	NcSelect,
 	NcButton,
 	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
+import { defineComponent } from 'vue'
 import Save from 'vue-material-design-icons/ContentSave.vue'
 import Web from 'vue-material-design-icons/Web.vue'
 
@@ -181,6 +200,7 @@ export default defineComponent({
 				configuration: {},
 				catalogLocation: '',
 			},
+
 			selectedRegister: null,
 			configuration: {},
 			schemaOptions: [],
@@ -194,10 +214,10 @@ export default defineComponent({
 		 * Generates options for register selection dropdown
 		 *
 		 * @return {Array<object>} Array of register options with label and value
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		registerOptions() {
-			return this.settings.availableRegisters.map(register => ({
+			return this.settings.availableRegisters.map((register) => ({
 				label: register.title,
 				value: register.id.toString(),
 			}))
@@ -207,36 +227,43 @@ export default defineComponent({
 		 * Determines if the selected register has schemas
 		 *
 		 * @return {boolean} True if the selected register has schemas, false otherwise
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		hasSchemas() {
 			if (!this.selectedRegister) return false
 
 			const register = this.settings.availableRegisters.find(
-				r => r.id.toString() === this.selectedRegister.value,
+				(r) => r.id.toString() === this.selectedRegister.value,
 			)
 
-			return register && Array.isArray(register.schemas) && register.schemas.length > 0
+			return (
+				register
+				&& Array.isArray(register.schemas)
+				&& register.schemas.length > 0
+			)
 		},
+
 		/**
 		 * Returns filtered schema options, excluding those that are already used
 		 *
 		 * @return {Array<object>} Array of available schema options
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		computedSchemaOptions() {
 			const usedSchemaIds = Object.values(this.configuration)
-				.filter(config => config.schema !== null)
-				.map(config => config.schema.value)
+				.filter((config) => config.schema !== null)
+				.map((config) => config.schema.value)
 
-			return this.schemaOptions.filter(option => !usedSchemaIds.includes(option.value))
+			return this.schemaOptions.filter(
+				(option) => !usedSchemaIds.includes(option.value),
+			)
 		},
 
 		/**
 		 * Check if catalog location has changed
 		 *
 		 * @return {boolean} True if catalog location has changed
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		catalogLocationChanged() {
 			return this.catalogLocation !== this.originalCatalogLocation
@@ -256,11 +283,13 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadSettings() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings',
+				)
 				const data = await response.json()
 				this.settings = data
 
@@ -282,12 +311,14 @@ export default defineComponent({
 
 		/**
 		 * Initializes the configuration object based on existing settings
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 *
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		initializeConfiguration() {
 			// Create empty configuration for each object type
-			this.settings.objectTypes.forEach(type => {
-				const registerId = this.settings.configuration[`${type}_register`] || ''
+			this.settings.objectTypes.forEach((type) => {
+				const registerId =
+					this.settings.configuration[`${type}_register`] || ''
 				const schemaId = this.settings.configuration[`${type}_schema`] || ''
 
 				this.configuration = {
@@ -299,7 +330,9 @@ export default defineComponent({
 
 				// If we have existing configuration, use it to set the selected register
 				if (registerId && !this.selectedRegister) {
-					const register = this.settings.availableRegisters.find(r => r.id.toString() === registerId)
+					const register = this.settings.availableRegisters.find(
+						(r) => r.id.toString() === registerId,
+					)
 					if (register) {
 						this.selectedRegister = {
 							label: register.title,
@@ -312,10 +345,12 @@ export default defineComponent({
 				// If we have a schema configured, set it
 				if (schemaId && this.selectedRegister) {
 					const register = this.settings.availableRegisters.find(
-						r => r.id.toString() === this.selectedRegister.value,
+						(r) => r.id.toString() === this.selectedRegister.value,
 					)
 					if (register && Array.isArray(register.schemas)) {
-						const schema = register.schemas.find(s => s.id.toString() === schemaId)
+						const schema = register.schemas.find(
+							(s) => s.id.toString() === schemaId,
+						)
 						if (schema) {
 							this.configuration = {
 								...this.configuration,
@@ -335,12 +370,13 @@ export default defineComponent({
 
 		/**
 		 * Automatically selects the opencatalogi register if it exists
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 *
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		autoSelectOpenCatalogiRegister() {
 			// Look for a register with "opencatalogi" in the name
 			const opencatalogiRegister = this.settings.availableRegisters.find(
-				register => register.title.toLowerCase().includes('publication'),
+				(register) => register.title.toLowerCase().includes('publication'),
 			)
 
 			if (opencatalogiRegister) {
@@ -354,7 +390,10 @@ export default defineComponent({
 				if (Array.isArray(opencatalogiRegister.schemas)) {
 					this.autoSelectMatchingSchemas(opencatalogiRegister)
 				}
-			} else if (this.settings.availableRegisters.length > 0 && !this.selectedRegister) {
+			} else if (
+				this.settings.availableRegisters.length > 0
+				&& !this.selectedRegister
+			) {
 				// If no Open Catalogi register but we have registers, select the first one
 				const firstRegister = this.settings.availableRegisters[0]
 				this.selectedRegister = {
@@ -374,7 +413,7 @@ export default defineComponent({
 		 * Auto-selects schemas that match object type names
 		 *
 		 * @param {object} register - The selected register object
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		autoSelectMatchingSchemas(register) {
 			// Only proceed if register has schemas array
@@ -382,10 +421,10 @@ export default defineComponent({
 				return
 			}
 
-			this.settings.objectTypes.forEach(type => {
+			this.settings.objectTypes.forEach((type) => {
 				// Look for a schema with the same name as the object type
 				const matchingSchema = register.schemas.find(
-					schema => schema.title.toLowerCase() === type.toLowerCase(),
+					(schema) => schema.title.toLowerCase() === type.toLowerCase(),
 				)
 
 				if (matchingSchema) {
@@ -407,12 +446,14 @@ export default defineComponent({
 		 * Updates schema options based on the selected register
 		 *
 		 * @param {string} registerId - The ID of the selected register
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateSchemaOptions(registerId) {
-			const register = this.settings.availableRegisters.find(r => r.id.toString() === registerId)
+			const register = this.settings.availableRegisters.find(
+				(r) => r.id.toString() === registerId,
+			)
 			if (register && Array.isArray(register.schemas)) {
-				this.schemaOptions = register.schemas.map(schema => ({
+				this.schemaOptions = register.schemas.map((schema) => ({
 					label: schema.title,
 					value: schema.id.toString(),
 				}))
@@ -426,7 +467,7 @@ export default defineComponent({
 		 *
 		 * @param {string} objectType - The object type to format
 		 * @return {string} The formatted title
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatTitle(objectType) {
 			return objectType.charAt(0).toUpperCase() + objectType.slice(1)
@@ -434,7 +475,8 @@ export default defineComponent({
 
 		/**
 		 * Handles register change event
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 *
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		handleRegisterChange() {
 			if (this.selectedRegister) {
@@ -442,7 +484,7 @@ export default defineComponent({
 				this.updateSchemaOptions(this.selectedRegister.value)
 
 				// Reset all schema selections
-				this.settings.objectTypes.forEach(type => {
+				this.settings.objectTypes.forEach((type) => {
 					this.configuration = {
 						...this.configuration,
 						[type]: {
@@ -454,7 +496,7 @@ export default defineComponent({
 
 				// Auto-select matching schemas
 				const register = this.settings.availableRegisters.find(
-					r => r.id.toString() === this.selectedRegister.value,
+					(r) => r.id.toString() === this.selectedRegister.value,
 				)
 				if (register && Array.isArray(register.schemas)) {
 					this.autoSelectMatchingSchemas(register)
@@ -467,7 +509,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveAll() {
 			if (!this.selectedRegister || !this.hasSchemas) {
@@ -487,7 +529,9 @@ export default defineComponent({
 					configToSave[`${type}_register`] = this.selectedRegister.value
 
 					// Set the schema ID if selected
-					configToSave[`${type}_schema`] = config.schema ? config.schema.value : ''
+					configToSave[`${type}_schema`] = config.schema
+						? config.schema.value
+						: ''
 				})
 
 				// Send configuration to backend
@@ -510,14 +554,16 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadConfiguration() {
 			this.loadingConfiguration = true
 			this.configurationResults = null
 
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/load')
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings/load',
+				)
 				const data = await response.json()
 
 				if (data.error) {
@@ -528,7 +574,9 @@ export default defineComponent({
 					await this.loadSettings()
 				}
 			} catch (error) {
-				this.configurationResults = { error: 'Failed to load configuration: ' + error.message }
+				this.configurationResults = {
+					error: 'Failed to load configuration: ' + error.message,
+				}
 			} finally {
 				this.loadingConfiguration = false
 			}
@@ -539,7 +587,7 @@ export default defineComponent({
 		 *
 		 * @param {string} value - New catalog location value
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		onCatalogLocationChange(value) {
 			this.catalogLocation = value
@@ -550,7 +598,7 @@ export default defineComponent({
 		 *
 		 * @async
 		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-settings-ui/tasks.md#task-1
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveCatalogLocation() {
 			if (!this.catalogLocationChanged) {
@@ -559,15 +607,18 @@ export default defineComponent({
 
 			this.savingCatalogLocation = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/catalog-location', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
+				const response = await fetch(
+					'/index.php/apps/softwarecatalog/api/settings/catalog-location',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							catalogLocation: this.catalogLocation,
+						}),
 					},
-					body: JSON.stringify({
-						catalogLocation: this.catalogLocation,
-					}),
-				})
+				)
 
 				if (response.ok) {
 					this.originalCatalogLocation = this.catalogLocation

@@ -16,9 +16,9 @@
  * @module utils/contractCost
  * @author Ruben Linde
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  */
 
 /**
@@ -27,9 +27,9 @@
  * @type {{MONTHLY: string, YEARLY: string, ONEOFF: string}}
  */
 export const PERIOD = Object.freeze({
-	MONTHLY: 'Maandelijks',
-	YEARLY: 'Jaarlijks',
-	ONEOFF: 'Eenmalig',
+	MONTHLY: 'Monthly',
+	YEARLY: 'Annually',
+	ONEOFF: 'One-off',
 })
 
 /**
@@ -54,7 +54,7 @@ function dataOf(contract) {
  * @param {*} value A raw `kosten` value (number or numeric string).
  * @return {number|null} The numeric amount, or null.
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  */
 export function parseAmount(value) {
 	if (typeof value === 'number' && Number.isFinite(value)) {
@@ -78,25 +78,25 @@ export function parseAmount(value) {
  * @param {object} contract A contract record (OR object or data bag).
  * @return {{annual: number, oneOff: number}} The split cost.
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  */
 export function annualisedCost(contract) {
 	const data = dataOf(contract)
-	const amount = parseAmount(data.kosten)
+	const amount = parseAmount(data.cost)
 	if (amount === null) {
 		return { annual: 0, oneOff: 0 }
 	}
 
-	switch (data.kostenPeriode) {
-	case PERIOD.MONTHLY:
-		return { annual: amount * 12, oneOff: 0 }
-	case PERIOD.YEARLY:
-		return { annual: amount, oneOff: 0 }
-	case PERIOD.ONEOFF:
-		return { annual: 0, oneOff: amount }
-	default:
-		// Unknown period: do not annualise an amount we can't classify.
-		return { annual: 0, oneOff: 0 }
+	switch (data.costPeriod) {
+		case PERIOD.MONTHLY:
+			return { annual: amount * 12, oneOff: 0 }
+		case PERIOD.YEARLY:
+			return { annual: amount, oneOff: 0 }
+		case PERIOD.ONEOFF:
+			return { annual: 0, oneOff: amount }
+		default:
+			// Unknown period: do not annualise an amount we can't classify.
+			return { annual: 0, oneOff: 0 }
 	}
 }
 
@@ -106,13 +106,16 @@ export function annualisedCost(contract) {
  * @param {Array<object>} contracts Contract records.
  * @return {{annual: number, oneOff: number}} Summed split cost.
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  */
 export function totalAnnualisedCost(contracts) {
-	return (contracts || []).reduce((acc, contract) => {
-		const { annual, oneOff } = annualisedCost(contract)
-		return { annual: acc.annual + annual, oneOff: acc.oneOff + oneOff }
-	}, { annual: 0, oneOff: 0 })
+	return (contracts || []).reduce(
+		(acc, contract) => {
+			const { annual, oneOff } = annualisedCost(contract)
+			return { annual: acc.annual + annual, oneOff: acc.oneOff + oneOff }
+		},
+		{ annual: 0, oneOff: 0 },
+	)
 }
 
 /**
@@ -121,8 +124,8 @@ export function totalAnnualisedCost(contracts) {
  * @param {object} contract A contract record.
  * @return {boolean} True when the contract's period is Eenmalig.
  *
- * @spec openspec/changes/contract-administration/specs/contract-administration/spec.md
+ * @spec openspec/specs/contract-administration/spec.md
  */
 export function isOneOff(contract) {
-	return dataOf(contract).kostenPeriode === PERIOD.ONEOFF
+	return dataOf(contract).costPeriod === PERIOD.ONEOFF
 }

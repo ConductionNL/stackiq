@@ -2,7 +2,7 @@
 	<div class="contactpersonen-list">
 		<div v-if="loading" class="loading">
 			<NcLoadingIcon :size="20" />
-			{{ t("softwarecatalog", "Loading contactpersonen...") }}
+			{{ t('softwarecatalog', 'Loading contactpersonen...') }}
 		</div>
 
 		<div v-else-if="error" class="error">
@@ -27,11 +27,11 @@
 			<table class="compact-table">
 				<thead>
 					<tr>
-						<th>{{ t("softwarecatalog", "Name") }}</th>
-						<th>{{ t("softwarecatalog", "Email") }}</th>
-						<th>{{ t("softwarecatalog", "Status") }}</th>
-						<th>{{ t("softwarecatalog", "Groups") }}</th>
-						<th>{{ t("softwarecatalog", "Actions") }}</th>
+						<th scope="col">{{ t('softwarecatalog', 'Name') }}</th>
+						<th scope="col">{{ t('softwarecatalog', 'Email') }}</th>
+						<th scope="col">{{ t('softwarecatalog', 'Status') }}</th>
+						<th scope="col">{{ t('softwarecatalog', 'Groups') }}</th>
+						<th scope="col">{{ t('softwarecatalog', 'Actions') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -43,39 +43,43 @@
 						</td>
 						<td class="email-cell">
 							{{
-								contactpersoon.data.email ||
-									contactpersoon.data["e-mailadres"] ||
-									"-"
+								contactpersoon.data.email
+								|| contactpersoon.data['e-mailadres']
+								|| '-'
 							}}
 						</td>
 						<td class="status-cell">
 							<span
 								v-if="
-									contactpersoon.user.hasUser && !contactpersoon.user.disabled
+									contactpersoon.user.hasUser
+									&& !contactpersoon.user.disabled
 								"
 								class="status-chip status-success">
-								{{ t("softwarecatalog", "User") }}
+								{{ t('softwarecatalog', 'User') }}
 							</span>
 							<span
 								v-else-if="
-									contactpersoon.user.hasUser && contactpersoon.user.disabled
+									contactpersoon.user.hasUser
+									&& contactpersoon.user.disabled
 								"
 								class="status-chip status-warning">
-								{{ t("softwarecatalog", "Disabled") }}
+								{{ t('softwarecatalog', 'Disabled') }}
 							</span>
 							<span v-else class="status-chip status-tertiary">
-								{{ t("softwarecatalog", "No User") }}
+								{{ t('softwarecatalog', 'No User') }}
 							</span>
 						</td>
 						<td class="groups-cell">
 							<div
 								v-if="
-									contactpersoon.user.hasUser &&
-										getFilteredGroups(contactpersoon).length > 0
+									contactpersoon.user.hasUser
+									&& getFilteredGroups(contactpersoon).length > 0
 								"
 								class="groups">
 								<span
-									v-for="group in getFilteredGroups(contactpersoon)"
+									v-for="group in getFilteredGroups(
+										contactpersoon,
+									)"
 									:key="group"
 									class="group-chip">
 									{{ formatGroupName(group) }}
@@ -88,66 +92,70 @@
 								<!-- Convert to User Action -->
 								<NcActionButton
 									v-if="!contactpersoon.user.hasUser"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									:disabled="contactpersoon.loading"
 									@click="convertToUser(contactpersoon)">
 									<template #icon>
-										<NcLoadingIcon v-if="contactpersoon.loading" :size="20" />
+										<NcLoadingIcon
+											v-if="contactpersoon.loading"
+											:size="20" />
 										<AccountPlus v-else :size="20" />
 									</template>
 									{{
 										contactpersoon.loading
-											? t("softwarecatalog", "Converting...")
-											: t("softwarecatalog", "Convert to User")
+											? t('softwarecatalog', 'Converting...')
+											: t('softwarecatalog', 'Convert to User')
 									}}
 								</NcActionButton>
 
 								<!-- Change Password Action -->
 								<NcActionButton
 									v-if="contactpersoon.user.hasUser"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									@click="openPasswordDialog(contactpersoon)">
 									<template #icon>
 										<Key :size="20" />
 									</template>
-									{{ t("softwarecatalog", "Change Password") }}
+									{{ t('softwarecatalog', 'Change Password') }}
 								</NcActionButton>
 
 								<!-- Manage Groups Action -->
 								<NcActionButton
 									v-if="contactpersoon.user.hasUser"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									@click="openGroupsDialog(contactpersoon)">
 									<template #icon>
 										<AccountGroup :size="20" />
 									</template>
-									{{ t("softwarecatalog", "Manage Groups") }}
+									{{ t('softwarecatalog', 'Manage Groups') }}
 								</NcActionButton>
 
 								<!-- Disable User Action -->
 								<NcActionButton
 									v-if="
-										contactpersoon.user.hasUser && !contactpersoon.user.disabled
+										contactpersoon.user.hasUser
+										&& !contactpersoon.user.disabled
 									"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									@click="disableUser(contactpersoon)">
 									<template #icon>
 										<CloseCircle :size="20" />
 									</template>
-									{{ t("softwarecatalog", "Disable User") }}
+									{{ t('softwarecatalog', 'Disable User') }}
 								</NcActionButton>
 
 								<!-- Enable User Action -->
 								<NcActionButton
 									v-if="
-										contactpersoon.user.hasUser && contactpersoon.user.disabled
+										contactpersoon.user.hasUser
+										&& contactpersoon.user.disabled
 									"
-									:close-after-click="true"
+									:closeAfterClick="true"
 									@click="enableUser(contactpersoon)">
 									<template #icon>
 										<CheckCircle :size="20" />
 									</template>
-									{{ t("softwarecatalog", "Enable User") }}
+									{{ t('softwarecatalog', 'Enable User') }}
 								</NcActionButton>
 							</NcActions>
 						</td>
@@ -156,192 +164,41 @@
 			</table>
 		</div>
 
-		<!-- Password Change Dialog -->
-		<NcDialog
+		<!-- Password Change Dialog — own file per ADR-004/ADR-012 -->
+		<ChangePasswordDialog
 			v-if="showPasswordDialog"
-			:name="t('softwarecatalog', 'Change Password')"
-			size="small"
-			@closing="closePasswordDialog">
-			<div class="password-dialog">
-				<p class="dialog-description">
-					{{
-						t("softwarecatalog", "Change password for user: {username}", {
-							username: selectedContactpersoon?.user?.username,
-						})
-					}}
-				</p>
+			:username="selectedContactpersoon?.user?.username"
+			@saved="closePasswordDialog"
+			@close="closePasswordDialog" />
 
-				<div class="password-input">
-					<NcTextField
-						:value="newPassword"
-						type="password"
-						:label="t('softwarecatalog', 'New password')"
-						:placeholder="t('softwarecatalog', 'Enter new password')"
-						class="compact-input"
-						@update:value="newPassword = $event" />
-				</div>
-
-				<!-- Password Requirements -->
-				<div class="password-requirements">
-					<h4>{{ t("softwarecatalog", "Password Requirements:") }}</h4>
-					<ul class="requirements-list">
-						<li :class="{ 'requirement-met': passwordValidation.minLength }">
-							<CheckCircle
-								v-if="passwordValidation.minLength"
-								:size="16"
-								class="check-icon" />
-							<CloseCircle v-else :size="16" class="close-icon" />
-							{{ t("softwarecatalog", "At least 10 characters") }}
-						</li>
-						<li :class="{ 'requirement-met': passwordValidation.hasUppercase }">
-							<CheckCircle
-								v-if="passwordValidation.hasUppercase"
-								:size="16"
-								class="check-icon" />
-							<CloseCircle v-else :size="16" class="close-icon" />
-							{{ t("softwarecatalog", "At least one uppercase letter") }}
-						</li>
-						<li :class="{ 'requirement-met': passwordValidation.hasLowercase }">
-							<CheckCircle
-								v-if="passwordValidation.hasLowercase"
-								:size="16"
-								class="check-icon" />
-							<CloseCircle v-else :size="16" class="close-icon" />
-							{{ t("softwarecatalog", "At least one lowercase letter") }}
-						</li>
-						<li :class="{ 'requirement-met': passwordValidation.hasNumber }">
-							<CheckCircle
-								v-if="passwordValidation.hasNumber"
-								:size="16"
-								class="check-icon" />
-							<CloseCircle v-else :size="16" class="close-icon" />
-							{{ t("softwarecatalog", "At least one number") }}
-						</li>
-						<li
-							:class="{ 'requirement-met': passwordValidation.hasSpecialChar }">
-							<CheckCircle
-								v-if="passwordValidation.hasSpecialChar"
-								:size="16"
-								class="check-icon" />
-							<CloseCircle v-else :size="16" class="close-icon" />
-							{{
-								t(
-									"softwarecatalog",
-									"At least one special character (!@#$%^&*)"
-								)
-							}}
-						</li>
-						<li :class="{ 'requirement-met': passwordValidation.notPwned }">
-							<NcLoadingIcon
-								v-if="pwnedCheckLoading"
-								:size="16"
-								class="loading-icon" />
-							<CheckCircle
-								v-else-if="passwordValidation.notPwned"
-								:size="16"
-								class="check-icon" />
-							<CloseCircle
-								v-else
-								:size="16"
-								class="close-icon" />
-							{{
-								t(
-									"softwarecatalog",
-									"Password has not appeared in known data breaches"
-								)
-							}}
-						</li>
-					</ul>
-				</div>
-
-				<div class="dialog-actions">
-					<NcButton type="secondary" @click="closePasswordDialog">
-						{{ t("softwarecatalog", "Cancel") }}
-					</NcButton>
-					<NcButton
-						type="primary"
-						:disabled="passwordLoading || !isPasswordValid || pwnedCheckLoading"
-						@click="savePassword">
-						<template #icon>
-							<NcLoadingIcon v-if="passwordLoading" :size="20" />
-						</template>
-						{{ t("softwarecatalog", "Save") }}
-					</NcButton>
-				</div>
-			</div>
-		</NcDialog>
-
-		<!-- Groups Management Dialog -->
-		<NcDialog
+		<!-- Groups Management Dialog — own file per ADR-004/ADR-012 -->
+		<ManageUserGroupsDialog
 			v-if="showGroupsDialog"
-			:name="t('softwarecatalog', 'Manage User Groups')"
-			size="normal"
-			@closing="closeGroupsDialog">
-			<div class="groups-dialog">
-				<p class="dialog-description">
-					{{
-						t("softwarecatalog", "Select groups for user: {username}", {
-							username: selectedContactpersoon?.user?.username,
-						})
-					}}
-				</p>
-
-				<div class="groups-selection">
-					<NcCheckboxRadioSwitch
-						v-for="group in availableGroups"
-						:key="group.id"
-						:checked="selectedGroups.includes(group.id)"
-						type="checkbox"
-						class="compact-checkbox"
-						@update:checked="toggleGroup(group.id, $event)">
-						{{ group.name }}
-						<template #description>
-							{{ group.description }}
-						</template>
-					</NcCheckboxRadioSwitch>
-				</div>
-
-				<div class="dialog-actions">
-					<NcButton type="secondary" @click="closeGroupsDialog">
-						{{ t("softwarecatalog", "Cancel") }}
-					</NcButton>
-					<NcButton
-						type="primary"
-						:disabled="groupsLoading"
-						@click="saveGroups">
-						<template #icon>
-							<NcLoadingIcon v-if="groupsLoading" :size="20" />
-						</template>
-						{{ t("softwarecatalog", "Save") }}
-					</NcButton>
-				</div>
-			</div>
-		</NcDialog>
+			:contactpersoon="selectedContactpersoon"
+			@groupsLoaded="onGroupsLoaded"
+			@saved="onGroupsSaved"
+			@close="closeGroupsDialog" />
 	</div>
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
-	NcActions,
 	NcActionButton,
+	NcActions,
+	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
-	NcEmptyContent,
-	NcDialog,
-	NcButton,
-	NcCheckboxRadioSwitch,
-	NcTextField,
 } from '@nextcloud/vue'
-
+import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
-import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
-import Key from 'vue-material-design-icons/Key.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
-
+import Key from 'vue-material-design-icons/Key.vue'
+import ChangePasswordDialog from '../dialogs/ChangePasswordDialog.vue'
+import ManageUserGroupsDialog from '../dialogs/ManageUserGroupsDialog.vue'
 import { useOrganisatieStore } from '../store/modules/organisatie.js'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'ContactpersonenList',
@@ -352,16 +209,14 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 		NcEmptyContent,
-		NcDialog,
-		NcButton,
-		NcCheckboxRadioSwitch,
-		NcTextField,
 		AccountMultiple,
 		AccountPlus,
 		AccountGroup,
 		Key,
 		CheckCircle,
 		CloseCircle,
+		ChangePasswordDialog,
+		ManageUserGroupsDialog,
 	},
 
 	props: {
@@ -369,6 +224,7 @@ export default {
 			type: String,
 			required: true,
 		},
+
 		organisationData: {
 			type: Object,
 			default: () => ({}),
@@ -380,35 +236,28 @@ export default {
 			showPasswordDialog: false,
 			showGroupsDialog: false,
 			selectedContactpersoon: null,
-			selectedGroups: [],
-			groupsLoading: false,
-			newPassword: '',
-			passwordLoading: false,
 			userStatusRefreshInProgress: false,
 			userStatusRefreshTimeout: null,
 			userInfoLoaded: false,
-			isPasswordPwned: true, // start of with true
-			pwnedCheckLoading: false,
-			pwnedCheckTimeout: null,
 		}
 	},
 
 	computed: {
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		organisatieStore() {
 			return useOrganisatieStore()
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		contactpersonen() {
 			// Use contactpersonen from organisation data if available, otherwise fall back to store
 			if (
 				this.organisationData.contactpersonen
-        && Array.isArray(this.organisationData.contactpersonen)
+				&& Array.isArray(this.organisationData.contactpersonen)
 			) {
 				return this.processContactpersonen(
 					this.organisationData.contactpersonen,
@@ -418,80 +267,29 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		loading() {
 			return this.organisatieStore.isLoading
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		error() {
 			return this.organisatieStore.getError
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		availableGroups() {
 			return this.organisatieStore.getAvailableGroups
 		},
-
-		// Password validation computed properties
-		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
-		 */
-		passwordValidation() {
-			return {
-				minLength: this.newPassword.length >= 10,
-				hasUppercase: /[A-Z]/.test(this.newPassword),
-				hasLowercase: /[a-z]/.test(this.newPassword),
-				hasNumber: /\d/.test(this.newPassword),
-				hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(this.newPassword),
-				// Only consider notPwned valid if check is complete and password is not pwned
-				// If check is still loading, treat as invalid to prevent premature save
-				notPwned: !this.pwnedCheckLoading && !this.isPasswordPwned,
-			}
-		},
-
-		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
-		 */
-		isPasswordValid() {
-			return Object.values(this.passwordValidation).every(
-				(requirement) => requirement,
-			)
-		},
-	},
-
-	watch: {
-		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
-		 */
-		newPassword(newVal) {
-			// Clear existing timeout
-			if (this.pwnedCheckTimeout) {
-				clearTimeout(this.pwnedCheckTimeout)
-			}
-
-			// Only check if password meets minimum length requirement
-			if (newVal && newVal.length >= 10) {
-				// Set loading state immediately to prevent save during debounce
-				this.pwnedCheckLoading = true
-				// Debounce the API call to avoid excessive requests
-				this.pwnedCheckTimeout = setTimeout(() => {
-					this.checkPasswordPwned(newVal)
-				}, 500)
-			} else {
-				// Password too short, no check needed
-				this.pwnedCheckLoading = false
-			}
-		},
 	},
 
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+	 * @spec openspec/specs/fe-organizations/spec.md
 	 */
 	async mounted() {
 		await this.loadData()
@@ -500,15 +298,12 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+	 * @spec openspec/specs/fe-organizations/spec.md
 	 */
-	beforeDestroy() {
+	beforeUnmount() {
 		// Clean up timeouts to prevent memory leaks
 		if (this.userStatusRefreshTimeout) {
 			clearTimeout(this.userStatusRefreshTimeout)
-		}
-		if (this.pwnedCheckTimeout) {
-			clearTimeout(this.pwnedCheckTimeout)
 		}
 	},
 
@@ -517,183 +312,7 @@ export default {
 
 	methods: {
 		/**
-		 * Compute SHA-1 hash of a string
-		 * @param {string} str - String to hash
-		 * @return {Promise<string>} SHA-1 hash in hexadecimal format (uppercase)
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
-		 */
-		async sha1(str) {
-			// Simple SHA-1 implementation
-			// Based on: https://github.com/emn178/js-sha1
-			const encoder = new TextEncoder()
-			const utf8Bytes = encoder.encode(str)
-			const bytes = Array.from(utf8Bytes)
-
-			const h = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0]
-
-			const w = []
-			const length = bytes.length * 8
-
-			bytes.push(0x80)
-			while (bytes.length % 64 !== 56) {
-				bytes.push(0)
-			}
-
-			for (let i = 0; i < bytes.length; i += 4) {
-				w.push(
-					(bytes[i] << 24)
-					| (bytes[i + 1] << 16)
-					| (bytes[i + 2] << 8)
-					| bytes[i + 3],
-				)
-			}
-
-			w.push(0)
-			w.push(0)
-			w[w.length - 2] = Math.floor(length / 0x100000000)
-			w[w.length - 1] = length & 0xffffffff
-
-			for (let i = 0; i < w.length; i += 16) {
-				// Create a local copy of w for this 512-bit block (expand to 80 words)
-				const wLocal = new Array(80)
-				for (let j = 0; j < 16; j++) {
-					wLocal[j] = w[i + j]
-				}
-
-				// Expand w array for rounds 16-79
-				for (let j = 16; j < 80; j++) {
-					const wVal = wLocal[j - 3]
-						^ wLocal[j - 8]
-						^ wLocal[j - 14]
-						^ wLocal[j - 16]
-					wLocal[j] = ((wVal << 1) | (wVal >>> 31)) >>> 0
-				}
-
-				let a = h[0]
-				let b = h[1]
-				let c = h[2]
-				let d = h[3]
-				let e = h[4]
-
-				for (let j = 0; j < 80; j++) {
-					let f
-					let k
-					if (j < 20) {
-						f = (b & c) | (~b & d)
-						k = 0x5A827999
-					} else if (j < 40) {
-						f = b ^ c ^ d
-						k = 0x6ED9EBA1
-					} else if (j < 60) {
-						f = (b & c) | (b & d) | (c & d)
-						k = 0x8F1BBCDC
-					} else {
-						f = b ^ c ^ d
-						k = 0xCA62C1D6
-					}
-
-					const temp = (this.rotl(a, 5) + f + e + k + wLocal[j]) >>> 0
-					e = d
-					d = c
-					c = this.rotl(b, 30) >>> 0
-					b = a
-					a = temp
-				}
-
-				h[0] = (h[0] + a) >>> 0
-				h[1] = (h[1] + b) >>> 0
-				h[2] = (h[2] + c) >>> 0
-				h[3] = (h[3] + d) >>> 0
-				h[4] = (h[4] + e) >>> 0
-			}
-
-			return (
-				h[0].toString(16).padStart(8, '0')
-				+ h[1].toString(16).padStart(8, '0')
-				+ h[2].toString(16).padStart(8, '0')
-				+ h[3].toString(16).padStart(8, '0')
-				+ h[4].toString(16).padStart(8, '0')
-			).toUpperCase()
-		},
-
-		/**
-		 * Rotate left operation for SHA-1
-		 * @param {number} value - Value to rotate
-		 * @param {number} amount - Amount to rotate
-		 * @return {number} Rotated value
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
-		 */
-		rotl(value, amount) {
-			return ((value << amount) | (value >>> (32 - amount))) >>> 0
-		},
-
-		/**
-		 * Check if password is in Have I Been Pwned database
-		 * @param {string} password - Password to check
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
-		 */
-		async checkPasswordPwned(password) {
-			if (!password || password.length < 10) {
-				this.isPasswordPwned = true
-				return
-			}
-
-			this.pwnedCheckLoading = true
-
-			try {
-				// Hash the password with SHA-1
-				const sha1Hash = await this.sha1(password)
-				const prefix = sha1Hash.substring(0, 5)
-				const suffix = sha1Hash.substring(5)
-
-				// Call Have I Been Pwned API
-				const response = await fetch(
-					`https://api.pwnedpasswords.com/range/${prefix}`,
-					{
-						method: 'GET',
-						headers: {
-							'User-Agent': 'Nextcloud-SoftwareCatalog',
-						},
-					},
-				)
-
-				if (!response.ok) {
-					console.error(
-						'HIBP API error:',
-						response.status,
-						response.statusText,
-					)
-					// If API fails, don't block password (fail open)
-					this.isPasswordPwned = false
-					return
-				}
-
-				const text = await response.text()
-				const hashes = text.split('\n')
-
-				// Check if our suffix is in the list
-				for (const line of hashes) {
-					const [hashSuffix] = line.split(':')
-					if (hashSuffix && hashSuffix.toUpperCase() === suffix) {
-						this.isPasswordPwned = true
-						this.pwnedCheckLoading = false
-						return
-					}
-				}
-
-				// Password not found in database
-				this.isPasswordPwned = false
-			} catch (error) {
-				console.error('Error checking password against HIBP:', error)
-				// If check fails, don't block password (fail open)
-				this.isPasswordPwned = false
-			} finally {
-				this.pwnedCheckLoading = false
-			}
-		},
-
-		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async loadData() {
 			try {
@@ -702,7 +321,9 @@ export default {
 
 				// If no organisation data provided, fall back to fetching contactpersonen separately
 				if (!this.organisationData.contactpersonen) {
-					await this.organisatieStore.fetchContactpersonen(this.organisationId)
+					await this.organisatieStore.fetchContactpersonen(
+						this.organisationId,
+					)
 				}
 			} catch (error) {
 				console.error('Error loading contactpersonen data:', error)
@@ -711,9 +332,10 @@ export default {
 
 		/**
 		 * Process contactpersonen data from organisation object to match expected format.
+		 *
 		 * @param {Array} rawContactpersonen - Raw contactpersonen data from organisation.
 		 * @return {Array} Processed contactpersonen with user information.
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		processContactpersonen(rawContactpersonen) {
 			return rawContactpersonen.map((contactpersoon) => {
@@ -722,7 +344,7 @@ export default {
 				const hasUser = !!data.username
 
 				// Debug logging to understand the data structure.
-				console.info('Processing contactpersoon:', {
+				console.info('Processing contactPerson:', {
 					contactId,
 					data,
 					hasUser,
@@ -743,7 +365,8 @@ export default {
 						// Use groups from API user object if available, otherwise from data.
 						groups: contactpersoon.user?.groups || data.groups || [],
 						// Use user.disabled from API, fallback to data.disabled.
-						disabled: contactpersoon.user?.disabled || data.disabled || false,
+						disabled:
+							contactpersoon.user?.disabled || data.disabled || false,
 					},
 					// Include loading state from organisation data.
 					loading: contactpersoon.loading || false,
@@ -753,7 +376,8 @@ export default {
 
 		/**
 		 * Load user info and available groups in parallel
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 *
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async loadUserInfoAndGroups() {
 			// Prevent multiple simultaneous calls
@@ -803,7 +427,6 @@ export default {
 					promises.push(Promise.resolve({}))
 				}
 
-				// eslint-disable-next-line no-unused-vars
 				const [availableGroups, bulkUserInfo] = await Promise.all(promises)
 
 				console.info('Received bulk user info:', bulkUserInfo)
@@ -826,57 +449,58 @@ export default {
 
 		/**
 		 * Update contactpersonen with bulk user info.
+		 *
 		 * @param {object} bulkUserInfo - User info object keyed by contactpersoon ID.
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		updateContactpersonenWithUserInfo(bulkUserInfo) {
 			if (!this.organisationData.contactpersonen) return
 
-			this.organisationData.contactpersonen.forEach((contactpersoon, index) => {
-				const contactpersoonId = contactpersoon.id || contactpersoon.uuid
-				const userInfo = bulkUserInfo[contactpersoonId]
+			this.organisationData.contactpersonen.forEach(
+				(contactpersoon, index) => {
+					const contactpersoonId = contactpersoon.id || contactpersoon.uuid
+					const userInfo = bulkUserInfo[contactpersoonId]
 
-				if (userInfo) {
-					console.info(
-						`Updating contactpersoon ${contactpersoonId} with user info:`,
-						userInfo,
-					)
+					if (userInfo) {
+						console.info(
+							`Updating contactpersoon ${contactpersoonId} with user info:`,
+							userInfo,
+						)
 
-					// Ensure user object exists.
-					if (!contactpersoon.user) {
-						contactpersoon.user = {}
+						// Ensure user object exists.
+						if (!contactpersoon.user) {
+							contactpersoon.user = {}
+						}
+
+						// Update user object.
+						contactpersoon.user.hasUser = userInfo.hasUser
+						contactpersoon.user.username = userInfo.username
+						contactpersoon.user.groups = userInfo.groups || []
+						contactpersoon.user.disabled = !userInfo.enabled // Map enabled to disabled.
+						contactpersoon.user.displayName = userInfo.displayName
+						contactpersoon.user.lastLogin = userInfo.lastLogin
+
+						// Update data object for consistency.
+						if (contactpersoon.data) {
+							contactpersoon.data.disabled = !userInfo.enabled // Map enabled to disabled.
+							contactpersoon.data.groups = userInfo.groups || [] // Also set groups in data.
+							contactpersoon.data.username = userInfo.username // Also set username in data.
+						}
+
+						// Force reactivity update.
+						// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
+						this.organisationData.contactpersonen[index] = contactpersoon
 					}
-
-					// Update user object.
-					contactpersoon.user.hasUser = userInfo.hasUser
-					contactpersoon.user.username = userInfo.username
-					contactpersoon.user.groups = userInfo.groups || []
-					contactpersoon.user.disabled = !userInfo.enabled // Map enabled to disabled.
-					contactpersoon.user.displayName = userInfo.displayName
-					contactpersoon.user.lastLogin = userInfo.lastLogin
-
-					// Update data object for consistency.
-					if (contactpersoon.data) {
-						contactpersoon.data.disabled = !userInfo.enabled // Map enabled to disabled.
-						contactpersoon.data.groups = userInfo.groups || [] // Also set groups in data.
-						contactpersoon.data.username = userInfo.username // Also set username in data.
-					}
-
-					// Force reactivity update.
-					this.$set(
-						this.organisationData.contactpersonen,
-						index,
-						contactpersoon,
-					)
-				}
-			})
+				},
+			)
 		},
 
 		/**
 		 * Refresh user statuses from Nextcloud for all contact persons
+		 *
 		 * @deprecated Use loadUserInfoAndGroups() instead for better performance
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async refreshUserStatuses() {
 			console.info(
@@ -887,7 +511,8 @@ export default {
 
 		/**
 		 * Public method to refresh user statuses - can be called from parent component
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 *
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async refreshUserData() {
 			console.info('Public refreshUserData called')
@@ -896,47 +521,53 @@ export default {
 
 		/**
 		 * Get contactperson name.
+		 *
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {string} The contact person's name.
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getContactpersoonName(contactpersoon) {
 			const data = contactpersoon.data
 			return (
-				data.naam
-        || data.name
-        || data.voornaam + ' ' + data.achternaam
-        || data.email
-        || data['e-mailadres']
-        || 'Unknown'
+				data.name
+				|| data.name
+				|| data.voornaam + ' ' + data.achternaam
+				|| data.email
+				|| data['e-mailadres']
+				|| 'Unknown'
 			)
 		},
 
 		/**
 		 * Filter groups to only show those available in the modal.
+		 *
 		 * @param {object} contactpersoon - The contact person object.
 		 * @return {Array} Filtered array of group IDs.
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getFilteredGroups(contactpersoon) {
-			if (!contactpersoon.user.groups || contactpersoon.user.groups.length === 0) {
+			if (
+				!contactpersoon.user.groups
+				|| contactpersoon.user.groups.length === 0
+			) {
 				return []
 			}
 
 			// Get list of available group IDs from the store.
-			const availableGroupIds = this.availableGroups.map(g => g.id)
+			const availableGroupIds = this.availableGroups.map((g) => g.id)
 
 			// Filter user groups to only include those in availableGroups.
-			return contactpersoon.user.groups.filter(groupId =>
+			return contactpersoon.user.groups.filter((groupId) =>
 				availableGroupIds.includes(groupId),
 			)
 		},
 
 		/**
 		 * Format group name.
+		 *
 		 * @param {string} groupId - The group ID.
 		 * @return {string} Formatted group name.
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		formatGroupName(groupId) {
 			const groupMap = {
@@ -948,7 +579,8 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @param contactpersoon
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async convertToUser(contactpersoon) {
 			console.info('convertToUser called with:', contactpersoon)
@@ -977,11 +609,14 @@ export default {
 			// Set loading state on the specific contactpersoon - ensure it's an object first
 			const contactObject = this.organisationData.contactpersonen[contactIndex]
 			if (typeof contactObject === 'object' && contactObject !== null) {
-				this.$set(contactObject, 'loading', true)
+				contactObject.loading = true
 			} else {
 				console.error('Contactpersoon is not an object:', contactObject)
 				showError(
-					this.t('softwarecatalog', 'Invalid contactpersoon data structure'),
+					this.t(
+						'softwarecatalog',
+						'Invalid contact person data structure',
+					),
 				)
 				return
 			}
@@ -994,21 +629,27 @@ export default {
 				console.info('Convert to user result:', result)
 
 				// Replace the contactpersoon object with the updated one from the API
-				if (result.contactpersoon) {
+				if (result.contactPerson) {
 					// The API returns the contactpersoon object directly, we need to structure it properly
 					const updatedContactpersoon = {
-						id: result.contactpersoon.id || result.contactpersoon['@self']?.id,
+						id:
+							result.contactPerson.id
+							|| result.contactPerson['@self']?.id,
+
 						uuid:
-              result.contactpersoon.id || result.contactpersoon['@self']?.id,
+							result.contactPerson.id
+							|| result.contactPerson['@self']?.id,
+
 						data: {
-							voornaam: result.contactpersoon.voornaam,
-							achternaam: result.contactpersoon.achternaam,
-							'e-mailadres': result.contactpersoon['e-mailadres'],
-							naam: result.contactpersoon.naam,
-							organisatie: result.contactpersoon.organisatie,
-							username: result.contactpersoon.username,
-							groups: result.contactpersoon.groups || [],
+							voornaam: result.contactPerson.voornaam,
+							achternaam: result.contactPerson.achternaam,
+							'e-mailadres': result.contactPerson['e-mailadres'],
+							name: result.contactPerson.name,
+							organization: result.contactPerson.organization,
+							username: result.contactPerson.username,
+							groups: result.contactPerson.groups || [],
 						},
+
 						loading: false, // Clear loading state
 					}
 
@@ -1037,196 +678,101 @@ export default {
 			} catch (error) {
 				console.error('Error in convertToUser:', error)
 				showError(
-					this.t('softwarecatalog', 'Failed to create user account: {error}', {
-						error: error.message,
-					}),
+					this.t(
+						'softwarecatalog',
+						'Failed to create user account: {error}',
+						{
+							error: error.message,
+						},
+					),
 				)
 
 				// Clear loading state on error - ensure it's an object first
-				const contactObject
-          = this.organisationData.contactpersonen[contactIndex]
+				const contactObject =
+					this.organisationData.contactpersonen[contactIndex]
 				if (typeof contactObject === 'object' && contactObject !== null) {
-					this.$set(contactObject, 'loading', false)
+					contactObject.loading = false
 				}
 			}
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @param contactpersoon
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		openPasswordDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
-			this.newPassword = ''
-			this.isPasswordPwned = true // start of with true
-			this.pwnedCheckLoading = false
-			if (this.pwnedCheckTimeout) {
-				clearTimeout(this.pwnedCheckTimeout)
-				this.pwnedCheckTimeout = null
-			}
+			// ChangePasswordDialog is mounted fresh (v-if) on every open, so its
+			// own data() is the reset that used to be spelled out here.
 			this.showPasswordDialog = true
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closePasswordDialog() {
 			this.showPasswordDialog = false
 			this.selectedContactpersoon = null
-			this.newPassword = ''
-			this.passwordLoading = false
-			this.isPasswordPwned = true // reset to true
-			this.pwnedCheckLoading = false
-			if (this.pwnedCheckTimeout) {
-				clearTimeout(this.pwnedCheckTimeout)
-				this.pwnedCheckTimeout = null
-			}
-		},
-
-		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
-		 */
-		async savePassword() {
-			if (!this.newPassword || this.newPassword.length < 10) {
-				showError(
-					this.t(
-						'softwarecatalog',
-						'Password must be at least 10 characters long',
-					),
-				)
-				return
-			}
-
-			if (!this.isPasswordValid) {
-				if (this.isPasswordPwned) {
-					showError(
-						this.t(
-							'softwarecatalog',
-							'This password has been found in data breaches and is not secure. Please choose a different password.',
-						),
-					)
-				} else {
-					showError(
-						this.t(
-							'softwarecatalog',
-							'Password does not meet all requirements',
-						),
-					)
-				}
-				return
-			}
-
-			this.passwordLoading = true
-
-			try {
-				await this.organisatieStore.changePassword(
-					this.selectedContactpersoon.user.username,
-					this.newPassword,
-				)
-				showSuccess(this.t('softwarecatalog', 'Password changed successfully'))
-				this.closePasswordDialog()
-			} catch (error) {
-				showError(
-					this.t('softwarecatalog', 'Failed to change password: {error}', {
-						error: error.message,
-					}),
-				)
-			} finally {
-				this.passwordLoading = false
-			}
 		},
 
 		/**
 		 * Open groups management dialog.
+		 * ManageUserGroupsDialog reads the user's CURRENT groups itself and
+		 * reports them back through `groups-loaded`.
+		 *
 		 * @param {object} contactpersoon - The contact person object.
-		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @return {void}
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
-		async openGroupsDialog(contactpersoon) {
+		openGroupsDialog(contactpersoon) {
 			this.selectedContactpersoon = contactpersoon
 			this.showGroupsDialog = true
-
-			try {
-			// Fetch user-specific info to get current groups and available groups.
-				const userInfo = await this.organisatieStore.fetchUserInfo(
-					contactpersoon.id,
-				)
-				this.selectedGroups = [...(userInfo.groups || [])]
-
-				// Update the local contactpersoon data with the fresh groups info.
-				// This ensures the table shows the correct groups.
-				this.updateContactpersoonGroups(contactpersoon.id, userInfo.groups || [])
-			} catch (error) {
-				console.error('Error fetching user info for groups dialog:', error)
-				// Fallback to existing groups.
-				this.selectedGroups = [...contactpersoon.user.groups]
-			// Note: Available groups should already be loaded from loadUserInfoAndGroups().
-			}
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		closeGroupsDialog() {
 			this.showGroupsDialog = false
 			this.selectedContactpersoon = null
-			this.selectedGroups = []
-			this.groupsLoading = false
 		},
 
 		/**
-		 * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * The groups dialog read the user's current groups — mirror them into the
+		 * local data so the table shows the correct groups.
+		 *
+		 * @param {Array} groups - Array of group IDs.
+		 * @return {void}
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
-		toggleGroup(groupId, checked) {
-			if (checked) {
-				if (!this.selectedGroups.includes(groupId)) {
-					this.selectedGroups.push(groupId)
-				}
-			} else {
-				const index = this.selectedGroups.indexOf(groupId)
-				if (index > -1) {
-					this.selectedGroups.splice(index, 1)
-				}
-			}
-		},
-
-		/**
-		 * Save user groups.
-		 * @return {Promise<void>}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
-		 */
-		async saveGroups() {
+		onGroupsLoaded(groups) {
 			if (!this.selectedContactpersoon) return
+			this.updateContactpersoonGroups(this.selectedContactpersoon.id, groups)
+		},
 
-			this.groupsLoading = true
-
-			try {
-				await this.organisatieStore.updateUserGroups(
-					this.selectedContactpersoon.user.username,
-					this.selectedGroups,
+		/**
+		 * The groups dialog saved a new membership — mirror it into the local data
+		 * and close the dialog.
+		 *
+		 * @param {Array} groups - Array of group IDs.
+		 * @return {void}
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		onGroupsSaved(groups) {
+			if (this.selectedContactpersoon) {
+				this.updateContactpersoonGroups(
+					this.selectedContactpersoon.id,
+					groups,
 				)
-
-				// Update the local contactpersoon data to reflect the new groups.
-				this.updateContactpersoonGroups(this.selectedContactpersoon.id, this.selectedGroups)
-
-				showSuccess(
-					this.t('softwarecatalog', 'User groups updated successfully'),
-				)
-				this.closeGroupsDialog()
-			} catch (error) {
-				showError(
-					this.t('softwarecatalog', 'Failed to update user groups: {error}', {
-						error: error.message,
-					}),
-				)
-			} finally {
-				this.groupsLoading = false
 			}
+			this.closeGroupsDialog()
 		},
 
 		/**
 		 * Disable a user account
+		 *
 		 * @param {object} contactpersoon - The contact person object
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async disableUser(contactpersoon) {
 			try {
@@ -1246,8 +792,9 @@ export default {
 
 		/**
 		 * Enable a user account
+		 *
 		 * @param {object} contactpersoon - The contact person object
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async enableUser(contactpersoon) {
 			try {
@@ -1267,22 +814,23 @@ export default {
 
 		/**
 		 * Update the disabled status of a contactpersoon in the local data.
+		 *
 		 * @param {string} contactpersoonId - The ID of the contact person.
 		 * @param {boolean} disabled - Whether the user is disabled.
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		updateContactpersoonStatus(contactpersoonId, disabled) {
-		// Find and update the contactpersoon in the organisation data.
+			// Find and update the contactpersoon in the organisation data.
 			if (this.organisationData.contactpersonen) {
 				const contactIndex = this.organisationData.contactpersonen.findIndex(
 					(cp) => (cp.id || cp.uuid) === contactpersoonId,
 				)
 
 				if (contactIndex !== -1) {
-				// Update the disabled status in both user and data objects.
-					const contactpersoon
-          = this.organisationData.contactpersonen[contactIndex]
+					// Update the disabled status in both user and data objects.
+					const contactpersoon =
+						this.organisationData.contactpersonen[contactIndex]
 
 					// Update in the user object (primary source).
 					if (contactpersoon.user) {
@@ -1295,32 +843,32 @@ export default {
 					}
 
 					// Force reactivity update.
-					this.$set(
-						this.organisationData.contactpersonen,
-						contactIndex,
-						contactpersoon,
-					)
+					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
+					this.organisationData.contactpersonen[contactIndex] =
+						contactpersoon
 				}
 			}
 		},
 
 		/**
 		 * Update the groups of a contactpersoon in the local data.
+		 *
 		 * @param {string} contactpersoonId - The ID of the contact person.
 		 * @param {Array} groups - Array of group IDs.
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-organizations/tasks.md#task-2
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		updateContactpersoonGroups(contactpersoonId, groups) {
-		// Find and update the contactpersoon in the organisation data.
+			// Find and update the contactpersoon in the organisation data.
 			if (this.organisationData.contactpersonen) {
 				const contactIndex = this.organisationData.contactpersonen.findIndex(
 					(cp) => (cp.id || cp.uuid) === contactpersoonId,
 				)
 
 				if (contactIndex !== -1) {
-				// Update the groups in both user and data objects.
-					const contactpersoon = this.organisationData.contactpersonen[contactIndex]
+					// Update the groups in both user and data objects.
+					const contactpersoon =
+						this.organisationData.contactpersonen[contactIndex]
 
 					// Update in the user object (primary source).
 					if (contactpersoon.user) {
@@ -1333,11 +881,9 @@ export default {
 					}
 
 					// Force reactivity update.
-					this.$set(
-						this.organisationData.contactpersonen,
-						contactIndex,
-						contactpersoon,
-					)
+					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
+					this.organisationData.contactpersonen[contactIndex] =
+						contactpersoon
 				}
 			}
 		},
@@ -1452,114 +998,6 @@ export default {
 	white-space: nowrap;
 }
 
-.password-dialog {
-	padding: 12px;
-	min-width: 320px;
-	max-width: 400px;
-}
-
-.groups-dialog {
-	padding: 12px;
-	min-width: 350px;
-	max-width: 450px;
-}
-
-.dialog-description {
-	margin: 0 0 12px 0;
-	font-size: 14px;
-	color: var(--color-text-lighter);
-}
-
-.password-input {
-	margin: 12px 0;
-}
-
-.groups-selection {
-	margin: 12px 0;
-	max-height: 200px;
-	overflow-y: auto;
-}
-
-.groups-selection .checkbox-radio-switch {
-	margin-bottom: 6px;
-}
-
-.compact-checkbox {
-	padding: 4px 0;
-}
-
-.compact-input {
-	margin: 8px 0;
-}
-
-.dialog-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 8px;
-	margin-top: 12px;
-	padding-top: 8px;
-	border-top: 1px solid var(--color-border);
-}
-
-/* Make NcTextField more compact */
-.compact-input :deep(.input-field) {
-	margin-bottom: 8px;
-}
-
-.compact-input :deep(.input-field__main-wrapper) {
-	min-height: 36px;
-}
-
-.compact-input :deep(.input-field__input) {
-	padding: 8px 12px;
-	font-size: 14px;
-}
-
-/* Password Requirements Styles */
-.password-requirements {
-	margin: 16px 0;
-	padding: 12px;
-	background: var(--color-background-dark);
-	border-radius: 6px;
-	border: 1px solid var(--color-border);
-}
-
-.password-requirements h4 {
-	margin: 0 0 8px 0;
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--color-text-dark);
-}
-
-.requirements-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-}
-
-.requirements-list li {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 4px 0;
-	font-size: 13px;
-	color: var(--color-text-lighter);
-	transition: color 0.2s ease;
-}
-
-.requirements-list li.requirement-met {
-	color: var(--color-success);
-}
-
-.check-icon {
-	color: var(--color-success);
-}
-
-.close-icon {
-	color: var(--color-error);
-}
-
-.loading-icon {
-	color: var(--color-text-lighter);
-}
+/* The password / groups dialog styles live with their dialogs in
+   src/dialogs/ChangePasswordDialog.vue and src/dialogs/ManageUserGroupsDialog.vue. */
 </style>

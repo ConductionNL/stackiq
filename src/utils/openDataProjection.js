@@ -13,7 +13,7 @@
  * NOTE (build status, updated 2026-06-15): the anonymous READ surface is LIVE on
  * the OpenRegister RBAC publish model — an entry is anonymously visible once its
  * `publicatiedatum` is set (schema read rule `{group:public, match:
- * {publicatiedatum:{$lte:$now}}}`); "publish" = set publicatiedatum via the
+ * {publication_date:{$lte:$now}}}`); "publish" = set publicatiedatum via the
  * PublicationService (`PUT /api/publication/{objectType}/{uuid}/publish`). The
  * earlier `@self.published` gap note is stale (that predicate is removed from
  * OpenRegister). This projection is the open-data serialization the public
@@ -22,7 +22,7 @@
  * @module utils/openDataProjection
  * @author Ruben Linde
  * @copyright 2026 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  */
@@ -34,18 +34,18 @@
  * @type {Array<string>}
  */
 const STRIPPED_FIELDS = Object.freeze([
-	'contactpersoon',
+	'contactPerson',
 	'contactpersonen',
-	'contactpersoonAanbieder',
-	'contactpersoonGebruiker',
-	'interneAantekening',
+	'contactPersonProvider',
+	'contactPersonUser',
+	'interneAnnotation',
 	'email',
 	'telefoonnummer',
 	'voornaam',
 	'achternaam',
 	'owner',
 	'authorization',
-	'geregistreerdDoor',
+	'registeredBy',
 ])
 
 /**
@@ -65,8 +65,10 @@ function split(entry) {
 	if (!entry || typeof entry !== 'object') {
 		return { data: {}, self: {} }
 	}
-	const self = (entry['@self'] && typeof entry['@self'] === 'object') ? entry['@self'] : {}
-	const data = (entry.object && typeof entry.object === 'object') ? entry.object : entry
+	const self =
+		entry['@self'] && typeof entry['@self'] === 'object' ? entry['@self'] : {}
+	const data =
+		entry.object && typeof entry.object === 'object' ? entry.object : entry
 	return { data, self }
 }
 
@@ -78,8 +80,10 @@ function split(entry) {
  */
 function isStripped(name) {
 	const lower = String(name).toLowerCase()
-	return STRIPPED_FIELDS.some((f) => f.toLowerCase() === lower)
-		|| lower.startsWith('contactpersoon')
+	return (
+		STRIPPED_FIELDS.some((f) => f.toLowerCase() === lower)
+		|| lower.startsWith('contactPerson')
+	)
 }
 
 /**
@@ -93,7 +97,10 @@ function isStripped(name) {
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  */
-export function projectOpenData(entry, { license = DEFAULT_LICENSE, publisherName = null } = {}) {
+export function projectOpenData(
+	entry,
+	{ license = DEFAULT_LICENSE, publisherName = null } = {},
+) {
 	const { data, self } = split(entry)
 
 	const projected = {}
@@ -136,5 +143,7 @@ export function isClean(projection) {
 	if (!projection || typeof projection !== 'object') {
 		return false
 	}
-	return Object.keys(projection).every((key) => !isStripped(key) && !key.startsWith('@self'))
+	return Object.keys(projection).every(
+		(key) => !isStripped(key) && !key.startsWith('@self'),
+	)
 }

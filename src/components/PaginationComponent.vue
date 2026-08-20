@@ -3,16 +3,19 @@
 		<!-- Page info first -->
 		<div class="viewPaginationInfo">
 			<span class="viewPageInfo">
-				{{ t('softwarecatalog', 'Page {current} of {total}', { current: currentPage, total: totalPages }) }}
+				{{
+					t('softwarecatalog', 'Page {current} of {total}', {
+						current: currentPage,
+						total: totalPages,
+					})
+				}}
 			</span>
 		</div>
 
 		<!-- Page navigation in middle -->
 		<div v-if="totalPages > 1" class="viewPaginationNav">
 			<!-- First page button -->
-			<NcButton
-				:disabled="currentPage === 1"
-				@click="changePage(1)">
+			<NcButton :disabled="currentPage === 1" @click="changePage(1)">
 				{{ t('softwarecatalog', 'First') }}
 			</NcButton>
 
@@ -26,11 +29,16 @@
 			<!-- Page number buttons -->
 			<div class="viewPaginationNumbers">
 				<template v-for="page in visiblePages">
-					<span v-if="page === '...'" :key="'ellipsis-' + page" class="viewPaginationEllipsis">...</span>
+					<span
+						v-if="page === '...'"
+						:key="'ellipsis-' + page"
+						class="viewPaginationEllipsis"
+						>...</span
+					>
 					<NcButton
 						v-else
 						:key="page"
-						:type="page === currentPage ? 'primary' : 'secondary'"
+						:variant="page === currentPage ? 'primary' : 'secondary'"
 						:disabled="page === currentPage"
 						@click="changePage(page)">
 						{{ page }}
@@ -55,15 +63,17 @@
 
 		<!-- Page size selector last -->
 		<div class="viewPaginationPageSize">
-			<label for="pageSize">{{ t('softwarecatalog', 'Items per page:') }}</label>
+			<label for="pageSize">{{
+				t('softwarecatalog', 'Items per page:')
+			}}</label>
 			<NcSelect
 				id="pageSize"
 				class="pagination-page-size-select"
-				:value="currentPageSizeOption"
+				:modelValue="currentPageSizeOption"
 				:options="pageSizeOptions"
 				:clearable="false"
-				:input-label="t('softwarecatalog', 'Items per page')"
-				:label-outside="true"
+				:inputLabel="t('softwarecatalog', 'Items per page')"
+				:labelOutside="true"
 				@option:selected="changePageSize" />
 		</div>
 	</div>
@@ -87,9 +97,11 @@ export default {
 		NcButton,
 		NcSelect,
 	},
+
 	props: {
 		/**
 		 * Current page number
+		 *
 		 * @type {number}
 		 * @default 1
 		 */
@@ -97,8 +109,10 @@ export default {
 			type: Number,
 			default: 1,
 		},
+
 		/**
 		 * Total number of pages
+		 *
 		 * @type {number}
 		 * @default 1
 		 */
@@ -106,8 +120,10 @@ export default {
 			type: Number,
 			default: 1,
 		},
+
 		/**
 		 * Total number of items
+		 *
 		 * @type {number}
 		 * @default 0
 		 */
@@ -115,8 +131,10 @@ export default {
 			type: Number,
 			default: 0,
 		},
+
 		/**
 		 * Current page size/limit
+		 *
 		 * @type {number}
 		 * @default 20
 		 */
@@ -124,8 +142,10 @@ export default {
 			type: Number,
 			default: 20,
 		},
+
 		/**
 		 * Available page size options
+		 *
 		 * @type {Array<object>}
 		 * @default Standard options array
 		 */
@@ -141,8 +161,10 @@ export default {
 				{ value: 1000, label: '1000' },
 			],
 		},
+
 		/**
 		 * Minimum items needed to show pagination
+		 *
 		 * @type {number}
 		 * @default 10
 		 */
@@ -151,19 +173,27 @@ export default {
 			default: 10,
 		},
 	},
+
 	computed: {
 		/**
 		 * Get current page size option object
+		 *
 		 * @return {object} Current page size option object
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-3
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		currentPageSizeOption() {
-			return this.pageSizeOptions.find(option => option.value === this.currentPageSize) || this.pageSizeOptions[1]
+			return (
+				this.pageSizeOptions.find(
+					(option) => option.value === this.currentPageSize,
+				) || this.pageSizeOptions[1]
+			)
 		},
+
 		/**
 		 * Calculate visible page numbers for pagination
+		 *
 		 * @return {Array} Array of page numbers and ellipsis
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-3
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		visiblePages() {
 			const current = this.currentPage
@@ -206,33 +236,39 @@ export default {
 			return pages
 		},
 	},
+
 	methods: {
 		/**
 		 * Change to a specific page
+		 *
 		 * @param {number} page - The page number to change to
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-3
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		changePage(page) {
 			if (page !== this.currentPage && page >= 1 && page <= this.totalPages) {
 				/**
 				 * Emitted when page changes
+				 *
 				 * @event page-changed
 				 * @type {number} The new page number
 				 */
 				this.$emit('page-changed', page)
 			}
 		},
+
 		/**
 		 * Change page size
+		 *
 		 * @param {object} option - Selected page size option
 		 * @return {void}
-		  * @spec openspec/changes/retrofit-2026-05-26-fe-shell-navigation/tasks.md#task-3
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		changePageSize(option) {
 			if (option.value !== this.currentPageSize) {
 				/**
 				 * Emitted when page size changes
+				 *
 				 * @event page-size-changed
 				 * @type {number} The new page size
 				 */

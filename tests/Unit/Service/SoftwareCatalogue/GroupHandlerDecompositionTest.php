@@ -41,123 +41,112 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-9-4
  */
-class GroupHandlerDecompositionTest extends TestCase
-{
+class GroupHandlerDecompositionTest extends TestCase {
 
-    /**
-     * Build a handler with stub collaborators.
-     *
-     * @param IGroupManager|null $groupManager Optional group manager mock
-     *
-     * @return GroupHandler
-     */
-    private function makeHandler(?IGroupManager $groupManager = null): GroupHandler
-    {
-        return new GroupHandler(
-            $groupManager ?? $this->createMock(IGroupManager::class),
-            $this->createMock(IUserManager::class),
-            $this->createMock(IAppConfig::class),
-            $this->createMock(ContainerInterface::class),
-            $this->createMock(IAppManager::class),
-            $this->createMock(LoggerInterface::class),
-        );
+	/**
+	 * Build a handler with stub collaborators.
+	 *
+	 * @param IGroupManager|null $groupManager Optional group manager mock
+	 *
+	 * @return GroupHandler
+	 */
+	private function makeHandler(?IGroupManager $groupManager = null): GroupHandler {
+		return new GroupHandler(
+			$groupManager ?? $this->createMock(IGroupManager::class),
+			$this->createMock(IUserManager::class),
+			$this->createMock(IAppConfig::class),
+			$this->createMock(ContainerInterface::class),
+			$this->createMock(IAppManager::class),
+			$this->createMock(LoggerInterface::class),
+		);
 
-    }//end makeHandler()
+	}//end makeHandler()
 
+	/**
+	 * assignOrganizationGroup short-circuits when the group ID is empty.
+	 *
+	 * @return void
+	 */
+	public function testAssignOrganizationGroupSkipsEmptyGroupId(): void {
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->expects($this->never())->method('get');
 
-    /**
-     * assignOrganizationGroup short-circuits when the group ID is empty.
-     *
-     * @return void
-     */
-    public function testAssignOrganizationGroupSkipsEmptyGroupId(): void
-    {
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->expects($this->never())->method('get');
+		$handler = $this->makeHandler($groupManager);
+		$reflection = new \ReflectionMethod($handler, 'assignOrganizationGroup');
+		$reflection->setAccessible(true);
 
-        $handler    = $this->makeHandler($groupManager);
-        $reflection = new \ReflectionMethod($handler, 'assignOrganizationGroup');
-        $reflection->setAccessible(true);
+		$user = $this->createMock(IUser::class);
+		$reflection->invoke($handler, $user, '', 'org-uuid');
+		$this->addToAssertionCount(1);
 
-        $user = $this->createMock(IUser::class);
-        $reflection->invoke($handler, $user, '', 'org-uuid');
-        $this->addToAssertionCount(1);
+	}//end testAssignOrganizationGroupSkipsEmptyGroupId()
 
-    }//end testAssignOrganizationGroupSkipsEmptyGroupId()
+	/**
+	 * assignOrganizationGroup adds the user when not already a member.
+	 *
+	 * @return void
+	 */
+	public function testAssignOrganizationGroupAddsUserWhenNotMember(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
 
+		$group = $this->createMock(IGroup::class);
+		$group->method('inGroup')->with($user)->willReturn(false);
+		$group->expects($this->once())->method('addUser')->with($user);
 
-    /**
-     * assignOrganizationGroup adds the user when not already a member.
-     *
-     * @return void
-     */
-    public function testAssignOrganizationGroupAddsUserWhenNotMember(): void
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('alice');
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('get')->with('org-group')->willReturn($group);
 
-        $group = $this->createMock(IGroup::class);
-        $group->method('inGroup')->with($user)->willReturn(false);
-        $group->expects($this->once())->method('addUser')->with($user);
+		$handler = $this->makeHandler($groupManager);
+		$reflection = new \ReflectionMethod($handler, 'assignOrganizationGroup');
+		$reflection->setAccessible(true);
 
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('get')->with('org-group')->willReturn($group);
+		$reflection->invoke($handler, $user, 'org-group', 'org-uuid');
 
-        $handler    = $this->makeHandler($groupManager);
-        $reflection = new \ReflectionMethod($handler, 'assignOrganizationGroup');
-        $reflection->setAccessible(true);
+	}//end testAssignOrganizationGroupAddsUserWhenNotMember()
 
-        $reflection->invoke($handler, $user, 'org-group', 'org-uuid');
+	/**
+	 * assignOrganizationGroup is a no-op when the user is already a member.
+	 *
+	 * @return void
+	 */
+	public function testAssignOrganizationGroupSkipsExistingMember(): void {
+		$user = $this->createMock(IUser::class);
 
-    }//end testAssignOrganizationGroupAddsUserWhenNotMember()
+		$group = $this->createMock(IGroup::class);
+		$group->method('inGroup')->with($user)->willReturn(true);
+		$group->expects($this->never())->method('addUser');
 
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('get')->with('org-group')->willReturn($group);
 
-    /**
-     * assignOrganizationGroup is a no-op when the user is already a member.
-     *
-     * @return void
-     */
-    public function testAssignOrganizationGroupSkipsExistingMember(): void
-    {
-        $user = $this->createMock(IUser::class);
+		$handler = $this->makeHandler($groupManager);
+		$reflection = new \ReflectionMethod($handler, 'assignOrganizationGroup');
+		$reflection->setAccessible(true);
 
-        $group = $this->createMock(IGroup::class);
-        $group->method('inGroup')->with($user)->willReturn(true);
-        $group->expects($this->never())->method('addUser');
+		$reflection->invoke($handler, $user, 'org-group', 'org-uuid');
+		$this->addToAssertionCount(1);
 
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('get')->with('org-group')->willReturn($group);
+	}//end testAssignOrganizationGroupSkipsExistingMember()
 
-        $handler    = $this->makeHandler($groupManager);
-        $reflection = new \ReflectionMethod($handler, 'assignOrganizationGroup');
-        $reflection->setAccessible(true);
+	/**
+	 * assignOrganizationGroup is a no-op when the group does not exist.
+	 *
+	 * @return void
+	 */
+	public function testAssignOrganizationGroupSkipsMissingGroup(): void {
+		$user = $this->createMock(IUser::class);
 
-        $reflection->invoke($handler, $user, 'org-group', 'org-uuid');
-        $this->addToAssertionCount(1);
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('get')->with('missing')->willReturn(null);
 
-    }//end testAssignOrganizationGroupSkipsExistingMember()
+		$handler = $this->makeHandler($groupManager);
+		$reflection = new \ReflectionMethod($handler, 'assignOrganizationGroup');
+		$reflection->setAccessible(true);
 
+		$reflection->invoke($handler, $user, 'missing', 'org-uuid');
+		$this->addToAssertionCount(1);
 
-    /**
-     * assignOrganizationGroup is a no-op when the group does not exist.
-     *
-     * @return void
-     */
-    public function testAssignOrganizationGroupSkipsMissingGroup(): void
-    {
-        $user = $this->createMock(IUser::class);
-
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('get')->with('missing')->willReturn(null);
-
-        $handler    = $this->makeHandler($groupManager);
-        $reflection = new \ReflectionMethod($handler, 'assignOrganizationGroup');
-        $reflection->setAccessible(true);
-
-        $reflection->invoke($handler, $user, 'missing', 'org-uuid');
-        $this->addToAssertionCount(1);
-
-    }//end testAssignOrganizationGroupSkipsMissingGroup()
-
+	}//end testAssignOrganizationGroupSkipsMissingGroup()
 
 }//end class
