@@ -5453,7 +5453,7 @@ export default {
 	text-align: left;
 	align-items: center;
 	white-space: normal;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .json-value {
@@ -5712,7 +5712,7 @@ export default {
 	min-height: 100px;
 	resize: vertical;
 	white-space: pre-wrap;
-	word-break: break-word;
+	overflow-wrap: break-word;
 	overflow-wrap: anywhere;
 }
 
@@ -5862,7 +5862,7 @@ export default {
 .viewObjectDialog .viewTable th,
 .viewObjectDialog .viewTable td {
 	white-space: normal;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .viewObjectDialog .viewTable td.td-labels {
@@ -5884,7 +5884,7 @@ export default {
 .viewObjectDialog .viewTable td.table-row-title {
 	flex: 1;
 	white-space: normal;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .short-column {
@@ -5900,7 +5900,7 @@ export default {
 	width: 100%;
 	max-width: initial;
 	white-space: normal;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .table-row-type {

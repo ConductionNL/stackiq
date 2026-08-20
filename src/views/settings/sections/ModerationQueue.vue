@@ -333,7 +333,7 @@ export default defineComponent({
 
 .moderation-title {
 	font-weight: 600;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .moderation-actions {

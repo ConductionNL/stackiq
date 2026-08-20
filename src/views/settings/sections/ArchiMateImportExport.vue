@@ -1305,7 +1305,7 @@ export default {
 	padding: 0;
 	margin: -1px;
 	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
+	clip-path: inset(50%);
 	white-space: nowrap;
 	border: 0;
 }
@@ -2036,7 +2036,7 @@ button.omschrijving-item:disabled {
 	font-weight: 500;
 	color: var(--color-main-text);
 	margin-bottom: 0.5rem;
-	word-wrap: break-word;
+	overflow-wrap: break-word;
 }
 
 .error-meta {
