@@ -965,11 +965,11 @@ export default {
 }
 
 .detail-value {
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .sub-detail-value {
-	word-break: break-word;
+	overflow-wrap: break-word;
 	font-size: 0.8rem;
 	color: var(--color-text-maxcontrast);
 }
