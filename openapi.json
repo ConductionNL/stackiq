@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "softwarecatalog",
-        "version": "0.1.141-unstable.20260821012736",
+        "version": "0.1.141-unstable.20260821014525",
         "description": "Software Catalog",
         "license": {
             "name": "agpl"
