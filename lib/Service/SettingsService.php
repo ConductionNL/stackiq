@@ -872,7 +872,7 @@ class SettingsService {
 
 				$amefKey = $amefKeyMap[$objectType] ?? null;
 
-				if ($amefKey !== false && isset($decodedAmefConfig[$amefKey]) === true) {
+				if (isset($decodedAmefConfig[$amefKey]) === true) {
 					$schemaId = $decodedAmefConfig[$amefKey];
 					if (empty($schemaId) === false) {
 						$result = (int)$schemaId;
@@ -920,9 +920,7 @@ class SettingsService {
 		// Only check voorzieningen config if object type exists in the key map.
 		if ($result === null && isset($voorzieningenKeyMap[$objectType]) === true) {
 			$voorzieningenKey = $voorzieningenKeyMap[$objectType];
-			if (isset($voorzieningenConfig[$voorzieningenKey]) === true
-				&& $voorzieningenConfig[$voorzieningenKey] !== null
-			) {
+			if (isset($voorzieningenConfig[$voorzieningenKey]) === true) {
 				$result = (int)$voorzieningenConfig[$voorzieningenKey];
 			}
 		}
@@ -5997,11 +5995,10 @@ class SettingsService {
 	 */
 	public function updateEmailConfig(array $config): array {
 		try {
-			if (isset($config) === true) {
-				$result = $this->updateEmailSettings(emailSettings: $config);
-				if ($result['success'] === false) {
-					return $result;
-				}
+			// No isset($config) guard: it is a required, non-nullable parameter.
+			$result = $this->updateEmailSettings(emailSettings: $config);
+			if ($result['success'] === false) {
+				return $result;
 			}
 
 			return [
@@ -6070,9 +6067,7 @@ class SettingsService {
 
 			// Load existing config to allow merging.
 			$existing = $this->getAmefConfig();
-			if (is_array($existing) === false) {
-				$existing = [];
-			}
+			// No is_array() fallback: getAmefConfig() is declared to return array.
 
 			// Determine target register id.
 			if (isset($config['register']) === true) {

@@ -106,15 +106,15 @@ class OrganisatieService {
 				organizationUuid: $organizationUuid
 			);
 
-			if ($organisationEntity !== null) {
-				$this->logger->info(
-					'OrganisatieService: Successfully created organization entity',
-					[
-						'organizationUuid' => $organizationUuid,
-						'entityId' => $organisationEntity->getId(),
-					]
-				);
-			}
+			// createOrganisationEntityInternal() is declared non-nullable and
+			// throws on failure — the catch below is the real failure path.
+			$this->logger->info(
+				'OrganisatieService: Successfully created organization entity',
+				[
+					'organizationUuid' => $organizationUuid,
+					'entityId' => $organisationEntity->getId(),
+				]
+			);
 
 			return $organisationEntity;
 		} catch (\Exception $e) {

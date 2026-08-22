@@ -1404,6 +1404,10 @@ class OrganizationSyncService {
 	private function updateOrganisationEntityUsers(object $organisationEntity, array $usernames, array &$stats): void {
 		try {
 			$organisationUuid = $organisationEntity->getUuid();
+			// OpenRegister is not on the analysis path, so getUsers() has no
+			// resolvable return type and sort() below cannot be checked without
+			// this. It is a list of usernames.
+			/** @var array<string> $currentUsers */
 			$currentUsers = ($organisationEntity->getUsers() ?? []);
 
 			// Add admin users to ensure they're always included.

@@ -642,10 +642,8 @@ class ArchiMateService {
 		// OPTIMIZATION: Removed debug logging from section processing.
 		$items = [];
 
-		// Safety check: ensure sectionData is an array.
-		if (is_array($sectionData) === false) {
-			return [];
-		}
+		// No is_array() safety check: $sectionData is declared array, so PHP
+		// rejects anything else at the call boundary before this could run.
 
 		// Get section structure configuration from AMEF config.
 		$config = $this->getSectionStructureConfig(sectionName: $sectionName);
@@ -974,7 +972,7 @@ class ArchiMateService {
 		} elseif (isset($data['Object ID']) === true) {
 			// Check if we have "Object ID" property directly.
 			$slug = $data['Object ID'];
-		} elseif ($identifier !== false && str_starts_with($identifier, 'id-') === true) {
+		} elseif (str_starts_with($identifier, 'id-') === true) {
 			// Fallback: extract from identifier (remove "id-" prefix if present).
 			$slug = substr($identifier, 3);
 		}
@@ -1027,9 +1025,9 @@ class ArchiMateService {
 
 		// PERFORMANCE OPTIMIZATION: Use parallel batch processing for large datasets.
 		$batchProcessingStartTime = microtime(true);
-		if (self::PERFORMANCE_OPTIMIZATIONS['parallel_processing'] === true
-			&& count($objects) > self::PERFORMANCE_OPTIMIZATIONS['batch_size']
-		) {
+		// PERFORMANCE_OPTIMIZATIONS['parallel_processing'] is a class constant set
+		// to true, so only the batch-size threshold decides this.
+		if (count($objects) > self::PERFORMANCE_OPTIMIZATIONS['batch_size']) {
 			$result = $this->saveObjectsInParallelBatches(
 				objects: $objects,
 				objectService: $objectService,
@@ -1169,9 +1167,9 @@ class ArchiMateService {
 			}//end try
 
 			// Memory cleanup between chunks.
-			if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup'] !== false) {
-				$this->cleanupMemory();
-			}
+			// PERFORMANCE_OPTIMIZATIONS['memory_cleanup'] is a class constant set
+			// to true, so this was never conditional.
+			$this->cleanupMemory();
 		}//end foreach
 
 		// Store the aggregated result for statistics calculation.
@@ -1767,7 +1765,7 @@ class ArchiMateService {
 		}
 
 		// Validate and normalize to positive int.
-		if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string)$rawRegisterId) === true) {
+		if ($rawRegisterId !== '' && is_numeric((string)$rawRegisterId) === true) {
 			$registerId = (int)$rawRegisterId;
 			if ($registerId > 0) {
 				return $registerId;
@@ -2258,10 +2256,8 @@ class ArchiMateService {
 					// Default fallback.
 				};
 
-				if (isset($statistics[$sectionKey]) === false) {
-					continue;
-					// Skip unknown section types.
-				}
+				// No "skip unknown section types" guard: the branch above pins
+				// $sectionKey to a key $statistics always has, so it never fired.
 
 				// Determine if this object was created, updated, or had errors.
 				$objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
@@ -2346,14 +2342,13 @@ class ArchiMateService {
 			'total_errors' => 0,
 		];
 
-		foreach ($statistics as $section => $sectionStats) {
-			if ($section !== 'omschrijving') {
-				// Skip summary section itself.
-				$summary['total_objects_created'] += $sectionStats['created'];
-				$summary['total_objects_updated'] += $sectionStats['updated'];
-				$summary['total_objects_skipped'] += $sectionStats['skipped'];
-				$summary['total_errors'] += count($sectionStats['errors']);
-			}
+		// No "skip the summary section" guard: `omschrijving` is written into
+		// $statistics on the line AFTER this loop, so the loop can never see it.
+		foreach ($statistics as $sectionStats) {
+			$summary['total_objects_created'] += $sectionStats['created'];
+			$summary['total_objects_updated'] += $sectionStats['updated'];
+			$summary['total_objects_skipped'] += $sectionStats['skipped'];
+			$summary['total_errors'] += count($sectionStats['errors']);
 		}
 
 		$statistics['omschrijving'] = $summary;
@@ -3061,7 +3056,7 @@ class ArchiMateService {
 			$standardId = $source;
 		}
 
-		if ($refCompId !== false && $standardId === true) {
+		if ($standardId === true) {
 			// Initialize arrays if not exists.
 			if (isset($gemmaRelationshipMap[$refCompId]) === false) {
 				$gemmaRelationshipMap[$refCompId] = [

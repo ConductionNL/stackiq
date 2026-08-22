@@ -261,7 +261,9 @@ class OrganisationMembersController extends Controller {
 	 *
 	 * @return \OCA\OpenRegister\Service\OrganisationService The service instance.
 	 *
-	 * @throws \Throwable When OpenRegister is unavailable.
+	 * No `@throws`: the body is a plain property read. If OpenRegister is
+	 * unavailable the failure happens in the container while CONSTRUCTING this
+	 * controller, not here.
 	 */
 	private function getOrganisationService(): \OCA\OpenRegister\Service\OrganisationService {
 		return $this->organisationService;

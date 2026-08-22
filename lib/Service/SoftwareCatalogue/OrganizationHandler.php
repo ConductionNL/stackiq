@@ -437,30 +437,31 @@ class OrganizationHandler {
 						);
 					}
 
-					if ($contactgegevensObject !== null) {
-						$processedContacts[] = $contactgegevensObject;
+					// No null guard: saveObject() returns a non-nullable
+					// ObjectEntityInterface and throws on failure, which the
+					// catch below handles.
+					$processedContacts[] = $contactgegevensObject;
 
-						$actionLogMessage = 'Created new contactgegevens from contactpersoon';
-						$actionValue = 'create';
-						if ($existingContactgegevens !== null) {
-							$actionLogMessage = 'Updated existing contactgegevens from contactpersoon';
-							$actionValue = 'update';
-						}
+					$actionLogMessage = 'Created new contactgegevens from contactpersoon';
+					$actionValue = 'create';
+					if ($existingContactgegevens !== null) {
+						$actionLogMessage = 'Updated existing contactgegevens from contactpersoon';
+						$actionValue = 'update';
+					}
 
-						$this->_logger->info(
-							$actionLogMessage,
-							[
-								'organizationId' => $organizationUuid,
-								// UUID, not getId(): `getId()` is not on
-								// ObjectEntityInterface (ADR-084), and the UUID is
-								// the identifier every other log line here carries.
-								'contactgegevensId' => $contactgegevensObject->getUuid(),
-								'contactpersoonIndex' => $index,
-								'email' => $contactgegevensData['email'],
-								'action' => $actionValue,
-							]
-						);
-					}//end if
+					$this->_logger->info(
+						$actionLogMessage,
+						[
+							'organizationId' => $organizationUuid,
+							// UUID, not getId(): `getId()` is not on
+							// ObjectEntityInterface (ADR-084), and the UUID is
+							// the identifier every other log line here carries.
+							'contactgegevensId' => $contactgegevensObject->getUuid(),
+							'contactpersoonIndex' => $index,
+							'email' => $contactgegevensData['email'],
+							'action' => $actionValue,
+						]
+					);
 				} catch (\Exception $e) {
 					$this->_logger->error(
 						'Failed to process contactPerson: ' . $e->getMessage(),

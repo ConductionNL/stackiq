@@ -1526,7 +1526,8 @@ class SoftwareCatalogueService {
 		$this->_logger->info(
 			'SoftwareCatalogueService: STEP 2 - Checking user context',
 			[
-				'hasUserSession' => $userSession !== null,
+				// Always true: $userSession is an injected, non-nullable IUserSession.
+				'hasUserSession' => true,
 				'currentUser' => $currentUserValue,
 				'isAnonymous' => $currentUser === null,
 			]
