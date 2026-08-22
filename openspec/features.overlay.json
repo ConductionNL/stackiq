@@ -115,7 +115,7 @@
     "summary": "Contacts become Nextcloud accounts with the right role.",
     "summary_nl": "Contactpersonen worden Nextcloud-accounts met de juiste rol.",
     "status": "stable",
-    "docsUrl": "openspec/specs/softwarecatalog-contacts-to-nc/spec.md"
+    "docsUrl": "openspec/specs/stackiq-contacts-to-nc/spec.md"
   },
   {
     "slug": "notifications",
@@ -125,7 +125,7 @@
     "summary_nl": "Word gewaarschuwd bij aflopende contracten, kwetsbaarheden en nieuwe versies.",
     "status": "stable",
     "providedBy": "openregister",
-    "docsUrl": "openspec/specs/softwarecatalog-notifications/spec.md"
+    "docsUrl": "openspec/specs/stackiq-notifications/spec.md"
   },
   {
     "slug": "federation-between-catalogues",

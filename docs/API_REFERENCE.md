@@ -8,7 +8,7 @@ The Software Catalog app provides a REST API for configuration management and pr
 
 All API endpoints are relative to the Nextcloud base URL:
 ```
-https://your-nextcloud-domain/index.php/apps/softwarecatalog/api/
+https://your-nextcloud-domain/index.php/apps/stackiq/api/
 ```
 
 ## Authentication

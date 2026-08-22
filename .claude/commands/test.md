@@ -5,7 +5,7 @@ category: Testing
 tags: [testing, softwarecatalogus, newman, playwright, persona]
 ---
 
-Base directory for this skill: /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/softwarecatalog
+Base directory for this skill: /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/stackiq
 
 # Test Softwarecatalogus — Orchestrator
 
@@ -57,33 +57,33 @@ When running API tests, use Newman CLI:
 which newman || npm install -g newman newman-reporter-htmlextra
 
 # Run setup first (creates test data)
-newman run softwarecatalog/postman/softwarecatalogus-tests.json \
-  -e softwarecatalog/postman/environment-local.json \
+newman run stackiq/postman/softwarecatalogus-tests.json \
+  -e stackiq/postman/environment-local.json \
   --folder "00 - Setup" --reporters cli 2>&1 | tail -20
 
 # Run all test folders
-newman run softwarecatalog/postman/softwarecatalogus-tests.json \
-  -e softwarecatalog/postman/environment-local.json \
+newman run stackiq/postman/softwarecatalogus-tests.json \
+  -e stackiq/postman/environment-local.json \
   --reporters cli,htmlextra \
-  --reporter-htmlextra-export softwarecatalog/test-results/api/report.html 2>&1
+  --reporter-htmlextra-export stackiq/test-results/api/report.html 2>&1
 
 # Run a specific folder
-newman run softwarecatalog/postman/softwarecatalogus-tests.json \
-  -e softwarecatalog/postman/environment-local.json \
+newman run stackiq/postman/softwarecatalogus-tests.json \
+  -e stackiq/postman/environment-local.json \
   --folder "{folder-name}" --reporters cli 2>&1
 ```
 
 **For custom environments**, pass variables:
 ```bash
-newman run softwarecatalog/postman/softwarecatalogus-tests.json \
-  -e softwarecatalog/postman/environment-local.json \
+newman run stackiq/postman/softwarecatalogus-tests.json \
+  -e stackiq/postman/environment-local.json \
   --env-var "base_url={BACKEND}" \
   --env-var "admin_user={ADMIN_USER}" \
   --env-var "admin_pass={ADMIN_PASS}" \
   --reporters cli 2>&1
 ```
 
-Write API results to `softwarecatalog/test-results/api/results.md`.
+Write API results to `stackiq/test-results/api/results.md`.
 
 ---
 
@@ -200,7 +200,7 @@ After EVERY page navigation, check network performance:
 - Search queries with >5 active filters
 
 ### Acceptance Criteria
-Before testing each issue, read its detailed acceptance criteria in `softwarecatalog/issues.md`. Each issue has specific, testable acceptance criteria with checkboxes. Use these to determine status:
+Before testing each issue, read its detailed acceptance criteria in `stackiq/issues.md`. Each issue has specific, testable acceptance criteria with checkboxes. Use these to determine status:
 - **PASS** = ALL acceptance criteria are met
 - **PARTIAL** = Some criteria met, some not
 - **FAIL** = Key criteria not met or feature is broken
@@ -217,7 +217,7 @@ CMS pages (privacy, terms, FAQ, disclaimer) are managed in the **OpenCatalogi** 
 
 ### RBAC Reference
 The authoritative RBAC rules are defined in the register JSON configuration:
-- **File**: `softwarecatalog/lib/Settings/softwarecatalogus_register.json`
+- **File**: `stackiq/lib/Settings/softwarecatalogus_register.json`
 - Each schema has an `"authorization"` block with `create`, `read`, `update`, `delete` rules
 - Rules can be simple group names (e.g., `"public"`, `"gebruik-beheerder"`) or conditional: `{ "group": "aanbod-beheerder", "match": { "_organisation": "$organisation" } }` (only own org's data)
 
@@ -261,7 +261,7 @@ After all testing is complete, agents **MUST** clean up any objects they created
 
 ### Rules
 - **READ ONLY on GitHub issues** — NEVER update, close, or comment on issues
-- Write test results ONLY to local files in `softwarecatalog/test-results/`
+- Write test results ONLY to local files in `stackiq/test-results/`
 - Take screenshots as evidence where applicable
 - **ALWAYS clean up test data** created during wizard walkthroughs (see Test Data Cleanup above)
 
@@ -289,10 +289,10 @@ Run the setup script to create test organizations, contact persons, user account
 
 ```bash
 # Local (default):
-bash softwarecatalog/test-setup.sh
+bash stackiq/test-setup.sh
 
 # Custom environment:
-BACKEND_URL="{BACKEND}" ADMIN_USER="{ADMIN_USER}" ADMIN_PASS="{ADMIN_PASS}" bash softwarecatalog/test-setup.sh
+BACKEND_URL="{BACKEND}" ADMIN_USER="{ADMIN_USER}" ADMIN_PASS="{ADMIN_PASS}" bash stackiq/test-setup.sh
 ```
 
 This script creates:
@@ -334,7 +334,7 @@ Run the Postman/Newman API test suite. This covers all `[API]`-tagged acceptance
 which newman || npm install -g newman newman-reporter-htmlextra
 ```
 
-**After Newman completes**, parse the output and write results to `softwarecatalog/test-results/api/results.md`:
+**After Newman completes**, parse the output and write results to `stackiq/test-results/api/results.md`:
 - Total requests, assertions, passes, failures
 - Per-folder pass/fail counts
 - Failed test names with issue references (tests are named `#NNN AC: description`)
@@ -366,7 +366,7 @@ Note: All 7 browsers are used. The bezoeker uses browser-6 (does not need headed
 You are a testing agent for the GEMMA Softwarecatalogus.
 
 Read and follow the instructions in the skill file at:
-softwarecatalog/.claude/skills/test-{persona}.md
+stackiq/.claude/skills/test-{persona}.md
 
 This file contains your persona details, login credentials, test scope, and the list of issues to test.
 
@@ -418,7 +418,7 @@ Your persona is linked to a proper organization (not Default Organisation):
 Organization-specific features (wizards, filters, dashboards) should work for your persona's org type.
 
 ### RBAC Reference
-The authoritative RBAC rules are in `softwarecatalog/lib/Settings/softwarecatalogus_register.json`.
+The authoritative RBAC rules are in `stackiq/lib/Settings/softwarecatalogus_register.json`.
 Each schema has an `"authorization"` block. Key rules:
 - **contactpersoon**: NOT public, but leverancier contact persons ARE expected to be publicly visible via publications. Only gemeente contact persons should be hidden.
 - **module** (applicatie): Public can read only where `geregistreerdDoor: Leverancier`. aanbod-beheerder sees only own org.
@@ -523,11 +523,11 @@ After completing all tests, you MUST clean up any objects you created during wiz
 **Why this matters:** Without cleanup, wizard re-runs create duplicate entries that cause false FAIL results for count-based issues (#300, #307).
 
 ### Acceptance Criteria
-Before testing each issue, read its acceptance criteria from softwarecatalog/issues.md.
+Before testing each issue, read its acceptance criteria from stackiq/issues.md.
 The file contains detailed checkboxes for each issue. Use these to determine PASS/FAIL/PARTIAL/CANNOT_TEST.
 
 ### Output Format
-Write your results to: softwarecatalog/test-results/{persona}/results-authenticated.md
+Write your results to: stackiq/test-results/{persona}/results-authenticated.md
 
 Use this format:
 - Header with persona name, date, environment, login used
@@ -557,20 +557,20 @@ If any agent fails (crashes, doesn't write results), log the failure and continu
 After all tests complete (or in `summary-only` mode), read all result files and generate a summary.
 
 **Read these files** (if they exist):
-- `softwarecatalog/test-results/api/results.md` (API test results)
-- `softwarecatalog/test-results/leverancier/results-authenticated.md`
-- `softwarecatalog/test-results/gemeente/results-authenticated.md`
-- `softwarecatalog/test-results/security-officer/results-authenticated.md`
-- `softwarecatalog/test-results/functioneel-beheerder/results-authenticated.md`
-- `softwarecatalog/test-results/samenwerking/results-authenticated.md`
-- `softwarecatalog/test-results/architectuur-expert/results-authenticated.md`
-- `softwarecatalog/test-results/bezoeker/results-public.md`
+- `stackiq/test-results/api/results.md` (API test results)
+- `stackiq/test-results/leverancier/results-authenticated.md`
+- `stackiq/test-results/gemeente/results-authenticated.md`
+- `stackiq/test-results/security-officer/results-authenticated.md`
+- `stackiq/test-results/functioneel-beheerder/results-authenticated.md`
+- `stackiq/test-results/samenwerking/results-authenticated.md`
+- `stackiq/test-results/architectuur-expert/results-authenticated.md`
+- `stackiq/test-results/bezoeker/results-public.md`
 
 For each file, extract:
 - Issue number, title, status (PASS/PARTIAL/FAIL/CANNOT_TEST), severity
 - Agent/method that tested it (API or persona name)
 
-**Write the summary to**: `softwarecatalog/test-results/README.md`
+**Write the summary to**: `stackiq/test-results/README.md`
 
 ### Summary Report Format
 
@@ -707,11 +707,11 @@ After writing the summary, display a concise overview to the user:
 - Total issues tested
 - PASS/FAIL/PARTIAL/CANNOT_TEST counts
 - Top 3 critical findings
-- Link to the full report: `softwarecatalog/test-results/README.md`
+- Link to the full report: `stackiq/test-results/README.md`
 
 ### Step 6: Backlog Suggestions
 
-After presenting the report, review the test findings for **suggestions and improvements** that are NOT existing GitHub issues but could be valuable. Present these to the user and ask if they should be added to the backlog at `softwarecatalog/website/docs/backlog.md`.
+After presenting the report, review the test findings for **suggestions and improvements** that are NOT existing GitHub issues but could be valuable. Present these to the user and ask if they should be added to the backlog at `stackiq/website/docs/backlog.md`.
 
 Examples of backlog-worthy suggestions:
 - UX improvements noticed during testing (e.g., inconsistent naming, confusing navigation)
@@ -730,7 +730,7 @@ When the argument starts with `issues`, this workflow processes open IGS issues 
 
 ### Step 7: Build Issue List
 
-Read `softwarecatalog/aanvullende-informatie.md` to get the full list of open issues with their categories.
+Read `stackiq/aanvullende-informatie.md` to get the full list of open issues with their categories.
 
 **Filter based on argument:**
 - `issues` → all 72 open issues
@@ -756,10 +756,10 @@ Your task is to process the following open issues and prepare a GitHub reply com
 For EACH issue number in your list:
 
 ### 1. Read the issue
-Read `softwarecatalog/issues/{number}.md` for the full description, comments, and images.
+Read `stackiq/issues/{number}.md` for the full description, comments, and images.
 
 ### 2. Determine the category
-Look up the issue in `softwarecatalog/aanvullende-informatie.md` to find its category (Bug, Datakwaliteit, Tekstueel, Wens, Nog te bepalen).
+Look up the issue in `stackiq/aanvullende-informatie.md` to find its category (Bug, Datakwaliteit, Tekstueel, Wens, Nog te bepalen).
 
 ### 3. Investigate based on category
 
@@ -767,11 +767,11 @@ Look up the issue in `softwarecatalog/aanvullende-informatie.md` to find its cat
 1. Navigate to the relevant page in the browser (Frontend: {FRONTEND}, Backend: {BACKEND})
 2. Try to reproduce the problem described in the issue
 3. Take screenshots showing the current state (whether fixed or still broken)
-4. If it involves RBAC, check `softwarecatalog/lib/Settings/softwarecatalogus_register.json`
+4. If it involves RBAC, check `stackiq/lib/Settings/softwarecatalogus_register.json`
 5. Use the appropriate template from aanvullende-informatie.md (Template A if fixed, Template B if still broken)
 
 **Datakwaliteit issues:**
-1. Read the relevant CSV file(s) from `softwarecatalog/data/`
+1. Read the relevant CSV file(s) from `stackiq/data/`
 2. Search for the specific data causing the issue (orphaned references, missing fields, etc.)
 3. Count affected records and provide examples
 4. Use Template C from aanvullende-informatie.md
@@ -783,7 +783,7 @@ Look up the issue in `softwarecatalog/aanvullende-informatie.md` to find its cat
 4. Use Template D from aanvullende-informatie.md
 
 **Wens issues:**
-1. Read `softwarecatalog/issues.md` to confirm this is outside the original PvE scope
+1. Read `stackiq/issues.md` to confirm this is outside the original PvE scope
 2. Describe current behavior
 3. Use Template E from aanvullende-informatie.md
 
@@ -793,11 +793,11 @@ Look up the issue in `softwarecatalog/aanvullende-informatie.md` to find its cat
 3. Follow that category's procedure
 
 ### 4. Write the reply
-Save the prepared reply as: `softwarecatalog/reacties/{number}.md`
+Save the prepared reply as: `stackiq/reacties/{number}.md`
 Include the issue title as an H1 header, the category, and the reply content using the appropriate template.
 
 ### 5. Save screenshots
-Save any screenshots to: `softwarecatalog/reacties/screenshots/{number}-{description}.png`
+Save any screenshots to: `stackiq/reacties/screenshots/{number}-{description}.png`
 
 ## Browser Assignment
 Use browser-{browser_num} for ALL browser operations (mcp__browser-{browser_num}__* tools).
@@ -808,16 +808,16 @@ For issues requiring authenticated access, log in as admin ({ADMIN_USER}/{ADMIN_
 For public-facing issues, test without logging in.
 
 ## Data Files
-CSV import data is in `softwarecatalog/data/`:
+CSV import data is in `stackiq/data/`:
 - module.csv (applicaties), koppeling.csv, organisatie.csv, contactpersoon.csv
 - compliancy.csv, gebruik.csv, gebruik_2.csv, gebruik_3.csv, moduleversie.csv
 
-GEMMA AMEF model: `softwarecatalog/data/GEMMA release.xml`
+GEMMA AMEF model: `stackiq/data/GEMMA release.xml`
 
 ## Rules — CRITICAL
 - NEVER update, close, or comment on GitHub issues — this is PREPARATION ONLY
 - NEVER post anything to GitHub — all output is LOCAL files for human review
-- Write replies ONLY to local files in softwarecatalog/reacties/
+- Write replies ONLY to local files in stackiq/reacties/
 - Take screenshots as evidence
 - Do NOT use gh CLI to interact with issues in any way
 ```
@@ -827,14 +827,14 @@ GEMMA AMEF model: `softwarecatalog/data/GEMMA release.xml`
 Wait for all issue agents to complete. Create the output directory if needed:
 
 ```bash
-mkdir -p softwarecatalog/reacties/screenshots
+mkdir -p stackiq/reacties/screenshots
 ```
 
 ### Step 10: Generate Issues Summary
 
-After all agents complete, read all files in `softwarecatalog/reacties/` and generate a summary.
+After all agents complete, read all files in `stackiq/reacties/` and generate a summary.
 
-**Write to**: `softwarecatalog/reacties/README.md`
+**Write to**: `stackiq/reacties/README.md`
 
 ```markdown
 # IGS Issues — Voorbereide Reacties

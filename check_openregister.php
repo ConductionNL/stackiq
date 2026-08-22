@@ -9,7 +9,7 @@ $possibleTables = [
     'oc_openregister_object',
     'openregister_objects',
     'objects',
-    'oc_softwarecatalog_objects'
+    'oc_stackiq_objects'
 ];
 
 foreach ($possibleTables as $tableName) {

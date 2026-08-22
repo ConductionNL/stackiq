@@ -30,7 +30,7 @@ Peter's account (`peter.vandijk@test.nl`) is in the Default Organisation. **Impo
 
 - **For frontend beheer testing**: Log in as `peter.vandijk@test.nl` (NOT `admin`). Peter has full admin group membership and a proper org assignment.
 - **For Nextcloud backend testing** (OpenCatalogi admin, OpenRegister config): Use `admin:admin` via the backend URL — these features don't depend on the org permission system.
-- If you see "org fetch error" or disabled edit/delete buttons, the active org UUID doesn't have a matching register object. Run `bash softwarecatalog/test-setup.sh` to fix org assignments.
+- If you see "org fetch error" or disabled edit/delete buttons, the active org UUID doesn't have a matching register object. Run `bash stackiq/test-setup.sh` to fix org assignments.
 
 ## Test Scope
 

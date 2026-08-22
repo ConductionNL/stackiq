@@ -2,13 +2,13 @@
 kind: code
 ---
 
-# Proposal: Rename the app id from `softwarecatalog` to `stackiq`
+# Proposal: Rename the app id from `stackiq` to `stackiq`
 
 ## Problem
 
 The repository was renamed to `ConductionNL/stackiq` in the 2026-08 fleet
 renaming, but the app itself was not: `appinfo/info.xml` still declares
-`<id>softwarecatalog</id>` and `<namespace>SoftwareCatalog</namespace>`. Until
+`<id>stackiq</id>` and `<namespace>Stackiq</namespace>`. Until
 the id moves, the repo name and the installed app disagree, `occ` commands and
 URLs still carry the old name, and every later change has to keep straddling
 both spellings.
@@ -33,12 +33,12 @@ record.
 ## Proposed Change
 
 1. **Move the identity.** `<id>` -> `stackiq`, `<namespace>` -> `Stackiq`, PHP
-   root namespace `OCA\SoftwareCatalog` -> `OCA\Stackiq`, l10n domain, URL and
+   root namespace `OCA\Stackiq` -> `OCA\Stackiq`, l10n domain, URL and
    route prefixes, webpack bundle prefix, DOM mount ids, composer/npm package
    names, and the display name -> "Stackiq". App-named classes and files move
-   with it (`SoftwareCatalogueService` -> `StackiqService`,
-   `lib/Service/SoftwareCatalogue/` -> `lib/Service/Stackiq/`,
-   `SoftwareCatalogAdmin` -> `StackiqAdmin`, and their tests).
+   with it (`StackiqueService` -> `StackiqService`,
+   `lib/Service/Stackique/` -> `lib/Service/Stackiq/`,
+   `StackiqAdmin` -> `StackiqAdmin`, and their tests).
 
 2. **Carry the stored data across.** Three new `IRepairStep`s —
    `MigrateAppConfigKeys`, `MigrateUserPreferences`,
@@ -58,11 +58,11 @@ record.
 ## Non-goals
 
 - Registering `stackiq` with the Nextcloud App Store, or issuing the signing
-  certificate for the new id. `.nextcloud/certificates/softwarecatalog.csr` is
+  certificate for the new id. `.nextcloud/certificates/stackiq.csr` is
   left as-is; a maintainer action is required before a stable release publishes
   under the new id.
-- Moving `softwarecatalog.conduction.nl` / `www.conduction.nl/apps/softwarecatalog`
-  or the `softwarecatalog-docs` Cloudflare Pages project. Those move when DNS and
+- Moving `softwarecatalog.conduction.nl` / `www.conduction.nl/apps/stackiq`
+  or the `stackiq-docs` Cloudflare Pages project. Those move when DNS and
   the Pages binding move, in a change that verifies both.
 - Renaming `openspec/specs/*` capability directories. They are referenced from
   `openspec/changes/archive/**`, which is frozen history.

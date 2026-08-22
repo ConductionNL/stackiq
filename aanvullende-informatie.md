@@ -33,8 +33,8 @@ Het GEMMA ArchiMate Exchange Format bestand bevat het volledige architectuurmode
 
 | Bestand | Omschrijving | Pad |
 |---------|-------------|-----|
-| `GEMMA release.xml` | Volledig GEMMA ArchiMate model (13.3 MB) | `softwarecatalog/data/GEMMA release.xml` |
-| `GEMMA_release.xml` | Kopie in Settings directory (13.4 MB) | `softwarecatalog/lib/Settings/GEMMA_release.xml` |
+| `GEMMA release.xml` | Volledig GEMMA ArchiMate model (13.3 MB) | `stackiq/data/GEMMA release.xml` |
+| `GEMMA_release.xml` | Kopie in Settings directory (13.4 MB) | `stackiq/lib/Settings/GEMMA_release.xml` |
 | Turfbrug test model | VNG Realisatie test-export (15 MB) | `Softwarecatalogus/docs/examples/02-04-2025_GEMMA 2_Turfbrug (test VNG Realisatie)_ameff_model.xml` |
 
 ### Analyse: Orphaned buitengemeentelijkVoorziening referenties in koppelingen
@@ -264,7 +264,7 @@ Softwarecatalogus/reacties/screenshots/{nummer}-{beschrijving}.png
 | Frontend URL | http://localhost:3000 |
 | Backend URL | http://localhost:8080 |
 | Admin credentials | admin / admin |
-| Test-gebruikers | Zie `softwarecatalog/.claude/skills/test-softwarecatalog.md` |
+| Test-gebruikers | Zie `stackiq/.claude/skills/test-stackiq.md` |
 
 ### Browsergebruik
 - Gebruik de toegewezen browser (zie browser-pool in CLAUDE.md)
@@ -292,7 +292,7 @@ awk -F',' '{if ($NF == "" || $NF == "\"\"") print}' Softwarecatalogus/data/conta
 ```
 
 ### RBAC-referentie voor agents
-De RBAC-regels staan in: `softwarecatalog/lib/Settings/softwarecatalogus_register.json`
+De RBAC-regels staan in: `stackiq/lib/Settings/softwarecatalogus_register.json`
 Raadpleeg dit bestand wanneer een issue gaat over zichtbaarheid, toegang, of organisatie-scoping.
 
 ### Voortgang bijhouden

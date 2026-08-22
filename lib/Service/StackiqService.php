@@ -7,7 +7,7 @@
  * user management, contact processing, and object lifecycle management.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -18,12 +18,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCA\Stackiq\Service\Stackiq\GroupHandler;
+use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
+use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
 use OCP\IGroupManager;
 use OCP\IUserManager;
@@ -39,7 +39,7 @@ use RuntimeException;
  * email notifications, and object lifecycle management.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -65,7 +65,7 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.UndefinedVariable)
  * @SuppressWarnings(PHPMD.CountInLoopExpression)
  */
-class SoftwareCatalogueService {
+class StackiqService {
 
 	/**
 	 * The name of the app
@@ -75,7 +75,7 @@ class SoftwareCatalogueService {
 	private string $appName;
 
 	/**
-	 * SoftwareCatalogueService constructor
+	 * StackiqService constructor
 	 *
 	 * @param OrganizationHandler $_organizationHandler Organization handler.
 	 * @param ContactPersonHandler $_contactPersonHandler Contact person handler.
@@ -102,7 +102,7 @@ class SoftwareCatalogueService {
 		private readonly IUserManager $_userManager,
 		private readonly IGroupManager $_groupManager,
 	) {
-		$this->appName = 'softwarecatalog';
+		$this->appName = 'stackiq';
 	}//end __construct()
 
 	/**
@@ -190,7 +190,7 @@ class SoftwareCatalogueService {
 			$objectData = $contactPersonObject->getObject();
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Starting contactpersoon processing',
+				'StackiqService: Starting contactpersoon processing',
 				[
 					'objectId' => $objectId,
 					'objectData' => $objectData,
@@ -200,7 +200,7 @@ class SoftwareCatalogueService {
 
 			// Delegate to contact person handler.
 			$this->_logger->debug(
-				'SoftwareCatalogueService: Delegating to ContactPersonHandler for contactpersoon processing',
+				'StackiqService: Delegating to ContactPersonHandler for contactpersoon processing',
 				[
 					'objectId' => $objectId,
 				]
@@ -209,7 +209,7 @@ class SoftwareCatalogueService {
 			$result = $this->_contactPersonHandler->processContactpersoon($contactPersonObject, $isUpdate);
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: ContactPersonHandler processing completed',
+				'StackiqService: ContactPersonHandler processing completed',
 				[
 					'objectId' => $objectId,
 					'result' => $result,
@@ -223,7 +223,7 @@ class SoftwareCatalogueService {
 				$username = $updatedObjectData['username'] ?? '';
 
 				$this->_logger->info(
-					'SoftwareCatalogueService: Username extracted from processed object',
+					'StackiqService: Username extracted from processed object',
 					[
 						'objectId' => $objectId,
 						'username' => $username,
@@ -237,7 +237,7 @@ class SoftwareCatalogueService {
 					// as it would overwrite the correct group assignments.
 					// Ensure organization has beheerder and set up manager relationships.
 					$this->_logger->debug(
-						'SoftwareCatalogueService: Ensuring organization beheerder',
+						'StackiqService: Ensuring organization beheerder',
 						[
 							'objectId' => $objectId,
 							'username' => $username,
@@ -248,7 +248,7 @@ class SoftwareCatalogueService {
 
 					// Set user to inactive initially.
 					$this->_logger->debug(
-						'SoftwareCatalogueService: Setting user to inactive',
+						'StackiqService: Setting user to inactive',
 						[
 							'objectId' => $objectId,
 							'username' => $username,
@@ -258,7 +258,7 @@ class SoftwareCatalogueService {
 					$this->_contactPersonHandler->setUserInactive($username);
 
 					$this->_logger->info(
-						'SoftwareCatalogueService: User setup completed',
+						'StackiqService: User setup completed',
 						[
 							'objectId' => $objectId,
 							'username' => $username,
@@ -270,7 +270,7 @@ class SoftwareCatalogueService {
 					$organization = $objectData['organization'] ?? null;
 					if (empty($organization) === false) {
 						$this->_logger->info(
-							'SoftwareCatalogueService: Adding user to organization entity',
+							'StackiqService: Adding user to organization entity',
 							[
 								'objectId' => $objectId,
 								'username' => $username,
@@ -282,7 +282,7 @@ class SoftwareCatalogueService {
 							$organisationMapper = $this->getOrganisationMapper();
 							if ($organisationMapper === null) {
 								$this->_logger->warning(
-									'SoftwareCatalogueService: OpenRegister OrganisationMapper not available, skipping organization membership',
+									'StackiqService: OpenRegister OrganisationMapper not available, skipping organization membership',
 									[
 										'objectId' => $objectId,
 										'username' => $username,
@@ -304,7 +304,7 @@ class SoftwareCatalogueService {
 									$organisationMapper->save($organisation);
 
 									$this->_logger->info(
-										'SoftwareCatalogueService: Successfully added user to organization entity',
+										'StackiqService: Successfully added user to organization entity',
 										[
 											'objectId' => $objectId,
 											'username' => $username,
@@ -314,7 +314,7 @@ class SoftwareCatalogueService {
 									);
 								} else {
 									$this->_logger->info(
-										'SoftwareCatalogueService: User already in organization entity',
+										'StackiqService: User already in organization entity',
 										[
 											'objectId' => $objectId,
 											'username' => $username,
@@ -324,7 +324,7 @@ class SoftwareCatalogueService {
 								}//end if
 							} else {
 								$this->_logger->warning(
-									'SoftwareCatalogueService: Organization entity not found',
+									'StackiqService: Organization entity not found',
 									[
 										'objectId' => $objectId,
 										'username' => $username,
@@ -334,7 +334,7 @@ class SoftwareCatalogueService {
 							}//end if
 						} catch (\Exception $e) {
 							$this->_logger->error(
-								'SoftwareCatalogueService: Failed to add user to organization entity',
+								'StackiqService: Failed to add user to organization entity',
 								[
 									'objectId' => $objectId,
 									'username' => $username,
@@ -345,7 +345,7 @@ class SoftwareCatalogueService {
 						}//end try
 					} else {
 						$this->_logger->warning(
-							'SoftwareCatalogueService: No organisation reference found for contact person',
+							'StackiqService: No organisation reference found for contact person',
 							[
 								'objectId' => $objectId,
 								'username' => $username,
@@ -354,7 +354,7 @@ class SoftwareCatalogueService {
 					}//end if
 				} else {
 					$this->_logger->warning(
-						'SoftwareCatalogueService: No username generated for contactpersoon',
+						'StackiqService: No username generated for contactpersoon',
 						[
 							'objectId' => $objectId,
 							'objectData' => $updatedObjectData,
@@ -363,7 +363,7 @@ class SoftwareCatalogueService {
 				}//end if
 			} else {
 				$this->_logger->warning(
-					'SoftwareCatalogueService: ContactPersonHandler returned false',
+					'StackiqService: ContactPersonHandler returned false',
 					[
 						'objectId' => $objectId,
 						'processingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms',
@@ -374,7 +374,7 @@ class SoftwareCatalogueService {
 			return $result;
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to process contactpersoon object: ' . $e->getMessage(),
+				'StackiqService: Failed to process contactpersoon object: ' . $e->getMessage(),
 				[
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
@@ -432,7 +432,7 @@ class SoftwareCatalogueService {
 	 * @param string $username The username to update groups for
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function updateUserGroups(object $contactPersonObject, string $username): void {
 		// Use the new organization type-based logic instead of old role-based logic.
@@ -452,7 +452,7 @@ class SoftwareCatalogueService {
 	 * @param string $username The username being processed
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function ensureOrganizationBeheerder(object $contactPersonObject, string $username): void {
 		// Delegate to hierarchy handler.
@@ -465,7 +465,7 @@ class SoftwareCatalogueService {
 	 * @param string $username The username
 	 *
 	 * @return string|null The manager's username or null if not set
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function getUserManager(string $username): ?string {
 		// Delegate to contact person handler.
@@ -478,12 +478,12 @@ class SoftwareCatalogueService {
 	 * @param object $organizationObject The new organization object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function handleNewOrganization(object $organizationObject): void {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Handling new organization',
+				'StackiqService: Handling new organization',
 				[
 					'objectId' => $organizationObject->getId(),
 				]
@@ -494,7 +494,7 @@ class SoftwareCatalogueService {
 
 			if ($syncResult === true) {
 				$this->_logger->info(
-					'SoftwareCatalogueService: Successfully synced organization with OpenRegister',
+					'StackiqService: Successfully synced organization with OpenRegister',
 					[
 						'objectId' => $organizationObject->getId(),
 					]
@@ -504,7 +504,7 @@ class SoftwareCatalogueService {
 				$this->updateOrganizationReferences(organizationObject: $organizationObject);
 			} else {
 				$this->_logger->warning(
-					'SoftwareCatalogueService: Failed to sync organization with OpenRegister',
+					'StackiqService: Failed to sync organization with OpenRegister',
 					[
 						'objectId' => $organizationObject->getId(),
 					]
@@ -554,7 +554,7 @@ class SoftwareCatalogueService {
 			$contactpersonen = $objectData['contactpersonen'] ?? [];
 			if (empty($contactpersonen) === false) {
 				$this->_logger->info(
-					'SoftwareCatalogueService: Processing nested contact persons',
+					'StackiqService: Processing nested contact persons',
 					[
 						'objectId' => $organizationObject->getId(),
 						'contactPersonCount' => count($contactpersonen),
@@ -565,19 +565,19 @@ class SoftwareCatalogueService {
 				$objectService = $this->getObjectService();
 
 				if (empty($objectService) === false) {
-					$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+					$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 					$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 					$contactSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
 
 					if ($contactSchemaId === null) {
-						$this->_logger->warning('SoftwareCatalogueService: Missing contactpersoon schema configuration');
+						$this->_logger->warning('StackiqService: Missing contactpersoon schema configuration');
 						return;
 					}
 
 					$organisationMapper = $this->getOrganisationMapper();
 					if ($organisationMapper === null) {
 						$this->_logger->warning(
-							'SoftwareCatalogueService: OpenRegister OrganisationMapper not available, skipping contact person membership'
+							'StackiqService: OpenRegister OrganisationMapper not available, skipping contact person membership'
 						);
 						return;
 					}
@@ -599,7 +599,7 @@ class SoftwareCatalogueService {
 									$addedUsers[] = $email;
 
 									$this->_logger->info(
-										'SoftwareCatalogueService: Added nested contact person user to organization',
+										'StackiqService: Added nested contact person user to organization',
 										[
 											'objectId' => $organizationObject->getId(),
 											'contactPersonId' => $contactPersonId,
@@ -610,7 +610,7 @@ class SoftwareCatalogueService {
 								}
 							} catch (\Exception $e) {
 								$this->_logger->warning(
-									'SoftwareCatalogueService: Failed to process nested contact person',
+									'StackiqService: Failed to process nested contact person',
 									[
 										'objectId' => $organizationObject->getId(),
 										'contactPersonId' => $contactPersonId,
@@ -625,7 +625,7 @@ class SoftwareCatalogueService {
 							$organisationMapper->save($organisation);
 
 							$this->_logger->info(
-								'SoftwareCatalogueService: Updated org with nested contact person users',
+								'StackiqService: Updated org with nested contact person users',
 								[
 									'objectId' => $organizationObject->getId(),
 									'organizationUuid' => $organizationUuid,
@@ -645,7 +645,7 @@ class SoftwareCatalogueService {
 			$this->syncContactPersonUsernamesWithOrganization(organizationUuid: $organizationUuid);
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Completed final contact person synchronization for new organization',
+				'StackiqService: Completed final contact person synchronization for new organization',
 				[
 					'objectId' => $organizationObject->getId(),
 					'organizationUuid' => $organizationUuid,
@@ -653,7 +653,7 @@ class SoftwareCatalogueService {
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to handle new organization: ' . $e->getMessage(),
+				'StackiqService: Failed to handle new organization: ' . $e->getMessage(),
 				[
 					'objectId' => $organizationObject->getId(),
 					'exception' => $e->getMessage(),
@@ -672,12 +672,12 @@ class SoftwareCatalogueService {
 	 * @param object $oldOrganizationObject The previous organization object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function handleOrganizationUpdate(object $organizationObject, object $oldOrganizationObject): void {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Handling organization update',
+				'StackiqService: Handling organization update',
 				[
 					'objectId' => $organizationObject->getId(),
 				]
@@ -695,14 +695,14 @@ class SoftwareCatalogueService {
 
 			if ($syncResult === true) {
 				$this->_logger->info(
-					'SoftwareCatalogueService: Successfully synced organization with OpenRegister',
+					'StackiqService: Successfully synced organization with OpenRegister',
 					[
 						'objectId' => $organizationObject->getId(),
 					]
 				);
 			} else {
 				$this->_logger->warning(
-					'SoftwareCatalogueService: Failed to sync organization with OpenRegister',
+					'StackiqService: Failed to sync organization with OpenRegister',
 					[
 						'objectId' => $organizationObject->getId(),
 					]
@@ -736,7 +736,7 @@ class SoftwareCatalogueService {
 					$organizationUuid = $newData['id'] ?? $organizationObject->getId();
 
 					$this->_logger->info(
-						'SoftwareCatalogueService: Organization became active - creating users from contactpersonen',
+						'StackiqService: Organization became active - creating users from contactpersonen',
 						[
 							'organizationUuid' => $organizationUuid,
 						]
@@ -747,8 +747,8 @@ class SoftwareCatalogueService {
 					// and contactpersonen were added before activation.
 					$this->processOrganization(organizationObject: $organizationObject);
 
-					// Activate SoftwareCatalog-specific users in this organization.
-					$this->activateSoftwareCatalogUsersForOrganization(organizationUuid: $organizationUuid);
+					// Activate Stackiq-specific users in this organization.
+					$this->activateStackiqUsersForOrganization(organizationUuid: $organizationUuid);
 
 					// Send activation email.
 					try {
@@ -792,14 +792,14 @@ class SoftwareCatalogueService {
 				);
 
 				if ($becameInactive === true) {
-					// Deactivate SoftwareCatalog-specific users in this organization.
+					// Deactivate Stackiq-specific users in this organization.
 					$organizationUuid = $newData['id'] ?? $organizationObject->getId();
-					$this->deactivateSoftwareCatalogUsersForOrganization(organizationUuid: $organizationUuid);
+					$this->deactivateStackiqUsersForOrganization(organizationUuid: $organizationUuid);
 				}
 			}//end if
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to handle organization update: ' . $e->getMessage(),
+				'StackiqService: Failed to handle organization update: ' . $e->getMessage(),
 				[
 					'objectId' => $organizationObject->getId(),
 					'exception' => $e->getMessage(),
@@ -841,7 +841,7 @@ class SoftwareCatalogueService {
 	 * @return void
 	 *
 	 * @deprecated This method is disabled to prevent organization duplication.
-	 * @spec       openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec       openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function sendOrganizationWelcomeEmail(object $organizationObject): void {
 		// DISABLED: Organization handling is disabled to prevent duplication.
@@ -862,7 +862,7 @@ class SoftwareCatalogueService {
 	 * @param object $contactObject The contact object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function handleNewContact(object $contactObject): void {
 		// Delegate to contact person handler.
@@ -875,7 +875,7 @@ class SoftwareCatalogueService {
 	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function handleNewGebruiker(object $userObject): void {
 		// Implementation for handling new gebruiker.
@@ -892,7 +892,7 @@ class SoftwareCatalogueService {
 	 *
 	 * Its whole body was a `logger->info('Sending gebruiker welcome email')`
 	 * — it never sent anything — and no caller reached it:
-	 * `SoftwareCatalogEventListener` does not invoke it on the
+	 * `StackiqEventListener` does not invoke it on the
 	 * gebruiker-created path. Wiring a method that sends no mail would have
 	 * bought nothing; implementing one is a feature, not dead-code removal.
 	 */
@@ -903,7 +903,7 @@ class SoftwareCatalogueService {
 	 * @param object $contactObject The contact object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function handleContactUpdate(object $contactObject): void {
 		// Delegate to contact person handler.
@@ -917,7 +917,7 @@ class SoftwareCatalogueService {
 	 * @param object $oldUserObject The old gebruiker object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function handleGebruikerUpdate(object $userObject, object $oldUserObject): void {
 		// Implementation for handling gebruiker updates.
@@ -935,7 +935,7 @@ class SoftwareCatalogueService {
 	 * @param object $contactObject The contact object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function handleContactDeletion(object $contactObject): void {
 		// Delegate to contact person handler.
@@ -948,7 +948,7 @@ class SoftwareCatalogueService {
 	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function blockUserForGebruiker(object $userObject): void {
 		// Implementation for blocking user.
@@ -966,7 +966,7 @@ class SoftwareCatalogueService {
 	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function temporarilyBlockUserForGebruiker(object $userObject): void {
 		// Implementation for temporarily blocking user.
@@ -984,7 +984,7 @@ class SoftwareCatalogueService {
 	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function restoreUserAccessForGebruiker(object $userObject): void {
 		// Implementation for restoring user access.
@@ -1002,7 +1002,7 @@ class SoftwareCatalogueService {
 	 * `syncUserWithRevertedContact()` and `updateUserFromRevertedGebruiker()`
 	 * were the same shape as `sendGebruikerWelcomeEmail()` above: a single
 	 * `logger->info()` and nothing else, with no caller —
-	 * `SoftwareCatalogEventListener` handles `ObjectRevertedEvent` without
+	 * `StackiqEventListener` handles `ObjectRevertedEvent` without
 	 * touching this service. They named a capability (reconcile the Nextcloud
 	 * user after an object revert) that has never been implemented; a log line
 	 * is not that capability, and wiring one in would have made the gap
@@ -1033,7 +1033,7 @@ class SoftwareCatalogueService {
 	 * Ensures all generic user groups exist
 	 *
 	 * @return array Array of created/existing groups
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function ensureGenericUserGroupsExist(): array {
 		return $this->_groupHandler->ensureGenericUserGroupsExist();
@@ -1068,7 +1068,7 @@ class SoftwareCatalogueService {
 	 * @param object $oldContactPersonObject The previous contactpersoon object (optional)
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function handleContactpersoonUpdate(object $contactPersonObject, ?object $oldContactPersonObject = null): void {
 		$startTime = microtime(true);
@@ -1076,7 +1076,7 @@ class SoftwareCatalogueService {
 		try {
 			$objectId = $contactPersonObject->getId();
 			$this->_logger->info(
-				'SoftwareCatalogueService: Starting contactpersoon update handling',
+				'StackiqService: Starting contactpersoon update handling',
 				[
 					'objectId' => $objectId,
 					'hasOldObject' => $oldContactPersonObject !== null,
@@ -1095,7 +1095,7 @@ class SoftwareCatalogueService {
 			$oldRoles = $oldData['roles'] ?? [];
 
 			$this->_logger->debug(
-				'SoftwareCatalogueService: Comparing roles for contactpersoon update',
+				'StackiqService: Comparing roles for contactpersoon update',
 				[
 					'objectId' => $objectId,
 					'newRoles' => $newRoles,
@@ -1109,7 +1109,7 @@ class SoftwareCatalogueService {
 			if (is_array($newRoles) === false) {
 				$newRoles = [$newRoles];
 				$this->_logger->debug(
-					'SoftwareCatalogueService: Converted newRoles to array',
+					'StackiqService: Converted newRoles to array',
 					[
 						'objectId' => $objectId,
 						'newRoles' => $newRoles,
@@ -1120,7 +1120,7 @@ class SoftwareCatalogueService {
 			if (is_array($oldRoles) === false) {
 				$oldRoles = [$oldRoles];
 				$this->_logger->debug(
-					'SoftwareCatalogueService: Converted oldRoles to array',
+					'StackiqService: Converted oldRoles to array',
 					[
 						'objectId' => $objectId,
 						'oldRoles' => $oldRoles,
@@ -1132,7 +1132,7 @@ class SoftwareCatalogueService {
 			if ($newRoles !== $oldRoles) {
 				// Roles changed - use role-based group assignment instead of generic group assignment.
 				$this->_logger->info(
-					'SoftwareCatalogueService: Roles changed for contactpersoon, using role-based group assignment',
+					'StackiqService: Roles changed for contactpersoon, using role-based group assignment',
 					[
 						'contactpersoonId' => $objectId,
 						'oldRoles' => $oldRoles,
@@ -1161,7 +1161,7 @@ class SoftwareCatalogueService {
 						$this->_contactPersonHandler->updateUserGroupsFromContactData($user, $contactData);
 
 						$this->_logger->info(
-							'SoftwareCatalogueService: Organization type-based group updates completed',
+							'StackiqService: Organization type-based group updates completed',
 							[
 								'username' => $username,
 								'objectId' => $objectId,
@@ -1170,7 +1170,7 @@ class SoftwareCatalogueService {
 						);
 					} else {
 						$this->_logger->warning(
-							'SoftwareCatalogueService: User not found for role-based group updates',
+							'StackiqService: User not found for role-based group updates',
 							[
 								'username' => $username,
 								'objectId' => $objectId,
@@ -1179,7 +1179,7 @@ class SoftwareCatalogueService {
 					}//end if
 				} else {
 					$this->_logger->warning(
-						'SoftwareCatalogueService: No username available for role-based group updates',
+						'StackiqService: No username available for role-based group updates',
 						[
 							'objectId' => $objectId,
 							'newData' => $newData,
@@ -1189,7 +1189,7 @@ class SoftwareCatalogueService {
 			} else {
 				// No role changes - use standard processing (assigns generic groups).
 				$this->_logger->debug(
-					'SoftwareCatalogueService: No role changes, using standard contactpersoon processing',
+					'StackiqService: No role changes, using standard contactpersoon processing',
 					[
 						'objectId' => $objectId,
 						'roles' => $newRoles,
@@ -1199,7 +1199,7 @@ class SoftwareCatalogueService {
 				$result = $this->processContactpersoon(contactPersonObject: $contactPersonObject, isUpdate: true);
 
 				$this->_logger->info(
-					'SoftwareCatalogueService: Standard contactpersoon processing completed',
+					'StackiqService: Standard contactpersoon processing completed',
 					[
 						'objectId' => $objectId,
 						'result' => $result,
@@ -1209,7 +1209,7 @@ class SoftwareCatalogueService {
 			}//end if
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Contactpersoon update handling completed',
+				'StackiqService: Contactpersoon update handling completed',
 				[
 					'objectId' => $objectId,
 					'totalProcessingTime' => round((microtime(true) - $startTime) * 1000, 2) . 'ms',
@@ -1217,7 +1217,7 @@ class SoftwareCatalogueService {
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to handle contactpersoon update: ' . $e->getMessage(),
+				'StackiqService: Failed to handle contactpersoon update: ' . $e->getMessage(),
 				[
 					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
@@ -1236,12 +1236,12 @@ class SoftwareCatalogueService {
 	 * @param object $organizationObject The organization object being deleted
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function handleOrganizationDeletion(object $organizationObject): void {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Handling organization deletion',
+				'StackiqService: Handling organization deletion',
 				[
 					'objectId' => $organizationObject->getId(),
 				]
@@ -1254,7 +1254,7 @@ class SoftwareCatalogueService {
 			$this->deactivateUsersForOrganization(organizationUuid: $organizationUuid);
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Successfully handled organization deletion',
+				'StackiqService: Successfully handled organization deletion',
 				[
 					'organizationId' => $organizationUuid,
 					'timestamp' => date('Y-m-d H:i:s'),
@@ -1262,7 +1262,7 @@ class SoftwareCatalogueService {
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to handle organization deletion: ' . $e->getMessage(),
+				'StackiqService: Failed to handle organization deletion: ' . $e->getMessage(),
 				[
 					'objectId' => $organizationObject->getId(),
 					'exception' => $e->getMessage(),
@@ -1280,12 +1280,12 @@ class SoftwareCatalogueService {
 	 * @param object $organizationObject The organization object to sync
 	 *
 	 * @return bool True if sync was successful
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function syncOrganizationWithOpenRegister(object $organizationObject): bool {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: SYNC_STEP_1 - Starting syncOrganizationWithOpenRegister',
+				'StackiqService: SYNC_STEP_1 - Starting syncOrganizationWithOpenRegister',
 				[
 					'objectId' => $organizationObject->getId(),
 					'objectClass' => get_class($organizationObject),
@@ -1296,7 +1296,7 @@ class SoftwareCatalogueService {
 			$organizationUuid = $objectData['id'] ?? $organizationObject->getId();
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: SYNC_STEP_2 - Extracted organization data',
+				'StackiqService: SYNC_STEP_2 - Extracted organization data',
 				[
 					'organizationUuid' => $organizationUuid,
 					'objectDataKeys' => array_keys($objectData),
@@ -1305,24 +1305,24 @@ class SoftwareCatalogueService {
 			);
 
 			// Get OpenRegister OrganisationService for proper organization entity management.
-			$this->_logger->info('SoftwareCatalogueService: SYNC_STEP_3 - Getting OrganisationService');
+			$this->_logger->info('StackiqService: SYNC_STEP_3 - Getting OrganisationService');
 			$organisationService = $this->getOrganisationService();
 			if ($organisationService === null) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: SYNC_STEP_3 - OpenRegister OrganisationService not available'
+					'StackiqService: SYNC_STEP_3 - OpenRegister OrganisationService not available'
 				);
 				return false;
 			}
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: SYNC_STEP_3 - OrganisationService retrieved',
+				'StackiqService: SYNC_STEP_3 - OrganisationService retrieved',
 				[
 					'serviceClass' => get_class($organisationService),
 				]
 			);
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: SYNC_STEP_4 - OpenRegister configuration',
+				'StackiqService: SYNC_STEP_4 - OpenRegister configuration',
 				[
 					'organizationUuid' => $organizationUuid,
 					'organizationName' => $objectData['name'] ?? 'Unknown',
@@ -1330,19 +1330,19 @@ class SoftwareCatalogueService {
 			);
 
 			// Check if organization already exists in OpenRegister.
-			$this->_logger->info('SoftwareCatalogueService: SYNC_STEP_5 - Checking if organization exists in OpenRegister');
+			$this->_logger->info('StackiqService: SYNC_STEP_5 - Checking if organization exists in OpenRegister');
 			try {
-				$this->_logger->info('SoftwareCatalogueService: SYNC_STEP_5A - Getting OrganisationMapper for lookup');
+				$this->_logger->info('StackiqService: SYNC_STEP_5A - Getting OrganisationMapper for lookup');
 				$organisationMapper = $this->getOrganisationMapper();
 				if ($organisationMapper === null) {
 					$this->_logger->error(
-						'SoftwareCatalogueService: OpenRegister OrganisationMapper not available, cannot sync organization'
+						'StackiqService: OpenRegister OrganisationMapper not available, cannot sync organization'
 					);
 					return false;
 				}
 
 				$this->_logger->info(
-					'SoftwareCatalogueService: SYNC_STEP_5B - Calling findByUuid',
+					'StackiqService: SYNC_STEP_5B - Calling findByUuid',
 					[
 						'uuid' => $organizationUuid,
 					]
@@ -1351,15 +1351,15 @@ class SoftwareCatalogueService {
 
 				// Organization exists - update it.
 				$this->_logger->info(
-					'SoftwareCatalogueService: SYNC_STEP_6 - Organization exists in OpenRegister, updating',
+					'StackiqService: SYNC_STEP_6 - Organization exists in OpenRegister, updating',
 					[
 						'organizationId' => $organizationUuid,
 						'existingOrganisationClass' => get_class($existingOrganisation),
 					]
 				);
 
-				// Map status from SoftwareCatalog to OpenRegister.
-				$this->_logger->info('SoftwareCatalogueService: SYNC_STEP_7 - Mapping organization data');
+				// Map status from Stackiq to OpenRegister.
+				$this->_logger->info('StackiqService: SYNC_STEP_7 - Mapping organization data');
 				$mappedData = $this->mapOrganizationDataForOpenRegister(objectData: $objectData);
 
 				// Update the organization using OrganisationService.
@@ -1370,7 +1370,7 @@ class SoftwareCatalogueService {
 				);
 
 				$this->_logger->info(
-					'SoftwareCatalogueService: Successfully updated organization in OpenRegister',
+					'StackiqService: Successfully updated organization in OpenRegister',
 					[
 						'organizationId' => $organizationUuid,
 						'openRegisterId' => $updatedOrganisation->getUuid(),
@@ -1381,19 +1381,19 @@ class SoftwareCatalogueService {
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 				// Organization doesn't exist - create it.
 				$this->_logger->info(
-					'SoftwareCatalogueService: SYNC_STEP_8 - Organization not found in OpenRegister, creating',
+					'StackiqService: SYNC_STEP_8 - Organization not found in OpenRegister, creating',
 					[
 						'organizationId' => $organizationUuid,
 						'exception' => $e->getMessage(),
 					]
 				);
 
-				// Map status from SoftwareCatalog to OpenRegister.
-				$this->_logger->info('SoftwareCatalogueService: SYNC_STEP_9 - Mapping organization data for creation');
+				// Map status from Stackiq to OpenRegister.
+				$this->_logger->info('StackiqService: SYNC_STEP_9 - Mapping organization data for creation');
 				$mappedData = $this->mapOrganizationDataForOpenRegister(objectData: $objectData);
 
 				// Create the organization using OrganisationService.
-				$this->_logger->info('SoftwareCatalogueService: SYNC_STEP_10 - Calling createOrganisationInOpenRegister');
+				$this->_logger->info('StackiqService: SYNC_STEP_10 - Calling createOrganisationInOpenRegister');
 				$createdOrganisation = $this->createOrganisationInOpenRegisterInternal(
 					organisationService: $organisationService,
 					mappedData: $mappedData,
@@ -1401,7 +1401,7 @@ class SoftwareCatalogueService {
 				);
 
 				$this->_logger->info(
-					'SoftwareCatalogueService: SYNC_STEP_11 - Successfully created organization in OpenRegister',
+					'StackiqService: SYNC_STEP_11 - Successfully created organization in OpenRegister',
 					[
 						'organizationId' => $organizationUuid,
 						'openRegisterId' => $createdOrganisation->getUuid(),
@@ -1413,7 +1413,7 @@ class SoftwareCatalogueService {
 			}//end try
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to sync organization with OpenRegister: ' . $e->getMessage(),
+				'StackiqService: Failed to sync organization with OpenRegister: ' . $e->getMessage(),
 				[
 					'objectId' => $organizationObject->getId(),
 					'exception' => $e->getMessage(),
@@ -1432,13 +1432,13 @@ class SoftwareCatalogueService {
 	 * @param array $objectData The organization object data
 	 *
 	 * @return object|null The created organisation entity or null on failure
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function createOrganisationInOpenRegister(array $objectData): ?object {
 		try {
 			$organizationUuid = $objectData['id'] ?? null;
 			if ($organizationUuid === null) {
-				$this->_logger->error('SoftwareCatalogueService: No organization UUID provided for creation');
+				$this->_logger->error('StackiqService: No organization UUID provided for creation');
 				return null;
 			}
 
@@ -1462,7 +1462,7 @@ class SoftwareCatalogueService {
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Error in public createOrganisationInOpenRegister',
+				'StackiqService: Error in public createOrganisationInOpenRegister',
 				[
 					'error' => $e->getMessage(),
 					'objectData' => $objectData,
@@ -1506,7 +1506,7 @@ class SoftwareCatalogueService {
 		string $organizationUuid,
 	): \OCA\OpenRegister\Db\Organisation {
 		$this->_logger->info(
-			'SoftwareCatalogueService: STEP 1 - Starting createOrganisationInOpenRegister',
+			'StackiqService: STEP 1 - Starting createOrganisationInOpenRegister',
 			[
 				'organizationUuid' => $organizationUuid,
 				'name' => $mappedData['name'] ?? 'Unknown',
@@ -1524,7 +1524,7 @@ class SoftwareCatalogueService {
 		}
 
 		$this->_logger->info(
-			'SoftwareCatalogueService: STEP 2 - Checking user context',
+			'StackiqService: STEP 2 - Checking user context',
 			[
 				// Always true: $userSession is an injected, non-nullable IUserSession.
 				'hasUserSession' => true,
@@ -1535,7 +1535,7 @@ class SoftwareCatalogueService {
 
 		if ($currentUser === null) {
 			$this->_logger->info(
-				'SoftwareCatalogueService: STEP 3A - Anonymous path: No user, creating org directly via mapper',
+				'StackiqService: STEP 3A - Anonymous path: No user, creating org directly via mapper',
 				[
 					'organizationUuid' => $organizationUuid,
 				]
@@ -1543,14 +1543,14 @@ class SoftwareCatalogueService {
 
 			// Keep the original UUID format - no conversion needed.
 			$this->_logger->info(
-				'SoftwareCatalogueService: STEP 3B - Using original UUID format for OpenRegister (anonymous)',
+				'StackiqService: STEP 3B - Using original UUID format for OpenRegister (anonymous)',
 				[
 					'organizationUuid' => $organizationUuid,
 				]
 			);
 
 			// Create organization directly via mapper to avoid user context requirements.
-			$this->_logger->info('SoftwareCatalogueService: STEP 3C - Getting OrganisationMapper from container');
+			$this->_logger->info('StackiqService: STEP 3C - Getting OrganisationMapper from container');
 			$organisationMapper = $this->getOrganisationMapper();
 			if ($organisationMapper === null) {
 				// This method's return type is non-nullable and its caller already
@@ -1560,18 +1560,18 @@ class SoftwareCatalogueService {
 			}
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: STEP 3D - OrganisationMapper retrieved',
+				'StackiqService: STEP 3D - OrganisationMapper retrieved',
 				[
 					'mapperClass' => get_class($organisationMapper),
 				]
 			);
 
 			// Create a new Organisation entity.
-			$this->_logger->info('SoftwareCatalogueService: STEP 3E - Creating new Organisation entity');
+			$this->_logger->info('StackiqService: STEP 3E - Creating new Organisation entity');
 			$organisation = new \OCA\OpenRegister\Db\Organisation();
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: STEP 3F - Setting organisation properties',
+				'StackiqService: STEP 3F - Setting organisation properties',
 				[
 					'name' => $mappedData['name'] ?? 'Unknown Organization',
 					'description' => $mappedData['website'] ?? '',
@@ -1590,7 +1590,7 @@ class SoftwareCatalogueService {
 			$allUsernames = array_unique($allUsernames);
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: STEP 3F_2 - Collected usernames for organization',
+				'StackiqService: STEP 3F_2 - Collected usernames for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 					'totalUsernames' => count($allUsernames),
@@ -1609,7 +1609,7 @@ class SoftwareCatalogueService {
 			// Set active status based on organization beoordeling.
 			// Debug: Check if UUID was set correctly.
 			$this->_logger->info(
-				'SoftwareCatalogueService: STEP 3G - Debug - UUID before save',
+				'StackiqService: STEP 3G - Debug - UUID before save',
 				[
 					'setUuid' => $organizationUuid,
 					'getUuid' => $organisation->getUuid(),
@@ -1619,15 +1619,15 @@ class SoftwareCatalogueService {
 			);
 
 			// Save the organization.
-			$this->_logger->info('SoftwareCatalogueService: STEP 3H - Calling organisationMapper->save()');
+			$this->_logger->info('StackiqService: STEP 3H - Calling organisationMapper->save()');
 			try {
 				$savedOrganisation = $organisationMapper->save($organisation);
 				$this->_logger->info(
-					'SoftwareCatalogueService: STEP 3I - organisationMapper->save() completed'
+					'StackiqService: STEP 3I - organisationMapper->save() completed'
 				);
 			} catch (\Exception $e) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: STEP 3I - organisationMapper->save() failed',
+					'StackiqService: STEP 3I - organisationMapper->save() failed',
 					[
 						'error' => $e->getMessage(),
 						'errorClass' => get_class($e),
@@ -1638,7 +1638,7 @@ class SoftwareCatalogueService {
 			}
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Successfully created organization in OpenRegister via mapper',
+				'StackiqService: Successfully created organization in OpenRegister via mapper',
 				[
 					'organizationUuid' => $organizationUuid,
 					'openRegisterId' => $savedOrganisation->getUuid(),
@@ -1650,7 +1650,7 @@ class SoftwareCatalogueService {
 			// Verify the UUID was preserved.
 			if ($savedOrganisation->getUuid() !== $organizationUuid) {
 				$this->_logger->warning(
-					'SoftwareCatalogueService: UUID mismatch after saving organization',
+					'StackiqService: UUID mismatch after saving organization',
 					[
 						'expectedUuid' => $organizationUuid,
 						'actualUuid' => $savedOrganisation->getUuid(),
@@ -1660,7 +1660,7 @@ class SoftwareCatalogueService {
 		}//end if
 
 		$this->_logger->info(
-			'SoftwareCatalogueService: STEP 4A - Auth path: User logged in, creating org via mapper',
+			'StackiqService: STEP 4A - Auth path: User logged in, creating org via mapper',
 			[
 				'organizationUuid' => $organizationUuid,
 				'currentUser' => $currentUser->getUID(),
@@ -1669,14 +1669,14 @@ class SoftwareCatalogueService {
 
 		// Keep the original UUID format - no conversion needed.
 		$this->_logger->info(
-			'SoftwareCatalogueService: STEP 4B - Using original UUID format for OpenRegister',
+			'StackiqService: STEP 4B - Using original UUID format for OpenRegister',
 			[
 				'organizationUuid' => $organizationUuid,
 			]
 		);
 
 		// Create organization directly via mapper to avoid service issues.
-		$this->_logger->info('SoftwareCatalogueService: STEP 4C - Getting OrganisationMapper from container');
+		$this->_logger->info('StackiqService: STEP 4C - Getting OrganisationMapper from container');
 		$organisationMapper = $this->getOrganisationMapper();
 		if ($organisationMapper === null) {
 			// Non-nullable return type, same reasoning as the anonymous branch above.
@@ -1684,7 +1684,7 @@ class SoftwareCatalogueService {
 		}
 
 		$this->_logger->info(
-			'SoftwareCatalogueService: STEP 4D - OrganisationMapper retrieved',
+			'StackiqService: STEP 4D - OrganisationMapper retrieved',
 			[
 				'mapperClass' => get_class($organisationMapper),
 			]
@@ -1702,7 +1702,7 @@ class SoftwareCatalogueService {
 		$allUsernames = array_unique($allUsernames);
 
 		$this->_logger->info(
-			'SoftwareCatalogueService: STEP 4E - Debug - UUID before createWithUuid',
+			'StackiqService: STEP 4E - Debug - UUID before createWithUuid',
 			[
 				'organizationUuid' => $organizationUuid,
 				'uuidLength' => strlen($organizationUuid),
@@ -1715,11 +1715,11 @@ class SoftwareCatalogueService {
 			]
 		);
 
-		$this->_logger->info('SoftwareCatalogueService: STEP 4F - Calling organisationMapper->createWithUuid()');
+		$this->_logger->info('StackiqService: STEP 4F - Calling organisationMapper->createWithUuid()');
 		try {
 			// Debug: Log the exact parameters being passed.
 			$this->_logger->info(
-				'SoftwareCatalogueService: STEP 4F_DEBUG - Parameters for createWithUuid',
+				'StackiqService: STEP 4F_DEBUG - Parameters for createWithUuid',
 				[
 					'name' => $mappedData['name'] ?? 'Unknown Organization',
 					'description' => $mappedData['website'] ?? '',
@@ -1746,11 +1746,11 @@ class SoftwareCatalogueService {
 				// Not default.
 			);
 			$this->_logger->info(
-				'SoftwareCatalogueService: STEP 4G - organisationMapper->createWithUuid() completed'
+				'StackiqService: STEP 4G - organisationMapper->createWithUuid() completed'
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: STEP 4G - organisationMapper->createWithUuid() failed',
+				'StackiqService: STEP 4G - organisationMapper->createWithUuid() failed',
 				[
 					'error' => $e->getMessage(),
 					'errorClass' => get_class($e),
@@ -1761,9 +1761,9 @@ class SoftwareCatalogueService {
 		}//end try
 
 		// Note: OpenRegister Organisation entity doesn't have status or type fields.
-		// These are managed in the SoftwareCatalog object, not in the OpenRegister organisation.
+		// These are managed in the Stackiq object, not in the OpenRegister organisation.
 		$this->_logger->info(
-			'SoftwareCatalogueService: Successfully created organization in OpenRegister via service',
+			'StackiqService: Successfully created organization in OpenRegister via service',
 			[
 				'organizationUuid' => $organizationUuid,
 				'openRegisterId' => $organisation->getUuid(),
@@ -1790,7 +1790,7 @@ class SoftwareCatalogueService {
 		array $mappedData,
 	): \OCA\OpenRegister\Db\Organisation {
 		$this->_logger->info(
-			'SoftwareCatalogueService: Updating organization in OpenRegister',
+			'StackiqService: Updating organization in OpenRegister',
 			[
 				'organizationUuid' => $existingOrganisation->getUuid(),
 				'name' => $mappedData['name'] ?? 'Unknown',
@@ -1807,7 +1807,7 @@ class SoftwareCatalogueService {
 		}
 
 		// Note: OpenRegister Organisation entity doesn't have status or type fields.
-		// These are managed in the SoftwareCatalog object, not in the OpenRegister organisation.
+		// These are managed in the Stackiq object, not in the OpenRegister organisation.
 		// Save the updated organization.
 		$organisationMapper = $this->getOrganisationMapper();
 		if ($organisationMapper === null) {
@@ -1819,7 +1819,7 @@ class SoftwareCatalogueService {
 		$updatedOrganisation = $organisationMapper->save($existingOrganisation);
 
 		$this->_logger->info(
-			'SoftwareCatalogueService: Successfully updated organization in OpenRegister',
+			'StackiqService: Successfully updated organization in OpenRegister',
 			[
 				'organizationUuid' => $existingOrganisation->getUuid(),
 				'openRegisterId' => $updatedOrganisation->getUuid(),
@@ -1844,7 +1844,7 @@ class SoftwareCatalogueService {
 		// These are available immediately when the organization is created.
 		$nestedContactPersons = $objectData['contactpersonen'] ?? [];
 		$this->_logger->info(
-			'SoftwareCatalogueService: Processing nested contact persons',
+			'StackiqService: Processing nested contact persons',
 			[
 				'organizationUuid' => $organizationUuid,
 				'nestedContactPersonCount' => count($nestedContactPersons),
@@ -1855,7 +1855,7 @@ class SoftwareCatalogueService {
 			if (is_array($contactPerson) === true && isset($contactPerson['email']) === true) {
 				$usernames[] = $contactPerson['email'];
 				$this->_logger->info(
-					'SoftwareCatalogueService: Added nested contact person username',
+					'StackiqService: Added nested contact person username',
 					[
 						'username' => $contactPerson['email'],
 						'contactPersonData' => $contactPerson,
@@ -1868,13 +1868,13 @@ class SoftwareCatalogueService {
 		// This is useful for updates or when contact persons were created separately.
 		$objectService = $this->getObjectService();
 		if (empty($objectService) === false) {
-			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$contactSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
 
 			if ($contactSchemaId === null) {
 				$this->_logger->warning(
-					'SoftwareCatalogueService: Missing contactpersoon schema config for username extraction'
+					'StackiqService: Missing contactpersoon schema config for username extraction'
 				);
 				return $usernames;
 			}
@@ -1896,7 +1896,7 @@ class SoftwareCatalogueService {
 					);
 				} catch (\Exception $e) {
 					$this->_logger->info(
-						'SoftwareCatalogueService: Approach 1 failed, trying approach 2',
+						'StackiqService: Approach 1 failed, trying approach 2',
 						[
 							'organizationUuid' => $organizationUuid,
 							'error' => $e->getMessage(),
@@ -1925,7 +1925,7 @@ class SoftwareCatalogueService {
 						}
 					} catch (\Exception $e) {
 						$this->_logger->info(
-							'SoftwareCatalogueService: Approach 2 also failed',
+							'StackiqService: Approach 2 also failed',
 							[
 								'organizationUuid' => $organizationUuid,
 								'error' => $e->getMessage(),
@@ -1935,7 +1935,7 @@ class SoftwareCatalogueService {
 				}//end if
 
 				$this->_logger->info(
-					'SoftwareCatalogueService: Found existing contact persons for organization',
+					'StackiqService: Found existing contact persons for organization',
 					[
 						'organizationUuid' => $organizationUuid,
 						'contactPersonCount' => count($contactPersons),
@@ -1954,7 +1954,7 @@ class SoftwareCatalogueService {
 					if (empty($email) === false) {
 						$usernames[] = $email;
 						$this->_logger->info(
-							'SoftwareCatalogueService: Added existing contact person username',
+							'StackiqService: Added existing contact person username',
 							[
 								'username' => $email,
 								'contactPersonId' => $contactPerson->getId(),
@@ -1964,7 +1964,7 @@ class SoftwareCatalogueService {
 				}
 			} catch (\Exception $e) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: Error collecting existing contact person usernames',
+					'StackiqService: Error collecting existing contact person usernames',
 					[
 						'organizationUuid' => $organizationUuid,
 						'error' => $e->getMessage(),
@@ -1976,7 +1976,7 @@ class SoftwareCatalogueService {
 		// Remove duplicates and return.
 		$uniqueUsernames = array_unique($usernames);
 		$this->_logger->info(
-			'SoftwareCatalogueService: Collected contact person usernames',
+			'StackiqService: Collected contact person usernames',
 			[
 				'organizationUuid' => $organizationUuid,
 				'totalUsernames' => count($uniqueUsernames),
@@ -1988,9 +1988,9 @@ class SoftwareCatalogueService {
 	}//end collectContactPersonUsernames()
 
 	/**
-	 * Maps organization data from SoftwareCatalog format to OpenRegister format
+	 * Maps organization data from Stackiq format to OpenRegister format
 	 *
-	 * @param array $objectData The organization data from SoftwareCatalog
+	 * @param array $objectData The organization data from Stackiq
 	 *
 	 * @return array The mapped data for OpenRegister
 	 */
@@ -2005,7 +2005,7 @@ class SoftwareCatalogueService {
 			'participants' => [],
 		];
 
-		// Map status from SoftwareCatalog to OpenRegister.
+		// Map status from Stackiq to OpenRegister.
 		$assessment = strtolower($objectData['beoordeling'] ?? '');
 		if ($assessment === 'actief') {
 			$mappedData['active'] = true;
@@ -2047,7 +2047,7 @@ class SoftwareCatalogueService {
 	private function activateUsersForOrganization(string $organizationUuid): void {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Activating users for organization',
+				'StackiqService: Activating users for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 				]
@@ -2055,7 +2055,7 @@ class SoftwareCatalogueService {
 
 			$objectService = $this->getObjectService();
 			if ($objectService === null) {
-				$this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available');
+				$this->_logger->error('StackiqService: OpenRegister ObjectService not available');
 				return;
 			}
 
@@ -2097,7 +2097,7 @@ class SoftwareCatalogueService {
 						$activatedCount++;
 
 						$this->_logger->info(
-							'SoftwareCatalogueService: Activated user for organization',
+							'StackiqService: Activated user for organization',
 							[
 								'username' => $username,
 								'organizationUuid' => $organizationUuid,
@@ -2108,7 +2108,7 @@ class SoftwareCatalogueService {
 			}
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Completed user activation for organization',
+				'StackiqService: Completed user activation for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 					'totalContactpersonen' => count($contactpersonen),
@@ -2117,7 +2117,7 @@ class SoftwareCatalogueService {
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to activate users for organization: ' . $e->getMessage(),
+				'StackiqService: Failed to activate users for organization: ' . $e->getMessage(),
 				[
 					'organizationUuid' => $organizationUuid,
 					'exception' => $e->getMessage(),
@@ -2139,7 +2139,7 @@ class SoftwareCatalogueService {
 	private function deactivateUsersForOrganization(string $organizationUuid): void {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Deactivating users for organization',
+				'StackiqService: Deactivating users for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 				]
@@ -2147,7 +2147,7 @@ class SoftwareCatalogueService {
 
 			$objectService = $this->getObjectService();
 			if ($objectService === null) {
-				$this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available');
+				$this->_logger->error('StackiqService: OpenRegister ObjectService not available');
 				return;
 			}
 
@@ -2189,7 +2189,7 @@ class SoftwareCatalogueService {
 						$deactivatedCount++;
 
 						$this->_logger->info(
-							'SoftwareCatalogueService: Deactivated user for organization',
+							'StackiqService: Deactivated user for organization',
 							[
 								'username' => $username,
 								'organizationUuid' => $organizationUuid,
@@ -2200,7 +2200,7 @@ class SoftwareCatalogueService {
 			}
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Completed user deactivation for organization',
+				'StackiqService: Completed user deactivation for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 					'totalContactpersonen' => count($contactpersonen),
@@ -2209,7 +2209,7 @@ class SoftwareCatalogueService {
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to deactivate users for organization: ' . $e->getMessage(),
+				'StackiqService: Failed to deactivate users for organization: ' . $e->getMessage(),
 				[
 					'organizationUuid' => $organizationUuid,
 					'exception' => $e->getMessage(),
@@ -2222,28 +2222,28 @@ class SoftwareCatalogueService {
 	}//end deactivateUsersForOrganization()
 
 	/**
-	 * Activates SoftwareCatalog-specific users for an organization
+	 * Activates Stackiq-specific users for an organization
 	 * Only affects users from contactpersoon objects, not admin group users
 	 *
 	 * @param string $organizationUuid The organization UUID
 	 *
 	 * @return void
 	 */
-	private function activateSoftwareCatalogUsersForOrganization(string $organizationUuid): void {
+	private function activateStackiqUsersForOrganization(string $organizationUuid): void {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Activating SoftwareCatalog users for organization',
+				'StackiqService: Activating Stackiq users for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 				]
 			);
 
-			// Get SoftwareCatalog-specific users (from contactpersonen).
-			$softwareCatalogUsers = $this->getSoftwareCatalogUsersForOrganization(organizationUuid: $organizationUuid);
+			// Get Stackiq-specific users (from contactpersonen).
+			$softwareCatalogUsers = $this->getStackiqUsersForOrganization(organizationUuid: $organizationUuid);
 
 			if (empty($softwareCatalogUsers) === true) {
 				$this->_logger->info(
-					'SoftwareCatalogueService: No SoftwareCatalog users found for organization',
+					'StackiqService: No Stackiq users found for organization',
 					[
 						'organizationUuid' => $organizationUuid,
 					]
@@ -2252,7 +2252,7 @@ class SoftwareCatalogueService {
 			}
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Found SoftwareCatalog users to activate',
+				'StackiqService: Found Stackiq users to activate',
 				[
 					'organizationUuid' => $organizationUuid,
 					'userCount' => count($softwareCatalogUsers),
@@ -2272,7 +2272,7 @@ class SoftwareCatalogueService {
 						$user->setEnabled(true);
 						$activatedUsers[] = $username;
 						$this->_logger->debug(
-							'SoftwareCatalogueService: Activated SoftwareCatalog user',
+							'StackiqService: Activated Stackiq user',
 							[
 								'organizationUuid' => $organizationUuid,
 								'username' => $username,
@@ -2280,7 +2280,7 @@ class SoftwareCatalogueService {
 						);
 					} elseif ($user !== false && $user->isEnabled() === true) {
 						$this->_logger->debug(
-							'SoftwareCatalogueService: SoftwareCatalog user already active',
+							'StackiqService: Stackiq user already active',
 							[
 								'organizationUuid' => $organizationUuid,
 								'username' => $username,
@@ -2289,7 +2289,7 @@ class SoftwareCatalogueService {
 					} else {
 						$failedUsers[] = $username;
 						$this->_logger->warning(
-							'SoftwareCatalogueService: SoftwareCatalog user not found',
+							'StackiqService: Stackiq user not found',
 							[
 								'organizationUuid' => $organizationUuid,
 								'username' => $username,
@@ -2299,7 +2299,7 @@ class SoftwareCatalogueService {
 				} catch (\Exception $e) {
 					$failedUsers[] = $username;
 					$this->_logger->error(
-						'SoftwareCatalogueService: Failed to activate SoftwareCatalog user',
+						'StackiqService: Failed to activate Stackiq user',
 						[
 							'organizationUuid' => $organizationUuid,
 							'username' => $username,
@@ -2310,7 +2310,7 @@ class SoftwareCatalogueService {
 			}//end foreach
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: SoftwareCatalog user activation complete',
+				'StackiqService: Stackiq user activation complete',
 				[
 					'organizationUuid' => $organizationUuid,
 					'activatedUsers' => $activatedUsers,
@@ -2320,38 +2320,38 @@ class SoftwareCatalogueService {
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Error activating SoftwareCatalog users for organization',
+				'StackiqService: Error activating Stackiq users for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 					'error' => $e->getMessage(),
 				]
 			);
 		}//end try
-	}//end activateSoftwareCatalogUsersForOrganization()
+	}//end activateStackiqUsersForOrganization()
 
 	/**
-	 * Deactivates SoftwareCatalog-specific users for an organization
+	 * Deactivates Stackiq-specific users for an organization
 	 * Only affects users from contactpersoon objects, not admin group users
 	 *
 	 * @param string $organizationUuid The organization UUID
 	 *
 	 * @return void
 	 */
-	private function deactivateSoftwareCatalogUsersForOrganization(string $organizationUuid): void {
+	private function deactivateStackiqUsersForOrganization(string $organizationUuid): void {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Deactivating SoftwareCatalog users for organization',
+				'StackiqService: Deactivating Stackiq users for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 				]
 			);
 
-			// Get SoftwareCatalog-specific users (from contactpersonen).
-			$softwareCatalogUsers = $this->getSoftwareCatalogUsersForOrganization(organizationUuid: $organizationUuid);
+			// Get Stackiq-specific users (from contactpersonen).
+			$softwareCatalogUsers = $this->getStackiqUsersForOrganization(organizationUuid: $organizationUuid);
 
 			if (empty($softwareCatalogUsers) === true) {
 				$this->_logger->info(
-					'SoftwareCatalogueService: No SoftwareCatalog users found for organization',
+					'StackiqService: No Stackiq users found for organization',
 					[
 						'organizationUuid' => $organizationUuid,
 					]
@@ -2360,7 +2360,7 @@ class SoftwareCatalogueService {
 			}
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Found SoftwareCatalog users to deactivate',
+				'StackiqService: Found Stackiq users to deactivate',
 				[
 					'organizationUuid' => $organizationUuid,
 					'userCount' => count($softwareCatalogUsers),
@@ -2380,7 +2380,7 @@ class SoftwareCatalogueService {
 						$user->setEnabled(false);
 						$deactivatedUsers[] = $username;
 						$this->_logger->debug(
-							'SoftwareCatalogueService: Deactivated SoftwareCatalog user',
+							'StackiqService: Deactivated Stackiq user',
 							[
 								'organizationUuid' => $organizationUuid,
 								'username' => $username,
@@ -2388,7 +2388,7 @@ class SoftwareCatalogueService {
 						);
 					} elseif ($user !== false && $user->isEnabled() === false) {
 						$this->_logger->debug(
-							'SoftwareCatalogueService: SoftwareCatalog user already inactive',
+							'StackiqService: Stackiq user already inactive',
 							[
 								'organizationUuid' => $organizationUuid,
 								'username' => $username,
@@ -2397,7 +2397,7 @@ class SoftwareCatalogueService {
 					} else {
 						$failedUsers[] = $username;
 						$this->_logger->warning(
-							'SoftwareCatalogueService: SoftwareCatalog user not found',
+							'StackiqService: Stackiq user not found',
 							[
 								'organizationUuid' => $organizationUuid,
 								'username' => $username,
@@ -2407,7 +2407,7 @@ class SoftwareCatalogueService {
 				} catch (\Exception $e) {
 					$failedUsers[] = $username;
 					$this->_logger->error(
-						'SoftwareCatalogueService: Failed to deactivate SoftwareCatalog user',
+						'StackiqService: Failed to deactivate Stackiq user',
 						[
 							'organizationUuid' => $organizationUuid,
 							'username' => $username,
@@ -2418,7 +2418,7 @@ class SoftwareCatalogueService {
 			}//end foreach
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: SoftwareCatalog user deactivation complete',
+				'StackiqService: Stackiq user deactivation complete',
 				[
 					'organizationUuid' => $organizationUuid,
 					'deactivatedUsers' => $deactivatedUsers,
@@ -2428,27 +2428,27 @@ class SoftwareCatalogueService {
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Error deactivating SoftwareCatalog users for organization',
+				'StackiqService: Error deactivating Stackiq users for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 					'error' => $e->getMessage(),
 				]
 			);
 		}//end try
-	}//end deactivateSoftwareCatalogUsersForOrganization()
+	}//end deactivateStackiqUsersForOrganization()
 
 	/**
-	 * Gets SoftwareCatalog-specific users for an organization
+	 * Gets Stackiq-specific users for an organization
 	 * These are users from contactpersoon objects, excluding admin group users
 	 *
 	 * @param string $organizationUuid The organization UUID
 	 *
 	 * @return array Array of usernames
 	 */
-	private function getSoftwareCatalogUsersForOrganization(string $organizationUuid): array {
+	private function getStackiqUsersForOrganization(string $organizationUuid): array {
 		try {
 			$this->_logger->debug(
-				'SoftwareCatalogueService: Getting SoftwareCatalog users for organization',
+				'StackiqService: Getting Stackiq users for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 				]
@@ -2458,7 +2458,7 @@ class SoftwareCatalogueService {
 			$objectService = $this->getObjectService();
 			if ($objectService === null) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: ObjectService not available for getting SoftwareCatalog users'
+					'StackiqService: ObjectService not available for getting Stackiq users'
 				);
 				return [];
 			}
@@ -2491,7 +2491,7 @@ class SoftwareCatalogueService {
 					if ($username !== false && in_array($username, $adminGroupUsers) === false) {
 						$softwareCatalogUsers[] = $username;
 						$this->_logger->debug(
-							'SoftwareCatalogueService: Found SoftwareCatalog user',
+							'StackiqService: Found Stackiq user',
 							[
 								'organizationUuid' => $organizationUuid,
 								'username' => $username,
@@ -2503,7 +2503,7 @@ class SoftwareCatalogueService {
 			}//end foreach
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Found SoftwareCatalog users for organization',
+				'StackiqService: Found Stackiq users for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 					'userCount' => count($softwareCatalogUsers),
@@ -2514,7 +2514,7 @@ class SoftwareCatalogueService {
 			return $softwareCatalogUsers;
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Error getting SoftwareCatalog users for organization',
+				'StackiqService: Error getting Stackiq users for organization',
 				[
 					'organizationUuid' => $organizationUuid,
 					'error' => $e->getMessage(),
@@ -2522,7 +2522,7 @@ class SoftwareCatalogueService {
 			);
 			return [];
 		}//end try
-	}//end getSoftwareCatalogUsersForOrganization()
+	}//end getStackiqUsersForOrganization()
 
 	/**
 	 * Gets all usernames from the admin group
@@ -2535,7 +2535,7 @@ class SoftwareCatalogueService {
 			$adminGroup = $groupManager->get('admin');
 
 			if ($adminGroup === null) {
-				$this->_logger->warning('SoftwareCatalogueService: Admin group not found');
+				$this->_logger->warning('StackiqService: Admin group not found');
 				return [];
 			}
 
@@ -2547,7 +2547,7 @@ class SoftwareCatalogueService {
 			}
 
 			$this->_logger->debug(
-				'SoftwareCatalogueService: Found admin group users',
+				'StackiqService: Found admin group users',
 				[
 					'adminUserCount' => count($adminUsernames),
 					'adminUsers' => $adminUsernames,
@@ -2557,7 +2557,7 @@ class SoftwareCatalogueService {
 			return $adminUsernames;
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Error getting admin group usernames',
+				'StackiqService: Error getting admin group usernames',
 				[
 					'error' => $e->getMessage(),
 				]
@@ -2576,7 +2576,7 @@ class SoftwareCatalogueService {
 	private function addAdminGroupUsersToOrganization(string $organizationUuid): void {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Adding admin group users to organization entity',
+				'StackiqService: Adding admin group users to organization entity',
 				[
 					'organizationUuid' => $organizationUuid,
 				]
@@ -2587,13 +2587,13 @@ class SoftwareCatalogueService {
 			$adminGroup = $groupManager->get('admin');
 
 			if ($adminGroup === null) {
-				$this->_logger->warning('SoftwareCatalogueService: Admin group not found');
+				$this->_logger->warning('StackiqService: Admin group not found');
 				return;
 			}
 
 			$adminUsers = $adminGroup->getUsers();
 			$this->_logger->info(
-				'SoftwareCatalogueService: Found admin group users',
+				'StackiqService: Found admin group users',
 				[
 					'organizationUuid' => $organizationUuid,
 					'adminUserCount' => count($adminUsers),
@@ -2603,13 +2603,13 @@ class SoftwareCatalogueService {
 			// Get the organization entity (not object) to update its users list.
 			$organisationMapper = $this->_container->get('OCA\\OpenRegister\\Db\\OrganisationMapper');
 			if ($organisationMapper === null) {
-				$this->_logger->error('SoftwareCatalogueService: OrganisationMapper not available for adding admin users');
+				$this->_logger->error('StackiqService: OrganisationMapper not available for adding admin users');
 				return;
 			}
 
 			// Find the organization entity by UUID.
 			$this->_logger->info(
-				'SoftwareCatalogueService: Searching for organization entity',
+				'StackiqService: Searching for organization entity',
 				[
 					'organizationUuid' => $organizationUuid,
 				]
@@ -2619,7 +2619,7 @@ class SoftwareCatalogueService {
 				$targetOrganisation = $organisationMapper->findByUuid($organizationUuid);
 
 				$this->_logger->info(
-					'SoftwareCatalogueService: Found target organization entity',
+					'StackiqService: Found target organization entity',
 					[
 						'organizationUuid' => $organizationUuid,
 						'entityId' => $targetOrganisation->getId(),
@@ -2627,7 +2627,7 @@ class SoftwareCatalogueService {
 				);
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 				$this->_logger->warning(
-					'SoftwareCatalogueService: Organization entity not found for adding admin users',
+					'StackiqService: Organization entity not found for adding admin users',
 					[
 						'organizationUuid' => $organizationUuid,
 					]
@@ -2639,7 +2639,7 @@ class SoftwareCatalogueService {
 			$currentUsers = $targetOrganisation->getUsers() ?? [];
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Current organization entity users',
+				'StackiqService: Current organization entity users',
 				[
 					'organizationUuid' => $organizationUuid,
 					'currentUsers' => $currentUsers,
@@ -2656,7 +2656,7 @@ class SoftwareCatalogueService {
 					$updatedUsers[] = $adminUsername;
 					$addedUsers[] = $adminUsername;
 					$this->_logger->debug(
-						'SoftwareCatalogueService: Added admin user to organization entity',
+						'StackiqService: Added admin user to organization entity',
 						[
 							'organizationUuid' => $organizationUuid,
 							'adminUsername' => $adminUsername,
@@ -2666,7 +2666,7 @@ class SoftwareCatalogueService {
 			}
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Admin users processing complete',
+				'StackiqService: Admin users processing complete',
 				[
 					'organizationUuid' => $organizationUuid,
 					'addedUsers' => $addedUsers,
@@ -2677,7 +2677,7 @@ class SoftwareCatalogueService {
 			// Update the organization entity with the new users list.
 			if (count($updatedUsers) > count($currentUsers)) {
 				$this->_logger->info(
-					'SoftwareCatalogueService: Updating organization entity with new users',
+					'StackiqService: Updating organization entity with new users',
 					[
 						'organizationUuid' => $organizationUuid,
 						'entityId' => $targetOrganisation->getId(),
@@ -2689,7 +2689,7 @@ class SoftwareCatalogueService {
 				$targetOrganisation->setUsers($updatedUsers);
 
 				$this->_logger->info(
-					'SoftwareCatalogueService: Saving updated organization entity',
+					'StackiqService: Saving updated organization entity',
 					[
 						'organizationUuid' => $organizationUuid,
 						'entityId' => $targetOrganisation->getId(),
@@ -2701,7 +2701,7 @@ class SoftwareCatalogueService {
 				$savedOrganisation = $organisationMapper->save($targetOrganisation);
 
 				$this->_logger->info(
-					'SoftwareCatalogueService: Successfully added admin users to organization entity',
+					'StackiqService: Successfully added admin users to organization entity',
 					[
 						'organizationUuid' => $organizationUuid,
 						'addedUsers' => count($updatedUsers) - count($currentUsers),
@@ -2710,7 +2710,7 @@ class SoftwareCatalogueService {
 				);
 			} else {
 				$this->_logger->info(
-					'SoftwareCatalogueService: All admin users already in organization entity',
+					'StackiqService: All admin users already in organization entity',
 					[
 						'organizationUuid' => $organizationUuid,
 						'totalUsers' => count($updatedUsers),
@@ -2719,7 +2719,7 @@ class SoftwareCatalogueService {
 			}//end if
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to add admin users to organization entity: ' . $e->getMessage(),
+				'StackiqService: Failed to add admin users to organization entity: ' . $e->getMessage(),
 				[
 					'organizationUuid' => $organizationUuid,
 					'exception' => $e,
@@ -2734,7 +2734,7 @@ class SoftwareCatalogueService {
 	 * @param object $contactPersonObject The contactpersoon object
 	 *
 	 * @return bool True if the user should be added to the organization
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function shouldAddContactpersoonToOrganization(object $contactPersonObject): bool {
 		try {
@@ -2769,7 +2769,7 @@ class SoftwareCatalogueService {
 
 				if (is_array($organizationUsers) === true && in_array($username, $organizationUsers) === false) {
 					$this->_logger->info(
-						'SoftwareCatalogueService: Contactpersoon should be added to organization',
+						'StackiqService: Contactpersoon should be added to organization',
 						[
 							'username' => $username,
 							'organizationUuid' => $organizationUuid,
@@ -2783,7 +2783,7 @@ class SoftwareCatalogueService {
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 				// Organization doesn't exist, so we can't add the user.
 				$this->_logger->warning(
-					'SoftwareCatalogueService: Organization not found for contactpersoon',
+					'StackiqService: Organization not found for contactpersoon',
 					[
 						'username' => $username,
 						'organizationUuid' => $organizationUuid,
@@ -2793,7 +2793,7 @@ class SoftwareCatalogueService {
 			}//end try
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to check contactpersoon addition to org: ' . $e->getMessage(),
+				'StackiqService: Failed to check contactpersoon addition to org: ' . $e->getMessage(),
 				[
 					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
@@ -2809,7 +2809,7 @@ class SoftwareCatalogueService {
 	 * @param object $contactPersonObject The contactpersoon object
 	 *
 	 * @return bool True if the user was successfully added
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function addContactpersoonToOrganization(object $contactPersonObject): bool {
 		try {
@@ -2819,7 +2819,7 @@ class SoftwareCatalogueService {
 
 			if (empty($username) === true || empty($organizationUuid) === true) {
 				$this->_logger->warning(
-					'SoftwareCatalogueService: Cannot add contactpersoon to org - missing username or org',
+					'StackiqService: Cannot add contactpersoon to org - missing username or org',
 					[
 						'username' => $username,
 						'organizationUuid' => $organizationUuid,
@@ -2830,7 +2830,7 @@ class SoftwareCatalogueService {
 
 			$objectService = $this->getObjectService();
 			if ($objectService === null) {
-				$this->_logger->error('SoftwareCatalogueService: OpenRegister ObjectService not available');
+				$this->_logger->error('StackiqService: OpenRegister ObjectService not available');
 				return false;
 			}
 
@@ -2867,7 +2867,7 @@ class SoftwareCatalogueService {
 					);
 
 					$this->_logger->info(
-						'SoftwareCatalogueService: Successfully added contactpersoon to organization',
+						'StackiqService: Successfully added contactpersoon to organization',
 						[
 							'username' => $username,
 							'organizationUuid' => $organizationUuid,
@@ -2877,7 +2877,7 @@ class SoftwareCatalogueService {
 				}//end if
 
 				$this->_logger->debug(
-					'SoftwareCatalogueService: Contactpersoon already in organization',
+					'StackiqService: Contactpersoon already in organization',
 					[
 						'username' => $username,
 						'organizationUuid' => $organizationUuid,
@@ -2887,7 +2887,7 @@ class SoftwareCatalogueService {
 				// Already there, consider it successful.
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: Organization not found for contactpersoon',
+					'StackiqService: Organization not found for contactpersoon',
 					[
 						'username' => $username,
 						'organizationUuid' => $organizationUuid,
@@ -2897,7 +2897,7 @@ class SoftwareCatalogueService {
 			}//end try
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to add contact person to organization: ' . $e->getMessage(),
+				'StackiqService: Failed to add contact person to organization: ' . $e->getMessage(),
 				[
 					'objectId' => $contactPersonObject->getId(),
 					'exception' => $e->getMessage(),
@@ -2920,7 +2920,7 @@ class SoftwareCatalogueService {
 	private function handleOwnershipAssignment(object $organizationObject): void {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Handling ownership assignment for organization',
+				'StackiqService: Handling ownership assignment for organization',
 				[
 					'objectId' => $organizationObject->getId(),
 				]
@@ -2932,7 +2932,7 @@ class SoftwareCatalogueService {
 
 			if (empty($contactpersonen) === true) {
 				$this->_logger->info(
-					'SoftwareCatalogueService: No contact persons found for ownership assignment',
+					'StackiqService: No contact persons found for ownership assignment',
 					[
 						'organizationUuid' => $organizationUuid,
 					]
@@ -2946,7 +2946,7 @@ class SoftwareCatalogueService {
 			$objectService = $this->getObjectService();
 			if ($objectService === null) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: OpenRegister ObjectService not available for ownership assignment'
+					'StackiqService: OpenRegister ObjectService not available for ownership assignment'
 				);
 				return;
 			}
@@ -2959,7 +2959,7 @@ class SoftwareCatalogueService {
 
 			if ($registerId === null || $contactPersonSchemaId === null || $organisationSchemaId === false) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: Register or schema not configured for contactpersoon/organisatie'
+					'StackiqService: Register or schema not configured for contactpersoon/organisatie'
 				);
 				return;
 			}
@@ -2983,7 +2983,7 @@ class SoftwareCatalogueService {
 					if (empty($primaryUsername) === true) {
 						if ($retry < $maxRetries - 1) {
 							$this->_logger->info(
-								'SoftwareCatalogueService: Primary contact no username, retry in ' . $retryDelay . 's',
+								'StackiqService: Primary contact no username, retry in ' . $retryDelay . 's',
 								[
 									'contactUuid' => $primaryContactUuid,
 									'organizationUuid' => $organizationUuid,
@@ -2995,7 +2995,7 @@ class SoftwareCatalogueService {
 						}
 
 						$this->_logger->warning(
-							'SoftwareCatalogueService: Primary contact person still has no username after retries',
+							'StackiqService: Primary contact person still has no username after retries',
 							[
 								'contactUuid' => $primaryContactUuid,
 								'organizationUuid' => $organizationUuid,
@@ -3030,7 +3030,7 @@ class SoftwareCatalogueService {
 								}
 							} catch (\Exception $e) {
 								$this->_logger->warning(
-									'SoftwareCatalogueService: Failed to add contact person to organization entity',
+									'StackiqService: Failed to add contact person to organization entity',
 									[
 										'contactUuid' => $contactUuid,
 										'error' => $e->getMessage(),
@@ -3043,7 +3043,7 @@ class SoftwareCatalogueService {
 						$organisationMapper->save($organisationEntity);
 
 						$this->_logger->info(
-							'SoftwareCatalogueService: Successfully added users to organization entity',
+							'StackiqService: Successfully added users to organization entity',
 							[
 								'organizationUuid' => $organisationEntityUuid,
 								'userCount' => count($organisationEntity->getUserIds()),
@@ -3051,7 +3051,7 @@ class SoftwareCatalogueService {
 						);
 					} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 						$this->_logger->error(
-							'SoftwareCatalogueService: Organization entity not found for adding users',
+							'StackiqService: Organization entity not found for adding users',
 							[
 								'organizationUuid' => $organisationEntityUuid,
 							]
@@ -3110,7 +3110,7 @@ class SoftwareCatalogueService {
 							}
 						} catch (\Exception $e) {
 							$this->_logger->warning(
-								'SoftwareCatalogueService: Failed to update contact person ownership',
+								'StackiqService: Failed to update contact person ownership',
 								[
 									'contactUuid' => $contactUuid,
 									'error' => $e->getMessage(),
@@ -3120,7 +3120,7 @@ class SoftwareCatalogueService {
 					}//end for
 
 					$this->_logger->info(
-						'SoftwareCatalogueService: Successfully assigned ownership for organization',
+						'StackiqService: Successfully assigned ownership for organization',
 						[
 							'organizationUuid' => $organizationUuid,
 							'primaryOwner' => $primaryUsername,
@@ -3135,7 +3135,7 @@ class SoftwareCatalogueService {
 				} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 					if ($retry < $maxRetries - 1) {
 						$this->_logger->info(
-							'SoftwareCatalogueService: Primary contact not found, retrying in ' . $retryDelay . ' seconds',
+							'StackiqService: Primary contact not found, retrying in ' . $retryDelay . ' seconds',
 							[
 								'contactUuid' => $primaryContactUuid,
 								'organizationUuid' => $organizationUuid,
@@ -3147,7 +3147,7 @@ class SoftwareCatalogueService {
 					}
 
 					$this->_logger->error(
-						'SoftwareCatalogueService: Primary contact person not found after retries',
+						'StackiqService: Primary contact person not found after retries',
 						[
 							'contactUuid' => $primaryContactUuid,
 							'organizationUuid' => $organizationUuid,
@@ -3158,7 +3158,7 @@ class SoftwareCatalogueService {
 			}//end for
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Error handling ownership assignment',
+				'StackiqService: Error handling ownership assignment',
 				[
 					'objectId' => $organizationObject->getId(),
 					'error' => $e->getMessage(),
@@ -3177,11 +3177,11 @@ class SoftwareCatalogueService {
 	 * @param string $organizationUuid The UUID of the organization
 	 *
 	 * @return void
-	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
+	 * @spec   openspec/specs/stackique-orchestration/spec.md
 	 */
 	public function syncContactPersonUsernamesWithOrganization(string $organizationUuid): void {
 		$this->_logger->info(
-			'SoftwareCatalogueService: Starting contact person username synchronization',
+			'StackiqService: Starting contact person username synchronization',
 			[
 				'organizationUuid' => $organizationUuid,
 			]
@@ -3190,19 +3190,19 @@ class SoftwareCatalogueService {
 		// Get the ObjectService to find contact persons.
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
-			$this->_logger->error('SoftwareCatalogueService: ObjectService not available for username synchronization');
+			$this->_logger->error('StackiqService: ObjectService not available for username synchronization');
 			return;
 		}
 
 		// Get the contact person schema ID from configuration.
-		$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+		$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 		$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 		$contactSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
 		$registerId = $voorzieningenConfig['register'] ?? null;
 
 		if ($contactSchemaId === null || $registerId === false) {
 			$this->_logger->warning(
-				'SoftwareCatalogueService: Missing Voorzieningen configuration for contact person sync',
+				'StackiqService: Missing Voorzieningen configuration for contact person sync',
 				[
 					'organizationUuid' => $organizationUuid,
 					'contactSchemaId' => $contactSchemaId,
@@ -3225,7 +3225,7 @@ class SoftwareCatalogueService {
 			);
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Found contact persons for synchronization',
+				'StackiqService: Found contact persons for synchronization',
 				[
 					'organizationUuid' => $organizationUuid,
 					'contactPersonCount' => count($contactPersons),
@@ -3240,7 +3240,7 @@ class SoftwareCatalogueService {
 				if (empty($email) === false) {
 					$contactPersonUsernames[] = $email;
 					$this->_logger->info(
-						'SoftwareCatalogueService: Found contact person username',
+						'StackiqService: Found contact person username',
 						[
 							'username' => $email,
 							'contactPersonId' => $contactPerson->getId(),
@@ -3253,7 +3253,7 @@ class SoftwareCatalogueService {
 			$organisationMapper = $this->getOrganisationMapper();
 			if ($organisationMapper === null) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: OpenRegister OrganisationMapper not available for synchronization',
+					'StackiqService: OpenRegister OrganisationMapper not available for synchronization',
 					[
 						'organizationUuid' => $organizationUuid,
 					]
@@ -3265,7 +3265,7 @@ class SoftwareCatalogueService {
 
 			if ($organisation === null) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: Organization entity not found for synchronization',
+					'StackiqService: Organization entity not found for synchronization',
 					[
 						'organizationUuid' => $organizationUuid,
 					]
@@ -3279,7 +3279,7 @@ class SoftwareCatalogueService {
 			$allUsers = array_unique($allUsers);
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Updating organization entity users',
+				'StackiqService: Updating organization entity users',
 				[
 					'organizationUuid' => $organizationUuid,
 					'currentUsers' => $currentUsers,
@@ -3293,7 +3293,7 @@ class SoftwareCatalogueService {
 			$organisationMapper->save($organisation);
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Successfully synchronized contact person usernames',
+				'StackiqService: Successfully synchronized contact person usernames',
 				[
 					'organizationUuid' => $organizationUuid,
 					'totalUsers' => count($allUsers),
@@ -3303,7 +3303,7 @@ class SoftwareCatalogueService {
 			// Organization entity doesn't exist yet - this can happen due to race conditions.
 			// Log and return gracefully, the organization sync will handle this later.
 			$this->_logger->warning(
-				'SoftwareCatalogueService: Organization entity not found during username sync (race condition)',
+				'StackiqService: Organization entity not found during username sync (race condition)',
 				[
 					'organizationUuid' => $organizationUuid,
 					'message' => 'Expected during anonymous registration - org entity created after contacts',
@@ -3311,7 +3311,7 @@ class SoftwareCatalogueService {
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Error synchronizing contact person usernames',
+				'StackiqService: Error synchronizing contact person usernames',
 				[
 					'organizationUuid' => $organizationUuid,
 					'error' => $e->getMessage(),
@@ -3339,7 +3339,7 @@ class SoftwareCatalogueService {
 
 		if ($email === null || $organization === false) {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Contact person missing email or organisation',
+				'StackiqService: Contact person missing email or organisation',
 				[
 					'contactPersonId' => $contactPersonObject->getId(),
 					'hasEmail' => empty($email) === false,
@@ -3353,7 +3353,7 @@ class SoftwareCatalogueService {
 		$owner = $contactPersonObject->getOwner();
 		if ($owner === 'system') {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Skipping contact person owned by system',
+				'StackiqService: Skipping contact person owned by system',
 				[
 					'contactPersonId' => $contactPersonObject->getId(),
 					'username' => $email,
@@ -3363,7 +3363,7 @@ class SoftwareCatalogueService {
 		}
 
 		$this->_logger->info(
-			'SoftwareCatalogueService: Ensuring contact person in organization',
+			'StackiqService: Ensuring contact person in organization',
 			[
 				'contactPersonId' => $contactPersonObject->getId(),
 				'username' => $email,
@@ -3376,7 +3376,7 @@ class SoftwareCatalogueService {
 			$organisationMapper = $this->getOrganisationMapper();
 			if ($organisationMapper === null) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: OpenRegister OrganisationMapper not available for contact person',
+					'StackiqService: OpenRegister OrganisationMapper not available for contact person',
 					[
 						'contactPersonId' => $contactPersonObject->getId(),
 						'organization' => $organization,
@@ -3389,7 +3389,7 @@ class SoftwareCatalogueService {
 
 			if ($organisation === null) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: Organization entity not found for contact person',
+					'StackiqService: Organization entity not found for contact person',
 					[
 						'contactPersonId' => $contactPersonObject->getId(),
 						'organization' => $organization,
@@ -3402,7 +3402,7 @@ class SoftwareCatalogueService {
 			$currentUsers = $organisation->getUsers() ?? [];
 			if (in_array($email, $currentUsers) === true) {
 				$this->_logger->info(
-					'SoftwareCatalogueService: Contact person already in organization',
+					'StackiqService: Contact person already in organization',
 					[
 						'contactPersonId' => $contactPersonObject->getId(),
 						'username' => $email,
@@ -3418,7 +3418,7 @@ class SoftwareCatalogueService {
 			$organisationMapper->save($organisation);
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Successfully added contact person to organization',
+				'StackiqService: Successfully added contact person to organization',
 				[
 					'contactPersonId' => $contactPersonObject->getId(),
 					'username' => $email,
@@ -3430,7 +3430,7 @@ class SoftwareCatalogueService {
 			// Organization entity doesn't exist yet - this can happen due to race conditions.
 			// Log and return gracefully, the organization sync will handle this later.
 			$this->_logger->warning(
-				'SoftwareCatalogueService: Org entity not found (race condition), handled by org sync',
+				'StackiqService: Org entity not found (race condition), handled by org sync',
 				[
 					'contactPersonId' => $contactPersonObject->getId(),
 					'username' => $email,
@@ -3452,7 +3452,7 @@ class SoftwareCatalogueService {
 	private function updateOrganizationReferences(object $organizationObject): void {
 		try {
 			$this->_logger->info(
-				'SoftwareCatalogueService: Updating organization references',
+				'StackiqService: Updating organization references',
 				[
 					'objectId' => $organizationObject->getId(),
 				]
@@ -3464,7 +3464,7 @@ class SoftwareCatalogueService {
 			// Get the ObjectService to update objects.
 			$objectService = $this->getObjectService();
 			if ($objectService === null) {
-				$this->_logger->error('SoftwareCatalogueService: ObjectService not available for updating references');
+				$this->_logger->error('StackiqService: ObjectService not available for updating references');
 				return;
 			}
 
@@ -3476,7 +3476,7 @@ class SoftwareCatalogueService {
 				$organisationEntityUuid = $organisationEntity->getUuid();
 
 				$this->_logger->info(
-					'SoftwareCatalogueService: Found organization entity for reference update',
+					'StackiqService: Found organization entity for reference update',
 					[
 						'organizationObjectUuid' => $organizationUuid,
 						'organizationEntityUuid' => $organisationEntityUuid,
@@ -3484,7 +3484,7 @@ class SoftwareCatalogueService {
 				);
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 				$this->_logger->error(
-					'SoftwareCatalogueService: Organization entity not found for reference update',
+					'StackiqService: Organization entity not found for reference update',
 					[
 						'organizationUuid' => $organizationUuid,
 					]
@@ -3494,7 +3494,7 @@ class SoftwareCatalogueService {
 
 			// Update the organization object's @self.organisation field.
 			$this->_logger->info(
-				'SoftwareCatalogueService: Updating organization object reference',
+				'StackiqService: Updating organization object reference',
 				[
 					'objectId' => $organizationObject->getId(),
 					'newOrganisationUuid' => $organisationEntityUuid,
@@ -3518,7 +3518,7 @@ class SoftwareCatalogueService {
 			$contactpersonen = $objectData['contactpersonen'] ?? [];
 			foreach ($contactpersonen as $contactUuid) {
 				$this->_logger->info(
-					'SoftwareCatalogueService: Updating contact person object reference',
+					'StackiqService: Updating contact person object reference',
 					[
 						'contactUuid' => $contactUuid,
 						'newOrganisationUuid' => $organisationEntityUuid,
@@ -3526,13 +3526,13 @@ class SoftwareCatalogueService {
 				);
 
 				// Get the contact person schema ID from configuration.
-				$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+				$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 				$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 				$contactSchemaId = $voorzieningenConfig['contactpersoon_schema'] ?? null;
 
 				if ($contactSchemaId === null) {
 					$this->_logger->warning(
-						'SoftwareCatalogueService: Missing contactpersoon schema configuration for object update',
+						'StackiqService: Missing contactpersoon schema configuration for object update',
 						[
 							'contactUuid' => $contactUuid,
 						]
@@ -3566,7 +3566,7 @@ class SoftwareCatalogueService {
 					}
 				} catch (\Exception $e) {
 					$this->_logger->error(
-						'SoftwareCatalogueService: Failed to update contact person object',
+						'StackiqService: Failed to update contact person object',
 						[
 							'contactUuid' => $contactUuid,
 							'error' => $e->getMessage(),
@@ -3576,7 +3576,7 @@ class SoftwareCatalogueService {
 			}//end foreach
 
 			$this->_logger->info(
-				'SoftwareCatalogueService: Successfully updated organization references',
+				'StackiqService: Successfully updated organization references',
 				[
 					'organizationUuid' => $organizationUuid,
 					'organizationEntityUuid' => $organisationEntityUuid,
@@ -3585,7 +3585,7 @@ class SoftwareCatalogueService {
 			);
 		} catch (\Exception $e) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Failed to update organization references: ' . $e->getMessage(),
+				'StackiqService: Failed to update organization references: ' . $e->getMessage(),
 				[
 					'objectId' => $organizationObject->getId(),
 					'exception' => $e->getMessage(),
@@ -3611,7 +3611,7 @@ class SoftwareCatalogueService {
 	 * log line so the per-method bodies no longer carry that boilerplate.
 	 *
 	 * W31 method-decomposition 2.6 — companion helper for the
-	 * SoftwareCatalogue subservice wiring.
+	 * Stackiq subservice wiring.
 	 *
 	 * @param string $schemaSlug Object-type slug as understood by
 	 *                           `SettingsService::getSchemaIdForObjectType()`
@@ -3633,7 +3633,7 @@ class SoftwareCatalogueService {
 
 		if ($registerId === null || $schemaId === null || $schemaId === false) {
 			$this->_logger->error(
-				'SoftwareCatalogueService: Register or schema not configured for ' . $logContext
+				'StackiqService: Register or schema not configured for ' . $logContext
 			);
 			return null;
 		}

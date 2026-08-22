@@ -141,11 +141,11 @@ regardless of feed availability.
 ### Requirement: Softwarecatalog performs no direct HTTP to the EOL feed
 
 All fetching of endoflife.date data SHALL happen in the openconnector
-`endoflife-date-source` source/synchronization; softwarecatalog SHALL only
+`endoflife-date-source` source/synchronization; stackiq SHALL only
 read already-ingested `eolProduct`/`eolCycle` objects via OpenRegister's
 `ObjectService`/`ConfigurationService`. No HTTP client, URL configuration
 field, or outbound network call to endoflife.date (or any other EOL feed)
-SHALL exist in softwarecatalog code.
+SHALL exist in stackiq code.
 
 #### Scenario: The matcher's data source is OpenRegister, not HTTP
 
@@ -153,5 +153,5 @@ SHALL exist in softwarecatalog code.
 - **THEN** its data access is limited to `ObjectService`/`ConfigurationService`
   calls against the configured register/schema
 - **AND** no HTTP client or outbound URL to endoflife.date exists anywhere in
-  softwarecatalog's codebase
+  stackiq's codebase
 

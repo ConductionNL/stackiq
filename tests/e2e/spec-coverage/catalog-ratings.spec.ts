@@ -9,7 +9,7 @@
  *   src/modals/SubmitReviewModal.vue            "Write a review"
  *   src/views/settings/sections/ModerationQueue.vue
  *                                               reused for type="assessment"
- *                                               at /settings/admin/softwarecatalog
+ *                                               at /settings/admin/stackiq
  *   manifest page `Reviews` (/reviews)          the reviews index
  *
  * The moderation lifecycle is driven END TO END through the UI: submit in the
@@ -189,7 +189,7 @@ async function submitReview(
 
 /** Open the admin settings page and wait for the review moderation queue. */
 async function openReviewQueue(page: Page) {
-	await page.goto('/index.php/settings/admin/softwarecatalog', {
+	await page.goto('/index.php/settings/admin/stackiq', {
 		waitUntil: 'domcontentloaded',
 	})
 	const queue = page
@@ -288,7 +288,7 @@ test('reviews: admin approval publishes the review and moves the aggregate', asy
 	// ANONYMOUS context (no credentials at all) must see the approved review.
 	const anon = await newAnonymousContext()
 	const res = await anon.get(
-		`/index.php/apps/softwarecatalog/api/reviews/aggregate?subjectType=module&subjectId=${moduleUuid}`,
+		`/index.php/apps/stackiq/api/reviews/aggregate?subjectType=module&subjectId=${moduleUuid}`,
 	)
 	expect(res.status(), `anonymous aggregate returned ${res.status()}`).toBe(200)
 	const body = await res.json()
@@ -316,7 +316,7 @@ test('reviews: a rejected review stays hidden, and so does a pending one', async
 	// it is a fixture (a second row that must stay invisible), not the
 	// behaviour under test, and driving the modal twice in one page session
 	// re-opens it with the previous submission's state still in the form.
-	const seeded = await ctx.post('/index.php/apps/softwarecatalog/api/reviews', {
+	const seeded = await ctx.post('/index.php/apps/stackiq/api/reviews', {
 		data: {
 			review: {
 				name: pending,
@@ -346,7 +346,7 @@ test('reviews: a rejected review stays hidden, and so does a pending one', async
 	// Nor in the anonymous (public) aggregate.
 	const anon = await newAnonymousContext()
 	const res = await anon.get(
-		`/index.php/apps/softwarecatalog/api/reviews/aggregate?subjectType=module&subjectId=${moduleUuid}`,
+		`/index.php/apps/stackiq/api/reviews/aggregate?subjectType=module&subjectId=${moduleUuid}`,
 	)
 	expect(res.status(), `anonymous aggregate returned ${res.status()}`).toBe(200)
 	const text = await res.text()
@@ -401,7 +401,7 @@ test('reviews: moderation reuses the ONE queue component, and the organisatie qu
 	page,
 }) => {
 	const bag = collectAppErrors(page)
-	await page.goto('/index.php/settings/admin/softwarecatalog', {
+	await page.goto('/index.php/settings/admin/stackiq', {
 		waitUntil: 'domcontentloaded',
 	})
 
@@ -437,7 +437,7 @@ test('reviews: moderation reuses the ONE queue component, and the organisatie qu
 
 	// And the unparameterised endpoint still answers for organisatie.
 	const res = await ctx.get(
-		'/index.php/apps/softwarecatalog/api/moderation/pending',
+		'/index.php/apps/stackiq/api/moderation/pending',
 	)
 	expect(res.status(), `default moderation/pending returned ${res.status()}`).toBe(
 		200,
@@ -461,7 +461,7 @@ test("reviews index: each configured column renders this row's real value", asyn
 	// seeds a row with a DISTINCT value per configured column and asserts each
 	// value reaches the page.
 	const reviewTitle = title('columns')
-	const created = await ctx.post('/index.php/apps/softwarecatalog/api/reviews', {
+	const created = await ctx.post('/index.php/apps/stackiq/api/reviews', {
 		data: {
 			review: {
 				name: reviewTitle,
@@ -515,7 +515,7 @@ test('reviews: an anonymous POST cannot create a review', async () => {
 	// `submit(array $review, string $subjectType, string $subjectId)`, so a
 	// FLAT body is rejected with `{"message":"empty payload"}` before auth is
 	// ever considered, which would make this test pass for the wrong reason.
-	const res = await anon.post('/index.php/apps/softwarecatalog/api/reviews', {
+	const res = await anon.post('/index.php/apps/stackiq/api/reviews', {
 		data: {
 			review: { name: `Anon review ${RUN_ID}`, rating: 10 },
 			subjectType: 'module',
@@ -548,7 +548,7 @@ test('reviews: a client-supplied auteur/status is stripped, not stored', async (
 	// No UI path: SubmitReviewModal never sends `auteur` or `status`, so this
 	// payload cannot be produced by any sequence of clicks.
 	const reviewTitle = title('rogue')
-	const res = await ctx.post('/index.php/apps/softwarecatalog/api/reviews', {
+	const res = await ctx.post('/index.php/apps/stackiq/api/reviews', {
 		data: {
 			review: {
 				name: reviewTitle,

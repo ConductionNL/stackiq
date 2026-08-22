@@ -66,7 +66,7 @@ const OR_VIEWS_API_BASE = '/apps/openregister/api/views'
  * OTHER saved views the same global OR endpoint stores for other index
  * pages/apps).
  *
- * FROZEN at `softwarecatalog-…` through the app-id rename. This string is not
+ * FROZEN at `stackiq-…` through the app-id rename. This string is not
  * a name we read from our own config — it is PERSISTED inside the `query` blob
  * of every saved view already stored in OpenRegister's GLOBAL saved-views
  * store, which this app's repair steps cannot reach. Renaming it makes the
@@ -75,7 +75,7 @@ const OR_VIEWS_API_BASE = '/apps/openregister/api/views'
  * database. Nothing errors — an unmatched marker reads exactly like "this user
  * has no saved facet views".
  */
-const VIEW_MARKER = 'softwarecatalog-gemma-facets'
+const VIEW_MARKER = 'stackiq-gemma-facets'
 
 /**
  * Build the empty (all-dimensions-present-but-empty) facet response shape,

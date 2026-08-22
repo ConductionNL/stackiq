@@ -7,7 +7,7 @@
  * Mounts CnAppRoot with the bundled manifest, registers icons/translations,
  * and primes the router from the manifest pages.
  *
- * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
+ * @spec openspec/specs/stackiq-manifest-v1/spec.md
  */
 
 import {

@@ -50,7 +50,7 @@ class MigrateAppConfigKeysTest extends TestCase {
 	 *
 	 * @var string
 	 */
-	private const LEGACY = 'softwarecatalog';
+	private const LEGACY = 'stackiq';
 
 	/**
 	 * The step reports a name that says what it does.
@@ -61,7 +61,7 @@ class MigrateAppConfigKeysTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$step = new MigrateAppConfigKeys($appConfig, new NullLogger());
 
-		$this->assertStringContainsString('softwarecatalog', $step->getName());
+		$this->assertStringContainsString('stackiq', $step->getName());
 		$this->assertStringContainsString('stackiq', $step->getName());
 	}//end testGetNameDescribesTheMigration()
 

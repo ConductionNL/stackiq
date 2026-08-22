@@ -24,7 +24,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+ * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Psr\Log\LoggerInterface;
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+ * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
  */
 class MigrateContactsToNc implements IRepairStep {
 	/**
@@ -89,7 +89,7 @@ class MigrateContactsToNc implements IRepairStep {
 	 *
 	 * @return string The repair step name.
 	 *
-	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
 	 */
 	public function getName(): string {
 		return 'Migrate Stackiq contacts/organisations to the Nextcloud addressbook';
@@ -102,7 +102,7 @@ class MigrateContactsToNc implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
 	 */
 	public function run(IOutput $output): void {
 		$output->startProgress(2);

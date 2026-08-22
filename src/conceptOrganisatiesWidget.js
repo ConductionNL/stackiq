@@ -10,7 +10,7 @@ import pinia from './pinia.js'
 import '@conduction/nextcloud-vue/css/index.css'
 
 OCA.Dashboard.register(
-	'softwarecatalog_concept_organisaties_widget',
+	'stackiq_concept_organisaties_widget',
 	async (el, { widget }) => {
 		const app = createApp({
 			render: () => h(ConceptOrganisatiesWidget, { title: widget.title }),

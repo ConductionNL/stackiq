@@ -39,13 +39,13 @@ class ConceptOrganisatiesWidget implements IWidget {
 	 * @return string The widget ID
 	 */
 	public function getId(): string {
-		// FROZEN across the softwarecatalog -> stackiq rename. The Dashboard app
+		// FROZEN across the stackiq -> stackiq rename. The Dashboard app
 		// stores each user's chosen widgets BY WIDGET ID, in its own `dashboard`
 		// appid namespace in `oc_preferences` — data this app's repair steps
 		// cannot reach. Renaming this id therefore does not error: the widget
 		// simply stops matching the stored selection and silently vanishes from
 		// every dashboard that had it.
-		return 'softwarecatalog_concept_organisaties_widget';
+		return 'stackiq_concept_organisaties_widget';
 	}//end getId()
 
 	/**

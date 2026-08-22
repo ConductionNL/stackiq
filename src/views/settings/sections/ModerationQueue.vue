@@ -4,7 +4,7 @@
  -
  - Moderation queue admin section: lists entries of `type` awaiting moderation
  - (organization: registratiestatus=pending, default; beoordeeling:
- - status=pending, softwarecatalog#375) and offers approve/reject per item.
+ - status=pending, stackiq#375) and offers approve/reject per item.
  - Approve flips organisatie to active + publishes it (publicatiedatum=now);
  - for beoordeeling it flips status to approved (the schema's own status-
  - conditioned public RBAC rule does the rest — no publicatiedatum involved).
@@ -96,7 +96,7 @@ import {
 /**
  * Generalised moderation queue admin section — reused for BOTH the
  * organisatie (anonymous registration) and beoordeeling (review) moderated
- * types via the `type` prop, per softwarecatalog#375 ("reuse the
+ * types via the `type` prop, per stackiq#375 ("reuse the
  * ModerationQueue.vue pattern... do not invent a second moderation
  * mechanism").
  *

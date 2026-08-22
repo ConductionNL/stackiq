@@ -101,8 +101,8 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param IDBConnection                  $db        Database connection.
-	 * @param LoggerInterface                $logger    Logger.
+	 * @param IDBConnection $db Database connection.
+	 * @param LoggerInterface $logger Logger.
 	 * @param RenameDutchSchemaSlugDecisions $decisions The pure predicates.
 	 */
 	public function __construct(
@@ -180,7 +180,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * the fact. So it refuses, loudly, and leaves both schemas alone.
 	 *
 	 * @param array<int, int> $schemaIds Schema ids in scope.
-	 * @param IOutput         $output    Repair output.
+	 * @param IOutput $output Repair output.
 	 *
 	 * @return void
 	 */
@@ -365,8 +365,8 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	/**
 	 * Rename one slug, scoped to this app's schemas.
 	 *
-	 * @param string          $old       Current slug.
-	 * @param string          $new       Replacement slug.
+	 * @param string $old Current slug.
+	 * @param string $new Replacement slug.
 	 * @param array<int, int> $schemaIds Schema ids in scope.
 	 *
 	 * @return bool True when the row was updated.

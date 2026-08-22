@@ -24,8 +24,8 @@
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;

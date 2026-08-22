@@ -100,7 +100,7 @@ test.afterAll(async () => {
 
 /** Navigate to a moduleVersie's detail page and open the Components sidebar tab. */
 async function openComponentsTab(page: Page): Promise<void> {
-	// The in-app router is hash-mode: a bare `/apps/softwarecatalog/moduleversies/:id`
+	// The in-app router is hash-mode: a bare `/apps/stackiq/moduleversies/:id`
 	// path boots the SPA with an empty hash, so vue-router falls back to the
 	// Dashboard and the detail page (with its Components tab) never mounts. Deep
 	// links MUST carry the `#` route.
@@ -113,7 +113,7 @@ async function openComponentsTab(page: Page): Promise<void> {
 		waitUntil: 'domcontentloaded',
 	})
 	await page
-		.locator('.softwarecatalog-app-root')
+		.locator('.stackiq-app-root')
 		.first()
 		.waitFor({ state: 'attached', timeout: 30000 })
 	// The first-run walkthrough overlay intercepts pointer events — dismiss it

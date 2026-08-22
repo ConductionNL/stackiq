@@ -74,7 +74,7 @@ test('dashboard: "Vernieuwen" refresh re-runs the data load without error', asyn
 // shared CnAppRoot shell — the user's working path is the "Organisations" nav
 // entry, covered separately). We therefore assert the button is a real,
 // clickable control and that clicking it leaves the app in a healthy state with
-// no softwarecatalog-origin error — rather than asserting a navigation the
+// no stackiq-origin error — rather than asserting a navigation the
 // deployed shell does not perform.
 test('dashboard: "Ga naar Organisaties" quick-nav button is clickable and error-free', async ({
 	page,

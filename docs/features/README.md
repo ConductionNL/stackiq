@@ -50,7 +50,7 @@ The **Applications** (`/modules`) and **Services** (`/diensten`) index pages off
 
 **Key service:** `lib/Service/FacetService.php`
 **Controller:** `lib/Controller/FacetController.php`
-**Endpoint:** `GET /apps/softwarecatalog/api/facets/{schema}` (`schema`: `module` or `dienst`)
+**Endpoint:** `GET /apps/stackiq/api/facets/{schema}` (`schema`: `module` or `dienst`)
 
 ## Module Tracking
 

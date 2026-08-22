@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
- * DEEP, data-dependent CRUD-with-PERSISTENCE workflows for the softwarecatalog
+ * DEEP, data-dependent CRUD-with-PERSISTENCE workflows for the stackiq
  * manifest index pages.
  *
  * These do NOT just assert a page renders — they prove the catalog FEATURES
@@ -176,7 +176,7 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 	// deployed here the View action opens Nextcloud's GENERIC right sidebar
 	// (Files / Notes / Tags / Audit trail tabs) rather than an object-data detail
 	// panel, so the entered field values are not rendered for a UI assertion.
-	// This is a deployed nextcloud-vue shell limitation, NOT a softwarecatalog
+	// This is a deployed nextcloud-vue shell limitation, NOT a stackiq
 	// bug. The read-back-of-persisted-values is instead proven by the Edit form
 	// pre-fill assertion below (the editor loads the row's stored values) and by
 	// the data-layer findAll cross-check. Re-enable once the deployed shell

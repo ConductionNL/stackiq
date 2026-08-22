@@ -10,7 +10,7 @@
 - **spec_ref**: `openspec/changes/portal-contribution/specs/portal-contribution/spec.md#requirement-provider-is-a-plain-dependency-free-class-req-port-001`
 - **files**: `lib/Portal/PortalContributionProvider.php`
 - **acceptance_criteria**:
-  - GIVEN the new class WHEN inspected THEN it is namespace `OCA\SoftwareCatalog\Portal`, has NO `use` of any portaliq symbol, NO `implements` clause, NO constructor dependencies, and carries the repo-standard EUPL-1.2/SPDX docblock header plus `@spec` tags
+  - GIVEN the new class WHEN inspected THEN it is namespace `OCA\Stackiq\Portal`, has NO `use` of any portaliq symbol, NO `implements` clause, NO constructor dependencies, and carries the repo-standard EUPL-1.2/SPDX docblock header plus `@spec` tags
   - GIVEN portaliq is absent WHEN the app runs THEN nothing references the class (no DI registration, no route) — it is inert
 - [x] Implement
 - [x] Test
@@ -62,5 +62,5 @@
 - All new/changed business logic covered by PHPUnit unit tests (`tests/Unit/`)
 - No new API endpoints → no Newman collection needed; no UI change → no Playwright needed (portal renders in portaliq)
 - All tests pass (phpunit against `tests/Unit/Portal/` in the php 8.3 container)
-- No user-facing strings added inside softwarecatalog (manifest labels are portal-side data; English source per i18n policy)
+- No user-facing strings added inside stackiq (manifest labels are portal-side data; English source per i18n policy)
 - `openspec validate` passes

@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Conflict Resolver for SoftwareCatalogueService
+ * Conflict Resolver for StackiqService
  *
- * Extracted from SoftwareCatalogueService to reduce ExcessiveClassLength and
+ * Extracted from StackiqService to reduce ExcessiveClassLength and
  * ExcessiveClassComplexity on that service. Handles deduplication and conflict resolution.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -21,14 +21,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
+namespace OCA\Stackiq\Service\Stackiq;
 
 use Psr\Log\LoggerInterface;
 
 /**
- * Resolves conflicts and deduplicates entries in the SoftwareCatalogue domain.
+ * Resolves conflicts and deduplicates entries in the Stackiq domain.
  *
- * SoftwareCatalogueService delegates all conflict detection and resolution
+ * StackiqService delegates all conflict detection and resolution
  * methods to this class, shrinking its own complexity metrics.
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-2

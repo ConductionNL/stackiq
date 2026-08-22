@@ -1,11 +1,11 @@
-# Proposal: softwarecatalog-mcp-adoption
+# Proposal: stackiq-mcp-adoption
 
 ## Summary
 Adopt ADR-063 ("MCP as Platform Abstraction") in Software Catalog by declaring the
 `x-openregister-mcp` schema dialect on a curated set of 9 register schemas
 (`module`, `moduleVersie`, `dienst`, `organisatie`, `contactpersoon`, `koppeling`,
 `compliancy`, `gebruik`, `contract`), so OpenRegister derives read-only
-`softwarecatalog.<schema>.search` / `.get` MCP tools for Hermiq without any
+`stackiq.<schema>.search` / `.get` MCP tools for Hermiq without any
 hand-written provider code. Software Catalog has no existing `IMcpToolProvider`,
 so this is a pure dialect declaration (`kind: config`) — no PHP is written or
 deleted.
@@ -24,7 +24,7 @@ exemplar. Software Catalog currently exposes zero MCP surface; this change close
 that gap for a curated, read-only slice of the catalogue.
 
 ## Affected Projects
-- [ ] Project: `softwarecatalog` — declare `x-openregister-mcp` (search/get,
+- [ ] Project: `stackiq` — declare `x-openregister-mcp` (search/get,
   read-only) on 9 curated schemas via a new `lib/Settings/register.d/` fragment;
   no PHP changes (no provider exists to migrate or delete).
 
@@ -39,7 +39,7 @@ that gap for a curated, read-only slice of the catalogue.
 - `search.filters` restricted to real, cross-checked schema properties.
 - Agent-facing `description` prose per verb per schema (what an LLM reads to
   decide when to call the tool).
-- A dedicated `register.d/softwarecatalog-mcp-adoption.json` fragment (ADR-037)
+- A dedicated `register.d/stackiq-mcp-adoption.json` fragment (ADR-037)
   so this change never edits the shared `softwarecatalogus_register.json`
   monolith.
 
@@ -62,7 +62,7 @@ that gap for a curated, read-only slice of the catalogue.
 Declare the dialect purely as data: one new `register.d/*.json` fragment
 (ADR-037 union-merge) that adds a `configuration.x-openregister-mcp` block to
 each curated schema. OpenRegister's `SchemaDerivedToolProvider` then derives
-`softwarecatalog.<schema>.search` / `softwarecatalog.<schema>.get` tools at
+`stackiq.<schema>.search` / `stackiq.<schema>.get` tools at
 runtime — no controller, service, or provider class is touched. Details
 (exact per-verb JSON, filter lists, hint values) live in design.md.
 
@@ -70,7 +70,7 @@ runtime — no controller, service, or provider class is touched. Details
 None.
 
 ## Impact
-- `lib/Settings/register.d/softwarecatalog-mcp-adoption.json` (new file).
+- `lib/Settings/register.d/stackiq-mcp-adoption.json` (new file).
 - OpenRegister's MCP surface for Hermiq (JSON-RPC `/api/mcp` + chat facade)
   gains 18 new derived tools (9 schemas × search/get) once imported.
 - No change to existing REST controllers, Vue frontend, or existing register
@@ -100,7 +100,7 @@ MCP layer) is the authoritative access gate at invoke time per
 these objects in the Vue frontend applies unchanged to MCP callers.
 
 ## Rollback Strategy
-Delete `lib/Settings/register.d/softwarecatalog-mcp-adoption.json` (or flip
+Delete `lib/Settings/register.d/stackiq-mcp-adoption.json` (or flip
 every `enabled` to `false`) and re-run the settings import; the fragment
 signature changes so OpenRegister re-imports and the derived tools disappear.
 No other file is touched, so rollback is a single-file revert.

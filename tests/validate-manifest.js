@@ -21,7 +21,7 @@
 //   2. node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest-v2.schema.json
 //   3. ../nextcloud-vue/src/schemas/app-manifest-v2.schema.json (sibling worktree)
 //   4. ../decidesk/node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest-v2.schema.json
-//      (sibling app's installed copy — fallback when softwarecatalog has not yet npm-installed)
+//      (sibling app's installed copy — fallback when stackiq has not yet npm-installed)
 
 'use strict'
 

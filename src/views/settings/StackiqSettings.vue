@@ -93,7 +93,7 @@
 		<!-- Registration Moderation Queue Section -->
 		<ModerationQueue />
 
-		<!-- Review Moderation Queue Section (softwarecatalog#375) — the
+		<!-- Review Moderation Queue Section (stackiq#375) — the
 		     same ModerationQueue.vue component, parameterised for the
 		     beoordeeling type, per catalog-ratings spec's "reuse the
 		     pattern, don't invent a second mechanism" requirement. -->

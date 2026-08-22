@@ -42,6 +42,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
+use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -53,7 +54,6 @@ use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\OrganisationService;
 
 /**
  * Beheerder-gated grant/revoke of organisation membership for an existing

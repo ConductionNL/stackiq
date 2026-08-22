@@ -7,7 +7,7 @@
  * contact processing, and organizational hierarchy management.
  *
  * @category  Handler
- * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -16,9 +16,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
+namespace OCA\Stackiq\Service\Stackiq;
 
-use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  * Handler for contact person-related operations.
  *
  * @category  Handler
- * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -302,7 +302,7 @@ class ContactPersonHandler {
 			$this->_logger->debug(
 				'User account creation started',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'contactId' => $contactId,
 					'email' => $email,
 					'organizationUuid' => $organizationUuid,
@@ -314,7 +314,7 @@ class ContactPersonHandler {
 				$this->_logger->error(
 					'❌ USER CREATION FAILED - NO EMAIL',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'contactpersoonId' => $contactId,
 					]
 				);
@@ -335,7 +335,7 @@ class ContactPersonHandler {
 				$this->_logger->critical(
 					'📝 USERNAME GENERATED',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'contactId' => $contactId,
 						'generatedUsername' => $username,
 						'email' => $email,
@@ -354,7 +354,7 @@ class ContactPersonHandler {
 				$this->_logger->critical(
 					'♻️ USER EXISTS BY EMAIL',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'email' => $email,
 						'contactpersoonId' => $contactId,
 					]
@@ -376,7 +376,7 @@ class ContactPersonHandler {
 					$this->_logger->critical(
 						'✅ EXISTING USER UPDATED',
 						[
-							'app' => 'softwarecatalog',
+							'app' => 'stackiq',
 							'username' => $existingUser->getUID(),
 							'email' => $email,
 							'organizationUuid' => $organizationUuid,
@@ -399,7 +399,7 @@ class ContactPersonHandler {
 				$this->_logger->critical(
 					'♻️ USER EXISTS BY USERNAME',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'username' => $username,
 						'contactpersoonId' => $contactId,
 					]
@@ -423,7 +423,7 @@ class ContactPersonHandler {
 				$this->_logger->critical(
 					'✅ EXISTING USER UPDATED BY USERNAME',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'username' => $username,
 						'email' => $existingUserByUsername->getEMailAddress(),
 						'organizationUuid' => $organizationUuid,
@@ -437,7 +437,7 @@ class ContactPersonHandler {
 			$this->_logger->critical(
 				'🚀 CREATING NEW USER ACCOUNT',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'username' => $username,
 					'email' => $email,
 					'contactId' => $contactId,
@@ -455,7 +455,7 @@ class ContactPersonHandler {
 				$this->_logger->critical(
 					'🎊 NEW USER ACCOUNT CREATED',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'username' => $username,
 						'email' => $email,
 						'contactId' => $contactId,
@@ -485,7 +485,7 @@ class ContactPersonHandler {
 				$this->_logger->critical(
 					'📋 USER DETAILS SET',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'username' => $username,
 						'email' => $email,
 						'displayName' => $displayName,
@@ -558,7 +558,7 @@ class ContactPersonHandler {
 				$this->_logger->critical(
 					'🎉 USER ACCOUNT CREATION COMPLETED',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'contactpersoonId' => $contactId,
 						'username' => $username,
 						'email' => $email,
@@ -574,7 +574,7 @@ class ContactPersonHandler {
 			$this->_logger->error(
 				'❌ USER CREATION RETURNED NULL',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'username' => $username,
 					'email' => $email,
 					'contactpersoonId' => $contactId,
@@ -587,7 +587,7 @@ class ContactPersonHandler {
 			$this->_logger->error(
 				'💥 USER CREATION EXCEPTION',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'contactpersoonId' => $contactPersonObject->getId(),
 					'email' => $objectData['email'] ?? $objectData['e-mailadres'] ?? 'unknown',
 					'username' => $username ?? 'unknown',
@@ -640,7 +640,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the settings service to access group configurations.
-			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 
 			// Add user to organization admin groups if this is the first contact.
 			if ($isFirstContact === true) {
@@ -995,7 +995,7 @@ class ContactPersonHandler {
 			}
 
 			// Get register and schema IDs dynamically from configuration.
-			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -1046,7 +1046,7 @@ class ContactPersonHandler {
 		$this->_logger->info(
 			'isFirstContactForOrganization: Defaulting to true (simplified)',
 			[
-				'app' => 'softwarecatalog',
+				'app' => 'stackiq',
 				'contactId' => $contactObject->getId(),
 				'contactUuid' => $contactObject->getUuid(),
 			]
@@ -1475,7 +1475,7 @@ class ContactPersonHandler {
 			// Since there's no built-in manager field, we'll use preferences.
 			$this->config->setUserValue(
 				$username,
-				'softwarecatalog',
+				'stackiq',
 				'manager',
 				$managerUsername
 			);
@@ -1511,7 +1511,7 @@ class ContactPersonHandler {
 		try {
 			$manager = $this->config->getUserValue(
 				$username,
-				'softwarecatalog',
+				'stackiq',
 				'manager',
 				''
 			);
@@ -1553,7 +1553,7 @@ class ContactPersonHandler {
 			);
 
 			// Get voorzieningen config for register and schema.
-			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
 			$organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
@@ -1667,7 +1667,7 @@ class ContactPersonHandler {
 				try {
 					$objectService = $this->getObjectService();
 					// Get register and schema IDs dynamically from configuration.
-					$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+					$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 					$registerId = $settingsService->getVoorzieningenRegisterId();
 					$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2116,7 +2116,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the organization object.
-			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2199,7 +2199,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the organization object.
-			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2502,7 +2502,7 @@ class ContactPersonHandler {
 			$objectService = $this->getObjectService();
 
 			// Get voorzieningen config for register and schema.
-			$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
 			$organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';

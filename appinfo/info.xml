@@ -6,7 +6,7 @@
     <name lang="nl">Stackiq</name>
     <summary lang="en">Manage your software portfolio with applications, modules, and connections</summary>
     <summary lang="nl">Beheer je softwareportfolio met applicaties, modules en koppelingen</summary>
-    <description lang="en"><![CDATA[> ⚠️ **Active development — not for production use yet.** This app is under active development. Although it may carry a stable release status, **please do not use it in production environments before 17 June 2026.** See the [app page on conduction.nl](https://conduction.nl/apps/softwarecatalog) for release planning and what this app does.
+    <description lang="en"><![CDATA[> ⚠️ **Active development — not for production use yet.** This app is under active development. Although it may carry a stable release status, **please do not use it in production environments before 17 June 2026.** See the [app page on conduction.nl](https://conduction.nl/apps/stackiq) for release planning and what this app does.
 
 Stackiq brings structured software portfolio management to Nextcloud. Keep track of all the applications, modules, and connections in your organization — and share them across a federated open data network.
 
@@ -28,7 +28,7 @@ Free and open source under the EUPL license.
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <description lang="nl"><![CDATA[> ⚠️ **In actieve ontwikkeling — nog niet voor productiegebruik.** Deze app is volop in ontwikkeling. Hoewel de app een stabiele release-status kan hebben, **gebruik deze nog niet in productieomgevingen vóór 17 juni 2026.** Zie de [app-pagina op conduction.nl](https://conduction.nl/apps/softwarecatalog) voor release-planning en het doel van deze app.
+    <description lang="nl"><![CDATA[> ⚠️ **In actieve ontwikkeling — nog niet voor productiegebruik.** Deze app is volop in ontwikkeling. Hoewel de app een stabiele release-status kan hebben, **gebruik deze nog niet in productieomgevingen vóór 17 juni 2026.** Zie de [app-pagina op conduction.nl](https://conduction.nl/apps/stackiq) voor release-planning en het doel van deze app.
 
 Stackiq brengt gestructureerd softwareportfoliobeheer naar Nextcloud. Houd al je applicaties, modules en koppelingen bij — en deel ze via een gefedereerd open data netwerk.
 
@@ -104,12 +104,12 @@ Vrij en open source onder de EUPL-licentie.
 	<repair-steps>
 		<post-migration>
 			<!--
-				APP-ID RENAME (softwarecatalog -> stackiq). These three MUST stay
+				APP-ID RENAME (stackiq -> stackiq). These three MUST stay
 				first in this block and in <install> below.
 
 				Nextcloud namespaces `oc_appconfig` and `oc_preferences` BY APP ID
 				and offers no in-place app-id upgrade, so every row written under
-				`softwarecatalog` becomes unreachable the moment the id moves. No
+				`stackiq` becomes unreachable the moment the id moves. No
 				reader errors — every one of them supplies a default — so admin
 				settings and per-user preferences silently revert to their defaults
 				instead of failing loudly.

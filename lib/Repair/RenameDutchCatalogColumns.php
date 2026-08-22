@@ -122,7 +122,7 @@ class RenameDutchCatalogColumns implements IRepairStep {
 	 *
 	 * @var string
 	 */
-	private const REGISTER_SLUG = 'softwarecatalog';
+	private const REGISTER_SLUG = 'stackiq';
 
 	/**
 	 * Schema slugs holding externally-standardised field names, which are
@@ -434,7 +434,7 @@ class RenameDutchCatalogColumns implements IRepairStep {
 	 * Read from `oc_openregister_schemas.properties`, which is the shape
 	 * MagicMapper materialises columns from — verified first-hand against a live
 	 * instance rather than inferred: the column is `json`, `jsonb_typeof` is
-	 * `object` for all 21 softwarecatalog schemas, and it is keyed by the
+	 * `object` for all 21 stackiq schemas, and it is keyed by the
 	 * camelCase property name (`properties::jsonb ? 'name'` is true on exactly
 	 * the schemas the register JSON declares `naam` on).
 	 *

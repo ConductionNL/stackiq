@@ -50,7 +50,7 @@ class MigrateUserPreferencesTest extends TestCase {
 	 *
 	 * @var string
 	 */
-	private const LEGACY = 'softwarecatalog';
+	private const LEGACY = 'stackiq';
 
 	/**
 	 * Build a user manager whose callForSeenUsers yields the given user ids.
@@ -91,7 +91,7 @@ class MigrateUserPreferencesTest extends TestCase {
 			new NullLogger()
 		);
 
-		$this->assertStringContainsString('softwarecatalog', $step->getName());
+		$this->assertStringContainsString('stackiq', $step->getName());
 		$this->assertStringContainsString('stackiq', $step->getName());
 	}//end testGetNameDescribesTheMigration()
 

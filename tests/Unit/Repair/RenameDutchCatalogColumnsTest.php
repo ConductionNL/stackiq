@@ -403,10 +403,10 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 				// Every candidate must defer while the register still declares the
 				// Dutch name — a list of targets does not weaken the guard.
 				foreach ((array)$target as $new) {
-				self::assertFalse(
-					$this->decisions->renameIsSafe($old, $new, $declared),
-					"Schema '$slug' still declares '$old'; moving it to '$new' would orphan the data"
-				);
+					self::assertFalse(
+						$this->decisions->renameIsSafe($old, $new, $declared),
+						"Schema '$slug' still declares '$old'; moving it to '$new' would orphan the data"
+					);
 				}
 			}
 		}

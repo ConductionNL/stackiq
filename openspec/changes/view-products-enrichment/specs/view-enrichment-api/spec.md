@@ -8,7 +8,7 @@ When `include_products=true` is set on a view fetch, the response's per-node `pr
 - GIVEN a view whose model contains a node with one or more linked product
   entities
 - AND the user enables the "Product" filter toggle
-- WHEN `GET /softwarecatalog/api/views/{viewId}?include_products=true` is
+- WHEN `GET /stackiq/api/views/{viewId}?include_products=true` is
   called
 - THEN the response MUST include `products` on that node
 - AND `products` MUST contain the actual linked product entities (not an

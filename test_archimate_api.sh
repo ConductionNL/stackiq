@@ -48,7 +48,7 @@ cd "$DOCKER_COMPOSE_PATH"
 
 # Test 1: Health Check
 log_info "Test 1: Health Check"
-HEALTH_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o /tmp/health_response.json -X GET "$BASE_URL/index.php/apps/softwarecatalog/api/health" -H "Content-Type: application/json" -u "$AUTH" || echo "000")
+HEALTH_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o /tmp/health_response.json -X GET "$BASE_URL/index.php/apps/stackiq/api/health" -H "Content-Type: application/json" -u "$AUTH" || echo "000")
 
 if [ "$HEALTH_RESPONSE" = "200" ]; then
     log_success "Health check passed"
@@ -58,7 +58,7 @@ fi
 
 # Test 2: Auto-configure AMEF settings
 log_info "Test 2: Auto-configuring AMEF settings"
-AMEF_AUTO_CONFIG_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/amef_auto_config_response.json" -X POST "$BASE_URL/index.php/apps/softwarecatalog/api/settings/amef/auto-configure" -H "Content-Type: application/json" -u "$AUTH" || echo "000")
+AMEF_AUTO_CONFIG_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/amef_auto_config_response.json" -X POST "$BASE_URL/index.php/apps/stackiq/api/settings/amef/auto-configure" -H "Content-Type: application/json" -u "$AUTH" || echo "000")
 
 if [ "$AMEF_AUTO_CONFIG_RESPONSE" = "200" ]; then
     log_success "AMEF auto-configuration completed"
@@ -70,7 +70,7 @@ fi
 
 # Test 3: Get AMEF settings to verify configuration
 log_info "Test 3: Getting AMEF settings"
-AMEF_GET_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/amef_settings.json" -X GET "$BASE_URL/index.php/apps/softwarecatalog/api/settings/amef" -H "Content-Type: application/json" -u "$AUTH" || echo "000")
+AMEF_GET_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/amef_settings.json" -X GET "$BASE_URL/index.php/apps/stackiq/api/settings/amef" -H "Content-Type: application/json" -u "$AUTH" || echo "000")
 
 if [ "$AMEF_GET_RESPONSE" = "200" ]; then
     log_success "AMEF settings retrieved successfully"
@@ -84,10 +84,10 @@ fi
 log_info "Test 4: Importing GEMMA ArchiMate file"
 
 # Copy the GEMMA file to a temporary location accessible by the container
-docker-compose exec -T nextcloud cp "/var/www/html/apps-extra/softwarecatalog/$GEMMA_FILE" "/tmp/test_gemma.xml"
+docker-compose exec -T nextcloud cp "/var/www/html/apps-extra/stackiq/$GEMMA_FILE" "/tmp/test_gemma.xml"
 
 # Import the file using curl with form data
-IMPORT_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/import_response.json" -X POST "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/import" -H "Content-Type: multipart/form-data" -u "$AUTH" -F "file=@/tmp/test_gemma.xml" -F "options[update_existing]=true" -F "options[organization_filter]=" || echo "000")
+IMPORT_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/import_response.json" -X POST "$BASE_URL/index.php/apps/stackiq/api/archimate/import" -H "Content-Type: multipart/form-data" -u "$AUTH" -F "file=@/tmp/test_gemma.xml" -F "options[update_existing]=true" -F "options[organization_filter]=" || echo "000")
 
 if [ "$IMPORT_RESPONSE" = "200" ]; then
     log_success "ArchiMate import initiated successfully"
@@ -103,7 +103,7 @@ if [ "$IMPORT_RESPONSE" = "200" ]; then
         
         for i in {1..10}; do
             sleep 2
-            PROGRESS_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/progress_$i.json" -X GET "$BASE_URL/index.php/apps/softwarecatalog/api/progress/$OPERATION_ID" -H "Content-Type: application/json" -u "$AUTH" || echo "000")
+            PROGRESS_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/progress_$i.json" -X GET "$BASE_URL/index.php/apps/stackiq/api/progress/$OPERATION_ID" -H "Content-Type: application/json" -u "$AUTH" || echo "000")
             
             if [ "$PROGRESS_RESPONSE" = "200" ]; then
                 PROGRESS_STATUS=$(cat "$TEST_OUTPUT_DIR/progress_$i.json" | python3 -c "import sys, json; print(json.load(sys.stdin).get('status', ''))" 2>/dev/null || echo "")
@@ -136,7 +136,7 @@ fi
 
 # Test 6: Export ArchiMate data
 log_info "Test 6: Exporting ArchiMate data"
-EXPORT_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/export_response.json" -X POST "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/export" -H "Content-Type: application/json" -u "$AUTH" -d '{
+EXPORT_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/export_response.json" -X POST "$BASE_URL/index.php/apps/stackiq/api/archimate/export" -H "Content-Type: application/json" -u "$AUTH" -d '{
     "format": "xml",
     "include_relationships": true,
     "include_views": true,
@@ -156,7 +156,7 @@ if [ "$EXPORT_RESPONSE" = "200" ]; then
         # Monitor export progress
         for i in {1..10}; do
             sleep 2
-            EXPORT_PROGRESS_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/export_progress_$i.json" -X GET "$BASE_URL/index.php/apps/softwarecatalog/api/progress/$EXPORT_OPERATION_ID" -H "Content-Type: application/json" -u "$AUTH" || echo "000")
+            EXPORT_PROGRESS_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/export_progress_$i.json" -X GET "$BASE_URL/index.php/apps/stackiq/api/progress/$EXPORT_OPERATION_ID" -H "Content-Type: application/json" -u "$AUTH" || echo "000")
             
             if [ "$EXPORT_PROGRESS_RESPONSE" = "200" ]; then
                 EXPORT_PROGRESS_STATUS=$(cat "$TEST_OUTPUT_DIR/export_progress_$i.json" | python3 -c "import sys, json; print(json.load(sys.stdin).get('status', ''))" 2>/dev/null || echo "")
@@ -182,7 +182,7 @@ if [ "$EXPORT_RESPONSE" = "200" ]; then
         # Test 7: Download exported file
         if [ -n "$EXPORT_FILE_NAME" ]; then
             log_info "Test 7: Downloading exported file: $EXPORT_FILE_NAME"
-            DOWNLOAD_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/exported_archimate.xml" -X GET "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/download/$EXPORT_FILE_NAME" -u "$AUTH" || echo "000")
+            DOWNLOAD_RESPONSE=$(docker-compose exec -T nextcloud curl -s -w "%{http_code}" -o "$TEST_OUTPUT_DIR/exported_archimate.xml" -X GET "$BASE_URL/index.php/apps/stackiq/api/archimate/download/$EXPORT_FILE_NAME" -u "$AUTH" || echo "000")
             
             if [ "$DOWNLOAD_RESPONSE" = "200" ]; then
                 log_success "Downloaded exported ArchiMate file successfully"
@@ -218,7 +218,7 @@ fi
 # Test 8: File comparison (basic check)
 log_info "Test 8: Basic file comparison"
 if [ -f "$TEST_OUTPUT_DIR/exported_archimate.xml" ] && [ -s "$TEST_OUTPUT_DIR/exported_archimate.xml" ]; then
-    ORIGINAL_SIZE=$(docker-compose exec -T nextcloud wc -c < "/var/www/html/apps-extra/softwarecatalog/$GEMMA_FILE" 2>/dev/null || echo "0")
+    ORIGINAL_SIZE=$(docker-compose exec -T nextcloud wc -c < "/var/www/html/apps-extra/stackiq/$GEMMA_FILE" 2>/dev/null || echo "0")
     EXPORTED_SIZE=$(wc -c < "$TEST_OUTPUT_DIR/exported_archimate.xml" 2>/dev/null || echo "0")
     
     log_info "Original file size: $ORIGINAL_SIZE bytes"

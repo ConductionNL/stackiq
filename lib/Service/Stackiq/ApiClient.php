@@ -1,13 +1,13 @@
 <?php
 
 /**
- * API Client for SoftwareCatalogueService
+ * API Client for StackiqService
  *
- * Extracted from SoftwareCatalogueService to reduce ExcessiveClassLength and
+ * Extracted from StackiqService to reduce ExcessiveClassLength and
  * CouplingBetweenObjects on that service. Handles all HTTP API communication.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -21,15 +21,15 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
+namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Handles all API communication for the SoftwareCatalogue domain.
+ * Handles all API communication for the Stackiq domain.
  *
- * SoftwareCatalogueService delegates API fetch operations to this class,
+ * StackiqService delegates API fetch operations to this class,
  * keeping its own constructor coupling below the PHPMD CouplingBetweenObjects
  * threshold and keeping its methods below ExcessiveMethodLength.
  *

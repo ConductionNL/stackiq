@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Service for handling settings-related operations in the SoftwareCatalog.
+ * Service for handling settings-related operations in the Stackiq.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -16,7 +16,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -31,13 +31,13 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
 /**
- * Service for handling settings-related operations in the SoftwareCatalog.
+ * Service for handling settings-related operations in the Stackiq.
  *
  * Provides functionality for retrieving, saving, and loading settings,
  * as well as managing configuration for different object types.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -152,7 +152,7 @@ class SettingsService {
 		private readonly IGroupManager $groupManager,
 		private readonly IL10N $l10n,
 	) {
-		$this->appName = 'softwarecatalog';
+		$this->appName = 'stackiq';
 	}//end __construct()
 
 	/**
@@ -244,7 +244,7 @@ class SettingsService {
 	 *
 	 * @return \OCA\OpenRegister\Service\RegisterResolverService|null The resolver or null.
 	 *
-	 * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
+	 * @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#phase-2
 	 */
 	public function getRegisterResolverService(): ?\OCA\OpenRegister\Service\RegisterResolverService {
 		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
@@ -952,7 +952,7 @@ class SettingsService {
 		}
 
 		// Fall back to generic configuration for backward compatibility.
-		// @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
+		// @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#phase-2
 		// Prefer the OR RegisterResolverService when available so per-install admin
 		// overrides go through the same `<context>_schema` resolution pipeline used by
 		// every other Conduction app (request-scoped caching + tenant-aware). Falls back
@@ -1081,7 +1081,7 @@ class SettingsService {
 			}
 		}
 
-		// @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
+		// @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#phase-2
 		// Fallback to legacy per-object-type register config — route through the OR
 		// RegisterResolverService when available so per-install admin overrides flow
 		// through the same `<context>_register` resolution pipeline used by every
@@ -1449,7 +1449,7 @@ class SettingsService {
 					$this->logger->info('SettingsService: Loading settings from file');
 					$loadResult = $this->loadSettings();
 					$results['settingsLoaded'] = true;
-					$results['configurationImported'] = empty($loadResult['softwarecatalog_imported']) === false;
+					$results['configurationImported'] = empty($loadResult['stackiq_imported']) === false;
 					$this->logger->info(
 						'SettingsService: Settings loaded successfully',
 						[
@@ -1623,7 +1623,7 @@ class SettingsService {
 						}
 					}//end if
 
-					$results['softwarecatalog'] = $softwareCatalogSettings;
+					$results['stackiq'] = $softwareCatalogSettings;
 
 					// Import via configuration service if available with version checking.
 					try {
@@ -1647,7 +1647,7 @@ class SettingsService {
 							fragmentSig: $fragmentSig
 						);
 
-						$appId = \OCA\SoftwareCatalog\AppInfo\Application::APP_ID;
+						$appId = \OCA\Stackiq\AppInfo\Application::APP_ID;
 
 						// Force-when-stale workaround (register-import-reliability,
 						// https://github.com/ConductionNL/openregister/issues/2075):
@@ -1724,7 +1724,7 @@ class SettingsService {
 							]
 						);
 
-						$results['softwarecatalog_imported'] = true;
+						$results['stackiq_imported'] = true;
 						$results['import_result'] = $importResult;
 
 						// Post-import verification (register-import-reliability): a version-gate
@@ -1739,15 +1739,15 @@ class SettingsService {
 						$results['registerVerification'] = $verification;
 						$this->persistRegisterVerificationStatus(verification: $verification);
 					} catch (\Exception $e) {
-						$results['softwarecatalog_import_error'] = $e->getMessage();
+						$results['stackiq_import_error'] = $e->getMessage();
 						$this->logger->error(
-							'Failed to import softwarecatalog settings: ' . $e->getMessage(),
+							'Failed to import stackiq settings: ' . $e->getMessage(),
 							[
 								'exception' => $e,
 								'trace' => $e->getTraceAsString(),
 								'force_flag' => $force,
 								'effective_force' => $effectiveForce,
-								'app_id' => \OCA\SoftwareCatalog\AppInfo\Application::APP_ID,
+								'app_id' => \OCA\Stackiq\AppInfo\Application::APP_ID,
 							]
 						);
 
@@ -2477,7 +2477,7 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function getEmailSettings(): array {
-		$this->logger->debug('SoftwareCatalog: Loading email settings from configuration');
+		$this->logger->debug('Stackiq: Loading email settings from configuration');
 
 		$app = $this->appName;
 		$settings = [
@@ -2620,7 +2620,7 @@ class SettingsService {
 		];
 
 		$this->logger->info(
-			'SoftwareCatalog: Email settings loaded from configuration',
+			'Stackiq: Email settings loaded from configuration',
 			[
 				'enabled' => $settings['enabled'],
 				'transport_type' => $settings['transportType'],
@@ -2951,7 +2951,7 @@ class SettingsService {
 	public function sendTestEmail(string $email, array $emailSettings = []): array {
 		// Validate email address first (business logic moved from controller).
 		if (empty($email) === true) {
-			$this->logger->warning('SoftwareCatalog: Test email request missing email address');
+			$this->logger->warning('Stackiq: Test email request missing email address');
 			return [
 				'success' => false,
 				'message' => 'Email address is required',
@@ -2959,7 +2959,7 @@ class SettingsService {
 		}
 
 		$this->logger->info(
-			'SoftwareCatalog: Starting sendTestEmail process',
+			'Stackiq: Starting sendTestEmail process',
 			[
 				'recipient' => $email,
 				'has_email_settings' => empty($emailSettings) === false,
@@ -2969,19 +2969,19 @@ class SettingsService {
 		try {
 			// Ensure vendor autoloader is loaded.
 			include_once __DIR__ . '/../../vendor/autoload.php';
-			$this->logger->debug('SoftwareCatalog: Vendor autoloader loaded');
+			$this->logger->debug('Stackiq: Vendor autoloader loaded');
 
 			// Use provided settings or fall back to stored settings.
 			if (empty($emailSettings) === true) {
 				$emailSettings = $this->getEmailSettings();
-				$this->logger->info('SoftwareCatalog: Loaded email settings from storage');
+				$this->logger->info('Stackiq: Loaded email settings from storage');
 			} else {
-				$this->logger->info('SoftwareCatalog: Using provided email settings');
+				$this->logger->info('Stackiq: Using provided email settings');
 			}
 
 			// Log the email configuration (without sensitive data).
 			$this->logger->info(
-				'SoftwareCatalog: Email configuration',
+				'Stackiq: Email configuration',
 				[
 					'enabled' => $emailSettings['enabled'] ?? false,
 					'transport_type' => $emailSettings['transportType'] ?? 'unknown',
@@ -2994,7 +2994,7 @@ class SettingsService {
 
 			// Check if email is enabled.
 			if (($emailSettings['enabled'] ?? false) === false) {
-				$this->logger->warning('SoftwareCatalog: Email notifications are disabled');
+				$this->logger->warning('Stackiq: Email notifications are disabled');
 				return [
 					'success' => false,
 					'message' => 'Email notifications are disabled',
@@ -3004,7 +3004,7 @@ class SettingsService {
 			// Use test receiver override if configured.
 			$recipient = $emailSettings['testReceiverOverride'] ?? $email;
 			$this->logger->info(
-				'SoftwareCatalog: Final recipient determined',
+				'Stackiq: Final recipient determined',
 				[
 					'original_recipient' => $email,
 					'final_recipient' => $recipient,
@@ -3013,12 +3013,12 @@ class SettingsService {
 			);
 
 			// Create transport based on configuration.
-			$this->logger->info('SoftwareCatalog: Creating email transport');
+			$this->logger->info('Stackiq: Creating email transport');
 			$transport = $this->createEmailTransport(emailSettings: $emailSettings);
-			$this->logger->info('SoftwareCatalog: Email transport created successfully');
+			$this->logger->info('Stackiq: Email transport created successfully');
 
 			$mailer = new Mailer($transport);
-			$this->logger->info('SoftwareCatalog: Mailer instance created');
+			$this->logger->info('Stackiq: Mailer instance created');
 
 			// Create test email.
 			$senderEmail = $emailSettings['senderEmail'] ?? 'noreply@softwarecatalogus.nl';
@@ -3026,7 +3026,7 @@ class SettingsService {
 			$transportType = $emailSettings['transportType'] ?? 'smtp';
 
 			$this->logger->info(
-				'SoftwareCatalog: Creating email message',
+				'Stackiq: Creating email message',
 				[
 					'sender_email' => $senderEmail,
 					'sender_name' => $senderName,
@@ -3050,13 +3050,13 @@ class SettingsService {
                 '
 				);
 
-			$this->logger->info('SoftwareCatalog: Email message created, attempting to send');
+			$this->logger->info('Stackiq: Email message created, attempting to send');
 
 			// Send the email.
 			$mailer->send($email);
 
 			$this->logger->info(
-				'SoftwareCatalog: Email sent successfully via Symfony Mailer',
+				'Stackiq: Email sent successfully via Symfony Mailer',
 				[
 					'recipient' => $recipient,
 					'transport' => $transportType,
@@ -3070,7 +3070,7 @@ class SettingsService {
 			];
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog: Failed to send test email',
+				'Stackiq: Failed to send test email',
 				[
 					'recipient' => $email,
 					'exception_class' => get_class($e),
@@ -3096,7 +3096,7 @@ class SettingsService {
 	 */
 	public function testEmailConnection(array $emailSettings = []): array {
 		$this->logger->info(
-			'SoftwareCatalog: Starting email connection test',
+			'Stackiq: Starting email connection test',
 			[
 				'has_email_settings' => empty($emailSettings) === false,
 			]
@@ -3105,19 +3105,19 @@ class SettingsService {
 		try {
 			// Ensure vendor autoloader is loaded.
 			include_once __DIR__ . '/../../vendor/autoload.php';
-			$this->logger->debug('SoftwareCatalog: Vendor autoloader loaded');
+			$this->logger->debug('Stackiq: Vendor autoloader loaded');
 
 			// Use provided settings or fall back to stored settings.
 			if (empty($emailSettings) === true) {
 				$emailSettings = $this->getEmailSettings();
-				$this->logger->info('SoftwareCatalog: Loaded email settings from storage');
+				$this->logger->info('Stackiq: Loaded email settings from storage');
 			} else {
-				$this->logger->info('SoftwareCatalog: Using provided email settings');
+				$this->logger->info('Stackiq: Using provided email settings');
 			}
 
 			// Log the email configuration (without sensitive data).
 			$this->logger->info(
-				'SoftwareCatalog: Email configuration for connection test',
+				'Stackiq: Email configuration for connection test',
 				[
 					'enabled' => $emailSettings['enabled'] ?? false,
 					'transport_type' => $emailSettings['transportType'] ?? 'unknown',
@@ -3129,7 +3129,7 @@ class SettingsService {
 
 			// Check if email is enabled.
 			if (($emailSettings['enabled'] ?? false) === false) {
-				$this->logger->warning('SoftwareCatalog: Email notifications are disabled');
+				$this->logger->warning('Stackiq: Email notifications are disabled');
 				return [
 					'success' => false,
 					'message' => 'Email notifications are disabled',
@@ -3148,19 +3148,19 @@ class SettingsService {
 			}
 
 			// Create transport based on configuration (this tests the connection).
-			$this->logger->info('SoftwareCatalog: Creating email transport for connection test');
+			$this->logger->info('Stackiq: Creating email transport for connection test');
 			$transport = $this->createEmailTransport(emailSettings: $emailSettings);
-			$this->logger->info('SoftwareCatalog: Email transport created successfully');
+			$this->logger->info('Stackiq: Email transport created successfully');
 
 			// Test the connection by creating a mailer instance.
 			$mailer = new Mailer($transport);
-			$this->logger->info('SoftwareCatalog: Mailer instance created for connection test');
+			$this->logger->info('Stackiq: Mailer instance created for connection test');
 
 			// For some transports, we can test the connection more directly.
 			$connectionDetails = $this->getConnectionDetails(emailSettings: $emailSettings);
 
 			$this->logger->info(
-				'SoftwareCatalog: Email connection test completed successfully',
+				'Stackiq: Email connection test completed successfully',
 				[
 					'transport' => $transportType,
 					'sender' => $senderEmail,
@@ -3174,7 +3174,7 @@ class SettingsService {
 			];
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog: Email connection test failed',
+				'Stackiq: Email connection test failed',
 				[
 					'exception_class' => get_class($e),
 					'exception_message' => $e->getMessage(),
@@ -3289,7 +3289,7 @@ class SettingsService {
 		$transportType = $emailSettings['transportType'] ?? 'smtp';
 
 		$this->logger->info(
-			'SoftwareCatalog: Creating transport',
+			'Stackiq: Creating transport',
 			[
 				'transport_type' => $transportType,
 			]
@@ -3297,14 +3297,14 @@ class SettingsService {
 
 		switch ($transportType) {
 			case 'mailjet':
-				$this->logger->info('SoftwareCatalog: Creating Mailjet transport');
+				$this->logger->info('Stackiq: Creating Mailjet transport');
 				return $this->createMailjetTransport(settings: $emailSettings);
 			case 'smtp':
-				$this->logger->info('SoftwareCatalog: Creating SMTP transport');
+				$this->logger->info('Stackiq: Creating SMTP transport');
 				return $this->createSmtpTransport(settings: $emailSettings);
 			default:
 				$this->logger->error(
-					'SoftwareCatalog: Unsupported transport type',
+					'Stackiq: Unsupported transport type',
 					[
 						'transport_type' => $transportType,
 					]
@@ -3325,7 +3325,7 @@ class SettingsService {
 		$secretKey = $settings['mailjetSecretKey'] ?? '';
 
 		$this->logger->info(
-			'SoftwareCatalog: Mailjet transport configuration',
+			'Stackiq: Mailjet transport configuration',
 			[
 				'has_api_key' => empty($apiKey) === false,
 				'api_key_length' => strlen($apiKey),
@@ -3336,7 +3336,7 @@ class SettingsService {
 
 		if (empty($apiKey) === true || empty($secretKey) === true) {
 			$this->logger->error(
-				'SoftwareCatalog: Mailjet API key and secret key are required',
+				'Stackiq: Mailjet API key and secret key are required',
 				[
 					'api_key_empty' => empty($apiKey) === true,
 					'secret_key_empty' => empty($secretKey) === true,
@@ -3352,7 +3352,7 @@ class SettingsService {
 		);
 
 		$this->logger->info(
-			'SoftwareCatalog: Creating Mailjet transport with DSN',
+			'Stackiq: Creating Mailjet transport with DSN',
 			[
 				'dsn_pattern' => 'mailjet+api://***:***@default',
 			]
@@ -3361,7 +3361,7 @@ class SettingsService {
 		try {
 			$transport = Transport::fromDsn($dsn);
 			$this->logger->info(
-				'SoftwareCatalog: Mailjet transport created successfully',
+				'Stackiq: Mailjet transport created successfully',
 				[
 					'transport_class' => get_class($transport),
 				]
@@ -3369,7 +3369,7 @@ class SettingsService {
 			return $transport;
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog: Failed to create Mailjet transport',
+				'Stackiq: Failed to create Mailjet transport',
 				[
 					'exception_class' => get_class($e),
 					'exception_message' => $e->getMessage(),
@@ -3394,7 +3394,7 @@ class SettingsService {
 		$password = $settings['smtpPassword'] ?? '';
 
 		$this->logger->info(
-			'SoftwareCatalog: SMTP transport configuration',
+			'Stackiq: SMTP transport configuration',
 			[
 				'host' => $host,
 				'port' => $port,
@@ -3425,7 +3425,7 @@ class SettingsService {
 		$dsnPattern = sprintf('smtp://***:***@%s:%d%s', $host, $port, $encSuffix);
 
 		$this->logger->info(
-			'SoftwareCatalog: Creating SMTP transport with DSN',
+			'Stackiq: Creating SMTP transport with DSN',
 			[
 				'dsn_pattern' => $dsnPattern,
 			]
@@ -3434,7 +3434,7 @@ class SettingsService {
 		try {
 			$transport = Transport::fromDsn($dsn);
 			$this->logger->info(
-				'SoftwareCatalog: SMTP transport created successfully',
+				'Stackiq: SMTP transport created successfully',
 				[
 					'transport_class' => get_class($transport),
 				]
@@ -3442,7 +3442,7 @@ class SettingsService {
 			return $transport;
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog: Failed to create SMTP transport',
+				'Stackiq: Failed to create SMTP transport',
 				[
 					'exception_class' => get_class($e),
 					'exception_message' => $e->getMessage(),
@@ -3506,7 +3506,7 @@ class SettingsService {
 	public function getVersionInfo(): array {
 		try {
 			// Get the current app version.
-			$currentAppVersion = $this->appManager->getAppVersion(\OCA\SoftwareCatalog\AppInfo\Application::APP_ID);
+			$currentAppVersion = $this->appManager->getAppVersion(\OCA\Stackiq\AppInfo\Application::APP_ID);
 
 			$this->logger->debug(
 				'SettingsService: Getting version information',
@@ -3520,7 +3520,7 @@ class SettingsService {
 			$storedConfigVersion = null;
 
 			try {
-				$appId = \OCA\SoftwareCatalog\AppInfo\Application::APP_ID;
+				$appId = \OCA\Stackiq\AppInfo\Application::APP_ID;
 				$storedConfigVersion = $configurationService->getConfiguredAppVersion($appId);
 			} catch (\Exception $e) {
 				$this->logger->warning(
@@ -3550,7 +3550,7 @@ class SettingsService {
 			}
 
 			$versionInfo = [
-				'appName' => 'SoftwareCatalog',
+				'appName' => 'Stackiq',
 				'appVersion' => $currentAppVersion,
 				'configuredVersion' => $storedConfigVersion,
 				'versionsMatch' => $versionsMatch,
@@ -4612,7 +4612,7 @@ class SettingsService {
 	public function getAmefConfig(): array {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
 			// Use reflection to access the private getAmefConfig method.
 			// setAccessible() is unnecessary on PHP 8.1+ — private methods are
@@ -4756,7 +4756,7 @@ class SettingsService {
 	public function getArchiMateStatus(): array {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
 			return $archiMateService->getArchiMateStatus();
 		} catch (\Exception $e) {
@@ -4936,7 +4936,7 @@ class SettingsService {
 	private function getAmefObjectCounts(): array {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
 			// Get object counts using ArchiMateService methods.
 			$elementObjects = $archiMateService->getElementObjects();
@@ -4997,7 +4997,7 @@ class SettingsService {
 	public function setArchiMateImportStatus(array $status): void {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
 			$archiMateService->setArchiMateImportStatus($status);
 		} catch (\Exception $e) {
@@ -5029,7 +5029,7 @@ class SettingsService {
 	public function setArchiMateExportStatus(array $status): void {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
 			$archiMateService->setArchiMateExportStatus($status);
 		} catch (\Exception $e) {
@@ -5059,7 +5059,7 @@ class SettingsService {
 	public function clearArchiMateImportStatus(): array {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
 			return $archiMateService->clearArchiMateImportStatus();
 		} catch (\Exception $e) {
@@ -5097,7 +5097,7 @@ class SettingsService {
 	public function killArchiMateImport(): array {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
 			return $archiMateService->clearArchiMateImportStatus(true);
 			// KillProcess = true.
@@ -5135,7 +5135,7 @@ class SettingsService {
 	public function cancelArchiMateImport(): array {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
 			return $archiMateService->cancelArchiMateImport();
 		} catch (\Exception $e) {
@@ -5174,7 +5174,7 @@ class SettingsService {
 	public function clearArchiMateExportStatus(): void {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\SoftwareCatalog\Service\ArchiMateService::class);
+			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
 			$archiMateService->clearArchiMateExportStatus();
 		} catch (\Exception $e) {
@@ -6819,10 +6819,10 @@ class SettingsService {
 		return [
 			'organization_contact_sync' => [
 				'name' => 'Organization Contact Sync',
-				'description' => 'Syncs organizations and contacts between SoftwareCatalog and OpenRegister.',
+				'description' => 'Syncs organizations and contacts between Stackiq and OpenRegister.',
 				'interval' => 300,
 				// 5 minutes.
-				'class' => 'OCA\\SoftwareCatalog\\BackgroundJob\\OrganizationContactSyncJob',
+				'class' => 'OCA\\Stackiq\\BackgroundJob\\OrganizationContactSyncJob',
 			],
 		];
 	}//end getAvailableCronjobs()
@@ -7234,7 +7234,7 @@ class SettingsService {
 	 * merged by key union (recursing on shared keys); list arrays are concatenated;
 	 * scalars in the fragment overwrite the base. Disjoint fragments never collide.
 	 *
-	 * EXCEPTION (catalog-ratings, softwarecatalog#375): any key literally named
+	 * EXCEPTION (catalog-ratings, stackiq#375): any key literally named
 	 * `authorization` switches its entire subtree to REPLACE semantics for list
 	 * values, instead of the general concatenation above. Concatenating an RBAC
 	 * rule list is a fail-OPEN trap: if the base already carries an unconditional
@@ -7262,7 +7262,7 @@ class SettingsService {
 	 * an `authorization` key has been crossed, and it stays true for that whole subtree. Turning
 	 * it into two methods would mean duplicating the merge for the sole purpose of removing a
 	 * parameter that no external caller ever passes, and would make the fail-open trap this flag
-	 * exists to close (softwarecatalog#375) easier to reintroduce.
+	 * exists to close (stackiq#375) easier to reintroduce.
 	 */
 	private static function deepMergeConfig(array $base, array $overlay, bool $replaceLists = false): array {
 		foreach ($overlay as $key => $value) {

@@ -20,7 +20,7 @@ BASE_URL="http://localhost"
 USERNAME="admin"
 PASSWORD="admin"
 GEMMA_FILE="lib/Settings/GEMMA_release.xml"
-CONTAINER_APP_PATH="/var/www/html/custom_apps/softwarecatalog"
+CONTAINER_APP_PATH="/var/www/html/custom_apps/stackiq"
 OUTPUT_DIR="$SCRIPT_DIR/test_results"
 TARGET_TIME_SECONDS=60
 XSD_CACHE_DIR="$OUTPUT_DIR/schema"
@@ -309,7 +309,7 @@ run_performance_test() {
         -F "useOptimized=true" \
         -F "updateExisting=true" \
         -F "preserveIds=true" \
-        "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/import" 2>/dev/null || echo "{}")
+        "$BASE_URL/index.php/apps/stackiq/api/archimate/import" 2>/dev/null || echo "{}")
 
     end_time=$(date +%s.%3N)
     duration=$(echo "scale=3; $end_time - $start_time" | bc)
@@ -374,7 +374,7 @@ run_roundtrip_test() {
         -F "updateExisting=true" \
         -F "preserveIds=true" \
         --max-time 600 \
-        "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/import" 2>/dev/null || echo "{}")
+        "$BASE_URL/index.php/apps/stackiq/api/archimate/import" 2>/dev/null || echo "{}")
 
     end_time=$(date +%s)
     import_duration=$((end_time - start_time))
@@ -415,7 +415,7 @@ except: pass
         -H "Content-Type: application/json" \
         -d '{"format":"xml","includeRelationships":true,"includeViews":true}' \
         --max-time 600 \
-        "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/export" 2>/dev/null || echo "{}")
+        "$BASE_URL/index.php/apps/stackiq/api/archimate/export" 2>/dev/null || echo "{}")
 
     end_time=$(date +%s)
     export_duration=$((end_time - start_time))
@@ -450,7 +450,7 @@ except: pass
         docker-compose exec -T nextcloud curl -s \
             -u "$USERNAME:$PASSWORD" \
             --max-time 120 \
-            "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/download/$file_name" \
+            "$BASE_URL/index.php/apps/stackiq/api/archimate/download/$file_name" \
             > "$exported_host_file" 2>/dev/null
     fi
 
@@ -602,7 +602,7 @@ run_export_test() {
         -u "$USERNAME:$PASSWORD" \
         -H "Content-Type: application/json" \
         -d '{"format":"xml","includeRelationships":true,"includeViews":true}' \
-        "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/export" 2>/dev/null || echo "{}")
+        "$BASE_URL/index.php/apps/stackiq/api/archimate/export" 2>/dev/null || echo "{}")
 
     local test_file="$OUTPUT_DIR/export_test.xml"
 
@@ -625,7 +625,7 @@ run_export_test() {
         if [ -n "$file_name" ]; then
             docker-compose exec -T nextcloud curl -s \
                 -u "$USERNAME:$PASSWORD" \
-                "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/download/$file_name" \
+                "$BASE_URL/index.php/apps/stackiq/api/archimate/download/$file_name" \
                 > "$test_file" 2>/dev/null
         fi
     fi
@@ -673,10 +673,10 @@ run_debug_test() {
     echo -e "${CYAN}===========================${NC}"
 
     echo -e "${BLUE}Checking app status${NC}"
-    docker-compose exec -u 33 -T nextcloud php occ app:list 2>/dev/null | grep -E "(openregister|softwarecatalog)" || echo "  Apps status check completed"
+    docker-compose exec -u 33 -T nextcloud php occ app:list 2>/dev/null | grep -E "(openregister|stackiq)" || echo "  Apps status check completed"
 
     echo -e "${BLUE}Checking configuration${NC}"
-    docker-compose exec -u 33 -T nextcloud php occ config:app:get softwarecatalog amef_register_id 2>/dev/null || echo "  No AMEF register ID configured"
+    docker-compose exec -u 33 -T nextcloud php occ config:app:get stackiq amef_register_id 2>/dev/null || echo "  No AMEF register ID configured"
 
     echo -e "${BLUE}Checking database objects${NC}"
     docker-compose exec -T nextcloud-mysql mysql -u nextcloud -pnextcloud nextcloud -e "SELECT COUNT(*) as total_objects FROM oc_openregister_objects;" 2>/dev/null || echo "  Database check completed"

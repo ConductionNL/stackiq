@@ -13,7 +13,7 @@ echo
 echo "Test 1: Basic export to XML"
 echo "---------------------------"
 
-curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" \
+curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/export" \
   -H "Content-Type: application/json" \
   -u admin:admin \
   -d '{
@@ -60,7 +60,7 @@ echo
 echo "Test 2: Round-trip test"
 echo "----------------------"
 
-curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/test-round-trip" \
+curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/test-round-trip" \
   -H "Content-Type: application/json" \
   -u admin:admin \
   -d '{}' \
@@ -115,7 +115,7 @@ echo
 echo "Test 3: Export status check"
 echo "---------------------------"
 
-curl -X GET "http://localhost/index.php/apps/softwarecatalog/api/settings" \
+curl -X GET "http://localhost/index.php/apps/stackiq/api/settings" \
   -H "Content-Type: application/json" \
   -u admin:admin \
   -o "settings_status.json"

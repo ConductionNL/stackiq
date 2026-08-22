@@ -98,15 +98,15 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 	/**
 	 * Build a SettingsController for a caller with the given identity.
 	 *
-	 * @param string|null $uid     The caller's UID, or null for anonymous.
-	 * @param bool        $isAdmin Whether that caller is a Nextcloud admin.
+	 * @param string|null $uid The caller's UID, or null for anonymous.
+	 * @param bool $isAdmin Whether that caller is a Nextcloud admin.
 	 *
 	 * @return SettingsController The controller under test.
 	 */
 	private function makeController(?string $uid, bool $isAdmin): SettingsController {
 		$this->settingsService = $this->createMock(SettingsService::class);
-		$this->groupManager    = $this->createMock(IGroupManager::class);
-		$this->userSession     = $this->createMock(IUserSession::class);
+		$this->groupManager = $this->createMock(IGroupManager::class);
+		$this->userSession = $this->createMock(IUserSession::class);
 
 		if ($uid === null) {
 			$this->userSession->method('getUser')->willReturn(null);
@@ -147,7 +147,7 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 	 * server error.
 	 *
 	 * @param string $serviceMethod The SettingsService method to arm.
-	 * @param int    $calls         Call counter, by reference.
+	 * @param int $calls Call counter, by reference.
 	 *
 	 * @return void
 	 */
@@ -175,14 +175,14 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 		);
 
 		$controller = $this->makeController(uid: 'plain-user', isAdmin: false);
-		$calls      = 0;
+		$calls = 0;
 		$this->spyOn(serviceMethod: 'getGenericUserGroups', calls: $calls);
 		$response = $controller->getGenericUserGroups();
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 		$this->assertSame(0, $calls, 'Deny before grant — the service must not be consulted.');
 		$this->assertStringNotContainsString(
 			'SENTINEL-group',
-			(string) json_encode($response->getData()),
+			(string)json_encode($response->getData()),
 			'The refusal must not carry the payload it refuses.'
 		);
 
@@ -213,14 +213,14 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 		);
 
 		$controller = $this->makeController(uid: 'plain-user', isAdmin: false);
-		$calls      = 0;
+		$calls = 0;
 		$this->spyOn(serviceMethod: 'getOrganizationAdminGroups', calls: $calls);
 		$response = $controller->getOrganizationAdminGroups();
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 		$this->assertSame(0, $calls, 'Deny before grant — the service must not be consulted.');
 		$this->assertStringNotContainsString(
 			'SENTINEL-group',
-			(string) json_encode($response->getData())
+			(string)json_encode($response->getData())
 		);
 
 		$controller = $this->makeController(uid: 'an-admin', isAdmin: true);
@@ -249,14 +249,14 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 		);
 
 		$controller = $this->makeController(uid: 'plain-user', isAdmin: false);
-		$calls      = 0;
+		$calls = 0;
 		$this->spyOn(serviceMethod: 'getSuperUserGroups', calls: $calls);
 		$response = $controller->getSuperUserGroups();
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 		$this->assertSame(0, $calls, 'Deny before grant — the service must not be consulted.');
 		$this->assertStringNotContainsString(
 			'SENTINEL-group',
-			(string) json_encode($response->getData()),
+			(string)json_encode($response->getData()),
 			'The super-user group list is the escalation target — it must not travel in a refusal.'
 		);
 
@@ -289,14 +289,14 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 		);
 
 		$controller = $this->makeController(uid: 'plain-user', isAdmin: false);
-		$calls      = 0;
+		$calls = 0;
 		$this->spyOn(serviceMethod: 'getAllGroups', calls: $calls);
 		$response = $controller->getAllGroups();
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 		$this->assertSame(0, $calls, 'Deny before grant — the service must not be consulted.');
 		$this->assertStringNotContainsString(
 			'SENTINEL-group',
-			(string) json_encode($response->getData()),
+			(string)json_encode($response->getData()),
 			'A non-admin must not enumerate the instance group list through a refusal body.'
 		);
 

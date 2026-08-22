@@ -115,7 +115,7 @@ async function seedOrganization(): Promise<void> {
 	})
 	try {
 		const configRes = await ctx.get(
-			'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+			'/index.php/apps/stackiq/api/voorzieningen/config',
 		)
 		if (!configRes.ok()) {
 			throw new Error(`config endpoint returned ${configRes.status()}`)
@@ -201,7 +201,7 @@ async function goToArchiMateSettings(page: Page): Promise<void> {
 	// network never goes idle and this wait can only ever time out or be
 	// satisfied by luck (ADR-074 rule 4). The real readiness signal is the
 	// heading assertion below, which waits for the SPA to actually mount.
-	await page.goto('/settings/admin/softwarecatalog', {
+	await page.goto('/settings/admin/stackiq', {
 		waitUntil: 'domcontentloaded',
 	})
 	await expect(

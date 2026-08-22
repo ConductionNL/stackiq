@@ -3,7 +3,7 @@
 /**
  * Unit tests for the W22 RegisterResolverService wiring in SettingsService.
  *
- * Covers softwarecatalog-adopt-or-abstractions Phase 2.5 (resolver-injection unit tests).
+ * Covers stackiq-adopt-or-abstractions Phase 2.5 (resolver-injection unit tests).
  * Confirms that getSchemaIdForObjectType / getRegisterIdForObjectType route the
  * generic-fallback path through `RegisterResolverService::resolveSchemaId` /
  * `resolveRegisterId` when the resolver is available, and gracefully degrade to
@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
+ * @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#phase-2
  */
 
 declare(strict_types=1);

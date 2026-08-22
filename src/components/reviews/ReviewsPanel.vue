@@ -2,7 +2,7 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
   - SPDX-License-Identifier: EUPL-1.2
   -
-  - Ratings & reviews body widget (softwarecatalog#375) — registered via
+  - Ratings & reviews body widget (stackiq#375) — registered via
   - src/customComponents.js and placed on ModuleDetail's `bodyWidgets`
   - (same escape hatch as ContractApprovalPanel/OrganisationMergePanel).
   - Shows the approved-only aggregate (average + count) computed server-side

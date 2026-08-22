@@ -1,7 +1,7 @@
 # catalog-ratings Specification
 
 **Status**: done
-**Scope**: softwarecatalog
+**Scope**: stackiq
 **OpenSpec changes**:
 - catalog-ratings (archived 2026-07-24)
 

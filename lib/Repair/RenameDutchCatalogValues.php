@@ -138,9 +138,9 @@ class RenameDutchCatalogValues implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param IDBConnection                 $db        Database connection.
-	 * @param LoggerInterface               $logger    Logger.
-	 * @param RenameDutchCatalogDecisions   $decisions Column-name predicates.
+	 * @param IDBConnection $db Database connection.
+	 * @param LoggerInterface $logger Logger.
+	 * @param RenameDutchCatalogDecisions $decisions Column-name predicates.
 	 */
 	public function __construct(
 		private readonly IDBConnection $db,
@@ -195,10 +195,10 @@ class RenameDutchCatalogValues implements IRepairStep {
 	/**
 	 * Rewrite one value in one column.
 	 *
-	 * @param string $table  Shard table.
+	 * @param string $table Shard table.
 	 * @param string $column Column name.
-	 * @param string $old    Stored Dutch value.
-	 * @param string $new    English replacement.
+	 * @param string $old Stored Dutch value.
+	 * @param string $new English replacement.
 	 *
 	 * @return int Rows affected.
 	 */

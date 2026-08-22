@@ -11,7 +11,7 @@
  * @author    Stackiq Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://github.com/nextcloud/softwarecatalog
+ * @link      https://github.com/nextcloud/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
@@ -47,7 +47,7 @@ use SimpleXMLElement;
  * @author    Stackiq Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://github.com/nextcloud/softwarecatalog
+ * @link      https://github.com/nextcloud/stackiq
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)

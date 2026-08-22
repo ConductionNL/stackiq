@@ -1,23 +1,23 @@
 ## ADDED Requirements
 
 ### Requirement: Software Catalog MUST register a hand-written MCP tool provider
-The app SHALL ship `OCA\SoftwareCatalog\Mcp\SoftwareCatalogToolProvider`
+The app SHALL ship `OCA\Stackiq\Mcp\StackiqToolProvider`
 implementing `OCA\OpenRegister\Mcp\IMcpToolProvider`, registered under the
-DI alias `OCA\OpenRegister\Mcp\IMcpToolProvider::softwarecatalog`
+DI alias `OCA\OpenRegister\Mcp\IMcpToolProvider::stackiq`
 (mirroring decidesk's registrar at
 `decidesk/lib/AppInfo/Registrar/DomainServiceRegistrar.php:121`). The
 provider MUST be a dispatcher only: it owns the tool catalogue (a constant
 descriptor table unit tests can assert as a fixture, per
 `DecideskToolProvider::TOOL_DESCRIPTORS`) and routes tool ids to handler
 classes; it MUST NOT contain business logic. Every tool id MUST be
-namespaced `softwarecatalog.{toolName}`.
+namespaced `stackiq.{toolName}`.
 
 #### Scenario: The provider is discoverable through OpenRegister
 - GIVEN this change applied and the app enabled
 - WHEN OpenRegister resolves registered `IMcpToolProvider` aliases
-- THEN `IMcpToolProvider::softwarecatalog` MUST resolve to
-  `SoftwareCatalogToolProvider`
-- AND its listed tools MUST all carry ids starting with `softwarecatalog.`
+- THEN `IMcpToolProvider::stackiq` MUST resolve to
+  `StackiqToolProvider`
+- AND its listed tools MUST all carry ids starting with `stackiq.`
 - @e2e exclude DI-resolution assertion; asserted by PHPUnit bootstrapping
   the container
 
@@ -29,7 +29,7 @@ Every descriptor — derived and curated — SHALL declare `scope` (one of
 `readOnlyHint`/`destructiveHint`/`idempotentHint` values. Reach MUST be
 declared explicitly (hermiq fail-closes an undeclared reach to
 `external`). A tool whose invocation issues an outbound HTTP request
-(`softwarecatalog.triggerEolSync` → endoflife.date) or alters the
+(`stackiq.triggerEolSync` → endoflife.date) or alters the
 anonymous open-data surface (`publishObject`/`depublishObject`) MUST
 declare `reach: external` regardless of its verb.
 
@@ -42,8 +42,8 @@ declare `reach: external` regardless of its verb.
   descriptor constant
 
 #### Scenario: Publication tools are classified as external reach
-- GIVEN the descriptors for `softwarecatalog.publishObject` and
-  `softwarecatalog.depublishObject`
+- GIVEN the descriptors for `stackiq.publishObject` and
+  `stackiq.depublishObject`
 - WHEN their `reach` is read
 - THEN it MUST be `external`
 - AND their `scope` MUST be `update`
@@ -61,7 +61,7 @@ persist anything. `previewOrganisationMerge` MUST delegate to
 
 #### Scenario: Merge preview never mutates
 - GIVEN two organisation uuids
-- WHEN `softwarecatalog.previewOrganisationMerge` is invoked
+- WHEN `stackiq.previewOrganisationMerge` is invoked
 - THEN the response MUST contain the dry-run impact summary
 - AND no object write MUST occur (asserted via a mocked
   `MergeOrganisatieService` expecting `dryRun()` once and `execute()` never)
@@ -90,7 +90,7 @@ NOT be exposed as MCP tools.
 - GIVEN a contract owned by organisation A
 - AND an authenticated caller whose active organisation is B and who is
   not an instance admin
-- WHEN `softwarecatalog.submitContractApproval` is invoked for that contract
+- WHEN `stackiq.submitContractApproval` is invoked for that contract
 - THEN the tool MUST return a forbidden error
 - AND `ContractApprovalService::submitForApproval()` MUST NOT be invoked
 - AND no `DecisionRequestedEvent` MUST be dispatched
@@ -99,7 +99,7 @@ NOT be exposed as MCP tools.
 
 #### Scenario: Review submission cannot bypass moderation
 - GIVEN any caller
-- WHEN `softwarecatalog.submitReview` is invoked with a payload declaring
+- WHEN `stackiq.submitReview` is invoked with a payload declaring
   `status: approved`
 - THEN the persisted assessment MUST have `status: pending` (forced
   server-side by `ReviewService::submit()`)
@@ -130,7 +130,7 @@ MUST NOT be modified.
 
 #### Scenario: Contracts are searchable by end date from chat
 - GIVEN the fragment imported and contracts with `endDate` values in Q4
-- WHEN an agent invokes `softwarecatalog.contract.search` with an
+- WHEN an agent invokes `stackiq.contract.search` with an
   `endDate` range filter for the quarter
 - THEN the result MUST contain exactly the contracts whose `endDate`
   falls in the range the caller may read under OR RBAC
@@ -156,7 +156,7 @@ the fragment MUST carry a `create`, `update`, or `delete` verb, and
 `vulnerability` MUST NOT carry `delete`.
 
 #### Scenario: An agent logs a vulnerability against an application
-- GIVEN an agent granted `softwarecatalog.vulnerability.create` (a write —
+- GIVEN an agent granted `stackiq.vulnerability.create` (a write —
   hermiq default-denies it until granted, and the invocation passes the
   human approval gate)
 - WHEN it invokes the tool with `name`, `cveCode`, `cvssScore`, and
@@ -169,17 +169,17 @@ the fragment MUST carry a `create`, `update`, or `delete` verb, and
 
 #### Scenario: Writes on lifecycle-governed schemas stay impossible
 - GIVEN the imported merged register
-- WHEN the derived tool list for `softwarecatalog` is enumerated
+- WHEN the derived tool list for `stackiq` is enumerated
 - THEN no `contract.*`, `usage.*`, `organization.*`, `moduleVersion.*`,
   or `connection.*` tool with scope `create`, `update`, or `delete` MUST
   exist
 - @e2e exclude Tool-listing assertion; import check in CI
 
-### Requirement: This change supersedes softwarecatalog-mcp-adoption
+### Requirement: This change supersedes stackiq-mcp-adoption
 The change SHALL be applied instead of, never after or alongside, the
-`softwarecatalog-mcp-adoption` fragment: that change's
-`register.d/softwarecatalog-mcp-adoption.json` (Dutch slugs) MUST NOT be
-created, and on landing this change the `softwarecatalog-mcp-adoption`
+`stackiq-mcp-adoption` fragment: that change's
+`register.d/stackiq-mcp-adoption.json` (Dutch slugs) MUST NOT be
+created, and on landing this change the `stackiq-mcp-adoption`
 change MUST be archived as superseded with a pointer to
 `mcp-full-action-surface`.
 
@@ -187,5 +187,5 @@ change MUST be archived as superseded with a pointer to
 - GIVEN this change applied
 - WHEN `lib/Settings/register.d/` is listed
 - THEN it MUST contain `mcp-full-action-surface.json`
-- AND it MUST NOT contain `softwarecatalog-mcp-adoption.json`
+- AND it MUST NOT contain `stackiq-mcp-adoption.json`
 - @e2e exclude File-presence assertion; checked in review/CI

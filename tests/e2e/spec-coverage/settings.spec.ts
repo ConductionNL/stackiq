@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
  * Behavioural UI coverage for the app's settings surface
- * (`/settings/admin/softwarecatalog` → SoftwareCatalogSettings.vue).
+ * (`/settings/admin/stackiq` → StackiqSettings.vue).
  *
  * This drove the in-app manifest page `Settings` until ADR-079 D1 removed it:
  * app-level configuration has exactly one home, the Nextcloud admin settings
@@ -37,13 +37,13 @@ import { VersionInformation } from './page-components'
  * is the real readiness signal.
  */
 async function gotoSettings(page) {
-	await page.goto('/settings/admin/softwarecatalog', {
+	await page.goto('/settings/admin/stackiq', {
 		waitUntil: 'domcontentloaded',
 	})
-	const main = page.locator('#softwarecatalog-settings')
+	const main = page.locator('#stackiq-settings')
 	// The settings shell renders the app name banner first.
 	await expect(
-		main.getByText('SoftwareCatalog', { exact: false }).first(),
+		main.getByText('Stackiq', { exact: false }).first(),
 	).toBeVisible({ timeout: 30000 })
 	return main
 }

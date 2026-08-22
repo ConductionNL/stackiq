@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Data Mapper for SoftwareCatalogueService
+ * Data Mapper for StackiqService
  *
- * Extracted from SoftwareCatalogueService to reduce ExcessiveClassLength and
+ * Extracted from StackiqService to reduce ExcessiveClassLength and
  * CyclomaticComplexity on that service. Handles data transformation and mapping.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -21,14 +21,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
+namespace OCA\Stackiq\Service\Stackiq;
 
 use Psr\Log\LoggerInterface;
 
 /**
- * Maps and transforms data between external API formats and the SoftwareCatalogue domain model.
+ * Maps and transforms data between external API formats and the Stackiq domain model.
  *
- * SoftwareCatalogueService delegates all data transformation methods to this class,
+ * StackiqService delegates all data transformation methods to this class,
  * shrinking its own method bodies below ExcessiveMethodLength.
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-2

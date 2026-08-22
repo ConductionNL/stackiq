@@ -76,13 +76,13 @@ final class SettingsServiceResolveImportForceTest extends TestCase {
 		/** @var ConfigurationService|MockObject $configurationService */
 		$configurationService = $this->createMock(ConfigurationService::class);
 		$configurationService->method('getConfiguredAppVersion')
-			->with('softwarecatalog')
+			->with('stackiq')
 			->willReturn('2.4.0+base.9003c029');
 
 		$result = $method->invoke(
 			$service,
 			$configurationService,
-			'softwarecatalog',
+			'stackiq',
 			'2.4.0+base.f6e72fc8+frag.92299b19',
 			false
 		);
@@ -108,13 +108,13 @@ final class SettingsServiceResolveImportForceTest extends TestCase {
 		/** @var ConfigurationService|MockObject $configurationService */
 		$configurationService = $this->createMock(ConfigurationService::class);
 		$configurationService->method('getConfiguredAppVersion')
-			->with('softwarecatalog')
+			->with('stackiq')
 			->willReturn('2.4.0+base.f6e72fc8+frag.92299b19');
 
 		$result = $method->invoke(
 			$service,
 			$configurationService,
-			'softwarecatalog',
+			'stackiq',
 			'2.4.0+base.f6e72fc8+frag.92299b19',
 			false
 		);
@@ -144,7 +144,7 @@ final class SettingsServiceResolveImportForceTest extends TestCase {
 		$result = $method->invoke(
 			$service,
 			$configurationService,
-			'softwarecatalog',
+			'stackiq',
 			'2.4.0+base.f6e72fc8+frag.92299b19',
 			true
 		);
@@ -175,7 +175,7 @@ final class SettingsServiceResolveImportForceTest extends TestCase {
 		$result = $method->invoke(
 			$service,
 			$configurationService,
-			'softwarecatalog',
+			'stackiq',
 			'2.4.0+base.f6e72fc8+frag.92299b19',
 			false
 		);
@@ -203,7 +203,7 @@ final class SettingsServiceResolveImportForceTest extends TestCase {
 		$result = $method->invoke(
 			$service,
 			$configurationService,
-			'softwarecatalog',
+			'stackiq',
 			'2.4.0+base.f6e72fc8+frag.92299b19',
 			false
 		);

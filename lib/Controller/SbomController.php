@@ -69,7 +69,7 @@ class SbomController extends Controller {
 	 * group membership OR manage-ACL on the target moduleVersie's parent
 	 * module").
 	 *
-	 * `software-catalog-admins` is FROZEN across the softwarecatalog -> stackiq
+	 * `software-catalog-admins` is FROZEN across the stackiq -> stackiq
 	 * rename: it is a Nextcloud group id, and membership is stored against that
 	 * literal in `oc_group_user`. Renaming it makes every membership check miss
 	 * without raising anything, so the app would silently drop the permissions

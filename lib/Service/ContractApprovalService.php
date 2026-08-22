@@ -66,11 +66,11 @@ class ContractApprovalService {
 	 * This consumer app id, stamped on the request event as `sourceApp` and
 	 * used by the conclusion listener to filter inbound events.
 	 *
-	 * FROZEN at `softwarecatalog` through the app-id rename. This value is not
+	 * FROZEN at `stackiq` through the app-id rename. This value is not
 	 * a name we own at read time — it is PERSISTED on decidesk's Decision rows
 	 * when the approval is raised, and `DecisionConcludedListener` matches
 	 * inbound conclusions against it. Every decision already open was stamped
-	 * `softwarecatalog`; moving the constant makes the filter miss them, so
+	 * `stackiq`; moving the constant makes the filter miss them, so
 	 * their outcomes are dropped on the floor and the contract never leaves
 	 * `In onderhandeling`. Nothing errors — a filtered-out event looks exactly
 	 * like an event that was never sent.
@@ -79,7 +79,7 @@ class ContractApprovalService {
 	 * `sourceApp` on decidesk's existing rows, or that accepts both spellings
 	 * on the read side first.
 	 */
-	public const SOURCE_APP = 'softwarecatalog';
+	public const SOURCE_APP = 'stackiq';
 
 	/**
 	 * The decisionType raised for a first activation of an `In onderhandeling`

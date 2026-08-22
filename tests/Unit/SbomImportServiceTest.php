@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit;
 
-use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\Exception\UnsupportedSbomFormatException;
 use OCA\Stackiq\Service\ProgressTracker;

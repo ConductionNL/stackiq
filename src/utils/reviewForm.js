@@ -1,5 +1,5 @@
 /**
- * Pure helpers for the submit-a-review form (catalog-ratings, softwarecatalog#375).
+ * Pure helpers for the submit-a-review form (catalog-ratings, stackiq#375).
  *
  * Extracted out of SubmitReviewModal.vue so the review-payload shape — most
  * importantly, that it NEVER includes an `auteur` (or `status`) key — is

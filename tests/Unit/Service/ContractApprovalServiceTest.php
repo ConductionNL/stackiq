@@ -18,15 +18,15 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+ * @spec openspec/changes/stackiq-delegation-via-events/specs/contract-decision-delegation/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Stackiq\Service\ContractApprovalService;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\EventDispatcher\IEventDispatcher;

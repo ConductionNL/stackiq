@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
- * Seeded-fixture helpers for the DEEP, data-dependent softwarecatalog e2e
+ * Seeded-fixture helpers for the DEEP, data-dependent stackiq e2e
  * workflows.
  *
  * These create and clean up real catalog objects (Organisatie, Component
@@ -75,7 +75,7 @@ export async function resolveConfig(
 	ctx: APIRequestContext,
 ): Promise<VoorzieningenConfig> {
 	const res = await ctx.get(
-		'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+		'/index.php/apps/stackiq/api/voorzieningen/config',
 	)
 	if (!res.ok()) {
 		throw new Error(`voorzieningen/config returned ${res.status()}`)

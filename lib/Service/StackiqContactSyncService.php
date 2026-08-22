@@ -1,9 +1,9 @@
 <?php
 
 /**
- * SoftwareCatalog Contact-sync service.
+ * Stackiq Contact-sync service.
  *
- * Bridges softwarecatalog catalog relationship/role records (contactpersoon,
+ * Bridges stackiq catalog relationship/role records (contactpersoon,
  * organisatie) to the Nextcloud addressbook through OCP\Contacts\IManager.
  * Identity (name, e-mail, phone, website, logo, CBS/KvK code) lives in
  * Nextcloud Contacts keyed by `contactsUid`; this service never re-implements
@@ -13,44 +13,43 @@
  * zaakafhandelapp/lib/Service/KlantContactSyncService.php.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+ * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCP\Constants;
 use OCP\Contacts\IManager as IContactsManager;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 
 /**
- * Search, import and create Nextcloud contacts for softwarecatalog
+ * Search, import and create Nextcloud contacts for stackiq
  * relationship/role records.
  *
  * @category Service
- * @package  OCA\SoftwareCatalog\Service
+ * @package  OCA\Stackiq\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
  * @link     https://codeberg.org/Conduction/SoftwareCatalog
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Overall complexity 56 (threshold 50). The
- * class maps several distinct softwarecatalog relationship types (organisation, contactpersoon,
+ * class maps several distinct stackiq relationship types (organisation, contactpersoon,
  * …) onto Nextcloud's vCard contact model, and each mapping needs per-field presence checks
  * because the legacy identity fields are optional and inconsistently populated across records.
  * The Contacts API is also an optional dependency, so every entry point carries an availability
  * guard. Both are breadth of mapping rather than depth of logic.
  */
-class SoftwareCatalogContactSyncService {
+class StackiqContactSyncService {
 	/**
 	 * Constructor.
 	 *
@@ -80,7 +79,7 @@ class SoftwareCatalogContactSyncService {
 	 *
 	 * @return array<int, array<string, mixed>> The matching contacts.
 	 *
-	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
 	 */
 	public function searchContacts(string $query): array {
 		if ($this->isAvailable() === false) {
@@ -139,11 +138,11 @@ class SoftwareCatalogContactSyncService {
 	 *
 	 * @return ?string The contacts UID, or null when it could not be resolved or created.
 	 *
-	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
 	 */
 	public function syncToContacts(string $objectType, array $record): ?string {
 		if ($this->isAvailable() === false) {
-			$this->logger->info('[SoftwareCatalogContactSync] Contacts disabled, cannot resolve UID', ['objectType' => $objectType]);
+			$this->logger->info('[StackiqContactSync] Contacts disabled, cannot resolve UID', ['objectType' => $objectType]);
 			return null;
 		}
 
@@ -170,7 +169,7 @@ class SoftwareCatalogContactSyncService {
 	 *
 	 * @return ?array<string, mixed> The contact, or null when not found.
 	 *
-	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
 	 */
 	public function findContactByUid(string $uid): ?array {
 		if ($uid === '' || $this->isAvailable() === false) {
@@ -196,7 +195,7 @@ class SoftwareCatalogContactSyncService {
 	 *
 	 * @return ?array<string, mixed> The matched contact, or null.
 	 *
-	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 10, exactly at the threshold. The
 	 * branches are the documented identity-match cascade: Contacts API availability, then e-mail,
@@ -247,7 +246,7 @@ class SoftwareCatalogContactSyncService {
 	 * @return ?string The new contacts UID, or null when no writable addressbook
 	 *                 is available or the record has no usable identity.
 	 *
-	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
 	 */
 	public function createContactForRecord(string $objectType, array $record): ?string {
 		if ($this->isAvailable() === false) {
@@ -257,7 +256,7 @@ class SoftwareCatalogContactSyncService {
 		$addressBookKey = $this->firstWritableAddressBookKey();
 		if ($addressBookKey === null) {
 			$this->logger->warning(
-				'[SoftwareCatalogContactSync] No writable addressbook available; cannot create contact',
+				'[StackiqContactSync] No writable addressbook available; cannot create contact',
 				['objectType' => $objectType]
 			);
 			return null;
@@ -265,7 +264,7 @@ class SoftwareCatalogContactSyncService {
 
 		$properties = $this->recordToVCard(objectType: $objectType, record: $record);
 		if (($properties['FN'] ?? '') === '') {
-			$this->logger->warning('[SoftwareCatalogContactSync] Record has no identity to create a contact from', ['objectType' => $objectType]);
+			$this->logger->warning('[StackiqContactSync] Record has no identity to create a contact from', ['objectType' => $objectType]);
 			return null;
 		}
 

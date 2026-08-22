@@ -24,7 +24,7 @@
  * purpose. A standalone script has to solve authentication itself, and the
  * committed `tests/e2e/.auth/admin.json` is a dead session against whatever
  * instance last generated it — an unauthenticated load returns **401**, whose
- * symptom (`#softwarecatalog` absent, ZERO js errors) is indistinguishable at a
+ * symptom (`#stackiq` absent, ZERO js errors) is indistinguishable at a
  * glance from a genuinely dead bundle. Running as a project reuses
  * `globalSetup`, which logs in fresh against the configured base URL.
  *
@@ -34,10 +34,10 @@
 import { test, expect } from '@playwright/test'
 
 const ROUTES = [
-	{ name: 'app root', path: '/index.php/apps/softwarecatalog/' },
+	{ name: 'app root', path: '/index.php/apps/stackiq/' },
 	{
 		name: 'organisations sub-route',
-		path: '/index.php/apps/softwarecatalog/#/organisaties',
+		path: '/index.php/apps/stackiq/#/organisaties',
 	},
 ]
 
@@ -57,10 +57,10 @@ for (const route of ROUTES) {
 		// The host element is emitted by templates/index.php. Its ABSENCE means we
 		// are not on the app page at all (login redirect / 401), which must not be
 		// reported as a boot failure.
-		const host = page.locator('#softwarecatalog')
+		const host = page.locator('#stackiq')
 		await expect(
 			host,
-			'app host element #softwarecatalog is missing — are we authenticated?',
+			'app host element #stackiq is missing — are we authenticated?',
 		).toBeAttached({ timeout: 30_000 })
 
 		// A mounted app replaces the empty host with real DOM. Host present but
@@ -68,7 +68,7 @@ for (const route of ROUTES) {
 		await expect
 			.poll(async () => await host.evaluate((el) => el.children.length), {
 				message:
-					'#softwarecatalog rendered NO children — the bundle did not mount (empty shell)',
+					'#stackiq rendered NO children — the bundle did not mount (empty shell)',
 				timeout: 30_000,
 			})
 			.toBeGreaterThan(0)

@@ -138,8 +138,8 @@ class ManifestRegisterSentinelTest extends TestCase {
 	 * page's widgets carry their own `content.{register,schema}` and those hit
 	 * the same endpoint.
 	 *
-	 * @param mixed                     $node Current node.
-	 * @param array<int, array<string>> $out  Accumulator, by reference.
+	 * @param mixed $node Current node.
+	 * @param array<int, array<string>> $out Accumulator, by reference.
 	 *
 	 * @return void
 	 */

@@ -2,16 +2,16 @@
 status: done
 ---
 
-# softwarecatalog-store-migration Specification
+# stackiq-store-migration Specification
 
 ## Purpose
-Migrates SoftwareCatalog's Pinia stores so every OpenRegister-CRUD entity store is built via the shared createObjectStore factory with the lib plugins and composables, instead of vanilla defineStore. App-specific extensions are expressed as createObjectStore plugins reusing the lib helpers and preserving legacy CRUD signatures, while non-CRUD UI-shell, settings, and non-OpenRegister-endpoint stores stay on vanilla defineStore.
+Migrates Stackiq's Pinia stores so every OpenRegister-CRUD entity store is built via the shared createObjectStore factory with the lib plugins and composables, instead of vanilla defineStore. App-specific extensions are expressed as createObjectStore plugins reusing the lib helpers and preserving legacy CRUD signatures, while non-CRUD UI-shell, settings, and non-OpenRegister-endpoint stores stay on vanilla defineStore.
 ## Requirements
 ### Requirement: createObjectStore for OpenRegister-CRUD stores
 
 OpenRegister-CRUD stores MUST be created via `createObjectStore`.
 
-Every Pinia store in softwarecatalog that wraps an
+Every Pinia store in stackiq that wraps an
 **OpenRegister-CRUD entity** (an OR `register / schema / object`
 triple) MUST be instantiated via
 `createObjectStore(id, { plugins: [...] })` from
@@ -43,7 +43,7 @@ The factory contract gives apps:
 
 #### Scenario: registerObjectType is invoked on bootstrap
 
-- **GIVEN** the softwarecatalogPlugin's `initializeVoorzieningenObjectTypes`
+- **GIVEN** the stackiqPlugin's `initializeVoorzieningenObjectTypes`
   action
 - **WHEN** `fetchSettings` resolves a non-empty `availableRegisters`
   list with a `voorzieningen` register
@@ -66,17 +66,17 @@ duplicate the lib base.
 
 #### Scenario: plugin uses lib helpers
 
-- **GIVEN** `src/store/plugins/softwarecatalogPlugin.js`
+- **GIVEN** `src/store/plugins/stackiqPlugin.js`
 - **WHEN** the file is parsed
 - **THEN** it MUST import `buildHeaders` and `buildQueryString` from
   `@conduction/nextcloud-vue` rather than redefining them locally
 - **AND** it MUST export a factory function
-  `softwarecatalogPlugin()` that returns
+  `stackiqPlugin()` that returns
   `{ name: 'Softwarecatalog', state, getters, actions }`
 
 #### Scenario: legacy CRUD signatures keep working
 
-- **GIVEN** the softwarecatalogPlugin's `saveObject` and
+- **GIVEN** the stackiqPlugin's `saveObject` and
   `deleteObject` actions
 - **WHEN** an existing view calls
   `objectStore.saveObject(objectItem, { register, schema })` (legacy)
@@ -92,7 +92,7 @@ Non-CRUD stores MAY use vanilla defineStore and MUST NOT be migrated to createOb
 Stores that hold UI shell state (active menu item, modal/dialog
 flags), settings glue (load/save against an app-specific endpoint,
 ArchiMate import polling), or wrappers over **non-OpenRegister
-backend endpoints** (softwarecatalog's `/api/contactpersonen/*`,
+backend endpoints** (stackiq's `/api/contactpersonen/*`,
 `/api/email/*`, `/api/user-groups/*`) MAY use vanilla `defineStore`.
 
 These stores MUST NOT be migrated to `createObjectStore` —

@@ -139,7 +139,7 @@ class RenameDutchCatalogDecisions {
 	 * issuing an UPDATE against a missing column is an error rather than a no-op.
 	 *
 	 * @param array<string, array<string, string>> $valueMap Property => old => new.
-	 * @param array<int, string>                   $columns  Columns the table has.
+	 * @param array<int, string> $columns Columns the table has.
 	 *
 	 * @return array<int, array{column: string, old: string, new: string}>
 	 */

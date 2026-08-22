@@ -8280,9 +8280,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{softwarecatalog_api}}/aangeboden-gebruik/deelnemers",
+									"raw": "{{stackiq_api}}/aangeboden-gebruik/deelnemers",
 									"host": [
-										"{{softwarecatalog_api}}"
+										"{{stackiq_api}}"
 									],
 									"path": [
 										"aangeboden-gebruik",
@@ -15336,9 +15336,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{softwarecatalog_api}}/me",
+									"raw": "{{stackiq_api}}/me",
 									"host": [
-										"{{softwarecatalog_api}}"
+										"{{stackiq_api}}"
 									],
 									"path": [
 										"me"
@@ -15813,9 +15813,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{softwarecatalog_api}}/me",
+									"raw": "{{stackiq_api}}/me",
 									"host": [
-										"{{softwarecatalog_api}}"
+										"{{stackiq_api}}"
 									],
 									"path": [
 										"me"
@@ -15947,9 +15947,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{softwarecatalog_api}}/me",
+									"raw": "{{stackiq_api}}/me",
 									"host": [
-										"{{softwarecatalog_api}}"
+										"{{stackiq_api}}"
 									],
 									"path": [
 										"me"
@@ -16009,9 +16009,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{softwarecatalog_api}}/me",
+									"raw": "{{stackiq_api}}/me",
 									"host": [
-										"{{softwarecatalog_api}}"
+										"{{stackiq_api}}"
 									],
 									"path": [
 										"me"
@@ -16286,9 +16286,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{softwarecatalog_api}}/me",
+									"raw": "{{stackiq_api}}/me",
 									"host": [
-										"{{softwarecatalog_api}}"
+										"{{stackiq_api}}"
 									],
 									"path": [
 										"me"
@@ -17494,9 +17494,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{softwarecatalog_api}}/aanbod",
+									"raw": "{{stackiq_api}}/aanbod",
 									"host": [
-										"{{softwarecatalog_api}}"
+										"{{stackiq_api}}"
 									],
 									"path": [
 										"aanbod"
@@ -17917,9 +17917,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{softwarecatalog_api}}/aanbod",
+									"raw": "{{stackiq_api}}/aanbod",
 									"host": [
-										"{{softwarecatalog_api}}"
+										"{{stackiq_api}}"
 									],
 									"path": [
 										"aanbod"
@@ -19362,14 +19362,14 @@
 									}
 								],
 								"url": {
-									"raw": "{{base_url}}/index.php/apps/softwarecatalog/",
+									"raw": "{{base_url}}/index.php/apps/stackiq/",
 									"host": [
 										"{{base_url}}"
 									],
 									"path": [
 										"index.php",
 										"apps",
-										"softwarecatalog"
+										"stackiq"
 									]
 								},
 								"auth": {
@@ -19481,14 +19481,14 @@
 									}
 								],
 								"url": {
-									"raw": "{{base_url}}/index.php/apps/softwarecatalog/",
+									"raw": "{{base_url}}/index.php/apps/stackiq/",
 									"host": [
 										"{{base_url}}"
 									],
 									"path": [
 										"index.php",
 										"apps",
-										"softwarecatalog"
+										"stackiq"
 									]
 								},
 								"auth": {
@@ -21560,7 +21560,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{base_url}}/ocs/v2.php/apps/softwarecatalog/api/config",
+									"raw": "{{base_url}}/ocs/v2.php/apps/stackiq/api/config",
 									"host": [
 										"{{base_url}}"
 									],
@@ -21568,7 +21568,7 @@
 										"ocs",
 										"v2.php",
 										"apps",
-										"softwarecatalog",
+										"stackiq",
 										"api",
 										"config"
 									]
@@ -21625,7 +21625,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{base_url}}/ocs/v2.php/apps/softwarecatalog/api/config",
+									"raw": "{{base_url}}/ocs/v2.php/apps/stackiq/api/config",
 									"host": [
 										"{{base_url}}"
 									],
@@ -21633,7 +21633,7 @@
 										"ocs",
 										"v2.php",
 										"apps",
-										"softwarecatalog",
+										"stackiq",
 										"api",
 										"config"
 									]

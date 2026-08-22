@@ -53,7 +53,7 @@ interface IndexPage {
 // list matches labels exactly — so it keeps a dedicated test below.
 // ⚠️ `addLabel` is not free text. nc-vue's CnIndexPage derives its primary
 // create action as `'Add ' + schema.title` (CnIndexPage.vue), and the
-// softwarecatalog schema titles were rewritten from Dutch to English on
+// stackiq schema titles were rewritten from Dutch to English on
 // 2026-07-26 (commit 13215dd). The Dutch spellings these entries used to carry
 // — "Add Beoordeeling", "Add Applicatieversie", "Add Contactpersoon" — have not
 // existed in the rendered UI since. "Add Contract" and "Add Compliancy" happen

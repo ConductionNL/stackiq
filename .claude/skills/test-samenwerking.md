@@ -25,7 +25,7 @@ Linda represents a collaboration that acts as BOTH a supplier (offering shared s
 
 ## Organization & Permissions Context
 
-Linda's active organization is **Test Samenwerking**. The org permission system requires the internal Nextcloud org UUID to match a register object in `voorzieningen/organisatie`. If org fetch fails (404 in console), edit/delete buttons will be disabled. Do NOT test beheer features as `admin` — use the test persona accounts. Run `bash softwarecatalog/test-setup.sh` if org assignments are broken.
+Linda's active organization is **Test Samenwerking**. The org permission system requires the internal Nextcloud org UUID to match a register object in `voorzieningen/organisatie`. If org fetch fails (404 in console), edit/delete buttons will be disabled. Do NOT test beheer features as `admin` — use the test persona accounts. Run `bash stackiq/test-setup.sh` if org assignments are broken.
 
 ## Test Scope
 

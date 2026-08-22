@@ -28,10 +28,10 @@ CONTAINER="nextcloud"
 DB_CONTAINER="openregister-postgres"
 API_URL="http://localhost"
 AUTH="admin:admin"
-DATA_DIR="/var/www/html/custom_apps/softwarecatalog/data"
+DATA_DIR="/var/www/html/custom_apps/stackiq/data"
 
 # Import configuration from magic config
-CONFIG_FILE="/var/www/html/custom_apps/softwarecatalog/lib/Settings/softwarecatalogus_register_magic.json"
+CONFIG_FILE="/var/www/html/custom_apps/stackiq/lib/Settings/softwarecatalogus_register_magic.json"
 
 echo -e "${YELLOW}📋 STAP 1: Importeren van configuratie${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -48,7 +48,7 @@ if [ -z "$REGISTER_ID" ]; then
     echo -e "${YELLOW}⚠️  'voorzieningen' register niet gevonden, kopiëren en importeren van configuratie...${NC}"
     
     # Copy config file to container
-    docker cp /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/softwarecatalog/lib/Settings/softwarecatalogus_register_magic.json \
+    docker cp /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/stackiq/lib/Settings/softwarecatalogus_register_magic.json \
         $CONTAINER:/tmp/softwarecatalogus_register_magic.json
     
     IMPORT_START=$(date +%s)

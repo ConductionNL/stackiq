@@ -54,12 +54,12 @@ docker-compose exec nextcloud curl -X PUT "http://localhost/index.php/apps/openr
 
 #### 4. Check EventListener logs
 ```bash
-docker-compose exec nextcloud tail -n 100 /var/www/html/data/nextcloud.log | grep -i "softwarecatalog"
+docker-compose exec nextcloud tail -n 100 /var/www/html/data/nextcloud.log | grep -i "stackiq"
 ```
 
 #### 5. Check configuration
 ```bash
-docker-compose exec -u 33 nextcloud php occ config:app:get softwarecatalog voorzieningen_organisatie_schema
+docker-compose exec -u 33 nextcloud php occ config:app:get stackiq voorzieningen_organisatie_schema
 ```
 
 ### Expected Behavior

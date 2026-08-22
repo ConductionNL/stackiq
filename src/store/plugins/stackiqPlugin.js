@@ -10,7 +10,7 @@
  * @copyright 2024
  * @license EUPL-1.2
  *
- * @spec openspec/specs/softwarecatalog-store-migration/spec.md#requirement-plugin-shape-for-app-specific-extensions
+ * @spec openspec/specs/stackiq-store-migration/spec.md#requirement-plugin-shape-for-app-specific-extensions
  */
 
 import { buildHeaders, buildQueryString } from '@conduction/nextcloud-vue'
@@ -1483,7 +1483,7 @@ export function stackiqPlugin() {
 			},
 
 			/**
-			 * Clear the softwarecatalog sub-resources (called by base clearAllSubResources).
+			 * Clear the stackiq sub-resources (called by base clearAllSubResources).
 			 *
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */

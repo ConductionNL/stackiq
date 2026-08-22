@@ -27,7 +27,7 @@ return [
 
         // Contract approval delegation to decidesk (in-process IEventDispatcher; fail-closed).
         // Outcome is projected by DecisionConcludedListener, not an HTTP callback.
-        // @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+        // @spec openspec/changes/stackiq-delegation-via-events/specs/contract-decision-delegation/spec.md
         ['name' => 'contractApproval#config', 'url' => '/api/contracts/approval/config', 'verb' => 'GET'],
         ['name' => 'contractApproval#submit', 'url' => '/api/contracts/{contractUuid}/approval/submit', 'verb' => 'POST'],
         ['name' => 'contractApproval#submitRenewal', 'url' => '/api/contracts/{contractUuid}/approval/renewal', 'verb' => 'POST'],

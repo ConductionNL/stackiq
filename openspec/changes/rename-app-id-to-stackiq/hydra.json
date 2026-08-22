@@ -1,6 +1,6 @@
 {
   "spec_slug": "rename-app-id-to-stackiq",
-  "title": "Rename the app id from softwarecatalog to stackiq",
+  "title": "Rename the app id from stackiq to stackiq",
   "app": "stackiq",
   "repo": "https://github.com/ConductionNL/stackiq",
   "depends_on": [],

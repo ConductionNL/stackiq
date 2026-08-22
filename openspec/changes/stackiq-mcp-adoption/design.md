@@ -1,4 +1,4 @@
-# Design: softwarecatalog-mcp-adoption
+# Design: stackiq-mcp-adoption
 
 ## Architecture Overview
 No new architecture. Software Catalog already loads its OpenRegister
@@ -6,19 +6,19 @@ configuration from `lib/Settings/softwarecatalogus_register.json`, deep-merged
 (ADR-037) with every `*.json` fragment in `lib/Settings/register.d/` by
 `SettingsService::loadSettings()` (`self::deepMergeConfig()`, confirmed at
 `lib/Service/SettingsService.php:1465-1535`). This change adds exactly one new
-fragment, `register.d/softwarecatalog-mcp-adoption.json`, that contributes a
+fragment, `register.d/stackiq-mcp-adoption.json`, that contributes a
 `configuration.x-openregister-mcp` block to 9 existing schema definitions.
 Nothing else in the request path changes: OpenRegister's
 `SchemaDerivedToolProvider` (cross-repo, already merged at
 openregister@origin/development) reads the merged register at MCP-serve time
-and derives `softwarecatalog.<schema>.<verb>` tools — Software Catalog ships no
+and derives `stackiq.<schema>.<verb>` tools — Software Catalog ships no
 PHP for this at all.
 
 ```
 Hermiq (agent)
   -> OpenRegister /api/mcp (JSON-RPC) or chat facade
     -> SchemaDerivedToolProvider
-      -> merged softwarecatalog register (monolith + register.d/*.json)
+      -> merged stackiq register (monolith + register.d/*.json)
         -> configuration.x-openregister-mcp per schema  (THIS CHANGE adds these)
 ```
 
@@ -40,7 +40,7 @@ the single cross-cutting justification instead of repeating it per schema.
 | `koppeling` | search, get | Integrations between applications/systems — "how do systems A and B exchange data", explicitly requested (a "components" question). |
 | `compliancy` | search, get | Standards-compliance evidence — explicitly requested by the task brief ("standards-compliance"); "is module X compliant with standard Y". |
 | `gebruik` | search, get | Adoption/usage records — "which organisations use module X and at what lifecycle stage" — the core join between `organisatie` and `module`/`dienst`. |
-| `contract` | search, get | Procurement agreements — "which contracts are active/in-negotiation for service X"; kept strictly read (see Risk 2 in proposal.md) because `approvalState`/`status=Actief` are decidesk-projected fields softwarecatalog itself never authors. |
+| `contract` | search, get | Procurement agreements — "which contracts are active/in-negotiation for service X"; kept strictly read (see Risk 2 in proposal.md) because `approvalState`/`status=Actief` are decidesk-projected fields stackiq itself never authors. |
 
 ### Excluded (10 schemas) — what and why
 
@@ -53,7 +53,7 @@ the single cross-cutting justification instead of repeating it per schema.
 | `element` | AMEF/ArchiMate architecture-model element — 80+ properties, a bulk GEMMA-XML-sync artifact (see `GEMMA_release.xml` etc. in `lib/Settings/`), not something a catalogue user asks about conversationally. Its huge property surface would itself bloat any generated tool schema. |
 | `view` | AMEF/ArchiMate view/diagram — same bulk-sync-artifact reasoning as `element`; a rendered diagram isn't a chat-answerable entity. |
 | `model` | AMEF/ArchiMate full model container (elements + relationships + views + orgs as nested XML) — a whole-file import/export artifact, not a queryable record. |
-| `organization` (English) — distinct from `organisatie` (Dutch) | DCAT/GEMMA "publisher of a catalog" concept from the architecture-model import path, not the softwarecatalog vendor/customer entity (that's `organisatie`, which is included). Two schemas share a similar name; only the one actually used by the softwarecatalog domain is curated. |
+| `organization` (English) — distinct from `organisatie` (Dutch) | DCAT/GEMMA "publisher of a catalog" concept from the architecture-model import path, not the stackiq vendor/customer entity (that's `organisatie`, which is included). Two schemas share a similar name; only the one actually used by the stackiq domain is curated. |
 | `property-definition` | AMEF property-definition metadata (3 fields, used only to interpret `element`/`relation` XML) — no standalone meaning outside the architecture-import pipeline. |
 | `relation` | AMEF ArchiMate relation between elements — same bulk-sync-artifact reasoning as `element`/`view`. |
 
@@ -65,7 +65,7 @@ business rules an ad hoc agent `create`/`update` would bypass:
 `ContractApprovalService`/`ContractStatusService` for contract lifecycle. Most
 concretely, `contract.status = "Actief"` and `contract.approvalState` are
 projections of a decidesk decision — the `contract` schema's own field
-description says "softwarecatalog never authors an approval decision locally"
+description says "stackiq never authors an approval decision locally"
 and "NEVER sets `status = Actief` on its own authority". Several curated
 schemas (`moduleVersie`, `koppeling`, `organisatie`, `gebruik`, `contract`) also
 carry `configuration.x-openregister-lifecycle` state machines — a raw `update`
@@ -78,7 +78,7 @@ deferred, not part of this change (see `DEFERRED_QUESTIONS` below).
 ## `configuration.x-openregister-mcp` — exact per-schema declaration
 
 All 9 blocks below go into
-`lib/Settings/register.d/softwarecatalog-mcp-adoption.json`, one entry per
+`lib/Settings/register.d/stackiq-mcp-adoption.json`, one entry per
 schema under `components.schemas.<name>.configuration.x-openregister-mcp`.
 ADR-037's recursive deep-merge folds each block into the existing
 `configuration` object (e.g. `moduleVersie` already has
@@ -323,10 +323,10 @@ existing register fragments.
 ## Decisions
 
 ### Decision 1: `register.d/` fragment, not editing the monolith
-The softwarecatalog `register.d/README.md` states each change should "add its
+The stackiq `register.d/README.md` states each change should "add its
 own `<change>.json` (OpenAPI components.schemas/paths) instead of editing
 `softwarecatalogus_register.json` — concurrent builds never conflict." This
-change follows that convention exactly: `register.d/softwarecatalog-mcp-adoption.json`.
+change follows that convention exactly: `register.d/stackiq-mcp-adoption.json`.
 **Alternative considered:** editing `softwarecatalogus_register.json` directly
 (this is what the pipelinq `client`/`lead` exemplar did) — rejected because
 Software Catalog's own README explicitly asks changes not to do this, and the
@@ -365,13 +365,13 @@ scoped with its own filter design given the schema's size, not bundled into
 this curated-catalogue change.
 
 ## Migration Plan
-1. Add `register.d/softwarecatalog-mcp-adoption.json` with the 9 blocks above.
+1. Add `register.d/stackiq-mcp-adoption.json` with the 9 blocks above.
 2. `python3 -m json.tool` validate the new fragment.
 3. Re-run `SettingsService::loadSettings()` (via the existing repair/import
    path) so the fragment signature changes and OpenRegister re-imports the
    merged register.
 4. Verify via OpenRegister's MCP tool listing that
-   `softwarecatalog.module.search`, `.get`, etc. (18 tools total) appear.
+   `stackiq.module.search`, `.get`, etc. (18 tools total) appear.
 5. **Rollback:** delete the fragment file (or flip every `enabled` to
    `false`) and re-run the import — see proposal.md Rollback Strategy.
 

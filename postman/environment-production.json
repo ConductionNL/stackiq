@@ -4,7 +4,7 @@
 	"values": [
 		{ "key": "base_url", "value": "https://softwarecatalogus.performance.commonground.nu", "enabled": true },
 		{ "key": "openregister_api", "value": "{{base_url}}/index.php/apps/openregister/api", "enabled": true },
-		{ "key": "softwarecatalog_api", "value": "{{base_url}}/index.php/apps/softwarecatalog/api", "enabled": true },
+		{ "key": "stackiq_api", "value": "{{base_url}}/index.php/apps/stackiq/api", "enabled": true },
 		{ "key": "opencatalogi_api", "value": "{{base_url}}/index.php/apps/opencatalogi/api", "enabled": true },
 		{ "key": "ocs_api", "value": "{{base_url}}/ocs/v2.php", "enabled": true },
 		{ "key": "admin_user", "value": "admin", "enabled": true },

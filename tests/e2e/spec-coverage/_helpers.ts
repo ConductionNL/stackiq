@@ -3,7 +3,7 @@
 /**
  * Shared helpers for the behavioural spec-coverage suite.
  *
- * These drive the REAL UI of the manifest-shell SoftwareCatalog SPA:
+ * These drive the REAL UI of the manifest-shell Stackiq SPA:
  * navigation is performed by clicking the actual app-navigation links (not
  * deep-link `goto`, which the shared shell sometimes resets to Dashboard), and
  * all assertions are made against rendered DOM (CnIndexPage surface, action
@@ -13,18 +13,18 @@
 import { expect, type Page } from '@playwright/test'
 import { APP_PATH } from '../base-url'
 
-// Was the hardcoded pretty path `/apps/softwarecatalog`, which only resolves
+// Was the hardcoded pretty path `/apps/stackiq`, which only resolves
 // behind a rewrite rule. See the APP_PATH docblock in tests/e2e/base-url.ts —
 // on the CI runner's `php -S` that path is served by the built-in server's own
 // "Not Found" page, and every spec then failed on a 30s app-root timeout that
 // read like a mount failure.
 export const APP_BASE = APP_PATH
-export const APP_SHELL = '.softwarecatalog-app-root'
+export const APP_SHELL = '.stackiq-app-root'
 export const APP_MAIN = 'main'
 
 /**
  * Console-error / 5xx collector that ignores noise NOT originating from the
- * softwarecatalog frontend bundle:
+ * stackiq frontend bundle:
  *  - the NC `user_status` heartbeat 500s (a platform quirk in this dev
  *    container, fired by core not by the app);
  *
@@ -62,8 +62,8 @@ export function collectAppErrors(page: Page): {
 		if (resp.status() < 500) return
 		const u = resp.url()
 		if (u.includes('user_status') || u.includes('heartbeat')) return
-		// Only flag 5xx that come from the softwarecatalog app surface.
-		if (u.includes('/apps/softwarecatalog/'))
+		// Only flag 5xx that come from the stackiq app surface.
+		if (u.includes('/apps/stackiq/'))
 			serverErrors.push(`${resp.status()} ${u}`)
 	})
 	return { errors, serverErrors }
@@ -76,11 +76,11 @@ export function expectNoAppErrors(bag: {
 }): void {
 	expect(
 		bag.serverErrors,
-		`softwarecatalog 5xx responses:\n${bag.serverErrors.join('\n')}`,
+		`stackiq 5xx responses:\n${bag.serverErrors.join('\n')}`,
 	).toEqual([])
 	expect(
 		bag.errors,
-		`softwarecatalog console errors:\n${bag.errors.join('\n')}`,
+		`stackiq console errors:\n${bag.errors.join('\n')}`,
 	).toEqual([])
 }
 
@@ -161,7 +161,7 @@ export async function dismissWalkthrough(page: Page): Promise<void> {
 /** Deep-link to a route and wait for the Vue shell + main region to mount. */
 export async function gotoAppRoute(page: Page, route: string): Promise<void> {
 	// The in-app router runs in hash mode, so deep links are `#<route>`. A bare
-	// path form (e.g. `/apps/softwarecatalog/settings`) boots the SPA but leaves
+	// path form (e.g. `/apps/stackiq/settings`) boots the SPA but leaves
 	// the hash empty, so vue-router falls back to the default `/` (Dashboard)
 	// and the requested surface never mounts. Always navigate via the hash.
 	const url = route === '/' ? `${APP_BASE}#/` : `${APP_BASE}#${route}`
@@ -184,10 +184,10 @@ export async function gotoAppRoute(page: Page, route: string): Promise<void> {
  * "Dashboard" nav label — that is what this helper exists for, and the identity
  * check below is unchanged in strength.
  *
- * ⚠️ This used to be `nav:has(a[href*="/apps/softwarecatalog/"])`, which stopped
+ * ⚠️ This used to be `nav:has(a[href*="/apps/stackiq/"])`, which stopped
  * matching ANYTHING under vue-router 4. In hash mode v4 emits HASH-RELATIVE
  * hrefs (`#/organisaties`); vue-router 3 emitted the base too
- * (`/apps/softwarecatalog/#/organisaties`). v4's `createHref` explicitly strips
+ * (`/apps/stackiq/#/organisaties`). v4's `createHref` explicitly strips
  * everything before the `#`, so no configuration of `createWebHashHistory`
  * restores the old shape — the change is by design, not a misconfiguration.
  *

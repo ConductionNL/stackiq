@@ -7,7 +7,7 @@
  * organization processing, and hierarchy management.
  *
  * @category  Handler
- * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -19,7 +19,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
+namespace OCA\Stackiq\Service\Stackiq;
 
 use OCP\App\IAppManager;
 use OCP\IGroup;
@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  * Handler for organization-related operations.
  *
  * @category  Handler
- * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -181,7 +181,7 @@ class OrganizationHandler {
 
 				// Save the updated organization with correct register/schema IDs.
 				$objectService = $this->getObjectService();
-				$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+				$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 				$registerId = $settingsService->getVoorzieningenRegisterId();
 				$organizationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -347,7 +347,7 @@ class OrganizationHandler {
 			foreach ($contactpersonen as $index => $contactPerson) {
 				try {
 					// Get the contactgegevens schema ID from settings.
-					$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+					$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 					$contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
 					$registerId = $settingsService->getVoorzieningenRegisterId();
 

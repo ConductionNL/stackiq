@@ -102,8 +102,8 @@ class SbomImportService {
 	 * @return array<string, mixed> Import result summary.
 	 *
 	 * @throws \OCA\Stackiq\Exception\UnsupportedSbomFormatException When the
-	 *                                                                       document's format/version is not supported.
-	 *                                                                       No component is written in that case.
+	 *                                                               document's format/version is not supported.
+	 *                                                               No component is written in that case.
 	 * @throws RuntimeException When the target `moduleVersie` cannot be
 	 *                          resolved, or required configuration is missing.
 	 *
@@ -216,7 +216,7 @@ class SbomImportService {
 	 * @return array{components: array<int, array<string, mixed>>, vulnerabilities: array<int, array{cveId: string, componentBomRef: string}>}
 	 *
 	 * @throws \OCA\Stackiq\Exception\UnsupportedSbomFormatException When
-	 *                                                                       the document's format/version is not supported.
+	 *                                                               the document's format/version is not supported.
 	 *
 	 * @spec openspec/specs/sbom-import/spec.md#requirement-cyclonedx-sbom-files-are-parsed-into-a-normalized-component-list
 	 */

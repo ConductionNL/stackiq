@@ -1,7 +1,7 @@
 {
  "info": {
-  "name": "SoftwareCatalog API contract (Newman)",
-  "description": "API-contract suite for the softwarecatalog app: Organisatie / Contactpersoon / Component(module) / Moduleversie / Contract CRUD via the OpenRegister object API (register 11, ADR-022), the Aanbod + ArchiMate/AMEF export endpoints, and the Settings/cronjob endpoints. Self-contained and idempotent: setup seeds the objects it needs and teardown removes them. Authz tests use {{noAuthBase}} (127.0.0.1) for cookie isolation.",
+  "name": "Stackiq API contract (Newman)",
+  "description": "API-contract suite for the stackiq app: Organisatie / Contactpersoon / Component(module) / Moduleversie / Contract CRUD via the OpenRegister object API (register 11, ADR-022), the Aanbod + ArchiMate/AMEF export endpoints, and the Settings/cronjob endpoints. Self-contained and idempotent: setup seeds the objects it needs and teardown removes them. Authz tests use {{noAuthBase}} (127.0.0.1) for cookie isolation.",
   "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
  },
  "auth": {
@@ -153,7 +153,7 @@
         "type": "text/javascript",
         "exec": [
          "// SLUG-RESOLUTION PREFLIGHT (GAP-2): the numeric OpenRegister register id that",
-         "// holds softwarecatalog objects varies between environments (dev box = 11, a fresh",
+         "// holds stackiq objects varies between environments (dev box = 11, a fresh",
          "// CI boot re-imports the register by slug and gets a different id). The register is",
          "// imported under the stable slug 'voorzieningen', so resolve the numeric id from the",
          "// slug here and set {{register}}. The org/contact/module/contract/etc. schemas are",
@@ -837,7 +837,7 @@
        "script": {
         "exec": [
          "// OpenRegister object reads are intentionally not auth-gated (ADR-022 -",
-         "// authorization on catalog data is OR's responsibility, not softwarecatalog's).",
+         "// authorization on catalog data is OR's responsibility, not stackiq's).",
          "pm.test('not a server error', () => pm.expect(pm.response.code).to.be.below(500));",
          "pm.test('OR returns the list anonymously (200)', () => pm.response.to.have.status(200));"
         ],
@@ -1068,14 +1068,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/contactpersonen/organisation/{{orgId}}",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/contactpersonen/organisation/{{orgId}}",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "contactpersonen",
         "organisation",
@@ -1116,14 +1116,14 @@
        }
       ],
       "url": {
-       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/contactpersonen/organisation/{{orgId}}",
+       "raw": "{{noAuthBase}}/index.php/apps/stackiq/api/contactpersonen/organisation/{{orgId}}",
        "host": [
         "{{noAuthBase}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "contactpersonen",
         "organisation",
@@ -1971,14 +1971,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/aanbod",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/aanbod",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "aanbod"
        ]
@@ -2017,14 +2017,14 @@
        }
       ],
       "url": {
-       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/aanbod",
+       "raw": "{{noAuthBase}}/index.php/apps/stackiq/api/aanbod",
        "host": [
         "{{noAuthBase}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "aanbod"
        ]
@@ -2096,14 +2096,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/archimate/export/organization/{{orgId}}",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/archimate/export/organization/{{orgId}}",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "archimate",
         "export",
@@ -2164,14 +2164,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/archimate/export",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/archimate/export",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "archimate",
         "export"
@@ -2216,14 +2216,14 @@
        }
       ],
       "url": {
-       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/archimate/export/organization/{{orgId}}",
+       "raw": "{{noAuthBase}}/index.php/apps/stackiq/api/archimate/export/organization/{{orgId}}",
        "host": [
         "{{noAuthBase}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "archimate",
         "export",
@@ -2292,14 +2292,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/settings",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/settings",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "settings"
        ]
@@ -2349,14 +2349,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/settings/stats",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/settings/stats",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "settings",
         "stats"
@@ -2405,14 +2405,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/voorzieningen/config",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/voorzieningen/config",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "voorzieningen",
         "config"
@@ -2463,14 +2463,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/settings/cronjobs",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/settings/cronjobs",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "settings",
         "cronjobs"
@@ -2524,14 +2524,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/settings/cronjobs/users",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/settings/cronjobs/users",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "settings",
         "cronjobs",
@@ -2576,14 +2576,14 @@
        }
       ],
       "url": {
-       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/settings",
+       "raw": "{{noAuthBase}}/index.php/apps/stackiq/api/settings",
        "host": [
         "{{noAuthBase}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "settings"
        ]
@@ -2632,14 +2632,14 @@
        }
       ],
       "url": {
-       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/settings/cronjobs",
+       "raw": "{{noAuthBase}}/index.php/apps/stackiq/api/settings/cronjobs",
        "host": [
         "{{noAuthBase}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "settings",
         "cronjobs"
@@ -2706,14 +2706,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/dashboard",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/dashboard",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "dashboard"
        ]
@@ -2763,14 +2763,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/me",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/me",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "me"
        ]
@@ -2808,14 +2808,14 @@
        }
       ],
       "url": {
-       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/me",
+       "raw": "{{noAuthBase}}/index.php/apps/stackiq/api/me",
        "host": [
         "{{noAuthBase}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "me"
        ]
@@ -2881,14 +2881,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/module",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/facets/module",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "facets",
         "module"
@@ -2943,14 +2943,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/dienst",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/facets/dienst",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "facets",
         "dienst"
@@ -3003,14 +3003,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/contract",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/facets/contract",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "facets",
         "contract"
@@ -3062,14 +3062,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/module?referentiecomponent[]=Zaakregistratiecomponent",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/facets/module?referentiecomponent[]=Zaakregistratiecomponent",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "facets",
         "module"
@@ -3129,14 +3129,14 @@
        }
       ],
       "url": {
-       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/module?search=zaak",
+       "raw": "{{baseUrl}}/index.php/apps/stackiq/api/facets/module?search=zaak",
        "host": [
         "{{baseUrl}}"
        ],
        "path": [
         "index.php",
         "apps",
-        "softwarecatalog",
+        "stackiq",
         "api",
         "facets",
         "module"

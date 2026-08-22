@@ -1,6 +1,6 @@
 /**
  * Unit tests for the ratings & reviews aggregate panel helpers
- * (catalog-ratings, softwarecatalog#375).
+ * (catalog-ratings, stackiq#375).
  *
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
  */

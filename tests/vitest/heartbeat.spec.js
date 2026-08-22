@@ -65,7 +65,7 @@ describe('Heartbeat singleton', () => {
 		// First heartbeat is fired synchronously inside start()
 		expect(global.fetch).toHaveBeenCalledTimes(1)
 		const [url, opts] = global.fetch.mock.calls[0]
-		expect(url).toBe('/index.php/apps/softwarecatalog/api/heartbeat')
+		expect(url).toBe('/index.php/apps/stackiq/api/heartbeat')
 		expect(opts.method).toBe('POST')
 		expect(opts.headers['Content-Type']).toBe('application/json')
 		expect(opts.headers.requesttoken).toBe('test-token')

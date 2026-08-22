@@ -26,9 +26,9 @@ namespace OCA\Stackiq\Service;
 
 use DateTime;
 use Exception;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for synchronizing and processing Gebruik (Usage) objects.

@@ -28,13 +28,13 @@ echo -e "${CYAN}============================================${NC}"
 echo
 
 # Check if GEMMA file exists in container
-if ! docker-compose exec -T nextcloud test -f "/var/www/html/apps-extra/softwarecatalog/$GEMMA_FILE"; then
+if ! docker-compose exec -T nextcloud test -f "/var/www/html/apps-extra/stackiq/$GEMMA_FILE"; then
     echo -e "${RED}❌ ERROR: GEMMA file not found in container${NC}"
     exit 1
 fi
 
 # Get file size
-FILE_SIZE=$(docker-compose exec -T nextcloud stat -c%s "/var/www/html/apps-extra/softwarecatalog/$GEMMA_FILE")
+FILE_SIZE=$(docker-compose exec -T nextcloud stat -c%s "/var/www/html/apps-extra/stackiq/$GEMMA_FILE")
 FILE_SIZE_MB=$(echo "scale=2; $FILE_SIZE / 1024 / 1024" | bc)
 echo -e "${BLUE}📁 Test file: $GEMMA_FILE (${FILE_SIZE_MB} MB)${NC}"
 echo
@@ -48,7 +48,7 @@ test_import_method() {
     echo -e "${YELLOW}🔄 Testing $method_name method...${NC}"
     
     # Copy file to temp location in container
-    docker-compose exec -T nextcloud cp "/var/www/html/apps-extra/softwarecatalog/$GEMMA_FILE" "/tmp/test_gemma.xml"
+    docker-compose exec -T nextcloud cp "/var/www/html/apps-extra/stackiq/$GEMMA_FILE" "/tmp/test_gemma.xml"
     
     # Record start time
     local start_time=$(date +%s.%3N)
@@ -62,7 +62,7 @@ test_import_method() {
         -F "useOptimized=$use_optimized" \
         -F "updateExisting=true" \
         -F "preserveIds=true" \
-        "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/import" 2>/dev/null || echo "000")
+        "$BASE_URL/index.php/apps/stackiq/api/archimate/import" 2>/dev/null || echo "000")
     
     # Record end time
     local end_time=$(date +%s.%3N)

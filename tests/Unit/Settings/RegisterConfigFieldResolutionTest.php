@@ -94,8 +94,8 @@ class RegisterConfigFieldResolutionTest extends TestCase {
 	 *  2. a pipe-separated fallback list — AT LEAST ONE entry must exist;
 	 *  3. a plain property name — it must exist.
 	 *
-	 * @param string             $value       The configuration value.
-	 * @param array<int,string>  $propertyKeys The schema's declared property keys.
+	 * @param string $value The configuration value.
+	 * @param array<int,string> $propertyKeys The schema's declared property keys.
 	 *
 	 * @return string|null The failure reason, or null when the value resolves.
 	 */
@@ -172,7 +172,7 @@ class RegisterConfigFieldResolutionTest extends TestCase {
 		$this->assertSame(
 			expected: [],
 			actual: $failures,
-			message: "a configuration field names a property its schema does not declare. OpenRegister REJECTS the whole schema for this, "
+			message: 'a configuration field names a property its schema does not declare. OpenRegister REJECTS the whole schema for this, '
 				. "the register is then imported without that schema link, and every dependent app-config id is written empty:\n- "
 				. implode("\n- ", $failures)
 		);

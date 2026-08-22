@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
@@ -34,8 +36,6 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\OrganisationService;
 
 /**
  * Controller for managing contactpersonen and their user accounts.

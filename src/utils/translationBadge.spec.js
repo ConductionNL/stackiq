@@ -1,7 +1,7 @@
 /**
  * Unit tests for the translation-badge utility.
  *
- * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#3.5
+ * @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#3.5
  */
 
 import {

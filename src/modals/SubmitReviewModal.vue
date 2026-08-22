@@ -2,7 +2,7 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
   - SPDX-License-Identifier: EUPL-1.2
   -
-  - Submit-a-review modal (softwarecatalog#375). Own file per ADR-012
+  - Submit-a-review modal (stackiq#375). Own file per ADR-012
   - (modals live in their own component). Collects a title, a 1-10 rating,
   - and a testimonial, then POSTs to /api/reviews. The author is NEVER sent
   - by this form — ReviewController/ReviewService always derive it from the

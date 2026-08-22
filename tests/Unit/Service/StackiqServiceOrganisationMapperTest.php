@@ -60,9 +60,9 @@ final class StackiqServiceOrganisationMapperTest extends TestCase {
 	 * so every property the method touches must be seeded here — that is why
 	 * `_appManager` is seeded even on the arm that never reaches the container.
 	 *
-	 * @param IAppManager       $appManager The app manager double.
+	 * @param IAppManager $appManager The app manager double.
 	 * @param ContainerInterface $container The container double.
-	 * @param LoggerInterface   $logger     The logger double.
+	 * @param LoggerInterface $logger The logger double.
 	 *
 	 * @return StackiqService The service under test.
 	 */
@@ -89,7 +89,6 @@ final class StackiqServiceOrganisationMapperTest extends TestCase {
 		}
 
 		return $service;
-
 	}//end buildService()
 
 	/**
@@ -103,7 +102,6 @@ final class StackiqServiceOrganisationMapperTest extends TestCase {
 		$method = new \ReflectionMethod($service, 'getOrganisationMapper');
 		$method->setAccessible(true);
 		return $method->invoke($service);
-
 	}//end callAccessor()
 
 	/**

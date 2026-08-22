@@ -1,6 +1,6 @@
-# SoftwareCatalog API-contract tests (Newman)
+# Stackiq API-contract tests (Newman)
 
-Newman/Postman contract tests that exercise softwarecatalog's HTTP surface
+Newman/Postman contract tests that exercise stackiq's HTTP surface
 directly, locking the API contract. Per the gate-19 split, **API/contract
 correctness lives in Newman**; Playwright drives the UI only.
 
@@ -46,7 +46,7 @@ Two cases assert the *current bad/missing* behaviour so the suite stays green
 without faking a pass. Each flips RED the moment the gap is provisioned — that's
 the signal to convert it to a happy-path assertion.
 
-1. **Standaard schema not provisioned** (folder 5). softwarecatalog's
+1. **Standaard schema not provisioned** (folder 5). stackiq's
    `voorzieningen_config` has no `standaard_schema` key and no `standaard`
    schema exists in register 11, so OR 404s the slug. The test asserts the 404.
 2. **AMEF register not provisioned** (folder 7,
@@ -79,14 +79,14 @@ the signal to convert it to a happy-path assertion.
 ./run-newman.sh
 
 # or directly:
-npx newman run softwarecatalog.postman_collection.json \
+npx newman run stackiq.postman_collection.json \
   --env-var baseUrl=http://localhost:8080 \
   --env-var adminUser=admin \
   --env-var adminPass=admin
 ```
 
 `run-newman.sh` prefers a globally-installed `newman`, falls back to
-`npx newman`, and serialises runs under `flock /tmp/uiaudit-softwarecatalog.lock`
+`npx newman`, and serialises runs under `flock /tmp/uiaudit-stackiq.lock`
 to avoid tripping the Nextcloud brute-force protection when multiple agents run
 in parallel.
 
@@ -111,9 +111,9 @@ honest:
 
 CRUD is delegated to OpenRegister (ADR-022). OR's object-read API returns the
 list/object to an **anonymous** request (`200`) — authorization on catalog data
-is OR's responsibility, not softwarecatalog's. The folder-1 anon test documents
+is OR's responsibility, not stackiq's. The folder-1 anon test documents
 this honestly rather than asserting a `401` the OR API never returns. The
-softwarecatalog controllers (contactpersonen, settings, cronjobs, me) **are**
+stackiq controllers (contactpersonen, settings, cronjobs, me) **are**
 auth-gated and return `401`; `aanbod` is intentionally `@PublicPage`.
 
 ## Collection variables

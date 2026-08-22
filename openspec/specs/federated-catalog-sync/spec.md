@@ -12,7 +12,7 @@ Federates the software catalog with other instances through an OpenCatalogi dire
 The app SHALL register the instance's software catalog with an OpenCatalogi
 directory by delegating to OpenCatalogi's `BroadcastService`/`DirectoryService`
 (never a bespoke HTTP client). The directory URL SHALL come from the
-`softwarecatalog/federation_directory_url` app-config key (default
+`stackiq/federation_directory_url` app-config key (default
 `https://directory.opencatalogi.nl`). When OpenCatalogi is not installed or
 enabled, federation SHALL be reported as unavailable in the admin settings and
 no directory traffic SHALL be attempted.
@@ -21,7 +21,7 @@ no directory traffic SHALL be attempted.
 
 @e2e exclude The announce path delegates to OpenCatalogi's BroadcastService/DirectoryService and needs a live OpenCatalogi install + a reachable directory (fed-testbed topology); covered by PHPUnit FederationServiceTest (testAnnounceDegradesWithoutOpenCatalogi, testAnnounceNoopWhenDisabled) and the OC-federation-testbed procedure. Federation settings is admin-only (ADR-004), not reachable from the in-app router the e2e suite drives.
 
-- **WHEN** an admin enables federation in the softwarecatalog admin settings with a directory URL configured
+- **WHEN** an admin enables federation in the stackiq admin settings with a directory URL configured
 - **THEN** the instance's catalog is announced to the directory via the OpenCatalogi broadcast machinery
 - **AND** the settings UI shows the registration status (registered / failed with reason)
 
@@ -70,7 +70,7 @@ reads.
 
 The app SHALL list peer organisations' catalogs found in the configured
 directory and let an admin subscribe to specific peers. Subscriptions SHALL be
-stored in the `softwarecatalog/federation_peers` app-config allowlist. The app
+stored in the `stackiq/federation_peers` app-config allowlist. The app
 SHALL NOT auto-subscribe to any peer.
 
 #### Scenario: Admin discovers and subscribes to a peer
@@ -123,7 +123,7 @@ remove objects originating from that same peer.
 ### Requirement: Sync runs on a schedule and handles staleness
 
 A background job SHALL pull all subscribed peer catalogs at the interval
-configured in `softwarecatalog/federation_sync_interval` (default 3600
+configured in `stackiq/federation_sync_interval` (default 3600
 seconds), with a per-peer timeout so one unreachable peer cannot block the
 rest. After 3 consecutive failed pulls (configurable) a peer's merged entries
 SHALL be marked stale (`_source.stale: true`) and surfaced as such — never
@@ -159,7 +159,7 @@ healthy peer's catalog no longer lists them.
 All outbound federation requests (directory, broadcast, peer pulls) SHALL pass
 the SSRF guard used by OpenCatalogi federation: private, loopback, and
 non-resolvable hosts are refused. For local development and test federation,
-the `softwarecatalog/local_federation_hosts` app-config key (comma-separated
+the `stackiq/local_federation_hosts` app-config key (comma-separated
 hostnames, **empty by default**) SHALL allowlist specific private hosts past
 the guard — mirroring the proven `opencatalogi/local_federation_hosts`
 pattern. The allowlist SHALL be settable only via server config/occ, not from
@@ -177,6 +177,6 @@ the web UI.
 
 @e2e exclude Requires a two-instance local federation topology; proven manually via the OC federation testbed procedure.
 
-- **WHEN** `softwarecatalog/local_federation_hosts` contains the target host
+- **WHEN** `stackiq/local_federation_hosts` contains the target host
 - **THEN** federation requests to that host proceed despite it being private/loopback
 

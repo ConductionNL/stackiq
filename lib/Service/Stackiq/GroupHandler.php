@@ -7,7 +7,7 @@
  * and ensures all required groups exist and are properly configured.
  *
  * @category  Handler
- * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -19,7 +19,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\SoftwareCatalogue;
+namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
@@ -36,7 +36,7 @@ use RuntimeException;
  * Handler for group management operations
  *
  * @category  Handler
- * @package   OCA\SoftwareCatalog\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -57,7 +57,7 @@ class GroupHandler {
 	 *
 	 * @var string
 	 */
-	private const APP_NAME = 'softwarecatalog';
+	private const APP_NAME = 'stackiq';
 
 	/**
 	 * GroupHandler constructor
@@ -396,7 +396,7 @@ class GroupHandler {
 	 */
 	private function resolveOrganisationData(string $organisationUuid): ?array {
 		$objectService = $this->getObjectService();
-		$settingsService = $this->_container->get('OCA\SoftwareCatalog\Service\SettingsService');
+		$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
 		$registerId = $settingsService->getVoorzieningenRegisterId();
 		$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 

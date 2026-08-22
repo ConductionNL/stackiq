@@ -21,12 +21,12 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Db\OrganisationMapper;
 
 /**
  * Service for synchronizing organizations and contact persons.

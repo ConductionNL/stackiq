@@ -5,10 +5,10 @@ status: implemented
 # Organization-Specific ArchiMate Export Specification
 
 ## Purpose
-Defines how the softwarecatalog app exports an organization-enriched ArchiMate (AMEFF) XML file that includes the base GEMMA model plus the organization's applications plotted on referentiecomponenten, with proper folder structure, naming, and metadata. Supports toggling data layers (modules, deelnames, gebruik) via query parameters and organises output into typed folders. The exported file is designed to import cleanly into Archi (the open-source ArchiMate modelling tool) and other AMEFF-compatible tools.
+Defines how the stackiq app exports an organization-enriched ArchiMate (AMEFF) XML file that includes the base GEMMA model plus the organization's applications plotted on referentiecomponenten, with proper folder structure, naming, and metadata. Supports toggling data layers (modules, deelnames, gebruik) via query parameters and organises output into typed folders. The exported file is designed to import cleanly into Archi (the open-source ArchiMate modelling tool) and other AMEFF-compatible tools.
 
 ## Context
-Organizations using the softwarecatalog map their applications to GEMMA referentiecomponenten. This export feature lets them download a complete ArchiMate model that includes both the national GEMMA standard and their organization-specific application landscape. The exported XML follows the ArchiMate Model Exchange File Format (AMEFF) specification and can be opened in tools like Archi for further analysis, reporting, and architecture governance.
+Organizations using the stackiq map their applications to GEMMA referentiecomponenten. This export feature lets them download a complete ArchiMate model that includes both the national GEMMA standard and their organization-specific application landscape. The exported XML follows the ArchiMate Model Exchange File Format (AMEFF) specification and can be opened in tools like Archi for further analysis, reporting, and architecture governance.
 
 **Relation to existing specs:**
 - `view-enrichment-api`: Uses similar module-to-referentiecomponent matching logic, but this spec outputs XML instead of JSON
@@ -436,7 +436,7 @@ _None._
 _None._
 
 ## Current Implementation Status
-- **Partially implemented**: The softwarecatalog app has an ArchiMate export controller, but deelnames and data layer toggles are not yet implemented.
+- **Partially implemented**: The stackiq app has an ArchiMate export controller, but deelnames and data layer toggles are not yet implemented.
 - **Key gaps**:
   - No deelnames data layer in the export
   - No typed organization folders (Gebruikt, Aangeboden, Deelnames)

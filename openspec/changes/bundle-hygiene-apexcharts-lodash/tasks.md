@@ -26,7 +26,7 @@
 ## 3. Verification
 
 - [ ] 3.1 `npm run build` — confirm the production bundle no longer
-  includes a top-level `apexcharts` chunk from softwarecatalog's own
+  includes a top-level `apexcharts` chunk from stackiq's own
   dependency (only nc-vue's nested copy, if any chart widget pulls it in
   transitively).
 - [ ] 3.2 Run existing vitest suite (`npm run test:unit` or equivalent) to

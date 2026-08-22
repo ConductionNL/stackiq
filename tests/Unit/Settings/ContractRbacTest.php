@@ -149,12 +149,12 @@ class ContractRbacTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testSoftwareCatalogAdminsRetainsUnrestrictedRead(): void {
+	public function testStackiqAdminsRetainsUnrestrictedRead(): void {
 		$authorization = $this->loadContractAuthorization();
 
 		$this->assertContains('software-catalog-admins', $authorization['read']);
 
-	}//end testSoftwareCatalogAdminsRetainsUnrestrictedRead()
+	}//end testStackiqAdminsRetainsUnrestrictedRead()
 
 	/**
 	 * Data provider of every role that schema-rbac-hardening (#390) newly

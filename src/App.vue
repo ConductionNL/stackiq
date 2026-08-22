@@ -9,13 +9,13 @@
 
  Global modals/dialogs (`<Modals />`, `<Dialogs />`) stay mounted at
  the app root so legacy custom components (OrganisatieIndexView,
- SoftwareCatalogSettingsPage) can still trigger them through the
+ StackiqSettingsPage) can still trigger them through the
  navigationStore.modal channel.
 
- @spec openspec/changes/softwarecatalog-manifest-v1/tasks.md#task-4.3
+ @spec openspec/changes/stackiq-manifest-v1/tasks.md#task-4.3
 -->
 <template>
-	<div class="softwarecatalog-app-root">
+	<div class="stackiq-app-root">
 		<CnAppRoot
 			:aiCompanion="true"
 			:manifest="manifest"
@@ -184,7 +184,7 @@ export default {
 	 */
 	async created() {
 		// Stackiq stores still need to come up so legacy custom
-		// components (OrganisatieIndexView, SoftwareCatalogSettingsPage)
+		// components (OrganisatieIndexView, StackiqSettingsPage)
 		// keep working through the transition. CnAppRoot itself doesn't
 		// depend on them — the openregister dependency check happens via
 		// `manifest.dependencies` + `useAppStatus()`.

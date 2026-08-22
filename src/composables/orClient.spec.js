@@ -1,7 +1,7 @@
 /**
  * Unit tests for the orClient composable (i18n + tenant URL/header helpers).
  *
- * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#3.2
+ * @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#3.2
  */
 
 import { getLanguage } from '@nextcloud/l10n'

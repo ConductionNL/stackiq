@@ -2,12 +2,12 @@
 status: proposed
 ---
 
-# App-Id Rename: softwarecatalog to stackiq
+# App-Id Rename: stackiq to stackiq
 
 ## Purpose
 
-The app's Nextcloud id moves from `softwarecatalog` to `stackiq`, and its PHP
-namespace from `OCA\SoftwareCatalog` to `OCA\Stackiq`, without losing a single
+The app's Nextcloud id moves from `stackiq` to `stackiq`, and its PHP
+namespace from `OCA\Stackiq` to `OCA\Stackiq`, without losing a single
 stored value and without rewriting any identifier another system owns.
 
 The reason this needs a spec at all is that **the failure mode of getting it
@@ -49,7 +49,7 @@ name. The PHP root namespace SHALL be `OCA\Stackiq`.
 ### Requirement: Stored App Config Survives The Rename
 
 On both fresh install and upgrade, the app SHALL copy every `oc_appconfig` key
-stored under the app id `softwarecatalog` into the `stackiq` namespace before
+stored under the app id `stackiq` into the `stackiq` namespace before
 any other repair step writes app config.
 
 The enumeration SHALL be exhaustive (`IAppConfig::getKeys()` over the old app
@@ -60,9 +60,9 @@ skipped.
 
 #### Scenario: An operator's admin settings survive the rename
 
-- **GIVEN** an instance where `softwarecatalog` has `federation_enabled = true` and `federation_directory_url` set
+- **GIVEN** an instance where `stackiq` has `federation_enabled = true` and `federation_directory_url` set
 - **WHEN** the renamed app is installed and the repair step runs
-- **THEN** both keys MUST be readable under app id `stackiq` with their original values, and the original `softwarecatalog` rows MUST still exist
+- **THEN** both keys MUST be readable under app id `stackiq` with their original values, and the original `stackiq` rows MUST still exist
 - @e2e exclude Repair-step behaviour with no UI surface; covered by `tests/Unit/Repair/MigrateAppConfigKeysTest.php`.
 
 #### Scenario: The reserved `enabled` key is never copied
@@ -82,7 +82,7 @@ skipped.
 ### Requirement: Stored User Preferences Survive The Rename
 
 On both fresh install and upgrade, the app SHALL copy every `oc_preferences`
-value stored under the app id `softwarecatalog`, for every seen user, into the
+value stored under the app id `stackiq`, for every seen user, into the
 `stackiq` namespace.
 
 The user enumeration SHALL use `IUserManager::callForSeenUsers()` combined with
@@ -92,7 +92,7 @@ arbitrary user-chosen view state) it migrates nothing and reports success.
 
 #### Scenario: A user's saved view preference survives the rename
 
-- **GIVEN** a user who has stored `pref_applications-view = table` under app id `softwarecatalog`
+- **GIVEN** a user who has stored `pref_applications-view = table` under app id `stackiq`
 - **WHEN** the renamed app is installed and the repair step runs
 - **THEN** `getUserValue($uid, 'stackiq', 'pref_applications-view')` MUST return `table`
 - @e2e exclude Repair-step behaviour with no UI surface; covered by `tests/Unit/Repair/MigrateUserPreferencesTest.php`.
@@ -107,13 +107,13 @@ arbitrary user-chosen view state) it migrates nothing and reports success.
 ### Requirement: Stored Background Job Classes Survive The Rename
 
 The app SHALL deregister the four `oc_jobs` rows whose stored `class` string
-carries the old `OCA\SoftwareCatalog\BackgroundJob\` prefix, so that Nextcloud's
+carries the old `OCA\Stackiq\BackgroundJob\` prefix, so that Nextcloud's
 own `<background-jobs>` registration of the `OCA\Stackiq\BackgroundJob\`
 classes is the only surviving registration.
 
 #### Scenario: The orphaned job rows are removed
 
-- **GIVEN** an instance whose `oc_jobs` table holds `OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob`
+- **GIVEN** an instance whose `oc_jobs` table holds `OCA\Stackiq\BackgroundJob\ContractStatusJob`
 - **WHEN** the repair step runs
 - **THEN** that row MUST be removed, because the class no longer exists: the job silently never runs again and nothing reports it
 - @e2e exclude Repair-step behaviour with no UI surface; covered by `tests/Unit/Repair/MigrateBackgroundJobClassesTest.php`.
@@ -123,12 +123,12 @@ classes is the only surviving registration.
 The rename SHALL NOT change any identifier whose authority lives outside this
 app. Specifically it SHALL leave unchanged: the Nextcloud group ids
 `software-catalog-users` and `software-catalog-admins`; the dashboard widget id
-`softwarecatalog_concept_organisaties_widget`; the appId this app passes to
+`stackiq_concept_organisaties_widget`; the appId this app passes to
 OpenRegister's configuration importer and the `sourceUrl` /
 `lib/Settings/softwarecatalogus_register.json` filename that accompanies it; the
 live hosts `softwarecatalog.conduction.nl` and
-`www.conduction.nl/apps/softwarecatalog`; the Cloudflare Pages project
-`softwarecatalog-docs`; VNG's own `softwarecatalogus.nl` identifiers; and every
+`www.conduction.nl/apps/stackiq`; the Cloudflare Pages project
+`stackiq-docs`; VNG's own `softwarecatalogus.nl` identifiers; and every
 other Conduction app's id and namespace.
 
 #### Scenario: Group membership still resolves after the rename
@@ -140,9 +140,9 @@ other Conduction app's id and namespace.
 
 #### Scenario: OpenRegister still recognises its own configuration row
 
-- **GIVEN** OpenRegister holds a Configuration row created with `appId = "softwarecatalog"`
+- **GIVEN** OpenRegister holds a Configuration row created with `appId = "stackiq"`
 - **WHEN** this app calls `getConfiguredAppVersion()` and `importFromApp()`
-- **THEN** it MUST keep passing the literal `softwarecatalog`, because OpenRegister looks the row up by that string in ITS OWN namespace: a new appId makes it see an app it has never configured, import a SECOND configuration, and orphan the existing registers and schemas without an error
+- **THEN** it MUST keep passing the literal `stackiq`, because OpenRegister looks the row up by that string in ITS OWN namespace: a new appId makes it see an app it has never configured, import a SECOND configuration, and orphan the existing registers and schemas without an error
 - @e2e exclude Cross-app persistence behaviour; asserted at the unit level against the frozen constant.
 
 #### Scenario: Documentation still publishes to a host that resolves

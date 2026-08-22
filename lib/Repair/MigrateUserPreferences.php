@@ -5,7 +5,7 @@
  *
  * Nextcloud namespaces `oc_preferences` BY APP ID exactly as it does
  * `oc_appconfig`, so every per-user preference this app stored under
- * `softwarecatalog` became unreachable when the id moved to `stackiq`. The
+ * `stackiq` became unreachable when the id moved to `stackiq`. The
  * app's preference reads all pass a default, so nothing errors — a user's saved
  * view mode, column choice and filter simply revert, which reads as "the app
  * forgot my settings" rather than as a failure.
@@ -50,7 +50,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Copies per-user preferences from the legacy `softwarecatalog` app id to `stackiq`.
+ * Copies per-user preferences from the legacy `stackiq` app id to `stackiq`.
  *
  * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
  */
@@ -92,7 +92,7 @@ class MigrateUserPreferences implements IRepairStep {
 	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
 	 */
 	public function getName(): string {
-		return 'Migrate user preferences from the softwarecatalog app id to stackiq';
+		return 'Migrate user preferences from the stackiq app id to stackiq';
 	}//end getName()
 
 	/**

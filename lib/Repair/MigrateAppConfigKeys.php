@@ -4,7 +4,7 @@
  * Repair step that carries `oc_appconfig` rows across the app-id rename.
  *
  * Nextcloud namespaces `oc_appconfig` BY APP ID and offers no in-place app-id
- * upgrade, so the moment `softwarecatalog` became `stackiq` every row this app
+ * upgrade, so the moment `stackiq` became `stackiq` every row this app
  * had ever written became unreachable. Nothing errors: every reader in this
  * codebase supplies a default, so an operator's federation URL, sync interval
  * and group configuration simply revert to their defaults and the instance
@@ -49,7 +49,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Copies app config from the legacy `softwarecatalog` app id to `stackiq`.
+ * Copies app config from the legacy `stackiq` app id to `stackiq`.
  *
  * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
  */
@@ -95,7 +95,7 @@ class MigrateAppConfigKeys implements IRepairStep {
 	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
 	 */
 	public function getName(): string {
-		return 'Migrate app config from the softwarecatalog app id to stackiq';
+		return 'Migrate app config from the stackiq app id to stackiq';
 	}//end getName()
 
 	/**
