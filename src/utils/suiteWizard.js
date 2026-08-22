@@ -37,7 +37,7 @@ export function isDetailsStepValid(stepData) {
  * navigation (the shape `CnWizardDialog`'s `validate` prop expects).
  *
  * @param {Array<object>} applications The modules attached in this step.
- * @param {Function} translate The `t('softwarecatalog', ...)` function.
+ * @param {Function} translate The `t('stackiq', ...)` function.
  * @return {(true|string)} `true` when valid, else a validation message.
  * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-must-require-at-least-one-attached-application-before-advancing-past-the-applications-step
  */
@@ -46,7 +46,7 @@ export function isApplicationsStepValid(applications, translate) {
 		return true
 	}
 	return translate(
-		'softwarecatalog',
+		'stackiq',
 		'Attach at least one existing application before continuing.',
 	)
 }

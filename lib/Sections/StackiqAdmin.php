@@ -1,24 +1,24 @@
 <?php
 
 /**
- * Settings section for SoftwareCatalog admin panel.
+ * Settings section for Stackiq admin panel.
  *
  * @category  Sections
- * @package   OCA\SoftwareCatalog\Sections
+ * @package   OCA\Stackiq\Sections
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
-namespace OCA\SoftwareCatalog\Sections;
+namespace OCA\Stackiq\Sections;
 
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Settings\IIconSection;
 
-class SoftwareCatalogAdmin implements IIconSection {
+class StackiqAdmin implements IIconSection {
 
 	/**
 	 * The localization service.
@@ -35,7 +35,7 @@ class SoftwareCatalogAdmin implements IIconSection {
 	private IURLGenerator $urlGenerator;
 
 	/**
-	 * Constructor for SoftwareCatalogAdmin section.
+	 * Constructor for StackiqAdmin section.
 	 *
 	 * @param IL10N $l10n The localization service
 	 * @param IURLGenerator $urlGenerator The URL generator service
@@ -52,7 +52,7 @@ class SoftwareCatalogAdmin implements IIconSection {
 	 */
 	public function getIcon(): string {
 		// phpcs:ignore -- named parameters unsafe for Nextcloud core methods (param names vary by NC version)
-		return $this->urlGenerator->imagePath('softwarecatalog', 'app-dark.svg');
+		return $this->urlGenerator->imagePath('stackiq', 'app-dark.svg');
 	}//end getIcon()
 
 	/**
@@ -61,7 +61,7 @@ class SoftwareCatalogAdmin implements IIconSection {
 	 * @return string The section ID
 	 */
 	public function getID(): string {
-		return 'softwarecatalog';
+		return 'stackiq';
 	}//end getID()
 
 	/**
@@ -70,7 +70,7 @@ class SoftwareCatalogAdmin implements IIconSection {
 	 * @return string The translated section name
 	 */
 	public function getName(): string {
-		return $this->l10n->t('Software Catalog');
+		return $this->l10n->t('Stackiq');
 	}//end getName()
 
 	/**

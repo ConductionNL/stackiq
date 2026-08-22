@@ -32,18 +32,18 @@
  * fallback list, plain property name).
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Settings
+ * @package   OCA\Stackiq\Tests\Unit\Settings
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/settings-service/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Settings;
+namespace OCA\Stackiq\Tests\Unit\Settings;
 
 use PHPUnit\Framework\TestCase;
 

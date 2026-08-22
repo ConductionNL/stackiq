@@ -383,7 +383,7 @@ export const useSettingsStore = defineStore('settings', {
 
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/objects/counts',
+					'/index.php/apps/stackiq/api/objects/counts',
 				)
 
 				if (!response.ok) {
@@ -436,7 +436,7 @@ export const useSettingsStore = defineStore('settings', {
 			try {
 				// Load basic settings first (minimal data)
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings',
+					'/index.php/apps/stackiq/api/settings',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -505,7 +505,7 @@ export const useSettingsStore = defineStore('settings', {
 				// Load available registers first (needed for register dropdowns)
 				this.loadingRegisters = true
 				const settingsResponse = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings',
+					'/index.php/apps/stackiq/api/settings',
 				)
 				if (!settingsResponse.ok) {
 					throw new Error(
@@ -551,7 +551,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingVoorzieningenSchemas = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+					'/index.php/apps/stackiq/api/voorzieningen/config',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -578,7 +578,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingAmefSchemas = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/amef/config',
+					'/index.php/apps/stackiq/api/amef/config',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -638,7 +638,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingGeneralSettings = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings/general/config',
+					'/index.php/apps/stackiq/api/settings/general/config',
 					{
 						headers: {
 							'X-Requested-With': 'XMLHttpRequest',
@@ -673,7 +673,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingSyncSettings = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings/sync/config',
+					'/index.php/apps/stackiq/api/settings/sync/config',
 					{
 						headers: {
 							'X-Requested-With': 'XMLHttpRequest',
@@ -708,7 +708,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingVersionInfo = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings/version',
+					'/index.php/apps/stackiq/api/settings/version',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -735,7 +735,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingArchiMateStatus = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/archimate/status',
+					'/index.php/apps/stackiq/api/archimate/status',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -767,7 +767,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingObjectCounts = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/objects/counts',
+					'/index.php/apps/stackiq/api/objects/counts',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -801,7 +801,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingEmailConfig = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/email/config',
+					'/index.php/apps/stackiq/api/email/config',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -829,7 +829,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingUserGroups = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/user-groups/config',
+					'/index.php/apps/stackiq/api/user-groups/config',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -865,7 +865,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async loadUserGroupsOnly() {
 			const response = await fetch(
-				'/index.php/apps/softwarecatalog/api/user-groups/config',
+				'/index.php/apps/stackiq/api/user-groups/config',
 			)
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -896,7 +896,7 @@ export const useSettingsStore = defineStore('settings', {
 		async loadAmefConfig() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/amef/config',
+					'/index.php/apps/stackiq/api/amef/config',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -922,7 +922,7 @@ export const useSettingsStore = defineStore('settings', {
 		async loadVoorzieningenConfig() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+					'/index.php/apps/stackiq/api/voorzieningen/config',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -1144,7 +1144,7 @@ export const useSettingsStore = defineStore('settings', {
 				formData.append('deleteOrphaned', this.importOptions.deleteOrphaned)
 				formData.append('preserveIds', 'true')
 				formData.append('processingMode', processingMode)
-				fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
+				fetch('/index.php/apps/stackiq/api/archimate/import', {
 					method: 'POST',
 					headers: { 'X-Requested-With': 'XMLHttpRequest' },
 					body: formData,
@@ -1234,7 +1234,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.isStatusPolling = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/archimate/status',
+					'/index.php/apps/stackiq/api/archimate/status',
 				)
 				if (!response.ok) {
 					throw new Error(
@@ -1266,7 +1266,7 @@ export const useSettingsStore = defineStore('settings', {
 		async clearImportStatus() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/archimate/status/import/clear',
+					'/index.php/apps/stackiq/api/archimate/status/import/clear',
 					{
 						method: 'POST',
 						headers: {
@@ -1315,7 +1315,7 @@ export const useSettingsStore = defineStore('settings', {
 		async clearExportStatus() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/archimate/status/export/clear',
+					'/index.php/apps/stackiq/api/archimate/status/export/clear',
 					{
 						method: 'POST',
 						headers: {
@@ -1447,7 +1447,7 @@ export const useSettingsStore = defineStore('settings', {
 
 				if (Object.keys(amefConfig).length > 0) {
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/amef/config', {
+						fetch('/index.php/apps/stackiq/api/amef/config', {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/json',
@@ -1505,7 +1505,7 @@ export const useSettingsStore = defineStore('settings', {
 				if (Object.keys(voorzieningenConfig).length > 0) {
 					savePromises.push(
 						fetch(
-							'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+							'/index.php/apps/stackiq/api/voorzieningen/config',
 							{
 								method: 'POST',
 								headers: {
@@ -1538,7 +1538,7 @@ export const useSettingsStore = defineStore('settings', {
 
 					savePromises.push(
 						fetch(
-							'/index.php/apps/softwarecatalog/api/user-groups/config',
+							'/index.php/apps/stackiq/api/user-groups/config',
 							{
 								method: 'POST',
 								headers: {
@@ -1557,7 +1557,7 @@ export const useSettingsStore = defineStore('settings', {
 					&& Object.keys(this.emailSettings).length > 0
 				) {
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/email/config', {
+						fetch('/index.php/apps/stackiq/api/email/config', {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/json',
@@ -1572,7 +1572,7 @@ export const useSettingsStore = defineStore('settings', {
 				if (this.settings.catalogLocation !== undefined) {
 					savePromises.push(
 						fetch(
-							'/index.php/apps/softwarecatalog/api/settings/general/config',
+							'/index.php/apps/stackiq/api/settings/general/config',
 							{
 								method: 'POST',
 								headers: {
@@ -1591,7 +1591,7 @@ export const useSettingsStore = defineStore('settings', {
 				if (this.settings.syncTimeWindow !== undefined) {
 					savePromises.push(
 						fetch(
-							'/index.php/apps/softwarecatalog/api/settings/sync/config',
+							'/index.php/apps/stackiq/api/settings/sync/config',
 							{
 								method: 'POST',
 								headers: {
@@ -1646,7 +1646,7 @@ export const useSettingsStore = defineStore('settings', {
 		async consolidatedAutoConfigure() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings/auto-configure',
+					'/index.php/apps/stackiq/api/settings/auto-configure',
 					{
 						method: 'POST',
 						headers: {
@@ -1699,7 +1699,7 @@ export const useSettingsStore = defineStore('settings', {
 		async resetAutoConfig() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings/reset-auto-config',
+					'/index.php/apps/stackiq/api/settings/reset-auto-config',
 					{
 						method: 'POST',
 						headers: {
@@ -1733,7 +1733,7 @@ export const useSettingsStore = defineStore('settings', {
 		async forceUpdate() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings/force-update',
+					'/index.php/apps/stackiq/api/settings/force-update',
 					{
 						method: 'POST',
 						headers: {
@@ -1781,7 +1781,7 @@ export const useSettingsStore = defineStore('settings', {
 		async testEmailConnection() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/email/test',
+					'/index.php/apps/stackiq/api/email/test',
 					{
 						method: 'POST',
 						headers: {
@@ -1834,7 +1834,7 @@ export const useSettingsStore = defineStore('settings', {
 		async sendTestEmail(testEmail = '') {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/email/test',
+					'/index.php/apps/stackiq/api/email/test',
 					{
 						method: 'POST',
 						headers: {
@@ -1902,7 +1902,7 @@ export const useSettingsStore = defineStore('settings', {
 				link.style.display = 'none'
 				document.body.appendChild(link)
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/archimate/export',
+					'/index.php/apps/stackiq/api/archimate/export',
 					{
 						method: 'POST',
 						headers: {
@@ -1964,7 +1964,7 @@ export const useSettingsStore = defineStore('settings', {
 		async testRoundTrip() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/archimate/test-round-trip',
+					'/index.php/apps/stackiq/api/archimate/test-round-trip',
 					{
 						method: 'POST',
 						headers: {

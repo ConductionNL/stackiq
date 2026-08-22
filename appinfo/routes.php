@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 /**
- * SoftwareCatalog Routes Configuration
+ * Stackiq Routes Configuration
  *
- * This file defines the API routes for the SoftwareCatalog application.
+ * This file defines the API routes for the Stackiq application.
  *
  * @category Configuration
- * @package  OCA\SoftwareCatalog
+ * @package  OCA\Stackiq
  * @version  1.0.0
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 
 return [
@@ -212,7 +212,7 @@ return [
         ['name' => 'moderation#approve', 'url' => '/api/moderation/{uuid}/approve', 'verb' => 'POST'],
         ['name' => 'moderation#reject', 'url' => '/api/moderation/{uuid}/reject', 'verb' => 'POST'],
 
-        // CATALOG RATINGS (softwarecatalog#375) — authenticated review
+        // CATALOG RATINGS (stackiq#375) — authenticated review
         // submission (author/status always server-stamped, never from the
         // client) + public approved-only aggregate for module/dienst detail.
         ['name' => 'review#submit', 'url' => '/api/reviews', 'verb' => 'POST'],
@@ -298,7 +298,7 @@ return [
         // `dashboard#page` route above: both entries target the same
         // controller#method, so without a postfix they generate the same
         // internal route name and the later one silently displaces the first —
-        // which 404'd the app's own entry point (`/apps/softwarecatalog/`) for
+        // which 404'd the app's own entry point (`/apps/stackiq/`) for
         // every user, because this route's `path` requirement ('.+') can never
         // match an empty path.
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => ''], 'postfix' => 'spa'],

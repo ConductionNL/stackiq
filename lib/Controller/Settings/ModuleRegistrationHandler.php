@@ -7,11 +7,11 @@
  * and CouplingBetweenObjects on that controller.
  *
  * @category  Handler
- * @package   OCA\SoftwareCatalog\Controller\Settings
+ * @package   OCA\Stackiq\Controller\Settings
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-3
  *
@@ -21,9 +21,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller\Settings;
+namespace OCA\Stackiq\Controller\Settings;
 
-use OCA\SoftwareCatalog\Service\ModuleRegistrationService;
+use OCA\Stackiq\Service\ModuleRegistrationService;
 use Psr\Log\LoggerInterface;
 
 /**

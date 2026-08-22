@@ -18,25 +18,25 @@
  *     proving the DI container is never consulted.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/settings-admin-controller/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\SettingsController;
-use OCA\SoftwareCatalog\Service\ArchiMateService;
-use OCA\SoftwareCatalog\Service\EolSyncService;
-use OCA\SoftwareCatalog\Service\OrganizationSyncService;
-use OCA\SoftwareCatalog\Service\ProgressTracker;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Controller\SettingsController;
+use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\EolSyncService;
+use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -113,7 +113,7 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 		$this->container = $this->createMock(ContainerInterface::class);
 
 		return new SettingsController(
-			'softwarecatalog',
+			'stackiq',
 			$request,
 			$this->createMock(IAppConfig::class),
 			$this->container,

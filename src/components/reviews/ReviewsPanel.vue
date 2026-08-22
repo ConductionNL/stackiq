@@ -17,7 +17,7 @@
 
 <template>
 	<CnWidgetWrapper
-		:title="t('softwarecatalog', 'Ratings & reviews')"
+		:title="t('stackiq', 'Ratings & reviews')"
 		titleIconPosition="left"
 		:showRefresh="false"
 		:showRequestFeature="false">
@@ -28,7 +28,7 @@
 			<NcLoadingIcon
 				v-if="loading"
 				:size="32"
-				:name="t('softwarecatalog', 'Loading reviews')" />
+				:name="t('stackiq', 'Loading reviews')" />
 
 			<template v-else>
 				<NcNoteCard v-if="error" type="error">
@@ -53,8 +53,8 @@
 						<span class="reviews-panel__count">
 							{{
 								count === 1
-									? t('softwarecatalog', '1 review')
-									: t('softwarecatalog', '{count} reviews', {
+									? t('stackiq', '1 review')
+									: t('stackiq', '{count} reviews', {
 											count,
 										})
 							}}
@@ -64,16 +64,16 @@
 						<template #icon>
 							<Star :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Write a review') }}
+						{{ t('stackiq', 'Write a review') }}
 					</NcButton>
 				</div>
 
 				<NcEmptyContent
 					v-if="items.length === 0"
-					:name="t('softwarecatalog', 'No reviews yet')"
+					:name="t('stackiq', 'No reviews yet')"
 					:description="
 						t(
-							'softwarecatalog',
+							'stackiq',
 							'Be the first to share your experience.',
 						)
 					">
@@ -204,7 +204,7 @@ export default {
 				this.items = normalised.items
 			} catch (fetchError) {
 				this.error =
-					t('softwarecatalog', 'Could not load reviews')
+					t('stackiq', 'Could not load reviews')
 					+ ': '
 					+ fetchError.message
 			} finally {

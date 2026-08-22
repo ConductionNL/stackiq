@@ -52,7 +52,7 @@ const ROUTE_QUERY_SEARCH_KEY = `${ROUTE_QUERY_PREFIX}search`
  * package's public barrel). Reused directly here rather than depending on
  * that internal composable, and rather than introducing a new
  * ViewController/ViewService endpoint (task 13's explicit constraint).
- * softwarecatalog's OWN `ViewController`/`ViewService` (`dashboard-views-api`)
+ * stackiq's OWN `ViewController`/`ViewService` (`dashboard-views-api`)
  * is a different, read-only ArchiMate-views API (`getAllViews`/`getView`,
  * no create/save) — NOT a saved-filter-view API — so it cannot serve this
  * requirement despite spec.md naming it; this is a documented, deliberate
@@ -65,6 +65,15 @@ const OR_VIEWS_API_BASE = '/apps/openregister/api/views'
  * facet-selection view for this feature (distinguishes it from the many
  * OTHER saved views the same global OR endpoint stores for other index
  * pages/apps).
+ *
+ * FROZEN at `softwarecatalog-…` through the app-id rename. This string is not
+ * a name we read from our own config — it is PERSISTED inside the `query` blob
+ * of every saved view already stored in OpenRegister's GLOBAL saved-views
+ * store, which this app's repair steps cannot reach. Renaming it makes the
+ * marker match nothing: every existing GEMMA facet view stops being recognised
+ * as one and silently disappears from the picker, while the rows stay in the
+ * database. Nothing errors — an unmatched marker reads exactly like "this user
+ * has no saved facet views".
  */
 const VIEW_MARKER = 'softwarecatalog-gemma-facets'
 

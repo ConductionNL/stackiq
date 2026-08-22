@@ -4,11 +4,11 @@
  * Structural guard: no control-flow construct in lib/ may have an empty body.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit
+ * @package   OCA\Stackiq\Tests\Unit
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -16,7 +16,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit;
+namespace OCA\Stackiq\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;

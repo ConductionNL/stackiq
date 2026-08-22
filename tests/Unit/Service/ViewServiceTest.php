@@ -7,7 +7,7 @@
  * and enrichment flag logic introduced by the deelnames-gebruik spec.
  *
  * @category Tests
- * @package  OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -20,10 +20,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\ViewService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\ViewService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -39,7 +39,7 @@ use ReflectionClass;
  * Unit tests for ViewService.
  *
  * @category Tests
- * @package  OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.

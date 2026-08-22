@@ -22,15 +22,15 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\SoftwareCatalog\Service\ArchiMateService;
-use OCA\SoftwareCatalog\Service\EolSyncService;
-use OCA\SoftwareCatalog\Service\OrganizationSyncService;
-use OCA\SoftwareCatalog\Service\ProgressTracker;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\EolSyncService;
+use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -578,7 +578,7 @@ class SettingsController extends Controller {
 	}//end load()
 
 	/**
-	 * Initialize the SoftwareCatalog settings
+	 * Initialize the Stackiq settings
 	 *
 	 * @return JSONResponse JSON response containing the initialization results
 	 *
@@ -629,7 +629,7 @@ class SettingsController extends Controller {
 				'versionInfo' => $versionInfo,
 				'timestamp' => time(),
 				'autoConfigCompleted' => $this->config->getValueString(
-					'softwarecatalog',
+					'stackiq',
 					'auto_config_completed',
 					'false'
 				) === 'true',
@@ -801,7 +801,7 @@ class SettingsController extends Controller {
 			);
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog: Failed to send test email in controller',
+				'Stackiq: Failed to send test email in controller',
 				[
 					'exception_class' => get_class($e),
 					'exception_message' => $e->getMessage(),
@@ -1915,14 +1915,14 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$this->logger->info('SoftwareCatalog: Email connection test endpoint called');
+		$this->logger->info('Stackiq: Email connection test endpoint called');
 
 		try {
 			$data = $this->request->getParams();
 			$emailSettings = $data['emailSettings'] ?? $data ?? [];
 
 			$this->logger->info(
-				'SoftwareCatalog: Email connection test request data',
+				'Stackiq: Email connection test request data',
 				[
 					'has_email_settings' => empty($emailSettings) === false,
 					'transport_type' => $emailSettings['transportType'] ?? 'not specified',
@@ -1933,7 +1933,7 @@ class SettingsController extends Controller {
 			$result = $this->settingsService->testEmailConnection($emailSettings);
 
 			$this->logger->info(
-				'SoftwareCatalog: Email connection test result from service',
+				'Stackiq: Email connection test result from service',
 				[
 					'success' => $result['success'],
 					'message' => $result['message'] ?? 'no message',
@@ -1949,7 +1949,7 @@ class SettingsController extends Controller {
 			);
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog: Failed to test email connection',
+				'Stackiq: Failed to test email connection',
 				[
 					'exception_class' => get_class($e),
 					'exception_message' => $e->getMessage(),
@@ -2876,13 +2876,13 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$this->logger->info('SoftwareCatalog: ArchiMate round-trip test started');
+			$this->logger->info('Stackiq: ArchiMate round-trip test started');
 
 			// Call the ArchiMate service to perform round-trip test.
 			$result = $this->archiMateService->testRoundTrip();
 
 			$this->logger->info(
-				'SoftwareCatalog: ArchiMate round-trip test completed',
+				'Stackiq: ArchiMate round-trip test completed',
 				[
 					'success' => $result['success'],
 					'message' => $result['message'] ?? 'no message',
@@ -2899,7 +2899,7 @@ class SettingsController extends Controller {
 			);
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog: ArchiMate round-trip test failed',
+				'Stackiq: ArchiMate round-trip test failed',
 				[
 					'exception_class' => get_class($e),
 					'exception_message' => $e->getMessage(),
@@ -3596,7 +3596,7 @@ class SettingsController extends Controller {
 			$this->logger->info('SettingsController: Starting bulk sync of module standards.');
 
 			// Get the ModuleComplianceService from the container.
-			$moduleComplianceService = $this->container->get(\OCA\SoftwareCatalog\Service\ModuleComplianceService::class);
+			$moduleComplianceService = $this->container->get(\OCA\Stackiq\Service\ModuleComplianceService::class);
 
 			// Perform the bulk sync.
 			$results = $moduleComplianceService->bulkSyncModuleStandards();

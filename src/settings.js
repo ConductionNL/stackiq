@@ -1,6 +1,6 @@
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { createApp, h } from 'vue'
-import AdminSettings from './views/settings/SoftwareCatalogSettings.vue'
+import AdminSettings from './views/settings/StackiqSettings.vue'
 import pinia from './pinia.js'
 
 const app = createApp({
@@ -16,4 +16,4 @@ app.use(pinia)
 // `mount()` renders INSIDE it, and `#settings` is a generic id Nextcloud's own
 // settings chrome can also carry. The host element is named after the app
 // (see templates/settings/admin.php) so there is nothing to disambiguate.
-app.mount('#softwarecatalog-settings')
+app.mount('#stackiq-settings')

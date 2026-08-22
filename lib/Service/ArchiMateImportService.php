@@ -1,14 +1,14 @@
 <?php
 
 /**
- * ArchiMate Import Service for SoftwareCatalog
+ * ArchiMate Import Service for Stackiq
  *
  * Handles the business logic for importing ArchiMate XML files with round-trip fidelity.
  * This service contains all the import-specific logic that was previously in ArchiMateService.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
- * @author    SoftwareCatalog Team <info@conduction.nl>
+ * @package   OCA\Stackiq\Service
+ * @author    Stackiq Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/nextcloud/softwarecatalog
@@ -18,7 +18,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
@@ -43,8 +43,8 @@ use SimpleXMLElement;
  * 5. Save objects using ObjectService::saveObjects
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
- * @author    SoftwareCatalog Team <info@conduction.nl>
+ * @package   OCA\Stackiq\Service
+ * @author    Stackiq Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/nextcloud/softwarecatalog
@@ -1960,7 +1960,7 @@ class ArchiMateImportService {
 	 * @spec openspec/specs/archimate-import/spec.md
 	 */
 	private function resolveConfiguredId(string $key): ?string {
-		$value = $this->config->getValueString('softwarecatalog', $key, '');
+		$value = $this->config->getValueString('stackiq', $key, '');
 		if (trim($value) === '') {
 			$this->logger->warning(
 				'ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string',
@@ -1984,7 +1984,7 @@ class ArchiMateImportService {
 
 		try {
 			// Get configuration from app config using the correct method.
-			$config = $this->config->getValueString('softwarecatalog', 'amef_config', '{}');
+			$config = $this->config->getValueString('stackiq', 'amef_config', '{}');
 			$decoded = json_decode($config, true);
 
 			if (is_array($decoded) === false) {
@@ -2041,9 +2041,9 @@ class ArchiMateImportService {
 
 		// Fallback to legacy individual app config keys if not present in JSON.
 		if ($rawRegisterId === null || $rawRegisterId === '') {
-			$rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
-			if ($this->config->getValueString('softwarecatalog', 'amef_register', '') !== '') {
-				$rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register', '');
+			$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register_id', '');
+			if ($this->config->getValueString('stackiq', 'amef_register', '') !== '') {
+				$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register', '');
 			}
 		}
 
@@ -2113,9 +2113,9 @@ class ArchiMateImportService {
 
 		// Fallback to legacy individual app config keys if not present in JSON.
 		foreach ($candidates as $key) {
-			$raw = $this->config->getValueString('softwarecatalog', $key, '');
-			if ($this->config->getValueString('softwarecatalog', 'amef_' . $key, '') !== '') {
-				$raw = $this->config->getValueString('softwarecatalog', 'amef_' . $key, '');
+			$raw = $this->config->getValueString('stackiq', $key, '');
+			if ($this->config->getValueString('stackiq', 'amef_' . $key, '') !== '') {
+				$raw = $this->config->getValueString('stackiq', 'amef_' . $key, '');
 			}
 
 			if ($raw !== '' && is_numeric((string)$raw) === true) {

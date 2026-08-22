@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Softwarecatalog OrganisationMembersController.
+ * Stackiq OrganisationMembersController.
  *
  * Self-service colleague access (VNG Softwarecatalogus #65): lets a
  * `beheerder` of an organisation grant or revoke an EXISTING Nextcloud
@@ -13,7 +13,7 @@
  * (ADR-011/ADR-022). It exists only because OpenRegister's own
  * `OrganisationController::join()`/`leave()` authorize a caller managing
  * ANOTHER user's membership solely via Nextcloud-admin-or-single-`owner`
- * (`canManageOrganisationMembers()`), which does not match SoftwareCatalog's
+ * (`canManageOrganisationMembers()`), which does not match Stackiq's
  * `beheerder`-role domain model — so this controller adds that
  * domain-specific authorization guard before delegating.
  *
@@ -26,11 +26,11 @@
  * any membership mutation is attempted.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
  *
@@ -40,9 +40,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\AppInfo\Application;
+use OCA\Stackiq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;

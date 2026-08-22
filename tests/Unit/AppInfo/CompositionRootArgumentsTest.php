@@ -20,7 +20,7 @@
  * `$organisationService` to `ContactpersonenController::__construct()`: the
  * factory at `Application.php` that exists "for /me endpoint" kept passing 11
  * arguments to a constructor that now requires 13, and
- * `GET /api/softwarecatalog/api/me` returned **500 for every user** on
+ * `GET /api/stackiq/api/me` returned **500 for every user** on
  * `development` until it was noticed by an end-to-end run.
  *
  * These tests close that hole. They read `Application.php`'s own source,
@@ -28,18 +28,18 @@
  * target class's real constructor via reflection.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\AppInfo
+ * @package   OCA\Stackiq\Tests\Unit\AppInfo
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\AppInfo;
+namespace OCA\Stackiq\Tests\Unit\AppInfo;
 
-use OCA\SoftwareCatalog\Controller\ContactpersonenController;
+use OCA\Stackiq\Controller\ContactpersonenController;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -267,7 +267,7 @@ class CompositionRootArgumentsTest extends TestCase {
 		self::assertSame(
 			[],
 			$missing,
-			'GET /api/softwarecatalog/api/me resolves ContactpersonenController '
+			'GET /api/stackiq/api/me resolves ContactpersonenController '
 			. 'through the hand-written factory in Application.php. It does not '
 			. 'pass: $' . implode(', $', $missing) . '. Every call to /me will '
 			. 'return 500 with "Too few arguments to function '

@@ -17,11 +17,11 @@
  * anonymous client has no CSRF token.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  *
@@ -31,10 +31,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\AppInfo\Application;
-use OCA\SoftwareCatalog\Service\IntakeService;
+use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Service\IntakeService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;

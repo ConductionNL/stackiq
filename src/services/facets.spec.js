@@ -91,7 +91,7 @@ describe('facets.fetchFacets', () => {
 		generateUrl.mockClear()
 	})
 
-	it('requests GET /apps/softwarecatalog/api/facets/{schema} with the encoded schema and query params', async () => {
+	it('requests GET /apps/stackiq/api/facets/{schema} with the encoded schema and query params', async () => {
 		axios.get.mockResolvedValue({
 			data: {
 				referenceComponent: [],
@@ -108,10 +108,10 @@ describe('facets.fetchFacets', () => {
 		})
 
 		expect(generateUrl).toHaveBeenCalledWith(
-			'/apps/softwarecatalog/api/facets/module',
+			'/apps/stackiq/api/facets/module',
 		)
 		const [calledUrl] = axios.get.mock.calls[0]
-		expect(calledUrl).toContain('/apps/softwarecatalog/api/facets/module?')
+		expect(calledUrl).toContain('/apps/stackiq/api/facets/module?')
 		expect(calledUrl).toContain('referenceComponent%5B%5D=A')
 		expect(calledUrl).toContain('search=zaak')
 	})
@@ -122,7 +122,7 @@ describe('facets.fetchFacets', () => {
 		await fetchFacets('service')
 
 		const [calledUrl] = axios.get.mock.calls[0]
-		expect(calledUrl).toBe('/apps/softwarecatalog/api/facets/service')
+		expect(calledUrl).toBe('/apps/stackiq/api/facets/service')
 	})
 
 	it('returns the response body', async () => {

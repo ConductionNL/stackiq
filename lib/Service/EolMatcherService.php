@@ -15,11 +15,11 @@
  * nulled), plus the two provenance fields.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/eol-feed-integration/spec.md#requirement-version-matching-is-conservative-and-unambiguous-only
  * @spec openspec/specs/eol-feed-integration/spec.md#requirement-stamping-preserves-every-other-field-and-records-provenance
@@ -30,7 +30,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 /**
  * Conservative version-prefix matcher between `moduleVersie.versie` and

@@ -10,18 +10,18 @@
  * unpublished. Also covers anti-spam validation, privileged-key stripping,
  * duplicate-pending refusal, and the not-pending / peer-sourced guards.
  *
- * Also covers (catalog-ratings, softwarecatalog#375) that `ModerationService`
+ * Also covers (catalog-ratings, stackiq#375) that `ModerationService`
  * generalised to a second type (`beoordeeling`) without changing ANY of the
  * above default-organisatie assertions — every test above calls
  * `approve()`/`reject()`/`listPending()` with no `$type` argument, so they
  * keep exercising the exact pre-existing organisatie/registratiestatus path.
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
@@ -29,14 +29,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\SoftwareCatalog\Service\IntakeService;
-use OCA\SoftwareCatalog\Service\ModerationService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\IntakeService;
+use OCA\Stackiq\Service\ModerationService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\AppFramework\Db\Entity;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -129,7 +129,7 @@ class IntakeModerationTest extends TestCase {
 	 * With the old `method_exists()` probe this returned `null` for EVERY real
 	 * save (the `is_array()` arm cannot rescue an object), so `submit()`
 	 * answered `uuid: null` to the client and wrote `['uuid' => null]` to the
-	 * audit log — softwarecatalog#490. See the twin test in ReviewServiceTest;
+	 * audit log — stackiq#490. See the twin test in ReviewServiceTest;
 	 * the two services carry byte-identical copies of this helper.
 	 *
 	 * @return void
@@ -279,7 +279,7 @@ class IntakeModerationTest extends TestCase {
 	}//end testListPending()
 
 	/**
-	 * beoordeeling (catalog-ratings, softwarecatalog#375): approval sets
+	 * beoordeeling (catalog-ratings, stackiq#375): approval sets
 	 * `status = approved` — no publicatiedatum stamping involved (the
 	 * schema's own status-conditioned public RBAC rule does that job).
 	 *

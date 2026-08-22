@@ -4,7 +4,7 @@
  * ArchiMate Export Service.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -14,19 +14,19 @@
  */
 
 /**
- * ArchiMate Export Service for the SoftwareCatalog app
+ * ArchiMate Export Service for the Stackiq app
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use Psr\Log\LoggerInterface;
 
@@ -2878,7 +2878,7 @@ XML;
 	}//end getViewName()
 
 	/**
-	 * Add Bron=Softwarecatalogus property to an XML data array.
+	 * Add Bron=Stackiq property to an XML data array.
 	 *
 	 * @param array $data The data array.
 	 * @param string $sourcePropDefId The Bron property definition ID.
@@ -2888,7 +2888,7 @@ XML;
 	private function addSourceProperty(array $data, string $sourcePropDefId): array {
 		$sourceProp = [
 			'_propertyDefinitionRef' => $sourcePropDefId,
-			'value' => ['_value' => 'Softwarecatalogus'],
+			'value' => ['_value' => 'Stackiq'],
 		];
 
 		if (isset($data['properties']) === false) {
@@ -3071,7 +3071,7 @@ XML;
 			}
 
 			$folders[] = [
-				'label' => ['_value' => 'Gebruikt (Softwarecatalogus)'],
+				'label' => ['_value' => 'Gebruikt (Stackiq)'],
 				'items' => $items,
 			];
 		}
@@ -3083,7 +3083,7 @@ XML;
 			}
 
 			$folders[] = [
-				'label' => ['_value' => 'Deelnames (Softwarecatalogus)'],
+				'label' => ['_value' => 'Deelnames (Stackiq)'],
 				'items' => $items,
 			];
 		}
@@ -3096,7 +3096,7 @@ XML;
 			}
 
 			$folders[] = [
-				'label' => ['_value' => 'Relaties (Softwarecatalogus)'],
+				'label' => ['_value' => 'Relaties (Stackiq)'],
 				'items' => $relItems,
 			];
 		}
@@ -3108,7 +3108,7 @@ XML;
 			}
 
 			$folders[] = [
-				'label' => ['_value' => 'Views (Softwarecatalogus)'],
+				'label' => ['_value' => 'Views (Stackiq)'],
 				'items' => $viewItems,
 			];
 		}
@@ -3146,7 +3146,7 @@ XML;
 		$xml = $this->createCleanArchiMateXml(modelMetadata: $modelMetadata);
 
 		// Override model name.
-		$modelName = 'Softwarecatalogus ' . $orgName;
+		$modelName = 'Stackiq ' . $orgName;
 		// Remove existing name children and add new one.
 		foreach ($xml->children() as $child) {
 			if ($child->getName() === 'name') {
@@ -3203,7 +3203,7 @@ XML;
 			$propsEl = $elNode->addChild('properties');
 			$propEl = $propsEl->addChild('property');
 			$propEl->addAttribute('propertyDefinitionRef', $appEl['bronPropDefId']);
-			$propEl->addChild('value', 'Softwarecatalogus');
+			$propEl->addChild('value', 'Stackiq');
 		}
 
 		// --- Relationships section ---.
@@ -3235,7 +3235,7 @@ XML;
 			$propsEl = $relNode->addChild('properties');
 			$propEl = $propsEl->addChild('property');
 			$propEl->addAttribute('propertyDefinitionRef', $rel['bronPropDefId']);
-			$propEl->addChild('value', 'Softwarecatalogus');
+			$propEl->addChild('value', 'Stackiq');
 		}
 
 		// --- Property Definitions section ---.

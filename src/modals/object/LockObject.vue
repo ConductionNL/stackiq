@@ -6,19 +6,19 @@ import { navigationStore, objectStore } from '../../store/store.js'
 	<NcDialog
 		v-if="navigationStore.modal === 'lockObject'"
 		:name="
-			t('softwarecatalog', 'Lock {name}', {
+			t('stackiq', 'Lock {name}', {
 				name:
 					objectStore.objectItem?.['@self']?.name
 					|| objectStore.objectItem?.name
 					|| objectStore.objectItem?.['@self']?.title
 					|| objectStore.objectItem?.id
-					|| t('softwarecatalog', 'Publication'),
+					|| t('stackiq', 'Publication'),
 			})
 		"
 		size="normal"
 		:canClose="false">
 		<p v-if="success === null">
-			{{ t('softwarecatalog', 'Do you want to lock') }}
+			{{ t('stackiq', 'Do you want to lock') }}
 			<b>{{
 				objectStore.objectItem?.['@self']?.name
 				|| objectStore.objectItem?.name
@@ -27,13 +27,13 @@ import { navigationStore, objectStore } from '../../store/store.js'
 			}}</b
 			>{{
 				t(
-					'softwarecatalog',
+					'stackiq',
 					"? Locking an object prevents other users from modifying it until it is unlocked. You can specify an optional process name to indicate why it's locked and a duration after which it will automatically unlock. Only the user who locked the object or an administrator can unlock it before the duration expires.",
 				)
 			}}
 		</p>
 		<NcNoteCard v-if="success" type="success">
-			<p>{{ t('softwarecatalog', 'Object successfully locked') }}</p>
+			<p>{{ t('stackiq', 'Object successfully locked') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -46,8 +46,8 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				</template>
 				{{
 					success
-						? t('softwarecatalog', 'Close')
-						: t('softwarecatalog', 'Cancel')
+						? t('stackiq', 'Close')
+						: t('stackiq', 'Cancel')
 				}}
 			</NcButton>
 			<NcButton
@@ -58,19 +58,19 @@ import { navigationStore, objectStore } from '../../store/store.js'
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<LockOutline v-else :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Lock') }}
+				{{ t('stackiq', 'Lock') }}
 			</NcButton>
 		</template>
 
 		<div v-if="!success" class="formContainer">
 			<NcTextField
 				v-model="process"
-				:label="t('softwarecatalog', 'Process Name (optional)')"
+				:label="t('stackiq', 'Process Name (optional)')"
 				:disabled="loading" />
 			<NcTextField
 				v-model="duration"
 				type="number"
-				:label="t('softwarecatalog', 'Duration in seconds (optional)')"
+				:label="t('stackiq', 'Duration in seconds (optional)')"
 				:disabled="loading" />
 		</div>
 	</NcDialog>
@@ -142,7 +142,7 @@ export default {
 			} catch (error) {
 				this.error =
 					error.message
-					|| this.t('softwarecatalog', 'Failed to lock object')
+					|| this.t('stackiq', 'Failed to lock object')
 			} finally {
 				this.loading = false
 			}

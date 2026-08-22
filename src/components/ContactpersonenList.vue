@@ -2,7 +2,7 @@
 	<div class="contactpersonen-list">
 		<div v-if="loading" class="loading">
 			<NcLoadingIcon :size="20" />
-			{{ t('softwarecatalog', 'Loading contactpersonen...') }}
+			{{ t('stackiq', 'Loading contactpersonen...') }}
 		</div>
 
 		<div v-else-if="error" class="error">
@@ -13,9 +13,9 @@
 
 		<div v-else-if="contactpersonen.length === 0" class="empty">
 			<NcEmptyContent
-				:name="t('softwarecatalog', 'No contactpersonen found')"
+				:name="t('stackiq', 'No contactpersonen found')"
 				:description="
-					t('softwarecatalog', 'This organisation has no contactpersonen.')
+					t('stackiq', 'This organisation has no contactpersonen.')
 				">
 				<template #icon>
 					<AccountMultiple :size="64" />
@@ -27,11 +27,11 @@
 			<table class="compact-table">
 				<thead>
 					<tr>
-						<th scope="col">{{ t('softwarecatalog', 'Name') }}</th>
-						<th scope="col">{{ t('softwarecatalog', 'Email') }}</th>
-						<th scope="col">{{ t('softwarecatalog', 'Status') }}</th>
-						<th scope="col">{{ t('softwarecatalog', 'Groups') }}</th>
-						<th scope="col">{{ t('softwarecatalog', 'Actions') }}</th>
+						<th scope="col">{{ t('stackiq', 'Name') }}</th>
+						<th scope="col">{{ t('stackiq', 'Email') }}</th>
+						<th scope="col">{{ t('stackiq', 'Status') }}</th>
+						<th scope="col">{{ t('stackiq', 'Groups') }}</th>
+						<th scope="col">{{ t('stackiq', 'Actions') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -55,7 +55,7 @@
 									&& !contactpersoon.user.disabled
 								"
 								class="status-chip status-success">
-								{{ t('softwarecatalog', 'User') }}
+								{{ t('stackiq', 'User') }}
 							</span>
 							<span
 								v-else-if="
@@ -63,10 +63,10 @@
 									&& contactpersoon.user.disabled
 								"
 								class="status-chip status-warning">
-								{{ t('softwarecatalog', 'Disabled') }}
+								{{ t('stackiq', 'Disabled') }}
 							</span>
 							<span v-else class="status-chip status-tertiary">
-								{{ t('softwarecatalog', 'No User') }}
+								{{ t('stackiq', 'No User') }}
 							</span>
 						</td>
 						<td class="groups-cell">
@@ -103,8 +103,8 @@
 									</template>
 									{{
 										contactpersoon.loading
-											? t('softwarecatalog', 'Converting...')
-											: t('softwarecatalog', 'Convert to User')
+											? t('stackiq', 'Converting...')
+											: t('stackiq', 'Convert to User')
 									}}
 								</NcActionButton>
 
@@ -116,7 +116,7 @@
 									<template #icon>
 										<Key :size="20" />
 									</template>
-									{{ t('softwarecatalog', 'Change Password') }}
+									{{ t('stackiq', 'Change Password') }}
 								</NcActionButton>
 
 								<!-- Manage Groups Action -->
@@ -127,7 +127,7 @@
 									<template #icon>
 										<AccountGroup :size="20" />
 									</template>
-									{{ t('softwarecatalog', 'Manage Groups') }}
+									{{ t('stackiq', 'Manage Groups') }}
 								</NcActionButton>
 
 								<!-- Disable User Action -->
@@ -141,7 +141,7 @@
 									<template #icon>
 										<CloseCircle :size="20" />
 									</template>
-									{{ t('softwarecatalog', 'Disable User') }}
+									{{ t('stackiq', 'Disable User') }}
 								</NcActionButton>
 
 								<!-- Enable User Action -->
@@ -155,7 +155,7 @@
 									<template #icon>
 										<CheckCircle :size="20" />
 									</template>
-									{{ t('softwarecatalog', 'Enable User') }}
+									{{ t('stackiq', 'Enable User') }}
 								</NcActionButton>
 							</NcActions>
 						</td>
@@ -599,7 +599,7 @@ export default {
 			if (contactIndex === -1) {
 				showError(
 					this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Contactpersoon not found in organisation data',
 					),
 				)
@@ -614,7 +614,7 @@ export default {
 				console.error('Contactpersoon is not an object:', contactObject)
 				showError(
 					this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Invalid contact person data structure',
 					),
 				)
@@ -673,13 +673,13 @@ export default {
 				await this.refreshUserData()
 
 				showSuccess(
-					this.t('softwarecatalog', 'User account created successfully'),
+					this.t('stackiq', 'User account created successfully'),
 				)
 			} catch (error) {
 				console.error('Error in convertToUser:', error)
 				showError(
 					this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Failed to create user account: {error}',
 						{
 							error: error.message,
@@ -777,13 +777,13 @@ export default {
 		async disableUser(contactpersoon) {
 			try {
 				await this.organisatieStore.disableUser(contactpersoon.id)
-				showSuccess(this.t('softwarecatalog', 'User disabled successfully'))
+				showSuccess(this.t('stackiq', 'User disabled successfully'))
 
 				// Update the local contactpersoon data to reflect disabled status
 				this.updateContactpersoonStatus(contactpersoon.id, true)
 			} catch (error) {
 				showError(
-					this.t('softwarecatalog', 'Failed to disable user: {error}', {
+					this.t('stackiq', 'Failed to disable user: {error}', {
 						error: error.message,
 					}),
 				)
@@ -799,13 +799,13 @@ export default {
 		async enableUser(contactpersoon) {
 			try {
 				await this.organisatieStore.enableUser(contactpersoon.id)
-				showSuccess(this.t('softwarecatalog', 'User enabled successfully'))
+				showSuccess(this.t('stackiq', 'User enabled successfully'))
 
 				// Update the local contactpersoon data to reflect enabled status
 				this.updateContactpersoonStatus(contactpersoon.id, false)
 			} catch (error) {
 				showError(
-					this.t('softwarecatalog', 'Failed to enable user: {error}', {
+					this.t('stackiq', 'Failed to enable user: {error}', {
 						error: error.message,
 					}),
 				)

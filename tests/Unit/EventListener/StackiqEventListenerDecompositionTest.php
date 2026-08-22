@@ -7,36 +7,36 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\EventListener;
+namespace OCA\Stackiq\Tests\Unit\EventListener;
 
-use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\EventListener\StackiqEventListener;
+use OCA\Stackiq\Service\SettingsService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use ReflectionMethod;
 
 /**
- * Unit tests for the W30 SoftwareCatalogEventListener decomposition helpers
+ * Unit tests for the W30 StackiqEventListener decomposition helpers
  * (resolveCatalogSchemaIds, matchesSchema, isActiveStatus).
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-6
  */
-class SoftwareCatalogEventListenerDecompositionTest extends TestCase {
+class StackiqEventListenerDecompositionTest extends TestCase {
 	/**
 	 * @var ContainerInterface|MockObject
 	 */
 	private $container;
 
 	/**
-	 * @var SoftwareCatalogEventListener
+	 * @var StackiqEventListener
 	 */
-	private SoftwareCatalogEventListener $listener;
+	private StackiqEventListener $listener;
 
 	protected function setUp(): void {
 		parent::setUp();
 		$this->container = $this->createMock(ContainerInterface::class);
-		$this->listener = new SoftwareCatalogEventListener($this->container);
+		$this->listener = new StackiqEventListener($this->container);
 	}
 
 	/**
@@ -137,7 +137,7 @@ class SoftwareCatalogEventListenerDecompositionTest extends TestCase {
 		};
 
 		$this->container->method('get')->willReturnCallback(
-			static fn (string $id): mixed => $id === 'OCA\SoftwareCatalog\Service\OrganizationSyncService'
+			static fn (string $id): mixed => $id === 'OCA\Stackiq\Service\OrganizationSyncService'
 				? $orgSyncService
 				: null
 		);

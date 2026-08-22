@@ -14,17 +14,17 @@
 					<div class="form-row">
 						<NcTextField
 							v-model="formData.name"
-							:label="t('softwarecatalog', 'Name')"
-							:placeholder="t('softwarecatalog', 'Organisation name')"
+							:label="t('stackiq', 'Name')"
+							:placeholder="t('stackiq', 'Organisation name')"
 							required />
 					</div>
 
 					<div class="form-row">
 						<NcTextField
 							v-model="formData.website"
-							:label="t('softwarecatalog', 'Website')"
+							:label="t('stackiq', 'Website')"
 							:placeholder="
-								t('softwarecatalog', 'https://example.com')
+								t('stackiq', 'https://example.com')
 							" />
 					</div>
 
@@ -32,9 +32,9 @@
 						<NcSelect
 							v-model="selectedType"
 							:options="organisationTypes"
-							:inputLabel="t('softwarecatalog', 'Type')"
+							:inputLabel="t('stackiq', 'Type')"
 							:placeholder="
-								t('softwarecatalog', 'Select organisation type')
+								t('stackiq', 'Select organisation type')
 							"
 							label="label"
 							trackBy="value"
@@ -45,10 +45,10 @@
 					<div class="form-row">
 						<NcTextField
 							v-model="formData.shortDescription"
-							:label="t('softwarecatalog', 'Short Description')"
+							:label="t('stackiq', 'Short Description')"
 							:placeholder="
 								t(
-									'softwarecatalog',
+									'stackiq',
 									'Brief description of the organisation',
 								)
 							" />
@@ -57,9 +57,9 @@
 					<div class="form-row">
 						<NcTextField
 							v-model="formData['e-mailadres']"
-							:label="t('softwarecatalog', 'Email')"
+							:label="t('stackiq', 'Email')"
 							:placeholder="
-								t('softwarecatalog', 'contact@example.com')
+								t('stackiq', 'contact@example.com')
 							"
 							type="email" />
 					</div>
@@ -67,17 +67,17 @@
 					<div class="form-row">
 						<NcTextField
 							v-model="formData.telefoonnummer"
-							:label="t('softwarecatalog', 'Phone')"
-							:placeholder="t('softwarecatalog', '+31 20 123 4567')" />
+							:label="t('stackiq', 'Phone')"
+							:placeholder="t('stackiq', '+31 20 123 4567')" />
 					</div>
 
 					<div class="form-row">
 						<NcTextField
 							v-model="formData.oin"
-							:label="t('softwarecatalog', 'OIN')"
+							:label="t('stackiq', 'OIN')"
 							:placeholder="
 								t(
-									'softwarecatalog',
+									'stackiq',
 									'Organisation Identification Number',
 								)
 							" />
@@ -86,8 +86,8 @@
 					<div class="form-row">
 						<NcTextField
 							v-model="formData.cbs"
-							:label="t('softwarecatalog', 'CBS')"
-							:placeholder="t('softwarecatalog', 'CBS number')" />
+							:label="t('stackiq', 'CBS')"
+							:placeholder="t('stackiq', 'CBS number')" />
 					</div>
 				</div>
 
@@ -98,7 +98,7 @@
 					<p class="auto-close-message">
 						{{
 							t(
-								'softwarecatalog',
+								'stackiq',
 								'This dialog will close automatically in {seconds} seconds...',
 								{ seconds: countdown },
 							)
@@ -108,7 +108,7 @@
 
 				<div class="form-actions">
 					<NcButton variant="secondary" @click="closeModal">
-						{{ t('softwarecatalog', 'Cancel') }}
+						{{ t('stackiq', 'Cancel') }}
 					</NcButton>
 					<NcButton
 						v-if="!success"
@@ -120,8 +120,8 @@
 						</template>
 						{{
 							isEditMode
-								? t('softwarecatalog', 'Update Organisation')
-								: t('softwarecatalog', 'Create Organisation')
+								? t('stackiq', 'Update Organisation')
+								: t('stackiq', 'Create Organisation')
 						}}
 					</NcButton>
 				</div>
@@ -215,11 +215,11 @@ export default {
 		 */
 		modalTitle() {
 			if (this.isEditMode) {
-				return this.t('softwarecatalog', 'Edit Organisation')
+				return this.t('stackiq', 'Edit Organisation')
 			} else if (this.isCopyMode) {
-				return this.t('softwarecatalog', 'Copy Organisation')
+				return this.t('stackiq', 'Copy Organisation')
 			}
-			return this.t('softwarecatalog', 'Create Organisation')
+			return this.t('stackiq', 'Create Organisation')
 		},
 
 		isFormValid() {
@@ -385,7 +385,7 @@ export default {
 		async saveOrganisation() {
 			if (!this.isFormValid) {
 				showError(
-					this.t('softwarecatalog', 'Please fill in all required fields'),
+					this.t('stackiq', 'Please fill in all required fields'),
 				)
 				return
 			}
@@ -404,7 +404,7 @@ export default {
 					if (Object.keys(changes).length === 0) {
 						// No changes detected
 						this.successMessage = this.t(
-							'softwarecatalog',
+							'stackiq',
 							'No changes to save',
 						)
 						this.success = true
@@ -421,7 +421,7 @@ export default {
 						changes,
 					)
 					this.successMessage = this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Organisation updated successfully',
 					)
 
@@ -437,7 +437,7 @@ export default {
 						schema: schemaConfig.schema,
 					})
 					this.successMessage = this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Organisation created successfully',
 					)
 
@@ -466,7 +466,7 @@ export default {
 				console.error('Error saving organisation:', error)
 				showError(
 					this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Failed to save organisation: {error}',
 						{ error: error.message },
 					),

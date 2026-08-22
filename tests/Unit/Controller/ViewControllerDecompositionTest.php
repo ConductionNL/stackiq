@@ -7,27 +7,27 @@
  * the list error payload from `getAllViews()` / `getView()`.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-9-6
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\ViewController;
+use OCA\Stackiq\Controller\ViewController;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for the private helpers extracted from ViewController.
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package  OCA\Stackiq\Tests\Unit\Controller
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-9-6
  */

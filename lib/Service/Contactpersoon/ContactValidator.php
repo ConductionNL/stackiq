@@ -1,17 +1,17 @@
 <?php
 
 /**
- * Contact Validator for SoftwareCatalog
+ * Contact Validator for Stackiq
  *
  * Extracts email, phone, and name validation from ContactpersoonService to reduce
  * CyclomaticComplexity and ExcessiveClassLength on that service.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service\Contactpersoon
+ * @package   OCA\Stackiq\Service\Contactpersoon
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-7
  *
@@ -21,7 +21,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\Contactpersoon;
+namespace OCA\Stackiq\Service\Contactpersoon;
 
 use InvalidArgumentException;
 

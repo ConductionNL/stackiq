@@ -2,7 +2,7 @@
 
 /**
  * Unit tests for SettingsService::deepMergeConfig()'s authorization-replace
- * fix (catalog-ratings, softwarecatalog#375).
+ * fix (catalog-ratings, stackiq#375).
  *
  * The general-purpose register-fragment merge concatenates list values
  * (documented, correct for e.g. extending a `required` array). Applied
@@ -15,20 +15,20 @@
  * unchanged).
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-the-register-fragment-merge-must-replace-authorization-rule-lists-not-concatenate-them
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 

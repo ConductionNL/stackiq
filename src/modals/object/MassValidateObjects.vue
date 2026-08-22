@@ -17,36 +17,36 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 		<div v-if="success === null" class="validate-step">
 			<NcNoteCard type="info">
 				<strong>{{
-					t('softwarecatalog', 'When to use mass validation:')
+					t('stackiq', 'When to use mass validation:')
 				}}</strong
 				><br />
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'• After updating the schema to apply new validation rules',
 					)
 				}}<br />
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'• When publications need to be re-enriched with updated name/description logic',
 					)
 				}}<br />
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'• To refresh computed properties or auto-generated fields',
 					)
 				}}<br />
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'• After changing schema configuration that affects existing publications',
 					)
 				}}<br /><br />
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Publications will be saved without modification to trigger validation and enrichment processes against the current schema.',
 					)
 				}}
@@ -55,8 +55,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<SelectedObjectsList
 				:title="
 					(objectStore.selectedObjects?.length || 0) === 1
-						? t('softwarecatalog', 'Publication to Validate')
-						: t('softwarecatalog', 'Selected Publications')
+						? t('stackiq', 'Publication to Validate')
+						: t('stackiq', 'Selected Publications')
 				"
 				:showRemove="true" />
 		</div>
@@ -65,8 +65,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<p>
 				{{
 					originalSelectedCount > 1
-						? t('softwarecatalog', 'Publications successfully validated')
-						: t('softwarecatalog', 'Publication successfully validated')
+						? t('stackiq', 'Publications successfully validated')
+						: t('stackiq', 'Publication successfully validated')
 				}}
 			</p>
 		</NcNoteCard>
@@ -81,8 +81,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				</template>
 				{{
 					success === null
-						? t('softwarecatalog', 'Cancel')
-						: t('softwarecatalog', 'Close')
+						? t('stackiq', 'Cancel')
+						: t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton
@@ -96,7 +96,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<CheckCircle v-if="!loading" :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Validate') }}
+				{{ t('stackiq', 'Validate') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -156,9 +156,9 @@ export default {
 		dialogTitle() {
 			const count = this.objectsToValidate.length
 			if (count === 1) {
-				return this.t('softwarecatalog', 'Validate publication')
+				return this.t('stackiq', 'Validate publication')
 			}
-			return this.t('softwarecatalog', 'Validate {count} publications', {
+			return this.t('stackiq', 'Validate {count} publications', {
 				count,
 			})
 		},
@@ -228,7 +228,7 @@ export default {
 
 				if (failed.length > 0) {
 					this.error = this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Failed to validate {count} objects',
 						{ count: failed.length },
 					)
@@ -238,7 +238,7 @@ export default {
 				this.error =
 					error.message
 					|| this.t(
-						'softwarecatalog',
+						'stackiq',
 						'An error occurred while validating objects',
 					)
 			} finally {

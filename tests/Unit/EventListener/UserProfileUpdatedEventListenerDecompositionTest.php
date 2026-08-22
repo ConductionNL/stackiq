@@ -8,22 +8,22 @@
  * `persistContactpersoonPatch()`.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\EventListener
+ * @package   OCA\Stackiq\Tests\Unit\EventListener
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-8-4
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\EventListener;
+namespace OCA\Stackiq\Tests\Unit\EventListener;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
-use OCA\SoftwareCatalog\EventListener\UserProfileUpdatedEventListener;
+use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -33,7 +33,7 @@ use Psr\Log\NullLogger;
  * UserProfileUpdatedEventListener::syncToContactpersoon.
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\EventListener
+ * @package  OCA\Stackiq\Tests\Unit\EventListener
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-8-4
  */

@@ -1,14 +1,14 @@
 <?php
 
 /**
- * Unit tests for SoftwareCatalogueService::getOrganisationMapper().
+ * Unit tests for StackiqService::getOrganisationMapper().
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  *
@@ -18,10 +18,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\OrganisationMapper;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogueService;
+use OCA\Stackiq\Service\StackiqService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -30,7 +30,7 @@ use Psr\Log\LoggerInterface;
 /**
  * THE INVARIANT UNDER TEST — OpenRegister is an OPTIONAL capability here.
  *
- * Eight call sites in SoftwareCatalogueService used to resolve
+ * Eight call sites in StackiqService used to resolve
  * `OCA\OpenRegister\Db\OrganisationMapper` from the container inline, so on an
  * instance without OpenRegister each one let a raw container exception escape.
  * They now go through `getOrganisationMapper()`, which answers null instead —
@@ -48,10 +48,10 @@ use Psr\Log\LoggerInterface;
  * returned null unconditionally would satisfy both null assertions while
  * silently disabling every organisation-membership path in the app.
  */
-final class SoftwareCatalogueServiceOrganisationMapperTest extends TestCase {
+final class StackiqServiceOrganisationMapperTest extends TestCase {
 
 	/**
-	 * Build a SoftwareCatalogueService with only the three properties this
+	 * Build a StackiqService with only the three properties this
 	 * accessor reads, seeded by reflection.
 	 *
 	 * The constructor is skipped deliberately: it takes the app's full
@@ -64,14 +64,14 @@ final class SoftwareCatalogueServiceOrganisationMapperTest extends TestCase {
 	 * @param ContainerInterface $container The container double.
 	 * @param LoggerInterface   $logger     The logger double.
 	 *
-	 * @return SoftwareCatalogueService The service under test.
+	 * @return StackiqService The service under test.
 	 */
 	private function buildService(
 		IAppManager $appManager,
 		ContainerInterface $container,
 		LoggerInterface $logger,
-	): SoftwareCatalogueService {
-		$service = (new \ReflectionClass(SoftwareCatalogueService::class))
+	): StackiqService {
+		$service = (new \ReflectionClass(StackiqService::class))
 			->newInstanceWithoutConstructor();
 
 		$reflection = new \ReflectionClass($service);
@@ -95,11 +95,11 @@ final class SoftwareCatalogueServiceOrganisationMapperTest extends TestCase {
 	/**
 	 * Invoke the private accessor.
 	 *
-	 * @param SoftwareCatalogueService $service The service under test.
+	 * @param StackiqService $service The service under test.
 	 *
 	 * @return OrganisationMapper|null The resolved mapper, or null.
 	 */
-	private function callAccessor(SoftwareCatalogueService $service): ?OrganisationMapper {
+	private function callAccessor(StackiqService $service): ?OrganisationMapper {
 		$method = new \ReflectionMethod($service, 'getOrganisationMapper');
 		$method->setAccessible(true);
 		return $method->invoke($service);

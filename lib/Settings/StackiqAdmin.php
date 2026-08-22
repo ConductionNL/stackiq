@@ -1,18 +1,18 @@
 <?php
 
 /**
- * Settings admin page for SoftwareCatalog.
+ * Settings admin page for Stackiq.
  *
  * @category  Settings
- * @package   OCA\SoftwareCatalog\Settings
+ * @package   OCA\Stackiq\Settings
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
-namespace OCA\SoftwareCatalog\Settings;
+namespace OCA\Stackiq\Settings;
 
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -21,7 +21,7 @@ use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\Settings\IDelegatedSettings;
 
-class SoftwareCatalogAdmin implements IDelegatedSettings {
+class StackiqAdmin implements IDelegatedSettings {
 
 	/**
 	 * The localization service.
@@ -52,7 +52,7 @@ class SoftwareCatalogAdmin implements IDelegatedSettings {
 	private IInitialState $initialState;
 
 	/**
-	 * Constructor for SoftwareCatalogAdmin settings.
+	 * Constructor for StackiqAdmin settings.
 	 *
 	 * @param IAppConfig $config The application configuration service
 	 * @param IL10N $l10n The localization service
@@ -72,9 +72,9 @@ class SoftwareCatalogAdmin implements IDelegatedSettings {
 	 * @return TemplateResponse The template response for the settings form
 	 */
 	public function getForm(): TemplateResponse {
-		$this->initialState->provideInitialState('version', $this->appManager->getAppVersion('softwarecatalog'));
+		$this->initialState->provideInitialState('version', $this->appManager->getAppVersion('stackiq'));
 
-		return new TemplateResponse('softwarecatalog', 'settings/admin', []);
+		return new TemplateResponse('stackiq', 'settings/admin', []);
 	}//end getForm()
 
 	/**
@@ -84,7 +84,7 @@ class SoftwareCatalogAdmin implements IDelegatedSettings {
 	 */
 	public function getSection(): string {
 		// Name of the previously created section.
-		$sectionName = 'softwarecatalog';
+		$sectionName = 'stackiq';
 		return $sectionName;
 	}//end getSection()
 
@@ -117,7 +117,7 @@ class SoftwareCatalogAdmin implements IDelegatedSettings {
 	/**
 	 * App config keys an authorized (delegated) admin may manage.
 	 *
-	 * Returned as a map of appId => list of allowed config keys. SoftwareCatalog
+	 * Returned as a map of appId => list of allowed config keys. Stackiq
 	 * exposes no delegatable sub-keys, so this is intentionally empty; the
 	 * `#[AuthorizedAdminSetting]` attribute still scopes the endpoints to full
 	 * admins (fail-closed). Required by IDelegatedSettings — its absence is a

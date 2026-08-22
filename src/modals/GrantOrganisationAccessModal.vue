@@ -21,7 +21,7 @@
 	<NcDialog
 		:open="open"
 		:name="
-			t('softwarecatalog', 'Manage access to {name}', {
+			t('stackiq', 'Manage access to {name}', {
 				name: organisationName,
 			})
 		"
@@ -33,7 +33,7 @@
 					v-model="selectedUser"
 					:inputLabel="
 						t(
-							'softwarecatalog',
+							'stackiq',
 							'Grant access to an existing Nextcloud user',
 						)
 					"
@@ -45,7 +45,7 @@
 					<template #icon>
 						<NcLoadingIcon v-if="granting" :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'Grant access') }}
+					{{ t('stackiq', 'Grant access') }}
 				</NcButton>
 			</div>
 
@@ -53,7 +53,7 @@
 				{{ errorMessage }}
 			</NcNoteCard>
 
-			<h3>{{ t('softwarecatalog', 'Current members') }}</h3>
+			<h3>{{ t('stackiq', 'Current members') }}</h3>
 			<NcLoadingIcon v-if="loading" :size="32" />
 			<ul v-else class="grant-organisation-access__members">
 				<NcListItem
@@ -74,21 +74,21 @@
 									:size="20" />
 								<CloseIcon v-else :size="20" />
 							</template>
-							{{ t('softwarecatalog', 'Revoke access') }}
+							{{ t('stackiq', 'Revoke access') }}
 						</NcActionButton>
 					</template>
 				</NcListItem>
 				<li
 					v-if="members.length === 0"
 					class="grant-organisation-access__empty">
-					{{ t('softwarecatalog', 'No members yet.') }}
+					{{ t('stackiq', 'No members yet.') }}
 				</li>
 			</ul>
 		</div>
 
 		<template #actions>
 			<NcButton @click="onClose">
-				{{ t('softwarecatalog', 'Close') }}
+				{{ t('stackiq', 'Close') }}
 			</NcButton>
 		</template>
 	</NcDialog>

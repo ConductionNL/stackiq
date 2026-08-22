@@ -5,7 +5,7 @@
 
 <template>
 	<CnWidgetWrapper
-		:title="t('softwarecatalog', 'Merge organisation')"
+		:title="t('stackiq', 'Merge organisation')"
 		titleIconPosition="left"
 		:showRefresh="false"
 		:showRequestFeature="false">
@@ -17,7 +17,7 @@
 			<NcLoadingIcon
 				v-if="loading"
 				:size="32"
-				:name="t('softwarecatalog', 'Loading merge status')" />
+				:name="t('stackiq', 'Loading merge status')" />
 
 			<template v-else>
 				<!-- Already merged (tombstoned) — read-only redirect notice, no controls. -->
@@ -25,7 +25,7 @@
 					<NcNoteCard type="warning">
 						{{
 							t(
-								'softwarecatalog',
+								'stackiq',
 								'This organisation has been merged and is no longer active.',
 							)
 						}}
@@ -36,7 +36,7 @@
 						</template>
 						{{
 							t(
-								'softwarecatalog',
+								'stackiq',
 								'Go to the organisation it was merged into',
 							)
 						}}
@@ -50,7 +50,7 @@
 					<p class="organisation-merge-panel__intro">
 						{{
 							t(
-								'softwarecatalog',
+								'stackiq',
 								'Fold this organisation into another one (gemeentelijke herindeling or leveranciersovername). Every contract, usage record, contact person, offering and compliance record is re-pointed to the target; this organisation is then marked as merged, never deleted.',
 							)
 						}}
@@ -59,10 +59,10 @@
 					<NcSelect
 						v-model="selectedTarget"
 						:options="targetOptions"
-						:inputLabel="t('softwarecatalog', 'Target organisation')"
+						:inputLabel="t('stackiq', 'Target organisation')"
 						:placeholder="
 							t(
-								'softwarecatalog',
+								'stackiq',
 								'Select the organisation to merge into',
 							)
 						"
@@ -85,7 +85,7 @@
 
 					<NcNoteCard v-if="success" type="success">
 						{{
-							t('softwarecatalog', 'Organisation successfully merged.')
+							t('stackiq', 'Organisation successfully merged.')
 						}}
 					</NcNoteCard>
 
@@ -98,7 +98,7 @@
 							<NcLoadingIcon v-if="previewing" :size="20" />
 							<Eye v-else :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Preview merge') }}
+						{{ t('stackiq', 'Preview merge') }}
 					</NcButton>
 				</template>
 			</template>
@@ -256,13 +256,13 @@ export default {
 				this.sourceName =
 					obj.name
 					|| obj.name
-					|| t('softwarecatalog', 'Unknown organisation')
+					|| t('stackiq', 'Unknown organisation')
 				this.status = obj.status || ''
 				this.mergedInto = obj.mergedInto || ''
 			} catch (e) {
 				// Non-fatal — the panel still renders merge controls with an
 				// empty source name rather than failing the whole detail page.
-				this.sourceName = t('softwarecatalog', 'Unknown organisation')
+				this.sourceName = t('stackiq', 'Unknown organisation')
 			} finally {
 				this.loading = false
 			}
@@ -311,7 +311,7 @@ export default {
 					}))
 			} catch (e) {
 				this.error = t(
-					'softwarecatalog',
+					'stackiq',
 					'Could not load target organisations.',
 				)
 			} finally {
@@ -347,7 +347,7 @@ export default {
 				this.showConfirm = true
 			} catch (e) {
 				this.error =
-					e.message || t('softwarecatalog', 'Could not preview the merge.')
+					e.message || t('stackiq', 'Could not preview the merge.')
 			} finally {
 				this.previewing = false
 			}
@@ -375,12 +375,12 @@ export default {
 				this.status = 'merged'
 				this.mergedInto = String(this.selectedTarget.value)
 				showSuccess(
-					t('softwarecatalog', 'Organisation successfully merged.'),
+					t('stackiq', 'Organisation successfully merged.'),
 				)
 			} catch (e) {
 				this.confirmError =
 					e.message
-					|| t('softwarecatalog', 'Could not merge the organisations.')
+					|| t('stackiq', 'Could not merge the organisations.')
 			} finally {
 				this.busy = false
 			}

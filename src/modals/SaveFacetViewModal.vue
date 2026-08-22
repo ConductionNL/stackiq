@@ -13,14 +13,14 @@ free-text search, if any) on the module/dienst index pages, then emits
 <template>
 	<NcDialog
 		v-if="show"
-		:name="t('softwarecatalog', 'Save as view')"
+		:name="t('stackiq', 'Save as view')"
 		size="small"
 		@closing="closeModal">
 		<div class="save-facet-view-modal">
 			<p class="save-facet-view-modal__description">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Save the current filter selection so it can be reopened later.',
 					)
 				}}
@@ -29,15 +29,15 @@ free-text search, if any) on the module/dienst index pages, then emits
 			<form class="save-facet-view-modal__form" @submit.prevent="save">
 				<NcTextField
 					v-model="name"
-					:label="t('softwarecatalog', 'View name')"
+					:label="t('stackiq', 'View name')"
 					:placeholder="
-						t('softwarecatalog', 'e.g. Zaakregistratie modules')
+						t('stackiq', 'e.g. Zaakregistratie modules')
 					"
 					required />
 
 				<div class="save-facet-view-modal__actions">
 					<NcButton variant="secondary" @click="closeModal">
-						{{ t('softwarecatalog', 'Cancel') }}
+						{{ t('stackiq', 'Cancel') }}
 					</NcButton>
 					<NcButton
 						variant="primary"
@@ -46,7 +46,7 @@ free-text search, if any) on the module/dienst index pages, then emits
 						<template #icon>
 							<NcLoadingIcon v-if="saving" :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Save view') }}
+						{{ t('stackiq', 'Save view') }}
 					</NcButton>
 				</div>
 			</form>

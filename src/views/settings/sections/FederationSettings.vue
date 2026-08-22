@@ -12,18 +12,18 @@
 
 <template>
 	<AlwaysVisibleSection
-		:name="t('softwarecatalog', 'Catalog federation')"
+		:name="t('stackiq', 'Catalog federation')"
 		:description="
 			t(
-				'softwarecatalog',
+				'stackiq',
 				'Subscribe to peer catalogs and pull their published entries into this instance.',
 			)
 		"
 		:loading="loading"
-		:loadingText="t('softwarecatalog', 'Loading federation status…')"
+		:loadingText="t('stackiq', 'Loading federation status…')"
 		:showRefreshButton="true"
 		:refreshing="loading"
-		:refreshButtonText="t('softwarecatalog', 'Refresh status')"
+		:refreshButtonText="t('stackiq', 'Refresh status')"
 		@refresh="loadStatus">
 		<template #header-actions>
 			<NcButton
@@ -39,7 +39,7 @@
 					<NcLoadingIcon v-if="pulling" :size="20" />
 					<Sync v-else :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Pull now') }}
+				{{ t('stackiq', 'Pull now') }}
 			</NcButton>
 		</template>
 
@@ -47,7 +47,7 @@
 		<NcNoteCard v-if="!status.available" type="warning">
 			{{
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Federation is unavailable. It requires the OpenCatalogi app to be installed and enabled.',
 				)
 			}}
@@ -55,29 +55,29 @@
 		<NcNoteCard v-else-if="!status.enabled" type="warning">
 			{{
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Federation is available but disabled. Enable it in the app configuration to pull peer catalogs.',
 				)
 			}}
 		</NcNoteCard>
 
 		<div class="federation-directory">
-			<h3>{{ t('softwarecatalog', 'Directory') }}</h3>
+			<h3>{{ t('stackiq', 'Directory') }}</h3>
 			<p class="help-text">
 				{{
 					status.directoryUrl
-					|| t('softwarecatalog', 'No directory configured')
+					|| t('stackiq', 'No directory configured')
 				}}
 			</p>
 		</div>
 
 		<!-- Add-peer control. -->
 		<div class="federation-add-peer">
-			<h3>{{ t('softwarecatalog', 'Add a federation peer') }}</h3>
+			<h3>{{ t('stackiq', 'Add a federation peer') }}</h3>
 			<p class="help-text">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Private and loopback hosts are blocked unless explicitly allowlisted via the local_federation_hosts setting.',
 					)
 				}}
@@ -85,7 +85,7 @@
 			<div class="federation-add-row">
 				<NcTextField
 					v-model="newPeerUrl"
-					:label="t('softwarecatalog', 'Peer catalog URL')"
+					:label="t('stackiq', 'Peer catalog URL')"
 					placeholder="https://catalog.example.org"
 					:disabled="adding"
 					@keydown.enter="addPeer" />
@@ -97,21 +97,21 @@
 						<NcLoadingIcon v-if="adding" :size="20" />
 						<Plus v-else :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'Add peer') }}
+					{{ t('stackiq', 'Add peer') }}
 				</NcButton>
 			</div>
 		</div>
 
 		<!-- Peer list. -->
 		<div class="federation-peers">
-			<h3>{{ t('softwarecatalog', 'Subscribed peers') }}</h3>
+			<h3>{{ t('stackiq', 'Subscribed peers') }}</h3>
 
 			<NcEmptyContent
 				v-if="status.peers.length === 0"
-				:name="t('softwarecatalog', 'No peers subscribed')"
+				:name="t('stackiq', 'No peers subscribed')"
 				:description="
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Add a peer catalog URL above to start federating.',
 					)
 				">
@@ -128,21 +128,21 @@
 							<span
 								v-if="peer.stale"
 								class="peer-badge peer-badge--stale">
-								{{ t('softwarecatalog', 'Stale') }}
+								{{ t('stackiq', 'Stale') }}
 							</span>
 							<span
 								v-else-if="!peer.allowed"
 								class="peer-badge peer-badge--blocked">
-								{{ t('softwarecatalog', 'Blocked by SSRF guard') }}
+								{{ t('stackiq', 'Blocked by SSRF guard') }}
 							</span>
 							<span v-else class="peer-badge peer-badge--ok">
-								{{ t('softwarecatalog', 'Healthy') }}
+								{{ t('stackiq', 'Healthy') }}
 							</span>
 						</span>
 						<span class="peer-failures help-text">
 							{{
 								n(
-									'softwarecatalog',
+									'stackiq',
 									'{count} consecutive failure (stale after {threshold})',
 									'{count} consecutive failures (stale after {threshold})',
 									peer.failures,
@@ -156,7 +156,7 @@
 					</div>
 					<NcButton
 						variant="tertiary"
-						:aria-label="t('softwarecatalog', 'Remove peer')"
+						:aria-label="t('stackiq', 'Remove peer')"
 						:disabled="removingUrl === peer.url"
 						@click="removePeer(peer.url)">
 						<template #icon>
@@ -263,7 +263,7 @@ export default defineComponent({
 				this.status = normaliseFederationStatus(data)
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'Could not load federation status')
+					t('stackiq', 'Could not load federation status')
 						+ ': '
 						+ error.message,
 				)
@@ -289,12 +289,12 @@ export default defineComponent({
 					method: 'POST',
 					body: { peerUrl: url },
 				})
-				showSuccess(t('softwarecatalog', 'Peer added'))
+				showSuccess(t('stackiq', 'Peer added'))
 				this.newPeerUrl = ''
 				await this.loadStatus()
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'Could not add peer')
+					t('stackiq', 'Could not add peer')
 						+ ': '
 						+ error.message,
 				)
@@ -317,11 +317,11 @@ export default defineComponent({
 					method: 'DELETE',
 					body: { peerUrl: url },
 				})
-				showSuccess(t('softwarecatalog', 'Peer removed'))
+				showSuccess(t('stackiq', 'Peer removed'))
 				await this.loadStatus()
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'Could not remove peer')
+					t('stackiq', 'Could not remove peer')
 						+ ': '
 						+ error.message,
 				)
@@ -344,14 +344,14 @@ export default defineComponent({
 					method: 'POST',
 				})
 				const peers = Array.isArray(result.peers) ? result.peers : []
-				this.pullSummary = t('softwarecatalog', 'Pulled {count} peer(s).', {
+				this.pullSummary = t('stackiq', 'Pulled {count} peer(s).', {
 					count: peers.length,
 				})
-				showSuccess(t('softwarecatalog', 'Federation pull completed'))
+				showSuccess(t('stackiq', 'Federation pull completed'))
 				await this.loadStatus()
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'Federation pull failed')
+					t('stackiq', 'Federation pull failed')
 						+ ': '
 						+ error.message,
 				)

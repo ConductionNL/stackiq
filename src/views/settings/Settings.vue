@@ -1,9 +1,9 @@
 <template>
 	<div>
 		<NcSettingsSection
-			name="Software Catalog"
+			name="Stackiq"
 			description="A central place for managing your software"
-			docUrl="https://docs.softwarecatalog.nl" />
+			docUrl="https://softwarecatalog.conduction.nl" />
 
 		<NcSettingsSection
 			name="Data storage"
@@ -93,9 +93,9 @@
 
 					<NcTextField
 						v-model="catalogLocation"
-						:label="t('softwarecatalog', 'Catalog Location URL')"
+						:label="t('stackiq', 'Catalog Location URL')"
 						:placeholder="
-							t('softwarecatalog', 'https://catalog.example.com')
+							t('stackiq', 'https://catalog.example.com')
 						"
 						:disabled="loading || savingCatalogLocation">
 						<template #icon>
@@ -288,7 +288,7 @@ export default defineComponent({
 		async loadSettings() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings',
+					'/index.php/apps/stackiq/api/settings',
 				)
 				const data = await response.json()
 				this.settings = data
@@ -535,7 +535,7 @@ export default defineComponent({
 				})
 
 				// Send configuration to backend
-				await fetch('/index.php/apps/softwarecatalog/api/settings', {
+				await fetch('/index.php/apps/stackiq/api/settings', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -562,7 +562,7 @@ export default defineComponent({
 
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings/load',
+					'/index.php/apps/stackiq/api/settings/load',
 				)
 				const data = await response.json()
 
@@ -608,7 +608,7 @@ export default defineComponent({
 			this.savingCatalogLocation = true
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings/catalog-location',
+					'/index.php/apps/stackiq/api/settings/catalog-location',
 					{
 						method: 'POST',
 						headers: {

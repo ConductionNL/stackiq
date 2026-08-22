@@ -19,7 +19,7 @@
 <template>
 	<NcDialog
 		v-if="show"
-		:name="t('softwarecatalog', 'Confirm organisation merge')"
+		:name="t('stackiq', 'Confirm organisation merge')"
 		size="normal"
 		:canClose="!busy"
 		@closing="$emit('cancel')">
@@ -27,7 +27,7 @@
 			<p>
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'This will permanently fold {source} into {target}.',
 						{ source: sourceName, target: targetName },
 					)
@@ -36,7 +36,7 @@
 			<p class="merge-confirm-dialog__note">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'{source} will be marked as merged (not deleted) and will disappear from the organisations list.',
 						{ source: sourceName },
 					)
@@ -47,7 +47,7 @@
 				<caption class="merge-confirm-dialog__counts-caption">
 					{{
 						t(
-							'softwarecatalog',
+							'stackiq',
 							'Records that will be re-pointed to {target}:',
 							{ target: targetName },
 						)
@@ -70,13 +70,13 @@
 
 		<template #actions>
 			<NcButton :disabled="busy" @click="$emit('cancel')">
-				{{ t('softwarecatalog', 'Cancel') }}
+				{{ t('stackiq', 'Cancel') }}
 			</NcButton>
 			<NcButton variant="error" :disabled="busy" @click="$emit('confirm')">
 				<template #icon>
 					<NcLoadingIcon v-if="busy" :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Merge organisations') }}
+				{{ t('stackiq', 'Merge organisations') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -151,12 +151,12 @@ export default {
 		 */
 		countRows() {
 			const labels = {
-				usage: t('softwarecatalog', 'Usage records'),
-				contract: t('softwarecatalog', 'Contracts'),
-				contactPerson: t('softwarecatalog', 'Contact persons'),
-				aanbod: t('softwarecatalog', 'Offerings'),
-				compliancy: t('softwarecatalog', 'Compliance records'),
-				groupMembers: t('softwarecatalog', 'Group members'),
+				usage: t('stackiq', 'Usage records'),
+				contract: t('stackiq', 'Contracts'),
+				contactPerson: t('stackiq', 'Contact persons'),
+				aanbod: t('stackiq', 'Offerings'),
+				compliancy: t('stackiq', 'Compliance records'),
+				groupMembers: t('stackiq', 'Group members'),
 			}
 
 			return Object.keys(labels).map((key) => ({

@@ -7,23 +7,23 @@
  * getObject() on an already-serialized array after jsonSerialize().
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\SoftwareCatalog\Service\GebruikService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\GebruikService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -34,11 +34,11 @@ use Psr\Log\LoggerInterface;
  * Tests for getApplicationIds serialisation safety (SB2).
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 class GebruikServiceGetApplicationIdsTest extends TestCase {
 

@@ -18,7 +18,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<NcNoteCard type="info">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Objects will be published with the current date and time. If any objects have a depublication date set, it will be removed to make them fully published.',
 					)
 				}}
@@ -27,8 +27,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<SelectedObjectsList
 				:title="
 					(objectStore.selectedObjects?.length || 0) === 1
-						? t('softwarecatalog', 'Publication to Publish')
-						: t('softwarecatalog', 'Selected Publications')
+						? t('stackiq', 'Publication to Publish')
+						: t('stackiq', 'Selected Publications')
 				"
 				:showRemove="true" />
 		</div>
@@ -37,8 +37,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<p>
 				{{
 					originalSelectedCount > 1
-						? t('softwarecatalog', 'Objects successfully published')
-						: t('softwarecatalog', 'Object successfully published')
+						? t('stackiq', 'Objects successfully published')
+						: t('stackiq', 'Object successfully published')
 				}}
 			</p>
 		</NcNoteCard>
@@ -53,8 +53,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				</template>
 				{{
 					success === null
-						? t('softwarecatalog', 'Cancel')
-						: t('softwarecatalog', 'Close')
+						? t('stackiq', 'Cancel')
+						: t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton
@@ -68,7 +68,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Publish v-if="!loading" :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Publish') }}
+				{{ t('stackiq', 'Publish') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -128,9 +128,9 @@ export default {
 		dialogTitle() {
 			const count = objectStore.selectedObjects?.length || 0
 			if (count === 1) {
-				return this.t('softwarecatalog', 'Publish publication')
+				return this.t('stackiq', 'Publish publication')
 			}
-			return this.t('softwarecatalog', 'Publish {count} publications', {
+			return this.t('stackiq', 'Publish {count} publications', {
 				count,
 			})
 		},
@@ -200,7 +200,7 @@ export default {
 
 				if (failed.length > 0) {
 					this.error = this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Failed to publish {count} objects',
 						{ count: failed.length },
 					)
@@ -210,7 +210,7 @@ export default {
 				this.error =
 					error.message
 					|| this.t(
-						'softwarecatalog',
+						'stackiq',
 						'An error occurred while publishing objects',
 					)
 			} finally {

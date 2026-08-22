@@ -13,22 +13,22 @@ declare(strict_types=1);
  * 5. Changing the user's password
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit
+ * @package  OCA\Stackiq\Tests\Unit
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  1.0.0
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 
-namespace OCA\SoftwareCatalog\Tests\Unit;
+namespace OCA\Stackiq\Tests\Unit;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
-use OCA\SoftwareCatalog\Controller\ContactpersonenController;
-use OCA\SoftwareCatalog\Service\ContactpersoonService;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
+use OCA\Stackiq\Controller\ContactpersonenController;
+use OCA\Stackiq\Service\ContactpersoonService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -44,11 +44,11 @@ use Psr\Log\LoggerInterface;
  * Test class for complete organisation user workflow
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit
+ * @package  OCA\Stackiq\Tests\Unit
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  1.0.0
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 class OrganisationUserWorkflowTest extends TestCase {
 	/**
@@ -150,7 +150,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 
 		// Create controller
 		$this->controller = new ContactpersonenController(
-			'softwarecatalog',
+			'stackiq',
 			$this->createMock(IRequest::class),
 			$this->settingsService,
 			$this->contactPersonHandler,

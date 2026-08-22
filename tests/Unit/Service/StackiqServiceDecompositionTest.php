@@ -1,31 +1,31 @@
 <?php
 
 /**
- * Unit tests for SoftwareCatalogueService decomposition helpers
+ * Unit tests for StackiqService decomposition helpers
  * extracted in W31.
  *
  * Covers method-decomposition task 2.6:
  * `resolveVoorzieningenContext(string $schemaSlug, string $logContext)`
  * — the shared "register + schema lookup + missing-config guard"
  * helper that replaces four duplicated inline blocks across the
- * SoftwareCatalogueService.
+ * StackiqService.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-2-6
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogueService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\StackiqService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,14 +40,14 @@ use Psr\Log\LoggerInterface;
  *     log line.
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-2-6
  */
-class SoftwareCatalogueServiceDecompositionTest extends TestCase {
+class StackiqServiceDecompositionTest extends TestCase {
 
 	/**
-	 * Builds a partially-mocked SoftwareCatalogueService whose container
+	 * Builds a partially-mocked StackiqService whose container
 	 * resolves SettingsService to a stub we control. Constructor is
 	 * skipped because we only exercise one private helper.
 	 *
@@ -55,10 +55,10 @@ class SoftwareCatalogueServiceDecompositionTest extends TestCase {
 	 * @param LoggerInterface $logger Logger spy (assertions on
 	 *                                error logging).
 	 *
-	 * @return SoftwareCatalogueService
+	 * @return StackiqService
 	 */
-	private function buildService(SettingsService $settings, LoggerInterface $logger): SoftwareCatalogueService {
-		$service = (new \ReflectionClass(SoftwareCatalogueService::class))
+	private function buildService(SettingsService $settings, LoggerInterface $logger): StackiqService {
+		$service = (new \ReflectionClass(StackiqService::class))
 			->newInstanceWithoutConstructor();
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -90,13 +90,13 @@ class SoftwareCatalogueServiceDecompositionTest extends TestCase {
 	 * Invokes the private resolveVoorzieningenContext helper on the
 	 * given service.
 	 *
-	 * @param SoftwareCatalogueService $service Service under test.
+	 * @param StackiqService $service Service under test.
 	 * @param string $schemaSlug Schema slug.
 	 * @param string $logContext Log context.
 	 *
 	 * @return array<string,int>|null
 	 */
-	private function callResolver(SoftwareCatalogueService $service, string $schemaSlug, string $logContext): ?array {
+	private function callResolver(StackiqService $service, string $schemaSlug, string $logContext): ?array {
 		$reflection = new \ReflectionMethod($service, 'resolveVoorzieningenContext');
 		$reflection->setAccessible(true);
 		return $reflection->invoke($service, $schemaSlug, $logContext);
@@ -175,7 +175,7 @@ class SoftwareCatalogueServiceDecompositionTest extends TestCase {
 	/**
 	 * The helper's schema-id guard treats the legacy `false` sentinel
 	 * the same as `null` (the call sites in
-	 * `SoftwareCatalogueService` historically checked for both shapes).
+	 * `StackiqService` historically checked for both shapes).
 	 * SettingsService::getSchemaIdForObjectType() is typed `?int` so we
 	 * cover the runtime guard by asserting the documented behavior in
 	 * the source — the live call site already passed phpunit on the

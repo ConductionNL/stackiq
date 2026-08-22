@@ -1,5 +1,5 @@
 /**
- * orClient — centralised OpenRegister object-API client for SoftwareCatalog.
+ * orClient — centralised OpenRegister object-API client for Stackiq.
  *
  * Provides a single place where the OpenRegister object URL is built and the
  * fleet-wide i18n conventions (ADR-025) are applied:
@@ -41,11 +41,11 @@ export const OR_API_BASE = '/index.php/apps/openregister/api'
  * Module-level active-organisation UUID (multi-org-membership).
  *
  * A plain module-level value rather than a Vue reactive/injected one —
- * SoftwareCatalog reloads the page on every organisation switch (see
+ * Stackiq reloads the page on every organisation switch (see
  * `OrganisationSwitcher.vue`), so the active organisation is stable for the
  * lifetime of a single page load and does not need cross-component
  * reactivity. Set once at boot from `App.vue`'s `/api/me` fetch via
- * {@link setActiveOrganisationUuid}; read by `softwarecatalogPlugin.js`'s
+ * {@link setActiveOrganisationUuid}; read by `stackiqPlugin.js`'s
  * write paths via {@link getActiveOrganisationUuid}.
  *
  * @type {string|null}

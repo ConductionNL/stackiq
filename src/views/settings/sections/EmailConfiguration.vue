@@ -71,7 +71,7 @@
 							" />
 						<NcTextField
 							label="Sender Name"
-							placeholder="Software Catalog"
+							placeholder="Stackiq"
 							:disabled="!emailSettings.enabled"
 							:modelValue="(emailSettings.senderName || '').toString()"
 							@update:modelValue="emailSettings.senderName = $event" />

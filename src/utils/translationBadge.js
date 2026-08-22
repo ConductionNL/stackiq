@@ -21,7 +21,7 @@
 
 /**
  * Map of language codes to their human-readable English display names.
- * Kept intentionally small — covers the languages SoftwareCatalog content is
+ * Kept intentionally small — covers the languages Stackiq content is
  * authored in. Unknown codes fall back to the upper-cased code itself.
  *
  * @type {{[key: string]: string}}
@@ -121,7 +121,7 @@ export function translationBadge(object, servedLang) {
 		 */
 		label(t) {
 			if (typeof t === 'function') {
-				return t('softwarecatalog', '(translated from {language})', {
+				return t('stackiq', '(translated from {language})', {
 					language: sourceLanguageName,
 				})
 			}

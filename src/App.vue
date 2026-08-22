@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <!--
- SoftwareCatalog app shell. Mounts CnAppRoot with the bundled manifest
+ Stackiq app shell. Mounts CnAppRoot with the bundled manifest
  and the customComponents registry; provides the `objectSidebarState`
  channel so detail pages (CnDetailPage) can drive a single
  host-rendered CnObjectSidebar through the #sidebar slot.
@@ -22,7 +22,7 @@
 			:customComponents="customComponents"
 			:registry="registry"
 			:pageTypes="pageTypes"
-			appId="softwarecatalog"
+			appId="stackiq"
 			:translate="translateForApp"
 			:permissions="permissions"
 			:initialOrganisationUuid="activeOrganisationUuid"
@@ -183,7 +183,7 @@ export default {
 	 * @spec exclude Vue lifecycle hook — SPA shell bootstrap
 	 */
 	async created() {
-		// SoftwareCatalog stores still need to come up so legacy custom
+		// Stackiq stores still need to come up so legacy custom
 		// components (OrganisatieIndexView, SoftwareCatalogSettingsPage)
 		// keep working through the transition. CnAppRoot itself doesn't
 		// depend on them — the openregister dependency check happens via
@@ -193,7 +193,7 @@ export default {
 		} catch (e) {
 			// eslint-disable-next-line no-console
 			console.warn(
-				'[softwarecatalog] settingsStore.loadSettings() failed; continuing with defaults',
+				'[stackiq] settingsStore.loadSettings() failed; continuing with defaults',
 				e,
 			)
 		}
@@ -217,7 +217,7 @@ export default {
 		async loadOrganisations() {
 			try {
 				const response = await fetch(
-					generateUrl('/apps/softwarecatalog/api/me'),
+					generateUrl('/apps/stackiq/api/me'),
 					{
 						headers: { requesttoken: OC.requestToken },
 					},
@@ -236,7 +236,7 @@ export default {
 			} catch (e) {
 				// eslint-disable-next-line no-console
 				console.warn(
-					'[softwarecatalog] Failed to load organisations; continuing single-tenant',
+					'[stackiq] Failed to load organisations; continuing single-tenant',
 					e,
 				)
 			}
@@ -252,7 +252,7 @@ export default {
 		 * @spec exclude i18n wrapper around @nextcloud/l10n translate
 		 */
 		translateForApp(key) {
-			return ncT('softwarecatalog', key)
+			return ncT('stackiq', key)
 		},
 	},
 }

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for ReviewAggregateService (catalog-ratings, softwarecatalog#375).
+ * Unit tests for ReviewAggregateService (catalog-ratings, stackiq#375).
  *
  * Covers the approved-only aggregate: pending/rejected reviews for the SAME
  * subject are excluded; approved reviews for a DIFFERENT subject are
@@ -9,24 +9,24 @@
  * average and zero count rather than erroring.
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\SoftwareCatalog\Service\ReviewAggregateService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\ReviewAggregateService;
+use OCA\Stackiq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

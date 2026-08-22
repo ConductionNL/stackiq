@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Unit tests for the Software Catalog Portal Contribution Provider.
+ * Unit tests for the Stackiq Portal Contribution Provider.
  *
  * @category Tests
- * @package  OCA\SoftwareCatalog\Tests\Unit\Portal
+ * @package  OCA\Stackiq\Tests\Unit\Portal
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -20,9 +20,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Portal;
+namespace OCA\Stackiq\Tests\Unit\Portal;
 
-use OCA\SoftwareCatalog\Portal\PortalContributionProvider;
+use OCA\Stackiq\Portal\PortalContributionProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -91,7 +91,7 @@ class PortalContributionProviderTest extends TestCase {
 	}
 
 	/**
-	 * Any audience Software Catalog does not serve yields null (fail-closed).
+	 * Any audience Stackiq does not serve yields null (fail-closed).
 	 *
 	 * @return void
 	 */
@@ -109,7 +109,7 @@ class PortalContributionProviderTest extends TestCase {
 	public function testVendorManifestShape(): void {
 		$manifest = $this->provider->getContribution(['audience' => 'vendor-org']);
 		$this->assertIsArray($manifest);
-		$this->assertSame('Software Catalog', $manifest['label']);
+		$this->assertSame('Stackiq', $manifest['label']);
 
 		$byId = $this->collectionsById($manifest);
 		$this->assertSame(
@@ -145,7 +145,7 @@ class PortalContributionProviderTest extends TestCase {
 	public function testParticipantManifestShape(): void {
 		$manifest = $this->provider->getContribution(['audience' => 'participant-org']);
 		$this->assertIsArray($manifest);
-		$this->assertSame('Software Catalog', $manifest['label']);
+		$this->assertSame('Stackiq', $manifest['label']);
 
 		$byId = $this->collectionsById($manifest);
 		$this->assertSame(['participantGebruik', 'participantContracts'], array_keys($byId));

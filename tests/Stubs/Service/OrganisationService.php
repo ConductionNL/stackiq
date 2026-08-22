@@ -5,7 +5,7 @@
  *
  * The real OrganisationService lives in the OpenRegister app which is not
  * available as a Composer dependency in the test environment. This stub
- * declares the methods SoftwareCatalog's
+ * declares the methods Stackiq's
  * AangebodenGebruikService::getCurrentOrganisation() /
  * AanbodService::getCurrentOrganisation() rely on (vendor-visibility-rbac's
  * deny-before-grant tests), plus the membership-management surface
@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Stubs\Service
+ * @package  OCA\Stackiq\Tests\Stubs\Service
  */
 
 declare(strict_types=1);
@@ -26,7 +26,7 @@ namespace OCA\OpenRegister\Service;
 use OCA\OpenRegister\Db\Organisation;
 
 /**
- * Stub for OrganisationService with the surface used by SoftwareCatalog
+ * Stub for OrganisationService with the surface used by Stackiq
  * tests.
  */
 abstract class OrganisationService {

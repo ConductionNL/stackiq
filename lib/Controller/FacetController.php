@@ -1,16 +1,16 @@
 <?php
 
 /**
- * Facet Controller for SoftwareCatalog
+ * Facet Controller for Stackiq
  *
  * Handles HTTP requests for the GEMMA-dimension facet aggregation endpoint.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -20,9 +20,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\Service\FacetService;
+use OCA\Stackiq\Service\FacetService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
  * Controller for the GEMMA-dimension facet aggregation endpoint.
  *
  * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
+ * @package  OCA\Stackiq\Controller
  *
  * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
  */

@@ -1,11 +1,11 @@
 /**
- * Softwarecatalog plugin for the @conduction/nextcloud-vue object store.
+ * Stackiq plugin for the @conduction/nextcloud-vue object store.
  *
  * Adds app-specific state, getters, and actions that extend the base CRUD store
- * with softwarecatalog-specific operations: settings management, active object
+ * with stackiq-specific operations: settings management, active object
  * tracking, mass operations, lifecycle actions, and column management.
  *
- * @module softwarecatalogPlugin
+ * @module stackiqPlugin
  * @author Ruben Linde
  * @copyright 2024
  * @license EUPL-1.2
@@ -85,12 +85,12 @@ function separateResults(results) {
 }
 
 /**
- * Softwarecatalog plugin factory.
+ * Stackiq plugin factory.
  *
  * @return {object} Plugin definition for createObjectStore
  * @spec exclude Pinia plugin installer factory — store bootstrap plumbing
  */
-export function softwarecatalogPlugin() {
+export function stackiqPlugin() {
 	return {
 		name: 'Softwarecatalog',
 
@@ -362,7 +362,7 @@ export function softwarecatalogPlugin() {
 			// ==========================================
 
 			/**
-			 * Fetch app settings from the softwarecatalog API.
+			 * Fetch app settings from the stackiq API.
 			 *
 			 * @return {Promise<void>}
 			 * @spec openspec/specs/fe-stores/spec.md
@@ -370,7 +370,7 @@ export function softwarecatalogPlugin() {
 			async fetchSettings() {
 				try {
 					const settingsResponse = await fetch(
-						'/index.php/apps/softwarecatalog/api/settings',
+						'/index.php/apps/stackiq/api/settings',
 						{ headers: buildHeaders() },
 					)
 					if (!settingsResponse.ok)
@@ -380,7 +380,7 @@ export function softwarecatalogPlugin() {
 					// Fetch voorzieningen-specific configuration
 					try {
 						const voorzieningenResponse = await fetch(
-							'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+							'/index.php/apps/stackiq/api/voorzieningen/config',
 							{ headers: buildHeaders() },
 						)
 						if (voorzieningenResponse.ok) {

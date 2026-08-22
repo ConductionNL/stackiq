@@ -10,21 +10,21 @@
  * aanbod-beheerder and any admin MUST still succeed unchanged.
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/contract-approval-ownership-guard/specs/contract-decision-delegation/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\ContractApprovalController;
-use OCA\SoftwareCatalog\Service\ContractApprovalService;
+use OCA\Stackiq\Controller\ContractApprovalController;
+use OCA\Stackiq\Service\ContractApprovalService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;

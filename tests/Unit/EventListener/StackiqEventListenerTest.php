@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\EventListener;
+namespace OCA\Stackiq\Tests\Unit\EventListener;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -11,32 +11,32 @@ use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\SoftwareCatalog\EventListener\SoftwareCatalogEventListener;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogueService;
+use OCA\Stackiq\EventListener\StackiqEventListener;
+use OCA\Stackiq\Service\StackiqService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * Test class for SoftwareCatalogEventListener
+ * Test class for StackiqEventListener
  *
  * This class contains comprehensive tests for all event handling methods
- * in the SoftwareCatalogEventListener class.
+ * in the StackiqEventListener class.
  *
  * @category Tests
- * @package  OCA\SoftwareCatalog\Tests\Unit\EventListener
+ * @package  OCA\Stackiq\Tests\Unit\EventListener
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  * @version  1.0.0
  */
-class SoftwareCatalogEventListenerTest extends TestCase {
+class StackiqEventListenerTest extends TestCase {
 	/**
-	 * Mock of the SoftwareCatalogueService
+	 * Mock of the StackiqService
 	 *
-	 * @var SoftwareCatalogueService|MockObject
+	 * @var StackiqService|MockObject
 	 */
-	private SoftwareCatalogueService|MockObject $softwareCatalogueService;
+	private StackiqService|MockObject $softwareCatalogueService;
 
 	/**
 	 * Mock of the LoggerInterface
@@ -48,9 +48,9 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 	/**
 	 * The event listener instance under test
 	 *
-	 * @var SoftwareCatalogEventListener
+	 * @var StackiqEventListener
 	 */
-	private SoftwareCatalogEventListener $eventListener;
+	private StackiqEventListener $eventListener;
 
 	/**
 	 * Set up the test environment before each test
@@ -60,24 +60,24 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		// The SoftwareCatalogEventListener was refactored after these tests
+		// The StackiqEventListener was refactored after these tests
 		// were written: handle() now dispatches via SettingsService schema-id
 		// lookups (handleObjectCreated/Updated/Deleted private dispatchers)
 		// rather than the direct handleNewContact/handleNewGebruiker/etc.
 		// service methods these tests assert. The tests need to be rewritten
 		// against the new dispatch flow and additional collaborators
 		// (SettingsService, AppManager, IUserManager, etc.) — tracked as a
-		// follow-up. See https://codeberg.org/Conduction/softwarecatalog
+		// follow-up. See https://github.com/ConductionNL/stackiq
 		$this->markTestSkipped(
-			'Stale against current SoftwareCatalogEventListener — needs '
+			'Stale against current StackiqEventListener — needs '
 			. 'rewrite against new SettingsService-driven dispatch. '
 			. 'Tracked as follow-up issue.'
 		);
 
-		$this->softwareCatalogueService = $this->createMock(SoftwareCatalogueService::class);
+		$this->softwareCatalogueService = $this->createMock(StackiqService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
-		$this->eventListener = new SoftwareCatalogEventListener(
+		$this->eventListener = new StackiqEventListener(
 			$this->softwareCatalogueService,
 			$this->logger
 		);
@@ -301,11 +301,11 @@ class SoftwareCatalogEventListenerTest extends TestCase {
 
 	/**
 	 * An object-reverted event reaches the listener without driving
-	 * SoftwareCatalogueService.
+	 * StackiqService.
 	 *
 	 * The two cases that stood here asserted
 	 * `syncUserWithRevertedContact()` / `updateUserFromRevertedGebruiker()`
-	 * were called once each. `SoftwareCatalogEventListener` does not call
+	 * were called once each. `StackiqEventListener` does not call
 	 * them — it never did — and both service methods were log-only stubs with
 	 * no caller, removed with this change. The assertion that survives is the
 	 * true one: the revert path must not blow up, and must not reach a

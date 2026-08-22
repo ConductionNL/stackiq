@@ -4,26 +4,26 @@
  * Contactpersoon Service
  *
  * This file contains the service class for handling contact person-specific operations
- * in the SoftwareCatalog application.
+ * in the Stackiq application.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCA\Stackiq\Service\Stackiq\GroupHandler;
+use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IAppConfig;
@@ -37,11 +37,11 @@ use Psr\Log\LoggerInterface;
  * user account creation, and group management.
  *
  * @category Service
- * @package  OCA\SoftwareCatalog\Service
+ * @package  OCA\Stackiq\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -173,7 +173,7 @@ class ContactpersoonService {
 						);
 						try {
 							$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-							$settingsService = $this->container->get('OCA\SoftwareCatalog\Service\SettingsService');
+							$settingsService = $this->container->get('OCA\Stackiq\Service\SettingsService');
 							$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 							$orgObject = $objectService->find(
 								id: $organizationUuid,
@@ -186,7 +186,7 @@ class ContactpersoonService {
 								$orgData = $orgObject->getObject();
 								$orgStatus = strtolower(($orgData['status'] ?? ''));
 								if (in_array(needle: $orgStatus, haystack: ['actief', 'active']) === true) {
-									$syncServiceClass = 'OCA\SoftwareCatalog\Service\OrganizationSyncService';
+									$syncServiceClass = 'OCA\Stackiq\Service\OrganizationSyncService';
 									$organizationSyncService = $this->container->get($syncServiceClass);
 									$backupStats = [
 										'entitiesCreated' => 0,

@@ -508,7 +508,7 @@
 				<h3>About Organization Synchronization</h3>
 				<p>
 					This section manages the automatic synchronization of
-					organization and contact person data between the Software Catalog
+					organization and contact person data between Stackiq
 					and OpenRegister.
 				</p>
 
@@ -790,7 +790,7 @@ export default {
 			try {
 				const timeWindow = this.selectedTimeWindow?.value || 10
 				const response = await fetch(
-					`/index.php/apps/softwarecatalog/api/settings/sync-status?timeWindow=${timeWindow}`,
+					`/index.php/apps/stackiq/api/settings/sync-status?timeWindow=${timeWindow}`,
 				)
 
 				if (!response.ok) {
@@ -825,7 +825,7 @@ export default {
 				// Wrap the sync operation with heartbeat to prevent 504 timeouts
 				const result = await withHeartbeat(async () => {
 					const response = await fetch(
-						'/index.php/apps/softwarecatalog/api/settings/sync',
+						'/index.php/apps/stackiq/api/settings/sync',
 						{
 							method: 'POST',
 							headers: {
@@ -1007,7 +1007,7 @@ export default {
 
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/settings/sync/organisations',
+					'/index.php/apps/stackiq/api/settings/sync/organisations',
 					{
 						method: 'POST',
 						headers: {

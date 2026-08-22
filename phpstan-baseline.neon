@@ -1,7 +1,7 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Parameter \\#2 \\$listener of method OCP\\\\AppFramework\\\\Bootstrap\\\\IRegistrationContext\\:\\:registerEventListener\\(\\) expects class\\-string\\<OCP\\\\EventDispatcher\\\\IEventListener\\<OCP\\\\EventDispatcher\\\\Event\\>\\>, 'OCA\\\\\\\\SoftwareCatalog\\\\\\\\EventListener\\\\\\\\UserProfileUpdatedEventListener' given\\.$#"
+			message: "#^Parameter \\#2 \\$listener of method OCP\\\\AppFramework\\\\Bootstrap\\\\IRegistrationContext\\:\\:registerEventListener\\(\\) expects class\\-string\\<OCP\\\\EventDispatcher\\\\IEventListener\\<OCP\\\\EventDispatcher\\\\Event\\>\\>, 'OCA\\\\\\\\Stackiq\\\\\\\\EventListener\\\\\\\\UserProfileUpdatedEventListener' given\\.$#"
 			count: 1
 			path: lib/AppInfo/Application.php
 
@@ -26,12 +26,12 @@ parameters:
 			path: lib/Controller/AangebodenGebruikController.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Controller\\\\ContactpersonenController\\:\\:\\$secureRandom is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Controller\\\\ContactpersonenController\\:\\:\\$secureRandom is never read, only written\\.$#"
 			count: 1
 			path: lib/Controller/ContactpersonenController.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Controller\\\\ContactpersonenController\\:\\:\\$settingsService is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Controller\\\\ContactpersonenController\\:\\:\\$settingsService is never read, only written\\.$#"
 			count: 1
 			path: lib/Controller/ContactpersonenController.php
 
@@ -46,7 +46,7 @@ parameters:
 			path: lib/Controller/SettingsController.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Dashboard\\\\ConceptOrganisatiesWidget\\:\\:\\$url is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Dashboard\\\\ConceptOrganisatiesWidget\\:\\:\\$url is never read, only written\\.$#"
 			count: 1
 			path: lib/Dashboard/ConceptOrganisatiesWidget.php
 
@@ -66,7 +66,7 @@ parameters:
 			path: lib/EventListener/UserProfileUpdatedEventListener.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\AanbodService\\:\\:\\$config is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\AanbodService\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/AanbodService.php
 
@@ -76,32 +76,32 @@ parameters:
 			path: lib/Service/AangebodenGebruikService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\AangebodenGebruikService\\:\\:checkOrganisationOwnership\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:checkOrganisationOwnership\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/AangebodenGebruikService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\AangebodenGebruikService\\:\\:getAllObjectsForSchema\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getAllObjectsForSchema\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/AangebodenGebruikService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\AangebodenGebruikService\\:\\:getApplicationsOwnedByOrganisation\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getApplicationsOwnedByOrganisation\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/AangebodenGebruikService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\AangebodenGebruikService\\:\\:getKoppelingenConfiguration\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getKoppelingenConfiguration\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/AangebodenGebruikService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\AangebodenGebruikService\\:\\:getObjectsRelatedToUuid\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getObjectsRelatedToUuid\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/AangebodenGebruikService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\AangebodenGebruikService\\:\\:\\$config is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/AangebodenGebruikService.php
 
@@ -121,7 +121,7 @@ parameters:
 			path: lib/Service/ArchiMateExportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateExportService\\:\\:addDataToXmlNode\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateExportService\\:\\:addDataToXmlNode\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateExportService.php
 
@@ -156,57 +156,57 @@ parameters:
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Constant OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:CONFIG_KEYS is unused\\.$#"
+			message: "#^Constant OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:CONFIG_KEYS is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:calculateOptimizedStatistics\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:calculateOptimizedStatistics\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:debugViewNodeHierarchy\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:debugViewNodeHierarchy\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:extractNodesRecursively\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:extractNodesRecursively\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:isAssoc\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:isAssoc\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:logMemoryUsage\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:logMemoryUsage\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsDirectToService\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsDirectToService\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsInParallelBatches\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsInParallelBatches\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsInSingleBatch\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsInSingleBatch\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:transformSectionObjectsBatch\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:transformSectionObjectsBatch\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:transformViewsOptimized\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:transformViewsOptimized\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
@@ -256,7 +256,7 @@ parameters:
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateImportService\\:\\:\\$rootFolder is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:\\$rootFolder is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
@@ -291,62 +291,62 @@ parameters:
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Constant OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:CONFIG_KEYS is unused\\.$#"
+			message: "#^Constant OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:CONFIG_KEYS is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:calculateObjectStatistics\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:calculateObjectStatistics\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:calculateOptimizedStatistics\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:calculateOptimizedStatistics\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:convertToOpenRegisterObjects\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:convertToOpenRegisterObjects\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:findItemsInSection\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:findItemsInSection\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:getAmefSchemaIdForType\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:getAmefSchemaIdForType\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:getVoorzieningenConfig\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:getVoorzieningenConfig\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:initializeCache\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:initializeCache\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:isOperationInProgress\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:isOperationInProgress\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:logMemoryUsage\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:logMemoryUsage\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:saveObjectsToDatabase\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:saveObjectsToDatabase\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:transformArchiMateXmlToObjectsBatch\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:transformArchiMateXmlToObjectsBatch\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
@@ -361,17 +361,17 @@ parameters:
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:\\$lastSaveTimingBreakdown is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:\\$lastSaveTimingBreakdown is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:\\$rootFolder is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:\\$rootFolder is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\ArchiMateService\\:\\:\\$userSession is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:\\$userSession is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
@@ -401,12 +401,12 @@ parameters:
 			path: lib/Service/ArchiMateService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\ContactpersoonService\\:\\:\\$config is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ContactpersoonService\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/ContactpersoonService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\ContactpersoonService\\:\\:\\$groupHandler is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ContactpersoonService\\:\\:\\$groupHandler is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/ContactpersoonService.php
 
@@ -431,17 +431,17 @@ parameters:
 			path: lib/Service/ModuleComplianceService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\OrganisatieService\\:\\:getActiveOrganisationUuid\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\OrganisatieService\\:\\:getActiveOrganisationUuid\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/OrganisatieService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\OrganisatieService\\:\\:\\$config is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\OrganisatieService\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/OrganisatieService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\OrganisatieService\\:\\:\\$organizationHandler is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\OrganisatieService\\:\\:\\$organizationHandler is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/OrganisatieService.php
 
@@ -451,12 +451,12 @@ parameters:
 			path: lib/Service/OrganizationSyncService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\OrganizationSyncService\\:\\:jsonContains\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\OrganizationSyncService\\:\\:jsonContains\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/OrganizationSyncService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\OrganizationSyncService\\:\\:jsonExtract\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\OrganizationSyncService\\:\\:jsonExtract\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/OrganizationSyncService.php
 
@@ -491,7 +491,7 @@ parameters:
 			path: lib/Service/SettingsService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\SettingsService\\:\\:\\$request is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\SettingsService\\:\\:\\$request is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/SettingsService.php
 
@@ -516,119 +516,119 @@ parameters:
 			path: lib/Service/SettingsService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogue\\\\ContactPersonHandler\\:\\:addUserToGroup\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\Stackiq\\\\ContactPersonHandler\\:\\:addUserToGroup\\(\\) is unused\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogue\\\\ContactPersonHandler\\:\\:ensureUniqueUsername\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\Stackiq\\\\ContactPersonHandler\\:\\:ensureUniqueUsername\\(\\) is unused\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogue\\\\ContactPersonHandler\\:\\:getAllowedRoleGroups\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\Stackiq\\\\ContactPersonHandler\\:\\:getAllowedRoleGroups\\(\\) is unused\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogue\\\\ContactPersonHandler\\:\\:getOrganizationGroup\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\Stackiq\\\\ContactPersonHandler\\:\\:getOrganizationGroup\\(\\) is unused\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
 			message: "#^Offset 'organization' on array\\{username\\: string\\} on left side of \\?\\? does not exist\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
 			message: "#^Offset 'organisation' on array\\{username\\: string\\} on left side of \\?\\? does not exist\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
 			message: "#^Offset 'rollen' on array\\{username\\: mixed\\} on left side of \\?\\? does not exist\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogue\\\\ContactPersonHandler\\:\\:\\$_config is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\Stackiq\\\\ContactPersonHandler\\:\\:\\$_config is never read, only written\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
 			message: "#^Result of \\|\\| is always true\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
 			message: "#^Strict comparison using \\=\\=\\= between OCP\\\\IUser\\|null and false will always evaluate to false\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
 			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
 			message: "#^Variable \\$currentRollen in empty\\(\\) always exists and is always falsy\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
 			message: "#^Variable \\$username on left side of \\?\\? always exists and is not nullable\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/ContactPersonHandler.php
+			path: lib/Service/Stackiq/ContactPersonHandler.php
 
 		-
 			message: "#^Strict comparison using \\=\\=\\= between 0\\|1\\|false and true will always evaluate to false\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogue/GroupHandler.php
+			path: lib/Service/Stackiq/GroupHandler.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogueService\\:\\:activateContactpersonenForOrganization\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:activateContactpersonenForOrganization\\(\\) is unused\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogueService.php
+			path: lib/Service/StackiqService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogueService\\:\\:activateUsersForOrganization\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:activateUsersForOrganization\\(\\) is unused\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogueService.php
+			path: lib/Service/StackiqService.php
 
 		-
-			message: "#^Method OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogueService\\:\\:ensureContactPersonInOrganization\\(\\) is unused\\.$#"
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:ensureContactPersonInOrganization\\(\\) is unused\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogueService.php
+			path: lib/Service/StackiqService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogueService\\:\\:\\$_organizationHandler is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:\\$_organizationHandler is never read, only written\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogueService.php
+			path: lib/Service/StackiqService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\SoftwareCatalogueService\\:\\:\\$appName is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:\\$appName is never read, only written\\.$#"
 			count: 1
-			path: lib/Service/SoftwareCatalogueService.php
+			path: lib/Service/StackiqService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\SymfonyEmailService\\:\\:\\$config is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\SymfonyEmailService\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/SymfonyEmailService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Service\\\\ViewService\\:\\:\\$config is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ViewService\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/ViewService.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Settings\\\\SoftwareCatalogAdmin\\:\\:\\$config is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Settings\\\\StackiqAdmin\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
-			path: lib/Settings/SoftwareCatalogAdmin.php
+			path: lib/Settings/StackiqAdmin.php
 
 		-
-			message: "#^Property OCA\\\\SoftwareCatalog\\\\Settings\\\\SoftwareCatalogAdmin\\:\\:\\$l10n is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Stackiq\\\\Settings\\\\StackiqAdmin\\:\\:\\$l10n is never read, only written\\.$#"
 			count: 1
-			path: lib/Settings/SoftwareCatalogAdmin.php
+			path: lib/Settings/StackiqAdmin.php
 
 		-
 			message: "#^Dead catch \\- Exception is never thrown in the try block\\.$#"

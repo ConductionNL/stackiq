@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// Custom-component registry for softwarecatalog's manifest-driven app shell.
+// Custom-component registry for stackiq's manifest-driven app shell.
 //
 // Every entry here is the "escape hatch" — pages or sidebar tabs that
 // don't fit one of the manifest's built-in types/widgets. Keep this
@@ -30,7 +30,7 @@ import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
 import LicensePostureView from './views/LicensePostureView.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
-import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
+import SoftwareCatalogSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
 
 export default {
@@ -42,7 +42,7 @@ export default {
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual
 	// widget rendering but not the multi-tab navigation pattern + ArchiMate
-	// status polling + register selector that SoftwareCatalogSettings.vue
+	// status polling + register selector that StackiqSettings.vue
 	// orchestrates. Settings stays type='settings' but its single section
 	// delegates to this custom component.
 	SoftwareCatalogSettingsPage,
@@ -69,7 +69,7 @@ export default {
 	// --- Cross-app decision seam: contract approval delegated to decidesk. ---
 	// Read-only Approval panel rendered as a ContractDetail sidebar tab. The
 	// approval/sign-off/renewal DECISION is raised in decidesk via the ADR-019
-	// integration registry and projected back onto the contract; softwarecatalog
+	// integration registry and projected back onto the contract; stackiq
 	// owns no approval workflow. Stays a custom tab component because it surfaces
 	// a cross-app outcome no built-in detail widget expresses.
 	ContractApprovalPanel,

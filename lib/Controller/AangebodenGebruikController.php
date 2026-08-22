@@ -1,26 +1,26 @@
 <?php
 
 /**
- * AangebodenGebruik Controller for SoftwareCatalog.
+ * AangebodenGebruik Controller for Stackiq.
  *
  * Handles HTTP requests for offered usage (aangeboden gebruik) operations including
  * retrieving gebruiks objects where the active organization is involved as afnemer
  * or in deelnemers, and updating the @self property of gebruiks objects.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\Service\AangebodenGebruikService;
+use OCA\Stackiq\Service\AangebodenGebruikService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -38,12 +38,12 @@ use Psr\Log\LoggerInterface;
  * (participants), and for updating the @self property of gebruiks objects.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -866,7 +866,7 @@ class AangebodenGebruikController extends Controller {
 	public function getApiDocumentation(): JSONResponse {
 		$documentation = [
 			'api_version' => '2.0.0',
-			'description' => 'SoftwareCatalog AangebodenGebruik API',
+			'description' => 'Stackiq AangebodenGebruik API',
 			'base_url' => '/api/aangeboden-gebruik',
 			'endpoints' => [
 				[

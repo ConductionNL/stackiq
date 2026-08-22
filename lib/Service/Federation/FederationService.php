@@ -5,17 +5,17 @@
  *
  * Cross-instance catalog federation by DELEGATING to OpenCatalogi's proven
  * federation stack (DirectoryService / BroadcastService) — never a bespoke
- * wire protocol (design constraint). softwarecatalog contributes only its
+ * wire protocol (design constraint). stackiq contributes only its
  * schema mapping, the merge/provenance semantics, the sync schedule, and the
  * admin controls. When OpenCatalogi is not installed, every entry point
  * degrades to a clean disabled state with a clear message — it never errors.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service\Federation
+ * @package   OCA\Stackiq\Service\Federation
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/federated-catalog-sync/spec.md
  *
@@ -25,9 +25,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\Federation;
+namespace OCA\Stackiq\Service\Federation;
 
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -384,7 +384,7 @@ class FederationService {
 	/**
 	 * Fetch a peer's published catalog entries via OpenCatalogi's DirectoryService.
 	 *
-	 * Delegates the wire to OpenCatalogi — softwarecatalog never speaks a bespoke
+	 * Delegates the wire to OpenCatalogi — stackiq never speaks a bespoke
 	 * federation protocol. Only published entries are returned (the peer's own
 	 * `publicatiedatum<=$now` public RBAC gate governs that surface).
 	 *

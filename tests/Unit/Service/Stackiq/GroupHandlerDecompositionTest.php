@@ -8,20 +8,20 @@
  * updateOrganizationGroups / updateGemeenteGroups).
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Tests\Unit\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-9-4
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service\SoftwareCatalogue;
+namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
+use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroup;
@@ -37,7 +37,7 @@ use Psr\Log\LoggerInterface;
  * GroupHandler::updateOrganizationGroups.
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\Service\SoftwareCatalogue
+ * @package  OCA\Stackiq\Tests\Unit\Service\Stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-9-4
  */

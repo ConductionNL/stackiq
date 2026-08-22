@@ -18,7 +18,7 @@
  * Idempotent: an already-migrated row simply matches no WHERE clause.
  *
  * @category  Repair
- * @package   OCA\SoftwareCatalog\Repair
+ * @package   OCA\Stackiq\Repair
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -30,7 +30,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Repair;
+namespace OCA\Stackiq\Repair;
 
 use OCP\DB\Exception;
 use OCP\IDBConnection;
@@ -155,7 +155,7 @@ class RenameDutchCatalogValues implements IRepairStep {
 	 * @return string
 	 */
 	public function getName(): string {
-		return 'Translate stored Dutch SoftwareCatalog enum values';
+		return 'Translate stored Dutch Stackiq enum values';
 	}//end getName()
 
 	/**
@@ -168,7 +168,7 @@ class RenameDutchCatalogValues implements IRepairStep {
 	public function run(IOutput $output): void {
 		$tables = $this->shardTables();
 		if ($tables === []) {
-			$output->info('RenameDutchCatalogValues: no SoftwareCatalog shard tables on this install; nothing to do.');
+			$output->info('RenameDutchCatalogValues: no Stackiq shard tables on this install; nothing to do.');
 			return;
 		}
 

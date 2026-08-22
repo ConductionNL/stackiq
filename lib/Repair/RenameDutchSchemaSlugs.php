@@ -28,7 +28,7 @@
  * Dutch keys, so resolution is unaffected by this step.
  *
  * @category  Repair
- * @package   OCA\SoftwareCatalog\Repair
+ * @package   OCA\Stackiq\Repair
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -40,7 +40,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Repair;
+namespace OCA\Stackiq\Repair;
 
 use OCP\DB\Exception;
 use OCP\IDBConnection;
@@ -118,7 +118,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * @return string
 	 */
 	public function getName(): string {
-		return 'Rename Dutch SoftwareCatalog schema slugs';
+		return 'Rename Dutch Stackiq schema slugs';
 	}//end getName()
 
 	/**
@@ -131,7 +131,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	public function run(IOutput $output): void {
 		$schemaIds = $this->inScopeSchemaIds();
 		if ($schemaIds === []) {
-			$output->info('RenameDutchSchemaSlugs: no SoftwareCatalog registers on this install; nothing to do.');
+			$output->info('RenameDutchSchemaSlugs: no Stackiq registers on this install; nothing to do.');
 			return;
 		}
 

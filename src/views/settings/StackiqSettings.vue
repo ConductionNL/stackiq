@@ -1,7 +1,7 @@
 <template>
 	<CnAdminSettingsShell
-		appId="softwarecatalog"
-		appName="Software Catalogus"
+		appId="stackiq"
+		appName="Stackiq"
 		:appVersion="versionInfo.appVersion || appVersion"
 		:configuredVersion="versionInfo.configuredVersion || ''"
 		:isUpToDate="versionInfo.versionsMatch !== false"
@@ -48,16 +48,16 @@
 			saveButtonText="Save General Settings"
 			@save="saveGeneralSettings"
 			@refresh="refreshGeneralSettings">
-			<!-- Software Catalog Location -->
+			<!-- Stackiq Location -->
 			<div class="catalog-location-section">
-				<h3>Software Catalog Location</h3>
+				<h3>Stackiq Location</h3>
 				<p>Set the base URL for your software catalog interface</p>
 
 				<NcTextField
 					v-model="catalogLocation"
-					:label="t('softwarecatalog', 'Software Catalog Location URL')"
+					:label="t('stackiq', 'Stackiq Location URL')"
 					:placeholder="
-						t('softwarecatalog', 'https://catalog.example.com')
+						t('stackiq', 'https://catalog.example.com')
 					"
 					:disabled="store.loading">
 					<template #icon>
@@ -100,16 +100,16 @@
 		<ModerationQueue
 			type="assessment"
 			entityLabel="review"
-			:name="t('softwarecatalog', 'Review moderation')"
+			:name="t('stackiq', 'Review moderation')"
 			:description="
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Review pending ratings and testimonials. Approving a review publishes it; rejecting leaves it hidden.',
 				)
 			"
-			:loadingText="t('softwarecatalog', 'Loading pending reviews…')"
+			:loadingText="t('stackiq', 'Loading pending reviews…')"
 			:emptyDescription="
-				t('softwarecatalog', 'There are no pending reviews right now.')
+				t('stackiq', 'There are no pending reviews right now.')
 			" />
 
 		<!-- Catalog Federation Section -->
@@ -145,14 +145,14 @@ import UserGroupsConfiguration from './sections/UserGroupsConfiguration.vue'
 import { settingsStore } from '../../store/store.js'
 
 /**
- * Software Catalog Settings component
+ * Stackiq Settings component
  *
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2
  * @version  1.0.0
  */
 export default defineComponent({
-	name: 'SoftwareCatalogSettings',
+	name: 'StackiqSettings',
 	components: {
 		CnAdminSettingsShell,
 		NcButton,
@@ -188,7 +188,7 @@ export default defineComponent({
 	 */
 	data() {
 		return {
-			appVersion: loadState('softwarecatalog', 'version', 'Unknown'),
+			appVersion: loadState('stackiq', 'version', 'Unknown'),
 			savingCatalogLocation: false,
 			catalogLocation: '',
 			autoConfiguring: false,

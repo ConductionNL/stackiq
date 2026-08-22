@@ -3,14 +3,14 @@
 </script>
 
 <template>
-	<NcAppSidebar name="Software Catalog" subname="Quick navigation">
+	<NcAppSidebar name="Stackiq" subname="Quick navigation">
 		<NcAppSidebarTab id="info-tab" name="Information" :order="1">
 			<template #icon>
 				<InformationOutline :size="20" />
 			</template>
 			<NcNoteCard type="info">
 				<p>
-					Welcome to the Software Catalog dashboard. Use the main
+					Welcome to the Stackiq dashboard. Use the main
 					navigation to access different features.
 				</p>
 			</NcNoteCard>

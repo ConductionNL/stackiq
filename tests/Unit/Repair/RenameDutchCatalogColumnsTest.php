@@ -12,7 +12,7 @@
  * and columns are in scope, and that is what these tests pin.
  *
  * @category Tests
- * @package  OCA\SoftwareCatalog\Tests\Unit\Repair
+ * @package  OCA\Stackiq\Tests\Unit\Repair
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -28,18 +28,18 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Repair;
+namespace OCA\Stackiq\Tests\Unit\Repair;
 
-use OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns;
-use OCA\SoftwareCatalog\Repair\RenameDutchCatalogDecisions;
+use OCA\Stackiq\Repair\RenameDutchCatalogColumns;
+use OCA\Stackiq\Repair\RenameDutchCatalogDecisions;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use ReflectionClass;
 use ReflectionMethod;
 
 /**
- * @covers \OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns
- * @covers \OCA\SoftwareCatalog\Repair\RenameDutchCatalogDecisions
+ * @covers \OCA\Stackiq\Repair\RenameDutchCatalogColumns
+ * @covers \OCA\Stackiq\Repair\RenameDutchCatalogDecisions
  */
 class RenameDutchCatalogColumnsTest extends TestCase {
 	/**
@@ -250,7 +250,7 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 
 	}//end testGetName()
 
-	// ── softwarecatalog#492: the ordering guard ────────────────────────────
+	// ── stackiq#492: the ordering guard ────────────────────────────
 
 	/**
 	 * The guard's full truth table.
@@ -352,7 +352,7 @@ class RenameDutchCatalogColumnsTest extends TestCase {
 	/**
 	 * Against the register this repo actually ships, the step is a NO-OP.
 	 *
-	 * This is the regression test for softwarecatalog#492, and it is the one
+	 * This is the regression test for stackiq#492, and it is the one
 	 * that would have caught it. The register still declares `naam`,
 	 * `beschrijvingKort`, `contactpersoon`, `publicatiedatum` and friends on
 	 * every in-scope schema, and declares none of the English destinations

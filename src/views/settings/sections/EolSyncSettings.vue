@@ -17,22 +17,22 @@
 
 <template>
 	<AlwaysVisibleSection
-		:name="t('softwarecatalog', 'End-of-life feed sync')"
+		:name="t('stackiq', 'End-of-life feed sync')"
 		:description="
 			t(
-				'softwarecatalog',
-				'Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Softwarecatalog never calls endoflife.date directly.',
+				'stackiq',
+				'Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Stackiq never calls endoflife.date directly.',
 			)
 		"
 		:loading="loading"
-		:loadingText="t('softwarecatalog', 'Loading EOL sync configuration…')"
+		:loadingText="t('stackiq', 'Loading EOL sync configuration…')"
 		:showSaveButton="true"
 		:canSave="!saving"
 		:saving="saving"
-		:saveButtonText="t('softwarecatalog', 'Save EOL sync settings')"
+		:saveButtonText="t('stackiq', 'Save EOL sync settings')"
 		:showRefreshButton="true"
 		:refreshing="loading"
-		:refreshButtonText="t('softwarecatalog', 'Refresh status')"
+		:refreshButtonText="t('stackiq', 'Refresh status')"
 		@save="saveConfig"
 		@refresh="loadAll">
 		<template #header-actions>
@@ -41,7 +41,7 @@
 					<NcLoadingIcon v-if="syncing" :size="20" />
 					<Sync v-else :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Sync now') }}
+				{{ t('stackiq', 'Sync now') }}
 			</NcButton>
 		</template>
 
@@ -49,7 +49,7 @@
 		<NcNoteCard v-if="status.available" type="success">
 			{{
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Last run: {matched} matched, {skipped} skipped, at {time}.',
 					{
 						matched: status.matched,
@@ -62,7 +62,7 @@
 		<NcNoteCard v-else type="warning">
 			{{
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Feed unavailable: {reason}. Manual end-of-support entry, the EOL-approaching filter, the roadmap, and the notification rule keep working regardless.',
 					{ reason: unavailableReasonLabel },
 				)
@@ -72,12 +72,12 @@
 		<div class="eol-sync-settings">
 			<div class="setting-group">
 				<NcCheckboxRadioSwitch v-model="config.enabled" type="switch">
-					{{ t('softwarecatalog', 'Enable EOL feed sync') }}
+					{{ t('stackiq', 'Enable EOL feed sync') }}
 				</NcCheckboxRadioSwitch>
 				<p class="help-text">
 					{{
 						t(
-							'softwarecatalog',
+							'stackiq',
 							'When disabled, the matcher never reads or writes anything — the same as the feed being unavailable.',
 						)
 					}}
@@ -85,40 +85,40 @@
 			</div>
 
 			<div class="setting-group">
-				<h4>{{ t('softwarecatalog', 'Source register and schemas') }}</h4>
+				<h4>{{ t('stackiq', 'Source register and schemas') }}</h4>
 				<p class="help-text">
 					{{
 						t(
-							'softwarecatalog',
+							'stackiq',
 							'Pre-filled with the names the openconnector endoflife-date-source change provisions. Change them if your instance uses different names — no code change required.',
 						)
 					}}
 				</p>
 				<NcTextField
 					v-model="config.register"
-					:label="t('softwarecatalog', 'Register slug')"
+					:label="t('stackiq', 'Register slug')"
 					:disabled="!config.enabled" />
 				<NcTextField
 					v-model="config.productSchema"
-					:label="t('softwarecatalog', 'eolProduct schema slug')"
+					:label="t('stackiq', 'eolProduct schema slug')"
 					:disabled="!config.enabled" />
 				<NcTextField
 					v-model="config.cycleSchema"
-					:label="t('softwarecatalog', 'eolCycle schema slug')"
+					:label="t('stackiq', 'eolCycle schema slug')"
 					:disabled="!config.enabled" />
 			</div>
 
 			<div class="setting-group">
-				<h4>{{ t('softwarecatalog', 'Schedule') }}</h4>
+				<h4>{{ t('stackiq', 'Schedule') }}</h4>
 				<NcTextField
 					v-model="intervalMinutesInput"
 					type="number"
-					:label="t('softwarecatalog', 'Sync interval (minutes)')"
+					:label="t('stackiq', 'Sync interval (minutes)')"
 					:disabled="!config.enabled" />
 				<p class="help-text">
 					{{
 						t(
-							'softwarecatalog',
+							'stackiq',
 							'The scheduled background job re-runs the matcher at this interval; the minimum enforced interval is 5 minutes.',
 						)
 					}}
@@ -151,17 +151,17 @@ import { apiRequest } from '../../../utils/adminApi.js'
  * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
  */
 const REASON_LABELS = {
-	disabled: () => t('softwarecatalog', 'EOL feed sync is disabled'),
-	'not-yet-run': () => t('softwarecatalog', 'not yet run'),
+	disabled: () => t('stackiq', 'EOL feed sync is disabled'),
+	'not-yet-run': () => t('stackiq', 'not yet run'),
 	'openregister-not-installed': () =>
-		t('softwarecatalog', 'OpenRegister is not installed'),
+		t('stackiq', 'OpenRegister is not installed'),
 	'object-service-unavailable': () =>
-		t('softwarecatalog', 'OpenRegister is not currently reachable'),
+		t('stackiq', 'OpenRegister is not currently reachable'),
 	'module-schema-not-configured': () =>
-		t('softwarecatalog', 'the module/moduleVersie schema is not configured yet'),
+		t('stackiq', 'the module/moduleVersie schema is not configured yet'),
 	'eol-register-or-schema-not-found': () =>
 		t(
-			'softwarecatalog',
+			'stackiq',
 			'the configured register or schema could not be found — is the openconnector endoflife-date-source change installed?',
 		),
 }
@@ -254,7 +254,7 @@ export default defineComponent({
 		 */
 		formattedLastRunAt() {
 			if (!this.status.lastRunAt) {
-				return t('softwarecatalog', 'never')
+				return t('stackiq', 'never')
 			}
 			try {
 				return new Date(this.status.lastRunAt).toLocaleString()
@@ -319,7 +319,7 @@ export default defineComponent({
 				}
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'Could not load EOL sync configuration')
+					t('stackiq', 'Could not load EOL sync configuration')
 						+ ': '
 						+ error.message,
 				)
@@ -340,7 +340,7 @@ export default defineComponent({
 				}
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'Could not load EOL sync status')
+					t('stackiq', 'Could not load EOL sync status')
 						+ ': '
 						+ error.message,
 				)
@@ -363,10 +363,10 @@ export default defineComponent({
 				if (data && data.config) {
 					this.config = { ...this.config, ...data.config }
 				}
-				showSuccess(t('softwarecatalog', 'EOL sync settings saved'))
+				showSuccess(t('stackiq', 'EOL sync settings saved'))
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'Could not save EOL sync settings')
+					t('stackiq', 'Could not save EOL sync settings')
 						+ ': '
 						+ error.message,
 				)
@@ -392,7 +392,7 @@ export default defineComponent({
 				if (this.status.available) {
 					showSuccess(
 						t(
-							'softwarecatalog',
+							'stackiq',
 							'EOL sync completed: {matched} matched, {skipped} skipped.',
 							{
 								matched: this.status.matched,
@@ -402,14 +402,14 @@ export default defineComponent({
 					)
 				} else {
 					showError(
-						t('softwarecatalog', 'EOL sync did not run: {reason}', {
+						t('stackiq', 'EOL sync did not run: {reason}', {
 							reason: this.unavailableReasonLabel,
 						}),
 					)
 				}
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'EOL sync failed') + ': ' + error.message,
+					t('stackiq', 'EOL sync failed') + ': ' + error.message,
 				)
 			} finally {
 				this.syncing = false

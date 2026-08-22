@@ -10,7 +10,7 @@
  * - Auto-updating status based on date fields
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Ruben van der Linde <ruben@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl
@@ -22,7 +22,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use DateTime;
 use Exception;
@@ -34,7 +34,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * Service for synchronizing and processing Gebruik (Usage) objects.
  *
  * @category Service
- * @package  OCA\SoftwareCatalog\Service
+ * @package  OCA\Stackiq\Service
  * @author   Ruben van der Linde <ruben@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl
  * @version  GIT: <git_id>
@@ -113,7 +113,7 @@ class GebruikSyncService {
 			$this->logger->debug(
 				'Processing gebruik object',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'gebruikId' => $gebruikUuid,
 					'currentStatus' => $gebruikData['status'] ?? 'Unknown',
 				]
@@ -135,7 +135,7 @@ class GebruikSyncService {
 			$this->logger->critical(
 				'GEBRUIK PROCESSING COMPLETED',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'gebruikId' => $gebruikUuid,
 					'stats' => $stats,
 					'processingTime' => $stats['duration'] . 's',
@@ -150,7 +150,7 @@ class GebruikSyncService {
 			$this->logger->error(
 				'GEBRUIK PROCESSING ERROR',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'gebruikId' => $gebruikObject->getUuid(),
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
@@ -199,7 +199,7 @@ class GebruikSyncService {
 			$this->logger->debug(
 				'Processing referentiecomponenten',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'gebruikId' => $gebruikUuid,
 					'referentieComponentenCount' => count($referenceComponents),
 				]
@@ -233,7 +233,7 @@ class GebruikSyncService {
 				$this->logger->error(
 					'AMEF configuration missing',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'amefRegister' => $amefRegister,
 						'elementSchema' => $elementSchema,
 					]
@@ -278,7 +278,7 @@ class GebruikSyncService {
 				$this->logger->critical(
 					'AMEF ELEMENTS UPDATED',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'gebruikId' => $gebruikUuid,
 						'amefSlugs' => $amefSlugs,
 						'amefElementsCount' => count($amefSlugs),
@@ -292,7 +292,7 @@ class GebruikSyncService {
 			$this->logger->error(
 				'AMEF PROCESSING ERROR',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'gebruikId' => $gebruikObject->getUuid(),
 					'exception' => $e->getMessage(),
 				]
@@ -337,7 +337,7 @@ class GebruikSyncService {
 				$this->logger->warning(
 					'Failed to search for AMEF element',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'id' => $id,
 						'error' => $e->getMessage(),
 					]
@@ -348,7 +348,7 @@ class GebruikSyncService {
 		$this->logger->info(
 			'AMEF elements search completed',
 			[
-				'app' => 'softwarecatalog',
+				'app' => 'stackiq',
 				'searchedIds' => $ids,
 				'foundElementsCount' => count($foundElements),
 			]
@@ -382,7 +382,7 @@ class GebruikSyncService {
 			$this->logger->info(
 				'CHECKING STATUS DATES',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'gebruikId' => $gebruikUuid,
 					'currentStatus' => $currentStatus,
 					'statusDates' => $statusDates,
@@ -402,7 +402,7 @@ class GebruikSyncService {
 				$this->logger->critical(
 					'STATUS AUTO-UPDATED',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'gebruikId' => $gebruikUuid,
 						'oldStatus' => $currentStatus,
 						'newStatus' => $targetStatus,
@@ -417,7 +417,7 @@ class GebruikSyncService {
 			$this->logger->error(
 				'STATUS UPDATE ERROR',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'gebruikId' => $gebruikObject->getUuid(),
 					'exception' => $e->getMessage(),
 				]
@@ -471,7 +471,7 @@ class GebruikSyncService {
 				$this->logger->warning(
 					'Invalid date format',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'gebruikId' => $gebruikUuid,
 						'status' => $status,
 						'dateString' => $dateString,
@@ -526,7 +526,7 @@ class GebruikSyncService {
 			$this->logger->info(
 				'Gebruik object updated successfully',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'gebruikId' => $gebruikObject->getUuid(),
 				]
 			);
@@ -534,7 +534,7 @@ class GebruikSyncService {
 			$this->logger->error(
 				'Failed to update gebruik object',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'gebruikId' => $gebruikObject->getUuid(),
 					'error' => $e->getMessage(),
 				]

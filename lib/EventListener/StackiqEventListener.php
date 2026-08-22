@@ -1,13 +1,13 @@
 <?php
 
 /**
- * SoftwareCatalog Event Listener
+ * Stackiq Event Listener
  *
  * This file contains the listener class for handling events from OpenRegister
- * specific to the SoftwareCatalog application.
+ * specific to the Stackiq application.
  *
  * @category  EventListener
- * @package   OCA\SoftwareCatalog\EventListener
+ * @package   OCA\Stackiq\EventListener
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -19,7 +19,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\EventListener;
+namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -27,9 +27,9 @@ use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\SoftwareCatalog\Service\ContactpersoonService;
-use OCA\SoftwareCatalog\Service\GebruikSyncService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\ContactpersoonService;
+use OCA\Stackiq\Service\GebruikSyncService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -43,7 +43,7 @@ use Psr\Log\LoggerInterface;
  * user blocking/unblocking functionality.
  *
  * @category EventListener
- * @package  OCA\SoftwareCatalog\EventListener
+ * @package  OCA\Stackiq\EventListener
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
@@ -53,9 +53,9 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class SoftwareCatalogEventListener implements IEventListener {
+class StackiqEventListener implements IEventListener {
 	/**
-	 * Constructor for SoftwareCatalogEventListener
+	 * Constructor for StackiqEventListener
 	 *
 	 * @param ContainerInterface $container DI container for lazy service resolution.
 	 */
@@ -83,7 +83,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			$settingsService = $this->container->get(SettingsService::class);
 
 			$logger->info(
-				'SoftwareCatalog: Processing event',
+				'Stackiq: Processing event',
 				[
 					'eventType' => get_class($event),
 					'timestamp' => date('Y-m-d H:i:s'),
@@ -100,7 +100,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			try {
 				$logger = $this->container->get(LoggerInterface::class);
 				$logger->error(
-					'SoftwareCatalog: Error in event handler',
+					'Stackiq: Error in event handler',
 					[
 						'eventType' => get_class($event),
 						'exception' => $e->getMessage(),
@@ -171,7 +171,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			|| $event instanceof ObjectRevertedEvent
 		) {
 			$logger->debug(
-				'SoftwareCatalog: Ignoring object lifecycle event',
+				'Stackiq: Ignoring object lifecycle event',
 				[
 					'eventType' => get_class($event),
 				]
@@ -261,10 +261,10 @@ class SoftwareCatalogEventListener implements IEventListener {
 	): void {
 		$objectId = $object->getUuid();
 		try {
-			$orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+			$orgSyncService = $this->container->get('OCA\Stackiq\Service\OrganizationSyncService');
 			$result = $orgSyncService->processSpecificOrganization($object);
 			$logger->info(
-				'SoftwareCatalog: Successfully processed organization ' . $phase,
+				'Stackiq: Successfully processed organization ' . $phase,
 				[
 					'objectId' => $objectId,
 					'processResult' => $result,
@@ -272,7 +272,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			);
 		} catch (\Exception $e) {
 			$logger->error(
-				'SoftwareCatalog: Failed to process organization ' . $phase,
+				'Stackiq: Failed to process organization ' . $phase,
 				[
 					'objectId' => $objectId,
 					'exception' => $e->getMessage(),
@@ -309,7 +309,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			$gebruikSyncService = $this->container->get(GebruikSyncService::class);
 			$result = $gebruikSyncService->processSpecificGebruik($object);
 			$logger->info(
-				'SoftwareCatalog: Successfully processed gebruik ' . $phase,
+				'Stackiq: Successfully processed gebruik ' . $phase,
 				[
 					'objectId' => $objectId,
 					'processResult' => $result,
@@ -317,7 +317,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			);
 		} catch (\Exception $e) {
 			$logger->error(
-				'SoftwareCatalog: Failed to process gebruik ' . $phase,
+				'Stackiq: Failed to process gebruik ' . $phase,
 				[
 					'objectId' => $objectId,
 					'exception' => $e->getMessage(),
@@ -366,7 +366,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			);
 
 			$logger->info(
-				'SoftwareCatalog: Refetched organization with contactpersonen',
+				'Stackiq: Refetched organization with contactpersonen',
 				[
 					'objectId' => $objectId,
 					'contactpersonenCount' => count(
@@ -378,7 +378,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			return $orgWithContacts;
 		} catch (\Exception $e) {
 			$logger->error(
-				'SoftwareCatalog: Failed to refetch organization with contactpersonen',
+				'Stackiq: Failed to refetch organization with contactpersonen',
 				[
 					'objectId' => $objectId,
 					'exception' => $e->getMessage(),
@@ -414,7 +414,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 	): void {
 		$object = $event->getObject();
 		if ($object === null) {
-			$logger->warning('SoftwareCatalog: ObjectCreatedEvent received with null object');
+			$logger->warning('Stackiq: ObjectCreatedEvent received with null object');
 			return;
 		}
 
@@ -426,7 +426,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		$objectSchemaIdInt = (int)$objectSchemaId;
 
 		$logger->info(
-			'SoftwareCatalog: Processing object creation',
+			'Stackiq: Processing object creation',
 			[
 				'objectId' => $objectId,
 				'schemaId' => $objectSchemaId,
@@ -444,7 +444,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		$gebruikSchemaId = $catalogSchemaIds['usage'];
 
 		$logger->debug(
-			'SoftwareCatalog: Configuration lookup results',
+			'Stackiq: Configuration lookup results',
 			[
 				'organisatieSchemaId' => $organisationSchemaId,
 				'contactpersoonSchemaId' => $contactSchemaId,
@@ -462,7 +462,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			// Only process active organizations.
 			if ($this->isActiveStatus(status: $status) === false) {
 				$logger->debug(
-					'SoftwareCatalog: Skipping non-active organization creation',
+					'Stackiq: Skipping non-active organization creation',
 					[
 						'objectId' => $objectId,
 						'status' => $status,
@@ -472,7 +472,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			}
 
 			$logger->info(
-				'SoftwareCatalog: Processing active organization creation',
+				'Stackiq: Processing active organization creation',
 				[
 					'objectId' => $objectId,
 					'status' => $status,
@@ -485,28 +485,28 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		// Check if this is a contactpersoon object.
 		if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $contactSchemaId) === true) {
-			$logger->info('SoftwareCatalog: Processing contactpersoon creation', ['objectId' => $objectId]);
+			$logger->info('Stackiq: Processing contactpersoon creation', ['objectId' => $objectId]);
 			$contactSvc->processContactpersoon($object);
 			return;
 		}
 
 		// Check if this is a contactgegevens object (deprecated - use contactpersoon instead).
 		if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $contactInfoSchemaId) === true) {
-			$logger->info('SoftwareCatalog: Processing contactgegevens creation (deprecated)', ['objectId' => $objectId]);
+			$logger->info('Stackiq: Processing contactgegevens creation (deprecated)', ['objectId' => $objectId]);
 			// Contactgegevens is deprecated, use contactpersoon instead.
 			return;
 		}
 
 		// Check if this is a gebruik object.
 		if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $gebruikSchemaId) === true) {
-			$logger->info('SoftwareCatalog: Processing gebruik creation', ['objectId' => $objectId]);
+			$logger->info('Stackiq: Processing gebruik creation', ['objectId' => $objectId]);
 			$this->runGebruikSync(object: $object, phase: 'creation', logger: $logger);
 			return;
 		}//end if
 
 		// Log unhandled object types.
 		$logger->debug(
-			'SoftwareCatalog: Object creation not handled - not a supported object type',
+			'Stackiq: Object creation not handled - not a supported object type',
 			[
 				'objectId' => $objectId,
 				'schemaId' => $objectSchemaIdInt,
@@ -547,7 +547,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		$oldObject = $event->getOldObject();
 
 		if ($object === null) {
-			$logger->warning('SoftwareCatalog: ObjectUpdatedEvent received with null object');
+			$logger->warning('Stackiq: ObjectUpdatedEvent received with null object');
 			return;
 		}
 
@@ -559,7 +559,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		$objectSchemaIdInt = (int)$objectSchemaId;
 
 		$logger->info(
-			'SoftwareCatalog: Processing object update',
+			'Stackiq: Processing object update',
 			[
 				'objectId' => $objectId,
 				'schemaId' => $objectSchemaId,
@@ -576,7 +576,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		$logger->debug(
 			'Got organisation schema ID',
 			[
-				'app' => 'softwarecatalog',
+				'app' => 'stackiq',
 				'organisatieSchemaId' => $organisationSchemaId,
 				'organisatieSchemaIdInt' => $orgSchemaIdInt,
 			]
@@ -585,7 +585,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		$logger->debug(
 			'Organization schema check',
 			[
-				'app' => 'softwarecatalog',
+				'app' => 'stackiq',
 				'objectSchemaId' => $objectSchemaId,
 				'objectSchemaIdInt' => $objectSchemaIdInt,
 				'organisatieSchemaId' => $organisationSchemaId,
@@ -607,7 +607,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			$logger->debug(
 				'Organization status check',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'objectId' => $objectId,
 					'status' => $status,
 					'oldStatus' => $oldStatus,
@@ -621,7 +621,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			// Only process active organizations.
 			if ($this->isActiveStatus(status: $status) === true && $status !== $oldStatus) {
 				$logger->info(
-					'SoftwareCatalog: Processing active organization update',
+					'Stackiq: Processing active organization update',
 					[
 						'objectId' => $objectId,
 						'status' => $status,
@@ -641,7 +641,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 			if ($this->isActiveStatus(status: $status) === false || $status === $oldStatus) {
 				$logger->debug(
-					'SoftwareCatalog: Skipping non-active organization update',
+					'Stackiq: Skipping non-active organization update',
 					[
 						'objectId' => $objectId,
 						'status' => $status,
@@ -659,7 +659,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		if ($contactSchemaId !== null && $objectSchemaIdInt === $cntSchemaIdInt) {
 			$logger->info(
-				'SoftwareCatalog: Matched contactpersoon schema - processing update',
+				'Stackiq: Matched contactpersoon schema - processing update',
 				[
 					'objectId' => $objectId,
 					'schemaId' => $objectSchemaId,
@@ -674,7 +674,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				);
 
 				$logger->info(
-					'SoftwareCatalog: Successfully processed contactpersoon update',
+					'Stackiq: Successfully processed contactpersoon update',
 					[
 						'objectId' => $objectId,
 						'timestamp' => date('Y-m-d H:i:s'),
@@ -682,7 +682,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				);
 			} catch (\Exception $e) {
 				$logger->error(
-					'SoftwareCatalog: Failed to process contactpersoon update',
+					'Stackiq: Failed to process contactpersoon update',
 					[
 						'objectId' => $objectId,
 						'exception' => $e->getMessage(),
@@ -702,7 +702,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		if ($contactInfoSchemaId !== null && $objectSchemaIdInt === $infoSchemaIdInt) {
 			$logger->info(
-				'SoftwareCatalog: Matched contactgegevens schema - processing update (backward compatibility)',
+				'Stackiq: Matched contactgegevens schema - processing update (backward compatibility)',
 				[
 					'objectId' => $objectId,
 					'schemaId' => $objectSchemaId,
@@ -718,7 +718,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				);
 
 				$logger->info(
-					'SoftwareCatalog: Successfully processed contactgegevens update (as contactpersoon)',
+					'Stackiq: Successfully processed contactgegevens update (as contactpersoon)',
 					[
 						'objectId' => $objectId,
 						'timestamp' => date('Y-m-d H:i:s'),
@@ -726,7 +726,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				);
 			} catch (\Exception $e) {
 				$logger->error(
-					'SoftwareCatalog: Failed to process contactgegevens update',
+					'Stackiq: Failed to process contactgegevens update',
 					[
 						'objectId' => $objectId,
 						'exception' => $e->getMessage(),
@@ -746,7 +746,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		if ($gebruikSchemaId !== null && $objectSchemaIdInt === $gebruikSchemaIdInt) {
 			$logger->info(
-				'SoftwareCatalog: Matched gebruik schema - processing update',
+				'Stackiq: Matched gebruik schema - processing update',
 				[
 					'objectId' => $objectId,
 					'schemaId' => $objectSchemaId,
@@ -760,7 +760,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		// Log if we don't handle this schema type.
 		$logger->debug(
-			'SoftwareCatalog: Object update not handled - focusing only on organisatie, contactpersonen, and gebruik',
+			'Stackiq: Object update not handled - focusing only on organisatie, contactpersonen, and gebruik',
 			[
 				'objectId' => $objectId,
 				'schemaId' => $objectSchemaId,
@@ -801,7 +801,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 	): void {
 		$object = $event->getObject();
 		if ($object === null) {
-			$logger->warning('SoftwareCatalog: ObjectDeletedEvent received with null object');
+			$logger->warning('Stackiq: ObjectDeletedEvent received with null object');
 			return;
 		}
 
@@ -810,7 +810,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		$objectRegisterId = $object->getRegister();
 
 		$logger->info(
-			'SoftwareCatalog: Processing object deletion',
+			'Stackiq: Processing object deletion',
 			[
 				'objectId' => $objectId,
 				'schemaId' => $objectSchemaId,
@@ -825,7 +825,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 		$objectSchemaIdInt = (int)$objectSchemaId;
 
 		if ($organisationSchemaId !== null && $objectSchemaIdInt === $orgSchemaIdInt) {
-			$logger->info('SoftwareCatalog: Processing organization deletion', ['objectId' => $objectId]);
+			$logger->info('Stackiq: Processing organization deletion', ['objectId' => $objectId]);
 			$this->runOrganizationSync(object: $object, phase: 'deletion', logger: $logger);
 			return;
 		}//end if
@@ -836,7 +836,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		if ($contactSchemaId !== null && $objectSchemaIdInt === $cntSchemaIdInt) {
 			$logger->info(
-				'SoftwareCatalog: Matched contactpersoon schema - processing deletion',
+				'Stackiq: Matched contactpersoon schema - processing deletion',
 				[
 					'objectId' => $objectId,
 					'schemaId' => $objectSchemaId,
@@ -848,7 +848,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				$contactSvc->handleContactDeletion($object);
 
 				$logger->info(
-					'SoftwareCatalog: Successfully processed contactpersoon deletion',
+					'Stackiq: Successfully processed contactpersoon deletion',
 					[
 						'objectId' => $objectId,
 						'timestamp' => date('Y-m-d H:i:s'),
@@ -856,7 +856,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				);
 			} catch (\Exception $e) {
 				$logger->error(
-					'SoftwareCatalog: Failed to process contactpersoon deletion',
+					'Stackiq: Failed to process contactpersoon deletion',
 					[
 						'objectId' => $objectId,
 						'exception' => $e->getMessage(),
@@ -876,7 +876,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		if ($contactInfoSchemaId !== null && $objectSchemaIdInt === $infoSchemaIdInt) {
 			$logger->info(
-				'SoftwareCatalog: Matched contactgegevens schema - processing deletion (backward compatibility)',
+				'Stackiq: Matched contactgegevens schema - processing deletion (backward compatibility)',
 				[
 					'objectId' => $objectId,
 					'schemaId' => $objectSchemaId,
@@ -888,7 +888,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				$contactSvc->handleContactDeletion($object);
 
 				$logger->info(
-					'SoftwareCatalog: Successfully processed contactgegevens deletion',
+					'Stackiq: Successfully processed contactgegevens deletion',
 					[
 						'objectId' => $objectId,
 						'timestamp' => date('Y-m-d H:i:s'),
@@ -896,7 +896,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 				);
 			} catch (\Exception $e) {
 				$logger->error(
-					'SoftwareCatalog: Failed to process contactgegevens deletion',
+					'Stackiq: Failed to process contactgegevens deletion',
 					[
 						'objectId' => $objectId,
 						'exception' => $e->getMessage(),
@@ -918,7 +918,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			$objectData = $object->getObject();
 
 			$logger->info(
-				'SoftwareCatalog: Matched gebruik schema - processing deletion',
+				'Stackiq: Matched gebruik schema - processing deletion',
 				[
 					'objectId' => $objectId,
 					'schemaId' => $objectSchemaId,
@@ -931,7 +931,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 			// For deletions, we mainly log the event since the object is being removed.
 			// No specific cleanup needed for gebruik objects currently.
 			$logger->info(
-				'SoftwareCatalog: Gebruik object deleted - no specific cleanup required',
+				'Stackiq: Gebruik object deleted - no specific cleanup required',
 				[
 					'objectId' => $objectId,
 					'timestamp' => date('Y-m-d H:i:s'),
@@ -942,7 +942,7 @@ class SoftwareCatalogEventListener implements IEventListener {
 
 		// Log if we don't handle this schema type.
 		$logger->debug(
-			'SoftwareCatalog: Object deletion not handled - focusing only on organisatie, contactpersonen, and gebruik',
+			'Stackiq: Object deletion not handled - focusing only on organisatie, contactpersonen, and gebruik',
 			[
 				'objectId' => $objectId,
 				'schemaId' => $objectSchemaId,

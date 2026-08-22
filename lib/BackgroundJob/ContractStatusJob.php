@@ -12,11 +12,11 @@
  * correct mechanism (tasks.md 2.1 → 2.2).
  *
  * @category  BackgroundJob
- * @package   OCA\SoftwareCatalog\BackgroundJob
+ * @package   OCA\Stackiq\BackgroundJob
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-administration/spec.md
  *
@@ -26,9 +26,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\BackgroundJob;
+namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\SoftwareCatalog\Service\ContractStatusService;
+use OCA\Stackiq\Service\ContractStatusService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;

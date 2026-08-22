@@ -18,7 +18,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<NcNoteCard type="info">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Publications will be soft deleted and moved to the',
 					)
 				}}
@@ -26,10 +26,10 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					href="#"
 					class="deleted-link"
 					@click.prevent="navigateToDeleted"
-					>{{ t('softwarecatalog', 'deleted publications section') }}</a
+					>{{ t('stackiq', 'deleted publications section') }}</a
 				>{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						". They will be retained according to their schema's configured retention period and automatically permanently deleted afterwards.",
 					)
 				}}
@@ -38,8 +38,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<SelectedObjectsList
 				:title="
 					(objectStore.selectedObjects?.length || 0) === 1
-						? t('softwarecatalog', 'Publication to Delete')
-						: t('softwarecatalog', 'Selected Publications')
+						? t('stackiq', 'Publication to Delete')
+						: t('stackiq', 'Selected Publications')
 				"
 				:showRemove="true" />
 		</div>
@@ -48,8 +48,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<p>
 				{{
 					originalSelectedCount > 1
-						? t('softwarecatalog', 'Publications successfully deleted')
-						: t('softwarecatalog', 'Publication successfully deleted')
+						? t('stackiq', 'Publications successfully deleted')
+						: t('stackiq', 'Publication successfully deleted')
 				}}
 			</p>
 		</NcNoteCard>
@@ -64,8 +64,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				</template>
 				{{
 					success === null
-						? t('softwarecatalog', 'Cancel')
-						: t('softwarecatalog', 'Close')
+						? t('stackiq', 'Cancel')
+						: t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton
@@ -79,7 +79,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<TrashCanOutline v-if="!loading" :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Delete') }}
+				{{ t('stackiq', 'Delete') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -139,9 +139,9 @@ export default {
 		dialogTitle() {
 			const count = objectStore.selectedObjects?.length || 0
 			if (count === 1) {
-				return this.t('softwarecatalog', 'Delete publication')
+				return this.t('stackiq', 'Delete publication')
 			}
-			return this.t('softwarecatalog', 'Delete {count} publications', {
+			return this.t('stackiq', 'Delete {count} publications', {
 				count,
 			})
 		},
@@ -211,7 +211,7 @@ export default {
 
 				if (failed.length > 0) {
 					this.error = this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Failed to delete {count} objects',
 						{ count: failed.length },
 					)
@@ -221,7 +221,7 @@ export default {
 				this.error =
 					error.message
 					|| this.t(
-						'softwarecatalog',
+						'stackiq',
 						'An error occurred while deleting objects',
 					)
 			} finally {

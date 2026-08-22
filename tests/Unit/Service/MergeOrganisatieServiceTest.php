@@ -9,11 +9,11 @@
  * and already-tombstoned validation, and NC group membership migration.
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organisation-merge/spec.md
  *
@@ -23,15 +23,15 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\SoftwareCatalog\Service\MergeOrganisatieService;
-use OCA\SoftwareCatalog\Service\OrganisatieService;
-use OCA\SoftwareCatalog\Service\ProgressTracker;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
+use OCA\Stackiq\Service\MergeOrganisatieService;
+use OCA\Stackiq\Service\OrganisatieService;
+use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IGroup;
@@ -210,7 +210,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 	 * The `entity()` double asserts its own premise, against the shape the real
 	 * OpenRegister `ObjectEntity` has TODAY.
 	 *
-	 * When softwarecatalog#490 was written, `getOrganisation()` existed on the
+	 * When stackiq#490 was written, `getOrganisation()` existed on the
 	 * real entity only as an `@method` docblock tag over
 	 * `protected ?string $organisation`, i.e. reached through
 	 * `Entity::__call()`, so `method_exists()` was FALSE there and TRUE on a
@@ -784,7 +784,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 	 * `addMethods()`, so a mock cannot configure a magic accessor. That double
 	 * made `method_exists($entity, 'getOrganisation')` TRUE in the suite and
 	 * FALSE in production, i.e. it inverted the exact predicate under test, and
-	 * is why softwarecatalog#490 was green here for its entire life.
+	 * is why stackiq#490 was green here for its entire life.
 	 *
 	 * It must be a SUBCLASS, not an arbitrary `Entity`: `ObjectService::find()`
 	 * declares `?ObjectEntity`, and an incompatible return raises a `TypeError`

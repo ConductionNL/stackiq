@@ -7,22 +7,22 @@
  * based on the owning organisation's type.
  *
  * @category  EventListener
- * @package   OCA\SoftwareCatalog\EventListener
+ * @package   OCA\Stackiq\EventListener
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\EventListener;
+namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\SoftwareCatalog\Service\ModuleRegistrationService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\ModuleRegistrationService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -33,7 +33,7 @@ use Psr\Log\LoggerInterface;
  * based on the owning organisation's type.
  *
  * @category EventListener
- * @package  OCA\SoftwareCatalog\EventListener
+ * @package  OCA\Stackiq\EventListener
  */
 class ModuleRegistrationSubscriber implements IEventListener {
 	/**

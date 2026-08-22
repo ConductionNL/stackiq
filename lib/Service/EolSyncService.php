@@ -15,11 +15,11 @@
  * "sync now" admin endpoint, so the two trigger paths can never drift.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
  * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
@@ -31,7 +31,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -352,7 +352,7 @@ class EolSyncService {
 	 * Fetch the `moduleVersie` rows belonging to one module.
 	 *
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
-	 * @param int $moduleRegisterId The (softwarecatalog) module register id.
+	 * @param int $moduleRegisterId The (stackiq) module register id.
 	 * @param int $versionSchemaId The moduleVersie schema id.
 	 * @param string $moduleUuid The owning module's uuid.
 	 *

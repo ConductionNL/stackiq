@@ -1,8 +1,8 @@
 /** * ChangeOrganisatieStatusDialog.vue * Dialog for changing organisatie status with
-confirmation * @category Components * @package softwarecatalog * @author Ruben Linde
+confirmation * @category Components * @package stackiq * @author Ruben Linde
 * @copyright 2024 * @license EUPL-1.2
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
-@link https://github.com/opencatalogi/softwarecatalog */
+@link https://github.com/ConductionNL/stackiq */
 
 <script setup>
 import { navigationStore, objectStore } from '../../store/store.js'
@@ -13,15 +13,15 @@ import { navigationStore, objectStore } from '../../store/store.js'
 		v-if="navigationStore.dialog === 'changeOrganisatieStatus'"
 		:name="
 			navigationStore.dialogProperties?.dialogTitle
-			|| t('softwarecatalog', 'Change status')
+			|| t('stackiq', 'Change status')
 		"
 		size="normal"
 		:canClose="false">
 		<p v-if="success === null">
 			{{
-				t('softwarecatalog', 'Are you sure you want to change the status of')
+				t('stackiq', 'Are you sure you want to change the status of')
 			}}
-			<b>{{ getOrganisatieName() }}</b> {{ t('softwarecatalog', 'to') }}
+			<b>{{ getOrganisatieName() }}</b> {{ t('stackiq', 'to') }}
 			<b>{{ navigationStore.dialogProperties?.newStatus }}</b
 			>?
 			<br />
@@ -30,7 +30,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				class="status-change-info">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'This organisation will be activated and will be visible to users.',
 					)
 				}}
@@ -42,7 +42,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				class="status-change-info">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'This organisation will be deactivated and will no longer be visible to users.',
 					)
 				}}
@@ -52,7 +52,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 		<NcNoteCard v-if="success" type="success">
 			<p>
 				{{
-					t('softwarecatalog', 'Status successfully changed to {status}', {
+					t('stackiq', 'Status successfully changed to {status}', {
 						status: navigationStore.dialogProperties?.newStatus,
 					})
 				}}
@@ -69,8 +69,8 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				</template>
 				{{
 					success === null
-						? t('softwarecatalog', 'Cancel')
-						: t('softwarecatalog', 'Close')
+						? t('stackiq', 'Cancel')
+						: t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton
@@ -97,8 +97,8 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				</template>
 				{{
 					navigationStore.dialogProperties?.action === 'activeren'
-						? t('softwarecatalog', 'Activate')
-						: t('softwarecatalog', 'Deactivate')
+						? t('stackiq', 'Activate')
+						: t('stackiq', 'Deactivate')
 				}}
 			</NcButton>
 		</template>
@@ -144,7 +144,7 @@ export default {
 				organisatie?.name
 				|| organisatie?.name
 				|| organisatie?.['@self']?.name
-				|| this.t('softwarecatalog', 'Unknown organisation')
+				|| this.t('stackiq', 'Unknown organisation')
 			)
 		},
 
@@ -178,7 +178,7 @@ export default {
 				if (!organisatie || !organisatie.id || !newStatus) {
 					throw new Error(
 						this.t(
-							'softwarecatalog',
+							'stackiq',
 							'Organisation or new status is missing',
 						),
 					)
@@ -230,7 +230,7 @@ export default {
 				this.error =
 					error.message
 					|| this.t(
-						'softwarecatalog',
+						'stackiq',
 						'An error occurred while changing the status',
 					)
 			} finally {

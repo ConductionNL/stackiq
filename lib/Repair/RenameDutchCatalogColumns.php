@@ -1,7 +1,7 @@
 <?php
 
 /**
- * SoftwareCatalog RenameDutchCatalogColumns Repair Step
+ * Stackiq RenameDutchCatalogColumns Repair Step
  *
  * Moves stored catalog data from the Dutch column names to the English ones
  * the register declares.
@@ -51,7 +51,7 @@
  *     reversible and a re-run is a no-op;
  *   - nothing is deleted.
  *
- * THE ORDERING GUARD (softwarecatalog#492). Everything above is only safe in
+ * THE ORDERING GUARD (stackiq#492). Everything above is only safe in
  * ONE merge order, and until this guard existed nothing enforced it.
  *
  * `appinfo/info.xml` states the precondition in prose — "Must run AFTER the
@@ -90,7 +90,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
  * @category Repair
- * @package  OCA\SoftwareCatalog\Repair
+ * @package  OCA\Stackiq\Repair
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -103,7 +103,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Repair;
+namespace OCA\Stackiq\Repair;
 
 use OCP\DB\Exception;
 use OCP\IDBConnection;

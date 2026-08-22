@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Conduction B.V.
 
 /**
- * SoftwareCatalog frontend bootstrap.
+ * Stackiq frontend bootstrap.
  *
  * Mounts CnAppRoot with the bundled manifest, registers icons/translations,
  * and primes the router from the manifest pages.
@@ -60,7 +60,7 @@ try {
 	// Non-fatal — lib translations fall back to English source.
 	// eslint-disable-next-line no-console
 	console.warn(
-		'[softwarecatalog] registerTranslations failed; falling back to English',
+		'[stackiq] registerTranslations failed; falling back to English',
 		e,
 	)
 }
@@ -78,7 +78,7 @@ try {
  */
 function tryLoadTranslations() {
 	try {
-		const result = loadTranslations('softwarecatalog', () => {})
+		const result = loadTranslations('stackiq', () => {})
 		if (result && typeof result.then === 'function') {
 			result.then(
 				() => {},
@@ -141,11 +141,11 @@ const registryProp = { ...registry }
 async function bootstrap() {
 	const { manifest: resolvedManifest } = await resolveManifestSentinels(
 		mergedManifest,
-		'softwarecatalog',
+		'stackiq',
 	)
 
 	const router = createRouter({
-		history: createWebHashHistory(generateUrl('/apps/softwarecatalog')),
+		history: createWebHashHistory(generateUrl('/apps/stackiq')),
 		routes: routesFromManifest(resolvedManifest),
 	})
 
@@ -177,7 +177,7 @@ async function bootstrap() {
 	// but under Vue 3 the same selector would nest the whole app inside core's
 	// chrome. `templates/index.php` already emits the app's own host element,
 	// so mount onto that and stop reasoning about which div wins.
-	app.mount('#softwarecatalog')
+	app.mount('#stackiq')
 }
 
 bootstrap()

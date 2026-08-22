@@ -14,32 +14,32 @@
 	<div class="suite-wizard-step1">
 		<NcTextField
 			:modelValue="payload.name"
-			:label="t('softwarecatalog', 'Name') + ' *'"
-			:placeholder="t('softwarecatalog', 'e.g. Centric Leefomgeving')"
+			:label="t('stackiq', 'Name') + ' *'"
+			:placeholder="t('stackiq', 'e.g. Centric Leefomgeving')"
 			required
 			@update:modelValue="onField('name', $event)" />
 
 		<NcTextField
 			:modelValue="payload.shortDescription"
-			:label="t('softwarecatalog', 'Short description') + ' *'"
-			:placeholder="t('softwarecatalog', 'A brief summary of the suite')"
+			:label="t('stackiq', 'Short description') + ' *'"
+			:placeholder="t('stackiq', 'A brief summary of the suite')"
 			required
 			@update:modelValue="onField('shortDescription', $event)" />
 
 		<NcTextArea
 			v-model="beschrijvingLangModel"
-			:label="t('softwarecatalog', 'Long description')"
+			:label="t('stackiq', 'Long description')"
 			:placeholder="
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'A detailed description of the suite and what it covers',
 				)
 			" />
 
 		<NcTextField
 			:modelValue="payload.website"
-			:label="t('softwarecatalog', 'Website')"
-			:placeholder="t('softwarecatalog', 'https://example.com/suite')"
+			:label="t('stackiq', 'Website')"
+			:placeholder="t('stackiq', 'https://example.com/suite')"
 			type="url"
 			@update:modelValue="onField('website', $event)" />
 	</div>

@@ -18,7 +18,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<NcNoteCard type="warning">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Objects will be unlocked and made available for editing by other users. Only objects that are currently locked can be unlocked.',
 					)
 				}}
@@ -27,8 +27,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<SelectedObjectsList
 				:title="
 					(objectStore.selectedObjects?.length || 0) === 1
-						? t('softwarecatalog', 'Publication to Unlock')
-						: t('softwarecatalog', 'Selected Publications')
+						? t('stackiq', 'Publication to Unlock')
+						: t('stackiq', 'Selected Publications')
 				"
 				:showRemove="true" />
 		</div>
@@ -37,8 +37,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<p>
 				{{
 					originalSelectedCount > 1
-						? t('softwarecatalog', 'Publications successfully unlocked')
-						: t('softwarecatalog', 'Publication successfully unlocked')
+						? t('stackiq', 'Publications successfully unlocked')
+						: t('stackiq', 'Publication successfully unlocked')
 				}}
 			</p>
 		</NcNoteCard>
@@ -53,8 +53,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				</template>
 				{{
 					success === null
-						? t('softwarecatalog', 'Cancel')
-						: t('softwarecatalog', 'Close')
+						? t('stackiq', 'Cancel')
+						: t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton
@@ -68,7 +68,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<LockOpenOutline v-if="!loading" :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Unlock') }}
+				{{ t('stackiq', 'Unlock') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -128,9 +128,9 @@ export default {
 		dialogTitle() {
 			const count = this.objectsToUnlock.length
 			if (count === 1) {
-				return this.t('softwarecatalog', 'Unlock publication')
+				return this.t('stackiq', 'Unlock publication')
 			}
-			return this.t('softwarecatalog', 'Unlock {count} publications', {
+			return this.t('stackiq', 'Unlock {count} publications', {
 				count,
 			})
 		},
@@ -200,7 +200,7 @@ export default {
 
 				if (failed.length > 0) {
 					this.error = this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Failed to unlock {count} objects',
 						{ count: failed.length },
 					)
@@ -210,7 +210,7 @@ export default {
 				this.error =
 					error.message
 					|| this.t(
-						'softwarecatalog',
+						'stackiq',
 						'An error occurred while unlocking objects',
 					)
 			} finally {

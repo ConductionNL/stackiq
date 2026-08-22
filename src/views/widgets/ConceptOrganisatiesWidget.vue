@@ -8,7 +8,7 @@ import { objectStore } from '../../store/store.js'
 		<div class="widget-header">
 			<NcButton
 				variant="tertiary"
-				:aria-label="t('softwarecatalog', 'Refresh')"
+				:aria-label="t('stackiq', 'Refresh')"
 				@click="fetchData">
 				<template #icon>
 					<RefreshIcon :size="20" />
@@ -22,7 +22,7 @@ import { objectStore } from '../../store/store.js'
 			rowIcon="Domain"
 			hideHeader
 			borderless
-			:emptyText="t('softwarecatalog', 'No concept organisations found')">
+			:emptyText="t('stackiq', 'No concept organisations found')">
 			<template #row-actions="{ row }">
 				<NcLoadingIcon v-if="processingIds.includes(row.id)" :size="20" />
 				<NcActions v-else>
@@ -30,7 +30,7 @@ import { objectStore } from '../../store/store.js'
 						<template #icon>
 							<CheckIcon :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Accept') }}
+						{{ t('stackiq', 'Accept') }}
 					</NcActionButton>
 				</NcActions>
 			</template>
@@ -104,7 +104,7 @@ export default {
 						item.name
 						|| item.name
 						|| item.title
-						|| t('softwarecatalog', 'Unknown organisation'),
+						|| t('stackiq', 'Unknown organisation'),
 					subText: item.website || item.type || '',
 				}))
 		},

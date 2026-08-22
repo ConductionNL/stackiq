@@ -7,9 +7,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service\SoftwareCatalogue;
+namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
+use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;

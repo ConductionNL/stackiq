@@ -18,7 +18,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<NcNoteCard type="warning">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Objects will be depublished with the current date and time. This will make them unavailable to the public while keeping their published date intact.',
 					)
 				}}
@@ -27,8 +27,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<SelectedObjectsList
 				:title="
 					(objectStore.selectedObjects?.length || 0) === 1
-						? t('softwarecatalog', 'Publication to Depublish')
-						: t('softwarecatalog', 'Selected Publications')
+						? t('stackiq', 'Publication to Depublish')
+						: t('stackiq', 'Selected Publications')
 				"
 				:showRemove="true" />
 		</div>
@@ -37,8 +37,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 			<p>
 				{{
 					originalSelectedCount > 1
-						? t('softwarecatalog', 'Objects successfully depublished')
-						: t('softwarecatalog', 'Object successfully depublished')
+						? t('stackiq', 'Objects successfully depublished')
+						: t('stackiq', 'Object successfully depublished')
 				}}
 			</p>
 		</NcNoteCard>
@@ -53,8 +53,8 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				</template>
 				{{
 					success === null
-						? t('softwarecatalog', 'Cancel')
-						: t('softwarecatalog', 'Close')
+						? t('stackiq', 'Cancel')
+						: t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton
@@ -68,7 +68,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<PublishOff v-if="!loading" :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Depublish') }}
+				{{ t('stackiq', 'Depublish') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -128,9 +128,9 @@ export default {
 		dialogTitle() {
 			const count = this.objectsToDepublish.length
 			if (count === 1) {
-				return this.t('softwarecatalog', 'Depublish publication')
+				return this.t('stackiq', 'Depublish publication')
 			}
-			return this.t('softwarecatalog', 'Depublish {count} publications', {
+			return this.t('stackiq', 'Depublish {count} publications', {
 				count,
 			})
 		},
@@ -200,7 +200,7 @@ export default {
 
 				if (failed.length > 0) {
 					this.error = this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Failed to depublish {count} objects',
 						{ count: failed.length },
 					)
@@ -210,7 +210,7 @@ export default {
 				this.error =
 					error.message
 					|| this.t(
-						'softwarecatalog',
+						'stackiq',
 						'An error occurred while depublishing objects',
 					)
 			} finally {
