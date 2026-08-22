@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
-    <id>softwarecatalog</id>
-    <name lang="en">Software Catalogus</name>
-    <name lang="nl">Software Catalogus</name>
+    <id>stackiq</id>
+    <name lang="en">Stackiq</name>
+    <name lang="nl">Stackiq</name>
     <summary lang="en">Manage your software portfolio with applications, modules, and connections</summary>
     <summary lang="nl">Beheer je softwareportfolio met applicaties, modules en koppelingen</summary>
     <description lang="en"><![CDATA[> ⚠️ **Active development — not for production use yet.** This app is under active development. Although it may carry a stable release status, **please do not use it in production environments before 17 June 2026.** See the [app page on conduction.nl](https://conduction.nl/apps/softwarecatalog) for release planning and what this app does.
 
-Software Catalogus brings structured software portfolio management to Nextcloud. Keep track of all the applications, modules, and connections in your organization — and share them across a federated open data network.
+Stackiq brings structured software portfolio management to Nextcloud. Keep track of all the applications, modules, and connections in your organization — and share them across a federated open data network.
 
 **Key Features**
 
@@ -18,7 +18,7 @@ Software Catalogus brings structured software portfolio management to Nextcloud.
 - **Contract & license administration** — Track contracts with an approval workflow, renewal status, and expiry alerts
 - **GEMMA/ArchiMate standards & compliance** — Maintain a standards register, record compliance claims with evidence, cross-check modules against standards in a compliance matrix, and import/export ArchiMate models
 - **Portfolio roadmap** — See applications in use grouped by lifecycle phase, with end-of-support and phase-out warnings
-- **Federated synchronization** — Share and sync catalog data with other Software Catalogus instances via OpenCatalogi's directory network (optional; degrades gracefully if OpenCatalogi is not installed)
+- **Federated synchronization** — Share and sync catalog data with other Stackiq instances via OpenCatalogi's directory network (optional; degrades gracefully if OpenCatalogi is not installed)
 - **Automatic user provisioning** — Sync contacts and organizations from your register into Nextcloud accounts and groups
 - **Open data publishing** — Publish selected catalog entries for transparency and reuse, with anonymous self-registration and moderation for new organizations
 
@@ -30,7 +30,7 @@ Free and open source under the EUPL license.
     ]]></description>
     <description lang="nl"><![CDATA[> ⚠️ **In actieve ontwikkeling — nog niet voor productiegebruik.** Deze app is volop in ontwikkeling. Hoewel de app een stabiele release-status kan hebben, **gebruik deze nog niet in productieomgevingen vóór 17 juni 2026.** Zie de [app-pagina op conduction.nl](https://conduction.nl/apps/softwarecatalog) voor release-planning en het doel van deze app.
 
-Software Catalogus brengt gestructureerd softwareportfoliobeheer naar Nextcloud. Houd al je applicaties, modules en koppelingen bij — en deel ze via een gefedereerd open data netwerk.
+Stackiq brengt gestructureerd softwareportfoliobeheer naar Nextcloud. Houd al je applicaties, modules en koppelingen bij — en deel ze via een gefedereerd open data netwerk.
 
 **Belangrijkste functies**
 
@@ -40,7 +40,7 @@ Software Catalogus brengt gestructureerd softwareportfoliobeheer naar Nextcloud.
 - **Contract- en licentiebeheer** — Volg contracten met een goedkeuringsworkflow, verlengingsstatus en verloopmeldingen
 - **GEMMA/ArchiMate-standaarden & compliance** — Beheer een standaardenregister, leg compliance-claims met bewijs vast, toets modules tegen standaarden in een compliance-matrix en importeer/exporteer ArchiMate-modellen
 - **Portfolioroadmap** — Zie applicaties in gebruik gegroepeerd op levenscyclusfase, met waarschuwingen voor einde ondersteuning en uitfasering
-- **Gefedereerde synchronisatie** — Deel en synchroniseer catalogusdata met andere Software Catalogus-instanties via het directorynetwerk van OpenCatalogi (optioneel; werkt zonder OpenCatalogi met beperkte functionaliteit)
+- **Gefedereerde synchronisatie** — Deel en synchroniseer catalogusdata met andere Stackiq-instanties via het directorynetwerk van OpenCatalogi (optioneel; werkt zonder OpenCatalogi met beperkte functionaliteit)
 - **Automatische gebruikersaanmaak** — Synchroniseer contacten en organisaties vanuit je register naar Nextcloud-accounts en -groepen
 - **Open data publicatie** — Publiceer geselecteerde catalogusitems voor transparantie en hergebruik, met anonieme zelfregistratie en moderatie voor nieuwe organisaties
 
@@ -53,7 +53,7 @@ Vrij en open source onder de EUPL-licentie.
     <version>0.1.141-unstable.20260821053703</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
-    <namespace>SoftwareCatalog</namespace>
+    <namespace>Stackiq</namespace>
     <documentation>
         <user>https://github.com/ConductionNL/stackiq</user>
         <admin>https://github.com/ConductionNL/stackiq</admin>
@@ -73,7 +73,7 @@ Vrij en open source onder de EUPL-licentie.
     <dependencies>
         <!--
         App dependency (not expressible in app-info.xsd): OpenRegister — every
-        Software Catalog entity is an OpenRegister object, and src/manifest.json
+        Stackiq entity is an OpenRegister object, and src/manifest.json
         lists "openregister" as a required dependency.
 
         min-version is therefore 32, NOT 28: openregister declares min-version="32"
@@ -95,16 +95,42 @@ Vrij en open source onder de EUPL-licentie.
     </dependencies>
 
 	<background-jobs>
-		<job>OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob</job>
-		<job>OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob</job>
-		<job>OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob</job>
-		<job>OCA\SoftwareCatalog\BackgroundJob\EolSyncJob</job>
+		<job>OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob</job>
+		<job>OCA\Stackiq\BackgroundJob\ContractStatusJob</job>
+		<job>OCA\Stackiq\BackgroundJob\FederationSyncJob</job>
+		<job>OCA\Stackiq\BackgroundJob\EolSyncJob</job>
 	</background-jobs>
 
 	<repair-steps>
 		<post-migration>
 			<!--
-				MUST stay first. OpenRegister's import matches a schema to an
+				APP-ID RENAME (softwarecatalog -> stackiq). These three MUST stay
+				first in this block and in <install> below.
+
+				Nextcloud namespaces `oc_appconfig` and `oc_preferences` BY APP ID
+				and offers no in-place app-id upgrade, so every row written under
+				`softwarecatalog` becomes unreachable the moment the id moves. No
+				reader errors — every one of them supplies a default — so admin
+				settings and per-user preferences silently revert to their defaults
+				instead of failing loudly.
+
+				Ordering is load-bearing: InitializeSettings and the backfills below
+				WRITE config themselves. If they ran first, the copy step would find
+				a value already present in the new namespace, skip the key as
+				"already migrated", and strand the operator's real value in the old
+				one forever.
+			-->
+			<step>OCA\Stackiq\Repair\MigrateAppConfigKeys</step>
+			<step>OCA\Stackiq\Repair\MigrateUserPreferences</step>
+			<!--
+				`oc_jobs` stores the background job's CLASS NAME as a string. The
+				namespace rename orphans all four rows: the class no longer exists,
+				so the job never runs again and nothing reports it.
+			-->
+			<step>OCA\Stackiq\Repair\MigrateBackgroundJobClasses</step>
+			<!--
+				MUST stay first among the register steps. OpenRegister's import
+				matches a schema to an
 				existing row by SLUG, so a renamed slug in the register JSON does
 				not rename anything: the import finds no match, creates a SECOND
 				schema, and every stored object keeps pointing at the old one —
@@ -114,10 +140,10 @@ Vrij en open source onder de EUPL-licentie.
 				InitializeSettings is what triggers that import, via
 				SettingsService::initialize().
 			-->
-			<step>OCA\SoftwareCatalog\Repair\RenameDutchSchemaSlugs</step>
-			<step>OCA\SoftwareCatalog\Repair\InitializeSettings</step>
-			<step>OCA\SoftwareCatalog\Repair\MigrateContactsToNc</step>
-			<step>OCA\SoftwareCatalog\Repair\BackfillContractApprovalState</step>
+			<step>OCA\Stackiq\Repair\RenameDutchSchemaSlugs</step>
+			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
+			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
 			<!--
 				Must run AFTER the register sync that adds the English columns, so it
 				can tell the rename case from the back-fill case. Scoped by SCHEMA,
@@ -125,7 +151,7 @@ Vrij en open source onder de EUPL-licentie.
 				their Dutch property names are that import's wire format.
 				Idempotent, non-destructive, and refuses ambiguous renames.
 			-->
-			<step>OCA\SoftwareCatalog\Repair\RenameDutchCatalogColumns</step>
+			<step>OCA\Stackiq\Repair\RenameDutchCatalogColumns</step>
 			<!--
 				After the column rename, and late for the same reason: the schema
 				edit changes the DECLARATION, but every row already written still
@@ -133,38 +159,48 @@ Vrij en open source onder de EUPL-licentie.
 				null rather than an error, so the feature reports "nothing found"
 				instead of failing.
 			-->
-			<step>OCA\SoftwareCatalog\Repair\RenameDutchCatalogValues</step>
+			<step>OCA\Stackiq\Repair\RenameDutchCatalogValues</step>
 		</post-migration>
 		<!--
 			FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
 			`Installer::installAppLastSteps()` guards both the pre-migration and
 			post-migration blocks with `if ($previousVersion !== '')`, and only
 			`repair-steps/install` runs unconditionally afterwards. Until this block
-			existed a brand-new SoftwareCatalog install ran NONE of the steps above,
+			existed a brand-new Stackiq install ran NONE of the steps above,
 			so InitializeSettings never fired and the register was never imported —
 			despite that step's own docblock saying it initialises settings "on
 			install/upgrade".
 
-			Only InitializeSettings belongs here. MigrateContactsToNc,
+			⚠️ An APP-ID RENAME PRESENTS AS A FRESH INSTALL, not as an upgrade:
+			Nextcloud has never seen `stackiq` before, so `$previousVersion` is ''
+			and <post-migration> above does not run at all. This block is therefore
+			the ONLY hook that fires on the very upgrade the migration steps exist
+			for, which is why all three of them are repeated here — first, and ahead
+			of InitializeSettings for the ordering reason given above.
+
+			The remaining upgrade steps stay out. MigrateContactsToNc,
 			BackfillContractApprovalState and RenameDutchCatalogColumns are all
 			migrations or backfills over data a fresh install does not yet have, so
 			they stay upgrade-only rather than running against an empty database.
 		-->
 		<install>
-			<step>OCA\SoftwareCatalog\Repair\InitializeSettings</step>
+			<step>OCA\Stackiq\Repair\MigrateAppConfigKeys</step>
+			<step>OCA\Stackiq\Repair\MigrateUserPreferences</step>
+			<step>OCA\Stackiq\Repair\MigrateBackgroundJobClasses</step>
+			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 		</install>
 	</repair-steps>
 
 	<settings>
-		<admin>OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin</admin>
-		<admin-section>OCA\SoftwareCatalog\Sections\SoftwareCatalogAdmin</admin-section>
+		<admin>OCA\Stackiq\Settings\StackiqAdmin</admin>
+		<admin-section>OCA\Stackiq\Sections\StackiqAdmin</admin-section>
 	</settings>
 
     <navigations>
         <navigation>
-            <id>softwarecatalog</id>
-            <name>Software Catalogs</name>
-            <route>softwarecatalog.dashboard.page</route>
+            <id>stackiq</id>
+            <name>Stackiq</name>
+            <route>stackiq.dashboard.page</route>
             <icon>app.svg</icon>
         </navigation>
     </navigations>

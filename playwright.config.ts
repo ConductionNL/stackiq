@@ -6,7 +6,7 @@ import * as path from 'path'
 import { resolveBaseUrl } from './tests/e2e/base-url'
 
 /**
- * Playwright configuration for softwarecatalog e2e tests.
+ * Playwright configuration for stackiq e2e tests.
  *
  * Base URL comes from `tests/e2e/base-url.ts` and has NO default — see the
  * rationale there. Set PLAYWRIGHT_BASE_URL (or CI's BASE_URL) to an isolated
