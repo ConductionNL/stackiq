@@ -106,7 +106,7 @@ class OrganisatieService {
 				organizationUuid: $organizationUuid
 			);
 
-			// createOrganisationEntityInternal() is declared non-nullable and
+			// The createOrganisationEntityInternal() helper is declared non-nullable and
 			// throws on failure — the catch below is the real failure path.
 			$this->logger->info(
 				'OrganisatieService: Successfully created organization entity',
