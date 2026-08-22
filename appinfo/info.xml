@@ -55,20 +55,20 @@ Vrij en open source onder de EUPL-licentie.
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>SoftwareCatalog</namespace>
     <documentation>
-        <user>https://codeberg.org/Conduction/softwarecatalog</user>
-        <admin>https://codeberg.org/Conduction/softwarecatalog</admin>
-        <developer>https://codeberg.org/Conduction/softwarecatalog</developer>
+        <user>https://github.com/ConductionNL/stackiq</user>
+        <admin>https://github.com/ConductionNL/stackiq</admin>
+        <developer>https://github.com/ConductionNL/stackiq</developer>
     </documentation>
     <category>organization</category>
     <category>tools</category>
     <category>integration</category>
-    <website>https://codeberg.org/Conduction/softwarecatalog</website>
-    <bugs>https://codeberg.org/Conduction/softwarecatalog/issues</bugs>
-    <repository>https://codeberg.org/Conduction/softwarecatalog</repository>
+    <website>https://github.com/ConductionNL/stackiq</website>
+    <bugs>https://github.com/ConductionNL/stackiq/issues</bugs>
+    <repository>https://github.com/ConductionNL/stackiq</repository>
 
-    <screenshot>https://codeberg.org/Conduction/softwarecatalog/raw/branch/main/img/screenshot-dashboard.png</screenshot>
-    <screenshot>https://codeberg.org/Conduction/softwarecatalog/raw/branch/main/img/screenshot-applications.png</screenshot>
-    <screenshot>https://codeberg.org/Conduction/softwarecatalog/raw/branch/main/img/screenshot-connections.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/stackiq/main/img/screenshot-dashboard.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/stackiq/main/img/screenshot-applications.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/stackiq/main/img/screenshot-connections.png</screenshot>
 
     <dependencies>
         <!--
