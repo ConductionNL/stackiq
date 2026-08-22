@@ -368,11 +368,11 @@ class ArchiMateImportService {
 
 			// PERFORMANCE OPTIMIZATION: Clean up memory after XML parsing.
 			$memoryCleanupTime = 0;
-			if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup'] !== false) {
-				$memCleanupStart = microtime(true);
-				$this->cleanupMemory();
-				$memoryCleanupTime = microtime(true) - $memCleanupStart;
-			}
+			// PERFORMANCE_OPTIMIZATIONS['memory_cleanup'] is a class constant set
+			// to true, so this was never conditional.
+			$memCleanupStart = microtime(true);
+			$this->cleanupMemory();
+			$memoryCleanupTime = microtime(true) - $memCleanupStart;
 
 			// STEP 2: Extract model identifier.
 			$modelIdStartTime = microtime(true);
@@ -1254,7 +1254,7 @@ class ArchiMateImportService {
 			// Fallback: Use AMEF identifier as both ID and extract clean UUID for slug.
 			$objectId = $identifier;
 			// Extract clean UUID from AMEF identifier (remove "id-" prefix if present).
-			if ($identifier !== false && str_starts_with($identifier, 'id-') === true) {
+			if (str_starts_with($identifier, 'id-') === true) {
 				$slug = substr($identifier, 3);
 				// Remove "id-" prefix.
 			} else {
@@ -1735,9 +1735,10 @@ class ArchiMateImportService {
 			}//end try
 
 			// Memory cleanup between chunks.
-			if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup'] !== false) {
-				$this->cleanupMemory();
-			}
+			// PERFORMANCE_OPTIMIZATIONS['memory_cleanup'] is a class constant set
+			// to true, so this was never conditional. Flip the constant and the
+			// compiler will point you back here.
+			$this->cleanupMemory();
 		}//end foreach
 
 		// Store the aggregated result for statistics calculation.
@@ -2047,7 +2048,7 @@ class ArchiMateImportService {
 		}
 
 		// Validate and normalize to positive int.
-		if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string)$rawRegisterId) === true) {
+		if ($rawRegisterId !== '' && is_numeric((string)$rawRegisterId) === true) {
 			$registerId = (int)$rawRegisterId;
 			if ($registerId > 0) {
 				return $registerId;
@@ -2549,10 +2550,8 @@ class ArchiMateImportService {
 		// OPTIMIZATION: Removed debug logging from section processing.
 		$items = [];
 
-		// Safety check: ensure sectionData is an array.
-		if (is_array($sectionData) === false) {
-			return [];
-		}
+		// No is_array() safety check: $sectionData is declared array, so PHP
+		// rejects anything else at the call boundary before this could run.
 
 		// Get section structure configuration from AMEF config.
 		$config = $this->getSectionStructureConfig(sectionName: $sectionName);
@@ -4033,7 +4032,7 @@ class ArchiMateImportService {
 			$standardId = $source;
 		}
 
-		if ($versionId !== false && $standardId === true) {
+		if ($standardId === true) {
 			$stdVersionRelMap[$versionId] = $standardId;
 		}
 	}//end processStandaardVersieRelationship()
@@ -4084,7 +4083,7 @@ class ArchiMateImportService {
 			$standardId = $source;
 		}
 
-		if ($refCompId !== false && $standardId === true) {
+		if ($standardId === true) {
 			// Initialize arrays if not exists.
 			if (isset($gemmaRelationshipMap[$refCompId]) === false) {
 				$gemmaRelationshipMap[$refCompId] = [
@@ -4800,7 +4799,7 @@ class ArchiMateImportService {
 					// AMEF identifier becomes slug.
 				} else {
 					// Fallback: extract clean UUID from AMEF identifier for slug.
-					if ($identifier !== false && str_starts_with($identifier, 'id-') === true) {
+					if (str_starts_with($identifier, 'id-') === true) {
 						$object['@self']['slug'] = substr($identifier, 3);
 						// Remove "id-" prefix.
 					} else {
@@ -4809,7 +4808,7 @@ class ArchiMateImportService {
 				}
 			} else {
 				// No properties to flatten, use AMEF identifier logic.
-				if ($identifier !== false && str_starts_with($identifier, 'id-') === true) {
+				if (str_starts_with($identifier, 'id-') === true) {
 					$object['@self']['slug'] = substr($identifier, 3);
 					// Remove "id-" prefix.
 				} else {
@@ -4988,7 +4987,9 @@ class ArchiMateImportService {
 				continue;
 			}
 
-			if ($value !== null && isset($propDefMap[$defRef]) === true) {
+			// No isset($propDefMap[$defRef]) re-check: the loop above only
+			// reaches here for a $defRef the map already has.
+			if ($value !== null) {
 				$propertyName = $propDefMap[$defRef];
 				$camelCaseName = $this->convertToCamelCase(propertyName: $propertyName);
 				$object[$camelCaseName] = $value;
@@ -5022,13 +5023,14 @@ class ArchiMateImportService {
 					);
 				}
 			} else {
+				// 'mapping_exists' is always true here — the map lookup already
+				// succeeded, so a null $value is the only way into this branch.
 				$this->logger->warning(
-					'Property value is null or mapping missing',
+					'Property value is null',
 					[
 						'object_id' => $object['identifier'] ?? 'unknown',
 						'property_def_ref' => $defRef,
 						'value' => $value,
-						'mapping_exists' => isset($propDefMap[$defRef]) === true,
 					]
 				);
 			}//end if
@@ -5720,10 +5722,8 @@ class ArchiMateImportService {
 					$sectionKey = 'elements';
 				}//end if
 
-				if (isset($statistics[$sectionKey]) === false) {
-					continue;
-					// Skip unknown section types.
-				}
+				// No "skip unknown section types" guard: the branch above pins
+				// $sectionKey to a key $statistics always has, so it never fired.
 
 				// Determine if this object was created, updated, or had errors.
 				$objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
@@ -5809,14 +5809,13 @@ class ArchiMateImportService {
 			'total_errors' => 0,
 		];
 
-		foreach ($statistics as $section => $sectionStats) {
-			if ($section !== 'omschrijving') {
-				// Skip summary section itself.
-				$summary['total_objects_created'] += $sectionStats['created'];
-				$summary['total_objects_updated'] += $sectionStats['updated'];
-				$summary['total_objects_unchanged'] += $sectionStats['unchanged'];
-				$summary['total_errors'] += count($sectionStats['errors']);
-			}
+		// No "skip the summary section" guard: `omschrijving` is written into
+		// $statistics on the line AFTER this loop, so the loop can never see it.
+		foreach ($statistics as $sectionStats) {
+			$summary['total_objects_created'] += $sectionStats['created'];
+			$summary['total_objects_updated'] += $sectionStats['updated'];
+			$summary['total_objects_unchanged'] += $sectionStats['unchanged'];
+			$summary['total_errors'] += count($sectionStats['errors']);
 		}
 
 		$statistics['omschrijving'] = $summary;

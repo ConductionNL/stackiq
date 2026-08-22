@@ -1454,7 +1454,11 @@ class ContactPersonHandler {
 			$user = $this->_userManager->get($username);
 			$manager = $this->_userManager->get($managerUsername);
 
-			if ($user === null || $manager === false) {
+			// `$manager === null`, not `=== false`: IUserManager::get() returns
+			// ?IUser and signals "no such user" with null. Comparing against
+			// false meant a MISSING MANAGER was never detected — the guard fell
+			// through and the method carried on as if the manager existed.
+			if ($user === null || $manager === null) {
 				$this->_logger->warning(
 					'Cannot set manager - user or manager not found',
 					[

@@ -22,3 +22,19 @@ parameters:
         # class` errors that a bare ignore pattern cannot fix. Analysis-only;
         # never loaded at runtime or by PHPUnit.
         - tests/analysis-stubs/decidesk-events.stub.php
+
+    ignoreErrors:
+        # OrganizationSyncService's `if ($contactObject !== null)` at the top of
+        # the contact-person loop. saveObject() returns a non-nullable
+        # ObjectEntityInterface, so the guard is provably true — the code a few
+        # lines ABOVE it already dereferences $contactObject unconditionally,
+        # which is the giveaway.
+        #
+        # Left in place rather than removed because the block it wraps is 243
+        # lines: deleting the `if` is a pure re-indentation of a quarter of the
+        # method, which is a large, review-hostile diff for zero behaviour
+        # change. Worth doing when that method is next touched for real.
+        -
+            message: '#Strict comparison using !== between OCA\\OpenRegister\\Contract\\ObjectEntityInterface and null will always evaluate to true#'
+            identifier: notIdentical.alwaysTrue
+            path: lib/Service/OrganizationSyncService.php

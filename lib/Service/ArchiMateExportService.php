@@ -1209,7 +1209,7 @@ XML;
 			$xmlData = $this->cleanObjectDataForXml(object: $object, propDefMap: $propertyDefinitionMap);
 		}
 
-		if (is_array($xmlData) === true && empty($xmlData) === false) {
+		if (empty($xmlData) === false) {
 			if ($sectionName === 'views') {
 				$this->addViewDataToXmlNode(viewNode: $objectNode, viewData: $xmlData);
 			} else {

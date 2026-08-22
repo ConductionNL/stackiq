@@ -264,7 +264,7 @@ class SettingsController extends Controller {
 
 		try {
 			$user = $this->userSession->getUser();
-			$isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
+			$isAdmin = $this->groupManager->isAdmin($user->getUID());
 
 			// Delegate all business logic to service.
 			$data = $this->settingsService->getAllSettings();
@@ -1577,10 +1577,12 @@ class SettingsController extends Controller {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-3
 	 */
 	private function resolveArchiMateMethod(array $options): array {
+		// No method_exists() probe: ArchiMateService declares
+		// importArchiMateFileFromPathOptimized(), so only the request parameter
+		// decides which path runs.
 		$useOptimized = $this->request->getParam('useOptimized', 'true') === 'true';
-		$hasOptimized = method_exists($this->archiMateService, 'importArchiMateFileFromPathOptimized');
 
-		if ($useOptimized === true && $hasOptimized === true) {
+		if ($useOptimized === true) {
 			$this->logger->info('Using OPTIMIZED ArchiMate import method.');
 			return $this->archiMateService->importArchiMateFileFromPathOptimized($options);
 		}
