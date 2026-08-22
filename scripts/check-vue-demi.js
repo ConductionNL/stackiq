@@ -66,7 +66,7 @@ if (before.isVue3) {
 }
 
 process.stderr.write(
-	'[softwarecatalog] vue-demi is on the Vue 2 shim — switching to Vue 3\n',
+	'[stackiq] vue-demi is on the Vue 2 shim — switching to Vue 3\n',
 )
 
 const bin = path.resolve(
@@ -85,7 +85,7 @@ const after = inspectShim()
 
 if (!after.isVue3) {
 	process.stderr.write(
-		'[softwarecatalog] FATAL: vue-demi is still on the Vue 2 shim.\n'
+		'[stackiq] FATAL: vue-demi is still on the Vue 2 shim.\n'
 			+ '  This app is Vue 3. Building now would produce a bundle whose pinia /\n'
 			+ '  vue-codemirror6 imports resolve against a Vue 2 compatibility layer.\n'
 			+ '  Fix with a clean install (postinstall hooks always re-run under `npm ci`):\n'

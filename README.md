@@ -1,23 +1,23 @@
 <p align="center">
-  <img src="img/app-store.svg" alt="Software Catalogus logo" width="80" height="80">
+  <img src="img/app-store.svg" alt="Stackiq logo" width="80" height="80">
 </p>
 
-<h1 align="center">Software Catalogus</h1>
+<h1 align="center">Stackiq</h1>
 
 <p align="center">
   <strong>GEMMA-compliant software catalog for Nextcloud — applications, modules, and integration management</strong>
 </p>
 
 <p align="center">
-  <a href="https://codeberg.org/Conduction/softwarecatalog/releases"><img src="https://img.shields.io/gitea/v/release/Conduction/softwarecatalog?gitea_url=https%3A%2F%2Fcodeberg.org" alt="Latest release"></a>
-  <a href="https://codeberg.org/Conduction/softwarecatalog/src/branch/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
-  <a href="https://ci.codeberg.org/repos/Conduction/softwarecatalog"><img src="https://ci.codeberg.org/api/badges/Conduction/softwarecatalog/status.svg" alt="Code quality"></a>
-  <a href="https://softwarecatalog.app"><img src="https://img.shields.io/badge/docs-softwarecatalog.app-green" alt="Documentation"></a>
+  <a href="https://github.com/ConductionNL/stackiq/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/stackiq" alt="Latest release"></a>
+  <a href="https://github.com/ConductionNL/stackiq/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
+  <a href="https://github.com/ConductionNL/stackiq/actions/workflows/code-quality.yml"><img src="https://github.com/ConductionNL/stackiq/actions/workflows/code-quality.yml/badge.svg" alt="Code quality"></a>
+  <a href="https://softwarecatalog.conduction.nl"><img src="https://img.shields.io/badge/docs-softwarecatalog.conduction.nl-green" alt="Documentation"></a>
 </p>
 
 ---
 
-Software Catalogus brings structured software portfolio management to Nextcloud. Register the applications, modules, and connections (koppelingen) that make up your organization's IT landscape, manage contacts and organizations, and synchronize catalog data across a federated open data network — all aligned with Dutch GEMMA standards.
+Stackiq brings structured software portfolio management to Nextcloud. Register the applications, modules, and connections (koppelingen) that make up your organization's IT landscape, manage contacts and organizations, and synchronize catalog data across a federated open data network — all aligned with Dutch GEMMA standards.
 
 It integrates with [OpenRegister](https://codeberg.org/Conduction/openregister) for data storage and automatic user provisioning, turning register contacts into Nextcloud accounts with role-based group membership.
 
@@ -92,7 +92,7 @@ graph TD
 ### Directory Structure
 
 ```
-softwarecatalog/
+stackiq/
 ├── appinfo/           # Nextcloud app manifest, routes, navigation
 ├── lib/               # PHP backend — controllers, services, event listeners
 │   ├── Controller/    # API and page controllers
@@ -104,7 +104,7 @@ softwarecatalog/
 ├── docs/              # Technical documentation
 ├── img/               # App icons and screenshots
 ├── l10n/              # Translations (en, nl)
-└── docusaurus/        # Product documentation site (softwarecatalog.app)
+└── docusaurus/        # Product documentation site (softwarecatalog.conduction.nl)
 ```
 
 ## Requirements
@@ -120,7 +120,7 @@ softwarecatalog/
 ### From the Nextcloud App Store
 
 1. Go to **Apps** in your Nextcloud instance
-2. Search for **Software Catalogus**
+2. Search for **Stackiq**
 3. Click **Download and enable**
 
 > OpenRegister must be installed first. [Install OpenRegister -->](https://apps.nextcloud.com/apps/openregister)
@@ -129,11 +129,11 @@ softwarecatalog/
 
 ```bash
 cd /var/www/html/custom_apps
-git clone https://codeberg.org/Conduction/softwarecatalog.git
-cd softwarecatalog
+git clone https://github.com/ConductionNL/stackiq.git
+cd stackiq
 npm install
 npm run build
-php occ app:enable softwarecatalog
+php occ app:enable stackiq
 ```
 
 ## Development
@@ -147,7 +147,7 @@ docker compose -f openregister/docker-compose.yml up -d
 ### Frontend development
 
 ```bash
-cd softwarecatalog
+cd stackiq
 npm install
 npm run dev        # Watch mode
 npm run build      # Production build
@@ -180,7 +180,7 @@ npm run stylelint       # CSS linting
 
 ## Documentation
 
-Full documentation is available at **[softwarecatalog.app](https://softwarecatalog.app)**
+Full documentation is available at **[softwarecatalog.conduction.nl](https://softwarecatalog.conduction.nl)**
 
 | Page | Description |
 |------|-------------|
@@ -191,11 +191,11 @@ Full documentation is available at **[softwarecatalog.app](https://softwarecatal
 
 ## Testing
 
-Software Catalogus is tested through three complementary layers that together provide comprehensive quality assurance.
+Stackiq is tested through three complementary layers that together provide comprehensive quality assurance.
 
 ### Code Quality (Conduction Quality Workflow)
 
-Every commit runs through the [Conduction quality workflow](https://codeberg.org/Conduction/softwarecatalog/actions) — a strict CI/CD pipeline that enforces:
+Every commit runs through the [Conduction quality workflow](https://github.com/ConductionNL/stackiq/actions) — a strict CI/CD pipeline that enforces:
 
 - **PHP Lint** — syntax validation
 - **PHPCS** — coding standards (PEAR + PSR-12 + custom Conduction rules, including forbidden functions and named parameter enforcement)
@@ -263,7 +263,7 @@ The master file `issues.md` tracks all 137 IGS (In Review/Scoped) issues with th
 
 ## Required Repositories
 
-The Softwarecatalogus is not a standalone application — it runs as a Nextcloud app backed by several other apps, with a separate React-based public frontend.
+Stackiq is not a standalone application — it runs as a Nextcloud app backed by several other apps, with a separate React-based public frontend.
 
 | Repository | Role | Required |
 |-----------|------|----------|
@@ -305,8 +305,8 @@ docker exec -u www-data nextcloud php occ app:enable opencatalogi
 # 3. NL Design — theming (no hard dependencies, but should be early)
 docker exec -u www-data nextcloud php occ app:enable nldesign
 
-# 4. Software Catalogus — depends on OpenRegister and OpenCatalogi
-docker exec -u www-data nextcloud php occ app:enable softwarecatalog
+# 4. Stackiq — depends on OpenRegister and OpenCatalogi
+docker exec -u www-data nextcloud php occ app:enable stackiq
 
 # 5. LaunchPad — optional, for dashboard widgets
 docker exec -u www-data nextcloud php occ app:enable launchpad
@@ -314,7 +314,7 @@ docker exec -u www-data nextcloud php occ app:enable launchpad
 
 ### 3. Import data
 
-The Softwarecatalogus requires register schemas and seed data to function. Import the configurations via the OpenRegister Magic Mapper:
+Stackiq requires register schemas and seed data to function. Import the configurations via the OpenRegister Magic Mapper:
 
 ```bash
 # Import the softwarecatalogus register configuration
@@ -323,13 +323,13 @@ The Softwarecatalogus requires register schemas and seed data to function. Impor
 curl -X POST "http://localhost:8080/index.php/apps/openregister/api/configurations?force=true" \
   -u admin:admin \
   -H "Content-Type: application/json" \
-  -d @softwarecatalog/configurations/softwarecatalogus_register.json
+  -d @stackiq/lib/Settings/softwarecatalogus_register.json
 ```
 
 For a complete test environment with users, organizations, and sample data:
 
 ```bash
-bash softwarecatalog/test-setup.sh
+bash stackiq/test-setup.sh
 ```
 
 This creates 7 test users across 4 organizations (leverancier, gemeente, samenwerking, admin), seeds contact persons and sample applications, and verifies RBAC scoping.
@@ -338,7 +338,7 @@ This creates 7 test users across 4 organizations (leverancier, gemeente, samenwe
 
 ```bash
 # Nextcloud app frontend (Vue 2)
-cd softwarecatalog && npm install && npm run build
+cd stackiq && npm install && npm run build
 
 # Public frontend (React) — only needed if not using Docker
 cd tilburg-woo-ui && yarn install && yarn build
