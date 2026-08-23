@@ -3,25 +3,25 @@ AddContactpersoonModal.vue
 Modal component for adding new contactpersoon to an organisation
 
 @category Components
-@package softwarecatalog
+@package stackiq
 @author Ruben Linde
 @copyright 2024
 @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
 @version 1.0.0
-@link https://github.com/opencatalogi/softwarecatalog
+@link https://github.com/ConductionNL/stackiq
 -->
 
 <template>
 	<NcDialog
 		v-if="show"
-		:name="t('softwarecatalog', 'Add Contactpersoon')"
+		:name="t('stackiq', 'Add Contactpersoon')"
 		size="small"
 		@closing="closeModal">
 		<div class="add-contactpersoon-modal">
 			<p class="modal-description">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Add a new contact person to organisation: {name}',
 						{ name: organisation?.name || 'Unknown' },
 					)
@@ -32,8 +32,8 @@ Modal component for adding new contactpersoon to an organisation
 				<div class="form-row">
 					<NcTextField
 						v-model="formData.voornaam"
-						:label="t('softwarecatalog', 'First Name')"
-						:placeholder="t('softwarecatalog', 'Enter first name')"
+						:label="t('stackiq', 'First Name')"
+						:placeholder="t('stackiq', 'Enter first name')"
 						class="compact-field"
 						required />
 				</div>
@@ -41,8 +41,8 @@ Modal component for adding new contactpersoon to an organisation
 				<div class="form-row">
 					<NcTextField
 						v-model="formData.achternaam"
-						:label="t('softwarecatalog', 'Last Name')"
-						:placeholder="t('softwarecatalog', 'Enter last name')"
+						:label="t('stackiq', 'Last Name')"
+						:placeholder="t('stackiq', 'Enter last name')"
 						class="compact-field"
 						required />
 				</div>
@@ -51,15 +51,15 @@ Modal component for adding new contactpersoon to an organisation
 					<NcTextField
 						v-model="formData['e-mailadres']"
 						type="email"
-						:label="t('softwarecatalog', 'Email Address')"
-						:placeholder="t('softwarecatalog', 'Enter email address')"
+						:label="t('stackiq', 'Email Address')"
+						:placeholder="t('stackiq', 'Enter email address')"
 						class="compact-field"
 						required />
 				</div>
 
 				<div class="dialog-actions">
 					<NcButton variant="secondary" @click="closeModal">
-						{{ t('softwarecatalog', 'Cancel') }}
+						{{ t('stackiq', 'Cancel') }}
 					</NcButton>
 					<NcButton
 						variant="primary"
@@ -68,7 +68,7 @@ Modal component for adding new contactpersoon to an organisation
 						<template #icon>
 							<NcLoadingIcon v-if="loading" :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Add Contactpersoon') }}
+						{{ t('stackiq', 'Add Contactpersoon') }}
 					</NcButton>
 				</div>
 			</form>
@@ -167,7 +167,7 @@ export default {
 			if (!this.isFormValid) {
 				showError(
 					this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Please fill in all required fields with valid data',
 					),
 				)
@@ -203,9 +203,7 @@ export default {
 					},
 				)
 
-				showSuccess(
-					this.t('softwarecatalog', 'Contactpersoon added successfully'),
-				)
+				showSuccess(this.t('stackiq', 'Contactpersoon added successfully'))
 
 				// Emit event to parent component.
 				this.$emit('contactpersoon-added', result.data)
@@ -220,11 +218,9 @@ export default {
 			} catch (error) {
 				console.error('Error adding contact person:', error)
 				showError(
-					this.t(
-						'softwarecatalog',
-						'Failed to add contact person: {error}',
-						{ error: error.message },
-					),
+					this.t('stackiq', 'Failed to add contact person: {error}', {
+						error: error.message,
+					}),
 				)
 			} finally {
 				this.loading = false

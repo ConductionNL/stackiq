@@ -1,24 +1,24 @@
 <?php
 
 /**
- * Softwarecatalog DecisionConcludedListener.
+ * Stackiq DecisionConcludedListener.
  *
  * In-process listener for decidesk's `DecisionConcludedEvent` — the terminal
- * outcome of a contract approval / renewal Decision that softwarecatalog raised
+ * outcome of a contract approval / renewal Decision that stackiq raised
  * via `DecisionRequestedEvent`. It REPLACES the former HTTP outcome-callback +
  * daily reconcile poll path: decidesk dispatches the conclusion synchronously,
- * this listener filters to `sourceApp === softwarecatalog`, IDOR-checks the
+ * this listener filters to `sourceApp === stackiq`, IDOR-checks the
  * carried `decisionId` against the contract's stored `approvalDecisionId`, and
  * projects the outcome onto the catalog-local `approvalState` / `status`
  * fields. The `In onderhandeling -> Actief` transition is reached ONLY here, as
  * a projection of an `approved` decidesk outcome — never on local authority.
  *
  * @category  EventListener
- * @package   OCA\SoftwareCatalog\EventListener
+ * @package   OCA\Stackiq\EventListener
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
  *
@@ -28,10 +28,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\EventListener;
+namespace OCA\Stackiq\EventListener;
 
 use OCA\Decidesk\Event\DecisionConcludedEvent;
-use OCA\SoftwareCatalog\Service\ContractApprovalService;
+use OCA\Stackiq\Service\ContractApprovalService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -59,7 +59,7 @@ class DecisionConcludedListener implements IEventListener {
 	/**
 	 * Handle a concluded decidesk Decision.
 	 *
-	 * Only `DecisionConcludedEvent`s whose `sourceApp` is softwarecatalog are
+	 * Only `DecisionConcludedEvent`s whose `sourceApp` is stackiq are
 	 * acted on; everything else is ignored. The carried `decisionId` is
 	 * IDOR-checked against the contract's stored `approvalDecisionId` inside
 	 * `resolveContractForOutcome()` before any projection is written.

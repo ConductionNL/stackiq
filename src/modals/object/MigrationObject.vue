@@ -126,7 +126,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 					:options="availableRegisters"
 					label="title"
 					trackBy="id"
-					:inputLabel="t('softwarecatalog', 'Target register')"
+					:inputLabel="t('stackiq', 'Target register')"
 					placeholder="Select a register..."
 					@update:modelValue="onRegisterChange" />
 			</div>
@@ -139,7 +139,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 					:options="availableSchemas"
 					label="title"
 					trackBy="id"
-					:inputLabel="t('softwarecatalog', 'Target schema')"
+					:inputLabel="t('stackiq', 'Target schema')"
 					placeholder="Select a schema..."
 					@update:modelValue="onSchemaChange" />
 			</div>
@@ -195,7 +195,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 								trackBy="value"
 								:inputLabel="
 									t(
-										'softwarecatalog',
+										'stackiq',
 										'Map {property} to target property',
 										{ property: sourceProperty.name },
 									)

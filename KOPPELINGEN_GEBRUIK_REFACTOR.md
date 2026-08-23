@@ -25,21 +25,21 @@ October 29, 2025
 ### 2. Code Changes
 
 #### routes.php
-- **File**: `softwarecatalog/appinfo/routes.php`
+- **File**: `stackiq/appinfo/routes.php`
 - **Changes**:
   - Removed generic endpoint route
   - Updated comment to reflect UUID-specific nature
   - Documented that endpoint supports organisation, module, and application UUIDs
 
 #### AangebodenGebruikController.php
-- **File**: `softwarecatalog/lib/Controller/AangebodenGebruikController.php`
+- **File**: `stackiq/lib/Controller/AangebodenGebruikController.php`
 - **Changes**:
   - Removed `getKoppelingenGebruik()` method (lines 131-198)
   - Kept `getKoppelingenGebruikByUuid()` method
   - Controller now only handles UUID-specific requests
 
 #### AangebodenGebruikService.php
-- **File**: `softwarecatalog/lib/Service/AangebodenGebruikService.php`
+- **File**: `stackiq/lib/Service/AangebodenGebruikService.php`
 - **Changes**:
   - Removed generic `getKoppelingenGebruik()` method
   - Enhanced docblock for `getKoppelingenGebruikByUuid()` to clarify it handles three UUID types
@@ -47,7 +47,7 @@ October 29, 2025
 
 ### 3. Enhanced Integration Tests ✅
 
-**File**: `softwarecatalog/tests/Integration/KoppelingenGebruikIntegrationTest.php`
+**File**: `stackiq/tests/Integration/KoppelingenGebruikIntegrationTest.php`
 
 **New Test Data Creation:**
 - ✅ Creates test organisations (Organisation A and Organisation B)
@@ -107,7 +107,7 @@ October 29, 2025
 
 ### 4. Documentation Updates ✅
 
-**File**: `softwarecatalog/website/docs/aangeboden-gebruik-api.md`
+**File**: `stackiq/website/docs/aangeboden-gebruik-api.md`
 
 **Changes:**
 
@@ -267,12 +267,12 @@ GET /api/koppelingen-gebruik/{uuid}?organisation={org-uuid}
 
 ```bash
 # From host
-cd softwarecatalog
+cd stackiq
 vendor/bin/phpunit tests/Integration/KoppelingenGebruikIntegrationTest.php
 
 # From Docker container
 docker exec -u 33 master-nextcloud-1 bash -c \
-  "cd /var/www/html/apps-extra/softwarecatalog && \
+  "cd /var/www/html/apps-extra/stackiq && \
    vendor/bin/phpunit tests/Integration/KoppelingenGebruikIntegrationTest.php"
 ```
 
@@ -287,11 +287,11 @@ docker exec -u 33 master-nextcloud-1 bash -c \
 
 ## Files Modified
 
-1. **✅ softwarecatalog/appinfo/routes.php** - Removed generic endpoint route
-2. **✅ softwarecatalog/lib/Controller/AangebodenGebruikController.php** - Removed generic method
-3. **✅ softwarecatalog/lib/Service/AangebodenGebruikService.php** - Removed generic method, updated docblocks
-4. **✅ softwarecatalog/tests/Integration/KoppelingenGebruikIntegrationTest.php** - Complete rewrite with comprehensive tests
-5. **✅ softwarecatalog/website/docs/aangeboden-gebruik-api.md** - Updated to reflect UUID-only endpoint
+1. **✅ stackiq/appinfo/routes.php** - Removed generic endpoint route
+2. **✅ stackiq/lib/Controller/AangebodenGebruikController.php** - Removed generic method
+3. **✅ stackiq/lib/Service/AangebodenGebruikService.php** - Removed generic method, updated docblocks
+4. **✅ stackiq/tests/Integration/KoppelingenGebruikIntegrationTest.php** - Complete rewrite with comprehensive tests
+5. **✅ stackiq/website/docs/aangeboden-gebruik-api.md** - Updated to reflect UUID-only endpoint
 
 ## Linter Status
 

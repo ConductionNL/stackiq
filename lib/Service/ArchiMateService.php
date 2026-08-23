@@ -1,25 +1,25 @@
 <?php
 
 /**
- * ArchiMate Service for SoftwareCatalog
+ * ArchiMate Service for Stackiq
  *
  * Handles import and export of ArchiMate XML files with round-trip fidelity.
  * Stores complete XML data as JSON blobs in the database and reconstructs
  * exact XML output during export.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
- * @author    SoftwareCatalog Team <info@conduction.nl>
+ * @package   OCA\Stackiq\Service
+ * @author    Stackiq Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://github.com/nextcloud/softwarecatalog
+ * @link      https://github.com/nextcloud/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
@@ -39,11 +39,11 @@ use Psr\Log\LoggerInterface;
  * 3. Export: Reconstruct exact XML from stored JSON blobs
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
- * @author    SoftwareCatalog Team <info@conduction.nl>
+ * @package   OCA\Stackiq\Service
+ * @author    Stackiq Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://github.com/nextcloud/softwarecatalog
+ * @link      https://github.com/nextcloud/stackiq
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -475,8 +475,8 @@ class ArchiMateService {
 				$options
 			);
 
-			// Generate file name: DD-MM-YYYY_Softwarecatalogus_AMEFF_export_OrgName.xml.
-			$fileName = date('d-m-Y') . '_Softwarecatalogus_AMEFF_export_' . str_replace(' ', '_', $orgName) . '.xml';
+			// Generate file name: DD-MM-YYYY_Stackiq_AMEFF_export_OrgName.xml.
+			$fileName = date('d-m-Y') . '_Stackiq_AMEFF_export_' . str_replace(' ', '_', $orgName) . '.xml';
 
 			return [
 				'success' => true,
@@ -1392,7 +1392,7 @@ class ArchiMateService {
 				$errorMessage .= "- {$item}\n";
 			}
 
-			$settingsHint = 'in the SoftwareCatalog settings before importing.';
+			$settingsHint = 'in the Stackiq settings before importing.';
 			$errorMessage .= "\nPlease configure the AMEF register and all required schema IDs $settingsHint";
 			$manualHint = 'or set them manually via the admin interface.';
 			$errorMessage .= "\nYou can use the auto-configuration feature $manualHint";
@@ -1615,7 +1615,7 @@ class ArchiMateService {
 	 * @spec openspec/specs/archimate-import/spec.md
 	 */
 	private function resolveConfiguredId(string $key): ?string {
-		$value = $this->config->getValueString('softwarecatalog', $key, '');
+		$value = $this->config->getValueString('stackiq', $key, '');
 		if (trim($value) === '') {
 			$this->logger->warning(
 				'ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string',
@@ -1639,7 +1639,7 @@ class ArchiMateService {
 
 		try {
 			// Get configuration from app config using the correct method.
-			$config = $this->config->getValueString('softwarecatalog', 'amef_config', '{}');
+			$config = $this->config->getValueString('stackiq', 'amef_config', '{}');
 			$decoded = json_decode($config, true);
 
 			if (is_array($decoded) === false) {
@@ -1757,10 +1757,10 @@ class ArchiMateService {
 
 		// Fallback to legacy individual app config keys if not present in JSON.
 		if ($rawRegisterId === null || $rawRegisterId === '') {
-			$rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
-			if ($this->config->getValueString('softwarecatalog', 'amef_register', '') !== '') {
+			$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register_id', '');
+			if ($this->config->getValueString('stackiq', 'amef_register', '') !== '') {
 				// If only the plain register key is configured, use it as the ID.
-				$rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register', '');
+				$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register', '');
 			}
 		}
 

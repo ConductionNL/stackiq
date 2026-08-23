@@ -42,16 +42,16 @@
  * — a new sentinel must be a decision, not a silent gap.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\AppInfo
+ * @package   OCA\Stackiq\Tests\Unit\AppInfo
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\AppInfo;
+namespace OCA\Stackiq\Tests\Unit\AppInfo;
 
 use PHPUnit\Framework\TestCase;
 
@@ -138,8 +138,8 @@ class ManifestRegisterSentinelTest extends TestCase {
 	 * page's widgets carry their own `content.{register,schema}` and those hit
 	 * the same endpoint.
 	 *
-	 * @param mixed                     $node Current node.
-	 * @param array<int, array<string>> $out  Accumulator, by reference.
+	 * @param mixed $node Current node.
+	 * @param array<int, array<string>> $out Accumulator, by reference.
 	 *
 	 * @return void
 	 */

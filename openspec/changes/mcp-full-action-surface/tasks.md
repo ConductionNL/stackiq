@@ -22,13 +22,13 @@
 
 ## 2. Provider skeleton
 
-- [ ] 2.1 Add `lib/Mcp/SoftwareCatalogToolProvider.php`
-  (`OCA\SoftwareCatalog\Mcp`, implements
+- [ ] 2.1 Add `lib/Mcp/StackiqToolProvider.php`
+  (`OCA\Stackiq\Mcp`, implements
   `OCA\OpenRegister\Mcp\IMcpToolProvider`): descriptor constant
   (id, name, description, inputSchema, scope, reach, hints) + dispatch
   table; no business logic (decidesk `DecideskToolProvider` shape).
 - [ ] 2.2 Register the DI alias
-  `OCA\OpenRegister\Mcp\IMcpToolProvider::softwarecatalog` in
+  `OCA\OpenRegister\Mcp\IMcpToolProvider::stackiq` in
   `lib/AppInfo/Application.php` (mirror
   `decidesk/lib/AppInfo/Registrar/DomainServiceRegistrar.php:121`).
 - [ ] 2.3 Add `lib/Mcp/McpArgumentValidator.php` (port of decidesk's:
@@ -103,9 +103,9 @@
 
 ## 7. Supersession + spec/docs
 
-- [ ] 7.1 Archive `softwarecatalog-mcp-adoption` as superseded by this
+- [ ] 7.1 Archive `stackiq-mcp-adoption` as superseded by this
   change (pointer in its archive note); its
-  `register.d/softwarecatalog-mcp-adoption.json` is never created.
+  `register.d/stackiq-mcp-adoption.json` is never created.
 - [ ] 7.2 Sync this change's spec delta into
   `openspec/specs/mcp-tool-surface/spec.md` on archive.
 - [ ] 7.3 CHANGELOG entry under Unreleased: full MCP action surface

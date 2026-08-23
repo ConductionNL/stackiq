@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Object-action modal text MUST be translatable
-Every user-visible string rendered by the object-action modal family (`src/modals/object/*.vue`, `src/modals/BulkSyncDialog.vue`) and the ArchiMate import/export settings section (`src/views/settings/sections/ArchiMateImportExport.vue`) MUST be wrapped in `t('softwarecatalog', '…')` with the English literal as the translation key, per ADR-004.
+Every user-visible string rendered by the object-action modal family (`src/modals/object/*.vue`, `src/modals/BulkSyncDialog.vue`) and the ArchiMate import/export settings section (`src/views/settings/sections/ArchiMateImportExport.vue`) MUST be wrapped in `t('stackiq', '…')` with the English literal as the translation key, per ADR-004.
 No literal English prose (headings, table headers, button labels, empty-state text, placeholders) MAY be rendered directly in a `<template>` block.
 
 #### Scenario: A Dutch-locale user opens the object-merge modal

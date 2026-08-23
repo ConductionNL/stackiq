@@ -5,21 +5,21 @@ status: done
 # view-enrichment-api Specification
 
 ## Purpose
-Provides the softwarecatalog view enrichment API that augments base GEMMA architecture views with organisation-specific module and deelnames overlay nodes, computed server-side and returned in the standard viewNode format so the frontend rendering pipeline is unchanged. Frontend filter toggles map to enrichment query parameters, enrichment is scoped to an active or specified organisation, and the API supports caching, input validation, concurrent requests, synthetic relationships, and node-count metadata.
+Provides the stackiq view enrichment API that augments base GEMMA architecture views with organisation-specific module and deelnames overlay nodes, computed server-side and returned in the standard viewNode format so the frontend rendering pipeline is unchanged. Frontend filter toggles map to enrichment query parameters, enrichment is scoped to an active or specified organisation, and the API supports caching, input validation, concurrent requests, synthetic relationships, and node-count metadata.
 ## Requirements
 ### Requirement: Frontend MUST call enrichment API for views
-The frontend MUST use the softwarecatalog enrichment API (`/softwarecatalog/api/views/{viewId}`) instead of the OpenRegister direct API (`/openregister/api/objects/vng-gemma/view/{id}`) for all view rendering.
+The frontend MUST use the stackiq enrichment API (`/stackiq/api/views/{viewId}`) instead of the OpenRegister direct API (`/openregister/api/objects/vng-gemma/view/{id}`) for all view rendering.
 
 #### Scenario: Beheer view loads with enrichment
 - GIVEN a user navigates to `/beheer/view/{id}`
 - WHEN the view component mounts
-- THEN the frontend MUST request `GET /softwarecatalog/api/views/{viewId}`
+- THEN the frontend MUST request `GET /stackiq/api/views/{viewId}`
 - AND the request MUST include enrichment parameters based on active filter toggles
 
 #### Scenario: Public view loads with enrichment
 - GIVEN a visitor navigates to `/views/{id}`
 - WHEN the public view component mounts
-- THEN the frontend MUST request `GET /softwarecatalog/api/views/{viewId}`
+- THEN the frontend MUST request `GET /stackiq/api/views/{viewId}`
 - AND the request MUST include enrichment parameters based on active filter toggles
 
 #### Scenario: Direct OpenRegister calls are no longer used for views
@@ -30,13 +30,13 @@ The frontend MUST use the softwarecatalog enrichment API (`/softwarecatalog/api/
 
 #### Scenario: Enrichment API returns 404 for non-existent view
 - GIVEN a view ID that does not exist in the system
-- WHEN `GET /softwarecatalog/api/views/{invalidId}` is called
+- WHEN `GET /stackiq/api/views/{invalidId}` is called
 - THEN the response MUST have status 404
 - AND the response body MUST contain an error message indicating the view was not found
 
 #### Scenario: Enrichment API handles server errors gracefully
 - GIVEN the ObjectService is temporarily unavailable
-- WHEN `GET /softwarecatalog/api/views/{viewId}` is called
+- WHEN `GET /stackiq/api/views/{viewId}` is called
 - THEN the response MUST have status 503 or 500
 - AND the response body MUST contain a descriptive error message
 - AND the error MUST be logged server-side
@@ -118,37 +118,37 @@ The enrichment API MUST return module overlay nodes in the same format as base G
 The enrichment API MUST know which organization to enrich for, either from the active organization setting or from a query parameter.
 
 #### Scenario: Active organization is used by default
-- GIVEN the softwarecatalog app has an active organization configured
-- WHEN `GET /softwarecatalog/api/views/{viewId}?include_modules=true` is called without an `organization` parameter
+- GIVEN the stackiq app has an active organization configured
+- WHEN `GET /stackiq/api/views/{viewId}?include_modules=true` is called without an `organization` parameter
 - THEN the enrichment MUST use the active organization's UUID
 - AND module mappings MUST be fetched for that organization
 
 #### Scenario: Organization parameter overrides active organization
-- GIVEN `GET /softwarecatalog/api/views/{viewId}?include_modules=true&organization={uuid}` is called
+- GIVEN `GET /stackiq/api/views/{viewId}?include_modules=true&organization={uuid}` is called
 - WHEN the `organization` parameter is provided
 - THEN the enrichment MUST use the specified organization UUID
 - AND the active organization setting MUST be ignored for this request
 
 #### Scenario: No organization available returns base view only
 - GIVEN no active organization is configured AND no `organization` parameter is provided
-- WHEN `GET /softwarecatalog/api/views/{viewId}?include_modules=true` is called
+- WHEN `GET /stackiq/api/views/{viewId}?include_modules=true` is called
 - THEN the response MUST return the base GEMMA view without any module enrichment
 - AND a warning header `X-Enrichment-Warning: no-organization` MUST be included
 
 ### Requirement: Endpoint constants MUST be updated
-The frontend endpoint configuration MUST point to the softwarecatalog enrichment API.
+The frontend endpoint configuration MUST point to the stackiq enrichment API.
 
 #### Scenario: GEMMA VIEW endpoint is configured
 - GIVEN the frontend endpoints constants file
 - WHEN the GEMMA.VIEW endpoint is resolved
-- THEN it MUST resolve to `/softwarecatalog/api/views/{id}`
-- AND the GEMMA.VIEWS endpoint MUST resolve to `/softwarecatalog/api/views`
+- THEN it MUST resolve to `/stackiq/api/views/{id}`
+- AND the GEMMA.VIEWS endpoint MUST resolve to `/stackiq/api/views`
 
 #### Scenario: Old OpenRegister view endpoint is removed
 - GIVEN the frontend endpoint constants
 - WHEN searching for view-related endpoint definitions
 - THEN no endpoint MUST reference `/openregister/api/objects/vng-gemma/view/`
-- AND all view-related fetches MUST use the softwarecatalog enrichment API
+- AND all view-related fetches MUST use the stackiq enrichment API
 
 #### Scenario: Endpoint supports query string parameters
 - GIVEN the enrichment API endpoint
@@ -241,19 +241,19 @@ For views with many nodes, the API MUST include metadata to help the frontend ma
 The API MUST validate all input parameters and return clear error messages for invalid input.
 
 #### Scenario: Invalid view ID format
-- GIVEN `GET /softwarecatalog/api/views/not-a-uuid?include_modules=true`
+- GIVEN `GET /stackiq/api/views/not-a-uuid?include_modules=true`
 - WHEN the request is processed
 - THEN the response MUST have status 400
 - AND the error message MUST indicate the view ID format is invalid
 
 #### Scenario: Invalid organization UUID
-- GIVEN `GET /softwarecatalog/api/views/{viewId}?organization=invalid`
+- GIVEN `GET /stackiq/api/views/{viewId}?organization=invalid`
 - WHEN the request is processed
 - THEN the response MUST have status 400
 - AND the error message MUST indicate the organization UUID is invalid
 
 #### Scenario: Unknown query parameter is ignored
-- GIVEN `GET /softwarecatalog/api/views/{viewId}?include_modules=true&unknown_param=true`
+- GIVEN `GET /stackiq/api/views/{viewId}?include_modules=true&unknown_param=true`
 - WHEN the request is processed
 - THEN the `unknown_param` MUST be silently ignored
 - AND the response MUST be generated normally with module enrichment

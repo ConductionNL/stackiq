@@ -52,7 +52,7 @@ Welcome to the Software Catalog app documentation. This app provides comprehensi
 ## System Architecture
 
 ```
-OpenRegister Events → SoftwareCatalogEventListener → SoftwareCatalogueService
+OpenRegister Events → StackiqEventListener → StackiqService
                                                            ↓
 User Creation ← Group Assignment ← Organization Processing ← Manager Assignment
      ↓                ↓                     ↓                      ↓

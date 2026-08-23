@@ -28,7 +28,7 @@
  * Dutch keys, so resolution is unaffected by this step.
  *
  * @category  Repair
- * @package   OCA\SoftwareCatalog\Repair
+ * @package   OCA\Stackiq\Repair
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -40,7 +40,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Repair;
+namespace OCA\Stackiq\Repair;
 
 use OCP\DB\Exception;
 use OCP\IDBConnection;
@@ -101,8 +101,8 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param IDBConnection                  $db        Database connection.
-	 * @param LoggerInterface                $logger    Logger.
+	 * @param IDBConnection $db Database connection.
+	 * @param LoggerInterface $logger Logger.
 	 * @param RenameDutchSchemaSlugDecisions $decisions The pure predicates.
 	 */
 	public function __construct(
@@ -118,7 +118,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * @return string
 	 */
 	public function getName(): string {
-		return 'Rename Dutch SoftwareCatalog schema slugs';
+		return 'Rename Dutch Stackiq schema slugs';
 	}//end getName()
 
 	/**
@@ -127,11 +127,13 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * @param IOutput $output Repair output.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/english-vocabulary-migration/spec.md#requirement-renaming-a-stored-property-ships-a-data-migration
 	 */
 	public function run(IOutput $output): void {
 		$schemaIds = $this->inScopeSchemaIds();
 		if ($schemaIds === []) {
-			$output->info('RenameDutchSchemaSlugs: no SoftwareCatalog registers on this install; nothing to do.');
+			$output->info('RenameDutchSchemaSlugs: no Stackiq registers on this install; nothing to do.');
 			return;
 		}
 
@@ -180,7 +182,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * the fact. So it refuses, loudly, and leaves both schemas alone.
 	 *
 	 * @param array<int, int> $schemaIds Schema ids in scope.
-	 * @param IOutput         $output    Repair output.
+	 * @param IOutput $output Repair output.
 	 *
 	 * @return void
 	 */
@@ -365,8 +367,8 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	/**
 	 * Rename one slug, scoped to this app's schemas.
 	 *
-	 * @param string          $old       Current slug.
-	 * @param string          $new       Replacement slug.
+	 * @param string $old Current slug.
+	 * @param string $new Replacement slug.
 	 * @param array<int, int> $schemaIds Schema ids in scope.
 	 *
 	 * @return bool True when the row was updated.

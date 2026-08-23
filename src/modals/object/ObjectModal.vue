@@ -59,7 +59,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 									:options="catalogOptions"
 									labelOutside
 									:aria-label-combobox="
-										t('softwarecatalog', 'Select a catalogus')
+										t('stackiq', 'Select a catalogus')
 									"
 									:disabled="objectStore.isLoading('object')"
 									required
@@ -97,7 +97,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 									:options="registerOptions"
 									labelOutside
 									:aria-label-combobox="
-										t('softwarecatalog', 'Select a register')
+										t('stackiq', 'Select a register')
 									"
 									:disabled="
 										objectStore.isLoading('object')
@@ -137,7 +137,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 									:options="schemaOptions"
 									labelOutside
 									:aria-label-combobox="
-										t('softwarecatalog', 'Select a schema')
+										t('stackiq', 'Select a schema')
 									"
 									:disabled="
 										objectStore.isLoading('object')

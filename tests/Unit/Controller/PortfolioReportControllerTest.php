@@ -8,11 +8,11 @@
  * `index()`.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-report-and-csv-export-are-scoped-to-the-requesters-authorised-organisations
  *
@@ -22,10 +22,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\PortfolioReportController;
-use OCA\SoftwareCatalog\Service\PortfolioReportService;
+use OCA\Stackiq\Controller\PortfolioReportController;
+use OCA\Stackiq\Service\PortfolioReportService;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IConfig;
@@ -86,7 +86,7 @@ class PortfolioReportControllerTest extends TestCase {
 		);
 
 		return new PortfolioReportController(
-			appName: 'softwarecatalog',
+			appName: 'stackiq',
 			request: $request,
 			userSession: $userSession,
 			groupManager: $groupManager,

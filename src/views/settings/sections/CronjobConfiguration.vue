@@ -140,10 +140,10 @@
 			<!-- Empty state -->
 			<NcEmptyContent
 				v-if="cronjobs.length === 0"
-				:name="t('softwarecatalog', 'No background jobs configured')"
+				:name="t('stackiq', 'No background jobs configured')"
 				:description="
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'There are no background jobs available for configuration.',
 					)
 				">
@@ -267,7 +267,7 @@ export default {
 		async loadCronjobs() {
 			try {
 				const response = await axios.get(
-					generateUrl('/apps/softwarecatalog/api/settings/cronjobs'),
+					generateUrl('/apps/stackiq/api/settings/cronjobs'),
 				)
 				if (response.data.success) {
 					// Transform to array and add selected values for dropdowns.
@@ -390,7 +390,7 @@ export default {
 			this.savingJob = job.id
 			try {
 				const response = await axios.post(
-					generateUrl('/apps/softwarecatalog/api/settings/cronjobs'),
+					generateUrl('/apps/stackiq/api/settings/cronjobs'),
 					{
 						jobId: job.id,
 						organisationUuid: job.selectedOrganisation?.value || null,
@@ -432,7 +432,7 @@ export default {
 			try {
 				// Trigger the organization sync endpoint.
 				const response = await axios.post(
-					generateUrl('/apps/softwarecatalog/api/settings/sync'),
+					generateUrl('/apps/stackiq/api/settings/sync'),
 				)
 
 				if (response.data.success) {

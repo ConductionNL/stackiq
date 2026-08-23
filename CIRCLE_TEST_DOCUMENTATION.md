@@ -14,27 +14,27 @@ Achieve perfect round-trip data integrity: `GEMMA_release.xml` → Import → Ex
 
 ### 1. Cancel Any Running Import
 ```bash
-cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import/cancel" -u admin:admin
+cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import/cancel" -u admin:admin
 ```
 
 ### 2. Run Fresh Import
 ```bash
-cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" -H "Content-Type: application/json" -u admin:admin -d '{"file_path": "/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml"}'
+cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" -H "Content-Type: application/json" -u admin:admin -d '{"file_path": "/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml"}'
 ```
 
 ### 3. Check Database Content (Debug)
 ```bash
-cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_db.php
+cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_db.php
 ```
 
 ### 4. Run Export
 ```bash
-cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" -H "Content-Type: application/json" -u admin:admin
+cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/export" -H "Content-Type: application/json" -u admin:admin
 ```
 
 ### 5. Run Comparison Script
 ```bash
-cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php
+cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/compare_archimate.php
 ```
 
 **What it does:**
@@ -54,19 +54,19 @@ The API has been refactored for better performance by separating concerns:
 #### 1. Basic Settings (Fast)
 ```bash
 # Get basic configuration only (no object counts)
-curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings"
+curl -u admin:admin "http://localhost/index.php/apps/stackiq/api/settings"
 ```
 
 #### 2. ArchiMate Status (Medium)
 ```bash
 # Get ArchiMate import/export status only (no object counts)
-curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings/archimate"
+curl -u admin:admin "http://localhost/index.php/apps/stackiq/api/settings/archimate"
 ```
 
 #### 3. Object Counts (Slow - Load on demand)
 ```bash
 # Get object counts for all registers (separate endpoint)
-curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings/objects"
+curl -u admin:admin "http://localhost/index.php/apps/stackiq/api/settings/objects"
 ```
 
 ### Performance Benefits
@@ -114,13 +114,13 @@ curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/setting
 
 ### Compare File Sizes
 ```bash
-cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud ls -lh /var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml /tmp/exported_archimate.xml
+cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud ls -lh /var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml /tmp/exported_archimate.xml
 ```
 
 ### Check XML Structure
 ```bash
 # Original structure
-docker-compose exec nextcloud head -20 /var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml
+docker-compose exec nextcloud head -20 /var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml
 
 # Exported structure  
 docker-compose exec nextcloud head -20 /tmp/exported_archimate.xml
@@ -129,7 +129,7 @@ docker-compose exec nextcloud head -20 /tmp/exported_archimate.xml
 ### Find Element Samples
 ```bash
 # Original element structure
-docker-compose exec nextcloud grep -A 5 -B 5 "element.*identifier" /var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml | head -20
+docker-compose exec nextcloud grep -A 5 -B 5 "element.*identifier" /var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml | head -20
 
 # Exported element structure
 docker-compose exec nextcloud grep -A 5 -B 5 "<element" /tmp/exported_archimate.xml | head -20
@@ -138,7 +138,7 @@ docker-compose exec nextcloud grep -A 5 -B 5 "<element" /tmp/exported_archimate.
 ### Check Relationships
 ```bash
 # Original relationships
-docker-compose exec nextcloud grep -A 3 -B 3 "<relationships>" /var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml
+docker-compose exec nextcloud grep -A 3 -B 3 "<relationships>" /var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml
 
 # Exported relationships
 docker-compose exec nextcloud grep -A 10 "<relationships>" /tmp/exported_archimate.xml
@@ -205,19 +205,19 @@ Relationships section exists but content needs verification.
 
 ## 🧪 **Complete Test Sequence**
 
-1. **Fresh Import**: `curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" -H "Content-Type: application/json" -u admin:admin -d '{"file_path": "/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml"}'`
+1. **Fresh Import**: `curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" -H "Content-Type: application/json" -u admin:admin -d '{"file_path": "/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml"}'`
 
-2. **Test Export**: `curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" -H "Content-Type: application/json" -u admin:admin -d '{"format":"archimate","includeRelationships":true,"includeViews":true,"organizationSpecific":false,"selectedSchemas":[]}' -o /tmp/test_export.xml`
+2. **Test Export**: `curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/export" -H "Content-Type: application/json" -u admin:admin -d '{"format":"archimate","includeRelationships":true,"includeViews":true,"organizationSpecific":false,"selectedSchemas":[]}' -o /tmp/test_export.xml`
 
-3. **Run Comparison**: `php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php`
+3. **Run Comparison**: `php /var/www/html/apps-extra/stackiq/compare_archimate.php`
 
-4. **Full Circle Test**: `php /var/www/html/apps-extra/softwarecatalog/full_circle_test.php`
+4. **Full Circle Test**: `php /var/www/html/apps-extra/stackiq/full_circle_test.php`
 
 ## 🔍 **Comparison Script Details**
 
 ### Usage
 ```bash
-cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php
+cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/compare_archimate.php
 ```
 
 ### What It Analyzes

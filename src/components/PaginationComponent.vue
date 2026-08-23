@@ -4,7 +4,7 @@
 		<div class="viewPaginationInfo">
 			<span class="viewPageInfo">
 				{{
-					t('softwarecatalog', 'Page {current} of {total}', {
+					t('stackiq', 'Page {current} of {total}', {
 						current: currentPage,
 						total: totalPages,
 					})
@@ -16,14 +16,14 @@
 		<div v-if="totalPages > 1" class="viewPaginationNav">
 			<!-- First page button -->
 			<NcButton :disabled="currentPage === 1" @click="changePage(1)">
-				{{ t('softwarecatalog', 'First') }}
+				{{ t('stackiq', 'First') }}
 			</NcButton>
 
 			<!-- Previous page button -->
 			<NcButton
 				:disabled="currentPage === 1"
 				@click="changePage(currentPage - 1)">
-				{{ t('softwarecatalog', 'Previous') }}
+				{{ t('stackiq', 'Previous') }}
 			</NcButton>
 
 			<!-- Page number buttons -->
@@ -50,29 +50,27 @@
 			<NcButton
 				:disabled="currentPage === totalPages"
 				@click="changePage(currentPage + 1)">
-				{{ t('softwarecatalog', 'Next') }}
+				{{ t('stackiq', 'Next') }}
 			</NcButton>
 
 			<!-- Last page button -->
 			<NcButton
 				:disabled="currentPage === totalPages"
 				@click="changePage(totalPages)">
-				{{ t('softwarecatalog', 'Last') }}
+				{{ t('stackiq', 'Last') }}
 			</NcButton>
 		</div>
 
 		<!-- Page size selector last -->
 		<div class="viewPaginationPageSize">
-			<label for="pageSize">{{
-				t('softwarecatalog', 'Items per page:')
-			}}</label>
+			<label for="pageSize">{{ t('stackiq', 'Items per page:') }}</label>
 			<NcSelect
 				id="pageSize"
 				class="pagination-page-size-select"
 				:modelValue="currentPageSizeOption"
 				:options="pageSizeOptions"
 				:clearable="false"
-				:inputLabel="t('softwarecatalog', 'Items per page')"
+				:inputLabel="t('stackiq', 'Items per page')"
 				:labelOutside="true"
 				@option:selected="changePageSize" />
 		</div>

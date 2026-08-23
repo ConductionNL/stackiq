@@ -20,7 +20,7 @@ volumes:
 services:
   db:
     image: pgvector/pgvector:pg16
-    container_name: softwarecatalog-ci-db
+    container_name: stackiq-ci-db
     environment:
       POSTGRES_DB: nextcloud
       POSTGRES_USER: nextcloud
@@ -62,4 +62,4 @@ services:
 
 networks:
   default:
-    name: softwarecatalog-ci-network
+    name: stackiq-ci-network

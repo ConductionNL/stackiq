@@ -7,7 +7,7 @@
 # objects are stored in magic mapper tables (not blob storage).
 #
 # Usage:
-#   cd /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/softwarecatalog
+#   cd /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/stackiq
 #   chmod +x test-magic-import.sh
 #   ./test-magic-import.sh
 ###############################################################################

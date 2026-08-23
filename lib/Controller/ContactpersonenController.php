@@ -1,18 +1,18 @@
 <?php
 
 /**
- * Contactpersonen Controller for SoftwareCatalog.
+ * Contactpersonen Controller for Stackiq.
  *
  * Handles HTTP requests for managing contactpersonen and their user accounts,
  * including converting contactpersonen to users, managing passwords and groups.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -20,11 +20,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\Service\ContactpersoonService;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\OrganisationService;
+use OCA\Stackiq\Service\ContactpersoonService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -34,8 +36,6 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\Security\ISecureRandom;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\OrganisationService;
 
 /**
  * Controller for managing contactpersonen and their user accounts.
@@ -46,12 +46,12 @@ use OCA\OpenRegister\Service\OrganisationService;
  * - Managing user group memberships
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)

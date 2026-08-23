@@ -33,7 +33,7 @@
 			<!-- Warning if OpenRegister is not installed -->
 			<NcNoteCard v-if="!versionInfo.openRegisterEnabled" type="warning">
 				OpenRegister is not installed or not available. Please install it to
-				use the Software Catalog with full functionality.
+				use Stackiq with full functionality.
 			</NcNoteCard>
 
 			<!-- Tabs for OpenRegister Configuration -->

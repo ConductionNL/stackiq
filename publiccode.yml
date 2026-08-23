@@ -1,7 +1,7 @@
 publiccodeYmlVersion: "0.4"
 
-name: Software Catalogs
-url: "https://codeberg.org/Conduction/softwarecatalog"
+name: Stackiq
+url: "https://github.com/ConductionNL/stackiq"
 softwareVersion: "0.2.2"
 releaseDate: "2026-05-26"
 developmentStatus: stable

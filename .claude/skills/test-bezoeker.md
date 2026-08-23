@@ -144,7 +144,7 @@ As an unauthenticated visitor, you should only see data that has `"public"` read
 
 ## Output Format
 
-Write results to: `softwarecatalog/test-results/bezoeker/results-public.md`
+Write results to: `stackiq/test-results/bezoeker/results-public.md`
 
 Use this format:
 - Header with persona name, date, environment

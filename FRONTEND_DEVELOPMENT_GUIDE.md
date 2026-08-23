@@ -36,19 +36,19 @@ This guide provides everything needed to implement the frontend for the **levera
 
 ### 1. Get Suggestions
 ```http
-GET /index.php/apps/softwarecatalog/api/aangeboden-gebruik/afnemer
+GET /index.php/apps/stackiq/api/aangeboden-gebruik/afnemer
 ```
 Returns all suggestions where current organisation is the afnemer.
 
 ### 2. Claim Suggestion  
 ```http
-PUT /index.php/apps/softwarecatalog/api/aangeboden-gebruik/{id}/set-self
+PUT /index.php/apps/stackiq/api/aangeboden-gebruik/{id}/set-self
 ```
 Claims a suggestion (transfers ownership to current organisation).
 
 ### 3. Deny Suggestion
 ```http
-DELETE /index.php/apps/softwarecatalog/api/aangeboden-gebruik/{id}/deny  
+DELETE /index.php/apps/stackiq/api/aangeboden-gebruik/{id}/deny  
 ```
 Denies a suggestion (deletes it completely).
 

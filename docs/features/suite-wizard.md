@@ -10,7 +10,7 @@ product made up of one or more existing applications, e.g. "Centric
 Leefomgeving" — and attach its member applications in one guided pass. This
 replaces the retired incumbent "product" concept per
 [VNG Softwarecatalogus issue #242](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/242)
-and softwarecatalog#372.
+and stackiq#372.
 
 Specification: [`openspec/specs/suite-wizard/spec.md`](../../openspec/specs/suite-wizard/spec.md).
 

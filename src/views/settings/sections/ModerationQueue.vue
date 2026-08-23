@@ -4,7 +4,7 @@
  -
  - Moderation queue admin section: lists entries of `type` awaiting moderation
  - (organization: registratiestatus=pending, default; beoordeeling:
- - status=pending, softwarecatalog#375) and offers approve/reject per item.
+ - status=pending, stackiq#375) and offers approve/reject per item.
  - Approve flips organisatie to active + publishes it (publicatiedatum=now);
  - for beoordeeling it flips status to approved (the schema's own status-
  - conditioned public RBAC rule does the rest — no publicatiedatum involved).
@@ -26,11 +26,11 @@
 		:loadingText="loadingText"
 		:showRefreshButton="true"
 		:refreshing="loading"
-		:refreshButtonText="t('softwarecatalog', 'Refresh queue')"
+		:refreshButtonText="t('stackiq', 'Refresh queue')"
 		@refresh="loadPending">
 		<NcEmptyContent
 			v-if="items.length === 0"
-			:name="t('softwarecatalog', 'Nothing to moderate')"
+			:name="t('stackiq', 'Nothing to moderate')"
 			:description="emptyDescription">
 			<template #icon>
 				<CheckCircle :size="40" />
@@ -58,7 +58,7 @@
 								:size="20" />
 							<Check v-else :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Approve') }}
+						{{ t('stackiq', 'Approve') }}
 					</NcButton>
 					<NcButton
 						variant="error"
@@ -70,7 +70,7 @@
 								:size="20" />
 							<Close v-else :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Reject') }}
+						{{ t('stackiq', 'Reject') }}
 					</NcButton>
 				</div>
 			</li>
@@ -96,7 +96,7 @@ import {
 /**
  * Generalised moderation queue admin section — reused for BOTH the
  * organisatie (anonymous registration) and beoordeeling (review) moderated
- * types via the `type` prop, per softwarecatalog#375 ("reuse the
+ * types via the `type` prop, per stackiq#375 ("reuse the
  * ModerationQueue.vue pattern... do not invent a second moderation
  * mechanism").
  *
@@ -129,7 +129,7 @@ export default defineComponent({
 		/** Section title. Defaults to the original organisatie copy. */
 		name: {
 			type: String,
-			default: () => t('softwarecatalog', 'Registration moderation'),
+			default: () => t('stackiq', 'Registration moderation'),
 		},
 
 		/** Section description. Defaults to the original organisatie copy. */
@@ -137,7 +137,7 @@ export default defineComponent({
 			type: String,
 			default: () =>
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Review anonymous catalog registrations. Approving an entry publishes it; rejecting leaves it hidden.',
 				),
 		},
@@ -145,17 +145,14 @@ export default defineComponent({
 		/** Loading-state copy. Defaults to the original organisatie copy. */
 		loadingText: {
 			type: String,
-			default: () => t('softwarecatalog', 'Loading pending registrations…'),
+			default: () => t('stackiq', 'Loading pending registrations…'),
 		},
 
 		/** Empty-state copy. Defaults to the original organisatie copy. */
 		emptyDescription: {
 			type: String,
 			default: () =>
-				t(
-					'softwarecatalog',
-					'There are no pending registrations right now.',
-				),
+				t('stackiq', 'There are no pending registrations right now.'),
 		},
 
 		/**
@@ -211,7 +208,7 @@ export default defineComponent({
 				this.items = Array.isArray(data.items) ? data.items : []
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'Could not load the moderation queue')
+					t('stackiq', 'Could not load the moderation queue')
 						+ ': '
 						+ error.message,
 				)
@@ -233,7 +230,7 @@ export default defineComponent({
 			await this.decide(
 				item,
 				'approve',
-				t('softwarecatalog', '{label} approved and published', { label }),
+				t('stackiq', '{label} approved and published', { label }),
 			)
 		},
 
@@ -250,7 +247,7 @@ export default defineComponent({
 			await this.decide(
 				item,
 				'reject',
-				t('softwarecatalog', '{label} rejected', { label }),
+				t('stackiq', '{label} rejected', { label }),
 			)
 		},
 
@@ -267,7 +264,7 @@ export default defineComponent({
 			const uuid = item.id || item.uuid
 			if (!uuid) {
 				showError(
-					t('softwarecatalog', '{label} has no identifier', {
+					t('stackiq', '{label} has no identifier', {
 						label:
 							this.entityLabel.charAt(0).toUpperCase()
 							+ this.entityLabel.slice(1),
@@ -286,7 +283,7 @@ export default defineComponent({
 				await this.loadPending()
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'Could not update the {label}', {
+					t('stackiq', 'Could not update the {label}', {
 						label: this.entityLabel,
 					})
 						+ ': '

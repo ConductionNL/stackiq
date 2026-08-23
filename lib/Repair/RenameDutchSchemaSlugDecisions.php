@@ -13,7 +13,7 @@
  * can be decided before touching it is decided here.
  *
  * @category  Repair
- * @package   OCA\SoftwareCatalog\Repair
+ * @package   OCA\Stackiq\Repair
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Repair;
+namespace OCA\Stackiq\Repair;
 
 /**
  * Pure predicates for the Dutch-to-English schema slug migration.
@@ -44,8 +44,8 @@ class RenameDutchSchemaSlugDecisions {
 	 * is visible to the collision check of a later one — otherwise two entries
 	 * targeting the same name would both look safe.
 	 *
-	 * @param array<string, string> $map      Old slug => new slug.
-	 * @param array<int, string>    $existing Slugs currently present.
+	 * @param array<string, string> $map Old slug => new slug.
+	 * @param array<int, string> $existing Slugs currently present.
 	 *
 	 * @return array{renames: array<string, string>, refused: array<string, string>}
 	 */
@@ -130,7 +130,7 @@ class RenameDutchSchemaSlugDecisions {
 	 * would make an empty schema look occupied and refuse a safe merge.
 	 *
 	 * @param string $tableName The candidate table name.
-	 * @param int    $schemaId  The schema id.
+	 * @param int $schemaId The schema id.
 	 *
 	 * @return bool True when the table belongs to that schema.
 	 */

@@ -1,8 +1,8 @@
 {
   "spec_slug": "adopt-apphost",
   "title": "Adopt OpenRegister AppHost (observability + boilerplate)",
-  "app": "softwarecatalog",
-  "repo": "https://codeberg.org/Conduction/softwarecatalog",
+  "app": "stackiq",
+  "repo": "https://codeberg.org/Conduction/stackiq",
   "depends_on": [
     "apphost-observability-engine",
     "apphost-boilerplate-controllers"

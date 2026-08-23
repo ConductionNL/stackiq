@@ -6,30 +6,30 @@ import { navigationStore, objectStore } from '../../store/store.js'
 	<NcDialog
 		v-if="navigationStore.dialog === 'deleteObject'"
 		:name="
-			t('softwarecatalog', 'Delete {name}', {
+			t('stackiq', 'Delete {name}', {
 				name:
 					objectStore.objectItem?.['@self']?.name
 					|| objectStore.objectItem?.name
 					|| objectStore.objectItem?.['@self']?.title
 					|| objectStore.objectItem?.id
-					|| t('softwarecatalog', 'Publication'),
+					|| t('stackiq', 'Publication'),
 			})
 		"
 		size="normal"
 		:canClose="false">
 		<p v-if="success === null">
-			{{ t('softwarecatalog', 'Do you want to permanently delete') }}
+			{{ t('stackiq', 'Do you want to permanently delete') }}
 			<b>{{
 				objectStore.objectItem?.['@self']?.name
 				|| objectStore.objectItem?.name
 				|| objectStore.objectItem?.['@self']?.title
 				|| objectStore.objectItem?.id
 			}}</b
-			>{{ t('softwarecatalog', '? This action cannot be undone.') }}
+			>{{ t('stackiq', '? This action cannot be undone.') }}
 		</p>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>{{ t('softwarecatalog', 'Publication successfully deleted') }}</p>
+			<p>{{ t('stackiq', 'Publication successfully deleted') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -41,9 +41,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 					<Cancel :size="20" />
 				</template>
 				{{
-					success === null
-						? t('softwarecatalog', 'Cancel')
-						: t('softwarecatalog', 'Close')
+					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton
@@ -55,7 +53,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<TrashCanOutline v-if="!loading" :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Delete') }}
+				{{ t('stackiq', 'Delete') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -115,7 +113,7 @@ export default {
 				this.error =
 					error.message
 					|| this.t(
-						'softwarecatalog',
+						'stackiq',
 						'An error occurred while deleting the publication',
 					)
 			} finally {

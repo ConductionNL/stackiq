@@ -12,7 +12,7 @@
  * was already sitting on before the candidate-target support was added.
  *
  * @category  Repair
- * @package   OCA\\SoftwareCatalog\\Repair
+ * @package   OCA\\Stackiq\\Repair
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -24,13 +24,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Repair;
+namespace OCA\Stackiq\Repair;
 
 /**
  * Pure predicates for the Dutch-to-English column migration.
  *
  * @category  Repair
- * @package   OCA\\SoftwareCatalog\\Repair
+ * @package   OCA\\Stackiq\\Repair
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -70,7 +70,7 @@ class RenameDutchCatalogDecisions {
 	/**
 	 * Whether moving `$old` to `$new` is safe for a schema declaring `$declared`.
 	 *
-	 * This is the softwarecatalog#492 guard, and it is deliberately BOTH halves:
+	 * This is the stackiq#492 guard, and it is deliberately BOTH halves:
 	 *
 	 *   - the destination MUST be declared — otherwise the data lands in a
 	 *     column nothing reads, and MagicMapper will re-add the Dutch one empty;
@@ -139,7 +139,7 @@ class RenameDutchCatalogDecisions {
 	 * issuing an UPDATE against a missing column is an error rather than a no-op.
 	 *
 	 * @param array<string, array<string, string>> $valueMap Property => old => new.
-	 * @param array<int, string>                   $columns  Columns the table has.
+	 * @param array<int, string> $columns Columns the table has.
 	 *
 	 * @return array<int, array{column: string, old: string, new: string}>
 	 */

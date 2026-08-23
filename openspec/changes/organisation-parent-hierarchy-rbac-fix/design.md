@@ -95,7 +95,7 @@ organisation *flat* rather than losing it, preserving the pre-hotfix
 **On "creator retains access" (proposal / task 3.2):** The app's
 organisation-create path runs `addCurrentUser: false` by design — these
 organisations represent *external* parties (gemeenten/leveranciers) created
-during catalog sync (`SoftwareCatalogueService` / `OrganizationSyncService`
+during catalog sync (`StackiqService` / `OrganizationSyncService`
 background paths), not orgs owned by the syncing user. Those sync paths run
 in admin/system context, and `hasAccessToOrganisation()` grants admins access
 to *every* organisation regardless of hierarchy direction — so an admin/

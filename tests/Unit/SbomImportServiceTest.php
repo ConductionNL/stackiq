@@ -12,11 +12,11 @@
  * parse failure writes nothing.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit
+ * @package   OCA\Stackiq\Tests\Unit
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
  *
@@ -26,16 +26,16 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit;
+namespace OCA\Stackiq\Tests\Unit;
 
-use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException;
-use OCA\SoftwareCatalog\Service\ProgressTracker;
-use OCA\SoftwareCatalog\Service\SbomImportService;
-use OCA\SoftwareCatalog\Service\SbomParserService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Exception\UnsupportedSbomFormatException;
+use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\SbomImportService;
+use OCA\Stackiq\Service\SbomParserService;
+use OCA\Stackiq\Service\SettingsService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;

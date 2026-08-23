@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// Router builder for softwarecatalog's manifest-driven app shell.
+// Router builder for stackiq's manifest-driven app shell.
 //
 // Mirrors decidesk's `routesFromManifest()` pattern. Each manifest page
 // becomes one vue-router route; the route's `name` IS `page.id` (per

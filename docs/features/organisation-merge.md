@@ -37,7 +37,7 @@ every object above and returns a count per relation type, without writing
 anything:
 
 ```
-POST /apps/softwarecatalog/api/organisaties/{sourceUuid}/merge/dry-run
+POST /apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run
 { "targetUuid": "<target organisation uuid>" }
 ```
 
@@ -59,7 +59,7 @@ UUID) and execute will refuse it too, with the same validation.
 ## Executing a merge
 
 ```
-POST /apps/softwarecatalog/api/organisaties/{sourceUuid}/merge
+POST /apps/stackiq/api/organisaties/{sourceUuid}/merge
 { "targetUuid": "<target organisation uuid>", "confirm": true }
 ```
 

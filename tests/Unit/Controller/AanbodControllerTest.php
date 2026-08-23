@@ -13,21 +13,21 @@
  * (deny-before-grant, REQ-001).
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-must-require-authentication-explicitly-not-implicitly-req-009
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\AanbodController;
-use OCA\SoftwareCatalog\Service\AanbodService;
+use OCA\Stackiq\Controller\AanbodController;
+use OCA\Stackiq\Service\AanbodService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
 use OCP\IUser;
@@ -63,7 +63,7 @@ class AanbodControllerTest extends TestCase {
 		$this->userSession = $this->createMock(IUserSession::class);
 
 		return new AanbodController(
-			'softwarecatalog',
+			'stackiq',
 			$request,
 			$this->userSession,
 			$this->aanbodService,

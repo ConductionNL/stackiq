@@ -1,17 +1,17 @@
 <?php
 
 /**
- * ArchiMate Context for SoftwareCatalog
+ * ArchiMate Context for Stackiq
  *
  * Groups shared infrastructure dependencies for the three ArchiMate services,
  * reducing CouplingBetweenObjects and ExcessiveParameterList on each service.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service\ArchiMate
+ * @package   OCA\Stackiq\Service\ArchiMate
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-4
  *
@@ -21,10 +21,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\ArchiMate;
+namespace OCA\Stackiq\Service\ArchiMate;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\SettingsService;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,7 +41,7 @@ class ArchiMateContext {
 	 * Constructor.
 	 *
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
-	 * @param SettingsService $settingsService The SoftwareCatalog settings service.
+	 * @param SettingsService $settingsService The Stackiq settings service.
 	 * @param LoggerInterface $logger The application logger.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-4

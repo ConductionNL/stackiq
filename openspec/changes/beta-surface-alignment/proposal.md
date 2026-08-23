@@ -2,14 +2,14 @@
 kind: docs
 ---
 
-# Proposal: Beta Cross-Surface Alignment — SoftwareCatalog
+# Proposal: Beta Cross-Surface Alignment — Stackiq
 
 ## Problem
 
-Four surfaces describe SoftwareCatalog (`appinfo/info.xml`, `src/manifest.json`, the conduction.nl product page, and `docs/`) and they disagreed badly enough to block a beta release:
+Four surfaces describe Stackiq (`appinfo/info.xml`, `src/manifest.json`, the conduction.nl product page, and `docs/`) and they disagreed badly enough to block a beta release:
 
 1. **License tag wrong.** `appinfo/info.xml` declared `<licence>agpl</licence>` even though the shipped `LICENSE` file is the European Union Public Licence v1.2 and the description text already said "EUPL". Many PHP/Vue/JS file headers also carry `SPDX-License-Identifier: AGPL-3.0-or-later` — a pre-existing, wider inconsistency noted below but not touched in this change (see "Deferred").
-2. **The product page (`conduction-website/src/pages/apps/softwarecatalog.mdx` + its NL translation) was substantially fabricated.** It described an app that pulls IT-asset inventory from Microsoft Intune/Jamf/GLPI/OCS Inventory via OpenConnector, computes a "dependency graph" with "deprecation impact" analysis, federates specifically to Forum Standaardisatie/data.overheid.nl, and ships dashboard widgets named "Renewals due", "Inventory snapshot" and "Discovery deltas". None of this exists in `lib/` or `src/`. The page also claimed version `v1.1` / status "Stable" against an actual `info.xml` version of `0.2.13`.
+2. **The product page (`conduction-website/src/pages/apps/stackiq.mdx` + its NL translation) was substantially fabricated.** It described an app that pulls IT-asset inventory from Microsoft Intune/Jamf/GLPI/OCS Inventory via OpenConnector, computes a "dependency graph" with "deprecation impact" analysis, federates specifically to Forum Standaardisatie/data.overheid.nl, and ships dashboard widgets named "Renewals due", "Inventory snapshot" and "Discovery deltas". None of this exists in `lib/` or `src/`. The page also claimed version `v1.1` / status "Stable" against an actual `info.xml` version of `0.2.13`.
 3. **`docs/FEATURES.md` was stale** (missing contracts, standards/compliance matrix, ArchiMate, portfolio roadmap, reviews, moderated self-registration — all real, shipped features) though not fabricated.
 4. **`docs/GOVERNMENT-FEATURES.md`** (a VNG-style requirements checklist) was largely accurate and unusually self-critical, but repeated the wrong license (`AGPL`) and an outdated attribution (`GitHub` instead of Codeberg).
 
@@ -43,9 +43,9 @@ Four surfaces describe SoftwareCatalog (`appinfo/info.xml`, `src/manifest.json`,
 ## Fixes Applied
 
 1. `appinfo/info.xml`: `<licence>agpl</licence>` → `<licence>EUPL-1.2</licence>`; EN+NL description "Key Features" lists expanded to include contract administration, GEMMA/ArchiMate standards & compliance, portfolio roadmap, and moderated open-data publishing; federated-sync bullet reworded to name OpenCatalogi as the optional delegate.
-2. `conduction-website/src/pages/apps/softwarecatalog.mdx` (EN) and the NL i18n copy: hero (version, status), intro, FeatureList, RotatingCards, WidgetShelf, Showcase, PairRow, and CtaBanner rewritten around the verified feature list; all fabricated claims removed.
-3. `softwarecatalog/docs/FEATURES.md`: added Contract Administration, Standards/Compliance Matrix/ArchiMate, Application Lifecycle & Portfolio Roadmap, Reviews, and Open Data Publishing & Moderated Self-Registration sections; Federated Synchronization section reworded to name OpenCatalogi.
-4. `softwarecatalog/docs/GOVERNMENT-FEATURES.md`: license line and open-source attribution corrected (AGPL→EUPL-1.2, GitHub→Codeberg).
+2. `conduction-website/src/pages/apps/stackiq.mdx` (EN) and the NL i18n copy: hero (version, status), intro, FeatureList, RotatingCards, WidgetShelf, Showcase, PairRow, and CtaBanner rewritten around the verified feature list; all fabricated claims removed.
+3. `stackiq/docs/FEATURES.md`: added Contract Administration, Standards/Compliance Matrix/ArchiMate, Application Lifecycle & Portfolio Roadmap, Reviews, and Open Data Publishing & Moderated Self-Registration sections; Federated Synchronization section reworded to name OpenCatalogi.
+4. `stackiq/docs/GOVERNMENT-FEATURES.md`: license line and open-source attribution corrected (AGPL→EUPL-1.2, GitHub→Codeberg).
 5. Icon (`img/app.svg`): checked against the brand convention (24×24 viewBox, single `#fff` fill) — already compliant, no change needed.
 
 ## Deferred (flagged, not fixed in this change)
@@ -56,4 +56,4 @@ Four surfaces describe SoftwareCatalog (`appinfo/info.xml`, `src/manifest.json`,
 
 ## Note on Scope
 
-softwarecatalog is a VNG client repository (`Softwarecatalogus/` external client is separate and untouched). All edits in this change are local — no push, no PR, per repo convention for this app.
+stackiq is a VNG client repository (`Softwarecatalogus/` external client is separate and untouched). All edits in this change are local — no push, no PR, per repo convention for this app.

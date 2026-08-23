@@ -16,11 +16,11 @@
  * therefore treated as read-only by every local write path (isPeerSourced()).
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service\Federation
+ * @package   OCA\Stackiq\Service\Federation
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/federated-catalog-sync/spec.md
  *
@@ -30,7 +30,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\Federation;
+namespace OCA\Stackiq\Service\Federation;
 
 /**
  * Reconciles a peer's published entries with the locally-stored peer mirrors.

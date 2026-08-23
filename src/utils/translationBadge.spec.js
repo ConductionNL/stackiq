@@ -95,10 +95,8 @@ describe('translationBadge.translationBadge', () => {
 		)
 		const badge = translationBadge({ sourceLanguage: 'nl' }, 'en')
 		expect(badge.label(t)).toBe('(translated from Dutch)')
-		expect(t).toHaveBeenCalledWith(
-			'softwarecatalog',
-			'(translated from {language})',
-			{ language: 'Dutch' },
-		)
+		expect(t).toHaveBeenCalledWith('stackiq', '(translated from {language})', {
+			language: 'Dutch',
+		})
 	})
 })

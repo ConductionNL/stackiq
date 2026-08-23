@@ -8,7 +8,7 @@
  * expiring/`Verlopen` contract) to decidesk — the canonical fleet decision
  * authority (cross-app interface contract #1) — through the in-process
  * `IEventDispatcher` event contract (`OCA\Decidesk\Event\DecisionRequestedEvent`
- * / `DecisionConcludedEvent`). softwarecatalog keeps the contract RECORD locally
+ * / `DecisionConcludedEvent`). stackiq keeps the contract RECORD locally
  * and PROJECTS the decidesk outcome onto two catalog-local fields
  * (`approvalDecisionId`, `approvalState`).
  *
@@ -21,11 +21,11 @@
  * never set to `Actief` on local authority.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
  *
@@ -35,7 +35,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -65,8 +65,21 @@ class ContractApprovalService {
 	/**
 	 * This consumer app id, stamped on the request event as `sourceApp` and
 	 * used by the conclusion listener to filter inbound events.
+	 *
+	 * FROZEN at `stackiq` through the app-id rename. This value is not
+	 * a name we own at read time — it is PERSISTED on decidesk's Decision rows
+	 * when the approval is raised, and `DecisionConcludedListener` matches
+	 * inbound conclusions against it. Every decision already open was stamped
+	 * `stackiq`; moving the constant makes the filter miss them, so
+	 * their outcomes are dropped on the floor and the contract never leaves
+	 * `In onderhandeling`. Nothing errors — a filtered-out event looks exactly
+	 * like an event that was never sent.
+	 *
+	 * It can only move in a coordinated change that also rewrites the stored
+	 * `sourceApp` on decidesk's existing rows, or that accepts both spellings
+	 * on the read side first.
 	 */
-	public const SOURCE_APP = 'softwarecatalog';
+	public const SOURCE_APP = 'stackiq';
 
 	/**
 	 * The decisionType raised for a first activation of an `In onderhandeling`

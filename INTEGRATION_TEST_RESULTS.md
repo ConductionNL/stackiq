@@ -15,14 +15,14 @@ The new `koppelingen-gebruik` API endpoints are fully functional and working as 
 - **PHP Version**: 8.2.29  
 - **PHPUnit Version**: 10.5.58
 - **Test User**: admin/admin
-- **SoftwareCatalog App**: Enabled ✓
+- **Stackiq App**: Enabled ✓
 - **OpenRegister App**: Enabled ✓
 
 ## API Endpoints Tested
 
 ### 1. GET /api/koppelingen-gebruik (List All)
 
-**Endpoint**: `http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik`
+**Endpoint**: `http://localhost/index.php/apps/stackiq/api/koppelingen-gebruik`
 
 **Test Results**:
 - ✅ Returns 200 OK
@@ -39,13 +39,13 @@ The new `koppelingen-gebruik` API endpoints are fully functional and working as 
   "pages": 2569,
   "limit": 20,
   "offset": 0,
-  "next": "/index.php/apps/softwarecatalog/api/koppelingen-gebruik?page=2"
+  "next": "/index.php/apps/stackiq/api/koppelingen-gebruik?page=2"
 }
 ```
 
 ### 2. GET /api/koppelingen-gebruik (With Pagination)
 
-**Endpoint**: `http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik?_limit=5`
+**Endpoint**: `http://localhost/index.php/apps/stackiq/api/koppelingen-gebruik?_limit=5`
 
 **Test Results**:
 - ✅ Limit parameter works correctly
@@ -54,7 +54,7 @@ The new `koppelingen-gebruik` API endpoints are fully functional and working as 
 
 ### 3. GET /api/koppelingen-gebruik/{uuid} (Filter by UUID)
 
-**Endpoint**: `http://localhost/index.php/apps/softwarecatalog/api/koppelingen-gebruik/369634b8-4581-5ce9-967e-b8529dee84bd`
+**Endpoint**: `http://localhost/index.php/apps/stackiq/api/koppelingen-gebruik/369634b8-4581-5ce9-967e-b8529dee84bd`
 
 **Test Results**:
 - ✅ UUID filtering works correctly
@@ -123,7 +123,7 @@ The new `koppelingen-gebruik` API endpoints are fully functional and working as 
 
 **Running All Integration Tests**:
 ```bash
-cd /var/www/html/apps-extra/softwarecatalog
+cd /var/www/html/apps-extra/stackiq
 vendor/bin/phpunit --testsuite "Integration Tests"
 ```
 
@@ -135,7 +135,7 @@ vendor/bin/phpunit tests/Integration/KoppelingenGebruikIntegrationTest.php
 **From Docker Container**:
 ```bash
 docker exec -u 33 master-nextcloud-1 bash -c \
-  "cd /var/www/html/apps-extra/softwarecatalog && \
+  "cd /var/www/html/apps-extra/stackiq && \
    vendor/bin/phpunit --testsuite 'Integration Tests'"
 ```
 

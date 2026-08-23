@@ -1,17 +1,17 @@
 <?php
 
 /**
- * Profile Field Mapper for SoftwareCatalog
+ * Profile Field Mapper for Stackiq
  *
  * Extracts field-mapping logic from UserProfileUpdatedEventListener to reduce
  * CyclomaticComplexity and ExcessiveMethodLength on the event listener.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-8
  *
@@ -21,10 +21,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 /**
- * Maps Nextcloud user profile field keys to SoftwareCatalog contactpersoon field names.
+ * Maps Nextcloud user profile field keys to Stackiq contactpersoon field names.
  *
  * Used by UserProfileUpdatedEventListener to delegate field-name resolution
  * without bloating the event-handler method.

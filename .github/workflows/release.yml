@@ -46,7 +46,7 @@ jobs:
     uses: ConductionNL/.github/.github/workflows/release.yml@main
     with:
       release-type: unstable
-      app-name: softwarecatalog
+      app-name: stackiq
     secrets: inherit
 
   beta:
@@ -58,7 +58,7 @@ jobs:
     uses: ConductionNL/.github/.github/workflows/release.yml@main
     with:
       release-type: beta
-      app-name: softwarecatalog
+      app-name: stackiq
     secrets: inherit
 
   stable:
@@ -70,5 +70,5 @@ jobs:
     uses: ConductionNL/.github/.github/workflows/release.yml@main
     with:
       release-type: stable
-      app-name: softwarecatalog
+      app-name: stackiq
     secrets: inherit

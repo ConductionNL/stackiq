@@ -2,30 +2,30 @@
 	<div class="complianceMatrixView">
 		<div class="cmv-header">
 			<h2 class="cmv-title">
-				{{ t('softwarecatalog', 'Compliance matrix') }}
+				{{ t('stackiq', 'Compliance matrix') }}
 			</h2>
 			<p class="cmv-intro">
 				{{
 					columnSource === 'bioMeasure'
 						? t(
-								'softwarecatalog',
+								'stackiq',
 								"Which applications support which BIO 2.0 measures, plus each application's BBN level and DPIA status. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.",
 							)
 						: t(
-								'softwarecatalog',
+								'stackiq',
 								'Which applications support which standards. A verified cell traces to evidence; a claimed cell is a supplier statement without evidence.',
 							)
 				}}
 			</p>
 			<NcButton
 				variant="tertiary"
-				:aria-label="t('softwarecatalog', 'Refresh data')"
+				:aria-label="t('stackiq', 'Refresh data')"
 				@click="loadData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Refresh') }}
+				{{ t('stackiq', 'Refresh') }}
 			</NcButton>
 		</div>
 
@@ -33,20 +33,20 @@
 		<div
 			class="cmv-scope"
 			role="radiogroup"
-			:aria-label="t('softwarecatalog', 'Compliance matrix scope')">
+			:aria-label="t('stackiq', 'Compliance matrix scope')">
 			<NcCheckboxRadioSwitch
 				v-model="columnSource"
 				value="standardVersion"
 				name="cmv-columnSource"
 				type="radio">
-				{{ t('softwarecatalog', 'Standards') }}
+				{{ t('stackiq', 'Standards') }}
 			</NcCheckboxRadioSwitch>
 			<NcCheckboxRadioSwitch
 				v-model="columnSource"
 				value="bioMeasure"
 				name="cmv-columnSource"
 				type="radio">
-				{{ t('softwarecatalog', 'BIO measures') }}
+				{{ t('stackiq', 'BIO measures') }}
 			</NcCheckboxRadioSwitch>
 		</div>
 
@@ -60,13 +60,13 @@
 				:closeOnSelect="false"
 				:inputLabel="
 					columnSource === 'bioMeasure'
-						? t('softwarecatalog', 'BIO measures')
-						: t('softwarecatalog', 'Standards')
+						? t('stackiq', 'BIO measures')
+						: t('stackiq', 'Standards')
 				"
 				:placeholder="
 					columnSource === 'bioMeasure'
-						? t('softwarecatalog', 'Select one or more BIO measures')
-						: t('softwarecatalog', 'Select one or more standards')
+						? t('stackiq', 'Select one or more BIO measures')
+						: t('stackiq', 'Select one or more standards')
 				"
 				trackBy="uuid"
 				label="label"
@@ -78,12 +78,9 @@
 				:multiple="false"
 				:clearable="true"
 				:inputLabel="
-					t(
-						'softwarecatalog',
-						'Organisation (scope to in-use applications)',
-					)
+					t('stackiq', 'Organisation (scope to in-use applications)')
 				"
-				:placeholder="t('softwarecatalog', 'All applications')"
+				:placeholder="t('stackiq', 'All applications')"
 				trackBy="uuid"
 				label="label"
 				@update:modelValue="onSelectionChange" />
@@ -93,17 +90,17 @@
 			v-if="!loading && noColumnsImported"
 			:name="
 				columnSource === 'bioMeasure'
-					? t('softwarecatalog', 'No BIO measures seeded')
-					: t('softwarecatalog', 'No standards imported')
+					? t('stackiq', 'No BIO measures seeded')
+					: t('stackiq', 'No standards imported')
 			"
 			:description="
 				columnSource === 'bioMeasure'
 					? t(
-							'softwarecatalog',
+							'stackiq',
 							'The BIO measures catalog is seeded on install/upgrade. Refresh, or check the BIO measures catalog.',
 						)
 					: t(
-							'softwarecatalog',
+							'stackiq',
 							'Import GEMMA standards via the ArchiMate import before building a compliance matrix.',
 						)
 			">
@@ -116,12 +113,12 @@
 			v-else-if="!loading && selectedColumns.length === 0"
 			:name="
 				columnSource === 'bioMeasure'
-					? t('softwarecatalog', 'Select BIO measures to compare')
-					: t('softwarecatalog', 'Select standards to compare')
+					? t('stackiq', 'Select BIO measures to compare')
+					: t('stackiq', 'Select standards to compare')
 			"
 			:description="
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Pick one or more columns above to render the compliance matrix.',
 				)
 			">
@@ -135,15 +132,15 @@
 			<div class="cmv-legend" aria-hidden="false">
 				<span class="cmv-legendItem"
 					><CheckCircle :size="16" class="cmv-iconVerified" />
-					{{ t('softwarecatalog', 'Verified (with evidence)') }}</span
+					{{ t('stackiq', 'Verified (with evidence)') }}</span
 				>
 				<span class="cmv-legendItem"
 					><HelpCircle :size="16" class="cmv-iconClaimed" />
-					{{ t('softwarecatalog', 'Claimed (no evidence)') }}</span
+					{{ t('stackiq', 'Claimed (no evidence)') }}</span
 				>
 				<span class="cmv-legendItem"
 					><MinusCircle :size="16" class="cmv-iconNone" />
-					{{ t('softwarecatalog', 'None') }}</span
+					{{ t('stackiq', 'None') }}</span
 				>
 			</div>
 
@@ -151,13 +148,13 @@
 				<thead>
 					<tr>
 						<th scope="col">
-							{{ t('softwarecatalog', 'Module') }}
+							{{ t('stackiq', 'Module') }}
 						</th>
 						<th v-if="columnSource === 'bioMeasure'" scope="col">
-							{{ t('softwarecatalog', 'BBN level') }}
+							{{ t('stackiq', 'BBN level') }}
 						</th>
 						<th v-if="columnSource === 'bioMeasure'" scope="col">
-							{{ t('softwarecatalog', 'DPIA status') }}
+							{{ t('stackiq', 'DPIA status') }}
 						</th>
 						<th
 							v-for="column in matrix.columns"
@@ -225,7 +222,7 @@
 				<NcNoteCard type="warning">
 					{{
 						t(
-							'softwarecatalog',
+							'stackiq',
 							'Some compliancy records only reference a standard by name and could not be matched to a standard version. They are excluded from the matrix.',
 						)
 						+ ' ('
@@ -239,7 +236,7 @@
 				<NcNoteCard type="warning">
 					{{
 						t(
-							'softwarecatalog',
+							'stackiq',
 							'Some compliancy records reference both a standard and a BIO measure — a data-quality issue. They are excluded from both matrices until corrected.',
 						)
 						+ ' ('
@@ -816,12 +813,12 @@ export default {
 		 */
 		stateLabel(state) {
 			if (state === 'verified') {
-				return t('softwarecatalog', 'Verified')
+				return t('stackiq', 'Verified')
 			}
 			if (state === 'claimed') {
-				return t('softwarecatalog', 'Claimed')
+				return t('stackiq', 'Claimed')
 			}
-			return t('softwarecatalog', 'None')
+			return t('stackiq', 'None')
 		},
 
 		/**
@@ -852,7 +849,7 @@ export default {
 		 */
 		bbnLevelLabel(module) {
 			const data = dataOf(module)
-			return data.bbnLevel || t('softwarecatalog', 'Not set')
+			return data.bbnLevel || t('stackiq', 'Not set')
 		},
 
 		/**
@@ -867,15 +864,15 @@ export default {
 		dpiaStatusLabel(module) {
 			const data = dataOf(module)
 			if (data.dpiaStatus === 'executed') {
-				return t('softwarecatalog', 'Executed')
+				return t('stackiq', 'Executed')
 			}
 			if (data.dpiaStatus === 'required') {
-				return t('softwarecatalog', 'Required')
+				return t('stackiq', 'Required')
 			}
 			if (data.dpiaStatus === 'not required') {
-				return t('softwarecatalog', 'Not required')
+				return t('stackiq', 'Not required')
 			}
-			return t('softwarecatalog', 'Not set')
+			return t('stackiq', 'Not set')
 		},
 	},
 }

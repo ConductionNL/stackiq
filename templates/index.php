@@ -2,7 +2,7 @@
 
 use OCP\Util;
 
-$appId = OCA\SoftwareCatalog\AppInfo\Application::APP_ID;
+$appId = OCA\Stackiq\AppInfo\Application::APP_ID;
 // The webpack build emits a separate runtime chunk (runtimeChunk: { name: 'runtime' })
 // plus shared vendor/nc-vue chunks. All must be loaded in dependency order BEFORE
 // the entry chunk, otherwise __webpack_require__ is never bootstrapped and Vue never
@@ -13,6 +13,6 @@ Util::addScript($appId, $appId . '-shared-nc-vue');
 Util::addScript($appId, $appId . '-main');
 Util::addStyle($appId, 'main');
 ?>
-<div id="softwarecatalog"></div>
+<div id="stackiq"></div>
 
 

@@ -3,17 +3,17 @@
 /**
  * Federation configuration value object.
  *
- * Reads the softwarecatalog federation app-config keys via IAppConfig and
+ * Reads the stackiq federation app-config keys via IAppConfig and
  * exposes them as a small immutable value object so callers never touch raw
  * config keys. Defaults match the spec (directory.opencatalogi.nl, federation
  * disabled, no peers, hourly sync).
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service\Federation
+ * @package   OCA\Stackiq\Service\Federation
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/federated-catalog-sync/spec.md
  *
@@ -23,9 +23,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\Federation;
+namespace OCA\Stackiq\Service\Federation;
 
-use OCA\SoftwareCatalog\AppInfo\Application;
+use OCA\Stackiq\AppInfo\Application;
 use OCP\IAppConfig;
 
 /**

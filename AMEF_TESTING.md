@@ -246,7 +246,7 @@ A comprehensive testing script `full_circle_test.php` automates the entire round
 
 ```bash
 # Run complete round-trip test
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/full_circle_test.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/full_circle_test.php
 ```
 
 #### Test Flow
@@ -316,16 +316,16 @@ Individual debug scripts for specific issues:
 
 ```bash
 # Debug XML property structure
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_properties_structure.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_properties_structure.php
 
 # Debug conversion flow
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_conversion_flow.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_conversion_flow.php
 
 # Debug database content
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_db.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_db.php
 
 # Compare XML files
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/compare_archimate.php
 ```
 
 ## API Testing Procedures
@@ -343,18 +343,18 @@ docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/compa
 ```bash
 # Upload file from host to container
 cd /home/rubenlinde/nextcloud-docker-dev
-curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" \
      -u admin:admin \
-     -F "archiMateFile=@workspace/server/apps-extra/softwarecatalog/lib/Settings/GEMMA_smaller.xml"
+     -F "archiMateFile=@workspace/server/apps-extra/stackiq/lib/Settings/GEMMA_smaller.xml"
 ```
 
 #### Method 3: Container-based Testing
 ```bash
 # Copy test file to container
-docker-compose exec nextcloud cp /var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_smaller.xml /tmp/
+docker-compose exec nextcloud cp /var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_smaller.xml /tmp/
 
 # Test from within container
-docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" \
      -u admin:admin \
      -F "archiMateFile=@/tmp/GEMMA_smaller.xml"
 ```
@@ -364,7 +364,7 @@ docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/soft
 #### Basic Export
 ```bash
 # Export all data to ArchiMate format
-curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" \
+curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/export" \
      -u admin:admin \
   -H "Content-Type: application/json" \
   -d '{
@@ -378,7 +378,7 @@ curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/expo
 #### Organization-Specific Export
 ```bash
 # Export data for specific organization
-curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" \
+curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/export" \
      -u admin:admin \
      -H "Content-Type: application/json" \
      -d '{
@@ -393,7 +393,7 @@ curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/expo
 ```bash
 # Download exported ArchiMate file
 curl -u admin:admin \
-     "http://localhost/index.php/apps/softwarecatalog/api/archimate/download/exported_file.xml" \
+     "http://localhost/index.php/apps/stackiq/api/archimate/download/exported_file.xml" \
      -o downloaded_file.xml
 ```
 
@@ -405,19 +405,19 @@ The API has been refactored for better performance by separating concerns:
 #### 1. Basic Settings (Fast - ~100ms)
 ```bash
 # Get basic configuration only (no object counts)
-curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings"
+curl -u admin:admin "http://localhost/index.php/apps/stackiq/api/settings"
 ```
 
 #### 2. ArchiMate Status (Medium - ~200ms)
 ```bash
 # Get ArchiMate import/export status only (no object counts)
-curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings/archimate"
+curl -u admin:admin "http://localhost/index.php/apps/stackiq/api/settings/archimate"
 ```
 
 #### 3. Object Counts (Slow - Load on demand)
 ```bash
 # Get object counts for all registers (separate endpoint)
-curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings/objects"
+curl -u admin:admin "http://localhost/index.php/apps/stackiq/api/settings/objects"
 ```
 
 ### Performance Benefits
@@ -428,10 +428,10 @@ curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/setting
 ### Status Polling (Updated)
 ```bash
 # Check ArchiMate import/export status for real-time monitoring
-curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings/archimate" | jq '.archimate'
+curl -u admin:admin "http://localhost/index.php/apps/stackiq/api/settings/archimate" | jq '.archimate'
 
 # Check object counts when needed for statistics
-curl -u admin:admin "http://localhost/index.php/apps/softwarecatalog/api/settings/objects" | jq '.objectCounts'
+curl -u admin:admin "http://localhost/index.php/apps/stackiq/api/settings/objects" | jq '.objectCounts'
 ```
 
 ## Performance Testing
@@ -452,7 +452,7 @@ echo 'Peak: ' . round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB' . PH
 ### 2. Processing Time Measurement
 ```bash
 # Test processing time for different file sizes
-time curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+time curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" \
      -u admin:admin \
      -F "archiMateFile=@lib/Settings/GEMMA_smaller.xml"
 ```
@@ -510,13 +510,13 @@ The issue occurs somewhere between `extractProperties()` and database storage. I
 
 ```bash
 # Test property extraction in isolation
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_properties_structure.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_properties_structure.php
 
 # Test conversion flow
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_conversion_flow.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_conversion_flow.php
 
 # Check actual database content
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_db.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_db.php
 ```
 
 #### Key Findings
@@ -589,7 +589,7 @@ if (isset($data['organizations']['item'])) {
 ```bash
 # Check if organizations section exists in parsed XML
 docker-compose exec nextcloud php -r "
-\$xml = file_get_contents('/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml');
+\$xml = file_get_contents('/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml');
 echo 'Organizations section: ' . (strpos(\$xml, '<organizations>') !== false ? 'FOUND' : 'NOT FOUND') . PHP_EOL;
 "
 
@@ -609,17 +609,17 @@ echo 'Organizations section: ' . (strpos(\$xml, '<organizations>') !== false ? '
 ### 1. Log Analysis
 ```bash
 # View real-time logs during import
-docker-compose logs -f nextcloud | grep -i "softwarecatalog\|archimate"
+docker-compose logs -f nextcloud | grep -i "stackiq\|archimate"
 
 # Check Nextcloud application logs
-docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "softwarecatalog"
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "stackiq"
 ```
 
 ### 2. XML Parsing Debug
 ```bash
 # Test XML parsing independently
 docker-compose exec nextcloud php -r "
-\$content = file_get_contents('/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_smaller.xml');
+\$content = file_get_contents('/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_smaller.xml');
 \$xml = simplexml_load_string(\$content);
 echo 'XML loaded: ' . (\$xml ? 'SUCCESS' : 'FAILED') . PHP_EOL;
 echo 'Root element: ' . \$xml->getName() . PHP_EOL;
@@ -629,7 +629,7 @@ echo 'Root element: ' . \$xml->getName() . PHP_EOL;
 ### 3. Database State Verification
 ```bash
 # Check if objects were created in database
-docker-compose exec nextcloud php occ app:execute softwarecatalog --debug-import-status
+docker-compose exec nextcloud php occ app:execute stackiq --debug-import-status
 ```
 
 ## Error Handling Testing
@@ -638,7 +638,7 @@ docker-compose exec nextcloud php occ app:execute softwarecatalog --debug-import
 ```bash
 # Test with malformed XML
 echo '<invalid>xml' > /tmp/invalid.xml
-curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" \
      -u admin:admin \
      -F "archiMateFile=@/tmp/invalid.xml"
 ```

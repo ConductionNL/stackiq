@@ -13,7 +13,7 @@
  * to `approved`/`rejected` — the schema's own `status`-conditioned public
  * RBAC rule does the visibility job `publicatiedatum` does for organisatie.
  *
- * AUTH (ADR-005): every method is `#[AuthorizedAdminSetting(SoftwareCatalogAdmin::class)]`
+ * AUTH (ADR-005): every method is `#[AuthorizedAdminSetting(StackiqAdmin::class)]`
  * — Nextcloud's admin-settings middleware rejects any non-admin caller before
  * the controller body runs, so an authenticated non-admin can never reach the
  * approve/publish path (no privilege escalation / IDOR — OWASP A01:2021). The
@@ -21,11 +21,11 @@
  * currently `pending` and on peer-sourced (federated) mirrors.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
@@ -36,11 +36,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\AppInfo\Application;
-use OCA\SoftwareCatalog\Service\ModerationService;
-use OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin;
+use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Service\ModerationService;
+use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -74,11 +74,11 @@ class ModerationController extends Controller {
 	 *
 	 * @return JSONResponse `{ok, items}` or a 400.
 	 *
-	 * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 * @spec                                                                               openspec/specs/open-data-publishing/spec.md
 	 * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
 	 */
-	#[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function pending(string $type = ModerationService::MODERATED_TYPE): JSONResponse {
 		$result = $this->moderation->listPending(type: $type);
 		if ($result['ok'] === false) {
@@ -96,11 +96,11 @@ class ModerationController extends Controller {
 	 *
 	 * @return JSONResponse `{ok, status}` or a 400.
 	 *
-	 * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 * @spec                                                                               openspec/specs/open-data-publishing/spec.md
 	 * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
 	 */
-	#[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function approve(string $uuid, string $type = ModerationService::MODERATED_TYPE): JSONResponse {
 		$result = $this->moderation->approve($uuid, type: $type);
 		if ($result['ok'] === false) {
@@ -118,11 +118,11 @@ class ModerationController extends Controller {
 	 *
 	 * @return JSONResponse `{ok, status}` or a 400.
 	 *
-	 * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 * @spec                                                                               openspec/specs/open-data-publishing/spec.md
 	 * @spec                                                                               openspec/specs/catalog-ratings/spec.md#requirement-a-newly-submitted-review-must-require-moderation-approval-before-becoming-public
 	 */
-	#[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function reject(string $uuid, string $type = ModerationService::MODERATED_TYPE): JSONResponse {
 		$result = $this->moderation->reject($uuid, type: $type);
 		if ($result['ok'] === false) {

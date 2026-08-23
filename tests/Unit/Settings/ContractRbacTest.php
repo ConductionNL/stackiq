@@ -17,7 +17,7 @@
  * already trusted elsewhere in this codebase
  * (`ContractApprovalService::authorizeSubmit()`).
  *
- * schema-rbac-hardening (softwarecatalog #390) extends this: every other
+ * schema-rbac-hardening (stackiq #390) extends this: every other
  * role the `contract` schema previously granted an unscoped read
  * (`functioneel-beheerder`, `gebruik-beheerder`, `vng-raadpleger`,
  * `software-catalog-users`, `organisatie-beheerder`,
@@ -28,18 +28,18 @@
  * wired into `setSuperUserGroups()` alongside Nextcloud's `admin`).
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Settings
+ * @package   OCA\Stackiq\Tests\Unit\Settings
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-contract-reads-must-deny-non-counterparty-cross-organisation-access-via-the-openregister-schema-rbac-rule-req-006
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Settings;
+namespace OCA\Stackiq\Tests\Unit\Settings;
 
 use PHPUnit\Framework\TestCase;
 
@@ -149,12 +149,12 @@ class ContractRbacTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testSoftwareCatalogAdminsRetainsUnrestrictedRead(): void {
+	public function testStackiqAdminsRetainsUnrestrictedRead(): void {
 		$authorization = $this->loadContractAuthorization();
 
 		$this->assertContains('software-catalog-admins', $authorization['read']);
 
-	}//end testSoftwareCatalogAdminsRetainsUnrestrictedRead()
+	}//end testStackiqAdminsRetainsUnrestrictedRead()
 
 	/**
 	 * Data provider of every role that schema-rbac-hardening (#390) newly
@@ -178,7 +178,7 @@ class ContractRbacTest extends TestCase {
 
 	/**
 	 * schema-rbac-hardening / REQ-006 (extended): none of these roles MUST
-	 * remain a bare unscoped read grant on `contract` (softwarecatalog
+	 * remain a bare unscoped read grant on `contract` (stackiq
 	 * #390 — the roles REQ-006 left unfixed alongside `aanbod-beheerder`).
 	 *
 	 * @dataProvider newlyScopedRoleProvider

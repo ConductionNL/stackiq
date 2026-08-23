@@ -3,7 +3,7 @@ kind: code
 depends_on: []
 ---
 
-# softwarecatalog — implement view "products" enrichment (currently a no-op)
+# stackiq — implement view "products" enrichment (currently a no-op)
 
 ## Why
 
@@ -46,7 +46,7 @@ actually true.
   scoped to the current organisation the same way `getModulesData()` already
   does (`lib/Service/ViewService.php:622+`), rather than returning `[]`.
   Establish (and document, in `design.md`) which register/schema/field
-  constitutes a "product" in this app's domain — the softwarecatalog register
+  constitutes a "product" in this app's domain — the stackiq register
   config (`lib/Settings/softwarecatalogus_register.json`) is the source of
   truth; if no `product`-equivalent schema currently exists, this change adds
   the minimal one (or maps onto an existing schema, e.g. `dienst`/`module`

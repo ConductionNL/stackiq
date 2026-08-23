@@ -12,23 +12,23 @@
  * also fail closed.
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/softwarecatalog-delegation-via-events/specs/contract-decision-delegation/spec.md
+ * @spec openspec/changes/stackiq-delegation-via-events/specs/contract-decision-delegation/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\SoftwareCatalog\Service\ContractApprovalService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\Stackiq\Service\ContractApprovalService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;

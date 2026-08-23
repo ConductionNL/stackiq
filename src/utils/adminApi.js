@@ -1,12 +1,12 @@
 /**
- * Thin fetch helpers for the admin-gated SoftwareCatalog REST endpoints
+ * Thin fetch helpers for the admin-gated Stackiq REST endpoints
  * (federation settings + moderation queue).
  *
  * Extracted from the settings section components so the request/response
  * contract — URL shape, JSON body/headers, ok/!ok branching, error-message
  * extraction — is unit-testable offline (vitest) without a Vue/DOM runtime.
  * The admin authorization itself is enforced server-side by
- * `#[AuthorizedAdminSetting(SoftwareCatalogAdmin::class)]`; these helpers add
+ * `#[AuthorizedAdminSetting(StackiqAdmin::class)]`; these helpers add
  * no client-side gate (a client gate would be security theatre).
  *
  * @spec openspec/specs/federated-catalog-sync/spec.md
@@ -18,7 +18,7 @@
 
 import { getRequestToken } from '@nextcloud/auth'
 
-const API_BASE = '/index.php/apps/softwarecatalog/api'
+const API_BASE = '/index.php/apps/stackiq/api'
 
 /**
  * Build the absolute API URL for a relative path.

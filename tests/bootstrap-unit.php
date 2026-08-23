@@ -4,7 +4,7 @@
  * Bootstrap file for PHPUnit unit tests (minimal — no Nextcloud bootstrap required).
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests
+ * @package  OCA\Stackiq\Tests
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.

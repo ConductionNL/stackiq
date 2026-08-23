@@ -2,12 +2,12 @@
 	<div class="vulnView">
 		<div class="vv-header">
 			<h2 class="vv-title">
-				{{ t('softwarecatalog', 'Vulnerabilities') }}
+				{{ t('stackiq', 'Vulnerabilities') }}
 			</h2>
 			<p class="vv-intro">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Track vulnerabilities (CVE / CVSS) against the applications in your catalogue and see which in-production usages are exposed.',
 					)
 				}}
@@ -15,23 +15,23 @@
 			<div class="vv-actions">
 				<NcButton
 					variant="primary"
-					:aria-label="t('softwarecatalog', 'Report a vulnerability')"
+					:aria-label="t('stackiq', 'Report a vulnerability')"
 					data-testid="vuln-report"
 					@click="reportVulnerability">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'Report vulnerability') }}
+					{{ t('stackiq', 'Report vulnerability') }}
 				</NcButton>
 				<NcButton
 					variant="tertiary"
-					:aria-label="t('softwarecatalog', 'Refresh data')"
+					:aria-label="t('stackiq', 'Refresh data')"
 					@click="loadData">
 					<template #icon>
 						<NcLoadingIcon v-if="loading" :size="20" />
 						<Refresh v-else :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'Refresh') }}
+					{{ t('stackiq', 'Refresh') }}
 				</NcButton>
 			</div>
 		</div>
@@ -55,10 +55,10 @@
 
 		<NcEmptyContent
 			v-else-if="filteredRows.length === 0"
-			:name="t('softwarecatalog', 'No vulnerabilities')"
+			:name="t('stackiq', 'No vulnerabilities')"
 			:description="
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'No vulnerabilities match the selected severity. Report one to start tracking exposure.',
 				)
 			">
@@ -70,17 +70,17 @@
 		<table v-else class="vv-table" data-testid="vuln-table">
 			<thead>
 				<tr>
-					<th scope="col">{{ t('softwarecatalog', 'Name') }}</th>
-					<th scope="col">{{ t('softwarecatalog', 'CVE') }}</th>
-					<th scope="col">{{ t('softwarecatalog', 'CVSS') }}</th>
-					<th scope="col">{{ t('softwarecatalog', 'Severity') }}</th>
+					<th scope="col">{{ t('stackiq', 'Name') }}</th>
+					<th scope="col">{{ t('stackiq', 'CVE') }}</th>
+					<th scope="col">{{ t('stackiq', 'CVSS') }}</th>
+					<th scope="col">{{ t('stackiq', 'Severity') }}</th>
 					<th scope="col">
-						{{ t('softwarecatalog', 'Affected applications') }}
+						{{ t('stackiq', 'Affected applications') }}
 					</th>
-					<th scope="col">{{ t('softwarecatalog', 'Exposed usages') }}</th>
+					<th scope="col">{{ t('stackiq', 'Exposed usages') }}</th>
 					<th scope="col" class="vv-actionsCol">
 						<span class="hidden-visually">{{
-							t('softwarecatalog', 'Actions')
+							t('stackiq', 'Actions')
 						}}</span>
 					</th>
 				</tr>
@@ -112,7 +112,7 @@
 					<td class="vv-actionsCol" @click.stop>
 						<NcButton
 							variant="tertiary"
-							:aria-label="t('softwarecatalog', 'Edit')"
+							:aria-label="t('stackiq', 'Edit')"
 							@click="editVulnerability(row)">
 							<template #icon>
 								<Pencil :size="18" />
@@ -120,7 +120,7 @@
 						</NcButton>
 						<NcButton
 							variant="tertiary"
-							:aria-label="t('softwarecatalog', 'Delete')"
+							:aria-label="t('stackiq', 'Delete')"
 							@click="deleteVulnerability(row)">
 							<template #icon>
 								<Delete :size="18" />
@@ -241,9 +241,7 @@ export default {
 							vuln.uuid ?? vuln.id ?? vuln['@self']?.id ?? vuln,
 						),
 						raw: vuln,
-						name:
-							data.name
-							|| t('softwarecatalog', 'Unnamed vulnerability'),
+						name: data.name || t('stackiq', 'Unnamed vulnerability'),
 						cveCode: data.cveCode || '',
 						cvssScore: parseCvss(data.cvssScore),
 						band: deriveSeverity(vuln),
@@ -360,12 +358,12 @@ export default {
 		 */
 		severityLabel(band) {
 			const map = {
-				All: t('softwarecatalog', 'All'),
-				[SEVERITY.CRITICAL]: t('softwarecatalog', 'Critical'),
-				[SEVERITY.HIGH]: t('softwarecatalog', 'High'),
-				[SEVERITY.MEDIUM]: t('softwarecatalog', 'Medium'),
-				[SEVERITY.LOW]: t('softwarecatalog', 'Low'),
-				[SEVERITY.UNKNOWN]: t('softwarecatalog', 'Unknown'),
+				All: t('stackiq', 'All'),
+				[SEVERITY.CRITICAL]: t('stackiq', 'Critical'),
+				[SEVERITY.HIGH]: t('stackiq', 'High'),
+				[SEVERITY.MEDIUM]: t('stackiq', 'Medium'),
+				[SEVERITY.LOW]: t('stackiq', 'Low'),
+				[SEVERITY.UNKNOWN]: t('stackiq', 'Unknown'),
 			}
 			return map[band] || band
 		},

@@ -33,7 +33,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
  * @category Tests
- * @package  OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package  OCA\Stackiq\Tests\Unit\Controller
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -46,7 +46,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use PHPUnit\Framework\TestCase;
 

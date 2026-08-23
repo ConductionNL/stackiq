@@ -3,7 +3,7 @@
 /**
  * UnsupportedSbomFormatException.
  *
- * Thrown by {@see \OCA\SoftwareCatalog\Service\SbomParserService} when an
+ * Thrown by {@see \OCA\Stackiq\Service\SbomParserService} when an
  * uploaded document's `bomFormat`/`specVersion` (CycloneDX) or `spdxVersion`
  * (SPDX) is not one this app supports. Carries the offending format/version
  * in its message so the controller can surface a precise 422 rather than a
@@ -11,11 +11,11 @@
  * this is thrown (fail-fast, not a silent partial parse).
  *
  * @category  Exception
- * @package   OCA\SoftwareCatalog\Exception
+ * @package   OCA\Stackiq\Exception
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md#requirement-cyclonedx-sbom-files-are-parsed-into-a-normalized-component-list
  *
@@ -25,7 +25,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Exception;
+namespace OCA\Stackiq\Exception;
 
 /**
  * Thrown when an uploaded SBOM document's format/spec-version is not supported.

@@ -117,7 +117,7 @@ jobs:
   quality:
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
-      app-name: softwarecatalog
+      app-name: stackiq
       php-version: "8.3"
       # THE LIST IS THE WHOLE DECLARED RANGE. appinfo/info.xml declares
       # <nextcloud min-version="32" max-version="34"/>, so 32, 33 and 34 each get
@@ -171,7 +171,7 @@ jobs:
       # declares only `smoke` + `chromium`.
       enable-playwright: true
       playwright-test-path: tests/e2e
-      # `occ app:enable softwarecatalog` runs InitializeSettings, but that
+      # `occ app:enable stackiq` runs InitializeSettings, but that
       # repair step has no user session (OpenRegister RBAC can deny it),
       # swallows its own exception as a warning, and imports with
       # `force: false` — so a fresh install can come up with no `voorzieningen`
@@ -179,7 +179,7 @@ jobs:
       # explicitly over the admin API and fails loudly if the registers,
       # schemas, or the app's own register→schema mapping still aren't there.
       # cwd for this step is the Nextcloud server root.
-      playwright-seed-command: 'bash apps/softwarecatalog/tests/e2e/ci-seed.sh'
+      playwright-seed-command: 'bash apps/stackiq/tests/e2e/ci-seed.sh'
 
       # Integration Tests (Newman) stays OFF here, deliberately. The
       # `enable-newman: false` further up is not a default nobody chose: it

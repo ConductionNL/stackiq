@@ -1,5 +1,5 @@
 {
-    "name": "conductionnl/softwarecatalog",
+    "name": "conductionnl/stackiq",
     "description": "Quickly build data registers based on schema.json",
     "license": "EUPL-1.2",
     "authors": [
@@ -11,7 +11,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "OCA\\SoftwareCatalog\\": "lib/"
+            "OCA\\Stackiq\\": "lib/"
         }
     },
     "scripts": {

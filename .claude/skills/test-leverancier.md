@@ -30,7 +30,7 @@ Jan's active organization is **Test Leverancier BV**. The internal Nextcloud org
 - **Beheer tables** only show objects owned by Jan's org (RBAC scoping by `@self.organisation`)
 - **Edit/Delete buttons** require the org data fetch to succeed — if you see disabled actions or missing buttons, check for org fetch 404 errors in the console
 - **Do NOT test beheer as admin** — admin's "Default Organisation" has no register object, so org fetch always fails and permissions are broken
-- The test setup script (`bash softwarecatalog/test-setup.sh`) creates test objects as jan.pietersen so they get the correct org assignment
+- The test setup script (`bash stackiq/test-setup.sh`) creates test objects as jan.pietersen so they get the correct org assignment
 - If beheer tables are empty, run the test setup script to create/verify test objects
 
 ## Test Scope

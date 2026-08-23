@@ -4,7 +4,7 @@
  * Bootstrap file for PHPUnit tests
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests
+ * @package  OCA\Stackiq\Tests
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2024 Conduction B.V.
@@ -78,7 +78,7 @@ if (!defined('OC_CONSOLE')) {
 	\OC_App::loadApps();
 
 	// Load our specific app
-	\OC_App::loadApp('softwarecatalog');
+	\OC_App::loadApp('stackiq');
 
 	// Clear hooks for testing
 	OC_Hook::clear();

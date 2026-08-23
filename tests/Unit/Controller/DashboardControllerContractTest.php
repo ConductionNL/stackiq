@@ -13,20 +13,20 @@
  * deny-before-grant guard as the rest of the API surface.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/dashboard-views-api/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\DashboardController;
+use OCA\Stackiq\Controller\DashboardController;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
@@ -59,7 +59,7 @@ class DashboardControllerContractTest extends TestCase {
 		$this->userSession = $this->createMock(IUserSession::class);
 
 		return new DashboardController(
-			'softwarecatalog',
+			'stackiq',
 			$request,
 			$this->userSession
 		);
@@ -79,7 +79,7 @@ class DashboardControllerContractTest extends TestCase {
 
 		$this->assertInstanceOf(TemplateResponse::class, $response);
 		$this->assertSame('index', $response->getTemplateName());
-		$this->assertSame('softwarecatalog', $response->getApp());
+		$this->assertSame('stackiq', $response->getApp());
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 
 	}//end testPageRendersTheAppIndexTemplate()

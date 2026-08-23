@@ -7,9 +7,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\SoftwareCatalog\Service\ArchiMateExportService;
+use OCA\Stackiq\Service\ArchiMateExportService;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;

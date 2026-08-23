@@ -1,12 +1,12 @@
 // @ts-check
 
 /**
- * SoftwareCatalog documentation site.
+ * Stackiq documentation site.
  *
  * Built on @conduction/docusaurus-preset for brand defaults (tokens,
  * theme swizzles for Navbar / Footer, four-locale i18n scaffolding,
  * KvK / BTW copyright). Site-specific overrides — locales, sidebar
- * path, mermaid theme, custom prism themes, softwarecatalog-only
+ * path, mermaid theme, custom prism themes, stackiq-only
  * navbar items — are passed through createConfig() opts.
  */
 
@@ -19,16 +19,16 @@ const { createConfig, baseFooterLinks } = require('@conduction/docusaurus-preset
 const BRAND_THEME = require.resolve('@conduction/docusaurus-preset/theme');
 
 const config = createConfig({
-  title: 'SoftwareCatalog',
+  title: 'Stackiq',
   tagline: 'IT-asset management on Nextcloud. Software inventory, licenses, contracts, dependencies. One register, every install.',
   url: 'https://softwarecatalog.conduction.nl',
   baseUrl: '/',
 
   organizationName: 'ConductionNL',
-  projectName: 'softwarecatalog',
+  projectName: 'stackiq',
 
   /* The brand preset's default i18n block (nl/en/de/fr) is replaced
-     wholesale here. SoftwareCatalog docs ship with NL + EN translation
+     wholesale here. Stackiq docs ship with NL + EN translation
      surfaces; keep both. */
   i18n: {
     defaultLocale: 'en',
@@ -39,10 +39,10 @@ const config = createConfig({
     },
   },
 
-  /* The softwarecatalog docs source lives at the repo root of `docs/`
+  /* The stackiq docs source lives at the repo root of `docs/`
      rather than under a `docs/` subfolder, so we override the preset's
      default `presets:` block to point `docs.path` at './' and disable
-     the blog plugin. customCss carries softwarecatalog-specific CSS
+     the blog plugin. customCss carries stackiq-specific CSS
      only — brand tokens and the theme swizzles are auto-loaded by the
      brand theme entry in `themes:` below. */
   presets: [
@@ -57,7 +57,7 @@ const config = createConfig({
              plus the standard node_modules bucket. */
           exclude: ['**/node_modules/**', 'src/**'],
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://codeberg.org/Conduction/softwarecatalog/src/branch/main/docs/',
+          editUrl: 'https://codeberg.org/Conduction/stackiq/src/branch/main/docs/',
         },
         blog: false,
         theme: {
@@ -70,7 +70,7 @@ const config = createConfig({
   themes: [BRAND_THEME, '@docusaurus/theme-mermaid'],
 
   /* Brand navbar provides locale dropdown + GitHub by default; we
-     replace items[] with softwarecatalog's own (Documentation sidebar
+     replace items[] with stackiq's own (Documentation sidebar
      link, GitHub link, locale dropdown). */
   navbar: {
     items: [
@@ -81,7 +81,7 @@ const config = createConfig({
         label: 'Documentation',
       },
       {
-        href: 'https://codeberg.org/Conduction/softwarecatalog',
+        href: 'https://codeberg.org/Conduction/stackiq',
         label: 'GitHub',
         position: 'right',
       },
@@ -107,7 +107,7 @@ const config = createConfig({
   /* themeConfig is shallow-merged into the preset's defaults
      (colorMode + navbar + footer). prism + mermaid land alongside. */
   themeConfig: {
-    image: 'img/og-softwarecatalog.png',
+    image: 'img/og-stackiq.png',
     prism: {
       theme: require('prism-react-renderer/themes/github'),
       darkTheme: require('prism-react-renderer/themes/dracula'),

@@ -118,7 +118,7 @@ Every user automatically gets a manager assigned:
 ### Manager Storage
 
 Manager relationships are stored in Nextcloud user preferences:
-- **App**: 'softwarecatalog'
+- **App**: 'stackiq'
 - **Key**: 'manager'
 - **Value**: Manager's username
 
@@ -195,7 +195,7 @@ All operations are logged with appropriate detail levels:
 
 ### Adding New Role-Based Groups
 
-To add new role-based groups, update the '_defaultGroups' array in SoftwareCatalogueService:
+To add new role-based groups, update the '_defaultGroups' array in StackiqueService:
 
 ```php
 private array $_defaultGroups = [

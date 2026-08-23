@@ -3,29 +3,29 @@
 /**
  * Unit tests for the W22 RegisterResolverService wiring in SettingsService.
  *
- * Covers softwarecatalog-adopt-or-abstractions Phase 2.5 (resolver-injection unit tests).
+ * Covers stackiq-adopt-or-abstractions Phase 2.5 (resolver-injection unit tests).
  * Confirms that getSchemaIdForObjectType / getRegisterIdForObjectType route the
  * generic-fallback path through `RegisterResolverService::resolveSchemaId` /
  * `resolveRegisterId` when the resolver is available, and gracefully degrade to
  * the legacy `IAppConfig::getValueString` read when it is not.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Service\RegisterResolverService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -41,11 +41,11 @@ use Psr\Log\LoggerInterface;
  * routing through the RegisterResolverService.
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 class SettingsServiceResolverWiringTest extends TestCase {
 
@@ -161,7 +161,7 @@ class SettingsServiceResolverWiringTest extends TestCase {
 			->method('resolveSchemaId')
 			->willReturnCallback(
 				function (string $appId, string $configKey, ?string $default = null, ?string $organisationUuid = null): string {
-					$this->assertSame('softwarecatalog', $appId);
+					$this->assertSame('stackiq', $appId);
 					$this->assertSame('wijktypeXyz_schema', $configKey);
 					return '42';
 				}
@@ -195,7 +195,7 @@ class SettingsServiceResolverWiringTest extends TestCase {
 
 		$this->container->method('get')->willReturn($resolver);
 
-		// Legacy fallback path: getValueString('softwarecatalog', 'legacyOnly_schema', '') returns "99".
+		// Legacy fallback path: getValueString('stackiq', 'legacyOnly_schema', '') returns "99".
 		$emptyVoorzieningen = '{}';
 		$this->config->method('getValueString')->willReturnCallback(
 			function (string $app, string $key, string $default = '') use ($emptyVoorzieningen): string {
@@ -234,7 +234,7 @@ class SettingsServiceResolverWiringTest extends TestCase {
 			->method('resolveRegisterId')
 			->willReturnCallback(
 				function (string $appId, string $configKey, ?string $default = null, ?string $organisationUuid = null): string {
-					$this->assertSame('softwarecatalog', $appId);
+					$this->assertSame('stackiq', $appId);
 					$this->assertSame('wijktype_register', $configKey);
 					return '7';
 				}

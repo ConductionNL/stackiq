@@ -8,7 +8,7 @@ The Software Catalog app provides a REST API for configuration management and pr
 
 All API endpoints are relative to the Nextcloud base URL:
 ```
-https://your-nextcloud-domain/index.php/apps/softwarecatalog/api/
+https://your-nextcloud-domain/index.php/apps/stackiq/api/
 ```
 
 ## Authentication
@@ -93,7 +93,7 @@ Loads configuration from register-specific JSON files.
 
 ## Service Classes API
 
-### SoftwareCatalogueService
+### StackiqService
 
 #### processContactgegevens()
 
@@ -114,7 +114,7 @@ public function processContactgegevens(object $contactgegevensObject): bool
 
 **Usage:**
 ```php
-$service = \OC::$server->get(SoftwareCatalogueService::class);
+$service = \OC::$server->get(StackiqService::class);
 $result = $service->processContactgegevens($contactgegevensObject);
 ```
 
@@ -172,7 +172,7 @@ public function getUserManager(string $username): ?string
 
 **Usage:**
 ```php
-$service = \OC::$server->get(SoftwareCatalogueService::class);
+$service = \OC::$server->get(StackiqService::class);
 $manager = $service->getUserManager('john.doe');
 ```
 
@@ -320,10 +320,10 @@ try {
 ### Programmatic User Creation
 
 ```php
-use OCA\SoftwareCatalog\Service\SoftwareCatalogueService;
+use OCA\Stackiq\Service\StackiqService;
 
 // Get the service
-$service = \OC::$server->get(SoftwareCatalogueService::class);
+$service = \OC::$server->get(StackiqService::class);
 
 // Create contactgegevens object data
 $contactData = [
@@ -352,9 +352,9 @@ try {
 ### Check User Manager
 
 ```php
-use OCA\SoftwareCatalog\Service\SoftwareCatalogueService;
+use OCA\Stackiq\Service\StackiqService;
 
-$service = \OC::$server->get(SoftwareCatalogueService::class);
+$service = \OC::$server->get(StackiqService::class);
 
 $username = 'john.doe';
 $manager = $service->getUserManager($username);
@@ -457,7 +457,7 @@ Cache is automatically invalidated on:
 ```php
 // Unit test example
 public function testProcessContactgegevens() {
-    $service = new SoftwareCatalogueService(/* dependencies */);
+    $service = new StackiqService(/* dependencies */);
     
     $contactObject = $this->createMockContactObject();
     $result = $service->processContactgegevens($contactObject);

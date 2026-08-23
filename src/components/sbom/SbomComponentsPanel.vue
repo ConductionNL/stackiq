@@ -8,7 +8,7 @@
 		<NcLoadingIcon
 			v-if="loading"
 			:size="32"
-			:name="t('softwarecatalog', 'Loading components')" />
+			:name="t('stackiq', 'Loading components')" />
 
 		<template v-else>
 			<!-- Summary counts (design Decision 6 / spec "summary counts"). -->
@@ -16,7 +16,7 @@
 				<div class="sbom-summary__tile">
 					<span class="sbom-summary__value">{{ totalComponents }}</span>
 					<span class="sbom-summary__label">{{
-						t('softwarecatalog', 'Components')
+						t('stackiq', 'Components')
 					}}</span>
 				</div>
 				<div class="sbom-summary__tile">
@@ -24,7 +24,7 @@
 						distinctLicenseCount
 					}}</span>
 					<span class="sbom-summary__label">{{
-						t('softwarecatalog', 'Distinct licenses')
+						t('stackiq', 'Distinct licenses')
 					}}</span>
 				</div>
 				<div
@@ -36,7 +36,7 @@
 						matchedVulnerabilityCount
 					}}</span>
 					<span class="sbom-summary__label">{{
-						t('softwarecatalog', 'Matched vulnerabilities')
+						t('stackiq', 'Matched vulnerabilities')
 					}}</span>
 				</div>
 			</div>
@@ -55,7 +55,7 @@
 					v-model="format"
 					class="sbom-upload__format"
 					:options="formatOptions"
-					:inputLabel="t('softwarecatalog', 'SBOM format')"
+					:inputLabel="t('stackiq', 'SBOM format')"
 					label="label"
 					:reduce="(option) => option.value"
 					:clearable="false"
@@ -78,7 +78,7 @@
 					<span>{{
 						selectedFile
 							? selectedFile.name
-							: t('softwarecatalog', 'Choose an SBOM JSON file')
+							: t('stackiq', 'Choose an SBOM JSON file')
 					}}</span>
 					<span v-if="selectedFile" class="sbom-upload__file-size">{{
 						formatFileSize(selectedFile.size)
@@ -93,7 +93,7 @@
 					<template #icon>
 						<NcLoadingIcon v-if="uploading" :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'Import SBOM') }}
+					{{ t('stackiq', 'Import SBOM') }}
 				</NcButton>
 			</div>
 
@@ -114,10 +114,10 @@
 			     tiles above already read 0/0/0 since `components` is empty). -->
 			<NcEmptyContent
 				v-if="totalComponents === 0"
-				:name="t('softwarecatalog', 'No components imported yet')"
+				:name="t('stackiq', 'No components imported yet')"
 				:description="
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Import a CycloneDX or SPDX SBOM to see this version\'s components, licenses and any matching known vulnerabilities.',
 					)
 				"
@@ -133,7 +133,7 @@
 				:columns="columns"
 				rowKey="id"
 				data-testid="sbom-component-table"
-				:emptyText="t('softwarecatalog', 'No components imported yet')">
+				:emptyText="t('stackiq', 'No components imported yet')">
 				<template #column-licenses="{ row }">
 					<span>{{ row.licenses || '—' }}</span>
 				</template>
@@ -142,13 +142,13 @@
 						v-if="row.confirmedCount > 0"
 						class="sbom-badge sbom-badge--confirmed"
 						data-testid="sbom-match-confirmed">
-						{{ t('softwarecatalog', 'Confirmed match') }}
+						{{ t('stackiq', 'Confirmed match') }}
 					</span>
 					<span
 						v-if="row.possibleCount > 0"
 						class="sbom-badge sbom-badge--possible"
 						data-testid="sbom-match-possible">
-						{{ t('softwarecatalog', 'Possible match') }}
+						{{ t('stackiq', 'Possible match') }}
 					</span>
 				</template>
 			</CnDataTable>
@@ -223,25 +223,25 @@ export default {
 			formatOptions: [
 				{
 					value: 'cyclonedx-json',
-					label: t('softwarecatalog', 'CycloneDX (JSON)'),
+					label: t('stackiq', 'CycloneDX (JSON)'),
 				},
-				{ value: 'spdx-json', label: t('softwarecatalog', 'SPDX (JSON)') },
+				{ value: 'spdx-json', label: t('stackiq', 'SPDX (JSON)') },
 			],
 
 			columns: [
-				{ key: 'name', label: t('softwarecatalog', 'Name'), sortable: true },
+				{ key: 'name', label: t('stackiq', 'Name'), sortable: true },
 				{
 					key: 'version',
-					label: t('softwarecatalog', 'Version'),
+					label: t('stackiq', 'Version'),
 					sortable: true,
 				},
 				{
 					key: 'purl',
-					label: t('softwarecatalog', 'Package URL'),
+					label: t('stackiq', 'Package URL'),
 					cellClass: 'sbom-cell--purl',
 				},
-				{ key: 'licenses', label: t('softwarecatalog', 'Licenses') },
-				{ key: 'match', label: t('softwarecatalog', 'Vulnerability match') },
+				{ key: 'licenses', label: t('stackiq', 'Licenses') },
+				{ key: 'match', label: t('stackiq', 'Vulnerability match') },
 			],
 		}
 	},
@@ -452,15 +452,11 @@ export default {
 				: date.toLocaleString()
 			const formatLabel =
 				data.sbomFormat === 'spdx-json' ? 'SPDX' : 'CycloneDX'
-			return t(
-				'softwarecatalog',
-				'Last imported {date} from {file} ({format})',
-				{
-					date: dateLabel,
-					file: data.sbomFileName || '?',
-					format: formatLabel,
-				},
-			)
+			return t('stackiq', 'Last imported {date} from {file} ({format})', {
+				date: dateLabel,
+				file: data.sbomFileName || '?',
+				format: formatLabel,
+			})
 		},
 	},
 
@@ -583,7 +579,7 @@ export default {
 				formData.append('format', this.format)
 
 				const url = generateUrl(
-					'/apps/softwarecatalog/api/moduleversies/{moduleVersieUuid}/sbom',
+					'/apps/stackiq/api/moduleversies/{moduleVersieUuid}/sbom',
 					{
 						moduleVersieUuid: String(this.objectId),
 					},
@@ -600,12 +596,12 @@ export default {
 
 				if (!response.ok || result.success === false) {
 					throw new Error(
-						result.message || t('softwarecatalog', 'SBOM import failed'),
+						result.message || t('stackiq', 'SBOM import failed'),
 					)
 				}
 
 				this.uploadSuccessMessage = t(
-					'softwarecatalog',
+					'stackiq',
 					'Imported {count} components.',
 					{ count: result.componentCount ?? 0 },
 				)
@@ -621,7 +617,7 @@ export default {
 				])
 			} catch (error) {
 				this.uploadError =
-					error.message || t('softwarecatalog', 'SBOM import failed')
+					error.message || t('stackiq', 'SBOM import failed')
 			} finally {
 				this.uploading = false
 			}

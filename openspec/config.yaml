@@ -2,14 +2,14 @@ schema: conduction
 
 context: |
   Project: Software Catalog
-  Repo: ConductionNL/softwarecatalog
+  Repo: ConductionNL/stackiq
   Type: Nextcloud App (PHP backend + Vue 2.7 frontend)
   Description: VNG Software Catalog — AMEF/GEMMA + Voorzieningen registry of municipal
     software (organisaties, diensten, modules, gebruik, contracten, compliancy,
     kwetsbaarheden) built on OpenRegister.
   Key components: Dashboard, Settings, Aanbod (offers), Aangeboden gebruik, Contactpersonen
   Database: PostgreSQL (via OpenRegister's ObjectService)
-  Mount path: /var/www/html/custom_apps/softwarecatalog
+  Mount path: /var/www/html/custom_apps/stackiq
 
   Architecture:
     Pattern: Thin client — Software Catalog owns no domain tables

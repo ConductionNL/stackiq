@@ -104,7 +104,7 @@ echo "--- Step 0b: Initializing app configurations ---"
 
 # Initialize SWC settings (imports softwarecatalogus_register.json)
 SWC_INIT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
-  "${NC_URL}/index.php/apps/softwarecatalog/api/settings/initialize" \
+  "${NC_URL}/index.php/apps/stackiq/api/settings/initialize" \
   -H "Content-Type: application/json" 2>&1)
 SWC_CONFIGURED=$(echo "$SWC_INIT" | python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('fullyConfigured', False))" 2>/dev/null || echo "false")
 echo "  SWC settings: configured=$SWC_CONFIGURED"
@@ -125,7 +125,7 @@ if [ -z "$OC_CATALOG_SCHEMA" ]; then
 
     # Run repair step to trigger OpenCatalogi auto-configuration
     echo "  Running maintenance:repair for OpenCatalogi initialization..."
-    docker exec nextcloud php occ maintenance:repair 2>&1 | grep -i "catalogi\|softwarecatalog" | head -5
+    docker exec nextcloud php occ maintenance:repair 2>&1 | grep -i "catalogi\|stackiq" | head -5
   else
     echo "  WARN: publication_register.json not found in opencatalogi app"
   fi
@@ -135,7 +135,7 @@ fi
 
 # Re-initialize SWC to configure OpenCatalogi page/menu/theme settings
 curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" -X POST \
-  "${NC_URL}/index.php/apps/softwarecatalog/api/settings/initialize" \
+  "${NC_URL}/index.php/apps/stackiq/api/settings/initialize" \
   -H "Content-Type: application/json" > /dev/null 2>&1
 
 # Verify final state
@@ -798,7 +798,7 @@ else:
 echo ""
 echo "--- Step 8b: Importing AMEF test data ---"
 
-AMEF_FILE="/var/www/html/custom_apps/softwarecatalog/tests/fixtures/amef/GEMMA release.xml"
+AMEF_FILE="/var/www/html/custom_apps/stackiq/tests/fixtures/amef/GEMMA release.xml"
 if docker exec nextcloud test -f "$AMEF_FILE"; then
     # Check if AMEF views already exist (full GEMMA release has 248 views)
     VIEW_COUNT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
@@ -812,7 +812,7 @@ if docker exec nextcloud test -f "$AMEF_FILE"; then
 <?php
 require \"/var/www/html/lib/base.php\";
 try {
-    \\\$svc = \\OC::\\\$server->get(\\OCA\\SoftwareCatalog\\Service\\ArchiMateImportService::class);
+    \\\$svc = \\OC::\\\$server->get(\\OCA\\Stackiq\\Service\\ArchiMateImportService::class);
     \\\$r = \\\$svc->importArchiMateFileFromPathOptimized([
         \"filePath\" => \"$AMEF_FILE\",
         \"fileName\" => \"GEMMA release.xml\",
@@ -1003,4 +1003,4 @@ echo "Options:"
 echo "  FORCE_BUILD=1 bash test-setup.sh       # Rebuild all frontend apps"
 echo "  CLEANUP_DUPLICATES=1 bash test-setup.sh # Remove duplicate test objects"
 echo ""
-echo "Ready to run: /test-softwarecatalog"
+echo "Ready to run: /test-stackiq"

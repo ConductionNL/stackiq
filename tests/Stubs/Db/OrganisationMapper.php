@@ -3,14 +3,14 @@
 /**
  * Test stub for OCA\OpenRegister\Db\OrganisationMapper.
  *
- * Declares the narrow surface SoftwareCatalog unit tests mock
+ * Declares the narrow surface Stackiq unit tests mock
  * (findByUuid + save), so PHPUnit can create mocks without the real
  * OpenRegister mapper being autoloadable.
  *
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Stubs\Db
+ * @package  OCA\Stackiq\Tests\Stubs\Db
  */
 
 declare(strict_types=1);

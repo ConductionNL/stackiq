@@ -1,15 +1,15 @@
 # contract-decision-delegation Specification
 
 ## Purpose
-Define how softwarecatalog delegates contract approval/renewal decisions to decidesk while keeping the contract record, schema, and nav surface local. Approval/renewal is raised by dispatching an in-process `DecisionRequestedEvent` and the outcome is projected back via a `DecisionConcludedEvent` listener (no server-side HTTP client, no callback endpoint, no reconcile poll); `contract.status` reaches `Actief` only as a projection of an `approved` decidesk outcome (fail-closed when decidesk is absent).
+Define how stackiq delegates contract approval/renewal decisions to decidesk while keeping the contract record, schema, and nav surface local. Approval/renewal is raised by dispatching an in-process `DecisionRequestedEvent` and the outcome is projected back via a `DecisionConcludedEvent` listener (no server-side HTTP client, no callback endpoint, no reconcile poll); `contract.status` reaches `Actief` only as a projection of an `approved` decidesk outcome (fail-closed when decidesk is absent).
 ## Requirements
-### Requirement: REQ-SCCD-001 — The system SHALL keep the contract record and its catalog metadata in softwarecatalog
+### Requirement: REQ-SCCD-001 — The system SHALL keep the contract record and its catalog metadata in stackiq
 
 The system SHALL keep the `contract` schema and all of its record/metadata
 fields (`dienst`, `gebruik`, `startDatum`, `eindDatum`, `contractNummer`,
 `contractType`, `kosten`, `kostenPeriode`, `contactpersoonAanbieder`,
 `contactpersoonGebruiker`, `documentReferentie`, `opmerkingen`, `status`) in
-the softwarecatalog `voorzieningen_register`, and SHALL keep the `Contracten`
+the stackiq `voorzieningen_register`, and SHALL keep the `Contracten`
 index page (`/contracten`) and `ContractDetail` page (`/contracten/:id`)
 routable so the catalog can record which contract governs which
 software/`gebruik`/`dienst` and federate/export it with the rest of the
@@ -19,11 +19,11 @@ CRUD owned by the `contract-administration` change.
 #### Scenario: Contract record stays local and routable
 
 - @e2e exclude record-persistence + federation contract — contract index/detail UI is owned by the contract-administration e2e suite; this scenario asserts no approval workflow is ADDED (a negative, code-review/gate-enforced) plus OR-store/federation persistence covered by Newman/PHPUnit
-- **GIVEN** an instance running softwarecatalog with the `contract` schema
+- **GIVEN** an instance running stackiq with the `contract` schema
 - **WHEN** a user opens the `Contracten` index or a `ContractDetail` page
 - **THEN** the contract record and all its metadata fields render from the OpenRegister object store
 - **AND** the contract continues to federate and export with the catalog data model
-- **AND** no contract-approval workflow, controller, or state-machine is added inside softwarecatalog
+- **AND** no contract-approval workflow, controller, or state-machine is added inside stackiq
 
 ### Requirement: REQ-SCCD-002 — The system SHALL delegate the contract approval and renewal decision to decidesk by dispatching an in-process DecisionRequestedEvent
 
@@ -33,7 +33,7 @@ raise a Decision in decidesk by dispatching
 `OCA\Decidesk\Event\DecisionRequestedEvent` through `IEventDispatcher` — never a
 hard-coded HTTP URL and never a server-side HTTP client — with
 `decisionType: contract` (approval) or `decisionType: contract-renewal`
-(renewal) and the provenance fields `sourceApp: softwarecatalog`,
+(renewal) and the provenance fields `sourceApp: stackiq`,
 `subjectRegister: voorzieningen`, `subjectSchema: contract`, `subjectId`,
 `subjectLabel`, `externalReference` (the `contractNummer`), and
 `correlationId`. After dispatch the system SHALL read `isHandled()` and
@@ -46,7 +46,7 @@ returned decision id to `contract.approvalDecisionId` and set
 - @e2e exclude cross-app backend contract — the DecisionRequestedEvent dispatch shape + provenance fields are verified by ContractApprovalServiceTest (PHPUnit) and the merged decidesk decision-events contract; an end-to-end raise requires decidesk installed
 - **GIVEN** an `In onderhandeling` contract and the decidesk event contract installed
 - **WHEN** a user clicks "Submit for approval" on the contract
-- **THEN** softwarecatalog dispatches a `DecisionRequestedEvent` with `decisionType: contract` and the provenance fields populated from the contract object
+- **THEN** stackiq dispatches a `DecisionRequestedEvent` with `decisionType: contract` and the provenance fields populated from the contract object
 - **AND** the decision id read back from the handled event is stored on `contract.approvalDecisionId`
 - **AND** `contract.approvalState` becomes `pending` while `status` stays `In onderhandeling`
 
@@ -55,7 +55,7 @@ returned decision id to `contract.approvalDecisionId` and set
 - @e2e exclude cross-app backend contract — the decisionType=contract-renewal dispatch is verified by PHPUnit + the decidesk decision-events contract, not a UI flow
 - **GIVEN** an expiring or `Verlopen` contract
 - **WHEN** a user clicks "Submit renewal"
-- **THEN** softwarecatalog dispatches a `DecisionRequestedEvent` with `decisionType: contract-renewal` and the same provenance fields
+- **THEN** stackiq dispatches a `DecisionRequestedEvent` with `decisionType: contract-renewal` and the same provenance fields
 - **AND** the request is delivered in-process via `IEventDispatcher`, not a hard-coded URL or HTTP client
 
 ### Requirement: REQ-SCCD-003 — The system SHALL fail closed when decidesk is unavailable and never self-approve a contract
@@ -79,7 +79,7 @@ SHALL NOT mark the contract approved or active.
 
 The system SHALL consume the decidesk outcome by registering a listener for
 `OCA\Decidesk\Event\DecisionConcludedEvent` that filters
-`getSourceApp() === 'softwarecatalog'`, resolves the contract from the carried
+`getSourceApp() === 'stackiq'`, resolves the contract from the carried
 `subjectId` (falling back to `externalReference`) with an IDOR check against the
 stored `approvalDecisionId`, and SHALL project it idempotently: an `approved`
 outcome (`getStatus() === 'approved'`) sets `approvalState = approved` and
@@ -93,7 +93,7 @@ reconcile poll SHALL be used.
 
 - @e2e exclude server-side projection — the approved -> approvalState=approved + status=Actief idempotent projection is verified by PHPUnit; the In onderhandeling -> Actief transition is applied server-side by the listener, not via a UI click
 - **GIVEN** a contract with `approvalState = pending` and a decidesk decision id
-- **WHEN** decidesk dispatches a `DecisionConcludedEvent` with `status: approved` and `sourceApp: softwarecatalog`
+- **WHEN** decidesk dispatches a `DecisionConcludedEvent` with `status: approved` and `sourceApp: stackiq`
 - **THEN** `contract.approvalState` becomes `approved`
 - **AND** `contract.status` transitions to `Actief`
 - **AND** re-receiving the same approved outcome is a no-op (idempotent)
@@ -109,7 +109,7 @@ reconcile poll SHALL be used.
 #### Scenario: Outcome for another source app is ignored
 
 - @e2e exclude cross-app filter — the getSourceApp() filter is verified by the listener guard + PHPUnit; a foreign source app must never mutate a catalog contract
-- **GIVEN** a `DecisionConcludedEvent` whose `sourceApp` is not `softwarecatalog`
+- **GIVEN** a `DecisionConcludedEvent` whose `sourceApp` is not `stackiq`
 - **WHEN** the listener receives it
 - **THEN** no contract is loaded or projected
 

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Repair step that migrates softwarecatalog person/organisation identity into
+ * Repair step that migrates stackiq person/organisation identity into
  * the Nextcloud addressbook.
  *
  * For every existing `contactpersoon` and `organisatie` object in the
@@ -17,23 +17,23 @@
  * `occ upgrade`).
  *
  * @category  Repair
- * @package   OCA\SoftwareCatalog\Repair
+ * @package   OCA\Stackiq\Repair
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Repair;
+namespace OCA\Stackiq\Repair;
 
-use OCA\SoftwareCatalog\AppInfo\Application;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogContactSyncService;
+use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -44,11 +44,11 @@ use Psr\Log\LoggerInterface;
  * Idempotent, fail-safe migration of identity to Nextcloud Contacts.
  *
  * @category Repair
- * @package  OCA\SoftwareCatalog\Repair
+ * @package  OCA\Stackiq\Repair
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
  */
@@ -69,7 +69,7 @@ class MigrateContactsToNc implements IRepairStep {
 	 *
 	 * @param IAppManager $appManager The app manager.
 	 * @param SettingsService $settingsService The settings service (register/schema id resolution).
-	 * @param SoftwareCatalogContactSyncService $contactSync The contacts bridge.
+	 * @param StackiqContactSyncService $contactSync The contacts bridge.
 	 * @param IAppConfig $appConfig The app config (convergence marker).
 	 * @param LoggerInterface $logger The logger.
 	 *
@@ -78,7 +78,7 @@ class MigrateContactsToNc implements IRepairStep {
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly SettingsService $settingsService,
-		private readonly SoftwareCatalogContactSyncService $contactSync,
+		private readonly StackiqContactSyncService $contactSync,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 	) {
@@ -92,7 +92,7 @@ class MigrateContactsToNc implements IRepairStep {
 	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 */
 	public function getName(): string {
-		return 'Migrate SoftwareCatalog contacts/organisations to the Nextcloud addressbook';
+		return 'Migrate Stackiq contacts/organisations to the Nextcloud addressbook';
 	}//end getName()
 
 	/**

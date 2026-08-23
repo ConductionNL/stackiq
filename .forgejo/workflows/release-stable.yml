@@ -9,5 +9,5 @@ jobs:
   release:
     uses: Conduction/.github/.forgejo/workflows/release-semrel.yml@main
     with:
-      app-name: softwarecatalog
+      app-name: stackiq
     secrets: inherit

@@ -1,9 +1,9 @@
 /**
- * SoftwareCatalog landing page.
+ * Stackiq landing page.
  *
  * Composes the brand <DetailHero> + <WidgetShelf> from
  * @conduction/docusaurus-preset/components, mirroring the connext page
- * at sites/www/src/pages/apps/softwarecatalog.mdx.
+ * at sites/www/src/pages/apps/stackiq.mdx.
  *
  * Written as .js (not .mdx) because the docs site has the docs plugin
  * pointed at `path: './'`, and an MDX file in src/pages/ trips the
@@ -25,7 +25,7 @@ import {
    the tile-grid motif reads as "rows in a register" for both apps
    (catalog of items vs. catalog of widgets) and ties the two product
    surfaces together visually. Cited from the connext detail page at
-   sites/www/src/pages/apps/softwarecatalog.mdx. */
+   sites/www/src/pages/apps/stackiq.mdx. */
 const SOFTWARECATALOG_ICON = (
   <svg viewBox="0 0 24 24">
     <rect x="3" y="3" width="7" height="9" />
@@ -294,37 +294,37 @@ const WIDGETS = [
 export default function Home() {
   return (
     <Layout
-      title="SoftwareCatalog, IT-asset and licence register for Nextcloud"
+      title="Stackiq, IT-asset and licence register for Nextcloud"
       description="IT-asset management on Nextcloud. Software inventory, licences, contracts, dependencies. One register, every install."
     >
       <main className="marketing-page">
         <DetailHero
-          appId="softwarecatalog"
+          appId="stackiq"
           background="cobalt"
           status={{ label: 'Stable', color: 'var(--c-mint-500)' }}
           version="v1.1"
           locales="NL · EN"
-          title="SoftwareCatalog"
+          title="Stackiq"
           tagline={TAGLINE}
           primaryCta={{
             label: 'Install from app store',
-            href: 'https://apps.nextcloud.com/apps/softwarecatalog',
+            href: 'https://apps.nextcloud.com/apps/stackiq',
             tone: 'orange',
           }}
           secondaryCta={{ label: 'Read the docs', href: '/docs/FEATURES' }}
           tertiaryCta={{
             label: 'View on GitHub',
-            href: 'https://codeberg.org/Conduction/softwarecatalog',
+            href: 'https://codeberg.org/Conduction/stackiq',
           }}
           iconColor="var(--c-orange-knvb)"
           icon={SOFTWARECATALOG_ICON}
-          illustration={<AppMock app="softwarecatalog" />}
+          illustration={<AppMock app="stackiq" />}
         />
 
         <WidgetShelf
           eyebrow="Widgets we ship"
           title="What runs where, on the IT-lead's home screen."
-          lede="Install SoftwareCatalog and these widgets show up on the dashboard for every IT-admin. Renewals first, inventory snapshot next, recent discovery deltas below."
+          lede="Install Stackiq and these widgets show up on the dashboard for every IT-admin. Renewals first, inventory snapshot next, recent discovery deltas below."
           widgets={WIDGETS}
         />
       </main>

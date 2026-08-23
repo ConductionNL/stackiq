@@ -1,8 +1,8 @@
-# SoftwareCatalog
+# Stackiq
 
-> SoftwareCatalog is an open-source IT-asset-management app for the Nextcloud workspace.
+> Stackiq is an open-source IT-asset-management app for the Nextcloud workspace.
 
-SoftwareCatalog is an open-source IT-asset-management app for the Nextcloud workspace. It keeps a central register of every application, licence, contract, and dependency the organisation runs, with renewal alerts before the auto-renewal date. Dashboard widgets surface upcoming renewals, an inventory snapshot by category, and discovery deltas showing newly added or removed apps. Built for the IT department that needs to know what runs where, without a separate asset database or second login. Released under EUPL-1.2 and maintained by Conduction since 2019.
+Stackiq is an open-source IT-asset-management app for the Nextcloud workspace. It keeps a central register of every application, licence, contract, and dependency the organisation runs, with renewal alerts before the auto-renewal date. Dashboard widgets surface upcoming renewals, an inventory snapshot by category, and discovery deltas showing newly added or removed apps. Built for the IT department that needs to know what runs where, without a separate asset database or second login. Released under EUPL-1.2 and maintained by Conduction since 2019.
 
 ## Docs
 
@@ -12,8 +12,8 @@ SoftwareCatalog is an open-source IT-asset-management app for the Nextcloud work
 ## Optional
 
 - [Install](https://www.conduction.nl/install): self-host on your Nextcloud instance.
-- [Source code](https://codeberg.org/Conduction/softwarecatalog): repository and issue tracker.
-- [App page](https://www.conduction.nl/apps/softwarecatalog): product positioning on conduction.nl.
+- [Source code](https://codeberg.org/Conduction/stackiq): repository and issue tracker.
+- [App page](https://www.conduction.nl/apps/stackiq): product positioning on conduction.nl.
 
 ## Contact
 

@@ -62,7 +62,7 @@ The catalog store SHALL hold catalog state and SHALL expose actions to clear err
 
 The object-operations store plugin SHALL provide the shared CRUD and lifecycle actions for register objects — fetch/save/patch/copy/delete, publish/depublish, lock/unlock, validate, download, merge, the bulk-operation runner, selection management, and the supporting initialization/refresh helpers — and SHALL surface per-object error state.
 
-`softwarecatalogPlugin.js` augments stores with these object actions (e.g. `saveObject`, `deleteObject`, `publishObject`, `lockObject`, `mergeObjects`, `massPublishObjects`, `refreshObjectList`, `setActiveObject`, `toggleSelectAllObjects`, `updateColumnFilter`). The plugin installer and the generic `$patch` passthrough are framework plumbing and are excluded from coverage.
+`stackiqPlugin.js` augments stores with these object actions (e.g. `saveObject`, `deleteObject`, `publishObject`, `lockObject`, `mergeObjects`, `massPublishObjects`, `refreshObjectList`, `setActiveObject`, `toggleSelectAllObjects`, `updateColumnFilter`). The plugin installer and the generic `$patch` passthrough are framework plumbing and are excluded from coverage.
 
 #### Scenario: Save an object
 - WHEN `saveObject` is dispatched

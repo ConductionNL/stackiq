@@ -3,7 +3,7 @@ kind: code
 depends_on: []
 ---
 
-# softwarecatalog — restore organisation parent-child hierarchy (disabled since a RBAC hotfix)
+# stackiq — restore organisation parent-child hierarchy (disabled since a RBAC hotfix)
 
 ## Why
 

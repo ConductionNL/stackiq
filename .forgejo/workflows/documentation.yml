@@ -21,5 +21,12 @@ jobs:
     if: github.event_name != 'pull_request'
     uses: Conduction/.github/.forgejo/workflows/documentation-deploy.yml@main
     with:
-      cf-project-name: softwarecatalog-docs
+      # FROZEN through the stackiq -> stackiq app-id rename.
+      # This names an EXISTING Cloudflare Pages project. Renaming it here does
+      # not rename the project — the deploy simply targets a project that does
+      # not exist, and a Pages deploy against an unknown project reports success
+      # while reaching nobody (see the two green Cloudflare deploys that shipped
+      # to nothing during the fleet rename). Rename the Cloudflare project first,
+      # then this line.
+      cf-project-name: stackiq-docs
     secrets: inherit

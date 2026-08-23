@@ -1,7 +1,7 @@
 # ArchiMate Import/Export Project Status
 
 ## Project Overview
-The ArchiMate Import/Export functionality for the Nextcloud SoftwareCatalog app enables importing architectural models from ArchiMate Exchange Format (AMEF) files and exporting OpenRegister objects back to ArchiMate format.
+The ArchiMate Import/Export functionality for the Nextcloud Stackiq app enables importing architectural models from ArchiMate Exchange Format (AMEF) files and exporting OpenRegister objects back to ArchiMate format.
 
 ## Current Status: ✅ COMPLETE - PRODUCTION READY
 
@@ -84,7 +84,7 @@ The ArchiMate Import/Export functionality for the Nextcloud SoftwareCatalog app 
 - **File Handling**: Direct file processing without complex framework abstractions
 - **Progress Tracking**: Server-Sent Events for real-time updates
 
-#### Frontend (`src/views/settings/SoftwareCatalogSettings.vue`)
+#### Frontend (`src/views/settings/StackiqSettings.vue`)
 - **Performance Dashboard**: Real-time performance metrics and timing breakdown
 - **Visual Analytics**: Progress bars, timing charts, and bottleneck identification
 - **Configuration**: Batch size and processing method configuration
@@ -146,25 +146,25 @@ $options = [
 
 #### Basic Settings (Fast - ~100ms)
 ```bash
-GET /apps/softwarecatalog/api/settings
+GET /apps/stackiq/api/settings
 ```
 Returns basic configuration without object counts for fast loading.
 
 #### ArchiMate Status (Medium - ~200ms)
 ```bash
-GET /apps/softwarecatalog/api/settings/archimate
+GET /apps/stackiq/api/settings/archimate
 ```
 Returns ArchiMate import/export status for real-time polling.
 
 #### Object Counts (Slow - Load on demand)
 ```bash
-GET /apps/softwarecatalog/api/settings/objects
+GET /apps/stackiq/api/settings/objects
 ```
 Returns object counts for all registers when needed for statistics.
 
 ### Import
 ```bash
-POST /apps/softwarecatalog/api/archimate/import
+POST /apps/stackiq/api/archimate/import
 Content-Type: multipart/form-data
 
 Parameters:
@@ -176,7 +176,7 @@ Parameters:
 
 ### Export
 ```bash
-POST /apps/softwarecatalog/api/archimate/export
+POST /apps/stackiq/api/archimate/export
 Content-Type: application/json
 
 {
@@ -215,13 +215,13 @@ Content-Type: application/json
 ```bash
 # Import test (small file)
 cd /home/rubenlinde/nextcloud-docker-dev
-docker exec -it -u 33 master-nextcloud-1 bash -c "curl -X POST 'http://localhost/index.php/apps/softwarecatalog/api/archimate/import' -u admin:admin -F 'archiMateFile=@/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_smaller.xml' -F 'updateExisting=true' -F 'preserveIds=true'"
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -X POST 'http://localhost/index.php/apps/stackiq/api/archimate/import' -u admin:admin -F 'archiMateFile=@/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_smaller.xml' -F 'updateExisting=true' -F 'preserveIds=true'"
 
 # Import test (production file)
-docker exec -it -u 33 master-nextcloud-1 bash -c "curl -X POST 'http://localhost/index.php/apps/softwarecatalog/api/archimate/import' -u admin:admin -F 'archiMateFile=@/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml' -F 'updateExisting=true' -F 'preserveIds=true'"
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -X POST 'http://localhost/index.php/apps/stackiq/api/archimate/import' -u admin:admin -F 'archiMateFile=@/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml' -F 'updateExisting=true' -F 'preserveIds=true'"
 
 # Export test
-docker exec -it -u 33 master-nextcloud-1 bash -c "curl -X POST 'http://localhost/index.php/apps/softwarecatalog/api/archimate/export' -u admin:admin -H 'Content-Type: application/json' -d '{\"format\":\"xml\",\"includeRelationships\":true,\"includeViews\":true}'"
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -X POST 'http://localhost/index.php/apps/stackiq/api/archimate/export' -u admin:admin -H 'Content-Type: application/json' -d '{\"format\":\"xml\",\"includeRelationships\":true,\"includeViews\":true}'"
 ```
 
 ## Troubleshooting

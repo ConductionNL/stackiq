@@ -62,7 +62,7 @@ if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
         
         # Check logs for any errors
         echo "Checking recent logs..."
-        docker-compose exec nextcloud tail -n 20 /var/www/html/data/nextcloud.log | grep -E "SoftwareCatalogue|ownership|UUID"
+        docker-compose exec nextcloud tail -n 20 /var/www/html/data/nextcloud.log | grep -E "Stackiq|ownership|UUID"
         
     else
         echo "❌ Could not extract UUID from response"

@@ -21,7 +21,7 @@ Choose a format (CycloneDX or SPDX, both JSON) and a file, then **Import
 SBOM**:
 
 ```
-POST /apps/softwarecatalog/api/moduleversies/{moduleVersieUuid}/sbom
+POST /apps/stackiq/api/moduleversies/{moduleVersieUuid}/sbom
 multipart/form-data: sbomFile=<file>, format=cyclonedx-json|spdx-json
 ```
 

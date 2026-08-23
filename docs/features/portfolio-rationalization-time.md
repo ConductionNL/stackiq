@@ -58,7 +58,7 @@ never fork into two competing sources of the same fact.
 
 ## The portfolio rationalization report
 
-`GET /apps/softwarecatalog/api/portfolio-report?organisation={uuid}`
+`GET /apps/stackiq/api/portfolio-report?organisation={uuid}`
 
 Returns a bounded, organisation-scoped aggregate:
 
@@ -139,7 +139,7 @@ The controller resolves and checks the caller's organisation access
 
 ### CSV export
 
-`GET /apps/softwarecatalog/api/portfolio-report?organisation={uuid}&format=csv`
+`GET /apps/stackiq/api/portfolio-report?organisation={uuid}&format=csv`
 
 The **same** bounded, RBAC-scoped row set as the JSON report, serialised as
 CSV (one row per gebruik: organisation, module, TIME classification,

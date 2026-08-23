@@ -19,10 +19,10 @@
 <template>
 	<div class="suites-index">
 		<CnIndexPage
-			:title="t('softwarecatalog', 'Suites')"
+			:title="t('stackiq', 'Suites')"
 			:description="
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Application suites — bundled products made up of one or more existing applications.',
 				)
 			"
@@ -38,7 +38,7 @@
 					<template #icon>
 						<Plus :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'New suite') }}
+					{{ t('stackiq', 'New suite') }}
 				</NcButton>
 			</template>
 		</CnIndexPage>

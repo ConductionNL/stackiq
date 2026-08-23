@@ -128,10 +128,10 @@ compliance data SHALL be listed as such — never omitted.
 
 The `module` schema SHALL declare a `dpia-review-overdue`
 `x-openregister-notifications` rule using the canonical dialect (see
-`softwarecatalog-notifications`): a `scheduled` trigger with a filter
+`stackiq-notifications`): a `scheduled` trigger with a filter
 matching modules whose `dpiaStatus` is `executed` and whose
 `dpiaVolgendeBeoordeling` is on or before today (`withinNext` with a
-zero-day window), dispatching to the `softwarecatalog-admins` group and
+zero-day window), dispatching to the `stackiq-admins` group and
 the module's manage-ACL holders on the `nc-notification` and `email`
 channels, with `nl` and `en` subject strings naming the application and
 the due date.
@@ -141,7 +141,7 @@ the due date.
 @e2e exclude Declarative background scheduled-sweep notification (x-openregister-notifications), not a UI event; the rule's dialect shape is covered by BioComplianceRegisterShapeTest::testModuleDeclaresDpiaOverdueRule (PHPUnit) and dispatch mechanics belong to OpenRegister's own notification engine.
 
 - **WHEN** a module has `dpiaStatus` executed and `dpiaVolgendeBeoordeling` on or before today, and the scheduled sweep runs
-- **THEN** the engine dispatches `nc-notification` + `email` to the `softwarecatalog-admins` group and the module's manage-ACL holders
+- **THEN** the engine dispatches `nc-notification` + `email` to the `stackiq-admins` group and the module's manage-ACL holders
 - **AND** the subject includes the application name and the review-due date in the recipient's locale (nl/en)
 
 #### Scenario: DPIA with a future review date does not notify

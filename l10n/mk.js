@@ -1,5 +1,5 @@
 OC.L10N.register(
-    "softwarecatalog",
+    "stackiq",
     {
     "Acquisition" : "Acquisition",
     "Applications in use for an organisation, grouped by lifecycle phase and ordered by nearest urgency (end-of-support, phase-out or planned replacement)." : "Applications in use for an organisation, grouped by lifecycle phase and ordered by nearest urgency (end-of-support, phase-out or planned replacement).",

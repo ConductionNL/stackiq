@@ -179,7 +179,7 @@ SoftwareCatalog: Set user manager: john.smith → jane.doe
 
 To add new role-based groups:
 
-1. **Code Modification**: Update SoftwareCatalogueService
+1. **Code Modification**: Update StackiqService
 2. **Documentation**: Document new role meanings
 3. **Testing**: Verify assignment works correctly
 

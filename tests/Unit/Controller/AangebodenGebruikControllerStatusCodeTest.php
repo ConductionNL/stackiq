@@ -5,11 +5,11 @@
  * returns when the service layer reports an error.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-offered-usage-afnemer-endpoint-must-require-authentication-explicitly-not-implicitly-req-004
  *
@@ -19,10 +19,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\AangebodenGebruikController;
-use OCA\SoftwareCatalog\Service\AangebodenGebruikService;
+use OCA\Stackiq\Controller\AangebodenGebruikController;
+use OCA\Stackiq\Service\AangebodenGebruikService;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
@@ -92,7 +92,7 @@ final class AangebodenGebruikControllerStatusCodeTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn($user);
 
 		return new AangebodenGebruikController(
-			'softwarecatalog',
+			'stackiq',
 			$request,
 			$this->userSession,
 			$this->gebruikSvc,

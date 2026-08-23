@@ -2,7 +2,7 @@
 status: done
 ---
 
-# softwarecatalog-contacts-to-nc Specification
+# stackiq-contacts-to-nc Specification
 
 ## Purpose
 Moves person and organisation identity out of app-local schemas and into the Nextcloud addressbook as the source of record, reducing the contactpersoon and organisatie schemas to catalog-specific relationship records keyed by a required contactsUid. A ContactSyncService bridges to Nextcloud Contacts via IManager, an idempotent fail-safe repair step migrates existing identity, and the top-level Organisations and Contacts navigation is removed while their pages stay routable for deep links.
@@ -17,10 +17,10 @@ ADR-012.
 
 #### Scenario: Identity lives in Nextcloud Contacts
 
-- **GIVEN** a person or organisation known to softwarecatalog
+- **GIVEN** a person or organisation known to stackiq
 - **WHEN** its identity fields (name, e-mail, phone, website, logo, code) are read
 - **THEN** they are resolved from the Nextcloud addressbook via `OCP\Contacts\IManager`
-- **AND** no softwarecatalog schema stores those identity fields as the source of record
+- **AND** no stackiq schema stores those identity fields as the source of record
 
 ### Requirement: REQ-SCNC-002 — The system SHALL keep only catalog-specific relationship/role records keyed by contactsUid
 
@@ -45,7 +45,7 @@ catalog fields and dropping all embedded identity properties.
 
 ### Requirement: REQ-SCNC-003 — The system SHALL bridge to Nextcloud Contacts through the reused ContactSyncService pattern
 
-The system SHALL provide a `SoftwareCatalogContactSyncService` modeled on the
+The system SHALL provide a `StackiqContactSyncService` modeled on the
 canonical `pipelinq/lib/Service/ContactSyncService.php`, exposing
 `searchContacts`, `syncToContacts(objectType, objectId)` returning a
 `contactsUid`, and `findContactByUid`, using `OCP\Contacts\IManager`
@@ -66,7 +66,7 @@ Contact is `findContactByUid`, and resolve-or-create is `syncToContacts`.
 - **GIVEN** the contacts-to-NC abstraction
 - **WHEN** identity is created or edited
 - **THEN** the write is performed against the Nextcloud Contacts app via `IManager`
-- **AND** softwarecatalog adds no controller that re-implements identity CRUD on top of the OR object store
+- **AND** stackiq adds no controller that re-implements identity CRUD on top of the OR object store
 
 ### Requirement: REQ-SCNC-004 — The system SHALL remove the top-level Organisations and Contacts navigation while keeping their pages routable
 
@@ -78,7 +78,7 @@ in product/organisation context.
 
 #### Scenario: Identity browsing is no longer top-level nav
 
-- **GIVEN** the softwarecatalog primary navigation
+- **GIVEN** the stackiq primary navigation
 - **WHEN** the change is applied
 - **THEN** the `Organisaties` (order 20) and `Contactpersonen` (order 30) menu entries are absent from the primary `menu[]`
 

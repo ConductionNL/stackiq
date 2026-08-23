@@ -1,6 +1,6 @@
 # Design — mcp-full-action-surface
 
-## 1. Positioning against `softwarecatalog-mcp-adoption`
+## 1. Positioning against `stackiq-mcp-adoption`
 
 That change (active, unimplemented, `.openspec.yaml: schema: conduction`,
 created 2026-07-13) is the read-only declarative half of this surface. Its
@@ -14,7 +14,7 @@ reasoning is kept; its artefacts cannot be applied as written:
 | Write tools deferred (`DEFERRED_QUESTIONS`) | The concrete need now exists (hermiq grant model + chat commanding) | This change is the deferred `kind: code` follow-up it named |
 
 **Disposition:** this change supersedes it. Archive
-`softwarecatalog-mcp-adoption` as superseded-by `mcp-full-action-surface`
+`stackiq-mcp-adoption` as superseded-by `mcp-full-action-surface`
 when this lands; do not apply its fragment first.
 
 ## 2. Architecture
@@ -23,7 +23,7 @@ when this lands; do not apply its fragment first.
 hermiq agent (default-deny grants, scope × reach, approval gate, audit)
   -> OpenRegister /api/mcp (JSON-RPC) / chat facade
     -> SchemaDerivedToolProvider           <- register.d/mcp-full-action-surface.json  (layer A+B)
-    -> IMcpToolProvider::softwarecatalog   <- lib/Mcp/SoftwareCatalogToolProvider.php  (layer C)
+    -> IMcpToolProvider::stackiq   <- lib/Mcp/StackiqToolProvider.php  (layer C)
          dispatcher only; per tool:
            McpArgumentValidator -> per-object gate -> existing workflow service
 ```
@@ -47,8 +47,8 @@ DI alias, mirroring `decidesk/lib/AppInfo/Registrar/DomainServiceRegistrar.php:1
 
 ```php
 $context->registerServiceAlias(
-    'OCA\\OpenRegister\\Mcp\\IMcpToolProvider::softwarecatalog',
-    SoftwareCatalogToolProvider::class
+    'OCA\\OpenRegister\\Mcp\\IMcpToolProvider::stackiq',
+    StackiqToolProvider::class
 );
 ```
 
@@ -96,7 +96,7 @@ via generic OR object CRUD, so a derived MCP write matches the app's
 existing authority model exactly (OR RBAC at invoke time). `delete` is
 withheld (destructive; no current UI story). Every OTHER schema keeps the
 superseded change's "no raw writes" rule: `contract.status = Actief` is a
-decidesk projection ("softwarecatalog NEVER sets `status = Actief` on its
+decidesk projection ("stackiq NEVER sets `status = Actief` on its
 own authority" — `register.d/contracts-to-decidesk.json`), and
 `moduleVersion`/`connection`/`organization`/`usage`/`contract` carry
 lifecycle state machines a raw `update` would bypass.
@@ -113,39 +113,39 @@ descriptor declares one explicitly.
 
 | Tool id | Delegates to | Reach | Notes |
 |---|---|---|---|
-| `softwarecatalog.getMyContactProfile` | `ContactpersonenController::getMe` path (`/api/me` resolution) | user | The caller's own contactPerson + organisation context |
-| `softwarecatalog.listOffers` | `AanbodService::getAanbod()` | user | Offers pending for the caller's active organisation |
-| `softwarecatalog.listOfferedUsages` | `AangebodenGebruikService::getGebruiksWhereAfnemer()` / `getGebruiksWhereDeelnemers()` | user | Usage records offered to / shared with the caller's organisation |
-| `softwarecatalog.getPortfolioReport` | `PortfolioReportService::buildReport(organisationUuid)` | user | Caller's organisation only; gate rejects foreign org uuids for non-admins |
-| `softwarecatalog.listPendingModerations` | `ModerationService::listPending()` | user | Admin-gated (same as `moderation#pending`) |
-| `softwarecatalog.getReviewAggregate` | `ReviewAggregateService` (`review#aggregate`) | user | Public aggregate numbers |
-| `softwarecatalog.getContractApprovalConfig` | `ContractApprovalService::isDelegationConfigured()` (`contractApproval#config`) | user | Lets an agent know whether submit tools can work |
-| `softwarecatalog.getSbomImportStatus` | `SbomImportService::getStatus(moduleVersionUuid)` | user | Behind `SbomImportService::userCanReadModule()` |
-| `softwarecatalog.listViews` / `softwarecatalog.getView` | `ViewService` (`view#getAllViews` / `#getView`) | user | Enriched ArchiMate view projection, incl. enrichment params |
-| `softwarecatalog.previewOrganisationMerge` | `MergeOrganisatieService::dryRun(source, target)` | user | Admin-gated; read-only preview of `mergeOrganisations` |
-| `softwarecatalog.getEolSyncStatus` | `EolSyncService::getStatus()` | user | Read of last-run metadata only |
+| `stackiq.getMyContactProfile` | `ContactpersonenController::getMe` path (`/api/me` resolution) | user | The caller's own contactPerson + organisation context |
+| `stackiq.listOffers` | `AanbodService::getAanbod()` | user | Offers pending for the caller's active organisation |
+| `stackiq.listOfferedUsages` | `AangebodenGebruikService::getGebruiksWhereAfnemer()` / `getGebruiksWhereDeelnemers()` | user | Usage records offered to / shared with the caller's organisation |
+| `stackiq.getPortfolioReport` | `PortfolioReportService::buildReport(organisationUuid)` | user | Caller's organisation only; gate rejects foreign org uuids for non-admins |
+| `stackiq.listPendingModerations` | `ModerationService::listPending()` | user | Admin-gated (same as `moderation#pending`) |
+| `stackiq.getReviewAggregate` | `ReviewAggregateService` (`review#aggregate`) | user | Public aggregate numbers |
+| `stackiq.getContractApprovalConfig` | `ContractApprovalService::isDelegationConfigured()` (`contractApproval#config`) | user | Lets an agent know whether submit tools can work |
+| `stackiq.getSbomImportStatus` | `SbomImportService::getStatus(moduleVersionUuid)` | user | Behind `SbomImportService::userCanReadModule()` |
+| `stackiq.listViews` / `stackiq.getView` | `ViewService` (`view#getAllViews` / `#getView`) | user | Enriched ArchiMate view projection, incl. enrichment params |
+| `stackiq.previewOrganisationMerge` | `MergeOrganisatieService::dryRun(source, target)` | user | Admin-gated; read-only preview of `mergeOrganisations` |
+| `stackiq.getEolSyncStatus` | `EolSyncService::getStatus()` | user | Read of last-run metadata only |
 
 ### Write tools (scope as listed; hermiq default-deny, human approval gate)
 
 | Tool id | Delegates to | Scope | Reach | Why that reach |
 |---|---|---|---|---|
-| `softwarecatalog.submitContractApproval` | `ContractApprovalService::submitForApproval(uuid, false)` behind `authorizeSubmit()` | update | instance | Raises a decidesk Decision other users see; flips `approvalState` |
-| `softwarecatalog.submitContractRenewal` | `submitForApproval(uuid, true)` | update | instance | Same seam, renewal flavour |
-| `softwarecatalog.publishObject` | `PublicationService::publish(objectType, uuid)` | update | external | Sets `publicationDate` → anonymous open-data readers see the record; effect leaves the authenticated instance surface |
-| `softwarecatalog.depublishObject` | `PublicationService::depublish(objectType, uuid)` | update | external | Withdraws from the public surface — same boundary |
-| `softwarecatalog.approveRegistration` | `ModerationService::approve(uuid, type)` | update | instance | Admits an organisation/review; visible to all users |
-| `softwarecatalog.rejectRegistration` | `ModerationService::reject(uuid, type)` | update | instance | |
-| `softwarecatalog.submitReview` | `ReviewService::submit(payload, subjectType, subjectId)` | create | instance | Forced to `status: pending` server-side; moderators observe it |
-| `softwarecatalog.acceptOffer` | `AanbodService::acceptAanbod(aanbodId)` | update | instance | |
-| `softwarecatalog.declineOffer` | `AanbodService::denyAanbod(aanbodId)` | delete | instance | REST twin is a DELETE verb |
-| `softwarecatalog.claimUsage` | `AangebodenGebruikService::setGebruikSelfToActiveOrg(gebruikId)` | update | instance | |
-| `softwarecatalog.declineUsage` | `AangebodenGebruikService::deleteGebruikAsAfnemer(gebruikId)` | delete | instance | |
-| `softwarecatalog.grantOrganisationMembership` | `OrganisationMembersController::grant(uuid, userId)` logic (extract to service if needed) | update | instance | Changes another user's permission set |
-| `softwarecatalog.revokeOrganisationMembership` | `::revoke(uuid, userId)` logic | update | instance | |
-| `softwarecatalog.mergeOrganisations` | `MergeOrganisatieService::execute(source, target, actorUid)` | update | instance | Admin-gated; tombstones the source (`mergedInto`) |
-| `softwarecatalog.registerOrganisation` | `IntakeService::submit(payload)` (+ `validate()`) | create | instance | Creates a `pending` registration for moderators |
-| `softwarecatalog.importSbom` | `SbomImportService::importForModuleVersie(...)` | create | instance | Content passed inline (SBOM JSON/XML string), not a file upload |
-| `softwarecatalog.triggerEolSync` | `EolSyncService::run()` | update | external | Outbound HTTP to endoflife.date — per hermiq's rule, anything issuing external requests is `external` regardless of verb |
+| `stackiq.submitContractApproval` | `ContractApprovalService::submitForApproval(uuid, false)` behind `authorizeSubmit()` | update | instance | Raises a decidesk Decision other users see; flips `approvalState` |
+| `stackiq.submitContractRenewal` | `submitForApproval(uuid, true)` | update | instance | Same seam, renewal flavour |
+| `stackiq.publishObject` | `PublicationService::publish(objectType, uuid)` | update | external | Sets `publicationDate` → anonymous open-data readers see the record; effect leaves the authenticated instance surface |
+| `stackiq.depublishObject` | `PublicationService::depublish(objectType, uuid)` | update | external | Withdraws from the public surface — same boundary |
+| `stackiq.approveRegistration` | `ModerationService::approve(uuid, type)` | update | instance | Admits an organisation/review; visible to all users |
+| `stackiq.rejectRegistration` | `ModerationService::reject(uuid, type)` | update | instance | |
+| `stackiq.submitReview` | `ReviewService::submit(payload, subjectType, subjectId)` | create | instance | Forced to `status: pending` server-side; moderators observe it |
+| `stackiq.acceptOffer` | `AanbodService::acceptAanbod(aanbodId)` | update | instance | |
+| `stackiq.declineOffer` | `AanbodService::denyAanbod(aanbodId)` | delete | instance | REST twin is a DELETE verb |
+| `stackiq.claimUsage` | `AangebodenGebruikService::setGebruikSelfToActiveOrg(gebruikId)` | update | instance | |
+| `stackiq.declineUsage` | `AangebodenGebruikService::deleteGebruikAsAfnemer(gebruikId)` | delete | instance | |
+| `stackiq.grantOrganisationMembership` | `OrganisationMembersController::grant(uuid, userId)` logic (extract to service if needed) | update | instance | Changes another user's permission set |
+| `stackiq.revokeOrganisationMembership` | `::revoke(uuid, userId)` logic | update | instance | |
+| `stackiq.mergeOrganisations` | `MergeOrganisatieService::execute(source, target, actorUid)` | update | instance | Admin-gated; tombstones the source (`mergedInto`) |
+| `stackiq.registerOrganisation` | `IntakeService::submit(payload)` (+ `validate()`) | create | instance | Creates a `pending` registration for moderators |
+| `stackiq.importSbom` | `SbomImportService::importForModuleVersie(...)` | create | instance | Content passed inline (SBOM JSON/XML string), not a file upload |
+| `stackiq.triggerEolSync` | `EolSyncService::run()` | update | external | Outbound HTTP to endoflife.date — per hermiq's rule, anything issuing external requests is `external` regardless of verb |
 
 Descriptor hints: every write tool sets `readOnlyHint: false`;
 `destructiveHint: true` only on `declineOffer`, `declineUsage`,
@@ -166,18 +166,18 @@ Descriptor hints: every write tool sets `readOnlyHint: false`;
 ## 6. Chat scenarios the surface must support (grounded end-to-end)
 
 1. **"Which contracts expire this quarter?"** →
-   `softwarecatalog.contract.search` with a `endDate` range filter
+   `stackiq.contract.search` with a `endDate` range filter
    (real property: `contract.endDate`, "De einddatum van het contract");
    scope read / reach user — grantable without approval friction.
 2. **"Log a vulnerability against application X."** →
-   `softwarecatalog.module.search {name: X}` then
-   `softwarecatalog.vulnerability.create {name, cveCode, cvssScore,
+   `stackiq.module.search {name: X}` then
+   `stackiq.vulnerability.create {name, cveCode, cvssScore,
    modules: [moduleId]}` (all real `vulnerability` properties); write →
    default-deny, first use prompts a grant, invocation passes the human
    approval gate and lands in the audit trail.
 3. **"Submit contract 2025-0042 for renewal approval."** →
    `contract.search {contractNumber}` then
-   `softwarecatalog.submitContractRenewal {contractUuid}`; the gate runs
+   `stackiq.submitContractRenewal {contractUuid}`; the gate runs
    `ContractApprovalService::authorizeSubmit()` — a caller whose active
    organisation doesn't own the contract gets the same 403-equivalent
    `forbidden` error the REST path returns, agent or not.
@@ -208,5 +208,5 @@ Descriptor hints: every write tool sets `readOnlyHint: false`;
 - `x-openregister-mcp` on a trimmed AMEF projection schema (inherited
   deferral).
 - `assessment` derived writes — review submission must stay behind
-  `softwarecatalog.submitReview` so the server-side `pending` forcing and
+  `stackiq.submitReview` so the server-side `pending` forcing and
   `auteur` stamping are never bypassed.

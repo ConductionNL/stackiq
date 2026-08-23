@@ -11,7 +11,7 @@ Lets catalogue maintainers publish and depublish software entries and organisati
 
 Catalogue maintainers SHALL be able to publish and depublish software entries
 (applicaties/voorzieningen, modules, koppelingen) and organisation profiles
-from the softwarecatalog UI. Publishing SHALL set the OpenRegister
+from the stackiq UI. Publishing SHALL set the OpenRegister
 `publicatiedatum` field (and clear any `depublicatiedatum`) via a normal
 `ObjectService::saveObject()`; depublishing SHALL set `depublicatiedatum` and
 clear `publicatiedatum`. Anonymous (public group) visibility SHALL be governed
@@ -74,7 +74,7 @@ The published (anonymous-visible) representation of an entry SHALL be a
 sanitized projection: no RBAC/ownership metadata, no internal notes, and no
 contact-person PII (names, email addresses, phone numbers). It SHALL retain
 stable identifiers (UUID, slug) and SHALL carry reuse metadata: a license
-(default CC0, configurable via `softwarecatalog/open_data_license`), the
+(default CC0, configurable via `stackiq/open_data_license`), the
 publishing organisation's public name, and a last-modified timestamp. The
 projection SHALL be applied at the publication boundary so every consumer of
 the published surface (API, federation, sitemap) sees the same shape.
@@ -125,7 +125,7 @@ behaviour remains governed by `aanbod-listings` and `aangeboden-gebruik-api`.
 
 The anonymous organisation self-registration flow SHALL be validated,
 throttled, and moderated. The flow
-(`SoftwareCatalogueService` anonymous path, entering via the OpenConnector
+(`StackiqueService` anonymous path, entering via the OpenConnector
 API per `docs/ANONYMOUS_USER_REGISTRATION_USECASE.md`) is governed as a
 public intake: input is validated against the organisation and contactpersoon
 schemas with caller-supplied ownership/RBAC/published fields stripped; the

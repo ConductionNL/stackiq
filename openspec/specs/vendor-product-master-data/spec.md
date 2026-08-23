@@ -17,11 +17,11 @@ The declaration SHALL be schema metadata only — no controller or service chang
 - **THEN** its `@type` is `https://schema.org/Organization`
 - **AND** the schema advertises `https://openregister.app/ns#Vendor` among its implemented capability URIs
 
-#### Scenario: The fleet vendor role resolves to softwarecatalog when installed
+#### Scenario: The fleet vendor role resolves to stackiq when installed
 
-- **WHEN** another app declares a property referencing `https://openregister.app/ns#Vendor` and softwarecatalog is installed with `implements` advertising that role
-- **THEN** the reference is resolvable to softwarecatalog's `organisatie` objects
-- **AND** softwarecatalog continues to function standalone when no other app consumes the role
+- **WHEN** another app declares a property referencing `https://openregister.app/ns#Vendor` and stackiq is installed with `implements` advertising that role
+- **THEN** the reference is resolvable to stackiq's `organisatie` objects
+- **AND** stackiq continues to function standalone when no other app consumes the role
 
 ### Requirement: Product schemas advertise SoftwareApplication and vendor references name their role
 
@@ -59,7 +59,7 @@ dedup service, merge controller, or survivorship engine SHALL be introduced;
 - **WHEN** federation imports mirrors of the same real vendor from two different peer catalogs
 - **THEN** OpenRegister's duplicate-candidate surface lists them as a merge candidate
 - **AND** a steward can resolve them to a single golden vendor through the OR merge surface
-- **AND** no softwarecatalog-local code performed the reconciliation
+- **AND** no stackiq-local code performed the reconciliation
 
 #### Scenario: Duplicate products by name and supplier are surfaced
 
