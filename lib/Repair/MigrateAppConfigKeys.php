@@ -151,9 +151,10 @@ class MigrateAppConfigKeys implements IRepairStep {
 
 				if ($this->copyValue(key: $key, value: $values[$key]) === true) {
 					$copied++;
-				} else {
-					$skipped++;
+					continue;
 				}
+
+				$skipped++;
 			}
 
 			$output->info(
