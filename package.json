@@ -11,6 +11,7 @@
     "test:l10n": "node tests/l10n/check-l10n.js",
     "test:l10n:parity": "node tests/l10n/check-l10n.js --parity",
     "test:l10n:write": "node tests/l10n/check-l10n.js --write",
+    "check:schema-l10n": "node scripts/check-schema-l10n.js",
     "check:vue-demi": "node scripts/check-vue-demi.js",
     "prebuild": "npm run check:vue-demi",
     "predev": "npm run check:vue-demi",
