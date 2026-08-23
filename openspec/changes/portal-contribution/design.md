@@ -11,7 +11,7 @@ new file under `lib/Portal/` and touches nothing else in the runtime app:
 
 ```
 portaliq (if installed)
-  └─ registry resolves OCA\SoftwareCatalog\Portal\PortalContributionProvider (FQCN)
+  └─ registry resolves OCA\Stackiq\Portal\PortalContributionProvider (FQCN)
        └─ getAudiences() → ['vendor-org','participant-org']   (v2, preferred)
        └─ getAudience()  → 'vendor-org'                       (v1 fallback)
        └─ getContribution($subject) → manifest (pure data) or null

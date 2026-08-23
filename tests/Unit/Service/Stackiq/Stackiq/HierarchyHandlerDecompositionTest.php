@@ -8,7 +8,7 @@
  * assignManagerForOtherBeheerders().
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service\SoftwareCatalogue
+ * @package   OCA\Stackiq\Tests\Unit\Service\Stackiq
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -19,11 +19,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service\SoftwareCatalogue;
+namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
+use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\IGroupManager;
 use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
@@ -34,7 +34,7 @@ use Psr\Log\NullLogger;
  * HierarchyHandler::setupManagerRelationships.
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\Service\SoftwareCatalogue
+ * @package  OCA\Stackiq\Tests\Unit\Service\Stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-8-5
  */

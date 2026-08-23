@@ -112,7 +112,7 @@ $ occ user:info test.fixed
 ## Key Fixes Applied
 
 ### 1. Username Generation Fix
-**File**: `lib/Service/SoftwareCatalogue/ContactPersonHandler.php`
+**File**: `lib/Service/Stackiq/ContactPersonHandler.php`
 **Issue**: `??` operator not working properly
 **Fix**: Explicit username assignment logic
 
@@ -127,7 +127,7 @@ $ occ user:info test.fixed
 **Fix**: Changed to use correct `find()` method with register/schema context
 
 ### 4. Organization Group Assignment Fix ⭐ **KEY FIX**
-**File**: `lib/Service/SoftwareCatalogue/ContactPersonHandler.php`
+**File**: `lib/Service/Stackiq/ContactPersonHandler.php`
 **Lines**: 814, 1175
 **Issue**: `$objectService->getObject($organizationId)` method doesn't exist
 **Fix**: 
@@ -144,17 +144,17 @@ $organizationObject = $objectService->find($organizationId, [], false, 6, 35);
 The following debug logging is currently active and should be removed after successful acceptance testing:
 
 ### 1. ContactPersonHandler Debug Logs
-**File**: `lib/Service/SoftwareCatalogue/ContactPersonHandler.php`
+**File**: `lib/Service/Stackiq/ContactPersonHandler.php`
 **Lines**: ~470-490, ~800-850
 **Purpose**: Track user group assignment and organization lookup
 
 ### 2. OrganizationHandler Debug Logs  
-**File**: `lib/Service/SoftwareCatalogue/OrganizationHandler.php`
+**File**: `lib/Service/Stackiq/OrganizationHandler.php`
 **Lines**: Various
 **Purpose**: Track contactgegevens creation process
 
 ### 3. EventListener Debug Logs
-**File**: `lib/EventListener/SoftwareCatalogEventListener.php`
+**File**: `lib/EventListener/StackiqEventListener.php`
 **Lines**: Various
 **Purpose**: Track event processing flow
 

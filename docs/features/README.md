@@ -120,8 +120,8 @@ Software Catalogus can synchronise catalogue data across organisations via the o
 
 This enables a federated, collaborative catalogue across Dutch municipalities without a central authority.
 
-**Key service:** `lib/Service/SoftwareCatalogueService.php`
-**Subservices:** `lib/Service/SoftwareCatalogue/` (dedicated handlers per sync scenario)
+**Key service:** `lib/Service/StackiqService.php`
+**Subservices:** `lib/Service/Stackiq/` (dedicated handlers per sync scenario)
 
 ## Automatic User Provisioning
 
