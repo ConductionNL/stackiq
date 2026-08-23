@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
- * Real UI smoke coverage for the manifest-driven SoftwareCatalog SPA pages.
+ * Real UI smoke coverage for the manifest-driven Stackiq SPA pages.
  *
  * src/manifest.json declares the rendering pages (index / detail / dashboard /
  * roadmap / settings). The app shell (CnAppRoot) uses vue-router in *hash*
@@ -241,7 +241,7 @@ for (const p of DETAIL_PAGES) {
 // `type: "settings"` page. ADR-079 D1 removed it: app-level configuration has
 // exactly one home, `/settings/admin/<app>`, where Nextcloud authorizes the
 // caller server-side before the section renders. The SAME component
-// (`src/views/settings/SoftwareCatalogSettings.vue`) renders there, mounted by
+// (`src/views/settings/StackiqSettings.vue`) renders there, mounted by
 // `src/settings.js` into `templates/settings/admin.php`, so these assertions
 // are unchanged in substance — only the door they walk through moved.
 //
@@ -261,16 +261,16 @@ async function gotoAdminSettings(page: Page) {
 	return host
 }
 
-// The settings shell (SoftwareCatalogSettings.vue) renders its section
+// The settings shell (StackiqSettings.vue) renders its section
 // navigation and the configuration status — fe-settings-ui "Open settings".
 // @e2e fe-settings-ui::open-settings
 test('admin settings: the settings section renders', async ({ page }) => {
 	const host = await gotoAdminSettings(page)
 	// Scope to the app's own settings host so the assertion can't match a
 	// transient notification toast elsewhere in the DOM.
-	await expect(
-		host.getByText('SoftwareCatalog', { exact: false }).first(),
-	).toBeVisible({ timeout: 30000 })
+	await expect(host.getByText('Stackiq', { exact: false }).first()).toBeVisible({
+		timeout: 30000,
+	})
 })
 
 // The settings shell renders the Statistics overview section (StatisticsOverview.vue),
