@@ -23,7 +23,7 @@
  *
  * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
  * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
- * @spec openspec/specs/eol-feed-integration/spec.md#requirement-stackiq-performs-no-direct-http-to-the-eol-feed
+ * @spec openspec/specs/eol-feed-integration/spec.md#requirement-softwarecatalog-performs-no-direct-http-to-the-eol-feed
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -116,7 +116,7 @@ class EolSyncService {
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
-	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-stackiq-performs-no-direct-http-to-the-eol-feed
+	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-softwarecatalog-performs-no-direct-http-to-the-eol-feed
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 13 (threshold 10). The spec
 	 * requires this method to never throw: feature disabled, OpenRegister absent, register or

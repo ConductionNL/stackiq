@@ -187,9 +187,7 @@
 					</h4>
 					<NcEmptyContent
 						v-if="group.rows.length === 0"
-						:name="
-							t('stackiq', 'No applications in this quadrant')
-						" />
+						:name="t('stackiq', 'No applications in this quadrant')" />
 					<table v-else class="pr-table">
 						<thead>
 							<tr>
@@ -234,9 +232,7 @@
 									<span
 										v-else-if="row.eolApproaching"
 										class="pr-eol pr-eol--approaching"
-										>{{
-											t('stackiq', 'Approaching')
-										}}</span
+										>{{ t('stackiq', 'Approaching') }}</span
 									>
 									<span v-else class="pr-eol pr-eol--ok">{{
 										t('stackiq', 'OK')

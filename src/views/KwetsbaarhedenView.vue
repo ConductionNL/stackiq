@@ -241,9 +241,7 @@ export default {
 							vuln.uuid ?? vuln.id ?? vuln['@self']?.id ?? vuln,
 						),
 						raw: vuln,
-						name:
-							data.name
-							|| t('stackiq', 'Unnamed vulnerability'),
+						name: data.name || t('stackiq', 'Unnamed vulnerability'),
 						cveCode: data.cveCode || '',
 						cvssScore: parseCvss(data.cvssScore),
 						band: deriveSeverity(vuln),

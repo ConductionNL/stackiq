@@ -15,7 +15,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/specs/organisatie-service/spec.md#requirement-the-system-shall-update-the-active-flag-of-an-openregister-organisation-from-a-stackiq-status-req-002
+ * @spec openspec/specs/organisatie-service/spec.md#requirement-the-system-shall-update-the-active-flag-of-an-openregister-organisation-from-a-softwarecatalog-status-req-002
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use ReflectionMethod;
 /**
  * Tests for OrganisatieService::mapStatus() and updateOrganizationStatus().
  *
- * @spec openspec/specs/organisatie-service/spec.md#requirement-the-system-shall-update-the-active-flag-of-an-openregister-organisation-from-a-stackiq-status-req-002
+ * @spec openspec/specs/organisatie-service/spec.md#requirement-the-system-shall-update-the-active-flag-of-an-openregister-organisation-from-a-softwarecatalog-status-req-002
  */
 class OrganisatieServiceMapStatusMergeTest extends TestCase {
 	/**

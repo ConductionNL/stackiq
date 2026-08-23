@@ -432,7 +432,7 @@ class StackiqService {
 	 * @param string $username The username to update groups for
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function updateUserGroups(object $contactPersonObject, string $username): void {
 		// Use the new organization type-based logic instead of old role-based logic.
@@ -452,7 +452,7 @@ class StackiqService {
 	 * @param string $username The username being processed
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function ensureOrganizationBeheerder(object $contactPersonObject, string $username): void {
 		// Delegate to hierarchy handler.
@@ -465,7 +465,7 @@ class StackiqService {
 	 * @param string $username The username
 	 *
 	 * @return string|null The manager's username or null if not set
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function getUserManager(string $username): ?string {
 		// Delegate to contact person handler.
@@ -478,7 +478,7 @@ class StackiqService {
 	 * @param object $organizationObject The new organization object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function handleNewOrganization(object $organizationObject): void {
 		try {
@@ -672,7 +672,7 @@ class StackiqService {
 	 * @param object $oldOrganizationObject The previous organization object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function handleOrganizationUpdate(object $organizationObject, object $oldOrganizationObject): void {
 		try {
@@ -841,7 +841,7 @@ class StackiqService {
 	 * @return void
 	 *
 	 * @deprecated This method is disabled to prevent organization duplication.
-	 * @spec       openspec/specs/stackique-orchestration/spec.md
+	 * @spec       openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function sendOrganizationWelcomeEmail(object $organizationObject): void {
 		// DISABLED: Organization handling is disabled to prevent duplication.
@@ -862,7 +862,7 @@ class StackiqService {
 	 * @param object $contactObject The contact object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function handleNewContact(object $contactObject): void {
 		// Delegate to contact person handler.
@@ -875,7 +875,7 @@ class StackiqService {
 	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function handleNewGebruiker(object $userObject): void {
 		// Implementation for handling new gebruiker.
@@ -903,7 +903,7 @@ class StackiqService {
 	 * @param object $contactObject The contact object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function handleContactUpdate(object $contactObject): void {
 		// Delegate to contact person handler.
@@ -917,7 +917,7 @@ class StackiqService {
 	 * @param object $oldUserObject The old gebruiker object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function handleGebruikerUpdate(object $userObject, object $oldUserObject): void {
 		// Implementation for handling gebruiker updates.
@@ -935,7 +935,7 @@ class StackiqService {
 	 * @param object $contactObject The contact object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function handleContactDeletion(object $contactObject): void {
 		// Delegate to contact person handler.
@@ -948,7 +948,7 @@ class StackiqService {
 	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function blockUserForGebruiker(object $userObject): void {
 		// Implementation for blocking user.
@@ -966,7 +966,7 @@ class StackiqService {
 	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function temporarilyBlockUserForGebruiker(object $userObject): void {
 		// Implementation for temporarily blocking user.
@@ -984,7 +984,7 @@ class StackiqService {
 	 * @param object $userObject The gebruiker object
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function restoreUserAccessForGebruiker(object $userObject): void {
 		// Implementation for restoring user access.
@@ -1033,7 +1033,7 @@ class StackiqService {
 	 * Ensures all generic user groups exist
 	 *
 	 * @return array Array of created/existing groups
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function ensureGenericUserGroupsExist(): array {
 		return $this->_groupHandler->ensureGenericUserGroupsExist();
@@ -1068,7 +1068,7 @@ class StackiqService {
 	 * @param object $oldContactPersonObject The previous contactpersoon object (optional)
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function handleContactpersoonUpdate(object $contactPersonObject, ?object $oldContactPersonObject = null): void {
 		$startTime = microtime(true);
@@ -1236,7 +1236,7 @@ class StackiqService {
 	 * @param object $organizationObject The organization object being deleted
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function handleOrganizationDeletion(object $organizationObject): void {
 		try {
@@ -1280,7 +1280,7 @@ class StackiqService {
 	 * @param object $organizationObject The organization object to sync
 	 *
 	 * @return bool True if sync was successful
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function syncOrganizationWithOpenRegister(object $organizationObject): bool {
 		try {
@@ -1432,7 +1432,7 @@ class StackiqService {
 	 * @param array $objectData The organization object data
 	 *
 	 * @return object|null The created organisation entity or null on failure
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function createOrganisationInOpenRegister(array $objectData): ?object {
 		try {
@@ -2734,7 +2734,7 @@ class StackiqService {
 	 * @param object $contactPersonObject The contactpersoon object
 	 *
 	 * @return bool True if the user should be added to the organization
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function shouldAddContactpersoonToOrganization(object $contactPersonObject): bool {
 		try {
@@ -2809,7 +2809,7 @@ class StackiqService {
 	 * @param object $contactPersonObject The contactpersoon object
 	 *
 	 * @return bool True if the user was successfully added
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function addContactpersoonToOrganization(object $contactPersonObject): bool {
 		try {
@@ -3177,7 +3177,7 @@ class StackiqService {
 	 * @param string $organizationUuid The UUID of the organization
 	 *
 	 * @return void
-	 * @spec   openspec/specs/stackique-orchestration/spec.md
+	 * @spec   openspec/specs/softwarecatalogue-orchestration/spec.md
 	 */
 	public function syncContactPersonUsernamesWithOrganization(string $organizationUuid): void {
 		$this->_logger->info(

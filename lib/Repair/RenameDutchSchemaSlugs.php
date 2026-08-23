@@ -127,6 +127,8 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * @param IOutput $output Repair output.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/english-vocabulary-migration/spec.md#requirement-renaming-a-stored-property-ships-a-data-migration
 	 */
 	public function run(IOutput $output): void {
 		$schemaIds = $this->inScopeSchemaIds();

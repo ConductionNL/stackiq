@@ -10,7 +10,7 @@
  * @copyright 2024
  * @license EUPL-1.2
  *
- * @spec openspec/specs/stackiq-store-migration/spec.md#requirement-plugin-shape-for-app-specific-extensions
+ * @spec openspec/specs/softwarecatalog-store-migration/spec.md#requirement-plugin-shape-for-app-specific-extensions
  */
 
 import { buildHeaders, buildQueryString } from '@conduction/nextcloud-vue'

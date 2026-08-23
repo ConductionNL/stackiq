@@ -52,9 +52,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<Cancel :size="20" />
 				</template>
 				{{
-					success === null
-						? t('stackiq', 'Cancel')
-						: t('stackiq', 'Close')
+					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton

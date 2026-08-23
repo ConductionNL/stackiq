@@ -44,11 +44,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{
-					success
-						? t('stackiq', 'Close')
-						: t('stackiq', 'Cancel')
-				}}
+				{{ success ? t('stackiq', 'Close') : t('stackiq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				:disabled="loading || success"
@@ -141,8 +137,7 @@ export default {
 				this.closeModalTimeout = setTimeout(this.closeModal, 2000)
 			} catch (error) {
 				this.error =
-					error.message
-					|| this.t('stackiq', 'Failed to lock object')
+					error.message || this.t('stackiq', 'Failed to lock object')
 			} finally {
 				this.loading = false
 			}

@@ -30,9 +30,7 @@ free-text search, if any) on the module/dienst index pages, then emits
 				<NcTextField
 					v-model="name"
 					:label="t('stackiq', 'View name')"
-					:placeholder="
-						t('stackiq', 'e.g. Zaakregistratie modules')
-					"
+					:placeholder="t('stackiq', 'e.g. Zaakregistratie modules')"
 					required />
 
 				<div class="save-facet-view-modal__actions">

@@ -152,10 +152,7 @@ export default defineComponent({
 		emptyDescription: {
 			type: String,
 			default: () =>
-				t(
-					'stackiq',
-					'There are no pending registrations right now.',
-				),
+				t('stackiq', 'There are no pending registrations right now.'),
 		},
 
 		/**

@@ -94,7 +94,7 @@ class OrganizationContactSyncJob extends TimedJob {
 	 * @return void
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 * @spec                                          openspec/specs/stackiq-contacts-to-nc/spec.md
+	 * @spec                                          openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 */
 	protected function run($argument): void {
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {

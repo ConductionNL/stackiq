@@ -94,9 +94,7 @@
 					<NcTextField
 						v-model="catalogLocation"
 						:label="t('stackiq', 'Catalog Location URL')"
-						:placeholder="
-							t('stackiq', 'https://catalog.example.com')
-						"
+						:placeholder="t('stackiq', 'https://catalog.example.com')"
 						:disabled="loading || savingCatalogLocation">
 						<template #icon>
 							<Web :size="16" />
@@ -287,9 +285,7 @@ export default defineComponent({
 		 */
 		async loadSettings() {
 			try {
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/settings',
-				)
+				const response = await fetch('/index.php/apps/stackiq/api/settings')
 				const data = await response.json()
 				this.settings = data
 

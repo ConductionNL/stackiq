@@ -63,8 +63,7 @@ export function collectAppErrors(page: Page): {
 		const u = resp.url()
 		if (u.includes('user_status') || u.includes('heartbeat')) return
 		// Only flag 5xx that come from the stackiq app surface.
-		if (u.includes('/apps/stackiq/'))
-			serverErrors.push(`${resp.status()} ${u}`)
+		if (u.includes('/apps/stackiq/')) serverErrors.push(`${resp.status()} ${u}`)
 	})
 	return { errors, serverErrors }
 }
@@ -78,10 +77,9 @@ export function expectNoAppErrors(bag: {
 		bag.serverErrors,
 		`stackiq 5xx responses:\n${bag.serverErrors.join('\n')}`,
 	).toEqual([])
-	expect(
-		bag.errors,
-		`stackiq console errors:\n${bag.errors.join('\n')}`,
-	).toEqual([])
+	expect(bag.errors, `stackiq console errors:\n${bag.errors.join('\n')}`).toEqual(
+		[],
+	)
 }
 
 /**

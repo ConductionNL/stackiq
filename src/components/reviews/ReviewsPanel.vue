@@ -72,10 +72,7 @@
 					v-if="items.length === 0"
 					:name="t('stackiq', 'No reviews yet')"
 					:description="
-						t(
-							'stackiq',
-							'Be the first to share your experience.',
-						)
+						t('stackiq', 'Be the first to share your experience.')
 					">
 					<template #icon>
 						<Star :size="40" />

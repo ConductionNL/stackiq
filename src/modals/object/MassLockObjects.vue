@@ -64,9 +64,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<Cancel :size="20" />
 				</template>
 				{{
-					success === null
-						? t('stackiq', 'Cancel')
-						: t('stackiq', 'Close')
+					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton
@@ -231,10 +229,7 @@ export default {
 				this.success = false
 				this.error =
 					error.message
-					|| this.t(
-						'stackiq',
-						'An error occurred while locking objects',
-					)
+					|| this.t('stackiq', 'An error occurred while locking objects')
 			} finally {
 				this.loading = false
 			}

@@ -35,10 +35,7 @@
 							<ArrowRight :size="20" />
 						</template>
 						{{
-							t(
-								'stackiq',
-								'Go to the organisation it was merged into',
-							)
+							t('stackiq', 'Go to the organisation it was merged into')
 						}}
 					</NcButton>
 				</template>
@@ -61,10 +58,7 @@
 						:options="targetOptions"
 						:inputLabel="t('stackiq', 'Target organisation')"
 						:placeholder="
-							t(
-								'stackiq',
-								'Select the organisation to merge into',
-							)
+							t('stackiq', 'Select the organisation to merge into')
 						"
 						label="label"
 						trackBy="value"
@@ -84,9 +78,7 @@
 					</NcNoteCard>
 
 					<NcNoteCard v-if="success" type="success">
-						{{
-							t('stackiq', 'Organisation successfully merged.')
-						}}
+						{{ t('stackiq', 'Organisation successfully merged.') }}
 					</NcNoteCard>
 
 					<NcButton
@@ -254,9 +246,7 @@ export default {
 				const obj =
 					data && data['@self'] !== undefined ? data : data.object || data
 				this.sourceName =
-					obj.name
-					|| obj.name
-					|| t('stackiq', 'Unknown organisation')
+					obj.name || obj.name || t('stackiq', 'Unknown organisation')
 				this.status = obj.status || ''
 				this.mergedInto = obj.mergedInto || ''
 			} catch (e) {
@@ -310,10 +300,7 @@ export default {
 							|| String(org.id),
 					}))
 			} catch (e) {
-				this.error = t(
-					'stackiq',
-					'Could not load target organisations.',
-				)
+				this.error = t('stackiq', 'Could not load target organisations.')
 			} finally {
 				this.loadingTargets = false
 			}
@@ -374,13 +361,10 @@ export default {
 				this.success = true
 				this.status = 'merged'
 				this.mergedInto = String(this.selectedTarget.value)
-				showSuccess(
-					t('stackiq', 'Organisation successfully merged.'),
-				)
+				showSuccess(t('stackiq', 'Organisation successfully merged.'))
 			} catch (e) {
 				this.confirmError =
-					e.message
-					|| t('stackiq', 'Could not merge the organisations.')
+					e.message || t('stackiq', 'Could not merge the organisations.')
 			} finally {
 				this.busy = false
 			}

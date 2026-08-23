@@ -62,11 +62,15 @@ class MigrateUserPreferences implements IRepairStep {
 
 	/**
 	 * Number of preference values copied during the current run.
+	 *
+	 * @var int
 	 */
 	private int $copied = 0;
 
 	/**
 	 * Number of users that carried at least one legacy preference.
+	 *
+	 * @var int
 	 */
 	private int $users = 0;
 
@@ -114,8 +118,14 @@ class MigrateUserPreferences implements IRepairStep {
 		$this->users = 0;
 
 		try {
+			// The callback must return bool|null, not void: IUserManager treats a
+			// `false` return as "stop iterating", so null means "keep going".
+			// A void closure does not satisfy that contract.
 			$this->userManager->callForSeenUsers(
-				Closure::fromCallable([$this, 'migrateUser'])
+				function (IUser $user): ?bool {
+					$this->migrateUser(user: $user);
+					return null;
+				}
 			);
 
 			$output->info(

@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#phase-2
+ * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
  */
 
 declare(strict_types=1);

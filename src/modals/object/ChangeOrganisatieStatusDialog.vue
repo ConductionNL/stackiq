@@ -1,6 +1,6 @@
 /** * ChangeOrganisatieStatusDialog.vue * Dialog for changing organisatie status with
-confirmation * @category Components * @package stackiq * @author Ruben Linde
-* @copyright 2024 * @license EUPL-1.2
+confirmation * @category Components * @package stackiq * @author Ruben Linde *
+@copyright 2024 * @license EUPL-1.2
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
 @link https://github.com/ConductionNL/stackiq */
 
@@ -18,9 +18,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 		size="normal"
 		:canClose="false">
 		<p v-if="success === null">
-			{{
-				t('stackiq', 'Are you sure you want to change the status of')
-			}}
+			{{ t('stackiq', 'Are you sure you want to change the status of') }}
 			<b>{{ getOrganisatieName() }}</b> {{ t('stackiq', 'to') }}
 			<b>{{ navigationStore.dialogProperties?.newStatus }}</b
 			>?
@@ -68,9 +66,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 					<Cancel :size="20" />
 				</template>
 				{{
-					success === null
-						? t('stackiq', 'Cancel')
-						: t('stackiq', 'Close')
+					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton
@@ -177,10 +173,7 @@ export default {
 
 				if (!organisatie || !organisatie.id || !newStatus) {
 					throw new Error(
-						this.t(
-							'stackiq',
-							'Organisation or new status is missing',
-						),
+						this.t('stackiq', 'Organisation or new status is missing'),
 					)
 				}
 

@@ -248,9 +248,8 @@
 
 				<h4>Application Version</h4>
 				<p>
-					Shows the currently installed version of the Stackiq
-					app. This should match the version in your app store or
-					deployment.
+					Shows the currently installed version of the Stackiq app. This
+					should match the version in your app store or deployment.
 				</p>
 
 				<h4>Configured Version</h4>

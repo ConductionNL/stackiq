@@ -164,6 +164,8 @@ class RenameDutchCatalogValues implements IRepairStep {
 	 * @param IOutput $output Repair output.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/english-vocabulary-migration/spec.md#requirement-the-migration-is-non-destructive-and-idempotent
 	 */
 	public function run(IOutput $output): void {
 		$tables = $this->shardTables();

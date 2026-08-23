@@ -7,7 +7,7 @@
  * Mounts CnAppRoot with the bundled manifest, registers icons/translations,
  * and primes the router from the manifest pages.
  *
- * @spec openspec/specs/stackiq-manifest-v1/spec.md
+ * @spec openspec/specs/softwarecatalog-manifest-v1/spec.md
  */
 
 import {
@@ -59,10 +59,7 @@ try {
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
 	// eslint-disable-next-line no-console
-	console.warn(
-		'[stackiq] registerTranslations failed; falling back to English',
-		e,
-	)
+	console.warn('[stackiq] registerTranslations failed; falling back to English', e)
 }
 
 // Fire-and-forget translation load. Some Nextcloud installs (including

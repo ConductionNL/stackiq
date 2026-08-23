@@ -12,7 +12,7 @@
  StackiqSettingsPage) can still trigger them through the
  navigationStore.modal channel.
 
- @spec openspec/changes/stackiq-manifest-v1/tasks.md#task-4.3
+ @spec openspec/changes/softwarecatalog-manifest-v1/tasks.md#task-4.3
 -->
 <template>
 	<div class="stackiq-app-root">
@@ -216,12 +216,9 @@ export default {
 		 */
 		async loadOrganisations() {
 			try {
-				const response = await fetch(
-					generateUrl('/apps/stackiq/api/me'),
-					{
-						headers: { requesttoken: OC.requestToken },
-					},
-				)
+				const response = await fetch(generateUrl('/apps/stackiq/api/me'), {
+					headers: { requesttoken: OC.requestToken },
+				})
 				if (!response.ok) return
 
 				const data = await response.json()

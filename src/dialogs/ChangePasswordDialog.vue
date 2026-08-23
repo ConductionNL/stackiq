@@ -94,10 +94,7 @@
 							class="check-icon" />
 						<CloseCircle v-else :size="16" class="close-icon" />
 						{{
-							t(
-								'stackiq',
-								'At least one special character (!@#$%^&*)',
-							)
+							t('stackiq', 'At least one special character (!@#$%^&*)')
 						}}
 					</li>
 					<li :class="{ 'requirement-met': passwordValidation.notPwned }">
@@ -462,10 +459,7 @@ export default {
 					)
 				} else {
 					showError(
-						this.t(
-							'stackiq',
-							'Password does not meet all requirements',
-						),
+						this.t('stackiq', 'Password does not meet all requirements'),
 					)
 				}
 				return
@@ -478,9 +472,7 @@ export default {
 					this.username,
 					this.newPassword,
 				)
-				showSuccess(
-					this.t('stackiq', 'Password changed successfully'),
-				)
+				showSuccess(this.t('stackiq', 'Password changed successfully'))
 				this.$emit('saved')
 			} catch (error) {
 				showError(

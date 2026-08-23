@@ -10,8 +10,8 @@
 			</template>
 			<NcNoteCard type="info">
 				<p>
-					Welcome to the Stackiq dashboard. Use the main
-					navigation to access different features.
+					Welcome to the Stackiq dashboard. Use the main navigation to
+					access different features.
 				</p>
 			</NcNoteCard>
 		</NcAppSidebarTab>

@@ -16,9 +16,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="validate-step">
 			<NcNoteCard type="info">
-				<strong>{{
-					t('stackiq', 'When to use mass validation:')
-				}}</strong
+				<strong>{{ t('stackiq', 'When to use mass validation:') }}</strong
 				><br />
 				{{
 					t(
@@ -80,9 +78,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<Cancel :size="20" />
 				</template>
 				{{
-					success === null
-						? t('stackiq', 'Cancel')
-						: t('stackiq', 'Close')
+					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
 				}}
 			</NcButton>
 			<NcButton

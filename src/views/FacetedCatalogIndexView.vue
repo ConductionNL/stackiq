@@ -53,9 +53,7 @@ generic route-query-to-filter passthrough never sees it (see the
 				:modelValue="searchValue"
 				class="faceted-catalog-index__search"
 				:label="t('stackiq', 'Search')"
-				:placeholder="
-					t('stackiq', 'Search applications and services…')
-				"
+				:placeholder="t('stackiq', 'Search applications and services…')"
 				@update:modelValue="onSearchInput" />
 			<NcButton
 				v-if="searchValue !== ''"

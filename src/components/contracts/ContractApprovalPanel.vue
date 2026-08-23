@@ -240,10 +240,7 @@ export default {
 				this.configured = Boolean(config.configured)
 				await this.loadContract()
 			} catch (e) {
-				this.error = t(
-					'stackiq',
-					'Could not load the approval state.',
-				)
+				this.error = t('stackiq', 'Could not load the approval state.')
 			} finally {
 				this.loading = false
 			}
@@ -296,10 +293,7 @@ export default {
 				this.approvalState = data.approvalState || 'pending'
 				this.decisionId = data.decisionId || this.decisionId
 				showSuccess(
-					t(
-						'stackiq',
-						'Contract submitted to decidesk for a decision.',
-					),
+					t('stackiq', 'Contract submitted to decidesk for a decision.'),
 				)
 			} catch (e) {
 				// Fail-closed: the contract stays In onderhandeling.

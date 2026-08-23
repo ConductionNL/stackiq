@@ -312,9 +312,9 @@
 			<div class="user-groups-info">
 				<h3>About User Groups</h3>
 				<p>
-					User groups in Stackiq are used to organize users
-					and control access to different parts of the system. There are
-					three types of user groups:
+					User groups in Stackiq are used to organize users and control
+					access to different parts of the system. There are three types of
+					user groups:
 				</p>
 
 				<h4>Generic User Groups</h4>

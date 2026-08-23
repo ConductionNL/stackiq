@@ -25,7 +25,7 @@
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#3.1
+ * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#3.1
  */
 
 import { getLanguage } from '@nextcloud/l10n'

@@ -74,9 +74,7 @@ export async function newApiContext(): Promise<APIRequestContext> {
 export async function resolveConfig(
 	ctx: APIRequestContext,
 ): Promise<VoorzieningenConfig> {
-	const res = await ctx.get(
-		'/index.php/apps/stackiq/api/voorzieningen/config',
-	)
+	const res = await ctx.get('/index.php/apps/stackiq/api/voorzieningen/config')
 	if (!res.ok()) {
 		throw new Error(`voorzieningen/config returned ${res.status()}`)
 	}

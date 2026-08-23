@@ -50,7 +50,12 @@ class MigrateAppConfigKeysTest extends TestCase {
 	 *
 	 * @var string
 	 */
-	private const LEGACY = 'stackiq';
+	// Mirrors the step's own constant rather than repeating the literal.
+	// A bulk rename rewrote this to the NEW id, and the test then asserted
+	// that the migration reads from the namespace it writes TO -- which is
+	// a migration that does nothing. Binding it to the source constant makes
+	// that drift impossible.
+	private const LEGACY = MigrateAppConfigKeys::LEGACY_APP_ID;
 
 	/**
 	 * The step reports a name that says what it does.

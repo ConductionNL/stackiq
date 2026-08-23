@@ -260,7 +260,7 @@ OC.L10N.register(
     "Group members" : "Group members",
     "Merge organisations" : "Merge organisations",
     "End-of-life feed sync" : "End-of-life feed sync",
-    "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Softwarecatalog never calls endoflife.date directly." : "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Softwarecatalog never calls endoflife.date directly.",
+    "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Stackiq never calls endoflife.date directly." : "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Stackiq never calls endoflife.date directly.",
     "Loading EOL sync configuration…" : "Loading EOL sync configuration…",
     "Save EOL sync settings" : "Save EOL sync settings",
     "Sync now" : "Sync now",

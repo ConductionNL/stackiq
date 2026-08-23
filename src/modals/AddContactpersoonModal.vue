@@ -203,9 +203,7 @@ export default {
 					},
 				)
 
-				showSuccess(
-					this.t('stackiq', 'Contactpersoon added successfully'),
-				)
+				showSuccess(this.t('stackiq', 'Contactpersoon added successfully'))
 
 				// Emit event to parent component.
 				this.$emit('contactpersoon-added', result.data)
@@ -220,11 +218,9 @@ export default {
 			} catch (error) {
 				console.error('Error adding contact person:', error)
 				showError(
-					this.t(
-						'stackiq',
-						'Failed to add contact person: {error}',
-						{ error: error.message },
-					),
+					this.t('stackiq', 'Failed to add contact person: {error}', {
+						error: error.message,
+					}),
 				)
 			} finally {
 				this.loading = false

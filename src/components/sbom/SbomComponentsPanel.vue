@@ -452,15 +452,11 @@ export default {
 				: date.toLocaleString()
 			const formatLabel =
 				data.sbomFormat === 'spdx-json' ? 'SPDX' : 'CycloneDX'
-			return t(
-				'stackiq',
-				'Last imported {date} from {file} ({format})',
-				{
-					date: dateLabel,
-					file: data.sbomFileName || '?',
-					format: formatLabel,
-				},
-			)
+			return t('stackiq', 'Last imported {date} from {file} ({format})', {
+				date: dateLabel,
+				file: data.sbomFileName || '?',
+				format: formatLabel,
+			})
 		},
 	},
 

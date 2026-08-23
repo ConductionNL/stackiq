@@ -1,7 +1,7 @@
 /**
  * Unit tests for the translation-badge utility.
  *
- * @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#3.5
+ * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#3.5
  */
 
 import {
@@ -95,10 +95,8 @@ describe('translationBadge.translationBadge', () => {
 		)
 		const badge = translationBadge({ sourceLanguage: 'nl' }, 'en')
 		expect(badge.label(t)).toBe('(translated from Dutch)')
-		expect(t).toHaveBeenCalledWith(
-			'stackiq',
-			'(translated from {language})',
-			{ language: 'Dutch' },
-		)
+		expect(t).toHaveBeenCalledWith('stackiq', '(translated from {language})', {
+			language: 'Dutch',
+		})
 	})
 })

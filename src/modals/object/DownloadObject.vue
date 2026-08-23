@@ -29,11 +29,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{
-					success
-						? t('stackiq', 'Close')
-						: t('stackiq', 'Cancel')
-				}}
+				{{ success ? t('stackiq', 'Close') : t('stackiq', 'Cancel') }}
 			</NcButton>
 		</template>
 

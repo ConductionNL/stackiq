@@ -1,0 +1,3406 @@
+{
+ "info": {
+  "name": "SoftwareCatalog API contract (Newman)",
+  "description": "API-contract suite for the softwarecatalog app: Organisatie / Contactpersoon / Component(module) / Moduleversie / Contract CRUD via the OpenRegister object API (register 11, ADR-022), the Aanbod + ArchiMate/AMEF export endpoints, and the Settings/cronjob endpoints. Self-contained and idempotent: setup seeds the objects it needs and teardown removes them. Authz tests use {{noAuthBase}} (127.0.0.1) for cookie isolation.",
+  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+ },
+ "auth": {
+  "type": "noauth"
+ },
+ "variable": [
+  {
+   "key": "baseUrl",
+   "value": "http://localhost:8080"
+  },
+  {
+   "key": "noAuthBase",
+   "value": "http://127.0.0.1:8080"
+  },
+  {
+   "key": "adminUser",
+   "value": "admin"
+  },
+  {
+   "key": "adminPass",
+   "value": "admin"
+  },
+  {
+   "key": "register",
+   "value": "11"
+  },
+  {
+   "key": "organisatieSchema",
+   "value": "39"
+  },
+  {
+   "key": "contactpersoonSchema",
+   "value": "38"
+  },
+  {
+   "key": "moduleSchema",
+   "value": "50"
+  },
+  {
+   "key": "moduleVersieSchema",
+   "value": "52"
+  },
+  {
+   "key": "contractSchema",
+   "value": "41"
+  },
+  {
+   "key": "dienstSchema",
+   "value": "36"
+  },
+  {
+   "key": "gebruikSchema",
+   "value": "40"
+  },
+  {
+   "key": "orgId",
+   "value": ""
+  },
+  {
+   "key": "moduleId",
+   "value": ""
+  },
+  {
+   "key": "dienstId",
+   "value": ""
+  },
+  {
+   "key": "gebruikId",
+   "value": ""
+  },
+  {
+   "key": "crudOrgId",
+   "value": ""
+  },
+  {
+   "key": "crudContactId",
+   "value": ""
+  },
+  {
+   "key": "crudModuleId",
+   "value": ""
+  },
+  {
+   "key": "crudVersieId",
+   "value": ""
+  },
+  {
+   "key": "crudContractId",
+   "value": ""
+  }
+ ],
+ "item": [
+  {
+   "name": "0. Setup (seed via OpenRegister object API)",
+   "item": [
+    {
+     "name": "Preflight: resolve register by slug (CI-durable)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/registers?_limit=300",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "registers"
+       ],
+       "query": [
+        {
+         "key": "_limit",
+         "value": "300"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// SLUG-RESOLUTION PREFLIGHT (GAP-2): the numeric OpenRegister register id that",
+         "// holds softwarecatalog objects varies between environments (dev box = 11, a fresh",
+         "// CI boot re-imports the register by slug and gets a different id). The register is",
+         "// imported under the stable slug 'voorzieningen', so resolve the numeric id from the",
+         "// slug here and set {{register}}. The org/contact/module/contract/etc. schemas are",
+         "// addressed by their stable slugs (the OR object router resolves a slug against the",
+         "// register), so they survive a re-import too.",
+         "pm.test('registers list reachable (200)', () => pm.response.to.have.status(200));",
+         "const body = pm.response.json();",
+         "const registers = Array.isArray(body) ? body : (body.results || []);",
+         "pm.expect(registers.length, 'at least one register').to.be.above(0);",
+         "const reg = registers.find(r => r.slug === 'voorzieningen');",
+         "pm.test('voorzieningen register resolved by slug', () => pm.expect(reg, \"register with slug 'voorzieningen' exists\").to.be.an('object'));",
+         "if (reg) { pm.collectionVariables.set('register', String(reg.id)); console.log('Resolved register slug=voorzieningen -> id=' + reg.id); }",
+         "pm.collectionVariables.set('organisatieSchema', 'organisatie');",
+         "pm.collectionVariables.set('contactpersoonSchema', 'contactpersoon');",
+         "pm.collectionVariables.set('moduleSchema', 'module');",
+         "pm.collectionVariables.set('moduleVersieSchema', 'moduleVersie');",
+         "pm.collectionVariables.set('contractSchema', 'Contract');",
+         "pm.collectionVariables.set('dienstSchema', 'dienst');",
+         "pm.collectionVariables.set('gebruikSchema', 'gebruik');"
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "name": "Seed organisatie (Leverancier)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{organisatieSchema}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{organisatieSchema}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"naam\": \"NEWMAN Org\",\n  \"website\": \"https://newman.example.org\",\n  \"type\": \"Leverancier\",\n  \"status\": \"Actief\"\n}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+         "const b = pm.response.json();",
+         "const id = b.id || (b['@self'] && b['@self'].id);",
+         "pm.test('returns an id', () => pm.expect(id).to.be.a('string').and.not.empty);",
+         "pm.collectionVariables.set('orgId', id);"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Seed component (module/applicatie)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{moduleSchema}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"naam\": \"NEWMAN Component\",\n  \"beschrijvingKort\": \"Newman seeded component\",\n  \"status\": \"Actief\"\n}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+         "const b = pm.response.json();",
+         "const id = b.id || (b['@self'] && b['@self'].id);",
+         "pm.collectionVariables.set('moduleId', id);"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Seed dienst (aanbieder = seeded org)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{dienstSchema}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{dienstSchema}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"naam\": \"NEWMAN dienst\",\n  \"aanbieder\": \"{{orgId}}\",\n  \"type\": [\n    \"Functioneel beheer\"\n  ]\n}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+         "const b = pm.response.json();",
+         "const id = b.id || (b['@self'] && b['@self'].id);",
+         "pm.collectionVariables.set('dienstId', id);"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "Seed gebruik (afnemer = seeded org)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{gebruikSchema}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{gebruikSchema}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"afnemer\": \"{{orgId}}\",\n  \"status\": \"Actief\"\n}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+         "const b = pm.response.json();",
+         "const id = b.id || (b['@self'] && b['@self'].id);",
+         "pm.collectionVariables.set('gebruikId', id);"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "1. Organisatie CRUD (OpenRegister object API)",
+   "item": [
+    {
+     "name": "list organisaties (happy: 200, @resolve returns data)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{organisatieSchema}}?_limit=5",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{organisatieSchema}}"
+       ],
+       "query": [
+        {
+         "key": "_limit",
+         "value": "5"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('has results array', () => pm.expect(b.results).to.be.an('array'));",
+         "pm.test('list is non-empty (@resolve fix)', () => pm.expect(b.results.length).to.be.above(0));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "create organisatie (happy: 2xx, captures id)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{organisatieSchema}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{organisatieSchema}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"naam\": \"NEWMAN crud org\",\n  \"type\": \"Afnemer\",\n  \"status\": \"Actief\"\n}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+         "const b = pm.response.json();",
+         "const id = b.id || (b['@self'] && b['@self'].id);",
+         "pm.test('returns an id', () => pm.expect(id).to.be.a('string').and.not.empty);",
+         "pm.test('persists naam', () => pm.expect(b.naam).to.eql('NEWMAN crud org'));",
+         "pm.collectionVariables.set('crudOrgId', id);"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "read organisatie (happy: 200, matches created)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{organisatieSchema}}/{{crudOrgId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{organisatieSchema}}",
+        "{{crudOrgId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('naam matches', () => pm.expect(b.naam).to.eql('NEWMAN crud org'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "update organisatie (happy: 200, mutation persisted)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "PUT",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{organisatieSchema}}/{{crudOrgId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{organisatieSchema}}",
+        "{{crudOrgId}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"naam\": \"NEWMAN crud org EDIT\",\n  \"type\": \"Afnemer\",\n  \"status\": \"Actief\"\n}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('mutation persisted', () => pm.expect(b.naam).to.eql('NEWMAN crud org EDIT'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "read organisatie unknown id (error: 404, not 500)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{organisatieSchema}}/00000000-0000-0000-0000-000000000000",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{organisatieSchema}}",
+        "00000000-0000-0000-0000-000000000000"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('not 500', () => pm.expect(pm.response.code).to.not.eql(500));",
+         "pm.test('404 for unknown id', () => pm.response.to.have.status(404));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "list organisaties NO AUTH (authz: OR reads are not auth-gated)",
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/openregister/api/objects/{{register}}/{{organisatieSchema}}?_limit=1",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{organisatieSchema}}"
+       ],
+       "query": [
+        {
+         "key": "_limit",
+         "value": "1"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authed requests run against {{baseUrl}} (localhost) and",
+         "// set a host-scoped NC session cookie. Authz requests run against {{noAuthBase}}",
+         "// (127.0.0.1) so that cookie is never sent -> genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "// OpenRegister object reads are intentionally not auth-gated (ADR-022 -",
+         "// authorization on catalog data is OR's responsibility, not softwarecatalog's).",
+         "pm.test('not a server error', () => pm.expect(pm.response.code).to.be.below(500));",
+         "pm.test('OR returns the list anonymously (200)', () => pm.response.to.have.status(200));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "delete organisatie (cleanup: 200/204)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{organisatieSchema}}/{{crudOrgId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{organisatieSchema}}",
+        "{{crudOrgId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('deleted (200/204)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "2. Contactpersoon CRUD (OpenRegister object API)",
+   "item": [
+    {
+     "name": "create contactpersoon (happy: 2xx)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{contactpersoonSchema}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{contactpersoonSchema}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"voornaam\": \"Newman\",\n  \"achternaam\": \"Tester\",\n  \"e-mailadres\": \"newman.tester@example.org\"\n}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+         "const b = pm.response.json();",
+         "const id = b.id || (b['@self'] && b['@self'].id);",
+         "pm.test('returns an id', () => pm.expect(id).to.be.a('string').and.not.empty);",
+         "pm.collectionVariables.set('crudContactId', id);"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "read contactpersoon (happy: 200)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{contactpersoonSchema}}/{{crudContactId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{contactpersoonSchema}}",
+        "{{crudContactId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('e-mailadres persisted', () => pm.expect(b['e-mailadres']).to.eql('newman.tester@example.org'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "list contactpersonen for organisation (happy: 200, swc controller)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/contactpersonen/organisation/{{orgId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "contactpersonen",
+        "organisation",
+        "{{orgId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('success envelope', () => pm.expect(b.success).to.eql(true));",
+         "pm.test('contactpersonen array present', () => pm.expect(b.contactpersonen).to.be.an('array'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "contactpersonen for org NO AUTH (authz: 401)",
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/contactpersonen/organisation/{{orgId}}",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "contactpersonen",
+        "organisation",
+        "{{orgId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authed requests run against {{baseUrl}} (localhost) and",
+         "// set a host-scoped NC session cookie. Authz requests run against {{noAuthBase}}",
+         "// (127.0.0.1) so that cookie is never sent -> genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('401 without credentials', () => pm.response.to.have.status(401));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "delete contactpersoon (cleanup)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{contactpersoonSchema}}/{{crudContactId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{contactpersoonSchema}}",
+        "{{crudContactId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('deleted (200/204)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "3. Component (module) + Moduleversie CRUD",
+   "item": [
+    {
+     "name": "list components (happy: 200, @resolve returns data)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}?_limit=5",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{moduleSchema}}"
+       ],
+       "query": [
+        {
+         "key": "_limit",
+         "value": "5"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('has results array', () => pm.expect(b.results).to.be.an('array'));",
+         "pm.test('list is non-empty (@resolve fix)', () => pm.expect(b.results.length).to.be.above(0));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "create component (happy: 2xx)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{moduleSchema}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"naam\": \"NEWMAN crud module\",\n  \"beschrijvingKort\": \"crud\",\n  \"status\": \"Actief\"\n}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+         "const b = pm.response.json();",
+         "const id = b.id || (b['@self'] && b['@self'].id);",
+         "pm.test('persists naam', () => pm.expect(b.naam).to.eql('NEWMAN crud module'));",
+         "pm.collectionVariables.set('crudModuleId', id);"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "create moduleversie linked to component (happy: 2xx)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleVersieSchema}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{moduleVersieSchema}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"versie\": \"1.0.0\",\n  \"module\": \"{{crudModuleId}}\",\n  \"status\": \"Actief\"\n}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+         "const b = pm.response.json();",
+         "const id = b.id || (b['@self'] && b['@self'].id);",
+         "pm.test('returns an id', () => pm.expect(id).to.be.a('string').and.not.empty);",
+         "pm.collectionVariables.set('crudVersieId', id);"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "create component invalid schema (error: 404, not 500)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/99999999",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "99999999"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\"naam\": \"x\"}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('not 500', () => pm.expect(pm.response.code).to.not.eql(500));",
+         "pm.test('404 schema not found', () => pm.response.to.have.status(404));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "delete moduleversie (cleanup)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleVersieSchema}}/{{crudVersieId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{moduleVersieSchema}}",
+        "{{crudVersieId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('deleted (200/204)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "delete component (cleanup)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}/{{crudModuleId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{moduleSchema}}",
+        "{{crudModuleId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('deleted (200/204)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "4. Contract CRUD (OpenRegister object API)",
+   "item": [
+    {
+     "name": "list contracten (happy: 200)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{contractSchema}}?_limit=5",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{contractSchema}}"
+       ],
+       "query": [
+        {
+         "key": "_limit",
+         "value": "5"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('has results array', () => pm.expect(b.results).to.be.an('array'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "create contract (happy: 2xx, references seeded dienst + gebruik)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{contractSchema}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{contractSchema}}"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"contractNumber\": \"NEWMAN-001\",\n  \"customerId\": \"{{gebruikId}}\",\n  \"signedAt\": \"2026-01-01\",\n  \"startDate\": \"2026-01-01\",\n  \"fixedConsideration\": 1000,\n  \"currency\": \"EUR\",\n  \"lifecycleState\": \"signed\",\n  \"administrationId\": \"newman-admin\",\n  \"dienst\": \"{{dienstId}}\",\n  \"gebruik\": \"{{gebruikId}}\"\n}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+         "const b = pm.response.json();",
+         "const id = b.id || (b['@self'] && b['@self'].id);",
+         "pm.test('returns an id', () => pm.expect(id).to.be.a('string').and.not.empty);",
+         "pm.test('contractNumber persisted', () => pm.expect(b.contractNumber).to.eql('NEWMAN-001'));",
+         "pm.collectionVariables.set('crudContractId', id);"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "read contract (happy: 200)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{contractSchema}}/{{crudContractId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{contractSchema}}",
+        "{{crudContractId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('contractNumber persisted', () => pm.expect(b.contractNumber).to.eql('NEWMAN-001'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "delete contract (cleanup)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{contractSchema}}/{{crudContractId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{contractSchema}}",
+        "{{crudContractId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('deleted (200/204)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "5. Standaard (QUARANTINED: schema not provisioned)",
+   "item": [
+    {
+     "name": "list standaarden via standaard schema slug (200, paginated envelope)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/standaard?_limit=1",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "standard"
+       ],
+       "query": [
+        {
+         "key": "_limit",
+         "value": "1"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "// The 'standard' schema is now provisioned in the voorzieningen register",
+         "// (previously a documented gap that 404'd). Per the prior note, this is now",
+         "// flipped to the happy-path list contract: a 200 paginated envelope.",
+         "pm.test('not a server error', () => pm.expect(pm.response.code).to.be.below(500));",
+         "pm.test('200 - standaard schema lists via its slug', () => pm.response.to.have.status(200));",
+         "pm.test('paginated envelope', () => { const b = pm.response.json(); pm.expect(b).to.have.property('results'); pm.expect(b).to.have.property('total'); });"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "6. Aanbod API",
+   "item": [
+    {
+     "name": "get aanbod (happy: 200, paginated envelope)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/aanbod",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "aanbod"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('has results array', () => pm.expect(b.results).to.be.an('array'));",
+         "pm.test('has pagination total', () => pm.expect(b).to.have.property('total'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "get aanbod NO AUTH (authz: PUBLIC endpoint, no org -> 200 empty)",
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/aanbod",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "aanbod"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authed requests run against {{baseUrl}} (localhost) and",
+         "// set a host-scoped NC session cookie. Authz requests run against {{noAuthBase}}",
+         "// (127.0.0.1) so that cookie is never sent -> genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "// AanbodController::getAanbod is annotated @PublicPage (by design - the public",
+         "// catalog of offers). Unauthenticated it has no 'current organization' so it",
+         "// returns 200 with an empty result set rather than 401. Asserting the real",
+         "// contract honestly (it does NOT require auth).",
+         "pm.test('200 (public endpoint, not 401)', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('empty results without an org context', () => pm.expect(b.results).to.eql([]));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "7. ArchiMate / AMEF export",
+   "item": [
+    {
+     "name": "export organisation ArchiMate (happy: 200, AMEF model XML)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/archimate/export/organization/{{orgId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "archimate",
+        "export",
+        "organization",
+        "{{orgId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "// PROVISIONED (GAP-4, previously quarantined): the AMEF register is auto-configured",
+         "// by the InitializeSettings repair step -> SettingsService::initialize() ->",
+         "// configureAmef(), which detects the AMEF register by its core schemas (model/element/",
+         "// relation/view/organization/property) and writes amef_config.register. exportOrgArchiMate",
+         "// therefore resolves the register and returns the ArchiMate model XML with HTTP 200.",
+         "pm.test('200 OK (AMEF provisioned)', () => pm.response.to.have.status(200));",
+         "pm.test('returns an ArchiMate <model> document', () => pm.expect(pm.response.text()).to.include('<model'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "POST export ArchiMate (happy: 200, AMEF model XML)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/archimate/export",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "archimate",
+        "export"
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{}"
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "// PROVISIONED (GAP-4, previously asserted the AMEF-missing 400 path): with the AMEF",
+         "// register auto-configured by the repair step, the bulk export endpoint returns the",
+         "// ArchiMate model XML with HTTP 200.",
+         "pm.test('200 OK (AMEF provisioned)', () => pm.response.to.have.status(200));",
+         "pm.test('returns an ArchiMate <model> document', () => pm.expect(pm.response.text()).to.include('<model'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "export organisation ArchiMate NO AUTH (authz: 401)",
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/archimate/export/organization/{{orgId}}",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "archimate",
+        "export",
+        "organization",
+        "{{orgId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authed requests run against {{baseUrl}} (localhost) and",
+         "// set a host-scoped NC session cookie. Authz requests run against {{noAuthBase}}",
+         "// (127.0.0.1) so that cookie is never sent -> genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('401 without credentials', () => pm.response.to.have.status(401));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "8. Settings & cronjobs (Phase-0 fix)",
+   "item": [
+    {
+     "name": "settings index (happy: 200, contract shape)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/settings",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "settings"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('exposes availableRegisters', () => pm.expect(b).to.have.property('availableRegisters'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "settings stats (happy: 200)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/settings/stats",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "settings",
+        "stats"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "voorzieningen config (happy: 200, register configured)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/voorzieningen/config",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "voorzieningen",
+        "config"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('register is configured', () => pm.expect(b.config.register).to.be.ok);"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "cronjob config (happy: 200 \u2014 Phase-0 deprecated-cronjob fix)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/settings/cronjobs",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "settings",
+        "cronjobs"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "// Phase-0 fixed the deprecated cronjob registration; this endpoint returns the",
+         "// active cronjob registry (no 500). Asserting it locks that fix.",
+         "pm.test('200 OK (not 500)', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('success envelope', () => pm.expect(b.success).to.eql(true));",
+         "pm.test('exposes cronjobs registry', () => pm.expect(b.cronjobs).to.be.an('object'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "cronjob users (contract: 410 Gone \u2014 deprecated-and-removed)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/settings/cronjobs/users",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "settings",
+        "cronjobs",
+        "users"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "// Phase-0 retired per-user cronjob context: this endpoint now returns a clean",
+         "// 410 Gone with a deprecation message (NOT a 500). Asserting that contract.",
+         "pm.test('410 Gone', () => pm.response.to.have.status(410));",
+         "const b = pm.response.json();",
+         "pm.test('success false + deprecation message', () => {",
+         "    pm.expect(b.success).to.eql(false);",
+         "    pm.expect(b.message).to.include('deprecated');",
+         "});"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "settings index NO AUTH (authz: 401)",
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/settings",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "settings"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authed requests run against {{baseUrl}} (localhost) and",
+         "// set a host-scoped NC session cookie. Authz requests run against {{noAuthBase}}",
+         "// (127.0.0.1) so that cookie is never sent -> genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('401 without credentials', () => pm.response.to.have.status(401));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "cronjob config NO AUTH (authz: 401)",
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/settings/cronjobs",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "settings",
+        "cronjobs"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authed requests run against {{baseUrl}} (localhost) and",
+         "// set a host-scoped NC session cookie. Authz requests run against {{noAuthBase}}",
+         "// (127.0.0.1) so that cookie is never sent -> genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('401 without credentials', () => pm.response.to.have.status(401));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "9. Dashboard & profile",
+   "item": [
+    {
+     "name": "dashboard index (happy: 200)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/dashboard",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "dashboard"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('has results', () => pm.expect(b).to.have.property('results'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "me / profile (happy: 200, resolves active organisation)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/me",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "me"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('exposes organisations', () => pm.expect(b).to.have.property('organisations'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "me NO AUTH (authz: 401)",
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/softwarecatalog/api/me",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "me"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authed requests run against {{baseUrl}} (localhost) and",
+         "// set a host-scoped NC session cookie. Authz requests run against {{noAuthBase}}",
+         "// (127.0.0.1) so that cookie is never sent -> genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('401 without credentials', () => pm.response.to.have.status(401));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "10. Facets API (gemma-faceted-search)",
+   "item": [
+    {
+     "name": "get facets for module (happy: 200, all 4 dimensions present)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/module",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "facets",
+        "module"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "['referentiecomponent', 'standard', 'applicatieservice', 'domein'].forEach((dim) => {",
+         "    pm.test(`has ${dim} facet array (present even when empty)`, () => pm.expect(b[dim]).to.be.an('array'));",
+         "});",
+         "pm.test('has _meta.totalMatched', () => pm.expect(b._meta).to.have.property('totalMatched'));",
+         "pm.test('has _meta.cached', () => pm.expect(b._meta).to.have.property('cached'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "get facets for dienst (happy: 200, all 4 dimensions present)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/dienst",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "facets",
+        "dienst"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "['referentiecomponent', 'standard', 'applicatieservice', 'domein'].forEach((dim) => {",
+         "    pm.test(`has ${dim} facet array (present even when empty)`, () => pm.expect(b[dim]).to.be.an('array'));",
+         "});"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "get facets for unsupported schema (400, names supported schemas)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/contract",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "facets",
+        "contract"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+         "const b = pm.response.json();",
+         "pm.test('names module in supportedSchemas', () => pm.expect(b.supportedSchemas).to.include('module'));",
+         "pm.test('names dienst in supportedSchemas', () => pm.expect(b.supportedSchemas).to.include('dienst'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "get facets for module with referentiecomponent filter (narrowed set)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/module?referentiecomponent[]=Zaakregistratiecomponent",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "facets",
+        "module"
+       ],
+       "query": [
+        {
+         "key": "referentiecomponent[]",
+         "value": "Zaakregistratiecomponent"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "// Narrowing is functional even against an unseeded/empty register: a",
+         "// filtered request must still succeed and return the standard shape,",
+         "// with totalMatched never exceeding the unfiltered baseline.",
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('has _meta.totalMatched as a number', () => pm.expect(b._meta.totalMatched).to.be.a('number'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "get facets for module with free-text search (combines with facets)",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/softwarecatalog/api/facets/module?search=zaak",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "softwarecatalog",
+        "api",
+        "facets",
+        "module"
+       ],
+       "query": [
+        {
+         "key": "search",
+         "value": "zaak"
+        }
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('has referentiecomponent facet array', () => pm.expect(b.referentiecomponent).to.be.an('array'));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "99. Teardown",
+   "item": [
+    {
+     "name": "delete seeded organisatie",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{organisatieSchema}}/{{orgId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{organisatieSchema}}",
+        "{{orgId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('cleanup ok (200/204/404)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "delete seeded component",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{moduleSchema}}/{{moduleId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{moduleSchema}}",
+        "{{moduleId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('cleanup ok (200/204/404)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "delete seeded gebruik",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{gebruikSchema}}/{{gebruikId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{gebruikSchema}}",
+        "{{gebruikId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('cleanup ok (200/204/404)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    },
+    {
+     "name": "delete seeded dienst",
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/{{register}}/{{dienstSchema}}/{{dienstId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "openregister",
+        "api",
+        "objects",
+        "{{register}}",
+        "{{dienstSchema}}",
+        "{{dienstId}}"
+       ]
+      }
+     },
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "exec": [
+         "pm.test('cleanup ok (200/204/404)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]));"
+        ],
+        "type": "text/javascript"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

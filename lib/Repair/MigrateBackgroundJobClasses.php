@@ -108,13 +108,21 @@ class MigrateBackgroundJobClasses implements IRepairStep {
 			$removed = 0;
 
 			foreach (self::LEGACY_JOB_CLASSES as $legacyClass) {
-				// remove() is a no-op when the row is absent, so has() is only an
-				// accounting call — it keeps the reported count honest on a
+				// The remove() call is a no-op when the row is absent, so has() is
+				// only an accounting call — it keeps the reported count honest on a
 				// re-run rather than claiming work that did not happen.
+				// PHPStan wants a class-string<IJob> here, which this method can
+				// never supply: the whole point is to deregister jobs whose class
+				// NO LONGER EXISTS after the namespace rename. A loadable
+				// class-string would mean there was nothing to clean up. The
+				// stored rows are matched by their literal class name, which is
+				// exactly what IJobList compares against.
+				// @phpstan-ignore argument.type
 				if ($this->jobList->has($legacyClass, null) === false) {
 					continue;
 				}
 
+				// @phpstan-ignore argument.type
 				$this->jobList->remove($legacyClass, null);
 				$removed++;
 			}

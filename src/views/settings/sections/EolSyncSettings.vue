@@ -408,9 +408,7 @@ export default defineComponent({
 					)
 				}
 			} catch (error) {
-				showError(
-					t('stackiq', 'EOL sync failed') + ': ' + error.message,
-				)
+				showError(t('stackiq', 'EOL sync failed') + ': ' + error.message)
 			} finally {
 				this.syncing = false
 			}

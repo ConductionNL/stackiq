@@ -436,9 +436,7 @@ test('reviews: moderation reuses the ONE queue component, and the organisatie qu
 	).toBeVisible()
 
 	// And the unparameterised endpoint still answers for organisatie.
-	const res = await ctx.get(
-		'/index.php/apps/stackiq/api/moderation/pending',
-	)
+	const res = await ctx.get('/index.php/apps/stackiq/api/moderation/pending')
 	expect(res.status(), `default moderation/pending returned ${res.status()}`).toBe(
 		200,
 	)

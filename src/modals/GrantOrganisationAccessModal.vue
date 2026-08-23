@@ -32,10 +32,7 @@
 				<NcSelectUsers
 					v-model="selectedUser"
 					:inputLabel="
-						t(
-							'stackiq',
-							'Grant access to an existing Nextcloud user',
-						)
+						t('stackiq', 'Grant access to an existing Nextcloud user')
 					"
 					:multiple="false" />
 				<NcButton

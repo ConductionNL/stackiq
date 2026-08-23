@@ -78,10 +78,7 @@
 				:multiple="false"
 				:clearable="true"
 				:inputLabel="
-					t(
-						'stackiq',
-						'Organisation (scope to in-use applications)',
-					)
+					t('stackiq', 'Organisation (scope to in-use applications)')
 				"
 				:placeholder="t('stackiq', 'All applications')"
 				trackBy="uuid"

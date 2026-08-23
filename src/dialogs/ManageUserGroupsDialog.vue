@@ -177,19 +177,13 @@ export default {
 					this.selectedGroups,
 				)
 
-				showSuccess(
-					this.t('stackiq', 'User groups updated successfully'),
-				)
+				showSuccess(this.t('stackiq', 'User groups updated successfully'))
 				this.$emit('saved', [...this.selectedGroups])
 			} catch (error) {
 				showError(
-					this.t(
-						'stackiq',
-						'Failed to update user groups: {error}',
-						{
-							error: error.message,
-						},
-					),
+					this.t('stackiq', 'Failed to update user groups: {error}', {
+						error: error.message,
+					}),
 				)
 			} finally {
 				this.groupsLoading = false

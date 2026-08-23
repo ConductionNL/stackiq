@@ -104,12 +104,7 @@
 			<!-- Per-organisation report -->
 			<section class="pv-section" data-testid="posture-org">
 				<h3 class="pv-sectionTitle">
-					{{
-						t(
-							'stackiq',
-							'Per-organisation open-source-first report',
-						)
-					}}
+					{{ t('stackiq', 'Per-organisation open-source-first report') }}
 				</h3>
 				<div class="pv-orgSelect">
 					<NcSelect
@@ -146,9 +141,7 @@
 					</div>
 					<div v-if="orgClosedContributors.length" class="pv-contributors">
 						<span class="pv-contribLabel"
-							>{{
-								t('stackiq', 'Closed-source applications')
-							}}:</span
+							>{{ t('stackiq', 'Closed-source applications') }}:</span
 						>
 						<ul>
 							<li v-for="c in orgClosedContributors" :key="c.id">

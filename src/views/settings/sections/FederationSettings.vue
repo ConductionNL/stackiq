@@ -64,10 +64,7 @@
 		<div class="federation-directory">
 			<h3>{{ t('stackiq', 'Directory') }}</h3>
 			<p class="help-text">
-				{{
-					status.directoryUrl
-					|| t('stackiq', 'No directory configured')
-				}}
+				{{ status.directoryUrl || t('stackiq', 'No directory configured') }}
 			</p>
 		</div>
 
@@ -110,10 +107,7 @@
 				v-if="status.peers.length === 0"
 				:name="t('stackiq', 'No peers subscribed')"
 				:description="
-					t(
-						'stackiq',
-						'Add a peer catalog URL above to start federating.',
-					)
+					t('stackiq', 'Add a peer catalog URL above to start federating.')
 				">
 				<template #icon>
 					<LanDisconnect :size="40" />
@@ -293,11 +287,7 @@ export default defineComponent({
 				this.newPeerUrl = ''
 				await this.loadStatus()
 			} catch (error) {
-				showError(
-					t('stackiq', 'Could not add peer')
-						+ ': '
-						+ error.message,
-				)
+				showError(t('stackiq', 'Could not add peer') + ': ' + error.message)
 			} finally {
 				this.adding = false
 			}
@@ -321,9 +311,7 @@ export default defineComponent({
 				await this.loadStatus()
 			} catch (error) {
 				showError(
-					t('stackiq', 'Could not remove peer')
-						+ ': '
-						+ error.message,
+					t('stackiq', 'Could not remove peer') + ': ' + error.message,
 				)
 			} finally {
 				this.removingUrl = null
@@ -351,9 +339,7 @@ export default defineComponent({
 				await this.loadStatus()
 			} catch (error) {
 				showError(
-					t('stackiq', 'Federation pull failed')
-						+ ': '
-						+ error.message,
+					t('stackiq', 'Federation pull failed') + ': ' + error.message,
 				)
 			} finally {
 				this.pulling = false

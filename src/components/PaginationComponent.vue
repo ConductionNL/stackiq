@@ -63,9 +63,7 @@
 
 		<!-- Page size selector last -->
 		<div class="viewPaginationPageSize">
-			<label for="pageSize">{{
-				t('stackiq', 'Items per page:')
-			}}</label>
+			<label for="pageSize">{{ t('stackiq', 'Items per page:') }}</label>
 			<NcSelect
 				id="pageSize"
 				class="pagination-page-size-select"

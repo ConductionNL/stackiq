@@ -508,8 +508,8 @@
 				<h3>About Organization Synchronization</h3>
 				<p>
 					This section manages the automatic synchronization of
-					organization and contact person data between Stackiq
-					and OpenRegister.
+					organization and contact person data between Stackiq and
+					OpenRegister.
 				</p>
 
 				<h4>How Synchronization Works</h4>

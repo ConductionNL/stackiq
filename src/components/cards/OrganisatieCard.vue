@@ -1,8 +1,7 @@
 /** * OrganisatieCard.vue * Custom card component for displaying organisatie objects
-* @category Components * @package stackiq * @author Ruben Linde * @copyright
-2024 * @license EUPL-1.2
-https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 *
-@link https://github.com/ConductionNL/stackiq */
+* @category Components * @package stackiq * @author Ruben Linde * @copyright 2024 *
+@license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 *
+@version 1.0.0 * @link https://github.com/ConductionNL/stackiq */
 
 <template>
 	<!-- role/tabindex/keydown rather than a click-only div: the whole card

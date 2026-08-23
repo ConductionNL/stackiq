@@ -16,7 +16,7 @@
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#3.5
+ * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#3.5
  */
 
 /**
@@ -103,6 +103,8 @@ export function shouldShowTranslationBadge(object, servedLang) {
  * @param {object} object     An OpenRegister object.
  * @param {string} servedLang The language currently served.
  * @return {?{sourceLanguage: string, sourceLanguageName: string, label: Function}}
+ *
+ * @spec openspec/specs/softwarecatalog-adopt-or-abstractions/spec.md
  */
 export function translationBadge(object, servedLang) {
 	if (!shouldShowTranslationBadge(object, servedLang)) return null
@@ -118,6 +120,8 @@ export function translationBadge(object, servedLang) {
 		 *
 		 * @param {function(string, object=): string} t Nextcloud translate fn.
 		 * @return {string} The localised "(translated from X)" label.
+		 *
+		 * @spec openspec/specs/softwarecatalog-adopt-or-abstractions/spec.md
 		 */
 		label(t) {
 			if (typeof t === 'function') {

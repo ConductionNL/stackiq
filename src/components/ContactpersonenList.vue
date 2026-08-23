@@ -612,12 +612,7 @@ export default {
 				contactObject.loading = true
 			} else {
 				console.error('Contactpersoon is not an object:', contactObject)
-				showError(
-					this.t(
-						'stackiq',
-						'Invalid contact person data structure',
-					),
-				)
+				showError(this.t('stackiq', 'Invalid contact person data structure'))
 				return
 			}
 
@@ -672,19 +667,13 @@ export default {
 				console.info('Refreshing user info after successful conversion...')
 				await this.refreshUserData()
 
-				showSuccess(
-					this.t('stackiq', 'User account created successfully'),
-				)
+				showSuccess(this.t('stackiq', 'User account created successfully'))
 			} catch (error) {
 				console.error('Error in convertToUser:', error)
 				showError(
-					this.t(
-						'stackiq',
-						'Failed to create user account: {error}',
-						{
-							error: error.message,
-						},
-					),
+					this.t('stackiq', 'Failed to create user account: {error}', {
+						error: error.message,
+					}),
 				)
 
 				// Clear loading state on error - ensure it's an object first

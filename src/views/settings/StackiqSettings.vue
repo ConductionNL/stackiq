@@ -56,9 +56,7 @@
 				<NcTextField
 					v-model="catalogLocation"
 					:label="t('stackiq', 'Stackiq Location URL')"
-					:placeholder="
-						t('stackiq', 'https://catalog.example.com')
-					"
+					:placeholder="t('stackiq', 'https://catalog.example.com')"
 					:disabled="store.loading">
 					<template #icon>
 						<Web :size="16" />

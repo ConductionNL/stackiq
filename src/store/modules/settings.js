@@ -435,9 +435,7 @@ export const useSettingsStore = defineStore('settings', {
 
 			try {
 				// Load basic settings first (minimal data)
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/settings',
-				)
+				const response = await fetch('/index.php/apps/stackiq/api/settings')
 				if (!response.ok) {
 					throw new Error(
 						`HTTP ${response.status}: ${response.statusText}`,
@@ -1504,17 +1502,14 @@ export const useSettingsStore = defineStore('settings', {
 
 				if (Object.keys(voorzieningenConfig).length > 0) {
 					savePromises.push(
-						fetch(
-							'/index.php/apps/stackiq/api/voorzieningen/config',
-							{
-								method: 'POST',
-								headers: {
-									'Content-Type': 'application/json',
-									'X-Requested-With': 'XMLHttpRequest',
-								},
-								body: JSON.stringify(voorzieningenConfig),
+						fetch('/index.php/apps/stackiq/api/voorzieningen/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
 							},
-						),
+							body: JSON.stringify(voorzieningenConfig),
+						}),
 					)
 				}
 
@@ -1537,17 +1532,14 @@ export const useSettingsStore = defineStore('settings', {
 					}
 
 					savePromises.push(
-						fetch(
-							'/index.php/apps/stackiq/api/user-groups/config',
-							{
-								method: 'POST',
-								headers: {
-									'Content-Type': 'application/json',
-									'X-Requested-With': 'XMLHttpRequest',
-								},
-								body: JSON.stringify(userGroupsConfig),
+						fetch('/index.php/apps/stackiq/api/user-groups/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
 							},
-						),
+							body: JSON.stringify(userGroupsConfig),
+						}),
 					)
 				}
 
@@ -1590,19 +1582,16 @@ export const useSettingsStore = defineStore('settings', {
 				// Save organization synchronization settings
 				if (this.settings.syncTimeWindow !== undefined) {
 					savePromises.push(
-						fetch(
-							'/index.php/apps/stackiq/api/settings/sync/config',
-							{
-								method: 'POST',
-								headers: {
-									'Content-Type': 'application/json',
-									'X-Requested-With': 'XMLHttpRequest',
-								},
-								body: JSON.stringify({
-									syncTimeWindow: this.settings.syncTimeWindow,
-								}),
+						fetch('/index.php/apps/stackiq/api/settings/sync/config', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
 							},
-						),
+							body: JSON.stringify({
+								syncTimeWindow: this.settings.syncTimeWindow,
+							}),
+						}),
 					)
 				}
 

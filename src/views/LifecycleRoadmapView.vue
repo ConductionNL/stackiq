@@ -79,12 +79,7 @@
 								v-else-if="entry.eolApproaching"
 								class="rm-badge rm-badge--warn">
 								<ClockAlert :size="14" />
-								{{
-									t(
-										'stackiq',
-										'End of support approaching',
-									)
-								}}
+								{{ t('stackiq', 'End of support approaching') }}
 							</span>
 							<span
 								v-if="entry.eol.withdrawn"

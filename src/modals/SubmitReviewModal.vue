@@ -34,10 +34,7 @@
 						v-model="formData.name"
 						:label="t('stackiq', 'Title')"
 						:placeholder="
-							t(
-								'stackiq',
-								'Summarise your experience in a few words',
-							)
+							t('stackiq', 'Summarise your experience in a few words')
 						"
 						required />
 				</div>

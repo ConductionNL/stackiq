@@ -107,9 +107,7 @@ describe('facets.fetchFacets', () => {
 			search: 'zaak',
 		})
 
-		expect(generateUrl).toHaveBeenCalledWith(
-			'/apps/stackiq/api/facets/module',
-		)
+		expect(generateUrl).toHaveBeenCalledWith('/apps/stackiq/api/facets/module')
 		const [calledUrl] = axios.get.mock.calls[0]
 		expect(calledUrl).toContain('/apps/stackiq/api/facets/module?')
 		expect(calledUrl).toContain('referenceComponent%5B%5D=A')

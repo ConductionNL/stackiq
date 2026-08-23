@@ -244,7 +244,7 @@ class SettingsService {
 	 *
 	 * @return \OCA\OpenRegister\Service\RegisterResolverService|null The resolver or null.
 	 *
-	 * @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#phase-2
+	 * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
 	 */
 	public function getRegisterResolverService(): ?\OCA\OpenRegister\Service\RegisterResolverService {
 		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
@@ -952,7 +952,7 @@ class SettingsService {
 		}
 
 		// Fall back to generic configuration for backward compatibility.
-		// @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#phase-2
+		// @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
 		// Prefer the OR RegisterResolverService when available so per-install admin
 		// overrides go through the same `<context>_schema` resolution pipeline used by
 		// every other Conduction app (request-scoped caching + tenant-aware). Falls back
@@ -1081,7 +1081,7 @@ class SettingsService {
 			}
 		}
 
-		// @spec openspec/changes/stackiq-adopt-or-abstractions/tasks.md#phase-2
+		// @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
 		// Fallback to legacy per-object-type register config — route through the OR
 		// RegisterResolverService when available so per-install admin overrides flow
 		// through the same `<context>_register` resolution pipeline used by every

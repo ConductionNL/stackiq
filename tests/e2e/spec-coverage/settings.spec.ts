@@ -42,9 +42,9 @@ async function gotoSettings(page) {
 	})
 	const main = page.locator('#stackiq-settings')
 	// The settings shell renders the app name banner first.
-	await expect(
-		main.getByText('Stackiq', { exact: false }).first(),
-	).toBeVisible({ timeout: 30000 })
+	await expect(main.getByText('Stackiq', { exact: false }).first()).toBeVisible({
+		timeout: 30000,
+	})
 	return main
 }
 

@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://codeberg.org/Conduction/SoftwareCatalog
  *
- * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
+ * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
  */
 
 declare(strict_types=1);
@@ -79,7 +79,7 @@ class StackiqContactSyncService {
 	 *
 	 * @return array<int, array<string, mixed>> The matching contacts.
 	 *
-	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 */
 	public function searchContacts(string $query): array {
 		if ($this->isAvailable() === false) {
@@ -138,7 +138,7 @@ class StackiqContactSyncService {
 	 *
 	 * @return ?string The contacts UID, or null when it could not be resolved or created.
 	 *
-	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 */
 	public function syncToContacts(string $objectType, array $record): ?string {
 		if ($this->isAvailable() === false) {
@@ -169,7 +169,7 @@ class StackiqContactSyncService {
 	 *
 	 * @return ?array<string, mixed> The contact, or null when not found.
 	 *
-	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 */
 	public function findContactByUid(string $uid): ?array {
 		if ($uid === '' || $this->isAvailable() === false) {
@@ -195,7 +195,7 @@ class StackiqContactSyncService {
 	 *
 	 * @return ?array<string, mixed> The matched contact, or null.
 	 *
-	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 10, exactly at the threshold. The
 	 * branches are the documented identity-match cascade: Contacts API availability, then e-mail,
@@ -246,7 +246,7 @@ class StackiqContactSyncService {
 	 * @return ?string The new contacts UID, or null when no writable addressbook
 	 *                 is available or the record has no usable identity.
 	 *
-	 * @spec openspec/specs/stackiq-contacts-to-nc/spec.md
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 */
 	public function createContactForRecord(string $objectType, array $record): ?string {
 		if ($this->isAvailable() === false) {

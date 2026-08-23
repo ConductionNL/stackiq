@@ -15,7 +15,7 @@
  * @version 2.0.0
  * @see {@link https://github.com/ConductionNL/stackiq}
  *
- * @spec openspec/specs/stackiq-store-migration/spec.md#requirement-createobjectstore-for-openregister-crud-stores
+ * @spec openspec/specs/softwarecatalog-store-migration/spec.md#requirement-createobjectstore-for-openregister-crud-stores
  */
 import {
 	auditTrailsPlugin,

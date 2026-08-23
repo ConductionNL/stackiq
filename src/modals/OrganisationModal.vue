@@ -23,9 +23,7 @@
 						<NcTextField
 							v-model="formData.website"
 							:label="t('stackiq', 'Website')"
-							:placeholder="
-								t('stackiq', 'https://example.com')
-							" />
+							:placeholder="t('stackiq', 'https://example.com')" />
 					</div>
 
 					<div class="form-row">
@@ -33,9 +31,7 @@
 							v-model="selectedType"
 							:options="organisationTypes"
 							:inputLabel="t('stackiq', 'Type')"
-							:placeholder="
-								t('stackiq', 'Select organisation type')
-							"
+							:placeholder="t('stackiq', 'Select organisation type')"
 							label="label"
 							trackBy="value"
 							:clearable="false"
@@ -47,10 +43,7 @@
 							v-model="formData.shortDescription"
 							:label="t('stackiq', 'Short Description')"
 							:placeholder="
-								t(
-									'stackiq',
-									'Brief description of the organisation',
-								)
+								t('stackiq', 'Brief description of the organisation')
 							" />
 					</div>
 
@@ -58,9 +51,7 @@
 						<NcTextField
 							v-model="formData['e-mailadres']"
 							:label="t('stackiq', 'Email')"
-							:placeholder="
-								t('stackiq', 'contact@example.com')
-							"
+							:placeholder="t('stackiq', 'contact@example.com')"
 							type="email" />
 					</div>
 
@@ -76,10 +67,7 @@
 							v-model="formData.oin"
 							:label="t('stackiq', 'OIN')"
 							:placeholder="
-								t(
-									'stackiq',
-									'Organisation Identification Number',
-								)
+								t('stackiq', 'Organisation Identification Number')
 							" />
 					</div>
 
@@ -384,9 +372,7 @@ export default {
 		 */
 		async saveOrganisation() {
 			if (!this.isFormValid) {
-				showError(
-					this.t('stackiq', 'Please fill in all required fields'),
-				)
+				showError(this.t('stackiq', 'Please fill in all required fields'))
 				return
 			}
 
@@ -403,10 +389,7 @@ export default {
 
 					if (Object.keys(changes).length === 0) {
 						// No changes detected
-						this.successMessage = this.t(
-							'stackiq',
-							'No changes to save',
-						)
+						this.successMessage = this.t('stackiq', 'No changes to save')
 						this.success = true
 						setTimeout(() => {
 							this.closeModal()
@@ -465,11 +448,9 @@ export default {
 			} catch (error) {
 				console.error('Error saving organisation:', error)
 				showError(
-					this.t(
-						'stackiq',
-						'Failed to save organisation: {error}',
-						{ error: error.message },
-					),
+					this.t('stackiq', 'Failed to save organisation: {error}', {
+						error: error.message,
+					}),
 				)
 			} finally {
 				this.loading = false
