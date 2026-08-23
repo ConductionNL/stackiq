@@ -30,10 +30,12 @@ jobs:
     uses: ConductionNL/.github/.github/workflows/documentation.yml@main
     with:
       # FROZEN through the stackiq -> stackiq app-id rename.
-      # `softwarecatalog.conduction.nl` answers 200 today; `stackiq.conduction.nl`
+      # `stackiq.conduction.nl` answers 200 today; `stackiq.conduction.nl`
       # answers 000 (no DNS record). A CNAME is not a name we own in this repo —
       # it is a claim about a record that exists. Publishing docs at a host that
       # resolves to nothing takes the documentation site OFFLINE, which is a
       # regression, not a rename. Move this only after DNS + the Pages/Cloudflare
       # binding for the new host are live, in a change that verifies both.
-      cname: softwarecatalog.conduction.nl
+      cname: stackiq.conduction.nl
+
+      docs-hosts: softwarecatalog.conduction.nl,stackiq.conduction.nl

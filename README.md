@@ -12,7 +12,7 @@
   <a href="https://github.com/ConductionNL/stackiq/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/stackiq" alt="Latest release"></a>
   <a href="https://github.com/ConductionNL/stackiq/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
   <a href="https://github.com/ConductionNL/stackiq/actions/workflows/code-quality.yml"><img src="https://github.com/ConductionNL/stackiq/actions/workflows/code-quality.yml/badge.svg" alt="Code quality"></a>
-  <a href="https://softwarecatalog.conduction.nl"><img src="https://img.shields.io/badge/docs-softwarecatalog.conduction.nl-green" alt="Documentation"></a>
+  <a href="https://stackiq.conduction.nl"><img src="https://img.shields.io/badge/docs-stackiq.conduction.nl-green" alt="Documentation"></a>
 </p>
 
 ---
@@ -104,7 +104,7 @@ stackiq/
 ├── docs/              # Technical documentation
 ├── img/               # App icons and screenshots
 ├── l10n/              # Translations (en, nl)
-└── docusaurus/        # Product documentation site (softwarecatalog.conduction.nl)
+└── docusaurus/        # Product documentation site (stackiq.conduction.nl)
 ```
 
 ## Requirements
@@ -180,7 +180,7 @@ npm run stylelint       # CSS linting
 
 ## Documentation
 
-Full documentation is available at **[softwarecatalog.conduction.nl](https://softwarecatalog.conduction.nl)**
+Full documentation is available at **[stackiq.conduction.nl](https://stackiq.conduction.nl)**
 
 | Page | Description |
 |------|-------------|

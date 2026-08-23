@@ -6,13 +6,13 @@ Stackiq is an open-source IT-asset-management app for the Nextcloud workspace. I
 
 ## Docs
 
-- [Documentation](https://softwarecatalog.conduction.nl/docs/intro): main entry, including tutorials, user guide, and admin guide.
-- [API reference](https://softwarecatalog.conduction.nl/api): OpenAPI documentation.
+- [Documentation](https://stackiq.conduction.nl/docs/intro): main entry, including tutorials, user guide, and admin guide.
+- [API reference](https://stackiq.conduction.nl/api): OpenAPI documentation.
 
 ## Optional
 
 - [Install](https://www.conduction.nl/install): self-host on your Nextcloud instance.
-- [Source code](https://codeberg.org/Conduction/stackiq): repository and issue tracker.
+- [Source code](https://github.com/ConductionNL/stackiq): repository and issue tracker.
 - [App page](https://www.conduction.nl/apps/stackiq): product positioning on conduction.nl.
 
 ## Contact

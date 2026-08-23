@@ -146,7 +146,7 @@
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "BookOpenVariantOutline",
-			"href": "https://softwarecatalog.conduction.nl",
+			"href": "https://stackiq.conduction.nl",
 			"section": "footer",
 			"order": 90
 		},
@@ -181,7 +181,7 @@
 				"columns": ["name", "type", "status", "website"],
 				"filter": { "status": ["Draft", "Active", "Inactive"] },
 				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			},
 			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs. config.filter excludes organisation-merge tombstones (status='merged') from the default listing per the organisation-merge spec — a merged-away source stays readable by direct UUID lookup (OrganisatieDetail route) but never appears in this index. 🔴 THIS FILTER IS COUPLED TO THE SCHEMA'S status ENUM AND WENT STALE: #520 translated the stored enum values and migrated the rows (Concept/Actief/Deactief/samengevoegd -> Draft/Active/Inactive/merged) but did NOT translate this list, so the index filtered on three values no row can hold any more. A value filter that matches nothing is not an error — OpenRegister answers 200 with total=0 — so the Organisations index rendered 'No items found' for every user and read as an empty catalogue. Measured on the running instance: ?status[]=Draft&status[]=Active returns the seeded row, ?status[]=Concept&status[]=Actief&status[]=Deactief returns total=0. Any future enum rename must move this list in the same commit."
 		},
@@ -222,7 +222,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -243,7 +243,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -270,7 +270,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -306,7 +306,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -335,7 +335,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -371,7 +371,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -480,7 +480,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -502,7 +502,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			},
 			"_note": "The register has NO dedicated 'standard' schema — GEMMA standards are `element` objects (the generic ArchiMate/GEMMA model-element schema, shared with referentiecomponenten, applications, capabilities, …) discriminated by `gemmaType`. Fixed a pre-existing bug: this page previously pointed at a non-existent `schema: \"standaard\"`, which would 404 on every fetch. Scoped with `filter.gemmaType: \"standaard\"` (see lib/Service/ArchiMateImportService.php's `extractGemmaType` comparisons and its `?gemmaType=referentiecomponent` query comment) so only standard-typed elements list here. REGISTER FIX (measured): `element` is declared under `components.registers.vng-gemma.schemas`, NOT under `voorzieningen`, so `@resolve:voorzieningen_register` produced `GET /api/objects/<voorzieningen>/element -> 404 {\"message\":\"Schema not found: 'element'\"}` on every load (CI trace, run 31981873526). Attaching `element` to `voorzieningen` was rejected deliberately: the request would then succeed and return an EMPTY list, because objects live per register and the AMEF elements are written to the AMEF one — a visible error traded for an invisible pass. Repointed at `@resolve:amef_register`, the second sentinel, provisioned in lib/AppInfo/Application.php::boot() from the `amef_config` blob exactly as `voorzieningen_register` is from `voorzieningen_config`."
 		},
@@ -534,7 +534,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -556,7 +556,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			},
 			"_note": "bio-compliance-assessment: BIO 2.0 measures reference catalog (design.md Decision 1/Decision 4), following the Standaarden/StandaardDetail index+detail pattern. Publicly readable (authorization.read: [\"public\"]) since it is a selection source for compliancy.bioMaatregel and the BIO coverage report (ComplianceMatrixView), not organisation-owned data."
 		},
@@ -584,7 +584,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -605,7 +605,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -636,7 +636,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -657,7 +657,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -686,7 +686,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -715,7 +715,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			},
 			"_note": "Fixed a pre-existing bug: `releaseDatum` is not a moduleVersie property (see lib/Settings/softwarecatalogus_register.json) — replaced with the real lifecycle field `datumInGebruik` (date the version went live), the closest analog to a release date."
 		},
@@ -748,7 +748,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -784,7 +784,7 @@
 						{ "id": "audit", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -817,7 +817,7 @@
 			"type": "roadmap",
 			"title": "Features & roadmap",
 			"config": {
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		}
 	]

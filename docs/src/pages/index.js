@@ -314,7 +314,7 @@ export default function Home() {
           secondaryCta={{ label: 'Read the docs', href: '/docs/FEATURES' }}
           tertiaryCta={{
             label: 'View on GitHub',
-            href: 'https://codeberg.org/Conduction/stackiq',
+            href: 'https://github.com/ConductionNL/stackiq',
           }}
           iconColor="var(--c-orange-knvb)"
           icon={SOFTWARECATALOG_ICON}
