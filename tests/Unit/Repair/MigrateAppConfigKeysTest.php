@@ -102,6 +102,66 @@ class MigrateAppConfigKeysTest extends TestCase {
 	}//end testCopiesStringValueToTheNewAppId()
 
 	/**
+	 * Two copyable keys are both migrated in one run.
+	 *
+	 * The loop `continue`s after a successful copy, so a single-key fixture
+	 * never executes that branch — and a migration that silently stops after
+	 * the first key would still pass every one-key test in this file.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/english-vocabulary-migration/spec.md#requirement-the-migration-is-non-destructive-and-idempotent
+	 */
+	public function testCopiesEveryCopyableKeyNotJustTheFirst(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getKeys')->with(self::LEGACY)->willReturn(['first_key', 'second_key']);
+		$appConfig->method('getAllValues')->with(self::LEGACY)->willReturn(
+			['first_key' => 'one', 'second_key' => 'two']
+		);
+		$appConfig->method('hasKey')->willReturn(false);
+
+		$seen = [];
+		$appConfig->expects($this->exactly(2))
+			->method('setValueString')
+			->willReturnCallback(
+				static function (string $app, string $key, string $value) use (&$seen): bool {
+					$seen[$key] = $value;
+					return true;
+				}
+			);
+
+		(new MigrateAppConfigKeys($appConfig, new NullLogger()))->run($this->createMock(IOutput::class));
+
+		self::assertSame(['first_key' => 'one', 'second_key' => 'two'], $seen);
+
+	}//end testCopiesEveryCopyableKeyNotJustTheFirst()
+
+	/**
+	 * A value copyValue() refuses is counted as skipped, not as copied.
+	 *
+	 * An empty string and an empty array are both "nothing to carry across";
+	 * writing them would create a row that reads back as absent anyway.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/english-vocabulary-migration/spec.md#requirement-the-migration-is-non-destructive-and-idempotent
+	 */
+	public function testAnUncopyableValueIsSkippedRatherThanWritten(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getKeys')->with(self::LEGACY)->willReturn(['empty_string', 'empty_array']);
+		$appConfig->method('getAllValues')->with(self::LEGACY)->willReturn(
+			['empty_string' => '', 'empty_array' => []]
+		);
+		$appConfig->method('hasKey')->willReturn(false);
+
+		$appConfig->expects($this->never())->method('setValueString');
+		$appConfig->expects($this->never())->method('setValueArray');
+
+		(new MigrateAppConfigKeys($appConfig, new NullLogger()))->run($this->createMock(IOutput::class));
+
+	}//end testAnUncopyableValueIsSkippedRatherThanWritten()
+
+	/**
 	 * The stored TYPE survives the copy.
 	 *
 	 * A bool written back as the string "1" reads as a different value through
