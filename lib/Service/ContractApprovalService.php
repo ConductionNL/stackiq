@@ -225,9 +225,17 @@ class ContractApprovalService {
 	 * It is a payload discriminator, not a second responsibility.
 	 */
 	public function submitForApproval(string $contractUuid, bool $isRenewal = false): string {
-		if ($this->isDelegationConfigured() === false) {
-			// Fail closed — never auto-approve when decidesk is not installed.
-			throw new RuntimeException('Contract approval delegation is not available (decidesk event contract not installed).');
+		// Resolve ONCE and narrow here, rather than calling
+		// isDelegationConfigured() and resolving again below. Two lookups of the
+		// same thing can disagree — and the second one has no guard, so a null
+		// would reach `new $eventClass(...)` as a call on null. Psalm caught
+		// exactly that shape.
+		$eventClass = $this->resolveRequestEventClass();
+		if ($eventClass === null) {
+			// Fail closed — never auto-approve when the decision app is absent.
+			throw new RuntimeException(
+				'Contract approval delegation is not available (decision event contract not installed).'
+			);
 		}
 
 		$contract = $this->loadContract(contractUuid: $contractUuid);
@@ -242,7 +250,6 @@ class ContractApprovalService {
 			$decisionType = self::DECISION_TYPE_RENEWAL;
 		}
 
-		$eventClass = $this->resolveRequestEventClass();
 		$event = new $eventClass(
 			self::SOURCE_APP,
 			self::SUBJECT_REGISTER,
