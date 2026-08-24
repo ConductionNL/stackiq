@@ -645,7 +645,7 @@ export default {
 			// Register the object type from the resolved config before fetching —
 			// `initializeVoorzieningenObjectTypes` only auto-registers when the
 			// settings `availableRegisters` carries a register slugged exactly
-			// 'voorzieningen', which is not guaranteed on every instance. Without
+			// 'stackiq', which is not guaranteed on every instance. Without
 			// this the nc-vue object store throws "Object type <type> is not
 			// registered". Mirrors the OrganisatieIndex registration fallback.
 			if (

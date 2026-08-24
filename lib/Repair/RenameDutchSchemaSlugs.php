@@ -96,7 +96,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 *
 	 * @var array<int, string>
 	 */
-	private const REGISTER_SLUGS = ['voorzieningen', 'vng-gemma'];
+	private const REGISTER_SLUGS = ['stackiq', 'vng-gemma'];
 
 	/**
 	 * Constructor.

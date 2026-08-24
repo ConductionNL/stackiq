@@ -58,10 +58,10 @@ fi
 docker exec nextcloud rm -f /tmp/config.json
 echo ""
 
-# Step 2: Find the voorzieningen register ID
-echo -e "${BLUE}2️⃣  Finding voorzieningen register...${NC}"
+# Step 2: Find the stackiq register ID
+echo -e "${BLUE}2️⃣  Finding stackiq register...${NC}"
 REGISTER_RESPONSE=$(docker exec -u 33 nextcloud curl -s -u "${ADMIN_USER}:${ADMIN_PASSWORD}" \
-    "${NEXTCLOUD_URL}/index.php/apps/openregister/api/registers?slug=voorzieningen")
+    "${NEXTCLOUD_URL}/index.php/apps/openregister/api/registers?slug=stackiq")
 
 REGISTER_ID=$(echo "$REGISTER_RESPONSE" | docker exec -i nextcloud jq -r '.results[0].id // empty')
 

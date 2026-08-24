@@ -33,17 +33,17 @@ AUTH="admin:admin"
 echo -e "${YELLOW}📋 STAP 1: Verificatie van configuratie${NC}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# Get registers to find voorzieningen register
-echo "🔍 Zoeken naar 'voorzieningen' register..."
+# Get registers to find stackiq register
+echo "🔍 Zoeken naar 'stackiq' register..."
 REGISTER_RESPONSE=$(docker exec -u 33 $CONTAINER curl -s -u "$AUTH" \
     -H "Content-Type: application/json" \
-    "$API_URL/api/registers?filters[slug]=voorzieningen")
+    "$API_URL/api/registers?filters[slug]=stackiq")
 
 REGISTER_ID=$(echo "$REGISTER_RESPONSE" | jq -r '.results[0].id // empty')
 REGISTER_CONFIG=$(echo "$REGISTER_RESPONSE" | jq -r '.results[0].configuration // empty')
 
 if [ -z "$REGISTER_ID" ]; then
-    echo -e "${RED}❌ 'voorzieningen' register niet gevonden!${NC}"
+    echo -e "${RED}❌ 'stackiq' register niet gevonden!${NC}"
     echo "   Importeer eerst de configuratie uit softwarecatalogus_register_magic.json"
     exit 1
 fi

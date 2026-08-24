@@ -5,7 +5,7 @@
 #
 # Prerequisites:
 #   - Nextcloud running at localhost:8080 with admin:admin
-#   - OpenRegister app enabled with voorzieningen register loaded
+#   - OpenRegister app enabled with stackiq register loaded
 #   - User accounts already created (see create-test-users section below)
 #
 # Usage:
@@ -289,7 +289,7 @@ create_nc_org() {
 find_reg_org_uuid() {
     local name="$1"
     curl -s -u "${ADMIN_AUTH}" \
-        "${BASE_URL}/objects/voorzieningen/organisatie?_search=$(echo "$name" | sed 's/ /+/g')&_limit=5" \
+        "${BASE_URL}/objects/stackiq/organisatie?_search=$(echo "$name" | sed 's/ /+/g')&_limit=5" \
         | python3 -c "
 import sys, json
 d = json.load(sys.stdin)
@@ -303,7 +303,7 @@ for r in d.get('results', []):
 create_reg_org() {
     local name="$1"
     local type="$2"
-    curl -s -X POST "${BASE_URL}/objects/voorzieningen/organisatie" \
+    curl -s -X POST "${BASE_URL}/objects/stackiq/organisatie" \
         -H 'Content-Type: application/json' \
         -u "${ADMIN_AUTH}" \
         -d "{
@@ -470,7 +470,7 @@ for r in d.get('results',[]):
     fi
 
     # Create as the user themselves so system `organisation` is set correctly by RBAC
-    uuid=$(curl -s -X POST "${BASE_URL}/objects/voorzieningen/contactpersoon" \
+    uuid=$(curl -s -X POST "${BASE_URL}/objects/stackiq/contactpersoon" \
         -H 'Content-Type: application/json' \
         -u "${user_auth}" \
         -d "{
@@ -505,7 +505,7 @@ echo "--- Step 6: Linking contact persons to organizations ---"
 
 # Test Leverancier BV
 if [ -n "$LEVER_REG" ] && [ -n "$JAN_CONTACT" ]; then
-    curl -s -X PUT "${BASE_URL}/objects/voorzieningen/organisatie/${LEVER_REG}" \
+    curl -s -X PUT "${BASE_URL}/objects/stackiq/organisatie/${LEVER_REG}" \
         -H 'Content-Type: application/json' \
         -u "${ADMIN_AUTH}" \
         -d "{\"naam\": \"Test Leverancier BV\", \"type\": \"Leverancier\", \"status\": \"Actief\", \"contactpersonen\": [\"${JAN_CONTACT}\"]}" > /dev/null 2>&1
@@ -514,7 +514,7 @@ fi
 
 # Test Gemeente
 if [ -n "$GEMEENTE_REG" ] && [ -n "$MARIA_CONTACT" ]; then
-    curl -s -X PUT "${BASE_URL}/objects/voorzieningen/organisatie/${GEMEENTE_REG}" \
+    curl -s -X PUT "${BASE_URL}/objects/stackiq/organisatie/${GEMEENTE_REG}" \
         -H 'Content-Type: application/json' \
         -u "${ADMIN_AUTH}" \
         -d "{\"naam\": \"Test Gemeente\", \"type\": \"Gemeente\", \"status\": \"Actief\", \"contactpersonen\": [\"${MARIA_CONTACT}\", \"${MARK_CONTACT}\"]}" > /dev/null 2>&1
@@ -523,7 +523,7 @@ fi
 
 # Test Samenwerking
 if [ -n "$SAMENWERKING_REG" ] && [ -n "$LINDA_CONTACT" ]; then
-    curl -s -X PUT "${BASE_URL}/objects/voorzieningen/organisatie/${SAMENWERKING_REG}" \
+    curl -s -X PUT "${BASE_URL}/objects/stackiq/organisatie/${SAMENWERKING_REG}" \
         -H 'Content-Type: application/json' \
         -u "${ADMIN_AUTH}" \
         -d "{\"naam\": \"Test Samenwerking\", \"type\": \"Samenwerking\", \"status\": \"Actief\", \"contactpersonen\": [\"${LINDA_CONTACT}\"]}" > /dev/null 2>&1
@@ -581,7 +581,7 @@ for r in d.get('results',[]):
 }
 
 # Applicatie for Test Leverancier BV (created as jan.pietersen)
-LEVER_APP_UUID=$(create_object "voorzieningen" "module" "{
+LEVER_APP_UUID=$(create_object "stackiq" "module" "{
     \"naam\": \"Test Applicatie Leverancier\",
     \"beschrijvingKort\": \"Een test applicatie van Test Leverancier BV voor geautomatiseerde tests\",
     \"beschrijvingLang\": \"Deze applicatie is aangemaakt door het test setup script om de beheer-, wizard- en zoekfunctionaliteit te testen.\",
@@ -591,7 +591,7 @@ LEVER_APP_UUID=$(create_object "voorzieningen" "module" "{
 }" "applicatie for Test Leverancier BV" "Test Applicatie Leverancier" "jan.pietersen@test.nl:${PASSWORD}")
 
 # Applicatie for Test Leverancier 2 (created as jan.vandeberg — cross-vendor testing)
-LEVER2_APP_UUID=$(create_object "voorzieningen" "module" "{
+LEVER2_APP_UUID=$(create_object "stackiq" "module" "{
     \"naam\": \"Test Applicatie Leverancier 2\",
     \"beschrijvingKort\": \"Een test applicatie van Test Leverancier 2 voor cross-vendor tests\",
     \"geregistreerdDoor\": \"Leverancier\",
@@ -600,7 +600,7 @@ LEVER2_APP_UUID=$(create_object "voorzieningen" "module" "{
 }" "applicatie for Test Leverancier 2" "Test Applicatie Leverancier 2" "jan.vandeberg@testleverancier.nl:${PASSWORD}")
 
 # Dienst for Test Leverancier BV (created as jan.pietersen)
-LEVER_DIENST_UUID=$(create_object "voorzieningen" "dienst" "{
+LEVER_DIENST_UUID=$(create_object "stackiq" "dienst" "{
     \"naam\": \"Test Dienst Leverancier\",
     \"beschrijvingKort\": \"Een test dienst voor geautomatiseerde tests\",
     \"type\": [\"Implementatieondersteuning\"],
@@ -610,7 +610,7 @@ LEVER_DIENST_UUID=$(create_object "voorzieningen" "dienst" "{
 }" "dienst for Test Leverancier BV" "Test Dienst Leverancier" "jan.pietersen@test.nl:${PASSWORD}")
 
 # Applicatie for Test Gemeente (created as maria.vanderberg)
-GEMEENTE_APP_UUID=$(create_object "voorzieningen" "module" "{
+GEMEENTE_APP_UUID=$(create_object "stackiq" "module" "{
     \"naam\": \"Test Applicatie Gemeente\",
     \"beschrijvingKort\": \"Een test applicatie geregistreerd door Test Gemeente\",
     \"geregistreerdDoor\": \"Gemeente\",
@@ -632,7 +632,7 @@ SAMENWERKING_AUTH="linda.bakker@test.nl:${PASSWORD}"
 # Check: Linda can list applicaties (should not 404/500)
 SAMENWERKING_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
     -u "${SAMENWERKING_AUTH}" \
-    "${BASE_URL}/objects/voorzieningen/module?_limit=1" 2>/dev/null)
+    "${BASE_URL}/objects/stackiq/module?_limit=1" 2>/dev/null)
 
 if [ "$SAMENWERKING_STATUS" = "200" ]; then
     echo "  PASS: Linda can list applicaties (HTTP ${SAMENWERKING_STATUS})"
@@ -643,7 +643,7 @@ fi
 # Check: Linda can list diensten
 DIENST_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
     -u "${SAMENWERKING_AUTH}" \
-    "${BASE_URL}/objects/voorzieningen/dienst?_limit=1" 2>/dev/null)
+    "${BASE_URL}/objects/stackiq/dienst?_limit=1" 2>/dev/null)
 
 if [ "$DIENST_STATUS" = "200" ]; then
     echo "  PASS: Linda can list diensten (HTTP ${DIENST_STATUS})"
@@ -724,10 +724,10 @@ for r in matches[1:]:
         fi
     }
 
-    cleanup_duplicates "${ADMIN_AUTH}" "voorzieningen" "module" "Test Applicatie Leverancier" "Lever app"
-    cleanup_duplicates "${ADMIN_AUTH}" "voorzieningen" "module" "Test Applicatie Leverancier 2" "Lever2 app"
-    cleanup_duplicates "${ADMIN_AUTH}" "voorzieningen" "module" "Test Applicatie Gemeente" "Gemeente app"
-    cleanup_duplicates "${ADMIN_AUTH}" "voorzieningen" "dienst" "Test Dienst Leverancier" "Lever dienst"
+    cleanup_duplicates "${ADMIN_AUTH}" "stackiq" "module" "Test Applicatie Leverancier" "Lever app"
+    cleanup_duplicates "${ADMIN_AUTH}" "stackiq" "module" "Test Applicatie Leverancier 2" "Lever2 app"
+    cleanup_duplicates "${ADMIN_AUTH}" "stackiq" "module" "Test Applicatie Gemeente" "Gemeente app"
+    cleanup_duplicates "${ADMIN_AUTH}" "stackiq" "dienst" "Test Dienst Leverancier" "Lever dienst"
     echo "  Cleanup done."
 fi
 
@@ -843,7 +843,7 @@ echo "--- Step 8c: Creating test koppelingen and glossary ---"
 
 # Create a test koppeling (as leverancier user)
 KOPPELING_CHECK=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
-    "${NC_URL}/index.php/apps/openregister/api/objects/voorzieningen/koppeling?_limit=1" 2>&1 | \
+    "${NC_URL}/index.php/apps/openregister/api/objects/stackiq/koppeling?_limit=1" 2>&1 | \
     python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('total',0))" 2>/dev/null || echo "0")
 
 if [ "$KOPPELING_CHECK" = "0" ]; then
@@ -851,13 +851,13 @@ if [ "$KOPPELING_CHECK" = "0" ]; then
 
     # Get applicatie UUIDs for linking
     APP_UUID=$(curl -s -u "jan.pietersen@test.nl:${PASSWORD}" \
-        "${NC_URL}/index.php/apps/openregister/api/objects/voorzieningen/module?_limit=1&_search=Test+Applicatie+Leverancier" 2>&1 | \
+        "${NC_URL}/index.php/apps/openregister/api/objects/stackiq/module?_limit=1&_search=Test+Applicatie+Leverancier" 2>&1 | \
         python3 -c "import sys,json; r=json.loads(sys.stdin.read()).get('results',[]); print(r[0]['uuid'] if r else '')" 2>/dev/null || echo "")
 
     if [ -n "$APP_UUID" ]; then
         # Create koppeling
         KOPPELING_RESULT=$(curl -s -u "jan.pietersen@test.nl:${PASSWORD}" -X POST \
-            "${NC_URL}/index.php/apps/openregister/api/objects/voorzieningen/koppeling" \
+            "${NC_URL}/index.php/apps/openregister/api/objects/stackiq/koppeling" \
             -H "Content-Type: application/json" \
             -d "{
                 \"naam\": \"Test Koppeling REST API\",
@@ -946,7 +946,7 @@ if [ -n "$LISTING_SCHEMA" ] && [ -n "$CATALOG_SCHEMA" ]; then
             python3 -c "import sys,json; r=json.loads(sys.stdin.read()).get('results',[]); print(r[0]['uuid'] if r else '')" 2>/dev/null || echo "")
     fi
 
-    # Create a listing that exposes voorzieningen/module as publications
+    # Create a listing that exposes stackiq/module as publications
     if [ -n "$CATALOG_UUID" ]; then
         LISTING_COUNT=$(curl -s -u "${ADMIN_USER}:${ADMIN_PASS}" \
             "${NC_URL}/index.php/apps/opencatalogi/api/listings" 2>&1 | \

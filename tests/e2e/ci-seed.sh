@@ -117,8 +117,12 @@ required = {
     # carries element / model / property-definition / relation / view, and the
     # Standaarden + StandaardDetail manifest pages read `element` from it via the
     # `@resolve:amef_register` sentinel. It was previously unchecked here, so an
-    # import that produced only `voorzieningen` reported a clean seed.
-    'registers': ['voorzieningen', 'vng-gemma'],
+    # import that produced only the catalog register reported a clean seed.
+    #
+    # `stackiq` is the catalog register's slug (renamed from `voorzieningen`;
+    # lib/Repair/MigrateRegisterSlug.php moves the row). `vng-gemma` deliberately
+    # keeps its name — it holds VNG reference data, not this app's own store.
+    'registers': ['stackiq', 'vng-gemma'],
     # The schemas the e2e fixtures create/read through, per _fixtures.ts
     # (organization, contactPerson, module, contract, moduleVersion) plus the
     # ones the spec-coverage index pages render.
@@ -200,7 +204,7 @@ PY
 # ── 3b. The AMEF register: resolve it, PROBE IT, and give it rows ────────────
 # The Standaarden / StandaardDetail manifest pages read `schema: element`, which
 # lib/Settings/softwarecatalogus_register.json attaches to the `vng-gemma` (AMEF)
-# register and NOT to `voorzieningen`. They resolve it through the
+# register and NOT to the catalog register `stackiq`. They resolve it through the
 # `@resolve:amef_register` sentinel that lib/AppInfo/Application.php::boot()
 # provisions from the `amef_config` blob.
 #

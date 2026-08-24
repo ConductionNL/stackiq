@@ -140,7 +140,7 @@ export default {
 	// A declarative `type: index` page has no slot to inject the multi-step
 	// "New suite" wizard trigger alongside the generic single-form create
 	// button, so this stays a custom page. `CnIndexPage` itself still
-	// self-fetches (register="voorzieningen" schema="suite") exactly as a
+	// self-fetches (register="stackiq" schema="suite") exactly as a
 	// declarative type:index page would.
 	// @spec openspec/specs/suite-wizard/spec.md
 	SuitesIndexView,

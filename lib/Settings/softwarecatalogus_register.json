@@ -814,8 +814,8 @@
   },
   "components": {
     "registers": {
-      "voorzieningen": {
-        "slug": "voorzieningen",
+      "stackiq": {
+        "slug": "stackiq",
         "title": "Voorzieningen",
         "version": "2.1.0",
         "description": "Register voor voorzieningen uit de softwarecatalogus",
@@ -975,7 +975,7 @@
         "endpointRegex": "#^register$#",
         "method": "POST",
         "targetType": "register/schema",
-        "targetId": "voorzieningen/organisatie",
+        "targetId": "stackiq/organisatie",
         "conditions": [],
         "inputMapping": null,
         "outputMapping": null,
@@ -8021,7 +8021,7 @@
     "objects": [
       {
         "@self": {
-          "register": "voorzieningen",
+          "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-topdesk-gem-leiden-deelnemers",
           "version": "0.0.1"
@@ -8050,7 +8050,7 @@
       },
       {
         "@self": {
-          "register": "voorzieningen",
+          "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-key2-gem-leiden-deelnemer",
           "version": "0.0.1"
@@ -8074,7 +8074,7 @@
       },
       {
         "@self": {
-          "register": "voorzieningen",
+          "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-suite4-gem-delft-eigenaar",
           "version": "0.0.1"

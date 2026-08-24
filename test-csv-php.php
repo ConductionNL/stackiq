@@ -28,7 +28,7 @@ $csvFiles = [
     'module' => '/var/www/html/custom_apps/stackiq/data/module.csv',
 ];
 
-// Find voorzieningen register
+// Find stackiq register
 echo "📋 STAP 1: Register lookup\n";
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
 
@@ -36,14 +36,14 @@ $registers = $registerMapper->findAll();
 $register = null;
 
 foreach ($registers as $r) {
-    if ($r->getSlug() === 'voorzieningen') {
+    if ($r->getSlug() === 'stackiq') {
         $register = $r;
         break;
     }
 }
 
 if ($register === null) {
-    echo "❌ 'voorzieningen' register niet gevonden!\n\n";
+    echo "❌ 'stackiq' register niet gevonden!\n\n";
     exit(1);
 }
 

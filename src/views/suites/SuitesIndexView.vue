@@ -10,7 +10,7 @@
  Stays `type: custom` (rather than a declarative `type: index` manifest
  page) purely because a declarative index page has no slot to inject the
  wizard's "New suite" action button — `CnIndexPage` itself self-fetches
- (`register="voorzieningen"` `schema="suite"` triggers the library's own
+ (`register="stackiq"` `schema="suite"` triggers the library's own
  self-fetch path, `CnIndexPage/useSelfFetchList.js`), identical to what a
  declarative type:index page gets for free.
 
@@ -28,7 +28,7 @@
 			"
 			:showTitle="true"
 			icon="PackageVariant"
-			register="voorzieningen"
+			register="stackiq"
 			schema="suite"
 			:columns="['name', 'shortDescription', 'website']"
 			:showAdd="false"

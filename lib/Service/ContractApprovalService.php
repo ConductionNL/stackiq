@@ -96,7 +96,7 @@ class ContractApprovalService {
 	/**
 	 * The catalog register slug that owns the contract record.
 	 */
-	public const SUBJECT_REGISTER = 'voorzieningen';
+	public const SUBJECT_REGISTER = 'stackiq';
 
 	/**
 	 * The contract schema slug.

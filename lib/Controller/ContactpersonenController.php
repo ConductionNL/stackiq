@@ -402,7 +402,7 @@ class ContactpersonenController extends Controller {
 			// Find the contactpersoon object — bind to current tenant.
 			$contactPersonObject = $this->objectService->find(
 				id: $contactPersonId,
-				register: 'voorzieningen',
+				register: 'stackiq',
 				schema: 'contactPerson',
 				_rbac: true,
 				_multitenancy: true
@@ -1217,7 +1217,7 @@ class ContactpersonenController extends Controller {
 		try {
 			$contactObject = $this->objectService->find(
 				id: $contactPersonId,
-				register: 'voorzieningen',
+				register: 'stackiq',
 				schema: 'contactPerson'
 			);
 

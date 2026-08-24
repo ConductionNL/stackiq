@@ -25,7 +25,7 @@ Jan manages his company's products in the Softwarecatalogus. He registers applic
 
 ## Organization & Permissions Context
 
-Jan's active organization is **Test Leverancier BV**. The internal Nextcloud org UUID matches a register object in `voorzieningen/organisatie`, which is required for edit/delete permissions to work.
+Jan's active organization is **Test Leverancier BV**. The internal Nextcloud org UUID matches a register object in `stackiq/organisatie`, which is required for edit/delete permissions to work.
 
 - **Beheer tables** only show objects owned by Jan's org (RBAC scoping by `@self.organisation`)
 - **Edit/Delete buttons** require the org data fetch to succeed — if you see disabled actions or missing buttons, check for org fetch 404 errors in the console
