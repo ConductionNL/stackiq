@@ -42,7 +42,7 @@
  * `cyclonedx-1.5-valid.json`) is uploaded through the real file input.
  */
 
-import type {Page} from '@playwright/test';
+import type { Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
 import * as path from 'path'
