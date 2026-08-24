@@ -366,12 +366,12 @@ docker-compose exec -u 33 nextcloud php /var/www/html/occ background:job:list | 
 **Objective**: Verify that creating an `organisatie` object in OpenRegister triggers synchronization to create a corresponding organization in OpenRegister.
 
 **Test Steps**:
-1. Create a new `organisatie` object in the voorzieningen register:
+1. Create a new `organisatie` object in the stackiq register:
 ```bash
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X POST -d '{\"naam\":\"Test Organization Create\",\"website\":\"https://test-create.org\",\"type\":\"Leverancier\",\"status\":\"actief\"}' 'http://localhost/index.php/apps/openregister/api/objects/6/35'"
 ```
 
-2. Verify the object was created in the voorzieningen register:
+2. Verify the object was created in the stackiq register:
 ```bash
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35?_limit=800' | grep 'Test Organization Create'"
 ```
@@ -382,7 +382,7 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 ```
 
 **Expected Results**:
-- Organization object created in voorzieningen register with status "actief"
+- Organization object created in stackiq register with status "actief"
 - Corresponding organization created in OpenRegister with status "active"
 - UUID preserved between both systems
 
@@ -396,7 +396,7 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X PUT -d '{\"naam\":\"Updated Test Organization\",\"website\":\"https://updated-test.org\",\"type\":\"Leverancier\",\"status\":\"inactief\"}' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
 ```
 
-2. Verify the update in voorzieningen register:
+2. Verify the update in stackiq register:
 ```bash
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
 ```
@@ -407,7 +407,7 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 ```
 
 **Expected Results**:
-- Organization updated in voorzieningen register with status "inactief"
+- Organization updated in stackiq register with status "inactief"
 - Corresponding organization updated in OpenRegister with status "inactive"
 - All other fields properly synchronized
 
@@ -421,7 +421,7 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -X DELETE 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
 ```
 
-2. Verify the deletion in voorzieningen register:
+2. Verify the deletion in stackiq register:
 ```bash
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
 ```
@@ -432,7 +432,7 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 ```
 
 **Expected Results**:
-- Organization deleted from voorzieningen register
+- Organization deleted from stackiq register
 - Corresponding organization deactivated in OpenRegister
 - All users in the organization deactivated
 

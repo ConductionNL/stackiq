@@ -17,7 +17,7 @@
 				"steps": [
 					{ "id": "welcome", "sinceVersion": "0.2.11", "placement": "center", "title": "Welcome to Stackiq", "body": "Let's take a quick spin through your software catalogue — we'll register an organisation together so you can see how the pieces fit. You'll add the record yourself.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } },
 					{ "id": "go-organisaties", "sinceVersion": "0.2.11", "placement": "right", "body": "Organisations are the heart of your catalogue — they own the contracts, modules and compliance records you track. Open Organisations from the menu to get started.", "task": "Click Organisations in the menu", "target": { "kind": "nav-item", "ref": "Organisaties" }, "advanceOn": { "type": "route-match", "route": "Organisaties" } },
-					{ "id": "create-organisatie", "sinceVersion": "0.2.11", "placement": "bottom", "allowManualNext": true, "body": "Add your first organisation — give it a name and save. You can attach contracts, modules and compliance records to it afterwards.", "task": "Click New and save an organisation", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "voorzieningen", "schema": "organization", "capture": { "organisatieId": ":id" } } },
+					{ "id": "create-organisatie", "sinceVersion": "0.2.11", "placement": "bottom", "allowManualNext": true, "body": "Add your first organisation — give it a name and save. You can attach contracts, modules and compliance records to it afterwards.", "task": "Click New and save an organisation", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "stackiq", "schema": "organization", "capture": { "organisatieId": ":id" } } },
 					{ "id": "done", "sinceVersion": "0.2.11", "placement": "center", "title": "You're all set", "body": "Nicely done — your catalogue has its first organisation. Head back to the Dashboard to watch it grow, and reopen this tour anytime from the … menu.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } }
 				]
 			}
@@ -454,7 +454,7 @@
 			"type": "custom",
 			"title": "Suites",
 			"component": "SuitesIndexView",
-			"_note": "suite-wizard: index of `suite` objects (an application suite — a bundled product made up of one or more existing applications, replacing the retired incumbent 'product' concept per VNG Softwarecatalogus #242 / softwarecatalog#372). Stays `type: custom` solely so the guided multi-step creation wizard's action button can sit in CnIndexPage's #actions slot alongside the self-fetch list (register=voorzieningen, schema=suite) — a declarative type:index page has no slot for it. Create/edit/delete of an individual suite outside the wizard still reuse the generic ObjectModal via CnIndexPage's own default form dialog."
+			"_note": "suite-wizard: index of `suite` objects (an application suite — a bundled product made up of one or more existing applications, replacing the retired incumbent 'product' concept per VNG Softwarecatalogus #242 / softwarecatalog#372). Stays `type: custom` solely so the guided multi-step creation wizard's action button can sit in CnIndexPage's #actions slot alongside the self-fetch list (register=stackiq, schema=suite) — a declarative type:index page has no slot for it. Create/edit/delete of an individual suite outside the wizard still reuse the generic ObjectModal via CnIndexPage's own default form dialog."
 		},
 		{
 			"id": "SuiteDetail",

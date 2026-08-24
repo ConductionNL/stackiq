@@ -318,7 +318,7 @@ Stackiq requires register schemas and seed data to function. Import the configur
 
 ```bash
 # Import the softwarecatalogus register configuration
-# This creates the voorzieningen register with all required schemas
+# This creates the stackiq register with all required schemas
 # (module, dienst, organisatie, contactpersoon, contract, etc.)
 curl -X POST "http://localhost:8080/index.php/apps/openregister/api/configurations?force=true" \
   -u admin:admin \

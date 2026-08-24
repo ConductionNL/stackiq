@@ -4024,7 +4024,10 @@ class SettingsService {
 				);
 			}
 
-			// Find the voorzieningen register by slug OR by presence of expected schema slugs.
+			// Find the catalog register by slug OR by presence of expected schema slugs.
+			// The slug moved `voorzieningen` -> `stackiq`; MigrateRegisterSlug renames
+			// the row before this ever runs, and the schema-slug fallback below still
+			// finds the register on an install where that rename was refused.
 			$targetRegister = null;
 			$expectedSlugs = [
 				'sector',
@@ -4050,7 +4053,7 @@ class SettingsService {
 				}
 
 				$slug = strtolower($register['slug'] ?? '');
-				if ($slug === 'voorzieningen') {
+				if ($slug === 'stackiq') {
 					// Fetch full schema details for the register.
 					$schemas = $register['schemas'] ?? [];
 					$schemaDetails = [];

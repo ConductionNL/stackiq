@@ -34,7 +34,7 @@ raise a Decision in decidesk by dispatching
 hard-coded HTTP URL and never a server-side HTTP client — with
 `decisionType: contract` (approval) or `decisionType: contract-renewal`
 (renewal) and the provenance fields `sourceApp: stackiq`,
-`subjectRegister: voorzieningen`, `subjectSchema: contract`, `subjectId`,
+`subjectRegister: stackiq`, `subjectSchema: contract`, `subjectId`,
 `subjectLabel`, `externalReference` (the `contractNummer`), and
 `correlationId`. After dispatch the system SHALL read `isHandled()` and
 `getDecisionId()` off the event; on a handled, non-null id it SHALL persist the

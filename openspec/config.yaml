@@ -14,7 +14,7 @@ context: |
   Architecture:
     Pattern: Thin client — Software Catalog owns no domain tables
     Data layer: OpenRegister (JSON object storage with schema validation)
-    Registers: voorzieningen (Voorzieningen) + vng-gemma (AMEF)
+    Registers: stackiq (Voorzieningen) + vng-gemma (AMEF)
     Frontend: Vue 2.7 + Pinia stores querying OpenRegister API directly
     Backend: SettingsController + register import + aanbod/gebruik services
 

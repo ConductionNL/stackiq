@@ -329,7 +329,7 @@ test('suite wizard: the Suites nav entry opens the suite index listing suites', 
 	).toBeVisible({ timeout: 30000 })
 
 	// The list body mounted — the "Showing N of M" header, or the empty state.
-	// Proves the self-fetch against register=voorzieningen/schema=suite ran.
+	// Proves the self-fetch against register=stackiq/schema=suite ran.
 	const populated = main.getByText(/Showing\s+\d+\s+of\s+\d+/i).first()
 	const empty = main.getByText('No items found', { exact: false }).first()
 	await expect(populated.or(empty)).toBeVisible({ timeout: 30000 })

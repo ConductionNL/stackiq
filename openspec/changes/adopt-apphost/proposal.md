@@ -24,7 +24,7 @@ Adopt both halves of the OpenRegister AppHost (`apphost-observability-engine` + 
 
 - Add an `observability` block to `src/manifest.json`:
   - **Health checks**: `database` + `orAvailable` (the app is fully OR-backed; if OR is down the app is down). Engine-owned posture: public, `statusCodePolicy: adr006` (503 on critical failure).
-  - **Metrics**: implicit `stackiq_info` / `stackiq_up`, plus one example descriptor `gebruik_total` — `objectCount` on register `voorzieningen`, schema `gebruik` (the app's main usage entity; both slugs verified against `lib/Settings/softwarecatalogus_register.json`). Engine-owned: admin-only, Prometheus text 0.0.4.
+  - **Metrics**: implicit `stackiq_info` / `stackiq_up`, plus one example descriptor `gebruik_total` — `objectCount` on register `stackiq`, schema `gebruik` (the app's main usage entity; both slugs verified against `lib/Settings/softwarecatalogus_register.json`). Engine-owned: admin-only, Prometheus text 0.0.4.
 - Route `/api/health` → `health#check` and `/api/metrics` → `metrics#index` to the AppHost generic controllers via the standard alias wiring.
 - **Delete the misleading routes.php comment.** `settings#status` keeps existing at `/api/settings/status` and reverts to being exactly what it is: an authenticated settings/configuration-status endpoint. Nothing else changes about it; it simply stops being claimed as health.
 

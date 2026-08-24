@@ -70,7 +70,7 @@ class PortalContributionProvider {
 	 *
 	 * @var string
 	 */
-	private const REGISTER = 'voorzieningen';
+	private const REGISTER = 'stackiq';
 
 	/**
 	 * The claim carrying the subject's organisatie UUID used to scope reads.

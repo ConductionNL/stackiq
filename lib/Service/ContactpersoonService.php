@@ -1300,7 +1300,7 @@ class ContactpersoonService {
 
 			$contactObject = $objectService->find(
 				id: $contactPersonId,
-				register: 'voorzieningen',
+				register: 'stackiq',
 				schema: 'contactPerson',
 				_rbac: false,
 				_multitenancy: false
@@ -1371,7 +1371,7 @@ class ContactpersoonService {
 
 			$contactObject = $objectService->find(
 				id: $contactPersonId,
-				register: 'voorzieningen',
+				register: 'stackiq',
 				schema: 'contactPerson',
 				_rbac: false,
 				_multitenancy: false

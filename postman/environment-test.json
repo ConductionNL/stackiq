@@ -12,7 +12,7 @@
 		{ "key": "test_password", "value": "WelcomeToTest2026", "enabled": true },
 		{ "key": "current_user", "value": "", "enabled": true },
 		{ "key": "current_password", "value": "", "enabled": true },
-		{ "key": "register_name", "value": "voorzieningen", "enabled": true },
+		{ "key": "register_name", "value": "stackiq", "enabled": true },
 		{ "key": "register_id", "value": "3", "enabled": true },
 		{ "key": "schema_applicatie", "value": "module", "enabled": true },
 		{ "key": "schema_contactpersoon", "value": "contactpersoon", "enabled": true },

@@ -505,7 +505,7 @@ export default {
 						'organization',
 						registerId,
 						{
-							registerSlug: 'voorzieningen',
+							registerSlug: 'stackiq',
 							schemaSlug: 'organization',
 						},
 					)
