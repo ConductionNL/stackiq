@@ -3,12 +3,13 @@
 # ArchiMate Unified Test Suite
 # Consolidates all ArchiMate testing into one comprehensive script
 #
-# This replaces:
+# This consolidated the following scripts, which have since been removed from
+# the repository (see git history if one is ever needed back):
 # - test_optimized_api.sh (performance testing)
 # - test_amef_simple.sh (round-trip testing)
 # - test_archimate_export.sh (export testing)
 # - test_archimate_import_debug.php (debugging)
-# - And eliminates redundancy with test_performance_optimization.php & test_amef_roundtrip.php
+# - And eliminated redundancy with test_performance_optimization.php & test_amef_roundtrip.php
 
 set -e
 
