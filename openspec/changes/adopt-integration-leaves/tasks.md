@@ -32,7 +32,7 @@
   renders); move on change, delete on clear, never duplicate (one tracked
   field = one event, deterministic marker).
 - [ ] 2.2 Add `lib/Listener/LifecycleCalendarListener.php` subscribed to
-  OpenRegister's object-saved event; filter to the voorzieningen register
+  OpenRegister's object-saved event; filter to the stackiq register
   and the `contract`/`moduleVersion` schemas resolved via
   `SettingsService` (no hard-coded register/schema ids); register the
   listener in `lib/AppInfo/Application.php` alongside the existing OR
@@ -64,7 +64,7 @@
   `dateEndSupport`), delete-on-clear, idempotent double-save, and
   fail-soft when the calendar double throws.
 - [ ] 4.2 PHPUnit `LifecycleCalendarListenerTest`: fires only for
-  `contract`/`moduleVersion` saves in the voorzieningen register; ignores
+  `contract`/`moduleVersion` saves in the stackiq register; ignores
   other schemas.
 - [ ] 4.3 Playwright: contacts tab on a seeded contactPerson
   (display name, not raw UID); calendar tab on a contract after setting

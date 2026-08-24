@@ -156,7 +156,7 @@ class SbomRegisterShapeTest extends TestCase {
 		$props = $sbomComponent['properties'] ?? [];
 		$this->assertArrayHasKey(key: 'moduleVersion', array: $props, message: 'sbomComponent must relate back to its moduleVersie');
 
-		$voorzieningen = $this->register['components']['registers']['voorzieningen'] ?? [];
+		$voorzieningen = $this->register['components']['registers']['stackiq'] ?? [];
 		$this->assertContains(
 			needle: 'sbomComponent',
 			haystack: $voorzieningen['schemas'] ?? [],

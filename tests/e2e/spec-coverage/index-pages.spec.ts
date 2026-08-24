@@ -22,10 +22,10 @@
  *
  * There are now TWO such sentinels. The Standards pages read `schema: element`,
  * which lib/Settings/softwarecatalogus_register.json attaches to the `vng-gemma`
- * (AMEF) register rather than to `voorzieningen`, and they resolve it through
+ * (AMEF) register rather than to the catalog register `stackiq`, and they resolve it through
  * `@resolve:amef_register` — provisioned the same way, from the `amef_config`
  * blob. See the block above the standards test for why repointing the page was
- * the right fix and attaching the schema to `voorzieningen` was not.
+ * the right fix and attaching the schema to the catalog register was not.
  */
 import { test, expect } from '@playwright/test'
 import {
@@ -46,7 +46,7 @@ interface IndexPage {
 	name: string
 }
 
-// True manifest `type: index` pages (CnIndexPage against a voorzieningen
+// True manifest `type: index` pages (CnIndexPage against a catalog-register
 // schema). NOTE: "Organisations" IS one of these now (it was decomposed from a
 // bespoke `type: custom` view), but its create label spells one word
 // differently depending on which schema title an environment carries, and this
@@ -121,11 +121,11 @@ test('index contactpersonen: the route reaches the CnIndexPage surface (toggle +
 // `404 {"message":"Schema not found: 'element'"}` (run 31981873526).
 //
 // The page config was `register: "@resolve:voorzieningen_register"` +
-// `schema: "element"` — but `element` is NOT attached to the voorzieningen
-// register. `lib/Settings/softwarecatalogus_register.json` binds it to the
+// `schema: "element"` — but `element` is NOT attached to the catalog
+// register (`stackiq`). `lib/Settings/softwarecatalogus_register.json` binds it to the
 // SECOND register in the same file:
 //
-//     components.registers.voorzieningen.schemas  (15) — no `element`
+//     components.registers.stackiq.schemas      (15) — no `element`
 //     components.registers.vng-gemma.schemas      (5)  — element, model,
 //                                                        property-definition,
 //                                                        relation, view
@@ -139,7 +139,7 @@ test('index contactpersonen: the route reaches the CnIndexPage surface (toggle +
 // here" is not evidence — check the version you are measuring against.
 //
 // ⚠️ THE OBVIOUS FIX IS THE WRONG ONE. Adding `element` to
-// `registers.voorzieningen.schemas` would make the request succeed and return
+// `registers.stackiq.schemas` would make the request succeed and return
 // NOTHING — objects live per register, and AMEF elements are written to the AMEF
 // one. That converts a visible error into an empty list, i.e. an invisible pass,
 // which is worse than the red.

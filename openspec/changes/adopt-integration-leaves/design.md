@@ -56,7 +56,7 @@ events for every contract — so this change adds a thin app-side sync:
   (`feedback_english-code`): "Contract ends: {contractNumber}" /
   "End of support: {module name} {version}".
 - `lib/Listener/LifecycleCalendarListener.php` — subscribes to
-  OpenRegister's object-saved event for the voorzieningen register,
+  OpenRegister's object-saved event for the stackiq register,
   filters on the `contract` / `moduleVersion` schema slugs resolved
   through `SettingsService` (never hard-coded register ids), and delegates
   to the service. Deletion of the object removes the linked event (OR's

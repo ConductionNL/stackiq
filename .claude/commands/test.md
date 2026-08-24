@@ -496,7 +496,7 @@ And a Console Errors Summary:
 - **#399 (cross-vendor)**: Public search page → find "Test Applicatie Leverancier 2", click Versies tab, click a version. Verify no error.
 - **#375 (SaaS version)**: After wizard, find the created app on `/zoeken?_page=1`, check Versies tab.
 - **#105 (RBAC)**: Leverancier only — `/beheer/applicatielandschappen` should show ONLY own org's applications (data scoping, not page visibility).
-- **#141 (merge)**: Functioneel-beheerder only — test via Nextcloud backend: OpenRegister → Search/Views → voorzieningen register → organisatie schema → three-dot menu → Merge.
+- **#141 (merge)**: Functioneel-beheerder only — test via Nextcloud backend: OpenRegister → Search/Views → stackiq register → organisatie schema → three-dot menu → Merge.
 - **#403 (delete dialog)**: Find a test object in beheer table, click delete, verify dialog text and usage check, click Cancel.
 - **#15 (export)**: In beheer table, click Acties → Exporteren → Als CSV/Excel. Verify download.
 - **#402 (Edge vs Chrome)**: **SKIP** — untestable (single Chromium engine).

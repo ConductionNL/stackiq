@@ -25,7 +25,7 @@ Maria manages her municipality's software landscape in the Softwarecatalogus. Sh
 
 ## Organization & Permissions Context
 
-Maria's active organization is **Test Gemeente**. The internal Nextcloud org UUID matches a register object in `voorzieningen/organisatie`, which is required for edit/delete permissions to work.
+Maria's active organization is **Test Gemeente**. The internal Nextcloud org UUID matches a register object in `stackiq/organisatie`, which is required for edit/delete permissions to work.
 
 - **Beheer tables** show objects based on RBAC rules — gebruik-beheerder can see ALL objects (not just own org) for most schemas
 - **Edit/Delete buttons** require the org data fetch to succeed — if you see disabled actions or missing buttons, check for org fetch 404 errors in the console

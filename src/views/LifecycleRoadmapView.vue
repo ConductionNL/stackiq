@@ -359,7 +359,7 @@ export default {
 			// Register the object type from the resolved config before fetching —
 			// the slug-based auto-registration only fires when the settings
 			// `availableRegisters` carries a register slugged exactly
-			// 'voorzieningen', which is not guaranteed on every instance. Without
+			// 'stackiq', which is not guaranteed on every instance. Without
 			// this the nc-vue object store throws "Object type <type> is not
 			// registered".
 			if (

@@ -133,7 +133,7 @@ export default {
 		 */
 		register: {
 			type: String,
-			default: 'voorzieningen',
+			default: 'stackiq',
 		},
 
 		/**

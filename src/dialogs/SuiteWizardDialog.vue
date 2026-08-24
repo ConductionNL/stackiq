@@ -164,7 +164,7 @@ export default {
 				&& !objectStore.objectTypeRegistry?.suite
 			) {
 				objectStore.registerObjectType('suite', 'suite', registerId, {
-					registerSlug: 'voorzieningen',
+					registerSlug: 'stackiq',
 					schemaSlug: 'suite',
 				})
 			}

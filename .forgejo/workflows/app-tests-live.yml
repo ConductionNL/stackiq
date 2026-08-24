@@ -11,7 +11,7 @@
 # Gate status for stackiq (see TESTING-CI-ROLLOUT.md for the evidence table):
 #   deep-e2e: true  — e2e RESOLVES register+schema at runtime from /api/voorzieningen/config — CI-portable
 #   newman:   true   — ARMED: the collection "0. Setup / Preflight" request resolves the register
-#                     numeric id from the stable slug 'voorzieningen' (and addresses the org/contact/
+#                     numeric id from the stable slug 'stackiq' (and addresses the org/contact/
 #                     module/contract/dienst/gebruik schemas by slug), so the suite survives a fresh
 #                     CI boot. AMEF ArchiMate export is un-quarantined (the InitializeSettings repair
 #                     step auto-configures the AMEF register -> exportOrgArchiMate returns 200 model

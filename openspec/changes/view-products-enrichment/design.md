@@ -2,7 +2,7 @@
 
 ## 1. Domain data model decision (task 1.1 / 1.2)
 
-**Products = the existing `dienst` schema** in the voorzieningen register
+**Products = the existing `dienst` schema** in the stackiq register
 (`lib/Settings/softwarecatalogus_register.json`, schema key `dienst`). No new
 schema is introduced. This is the closest existing concept to "product" in
 this catalog's domain (a VNG-style software catalog): `dienst` (service/
@@ -17,7 +17,7 @@ key `voorzieningen_dienst_schema`) and normalized into
 `SettingsService::getVoorzieningenConfig()['dienst_schema']`
 (`SettingsService::normalizeVoorzieningenConfig()`, `schemaKeys` list) — the
 same register/config surface `getGebruikData()` and
-`getDeelnamesGebruikData()` already use (voorzieningen register, NOT the
+`getDeelnamesGebruikData()` already use (stackiq register, NOT the
 separate AMEF register `getModulesData()` reads from).
 
 **Node-linkage field**: mirrors `getModulesData()`'s established convention
@@ -55,5 +55,5 @@ the AMEF elements themselves. Following that exact path for "products" would
 mean products enrichment queries the SAME AMEF elements a second time under
 a different name, which does not match the domain intent ("Product filter"
 in the spec) and would not reuse the catalog's actual product record
-(`dienst`). Using the voorzieningen-register `dienst` schema is the correct,
+(`dienst`). Using the stackiq-register `dienst` schema is the correct,
 domain-accurate choice.

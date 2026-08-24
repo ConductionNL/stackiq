@@ -48,7 +48,7 @@ read from two directions.
 
 ## Data model
 
-`suite` is an OpenRegister schema in the `voorzieningen` register:
+`suite` is an OpenRegister schema in the `stackiq` register:
 
 | Field | Type | Notes |
 |-------|------|-------|

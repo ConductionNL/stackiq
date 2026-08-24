@@ -76,7 +76,7 @@ Loads configuration from register-specific JSON files.
 **Request Body:**
 ```json
 {
-  "register": "voorzieningen"
+  "register": "stackiq"
 }
 ```
 
@@ -207,7 +207,7 @@ public function loadSettings(string $register): array
 ```
 
 **Parameters:**
-- '$register' - Register name ('amef', 'voorzieningen')
+- '$register' - Register name ('amef', 'stackiq')
 
 **Returns:**
 - 'array' - Loaded settings array

@@ -163,7 +163,7 @@ export default {
 		/** The organisation register slug. */
 		register: {
 			type: String,
-			default: 'voorzieningen',
+			default: 'stackiq',
 		},
 
 		/** The organisation schema slug. */

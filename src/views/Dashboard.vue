@@ -252,7 +252,7 @@ export default {
 
 			const voorzieningenRegister =
 				objectStore.settings.availableRegisters.find(
-					(register) => register.slug === 'voorzieningen',
+					(register) => register.slug === 'stackiq',
 				)
 
 			if (!voorzieningenRegister?.schemas) {

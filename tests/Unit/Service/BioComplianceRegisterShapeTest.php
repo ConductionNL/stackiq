@@ -91,7 +91,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 	 * @spec   openspec/specs/bio-compliance-assessment/spec.md#requirement-bio-measures-form-a-seedable-reference-catalog
 	 */
 	public function testBioMaatregelIsRegisteredInVoorzieningen(): void {
-		$voorzieningen = $this->register['components']['registers']['voorzieningen'] ?? [];
+		$voorzieningen = $this->register['components']['registers']['stackiq'] ?? [];
 		$this->assertContains(needle: 'bioMeasure', haystack: $voorzieningen['schemas'] ?? []);
 		$this->assertArrayHasKey(key: 'bioMeasure', array: $voorzieningen['configuration']['schemas'] ?? []);
 		$this->assertTrue(condition: $voorzieningen['configuration']['schemas']['bioMeasure']['autoCreateTable'] ?? false);

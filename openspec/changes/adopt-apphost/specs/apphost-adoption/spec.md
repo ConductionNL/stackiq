@@ -34,7 +34,7 @@ Stackiq SHALL serve `GET /apps/stackiq/api/health` through the AppHost `GenericH
 
 ### Requirement: ADR-006 Metrics Endpoint
 
-Stackiq SHALL serve `GET /apps/stackiq/api/metrics` through the AppHost `GenericMetricsController` — admin-only, Prometheus text format 0.0.4 — emitting the implicit `stackiq_info` and `stackiq_up` metrics plus the declared `stackiq_gebruik_total` gauge (`objectCount` on register `voorzieningen`, schema `gebruik`).
+Stackiq SHALL serve `GET /apps/stackiq/api/metrics` through the AppHost `GenericMetricsController` — admin-only, Prometheus text format 0.0.4 — emitting the implicit `stackiq_info` and `stackiq_up` metrics plus the declared `stackiq_gebruik_total` gauge (`objectCount` on register `stackiq`, schema `gebruik`).
 
 #### Scenario: Admin scrapes metrics
 
