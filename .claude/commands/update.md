@@ -259,9 +259,9 @@ For each [API] criterion, create a Postman request item:
       {"key": "Content-Type", "value": "application/json", "type": "text"}
     ],
     "url": {
-      "raw": "{{base_url}}/index.php/apps/openregister/api/objects/voorzieningen/{schema}",
+      "raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/{schema}",
       "host": ["{{base_url}}"],
-      "path": ["index.php", "apps", "openregister", "api", "objects", "voorzieningen", "{schema}"]
+      "path": ["index.php", "apps", "openregister", "api", "objects", "stackiq", "{schema}"]
     },
     "auth": {
       "type": "basic",

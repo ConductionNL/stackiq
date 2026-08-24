@@ -20,7 +20,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
  *

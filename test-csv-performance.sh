@@ -38,14 +38,14 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 echo "🔍 Controleren of configuratie al bestaat..."
 
-# Check if voorzieningen register exists
+# Check if stackiq register exists
 REGISTER_RESPONSE=$(docker exec -u 33 $CONTAINER curl -s -u "$AUTH" \
-    "$API_URL/api/registers?filters[slug]=voorzieningen")
+    "$API_URL/api/registers?filters[slug]=stackiq")
 
 REGISTER_ID=$(echo "$REGISTER_RESPONSE" | jq -r '.results[0].id // empty')
 
 if [ -z "$REGISTER_ID" ]; then
-    echo -e "${YELLOW}⚠️  'voorzieningen' register niet gevonden, kopiëren en importeren van configuratie...${NC}"
+    echo -e "${YELLOW}⚠️  'stackiq' register niet gevonden, kopiëren en importeren van configuratie...${NC}"
     
     # Copy config file to container
     docker cp /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/stackiq/lib/Settings/softwarecatalogus_register_magic.json \
@@ -65,13 +65,13 @@ if [ -z "$REGISTER_ID" ]; then
     
     # Re-fetch register
     REGISTER_RESPONSE=$(docker exec -u 33 $CONTAINER curl -s -u "$AUTH" \
-        "$API_URL/api/registers?filters[slug]=voorzieningen")
+        "$API_URL/api/registers?filters[slug]=stackiq")
     
     REGISTER_ID=$(echo "$REGISTER_RESPONSE" | jq -r '.results[0].id // empty')
 fi
 
 if [ -z "$REGISTER_ID" ]; then
-    echo -e "${RED}❌ 'voorzieningen' register niet gevonden na import!${NC}"
+    echo -e "${RED}❌ 'stackiq' register niet gevonden na import!${NC}"
     exit 1
 fi
 

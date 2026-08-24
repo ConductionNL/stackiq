@@ -419,7 +419,7 @@ export function stackiqPlugin() {
 
 					const voorzieningenRegister =
 						this.settings.availableRegisters.find(
-							(register) => register.slug === 'voorzieningen',
+							(register) => register.slug === 'stackiq',
 						)
 
 					if (!voorzieningenRegister?.schemas) return

@@ -9,7 +9,7 @@
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: 1.0.0
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
@@ -42,7 +42,7 @@ use Symfony\Component\Mime\Email;
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: 1.0.0
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -4024,7 +4024,10 @@ class SettingsService {
 				);
 			}
 
-			// Find the voorzieningen register by slug OR by presence of expected schema slugs.
+			// Find the catalog register by slug OR by presence of expected schema slugs.
+			// The slug moved `voorzieningen` -> `stackiq`; MigrateRegisterSlug renames
+			// the row before this ever runs, and the schema-slug fallback below still
+			// finds the register on an install where that rename was refused.
 			$targetRegister = null;
 			$expectedSlugs = [
 				'sector',
@@ -4050,7 +4053,7 @@ class SettingsService {
 				}
 
 				$slug = strtolower($register['slug'] ?? '');
-				if ($slug === 'voorzieningen') {
+				if ($slug === 'stackiq') {
 					// Fetch full schema details for the register.
 					$schemas = $register['schemas'] ?? [];
 					$schemaDetails = [];

@@ -153,7 +153,7 @@ jobs:
       # `/var/www/html/custom_apps/openregister/...`, neither of which exists on
       # the CI runner (NC lives under `server/apps/`, no rewrite → `/index.php/...`).
       # Re-enable after the collection is rewritten to the CI base_url/paths +
-      # a seed step provisions the `voorzieningen` register/`module` schema.
+      # a seed step provisions the `stackiq` register/`module` schema.
       enable-newman: false
       newman-collection-path: "tests"
 
@@ -174,7 +174,7 @@ jobs:
       # `occ app:enable stackiq` runs InitializeSettings, but that
       # repair step has no user session (OpenRegister RBAC can deny it),
       # swallows its own exception as a warning, and imports with
-      # `force: false` — so a fresh install can come up with no `voorzieningen`
+      # `force: false` — so a fresh install can come up with no `stackiq`
       # register at all and nothing exits non-zero. The script imports
       # explicitly over the admin API and fails loudly if the registers,
       # schemas, or the app's own register→schema mapping still aren't there.
@@ -186,7 +186,7 @@ jobs:
       # records that the collection's requests hard-code
       # `/var/www/html/custom_apps/openregister/...` paths that do not exist on
       # a CI runner (Nextcloud lives under `server/apps/`, no rewrite), and that
-      # it assumes a seeded `voorzieningen` register / `module` schema. Turning
+      # it assumes a seeded `stackiq` register / `module` schema. Turning
       # it on would produce a guaranteed red whose cause is already written
       # down. Flipped back on in the commit that rewrites the collection to the
       # CI base_url and adds the seed step.

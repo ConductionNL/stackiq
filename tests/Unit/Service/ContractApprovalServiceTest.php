@@ -80,17 +80,44 @@ class ContractApprovalServiceTest extends TestCase {
 	}//end makeService()
 
 	/**
-	 * Delegation is NOT configured when decidesk's event class is absent.
+	 * Delegation is NOT configured when NO spelling of the event class exists.
 	 *
-	 * The decidesk app is not installed in the unit-test autoload scope, so the
-	 * class_exists guard returns false — delegation is reported unconfigured.
+	 * The decision app is not installed in the unit-test autoload scope, so
+	 * every candidate misses and delegation is reported unconfigured.
 	 *
 	 * @return void
 	 */
 	public function testDelegationNotConfiguredWhenDecideskAbsent(): void {
-		$this->assertFalse(class_exists(ContractApprovalService::DECISION_REQUESTED_EVENT));
+		foreach (ContractApprovalService::DECISION_REQUESTED_EVENTS as $candidate) {
+			$this->assertFalse(class_exists($candidate));
+		}
+
 		$this->assertFalse($this->makeService()->isDelegationConfigured());
 	}//end testDelegationNotConfiguredWhenDecideskAbsent()
+
+	/**
+	 * The candidate list names the CURRENT namespace and still names the old one.
+	 *
+	 * Pinning one spelling is what broke this: the decision app renamed to
+	 * OCA\Decidiq without an alias, `isDelegationConfigured()` went false on an
+	 * instance where the app was installed, and contract approvals silently
+	 * stopped delegating. An app cannot move another app's class name — it can
+	 * only follow it — so the property worth holding is that this LISTS the
+	 * spellings, newest first, rather than pinning one.
+	 *
+	 * @return void
+	 */
+	public function testTheEventCandidatesFollowTheRename(): void {
+		$candidates = ContractApprovalService::DECISION_REQUESTED_EVENTS;
+
+		$this->assertGreaterThanOrEqual(2, count($candidates));
+		$this->assertStringContainsString('Decidiq', $candidates[0], 'The current namespace must be tried first.');
+		$this->assertStringContainsString(
+			'Decidesk',
+			implode(' ', $candidates),
+			'The old namespace must stay listed until no supported install ships it.'
+		);
+	}//end testTheEventCandidatesFollowTheRename()
 
 	/**
 	 * Submitting fails CLOSED (throws) when decidesk's event class is absent —

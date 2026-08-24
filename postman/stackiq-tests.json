@@ -7557,7 +7557,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/voorzieningen/dienst?_limit=5",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/dienst?_limit=5",
 							"host": [
 								"{{base_url}}"
 							],
@@ -7567,7 +7567,7 @@
 								"openregister",
 								"api",
 								"objects",
-								"voorzieningen",
+								"stackiq",
 								"dienst"
 							],
 							"query": [
@@ -7622,7 +7622,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/voorzieningen/organisatie?_search=Theekop",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/organisatie?_search=Theekop",
 							"host": [
 								"{{base_url}}"
 							],
@@ -7632,7 +7632,7 @@
 								"openregister",
 								"api",
 								"objects",
-								"voorzieningen",
+								"stackiq",
 								"organisatie"
 							],
 							"query": [
@@ -7687,7 +7687,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/voorzieningen/organisatie?_search=Theekop",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/organisatie?_search=Theekop",
 							"host": [
 								"{{base_url}}"
 							],
@@ -7697,7 +7697,7 @@
 								"openregister",
 								"api",
 								"objects",
-								"voorzieningen",
+								"stackiq",
 								"organisatie"
 							],
 							"query": [
@@ -13281,7 +13281,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/voorzieningen/organisatie?_limit=10",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/organisatie?_limit=10",
 							"host": [
 								"{{base_url}}"
 							],
@@ -13291,7 +13291,7 @@
 								"openregister",
 								"api",
 								"objects",
-								"voorzieningen",
+								"stackiq",
 								"organisatie"
 							],
 							"query": [
@@ -18900,7 +18900,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/voorzieningen/koppeling/{{test_koppeling_id}}",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/koppeling/{{test_koppeling_id}}",
 							"host": [
 								"{{base_url}}"
 							],
@@ -18910,7 +18910,7 @@
 								"openregister",
 								"api",
 								"objects",
-								"voorzieningen",
+								"stackiq",
 								"koppeling",
 								"{{test_koppeling_id}}"
 							]
@@ -18999,7 +18999,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/voorzieningen/koppeling/{{test_koppeling_no_usage_id}}",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/koppeling/{{test_koppeling_no_usage_id}}",
 							"host": [
 								"{{base_url}}"
 							],
@@ -19009,7 +19009,7 @@
 								"openregister",
 								"api",
 								"objects",
-								"voorzieningen",
+								"stackiq",
 								"koppeling",
 								"{{test_koppeling_no_usage_id}}"
 							]
@@ -19063,7 +19063,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/voorzieningen/koppeling/{{test_koppeling_id}}",
+							"raw": "{{base_url}}/index.php/apps/openregister/api/objects/stackiq/koppeling/{{test_koppeling_id}}",
 							"host": [
 								"{{base_url}}"
 							],
@@ -19073,7 +19073,7 @@
 								"openregister",
 								"api",
 								"objects",
-								"voorzieningen",
+								"stackiq",
 								"koppeling",
 								"{{test_koppeling_id}}"
 							]

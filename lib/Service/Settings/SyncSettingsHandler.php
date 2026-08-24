@@ -11,7 +11,7 @@
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-1
  *

@@ -27,7 +27,7 @@
 #   USERNAME        - Admin username (default: admin)
 #   PASSWORD        - Admin password (default: admin)
 #   AUTH            - Full auth string user:pass (overrides USERNAME/PASSWORD)
-#   REGISTER        - Register slug (default: voorzieningen)
+#   REGISTER        - Register slug (default: stackiq)
 #   SCHEMA          - Organisation schema slug (default: organisatie)
 #   WAIT_TIME       - Seconds to wait for event processing (default: 3)
 #   API_PATH        - API path prefix (default: /api/apps/openregister/api/objects)
@@ -68,7 +68,7 @@ PASSWORD="${PASSWORD:-admin}"
 AUTH="${AUTH:-${USERNAME}:${PASSWORD}}"
 BASE_URL="${BASE_URL:-http://localhost:3000}"
 NEXTCLOUD_URL="${NEXTCLOUD_URL:-http://localhost:8080}"
-REGISTER="${REGISTER:-voorzieningen}"
+REGISTER="${REGISTER:-stackiq}"
 SCHEMA="${SCHEMA:-organisatie}"
 WAIT_TIME="${WAIT_TIME:-3}"
 API_PATH="${API_PATH:-/api/apps/openregister/api/objects}"
