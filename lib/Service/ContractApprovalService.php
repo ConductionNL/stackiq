@@ -57,10 +57,24 @@ use RuntimeException;
  */
 class ContractApprovalService {
 	/**
-	 * The fully-qualified decidesk request-event class — the in-process
-	 * existence guard (decidesk installed + autoloaded) for delegation.
+	 * The fully-qualified request-event class spellings, NEWEST FIRST — the
+	 * in-process existence guard (the decision app installed + autoloaded) for
+	 * delegation.
+	 *
+	 * TWO SPELLINGS because a cross-app event class name is a RUNTIME lookup
+	 * this app can only follow, never move. The decision app renamed from
+	 * OCA\Decidesk to OCA\Decidiq with no compatibility alias, and this constant
+	 * named only the old one — so `isDelegationConfigured()` returned false on an
+	 * instance where the app was installed, and contract approvals silently
+	 * stopped delegating. Measured: OCA\Decidiq\Event\DecisionRequestedEvent
+	 * EXISTS, OCA\Decidesk\Event\DecisionRequestedEvent MISSING.
+	 *
+	 * @var array<int, string>
 	 */
-	public const DECISION_REQUESTED_EVENT = '\\OCA\\Decidesk\\Event\\DecisionRequestedEvent';
+	public const DECISION_REQUESTED_EVENTS = [
+		'\\OCA\\Decidiq\\Event\\DecisionRequestedEvent',
+		'\\OCA\\Decidesk\\Event\\DecisionRequestedEvent',
+	];
 
 	/**
 	 * This consumer app id, stamped on the request event as `sourceApp` and
@@ -163,8 +177,27 @@ class ContractApprovalService {
 	 * @spec openspec/specs/contract-decision-delegation/spec.md
 	 */
 	public function isDelegationConfigured(): bool {
-		return class_exists(self::DECISION_REQUESTED_EVENT);
+		return ($this->resolveRequestEventClass() !== null);
 	}//end isDelegationConfigured()
+
+	/**
+	 * The first request-event class that actually exists, or null.
+	 *
+	 * Resolving rather than assuming: this app can only follow the decision
+	 * app's namespace, and a hard-coded spelling turns a rename over there into
+	 * a silently disabled feature over here.
+	 *
+	 * @return string|null The event FQN, or null when the decision app is absent.
+	 */
+	private function resolveRequestEventClass(): ?string {
+		foreach (self::DECISION_REQUESTED_EVENTS as $candidate) {
+			if (class_exists($candidate) === true) {
+				return $candidate;
+			}
+		}
+
+		return null;
+	}//end resolveRequestEventClass()
 
 	/**
 	 * Raise a decidesk Decision for a contract approval or renewal.
@@ -209,7 +242,7 @@ class ContractApprovalService {
 			$decisionType = self::DECISION_TYPE_RENEWAL;
 		}
 
-		$eventClass = self::DECISION_REQUESTED_EVENT;
+		$eventClass = $this->resolveRequestEventClass();
 		$event = new $eventClass(
 			self::SOURCE_APP,
 			self::SUBJECT_REGISTER,
