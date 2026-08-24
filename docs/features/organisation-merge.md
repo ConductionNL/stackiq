@@ -12,7 +12,7 @@ Every relation that references the source organisation is re-pointed onto
 the target, and the source is soft-retired with a tombstone rather than
 deleted. See [VNG Softwarecatalogus issue #141](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/141).
 
-Specification: [`openspec/specs/organisation-merge/spec.md`](../../openspec/specs/organisation-merge/spec.md).
+Specification: [`openspec/specs/organisation-merge/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/organisation-merge/spec.md).
 
 ## What gets re-pointed
 

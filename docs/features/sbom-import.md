@@ -12,7 +12,7 @@ SPDX 2.3 JSON as an optional second format — for a specific `moduleVersie`
 tab with licenses, summary counts, and a render-time cross-reference against
 the existing `kwetsbaarheid` (vulnerability) register.
 
-Specification: [`openspec/specs/sbom-import/spec.md`](../../openspec/specs/sbom-import/spec.md).
+Specification: [`openspec/specs/sbom-import/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/sbom-import/spec.md).
 
 ## Uploading an SBOM
 

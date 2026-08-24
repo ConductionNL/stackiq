@@ -12,7 +12,7 @@ replaces the retired incumbent "product" concept per
 [VNG Softwarecatalogus issue #242](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/242)
 and stackiq#372.
 
-Specification: [`openspec/specs/suite-wizard/spec.md`](../../openspec/specs/suite-wizard/spec.md).
+Specification: [`openspec/specs/suite-wizard/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/suite-wizard/spec.md).
 
 ## Registering a suite
 

@@ -15,7 +15,7 @@ quadrant counts with existing end-of-support exposure
 [VNG Softwarecatalogus issue #54](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/54).
 
 Specification:
-[`openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md`](../../openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md).
+[`openspec/specs/portfolio-rationalization-time/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/portfolio-rationalization-time/spec.md).
 
 > Screenshots of the report page are still pending a live-instance capture —
 > this document ships with the implementation; the Playwright-captured

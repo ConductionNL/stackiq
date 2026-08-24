@@ -4,16 +4,16 @@ Task 6 of `openspec/changes/vendor-visibility-rbac/tasks.md`: every route in
 `appinfo/routes.php` whose controller method reads a `gebruik`, `koppeling`,
 or `contract` OpenRegister object, enumerated with its authorization posture
 and the test(s) that cover it, per
-[REQ-007](../../openspec/specs/vendor-visibility-rbac/spec.md#requirement-every-route-touching-gebruik-koppeling-or-contract-objects-must-have-a-documented-tested-authorization-posture-req-007).
+[REQ-007](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/vendor-visibility-rbac/spec.md).
 
 **Updated by `schema-rbac-hardening`** (stackiq #379, #390, #378):
 closed the two follow-up gaps this audit originally flagged below — the
 `gebruik`/`koppeling`/`organisatie` schema-level RBAC gap and the
 `AanbodController::getAanbod()` implicit-guard gap — and extended the
 `contract` schema fix (REQ-006) to the roles it had not yet covered. See
-[REQ-008](../../openspec/specs/vendor-visibility-rbac/spec.md#requirement-gebruik-koppeling-and-organisatie-schema-level-rbac-reads-must-deny-cross-organisation-access-for-gebruik-beheerder-req-008)
+[REQ-008](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/vendor-visibility-rbac/spec.md)
 and
-[REQ-009](../../openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-must-require-authentication-explicitly-not-implicitly-req-009).
+[REQ-009](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/vendor-visibility-rbac/spec.md).
 Both the schema-RBAC layer and the one deliberately accepted residual
 (deelnemer-array sharing) are documented in the new section below.
 
