@@ -230,7 +230,7 @@ Tracked but DEFERRED to a future change:
   `@conduction/nextcloud-vue` `CnAppRoot` + `CnPageRenderer` (see
   the lib's CLAUDE.md "JSON Manifest Renderer" section).
 - **Reference migration (full Tier 4 + cleanup)**:
-  - Pull request: https://codeberg.org/Conduction/decidesk/pulls/160
+  - Pull request: Codeberg decidesk#160 (pre-migration, not migrated to GitHub; `decidesk` is now `decidiq`)
   - Spec: `decidesk/openspec/changes/decidesk-manifest-v1/`
   - Reference commits:
     - `b5c88cd2` — manifest write
