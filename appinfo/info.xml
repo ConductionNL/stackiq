@@ -258,6 +258,16 @@ Vrij en open source onder de EUPL-licentie.
 				just corrected. Run it first and it matches against the old slug.
 			-->
 			<step>OCA\Stackiq\Repair\MigrateRegisterSlug</step>
+			<!--
+				RenameDutchSchemaSlugs repeats here because MigrateSchemaApplicationId
+				below documents it as a prerequisite: "After RenameDutchSchemaSlugs,
+				so the collision check is judged against the slugs the rows will
+				actually carry." <post-migration> runs the two in that order; this
+				block did not, and on the fresh-install path — which is exactly what
+				an app-id rename presents as — the collision check was judged against
+				the pre-rename slugs.
+			-->
+			<step>OCA\Stackiq\Repair\RenameDutchSchemaSlugs</step>
 			<step>OCA\Stackiq\Repair\MigrateSchemaApplicationId</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 		</install>
