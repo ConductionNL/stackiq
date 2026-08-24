@@ -141,6 +141,38 @@ Vrij en open source onder de EUPL-licentie.
 				SettingsService::initialize().
 			-->
 			<step>OCA\Stackiq\Repair\RenameDutchSchemaSlugs</step>
+			<!--
+				A DIFFERENT COLUMN FROM THE STEP ABOVE, AND NEITHER COVERS THE
+				OTHER: RenameDutchSchemaSlugs rewrites
+				`openregister_schemas.slug`, this one rewrites
+				`openregister_schemas.application`. It is also the THIRD store
+				keyed by app id — `oc_appconfig` and `oc_preferences` are
+				Nextcloud's, this one is OpenRegister's — so the two Migrate*
+				steps at the top of this block do not cover it either.
+
+				OpenRegister resolves the two halves of a configuration by
+				DIFFERENT keys: a REGISTER by slug alone, a SCHEMA by the PAIR
+				(application, slug) via findByApplicationAndSlug(). This app now
+				passes `appId: Application::APP_ID` = `stackiq`, while every
+				schema it already owns still carries
+				`application = softwarecatalog` — so the pair matches nothing,
+				and the import's not-found branch is not an error path, it is
+				the "create a new one" path. The import then builds a SECOND,
+				EMPTY schema set while every stored object stays bound to the
+				old rows. Nothing errors; the app renders empty collections.
+				Measured before this step existed: 21 schemas under
+				`softwarecatalog`, zero under `stackiq`, zero collisions.
+
+				POSITION IS LOAD-BEARING IN BOTH DIRECTIONS. After
+				RenameDutchSchemaSlugs, so the collision check is judged against
+				the slugs the rows will actually carry; before
+				InitializeSettings, which is what triggers the register import.
+
+				Refuses rather than merges where a slug already has a twin under
+				the new application id, never deletes a schema, and never throws
+				— an escaping exception in <install> aborts the install.
+			-->
+			<step>OCA\Stackiq\Repair\MigrateSchemaApplicationId</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
@@ -187,6 +219,16 @@ Vrij en open source onder de EUPL-licentie.
 			<step>OCA\Stackiq\Repair\MigrateAppConfigKeys</step>
 			<step>OCA\Stackiq\Repair\MigrateUserPreferences</step>
 			<step>OCA\Stackiq\Repair\MigrateBackgroundJobClasses</step>
+			<!--
+				The schema half of the app-id rename, repeated here for the same
+				reason the app-id steps are: an app-id rename presents to
+				Nextcloud as a FRESH INSTALL, so <post-migration> never fires on
+				the very upgrade this step exists for. It must sit ahead of
+				InitializeSettings, which triggers the register import that
+				resolves each schema by the (application, slug) PAIR. See the
+				full rationale in the <post-migration> block.
+			-->
+			<step>OCA\Stackiq\Repair\MigrateSchemaApplicationId</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 		</install>
 	</repair-steps>
