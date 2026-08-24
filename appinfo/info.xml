@@ -167,6 +167,38 @@ Vrij en open source onder de EUPL-licentie.
 				SettingsService::initialize().
 			-->
 			<step>OCA\Stackiq\Repair\RenameDutchSchemaSlugs</step>
+			<!--
+				A DIFFERENT COLUMN FROM THE STEP ABOVE, AND NEITHER COVERS THE
+				OTHER: RenameDutchSchemaSlugs rewrites
+				`openregister_schemas.slug`, this one rewrites
+				`openregister_schemas.application`. It is also the THIRD store
+				keyed by app id — `oc_appconfig` and `oc_preferences` are
+				Nextcloud's, this one is OpenRegister's — so the two Migrate*
+				steps at the top of this block do not cover it either.
+
+				OpenRegister resolves the two halves of a configuration by
+				DIFFERENT keys: a REGISTER by slug alone, a SCHEMA by the PAIR
+				(application, slug) via findByApplicationAndSlug(). This app now
+				passes `appId: Application::APP_ID` = `stackiq`, while every
+				schema it already owns still carries
+				`application = softwarecatalog` — so the pair matches nothing,
+				and the import's not-found branch is not an error path, it is
+				the "create a new one" path. The import then builds a SECOND,
+				EMPTY schema set while every stored object stays bound to the
+				old rows. Nothing errors; the app renders empty collections.
+				Measured before this step existed: 21 schemas under
+				`softwarecatalog`, zero under `stackiq`, zero collisions.
+
+				POSITION IS LOAD-BEARING IN BOTH DIRECTIONS. After
+				RenameDutchSchemaSlugs, so the collision check is judged against
+				the slugs the rows will actually carry; before
+				InitializeSettings, which is what triggers the register import.
+
+				Refuses rather than merges where a slug already has a twin under
+				the new application id, never deletes a schema, and never throws
+				— an escaping exception in <install> aborts the install.
+			-->
+			<step>OCA\Stackiq\Repair\MigrateSchemaApplicationId</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
@@ -219,8 +251,24 @@ Vrij en open source onder de EUPL-licentie.
 				<post-migration> never fires on the very upgrade this step exists
 				for. It must sit ahead of InitializeSettings, which triggers the
 				register import that resolves the register by slug.
+
+				The schema step follows the register step, not the other way
+				round: it resolves each schema by the (application, slug) PAIR,
+				and the slug it matches on is the one MigrateRegisterSlug has
+				just corrected. Run it first and it matches against the old slug.
 			-->
 			<step>OCA\Stackiq\Repair\MigrateRegisterSlug</step>
+			<!--
+				RenameDutchSchemaSlugs repeats here because MigrateSchemaApplicationId
+				below documents it as a prerequisite: "After RenameDutchSchemaSlugs,
+				so the collision check is judged against the slugs the rows will
+				actually carry." <post-migration> runs the two in that order; this
+				block did not, and on the fresh-install path — which is exactly what
+				an app-id rename presents as — the collision check was judged against
+				the pre-rename slugs.
+			-->
+			<step>OCA\Stackiq\Repair\RenameDutchSchemaSlugs</step>
+			<step>OCA\Stackiq\Repair\MigrateSchemaApplicationId</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 		</install>
 	</repair-steps>
