@@ -14,7 +14,7 @@ roadmap, and `eol-approaching` notification rule declared in
 what populates the field they already read.
 
 Specification:
-[`openspec/specs/eol-feed-integration/spec.md`](../../openspec/specs/eol-feed-integration/spec.md).
+[`openspec/specs/eol-feed-integration/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/eol-feed-integration/spec.md).
 
 ## Architecture: stackiq never calls endoflife.date
 

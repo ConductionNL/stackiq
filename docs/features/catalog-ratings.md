@@ -12,7 +12,7 @@ create/update/delete rules, no attributable author). See
 [VNG Softwarecatalogus issue #49](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/49)
 and stackiq#375.
 
-Specification: [`openspec/specs/catalog-ratings/spec.md`](../../openspec/specs/catalog-ratings/spec.md).
+Specification: [`openspec/specs/catalog-ratings/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/catalog-ratings/spec.md).
 
 ## Why it existed but didn't work
 

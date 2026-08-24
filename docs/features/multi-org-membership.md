@@ -15,7 +15,7 @@ gemeentelijke herindeling. See
 [#60](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/60), and
 [#65](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/65).
 
-Specification: [`openspec/specs/multi-org-membership/spec.md`](../../openspec/specs/multi-org-membership/spec.md).
+Specification: [`openspec/specs/multi-org-membership/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/multi-org-membership/spec.md).
 
 Everything in this feature is built on OpenRegister's own, already-shipped
 `OrganisationService`/`OrganisationController` — Stackiq does not
