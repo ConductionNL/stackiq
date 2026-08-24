@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// Router builder for softwarecatalog's manifest-driven app shell.
+// Router builder for stackiq's manifest-driven app shell.
 //
 // Mirrors decidesk's `routesFromManifest()` pattern. Each manifest page
 // becomes one vue-router route; the route's `name` IS `page.id` (per
@@ -12,10 +12,9 @@
 import { CnPageRenderer } from '@conduction/nextcloud-vue'
 
 // Shallow-clone CnPageRenderer because the lib's barrel exports are
-// non-extensible (webpack ESM module records). Vue 2's `Vue.extend()`
-// adds an internal `_Ctor` cache to the component definition; mutating
-// a non-extensible export throws "Cannot add property _Ctor, object is
-// not extensible". Cloning gives Vue Router an extensible
+// non-extensible (webpack ESM module records) and anything that caches state
+// on the component definition throws "Cannot add property …, object is not
+// extensible" against them. Cloning gives Vue Router an extensible
 // component-options object without altering the lib's internals.
 const RoutePageRenderer = { ...CnPageRenderer }
 
@@ -24,7 +23,7 @@ const RoutePageRenderer = { ...CnPageRenderer }
  * becomes one route; the route's `name` IS `page.id`.
  *
  * @param {object} manifest The bundled manifest (with `pages[]`).
- * @return {Array<object>} vue-router 3 routes config.
+ * @return {Array<object>} vue-router 4 routes config.
  */
 export function routesFromManifest(manifest) {
 	const routes = manifest.pages.map((page) => ({
@@ -34,6 +33,9 @@ export function routesFromManifest(manifest) {
 		props: page.route.includes(':'),
 	}))
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
-	routes.push({ path: '*', redirect: '/' })
+	// ⚠️ vue-router 4 REMOVED the bare `path: '*'` wildcard and matches it
+	// against nothing — silently, with the shell rendering and `<main>` empty.
+	// The v4 spelling is a named param with a custom regexp.
+	routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
 	return routes
 }

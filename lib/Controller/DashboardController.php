@@ -1,88 +1,99 @@
 <?php
+
 /**
- * Dashboard Controller for SoftwareCatalog.
+ * Dashboard Controller for Stackiq.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\TemplateResponse;
-use OCP\AppFramework\Http\JSONResponse;
-use OCP\IRequest;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\TemplateResponse;
+use OCP\IRequest;
+use OCP\IUserSession;
 
-class DashboardController extends Controller
-{
-    /**
-     * Constructor for DashboardController.
-     *
-     * @param string   $appName The app name
-     * @param IRequest $request The request object
-     */
-    public function __construct($appName, IRequest $request)
-    {
-        parent::__construct(appName: $appName, request: $request);
-    }//end __construct()
+class DashboardController extends Controller {
+	/**
+	 * Constructor for DashboardController.
+	 *
+	 * @param string $appName The app name
+	 * @param IRequest $request The request object
+	 * @param IUserSession $userSession The user session
+	 */
+	public function __construct(
+		$appName,
+		IRequest $request,
+		private readonly IUserSession $userSession,
+	) {
+		parent::__construct(appName: $appName, request: $request);
+	}//end __construct()
 
-    /**
-     * Renders the main application page.
-     *
-     * @param string|null $getParameter Optional query parameter
-     *
-     * @return TemplateResponse The rendered page template
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    public function page(?string $getParameter): TemplateResponse
-    {
-        try {
-            $response = new TemplateResponse(
-                $this->appName,
-                'index',
-                []
-            );
+	/**
+	 * Renders the main application page.
+	 *
+	 * @param string|null $getParameter Optional query parameter
+	 *
+	 * @return TemplateResponse The rendered page template
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 * @spec                                          openspec/specs/dashboard-views-api/spec.md
+	 */
+	public function page(?string $getParameter): TemplateResponse {
+		try {
+			$response = new TemplateResponse(
+				$this->appName,
+				'index',
+				[]
+			);
 
-            $csp = new ContentSecurityPolicy();
-            $csp->addAllowedConnectDomain('*');
-            $response->setContentSecurityPolicy($csp);
+			$csp = new ContentSecurityPolicy();
+			$csp->addAllowedConnectDomain('*');
+			$response->setContentSecurityPolicy($csp);
 
-            return $response;
-        } catch (\Exception $e) {
-            return new TemplateResponse(
-                $this->appName,
-                'error',
-                ['error' => $e->getMessage()],
-                '500'
-            );
-        }
-    }//end page()
+			return $response;
+		} catch (\Exception $e) {
+			return new TemplateResponse(
+				$this->appName,
+				'error',
+				['error' => $e->getMessage()],
+				TemplateResponse::RENDER_AS_ERROR,
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+	}//end page()
 
-    /**
-     * Returns an empty JSON result.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @return JSONResponse The JSON response with empty results
-     */
-    public function index(): JSONResponse
-    {
-        try {
-            $results = ['results' => []];
-            return new JSONResponse($results);
-        } catch (\Exception $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
-    }//end index()
+	/**
+	 * Returns an empty JSON result.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 *
+	 * @return JSONResponse The JSON response with empty results
+	 * @spec   openspec/specs/dashboard-views-api/spec.md
+	 */
+	public function index(): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		try {
+			$results = ['results' => []];
+			return new JSONResponse($results);
+		} catch (\Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 500);
+		}
+	}//end index()
 }//end class

@@ -16,7 +16,7 @@ Modified `ContactPersonHandler.php` to:
 ## Test Results
 
 ### Automated Test Execution
-- **Test Script**: `softwarecatalog/test_organisation_user_fix.sh`
+- **Test Script**: `stackiq/test_organisation_user_fix.sh`
 - **Test Run**: Successful
 - **Exit Code**: 0
 
@@ -71,7 +71,7 @@ Users: ["testuser1760447692@test.nl"]
 ## Code Changes
 
 ### File Modified
-`softwarecatalog/lib/Service/SoftwareCatalogue/ContactPersonHandler.php`
+`stackiq/lib/Service/Stackique/ContactPersonHandler.php`
 
 ### Methods Changed
 1. **`addUserToOrganizationEntity()`**
@@ -166,10 +166,10 @@ The bug fix successfully resolves the issue of users being added to the wrong or
 
 ## Files Changed
 
-1. `softwarecatalog/lib/Service/SoftwareCatalogue/ContactPersonHandler.php` - Main fix
-2. `softwarecatalog/BUG_FIX_ORGANISATION_USER_ASSIGNMENT.md` - Documentation
-3. `softwarecatalog/test_organisation_user_fix.sh` - Automated test script
-4. `softwarecatalog/FIX_VERIFICATION_SUMMARY.md` - This file
+1. `stackiq/lib/Service/Stackique/ContactPersonHandler.php` - Main fix
+2. `stackiq/BUG_FIX_ORGANISATION_USER_ASSIGNMENT.md` - Documentation
+3. `stackiq/test_organisation_user_fix.sh` - Automated test script
+4. `stackiq/FIX_VERIFICATION_SUMMARY.md` - This file
 
 ## Sign Off
 

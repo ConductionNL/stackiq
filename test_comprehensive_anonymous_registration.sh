@@ -188,7 +188,7 @@ if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
         echo "📊 Step 7: Checking Recent Logs"
         echo "-------------------------------"
         echo "Expected: Logs show successful processing without UUID mismatches"
-        recent_logs=$(docker-compose exec nextcloud tail -n 30 /var/www/html/data/nextcloud.log | grep -E "SoftwareCatalogue|ownership|UUID|organization" | tail -n 10)
+        recent_logs=$(docker-compose exec nextcloud tail -n 30 /var/www/html/data/nextcloud.log | grep -E "Stackiq|ownership|UUID|organization" | tail -n 10)
         if [ -n "$recent_logs" ]; then
             echo "Recent relevant logs:"
             echo "$recent_logs"

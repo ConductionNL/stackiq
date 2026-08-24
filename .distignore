@@ -1,0 +1,42 @@
+# Development and debug scripts — excluded from release packages
+check_*.php
+debug_*.php
+cleanup_*.php
+enhance_*.php
+find_*.php
+compare_*.php
+test-*.php
+test-*.sh
+phpstan-bootstrap.php
+
+# Test infrastructure
+tests/
+postman/
+reacties/
+issues/
+issues.md
+*.md
+!README.md
+!CHANGELOG.md
+!LICENSE
+
+# Build/dev artifacts
+node_modules/
+src/
+webpack.config.js
+package.json
+package-lock.json
+tsconfig.json
+jest.config.js
+eslint.config.js
+stylelint.config.js
+grumphp.yml
+phpcs.xml
+phpmd.xml
+phpstan.neon
+psalm.xml
+phpunit.xml
+phpcs-custom-sniffs/
+coverage/
+coverage-frontend/
+.last-update

@@ -4,7 +4,7 @@ require_once '/var/www/html/lib/base.php';
 $db = \OC::$server->getDatabaseConnection();
 $query = $db->getQueryBuilder();
 $query->select('id', 'slug', 'object')
-      ->from('softwarecatalog_objects')
+      ->from('stackiq_objects')
       ->where($query->expr()->like('id', $query->createNamedParameter('%d4572e2e%')))
       ->setMaxResults(1);
 $result = $query->execute();

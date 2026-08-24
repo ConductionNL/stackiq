@@ -4,7 +4,7 @@
 # CSV Import Test Script for Magic Mapper
 ###############################################################################
 # This script tests bulk CSV import to magic-mapped tables using the API.
-# It imports data from softwarecatalog/data/*.csv files.
+# It imports data from stackiq/data/*.csv files.
 ###############################################################################
 
 set -e  # Exit on error
@@ -85,7 +85,7 @@ echo -e "${GREEN}✓ Schema gevonden: ID $SCHEMA_ID${NC}"
 # Copy CSV to container
 echo ""
 echo "📦 Kopiëren van module.csv naar container..."
-docker cp /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/softwarecatalog/data/module.csv \
+docker cp /home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/stackiq/data/module.csv \
     $CONTAINER:/tmp/module.csv
 
 echo -e "${GREEN}✓ CSV gekopieerd${NC}"

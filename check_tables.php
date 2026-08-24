@@ -3,13 +3,13 @@ require_once '/var/www/html/lib/base.php';
 
 $db = \OC::$server->getDatabaseConnection();
 
-// Get all tables that contain 'softwarecatalog' or 'catalog'
+// Get all tables that contain 'stackiq' or 'catalog'
 $query = $db->getQueryBuilder();
 $query->select('TABLE_NAME')
       ->from('information_schema.TABLES')
       ->where($query->expr()->eq('TABLE_SCHEMA', $query->createNamedParameter('nextcloud')))
       ->andWhere($query->expr()->orX(
-          $query->expr()->like('TABLE_NAME', $query->createNamedParameter('%softwarecatalog%')),
+          $query->expr()->like('TABLE_NAME', $query->createNamedParameter('%stackiq%')),
           $query->expr()->like('TABLE_NAME', $query->createNamedParameter('%catalog%'))
       ));
 
@@ -21,7 +21,7 @@ try {
     }
     
     if (empty($tables)) {
-        echo "No tables found containing 'softwarecatalog' or 'catalog'" . PHP_EOL;
+        echo "No tables found containing 'stackiq' or 'catalog'" . PHP_EOL;
         
         // Let's check for any tables that might be related
         $query2 = $db->getQueryBuilder();

@@ -1,59 +1,40 @@
+# Stackiq — Conduction PHPStan config.
+#
+# The shared base is the single source of truth. Everything here is either the
+# app's own tracked debt or an ignore naming a symbol that exists in no other
+# fleet app. Anything you are tempted to add that another app would also need
+# belongs in the base, not here.
+includes:
+    - vendor/conduction/hydra-gates/quality-config/phpstan-base.neon
+    # Per-app tracked lint debt (auto-generated via `phpstan --generate-baseline`).
+    - phpstan-baseline.neon
+
 parameters:
-    level: 5
-    paths:
-        - lib
-    bootstrapFiles:
-        - vendor/autoload.php
-    excludePaths:
-        analyseAndScan:
-            - vendor-bin
-        analyse:
-            - vendor
-    scanDirectories:
-        - vendor/nextcloud/ocp
-        - ../openregister/lib
-    treatPhpDocTypesAsCertain: false
-    reportUnmatchedIgnoredErrors: false
+    # App-specific only. The base already sets level, paths, bootstrapFiles,
+    # excludePaths, scanDirectories and every fleet-wide ignore.
+    scanFiles:
+        # decidesk decision-event contract (DecisionRequestedEvent +
+        # DecisionConcludedEvent). decidesk is a sibling Nextcloud app, not a
+        # Composer dependency, so it is genuinely absent from the CI analysis
+        # path. The stub mirrors the real signatures in decidesk/lib/Event/ and
+        # supplies real type information rather than silencing the diagnostic —
+        # that is what also resolves the six `Call to method X() on an unknown
+        # class` errors that a bare ignore pattern cannot fix. Analysis-only;
+        # never loaded at runtime or by PHPUnit.
+        - tests/analysis-stubs/decidesk-events.stub.php
+
     ignoreErrors:
-        # Nextcloud internal classes that PHPStan might not recognize
-        - '#Call to an undefined method OC::#'
-        - '#Class OC not found#'
-        - '#Access to static property .* on an unknown class OC#'
-        - '#unknown class OC\\#'
-        - '#Class OC_App not found#'
-        - '#Caught class OC\\#'
-        # Doctrine DBAL platform class (varies by version)
-        - '#Doctrine\\DBAL\\Platforms#'
-        # JSONResponse status code union type - common Nextcloud pattern
+        # OrganizationSyncService's `if ($contactObject !== null)` at the top of
+        # the contact-person loop. saveObject() returns a non-nullable
+        # ObjectEntityInterface, so the guard is provably true — the code a few
+        # lines ABOVE it already dereferences $contactObject unconditionally,
+        # which is the giveaway.
+        #
+        # Left in place rather than removed because the block it wraps is 243
+        # lines: deleting the `if` is a pure re-indentation of a quarter of the
+        # method, which is a large, review-hostile diff for zero behaviour
+        # change. Worth doing when that method is next touched for real.
         -
-            message: '#statusCode of class OCP\\AppFramework\\Http\\JSONResponse#'
-            path: lib/*
-        # SimpleXMLElement addChild returns SimpleXMLElement|null but accepts string values
-        - '#\(SimpleXMLElement\|null\) does not accept string#'
-        - '#SimpleXMLElement does not accept string#'
-        # SimpleXMLElement array access creates false type inference for method calls
-        - '#Cannot call method addAttribute\(\) on array<int, string>#'
-        # Defensive null/false checks that PHPStan considers redundant
-        - '#Strict comparison using === between .* and (null|false|true) will always evaluate to (false|true)#'
-        - '#Negated boolean expression is always false#'
-        # Defensive ?? and empty()/isset() checks on always-existing values
-        - '#on left side of \?\? always exists and is not nullable#'
-        - '#in empty\(\) always exists and is (always falsy|not falsy)#'
-        - '#in isset\(\) always exists and is not nullable#'
-        - '#Variable .* on left side of \?\? always exists and is not nullable#'
-        # Unreachable branches from defensive coding
-        - '#Else branch is unreachable because previous condition is always true#'
-        - '#Result of \&\& is always false#'
-        - '#Result of \|\| is always true#'
-        - '#Expression in empty\(\) is always falsy#'
-        # Offset access on typed arrays that PHPStan considers always existing
-        - '#Offset .* on left side of \?\? (always exists|does not exist)#'
-        - '#Offset .* in isset\(\) always exists#'
-        # Comparison operation errors from mixed arithmetic
-        - '#Comparison operation .* results in an error#'
-        # Properties injected for future use or subclass access
-        - '#is never read, only written#'
-        # Methods kept for API compatibility or future use
-        - '#is unused#'
-        # is_array() checks on typed objects (defensive against runtime type changes)
-        - '#Call to function is_array\(\) with .* will always evaluate to false#'
+            message: '#Strict comparison using !== between OCA\\OpenRegister\\Contract\\ObjectEntityInterface and null will always evaluate to true#'
+            identifier: notIdentical.alwaysTrue
+            path: lib/Service/OrganizationSyncService.php

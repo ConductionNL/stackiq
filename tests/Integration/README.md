@@ -1,8 +1,8 @@
-# Integration Tests for SoftwareCatalog
+# Integration Tests for Stackiq
 
 ## Overview
 
-This directory contains integration tests for the SoftwareCatalog Nextcloud app. These tests verify API endpoints by making real HTTP requests to a running Nextcloud instance.
+This directory contains integration tests for the Stackiq Nextcloud app. These tests verify API endpoints by making real HTTP requests to a running Nextcloud instance.
 
 ## Test Structure
 
@@ -22,7 +22,7 @@ Tests for the Koppelingen-Gebruik API endpoints that provide extended access to 
 
 ### Environment
 - Nextcloud container running (e.g., master-nextcloud-1)
-- SoftwareCatalog app enabled
+- Stackiq app enabled
 - OpenRegister app enabled and configured
 - Test user 'admin' with password 'admin'
 - Voorzieningen register and schemas configured
@@ -45,7 +45,7 @@ This installs:
 
 ```bash
 # Navigate to app directory
-cd /Ubuntu-20.04/home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/softwarecatalog
+cd /Ubuntu-20.04/home/rubenlinde/nextcloud-docker-dev/workspace/server/apps-extra/stackiq
 
 # Run all integration tests
 vendor/bin/phpunit --testsuite "Integration Tests"
@@ -67,7 +67,7 @@ vendor/bin/phpunit --testsuite "Integration Tests" --verbose --colors=always
 docker exec -it master-nextcloud-1 bash
 
 # Navigate to app directory
-cd /var/www/html/apps-extra/softwarecatalog
+cd /var/www/html/apps-extra/stackiq
 
 # Run tests as www-data user (UID 33)
 sudo -u www-data vendor/bin/phpunit --testsuite "Integration Tests"
@@ -141,7 +141,7 @@ public function testYourTestName(): void
     }
 
     // Make API request
-    $response = $this->client->get('/index.php/apps/softwarecatalog/api/your-endpoint');
+    $response = $this->client->get('/index.php/apps/stackiq/api/your-endpoint');
     
     // Assert response
     $this->assertEquals(200, $response->getStatusCode());
@@ -205,7 +205,7 @@ docker-compose up -d  # if container is down
 **Error:** Tests skipped with "Configuration not available"
 
 **Solution:**
-1. Ensure SoftwareCatalog app is enabled: `php occ app:enable softwarecatalog`
+1. Ensure Stackiq app is enabled: `php occ app:enable stackiq`
 2. Configure Voorzieningen settings in admin panel
 3. Verify register and schema IDs are set
 
@@ -283,11 +283,11 @@ jobs:
       - name: Enable Apps
         run: |
           docker exec -u 33 nextcloud php occ app:enable openregister
-          docker exec -u 33 nextcloud php occ app:enable softwarecatalog
+          docker exec -u 33 nextcloud php occ app:enable stackiq
       
       - name: Run Tests
         run: |
-          docker exec -u 33 nextcloud bash -c "cd /var/www/html/apps-extra/softwarecatalog && vendor/bin/phpunit --testsuite 'Integration Tests'"
+          docker exec -u 33 nextcloud bash -c "cd /var/www/html/apps-extra/stackiq && vendor/bin/phpunit --testsuite 'Integration Tests'"
 ```
 
 ## Additional Resources

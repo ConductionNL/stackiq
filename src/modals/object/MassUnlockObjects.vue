@@ -1,35 +1,46 @@
-/**
- * @file MassUnlockObjects.vue
- * @module Modals/Object
- * @author Your Name
- * @copyright 2024 Your Organization
- * @license AGPL-3.0-or-later
- * @version 1.0.0
- */
+/** * @file MassUnlockObjects.vue * @module Modals/Object * @author Your Name *
+@copyright 2024 Your Organization * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog :name="dialogTitle"
-		:can-close="true"
+	<NcDialog
+		:name="dialogTitle"
+		:canClose="true"
 		size="normal"
 		class="mass-action-dialog"
 		@update:open="handleDialogClose">
 		<!-- Object Selection Review -->
 		<div v-if="success === null" class="unlock-step">
 			<NcNoteCard type="warning">
-				Objects will be unlocked and made available for editing by other users. Only objects that are currently locked can be unlocked.
+				{{
+					t(
+						'stackiq',
+						'Objects will be unlocked and made available for editing by other users. Only objects that are currently locked can be unlocked.',
+					)
+				}}
 			</NcNoteCard>
 
 			<SelectedObjectsList
-				:title="(objectStore.selectedObjects?.length || 0) === 1 ? 'Publication to Unlock' : 'Selected Publications'"
-				:show-remove="true" />
+				:title="
+					(objectStore.selectedObjects?.length || 0) === 1
+						? t('stackiq', 'Publication to Unlock')
+						: t('stackiq', 'Selected Publications')
+				"
+				:showRemove="true" />
 		</div>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Publication{{ originalSelectedCount > 1 ? 's' : '' }} successfully unlocked</p>
+			<p>
+				{{
+					originalSelectedCount > 1
+						? t('stackiq', 'Publications successfully unlocked')
+						: t('stackiq', 'Publication successfully unlocked')
+				}}
+			</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -40,30 +51,29 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Cancel' : 'Close' }}
+				{{
+					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
+				}}
 			</NcButton>
-			<NcButton v-if="success === null"
-				:disabled="loading || (objectStore.selectedObjects?.length || 0) === 0"
-				type="warning"
+			<NcButton
+				v-if="success === null"
+				:disabled="
+					loading || (objectStore.selectedObjects?.length || 0) === 0
+				"
+				variant="warning"
 				@click="unlockObjects()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<LockOpenOutline v-if="!loading" :size="20" />
 				</template>
-				Unlock
+				{{ t('stackiq', 'Unlock') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcLoadingIcon,
-	NcNoteCard,
-} from '@nextcloud/vue'
-
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import LockOpenOutline from 'vue-material-design-icons/LockOpenOutline.vue'
 import SelectedObjectsList from '../../components/SelectedObjectsList.vue'
@@ -99,7 +109,9 @@ export default {
 	computed: {
 		/**
 		 * Get the objects to operate on from selected objects
+		 *
 		 * @return {Array<object>} Array of objects to unlock
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		objectsToUnlock() {
 			return objectStore.selectedObjects || []
@@ -107,24 +119,37 @@ export default {
 
 		/**
 		 * Get the dialog title based on number of objects
+		 *
 		 * @return {string} Dialog title
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		dialogTitle() {
 			const count = this.objectsToUnlock.length
 			if (count === 1) {
-				return 'Unlock publication'
+				return this.t('stackiq', 'Unlock publication')
 			}
-			return `Unlock ${count} publication${count !== 1 ? 's' : ''}`
+			return this.t('stackiq', 'Unlock {count} publications', {
+				count,
+			})
 		},
 	},
+
 	mounted() {
 		this.initializeSelection()
 	},
+
 	methods: {
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		initializeSelection() {
 			// Store the original count for success message
 			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		closeDialog() {
 			// Clear any pending timeout that might reopen the dialog
 			if (this.closeModalTimeout) {
@@ -133,11 +158,20 @@ export default {
 			}
 			navigationStore.setDialog(false)
 		},
+
+		/**
+		 * @param isOpen
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		handleDialogClose(isOpen) {
 			if (!isOpen) {
 				this.closeDialog()
 			}
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async unlockObjects() {
 			this.loading = true
 
@@ -146,7 +180,8 @@ export default {
 				const objectsToProcess = [...this.objectsToUnlock]
 
 				// Use the store's mass unlock method
-				const { successful, failed } = await objectStore.massUnlockObjects(objectsToProcess)
+				const { successful, failed } =
+					await objectStore.massUnlockObjects(objectsToProcess)
 
 				if (successful.length > 0) {
 					this.success = true
@@ -162,12 +197,17 @@ export default {
 				}
 
 				if (failed.length > 0) {
-					this.error = `Failed to unlock ${failed.length} object${failed.length > 1 ? 's' : ''}`
+					this.error = this.t(
+						'stackiq',
+						'Failed to unlock {count} objects',
+						{ count: failed.length },
+					)
 				}
-
 			} catch (error) {
 				this.success = false
-				this.error = error.message || 'An error occurred while unlocking objects'
+				this.error =
+					error.message
+					|| this.t('stackiq', 'An error occurred while unlocking objects')
 			} finally {
 				this.loading = false
 			}

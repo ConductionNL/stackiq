@@ -1,0 +1,15 @@
+# Tasks
+
+- [x] task-1: method-decomposition#REQ-DECOMP-001 — SettingsController Decomposition (retroactive annotation)
+- [x] task-2: method-decomposition#REQ-DECOMP-002 — SoftwareCatalogEventListener Decomposition (retroactive annotation)
+- [x] task-3: method-decomposition#REQ-DECOMP-004 — SoftwareCatalogueService Decomposition (retroactive annotation)
+- [x] task-4: method-decomposition#REQ-DECOMP-005 — SettingsService Decomposition (retroactive annotation)
+- [x] task-5: method-decomposition#REQ-DECOMP-006 — ArchiMate Services Decomposition (retroactive annotation)
+- [x] task-6: method-decomposition#REQ-DECOMP-007 — OrganizationSyncService Decomposition (retroactive annotation)
+- [x] task-7: method-decomposition#REQ-DECOMP-008 — ContactpersoonService Decomposition (retroactive annotation)
+- [x] task-8: method-decomposition#REQ-DECOMP-010 — ViewService and SymfonyEmailService Decomposition (retroactive annotation)
+- [x] task-9: method-decomposition#REQ-DECOMP-011 — Priority 2 File Decomposition (retroactive annotation)
+- [x] task-10: method-decomposition#REQ-DECOMP-012 — Priority 3 File Cleanup (retroactive annotation)
+- [x] task-11: softwarecatalog-manifest-v1#REQ-SCMV1-1 — SoftwareCatalog MUST ship src/manifest.json (retroactive annotation)
+- [x] task-12: softwarecatalog-store-migration#createObjectStore-for-OR-CRUD — createObjectStore for OpenRegister-CRUD stores (retroactive annotation)
+- [x] task-13: softwarecatalog-store-migration#plugin-shape-for-app-extensions — plugin shape for app-specific extensions (retroactive annotation)

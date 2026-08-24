@@ -1,75 +1,87 @@
-/**
- * @file ViewObject.vue
- * @module Modals/Object
- * @author Your Name
- * @copyright 2024 Your Organization
- * @license AGPL-3.0-or-later
- * @version 1.0.0
- */
+/** * @file ViewObject.vue * @module Modals/Object * @author Your Name * @copyright
+2024 Your Organization * @license EUPL-1.2
+https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
 	<div>
-		<NcDialog v-if="navigationStore.modal === 'viewObject'"
+		<NcDialog
+			v-if="navigationStore.modal === 'viewObject'"
 			:name="getModalTitle()"
 			size="large"
-			:can-close="true"
+			:canClose="true"
 			@update:open="handleDialogClose">
 			<template #name>
 				<div class="dialog__name">
-					<PublishedIcon v-if="shouldShowPublishedIcon"
+					<PublishedIcon
+						v-if="shouldShowPublishedIcon"
 						:object="currentObject"
 						:size="30"
 						class="status-icon draft-icon" />
-					<Pencil v-else
-						:size="30"
-						class="status-icon draft-icon" />
+					<Pencil v-else :size="30" class="status-icon draft-icon" />
 					<span>{{ getModalTitle() }}</span>
 				</div>
 			</template>
 			<div class="formContainer viewObjectDialog">
 				<!-- Display Object -->
-				<div v-if="objectStore.getActiveObject('publication') || isNewObject">
+				<div
+					v-if="objectStore.getActiveObject('publication') || isNewObject">
 					<!-- For new objects, show catalog/register/schema selection first -->
-					<div v-if="isNewObject && !hasSelectedSchema" class="selectionContainer">
+					<div
+						v-if="isNewObject && !hasSelectedSchema"
+						class="selectionContainer">
 						<div v-if="catalogOptions.length > 1" class="selectionStep">
 							<h3>Select Catalog</h3>
-							<p>Choose the catalog where this publication will be stored.</p>
+							<p>
+								Choose the catalog where this publication will be
+								stored.
+							</p>
 							<NcSelect
 								v-model="selectedCatalog"
 								:options="catalogOptions"
-								input-label="Catalog"
+								inputLabel="Catalog"
 								placeholder="Select a catalog..."
 								:disabled="catalogStore.isLoading" />
 						</div>
 
-						<div v-if="selectedCatalog && registerOptions.length > 1" class="selectionStep">
+						<div
+							v-if="selectedCatalog && registerOptions.length > 1"
+							class="selectionStep">
 							<h3>Select Register</h3>
-							<p>Choose the register that will store this publication.</p>
+							<p>
+								Choose the register that will store this publication.
+							</p>
 							<NcSelect
 								v-model="selectedRegister"
 								:options="registerOptions"
-								input-label="Register"
+								inputLabel="Register"
 								placeholder="Select a register..."
 								:disabled="catalogStore.isLoading" />
 						</div>
 
-						<div v-if="selectedRegister && schemaOptions.length > 1" class="selectionStep">
+						<div
+							v-if="selectedRegister && schemaOptions.length > 1"
+							class="selectionStep">
 							<h3>Select Schema</h3>
-							<p>Choose the schema that defines the structure of this publication.</p>
+							<p>
+								Choose the schema that defines the structure of this
+								publication.
+							</p>
 							<NcSelect
 								v-model="selectedSchema"
 								:options="schemaOptions"
-								input-label="Schema"
+								inputLabel="Schema"
 								placeholder="Select a schema..."
 								:disabled="catalogStore.isLoading" />
 						</div>
 
-						<div v-if="hasSelectedSchema && !allSelectionsComplete" class="selectionStep">
-							<NcButton type="primary" @click="proceedToProperties">
+						<div
+							v-if="hasSelectedSchema && !allSelectionsComplete"
+							class="selectionStep">
+							<NcButton variant="primary" @click="proceedToProperties">
 								<template #icon>
 									<ArrowRight :size="20" />
 								</template>
@@ -79,27 +91,48 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					</div>
 
 					<!-- For new objects with schema selected, show properties table -->
-					<div v-else-if="isNewObject && (hasSelectedSchema || allSelectionsComplete)" class="viewTableContainer">
+					<div
+						v-else-if="
+							isNewObject
+							&& (hasSelectedSchema || allSelectionsComplete)
+						"
+						class="viewTableContainer">
 						<table class="viewTable">
 							<thead>
 								<tr class="viewTableRow">
-									<th class="tableColumnConstrained">
+									<th scope="col" class="tableColumnConstrained">
 										Property
 									</th>
-									<th class="tableColumnExpanded">
+									<th scope="col" class="tableColumnExpanded">
 										Value
 									</th>
-									<th class="tableColumnActions actions-header-cell">
+									<th
+										scope="col"
+										class="tableColumnActions actions-header-cell">
 										<!-- Show/Hide Constant & Immutable Properties Toggle -->
-										<NcButton v-if="hasConstantOrImmutableProperties"
-											v-tooltip="showConstantProperties ? 'Hide constant & immutable properties' : 'Show constant & immutable properties'"
-											type="primary"
+										<NcButton
+											v-if="hasConstantOrImmutableProperties"
+											v-tooltip="
+												showConstantProperties
+													? 'Hide constant & immutable properties'
+													: 'Show constant & immutable properties'
+											"
+											variant="primary"
 											size="small"
 											class="action-btn eye-toggle-btn"
-											:aria-label="showConstantProperties ? 'Hide constant & immutable properties' : 'Show constant & immutable properties'"
-											@click="showConstantProperties = !showConstantProperties">
+											:aria-label="
+												showConstantProperties
+													? 'Hide constant & immutable properties'
+													: 'Show constant & immutable properties'
+											"
+											@click="
+												showConstantProperties =
+													!showConstantProperties
+											">
 											<template #icon>
-												<Eye v-if="!showConstantProperties" :size="16" />
+												<Eye
+													v-if="!showConstantProperties"
+													:size="16" />
 												<EyeOff v-else :size="16" />
 											</template>
 										</NcButton>
@@ -108,32 +141,82 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 							</thead>
 							<tbody>
 								<tr
-									v-for="([key, value]) in filteredObjectProperties"
+									v-for="[key, value] in filteredObjectProperties"
 									:key="key"
 									class="viewTableRow"
 									:class="{
 										'selected-row': selectedProperty === key,
 										'edited-row': formData[key] !== undefined,
-										'non-editable-row': !isPropertyEditable(key, formData[key] !== undefined ? formData[key] : value),
-										...getPropertyValidationClass(key, value)
+										'non-editable-row': !isPropertyEditable(
+											key,
+											formData[key] !== undefined
+												? formData[key]
+												: value,
+										),
+										...getPropertyValidationClass(key, value),
 									}"
 									@click="handleRowClick(key, $event)">
 									<td class="tableColumnConstrained prop-cell">
 										<div class="prop-cell-content">
-											<AlertCircle v-if="getPropertyValidationClass(key, value) === 'property-invalid'"
-												v-tooltip="getPropertyErrorMessage(key, value)"
+											<AlertCircle
+												v-if="
+													getPropertyValidationClass(
+														key,
+														value,
+													) === 'property-invalid'
+												"
+												v-tooltip="
+													getPropertyErrorMessage(
+														key,
+														value,
+													)
+												"
 												class="validation-icon error-icon"
 												:size="16" />
-											<Alert v-else-if="getPropertyValidationClass(key, value) === 'property-warning'"
-												v-tooltip="getPropertyWarningMessage(key, value)"
+											<Alert
+												v-else-if="
+													getPropertyValidationClass(
+														key,
+														value,
+													) === 'property-warning'
+												"
+												v-tooltip="
+													getPropertyWarningMessage(
+														key,
+														value,
+													)
+												"
 												class="validation-icon warning-icon"
 												:size="16" />
-											<Plus v-else-if="getPropertyValidationClass(key, value) === 'property-new'"
-												v-tooltip="getPropertyNewMessage(key)"
+											<Plus
+												v-else-if="
+													getPropertyValidationClass(
+														key,
+														value,
+													) === 'property-new'
+												"
+												v-tooltip="
+													getPropertyNewMessage(key)
+												"
 												class="validation-icon new-icon"
 												:size="16" />
-											<LockOutline v-else-if="!isPropertyEditable(key, formData[key] !== undefined ? formData[key] : value)"
-												v-tooltip="getEditabilityWarning(key, formData[key] !== undefined ? formData[key] : value)"
+											<LockOutline
+												v-else-if="
+													!isPropertyEditable(
+														key,
+														formData[key] !== undefined
+															? formData[key]
+															: value,
+													)
+												"
+												v-tooltip="
+													getEditabilityWarning(
+														key,
+														formData[key] !== undefined
+															? formData[key]
+															: value,
+													)
+												"
 												class="validation-icon lock-icon"
 												:size="16" />
 											<span
@@ -144,75 +227,204 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 									</td>
 									<td class="tableColumnExpanded value-cell">
 										<div class="value-cell-content">
-											<div v-if="selectedProperty === key && isPropertyEditable(key, formData[key] !== undefined ? formData[key] : value)" class="value-input-container" @click.stop>
+											<div
+												v-if="
+													selectedProperty === key
+													&& isPropertyEditable(
+														key,
+														formData[key] !== undefined
+															? formData[key]
+															: value,
+													)
+												"
+												class="value-input-container"
+												@click.stop>
 												<!-- Boolean properties -->
 												<NcCheckboxRadioSwitch
-													v-if="getPropertyInputComponent(key) === 'NcCheckboxRadioSwitch'"
-													:checked="formData[key] !== undefined ? formData[key] : value"
+													v-if="
+														getPropertyInputComponent(
+															key,
+														) === 'NcCheckboxRadioSwitch'
+													"
+													:modelValue="
+														Boolean(
+															formData[key]
+																!== undefined
+																? formData[key]
+																: value,
+														)
+													"
 													type="switch"
-													@update:checked="updatePropertyValue(key, $event)">
+													@update:modelValue="
+														updatePropertyValue(
+															key,
+															$event,
+														)
+													">
 													{{ getPropertyDisplayName(key) }}
 												</NcCheckboxRadioSwitch>
 
 												<!-- Date/Time properties -->
 												<NcDateTimePicker
-													v-else-if="getPropertyInputComponent(key) === 'NcDateTimePicker'"
+													v-else-if="
+														getPropertyInputComponent(
+															key,
+														) === 'NcDateTimePicker'
+													"
 													:key="`datetime-${key}-edit`"
-													:append-to-body="true"
-													:popup-class="'view-object-datepicker'"
-													:popup-style="{ zIndex: 12000 }"
-													:value="getDateTimePickerValue(key, value)"
-													:label="getPropertyDisplayName(key)"
-													:type="getDateTimePickerType(key)"
-													:placeholder="getPropertyDisplayName(key)"
+													:appendToBody="true"
+													popupClass="view-object-datepicker"
+													:popupStyle="{ zIndex: 12000 }"
+													:modelValue="
+														getDateTimePickerValue(
+															key,
+															value,
+														)
+													"
+													:label="
+														getPropertyDisplayName(key)
+													"
+													:type="
+														getDateTimePickerType(key)
+													"
+													:placeholder="
+														getPropertyDisplayName(key)
+													"
 													:clearable="true"
-													@input="handleDateTimeUpdate(key, $event)"
-													@update:value="handleDateTimeUpdate(key, $event)"
-													@change="handleDateTimeUpdate(key, $event)"
-													@update:modelValue="handleDateTimeUpdate(key, $event)" />
+													@update:modelValue="
+														handleDateTimeUpdate(
+															key,
+															$event,
+														)
+													" />
 
 												<!-- Text area properties -->
 												<NcTextArea
-													v-else-if="getPropertyInputComponent(key) === 'NcTextArea'"
+													v-else-if="
+														getPropertyInputComponent(
+															key,
+														) === 'NcTextArea'
+													"
 													ref="propertyValueInput"
-													:value="String(formData[key] !== undefined ? formData[key] : value || '')"
-													:placeholder="getPropertyDisplayName(key)"
+													:modelValue="
+														String(
+															formData[key]
+																!== undefined
+																? formData[key]
+																: value || '',
+														)
+													"
+													:placeholder="
+														getPropertyDisplayName(key)
+													"
 													:rows="4"
-													@update:value="updatePropertyValue(key, $event)" />
+													@update:modelValue="
+														updatePropertyValue(
+															key,
+															$event,
+														)
+													" />
 
 												<!-- Markdown editor properties -->
-												<Editor
-													v-else-if="getPropertyInputComponent(key) === 'Editor'"
+												<div
+													v-else-if="
+														getPropertyInputComponent(
+															key,
+														) === 'Editor'
+													"
 													:key="`editor-${key}`"
-													:initial-value="String(formData[key] !== undefined ? formData[key] : value || '')"
-													:options="getMarkdownEditorOptions(key)"
-													initial-edit-type="wysiwyg"
-													height="400px"
-													@load="(editor) => markdownEditors[key] = editor"
-													@blur="updateMarkdownValue(key, markdownEditors[key])" />
+													ref="markdownEditorContainer"
+													class="markdown-editor-container" />
 
 												<!-- Themes properties -->
-												<div v-else-if="getPropertyInputComponent(key) === 'NcTextFieldArray' && key === 'themes'" class="input-with-icon">
+												<div
+													v-else-if="
+														getPropertyInputComponent(
+															key,
+														) === 'NcTextFieldArray'
+														&& key === 'themes'
+													"
+													class="input-with-icon">
 													<NcSelect
 														v-model="themeFormData"
 														:options="themeOptions"
-														input-label="Themes"
+														inputLabel="Themes"
 														multiple
-														:placeholder="getPropertyDisplayName(key)" />
+														:placeholder="
+															getPropertyDisplayName(
+																key,
+															)
+														" />
 												</div>
 												<!-- Array properties -->
-												<div v-else-if="getPropertyInputComponent(key) === 'NcTextFieldArray'" class="input-with-icon">
+												<div
+													v-else-if="
+														getPropertyInputComponent(
+															key,
+														) === 'NcTextFieldArray'
+													"
+													class="input-with-icon">
 													<NcTextField
 														ref="propertyValueInput"
-														:value="String(formData[key] !== undefined ? (Array.isArray(formData[key]) ? formData[key].join(',') : formData[key]) : (Array.isArray(value) ? value.join(',') : value || ''))"
-														:type="getPropertyInputType(key)"
-														:placeholder="getPropertyDisplayName(key)"
-														:min="getPropertyMinimum(key)"
-														:max="getPropertyMaximum(key)"
+														:aria-label="
+															getPropertyDisplayName(
+																key,
+															)
+														"
+														:modelValue="
+															String(
+																formData[key]
+																	!== undefined
+																	? Array.isArray(
+																			formData[
+																				key
+																			],
+																		)
+																		? formData[
+																				key
+																			].join(
+																				',',
+																			)
+																		: formData[
+																				key
+																			]
+																	: Array.isArray(
+																				value,
+																		  )
+																		? value.join(
+																				',',
+																			)
+																		: value
+																			|| '',
+															)
+														"
+														:type="
+															getPropertyInputType(key)
+														"
+														:placeholder="
+															getPropertyDisplayName(
+																key,
+															)
+														"
+														:min="
+															getPropertyMinimum(key)
+														"
+														:max="
+															getPropertyMaximum(key)
+														"
 														:step="getPropertyStep(key)"
-														@update:value="updatePropertyValue(key, $event.split(/ *, */g).filter(Boolean))" />
+														@update:modelValue="
+															updatePropertyValue(
+																key,
+																$event
+																	.split(/ *, */g)
+																	.filter(Boolean),
+															)
+														" />
 													<InformationOutline
-														v-tooltip="'Array values should be separated by commas'"
+														v-tooltip="
+															'Array values should be separated by commas'
+														"
 														:size="25"
 														class="info-icon" />
 												</div>
@@ -221,54 +433,159 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 												<NcTextField
 													v-else
 													ref="propertyValueInput"
-													:value="String(formData[key] !== undefined ? formData[key] : value || '')"
+													:aria-label="
+														getPropertyDisplayName(key)
+													"
+													:modelValue="
+														String(
+															formData[key]
+																!== undefined
+																? formData[key]
+																: value || '',
+														)
+													"
 													:type="getPropertyInputType(key)"
-													:placeholder="getPropertyDisplayName(key)"
+													:placeholder="
+														getPropertyDisplayName(key)
+													"
 													:min="getPropertyMinimum(key)"
 													:max="getPropertyMaximum(key)"
 													:step="getPropertyStep(key)"
-													@update:value="updatePropertyValue(key, $event)" />
+													@update:modelValue="
+														updatePropertyValue(
+															key,
+															$event,
+														)
+													" />
 											</div>
 											<div v-else>
-												<template v-if="formData[key] !== undefined">
+												<template
+													v-if="
+														formData[key] !== undefined
+													">
 													<!-- Show edited value -->
 													<pre
-														v-if="key !== 'themes' && typeof formData[key] === 'object' && formData[key] !== null"
-														v-tooltip="'JSON object (edited)'"
-														class="json-value">{{ formatValue(formData[key]) }}</pre>
+														v-if="
+															key !== 'themes'
+															&& typeof formData[key]
+																=== 'object'
+															&& formData[key] !== null
+														"
+														v-tooltip="
+															'JSON object (edited)'
+														"
+														class="json-value"
+														>{{
+															formatValue(
+																formData[key],
+															)
+														}}</pre>
 													<span
-														v-else-if="isDateTimeProperty(key) && formData[key]"
-														v-tooltip="`${getDateTimePropertyFormat(key)}: ${formData[key]} (edited)`">{{ formatDateTimeValue(key, formData[key]) }}</span>
+														v-else-if="
+															isDateTimeProperty(key)
+															&& formData[key]
+														"
+														v-tooltip="
+															`${getDateTimePropertyFormat(key)}: ${formData[key]} (edited)`
+														"
+														>{{
+															formatDateTimeValue(
+																key,
+																formData[key],
+															)
+														}}</span
+													>
 													<span
-														v-else-if="isValidDate(formData[key])"
-														v-tooltip="`Date: ${new Date(formData[key]).toISOString()} (edited)`">{{ new Date(formData[key]).toLocaleString() }}</span>
+														v-else-if="
+															isValidDate(
+																formData[key],
+															)
+														"
+														v-tooltip="
+															`Date: ${new Date(formData[key]).toISOString()} (edited)`
+														"
+														>{{
+															new Date(
+																formData[key],
+															).toLocaleString()
+														}}</span
+													>
 													<span
 														v-else
-														v-tooltip="getPropertyTooltip(key)">{{ getDisplayValue(key, value) }}</span>
+														v-tooltip="
+															getPropertyTooltip(key)
+														"
+														>{{
+															getDisplayValue(
+																key,
+																value,
+															)
+														}}</span
+													>
 												</template>
 												<template v-else>
 													<!-- Show original value -->
 													<pre
-														v-if="key !== 'themes' && typeof value === 'object' && value !== null"
+														v-if="
+															key !== 'themes'
+															&& typeof value
+																=== 'object'
+															&& value !== null
+														"
 														v-tooltip="'JSON object'"
-														class="json-value">{{ formatValue(value) }}</pre>
+														class="json-value"
+														>{{
+															formatValue(value)
+														}}</pre>
 													<span
-														v-else-if="isDateTimeProperty(key) && value"
-														v-tooltip="`${getDateTimePropertyFormat(key)}: ${value}`">{{ formatDateTimeValue(key, value) }}</span>
+														v-else-if="
+															isDateTimeProperty(key)
+															&& value
+														"
+														v-tooltip="
+															`${getDateTimePropertyFormat(key)}: ${value}`
+														"
+														>{{
+															formatDateTimeValue(
+																key,
+																value,
+															)
+														}}</span
+													>
 													<span
-														v-else-if="isValidDate(value)"
-														v-tooltip="`Date: ${new Date(value).toISOString()}`">{{ new Date(value).toLocaleString() }}</span>
+														v-else-if="
+															isValidDate(value)
+														"
+														v-tooltip="
+															`Date: ${new Date(value).toISOString()}`
+														"
+														>{{
+															new Date(
+																value,
+															).toLocaleString()
+														}}</span
+													>
 													<span
 														v-else
-														v-tooltip="getPropertyTooltip(key)">{{ getDisplayValue(key, value) }}</span>
+														v-tooltip="
+															getPropertyTooltip(key)
+														"
+														>{{
+															getDisplayValue(
+																key,
+																value,
+															)
+														}}</span
+													>
 												</template>
 											</div>
 										</div>
 									</td>
 									<td class="tableColumnActions">
-										<NcButton v-if="canDropProperty(key, value)"
+										<NcButton
+											v-if="canDropProperty(key, value)"
 											v-tooltip="getDropPropertyTooltip(key)"
-											type="tertiary-no-background"
+											variant="tertiary-no-background"
 											size="small"
 											class="drop-property-btn"
 											:aria-label="getDropPropertyTooltip(key)"
@@ -285,30 +602,91 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 
 					<!-- For existing objects, show tabs -->
 					<div v-else class="tabContainer">
-						<BTabs v-model="activeTab" content-class="mt-3" justified>
-							<BTab title="Properties" active>
+						<div class="standard-tabs">
+							<div class="tab-navigation">
+								<button
+									class="tab-button"
+									:class="{ active: activeTab === 'properties' }"
+									@click="activeTab = 'properties'">
+									Properties
+								</button>
+								<button
+									class="tab-button"
+									:class="{ active: activeTab === 'metadata' }"
+									@click="activeTab = 'metadata'">
+									Metadata
+								</button>
+								<button
+									class="tab-button"
+									:class="{ active: activeTab === 'files' }"
+									@click="activeTab = 'files'">
+									<div class="tab-title">
+										<span>Files</span>
+										<NcLoadingIcon
+											v-if="
+												currentObject
+												&& objectStore.isLoading(
+													`publication_${currentObject.id}_files`,
+												)
+											"
+											:size="16" />
+										<NcCounterBubble
+											v-else
+											:count="filesTotalItems" />
+									</div>
+								</button>
+							</div>
+							<div
+								v-show="activeTab === 'properties'"
+								class="tab-content">
 								<div class="viewTableContainer">
 									<table class="viewTable">
 										<thead>
 											<tr class="viewTableRow">
-												<th class="tableColumnConstrained">
+												<th
+													scope="col"
+													class="tableColumnConstrained">
 													Property
 												</th>
-												<th class="tableColumnExpanded">
+												<th
+													scope="col"
+													class="tableColumnExpanded">
 													Value
 												</th>
-												<th class="tableColumnActions actions-header-cell">
+												<th
+													scope="col"
+													class="tableColumnActions actions-header-cell">
 													<!-- Show/Hide Constant & Immutable Properties Toggle -->
-													<NcButton v-if="hasConstantOrImmutableProperties"
-														v-tooltip="showConstantProperties ? 'Hide constant & immutable properties' : 'Show constant & immutable properties'"
-														type="primary"
+													<NcButton
+														v-if="
+															hasConstantOrImmutableProperties
+														"
+														v-tooltip="
+															showConstantProperties
+																? 'Hide constant & immutable properties'
+																: 'Show constant & immutable properties'
+														"
+														variant="primary"
 														size="small"
 														class="action-btn eye-toggle-btn"
-														:aria-label="showConstantProperties ? 'Hide constant & immutable properties' : 'Show constant & immutable properties'"
-														@click="showConstantProperties = !showConstantProperties">
+														:aria-label="
+															showConstantProperties
+																? 'Hide constant & immutable properties'
+																: 'Show constant & immutable properties'
+														"
+														@click="
+															showConstantProperties =
+																!showConstantProperties
+														">
 														<template #icon>
-															<Eye v-if="!showConstantProperties" :size="16" />
-															<EyeOff v-else :size="16" />
+															<Eye
+																v-if="
+																	!showConstantProperties
+																"
+																:size="16" />
+															<EyeOff
+																v-else
+																:size="16" />
 														</template>
 													</NcButton>
 												</th>
@@ -316,112 +694,370 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										</thead>
 										<tbody>
 											<tr
-												v-for="([key, value]) in filteredObjectProperties"
+												v-for="[
+													key,
+													value,
+												] in filteredObjectProperties"
 												:key="key"
 												class="viewTableRow"
 												:class="{
-													'selected-row': selectedProperty === key,
-													'edited-row': formData[key] !== undefined,
-													'non-editable-row': !isPropertyEditable(key, formData[key] !== undefined ? formData[key] : value),
-													...getPropertyValidationClass(key, value)
+													'selected-row':
+														selectedProperty === key,
+													'edited-row':
+														formData[key] !== undefined,
+													'non-editable-row':
+														!isPropertyEditable(
+															key,
+															formData[key]
+																!== undefined
+																? formData[key]
+																: value,
+														),
+													...getPropertyValidationClass(
+														key,
+														value,
+													),
 												}"
 												@click="handleRowClick(key, $event)">
-												<td class="tableColumnConstrained prop-cell">
+												<td
+													class="tableColumnConstrained prop-cell">
 													<div class="prop-cell-content">
-														<AlertCircle v-if="getPropertyValidationClass(key, value) === 'property-invalid'"
-															v-tooltip="getPropertyErrorMessage(key, value)"
+														<AlertCircle
+															v-if="
+																getPropertyValidationClass(
+																	key,
+																	value,
+																)
+																=== 'property-invalid'
+															"
+															v-tooltip="
+																getPropertyErrorMessage(
+																	key,
+																	value,
+																)
+															"
 															class="validation-icon error-icon"
 															:size="16" />
-														<Alert v-else-if="getPropertyValidationClass(key, value) === 'property-warning'"
-															v-tooltip="getPropertyWarningMessage(key, value)"
+														<Alert
+															v-else-if="
+																getPropertyValidationClass(
+																	key,
+																	value,
+																)
+																=== 'property-warning'
+															"
+															v-tooltip="
+																getPropertyWarningMessage(
+																	key,
+																	value,
+																)
+															"
 															class="validation-icon warning-icon"
 															:size="16" />
-														<Plus v-else-if="getPropertyValidationClass(key, value) === 'property-new'"
-															v-tooltip="getPropertyNewMessage(key)"
+														<Plus
+															v-else-if="
+																getPropertyValidationClass(
+																	key,
+																	value,
+																) === 'property-new'
+															"
+															v-tooltip="
+																getPropertyNewMessage(
+																	key,
+																)
+															"
 															class="validation-icon new-icon"
 															:size="16" />
-														<LockOutline v-else-if="!isPropertyEditable(key, formData[key] !== undefined ? formData[key] : value)"
-															v-tooltip="getEditabilityWarning(key, formData[key] !== undefined ? formData[key] : value)"
+														<LockOutline
+															v-else-if="
+																!isPropertyEditable(
+																	key,
+																	formData[key]
+																		!== undefined
+																		? formData[
+																				key
+																			]
+																		: value,
+																)
+															"
+															v-tooltip="
+																getEditabilityWarning(
+																	key,
+																	formData[key]
+																		!== undefined
+																		? formData[
+																				key
+																			]
+																		: value,
+																)
+															"
 															class="validation-icon lock-icon"
 															:size="16" />
 														<span
-															v-tooltip="getPropertyTooltip(key)">
-															{{ getPropertyDisplayName(key) }}
+															v-tooltip="
+																getPropertyTooltip(
+																	key,
+																)
+															">
+															{{
+																getPropertyDisplayName(
+																	key,
+																)
+															}}
 														</span>
 													</div>
 												</td>
-												<td class="tableColumnExpanded value-cell">
+												<td
+													class="tableColumnExpanded value-cell">
 													<div class="value-cell-content">
-														<div v-if="selectedProperty === key && isPropertyEditable(key, formData[key] !== undefined ? formData[key] : value)" class="value-input-container" @click.stop>
+														<div
+															v-if="
+																selectedProperty
+																	=== key
+																&& isPropertyEditable(
+																	key,
+																	formData[key]
+																		!== undefined
+																		? formData[
+																				key
+																			]
+																		: value,
+																)
+															"
+															class="value-input-container"
+															@click.stop>
 															<!-- Boolean properties -->
 															<NcCheckboxRadioSwitch
-																v-if="getPropertyInputComponent(key) === 'NcCheckboxRadioSwitch'"
-																:checked="formData[key] !== undefined ? formData[key] : value"
+																v-if="
+																	getPropertyInputComponent(
+																		key,
+																	)
+																	=== 'NcCheckboxRadioSwitch'
+																"
+																:modelValue="
+																	Boolean(
+																		formData[key]
+																			!== undefined
+																			? formData[
+																					key
+																				]
+																			: value,
+																	)
+																"
 																type="switch"
-																@update:checked="updatePropertyValue(key, $event)">
-																{{ getPropertyDisplayName(key) }}
+																@update:modelValue="
+																	updatePropertyValue(
+																		key,
+																		$event,
+																	)
+																">
+																{{
+																	getPropertyDisplayName(
+																		key,
+																	)
+																}}
 															</NcCheckboxRadioSwitch>
 
 															<!-- Date/Time properties -->
 															<NcDateTimePicker
-																v-else-if="getPropertyInputComponent(key) === 'NcDateTimePicker'"
+																v-else-if="
+																	getPropertyInputComponent(
+																		key,
+																	)
+																	=== 'NcDateTimePicker'
+																"
 																:key="`datetime-${key}`"
-																:append-to-body="true"
-																:popup-class="'view-object-datepicker'"
-																:popup-style="{ zIndex: 12000 }"
-																:value="getDateTimePickerValue(key, value)"
-																:label="getPropertyDisplayName(key)"
-																:type="getDateTimePickerType(key)"
-																:placeholder="getPropertyDisplayName(key)"
+																:appendToBody="true"
+																popupClass="view-object-datepicker"
+																:popupStyle="{
+																	zIndex: 12000,
+																}"
+																:modelValue="
+																	getDateTimePickerValue(
+																		key,
+																		value,
+																	)
+																"
+																:label="
+																	getPropertyDisplayName(
+																		key,
+																	)
+																"
+																:type="
+																	getDateTimePickerType(
+																		key,
+																	)
+																"
+																:placeholder="
+																	getPropertyDisplayName(
+																		key,
+																	)
+																"
 																:clearable="true"
-																@input="handleDateTimeUpdate(key, $event)"
-																@update:value="handleDateTimeUpdate(key, $event)"
-																@change="handleDateTimeUpdate(key, $event)"
-																@update:modelValue="handleDateTimeUpdate(key, $event)" />
+																@update:modelValue="
+																	handleDateTimeUpdate(
+																		key,
+																		$event,
+																	)
+																" />
 
 															<!-- Text area properties -->
 															<NcTextArea
-																v-else-if="getPropertyInputComponent(key) === 'NcTextArea'"
+																v-else-if="
+																	getPropertyInputComponent(
+																		key,
+																	)
+																	=== 'NcTextArea'
+																"
 																ref="propertyValueInput"
 																class="textarea-property"
-																:value="String(formData[key] !== undefined ? formData[key] : value || '')"
-																:placeholder="getPropertyDisplayName(key)"
+																:modelValue="
+																	String(
+																		formData[key]
+																			!== undefined
+																			? formData[
+																					key
+																				]
+																			: value
+																					|| '',
+																	)
+																"
+																:placeholder="
+																	getPropertyDisplayName(
+																		key,
+																	)
+																"
 																:rows="4"
-																@update:value="updatePropertyValue(key, $event)" />
+																@update:modelValue="
+																	updatePropertyValue(
+																		key,
+																		$event,
+																	)
+																" />
 
 															<!-- Markdown editor properties -->
-															<Editor
-																v-else-if="getPropertyInputComponent(key) === 'Editor'"
+															<div
+																v-else-if="
+																	getPropertyInputComponent(
+																		key,
+																	) === 'Editor'
+																"
 																:key="`editor-${key}-tab`"
-																:initial-value="String(formData[key] !== undefined ? formData[key] : value || '')"
-																:options="getMarkdownEditorOptions(key)"
-																initial-edit-type="wysiwyg"
-																height="400px"
-																@load="(editor) => markdownEditors[key] = editor"
-																@blur="updateMarkdownValue(key, markdownEditors[key])" />
+																ref="markdownEditorContainer"
+																class="markdown-editor-container" />
 
 															<!-- Themes properties -->
-															<div v-else-if="getPropertyInputComponent(key) === 'NcTextFieldArray' && key === 'themes'" class="input-with-icon">
+															<div
+																v-else-if="
+																	getPropertyInputComponent(
+																		key,
+																	)
+																		=== 'NcTextFieldArray'
+																	&& key
+																		=== 'themes'
+																"
+																class="input-with-icon">
 																<NcSelect
-																	v-model="themeFormData"
-																	:options="themeOptions"
-																	input-label="Themes"
+																	v-model="
+																		themeFormData
+																	"
+																	:options="
+																		themeOptions
+																	"
+																	inputLabel="Themes"
 																	multiple
-																	:placeholder="getPropertyDisplayName(key)" />
+																	:placeholder="
+																		getPropertyDisplayName(
+																			key,
+																		)
+																	" />
 															</div>
 															<!-- Array properties -->
-															<div v-else-if="getPropertyInputComponent(key) === 'NcTextFieldArray'" class="input-with-icon">
+															<div
+																v-else-if="
+																	getPropertyInputComponent(
+																		key,
+																	)
+																	=== 'NcTextFieldArray'
+																"
+																class="input-with-icon">
 																<NcTextField
 																	ref="propertyValueInput"
-																	:value="String(formData[key] !== undefined ? (Array.isArray(formData[key]) ? formData[key].join(',') : formData[key]) : (Array.isArray(value) ? value.join(',') : value || ''))"
-																	:type="getPropertyInputType(key)"
-																	:placeholder="getPropertyDisplayName(key)"
-																	:min="getPropertyMinimum(key)"
-																	:max="getPropertyMaximum(key)"
-																	:step="getPropertyStep(key)"
-																	@update:value="updatePropertyValue(key, $event.split(/ *, */g).filter(Boolean))" />
+																	:aria-label="
+																		getPropertyDisplayName(
+																			key,
+																		)
+																	"
+																	:modelValue="
+																		String(
+																			formData[
+																				key
+																			]
+																				!== undefined
+																				? Array.isArray(
+																						formData[
+																							key
+																						],
+																					)
+																					? formData[
+																							key
+																						].join(
+																							',',
+																						)
+																					: formData[
+																							key
+																						]
+																				: Array.isArray(
+																							value,
+																					  )
+																					? value.join(
+																							',',
+																						)
+																					: value
+																						|| '',
+																		)
+																	"
+																	:type="
+																		getPropertyInputType(
+																			key,
+																		)
+																	"
+																	:placeholder="
+																		getPropertyDisplayName(
+																			key,
+																		)
+																	"
+																	:min="
+																		getPropertyMinimum(
+																			key,
+																		)
+																	"
+																	:max="
+																		getPropertyMaximum(
+																			key,
+																		)
+																	"
+																	:step="
+																		getPropertyStep(
+																			key,
+																		)
+																	"
+																	@update:modelValue="
+																		updatePropertyValue(
+																			key,
+																			$event
+																				.split(
+																					/ *, */g,
+																				)
+																				.filter(
+																					Boolean,
+																				),
+																		)
+																	" />
 																<InformationOutline
-																	v-tooltip="'Array values should be separated by commas'"
+																	v-tooltip="
+																		'Array values should be separated by commas'
+																	"
 																	:size="25"
 																	class="info-icon" />
 															</div>
@@ -430,58 +1066,232 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 															<NcTextField
 																v-else
 																ref="propertyValueInput"
-																:value="String(formData[key] !== undefined ? formData[key] : value || '')"
-																:type="getPropertyInputType(key)"
-																:placeholder="getPropertyDisplayName(key)"
-																:min="getPropertyMinimum(key)"
-																:max="getPropertyMaximum(key)"
-																:step="getPropertyStep(key)"
-																@update:value="updatePropertyValue(key, $event)" />
+																:aria-label="
+																	getPropertyDisplayName(
+																		key,
+																	)
+																"
+																:modelValue="
+																	String(
+																		formData[key]
+																			!== undefined
+																			? formData[
+																					key
+																				]
+																			: value
+																					|| '',
+																	)
+																"
+																:type="
+																	getPropertyInputType(
+																		key,
+																	)
+																"
+																:placeholder="
+																	getPropertyDisplayName(
+																		key,
+																	)
+																"
+																:min="
+																	getPropertyMinimum(
+																		key,
+																	)
+																"
+																:max="
+																	getPropertyMaximum(
+																		key,
+																	)
+																"
+																:step="
+																	getPropertyStep(
+																		key,
+																	)
+																"
+																@update:modelValue="
+																	updatePropertyValue(
+																		key,
+																		$event,
+																	)
+																" />
 														</div>
 														<div v-else>
-															<template v-if="formData[key] !== undefined">
+															<template
+																v-if="
+																	formData[key]
+																	!== undefined
+																">
 																<!-- Show edited value -->
 																<pre
-																	v-if="key !== 'themes' && typeof formData[key] === 'object' && formData[key] !== null"
-																	v-tooltip="'JSON object (edited)'"
-																	class="json-value">{{ formatValue(formData[key]) }}</pre>
+																	v-if="
+																		key
+																			!== 'themes'
+																		&& typeof formData[
+																			key
+																		]
+																			=== 'object'
+																		&& formData[
+																			key
+																		] !== null
+																	"
+																	v-tooltip="
+																		'JSON object (edited)'
+																	"
+																	class="json-value"
+																	>{{
+																		formatValue(
+																			formData[
+																				key
+																			],
+																		)
+																	}}</pre>
 																<span
-																	v-else-if="isDateTimeProperty(key) && formData[key]"
-																	v-tooltip="`${getDateTimePropertyFormat(key)}: ${formData[key]} (edited)`">{{ formatDateTimeValue(key, formData[key]) }}</span>
+																	v-else-if="
+																		isDateTimeProperty(
+																			key,
+																		)
+																		&& formData[
+																			key
+																		]
+																	"
+																	v-tooltip="
+																		`${getDateTimePropertyFormat(key)}: ${formData[key]} (edited)`
+																	"
+																	>{{
+																		formatDateTimeValue(
+																			key,
+																			formData[
+																				key
+																			],
+																		)
+																	}}</span
+																>
 																<span
-																	v-else-if="isValidDate(formData[key])"
-																	v-tooltip="`Date: ${new Date(formData[key]).toISOString()} (edited)`">{{ new Date(formData[key]).toLocaleString() }}</span>
+																	v-else-if="
+																		isValidDate(
+																			formData[
+																				key
+																			],
+																		)
+																	"
+																	v-tooltip="
+																		`Date: ${new Date(formData[key]).toISOString()} (edited)`
+																	"
+																	>{{
+																		new Date(
+																			formData[
+																				key
+																			],
+																		).toLocaleString()
+																	}}</span
+																>
 																<span
 																	v-else
-																	v-tooltip="getPropertyTooltip(key)">{{ getDisplayValue(key, value) }}</span>
+																	v-tooltip="
+																		getPropertyTooltip(
+																			key,
+																		)
+																	"
+																	>{{
+																		getDisplayValue(
+																			key,
+																			value,
+																		)
+																	}}</span
+																>
 															</template>
 															<template v-else>
 																<!-- Show original value -->
 																<pre
-																	v-if="key !== 'themes' && typeof value === 'object' && value !== null"
-																	v-tooltip="'JSON object'"
-																	class="json-value">{{ formatValue(value) }}</pre>
+																	v-if="
+																		key
+																			!== 'themes'
+																		&& typeof value
+																			=== 'object'
+																		&& value
+																			!== null
+																	"
+																	v-tooltip="
+																		'JSON object'
+																	"
+																	class="json-value"
+																	>{{
+																		formatValue(
+																			value,
+																		)
+																	}}</pre>
 																<span
-																	v-else-if="isDateTimeProperty(key) && value"
-																	v-tooltip="`${getDateTimePropertyFormat(key)}: ${value}`">{{ formatDateTimeValue(key, value) }}</span>
+																	v-else-if="
+																		isDateTimeProperty(
+																			key,
+																		) && value
+																	"
+																	v-tooltip="
+																		`${getDateTimePropertyFormat(key)}: ${value}`
+																	"
+																	>{{
+																		formatDateTimeValue(
+																			key,
+																			value,
+																		)
+																	}}</span
+																>
 																<span
-																	v-else-if="isValidDate(value)"
-																	v-tooltip="`Date: ${new Date(value).toISOString()}`">{{ new Date(value).toLocaleString() }}</span>
+																	v-else-if="
+																		isValidDate(
+																			value,
+																		)
+																	"
+																	v-tooltip="
+																		`Date: ${new Date(value).toISOString()}`
+																	"
+																	>{{
+																		new Date(
+																			value,
+																		).toLocaleString()
+																	}}</span
+																>
 																<span
 																	v-else
-																	v-tooltip="getPropertyTooltip(key)">{{ getDisplayValue(key, value) }}</span>
+																	v-tooltip="
+																		getPropertyTooltip(
+																			key,
+																		)
+																	"
+																	>{{
+																		getDisplayValue(
+																			key,
+																			value,
+																		)
+																	}}</span
+																>
 															</template>
 														</div>
 													</div>
 												</td>
 												<td class="tableColumnActions">
-													<NcButton v-if="canDropProperty(key, value)"
-														v-tooltip="getDropPropertyTooltip(key)"
-														type="tertiary-no-background"
+													<NcButton
+														v-if="
+															canDropProperty(
+																key,
+																value,
+															)
+														"
+														v-tooltip="
+															getDropPropertyTooltip(
+																key,
+															)
+														"
+														variant="tertiary-no-background"
 														size="small"
 														class="drop-property-btn"
-														:aria-label="getDropPropertyTooltip(key)"
-														@click.stop="dropProperty(key)">
+														:aria-label="
+															getDropPropertyTooltip(
+																key,
+															)
+														"
+														@click.stop="
+															dropProperty(key)
+														">
 														<template #icon>
 															<Close :size="16" />
 														</template>
@@ -491,23 +1301,32 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										</tbody>
 									</table>
 								</div>
-							</BTab>
-							<BTab title="Metadata">
+							</div>
+							<div
+								v-show="activeTab === 'metadata'"
+								class="tab-content">
 								<div class="viewTableContainer">
 									<table class="viewTable">
 										<thead>
 											<tr class="viewTableRow">
-												<th class="tableColumnConstrained">
+												<th
+													scope="col"
+													class="tableColumnConstrained">
 													Metadata
 												</th>
-												<th class="tableColumnExpanded">
+												<th
+													scope="col"
+													class="tableColumnExpanded">
 													Value
 												</th>
 											</tr>
 										</thead>
 										<tbody>
 											<tr
-												v-for="([key, value]) in metadataProperties"
+												v-for="[
+													key,
+													value,
+												] in metadataProperties"
 												:key="key"
 												class="viewTableRow">
 												<td class="tableColumnConstrained">
@@ -520,24 +1339,34 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										</tbody>
 									</table>
 								</div>
-							</BTab>
-							<BTab>
-								<template #title>
-									<div class="tab-title">
-										<span>Files</span>
-										<NcLoadingIcon v-if="currentObject && objectStore.isLoading(`publication_${currentObject.id}_files`)" :size="16" />
-										<NcCounterBubble v-else :count="filesTotalItems" />
-									</div>
-								</template>
+							</div>
+							<div v-show="activeTab === 'files'" class="tab-content">
 								<!-- Info box for new objects -->
-								<NcNoteCard v-if="isNewObject" type="info" class="files-info-card">
-									<p><strong>Files can be added after the publication is created.</strong></p>
-									<p>Save the publication first, then you'll be able to upload and manage files.</p>
+								<NcNoteCard
+									v-if="isNewObject"
+									type="info"
+									class="files-info-card">
+									<p>
+										<strong
+											>Files can be added after the publication
+											is created.</strong
+										>
+									</p>
+									<p>
+										Save the publication first, then you'll be
+										able to upload and manage files.
+									</p>
 								</NcNoteCard>
 
-								<NcEmptyContent v-if="currentObject && objectStore.isLoading(`publication_${currentObject.id}_files`)"
+								<NcEmptyContent
+									v-if="
+										currentObject
+										&& objectStore.isLoading(
+											`publication_${currentObject.id}_files`,
+										)
+									"
 									title="Loading files..."
-									:description="'Loading files for this publication...'">
+									description="Loading files for this publication...">
 									<template #icon>
 										<NcLoadingIcon :size="64" />
 									</template>
@@ -545,39 +1374,88 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 								<template v-else-if="paginatedFiles.length > 0">
 									<div class="multi-actions-container">
 										<NcActions
-											:force-name="true"
-											:disabled="selectedAttachments.length === 0"
-											:title="selectedAttachments.length === 0 ? 'Select one or more files to use mass actions' : `Mass actions (${selectedAttachments.length} selected)`"
-											:menu-name="`Mass Actions (${selectedAttachments.length})`">
+											:forceName="true"
+											:disabled="
+												selectedAttachments.length === 0
+											"
+											:title="
+												selectedAttachments.length === 0
+													? 'Select one or more files to use mass actions'
+													: `Mass actions (${selectedAttachments.length} selected)`
+											"
+											:menuName="`Mass Actions (${selectedAttachments.length})`">
 											<template #icon>
 												<FormatListChecks :size="20" />
 											</template>
 											<NcActionButton
-												:disabled="publishLoading.length > 0 || selectedAttachments.length === 0"
+												:disabled="
+													publishLoading.length > 0
+													|| selectedAttachments.length
+														=== 0
+												"
 												@click="publishSelectedFiles">
 												<template #icon>
-													<NcLoadingIcon v-if="publishLoading.length > 0" :size="20" />
+													<NcLoadingIcon
+														v-if="
+															publishLoading.length > 0
+														"
+														:size="20" />
 													<FileOutline v-else :size="20" />
 												</template>
-												Publish {{ selectedAttachments.length }} file{{ selectedAttachments.length > 1 ? 's' : '' }}
+												Publish
+												{{ selectedAttachments.length }}
+												file{{
+													selectedAttachments.length > 1
+														? 's'
+														: ''
+												}}
 											</NcActionButton>
 											<NcActionButton
-												:disabled="depublishLoading.length > 0 || selectedAttachments.length === 0"
+												:disabled="
+													depublishLoading.length > 0
+													|| selectedAttachments.length
+														=== 0
+												"
 												@click="depublishSelectedFiles">
 												<template #icon>
-													<NcLoadingIcon v-if="depublishLoading.length > 0" :size="20" />
+													<NcLoadingIcon
+														v-if="
+															depublishLoading.length
+															> 0
+														"
+														:size="20" />
 													<LockOutline v-else :size="20" />
 												</template>
-												Depublish {{ selectedAttachments.length }} file{{ selectedAttachments.length > 1 ? 's' : '' }}
+												Depublish
+												{{ selectedAttachments.length }}
+												file{{
+													selectedAttachments.length > 1
+														? 's'
+														: ''
+												}}
 											</NcActionButton>
 											<NcActionButton
-												:disabled="fileIdsLoading.length > 0 || selectedAttachments.length === 0"
+												:disabled="
+													fileIdsLoading.length > 0
+													|| selectedAttachments.length
+														=== 0
+												"
 												@click="deleteSelectedFiles">
 												<template #icon>
-													<NcLoadingIcon v-if="fileIdsLoading.length > 0" :size="20" />
+													<NcLoadingIcon
+														v-if="
+															fileIdsLoading.length > 0
+														"
+														:size="20" />
 													<Delete v-else :size="20" />
 												</template>
-												Delete {{ selectedAttachments.length }} file{{ selectedAttachments.length > 1 ? 's' : '' }}
+												Delete
+												{{ selectedAttachments.length }}
+												file{{
+													selectedAttachments.length > 1
+														? 's'
+														: ''
+												}}
 											</NcActionButton>
 										</NcActions>
 									</div>
@@ -585,103 +1463,238 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										<table class="viewTable">
 											<thead>
 												<tr class="viewTableRow">
-													<th class="tableColumnCheckbox">
+													<th
+														scope="col"
+														class="tableColumnCheckbox">
 														<NcCheckboxRadioSwitch
-															:checked="allFilesSelected"
-															:indeterminate="someFilesSelected"
-															@update:checked="toggleSelectAllFiles" />
+															:modelValue="
+																allFilesSelected
+															"
+															:indeterminate="
+																someFilesSelected
+															"
+															aria-label="Select all attachments"
+															@update:modelValue="
+																toggleSelectAllFiles
+															" />
 													</th>
-													<th class="tableColumnExpanded table-row-title">
+													<th
+														scope="col"
+														class="tableColumnExpanded table-row-title">
 														Name
 													</th>
-													<th class="tableColumnConstrained short-column">
+													<th
+														scope="col"
+														class="tableColumnConstrained short-column">
 														Size
 													</th>
-													<th class="tableColumnConstrained table-row-type">
+													<th
+														scope="col"
+														class="tableColumnConstrained table-row-type">
 														Type
 													</th>
-													<th :class="`tableColumnConstrained ${editingTags ? 'table-row-labels' : 'short-column'}`">
+													<th
+														scope="col"
+														:class="`tableColumnConstrained ${editingTags ? 'table-row-labels' : 'short-column'}`">
 														Labels
 													</th>
-													<th class="table-row-actions" />
+													<th
+														scope="col"
+														class="table-row-actions">
+														<span class="hidden-visually"
+															>Actions</span
+														>
+													</th>
 												</tr>
 											</thead>
 											<tbody>
-												<tr v-for="(attachment, i) in paginatedFiles"
+												<tr
+													v-for="(
+														attachment, i
+													) in paginatedFiles"
 													:key="`${attachment.id}${i}`"
-													:class="{ 'active': activeAttachment === attachment.id }"
+													:class="{
+														active:
+															activeAttachment
+															=== attachment.id,
+													}"
 													class="viewTableRow"
-													@click="() => {
-														if (activeAttachment === attachment.id) activeAttachment = null
-														else activeAttachment = attachment.id
-													}">
+													@click="
+														() => {
+															if (
+																activeAttachment
+																=== attachment.id
+															)
+																activeAttachment =
+																	null
+															else
+																activeAttachment =
+																	attachment.id
+														}
+													">
 													<td class="tableColumnCheckbox">
 														<NcCheckboxRadioSwitch
-															:checked="selectedAttachments.includes(attachment.id)"
-															@update:checked="(checked) => toggleFileSelection(attachment.id, checked)" />
+															:modelValue="
+																selectedAttachments.includes(
+																	attachment.id,
+																)
+															"
+															:aria-label="`Select ${attachment.title || attachment.name || 'attachment'}`"
+															@update:modelValue="
+																(checked) =>
+																	toggleFileSelection(
+																		attachment.id,
+																		checked,
+																	)
+															" />
 													</td>
-													<td class="tableColumnExpanded table-row-title">
-														<div class="file-name-container">
-															<div class="file-status-icons">
+													<td
+														class="tableColumnExpanded table-row-title">
+														<div
+															class="file-name-container">
+															<div
+																class="file-status-icons">
 																<!-- Show warning icon if file is not shared -->
-																<ExclamationThick v-if="!attachment.accessUrl && !attachment.downloadUrl"
-																	v-tooltip="'Not shared'"
+																<ExclamationThick
+																	v-if="
+																		!attachment.accessUrl
+																		&& !attachment.downloadUrl
+																	"
+																	v-tooltip="
+																		'Not shared'
+																	"
 																	class="warningIcon"
 																	:size="20" />
 																<!-- Show published icon if file is shared -->
-																<FileOutline v-else class="publishedIcon" :size="20" />
+																<FileOutline
+																	v-else
+																	class="publishedIcon"
+																	:size="20" />
 															</div>
-															<span class="file-name">{{ attachment.name ?? attachment?.title }}</span>
+															<span
+																class="file-name"
+																>{{
+																	attachment.name
+																	?? attachment?.title
+																}}</span
+															>
 														</div>
 													</td>
-													<td class="tableColumnConstrained short-column">
-														{{ formatFileSize(attachment?.size) }}
+													<td
+														class="tableColumnConstrained short-column">
+														{{
+															formatFileSize(
+																attachment?.size,
+															)
+														}}
 													</td>
-													<td class="tableColumnConstrained table-row-type">
-														{{ attachment?.type || 'No type' }}
+													<td
+														class="tableColumnConstrained table-row-type">
+														{{
+															attachment?.type
+															|| 'No type'
+														}}
 													</td>
-													<td class="tableColumnConstrained td-labels">
-														<div class="fileLabelsContainer">
-															<span v-if="editingTags !== attachment.id"
+													<td
+														class="tableColumnConstrained td-labels">
+														<div
+															class="fileLabelsContainer">
+															<span
+																v-if="
+																	editingTags
+																	!== attachment.id
+																"
 																class="files-list__row-action--inline files-list__row-action-system-tags">
-																<ul v-if="attachment.labels && attachment.labels.length > 0" class="files-list__system-tags" aria-label="Assigned collaborative tags">
-																	<li v-for="label of attachment.labels"
+																<ul
+																	v-if="
+																		attachment.labels
+																		&& attachment
+																			.labels
+																			.length
+																			> 0
+																	"
+																	class="files-list__system-tags"
+																	aria-label="Assigned collaborative tags">
+																	<li
+																		v-for="label of attachment.labels"
 																		:key="label"
 																		class="files-list__system-tag"
-																		:title="label">
+																		:title="
+																			label
+																		">
 																		{{ label }}
 																	</li>
 																</ul>
-																<span v-if="!attachment.labels || attachment.labels.length === 0">
+																<span
+																	v-if="
+																		!attachment.labels
+																		|| attachment
+																			.labels
+																			.length
+																			=== 0
+																	">
 																	No labels
 																</span>
 															</span>
-															<div v-if="editingTags === attachment.id" class="label-edit-container">
+															<div
+																v-if="
+																	editingTags
+																	=== attachment.id
+																"
+																class="label-edit-container">
 																<NcSelect
-																	v-model="editedTags"
-																	:disabled="tagsLoading"
-																	:loading="tagsLoading"
+																	v-model="
+																		editedTags
+																	"
+																	:disabled="
+																		tagsLoading
+																	"
+																	:loading="
+																		tagsLoading
+																	"
 																	:multiple="true"
-																	:aria-label-combobox="labelOptionsEdit.inputLabel"
-																	:options="labelOptionsEdit.options" />
+																	:aria-label-combobox="
+																		labelOptionsEdit.inputLabel
+																	"
+																	:options="
+																		labelOptionsEdit.options
+																	" />
 																<NcButton
-																	v-tooltip="'Save labels'"
-																	type="primary"
+																	v-tooltip="
+																		'Save labels'
+																	"
+																	variant="primary"
 																	size="small"
 																	:aria-label="`save labels for ${attachment.name ?? attachment?.title ?? 'file'}`"
 																	class="editTagsButton"
-																	@click="saveTags(attachment, editedTags)">
+																	@click="
+																		saveTags(
+																			attachment,
+																			editedTags,
+																		)
+																	">
 																	<template #icon>
-																		<ContentSaveOutline :size="20" />
+																		<ContentSaveOutline
+																			:size="
+																				20
+																			" />
 																	</template>
 																</NcButton>
 																<NcButton
-																	v-tooltip="'Cancel'"
-																	type="secondary"
+																	v-tooltip="
+																		'Cancel'
+																	"
+																	:aria-label="`cancel editing labels for ${attachment.name ?? attachment?.title ?? 'file'}`"
+																	variant="secondary"
 																	size="small"
-																	@click="cancelFileLabelEditing">
+																	@click="
+																		cancelFileLabelEditing
+																	">
 																	<template #icon>
-																		<Cancel :size="20" />
+																		<Cancel
+																			:size="
+																				20
+																			" />
 																	</template>
 																</NcButton>
 															</div>
@@ -689,48 +1702,118 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 													</td>
 													<td class="table-row-actions">
 														<NcActions
-															v-if="editingTags !== attachment.id"
+															v-if="
+																editingTags
+																!== attachment.id
+															"
 															:aria-label="`Actions for ${attachment.name ?? attachment?.title ?? 'file'}`">
-															<NcActionButton @click="openFile(attachment)">
+															<NcActionButton
+																@click="
+																	openFile(
+																		attachment,
+																	)
+																">
 																<template #icon>
-																	<OpenInNew :size="20" />
+																	<OpenInNew
+																		:size="20" />
 																</template>
 																View
 															</NcActionButton>
 															<NcActionButton
-																:disabled="editingTags && editingTags !== attachment.id || tagsLoading"
-																@click="editFileLabels(attachment)">
+																:disabled="
+																	(editingTags
+																		&& editingTags
+																			!== attachment.id)
+																	|| tagsLoading
+																"
+																@click="
+																	editFileLabels(
+																		attachment,
+																	)
+																">
 																<template #icon>
-																	<Tag :size="20" />
+																	<Tag
+																		:size="20" />
 																</template>
 																Edit Labels
 															</NcActionButton>
 															<NcActionButton
-																v-if="!attachment.accessUrl && !attachment.downloadUrl"
-																:disabled="publishLoading.includes(attachment.id)"
-																@click="publishFile(attachment)">
+																v-if="
+																	!attachment.accessUrl
+																	&& !attachment.downloadUrl
+																"
+																:disabled="
+																	publishLoading.includes(
+																		attachment.id,
+																	)
+																"
+																@click="
+																	publishFile(
+																		attachment,
+																	)
+																">
 																<template #icon>
-																	<NcLoadingIcon v-if="publishLoading.includes(attachment.id)" :size="20" />
-																	<FileOutline v-else :size="20" />
+																	<NcLoadingIcon
+																		v-if="
+																			publishLoading.includes(
+																				attachment.id,
+																			)
+																		"
+																		:size="20" />
+																	<FileOutline
+																		v-else
+																		:size="20" />
 																</template>
 																Publish
 															</NcActionButton>
 															<NcActionButton
 																v-else
-																:disabled="depublishLoading.includes(attachment.id)"
-																@click="depublishFile(attachment)">
+																:disabled="
+																	depublishLoading.includes(
+																		attachment.id,
+																	)
+																"
+																@click="
+																	depublishFile(
+																		attachment,
+																	)
+																">
 																<template #icon>
-																	<NcLoadingIcon v-if="depublishLoading.includes(attachment.id)" :size="20" />
-																	<LockOutline v-else :size="20" />
+																	<NcLoadingIcon
+																		v-if="
+																			depublishLoading.includes(
+																				attachment.id,
+																			)
+																		"
+																		:size="20" />
+																	<LockOutline
+																		v-else
+																		:size="20" />
 																</template>
 																Depublish
 															</NcActionButton>
 															<NcActionButton
-																:disabled="fileIdsLoading.includes(attachment.id)"
-																@click="deleteFile(attachment)">
+																:disabled="
+																	fileIdsLoading.includes(
+																		attachment.id,
+																	)
+																"
+																@click="
+																	deleteFile(
+																		attachment,
+																	)
+																">
 																<template #icon>
-																	<NcLoadingIcon v-if="fileIdsLoading.includes(attachment.id)" :size="20" />
-																	<Delete v-else :size="20" />
+																	<NcLoadingIcon
+																		v-if="
+																			fileIdsLoading.includes(
+																				attachment.id,
+																			)
+																		"
+																		:size="20" />
+																	<Delete
+																		v-else
+																		:size="20" />
 																</template>
 																Delete
 															</NcActionButton>
@@ -741,7 +1824,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 										</table>
 									</div>
 								</template>
-								<NcEmptyContent v-else-if="!isNewObject"
+								<NcEmptyContent
+									v-else-if="!isNewObject"
 									name="No files attached"
 									description="No files have been attached to this object">
 									<template #icon>
@@ -752,16 +1836,20 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 								<!-- Files Pagination -->
 								<PaginationComponent
 									v-if="filesTotalItems > 10"
-									:current-page="objectStore.getPagination('publication_files').page"
-									:total-pages="filesTotalPages"
-									:total-items="filesTotalItems"
-									:current-page-size="filesCurrentPageSize"
-									:page-size-options="pageSizeOptions"
-									:min-items-to-show="5"
-									@page-changed="onFilesPageChanged"
-									@page-size-changed="onFilesPageSizeChanged" />
-							</BTab>
-						</BTabs>
+									:currentPage="
+										objectStore.getPagination(
+											'publication_files',
+										).page
+									"
+									:totalPages="filesTotalPages"
+									:totalItems="filesTotalItems"
+									:currentPageSize="filesCurrentPageSize"
+									:pageSizeOptions="pageSizeOptions"
+									:minItemsToShow="5"
+									@pageChanged="onFilesPageChanged"
+									@pageSizeChanged="onFilesPageSizeChanged" />
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -779,34 +1867,45 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 					</template>
 					Add File
 				</NcButton>
-				<NcButton v-if="shouldShowPublishAction(currentObject)"
+				<NcButton
+					v-if="shouldShowPublishAction(currentObject)"
 					@click="singlePublishObject">
 					<template #icon>
 						<Publish :size="20" />
 					</template>
 					Publish
 				</NcButton>
-				<NcButton v-if="shouldShowDepublishAction(currentObject)"
+				<NcButton
+					v-if="shouldShowDepublishAction(currentObject)"
 					@click="singleDepublishObject">
 					<template #icon>
 						<PublishOff :size="20" />
 					</template>
 					Depublish
 				</NcButton>
-				<NcButton v-if="!isNewObject"
-					type="error"
+				<NcButton
+					v-if="!isNewObject"
+					variant="error"
 					@click="singleDeleteObject">
 					<template #icon>
 						<Delete :size="20" />
 					</template>
 					Delete
 				</NcButton>
-				<NcButton type="primary" :disabled="isSaving" @click="saveObject">
+				<NcButton variant="primary" :disabled="isSaving" @click="saveObject">
 					<template #icon>
 						<NcLoadingIcon v-if="isSaving" :size="20" />
 						<ContentSave v-else :size="20" />
 					</template>
-					{{ isSaving ? (isNewObject ? 'Creating...' : 'Saving...') : (isNewObject ? 'Create' : 'Save') }}
+					{{
+						isSaving
+							? isNewObject
+								? 'Creating...'
+								: 'Saving...'
+							: isNewObject
+								? 'Create'
+								: 'Save'
+					}}
 				</NcButton>
 			</template>
 		</NcDialog>
@@ -815,51 +1914,54 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 
 <script>
 import {
-	NcDialog,
-	NcButton,
-	NcActions,
 	NcActionButton,
-	NcNoteCard,
-	NcCounterBubble,
-	NcTextField,
-	NcTextArea,
+	NcActions,
+	NcButton,
 	NcCheckboxRadioSwitch,
-	NcLoadingIcon,
+	NcCounterBubble,
 	NcDateTimePicker,
+	NcDialog,
 	NcEmptyContent,
+	NcLoadingIcon,
+	NcNoteCard,
 	NcSelect,
+	NcTextArea,
+	NcTextField,
 } from '@nextcloud/vue'
+// The Vue-2 `@toast-ui/vue-editor` wrapper is gone; the framework-agnostic core
+// editor is instantiated by hand against a plain `<div>` ref instead — see
+// createMarkdownEditor() / destroyMarkdownEditors().
+import { Editor } from '@toast-ui/editor'
 // import { json, jsonParseLinter } from '@codemirror/lang-json'
 // import CodeMirror from 'vue-codemirror6'
-import { BTabs, BTab } from 'bootstrap-vue'
-import { getTheme } from '../../services/getTheme.js'
-import { Editor } from '@toast-ui/vue-editor'
-import '@toast-ui/editor/dist/toastui-editor.css'
-import Cancel from 'vue-material-design-icons/Cancel.vue'
-import FileOutline from 'vue-material-design-icons/FileOutline.vue'
-import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
-import Delete from 'vue-material-design-icons/Delete.vue'
-import Upload from 'vue-material-design-icons/Upload.vue'
-
-import ContentSave from 'vue-material-design-icons/ContentSave.vue'
-import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
-import LockOutline from 'vue-material-design-icons/LockOutline.vue'
-import Tag from 'vue-material-design-icons/Tag.vue'
-import FormatListChecks from 'vue-material-design-icons/FormatListChecks.vue'
+import { markRaw } from 'vue'
 import Alert from 'vue-material-design-icons/Alert.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
+import Cancel from 'vue-material-design-icons/Cancel.vue'
+import Close from 'vue-material-design-icons/Close.vue'
+import ContentSave from 'vue-material-design-icons/ContentSave.vue'
+import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
+import Delete from 'vue-material-design-icons/Delete.vue'
+import ExclamationThick from 'vue-material-design-icons/ExclamationThick.vue'
+import Eye from 'vue-material-design-icons/Eye.vue'
+import EyeOff from 'vue-material-design-icons/EyeOff.vue'
+import FileOutline from 'vue-material-design-icons/FileOutline.vue'
+import FormatListChecks from 'vue-material-design-icons/FormatListChecks.vue'
+import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
+import LockOutline from 'vue-material-design-icons/LockOutline.vue'
+import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
-import Pencil from 'vue-material-design-icons/Pencil.vue'
-import ExclamationThick from 'vue-material-design-icons/ExclamationThick.vue'
-import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
-import Close from 'vue-material-design-icons/Close.vue'
-import Eye from 'vue-material-design-icons/Eye.vue'
-import EyeOff from 'vue-material-design-icons/EyeOff.vue'
+import Tag from 'vue-material-design-icons/Tag.vue'
+import Upload from 'vue-material-design-icons/Upload.vue'
 import PaginationComponent from '../../components/PaginationComponent.vue'
 import PublishedIcon from '../../components/PublishedIcon.vue'
-import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
+import { getTheme } from '../../services/getTheme.js'
+
+import '@toast-ui/editor/dist/toastui-editor.css'
 
 export default {
 	name: 'ViewObject',
@@ -877,10 +1979,7 @@ export default {
 		NcDateTimePicker,
 		NcEmptyContent,
 		NcSelect,
-		Editor,
 		// CodeMirror,
-		BTabs,
-		BTab,
 		Cancel,
 		FileOutline,
 		OpenInNew,
@@ -907,9 +2006,10 @@ export default {
 		PublishedIcon,
 		InformationOutline,
 	},
+
 	data() {
 		return {
-			activeTab: 0,
+			activeTab: 'properties',
 			formData: {}, // Ensure this is always an object, never an array
 			jsonData: '',
 			selectedProperty: null,
@@ -939,6 +2039,7 @@ export default {
 				{ value: 500, label: '500' },
 				{ value: 1000, label: '1000' },
 			],
+
 			// Selection flow properties
 			selectedCatalog: null,
 			selectedRegister: null,
@@ -956,18 +2057,30 @@ export default {
 				multiple: true,
 				options: [],
 			},
+
 			tagsLoading: false,
 		}
 	},
+
 	computed: {
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		currentObject() {
 			return objectStore.getActiveObject('publication')
 		},
 
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		isNewObject() {
 			const obj = objectStore.getActiveObject('publication')
 			return !obj || !obj?.['@self']?.id
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		objectProperties() {
 			// Return array of [key, value] pairs, excluding '@self' and 'id'
 			const objectData = this.currentObject || {}
@@ -977,33 +2090,35 @@ export default {
 			const propertiesWithoutOrder = []
 
 			// First, add all schema properties in their defined order
-			for (const [schemaKey, schemaProperty] of Object.entries(schemaProperties)) {
+			for (const [schemaKey, schemaProperty] of Object.entries(
+				schemaProperties,
+			)) {
 				let propertyValue
-				if (Object.prototype.hasOwnProperty.call(objectData, schemaKey)) {
+				if (Object.hasOwn(objectData, schemaKey)) {
 					// Property exists in object, use its value
 					propertyValue = objectData[schemaKey]
 				} else {
 					// Property doesn't exist in object, use appropriate default value
 					let defaultValue = ''
 					switch (schemaProperty.type) {
-					case 'string':
-						defaultValue = schemaProperty.const || ''
-						break
-					case 'number':
-					case 'integer':
-						defaultValue = 0
-						break
-					case 'boolean':
-						defaultValue = false
-						break
-					case 'array':
-						defaultValue = []
-						break
-					case 'object':
-						defaultValue = {}
-						break
-					default:
-						defaultValue = ''
+						case 'string':
+							defaultValue = schemaProperty.const || ''
+							break
+						case 'number':
+						case 'integer':
+							defaultValue = 0
+							break
+						case 'boolean':
+							defaultValue = false
+							break
+						case 'array':
+							defaultValue = []
+							break
+						case 'object':
+							defaultValue = {}
+							break
+						default:
+							defaultValue = ''
 					}
 					propertyValue = defaultValue
 				}
@@ -1011,7 +2126,10 @@ export default {
 				const propertyData = [schemaKey, propertyValue, schemaProperty]
 
 				// Check if property has an order value
-				if (schemaProperty.order !== undefined && schemaProperty.order !== null) {
+				if (
+					schemaProperty.order !== undefined
+					&& schemaProperty.order !== null
+				) {
 					propertiesWithOrder.push(propertyData)
 				} else {
 					propertiesWithoutOrder.push(propertyData)
@@ -1023,10 +2141,12 @@ export default {
 			for (const [objectKey, objectValue] of Object.entries(objectData)) {
 				// Skip metadata and properties already handled by schema
 				// Also skip properties that have been marked for deletion (undefined in formData)
-				if (objectKey !== '@self'
+				if (
+					objectKey !== '@self'
 					&& objectKey !== 'id'
-					&& !Object.prototype.hasOwnProperty.call(schemaProperties, objectKey)
-					&& !(this.formData[objectKey] === undefined)) {
+					&& !Object.hasOwn(schemaProperties, objectKey)
+					&& !(this.formData[objectKey] === undefined)
+				) {
 					additionalProperties.push([objectKey, objectValue, null])
 				}
 			}
@@ -1059,11 +2179,15 @@ export default {
 			additionalProperties.sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
 
 			// If we have no properties to show (new object with no schema), provide some basic ones
-			if (propertiesWithoutOrder.length === 0 && propertiesWithOrder.length === 0 && additionalProperties.length === 0) {
+			if (
+				propertiesWithoutOrder.length === 0
+				&& propertiesWithOrder.length === 0
+				&& additionalProperties.length === 0
+			) {
 				return [
 					['title', ''],
 					['description', ''],
-					['summary', ''],
+					['omschrijving', ''],
 					['category', ''],
 					['status', 'draft'],
 				]
@@ -1078,9 +2202,12 @@ export default {
 
 			return combinedProperties
 		},
+
 		/**
 		 * Filter out constant and immutable properties based on showConstantProperties state
+		 *
 		 * @return {Array} Filtered properties array
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		filteredObjectProperties() {
 			if (this.showConstantProperties) {
@@ -1092,23 +2219,35 @@ export default {
 				const isConstantOrImmutableProperty = this.isConstantOrImmutable(key)
 
 				// Debug: Log property filtering
-				if (process.env.NODE_ENV === 'development' && isConstantOrImmutableProperty) {
+				if (
+					process.env.NODE_ENV === 'development'
+					&& isConstantOrImmutableProperty
+				) {
 					// eslint-disable-next-line no-console
-					console.log(`Filtering out property ${key}: constant or immutable`)
+					console.log(
+						`Filtering out property ${key}: constant or immutable`,
+					)
 				}
 
 				return !isConstantOrImmutableProperty
 			})
 		},
+
 		/**
 		 * Check if there are any constant or immutable properties
+		 *
 		 * @return {boolean} True if there are constant/immutable properties
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		hasConstantOrImmutableProperties() {
 			return this.objectProperties.some(([key, value]) => {
 				return this.isConstantOrImmutable(key)
 			})
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		metadataProperties() {
 			// Return array of [key, value] for metadata display
 			if (!this.currentObject) return []
@@ -1117,50 +2256,44 @@ export default {
 			const metadata = []
 
 			// ID
-			metadata.push([
-				'ID',
-				obj.id || 'Not set',
-			])
+			metadata.push(['ID', obj.id || 'Not set'])
 
 			// Version
-			metadata.push([
-				'Version',
-				obj['@self']?.version || 'Not set',
-			])
+			metadata.push(['Version', obj['@self']?.version || 'Not set'])
 
 			// Register
 			const register = obj['@self']?.register
 			let registerDisplay = 'Not set'
 			if (register) {
 				if (typeof register === 'object') {
-					registerDisplay = register.title || register.name || register.id || register
+					registerDisplay =
+						register.title || register.name || register.id || register
 				} else {
 					// Try to find the register title from available registers
-					const availableRegister = objectStore.availableRegisters.find(r => r.id === register)
+					const availableRegister = objectStore.availableRegisters.find(
+						(r) => r.id === register,
+					)
 					registerDisplay = availableRegister?.title || register
 				}
 			}
-			metadata.push([
-				'Register',
-				registerDisplay,
-			])
+			metadata.push(['Register', registerDisplay])
 
 			// Schema
 			const schema = obj['@self']?.schema
 			let schemaDisplay = 'Not set'
 			if (schema) {
 				if (typeof schema === 'object') {
-					schemaDisplay = schema.title || schema.name || schema.id || schema
+					schemaDisplay =
+						schema.title || schema.name || schema.id || schema
 				} else {
 					// Try to find the schema title from available schemas
-					const availableSchema = objectStore.availableSchemas.find(s => s.id === schema)
+					const availableSchema = objectStore.availableSchemas.find(
+						(s) => s.id === schema,
+					)
 					schemaDisplay = availableSchema?.title || schema
 				}
 			}
-			metadata.push([
-				'Schema',
-				schemaDisplay,
-			])
+			metadata.push(['Schema', schemaDisplay])
 
 			// Locked
 			const locked = obj['@self']?.locked
@@ -1168,45 +2301,56 @@ export default {
 			if (locked) {
 				if (typeof locked === 'object') {
 					const lockedBy = locked.lockedBy || 'Unknown user'
-					const lockedAt = locked.lockedAt ? new Date(locked.lockedAt).toLocaleString() : 'Unknown time'
+					const lockedAt = locked.lockedAt
+						? new Date(locked.lockedAt).toLocaleString()
+						: 'Unknown time'
 					const process = locked.process ? ` (${locked.process})` : ''
 					lockedDisplay = `Locked by ${lockedBy} at ${lockedAt}${process}`
 				} else {
 					lockedDisplay = 'Locked'
 				}
 			}
-			metadata.push([
-				'Locked',
-				lockedDisplay,
-			])
+			metadata.push(['Locked', lockedDisplay])
 
 			// Created
 			metadata.push([
 				'Created',
-				obj['@self']?.created ? new Date(obj['@self'].created).toLocaleString() : 'Not set',
+				obj['@self']?.created
+					? new Date(obj['@self'].created).toLocaleString()
+					: 'Not set',
 			])
 
 			// Updated
 			metadata.push([
 				'Updated',
-				obj['@self']?.updated ? new Date(obj['@self'].updated).toLocaleString() : 'Not set',
+				obj['@self']?.updated
+					? new Date(obj['@self'].updated).toLocaleString()
+					: 'Not set',
 			])
 
 			// Published
 			metadata.push([
 				'Published',
-				obj['@self']?.published ? new Date(obj['@self'].published).toLocaleString() : 'Not published',
+				obj['@self']?.published
+					? new Date(obj['@self'].published).toLocaleString()
+					: 'Not published',
 			])
 
 			// Depublished
 			metadata.push([
 				'Depublished',
-				obj['@self']?.depublished ? new Date(obj['@self'].depublished).toLocaleString() : 'Not depublished',
+				obj['@self']?.depublished
+					? new Date(obj['@self'].depublished).toLocaleString()
+					: 'Not depublished',
 			])
 
 			return metadata
 		},
+
 		// Files tab computed properties
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		paginatedFiles() {
 			const filesData = objectStore.getRelatedData('publication', 'files')
 			const files = filesData?.results || []
@@ -1217,36 +2361,71 @@ export default {
 			}
 			return files
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		filesTotalPages() {
 			const filesPagination = objectStore.getPagination('publication_files')
 			return filesPagination.pages
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		filesTotalItems() {
 			const filesPagination = objectStore.getPagination('publication_files')
 			return filesPagination.total
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		filesCurrentPageSize() {
 			const filesPagination = objectStore.getPagination('publication_files')
 			return filesPagination.limit
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		allFilesSelected() {
-			return this.paginatedFiles.length > 0 && this.paginatedFiles.every(file => this.selectedAttachments.includes(file.id))
+			return (
+				this.paginatedFiles.length > 0
+				&& this.paginatedFiles.every((file) =>
+					this.selectedAttachments.includes(file.id),
+				)
+			)
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		someFilesSelected() {
 			return this.selectedAttachments.length > 0 && !this.allFilesSelected
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		catalogOptions() {
-			return objectStore.getCollection('catalog').results.map(catalog => ({
+			return objectStore.getCollection('catalog').results.map((catalog) => ({
 				id: catalog.id,
 				label: catalog.title,
 			}))
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		registerOptions() {
 			if (!this.selectedCatalog) {
 				return []
 			}
 
-			const fullCatalog = objectStore.getCollection('catalog').results.find(catalog => catalog.id === this.selectedCatalog.id)
+			const fullCatalog = objectStore
+				.getCollection('catalog')
+				.results.find((catalog) => catalog.id === this.selectedCatalog.id)
 			if (!fullCatalog) {
 				return []
 			}
@@ -1254,93 +2433,149 @@ export default {
 			const selectedCatalogRegisterIds = fullCatalog.registers || []
 
 			return objectStore.availableRegisters
-				.filter(register => selectedCatalogRegisterIds.includes(register.id))
-				.map(register => ({
+				.filter((register) =>
+					selectedCatalogRegisterIds.includes(register.id),
+				)
+				.map((register) => ({
 					id: register.id,
 					label: register.title,
 				}))
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		schemaOptions() {
 			if (!this.selectedRegister || !this.selectedCatalog) {
 				return []
 			}
 
-			const register = objectStore.availableRegisters.find(register => register.id === this.selectedRegister.id)
-			const catalog = objectStore.getCollection('catalog').results.find(catalog => catalog.id === this.selectedCatalog.id)
+			const register = objectStore.availableRegisters.find(
+				(register) => register.id === this.selectedRegister.id,
+			)
+			const catalog = objectStore
+				.getCollection('catalog')
+				.results.find((catalog) => catalog.id === this.selectedCatalog.id)
 
 			if (!register || !catalog) {
 				return []
 			}
 
-			const registerSchemaIds = register.schemas?.map(schema => schema.id) || []
+			const registerSchemaIds =
+				register.schemas?.map((schema) => schema.id) || []
 			const catalogSchemaIds = catalog.schemas || []
 
 			// only get schema ids where the id is in both registerSchemaIds and catalogSchemaIds
-			const validSchemaIds = registerSchemaIds.filter(id => catalogSchemaIds.includes(id))
+			const validSchemaIds = registerSchemaIds.filter((id) =>
+				catalogSchemaIds.includes(id),
+			)
 
 			return objectStore.availableSchemas
-				.filter(schema => validSchemaIds.includes(schema.id))
-				.map(schema => ({
+				.filter((schema) => validSchemaIds.includes(schema.id))
+				.map((schema) => ({
 					id: schema.id,
 					label: schema.title,
 				}))
 		},
+
 		hasSelectedSchema() {
 			return this.selectedSchema !== null && this.showProperties
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		allSelectionsComplete() {
-			return this.selectedCatalog && this.selectedRegister && this.selectedSchema
+			return (
+				this.selectedCatalog && this.selectedRegister && this.selectedSchema
+			)
 		},
 
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		shouldShowPublishedIcon() {
 			return this.currentObject && this.currentObject['@self']
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		themeOptions() {
 			const themes = objectStore.getCollection('theme').results || []
-			return themes.map(theme => ({
+			return themes.map((theme) => ({
 				id: theme.id,
 				label: theme.title || `#${theme.id}`,
 			}))
 		},
+
 		// Replace the existing themeFormData with this new version
 		themeFormData: {
+			/**
+			 * @spec openspec/specs/fe-object-modals/spec.md
+			 */
 			get() {
 				if (!this.formData.themes || !Array.isArray(this.formData.themes)) {
 					return []
 				}
 
 				const themes = objectStore.getCollection('theme').results || []
-				return this.formData.themes.map(themeId => {
-					const theme = themes.find(t => t.id === themeId)
-					return theme ? { id: theme.id, label: theme.title || `#${theme.id}` } : { id: themeId, label: themeId }
+				return this.formData.themes.map((themeId) => {
+					const theme = themes.find((t) => t.id === themeId)
+					return theme
+						? { id: theme.id, label: theme.title || `#${theme.id}` }
+						: { id: themeId, label: themeId }
 				})
 			},
+
+			/**
+			 * @param selectedThemes
+			 * @spec openspec/specs/fe-object-modals/spec.md
+			 */
 			set(selectedThemes) {
 				// Extract just the IDs from the selected theme objects
-				const themeIds = selectedThemes.map(theme => typeof theme === 'object' ? theme.id : theme)
-				this.$set(this.formData, 'themes', themeIds)
+				const themeIds = selectedThemes.map((theme) =>
+					typeof theme === 'object' ? theme.id : theme,
+				)
+				this.formData.themes = themeIds
 			},
 		},
 	},
+
 	watch: {
 		currentObject: {
+			/**
+			 * @param newValue
+			 * @spec openspec/specs/fe-object-modals/spec.md
+			 */
 			handler(newValue) {
 				if (newValue) {
 					this.initializeData()
 				}
 			},
+
 			deep: true,
 		},
+
 		jsonData: {
+			/**
+			 * @param newValue
+			 * @spec openspec/specs/fe-object-modals/spec.md
+			 */
 			handler(newValue) {
 				if (this.isValidJson(newValue)) {
 					this.updateFormFromJson()
 				}
 			},
 		},
+
 		formData: {
 			deep: true,
 			immediate: true,
+			/**
+			 * @param obj
+			 * @spec openspec/specs/fe-object-modals/spec.md
+			 */
 			handler(obj) {
 				// Create a clean copy of the form data
 				const draft = JSON.stringify(obj, null, 2)
@@ -1350,7 +2585,12 @@ export default {
 				}
 			},
 		},
+
 		selectedCatalog: {
+			/**
+			 * @param newCatalog
+			 * @spec openspec/specs/fe-object-modals/spec.md
+			 */
 			handler(newCatalog) {
 				// Auto-select register if there's only one
 				if (newCatalog && this.registerOptions.length === 1) {
@@ -1362,7 +2602,12 @@ export default {
 				}
 			},
 		},
+
 		selectedRegister: {
+			/**
+			 * @param newRegister
+			 * @spec openspec/specs/fe-object-modals/spec.md
+			 */
 			handler(newRegister) {
 				// Auto-select schema if there's only one
 				if (newRegister && this.schemaOptions.length === 1) {
@@ -1373,7 +2618,12 @@ export default {
 				}
 			},
 		},
+
 		selectedSchema: {
+			/**
+			 * @param newSchema
+			 * @spec openspec/specs/fe-object-modals/spec.md
+			 */
 			handler(newSchema) {
 				if (!newSchema) {
 					this.showProperties = false
@@ -1383,7 +2633,34 @@ export default {
 				}
 			},
 		},
+
+		/**
+		 * The Toast UI markdown editor is no longer a Vue component, so its
+		 * lifetime has to be tied by hand to the row that is currently being
+		 * edited: exactly one property can be in edit mode at a time, so the
+		 * previous instance is always destroyed before a new one is built.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		selectedProperty: {
+			/**
+			 * @param {string|null} newKey The property now in edit mode, if any.
+			 * @return {void}
+			 * @spec openspec/specs/fe-object-modals/spec.md
+			 */
+			handler(newKey) {
+				this.destroyMarkdownEditors()
+
+				if (newKey && this.getPropertyInputComponent(newKey) === 'Editor') {
+					this.$nextTick(() => this.createMarkdownEditor(newKey))
+				}
+			},
+		},
 	},
+
+	/**
+	 * @spec openspec/specs/fe-object-modals/spec.md
+	 */
 	mounted() {
 		this.initializeData()
 		// Fetch themes for the theme options dropdown
@@ -1391,7 +2668,18 @@ export default {
 		// Fetch tags for the label options dropdown
 		this.getAllTags()
 	},
+
+	/**
+	 * @spec openspec/specs/fe-object-modals/spec.md
+	 */
+	beforeUnmount() {
+		this.destroyMarkdownEditors()
+	},
+
 	methods: {
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getModalTitle() {
 			// For new objects, show "Create Publication"
 			if (this.isNewObject) {
@@ -1400,7 +2688,8 @@ export default {
 
 			if (!this.currentObject) return 'View Object'
 
-			const name = this.currentObject['@self']?.name
+			const name =
+				this.currentObject['@self']?.name
 				|| this.currentObject.name
 				|| this.currentObject.title
 				|| this.currentObject.id
@@ -1410,14 +2699,22 @@ export default {
 			let schemaName = 'Publication'
 
 			// Check if schema is an object with title/name properties
-			if (this.currentObject.schema && typeof this.currentObject.schema === 'object') {
-				schemaName = this.currentObject.schema.title
+			if (
+				this.currentObject.schema
+				&& typeof this.currentObject.schema === 'object'
+			) {
+				schemaName =
+					this.currentObject.schema.title
 					|| this.currentObject.schema.name
 					|| this.currentObject.schema.id
 					|| 'Publication'
-			} else if (this.currentObject['@self']?.schema && typeof this.currentObject['@self'].schema === 'object') {
+			} else if (
+				this.currentObject['@self']?.schema
+				&& typeof this.currentObject['@self'].schema === 'object'
+			) {
 				// Check if @self.schema is an object with title/name properties
-				schemaName = this.currentObject['@self'].schema.title
+				schemaName =
+					this.currentObject['@self'].schema.title
 					|| this.currentObject['@self'].schema.name
 					|| this.currentObject['@self'].schema.id
 					|| 'Publication'
@@ -1429,9 +2726,12 @@ export default {
 			return `${name} (${schemaName})`
 		},
 
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		closeModal() {
 			// Clear state first
-			this.activeTab = 0
+			this.activeTab = 'properties'
 			this.success = null
 			this.error = null
 			this.isCopied = false
@@ -1457,14 +2757,27 @@ export default {
 			// Close modal
 			navigationStore.setModal(null)
 		},
+
+		/**
+		 * @param isOpen
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		handleDialogClose(isOpen) {
 			if (!isOpen) {
 				this.closeModal()
 			}
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		proceedToProperties() {
 			this.showProperties = true
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		initializeData() {
 			if (!this.currentObject) {
 				// For new objects, initialize with empty form data and auto-select if possible
@@ -1531,13 +2844,17 @@ export default {
 			// Ensure themes are properly initialized as an array of IDs
 			if (this.formData.themes && Array.isArray(this.formData.themes)) {
 				// Convert any theme objects back to IDs if needed
-				this.formData.themes = this.formData.themes.map(theme =>
+				this.formData.themes = this.formData.themes.map((theme) =>
 					typeof theme === 'object' ? theme.id : theme,
 				)
 			}
 
 			this.jsonData = JSON.stringify(filtered, null, 2)
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async saveObject() {
 			this.isSaving = true
 			this.error = null
@@ -1546,8 +2863,14 @@ export default {
 				const isCreating = this.isNewObject
 
 				// For new objects, validate we have the required selections
-				if (isCreating && (!this.selectedSchema || !this.selectedRegister || !this.selectedCatalog)) {
-					this.error = 'Please select catalog, register, and schema before saving'
+				if (
+					isCreating
+					&& (!this.selectedSchema
+						|| !this.selectedRegister
+						|| !this.selectedCatalog)
+				) {
+					this.error =
+						'Please select catalog, register, and schema before saving'
 					return
 				}
 
@@ -1566,8 +2889,11 @@ export default {
 					// For existing objects, merge current object with all schema properties
 					objectData = this.buildCompleteObjectData()
 					// Get register and schema info from the current object
-					const { registerId, schemaId } = this.getRegisterSchemaIds(this.currentObject)
-					const objectId = this.currentObject['@self']?.id || this.currentObject.id
+					const { registerId, schemaId } = this.getRegisterSchemaIds(
+						this.currentObject,
+					)
+					const objectId =
+						this.currentObject['@self']?.id || this.currentObject.id
 					endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${objectId}`
 					method = 'PUT'
 				}
@@ -1582,13 +2908,20 @@ export default {
 
 				if (!response.ok) {
 					const errorText = await response.text()
-					throw new Error(`Failed to ${isCreating ? 'create' : 'update'} publication: ${response.status} ${response.statusText} - ${errorText}`)
+					throw new Error(
+						`Failed to ${isCreating ? 'create' : 'update'} publication: ${response.status} ${response.statusText} - ${errorText}`,
+					)
 				}
 
 				const result = await response.json()
-				const schema = objectStore.availableSchemas.find(schema => schema.id === Number(result['@self'].schema))
+				const schema = objectStore.availableSchemas.find(
+					(schema) => schema.id === Number(result['@self'].schema),
+				)
 				// Set the newly created/updated object as active in the object store
-				objectStore.setActiveObject('publication', { ...result, '@self': { ...result['@self'], schema } })
+				objectStore.setActiveObject('publication', {
+					...result,
+					'@self': { ...result['@self'], schema },
+				})
 
 				// Clear form data since we now have the saved object
 				this.formData = {}
@@ -1609,7 +2942,6 @@ export default {
 				setTimeout(() => {
 					this.success = null
 				}, 3000)
-
 			} catch (e) {
 				console.error('Save error:', e)
 				this.error = e.message || 'Failed to save object'
@@ -1618,6 +2950,10 @@ export default {
 				this.isSaving = false
 			}
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		updateFormFromJson() {
 			try {
 				const parsed = JSON.parse(this.jsonData)
@@ -1626,6 +2962,11 @@ export default {
 				this.error = 'Invalid JSON format'
 			}
 		},
+
+		/**
+		 * @param str
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		isValidJson(str) {
 			if (!str || !str.trim()) {
 				return false
@@ -1637,6 +2978,10 @@ export default {
 				return false
 			}
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		formatJSON() {
 			try {
 				if (this.jsonData) {
@@ -1647,6 +2992,11 @@ export default {
 				// Keep invalid JSON as-is
 			}
 		},
+
+		/**
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		isValidDate(value) {
 			if (!value || typeof value !== 'string') return false
 
@@ -1660,23 +3010,43 @@ export default {
 				/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, // ISO datetime
 			]
 
-			const looksLikeDate = datePatterns.some(pattern => pattern.test(value))
+			const looksLikeDate = datePatterns.some((pattern) => pattern.test(value))
 			if (!looksLikeDate) return false
 
 			// Try to parse it
 			const date = new Date(value)
 			return date instanceof Date && !isNaN(date) && date.getFullYear() > 1900
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		isDateTimeProperty(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			return schemaProperty && schemaProperty.type === 'string' && ['date', 'time', 'date-time'].includes(schemaProperty.format)
+			return (
+				schemaProperty
+				&& schemaProperty.type === 'string'
+				&& ['date', 'time', 'date-time'].includes(schemaProperty.format)
+			)
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getDateTimePropertyFormat(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
 			return schemaProperty?.format || 'unknown'
 		},
+
+		/**
+		 * @param key
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		formatDateTimeValue(key, value) {
 			if (!value) return ''
 
@@ -1686,42 +3056,66 @@ export default {
 
 			try {
 				switch (format) {
-				case 'date':
-					// For date-only, show as date without time
-					if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-						return new Date(value + 'T12:00:00').toLocaleDateString()
-					}
-					return new Date(value).toLocaleDateString()
-				case 'time':
-					// For time-only, show just the time part
-					if (typeof value === 'string' && value.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
+					case 'date':
+						// For date-only, show as date without time
+						if (
+							typeof value === 'string'
+							&& value.match(/^\d{4}-\d{2}-\d{2}$/)
+						) {
+							return new Date(value + 'T12:00:00').toLocaleDateString()
+						}
+						return new Date(value).toLocaleDateString()
+					case 'time':
+						// For time-only, show just the time part
+						if (
+							typeof value === 'string'
+							&& value.match(/^\d{2}:\d{2}(:\d{2})?$/)
+						) {
+							return value
+						}
+						return new Date(value).toLocaleTimeString()
+					case 'date-time':
+						// For date-time, show full date and time
+						return new Date(value).toLocaleString()
+					default:
 						return value
-					}
-					return new Date(value).toLocaleTimeString()
-				case 'date-time':
-					// For date-time, show full date and time
-					return new Date(value).toLocaleString()
-				default:
-					return value
 				}
 			} catch (e) {
 				return value
 			}
 		},
+
+		/**
+		 * @param val
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		formatValue(val) {
 			return JSON.stringify(val, null, 2)
 		},
+
 		getTheme,
+		/**
+		 * @param text
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async copyToClipboard(text) {
 			try {
 				await navigator.clipboard.writeText(text)
 				this.isCopied = true
-				setTimeout(() => { this.isCopied = false }, 2000)
+				setTimeout(() => {
+					this.isCopied = false
+				}, 2000)
 			} catch (err) {
 				// console.error('Failed to copy text:', err)
 			}
 		},
+
 		// Property validation and editing methods
+		/**
+		 * @param key
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getPropertyValidationClass(key, value) {
 			// Skip @self as it's metadata
 			if (key === '@self') {
@@ -1731,7 +3125,8 @@ export default {
 			// Get schema properties
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			const existsInObject = this.currentObject && Object.prototype.hasOwnProperty.call(this.currentObject, key)
+			const existsInObject =
+				this.currentObject && Object.hasOwn(this.currentObject, key)
 
 			if (!schemaProperty) {
 				// Property exists in object but not in schema - warning (yellow)
@@ -1755,6 +3150,12 @@ export default {
 				return 'property-invalid'
 			}
 		},
+
+		/**
+		 * @param key
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getPropertyErrorMessage(key, value) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
@@ -1765,7 +3166,10 @@ export default {
 
 			// Check if required but empty
 			const isRequired = schemaProperty.required
-			if ((value === null || value === undefined || value === '') && isRequired) {
+			if (
+				(value === null || value === undefined || value === '')
+				&& isRequired
+			) {
 				return `Required property '${key}' is missing or empty`
 			}
 
@@ -1789,12 +3193,20 @@ export default {
 
 			return `Property '${key}' has an invalid value`
 		},
+
 		getPropertyWarningMessage(key, value) {
 			return `Property '${key}' exists in the object but is not defined in the current schema. This might happen when property names are changed in the schema.`
 		},
+
 		getPropertyNewMessage(key) {
 			return `Property '${key}' is defined in the schema but doesn't have a value yet. Click to add a value.`
 		},
+
+		/**
+		 * @param key
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		isPropertyEditable(key, value) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
@@ -1808,12 +3220,23 @@ export default {
 			}
 
 			// Check if property is immutable and already has a value
-			if (schemaProperty.immutable && (value !== null && value !== undefined && value !== '')) {
+			if (
+				schemaProperty.immutable
+				&& value !== null
+				&& value !== undefined
+				&& value !== ''
+			) {
 				return false // Immutable properties with values cannot be edited
 			}
 
 			return true
 		},
+
+		/**
+		 * @param key
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getEditabilityWarning(key, value) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
@@ -1822,15 +3245,30 @@ export default {
 				return `This property is constant and must always be '${schemaProperty.const}'. Const properties cannot be modified to maintain data integrity.`
 			}
 
-			if (schemaProperty?.immutable && (value !== null && value !== undefined && value !== '')) {
+			if (
+				schemaProperty?.immutable
+				&& value !== null
+				&& value !== undefined
+				&& value !== ''
+			) {
 				return `This property is immutable and cannot be changed once it has a value. Current value: '${value}'. Immutable properties preserve data consistency.`
 			}
 
 			return null
 		},
+
+		/**
+		 * @param key
+		 * @param event
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		handleRowClick(key, event) {
 			// Don't select if clicking on an input or button
-			if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON' || event.target.closest('.value-input-container')) {
+			if (
+				event.target.tagName === 'INPUT'
+				|| event.target.tagName === 'BUTTON'
+				|| event.target.closest('.value-input-container')
+			) {
 				return
 			}
 
@@ -1840,20 +3278,32 @@ export default {
 			}
 
 			// Check if property is editable
-			const value = this.formData[key] !== undefined ? this.formData[key] : this.objectProperties.find(([k]) => k === key)?.[1]
+			const value =
+				this.formData[key] !== undefined
+					? this.formData[key]
+					: this.objectProperties.find(([k]) => k === key)?.[1]
 			if (!this.isPropertyEditable(key, value)) {
 				return
 			}
 
 			this.selectProperty(key)
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		selectProperty(key) {
 			this.selectedProperty = key
 
 			// Focus the input field after Vue updates the DOM
 			this.$nextTick(() => {
-				if (this.$refs.propertyValueInput && this.$refs.propertyValueInput[0]) {
-					const input = this.$refs.propertyValueInput[0].$el.querySelector('input')
+				if (
+					this.$refs.propertyValueInput
+					&& this.$refs.propertyValueInput[0]
+				) {
+					const input =
+						this.$refs.propertyValueInput[0].$el.querySelector('input')
 					if (input) {
 						input.focus()
 						input.select()
@@ -1861,6 +3311,12 @@ export default {
 				}
 			})
 		},
+
+		/**
+		 * @param key
+		 * @param newValue
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		updatePropertyValue(key, newValue) {
 			// Ensure formData is an object before updating
 			if (!this.formData || Array.isArray(this.formData)) {
@@ -1870,23 +3326,36 @@ export default {
 			// Special handling for themes: extract IDs from selected objects
 			if (key === 'themes' && Array.isArray(newValue)) {
 				// Extract just the IDs from the selected theme objects
-				const themeIds = newValue.map(theme => typeof theme === 'object' ? theme.id : theme)
-				this.$set(this.formData, key, themeIds)
+				const themeIds = newValue.map((theme) =>
+					typeof theme === 'object' ? theme.id : theme,
+				)
+				this.formData[key] = themeIds
 				return
 			}
 
 			// Convert date/time values to proper format for storage
 			const processedValue = this.processDateTimeValue(key, newValue)
 
-			// Update the form data using Vue 2 reactivity
-			this.$set(this.formData, key, processedValue)
+			// Update the form data
+			this.formData[key] = processedValue
 		},
+
 		// Test method to verify Vue methods are working
+		/**
+		 * @param message
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		testVueMethod(message) {
 			if (process.env.NODE_ENV === 'development') {
 				alert(`Vue method works: ${message}`)
 			}
 		},
+
+		/**
+		 * @param key
+		 * @param newValue
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		handleDateTimeUpdate(key, newValue) {
 			// Ensure formData is an object before updating
 			if (!this.formData || Array.isArray(this.formData)) {
@@ -1899,7 +3368,7 @@ export default {
 			const format = schemaProperty?.format
 
 			// Helper to format date in local TZ as YYYY-MM-DD
-			const toLocalDateString = date => {
+			const toLocalDateString = (date) => {
 				if (!(date instanceof Date) || isNaN(date.getTime())) return ''
 				const yyyy = date.getFullYear()
 				const mm = String(date.getMonth() + 1).padStart(2, '0')
@@ -1913,19 +3382,21 @@ export default {
 			if (newValue instanceof Date && !isNaN(newValue.getTime())) {
 				try {
 					switch (format) {
-					case 'date':
-						processedValue = toLocalDateString(newValue)
-						break
-					case 'time':
-						processedValue = newValue.toTimeString().split(' ')[0].substring(0, 5)
-						break
-					case 'date-time':
-						processedValue = newValue.toISOString()
-						break
-					default:
-						processedValue = newValue.toISOString()
+						case 'date':
+							processedValue = toLocalDateString(newValue)
+							break
+						case 'time':
+							processedValue = newValue
+								.toTimeString()
+								.split(' ')[0]
+								.substring(0, 5)
+							break
+						case 'date-time':
+							processedValue = newValue.toISOString()
+							break
+						default:
+							processedValue = newValue.toISOString()
 					}
-
 				} catch (e) {
 					processedValue = ''
 				}
@@ -1933,10 +3404,15 @@ export default {
 				processedValue = ''
 			}
 
-			// Update the form data using Vue 2 reactivity
-			this.$set(this.formData, key, processedValue)
-
+			// Update the form data
+			this.formData[key] = processedValue
 		},
+
+		/**
+		 * @param key
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		processDateTimeValue(key, value) {
 			// Get schema information to determine if this is a date/time field
 			const schemaProperties = this.getSchemaProperties()
@@ -1952,7 +3428,7 @@ export default {
 			}
 
 			// Helper to format date in local TZ as YYYY-MM-DD
-			const toLocalDateString = date => {
+			const toLocalDateString = (date) => {
 				if (!(date instanceof Date) || isNaN(date.getTime())) return ''
 				const yyyy = date.getFullYear()
 				const mm = String(date.getMonth() + 1).padStart(2, '0')
@@ -1969,17 +3445,17 @@ export default {
 			if (value instanceof Date) {
 				try {
 					switch (format) {
-					case 'date':
-						// Return YYYY-MM-DD format **in local timezone**
-						return toLocalDateString(value)
-					case 'time':
-						// Return HH:MM format for consistency with HTML time input
-						return value.toTimeString().split(' ')[0].substring(0, 5)
-					case 'date-time':
-						// Return full ISO string
-						return value.toISOString()
-					default:
-						return value.toISOString()
+						case 'date':
+							// Return YYYY-MM-DD format **in local timezone**
+							return toLocalDateString(value)
+						case 'time':
+							// Return HH:MM format for consistency with HTML time input
+							return value.toTimeString().split(' ')[0].substring(0, 5)
+						case 'date-time':
+							// Return full ISO string
+							return value.toISOString()
+						default:
+							return value.toISOString()
 					}
 				} catch (e) {
 					return ''
@@ -1989,30 +3465,35 @@ export default {
 			// Handle string values (legacy or fallback)
 			try {
 				switch (format) {
-				case 'date':
-					// Expect YYYY-MM-DD string already in local TZ
-					return value
-				case 'time':
-					// HTML time input returns HH:MM, keep as HH:MM for consistency
-					if (value.length === 5 && value.match(/^\d{2}:\d{2}$/)) {
-						return value // Keep as HH:MM
+					case 'date':
+						// Expect YYYY-MM-DD string already in local TZ
+						return value
+					case 'time':
+						// HTML time input returns HH:MM, keep as HH:MM for consistency
+						if (value.length === 5 && value.match(/^\d{2}:\d{2}$/)) {
+							return value // Keep as HH:MM
+						}
+						return value
+					case 'date-time': {
+						// HTML datetime-local input returns YYYY-MM-DDTHH:MM
+						if (value.length === 16) {
+							// Add seconds and timezone
+							return `${value}:00.000Z`
+						}
+						return value
 					}
-					return value
-				case 'date-time': {
-					// HTML datetime-local input returns YYYY-MM-DDTHH:MM
-					if (value.length === 16) {
-						// Add seconds and timezone
-						return `${value}:00.000Z`
-					}
-					return value
-				}
-				default:
-					return value
+					default:
+						return value
 				}
 			} catch (e) {
 				return value
 			}
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getPropertyInputType(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
@@ -2023,23 +3504,28 @@ export default {
 
 			// Handle different types and formats
 			switch (type) {
-			case 'string':
-				if (format === 'date') return 'date'
-				if (format === 'time') return 'time'
-				if (format === 'date-time') return 'datetime-local'
-				if (format === 'email') return 'email'
-				if (format === 'url' || format === 'uri') return 'url'
-				if (format === 'password') return 'password'
-				return 'text'
-			case 'number':
-			case 'integer':
-				return 'number'
-			case 'boolean':
-				return 'checkbox'
-			default:
-				return 'text'
+				case 'string':
+					if (format === 'date') return 'date'
+					if (format === 'time') return 'time'
+					if (format === 'date-time') return 'datetime-local'
+					if (format === 'email') return 'email'
+					if (format === 'url' || format === 'uri') return 'url'
+					if (format === 'password') return 'password'
+					return 'text'
+				case 'number':
+				case 'integer':
+					return 'number'
+				case 'boolean':
+					return 'checkbox'
+				default:
+					return 'text'
 			}
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getPropertyInputComponent(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
@@ -2050,29 +3536,38 @@ export default {
 
 			// Handle different types and formats
 			switch (type) {
-			case 'boolean':
-				return 'NcCheckboxRadioSwitch'
-			case 'string':
-				if (format === 'date' || format === 'date-time' || format === 'time') {
-					return 'NcDateTimePicker'
-				}
-				if (format === 'text') {
-					return 'NcTextArea'
-				}
-				if (format === 'markdown') {
-					return 'Editor'
-				}
-				return 'NcTextField'
-			case 'number':
-			case 'integer':
-				return 'NcTextField'
-			case 'array':
-				return 'NcTextFieldArray'
+				case 'boolean':
+					return 'NcCheckboxRadioSwitch'
+				case 'string':
+					if (
+						format === 'date'
+						|| format === 'date-time'
+						|| format === 'time'
+					) {
+						return 'NcDateTimePicker'
+					}
+					if (format === 'text') {
+						return 'NcTextArea'
+					}
+					if (format === 'markdown') {
+						return 'Editor'
+					}
+					return 'NcTextField'
+				case 'number':
+				case 'integer':
+					return 'NcTextField'
+				case 'array':
+					return 'NcTextFieldArray'
 
-			default:
-				return 'NcTextField'
+				default:
+					return 'NcTextField'
 			}
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getPropertyDisplayName(key) {
 			// Ensure we always have a valid key
 			if (!key || typeof key !== 'string') {
@@ -2085,12 +3580,22 @@ export default {
 
 			// Return the title if it exists and is not empty or just "new" (placeholder)
 			const title = schemaProperty?.title
-			if (title && typeof title === 'string' && title.trim() !== '' && title.trim().toLowerCase() !== 'new') {
+			if (
+				title
+				&& typeof title === 'string'
+				&& title.trim() !== ''
+				&& title.trim().toLowerCase() !== 'new'
+			) {
 				return title
 			}
 
 			return key
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getPropertyTooltip(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
@@ -2107,16 +3612,31 @@ export default {
 			// Fallback to property key info
 			return `Property: ${key}`
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getPropertyMinimum(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
 			return schemaProperty?.minimum
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getPropertyMaximum(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
 			return schemaProperty?.maximum
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getPropertyStep(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
@@ -2128,6 +3648,11 @@ export default {
 			}
 			return undefined
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getMarkdownEditorOptions(key) {
 			return {
 				placeholder: this.getPropertyDisplayName(key),
@@ -2141,12 +3666,14 @@ export default {
 					['table', 'image', 'link'],
 					['code', 'codeblock'],
 				],
+
 				viewer: true, // Enable WYSIWYG mode
 				initialEditType: 'wysiwyg', // Start in WYSIWYG mode
 				// Hook into the editor events to remove borders after initialization
 				hooks: {
 					addImageBlobHook: () => false, // Disable image uploads
 				},
+
 				events: {
 					load: (editor) => {
 						// Remove borders after the editor is fully loaded
@@ -2154,6 +3681,7 @@ export default {
 							this.removeBordersFromEditor(editor)
 						})
 					},
+
 					changeMode: (editor) => {
 						// Remove borders when mode changes
 						this.$nextTick(() => {
@@ -2163,6 +3691,82 @@ export default {
 				},
 			}
 		},
+
+		/**
+		 * Initial markdown handed to a freshly created editor. Mirrors what the
+		 * template used to bind to the wrapper's `initial-value` prop: the edited
+		 * value when the property has been touched, the stored value otherwise.
+		 *
+		 * @param {string} key Property key being edited
+		 * @return {string} Markdown source for the editor
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		getMarkdownInitialValue(key) {
+			if (this.formData[key] !== undefined) {
+				return String(this.formData[key])
+			}
+
+			const entry = this.objectProperties.find(([k]) => k === key)
+			return String((entry ? entry[1] : '') || '')
+		},
+
+		/**
+		 * Build the Toast UI editor against the `<div>` rendered for the property
+		 * currently in edit mode. Replaces the removed `@toast-ui/vue-editor`
+		 * wrapper; `blur` still writes the markdown back into formData.
+		 *
+		 * @param {string} key Property key being edited
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		createMarkdownEditor(key) {
+			const refs = this.$refs.markdownEditorContainer
+			const el = Array.isArray(refs) ? refs[0] : refs
+
+			if (!el || this.markdownEditors[key]) {
+				return
+			}
+
+			const { events = {}, ...options } = this.getMarkdownEditorOptions(key)
+
+			const editor = new Editor({
+				...options,
+				el,
+				initialValue: this.getMarkdownInitialValue(key),
+				initialEditType: 'wysiwyg',
+				height: '400px',
+				events: {
+					...events,
+					blur: () =>
+						this.updateMarkdownValue(key, this.markdownEditors[key]),
+				},
+			})
+
+			// markRaw keeps the editor instance out of the reactivity proxy —
+			// a proxied Toast UI instance breaks its internal identity checks.
+			this.markdownEditors[key] = markRaw(editor)
+		},
+
+		/**
+		 * Tear down every live markdown editor. Called when the edited property
+		 * changes and from beforeUnmount(), so no editor outlives its `<div>`.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		destroyMarkdownEditors() {
+			Object.keys(this.markdownEditors).forEach((key) => {
+				try {
+					this.markdownEditors[key]?.destroy()
+				} catch (error) {
+					console.warn('Could not destroy markdown editor:', error)
+				}
+				delete this.markdownEditors[key]
+			})
+		},
+
+		/**
+		 * @param editor
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		removeBordersFromEditor(editor) {
 			try {
 				// Get the editor container
@@ -2170,7 +3774,7 @@ export default {
 				if (editorEl) {
 					// Remove borders from all nested elements
 					const allElements = editorEl.querySelectorAll('*')
-					allElements.forEach(el => {
+					allElements.forEach((el) => {
 						el.style.border = 'none'
 						el.style.borderWidth = '0'
 						el.style.borderStyle = 'none'
@@ -2191,20 +3795,33 @@ export default {
 				console.warn('Could not remove borders from editor:', error)
 			}
 		},
+
+		/**
+		 * @param key
+		 * @param editorInstance
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		updateMarkdownValue(key, editorInstance) {
 			// Get the current content from the editor as MARKDOWN
 			let content = ''
 
 			try {
 				// Always prefer markdown output over HTML
-				if (editorInstance && typeof editorInstance.getMarkdown === 'function') {
+				if (
+					editorInstance
+					&& typeof editorInstance.getMarkdown === 'function'
+				) {
 					content = editorInstance.getMarkdown()
-				} else if (editorInstance && typeof editorInstance.getHTML === 'function') {
+				} else if (
+					editorInstance
+					&& typeof editorInstance.getHTML === 'function'
+				) {
 					// Fallback to HTML if markdown not available
 					content = editorInstance.getHTML()
 				} else {
 					// Fallback: if it's a string, use it directly
-					content = typeof editorInstance === 'string' ? editorInstance : ''
+					content =
+						typeof editorInstance === 'string' ? editorInstance : ''
 				}
 			} catch (error) {
 				console.warn('Error getting content from markdown editor:', error)
@@ -2214,14 +3831,21 @@ export default {
 			// Update the form data
 			this.updatePropertyValue(key, content)
 		},
+
+		/**
+		 * @param key
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getDisplayValue(key, value) {
 			if (key === 'themes') {
 				const themes = objectStore.getCollection('theme').results || []
 				const idToLabel = (id) => {
-					const themeObj = themes.find(t => t.id === id)
-					return themeObj ? (themeObj.title || `#${themeObj.id}`) : id
+					const themeObj = themes.find((t) => t.id === id)
+					return themeObj ? themeObj.title || `#${themeObj.id}` : id
 				}
-				const currentVal = this.formData[key] !== undefined ? this.formData[key] : value
+				const currentVal =
+					this.formData[key] !== undefined ? this.formData[key] : value
 				if (Array.isArray(currentVal)) {
 					return currentVal.map(idToLabel).join(', ')
 				}
@@ -2245,7 +3869,11 @@ export default {
 				}
 
 				// Handle date formatting for edited values
-				if (this.isValidDate(editedValue) && typeof editedValue === 'string' && editedValue.includes('T')) {
+				if (
+					this.isValidDate(editedValue)
+					&& typeof editedValue === 'string'
+					&& editedValue.includes('T')
+				) {
 					return new Date(editedValue).toLocaleString()
 				}
 				return editedValue
@@ -2265,7 +3893,11 @@ export default {
 			}
 
 			// Handle date formatting for original values - only if it's actually a date string
-			if (this.isValidDate(value) && typeof value === 'string' && (value.includes('T') || value.includes('-'))) {
+			if (
+				this.isValidDate(value)
+				&& typeof value === 'string'
+				&& (value.includes('T') || value.includes('-'))
+			) {
 				// Check if it looks like a date (has date separators)
 				const datePattern = /^\d{4}-\d{2}-\d{2}|^\d{1,2}-\d{1,2}-\d{4}/
 				if (datePattern.test(value)) {
@@ -2284,9 +3916,16 @@ export default {
 			// Return the value as-is for everything else
 			return value
 		},
+
+		/**
+		 * @param key
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getDateTimeValue(key, value) {
 			// Get the current value (either from formData or original value)
-			const currentValue = this.formData[key] !== undefined ? this.formData[key] : value
+			const currentValue =
+				this.formData[key] !== undefined ? this.formData[key] : value
 
 			if (!currentValue) {
 				return ''
@@ -2303,27 +3942,34 @@ export default {
 				}
 
 				switch (inputType) {
-				case 'date':
-					// Format as YYYY-MM-DD
-					return date.toISOString().split('T')[0]
-				case 'time':
-					// Format as HH:MM for HTML time input
-					return date.toTimeString().split(' ')[0].substring(0, 5)
-				case 'datetime-local': {
-					// Format as YYYY-MM-DDTHH:MM
-					const isoString = date.toISOString()
-					return isoString.substring(0, 16) // Remove seconds and timezone
-				}
-				default:
-					return currentValue
+					case 'date':
+						// Format as YYYY-MM-DD
+						return date.toISOString().split('T')[0]
+					case 'time':
+						// Format as HH:MM for HTML time input
+						return date.toTimeString().split(' ')[0].substring(0, 5)
+					case 'datetime-local': {
+						// Format as YYYY-MM-DDTHH:MM
+						const isoString = date.toISOString()
+						return isoString.substring(0, 16) // Remove seconds and timezone
+					}
+					default:
+						return currentValue
 				}
 			} catch (e) {
 				return currentValue
 			}
 		},
+
+		/**
+		 * @param key
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getDateTimePickerValue(key, value) {
 			// Get the current value (either from formData or original value)
-			const currentValue = this.formData[key] !== undefined ? this.formData[key] : value
+			const currentValue =
+				this.formData[key] !== undefined ? this.formData[key] : value
 
 			if (!currentValue) {
 				return null
@@ -2341,7 +3987,10 @@ export default {
 				if (format === 'date') {
 					// For date-only fields, ensure we create the date correctly
 					// to avoid timezone issues
-					if (typeof currentValue === 'string' && currentValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+					if (
+						typeof currentValue === 'string'
+						&& currentValue.match(/^\d{4}-\d{2}-\d{2}$/)
+					) {
 						// Create date at noon to avoid timezone issues
 						date = new Date(currentValue + 'T12:00:00')
 					} else {
@@ -2349,7 +3998,10 @@ export default {
 					}
 				} else if (format === 'time') {
 					// For time-only fields, create a date with today's date
-					if (typeof currentValue === 'string' && currentValue.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
+					if (
+						typeof currentValue === 'string'
+						&& currentValue.match(/^\d{2}:\d{2}(:\d{2})?$/)
+					) {
 						const today = new Date().toISOString().split('T')[0]
 						date = new Date(today + 'T' + currentValue)
 					} else {
@@ -2369,6 +4021,11 @@ export default {
 				return null
 			}
 		},
+
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getDateTimePickerType(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
@@ -2381,28 +4038,32 @@ export default {
 
 			// Map schema formats to NcDateTimePicker types
 			switch (schemaProperty.format) {
-			case 'date':
-				pickerType = 'date'
-				break
-			case 'date-time':
-				pickerType = 'datetime'
-				break
-			case 'time':
-				pickerType = 'time'
-				break
-			default:
-				// For string type with no specific format, default to datetime
-				if (schemaProperty.type === 'string') {
+				case 'date':
+					pickerType = 'date'
+					break
+				case 'date-time':
 					pickerType = 'datetime'
-				} else {
-					pickerType = 'datetime'
-				}
-				break
+					break
+				case 'time':
+					pickerType = 'time'
+					break
+				default:
+					// For string type with no specific format, default to datetime
+					if (schemaProperty.type === 'string') {
+						pickerType = 'datetime'
+					} else {
+						pickerType = 'datetime'
+					}
+					break
 			}
 
 			return pickerType
 		},
+
 		// Publish/Depublish methods
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		openPublishModal() {
 			if (this.currentObject['@self']?.published) {
 				this.publishDate = new Date(this.currentObject['@self'].published)
@@ -2411,24 +4072,42 @@ export default {
 			}
 			this.showPublishModal = true
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		openDepublishModal() {
 			if (this.currentObject['@self']?.depublished) {
-				this.depublishDate = new Date(this.currentObject['@self'].depublished)
+				this.depublishDate = new Date(
+					this.currentObject['@self'].depublished,
+				)
 			} else {
 				this.depublishDate = null
 			}
 			this.showDepublishModal = true
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		closePublishModal() {
 			this.showPublishModal = false
 			this.publishDate = null
 			this.isPublishing = false
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		closeDepublishModal() {
 			this.showDepublishModal = false
 			this.depublishDate = null
 			this.isDepublishing = false
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async publishObject() {
 			this.isPublishing = true
 			try {
@@ -2436,8 +4115,11 @@ export default {
 					throw new Error('No object to publish')
 				}
 
-				const { registerId, schemaId } = this.getRegisterSchemaIds(this.currentObject)
-				const objectId = this.currentObject['@self']?.id || this.currentObject.id
+				const { registerId, schemaId } = this.getRegisterSchemaIds(
+					this.currentObject,
+				)
+				const objectId =
+					this.currentObject['@self']?.id || this.currentObject.id
 
 				let endpoint
 				let body = {}
@@ -2449,7 +4131,10 @@ export default {
 						...this.currentObject,
 						'@self': {
 							...this.currentObject['@self'],
-							published: this.publishDate instanceof Date ? this.publishDate.toISOString() : this.publishDate,
+							published:
+								this.publishDate instanceof Date
+									? this.publishDate.toISOString()
+									: this.publishDate,
 						},
 					}
 				} else {
@@ -2461,15 +4146,17 @@ export default {
 					method: this.showPublishModal ? 'PUT' : 'POST',
 					headers: this.showPublishModal
 						? {
-							'Content-Type': 'application/json',
-						}
+								'Content-Type': 'application/json',
+							}
 						: undefined,
 					body: this.showPublishModal ? JSON.stringify(body) : undefined,
 				})
 
 				if (!response.ok) {
 					const errorText = await response.text()
-					throw new Error(`Failed to publish object: ${response.status} ${response.statusText} - ${errorText}`)
+					throw new Error(
+						`Failed to publish object: ${response.status} ${response.statusText} - ${errorText}`,
+					)
 				}
 
 				const result = await response.json()
@@ -2498,6 +4185,10 @@ export default {
 				this.isPublishing = false
 			}
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async depublishObject() {
 			this.isDepublishing = true
 			try {
@@ -2505,8 +4196,11 @@ export default {
 					throw new Error('No object to depublish')
 				}
 
-				const { registerId, schemaId } = this.getRegisterSchemaIds(this.currentObject)
-				const objectId = this.currentObject['@self']?.id || this.currentObject.id
+				const { registerId, schemaId } = this.getRegisterSchemaIds(
+					this.currentObject,
+				)
+				const objectId =
+					this.currentObject['@self']?.id || this.currentObject.id
 
 				let endpoint
 				let body = {}
@@ -2518,7 +4212,10 @@ export default {
 						...this.currentObject,
 						'@self': {
 							...this.currentObject['@self'],
-							depublished: this.depublishDate instanceof Date ? this.depublishDate.toISOString() : this.depublishDate,
+							depublished:
+								this.depublishDate instanceof Date
+									? this.depublishDate.toISOString()
+									: this.depublishDate,
 						},
 					}
 				} else {
@@ -2530,15 +4227,17 @@ export default {
 					method: this.showDepublishModal ? 'PUT' : 'POST',
 					headers: this.showDepublishModal
 						? {
-							'Content-Type': 'application/json',
-						}
+								'Content-Type': 'application/json',
+							}
 						: undefined,
 					body: this.showDepublishModal ? JSON.stringify(body) : undefined,
 				})
 
 				if (!response.ok) {
 					const errorText = await response.text()
-					throw new Error(`Failed to depublish object: ${response.status} ${response.statusText} - ${errorText}`)
+					throw new Error(
+						`Failed to depublish object: ${response.status} ${response.statusText} - ${errorText}`,
+					)
 				}
 
 				const result = await response.json()
@@ -2567,10 +4266,13 @@ export default {
 				this.isDepublishing = false
 			}
 		},
+
 		// Files tab methods
 		/**
 		 * Open a file in the Nextcloud Files app
+		 *
 		 * @param {object} file - The file object to open
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		openFile(file) {
 			const dirPath = file.path.substring(0, file.path.lastIndexOf('/'))
@@ -2578,10 +4280,13 @@ export default {
 			const filesAppUrl = `/index.php/apps/files/files/${file.id}?dir=${encodeURIComponent(cleanPath)}&openfile=true`
 			window.open(filesAppUrl, '_blank')
 		},
+
 		/**
 		 * Format file size for display
+		 *
 		 * @param {number} bytes - The file size in bytes
 		 * @return {string} The formatted file size
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatFileSize(bytes) {
 			const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
@@ -2591,29 +4296,49 @@ export default {
 			if (i === 0) return bytes + ' ' + sizes[i]
 			return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i]
 		},
+
+		/**
+		 * @param checked
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		toggleSelectAllFiles(checked) {
 			if (checked) {
 				// Add all current page files to selection
-				this.paginatedFiles.forEach(file => {
+				this.paginatedFiles.forEach((file) => {
 					if (!this.selectedAttachments.includes(file.id)) {
 						this.selectedAttachments.push(file.id)
 					}
 				})
 			} else {
 				// Remove all current page files from selection
-				const currentPageIds = this.paginatedFiles.map(file => file.id)
-				this.selectedAttachments = this.selectedAttachments.filter(id => !currentPageIds.includes(id))
+				const currentPageIds = this.paginatedFiles.map((file) => file.id)
+				this.selectedAttachments = this.selectedAttachments.filter(
+					(id) => !currentPageIds.includes(id),
+				)
 			}
 		},
+
+		/**
+		 * @param fileId
+		 * @param checked
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		toggleFileSelection(fileId, checked) {
 			if (checked) {
 				if (!this.selectedAttachments.includes(fileId)) {
 					this.selectedAttachments.push(fileId)
 				}
 			} else {
-				this.selectedAttachments = this.selectedAttachments.filter(id => id !== fileId)
+				this.selectedAttachments = this.selectedAttachments.filter(
+					(id) => id !== fileId,
+				)
 			}
 		},
+
+		/**
+		 * @param page
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async onFilesPageChanged(page) {
 			if (!this.currentObject) return
 
@@ -2625,11 +4350,22 @@ export default {
 				register: registerId,
 			}
 
-			await objectStore.fetchRelatedData('publication', this.currentObject.id, 'files', {
-				_page: page,
-				_limit: this.filesCurrentPageSize,
-			}, publicationData)
+			await objectStore.fetchRelatedData(
+				'publication',
+				this.currentObject.id,
+				'files',
+				{
+					_page: page,
+					_limit: this.filesCurrentPageSize,
+				},
+				publicationData,
+			)
 		},
+
+		/**
+		 * @param pageSize
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async onFilesPageSizeChanged(pageSize) {
 			if (!this.currentObject) return
 
@@ -2641,11 +4377,21 @@ export default {
 				register: registerId,
 			}
 
-			await objectStore.fetchRelatedData('publication', this.currentObject.id, 'files', {
-				_page: 1,
-				_limit: pageSize,
-			}, publicationData)
+			await objectStore.fetchRelatedData(
+				'publication',
+				this.currentObject.id,
+				'files',
+				{
+					_page: 1,
+					_limit: pageSize,
+				},
+				publicationData,
+			)
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async publishSelectedFiles() {
 			if (this.selectedAttachments.length === 0) return
 
@@ -2653,14 +4399,15 @@ export default {
 				this.publishLoading = [...this.selectedAttachments]
 
 				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter(file =>
+				const selectedFiles = this.paginatedFiles.filter((file) =>
 					this.selectedAttachments.includes(file.id),
 				)
 
 				// Publish each file individually
 				for (const file of selectedFiles) {
 					const publication = this.currentObject
-					const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
+					const { registerId, schemaId } =
+						this.getRegisterSchemaIds(publication)
 					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/publish`
 
 					const response = await fetch(endpoint, {
@@ -2668,29 +4415,41 @@ export default {
 					})
 
 					if (!response.ok) {
-						throw new Error(`Failed to publish file ${file.title || file.name}: ${response.statusText}`)
+						throw new Error(
+							`Failed to publish file ${file.title || file.name}: ${response.statusText}`,
+						)
 					}
 				}
 
 				// Refresh files list once after all operations with publication data
 				const publication = this.currentObject
-				const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
+				const { registerId, schemaId } =
+					this.getRegisterSchemaIds(publication)
 				const publicationData = {
 					source: 'openregister',
 					schema: schemaId,
 					register: registerId,
 				}
-				await objectStore.fetchRelatedData('publication', this.currentObject.id, 'files', {}, publicationData)
+				await objectStore.fetchRelatedData(
+					'publication',
+					this.currentObject.id,
+					'files',
+					{},
+					publicationData,
+				)
 
 				// Clear selection after successful operation
 				this.selectedAttachments = []
-
 			} catch (error) {
 				console.error('Error publishing files:', error)
 			} finally {
 				this.publishLoading = []
 			}
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async depublishSelectedFiles() {
 			if (this.selectedAttachments.length === 0) return
 
@@ -2698,14 +4457,15 @@ export default {
 				this.depublishLoading = [...this.selectedAttachments]
 
 				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter(file =>
+				const selectedFiles = this.paginatedFiles.filter((file) =>
 					this.selectedAttachments.includes(file.id),
 				)
 
 				// Depublish each file individually
 				for (const file of selectedFiles) {
 					const publication = this.currentObject
-					const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
+					const { registerId, schemaId } =
+						this.getRegisterSchemaIds(publication)
 					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/depublish`
 
 					const response = await fetch(endpoint, {
@@ -2713,29 +4473,41 @@ export default {
 					})
 
 					if (!response.ok) {
-						throw new Error(`Failed to depublish file ${file.title || file.name}: ${response.statusText}`)
+						throw new Error(
+							`Failed to depublish file ${file.title || file.name}: ${response.statusText}`,
+						)
 					}
 				}
 
 				// Refresh files list once after all operations with publication data
 				const publication = this.currentObject
-				const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
+				const { registerId, schemaId } =
+					this.getRegisterSchemaIds(publication)
 				const publicationData = {
 					source: 'openregister',
 					schema: schemaId,
 					register: registerId,
 				}
-				await objectStore.fetchRelatedData('publication', this.currentObject.id, 'files', {}, publicationData)
+				await objectStore.fetchRelatedData(
+					'publication',
+					this.currentObject.id,
+					'files',
+					{},
+					publicationData,
+				)
 
 				// Clear selection after successful operation
 				this.selectedAttachments = []
-
 			} catch (error) {
 				console.error('Error depublishing files:', error)
 			} finally {
 				this.depublishLoading = []
 			}
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async deleteSelectedFiles() {
 			if (this.selectedAttachments.length === 0) return
 
@@ -2743,14 +4515,15 @@ export default {
 				this.fileIdsLoading = [...this.selectedAttachments]
 
 				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter(item =>
+				const selectedFiles = this.paginatedFiles.filter((item) =>
 					this.selectedAttachments.includes(item.id),
 				)
 
 				// Delete each selected file
 				for (const file of selectedFiles) {
 					const publication = this.currentObject
-					const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
+					const { registerId, schemaId } =
+						this.getRegisterSchemaIds(publication)
 					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
 
 					const response = await fetch(endpoint, {
@@ -2758,19 +4531,28 @@ export default {
 					})
 
 					if (!response.ok) {
-						throw new Error(`Failed to delete file ${file.title || file.name}: ${response.statusText}`)
+						throw new Error(
+							`Failed to delete file ${file.title || file.name}: ${response.statusText}`,
+						)
 					}
 				}
 
 				// Refresh files list once after all operations with publication data
 				const publication = this.currentObject
-				const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
+				const { registerId, schemaId } =
+					this.getRegisterSchemaIds(publication)
 				const publicationData = {
 					source: 'openregister',
 					schema: schemaId,
 					register: registerId,
 				}
-				await objectStore.fetchRelatedData('publication', this.currentObject.id, 'files', {}, publicationData)
+				await objectStore.fetchRelatedData(
+					'publication',
+					this.currentObject.id,
+					'files',
+					{},
+					publicationData,
+				)
 
 				// Clear selection - files list is automatically refreshed by the store methods
 				this.selectedAttachments = []
@@ -2780,12 +4562,18 @@ export default {
 				this.fileIdsLoading = []
 			}
 		},
+
+		/**
+		 * @param file
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async publishFile(file) {
 			try {
 				this.publishLoading.push(file.id)
 
 				const publication = this.currentObject
-				const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
+				const { registerId, schemaId } =
+					this.getRegisterSchemaIds(publication)
 				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/publish`
 
 				const response = await fetch(endpoint, {
@@ -2802,19 +4590,33 @@ export default {
 					schema: schemaId,
 					register: registerId,
 				}
-				await objectStore.fetchRelatedData('publication', this.currentObject.id, 'files', {}, publicationData)
+				await objectStore.fetchRelatedData(
+					'publication',
+					this.currentObject.id,
+					'files',
+					{},
+					publicationData,
+				)
 			} catch (error) {
 				console.error('Failed to publish file:', error)
 			} finally {
-				this.publishLoading = this.publishLoading.filter(id => id !== file.id)
+				this.publishLoading = this.publishLoading.filter(
+					(id) => id !== file.id,
+				)
 			}
 		},
+
+		/**
+		 * @param file
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async depublishFile(file) {
 			try {
 				this.depublishLoading.push(file.id)
 
 				const publication = this.currentObject
-				const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
+				const { registerId, schemaId } =
+					this.getRegisterSchemaIds(publication)
 				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/depublish`
 
 				const response = await fetch(endpoint, {
@@ -2822,7 +4624,9 @@ export default {
 				})
 
 				if (!response.ok) {
-					throw new Error(`Failed to depublish file: ${response.statusText}`)
+					throw new Error(
+						`Failed to depublish file: ${response.statusText}`,
+					)
 				}
 
 				// Refresh files list with publication data
@@ -2831,19 +4635,33 @@ export default {
 					schema: schemaId,
 					register: registerId,
 				}
-				await objectStore.fetchRelatedData('publication', this.currentObject.id, 'files', {}, publicationData)
+				await objectStore.fetchRelatedData(
+					'publication',
+					this.currentObject.id,
+					'files',
+					{},
+					publicationData,
+				)
 			} catch (error) {
 				console.error('Failed to depublish file:', error)
 			} finally {
-				this.depublishLoading = this.depublishLoading.filter(id => id !== file.id)
+				this.depublishLoading = this.depublishLoading.filter(
+					(id) => id !== file.id,
+				)
 			}
 		},
+
+		/**
+		 * @param file
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async deleteFile(file) {
 			try {
 				this.fileIdsLoading.push(file.id)
 
 				const publication = this.currentObject
-				const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
+				const { registerId, schemaId } =
+					this.getRegisterSchemaIds(publication)
 				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
 
 				const response = await fetch(endpoint, {
@@ -2860,21 +4678,42 @@ export default {
 					schema: schemaId,
 					register: registerId,
 				}
-				await objectStore.fetchRelatedData('publication', this.currentObject.id, 'files', {}, publicationData)
+				await objectStore.fetchRelatedData(
+					'publication',
+					this.currentObject.id,
+					'files',
+					{},
+					publicationData,
+				)
 			} catch (error) {
 				console.error('Failed to delete file:', error)
 			} finally {
-				this.fileIdsLoading = this.fileIdsLoading.filter(id => id !== file.id)
+				this.fileIdsLoading = this.fileIdsLoading.filter(
+					(id) => id !== file.id,
+				)
 			}
 		},
+
+		/**
+		 * @param file
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		editFileLabels(file) {
 			this.editingTags = file.id
 			this.editedTags = file.labels || []
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		cancelFileLabelEditing() {
 			this.editingTags = null
 			this.editedTags = []
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async getAllTags() {
 			this.tagsLoading = true
 			try {
@@ -2895,10 +4734,17 @@ export default {
 				this.tagsLoading = false
 			}
 		},
+
+		/**
+		 * @param file
+		 * @param editedTags
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async saveTags(file, editedTags) {
 			try {
 				const publication = this.currentObject
-				const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
+				const { registerId, schemaId } =
+					this.getRegisterSchemaIds(publication)
 
 				// Update file tags using the same approach as PublicationDetail.vue
 				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
@@ -2914,7 +4760,9 @@ export default {
 				})
 
 				if (!response.ok) {
-					throw new Error(`Failed to update file tags: ${response.statusText}`)
+					throw new Error(
+						`Failed to update file tags: ${response.statusText}`,
+					)
 				}
 
 				// Refresh files list with publication data
@@ -2923,7 +4771,13 @@ export default {
 					schema: schemaId,
 					register: registerId,
 				}
-				await objectStore.fetchRelatedData('publication', this.currentObject.id, 'files', {}, publicationData)
+				await objectStore.fetchRelatedData(
+					'publication',
+					this.currentObject.id,
+					'files',
+					{},
+					publicationData,
+				)
 
 				this.editingTags = null
 				this.editedTags = []
@@ -2941,29 +4795,62 @@ export default {
 				}, 5000)
 			}
 		},
+
 		// Utility method to get register and schema IDs from publication object
+		/**
+		 * @param publication
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getRegisterSchemaIds(publication) {
-			const registerId = typeof publication['@self'].register === 'object'
-				? publication['@self'].register?.id || publication['@self'].register?.uuid
-				: publication['@self'].register
-			const schemaId = typeof publication['@self'].schema === 'object'
-				? publication['@self'].schema?.id || publication['@self'].schema?.uuid
-				: publication['@self'].schema
+			const registerId =
+				typeof publication['@self'].register === 'object'
+					? publication['@self'].register?.id
+						|| publication['@self'].register?.uuid
+					: publication['@self'].register
+			const schemaId =
+				typeof publication['@self'].schema === 'object'
+					? publication['@self'].schema?.id
+						|| publication['@self'].schema?.uuid
+					: publication['@self'].schema
 			return { registerId, schemaId }
 		},
+
 		// Action button methods
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		uploadFiles() {
 			// Open the upload files modal (same as in PublicationDetail.vue)
 			navigationStore.setDialog('uploadFiles')
 		},
+
+		/**
+		 * @param object
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		shouldShowPublishAction(object) {
 			if (!object || !object['@self']) return false
-			return object['@self'].published === null || object['@self'].published === undefined
+			return (
+				object['@self'].published === null
+				|| object['@self'].published === undefined
+			)
 		},
+
+		/**
+		 * @param object
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		shouldShowDepublishAction(object) {
 			if (!object || !object['@self']) return false
-			return object['@self'].published !== null && object['@self'].published !== undefined
+			return (
+				object['@self'].published !== null
+				&& object['@self'].published !== undefined
+			)
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		singlePublishObject() {
 			if (!this.currentObject) return
 
@@ -2977,6 +4864,10 @@ export default {
 			// Open the mass publish dialog
 			navigationStore.setDialog('massPublishObjects')
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		singleDepublishObject() {
 			if (!this.currentObject) return
 
@@ -2990,6 +4881,10 @@ export default {
 			// Open the mass depublish dialog
 			navigationStore.setDialog('massDepublishObjects')
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		singleDeleteObject() {
 			if (!this.currentObject) return
 
@@ -3003,13 +4898,19 @@ export default {
 			// Open the mass delete dialog
 			navigationStore.setDialog('massDeleteObject')
 		},
+
 		// Schema handling methods
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getSchemaProperties() {
 			let properties = {}
 
 			// For new objects, use the selected schema
 			if (this.isNewObject && this.selectedSchema) {
-				const fullSchema = objectStore.availableSchemas.find(schema => schema.id === this.selectedSchema.id)
+				const fullSchema = objectStore.availableSchemas.find(
+					(schema) => schema.id === this.selectedSchema.id,
+				)
 				properties = fullSchema?.properties || {}
 			} else if (this.currentObject && this.currentObject['@self']?.schema) {
 				// For existing objects, try to get schema from the object's schema reference
@@ -3024,7 +4925,9 @@ export default {
 				}
 
 				if (schemaId) {
-					const fullSchema = objectStore.availableSchemas.find(schema => schema.id === schemaId)
+					const fullSchema = objectStore.availableSchemas.find(
+						(schema) => schema.id === schemaId,
+					)
 					if (fullSchema?.properties) {
 						properties = fullSchema.properties
 					}
@@ -3036,7 +4939,12 @@ export default {
 
 			return properties
 		},
+
 		// Helper method to rebuild object with schema properties after API operations
+		/**
+		 * @param apiResult
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		rebuildObjectWithSchemaProperties(apiResult) {
 			// Start with the API result merged with current object
 			const mergedObject = {
@@ -3053,28 +4961,28 @@ export default {
 
 			// Add missing schema properties with default values
 			for (const [key, schemaProperty] of Object.entries(schemaProperties)) {
-				if (!Object.prototype.hasOwnProperty.call(mergedObject, key)) {
+				if (!Object.hasOwn(mergedObject, key)) {
 					// Add with appropriate default value based on type
 					let defaultValue = ''
 					switch (schemaProperty.type) {
-					case 'string':
-						defaultValue = schemaProperty.const || ''
-						break
-					case 'number':
-					case 'integer':
-						defaultValue = 0
-						break
-					case 'boolean':
-						defaultValue = false
-						break
-					case 'array':
-						defaultValue = []
-						break
-					case 'object':
-						defaultValue = {}
-						break
-					default:
-						defaultValue = ''
+						case 'string':
+							defaultValue = schemaProperty.const || ''
+							break
+						case 'number':
+						case 'integer':
+							defaultValue = 0
+							break
+						case 'boolean':
+							defaultValue = false
+							break
+						case 'array':
+							defaultValue = []
+							break
+						case 'object':
+							defaultValue = {}
+							break
+						default:
+							defaultValue = ''
 					}
 					mergedObject[key] = defaultValue
 				}
@@ -3085,7 +4993,9 @@ export default {
 
 		/**
 		 * Clean formData to ensure it's a proper object with correct property keys
+		 *
 		 * @return {object} Cleaned form data object
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		cleanFormData() {
 			const cleaned = {}
@@ -3103,11 +5013,13 @@ export default {
 				// - Must not be empty
 				// - Must not be purely numeric (array indices)
 				// - Must not be special Vue/internal keys
-				if (typeof key === 'string'
+				if (
+					typeof key === 'string'
 					&& key.length > 0
 					&& !/^\d+$/.test(key)
 					&& !key.startsWith('_')
-					&& !key.startsWith('$')) {
+					&& !key.startsWith('$')
+				) {
 					cleaned[key] = value
 				}
 			}
@@ -3117,7 +5029,9 @@ export default {
 
 		/**
 		 * Build complete object data including all schema properties
+		 *
 		 * @return {object} Complete object with all properties from schema and current object
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		buildCompleteObjectData() {
 			const schemaProperties = this.getSchemaProperties()
@@ -3133,8 +5047,10 @@ export default {
 			}
 
 			// Add all schema properties with appropriate values
-			for (const [propertyKey, schemaProperty] of Object.entries(schemaProperties)) {
-				if (Object.prototype.hasOwnProperty.call(cleanedFormData, propertyKey)) {
+			for (const [propertyKey, schemaProperty] of Object.entries(
+				schemaProperties,
+			)) {
+				if (Object.hasOwn(cleanedFormData, propertyKey)) {
 					// Check if property was marked for deletion (undefined)
 					if (cleanedFormData[propertyKey] === undefined) {
 						// For schema properties, don't include undefined values - let backend handle defaults
@@ -3144,7 +5060,7 @@ export default {
 						// Use edited value from formData
 						objectData[propertyKey] = cleanedFormData[propertyKey]
 					}
-				} else if (Object.prototype.hasOwnProperty.call(currentObjectData, propertyKey)) {
+				} else if (Object.hasOwn(currentObjectData, propertyKey)) {
 					// Keep existing value from current object
 					objectData[propertyKey] = currentObjectData[propertyKey]
 				} else {
@@ -3153,24 +5069,24 @@ export default {
 
 					// Only set non-null defaults for specific cases
 					switch (schemaProperty.type) {
-					case 'string':
-						defaultValue = schemaProperty.const || null
-						break
-					case 'number':
-					case 'integer':
-						defaultValue = null // Let backend handle defaults
-						break
-					case 'boolean':
-						defaultValue = null // Let backend handle defaults
-						break
-					case 'array':
-						defaultValue = null // Let backend handle defaults
-						break
-					case 'object':
-						defaultValue = null // Let backend handle defaults
-						break
-					default:
-						defaultValue = null
+						case 'string':
+							defaultValue = schemaProperty.const || null
+							break
+						case 'number':
+						case 'integer':
+							defaultValue = null // Let backend handle defaults
+							break
+						case 'boolean':
+							defaultValue = null // Let backend handle defaults
+							break
+						case 'array':
+							defaultValue = null // Let backend handle defaults
+							break
+						case 'object':
+							defaultValue = null // Let backend handle defaults
+							break
+						default:
+							defaultValue = null
 					}
 
 					objectData[propertyKey] = defaultValue
@@ -3180,11 +5096,14 @@ export default {
 			// Also include any edited properties that might not be in the schema
 			// But only include valid property names (not numeric indices) and not undefined values
 			for (const [key, value] of Object.entries(cleanedFormData)) {
-				if (!Object.prototype.hasOwnProperty.call(schemaProperties, key)
+				if (
+					!Object.hasOwn(schemaProperties, key)
 					&& typeof key === 'string'
 					&& key.length > 0
 					&& !/^\d+$/.test(key)
-					&& value !== undefined) { // Don't include properties marked for deletion
+					&& value !== undefined
+				) {
+					// Don't include properties marked for deletion
 					objectData[key] = value
 				}
 			}
@@ -3193,6 +5112,11 @@ export default {
 		},
 
 		// Property dropping methods
+		/**
+		 * @param key
+		 * @param value
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		canDropProperty(key, value) {
 			// Don't show drop button for metadata properties
 			if (key === '@self' || key === 'id') {
@@ -3208,14 +5132,18 @@ export default {
 			// 1. Property has a value (either in formData or original object)
 			// 2. Property exists in current object or has been edited
 			const hasFormValue = this.formData[key] !== undefined
-			const hasOriginalValue = this.currentObject && Object.prototype.hasOwnProperty.call(this.currentObject, key)
+			const hasOriginalValue =
+				this.currentObject && Object.hasOwn(this.currentObject, key)
 
 			return hasFormValue || hasOriginalValue
 		},
+
 		/**
 		 * Check if a property is constant or immutable
+		 *
 		 * @param {string} key - Property key
 		 * @return {boolean} True if property is constant or immutable
+		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isConstantOrImmutable(key) {
 			const schemaProperties = this.getSchemaProperties()
@@ -3223,13 +5151,15 @@ export default {
 
 			// Check by property name patterns (case insensitive)
 			const immutablePatterns = ['immutable', 'readonly', 'constant']
-			const isImmutableByName = immutablePatterns.some(pattern =>
+			const isImmutableByName = immutablePatterns.some((pattern) =>
 				key.toLowerCase().includes(pattern),
 			)
 
 			if (schemaProperty) {
 				const isConstant = schemaProperty.const !== undefined
-				const isImmutable = schemaProperty.readOnly === true || schemaProperty.immutable === true
+				const isImmutable =
+					schemaProperty.readOnly === true
+					|| schemaProperty.immutable === true
 
 				// Debug: Log all detection methods
 				if (process.env.NODE_ENV === 'development') {
@@ -3248,9 +5178,13 @@ export default {
 			return isImmutableByName
 		},
 
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		getDropPropertyTooltip(key) {
 			const schemaProperties = this.getSchemaProperties()
-			const isSchemaProperty = Object.prototype.hasOwnProperty.call(schemaProperties, key)
+			const isSchemaProperty = Object.hasOwn(schemaProperties, key)
 
 			if (isSchemaProperty) {
 				return `Reset '${this.getPropertyDisplayName(key)}' to empty value`
@@ -3259,9 +5193,13 @@ export default {
 			}
 		},
 
+		/**
+		 * @param key
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		dropProperty(key) {
 			const schemaProperties = this.getSchemaProperties()
-			const isSchemaProperty = Object.prototype.hasOwnProperty.call(schemaProperties, key)
+			const isSchemaProperty = Object.hasOwn(schemaProperties, key)
 
 			if (isSchemaProperty) {
 				// For schema properties, reset to appropriate default/null value
@@ -3269,38 +5207,38 @@ export default {
 				let defaultValue = null
 
 				switch (schemaProperty.type) {
-				case 'string':
-					defaultValue = schemaProperty.const || ''
-					break
-				case 'number':
-				case 'integer':
-					defaultValue = 0
-					break
-				case 'boolean':
-					defaultValue = false
-					break
-				case 'array':
-					defaultValue = []
-					break
-				case 'object':
-					defaultValue = {}
-					break
-				default:
-					defaultValue = ''
+					case 'string':
+						defaultValue = schemaProperty.const || ''
+						break
+					case 'number':
+					case 'integer':
+						defaultValue = 0
+						break
+					case 'boolean':
+						defaultValue = false
+						break
+					case 'array':
+						defaultValue = []
+						break
+					case 'object':
+						defaultValue = {}
+						break
+					default:
+						defaultValue = ''
 				}
 
 				// Set the default value in formData
-				this.$set(this.formData, key, defaultValue)
+				this.formData[key] = defaultValue
 			} else {
 				// For non-schema properties, remove completely from formData
 				if (this.formData[key] !== undefined) {
-					this.$delete(this.formData, key)
+					delete this.formData[key]
 				}
 
 				// If it was in the original object, we need to track its removal
 				// We'll set it to a special marker that indicates deletion
-				if (this.currentObject && Object.prototype.hasOwnProperty.call(this.currentObject, key)) {
-					this.$set(this.formData, key, undefined)
+				if (this.currentObject && Object.hasOwn(this.currentObject, key)) {
+					this.formData[key] = undefined
 				}
 			}
 
@@ -3311,6 +5249,12 @@ export default {
 		},
 
 		// Enhanced property validation and editing methods (from openregister version)
+		/**
+		 * @param key
+		 * @param value
+		 * @param schemaProperty
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		isValidPropertyValue(key, value, schemaProperty) {
 			// Handle null/undefined values
 			if (value === null || value === undefined || value === '') {
@@ -3321,32 +5265,36 @@ export default {
 
 			// Validate based on schema type
 			switch (schemaProperty.type) {
-			case 'string':
-				if (typeof value !== 'string') return false
-				// Check format constraints
-				if (schemaProperty.format === 'date-time') {
-					return this.isValidDate(value)
-				}
-				// Check const constraint
-				if (schemaProperty.const && value !== schemaProperty.const) {
-					return false
-				}
-				return true
+				case 'string':
+					if (typeof value !== 'string') return false
+					// Check format constraints
+					if (schemaProperty.format === 'date-time') {
+						return this.isValidDate(value)
+					}
+					// Check const constraint
+					if (schemaProperty.const && value !== schemaProperty.const) {
+						return false
+					}
+					return true
 
-			case 'number':
-				return typeof value === 'number' && !isNaN(value)
+				case 'number':
+					return typeof value === 'number' && !isNaN(value)
 
-			case 'boolean':
-				return typeof value === 'boolean'
+				case 'boolean':
+					return typeof value === 'boolean'
 
-			case 'array':
-				return Array.isArray(value)
+				case 'array':
+					return Array.isArray(value)
 
-			case 'object':
-				return typeof value === 'object' && value !== null && !Array.isArray(value)
+				case 'object':
+					return (
+						typeof value === 'object'
+						&& value !== null
+						&& !Array.isArray(value)
+					)
 
-			default:
-				return true // Unknown type, assume valid
+				default:
+					return true // Unknown type, assume valid
 			}
 		},
 	},
@@ -3444,7 +5392,7 @@ export default {
 
 .drop-property-btn {
 	opacity: 0.3 !important;
-	transition: .2s ease !important;
+	transition: 0.2s ease !important;
 	margin-left: auto;
 	flex-shrink: 0;
 }
@@ -3505,7 +5453,7 @@ export default {
 	text-align: left;
 	align-items: center;
 	white-space: normal;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .json-value {
@@ -3545,6 +5493,103 @@ export default {
 
 .publishedIcon {
 	color: var(--color-success);
+}
+
+/* Tab strip. Mirrors src/components/StandardTabs.vue so the modal keeps the
+   app-wide tab look, but written out here because the Files tab needs a
+   component-rendered title (spinner / counter bubble) and StandardTabs only
+   accepts plain title strings. */
+.standard-tabs {
+	width: 100%;
+}
+
+.tab-navigation {
+	display: flex;
+	border: 1px solid var(--color-border);
+	border-bottom: none;
+	margin-bottom: 0;
+	background-color: var(--color-background-hover);
+	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+	padding: 0 8px;
+}
+
+.tab-button {
+	flex: 1;
+	padding: 12px 16px;
+	background: none;
+	border: none;
+	color: var(--color-text-lighter);
+	font-weight: 500;
+	font-size: 14px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	position: relative;
+	min-height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.tab-button:hover {
+	color: var(--color-main-text);
+	background-color: var(--color-background-hover);
+}
+
+.tab-button.active {
+	color: var(--color-primary);
+	background-color: var(--color-background);
+	font-weight: 600;
+	border: 1px solid var(--color-border);
+	border-bottom: 2px solid var(--color-background);
+	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+}
+
+.tab-button.active::after {
+	content: '';
+	position: absolute;
+	bottom: -2px;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background-color: var(--color-primary);
+}
+
+.tab-content {
+	padding: 8px 0 0 0;
+	border: none;
+	border-top: none;
+	border-radius: 0;
+	background-color: transparent;
+}
+
+@media (max-width: 768px) {
+	.tab-navigation {
+		flex-direction: column;
+		border-bottom: none;
+		border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
+		padding: 8px;
+	}
+
+	.tab-button {
+		border-bottom: none;
+		border-radius: var(--border-radius);
+		margin-bottom: 4px;
+		min-height: 40px;
+	}
+
+	.tab-button.active {
+		background-color: var(--color-primary);
+		color: white;
+		border-bottom-color: transparent;
+	}
+
+	.tab-button.active::after {
+		display: none;
+	}
+
+	.tab-content {
+		border-top: 1px solid var(--color-border);
+	}
 }
 
 .tab-title {
@@ -3667,7 +5712,7 @@ export default {
 	min-height: 100px;
 	resize: vertical;
 	white-space: pre-wrap;
-	word-break: break-word;
+	overflow-wrap: break-word;
 	overflow-wrap: anywhere;
 }
 
@@ -3817,7 +5862,7 @@ export default {
 .viewObjectDialog .viewTable th,
 .viewObjectDialog .viewTable td {
 	white-space: normal;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .viewObjectDialog .viewTable td.td-labels {
@@ -3839,7 +5884,7 @@ export default {
 .viewObjectDialog .viewTable td.table-row-title {
 	flex: 1;
 	white-space: normal;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .short-column {
@@ -3855,7 +5900,7 @@ export default {
 	width: 100%;
 	max-width: initial;
 	white-space: normal;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .table-row-type {
@@ -3886,5 +5931,19 @@ export default {
 .viewObjectDialog .viewTable th.table-row-title,
 .viewObjectDialog .viewTable td.table-row-title {
 	width: 100%;
+}
+
+/* WCAG 2.3.3 — row hover, the drop-property button and the tab strip all
+   animate purely for polish. `!important` mirrors the declaration it has to
+   override on .drop-property-btn. */
+@media (prefers-reduced-motion: reduce) {
+	.viewTableRow,
+	.tab-button {
+		transition: none;
+	}
+
+	.drop-property-btn {
+		transition: none !important;
+	}
 }
 </style>

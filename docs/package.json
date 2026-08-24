@@ -1,5 +1,5 @@
 {
-  "name": "softwarecatalog-docs",
+  "name": "stackiq-docs",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -17,7 +17,7 @@
     "ci": "npm ci --legacy-peer-deps && npm run build"
   },
   "dependencies": {
-    "@conduction/docusaurus-preset": "^3.6.0",
+    "@conduction/docusaurus-preset": "^3.26.0",
     "@docusaurus/core": "^3.7.0",
     "@docusaurus/preset-classic": "^3.7.0",
     "@docusaurus/theme-mermaid": "^3.7.0",

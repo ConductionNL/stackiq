@@ -17,17 +17,29 @@ Break down applications into functional modules. Track each module's purpose, de
 ### Connection Mapping
 Map connections (koppelingen) between applications and modules. Visualize your software landscape and understand system dependencies at a glance.
 
+### Contract Administration
+Track contracts (period, cost, status) with a submit-and-approve workflow for new contracts and renewals, quick filters for active/expiring/in-negotiation contracts, and a background job that keeps contract status current.
+
+### Standards, Compliance Matrix, and ArchiMate
+Maintain a register of standards (including GEMMA), record compliance claims with supporting evidence per module, and cross-check modules against standard versions in a compliance matrix. Import and export the underlying architecture model as ArchiMate (AMEF) XML.
+
+### Application Lifecycle & Portfolio Roadmap
+Derive each application's lifecycle phase from its in-use dates and surface end-of-support / end-of-life warnings. A per-organisation portfolio roadmap groups applications in use by phase and urgency.
+
+### Reviews
+Record ratings and assessments of modules, services, connections, and usage records, with supporting evidence.
+
 ### Federated Synchronization
-Synchronize catalogue data across organizations. Import and merge listings from external sources to build a collaborative, federated software registry.
+When [OpenCatalogi](https://apps.nextcloud.com/apps/opencatalogi) is installed, synchronize organisation profiles with peer Software Catalogus instances via OpenCatalogi's directory network (add a peer, pull on demand). Degrades gracefully to a single-instance catalogue when OpenCatalogi is not present.
 
 ### Automatic User Provisioning
-Automatically create Nextcloud user accounts for registered organizations and their members. Keeps access control in sync with your catalogue data.
+Automatically create Nextcloud user accounts and group memberships for registered organizations' contact persons. Keeps access control in sync with your catalogue data.
 
-### Open Data Publishing
-Publish your software catalogue as open data. Exposes standardized API endpoints for public consumption and GEMMA compliance.
+### Open Data Publishing & Moderated Self-Registration
+Publish selected catalogue entries as open data for transparency and reuse. Anonymous organisations can submit a self-registration request, which lands in an admin moderation queue for approval or rejection before it is published.
 
 ### GEMMA Compliance
-Built around the GEMMA (Gemeentelijk Model Architectuur) reference architecture for Dutch municipalities. Supports standardized categorization and classification.
+Aligned with the GEMMA (Gemeentelijk Model Architectuur) reference architecture for Dutch municipalities, via the standards register, compliance matrix, and ArchiMate import/export above.
 
 ### OpenRegister Integration
 All objects are stored as flexible OpenRegister objects, enabling full audit trails, versioning, and cross-app data sharing.

@@ -1,5 +1,8 @@
 <template>
-	<div class="published-icon" :class="{ 'published': isPublished }" :title="tooltip || defaultTooltip">
+	<div
+		class="published-icon"
+		:class="{ published: isPublished }"
+		:title="tooltip || defaultTooltip">
 		<span v-if="isPublished" class="published-icon-svg">✓</span>
 		<span v-else class="unpublished-icon-svg">✗</span>
 	</div>
@@ -13,12 +16,17 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
 		tooltip: {
 			type: String,
 			default: '',
 		},
 	},
+
 	computed: {
+		/**
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
 		defaultTooltip() {
 			return this.isPublished ? 'Published' : 'Not Published'
 		},

@@ -1,7 +1,7 @@
-# API Testing Guide for SoftwareCatalog Integration
+# API Testing Guide for Stackiq Integration
 
 **Date:** July 24, 2025  
-**App:** SoftwareCatalog  
+**App:** Stackiq  
 **Purpose:** Repeatable local API testing for organization synchronization
 
 ## 🚀 Recommended Testing Tools
@@ -44,11 +44,11 @@ npm install -g newman-reporter-cli
 ## 📁 Project Structure
 
 ```
-softwarecatalog/
+stackiq/
 ├── tests/
 │   ├── api/
 │   │   ├── postman/
-│   │   │   ├── SoftwareCatalog_API_Tests.postman_collection.json
+│   │   │   ├── Stackiq_API_Tests.postman_collection.json
 │   │   │   ├── Local_Environment.postman_environment.json
 │   │   │   └── Docker_Environment.postman_environment.json
 │   │   ├── scripts/
@@ -67,7 +67,7 @@ softwarecatalog/
 
 ### Collection Structure
 ```
-SoftwareCatalog API Tests/
+Stackiq API Tests/
 ├── Setup/
 │   ├── Check Configuration
 │   └── Verify Services
@@ -113,16 +113,16 @@ SoftwareCatalog API Tests/
 ### Basic Test Execution
 ```bash
 # Run all tests
-newman run tests/api/postman/SoftwareCatalog_API_Tests.postman_collection.json \
+newman run tests/api/postman/Stackiq_API_Tests.postman_collection.json \
   -e tests/api/postman/Local_Environment.postman_environment.json
 
 # Run specific folder
-newman run tests/api/postman/SoftwareCatalog_API_Tests.postman_collection.json \
+newman run tests/api/postman/Stackiq_API_Tests.postman_collection.json \
   -e tests/api/postman/Local_Environment.postman_environment.json \
   --folder "Anonymous Registration"
 
 # Run with detailed reporting
-newman run tests/api/postman/SoftwareCatalog_API_Tests.postman_collection.json \
+newman run tests/api/postman/Stackiq_API_Tests.postman_collection.json \
   -e tests/api/postman/Local_Environment.postman_environment.json \
   --reporters cli,htmlextra \
   --reporter-htmlextra-export tests/api/results/newman-reports/
@@ -131,11 +131,11 @@ newman run tests/api/postman/SoftwareCatalog_API_Tests.postman_collection.json \
 ### Test with Different Environments
 ```bash
 # Local development
-newman run tests/api/postman/SoftwareCatalog_API_Tests.postman_collection.json \
+newman run tests/api/postman/Stackiq_API_Tests.postman_collection.json \
   -e tests/api/postman/Local_Environment.postman_environment.json
 
 # Docker environment
-newman run tests/api/postman/SoftwareCatalog_API_Tests.postman_collection.json \
+newman run tests/api/postman/Stackiq_API_Tests.postman_collection.json \
   -e tests/api/postman/Docker_Environment.postman_environment.json
 ```
 
@@ -148,7 +148,7 @@ newman run tests/api/postman/SoftwareCatalog_API_Tests.postman_collection.json \
 
 set -e
 
-echo "🚀 Starting SoftwareCatalog API Tests..."
+echo "🚀 Starting Stackiq API Tests..."
 
 # Configuration
 BASE_URL="http://localhost"
@@ -461,11 +461,11 @@ curl -u 'admin:admin' \
 ### Newman HTML Report
 ```bash
 # Generate detailed HTML report
-newman run tests/api/postman/SoftwareCatalog_API_Tests.postman_collection.json \
+newman run tests/api/postman/Stackiq_API_Tests.postman_collection.json \
     -e tests/api/postman/Local_Environment.postman_environment.json \
     --reporters htmlextra \
     --reporter-htmlextra-export tests/api/results/newman-reports/ \
-    --reporter-htmlextra-title "SoftwareCatalog API Test Report"
+    --reporter-htmlextra-title "Stackiq API Test Report"
 ```
 
 ### Shell Script Logging
@@ -503,7 +503,7 @@ jobs:
           
       - name: Run API Tests
         run: |
-          newman run tests/api/postman/SoftwareCatalog_API_Tests.postman_collection.json \
+          newman run tests/api/postman/Stackiq_API_Tests.postman_collection.json \
             -e tests/api/postman/Docker_Environment.postman_environment.json \
             --reporters cli,htmlextra \
             --reporter-htmlextra-export tests/api/results/newman-reports/
@@ -537,13 +537,13 @@ curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/
 #### 3. Schema Configuration Issues
 ```bash
 # Check configuration
-docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwarecatalog voorzieningen_organisatie_schema
+docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get stackiq voorzieningen_organisatie_schema
 ```
 
 ### Debug Mode
 ```bash
 # Run with verbose output
-newman run tests/api/postman/SoftwareCatalog_API_Tests.postman_collection.json \
+newman run tests/api/postman/Stackiq_API_Tests.postman_collection.json \
     -e tests/api/postman/Local_Environment.postman_environment.json \
     --verbose
 
@@ -605,4 +605,4 @@ scenarios:
 - [curl Documentation](https://curl.se/docs/)
 - [jq Documentation](https://stedolan.github.io/jq/manual/)
 
-This comprehensive API testing setup provides repeatable, automated testing for all SoftwareCatalog integration scenarios, from basic CRUD operations to complex anonymous user registration flows. 
+This comprehensive API testing setup provides repeatable, automated testing for all Stackiq integration scenarios, from basic CRUD operations to complex anonymous user registration flows. 

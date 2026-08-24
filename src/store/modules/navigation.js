@@ -17,26 +17,49 @@ export const useNavigationStore = defineStore('ui', {
 		transferData: null,
 	}),
 	actions: {
+		/**
+		 * @param selected
+		 * @spec openspec/specs/fe-stores/spec.md
+		 */
 		setSelected(selected) {
 			this.selected = selected
 			console.log('Active menu item set to ' + selected)
 		},
+		/**
+		 * @param selectedOrganisatie
+		 * @spec openspec/specs/fe-stores/spec.md
+		 */
 		setSelectedOrganisatie(selectedOrganisatie) {
 			this.selectedOrganisatie = selectedOrganisatie
 			console.log('Active organisatie menu set to ' + selectedOrganisatie)
 		},
+		/**
+		 * @param modal
+		 * @spec openspec/specs/fe-stores/spec.md
+		 */
 		setModal(modal) {
 			this.modal = modal
 			console.log('Active modal set to ' + modal)
 		},
+		/**
+		 * @param dialog
+		 * @param properties
+		 * @spec openspec/specs/fe-stores/spec.md
+		 */
 		setDialog(dialog, properties) {
 			this.dialog = dialog
 			this.dialogProperties = properties || null
-			console.log('Active dialog set to ' + dialog, properties ? 'with properties' : '')
+			console.log(
+				'Active dialog set to ' + dialog,
+				properties ? 'with properties' : '',
+			)
 		},
 		setTransferData(transferData) {
 			this.transferData = transferData
 		},
+		/**
+		 * @spec openspec/specs/fe-stores/spec.md
+		 */
 		getTransferData() {
 			const tempData = this.transferData
 			this.transferData = null

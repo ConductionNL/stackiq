@@ -43,7 +43,7 @@ make_request() {
 echo -e "${BLUE}🔧 Testing AMEF Configuration...${NC}"
 
 echo "Getting current AMEF settings..."
-response=$(make_request "$BASE_URL/index.php/apps/softwarecatalog/api/settings/amef" "GET")
+response=$(make_request "$BASE_URL/index.php/apps/stackiq/api/settings/amef" "GET")
 http_code=$(echo "$response" | tail -n1 | cut -d: -f2)
 json_response=$(echo "$response" | head -n -1)
 
@@ -57,7 +57,7 @@ fi
 
 echo
 echo "Running auto-configuration..."
-response=$(make_request "$BASE_URL/index.php/apps/softwarecatalog/api/settings/amef/auto-configure" "POST")
+response=$(make_request "$BASE_URL/index.php/apps/stackiq/api/settings/amef/auto-configure" "POST")
 http_code=$(echo "$response" | tail -n1 | cut -d: -f2)
 json_response=$(echo "$response" | head -n -1)
 
@@ -94,7 +94,7 @@ response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -F "preserveIds=true" \
     --connect-timeout 30 \
     --max-time 300 \
-    "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/import")
+    "$BASE_URL/index.php/apps/stackiq/api/archimate/import")
 
 end_time=$(date +%s)
 duration=$((end_time - start_time))
@@ -133,7 +133,7 @@ export_data='{
     "organizationSpecific": false
 }'
 
-response=$(make_request "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/export" "POST" "$export_data")
+response=$(make_request "$BASE_URL/index.php/apps/stackiq/api/archimate/export" "POST" "$export_data")
 
 end_time=$(date +%s)
 duration=$((end_time - start_time))
@@ -167,7 +167,7 @@ echo -e "${BLUE}💾 Downloading exported file: $file_name${NC}"
 
 curl -s -u "$USERNAME:$PASSWORD" \
     -o "$EXPORTED_FILE" \
-    "$BASE_URL/index.php/apps/softwarecatalog/api/archimate/download/$file_name"
+    "$BASE_URL/index.php/apps/stackiq/api/archimate/download/$file_name"
 
 if [ $? -eq 0 ] && [ -f "$EXPORTED_FILE" ]; then
     exported_size=$(stat -f%z "$EXPORTED_FILE" 2>/dev/null || stat -c%s "$EXPORTED_FILE" 2>/dev/null)

@@ -1,17 +1,39 @@
 <script setup>
-import { objectStore, navigationStore } from '../../store/store.js'
+import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog v-if="navigationStore.modal === 'lockObject'"
-		:name="'Lock ' + (objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id || 'Publication')"
+	<NcDialog
+		v-if="navigationStore.modal === 'lockObject'"
+		:name="
+			t('stackiq', 'Lock {name}', {
+				name:
+					objectStore.objectItem?.['@self']?.name
+					|| objectStore.objectItem?.name
+					|| objectStore.objectItem?.['@self']?.title
+					|| objectStore.objectItem?.id
+					|| t('stackiq', 'Publication'),
+			})
+		"
 		size="normal"
-		:can-close="false">
+		:canClose="false">
 		<p v-if="success === null">
-			Do you want to lock <b>{{ objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id }}</b>? Locking an object prevents other users from modifying it until it is unlocked. You can specify an optional process name to indicate why it's locked and a duration after which it will automatically unlock. Only the user who locked the object or an administrator can unlock it before the duration expires.
+			{{ t('stackiq', 'Do you want to lock') }}
+			<b>{{
+				objectStore.objectItem?.['@self']?.name
+				|| objectStore.objectItem?.name
+				|| objectStore.objectItem?.['@self']?.title
+				|| objectStore.objectItem?.id
+			}}</b
+			>{{
+				t(
+					'stackiq',
+					"? Locking an object prevents other users from modifying it until it is unlocked. You can specify an optional process name to indicate why it's locked and a duration after which it will automatically unlock. Only the user who locked the object or an administrator can unlock it before the duration expires.",
+				)
+			}}
 		</p>
 		<NcNoteCard v-if="success" type="success">
-			<p>Object successfully locked</p>
+			<p>{{ t('stackiq', 'Object successfully locked') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -22,29 +44,29 @@ import { objectStore, navigationStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success ? 'Close' : 'Cancel' }}
+				{{ success ? t('stackiq', 'Close') : t('stackiq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				:disabled="loading || success"
-				type="primary"
+				variant="primary"
 				@click="lockObject()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<LockOutline v-else :size="20" />
 				</template>
-				Lock
+				{{ t('stackiq', 'Lock') }}
 			</NcButton>
 		</template>
 
 		<div v-if="!success" class="formContainer">
 			<NcTextField
-				:value.sync="process"
-				label="Process Name (optional)"
+				v-model="process"
+				:label="t('stackiq', 'Process Name (optional)')"
 				:disabled="loading" />
 			<NcTextField
+				v-model="duration"
 				type="number"
-				:value.sync="duration"
-				label="Duration in seconds (optional)"
+				:label="t('stackiq', 'Duration in seconds (optional)')"
 				:disabled="loading" />
 		</div>
 	</NcDialog>
@@ -54,13 +76,12 @@ import { objectStore, navigationStore } from '../../store/store.js'
 import {
 	NcButton,
 	NcDialog,
-	NcTextField,
 	NcLoadingIcon,
 	NcNoteCard,
+	NcTextField,
 } from '@nextcloud/vue'
-
-import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
+import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 
 export default {
 	name: 'LockObject',
@@ -73,6 +94,7 @@ export default {
 		LockOutline,
 		Cancel,
 	},
+
 	data() {
 		return {
 			process: '',
@@ -83,7 +105,11 @@ export default {
 			closeModalTimeout: null,
 		}
 	},
+
 	methods: {
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		closeModal() {
 			navigationStore.setModal(false)
 			clearTimeout(this.closeModalTimeout)
@@ -93,6 +119,10 @@ export default {
 			this.process = ''
 			this.duration = 3600
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async lockObject() {
 			this.loading = true
 
@@ -106,7 +136,8 @@ export default {
 				this.error = null
 				this.closeModalTimeout = setTimeout(this.closeModal, 2000)
 			} catch (error) {
-				this.error = error.message || 'Failed to lock object'
+				this.error =
+					error.message || this.t('stackiq', 'Failed to lock object')
 			} finally {
 				this.loading = false
 			}

@@ -1,7 +1,36 @@
 version: 2
+
+# ⚠️ `target-branch: development` is load-bearing, not cosmetic.
+#
+# Without it Dependabot targets the repository DEFAULT branch, which is `main`.
+# `main` is currently **729 commits behind `development`** and carries an
+# entirely different lockfile, so the PRs Dependabot raised there were:
+#
+#   • measured against a tree nobody develops on — the open alerts claimed
+#     5 critical / 51 high, while `development` actually had 1 critical /
+#     2 high (npm) and ZERO composer advisories; and
+#   • ungated — `code-quality.yml` on `main` is a stale, self-contained
+#     workflow, and PRs #368 and #369 collected **no check runs at all**
+#     beyond a neutral CodeQL. A dependency PR that nothing builds is exactly
+#     how this fleet previously shipped an unbuildable image for two months.
+#
+# Pointing Dependabot at `development` puts its PRs in front of the real
+# shared quality workflow (build, unit tests, SBOM, licence and audit legs).
+#
+# Trade-off, stated explicitly: GitHub only raises Dependabot SECURITY updates
+# against the default branch, so setting `target-branch` converts these to
+# VERSION updates. That is a net gain here — a version update on `development`
+# is verified and mergeable, whereas a security update on `main` was neither.
+# The alert list itself still tracks `main` and will only shrink as
+# `development` is released forward.
+#
+# Matches the fleet convention already in place on nldesign, decidesk,
+# openbuild, procest and shillinq.
+
 updates:
   - package-ecosystem: "npm"
     directory: "/"
+    target-branch: "development"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
@@ -11,3 +40,34 @@ updates:
         - "*"
       exclude:
         - "@conduction/*"
+
+  # composer had no entry at all, so the only composer PRs this repo ever saw
+  # were security updates against `main` (e.g. #369, which bumped twig to
+  # 3.27.0 — a version `development` already had).
+  #
+  # default-days corrected 1 -> 2 and exclude added: this entry had a cooldown
+  # window but no first-party exclusion, so a fresh conduction/* release would
+  # have waited the same one day as any third-party package instead of being
+  # exempt — the fleet-wide floor gate-93 (composer-cooldown-config) enforces
+  # is 2 days plus a conduction/* exclude, matching the npm entry above's
+  # exclude and the fleet's `conduction/hydra-gates` / `conduction/coding-standard`
+  # first-party dependencies.
+  - package-ecosystem: "composer"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 2
+      include:
+        - "*"
+      exclude:
+        - "conduction/*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "development"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5

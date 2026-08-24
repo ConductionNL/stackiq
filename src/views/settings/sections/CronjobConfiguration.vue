@@ -1,19 +1,19 @@
 <!--
  - @copyright Copyright (c) 2024 Conduction B.V. <info@conduction.nl>
- - @license AGPL-3.0-or-later
+ - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - This program is free software: you can redistribute it and/or modify
- - it under the terms of the GNU Affero General Public License as
- - published by the Free Software Foundation, either version 3 of the
- - License, or (at your option) any later version.
+ - Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+ - the European Commission – subsequent versions of the EUPL (the "Licence");
+ - You may not use this work except in compliance with the Licence.
+ - You may obtain a copy of the Licence at:
  -
- - This program is distributed in the hope that it will be useful,
- - but WITHOUT ANY WARRANTY; without even the implied warranty of
- - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- - GNU Affero General Public License for more details.
+ - https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - You should have received a copy of the GNU Affero General Public License
- - along with this program. If not, see <http://www.gnu.org/licenses/>.
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the Licence is distributed on an "AS IS" basis,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the Licence for the specific language governing permissions and
+ - limitations under the Licence.
  -->
 
 <template>
@@ -21,31 +21,30 @@
 		name="Background Jobs Configuration"
 		description="Configure user and organisation context for background jobs to enable proper authorization"
 		:loading="loading"
-		loading-text="Loading cronjob configuration..."
-		:show-save-button="false"
-		:show-refresh-button="true"
+		loadingText="Loading cronjob configuration..."
+		:showSaveButton="false"
+		:showRefreshButton="true"
 		@refresh="loadConfig">
 		<div v-if="!loading" class="cronjob-configuration">
 			<!-- Information Note -->
 			<NcNoteCard type="info" class="info-card">
-				Background jobs (cronjobs) need a user and organisation context to properly
-				access data with correct permissions. Configure each job below to set which
-				user and organisation it should run as.
+				Background jobs (cronjobs) need a user and organisation context to
+				properly access data with correct permissions. Configure each job
+				below to set which user and organisation it should run as.
 			</NcNoteCard>
 
 			<!-- Cronjob Cards -->
 			<div class="cronjob-list">
-				<div
-					v-for="job in cronjobs"
-					:key="job.id"
-					class="cronjob-card">
+				<div v-for="job in cronjobs" :key="job.id" class="cronjob-card">
 					<div class="cronjob-header">
 						<div class="cronjob-title">
 							<h4>{{ job.name }}</h4>
 							<NcCheckboxRadioSwitch
-								:checked="job.enabled"
+								:modelValue="job.enabled"
 								type="switch"
-								@update:checked="updateJobEnabled(job.id, $event)">
+								@update:modelValue="
+									updateJobEnabled(job.id, $event)
+								">
 								{{ job.enabled ? 'Enabled' : 'Disabled' }}
 							</NcCheckboxRadioSwitch>
 						</div>
@@ -61,61 +60,76 @@
 					<div class="cronjob-config">
 						<div class="config-row">
 							<div class="config-field">
-								<label :for="'user-' + job.id">Run as User</label>
-								<NcSelect
-									:id="'user-' + job.id"
-									v-model="job.selectedUser"
-									:options="userOptions"
-									:loading="loadingUsers"
-									:disabled="!job.enabled || savingJob === job.id"
-									input-label="Select a user" />
-							</div>
-
-							<div class="config-field">
-								<label :for="'org-' + job.id">Run in Organisation</label>
+								<label :for="'org-' + job.id"
+									>Run in Organisation</label
+								>
 								<NcSelect
 									:id="'org-' + job.id"
 									v-model="job.selectedOrganisation"
 									:options="organisationOptions"
 									:loading="loadingOrganisations"
 									:disabled="!job.enabled || savingJob === job.id"
-									input-label="Select an organisation" />
+									inputLabel="Select an organisation" />
 							</div>
 						</div>
 
 						<!-- Save button, Run button and status -->
 						<div class="config-actions">
 							<NcButton
-								type="primary"
+								variant="primary"
 								:disabled="!canSaveJob(job) || savingJob === job.id"
 								@click="saveJobConfig(job)">
 								<template #icon>
-									<NcLoadingIcon v-if="savingJob === job.id" :size="20" />
+									<NcLoadingIcon
+										v-if="savingJob === job.id"
+										:size="20" />
 									<ContentSave v-else :size="20" />
 								</template>
-								{{ savingJob === job.id ? 'Saving...' : 'Save Configuration' }}
+								{{
+									savingJob === job.id
+										? 'Saving...'
+										: 'Save Configuration'
+								}}
 							</NcButton>
 
 							<NcButton
-								type="secondary"
-								:disabled="!job.userId || !job.organisationUuid || runningJob === job.id"
+								variant="secondary"
+								:disabled="
+									!job.organisationUuid || runningJob === job.id
+								"
 								@click="runJob(job)">
 								<template #icon>
-									<NcLoadingIcon v-if="runningJob === job.id" :size="20" />
+									<NcLoadingIcon
+										v-if="runningJob === job.id"
+										:size="20" />
 									<Play v-else :size="20" />
 								</template>
-								{{ runningJob === job.id ? 'Running...' : 'Run Now' }}
+								{{
+									runningJob === job.id ? 'Running...' : 'Run Now'
+								}}
 							</NcButton>
 
 							<!-- Status indicator -->
-							<div :class="['config-status', job.userId && job.organisationUuid ? 'success' : 'warning']">
-								<template v-if="job.userId && job.organisationUuid">
+							<div
+								class="config-status"
+								:class="[
+									job.organisationUuid ? 'success' : 'warning',
+								]">
+								<template v-if="job.organisationUuid">
 									<Check :size="16" class="status-icon success" />
-									<span class="status-text">Configured - Job will run with proper authorization</span>
+									<span class="status-text"
+										>Configured - Job will run with proper
+										authorization</span
+									>
 								</template>
 								<template v-else>
-									<AlertCircle :size="16" class="status-icon warning" />
-									<span class="status-text">Not configured - Job may encounter RBAC errors</span>
+									<AlertCircle
+										:size="16"
+										class="status-icon warning" />
+									<span class="status-text"
+										>Not configured - Job may encounter RBAC
+										errors</span
+									>
 								</template>
 							</div>
 						</div>
@@ -126,8 +140,13 @@
 			<!-- Empty state -->
 			<NcEmptyContent
 				v-if="cronjobs.length === 0"
-				:name="t('softwarecatalog', 'No background jobs configured')"
-				:description="t('softwarecatalog', 'There are no background jobs available for configuration.')">
+				:name="t('stackiq', 'No background jobs configured')"
+				:description="
+					t(
+						'stackiq',
+						'There are no background jobs available for configuration.',
+					)
+				">
 				<template #icon>
 					<Cog :size="64" />
 				</template>
@@ -145,32 +164,31 @@
  *
  * @author Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  * @version 1.0.0
  */
 
-import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-
+import { generateUrl } from '@nextcloud/router'
 // Nextcloud Vue components
-import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcEmptyContent from '@nextcloud/vue/dist/Components/NcEmptyContent.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-
-// Custom components
-import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcEmptyContent,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+} from '@nextcloud/vue'
+import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import Check from 'vue-material-design-icons/Check.vue'
 // Icons
 import Clock from 'vue-material-design-icons/Clock.vue'
-import Check from 'vue-material-design-icons/Check.vue'
-import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
 import Play from 'vue-material-design-icons/Play.vue'
+// Custom components
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 
 export default {
 	name: 'CronjobConfiguration',
@@ -194,36 +212,23 @@ export default {
 	data() {
 		return {
 			loading: true,
-			loadingUsers: false,
 			loadingOrganisations: false,
 			savingJob: null,
 			runningJob: null,
 			cronjobs: [],
-			users: [],
 			organisations: [],
 		}
 	},
 
 	computed: {
 		/**
-		 * Format users for NcSelect
-		 *
-		 * @return {Array} User options for select
-		 */
-		userOptions() {
-			return this.users.map(user => ({
-				value: user.id,
-				label: user.displayName + (user.email ? ` (${user.email})` : ''),
-			}))
-		},
-
-		/**
 		 * Format organisations for NcSelect
 		 *
 		 * @return {Array} Organisation options for select
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		organisationOptions() {
-			return this.organisations.map(org => ({
+			return this.organisations.map((org) => ({
 				value: org.uuid,
 				label: org.name,
 			}))
@@ -239,15 +244,12 @@ export default {
 		 * Load all configuration data
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadConfig() {
 			this.loading = true
 			try {
-				await Promise.all([
-					this.loadCronjobs(),
-					this.loadUsers(),
-					this.loadOrganisations(),
-				])
+				await Promise.all([this.loadCronjobs(), this.loadOrganisations()])
 			} catch (error) {
 				console.error('Failed to load cronjob configuration:', error)
 				showError('Failed to load cronjob configuration')
@@ -260,25 +262,30 @@ export default {
 		 * Load cronjob configurations
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadCronjobs() {
 			try {
-				const response = await axios.get(generateUrl('/apps/softwarecatalog/api/settings/cronjobs'))
+				const response = await axios.get(
+					generateUrl('/apps/stackiq/api/settings/cronjobs'),
+				)
 				if (response.data.success) {
 					// Transform to array and add selected values for dropdowns.
 					// Labels will be updated when users and organisations are loaded.
-					this.cronjobs = Object.values(response.data.cronjobs).map(job => ({
-						...job,
-						selectedUser: job.userId ? { value: job.userId, label: job.userId } : null,
-						selectedOrganisation: job.organisationUuid
-							? { value: job.organisationUuid, label: job.organisationUuid }
-							: null,
-					}))
+					this.cronjobs = Object.values(response.data.cronjobs).map(
+						(job) => ({
+							...job,
+							selectedOrganisation: job.organisationUuid
+								? {
+										value: job.organisationUuid,
+										label: job.organisationUuid,
+									}
+								: null,
+						}),
+					)
 
 					// Update labels if organisations are already loaded.
 					this.updateOrganisationLabels()
-					// Update labels if users are already loaded.
-					this.updateUserLabels()
 				}
 			} catch (error) {
 				console.error('Failed to load cronjobs:', error)
@@ -290,13 +297,16 @@ export default {
 		 * Update organisation labels in cronjobs from loaded organisations
 		 *
 		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateOrganisationLabels() {
 			if (this.organisations.length === 0) return
 
-			this.cronjobs.forEach(job => {
+			this.cronjobs.forEach((job) => {
 				if (job.organisationUuid) {
-					const org = this.organisations.find(o => o.uuid === job.organisationUuid)
+					const org = this.organisations.find(
+						(o) => o.uuid === job.organisationUuid,
+					)
 					if (org) {
 						job.selectedOrganisation = {
 							value: org.uuid,
@@ -308,64 +318,25 @@ export default {
 		},
 
 		/**
-		 * Update user labels in cronjobs from loaded users
-		 *
-		 * @return {void}
-		 */
-		updateUserLabels() {
-			if (this.users.length === 0) return
-
-			this.cronjobs.forEach(job => {
-				if (job.userId) {
-					const user = this.users.find(u => u.id === job.userId)
-					if (user) {
-						job.selectedUser = {
-							value: user.id,
-							label: user.displayName + (user.email ? ` (${user.email})` : ''),
-						}
-					}
-				}
-			})
-		},
-
-		/**
-		 * Load available users
-		 *
-		 * @return {Promise<void>}
-		 */
-		async loadUsers() {
-			this.loadingUsers = true
-			try {
-				const response = await axios.get(generateUrl('/apps/softwarecatalog/api/settings/cronjobs/users'))
-				if (response.data.success) {
-					this.users = response.data.users
-					// Update labels in cronjobs.
-					this.updateUserLabels()
-				}
-			} catch (error) {
-				console.error('Failed to load users:', error)
-			} finally {
-				this.loadingUsers = false
-			}
-		},
-
-		/**
 		 * Load available organisations from OpenRegister API
 		 *
 		 * Since the user is logged in on the settings page, we can call
 		 * the OpenRegister organisations endpoint directly.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadOrganisations() {
 			this.loadingOrganisations = true
 			try {
 				// Call OpenRegister organisations endpoint directly.
-				const response = await axios.get(generateUrl('/apps/openregister/api/organisations'))
+				const response = await axios.get(
+					generateUrl('/apps/openregister/api/organisations'),
+				)
 
 				// The response has a 'results' array with organisations.
 				if (response.data && response.data.results) {
-					this.organisations = response.data.results.map(org => ({
+					this.organisations = response.data.results.map((org) => ({
 						uuid: org.uuid,
 						name: org.name,
 						description: org.description,
@@ -382,13 +353,14 @@ export default {
 		},
 
 		/**
-		 * Check if a job can be saved (has both user and organisation selected)
+		 * Check if a job can be saved (has an organisation selected)
 		 *
 		 * @param {object} job The job to check
 		 * @return {boolean} True if the job can be saved
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		canSaveJob(job) {
-			return job.selectedUser?.value && job.selectedOrganisation?.value
+			return !!job.selectedOrganisation?.value
 		},
 
 		/**
@@ -397,9 +369,10 @@ export default {
 		 * @param {string} jobId The job ID
 		 * @param {boolean} enabled Whether the job is enabled
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async updateJobEnabled(jobId, enabled) {
-			const job = this.cronjobs.find(j => j.id === jobId)
+			const job = this.cronjobs.find((j) => j.id === jobId)
 			if (job) {
 				job.enabled = enabled
 				await this.saveJobConfig(job)
@@ -411,15 +384,15 @@ export default {
 		 *
 		 * @param {object} job The job to save
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveJobConfig(job) {
 			this.savingJob = job.id
 			try {
 				const response = await axios.post(
-					generateUrl('/apps/softwarecatalog/api/settings/cronjobs'),
+					generateUrl('/apps/stackiq/api/settings/cronjobs'),
 					{
 						jobId: job.id,
-						userId: job.selectedUser?.value || null,
 						organisationUuid: job.selectedOrganisation?.value || null,
 						enabled: job.enabled,
 					},
@@ -427,11 +400,12 @@ export default {
 
 				if (response.data.success) {
 					// Update local state.
-					job.userId = job.selectedUser?.value || null
 					job.organisationUuid = job.selectedOrganisation?.value || null
 					showSuccess('Cronjob configuration saved')
 				} else {
-					showError(response.data.message || 'Failed to save configuration')
+					showError(
+						response.data.message || 'Failed to save configuration',
+					)
 				}
 			} catch (error) {
 				console.error('Failed to save job config:', error)
@@ -446,17 +420,20 @@ export default {
 		 *
 		 * @param {object} job The job to run
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async runJob(job) {
-			if (!job.userId || !job.organisationUuid) {
-				showError('Please configure and save user and organisation first')
+			if (!job.organisationUuid) {
+				showError('Please configure and save an organisation first')
 				return
 			}
 
 			this.runningJob = job.id
 			try {
 				// Trigger the organization sync endpoint.
-				const response = await axios.post(generateUrl('/apps/softwarecatalog/api/settings/sync'))
+				const response = await axios.post(
+					generateUrl('/apps/stackiq/api/settings/sync'),
+				)
 
 				if (response.data.success) {
 					showSuccess('Background job executed successfully')
@@ -465,7 +442,10 @@ export default {
 				}
 			} catch (error) {
 				console.error('Failed to run job:', error)
-				showError('Failed to run background job: ' + (error.response?.data?.message || error.message))
+				showError(
+					'Failed to run background job: '
+						+ (error.response?.data?.message || error.message),
+				)
 			} finally {
 				this.runningJob = null
 			}
@@ -476,6 +456,7 @@ export default {
 		 *
 		 * @param {number} seconds Interval in seconds
 		 * @return {string} Formatted interval
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatInterval(seconds) {
 			if (seconds < 60) {
@@ -495,6 +476,7 @@ export default {
 		 * @param {string} app App name
 		 * @param {string} text Text to translate
 		 * @return {string} Translated text
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		t(app, text) {
 			return text

@@ -1,32 +1,37 @@
-/**
- * OrganisatieCard.vue
- * Custom card component for displaying organisatie objects
- * @category Components
- * @package softwarecatalog
- * @author Ruben Linde
- * @copyright 2024
- * @license AGPL-3.0-or-later
- * @version 1.0.0
- * @link https://github.com/opencatalogi/softwarecatalog
- */
+/** * OrganisatieCard.vue * Custom card component for displaying organisatie objects
+* @category Components * @package stackiq * @author Ruben Linde * @copyright 2024 *
+@license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 *
+@version 1.0.0 * @link https://github.com/ConductionNL/stackiq */
 
 <template>
-	<div class="organisatieCard">
+	<!-- role/tabindex/keydown rather than a click-only div: the whole card
+	     navigates to the organisation detail page, so it is the primary control
+	     in this component and a keyboard user could not activate it at all
+	     (WCAG 2.1.1). The nested .cardHeaderActions already stops propagation,
+	     so the NcActions menu is unaffected. -->
+	<div
+		class="organisatieCard"
+		role="button"
+		tabindex="0"
+		:aria-label="`Open ${getOrganisatieTitle(item)}`"
+		@click="handleCardClick"
+		@keydown.enter.prevent="handleCardClick"
+		@keydown.space.prevent="handleCardClick">
 		<div class="cardHeader">
 			<h2 v-tooltip.bottom="getOrganisatieSummary(item)">
 				<component :is="cardIcon" :size="20" />
 				{{ getOrganisatieTitle(item) }}
 			</h2>
-			<div class="cardHeaderActions">
+			<div class="cardHeaderActions" @click.stop>
 				<!-- Object Actions -->
-				<NcActions :primary="true" menu-name="Actions">
+				<NcActions :primary="true" menuName="Actions">
 					<template #icon>
 						<DotsHorizontal :size="20" />
 					</template>
 					<NcActionButton
 						v-for="action in objectActions"
 						:key="action.id"
-						close-after-click
+						closeAfterClick
 						:disabled="action.condition && !action.condition(item)"
 						@click="executeObjectAction(action, item)">
 						<template #icon>
@@ -41,27 +46,33 @@
 		<!-- Custom Organisation Content -->
 		<div class="organisatieContent">
 			<!-- Organisation View -->
-			<div v-if="currentView === 'organisatie'">
+			<div v-if="currentView === 'organization'">
 				<!-- Organisation Type Badge -->
 				<div class="organisatieBadges">
-					<span v-if="item.type" class="typeBadge" :class="`type-${item.type.toLowerCase()}`">
+					<span
+						v-if="item.type"
+						class="typeBadge"
+						:class="`type-${item.type.toLowerCase()}`">
 						{{ item.type }}
 					</span>
-					<span v-if="item.status" class="statusBadge" :class="`status-${item.status.toLowerCase()}`">
+					<span
+						v-if="item.status"
+						class="statusBadge"
+						:class="`status-${item.status.toLowerCase()}`">
 						{{ item.status }}
 					</span>
 				</div>
 
 				<!-- Organisation Description -->
 				<div class="organisatieDescription">
-					<p v-if="item.beschrijvingKort" class="beschrijvingKort">
-						{{ item.beschrijvingKort }}
+					<p v-if="item.shortDescription" class="shortDescription">
+						{{ item.shortDescription }}
 					</p>
-					<p v-else-if="item.beschrijvingLang" class="beschrijvingLang">
-						{{ truncateText(item.beschrijvingLang, 150) }}
+					<p v-else-if="item.longDescription" class="longDescription">
+						{{ truncateText(item.longDescription, 150) }}
 					</p>
 					<p v-else class="noDescription">
-						{{ t('softwarecatalog', 'No description available') }}
+						{{ t('stackiq', 'No description available') }}
 					</p>
 				</div>
 
@@ -69,7 +80,10 @@
 				<div class="organisatieDetails">
 					<div v-if="item.website" class="detailItem">
 						<Globe :size="16" />
-						<a :href="formatWebsiteUrl(item.website)" target="_blank" rel="noopener">
+						<a
+							:href="formatWebsiteUrl(item.website)"
+							target="_blank"
+							rel="noopener">
 							{{ item.website }}
 						</a>
 					</div>
@@ -95,26 +109,37 @@
 						<AccountMultiple :size="16" />
 						<span>{{ getContactpersonenCount() }} contactpersonen</span>
 					</div>
-					<div class="viewToggleContainer">
+					<div class="viewToggleContainer" @click.stop>
 						<NcButton
-							:type="currentView === 'contactpersonen' ? 'primary' : 'secondary'"
+							:variant="
+								currentView === 'contactpersonen'
+									? 'primary'
+									: 'secondary'
+							"
 							size="small"
 							@click="toggleView">
 							<template #icon>
 								<AccountMultiple :size="16" />
 							</template>
-							{{ currentView === 'contactpersonen' ? 'Bekijk organisatie' : 'Bekijk contactpersonen' }}
+							{{
+								currentView === 'contactpersonen'
+									? 'Bekijk organisatie'
+									: 'Bekijk contactpersonen'
+							}}
 						</NcButton>
 					</div>
 				</div>
 			</div>
 
 			<!-- Contactpersonen View -->
-			<div v-else-if="currentView === 'contactpersonen'" class="contactpersonenView">
+			<div
+				v-else-if="currentView === 'contactpersonen'"
+				class="contactpersonenView"
+				@click.stop>
 				<ContactpersonenList
 					ref="contactpersonenList"
-					:organisation-id="item.id || item.uuid"
-					:organisation-data="item" />
+					:organisationId="item.id || item.uuid"
+					:organisationData="item" />
 
 				<!-- Toggle Button Row in Contactpersonen View -->
 				<div class="contactCountRow">
@@ -124,13 +149,21 @@
 					</div>
 					<div class="viewToggleContainer">
 						<NcButton
-							:type="currentView === 'organisatie' ? 'primary' : 'secondary'"
+							:variant="
+								currentView === 'organization'
+									? 'primary'
+									: 'secondary'
+							"
 							size="small"
 							@click="toggleView">
 							<template #icon>
 								<component :is="cardIcon" :size="16" />
 							</template>
-							{{ currentView === 'contactpersonen' ? 'Bekijk organisatie' : 'Bekijk contactpersonen' }}
+							{{
+								currentView === 'contactpersonen'
+									? 'Bekijk organisatie'
+									: 'Bekijk contactpersonen'
+							}}
 						</NcButton>
 					</div>
 				</div>
@@ -140,13 +173,13 @@
 </template>
 
 <script>
-import { NcActions, NcActionButton, NcButton } from '@nextcloud/vue'
+import { NcActionButton, NcActions, NcButton } from '@nextcloud/vue'
+import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
+import Certificate from 'vue-material-design-icons/Certificate.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
-import Globe from 'vue-material-design-icons/Web.vue'
 import Email from 'vue-material-design-icons/Email.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
-import Certificate from 'vue-material-design-icons/Certificate.vue'
-import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
+import Globe from 'vue-material-design-icons/Web.vue'
 import ContactpersonenList from '../ContactpersonenList.vue'
 
 export default {
@@ -163,6 +196,7 @@ export default {
 		AccountMultiple,
 		ContactpersonenList,
 	},
+
 	props: {
 		/**
 		 * The organisation item data
@@ -171,6 +205,7 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		/**
 		 * Available actions for this organisation
 		 */
@@ -178,6 +213,7 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/**
 		 * Icon component for the card
 		 */
@@ -186,9 +222,10 @@ export default {
 			required: true,
 		},
 	},
+
 	data() {
 		return {
-			currentView: 'organisatie', // 'organisatie' or 'contactpersonen'
+			currentView: 'organization', // 'organization' or 'contactpersonen'
 		}
 	},
 
@@ -197,53 +234,97 @@ export default {
 		 * Watch for changes in currentView and refresh user data when switching to contactpersonen
 		 */
 		currentView: {
+			/**
+			 * @param newView
+			 * @param oldView
+			 * @spec openspec/specs/fe-organizations/spec.md
+			 */
 			async handler(newView, oldView) {
 				// Only trigger when actually switching TO contactpersonen view from a different view
-				if (newView === 'contactpersonen' && oldView && oldView !== 'contactpersonen') {
-					console.info('Switched to contactpersonen view, loading user info and groups...')
+				if (
+					newView === 'contactpersonen'
+					&& oldView
+					&& oldView !== 'contactpersonen'
+				) {
+					console.info(
+						'Switched to contactpersonen view, loading user info and groups...',
+					)
 					// Use nextTick to ensure the component is fully rendered
 					await this.$nextTick()
-					if (this.$refs.contactpersonenList && this.$refs.contactpersonenList.loadUserInfoAndGroups) {
+					if (
+						this.$refs.contactpersonenList
+						&& this.$refs.contactpersonenList.loadUserInfoAndGroups
+					) {
 						// Add a small delay to prevent rapid successive calls
 						setTimeout(async () => {
-							if (this.$refs.contactpersonenList && this.$refs.contactpersonenList.loadUserInfoAndGroups) {
+							if (
+								this.$refs.contactpersonenList
+								&& this.$refs.contactpersonenList
+									.loadUserInfoAndGroups
+							) {
 								await this.$refs.contactpersonenList.loadUserInfoAndGroups()
 							}
 						}, 100)
 					}
 				}
 			},
+
 			immediate: false,
 		},
 	},
 
 	methods: {
 		/**
+		 * Emit the `click` event CnCardGrid/CnIndexPage listen on for
+		 * navigation (CnPageRenderer.onRowOpen resolves the matching
+		 * type:"detail" page by register+schema and pushes to it). The
+		 * default CnObjectCard wires this via CnCardGrid's cardListeners;
+		 * a custom cardComponent like this one must emit it explicitly —
+		 * without it, clicking an organisation card was a no-op.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		handleCardClick() {
+			this.$emit('click', this.item)
+		},
+
+		/**
 		 * Get the display title for the organisation
+		 *
 		 * @param {object} item - The organisation object
 		 * @return {string} The title to display
 		 */
 		getOrganisatieTitle(item) {
-			return item?.naam || item?.name || item?.['@self']?.name || 'Unknown Organisation'
+			return (
+				item?.name
+				|| item?.name
+				|| item?.['@self']?.name
+				|| 'Unknown Organisation'
+			)
 		},
 
 		/**
 		 * Get the summary/tooltip text for the organisation
+		 *
 		 * @param {object} item - The organisation object
 		 * @return {string} The summary text
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieSummary(item) {
-			if (item?.beschrijvingKort) return item.beschrijvingKort
-			if (item?.beschrijvingLang) return item.beschrijvingLang
-			if (item?.type && item?.naam) return `${item.type} organisatie`
+			if (item?.shortDescription) return item.shortDescription
+			if (item?.longDescription) return item.longDescription
+			if (item?.type && item?.name) return `${item.type} organisatie`
 			if (item?.type) return item.type
 			return ''
 		},
 
 		/**
 		 * Execute an object action
+		 *
 		 * @param {object} action - The action to execute
 		 * @param {object} item - The item to execute the action on
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		executeObjectAction(action, item) {
 			if (action.handler) {
@@ -253,8 +334,10 @@ export default {
 
 		/**
 		 * Format website URL to ensure it has protocol
+		 *
 		 * @param {string} url - The website URL
 		 * @return {string} Formatted URL with protocol
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		formatWebsiteUrl(url) {
 			if (!url) return '#'
@@ -266,9 +349,11 @@ export default {
 
 		/**
 		 * Truncate text to specified length
+		 *
 		 * @param {string} text - Text to truncate
 		 * @param {number} maxLength - Maximum length
 		 * @return {string} Truncated text
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		truncateText(text, maxLength = 150) {
 			if (!text || text.length <= maxLength) return text
@@ -277,9 +362,14 @@ export default {
 
 		/**
 		 * Toggle between organisation and contactpersonen views
+		 *
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async toggleView() {
-			const newView = this.currentView === 'organisatie' ? 'contactpersonen' : 'organisatie'
+			const newView =
+				this.currentView === 'organization'
+					? 'contactpersonen'
+					: 'organization'
 			this.currentView = newView
 
 			// Note: The watch handler will handle refreshing user data when switching to contactpersonen view
@@ -288,6 +378,7 @@ export default {
 
 		/**
 		 * Get the contactpersonen count
+		 *
 		 * @return {number} The number of contactpersons
 		 */
 		getContactpersonenCount() {
@@ -296,7 +387,9 @@ export default {
 
 		/**
 		 * Get the organisation address
+		 *
 		 * @return {string} The organisation's address
+		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		getOrganisatieAdres() {
 			const adres = this.item?.adres
@@ -315,7 +408,6 @@ export default {
 
 			return 'Geen adres beschikbaar'
 		},
-
 	},
 }
 </script>
@@ -370,7 +462,8 @@ export default {
 	flex-wrap: wrap;
 }
 
-.typeBadge, .statusBadge {
+.typeBadge,
+.statusBadge {
 	padding: 4px 8px;
 	border-radius: var(--border-radius-pill);
 	font-size: 12px;
@@ -422,7 +515,8 @@ export default {
 	line-height: 1.4;
 }
 
-.beschrijvingKort, .beschrijvingLang {
+.shortDescription,
+.longDescription {
 	margin: 0;
 	color: var(--color-main-text);
 	font-size: 14px;
@@ -497,4 +591,11 @@ export default {
 	color: var(--color-main-text);
 }
 
+/* WCAG 2.3.3 — the card's hover shadow transition is decorative; the shadow
+   still appears, it just appears instantly. */
+@media (prefers-reduced-motion: reduce) {
+	.organisatieCard {
+		transition: none;
+	}
+}
 </style>

@@ -10,7 +10,7 @@ tags: [testing, softwarecatalogus, sync, issues, acceptance-criteria]
 Synchronize GitHub issues from `VNG-Realisatie/Softwarecatalogus` into local files, auto-generate acceptance criteria, and update both Postman tests and browser test agent skill files.
 
 **Target repo**: `VNG-Realisatie/Softwarecatalogus`
-**Local directory**: `softwarecatalog/`
+**Local directory**: `stackiq/`
 
 **Input**: Optional argument after `/swc:update`:
 - No argument → incremental sync (changes since last run)
@@ -24,7 +24,7 @@ Synchronize GitHub issues from `VNG-Realisatie/Softwarecatalogus` into local fil
 
 ### Step 1: Read last-update timestamp
 
-Read `softwarecatalog/.last-update`. This file contains a single ISO 8601 timestamp (e.g., `2026-03-04T12:00:00Z`).
+Read `stackiq/.last-update`. This file contains a single ISO 8601 timestamp (e.g., `2026-03-04T12:00:00Z`).
 
 - If the file **exists**: use its content as `SINCE_TIMESTAMP`
 - If the file **does not exist**: first run. Set `SINCE_TIMESTAMP` to empty (fetch ALL open issues)
@@ -60,7 +60,7 @@ Skip the list query. Fetch each specified issue individually in Step 4.
 
 For each issue in the result set:
 
-- **NEW**: No file exists at `softwarecatalog/issues/{number}.md`
+- **NEW**: No file exists at `stackiq/issues/{number}.md`
 - **UPDATED**: File exists AND GitHub `updatedAt` is after `SINCE_TIMESTAMP`
 - **CLOSED**: Issue `state` is `"closed"`
 - **UNCHANGED**: File exists AND not updated since last sync → skip
@@ -83,7 +83,7 @@ gh issue view {NUMBER} --repo VNG-Realisatie/Softwarecatalogus \
 
 ### Step 5: Write individual issue files
 
-Write/overwrite `softwarecatalog/issues/{number}.md` using the **established format**:
+Write/overwrite `stackiq/issues/{number}.md` using the **established format**:
 
 ```markdown
 # #{number} — {title}
@@ -112,7 +112,7 @@ Write/overwrite `softwarecatalog/issues/{number}.md` using the **established for
 ...
 ```
 
-**Formatting rules** (match existing files in `softwarecatalog/issues/`):
+**Formatting rules** (match existing files in `stackiq/issues/`):
 - Title uses `# #{number} — {title}` (em-dash `—`, not hyphen)
 - Status is UPPERCASE: `OPEN` or `CLOSED`
 - Preserve HTML image tags from GitHub as-is (don't convert to markdown)
@@ -124,7 +124,7 @@ Write/overwrite `softwarecatalog/issues/{number}.md` using the **established for
 
 ### Step 6: Read and parse current issues.md
 
-Read `softwarecatalog/issues.md`. Understand its structure:
+Read `stackiq/issues.md`. Understand its structure:
 - **Header** (first ~45 lines): date, summary counts, test type legend, recently closed list, new issues list
 - **IGS Issues section**: individual `### #{number}: {title}` blocks with acceptance criteria
 - **Other Issues section**: table of non-testable issues
@@ -230,7 +230,7 @@ For issues that changed to CLOSED:
 
 ### Step 12: Update Postman collection for new [API] criteria
 
-Read `softwarecatalog/postman/softwarecatalogus-tests.json` (Postman v2.1 format).
+Read `stackiq/postman/softwarecatalogus-tests.json` (Postman v2.1 format).
 
 For each new issue with [API]-tagged criteria, determine the target folder:
 
@@ -304,10 +304,10 @@ For each [API] criterion, create a Postman request item:
 ```bash
 python3 -c "
 import json
-with open('softwarecatalog/postman/softwarecatalogus-tests.json', 'r') as f:
+with open('stackiq/postman/softwarecatalogus-tests.json', 'r') as f:
     collection = json.load(f)
 # ... add new items to the appropriate folder ...
-with open('softwarecatalog/postman/softwarecatalogus-tests.json', 'w') as f:
+with open('stackiq/postman/softwarecatalogus-tests.json', 'w') as f:
     json.dump(collection, f, indent='\t', ensure_ascii=False)
 "
 ```
@@ -320,13 +320,13 @@ Determine which persona(s) should test each new issue:
 
 | Label / content | Primary persona | Skill file |
 |----------------|----------------|------------|
-| "Aanbod", vendor features | leverancier | `softwarecatalog/.claude/skills/test-leverancier.md` |
-| "Gebruik" (municipality) | gemeente | `softwarecatalog/.claude/skills/test-gemeente.md` |
-| "Gebruik" (collaboration) | samenwerking | `softwarecatalog/.claude/skills/test-samenwerking.md` |
-| "Zoeken" (unauthenticated) | bezoeker | `softwarecatalog/.claude/skills/test-bezoeker.md` |
-| "Referentiearchitectuur" | architectuur-expert | `softwarecatalog/.claude/skills/test-architectuur-expert.md` |
-| Security, privacy, RBAC | security-officer | `softwarecatalog/.claude/skills/test-security-officer.md` |
-| Admin, CMS, config | functioneel-beheerder | `softwarecatalog/.claude/skills/test-functioneel-beheerder.md` |
+| "Aanbod", vendor features | leverancier | `stackiq/.claude/skills/test-leverancier.md` |
+| "Gebruik" (municipality) | gemeente | `stackiq/.claude/skills/test-gemeente.md` |
+| "Gebruik" (collaboration) | samenwerking | `stackiq/.claude/skills/test-samenwerking.md` |
+| "Zoeken" (unauthenticated) | bezoeker | `stackiq/.claude/skills/test-bezoeker.md` |
+| "Referentiearchitectuur" | architectuur-expert | `stackiq/.claude/skills/test-architectuur-expert.md` |
+| Security, privacy, RBAC | security-officer | `stackiq/.claude/skills/test-security-officer.md` |
+| Admin, CMS, config | functioneel-beheerder | `stackiq/.claude/skills/test-functioneel-beheerder.md` |
 
 For each persona skill file, find the issues table (format: `| Issue | Title | ... |`) and add the new issue row in numerical order:
 ```
@@ -339,7 +339,7 @@ Also add brief testing instructions for the new issue in the "Detailed Testing I
 
 ### Step 14: Update aanvullende-informatie.md
 
-Read `softwarecatalog/aanvullende-informatie.md`. Update:
+Read `stackiq/aanvullende-informatie.md`. Update:
 - The total count in the header
 - Add new issues to the appropriate category section
 - Note any new functional areas not previously covered
@@ -350,9 +350,9 @@ Read `softwarecatalog/aanvullende-informatie.md`. Update:
 
 ### Step 15: Write timestamp
 
-Write the current UTC time as ISO 8601 to `softwarecatalog/.last-update`:
+Write the current UTC time as ISO 8601 to `stackiq/.last-update`:
 ```bash
-date -u +"%Y-%m-%dT%H:%M:%SZ" > softwarecatalog/.last-update
+date -u +"%Y-%m-%dT%H:%M:%SZ" > stackiq/.last-update
 ```
 
 ### Step 16: Present summary
@@ -385,12 +385,12 @@ Output a structured summary to the user:
 {list of closed issue numbers and titles}
 
 ### Files Modified
-- softwarecatalog/issues.md
-- softwarecatalog/issues/{numbers}.md
-- softwarecatalog/postman/softwarecatalogus-tests.json (if API tests added)
-- softwarecatalog/.claude/skills/test-{persona}.md (list which ones)
-- softwarecatalog/aanvullende-informatie.md
-- softwarecatalog/.last-update
+- stackiq/issues.md
+- stackiq/issues/{numbers}.md
+- stackiq/postman/softwarecatalogus-tests.json (if API tests added)
+- stackiq/.claude/skills/test-{persona}.md (list which ones)
+- stackiq/aanvullende-informatie.md
+- stackiq/.last-update
 ```
 
 ### Step 17: Offer test execution
@@ -410,8 +410,8 @@ If the user chooses to test:
 
 **API tests**: Run Newman for only the affected folders:
 ```bash
-newman run softwarecatalog/postman/softwarecatalogus-tests.json \
-  -e softwarecatalog/postman/environment-local.json \
+newman run stackiq/postman/softwarecatalogus-tests.json \
+  -e stackiq/postman/environment-local.json \
   --folder "{affected-folder-name}" \
   --reporters cli 2>&1
 ```
@@ -420,7 +420,7 @@ Repeat for each folder that received new tests.
 **Browser tests**: Launch the affected persona agents using the same sub-agent pattern from `/swc:test`:
 - For each affected persona, launch a Task agent with the sub-agent prompt template from `/swc:test` Step 2
 - BUT limit testing to only the new/updated issues (include a list of specific issue numbers in the prompt)
-- Write results to `softwarecatalog/test-results/{persona}/results-authenticated.md`
+- Write results to `stackiq/test-results/{persona}/results-authenticated.md`
 
 **Both**: Run API first, then browser.
 
@@ -430,10 +430,10 @@ After testing completes, if any tests FAIL, ask the user:
 
 | Option | Label | Description |
 |--------|-------|-------------|
-| 1 | **Yes, fix them** | I'll investigate the failures and implement fixes in the softwarecatalog app code |
+| 1 | **Yes, fix them** | I'll investigate the failures and implement fixes in the stackiq app code |
 | 2 | **No, just report** | Save the test results for later review |
 
-If the user wants fixes: read the test results, identify the root causes, and implement code fixes in the `softwarecatalog/` app. After fixing, re-run the affected tests to verify.
+If the user wants fixes: read the test results, identify the root causes, and implement code fixes in the `stackiq/` app. After fixing, re-run the affected tests to verify.
 
 ---
 
@@ -444,10 +444,10 @@ If the user wants fixes: read the test results, identify the root causes, and im
 - **NEVER** post comments, update labels, change state, or modify GitHub issues in any way
 - **ONLY** use `gh issue list` (to discover) and `gh issue view` (to read) — nothing else
 - **NEVER** push changes to any remote repository
-- All output goes to LOCAL files in `softwarecatalog/` only
+- All output goes to LOCAL files in `stackiq/` only
 
 ### Other rules
-- All file writes go to `softwarecatalog/` only — NEVER write to `Softwarecatalogus/`
+- All file writes go to `stackiq/` only — NEVER write to `Softwarecatalogus/`
 - Preserve existing acceptance criteria checkbox states (`[x]` and `[ ]`)
 - Use `python3` for Postman JSON manipulation (not manual text editing)
 - When in doubt about tag classification, default to `[HYBRID]`

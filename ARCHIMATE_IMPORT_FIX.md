@@ -61,12 +61,12 @@ Before testing, ensure AMEF configuration is properly set:
 
 ```bash
 # Check AMEF configuration
-docker-compose exec -u 33 nextcloud php occ config:app:get softwarecatalog amef_config
+docker-compose exec -u 33 nextcloud php occ config:app:get stackiq amef_config
 
 # Check via API
 curl -u 'admin:admin' \
      -H 'OCS-APIREQUEST: true' \
-     'http://localhost/index.php/apps/softwarecatalog/api/settings/debug'
+     'http://localhost/index.php/apps/stackiq/api/settings/debug'
 ```
 
 ### 2. Test Import via UI
@@ -81,7 +81,7 @@ curl -u 'admin:admin' \
 curl -u 'admin:admin' \
      -H 'OCS-APIREQUEST: true' \
      -F 'archiMateFile=@/path/to/GEMMA_release.xml' \
-     'http://localhost/index.php/apps/softwarecatalog/api/archimate/import'
+     'http://localhost/index.php/apps/stackiq/api/archimate/import'
 ```
 
 ### 4. Monitor Logs
@@ -130,7 +130,7 @@ docker logs master-nextcloud-1 | grep -E 'Object creation completed|Object updat
 ### 1. Check Object Creation
 ```bash
 # Check if objects were created in the database
-docker-compose exec -u 33 nextcloud php occ config:app:get softwarecatalog amef_config
+docker-compose exec -u 33 nextcloud php occ config:app:get stackiq amef_config
 ```
 
 ### 2. Verify Schema Mapping
@@ -150,7 +150,7 @@ The fix ensures that:
 
 1. **Check AMEF Configuration**:
    ```bash
-   docker-compose exec -u 33 nextcloud php occ config:app:get softwarecatalog amef_config
+   docker-compose exec -u 33 nextcloud php occ config:app:get stackiq amef_config
    ```
    Ensure all schema IDs are properly set.
 

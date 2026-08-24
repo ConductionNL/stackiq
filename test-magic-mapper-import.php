@@ -8,7 +8,7 @@
  * It should be run from within the Nextcloud container as user www-data.
  * 
  * Usage:
- *   docker exec -u 33 nextcloud php /var/www/html/custom_apps/softwarecatalog/test-magic-mapper-import.php
+ *   docker exec -u 33 nextcloud php /var/www/html/custom_apps/stackiq/test-magic-mapper-import.php
  */
 
 require_once __DIR__ . '/../../lib/base.php';
@@ -44,7 +44,7 @@ try {
     // Import the configuration.
     echo "⚙️  Starting import...\n";
     $result = $configService->importFromApp(
-        appId: 'softwarecatalog',
+        appId: 'stackiq',
         data: $data,
         version: $data['info']['version'] ?? '2.0.1-magic',
         force: true // Force import for testing

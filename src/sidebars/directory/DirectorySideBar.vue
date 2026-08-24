@@ -1,13 +1,17 @@
 <script setup>
-import { navigationStore } from '../../store/store.js'
 import { reactive } from 'vue'
+import { navigationStore } from '../../store/store.js'
 </script>
 
 <template>
 	<NcAppSidebar
-		:name="directoryStore.listingItem?.title || 'Geen listing' "
+		:name="directoryStore.listingItem?.title || 'Geen listing'"
 		:subname="directoryStore.listingItem?.organisation?.title">
-		<NcEmptyContent v-if="!directoryStore.listingItem.id || navigationStore.selected != 'directory'"
+		<NcEmptyContent
+			v-if="
+				!directoryStore.listingItem.id
+				|| navigationStore.selected != 'directory'
+			"
 			class="detailContainer"
 			name="Geen listing"
 			description="Nog geen listing geselecteerd, listings kan je ontdekken via (externe) directories.">
@@ -15,13 +19,21 @@ import { reactive } from 'vue'
 				<LayersOutline />
 			</template>
 			<template #action>
-				<NcButton type="primary" @click="navigationStore.setModal('addDirectory')">
+				<NcButton
+					variant="primary"
+					@click="navigationStore.setModal('addDirectory')">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
 					Directory inlezen
 				</NcButton>
-				<NcButton @click="openLink('https://conduction.gitbook.io/opencatalogi-nextcloud/beheerders/directory', '_blank')">
+				<NcButton
+					@click="
+						openLink(
+							'https://conduction.gitbook.io/opencatalogi-nextcloud/beheerders/directory',
+							'_blank',
+						)
+					">
 					<template #icon>
 						<HelpCircleOutline :size="20" />
 					</template>
@@ -29,7 +41,11 @@ import { reactive } from 'vue'
 				</NcButton>
 			</template>
 		</NcEmptyContent>
-		<NcAppSidebarTab v-if="directoryStore.listingItem.id && navigationStore.selected === 'directory'"
+		<NcAppSidebarTab
+			v-if="
+				directoryStore.listingItem.id
+				&& navigationStore.selected === 'directory'
+			"
 			id="detail-tab"
 			name="Details"
 			:order="1">
@@ -63,23 +79,31 @@ import { reactive } from 'vue'
 				</div>
 			</div>
 		</NcAppSidebarTab>
-		<NcAppSidebarTab v-if="directoryStore.listingItem.id && navigationStore.selected === 'directory'"
+		<NcAppSidebarTab
+			v-if="
+				directoryStore.listingItem.id
+				&& navigationStore.selected === 'directory'
+			"
 			id="settings-tab"
 			name="Configuratie"
 			:order="2">
 			<template #icon>
 				<CogOutline :size="20" />
 			</template>
-			<NcCheckboxRadioSwitch :checked.sync="directoryStore.listingItem.available" type="switch">
+			<NcCheckboxRadioSwitch
+				v-model="directoryStore.listingItem.available"
+				type="switch">
 				Beschickbaar maken voor mijn zoek opdrachten
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch :checked.sync="directoryStore.listingItem.default" type="switch">
+			<NcCheckboxRadioSwitch
+				v-model="directoryStore.listingItem.default"
+				type="switch">
 				Standaard mee nemen in de beantwoording van mijn zoekopdrachten
 			</NcCheckboxRadioSwitch>
 
 			<NcButton
 				:disabled="syncLoading"
-				type="primary"
+				variant="primary"
 				class="syncButton"
 				@click="synDirectroy">
 				<template #icon>
@@ -90,7 +114,11 @@ import { reactive } from 'vue'
 				Synchroniseren
 			</NcButton>
 		</NcAppSidebarTab>
-		<NcAppSidebarTab v-if="directoryStore.listingItem.id && navigationStore.selected === 'directory'"
+		<NcAppSidebarTab
+			v-if="
+				directoryStore.listingItem.id
+				&& navigationStore.selected === 'directory'
+			"
 			id="metdata-tab"
 			name="Publicatie typen"
 			:order="3">
@@ -99,9 +127,11 @@ import { reactive } from 'vue'
 			</template>
 			Welke meta data typen zou u uit deze catalogus willen overnemen?
 			<div v-if="!loading">
-				<NcCheckboxRadioSwitch v-for="(metadataSingular, i) in directoryStore.listingItem.metadata"
+				<NcCheckboxRadioSwitch
+					v-for="(metadataSingular, i) in directoryStore.listingItem
+						.metadata"
 					:key="`${metadataSingular}${i}`"
-					:checked.sync="checkedMetadata[metadataSingular]"
+					v-model="checkedMetadata[metadataSingular]"
 					type="switch">
 					{{ metadataSingular }}
 				</NcCheckboxRadioSwitch>
@@ -110,16 +140,23 @@ import { reactive } from 'vue'
 		</NcAppSidebarTab>
 	</NcAppSidebar>
 </template>
-<script>
 
-import { NcAppSidebar, NcEmptyContent, NcButton, NcAppSidebarTab, NcCheckboxRadioSwitch, NcLoadingIcon } from '@nextcloud/vue'
+<script>
+import {
+	NcAppSidebar,
+	NcAppSidebarTab,
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcEmptyContent,
+	NcLoadingIcon,
+} from '@nextcloud/vue'
+import CogOutline from 'vue-material-design-icons/CogOutline.vue'
+import DatabaseSyncOutline from 'vue-material-design-icons/DatabaseSyncOutline.vue'
+import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
+import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
+import InformationSlabSymbol from 'vue-material-design-icons/InformationSlabSymbol.vue'
 import LayersOutline from 'vue-material-design-icons/LayersOutline.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
-import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
-import DatabaseSyncOutline from 'vue-material-design-icons/DatabaseSyncOutline.vue'
-import CogOutline from 'vue-material-design-icons/CogOutline.vue'
-import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
-import InformationSlabSymbol from 'vue-material-design-icons/InformationSlabSymbol.vue'
 
 // Temporary placeholder stores until they are properly implemented
 const directoryStore = reactive({
@@ -153,6 +190,7 @@ export default {
 		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 	},
+
 	data() {
 		return {
 			checkedMetadata: {},
@@ -161,13 +199,23 @@ export default {
 			syncLoading: false,
 		}
 	},
+
 	computed: {
+		/**
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
 		listingItem() {
 			return directoryStore.listingItem
 		},
 	},
+
 	watch: {
 		checkedMetadata: {
+			/**
+			 * @param newValue
+			 * @param oldValue
+			 * @spec openspec/specs/fe-shell-navigation/spec.md
+			 */
 			handler(newValue, oldValue) {
 				const metadataUrl = Object.entries(newValue)[0][0]
 				const shouldCopyMetadata = Object.entries(newValue)[0][1]
@@ -177,27 +225,50 @@ export default {
 					this.deleteMetadata(metadataUrl)
 				}
 			},
+
 			deep: true,
 		},
+
 		listingItem: {
+			/**
+			 * @param newValue
+			 * @param oldValue
+			 * @spec openspec/specs/fe-shell-navigation/spec.md
+			 */
 			handler(newValue, oldValue) {
 				if (newValue !== false && metadataStore?.metaDataList) {
 					this.loading = true
 					this.checkMetadataSwitches()
 				}
 			},
+
 			deep: true, // Track changes in nested objects
 			immediate: true, // Run the handler immediately on initialization
 		},
 	},
+
+	/**
+	 * @spec openspec/specs/fe-shell-navigation/spec.md
+	 */
 	created() {
 		metadataStore.refreshMetaDataList()
 		this.checkMetadataSwitches()
 	},
+
 	methods: {
+		/**
+		 * @param url
+		 * @param type
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
 		openLink(url, type = '') {
 			window.open(url, type)
 		},
+
+		/**
+		 * @param metadataUrl
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
 		getMetadataId(metadataUrl) {
 			let metadataId
 			metadataStore.metaDataList.forEach((metadataItem) => {
@@ -207,30 +278,41 @@ export default {
 			})
 			return metadataId
 		},
+
+		/**
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
 		checkMetadataSwitches() {
 			if (Array.isArray(directoryStore?.listingItem?.metadata)) {
 				directoryStore.listingItem.metadata.forEach((metadataUrl) => {
 					// Check if the metadata URL exists in the metadataStore.metaDataList
-					const exists = metadataStore.metaDataList.some(metaData => metaData.source === metadataUrl)
+					const exists = metadataStore.metaDataList.some(
+						(metaData) => metaData.source === metadataUrl,
+					)
 					// Update the checkedMetadata reactive state
-					this.$set(this.checkedMetadata, metadataUrl, exists)
+					this.checkedMetadata[metadataUrl] = exists
 				})
 			}
 			this.loading = false
 		},
+
+		/**
+		 * @param metadataUrl
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
 		copyMetadata(metadataUrl) {
 			this.loading = true
-			fetch(
-				metadataUrl,
-				{
-					method: 'GET',
-				},
-			)
+			fetch(metadataUrl, {
+				method: 'GET',
+			})
 				.then((response) => {
 					metadataStore.refreshMetaDataList()
 					response.json().then((data) => {
-						const metaDataSources = metadataStore.metaDataList.map((metaData) => metaData.source)
-						if (!metaDataSources.includes(data.source)) this.createMetadata(data)
+						const metaDataSources = metadataStore.metaDataList.map(
+							(metaData) => metaData.source,
+						)
+						if (!metaDataSources.includes(data.source))
+							this.createMetadata(data)
 					})
 					this.loading = false
 				})
@@ -239,6 +321,11 @@ export default {
 					this.loading = false
 				})
 		},
+
+		/**
+		 * @param data
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
 		createMetadata(data) {
 			this.loading = true
 			data.title = 'KOPIE: ' + data.title
@@ -250,16 +337,13 @@ export default {
 			delete data.id
 			delete data._id
 
-			fetch(
-				'/index.php/apps/opencatalogi/api/metadata',
-				{
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(data),
+			fetch('/index.php/apps/opencatalogi/api/metadata', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
 				},
-			)
+				body: JSON.stringify(data),
+			})
 				.then((response) => {
 					this.loading = false
 				})
@@ -268,19 +352,21 @@ export default {
 					this.loading = false
 				})
 		},
+
+		/**
+		 * @param metadataUrl
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
 		deleteMetadata(metadataUrl) {
 			this.loading = true
 			const metadataId = this.getMetadataId(metadataUrl)
 
-			fetch(
-				`/index.php/apps/opencatalogi/api/metadata/${metadataId}`,
-				{
-					method: 'DELETE',
-					headers: {
-						'Content-Type': 'application/json',
-					},
+			fetch(`/index.php/apps/opencatalogi/api/metadata/${metadataId}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
 				},
-			)
+			})
 				.then(() => {
 					this.loading = false
 				})
@@ -289,6 +375,10 @@ export default {
 					this.loading = false
 				})
 		},
+
+		/**
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
 		synDirectroy() {
 			this.syncLoading = true
 			fetch(

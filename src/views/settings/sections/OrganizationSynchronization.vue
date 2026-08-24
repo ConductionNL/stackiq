@@ -1,19 +1,19 @@
 <!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
- - @license AGPL-3.0-or-later
+ - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - This program is free software: you can redistribute it and/or modify
- - it under the terms of the GNU Affero General Public License as
- - published by the Free Software Foundation, either version 3 of the
- - License, or (at your option) any later version.
+ - Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+ - the European Commission – subsequent versions of the EUPL (the "Licence");
+ - You may not use this work except in compliance with the Licence.
+ - You may obtain a copy of the Licence at:
  -
- - This program is distributed in the hope that it will be useful,
- - but WITHOUT ANY WARRANTY; without even the implied warranty of
- - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- - GNU Affero General Public License for more details.
+ - https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - You should have received a copy of the GNU Affero General Public License
- - along with this program. If not, see <http://www.gnu.org/licenses/>.
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the Licence is distributed on an "AS IS" basis,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the Licence for the specific language governing permissions and
+ - limitations under the Licence.
  -->
 
 <template>
@@ -21,51 +21,61 @@
 		name="Organization Synchronization"
 		description="Synchronize organization data between OpenRegister and external systems"
 		:loading="loading"
-		:show-save-button="true"
-		:show-refresh-button="true"
-		:can-save="hasTimeWindowChanges"
+		:showSaveButton="true"
+		:showRefreshButton="true"
+		:canSave="hasTimeWindowChanges"
 		:saving="savingConfig"
-		save-button-text="Save Configuration"
+		saveButtonText="Save Configuration"
 		:refreshing="loadingSyncStatus"
-		refresh-button-text="Refresh Status"
-		:has-info-content="true"
+		refreshButtonText="Refresh Status"
+		:hasInfoContent="true"
 		@save="saveConfiguration"
 		@refresh="refreshConfiguration">
 		<template #header-actions>
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="loading || performingSync"
 				@click="performManualSync">
 				<template #icon>
 					<NcLoadingIcon v-if="performingSync" :size="20" />
 					<Sync v-else :size="20" />
 				</template>
-				{{ selectedTimeWindow && selectedTimeWindow.value === 0 ? 'Full Sync Now' : 'Incremental Sync Now' }}
+				{{
+					selectedTimeWindow && selectedTimeWindow.value === 0
+						? 'Full Sync Now'
+						: 'Incremental Sync Now'
+				}}
 			</NcButton>
 		</template>
 		<div>
 			<div class="sync-section">
-				<p>Monitor the status of organization and contact person synchronization</p>
+				<p>
+					Monitor the status of organization and contact person
+					synchronization
+				</p>
 
 				<!-- Time Window Configuration -->
 				<div class="time-window-configuration">
 					<h4>Incremental Sync Time Window</h4>
-					<p>Configure how far back to look for updated organizations during incremental synchronization</p>
+					<p>
+						Configure how far back to look for updated organizations
+						during incremental synchronization
+					</p>
 
 					<div class="time-window-row">
 						<div class="time-window-selector">
 							<NcSelect
 								v-model="selectedTimeWindow"
 								:options="timeWindowOptions"
-								input-label="Time Window"
+								inputLabel="Time Window"
 								:disabled="loading || loadingSyncStatus"
-								@change="handleTimeWindowChange" />
+								@update:modelValue="handleTimeWindowChange" />
 						</div>
 
 						<!-- Sync Actions in same row -->
 						<div class="sync-actions">
 							<NcButton
-								type="secondary"
+								variant="secondary"
 								:disabled="loading || loadingSyncStatus"
 								@click="refreshConfiguration">
 								<template #icon>
@@ -76,11 +86,13 @@
 							</NcButton>
 
 							<NcButton
-								type="secondary"
+								variant="secondary"
 								:disabled="loading || loadingSyncStatus"
 								@click="loadSyncStatus">
 								<template #icon>
-									<NcLoadingIcon v-if="loadingSyncStatus" :size="20" />
+									<NcLoadingIcon
+										v-if="loadingSyncStatus"
+										:size="20" />
 									<Refresh v-else :size="20" />
 								</template>
 								Refresh Status
@@ -98,47 +110,108 @@
 						<div class="configuration-overview">
 							<div class="config-item">
 								<span class="config-label">Configuration:</span>
-								<span v-if="syncStatus.configured" class="status-configured">✓ Configured</span>
-								<span v-else class="status-missing">⚠ Not configured</span>
+								<span
+									v-if="syncStatus.configured"
+									class="status-configured"
+									>✓ Configured</span
+								>
+								<span v-else class="status-missing"
+									>⚠ Not configured</span
+								>
 							</div>
 
 							<div v-if="syncStatus.configured" class="config-details">
 								<div class="config-item">
 									<span class="config-label">Sync Mode:</span>
-									<span class="config-value">{{ syncStatus.syncMode || 'Unknown' }}</span>
+									<span class="config-value">{{
+										syncStatus.syncMode || 'Unknown'
+									}}</span>
 								</div>
 								<div class="config-item">
 									<span class="config-label">Time Window:</span>
-									<span class="config-value">{{ formatTimeWindow(syncStatus.timeWindow) }}</span>
+									<span class="config-value">{{
+										formatTimeWindow(syncStatus.timeWindow)
+									}}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Total Organizations:</span>
-									<span class="config-value">{{ formatNumber(syncStatus.totalOrganizationObjects) || 0 }}</span>
+									<span class="config-label"
+										>Total Organizations:</span
+									>
+									<span class="config-value">{{
+										formatNumber(
+											syncStatus.totalOrganizationObjects,
+										) || 0
+									}}</span>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Organizations to Process:</span>
-									<span class="config-value" :class="getProcessingClass(syncStatus.organizationsToProcess)">{{ syncStatus.organizationsToProcess || 0 }}</span>
+									<span class="config-label"
+										>Organizations to Process:</span
+									>
+									<span
+										class="config-value"
+										:class="
+											getProcessingClass(
+												syncStatus.organizationsToProcess,
+											)
+										"
+										>{{
+											syncStatus.organizationsToProcess || 0
+										}}</span
+									>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Contact Persons to Process:</span>
-									<span class="config-value" :class="getProcessingClass(syncStatus.contactPersonsToProcess)">{{ syncStatus.contactPersonsToProcess || 0 }}</span>
+									<span class="config-label"
+										>Contact Persons to Process:</span
+									>
+									<span
+										class="config-value"
+										:class="
+											getProcessingClass(
+												syncStatus.contactPersonsToProcess,
+											)
+										"
+										>{{
+											syncStatus.contactPersonsToProcess || 0
+										}}</span
+									>
 								</div>
-								<div v-if="syncStatus.efficiencyImprovement" class="config-item">
-									<span class="config-label">Efficiency Improvement:</span>
-									<span class="config-value efficiency-highlight">{{ syncStatus.efficiencyImprovement }}</span>
+								<div
+									v-if="syncStatus.efficiencyImprovement"
+									class="config-item">
+									<span class="config-label"
+										>Efficiency Improvement:</span
+									>
+									<span
+										class="config-value efficiency-highlight"
+										>{{ syncStatus.efficiencyImprovement }}</span
+									>
 								</div>
 								<div class="config-item">
-									<span class="config-label">Organization Entities:</span>
-									<span class="config-value">{{ formatNumber(syncStatus.totalOrganizationEntities) || 0 }}</span>
+									<span class="config-label"
+										>Organization Entities:</span
+									>
+									<span class="config-value">{{
+										formatNumber(
+											syncStatus.totalOrganizationEntities,
+										) || 0
+									}}</span>
 								</div>
 								<div class="config-item">
 									<span class="config-label">Contact Schema:</span>
-									<span v-if="syncStatus.contactSchemaConfigured" class="status-configured">✓ Configured</span>
-									<span v-else class="status-missing">⚠ Not configured</span>
+									<span
+										v-if="syncStatus.contactSchemaConfigured"
+										class="status-configured"
+										>✓ Configured</span
+									>
+									<span v-else class="status-missing"
+										>⚠ Not configured</span
+									>
 								</div>
 								<div class="config-item">
 									<span class="config-label">Last Sync:</span>
-									<span class="config-value">{{ formatLastSyncTime(syncStatus.lastSyncTime) }}</span>
+									<span class="config-value">{{
+										formatLastSyncTime(syncStatus.lastSyncTime)
+									}}</span>
 								</div>
 							</div>
 						</div>
@@ -160,21 +233,56 @@
 						</template>
 						<div class="sync-result-content">
 							<strong>{{ syncResult.message }}</strong>
-							<div v-if="syncResult.success && syncResult.results" class="sync-statistics">
+							<div
+								v-if="syncResult.success && syncResult.results"
+								class="sync-statistics">
 								<h5>Synchronization Results:</h5>
 								<ul>
-									<li>Organizations processed: {{ syncResult.results.organizationsProcessed }}</li>
-									<li>Entities created: {{ syncResult.results.entitiesCreated }}</li>
-									<li>Entities updated: {{ syncResult.results.entitiesUpdated }}</li>
-									<li>Contact persons processed: {{ syncResult.results.contactPersonsProcessed }}</li>
-									<li>Users created: {{ syncResult.results.usersCreated }}</li>
-									<li>Users updated: {{ syncResult.results.usersUpdated }}</li>
-									<li>Duration: {{ syncResult.results.duration }}</li>
+									<li>
+										Organizations processed:
+										{{
+											syncResult.results.organizationsProcessed
+										}}
+									</li>
+									<li>
+										Entities created:
+										{{ syncResult.results.entitiesCreated }}
+									</li>
+									<li>
+										Entities updated:
+										{{ syncResult.results.entitiesUpdated }}
+									</li>
+									<li>
+										Contact persons processed:
+										{{
+											syncResult.results
+												.contactPersonsProcessed
+										}}
+									</li>
+									<li>
+										Users created:
+										{{ syncResult.results.usersCreated }}
+									</li>
+									<li>
+										Users updated:
+										{{ syncResult.results.usersUpdated }}
+									</li>
+									<li>
+										Duration: {{ syncResult.results.duration }}
+									</li>
 								</ul>
-								<div v-if="syncResult.results.errors && syncResult.results.errors.length > 0" class="sync-errors">
+								<div
+									v-if="
+										syncResult.results.errors
+										&& syncResult.results.errors.length > 0
+									"
+									class="sync-errors">
 									<h5>Errors encountered:</h5>
 									<ul>
-										<li v-for="error in syncResult.results.errors" :key="error">
+										<li
+											v-for="error in syncResult.results
+												.errors"
+											:key="error">
 											{{ error }}
 										</li>
 									</ul>
@@ -187,7 +295,10 @@
 				<!-- Organisation Sync to Voorzieningen Section -->
 				<div class="organisation-voorzieningen-sync">
 					<h4>Sync Organisations to Voorzieningen Register</h4>
-					<p>Synchronize OpenRegister organisations to the voorzieningen register as organisatie objects.</p>
+					<p>
+						Synchronize OpenRegister organisations to the voorzieningen
+						register as organisatie objects.
+					</p>
 
 					<div class="voorzieningen-sync-controls">
 						<div class="sync-options">
@@ -196,7 +307,7 @@
 									<input
 										v-model="orgSyncOptions.dryRun"
 										type="checkbox"
-										:disabled="performingOrgSync">
+										:disabled="performingOrgSync" />
 									Dry Run (preview only)
 								</label>
 							</div>
@@ -208,58 +319,120 @@
 									type="number"
 									min="1"
 									max="1000"
-									:disabled="performingOrgSync">
+									:disabled="performingOrgSync" />
 							</div>
 						</div>
 
 						<div class="sync-actions">
 							<NcButton
-								type="primary"
+								variant="primary"
 								:disabled="loading || performingOrgSync"
 								@click="performOrganisationSync">
 								<template #icon>
-									<NcLoadingIcon v-if="performingOrgSync" :size="20" />
+									<NcLoadingIcon
+										v-if="performingOrgSync"
+										:size="20" />
 									<Sync v-else :size="20" />
 								</template>
-								{{ orgSyncOptions.dryRun ? 'Preview Sync' : 'Sync Organisations' }}
+								{{
+									orgSyncOptions.dryRun
+										? 'Preview Sync'
+										: 'Sync Organisations'
+								}}
 							</NcButton>
 						</div>
 					</div>
 
 					<div v-if="orgSyncResult" class="sync-result">
-						<NcNoteCard :type="orgSyncResult.success ? 'success' : 'error'">
+						<NcNoteCard
+							:type="orgSyncResult.success ? 'success' : 'error'">
 							<template #icon>
-								<CheckCircle v-if="orgSyncResult.success" :size="20" />
+								<CheckCircle
+									v-if="orgSyncResult.success"
+									:size="20" />
 								<Alert v-else :size="20" />
 							</template>
 							<div class="sync-result-content">
 								<strong>{{ orgSyncResult.message }}</strong>
-								<div v-if="orgSyncResult.results" class="sync-statistics">
+								<div
+									v-if="orgSyncResult.results"
+									class="sync-statistics">
 									<h5>Organisation Sync Results:</h5>
 									<ul>
-										<li>Total organisations: {{ orgSyncResult.results.total_organisations }}</li>
-										<li>Already existing: {{ orgSyncResult.results.existing_count }}</li>
+										<li>
+											Total organisations:
+											{{
+												orgSyncResult.results
+													.total_organisations
+											}}
+										</li>
+										<li>
+											Already existing:
+											{{
+												orgSyncResult.results.existing_count
+											}}
+										</li>
 										<li v-if="!orgSyncOptions.dryRun">
-											Created: {{ orgSyncResult.results.created_count }}
+											Created:
+											{{ orgSyncResult.results.created_count }}
 										</li>
 										<li v-if="orgSyncOptions.dryRun">
-											Would create: {{ orgSyncResult.results.to_create_count }}
+											Would create:
+											{{
+												orgSyncResult.results.to_create_count
+											}}
 										</li>
-										<li v-if="orgSyncResult.results.failed_count > 0">
-											Failed: {{ orgSyncResult.results.failed_count }}
+										<li
+											v-if="
+												orgSyncResult.results.failed_count
+												> 0
+											">
+											Failed:
+											{{ orgSyncResult.results.failed_count }}
 										</li>
-										<li v-if="orgSyncResult.results.total_time_seconds">
-											Duration: {{ orgSyncResult.results.total_time_seconds }}s
+										<li
+											v-if="
+												orgSyncResult.results
+													.total_time_seconds
+											">
+											Duration:
+											{{
+												orgSyncResult.results
+													.total_time_seconds
+											}}s
 										</li>
-										<li v-if="orgSyncResult.results.overall_objects_per_second">
-											Performance: {{ orgSyncResult.results.overall_objects_per_second }} orgs/sec
+										<li
+											v-if="
+												orgSyncResult.results
+													.overall_objects_per_second
+											">
+											Performance:
+											{{
+												orgSyncResult.results
+													.overall_objects_per_second
+											}}
+											orgs/sec
 										</li>
 									</ul>
-									<div v-if="orgSyncResult.results.performance && orgSyncResult.results.performance.length > 0" class="batch-performance">
+									<div
+										v-if="
+											orgSyncResult.results.performance
+											&& orgSyncResult.results.performance
+												.length > 0
+										"
+										class="batch-performance">
 										<h5>Batch Performance:</h5>
 										<ul>
-											<li v-for="batch in orgSyncResult.results.performance" :key="batch.batch">
-												Batch {{ batch.batch }}: {{ batch.objects }} objects in {{ batch.time_seconds }}s ({{ batch.objects_per_second }} orgs/sec)
+											<li
+												v-for="batch in orgSyncResult.results
+													.performance"
+												:key="batch.batch">
+												Batch {{ batch.batch }}:
+												{{ batch.objects }} objects in
+												{{ batch.time_seconds }}s ({{
+													batch.objects_per_second
+												}}
+												orgs/sec)
 											</li>
 										</ul>
 									</div>
@@ -269,9 +442,23 @@
 					</div>
 
 					<div class="voorzieningen-sync-info">
-						<p><strong>What this does:</strong> This sync ensures that all organisations from OpenRegister exist as organisatie objects in the voorzieningen register. This is needed for cross-organisation workflows like leverancier-gemeente gebruik suggestions.</p>
-						<p><strong>Performance:</strong> Uses bulk operations for optimal performance with large numbers of organisations (1000+).</p>
-						<p><strong>Safety:</strong> Only creates missing organisations - existing ones are skipped. Use dry run to preview changes.</p>
+						<p>
+							<strong>What this does:</strong> This sync ensures that
+							all organisations from OpenRegister exist as organisatie
+							objects in the voorzieningen register. This is needed for
+							cross-organisation workflows like leverancier-gemeente
+							gebruik suggestions.
+						</p>
+						<p>
+							<strong>Performance:</strong> Uses bulk operations for
+							optimal performance with large numbers of organisations
+							(1000+).
+						</p>
+						<p>
+							<strong>Safety:</strong> Only creates missing
+							organisations - existing ones are skipped. Use dry run to
+							preview changes.
+						</p>
 					</div>
 				</div>
 
@@ -279,13 +466,38 @@
 					<h4>About Synchronization</h4>
 					<p>The synchronization process ensures that:</p>
 					<ul>
-						<li><strong>Organization entities:</strong> Every organization object has a corresponding organization entity</li>
-						<li><strong>User accounts:</strong> Contact persons have Nextcloud user accounts</li>
-						<li><strong>Relationships:</strong> Organization entities maintain correct user lists</li>
-						<li><strong>Status consistency:</strong> Organization active status reflects the 'beoordeling' field</li>
+						<li>
+							<strong>Organization entities:</strong> Every
+							organization object has a corresponding organization
+							entity
+						</li>
+						<li>
+							<strong>User accounts:</strong> Contact persons have
+							Nextcloud user accounts
+						</li>
+						<li>
+							<strong>Relationships:</strong> Organization entities
+							maintain correct user lists
+						</li>
+						<li>
+							<strong>Status consistency:</strong> Organization active
+							status reflects the 'beoordeling' field
+						</li>
 					</ul>
-					<p><strong>Time-based filtering:</strong> Organizations remain in the sync queue based on their last update time in OpenRegister, not when they were last processed. An organization will naturally "age out" of the time window once it hasn't been updated for longer than the selected time period.</p>
-					<p><strong>Automatic synchronization:</strong> This process runs every 5 minutes in the background using incremental sync (10-minute window by default). Use manual sync for immediate updates or troubleshooting.</p>
+					<p>
+						<strong>Time-based filtering:</strong> Organizations remain
+						in the sync queue based on their last update time in
+						OpenRegister, not when they were last processed. An
+						organization will naturally "age out" of the time window once
+						it hasn't been updated for longer than the selected time
+						period.
+					</p>
+					<p>
+						<strong>Automatic synchronization:</strong> This process runs
+						every 5 minutes in the background using incremental sync
+						(10-minute window by default). Use manual sync for immediate
+						updates or troubleshooting.
+					</p>
 				</div>
 			</div>
 		</div>
@@ -294,36 +506,75 @@
 		<template #info-content>
 			<div class="organization-sync-info">
 				<h3>About Organization Synchronization</h3>
-				<p>This section manages the automatic synchronization of organization and contact person data between the Software Catalog and OpenRegister.</p>
+				<p>
+					This section manages the automatic synchronization of
+					organization and contact person data between Stackiq and
+					OpenRegister.
+				</p>
 
 				<h4>How Synchronization Works</h4>
-				<p>The system automatically synchronizes organization data from OpenRegister every 5 minutes using an incremental sync process. Only organizations that have been updated within the specified time window are processed.</p>
+				<p>
+					The system automatically synchronizes organization data from
+					OpenRegister every 5 minutes using an incremental sync process.
+					Only organizations that have been updated within the specified
+					time window are processed.
+				</p>
 
 				<h4>Time Window Configuration</h4>
-				<p>The time window determines how far back the system looks for updated organizations:</p>
+				<p>
+					The time window determines how far back the system looks for
+					updated organizations:
+				</p>
 				<ul>
-					<li><strong>10 minutes</strong> - Most recent changes only (default)</li>
-					<li><strong>1 hour</strong> - Recent changes within the last hour</li>
+					<li>
+						<strong>10 minutes</strong> - Most recent changes only
+						(default)
+					</li>
+					<li>
+						<strong>1 hour</strong> - Recent changes within the last hour
+					</li>
 					<li><strong>24 hours</strong> - Changes from the last day</li>
 					<li><strong>7 days</strong> - Changes from the last week</li>
 				</ul>
 
 				<h4>Manual Synchronization</h4>
-				<p>Use manual sync when you need immediate updates or for troubleshooting. Manual sync processes all organizations regardless of the time window.</p>
+				<p>
+					Use manual sync when you need immediate updates or for
+					troubleshooting. Manual sync processes all organizations
+					regardless of the time window.
+				</p>
 
 				<h4>Sync Statistics</h4>
 				<p>The status display shows:</p>
 				<ul>
-					<li><strong>Efficiency</strong> - Percentage of successfully processed organizations</li>
-					<li><strong>Processing Time</strong> - Average time per organization</li>
-					<li><strong>Total Organizations</strong> - Number of organizations in the current sync scope</li>
-					<li><strong>Last Sync</strong> - When the last synchronization was completed</li>
+					<li>
+						<strong>Efficiency</strong> - Percentage of successfully
+						processed organizations
+					</li>
+					<li>
+						<strong>Processing Time</strong> - Average time per
+						organization
+					</li>
+					<li>
+						<strong>Total Organizations</strong> - Number of
+						organizations in the current sync scope
+					</li>
+					<li>
+						<strong>Last Sync</strong> - When the last synchronization
+						was completed
+					</li>
 				</ul>
 
 				<h4>Troubleshooting</h4>
 				<ul>
-					<li>Low efficiency may indicate data quality issues or network problems</li>
-					<li>High processing times may suggest performance optimization is needed</li>
+					<li>
+						Low efficiency may indicate data quality issues or network
+						problems
+					</li>
+					<li>
+						High processing times may suggest performance optimization is
+						needed
+					</li>
 					<li>Use manual sync to test changes immediately</li>
 					<li>Check the time window if recent changes aren't appearing</li>
 				</ul>
@@ -341,25 +592,22 @@
  *
  * @author Ruben Linde <info@conduction.nl>
  * @copyright 2023 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  * @version 1.0.0
  */
 
-import { settingsStore } from '../../../store/store.js'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { withHeartbeat } from '../../../utils/heartbeat.js'
-
-// Components
-import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
-
 // Nextcloud Vue components
-import { NcButton, NcSelect, NcNoteCard, NcLoadingIcon } from '@nextcloud/vue'
-
+import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import Alert from 'vue-material-design-icons/Alert.vue'
+import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 // Icons
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Sync from 'vue-material-design-icons/Sync.vue'
-import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
-import Alert from 'vue-material-design-icons/Alert.vue'
+// Components
+import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
+import { settingsStore } from '../../../store/store.js'
+import { withHeartbeat } from '../../../utils/heartbeat.js'
 
 export default {
 	name: 'OrganizationSynchronization',
@@ -381,6 +629,7 @@ export default {
 	 * Provides access to the settings store
 	 *
 	 * @return {object} Setup object with store reference
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	setup() {
 		return {
@@ -414,6 +663,7 @@ export default {
 				{ value: 720, label: '12 hours' },
 				{ value: 1440, label: '24 hours' },
 			],
+
 			// Organisation sync to voorzieningen
 			performingOrgSync: false,
 			orgSyncResult: null,
@@ -426,8 +676,19 @@ export default {
 
 	computed: {
 		// Store-connected computed properties
-		loading() { return this.store.loadingSyncSettings },
-		settings() { return this.store.settings },
+		/**
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		loading() {
+			return this.store.loadingSyncSettings
+		},
+
+		/**
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		settings() {
+			return this.store.settings
+		},
 
 		/**
 		 * Check if time window configuration has changed
@@ -444,14 +705,25 @@ export default {
 	 */
 	watch: {
 		'settings.syncTimeWindow': {
+			/**
+			 * @param newValue
+			 * @spec openspec/specs/fe-settings-ui/spec.md
+			 */
 			handler(newValue) {
 				if (newValue !== undefined) {
 					this.loadSavedConfiguration()
 				}
 			},
+
 			immediate: true,
 		},
+
 		'store.loadingSyncSettings': {
+			/**
+			 * @param newValue
+			 * @param oldValue
+			 * @spec openspec/specs/fe-settings-ui/spec.md
+			 */
 			handler(newValue, oldValue) {
 				// When loading finishes, reload the configuration
 				if (oldValue === true && newValue === false) {
@@ -466,6 +738,7 @@ export default {
 	 * Load sync status when component is created
 	 *
 	 * @return {Promise<void>}
+	 * @spec openspec/specs/fe-settings-ui/spec.md
 	 */
 	async created() {
 		await this.loadSavedConfiguration()
@@ -477,6 +750,7 @@ export default {
 		 * Load saved time window configuration
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadSavedConfiguration() {
 			try {
@@ -492,7 +766,9 @@ export default {
 				// Only update if we have a valid value
 				if (savedTimeWindow !== undefined && savedTimeWindow !== null) {
 					// Find the matching option
-					const savedOption = this.timeWindowOptions.find(option => option.value === savedTimeWindow)
+					const savedOption = this.timeWindowOptions.find(
+						(option) => option.value === savedTimeWindow,
+					)
 					if (savedOption) {
 						this.selectedTimeWindow = { ...savedOption }
 						this.originalTimeWindow = { ...savedOption }
@@ -507,15 +783,20 @@ export default {
 		 * Load synchronization status
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadSyncStatus() {
 			this.loadingSyncStatus = true
 			try {
 				const timeWindow = this.selectedTimeWindow?.value || 10
-				const response = await fetch(`/index.php/apps/softwarecatalog/api/settings/sync-status?timeWindow=${timeWindow}`)
+				const response = await fetch(
+					`/index.php/apps/stackiq/api/settings/sync-status?timeWindow=${timeWindow}`,
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const data = await response.json()
@@ -532,6 +813,7 @@ export default {
 		 * Perform manual synchronization
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async performManualSync() {
 			this.performingSync = true
@@ -542,17 +824,22 @@ export default {
 
 				// Wrap the sync operation with heartbeat to prevent 504 timeouts
 				const result = await withHeartbeat(async () => {
-					const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'X-Requested-With': 'XMLHttpRequest',
+					const response = await fetch(
+						'/index.php/apps/stackiq/api/settings/sync',
+						{
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'X-Requested-With': 'XMLHttpRequest',
+							},
+							body: JSON.stringify({ timeWindow }),
 						},
-						body: JSON.stringify({ timeWindow }),
-					})
+					)
 
 					if (!response.ok) {
-						throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+						throw new Error(
+							`HTTP ${response.status}: ${response.statusText}`,
+						)
 					}
 
 					return await response.json()
@@ -571,9 +858,12 @@ export default {
 				console.error('Failed to perform manual sync:', error)
 				this.syncResult = {
 					success: false,
-					message: 'Failed to perform manual synchronization: ' + error.message,
+					message:
+						'Failed to perform manual synchronization: ' + error.message,
 				}
-				showError('Failed to perform manual synchronization: ' + error.message)
+				showError(
+					'Failed to perform manual synchronization: ' + error.message,
+				)
 			} finally {
 				this.performingSync = false
 			}
@@ -583,6 +873,7 @@ export default {
 		 * Handle time window change
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async handleTimeWindowChange() {
 			await this.loadSyncStatus()
@@ -593,6 +884,7 @@ export default {
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async saveConfiguration() {
 			this.savingConfig = true
@@ -606,7 +898,9 @@ export default {
 				showSuccess('Time window configuration saved successfully')
 			} catch (error) {
 				console.error('Failed to save time window configuration:', error)
-				showError('Failed to save time window configuration: ' + error.message)
+				showError(
+					'Failed to save time window configuration: ' + error.message,
+				)
 			} finally {
 				this.savingConfig = false
 			}
@@ -617,6 +911,7 @@ export default {
 		 *
 		 * @async
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async refreshConfiguration() {
 			try {
@@ -631,6 +926,7 @@ export default {
 		 * Get time window description
 		 *
 		 * @return {string} Description of the current time window
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getTimeWindowDescription() {
 			if (!this.selectedTimeWindow) return ''
@@ -647,6 +943,7 @@ export default {
 		 *
 		 * @param {number} minutes Time window in minutes
 		 * @return {string} Formatted time window
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatTimeWindow(minutes) {
 			if (!minutes || minutes === 0) return 'Full sync'
@@ -660,6 +957,7 @@ export default {
 		 *
 		 * @param {number} num Number to format
 		 * @return {string} Formatted number
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatNumber(num) {
 			if (!num) return '0'
@@ -671,6 +969,7 @@ export default {
 		 *
 		 * @param {string} timestamp Last sync timestamp
 		 * @return {string} Formatted time
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		formatLastSyncTime(timestamp) {
 			if (!timestamp) return 'Never'
@@ -687,6 +986,7 @@ export default {
 		 *
 		 * @param {number} count Processing count
 		 * @return {string} CSS class name
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getProcessingClass(count) {
 			if (!count || count === 0) return 'processing-none'
@@ -699,33 +999,41 @@ export default {
 		 * Perform organisation sync to voorzieningen register
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async performOrganisationSync() {
 			this.performingOrgSync = true
 			this.orgSyncResult = null
 
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync/organisations', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/settings/sync/organisations',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify({
+							dry_run: this.orgSyncOptions.dryRun,
+							batch_size: this.orgSyncOptions.batchSize,
+						}),
 					},
-					body: JSON.stringify({
-						dry_run: this.orgSyncOptions.dryRun,
-						batch_size: this.orgSyncOptions.batchSize,
-					}),
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const result = await response.json()
 				this.orgSyncResult = result
 
 				if (result.success) {
-					const actionText = this.orgSyncOptions.dryRun ? 'Organisation sync preview completed' : 'Organisation sync completed successfully'
+					const actionText = this.orgSyncOptions.dryRun
+						? 'Organisation sync preview completed'
+						: 'Organisation sync completed successfully'
 					showSuccess(actionText)
 				} else {
 					throw new Error(result.message || 'Organisation sync failed')

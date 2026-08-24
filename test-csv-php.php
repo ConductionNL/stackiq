@@ -24,8 +24,8 @@ $schemaMapper = \OC::$server->get(SchemaMapper::class);
 
 // CSV files to import
 $csvFiles = [
-    'organisatie' => '/var/www/html/custom_apps/softwarecatalog/data/organisatie.csv',
-    'module' => '/var/www/html/custom_apps/softwarecatalog/data/module.csv',
+    'organisatie' => '/var/www/html/custom_apps/stackiq/data/organisatie.csv',
+    'module' => '/var/www/html/custom_apps/stackiq/data/module.csv',
 ];
 
 // Find voorzieningen register

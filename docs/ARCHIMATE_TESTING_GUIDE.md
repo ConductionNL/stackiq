@@ -1,11 +1,11 @@
 # ArchiMate Import/Export Testing Guide
 
-This guide provides comprehensive instructions for testing the ArchiMate import/export functionality in the SoftwareCatalog application, including full round-trip testing to ensure data integrity.
+This guide provides comprehensive instructions for testing the ArchiMate import/export functionality in the Stackiq application, including full round-trip testing to ensure data integrity.
 
 ## Prerequisites
 
 - Docker Compose setup with Nextcloud container running
-- SoftwareCatalog and OpenRegister apps enabled
+- Stackiq and OpenRegister apps enabled
 - Admin credentials (default: admin:admin)
 - Sample ArchiMate XML file (GEMMA_release.xml is included)
 
@@ -17,10 +17,10 @@ This guide provides comprehensive instructions for testing the ArchiMate import/
 # Import the sample GEMMA file
 cd /home/rubenlinde/nextcloud-docker-dev
 docker-compose exec nextcloud curl -X POST \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/import" \
   -H "Content-Type: application/json" \
   -u admin:admin \
-  -d '{"file_path": "/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml"}'
+  -d '{"file_path": "/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml"}'
 ```
 
 Expected response includes statistics like:
@@ -42,7 +42,7 @@ Expected response includes statistics like:
 ```bash
 # Export the imported data
 docker-compose exec nextcloud curl -X POST \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/export" \
   -H "Content-Type: application/json" \
   -u admin:admin \
   -d '{}' > /tmp/exported_archimate.xml
@@ -56,7 +56,7 @@ The application includes a comprehensive comparison script that automatically te
 
 ```bash
 # Run the automated comparison
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/compare_archimate.php
 ```
 
 This script will:
@@ -72,12 +72,12 @@ This script will:
 ```bash
 # Clear any existing import status
 docker-compose exec nextcloud curl -X POST \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/import/cancel" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/import/cancel" \
   -u admin:admin
 
 # Check that the system is ready
 docker-compose exec nextcloud curl -X GET \
-  "http://localhost/index.php/apps/softwarecatalog/api/settings/status" \
+  "http://localhost/index.php/apps/stackiq/api/settings/status" \
   -u admin:admin
 ```
 
@@ -86,10 +86,10 @@ docker-compose exec nextcloud curl -X GET \
 ```bash
 # Import the original GEMMA file
 docker-compose exec nextcloud curl -X POST \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/import" \
   -H "Content-Type: application/json" \
   -u admin:admin \
-  -d '{"file_path": "/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml"}'
+  -d '{"file_path": "/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml"}'
 ```
 
 #### Step 3: Export Imported Data
@@ -97,13 +97,13 @@ docker-compose exec nextcloud curl -X POST \
 ```bash
 # Export the data to a new file
 docker-compose exec nextcloud curl -X POST \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/export" \
   -H "Content-Type: application/json" \
   -u admin:admin \
   -d '{}' > /tmp/round_trip_export.xml
 
 # Check the export file size (should be similar to original)
-docker-compose exec nextcloud ls -lh /var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml
+docker-compose exec nextcloud ls -lh /var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml
 docker-compose exec nextcloud ls -lh /tmp/round_trip_export.xml
 ```
 
@@ -111,7 +111,7 @@ docker-compose exec nextcloud ls -lh /tmp/round_trip_export.xml
 
 ```bash
 # Run the detailed comparison
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/compare_archimate.php
 
 # For manual inspection, check specific sections
 docker-compose exec nextcloud head -n 50 /tmp/round_trip_export.xml
@@ -124,7 +124,7 @@ docker-compose exec nextcloud head -n 50 /tmp/round_trip_export.xml
 Use the included debug script to inspect what's stored in the database:
 
 ```bash
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_db.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_db.php
 ```
 
 This will show:
@@ -159,7 +159,7 @@ foreach ($query->fetchAll() as $row) {
 ```bash
 # Check a specific element
 docker-compose exec nextcloud curl -X GET \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/export" \
   -u admin:admin | grep -A 10 "id-009fa62f25844aa3a87d252bf2b6bb0c"
 ```
 
@@ -173,7 +173,7 @@ Expected output should include:
 ```bash
 # Check relationships structure
 docker-compose exec nextcloud curl -X GET \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/export" \
   -u admin:admin | grep -A 5 -B 2 '<relationship'
 ```
 
@@ -188,7 +188,7 @@ Expected output should include:
 ```bash
 # Check property definitions
 docker-compose exec nextcloud curl -X GET \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/export" \
   -u admin:admin | grep -A 3 '<propertyDefinition'
 ```
 
@@ -202,7 +202,7 @@ Expected output:
 ```bash
 # Check folders are exported
 docker-compose exec nextcloud curl -X GET \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/export" \
   -u admin:admin | grep -A 3 '<folder'
 ```
 
@@ -211,7 +211,7 @@ docker-compose exec nextcloud curl -X GET \
 ```bash
 # Check views structure
 docker-compose exec nextcloud curl -X GET \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/export" \
   -u admin:admin | grep -A 5 '<view'
 ```
 
@@ -227,10 +227,10 @@ Expected output:
 ```bash
 # Test with large files (measure time)
 time docker-compose exec nextcloud curl -X POST \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/import" \
   -H "Content-Type: application/json" \
   -u admin:admin \
-  -d '{"file_path": "/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml"}'
+  -d '{"file_path": "/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml"}'
 ```
 
 ### Memory Usage Monitoring
@@ -253,24 +253,24 @@ echo "Peak memory: " . memory_get_peak_usage(true) / 1024 / 1024 . " MB\n";
 
 ```bash
 # Check file exists and is readable
-docker-compose exec nextcloud ls -la /var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml
+docker-compose exec nextcloud ls -la /var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml
 
 # Ensure proper file path in request
-curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" \
   -H "Content-Type: application/json" \
   -u admin:admin \
-  -d '{"file_path": "/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml"}'
+  -d '{"file_path": "/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml"}'
 ```
 
 #### 2. Export Returns Empty or Minimal XML
 
 ```bash
 # Check if data was actually imported
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_db.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_db.php
 
 # Clear any stuck import status
 docker-compose exec nextcloud curl -X POST \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/import/cancel" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/import/cancel" \
   -u admin:admin
 ```
 
@@ -317,7 +317,7 @@ if ($result) {
 
 ```bash
 # Check Nextcloud logs for errors
-docker-compose exec nextcloud tail -n 100 /var/www/html/data/nextcloud.log | grep -i "archimate\|softwarecatalog"
+docker-compose exec nextcloud tail -n 100 /var/www/html/data/nextcloud.log | grep -i "archimate\|stackiq"
 
 # Check for specific error patterns
 docker-compose exec nextcloud grep -i "error\|exception" /var/www/html/data/nextcloud.log | tail -n 20
@@ -346,13 +346,13 @@ if ($dom->schemaValidate("/path/to/archimate.xsd")) {
 ```bash
 # Count elements in original vs export
 echo "Original elements:"
-docker-compose exec nextcloud grep -c '<element ' /var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml
+docker-compose exec nextcloud grep -c '<element ' /var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml
 
 echo "Exported elements:"
 docker-compose exec nextcloud grep -c '<element ' /tmp/round_trip_export.xml
 
 echo "Original relationships:"
-docker-compose exec nextcloud grep -c '<relationship ' /var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml
+docker-compose exec nextcloud grep -c '<relationship ' /var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml
 
 echo "Exported relationships:"
 docker-compose exec nextcloud grep -c '<relationship ' /tmp/round_trip_export.xml
@@ -382,16 +382,16 @@ echo "Starting ArchiMate round-trip test..."
 
 # Clear any existing state
 docker-compose exec nextcloud curl -X POST \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/import/cancel" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/import/cancel" \
   -u admin:admin
 
 # Import test data
 echo "Importing GEMMA data..."
 IMPORT_RESULT=$(docker-compose exec nextcloud curl -s -X POST \
-  "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+  "http://localhost/index.php/apps/stackiq/api/archimate/import" \
   -H "Content-Type: application/json" \
   -u admin:admin \
-  -d '{"file_path": "/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml"}')
+  -d '{"file_path": "/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml"}')
 
 # Check import success
 if ! echo "$IMPORT_RESULT" | grep -q '"success":true'; then
@@ -401,7 +401,7 @@ fi
 
 # Run comparison test
 echo "Running comparison test..."
-COMPARISON_RESULT=$(docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php)
+COMPARISON_RESULT=$(docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/compare_archimate.php)
 
 # Check for perfect round-trip
 if echo "$COMPARISON_RESULT" | grep -q "NO DIFFERENCES FOUND"; then

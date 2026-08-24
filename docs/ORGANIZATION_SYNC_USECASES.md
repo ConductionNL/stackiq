@@ -1,7 +1,7 @@
 # Organization Synchronization Use Cases and Testing
 
 **Date:** July 24, 2025  
-**App:** SoftwareCatalog  
+**App:** Stackiq  
 **Feature:** Organization Synchronization with OpenRegister
 
 ## 🚨 QUICK REFERENCE FOR NEW CONVERSATION
@@ -31,10 +31,10 @@ docker-compose exec -u 33 nextcloud php /var/www/html/occ user:list
 docker-compose exec -u 33 nextcloud php /var/www/html/occ user:info {username}
 
 # Log monitoring
-docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "softwarecatalog"
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "stackiq"
 
 # Configuration
-docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwarecatalog voorzieningen_organisatie_schema
+docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get stackiq voorzieningen_organisatie_schema
 ```
 
 ### Architecture Summary
@@ -51,13 +51,13 @@ docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwar
 
 ## Overview
 
-This document outlines the use cases and testing scenarios for the new organization synchronization functionality in the Software Catalog app. The feature enables automatic synchronization between SoftwareCatalog organizations and OpenRegister, along with user status management based on organization status.
+This document outlines the use cases and testing scenarios for the new organization synchronization functionality in the Software Catalog app. The feature enables automatic synchronization between Stackiq organizations and OpenRegister, along with user status management based on organization status.
 
 ## Use Cases
 
 ### 1. Organization Creation Synchronization
 
-**Scenario:** A new organization is created in SoftwareCatalog
+**Scenario:** A new organization is created in Stackiq
 
 **Expected Behavior:**
 - Organization data is automatically synced to OpenRegister
@@ -66,7 +66,7 @@ This document outlines the use cases and testing scenarios for the new organizat
 - Contactpersonen are processed and users are created (inactive initially)
 
 **Test Steps:**
-1. Create a new organization in SoftwareCatalog with status `actief`
+1. Create a new organization in Stackiq with status `actief`
 2. Verify organization appears in OpenRegister with `active: true`
 3. Verify organization UUID is identical in both systems
 4. Create contactpersonen for the organization
@@ -109,7 +109,7 @@ This document outlines the use cases and testing scenarios for the new organizat
 
 ### 4. Organization Deletion
 
-**Scenario:** Organization is deleted from SoftwareCatalog
+**Scenario:** Organization is deleted from Stackiq
 
 **Expected Behavior:**
 - All users in the organization are deactivated
@@ -134,7 +134,7 @@ This document outlines the use cases and testing scenarios for the new organizat
 - Organization membership is properly established
 
 **Test Steps:**
-1. Create organization in SoftwareCatalog
+1. Create organization in Stackiq
 2. Create contactpersoon for the organization
 3. Verify user account is created
 4. Verify username is added to organization's users list
@@ -164,7 +164,7 @@ This document outlines the use cases and testing scenarios for the new organizat
 **Scenario:** Organizations and contactpersonen use UUIDs across systems
 
 **Expected Behavior:**
-- Organization UUIDs are identical in SoftwareCatalog and OpenRegister
+- Organization UUIDs are identical in Stackiq and OpenRegister
 - Contactpersoon UUIDs are preserved during processing
 - UUID-based lookups work correctly in both systems
 
@@ -175,9 +175,9 @@ This document outlines the use cases and testing scenarios for the new organizat
 4. Verify UUID is preserved during user creation
 5. Test UUID-based lookups in both systems
 
-### 8. SoftwareCatalog-Specific User Status Management
+### 8. Stackiq-Specific User Status Management
 
-**Scenario:** Organization status changes affect only SoftwareCatalog-specific users (from contactpersoon objects), while admin group users remain protected.
+**Scenario:** Organization status changes affect only Stackiq-specific users (from contactpersoon objects), while admin group users remain protected.
 
 **Expected Behavior:**
 - When organization becomes `inactief`: Only contactpersoon users are deactivated
@@ -207,7 +207,7 @@ This document outlines the use cases and testing scenarios for the new organizat
 - User can be activated/deactivated with organization status changes
 
 **Test Steps:**
-1. Create organization in SoftwareCatalog
+1. Create organization in Stackiq
 2. Create contact person with organization reference
 3. Verify user account is created
 4. Verify username is added to organization's users list
@@ -222,7 +222,7 @@ This document outlines the use cases and testing scenarios for the new organizat
 - Admin group users are always added to organizations
 - Admin group users are never deactivated when organization becomes inactive
 - Admin group users remain active regardless of organization status
-- Only SoftwareCatalog-specific users (contactpersonen) are affected by status changes
+- Only Stackiq-specific users (contactpersonen) are affected by status changes
 
 **Test Steps:**
 1. Create organization with admin users present
@@ -350,7 +350,7 @@ This document outlines the use cases and testing scenarios for the new organizat
 ### Test Environment Setup
 
 **Prerequisites:**
-- SoftwareCatalog app enabled
+- Stackiq app enabled
 - OpenRegister app enabled
 - Proper schema and register configuration
 - Test organization and contactpersoon schemas configured
@@ -400,7 +400,7 @@ This document outlines the use cases and testing scenarios for the new organizat
 // Test organization creation and OpenRegister sync
 public function testOrganizationCreationSync(): void
 {
-    // 1. Create organization in SoftwareCatalog
+    // 1. Create organization in Stackiq
     $organizationData = $this->createTestOrganization();
     $organization = $this->createOrganization($organizationData);
     
@@ -540,19 +540,19 @@ public function testOrganizationMembership(): void
 ### Debug Commands
 ```bash
 # Check organization sync status
-docker exec -u 33 master-nextcloud-1 php /var/www/html/occ softwarecatalog:debug:organization-sync
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ stackiq:debug:organization-sync
 
 # Check user status for organization
-docker exec -u 33 master-nextcloud-1 php /var/www/html/occ softwarecatalog:debug:user-status --organization=UUID
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ stackiq:debug:user-status --organization=UUID
 
 # Check organization membership
-docker exec -u 33 master-nextcloud-1 php /var/www/html/occ softwarecatalog:debug:organization-membership --organization=UUID
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ stackiq:debug:organization-membership --organization=UUID
 ```
 
 ## Future Enhancements
 
 ### Planned Features
-- Bidirectional sync (OpenRegister → SoftwareCatalog)
+- Bidirectional sync (OpenRegister → Stackiq)
 - Bulk organization operations
 - Advanced status mapping
 - Custom field synchronization
@@ -567,6 +567,6 @@ docker exec -u 33 master-nextcloud-1 php /var/www/html/occ softwarecatalog:debug
 
 ## Conclusion
 
-The organization synchronization feature provides seamless integration between SoftwareCatalog and OpenRegister, ensuring data consistency and proper user management. The comprehensive testing framework ensures reliable operation across various scenarios and edge cases.
+The organization synchronization feature provides seamless integration between Stackiq and OpenRegister, ensuring data consistency and proper user management. The comprehensive testing framework ensures reliable operation across various scenarios and edge cases.
 
-For questions or issues, refer to the SoftwareCatalog documentation or contact the development team. 
+For questions or issues, refer to the Stackiq documentation or contact the development team. 

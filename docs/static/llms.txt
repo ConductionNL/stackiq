@@ -1,23 +1,23 @@
-# SoftwareCatalog
+# Stackiq
 
-> SoftwareCatalog is an open-source IT-asset-management app for the Nextcloud workspace.
+> Stackiq is an open-source IT-asset-management app for the Nextcloud workspace.
 
-SoftwareCatalog is an open-source IT-asset-management app for the Nextcloud workspace. It keeps a central register of every application, licence, contract, and dependency the organisation runs, with renewal alerts before the auto-renewal date. Dashboard widgets surface upcoming renewals, an inventory snapshot by category, and discovery deltas showing newly added or removed apps. Built for the IT department that needs to know what runs where, without a separate asset database or second login. Released under EUPL-1.2 and maintained by Conduction since 2019.
+Stackiq is an open-source IT-asset-management app for the Nextcloud workspace. It keeps a central register of every application, licence, contract, and dependency the organisation runs, with renewal alerts before the auto-renewal date. Dashboard widgets surface upcoming renewals, an inventory snapshot by category, and discovery deltas showing newly added or removed apps. Built for the IT department that needs to know what runs where, without a separate asset database or second login. Released under EUPL-1.2 and maintained by Conduction since 2019.
 
 ## Docs
 
-- [Documentation](https://softwarecatalog.conduction.nl/docs/intro): main entry, including tutorials, user guide, and admin guide.
-- [API reference](https://softwarecatalog.conduction.nl/api): OpenAPI documentation.
+- [Documentation](https://stackiq.conduction.nl/docs/intro): main entry, including tutorials, user guide, and admin guide.
+- [API reference](https://stackiq.conduction.nl/api): OpenAPI documentation.
 
 ## Optional
 
 - [Install](https://www.conduction.nl/install): self-host on your Nextcloud instance.
-- [Source code](https://github.com/ConductionNL/softwarecatalog): repository and issue tracker.
-- [App page](https://www.conduction.nl/apps/softwarecatalog): product positioning on conduction.nl.
+- [Source code](https://github.com/ConductionNL/stackiq): repository and issue tracker.
+- [App page](https://www.conduction.nl/apps/stackiq): product positioning on conduction.nl.
 
 ## Contact
 
 - Email: info@conduction.nl
 - Web: https://www.conduction.nl
-- GitHub: https://github.com/ConductionNL
+- GitHub: https://codeberg.org/Conduction
 - Conduction B.V. · KvK 76741850 · Lauriergracht 14h, Amsterdam, Netherlands
