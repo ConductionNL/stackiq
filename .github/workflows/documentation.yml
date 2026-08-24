@@ -1,10 +1,16 @@
 name: Documentation
 
 on:
+  # `development` is where the work lands. This used to trigger on a
+  # `documentation` branch that exists but nobody updates — so the workflow
+  # was green and idle while the live site aged. Measured today:
+  # softwarecatalog.conduction.nl and stackiq.conduction.nl both still serve
+  # the pre-rename "SoftwareCatalog" title while docs/docusaurus.config.js
+  # says 'Stackiq'.
   push:
-    branches: [documentation]
+    branches: [development]
   pull_request:
-    branches: [documentation]
+    branches: [development]
 
 jobs:
   deploy:
@@ -17,7 +23,7 @@ jobs:
     #
     # ⚠️ `packages: write` is load-bearing at RUNTIME, not merely statically:
     # the callee's `build-image` input DEFAULTS TO TRUE, so the `image` job
-    # really does run on a push to `documentation` and really does push to
+    # really does run on a push to `development` and really does push to
     # GHCR. Dropping it 403s that push.
     #
     # It would be required even if that job were disabled, because GitHub
@@ -29,13 +35,19 @@ jobs:
       packages: write
     uses: ConductionNL/.github/.github/workflows/documentation.yml@main
     with:
-      # FROZEN through the stackiq -> stackiq app-id rename.
-      # `stackiq.conduction.nl` answers 200 today; `stackiq.conduction.nl`
-      # answers 000 (no DNS record). A CNAME is not a name we own in this repo —
-      # it is a claim about a record that exists. Publishing docs at a host that
-      # resolves to nothing takes the documentation site OFFLINE, which is a
-      # regression, not a rename. Move this only after DNS + the Pages/Cloudflare
-      # binding for the new host are live, in a change that verifies both.
+      # `stackiq.conduction.nl` resolves as of 2026-08-23 — attached as a
+      # second custom domain on the SAME `softwarecatalog-docs` worker that
+      # serves `softwarecatalog.conduction.nl`. Both hosts answer 200.
+      # (The comment that used to sit here said the new host answered 000;
+      # that was true when it was written and is not any more.)
       cname: stackiq.conduction.nl
 
       docs-hosts: softwarecatalog.conduction.nl,stackiq.conduction.nl
+
+      # The worker that ALREADY holds both custom domains. Without this the
+      # callee derives the name from `cname` — `stackiq-docs` — which does not
+      # exist. Deploying that would create a SECOND worker while both custom
+      # domains keep routing to `softwarecatalog-docs`: every deploy green,
+      # reaching nobody. Renaming the worker is a Cloudflare-side move, not
+      # something this file can perform.
+      worker-name: softwarecatalog-docs
