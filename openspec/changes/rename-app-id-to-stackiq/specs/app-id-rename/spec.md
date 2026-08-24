@@ -126,7 +126,7 @@ app. Specifically it SHALL leave unchanged: the Nextcloud group ids
 `stackiq_concept_organisaties_widget`; the appId this app passes to
 OpenRegister's configuration importer and the `sourceUrl` /
 `lib/Settings/softwarecatalogus_register.json` filename that accompanies it; the
-live hosts `softwarecatalog.conduction.nl` and
+live hosts `stackiq.conduction.nl` and
 `www.conduction.nl/apps/stackiq`; the Cloudflare Pages project
 `stackiq-docs`; VNG's own `softwarecatalogus.nl` identifiers; and every
 other Conduction app's id and namespace.
@@ -147,7 +147,7 @@ other Conduction app's id and namespace.
 
 #### Scenario: Documentation still publishes to a host that resolves
 
-- **GIVEN** `softwarecatalog.conduction.nl` answers HTTP 200 and `stackiq.conduction.nl` does not resolve
+- **GIVEN** `stackiq.conduction.nl` answers HTTP 200 and `stackiq.conduction.nl` does not resolve
 - **WHEN** the documentation workflow deploys
-- **THEN** the `cname` input MUST remain `softwarecatalog.conduction.nl`, because publishing at a host with no DNS record takes the documentation site offline — a regression, not a rename
+- **THEN** the `cname` input MUST remain `stackiq.conduction.nl`, because publishing at a host with no DNS record takes the documentation site offline — a regression, not a rename
 - @e2e exclude CI workflow input; verified by probing both hosts, not by a browser test.

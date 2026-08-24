@@ -21,7 +21,7 @@ const BRAND_THEME = require.resolve('@conduction/docusaurus-preset/theme');
 const config = createConfig({
   title: 'Stackiq',
   tagline: 'IT-asset management on Nextcloud. Software inventory, licenses, contracts, dependencies. One register, every install.',
-  url: 'https://softwarecatalog.conduction.nl',
+  url: 'https://stackiq.conduction.nl',
   baseUrl: '/',
 
   organizationName: 'ConductionNL',
@@ -57,7 +57,7 @@ const config = createConfig({
              plus the standard node_modules bucket. */
           exclude: ['**/node_modules/**', 'src/**'],
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://codeberg.org/Conduction/stackiq/src/branch/main/docs/',
+          editUrl: 'https://github.com/ConductionNL/stackiq/tree/main/docs/',
         },
         blog: false,
         theme: {
@@ -81,7 +81,7 @@ const config = createConfig({
         label: 'Documentation',
       },
       {
-        href: 'https://codeberg.org/Conduction/stackiq',
+        href: 'https://github.com/ConductionNL/stackiq',
         label: 'GitHub',
         position: 'right',
       },

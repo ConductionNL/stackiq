@@ -3,7 +3,7 @@
 		<NcSettingsSection
 			name="Stackiq"
 			description="A central place for managing your software"
-			docUrl="https://softwarecatalog.conduction.nl" />
+			docUrl="https://stackiq.conduction.nl" />
 
 		<NcSettingsSection
 			name="Data storage"

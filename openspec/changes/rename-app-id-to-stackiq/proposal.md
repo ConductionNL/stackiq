@@ -61,7 +61,7 @@ record.
   certificate for the new id. `.nextcloud/certificates/stackiq.csr` is
   left as-is; a maintainer action is required before a stable release publishes
   under the new id.
-- Moving `softwarecatalog.conduction.nl` / `www.conduction.nl/apps/stackiq`
+- Moving `stackiq.conduction.nl` / `www.conduction.nl/apps/stackiq`
   or the `stackiq-docs` Cloudflare Pages project. Those move when DNS and
   the Pages binding move, in a change that verifies both.
 - Renaming `openspec/specs/*` capability directories. They are referenced from

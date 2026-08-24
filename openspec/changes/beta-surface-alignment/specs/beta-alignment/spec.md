@@ -6,7 +6,7 @@ status: proposed
 
 ## Purpose
 
-Stackiq's code metadata (`appinfo/info.xml`), product page (conduction.nl), and docs (softwarecatalog.conduction.nl) SHALL describe the same, code-verified feature set and licence, so the app is beta-release-ready.
+Stackiq's code metadata (`appinfo/info.xml`), product page (conduction.nl), and docs (stackiq.conduction.nl) SHALL describe the same, code-verified feature set and licence, so the app is beta-release-ready.
 
 ## Requirements
 
