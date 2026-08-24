@@ -42,17 +42,19 @@
  * `cyclonedx-1.5-valid.json`) is uploaded through the real file input.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type {Page} from '@playwright/test';
+
+import { expect, test } from '@playwright/test'
 import * as path from 'path'
+import { APP_PATH } from './base-url'
+import { dismissWalkthrough } from './spec-coverage/_helpers'
 import {
+	cleanupByToken,
+	createObject,
 	newApiContext,
 	resolveConfig,
-	createObject,
-	cleanupByToken,
 	RUN_ID,
 } from './workflows/_fixtures'
-import { dismissWalkthrough } from './spec-coverage/_helpers'
-import { APP_PATH } from './base-url'
 
 const FIXTURES_DIR = path.resolve(__dirname, '../fixtures/sbom')
 const CYCLONEDX_16 = path.join(FIXTURES_DIR, 'cyclonedx-1.6-valid.json') // 3 components
@@ -173,7 +175,12 @@ test('sbom-import upload-and-replace: uploading a CycloneDX file renders the com
 
 	const table = page.getByTestId('sbom-component-table')
 	await expect(table).toBeVisible()
-	await expect(table.getByText('lodash')).toBeVisible()
+	// `exact` matters: the table renders the component NAME and its purl, and
+	// the purl CONTAINS the name (`pkg:npm/lodash@4.17.21`). A substring match
+	// resolves to both cells and Playwright's strict mode rejects it outright —
+	// this assertion is about the row existing, not about how many places the
+	// string happens to appear.
+	await expect(table.getByText('lodash', { exact: true })).toBeVisible()
 	await expect(table.locator('tbody tr')).toHaveCount(3)
 
 	const summary = page.getByTestId('sbom-summary')
@@ -191,6 +198,9 @@ test('sbom-import upload-and-replace: uploading a CycloneDX file renders the com
 	})
 
 	await expect(table.locator('tbody tr')).toHaveCount(2)
-	await expect(table.getByText('lodash')).toHaveCount(0)
-	await expect(table.getByText('express')).toBeVisible()
+	// Same `exact` reasoning, and it matters more here: without it a surviving
+	// purl mentioning lodash would keep this count above zero and report the
+	// replacement as broken when it had worked.
+	await expect(table.getByText('lodash', { exact: true })).toHaveCount(0)
+	await expect(table.getByText('express', { exact: true })).toBeVisible()
 })
