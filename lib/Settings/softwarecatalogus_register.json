@@ -41,7 +41,7 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.3"
@@ -133,7 +133,7 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.5"
@@ -153,7 +153,7 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.3"
@@ -173,7 +173,7 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.3"
@@ -193,7 +193,7 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.3"
@@ -213,7 +213,7 @@
             ],
             "published": true,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "page",
               "version": "0.0.3"
@@ -241,7 +241,7 @@
             "hideAfterLogin": true,
             "hideBeforeLogin": false,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -271,7 +271,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -295,7 +295,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -313,7 +313,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -331,7 +331,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -367,7 +367,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -392,7 +392,7 @@
             ],
             "hideBeforeLogin": true,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -458,7 +458,7 @@
               }
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "menu",
               "version": "0.0.3"
@@ -478,7 +478,7 @@
             "isExternal": false,
             "sort": 1,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "theme",
               "version": "0.0.4"
@@ -496,7 +496,7 @@
             "isExternal": false,
             "sort": 2,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "theme",
               "version": "0.0.4"
@@ -514,7 +514,7 @@
             "isExternal": false,
             "sort": 3,
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "theme",
               "version": "0.0.4"
@@ -533,7 +533,7 @@
               "Catalogi"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "publication",
               "version": "0.0.1"
@@ -550,7 +550,7 @@
               "Digitalisering"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "publication",
               "version": "0.0.1"
@@ -567,7 +567,7 @@
               "Data Management"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "publication",
               "version": "0.0.1"
@@ -584,7 +584,7 @@
               "Catalogus"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "publication",
               "version": "0.0.1"
@@ -601,7 +601,7 @@
               "Standaarden"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "publication",
               "version": "0.0.1"
@@ -618,7 +618,7 @@
               "Addenda"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -634,7 +634,7 @@
               "convenant"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -649,7 +649,7 @@
               "Eindproduct-standaarden"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -665,7 +665,7 @@
               "Gegevensstandaarden"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -680,7 +680,7 @@
               "Grondstof-standaarden"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -695,7 +695,7 @@
               "Halffabrikaat-standaarden"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -710,7 +710,7 @@
               "Leveranciers"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -725,7 +725,7 @@
               "Referentiecomponenten"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -740,7 +740,7 @@
               "Software as a Service"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
@@ -755,7 +755,7 @@
               "Standaarden"
             ],
             "@self": {
-              "configuration": "https://codeberg.org/Conduction/opencatalogi/raw/branch/master/apps-extra/opencatalogi/lib/Settings/publication_register_magic.json",
+              "configuration": "https://raw.githubusercontent.com/ConductionNL/opencatalogi/main/lib/Settings/publication_register.json",
               "register": "publication",
               "schema": "glossary",
               "version": "0.0.1"
