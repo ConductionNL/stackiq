@@ -1,14 +1,14 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "softwarecatalog demo data",
+    "title": "stackiq demo data",
     "version": "1.0.0",
     "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
   },
   "x-openregister": {
     "type": "mock",
-    "app": "softwarecatalog",
-    "description": "Demo data for softwarecatalog. NOT installed automatically — a mock register is imported on demand, from the setup walkthrough or `occ openregister:descriptors:list --app=softwarecatalog --import=<slug>`."
+    "app": "stackiq",
+    "description": "Demo data for stackiq. NOT installed automatically — a mock register is imported on demand, from the setup walkthrough or `occ openregister:descriptors:list --app=stackiq --import=<slug>`."
   },
   "paths": {},
   "components": {
@@ -28,45 +28,31 @@
     },
     "schemas": {
       "assessment": {
-        "uri": null,
-        "slug": "assessment",
-        "x-openregister-notifications": {
-          "review-submitted": {
-            "trigger": {
-              "type": "created"
-            },
-            "enabled": true,
-            "channels": [
-              "nc-notification"
-            ],
-            "recipients": [
-              {
-                "kind": "object-acl",
-                "permission": "manage"
-              },
-              {
-                "kind": "groups",
-                "groups": [
-                  "software-catalog-admins"
-                ]
-              }
-            ],
-            "subject": {
-              "nl": "Nieuwe beoordeling: {{naam}} (waardering {{waardering}})",
-              "en": "New review: {{naam}} (rating {{waardering}})"
-            }
-          }
-        },
-        "title": "Assessment",
-        "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
-        "version": "0.1.3",
-        "omschrijving": "",
-        "icon": "Star",
-        "required": [
-          "name",
-          "rating"
-        ],
         "properties": {
+          "auteur": {
+            "type": "string",
+            "description": "Display name of the submitting user. Stamped server-side by ReviewService from the authenticated Nextcloud session at submission time — a client-supplied value is always discarded and never persisted.",
+            "visible": true,
+            "facetable": false,
+            "title": "Auteur",
+            "order": 10,
+            "example": "Bijvoorbeeld: Jan Jansen"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "default": "pending",
+            "description": "Moderation status. Every new review is forced to 'pending' server-side by ReviewService regardless of client input; only an admin approval/rejection decision (ModerationService, reusing the organisatie moderation pattern) may transition it. The public RBAC read rule below only ever matches 'approved'.",
+            "visible": true,
+            "facetable": true,
+            "title": "Status",
+            "order": 11,
+            "example": "Bijvoorbeeld: pending"
+          },
           "name": {
             "description": "Naam van de beoordeling",
             "type": "string",
@@ -164,6 +150,100 @@
             "$ref": "#/components/schemas/usage"
           }
         },
+        "authorization": {
+          "create": [
+            "vng-raadpleger",
+            "software-catalog-users",
+            "software-catalog-admins",
+            "organisaties-beheerder",
+            "organisatie-beheerder",
+            "gebruik-raadpleger",
+            "gebruik-beheerder",
+            "functioneel-beheerder",
+            "ambtenaar",
+            "aanbod-beheerder"
+          ],
+          "read": [
+            {
+              "group": "public",
+              "match": {
+                "status": "approved"
+              }
+            },
+            "aanbod-beheerder",
+            "ambtenaar",
+            "functioneel-beheerder",
+            "gebruik-beheerder",
+            "vng-raadpleger",
+            "software-catalog-users",
+            "software-catalog-admins",
+            "organisatie-beheerder",
+            "organisaties-beheerder",
+            "gebruik-raadpleger"
+          ],
+          "update": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "delete": [
+            "software-catalog-admins"
+          ]
+        },
+        "required": [
+          "name",
+          "rating"
+        ],
+        "uri": null,
+        "slug": "assessment",
+        "x-openregister-notifications": {
+          "review-submitted": {
+            "trigger": {
+              "type": "created"
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "object-acl",
+                "permission": "manage"
+              },
+              {
+                "kind": "groups",
+                "groups": [
+                  "software-catalog-admins"
+                ]
+              }
+            ],
+            "subject": {
+              "nl": "Nieuwe beoordeling: {{naam}} (waardering {{waardering}})",
+              "en": "New review: {{naam}} (rating {{waardering}})"
+            }
+          }
+        },
+        "title": "Assessment",
+        "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
+        "version": "0.1.3",
+        "omschrijving": "",
+        "icon": "Star",
         "archive": [],
         "source": "internal",
         "hardValidation": false,
@@ -174,11 +254,6 @@
         "application": null,
         "organisation": null,
         "groups": null,
-        "authorization": {
-          "read": [
-            "public"
-          ]
-        },
         "configuration": {
           "objectNameField": "name",
           "objectSummaryField": "shortDescription",
@@ -1062,61 +1137,30 @@
         }
       },
       "contract": {
-        "uri": null,
-        "slug": "contract",
-        "x-openregister-notifications": {
-          "contract-expiry": {
-            "trigger": {
-              "type": "scheduled",
-              "intervalSec": 86400,
-              "filter": {
-                "status": {
-                  "operator": "equals",
-                  "value": "Actief"
-                },
-                "endDate": {
-                  "operator": "withinNext",
-                  "value": "P90D"
-                }
-              }
-            },
-            "enabled": true,
-            "channels": [
-              "nc-notification",
-              "email"
-            ],
-            "recipients": [
-              {
-                "kind": "groups",
-                "groups": [
-                  "software-catalog-admins"
-                ]
-              },
-              {
-                "kind": "object-acl",
-                "permission": "manage"
-              }
-            ],
-            "subject": {
-              "nl": "Contract verloopt: {{contractNummer}} (einddatum {{eindDatum}})",
-              "en": "Contract expiring: {{contractNummer}} (end date {{eindDatum}})"
-            }
-          }
-        },
-        "title": "Contract",
-        "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
-        "version": "0.1.1",
-        "omschrijving": "",
-        "icon": "FileDocumentEdit",
-        "required": [
-          "service",
-          "usage",
-          "startDate",
-          "contractNumber",
-          "contractType",
-          "status"
-        ],
         "properties": {
+          "approvalDecisionId": {
+            "type": "string",
+            "description": "PROJECTION FIELD. The id of the decidesk Decision (decisionType contract / contract-renewal) raised for this contract's approval/sign-off, resolved via the ADR-019 integration registry. Empty until the contract is submitted for approval. stackiq never authors an approval decision locally; it raises it in decidesk and stores the returned id here for outcome reconciliation.",
+            "facetable": false,
+            "title": "Approval decision id",
+            "order": 20,
+            "example": "Bijvoorbeeld: dec-2025-0042"
+          },
+          "approvalState": {
+            "type": "string",
+            "enum": [
+              "none",
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "default": "none",
+            "description": "PROJECTION of the decidesk outcome for the approval/renewal decision — distinct from the catalog lifecycle field `status`. `none` = no decision raised; `pending` = a decidesk Decision is open; `approved` = decidesk reported an adopting outcome (this is the ONLY thing that drives the `In onderhandeling -> Actief` transition on `status`); `rejected` = decidesk rejected/withdrew (status stays `In onderhandeling`). stackiq NEVER sets `status = Actief` on its own authority — it is always a projection of an `approved` decidesk outcome. The date-driven `Actief -> Verlopen` expiry transition is catalog-local and is NOT a decision delegated to decidesk.",
+            "facetable": false,
+            "title": "Approval state",
+            "order": 21,
+            "example": "Bijvoorbeeld: pending"
+          },
           "service": {
             "description": "De dienst waarop dit contract betrekking heeft",
             "type": "object",
@@ -1292,6 +1336,60 @@
             "x-allow-create": true
           }
         },
+        "required": [
+          "service",
+          "usage",
+          "startDate",
+          "contractNumber",
+          "contractType",
+          "status"
+        ],
+        "uri": null,
+        "slug": "contract",
+        "x-openregister-notifications": {
+          "contract-expiry": {
+            "trigger": {
+              "type": "scheduled",
+              "intervalSec": 86400,
+              "filter": {
+                "status": {
+                  "operator": "equals",
+                  "value": "Actief"
+                },
+                "endDate": {
+                  "operator": "withinNext",
+                  "value": "P90D"
+                }
+              }
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification",
+              "email"
+            ],
+            "recipients": [
+              {
+                "kind": "groups",
+                "groups": [
+                  "software-catalog-admins"
+                ]
+              },
+              {
+                "kind": "object-acl",
+                "permission": "manage"
+              }
+            ],
+            "subject": {
+              "nl": "Contract verloopt: {{contractNummer}} (einddatum {{eindDatum}})",
+              "en": "Contract expiring: {{contractNummer}} (end date {{eindDatum}})"
+            }
+          }
+        },
+        "title": "Contract",
+        "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
+        "version": "0.1.1",
+        "omschrijving": "",
+        "icon": "FileDocumentEdit",
         "archive": [],
         "source": "internal",
         "hardValidation": false,
@@ -7210,6 +7308,8 @@
         },
         "name": "Voorbeeld Name 1",
         "rating": 1,
+        "auteur": "Voorbeeld Auteur 1",
+        "status": "pending",
         "shortDescription": "Voorbeeld Shortdescription 1",
         "longDescription": "Voorbeeld markdown 0",
         "modules": [
@@ -7231,6 +7331,8 @@
         },
         "name": "Voorbeeld Name 2",
         "rating": 2,
+        "auteur": "Voorbeeld Auteur 2",
+        "status": "approved",
         "shortDescription": "Voorbeeld Shortdescription 2",
         "longDescription": "Voorbeeld markdown 1",
         "modules": [
@@ -7252,6 +7354,8 @@
         },
         "name": "Voorbeeld Name 3",
         "rating": 3,
+        "auteur": "Voorbeeld Auteur 3",
+        "status": "rejected",
         "shortDescription": "Voorbeeld Shortdescription 3",
         "longDescription": "Voorbeeld markdown 2",
         "modules": [
@@ -7505,6 +7609,8 @@
         "contractNumber": "Voorbeeld Contractnumber 1",
         "contractType": "SLA",
         "status": "Active",
+        "approvalDecisionId": "Voorbeeld Approvaldecisionid 1",
+        "approvalState": "none",
         "endDate": "2026-03-01",
         "cost": 1.0,
         "costPeriod": "Monthly",
@@ -7534,6 +7640,8 @@
         "contractNumber": "Voorbeeld Contractnumber 2",
         "contractType": "Licence",
         "status": "Expired",
+        "approvalDecisionId": "Voorbeeld Approvaldecisionid 2",
+        "approvalState": "pending",
         "endDate": "2026-03-02",
         "cost": 2.0,
         "costPeriod": "Annually",
@@ -7563,6 +7671,8 @@
         "contractNumber": "Voorbeeld Contractnumber 3",
         "contractType": "Maintenance",
         "status": "In negotiation",
+        "approvalDecisionId": "Voorbeeld Approvaldecisionid 3",
+        "approvalState": "approved",
         "endDate": "2026-03-03",
         "cost": 3.0,
         "costPeriod": "One-off",
@@ -8767,6 +8877,8 @@
         },
         "name": "Voorbeeld Name 1",
         "rating": 1,
+        "auteur": "Voorbeeld Auteur 1",
+        "status": "pending",
         "shortDescription": "Voorbeeld Shortdescription 1",
         "longDescription": "Voorbeeld markdown 0",
         "modules": [
@@ -8788,6 +8900,8 @@
         },
         "name": "Voorbeeld Name 2",
         "rating": 2,
+        "auteur": "Voorbeeld Auteur 2",
+        "status": "approved",
         "shortDescription": "Voorbeeld Shortdescription 2",
         "longDescription": "Voorbeeld markdown 1",
         "modules": [
@@ -8809,6 +8923,8 @@
         },
         "name": "Voorbeeld Name 3",
         "rating": 3,
+        "auteur": "Voorbeeld Auteur 3",
+        "status": "rejected",
         "shortDescription": "Voorbeeld Shortdescription 3",
         "longDescription": "Voorbeeld markdown 2",
         "modules": [
@@ -9062,6 +9178,8 @@
         "contractNumber": "Voorbeeld Contractnumber 1",
         "contractType": "SLA",
         "status": "Active",
+        "approvalDecisionId": "Voorbeeld Approvaldecisionid 1",
+        "approvalState": "none",
         "endDate": "2026-03-01",
         "cost": 1.0,
         "costPeriod": "Monthly",
@@ -9091,6 +9209,8 @@
         "contractNumber": "Voorbeeld Contractnumber 2",
         "contractType": "Licence",
         "status": "Expired",
+        "approvalDecisionId": "Voorbeeld Approvaldecisionid 2",
+        "approvalState": "pending",
         "endDate": "2026-03-02",
         "cost": 2.0,
         "costPeriod": "Annually",
@@ -9120,6 +9240,8 @@
         "contractNumber": "Voorbeeld Contractnumber 3",
         "contractType": "Maintenance",
         "status": "In negotiation",
+        "approvalDecisionId": "Voorbeeld Approvaldecisionid 3",
+        "approvalState": "approved",
         "endDate": "2026-03-03",
         "cost": 3.0,
         "costPeriod": "One-off",
