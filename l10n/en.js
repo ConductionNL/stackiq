@@ -694,7 +694,10 @@ OC.L10N.register(
         "Add a new contactpersoon to organisation: {name}": "Add a new contactpersoon to organisation: {name}",
         "Add contactpersoon": "Add contactpersoon",
         "Failed to add contactpersoon: {error}": "Failed to add contactpersoon: {error}",
-        "Invalid contactpersoon data structure": "Invalid contactpersoon data structure"
+        "Invalid contactpersoon data structure": "Invalid contactpersoon data structure",
+        "Where the automation lives": "Where the automation lives",
+        "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them — nothing to build now.": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them — nothing to build now.",
+        "Open Flows in the menu": "Open Flows in the menu"
     },
     "nplurals=2; plural=(n != 1);"
 )
