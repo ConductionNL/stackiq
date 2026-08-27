@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"dependencies": [
 		"openregister"
 	],
@@ -18,6 +18,7 @@
 					{ "id": "welcome", "sinceVersion": "0.2.11", "placement": "center", "title": "Welcome to Stackiq", "body": "Let's take a quick spin through your software catalogue. We'll register an organisation together so you can see how the pieces fit, and you'll add the record yourself.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } },
 					{ "id": "go-organisaties", "sinceVersion": "0.2.11", "placement": "right", "body": "Organisations are the heart of your catalogue: they own the contracts, modules and compliance records you track. Open Organisations from the menu to get started.", "task": "Click Organisations in the menu", "target": { "kind": "nav-item", "ref": "Organisaties" }, "advanceOn": { "type": "route-match", "route": "Organisaties" } },
 					{ "id": "create-organisatie", "sinceVersion": "0.2.11", "placement": "bottom", "allowManualNext": true, "body": "Add your first organisation. Give it a name and save. Contracts, modules and compliance records attach to it afterwards.", "task": "Click New and save an organisation", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "stackiq", "schema": "organization", "capture": { "organisatieId": ":id" } } },
+					{ "id": "see-flows", "sinceVersion": "1.1.0", "placement": "right", "optional": true, "allowManualNext": true, "title": "Where the automation lives", "body": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them — nothing to build now.", "task": "Open Flows in the menu", "target": {"kind": "nav-item", "ref": "FlowsMenu"}, "advanceOn": {"type": "route-match", "route": "Flows"} },
 					{ "id": "done", "sinceVersion": "0.2.11", "placement": "center", "title": "Your catalogue has its first organisation", "body": "The Dashboard tracks the catalogue as it grows. The documentation covers the rest.", "task": "Open the documentation to keep going", "target": { "kind": "nav-item", "ref": "Documentation" }, "advanceOn": { "type": "manual" } }
 				]
 			}
