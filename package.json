@@ -32,7 +32,9 @@
     "stylelint": "stylelint \"{src,css}/**/*.{vue,scss,css}\"",
     "check:manifest": "node tests/validate-manifest.js",
     "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
-    "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\""
+    "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
+    "l10n:build": "node scripts/build-l10n-js.js",
+    "check:l10n-js": "node scripts/build-l10n-js.js --check"
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"
