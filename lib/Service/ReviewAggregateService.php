@@ -2,7 +2,7 @@
 
 /**
  * Public approved-only review aggregate/read path (catalog-ratings,
- * softwarecatalog#375) — split out of ReviewService (which owns the
+ * stackiq#375) — split out of ReviewService (which owns the
  * authenticated write path) to keep each class under the
  * ExcessiveClassComplexity budget.
  *
@@ -15,11 +15,11 @@
  * matching — computing it here is fully unit-testable regardless of that.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
  *
@@ -29,7 +29,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

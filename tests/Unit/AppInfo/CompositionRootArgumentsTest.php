@@ -20,7 +20,7 @@
  * `$organisationService` to `ContactpersonenController::__construct()`: the
  * factory at `Application.php` that exists "for /me endpoint" kept passing 11
  * arguments to a constructor that now requires 13, and
- * `GET /api/softwarecatalog/api/me` returned **500 for every user** on
+ * `GET /api/stackiq/api/me` returned **500 for every user** on
  * `development` until it was noticed by an end-to-end run.
  *
  * These tests close that hole. They read `Application.php`'s own source,
@@ -28,18 +28,18 @@
  * target class's real constructor via reflection.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\AppInfo
+ * @package   OCA\Stackiq\Tests\Unit\AppInfo
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\AppInfo;
+namespace OCA\Stackiq\Tests\Unit\AppInfo;
 
-use OCA\SoftwareCatalog\Controller\ContactpersonenController;
+use OCA\Stackiq\Controller\ContactpersonenController;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -66,7 +66,6 @@ class CompositionRootArgumentsTest extends TestCase {
 	 */
 	private array $callSites;
 
-
 	/**
 	 * Parse the composition root once per test.
 	 *
@@ -86,7 +85,6 @@ class CompositionRootArgumentsTest extends TestCase {
 		);
 
 	}//end setUp()
-
 
 	/**
 	 * The parser must actually have found the factories.
@@ -117,14 +115,13 @@ class CompositionRootArgumentsTest extends TestCase {
 
 	}//end testTheParserFindsTheFactoriesItIsSupposedToCheck()
 
-
 	/**
 	 * Every manual factory supplies every argument its constructor requires.
 	 *
 	 * @return void
 	 */
 	public function testEveryManualFactorySuppliesAllRequiredConstructorArguments(): void {
-		$checked  = 0;
+		$checked = 0;
 		$problems = [];
 
 		foreach ($this->callSites as $site) {
@@ -144,7 +141,7 @@ class CompositionRootArgumentsTest extends TestCase {
 
 			$checked++;
 			$parameters = $constructor->getParameters();
-			$names      = array_map(
+			$names = array_map(
 				static fn ($parameter) => $parameter->getName(),
 				$parameters
 			);
@@ -222,7 +219,6 @@ class CompositionRootArgumentsTest extends TestCase {
 
 	}//end testEveryManualFactorySuppliesAllRequiredConstructorArguments()
 
-
 	/**
 	 * The `/me` endpoint's factory, named explicitly.
 	 *
@@ -267,7 +263,7 @@ class CompositionRootArgumentsTest extends TestCase {
 		self::assertSame(
 			[],
 			$missing,
-			'GET /api/softwarecatalog/api/me resolves ContactpersonenController '
+			'GET /api/stackiq/api/me resolves ContactpersonenController '
 			. 'through the hand-written factory in Application.php. It does not '
 			. 'pass: $' . implode(', $', $missing) . '. Every call to /me will '
 			. 'return 500 with "Too few arguments to function '
@@ -275,7 +271,6 @@ class CompositionRootArgumentsTest extends TestCase {
 		);
 
 	}//end testMeEndpointControllerFactoryMatchesItsConstructor()
-
 
 	/**
 	 * Record which factory targets could not be reflected.
@@ -315,7 +310,6 @@ class CompositionRootArgumentsTest extends TestCase {
 
 	}//end testUnresolvableFactoryTargetsAreDeclared()
 
-
 	/**
 	 * The namespace the composition root is declared in.
 	 *
@@ -334,9 +328,7 @@ class CompositionRootArgumentsTest extends TestCase {
 		}
 
 		return '';
-
 	}//end currentNamespace()
-
 
 	/**
 	 * Build alias => fully-qualified-class-name from the file's `use` list.
@@ -355,7 +347,7 @@ class CompositionRootArgumentsTest extends TestCase {
 		);
 
 		foreach ($matches as $match) {
-			$fqn   = $match[1];
+			$fqn = $match[1];
 			$parts = explode('\\', $fqn);
 			$alias = ($match[2] ?? '');
 			if ($alias === '') {
@@ -366,9 +358,7 @@ class CompositionRootArgumentsTest extends TestCase {
 		}
 
 		return $map;
-
 	}//end buildUseMap()
-
 
 	/**
 	 * Extract every `new <Class>(...)` call site from PHP source.
@@ -376,16 +366,16 @@ class CompositionRootArgumentsTest extends TestCase {
 	 * Uses PHP's own tokeniser, so comments and string literals cannot be
 	 * mistaken for code.
 	 *
-	 * @param string                $source    The PHP source of the composition root.
-	 * @param array<string, string> $useMap    Alias => FQN, from buildUseMap().
-	 * @param string                $namespace The file's own namespace.
+	 * @param string $source The PHP source of the composition root.
+	 * @param array<string, string> $useMap Alias => FQN, from buildUseMap().
+	 * @param string $namespace The file's own namespace.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function parseNewCalls(string $source, array $useMap, string $namespace): array {
 		$tokens = token_get_all($source);
-		$sites  = [];
-		$count  = count($tokens);
+		$sites = [];
+		$count = count($tokens);
 
 		for ($i = 0; $i < $count; $i++) {
 			if (is_array($tokens[$i]) === false || $tokens[$i][0] !== T_NEW) {
@@ -413,9 +403,9 @@ class CompositionRootArgumentsTest extends TestCase {
 				continue;
 			}
 
-			$name       = $tokens[$j][1];
+			$name = $tokens[$j][1];
 			$isAbsolute = (str_starts_with($name, '\\') === true);
-			$name       = ltrim($name, '\\');
+			$name = ltrim($name, '\\');
 
 			// The argument list must open immediately.
 			$k = ($j + 1);
@@ -435,19 +425,19 @@ class CompositionRootArgumentsTest extends TestCase {
 			// own namespace. An aliased class resolved the other way round
 			// looks unresolvable, and unresolvable reads as unchecked.
 			$head = explode('\\', $name)[0];
-			$fqn  = $name;
+			$fqn = $name;
 			if (isset($useMap[$head]) === true) {
 				$fqn = $useMap[$head] . substr($name, strlen($head));
-			} else if ($isAbsolute === false && $namespace !== '') {
+			} elseif ($isAbsolute === false && $namespace !== '') {
 				// Not imported and not fully qualified: PHP resolves it
 				// relative to the file's own namespace.
 				$fqn = $namespace . '\\' . $name;
 			}
 
 			$sites[] = [
-				'class'      => ltrim($fqn, '\\'),
-				'line'       => $line,
-				'named'      => $named,
+				'class' => ltrim($fqn, '\\'),
+				'line' => $line,
+				'named' => $named,
 				'positional' => $positional,
 			];
 
@@ -455,15 +445,13 @@ class CompositionRootArgumentsTest extends TestCase {
 		}//end for
 
 		return $sites;
-
 	}//end parseNewCalls()
-
 
 	/**
 	 * Read one argument list starting at the `(` token.
 	 *
 	 * @param array<int, mixed> $tokens The full token stream.
-	 * @param int               $open   Index of the opening parenthesis.
+	 * @param int $open Index of the opening parenthesis.
 	 *
 	 * @return array{0: string[], 1: int, 2: int} Named argument names, the
 	 *                                            number of positional
@@ -471,12 +459,12 @@ class CompositionRootArgumentsTest extends TestCase {
 	 *                                            the closing parenthesis.
 	 */
 	private function readArgumentList(array $tokens, int $open): array {
-		$depth      = 0;
-		$named      = [];
+		$depth = 0;
+		$named = [];
 		$positional = 0;
-		$sawToken   = false;
-		$count      = count($tokens);
-		$i          = $open;
+		$sawToken = false;
+		$count = count($tokens);
+		$i = $open;
 
 		for (; $i < $count; $i++) {
 			$token = $tokens[$i];
@@ -501,9 +489,9 @@ class CompositionRootArgumentsTest extends TestCase {
 						}
 
 						if ($next < $count && $tokens[$next] === ':') {
-							$named[]  = $token[1];
+							$named[] = $token[1];
 							$sawToken = true;
-							$i        = $next;
+							$i = $next;
 							continue;
 						}
 					}
@@ -554,8 +542,6 @@ class CompositionRootArgumentsTest extends TestCase {
 		}//end for
 
 		return [$named, $positional, $i];
-
 	}//end readArgumentList()
-
 
 }//end class

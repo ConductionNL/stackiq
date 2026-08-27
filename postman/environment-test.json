@@ -4,7 +4,7 @@
 	"values": [
 		{ "key": "base_url", "value": "https://backend.test.opencatalogi.nl", "enabled": true },
 		{ "key": "openregister_api", "value": "{{base_url}}/index.php/apps/openregister/api", "enabled": true },
-		{ "key": "softwarecatalog_api", "value": "{{base_url}}/index.php/apps/softwarecatalog/api", "enabled": true },
+		{ "key": "stackiq_api", "value": "{{base_url}}/index.php/apps/stackiq/api", "enabled": true },
 		{ "key": "opencatalogi_api", "value": "{{base_url}}/index.php/apps/opencatalogi/api", "enabled": true },
 		{ "key": "ocs_api", "value": "{{base_url}}/ocs/v2.php", "enabled": true },
 		{ "key": "admin_user", "value": "peter.vandijk@test.nl", "enabled": true },
@@ -12,7 +12,7 @@
 		{ "key": "test_password", "value": "WelcomeToTest2026", "enabled": true },
 		{ "key": "current_user", "value": "", "enabled": true },
 		{ "key": "current_password", "value": "", "enabled": true },
-		{ "key": "register_name", "value": "voorzieningen", "enabled": true },
+		{ "key": "register_name", "value": "stackiq", "enabled": true },
 		{ "key": "register_id", "value": "3", "enabled": true },
 		{ "key": "schema_applicatie", "value": "module", "enabled": true },
 		{ "key": "schema_contactpersoon", "value": "contactpersoon", "enabled": true },

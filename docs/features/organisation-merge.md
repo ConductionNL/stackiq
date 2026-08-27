@@ -12,7 +12,7 @@ Every relation that references the source organisation is re-pointed onto
 the target, and the source is soft-retired with a tombstone rather than
 deleted. See [VNG Softwarecatalogus issue #141](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/141).
 
-Specification: [`openspec/specs/organisation-merge/spec.md`](../../openspec/specs/organisation-merge/spec.md).
+Specification: [`openspec/specs/organisation-merge/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/organisation-merge/spec.md).
 
 ## What gets re-pointed
 
@@ -37,7 +37,7 @@ every object above and returns a count per relation type, without writing
 anything:
 
 ```
-POST /apps/softwarecatalog/api/organisaties/{sourceUuid}/merge/dry-run
+POST /apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run
 { "targetUuid": "<target organisation uuid>" }
 ```
 
@@ -59,7 +59,7 @@ UUID) and execute will refuse it too, with the same validation.
 ## Executing a merge
 
 ```
-POST /apps/softwarecatalog/api/organisaties/{sourceUuid}/merge
+POST /apps/stackiq/api/organisaties/{sourceUuid}/merge
 { "targetUuid": "<target organisation uuid>", "confirm": true }
 ```
 

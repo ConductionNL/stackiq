@@ -32,7 +32,7 @@ The fix adds logic to ensure that:
 
 ### Code Changes
 
-**File**: `softwarecatalog/lib/Service/SoftwareCatalogue/ContactPersonHandler.php`
+**File**: `stackiq/lib/Service/Stackique/ContactPersonHandler.php`
 
 #### 1. Updated `addUserToOrganizationEntity()` Method
 
@@ -60,7 +60,7 @@ This new private method:
 ### Prerequisites
 
 1. Access to a development environment with:
-   - Nextcloud with OpenRegister and SoftwareCatalog apps installed
+   - Nextcloud with OpenRegister and Stackiq apps installed
    - Docker containers running (nextcloud and database)
    - Admin access to Nextcloud
 
@@ -178,7 +178,7 @@ docker logs <nextcloud-container> | grep "ContactPersonHandler: Creating organiz
 ### Rollback
 
 If issues occur, the changes can be reverted by restoring the previous version of:
-- `softwarecatalog/lib/Service/SoftwareCatalogue/ContactPersonHandler.php`
+- `stackiq/lib/Service/Stackique/ContactPersonHandler.php`
 
 ## Additional Notes
 
@@ -190,7 +190,7 @@ If issues occur, the changes can be reverted by restoring the previous version o
 
 ### Related Files
 
-- `softwarecatalog/lib/Service/SoftwareCatalogue/ContactPersonHandler.php` - Main fix
+- `stackiq/lib/Service/Stackique/ContactPersonHandler.php` - Main fix
 - `openregister/lib/Service/OrganisationService.php` - Used for entity creation
 - `openregister/lib/Db/OrganisationMapper.php` - Database operations
 
@@ -209,5 +209,5 @@ If issues occur, the changes can be reverted by restoring the previous version o
 
 - Issue: Users created from contactpersonen added to wrong organisation
 - Related: OpenRegister multi-tenancy system
-- Related: SoftwareCatalog organisation management
+- Related: Stackiq organisation management
 

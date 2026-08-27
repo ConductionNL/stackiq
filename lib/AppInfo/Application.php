@@ -1,24 +1,24 @@
 <?php
 
 /**
- * SoftwareCatalog Application
+ * Stackiq Application
  *
- * This file contains the main application class for the SoftwareCatalog app.
+ * This file contains the main application class for the Stackiq app.
  *
  * @category  Application
- * @package   OCA\SoftwareCatalog\AppInfo
+ * @package   OCA\Stackiq\AppInfo
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\AppInfo;
+namespace OCA\Stackiq\AppInfo;
 
 use OCA\Decidesk\Event\DecisionConcludedEvent;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -26,53 +26,53 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationService;
-use OCA\SoftwareCatalog\BackgroundJob\ContractStatusJob;
-use OCA\SoftwareCatalog\BackgroundJob\EolSyncJob;
-use OCA\SoftwareCatalog\BackgroundJob\FederationSyncJob;
-use OCA\SoftwareCatalog\BackgroundJob\OrganizationContactSyncJob;
-use OCA\SoftwareCatalog\Controller\ContactpersonenController;
-use OCA\SoftwareCatalog\Dashboard\ConceptOrganisatiesWidget;
-use OCA\SoftwareCatalog\EventListener\DecisionConcludedListener;
-use OCA\SoftwareCatalog\EventListener\ModuleComplianceSubscriber;
-use OCA\SoftwareCatalog\EventListener\ModuleRegistrationSubscriber;
-use OCA\SoftwareCatalog\EventListener\TestEventListener;
-use OCA\SoftwareCatalog\EventListener\UserProfileUpdatedEventListener;
-use OCA\SoftwareCatalog\Service\ArchiMateExportService;
-use OCA\SoftwareCatalog\Service\ArchiMateImportService;
-use OCA\SoftwareCatalog\Service\ArchiMateService;
-use OCA\SoftwareCatalog\Service\ContactpersoonService;
-use OCA\SoftwareCatalog\Service\ContractApprovalService;
-use OCA\SoftwareCatalog\Service\ContractStatusService;
-use OCA\SoftwareCatalog\Service\EolMatcherService;
-use OCA\SoftwareCatalog\Service\EolSyncService;
-use OCA\SoftwareCatalog\Service\FacetService;
-use OCA\SoftwareCatalog\Service\Federation\FederationConfig;
-use OCA\SoftwareCatalog\Service\Federation\FederationMerger;
-use OCA\SoftwareCatalog\Service\Federation\FederationService;
-use OCA\SoftwareCatalog\Service\GebruikSyncService;
-use OCA\SoftwareCatalog\Service\IntakeService;
-use OCA\SoftwareCatalog\Service\MergeOrganisatieService;
-use OCA\SoftwareCatalog\Service\ModerationService;
-use OCA\SoftwareCatalog\Service\ModuleComplianceService;
-use OCA\SoftwareCatalog\Service\ModuleRegistrationService;
-use OCA\SoftwareCatalog\Service\ModuleVersionService;
-use OCA\SoftwareCatalog\Service\OrganisatieService;
-use OCA\SoftwareCatalog\Service\OrganizationSyncService;
-use OCA\SoftwareCatalog\Service\ProgressTracker;
-use OCA\SoftwareCatalog\Service\PublicationService;
-use OCA\SoftwareCatalog\Service\ReviewAggregateService;
-use OCA\SoftwareCatalog\Service\ReviewService;
-use OCA\SoftwareCatalog\Service\SbomImportService;
-use OCA\SoftwareCatalog\Service\SbomParserService;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogContactSyncService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
-use OCA\SoftwareCatalog\Service\SymfonyEmailService;
-use OCA\SoftwareCatalog\Service\ViewQueryBuilder;
-use OCA\SoftwareCatalog\Service\ViewService;
+use OCA\Stackiq\BackgroundJob\ContractStatusJob;
+use OCA\Stackiq\BackgroundJob\EolSyncJob;
+use OCA\Stackiq\BackgroundJob\FederationSyncJob;
+use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
+use OCA\Stackiq\Controller\ContactpersonenController;
+use OCA\Stackiq\Dashboard\ConceptOrganisatiesWidget;
+use OCA\Stackiq\EventListener\DecisionConcludedListener;
+use OCA\Stackiq\EventListener\ModuleComplianceSubscriber;
+use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
+use OCA\Stackiq\EventListener\TestEventListener;
+use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
+use OCA\Stackiq\Service\ArchiMateExportService;
+use OCA\Stackiq\Service\ArchiMateImportService;
+use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\ContactpersoonService;
+use OCA\Stackiq\Service\ContractApprovalService;
+use OCA\Stackiq\Service\ContractStatusService;
+use OCA\Stackiq\Service\EolMatcherService;
+use OCA\Stackiq\Service\EolSyncService;
+use OCA\Stackiq\Service\FacetService;
+use OCA\Stackiq\Service\Federation\FederationConfig;
+use OCA\Stackiq\Service\Federation\FederationMerger;
+use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Service\GebruikSyncService;
+use OCA\Stackiq\Service\IntakeService;
+use OCA\Stackiq\Service\MergeOrganisatieService;
+use OCA\Stackiq\Service\ModerationService;
+use OCA\Stackiq\Service\ModuleComplianceService;
+use OCA\Stackiq\Service\ModuleRegistrationService;
+use OCA\Stackiq\Service\ModuleVersionService;
+use OCA\Stackiq\Service\OrganisatieService;
+use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\PublicationService;
+use OCA\Stackiq\Service\ReviewAggregateService;
+use OCA\Stackiq\Service\ReviewService;
+use OCA\Stackiq\Service\SbomImportService;
+use OCA\Stackiq\Service\SbomParserService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCA\Stackiq\Service\Stackiq\GroupHandler;
+use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
+use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
+use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCA\Stackiq\Service\SymfonyEmailService;
+use OCA\Stackiq\Service\ViewQueryBuilder;
+use OCA\Stackiq\Service\ViewService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -92,14 +92,14 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Main Application class for SoftwareCatalog
+ * Main Application class for Stackiq
  *
  * @category Application
- * @package  OCA\SoftwareCatalog\AppInfo
+ * @package  OCA\Stackiq\AppInfo
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
@@ -109,7 +109,7 @@ class Application extends App implements IBootstrap {
 	/**
 	 * The application ID
 	 */
-	public const APP_ID = 'softwarecatalog';
+	public const APP_ID = 'stackiq';
 
 	/**
 	 * Application constructor
@@ -157,7 +157,7 @@ class Application extends App implements IBootstrap {
 	}//end register()
 
 	/**
-	 * Wire the four SoftwareCatalogue handler services as DI bindings.
+	 * Wire the four Stackiq handler services as DI bindings.
 	 *
 	 * Single-responsibility helper extracted from `register()` per
 	 * `openspec/changes/method-decomposition/tasks.md` task 9.1.
@@ -170,7 +170,7 @@ class Application extends App implements IBootstrap {
 	 */
 	private function registerHandlerServices(IRegistrationContext $context): void {
 		$context->registerService(
-			'OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler',
+			'OCA\Stackiq\Service\Stackiq\OrganizationHandler',
 			function (ContainerInterface $c) {
 				return new OrganizationHandler(
 					_groupManager: $c->get(IGroupManager::class),
@@ -183,7 +183,7 @@ class Application extends App implements IBootstrap {
 		);
 
 		$context->registerService(
-			'OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler',
+			'OCA\Stackiq\Service\Stackiq\ContactPersonHandler',
 			function (ContainerInterface $c) {
 				return new ContactPersonHandler(
 					_userManager: $c->get(IUserManager::class),
@@ -200,7 +200,7 @@ class Application extends App implements IBootstrap {
 		);
 
 		$context->registerService(
-			'OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler',
+			'OCA\Stackiq\Service\Stackiq\GroupHandler',
 			function (ContainerInterface $c) {
 				return new GroupHandler(
 					_groupManager: $c->get(IGroupManager::class),
@@ -214,11 +214,11 @@ class Application extends App implements IBootstrap {
 		);
 
 		$context->registerService(
-			'OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler',
+			'OCA\Stackiq\Service\Stackiq\HierarchyHandler',
 			function (ContainerInterface $c) {
 				return new HierarchyHandler(
-					_organizationHandler: $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler'),
-					_contactPersonHandler: $c->get('OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'),
+					_organizationHandler: $c->get('OCA\Stackiq\Service\Stackiq\OrganizationHandler'),
+					_contactPersonHandler: $c->get('OCA\Stackiq\Service\Stackiq\ContactPersonHandler'),
 					_logger: $c->get(LoggerInterface::class),
 					_userManager: $c->get(IUserManager::class),
 					_groupManager: $c->get(IGroupManager::class)
@@ -361,9 +361,9 @@ class Application extends App implements IBootstrap {
 		// Register the Nextcloud-Contacts bridge (identity → NC addressbook,
 		// relationship records keyed by contactsUid; ADR-019/ADR-022).
 		$context->registerService(
-			SoftwareCatalogContactSyncService::class,
+			StackiqContactSyncService::class,
 			function ($container) {
-				return new SoftwareCatalogContactSyncService(
+				return new StackiqContactSyncService(
 					contactsManager: $container->get('OCP\Contacts\IManager'),
 					logger: $container->get('Psr\Log\LoggerInterface')
 				);
@@ -434,7 +434,7 @@ class Application extends App implements IBootstrap {
 		);
 
 		// Register the registration/review moderation/approval-queue service
-		// (generalised to also moderate beoordeeling — softwarecatalog#375).
+		// (generalised to also moderate beoordeeling — stackiq#375).
 		$context->registerService(
 			ModerationService::class,
 			function ($container) {
@@ -447,7 +447,7 @@ class Application extends App implements IBootstrap {
 		);
 
 		// Register the authenticated review-submission service (catalog-ratings,
-		// softwarecatalog#375). Author identity comes from IUserSession, never
+		// stackiq#375). Author identity comes from IUserSession, never
 		// from client input.
 		$context->registerService(
 			ReviewService::class,
@@ -462,7 +462,7 @@ class Application extends App implements IBootstrap {
 		);
 
 		// Register the public approved-only review aggregate/read service
-		// (catalog-ratings, softwarecatalog#375) — split from ReviewService
+		// (catalog-ratings, stackiq#375) — split from ReviewService
 		// to keep each class under the complexity budget.
 		$context->registerService(
 			ReviewAggregateService::class,
@@ -607,7 +607,7 @@ class Application extends App implements IBootstrap {
 				return new OrganizationContactSyncJob(
 					timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
 					orgSyncService: $container->get(OrganizationSyncService::class),
-					contactSync: $container->get(SoftwareCatalogContactSyncService::class),
+					contactSync: $container->get(StackiqContactSyncService::class),
 					settingsService: $container->get(SettingsService::class),
 					appManager: $container->get(IAppManager::class),
 					logger: $container->get(LoggerInterface::class)
@@ -731,7 +731,7 @@ class Application extends App implements IBootstrap {
 					request: $container->get('OCP\IRequest'),
 					settingsService: $container->get(SettingsService::class),
 					contactPersonHandler: $container->get(
-						'OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler'
+						'OCA\Stackiq\Service\Stackiq\ContactPersonHandler'
 					),
 					contactSvc: $container->get(ContactpersoonService::class),
 					userManager: $container->get('OCP\IUserManager'),
@@ -773,7 +773,7 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
 
 		// OpenRegister object lifecycle events are NO LONGER broadcast to
-		// SoftwareCatalogEventListener.
+		// StackiqEventListener.
 		//
 		// That listener's own docblock has said "DISABLED: All processing is now
 		// handled by cron-based OrganizationSyncService to avoid race conditions"
@@ -784,7 +784,7 @@ class Application extends App implements IBootstrap {
 		// then discarded the result.
 		//
 		// The cost was not theoretical. Importing OpenCatalogi's configuration —
-		// twelve seeded objects — produced 657 SoftwareCatalog event handlings.
+		// twelve seeded objects — produced 657 Stackiq event handlings.
 		// Each one resolved three services from the container and wrote six log
 		// lines BEFORE reaching the schema check that decides the event is not
 		// ours. `occ maintenance:repair` reached 119 of 120 steps and then sat in

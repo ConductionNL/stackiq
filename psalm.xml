@@ -16,6 +16,22 @@
     </projectFiles>
     <stubs>
         <file name="vendor/nextcloud/ocp/OCP/Capabilities/ICapability.php" preloadClasses="true" />
+        <!--
+            OpenRegister's data-access contract — same reasoning as the decidesk
+            event stubs below: a sibling Nextcloud app supplies it at runtime, so
+            it is absent from the analysis path.
+
+            It USED to resolve, because hydra-gates declared
+            `OCA\OpenRegister\Contract\` as a psr-4 prefix. That was a bug — the
+            prefix is longer than openregister's own, so a vendored copy in any
+            app defined the contract for the whole process — and v1.9.0 removed
+            it (ConductionNL/.github#531). The runtime side is handled by the
+            guarded require in this app's test bootstrap; psalm never runs that,
+            so it needs the shape declared here instead. 213 UndefinedClass
+            errors without it.
+        -->
+        <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/ObjectServiceInterface.php" />
+        <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/ObjectEntityInterface.php" />
         <!-- decidesk decision-event contract (DecisionRequestedEvent +
              DecisionConcludedEvent). decidesk is a sibling Nextcloud app, not a
              Composer dependency, so it is absent from the analysis path. The

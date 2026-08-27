@@ -74,20 +74,20 @@ export const BASE_URL = resolveBaseUrl()
  * ⚠️ THE `/index.php` PREFIX IS NOT COSMETIC — it is the difference between
  * the suite running and 404-ing.
  *
- * The pretty form `/apps/softwarecatalog` only resolves where a rewrite rule
+ * The pretty form `/apps/stackiq` only resolves where a rewrite rule
  * maps every unmatched path onto `index.php` — Apache + `.htaccess` in the
  * docker dev images. The CI runner serves Nextcloud with PHP's built-in
  * server (`php -S 0.0.0.0:8080`, no router script), which has no rewriting at
  * all: it resolves a request against the filesystem first, and
- * `server/apps/softwarecatalog/` IS a real directory with no `index.php`
+ * `server/apps/stackiq/` IS a real directory with no `index.php`
  * inside it. So the request never reaches Nextcloud and the built-in server
  * answers with its OWN error page:
  *
- *     Not Found — The requested resource /apps/softwarecatalog was not found
+ *     Not Found — The requested resource /apps/stackiq was not found
  *     on this server.
  *
  * Observed on run 30797297831: 50 of 58 failures were this one cause. Every
- * one of them surfaced as `waiting for locator('.softwarecatalog-app-root')`
+ * one of them surfaced as `waiting for locator('.stackiq-app-root')`
  * timing out after 30s — a message that accuses the app of not mounting.
  * The three specs that already used the `/index.php/...` form (the `smoke`
  * project and the admin-settings tests) passed in the same run, which is what
@@ -97,4 +97,4 @@ export const BASE_URL = resolveBaseUrl()
  * portable spelling, not a CI workaround. Testing that the rewrite rule is in
  * place is a webserver-config concern, not something these specs assert.
  */
-export const APP_PATH = '/index.php/apps/softwarecatalog'
+export const APP_PATH = '/index.php/apps/stackiq'

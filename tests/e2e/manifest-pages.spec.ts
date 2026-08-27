@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
- * Real UI smoke coverage for the manifest-driven SoftwareCatalog SPA pages.
+ * Real UI smoke coverage for the manifest-driven Stackiq SPA pages.
  *
  * src/manifest.json declares the rendering pages (index / detail / dashboard /
  * roadmap / settings). The app shell (CnAppRoot) uses vue-router in *hash*
  * mode, so every page is deep-linkable as `<app entry>#<route>` (this header
  * previously claimed history mode — it is not; see `gotoAppRoute` below, which
  * has always built hash URLs). Each test drives the real UI by navigating to the page route and
- * asserting the Vue shell mounted (the `.softwarecatalog-app-root` shell that
+ * asserting the Vue shell mounted (the `.stackiq-app-root` shell that
  * replaces `#content` on mount renders) and the page-specific title text is
  * visible — no Vue-internals
  * patching.
@@ -36,23 +36,23 @@
 import { test, expect, type Page } from '@playwright/test'
 import { APP_PATH } from './base-url'
 
-// Was the hardcoded pretty path `/apps/softwarecatalog`. See the APP_PATH
+// Was the hardcoded pretty path `/apps/stackiq`. See the APP_PATH
 // docblock in tests/e2e/base-url.ts: without a rewrite rule that path is not a
 // Nextcloud URL at all, and the CI runner has no rewriting.
 const APP_BASE = APP_PATH
 
 // The Vue app bootstraps with `.$mount('#content')` (src/main.js), replacing
 // Nextcloud's standard `#content` node with the App.vue root, whose outermost
-// element is `<div class="softwarecatalog-app-root">` wrapping CnAppRoot. The
-// vestigial `<div id="softwarecatalog">` in templates/index.php is never used
+// element is `<div class="stackiq-app-root">` wrapping CnAppRoot. The
+// vestigial `<div id="stackiq">` in templates/index.php is never used
 // as the mount target, so the shell is identified by its root class instead.
 //
-// The `.softwarecatalog-app-root` wrapper itself carries no geometry (the
+// The `.stackiq-app-root` wrapper itself carries no geometry (the
 // CnAppRoot/NcContent layout positions its children), so Playwright reports
 // the wrapper as "hidden" even when the page is fully rendered. We therefore
 // wait for the wrapper to be *attached* (Vue mounted) and assert visibility on
 // the real content region — the NcAppContent `<main>` — and on page text.
-const APP_SHELL = '.softwarecatalog-app-root'
+const APP_SHELL = '.stackiq-app-root'
 const APP_MAIN = 'main'
 
 /**
@@ -241,14 +241,14 @@ for (const p of DETAIL_PAGES) {
 // `type: "settings"` page. ADR-079 D1 removed it: app-level configuration has
 // exactly one home, `/settings/admin/<app>`, where Nextcloud authorizes the
 // caller server-side before the section renders. The SAME component
-// (`src/views/settings/SoftwareCatalogSettings.vue`) renders there, mounted by
+// (`src/views/settings/StackiqSettings.vue`) renders there, mounted by
 // `src/settings.js` into `templates/settings/admin.php`, so these assertions
 // are unchanged in substance — only the door they walk through moved.
 //
 // `domcontentloaded`, not `networkidle`: Nextcloud keeps long-lived polls open,
 // so the network never goes idle (ADR-074 rule 4). The visibility assertions
 // below are the real readiness signal.
-const ADMIN_SETTINGS_URL = '/settings/admin/softwarecatalog'
+const ADMIN_SETTINGS_URL = '/settings/admin/stackiq'
 
 /**
  * Open the app's Nextcloud admin settings section and return its host element.
@@ -256,21 +256,21 @@ const ADMIN_SETTINGS_URL = '/settings/admin/softwarecatalog'
  */
 async function gotoAdminSettings(page: Page) {
 	await page.goto(ADMIN_SETTINGS_URL, { waitUntil: 'domcontentloaded' })
-	const host = page.locator('#softwarecatalog-settings')
+	const host = page.locator('#stackiq-settings')
 	await expect(host).toBeVisible({ timeout: 30000 })
 	return host
 }
 
-// The settings shell (SoftwareCatalogSettings.vue) renders its section
+// The settings shell (StackiqSettings.vue) renders its section
 // navigation and the configuration status — fe-settings-ui "Open settings".
 // @e2e fe-settings-ui::open-settings
 test('admin settings: the settings section renders', async ({ page }) => {
 	const host = await gotoAdminSettings(page)
 	// Scope to the app's own settings host so the assertion can't match a
 	// transient notification toast elsewhere in the DOM.
-	await expect(
-		host.getByText('SoftwareCatalog', { exact: false }).first(),
-	).toBeVisible({ timeout: 30000 })
+	await expect(host.getByText('Stackiq', { exact: false }).first()).toBeVisible({
+		timeout: 30000,
+	})
 })
 
 // The settings shell renders the Statistics overview section (StatisticsOverview.vue),

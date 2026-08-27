@@ -12,20 +12,20 @@
  * the value that reaches IConfig — not merely that a 200 comes back.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/dashboard-views-api/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\PreferencesController;
+use OCA\Stackiq\Controller\PreferencesController;
 use OCP\AppFramework\Http;
 use OCP\IConfig;
 use OCP\IRequest;
@@ -133,7 +133,7 @@ class PreferencesControllerContractTest extends TestCase {
 
 		$this->config->expects($this->once())
 			->method('getUserValue')
-			->with('alice', 'softwarecatalog', 'pref_appspassword', '')
+			->with('alice', 'stackiq', 'pref_appspassword', '')
 			->willReturn('');
 
 		$response = $controller->getPreference('../apps/Password');
@@ -205,7 +205,7 @@ class PreferencesControllerContractTest extends TestCase {
 
 		$this->config->expects($this->once())
 			->method('setUserValue')
-			->with('alice', 'softwarecatalog', 'pref_tour-seen', 'yes');
+			->with('alice', 'stackiq', 'pref_tour-seen', 'yes');
 
 		$response = $controller->setPreference('Tour-Seen', 'yes');
 
@@ -226,7 +226,7 @@ class PreferencesControllerContractTest extends TestCase {
 
 		$this->config->expects($this->once())
 			->method('deleteUserValue')
-			->with('alice', 'softwarecatalog', 'pref_tour-seen');
+			->with('alice', 'stackiq', 'pref_tour-seen');
 		$this->config->expects($this->never())->method('setUserValue');
 
 		$response = $controller->setPreference('tour-seen', '');

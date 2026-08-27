@@ -17,25 +17,25 @@
  *     403 without the lookup happening.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contactpersonen-api/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\OrganisationService;
-use OCA\SoftwareCatalog\Controller\ContactpersonenController;
-use OCA\SoftwareCatalog\Service\ContactpersoonService;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
+use OCA\Stackiq\Controller\ContactpersonenController;
+use OCA\Stackiq\Service\ContactpersoonService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\AppFramework\Http;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -110,7 +110,7 @@ class ContactpersonenControllerUserAdminContractTest extends TestCase {
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 
 		return new ContactpersonenController(
-			'softwarecatalog',
+			'stackiq',
 			$request,
 			$this->createMock(SettingsService::class),
 			$this->createMock(ContactPersonHandler::class),

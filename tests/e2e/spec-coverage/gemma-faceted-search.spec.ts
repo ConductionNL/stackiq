@@ -47,7 +47,7 @@ import {
 	type VoorzieningenConfig,
 } from '../workflows/_fixtures'
 
-const FACETS = '/index.php/apps/softwarecatalog/api/facets'
+const FACETS = '/index.php/apps/stackiq/api/facets'
 /** The four GEMMA dimensions the endpoint must always describe. */
 const DIMENSIONS = [
 	// Wire names: FacetController and FacetService declare these four, and they

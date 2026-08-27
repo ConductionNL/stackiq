@@ -4,7 +4,7 @@ kind: code
 
 # Proposal: portal-contribution
 
-Tracking issue: Conduction/softwarecatalog#72
+Tracking issue: Conduction/stackiq#72
 
 ## Summary
 
@@ -35,13 +35,13 @@ catalog can stop minting NC accounts and stop widening its public API surface.
 
 ## Affected Projects
 
-- [x] Project: `softwarecatalog` — new `lib/Portal/PortalContributionProvider.php`; new `tests/Unit/Portal/PortalContributionProviderTest.php`; new OpenSpec capability `portal-contribution`. No register-schema, route, controller, service, frontend or info.xml change.
+- [x] Project: `stackiq` — new `lib/Portal/PortalContributionProvider.php`; new `tests/Unit/Portal/PortalContributionProviderTest.php`; new OpenSpec capability `portal-contribution`. No register-schema, route, controller, service, frontend or info.xml change.
 
 ## Scope
 
 ### In Scope
 
-- A plain `OCA\SoftwareCatalog\Portal\PortalContributionProvider` class (no
+- A plain `OCA\Stackiq\Portal\PortalContributionProvider` class (no
   portaliq import, no `implements`, no info.xml dependency) exposing
   `getAudiences()`, `getAudience()`, and `getContribution(array $subject): ?array`.
 - Declarative READ manifests for `vendor-org` and `participant-org`, scoped by

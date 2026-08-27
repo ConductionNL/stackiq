@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for ReviewService (catalog-ratings, softwarecatalog#375).
+ * Unit tests for ReviewService (catalog-ratings, stackiq#375).
  *
  * Covers the mandated security scenarios: an unauthenticated submission is
  * refused before any object is created; a client-supplied `auteur` is
@@ -14,24 +14,24 @@
  * ExcessiveClassComplexity budget).
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/catalog-ratings/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\SoftwareCatalog\Service\ReviewService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\ReviewService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\AppFramework\Db\Entity;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -230,7 +230,7 @@ class ReviewServiceTest extends TestCase {
 	 * With the old `method_exists()` probe this returned `null` for EVERY real
 	 * save (the `is_array()` arm cannot rescue an object), so `submit()`
 	 * answered `uuid: null` to the client and wrote `['uuid' => null]` to the
-	 * audit log — softwarecatalog#490.
+	 * audit log — stackiq#490.
 	 *
 	 * The private method is exercised directly because the shared
 	 * `tests/Stubs/Db/ObjectEntity` still declares `getUuid()` concretely (8

@@ -89,7 +89,7 @@ export async function fetchFacets(schema, options = {}) {
 	const params = buildFacetQueryParams(options)
 	const query = params.toString()
 	const url =
-		generateUrl(`/apps/softwarecatalog/api/facets/${encodeURIComponent(schema)}`)
+		generateUrl(`/apps/stackiq/api/facets/${encodeURIComponent(schema)}`)
 		+ (query !== '' ? `?${query}` : '')
 
 	const response = await axios.get(url)

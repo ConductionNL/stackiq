@@ -52,22 +52,20 @@ generic route-query-to-filter passthrough never sees it (see the
 			<NcTextField
 				:modelValue="searchValue"
 				class="faceted-catalog-index__search"
-				:label="t('softwarecatalog', 'Search')"
-				:placeholder="
-					t('softwarecatalog', 'Search applications and services…')
-				"
+				:label="t('stackiq', 'Search')"
+				:placeholder="t('stackiq', 'Search applications and services…')"
 				@update:modelValue="onSearchInput" />
 			<NcButton
 				v-if="searchValue !== ''"
 				variant="tertiary"
-				:aria-label="t('softwarecatalog', 'Clear search')"
+				:aria-label="t('stackiq', 'Clear search')"
 				@click="onSearchInput('')">
 				<template #icon>
 					<CloseIcon :size="18" />
 				</template>
 			</NcButton>
 
-			<NcActions :aria-label="t('softwarecatalog', 'Saved views')">
+			<NcActions :aria-label="t('stackiq', 'Saved views')">
 				<template #icon>
 					<FolderStarOutline :size="20" />
 				</template>
@@ -77,11 +75,11 @@ generic route-query-to-filter passthrough never sees it (see the
 					<template #icon>
 						<ContentSaveOutline :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'Save current filters as view') }}
+					{{ t('stackiq', 'Save current filters as view') }}
 				</NcActionButton>
 				<NcActionCaption
 					v-if="facetStore[schema].savedViews.length > 0"
-					:name="t('softwarecatalog', 'Saved views')" />
+					:name="t('stackiq', 'Saved views')" />
 				<NcActionButton
 					v-for="view in facetStore[schema].savedViews"
 					:key="view.id"
@@ -96,12 +94,12 @@ generic route-query-to-filter passthrough never sees it (see the
 
 		<div class="faceted-catalog-index__body">
 			<CnFacetSidebar
-				:title="t('softwarecatalog', 'GEMMA filters')"
+				:title="t('stackiq', 'GEMMA filters')"
 				:schema="facetDimensionSchema"
 				:facetData="facetStore.facetDataFor(schema)"
 				:activeFilters="facetStore[schema].activeFilters"
 				:loading="facetStore[schema].loading"
-				:clearLabel="t('softwarecatalog', 'Clear all')"
+				:clearLabel="t('stackiq', 'Clear all')"
 				class="faceted-catalog-index__sidebar"
 				@filterChange="onFacetFilterChange"
 				@clearAll="onClearAllFacets" />
@@ -149,10 +147,10 @@ import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
 const DIMENSION_LABELS = {
-	referenceComponent: () => t('softwarecatalog', 'Reference component'),
-	standard: () => t('softwarecatalog', 'Standard'),
-	applicationService: () => t('softwarecatalog', 'Application service'),
-	domain: () => t('softwarecatalog', 'Domain'),
+	referenceComponent: () => t('stackiq', 'Reference component'),
+	standard: () => t('stackiq', 'Standard'),
+	applicationService: () => t('stackiq', 'Application service'),
+	domain: () => t('stackiq', 'Domain'),
 }
 
 /** Debounce delay (ms) between search keystrokes and the facets/list refetch. */
@@ -458,10 +456,10 @@ export default {
 			try {
 				await this.facetStore.saveCurrentAsView(this.schema, name)
 				this.showSaveViewModal = false
-				showSuccess(t('softwarecatalog', 'View "{name}" saved', { name }))
+				showSuccess(t('stackiq', 'View "{name}" saved', { name }))
 			} catch (error) {
 				showError(
-					t('softwarecatalog', 'Failed to save view: {message}', {
+					t('stackiq', 'Failed to save view: {message}', {
 						message: error.message ?? '',
 					}),
 				)

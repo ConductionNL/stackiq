@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: 2026 Conduction / SoftwareCatalog Contributors
+ * SPDX-FileCopyrightText: 2026 Conduction / Stackiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Unit tests for src/utils/translationBadge.js — the pure, framework-light
@@ -96,9 +96,7 @@ describe('translationBadge', () => {
 	it('label() uses the provided t() with interpolation', () => {
 		const badge = translationBadge({ sourceLanguage: 'nl' }, 'en')
 		const t = (app, str, vars) => `${app}:${str}:${vars.language}`
-		expect(badge.label(t)).toBe(
-			'softwarecatalog:(translated from {language}):Dutch',
-		)
+		expect(badge.label(t)).toBe('stackiq:(translated from {language}):Dutch')
 	})
 
 	it('label() falls back to a plain English string without t()', () => {

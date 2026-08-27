@@ -15,21 +15,21 @@
  * that queried first and filtered afterwards.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/aangeboden-gebruik-api/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\AangebodenGebruikController;
-use OCA\SoftwareCatalog\Service\AangebodenGebruikService;
+use OCA\Stackiq\Controller\AangebodenGebruikController;
+use OCA\Stackiq\Service\AangebodenGebruikService;
 use OCP\AppFramework\Http;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -88,7 +88,7 @@ class AangebodenGebruikControllerEndpointContractTest extends TestCase {
 		$this->groupManager = $this->createMock(IGroupManager::class);
 
 		return new AangebodenGebruikController(
-			'softwarecatalog',
+			'stackiq',
 			$request,
 			$this->userSession,
 			$this->gebruikSvc,

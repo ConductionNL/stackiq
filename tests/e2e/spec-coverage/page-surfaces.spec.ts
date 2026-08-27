@@ -152,11 +152,11 @@ test('admin settings: EolSyncSettings renders its section and sync control', asy
 	const bag = collectAppErrors(page)
 	// `domcontentloaded`, not `networkidle`: Nextcloud keeps long-lived polls
 	// open so the network never goes idle (ADR-074 rule 4).
-	await page.goto('/settings/admin/softwarecatalog', {
+	await page.goto('/settings/admin/stackiq', {
 		waitUntil: 'domcontentloaded',
 	})
 
-	const host = page.locator('#softwarecatalog-settings')
+	const host = page.locator('#stackiq-settings')
 	await expect(host).toBeVisible({ timeout: 30000 })
 
 	// The section name and the manual-trigger button are both declared by

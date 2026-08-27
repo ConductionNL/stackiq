@@ -91,7 +91,7 @@ Specifically:
   reflected in `src/manifest.json` is treated as drift. (Pairs with
   ADR-029 route-reachability gate.)
 - Migration order recommendation (cheapest → highest-value):
-  `launchpad` → `larpingapp` / `softwarecatalog` → `openregister` →
+  `launchpad` → `larpingapp` / `stackiq` → `openregister` →
   remaining apps. Decidesk is already Tier 4 and serves as the
   reference.
 - App-manifest extensions (e.g. `theme: { primary, accent, logoUrl }`,

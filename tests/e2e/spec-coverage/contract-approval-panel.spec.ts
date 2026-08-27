@@ -12,7 +12,7 @@
  * paths are covered by ContractApprovalServiceTest (PHPUnit) and carry
  * `@e2e exclude` in the spec.
  *
- * @spec openspec/changes/softwarecatalog-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
+ * @spec openspec/changes/stackiq-contracts-to-decidesk/specs/contract-decision-delegation/spec.md
  */
 import { test, expect } from '@playwright/test'
 import {
@@ -114,7 +114,7 @@ test('contract approval: the config endpoint reports a delegation flag', async (
 	).not.toBe('')
 
 	const res = await page.request.get(
-		'/index.php/apps/softwarecatalog/api/contracts/approval/config',
+		'/index.php/apps/stackiq/api/contracts/approval/config',
 		{ headers: { requesttoken: requestToken, 'OCS-APIREQUEST': 'true' } },
 	)
 	// Authenticated session → 200 with a boolean `configured`; an unauthenticated

@@ -3,23 +3,23 @@
 /**
  * Organization Synchronization Tests
  *
- * Tests for the organization synchronization functionality between SoftwareCatalog and OpenRegister.
+ * Tests for the organization synchronization functionality between Stackiq and OpenRegister.
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests
+ * @package  OCA\Stackiq\Tests
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  1.0.0
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests;
+namespace OCA\Stackiq\Tests;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogueService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\StackiqService;
 use OCP\AppFramework\Db\Entity;
 use OCP\IGroupManager;
 use OCP\IUserManager;
@@ -29,11 +29,11 @@ use PHPUnit\Framework\TestCase;
  * Test class for organization synchronization functionality
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests
+ * @package  OCA\Stackiq\Tests
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  1.0.0
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 class OrganizationSyncTest extends TestCase {
 	/**
@@ -85,12 +85,12 @@ class OrganizationSyncTest extends TestCase {
 			->willReturn($openRegisterObject);
 
 		// Create service instance
-		$service = new SoftwareCatalogueService(
-			$this->createMock(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler::class),
-			$this->createMock(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler::class),
-			$this->createMock(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\GroupHandler::class),
-			$this->createMock(\OCA\SoftwareCatalog\Service\SoftwareCatalogue\HierarchyHandler::class),
-			$this->createMock(\OCA\SoftwareCatalog\Service\SymfonyEmailService::class),
+		$service = new StackiqService(
+			$this->createMock(\OCA\Stackiq\Service\Stackiq\OrganizationHandler::class),
+			$this->createMock(\OCA\Stackiq\Service\Stackiq\ContactPersonHandler::class),
+			$this->createMock(\OCA\Stackiq\Service\Stackiq\GroupHandler::class),
+			$this->createMock(\OCA\Stackiq\Service\Stackiq\HierarchyHandler::class),
+			$this->createMock(\OCA\Stackiq\Service\SymfonyEmailService::class),
 			$this->createMock(\Psr\Log\LoggerInterface::class),
 			$this->createMock(\Psr\Container\ContainerInterface::class),
 			$this->createMock(\OCP\App\IAppManager::class),
@@ -218,7 +218,7 @@ class OrganizationSyncTest extends TestCase {
 	/**
 	 * Helper method to map organization data for OpenRegister
 	 *
-	 * @param array $objectData The organization data from SoftwareCatalog
+	 * @param array $objectData The organization data from Stackiq
 	 *
 	 * @return array The mapped data for OpenRegister
 	 */
@@ -232,7 +232,7 @@ class OrganizationSyncTest extends TestCase {
 			'participants' => []
 		];
 
-		// Map status from SoftwareCatalog to OpenRegister
+		// Map status from Stackiq to OpenRegister
 		$assessment = strtolower($objectData['beoordeling'] ?? '');
 		if ($assessment === 'actief') {
 			$mappedData['active'] = true;

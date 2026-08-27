@@ -23,16 +23,16 @@
 	<CnWizardDialog
 		v-if="show"
 		ref="wizard"
-		:dialogTitle="t('softwarecatalog', 'New suite')"
+		:dialogTitle="t('stackiq', 'New suite')"
 		:steps="wizardSteps"
 		:defaults="defaults"
 		:validate="validateStep"
-		:cancelLabel="t('softwarecatalog', 'Cancel')"
-		:backLabel="t('softwarecatalog', 'Back')"
-		:nextLabel="t('softwarecatalog', 'Next')"
-		:submitLabel="t('softwarecatalog', 'Create suite')"
-		:closeLabel="t('softwarecatalog', 'Close')"
-		:successText="t('softwarecatalog', 'Suite created.')"
+		:cancelLabel="t('stackiq', 'Cancel')"
+		:backLabel="t('stackiq', 'Back')"
+		:nextLabel="t('stackiq', 'Next')"
+		:submitLabel="t('stackiq', 'Create suite')"
+		:closeLabel="t('stackiq', 'Close')"
+		:successText="t('stackiq', 'Suite created.')"
 		@submit="onSubmit"
 		@close="onClose">
 		<template #step-details="{ stepData, setStepData }">
@@ -108,9 +108,9 @@ export default {
 		 */
 		wizardSteps() {
 			return [
-				{ id: 'details', label: t('softwarecatalog', 'Details') },
-				{ id: 'applications', label: t('softwarecatalog', 'Applications') },
-				{ id: 'confirm', label: t('softwarecatalog', 'Confirm') },
+				{ id: 'details', label: t('stackiq', 'Details') },
+				{ id: 'applications', label: t('stackiq', 'Applications') },
+				{ id: 'confirm', label: t('stackiq', 'Confirm') },
 			]
 		},
 	},
@@ -131,7 +131,7 @@ export default {
 			if (stepId === 'details') {
 				return isDetailsStepValid(stepData)
 					? true
-					: t('softwarecatalog', 'Enter a name and a short description.')
+					: t('stackiq', 'Enter a name and a short description.')
 			}
 			if (stepId === 'applications') {
 				return isApplicationsStepValid(stepData.applications, t)
@@ -164,7 +164,7 @@ export default {
 				&& !objectStore.objectTypeRegistry?.suite
 			) {
 				objectStore.registerObjectType('suite', 'suite', registerId, {
-					registerSlug: 'voorzieningen',
+					registerSlug: 'stackiq',
 					schemaSlug: 'suite',
 				})
 			}
@@ -194,7 +194,7 @@ export default {
 				console.error('SuiteWizardDialog: failed to create suite', error)
 				const message =
 					(error && error.message)
-					|| t('softwarecatalog', 'Failed to create the suite.')
+					|| t('stackiq', 'Failed to create the suite.')
 				if (this.$refs.wizard) {
 					this.$refs.wizard.setError(message)
 				}

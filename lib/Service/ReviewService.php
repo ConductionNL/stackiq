@@ -5,7 +5,7 @@
  * ReviewAggregateService for the approved-only read/aggregate path; split
  * to keep each class under the ExcessiveClassComplexity budget).
  *
- * The write path for the `catalog-ratings` feature (softwarecatalog#375).
+ * The write path for the `catalog-ratings` feature (stackiq#375).
  * Unlike `IntakeService` (anonymous organisation registration), a review
  * submission REQUIRES an authenticated Nextcloud session — anonymous public
  * review submission is explicitly out of scope. The author identity is never
@@ -17,11 +17,11 @@
  * organisatie moderation pattern) may change that.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/catalog-ratings/spec.md
  *
@@ -31,7 +31,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCP\IUser;
 use OCP\IUserSession;
@@ -359,7 +359,7 @@ class ReviewService {
 	 * FALSE, and because an object is not an array the array arm below cannot
 	 * rescue it — so this method used to return `null` for EVERY real save,
 	 * putting `uuid: null` in the submit response and the audit log
-	 * (softwarecatalog#490). `property_exists()` is the instrument
+	 * (stackiq#490). `property_exists()` is the instrument
 	 * `Entity::getter()` itself decides on; `method_exists()` is kept as the
 	 * second arm for genuinely concrete accessors, and the call is wrapped
 	 * because neither probe guarantees the other object's shape.

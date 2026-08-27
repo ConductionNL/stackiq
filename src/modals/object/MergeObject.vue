@@ -172,7 +172,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 										trackBy="value"
 										:inputLabel="
 											t(
-												'softwarecatalog',
+												'stackiq',
 												'Choose value for {property}',
 												{ property },
 											)

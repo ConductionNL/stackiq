@@ -47,7 +47,7 @@ use OCP\EventDispatcher\Event;
  * Analysis-only mirror of decidesk's DecisionConcludedEvent.
  *
  * Dispatched by decidesk when a Decision reaches a terminal outcome; consumed
- * by SoftwareCatalog's DecisionConcludedListener.
+ * by Stackiq's DecisionConcludedListener.
  */
 class DecisionConcludedEvent extends Event {
 
@@ -219,7 +219,7 @@ class DecisionConcludedEvent extends Event {
 /**
  * Analysis-only mirror of decidesk's DecisionRequestedEvent.
  *
- * Dispatched by SoftwareCatalog's ContractApprovalService to ask decidesk to
+ * Dispatched by Stackiq's ContractApprovalService to ask decidesk to
  * open a Decision; decidesk's listener fills the `decisionId` / `handled`
  * result slots before the dispatch call returns.
  */

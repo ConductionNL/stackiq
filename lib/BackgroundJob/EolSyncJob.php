@@ -14,11 +14,11 @@
  * sharing it.
  *
  * @category  BackgroundJob
- * @package   OCA\SoftwareCatalog\BackgroundJob
+ * @package   OCA\Stackiq\BackgroundJob
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
  *
@@ -28,9 +28,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\BackgroundJob;
+namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\SoftwareCatalog\Service\EolSyncService;
+use OCA\Stackiq\Service\EolSyncService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -58,7 +58,7 @@ class EolSyncJob extends TimedJob {
 	) {
 		parent::__construct(time: $timeFactory);
 
-		// Floor at 300s (the shortest interval any existing SoftwareCatalog
+		// Floor at 300s (the shortest interval any existing Stackiq
 		// background job runs at — OrganizationContactSyncJob) so a
 		// mistyped admin value can never schedule a tighter loop than the
 		// rest of the app's cron surface.

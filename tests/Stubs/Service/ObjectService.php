@@ -5,12 +5,12 @@
  *
  * The real ObjectService lives in the OpenRegister app which is not available
  * as a Composer dependency in the test environment. This stub declares the
- * methods used by SoftwareCatalog unit tests so PHPUnit can create mocks.
+ * methods used by Stackiq unit tests so PHPUnit can create mocks.
  *
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Stubs\Service
+ * @package  OCA\Stackiq\Tests\Stubs\Service
  */
 
 declare(strict_types=1);
@@ -20,7 +20,7 @@ namespace OCA\OpenRegister\Service;
 use OCA\OpenRegister\Db\ObjectEntity;
 
 /**
- * Stub for ObjectService with the surface used by SoftwareCatalog tests.
+ * Stub for ObjectService with the surface used by Stackiq tests.
  */
 abstract class ObjectService {
 

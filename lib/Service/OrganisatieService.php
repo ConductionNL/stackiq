@@ -4,22 +4,22 @@
  * Organisatie Service.
  *
  * This file contains the service class for handling organization-specific operations
- * in the SoftwareCatalog application.
+ * in the Stackiq application.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
+use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserManager;
@@ -33,11 +33,11 @@ use Psr\Log\LoggerInterface;
  * status management, and integration with OpenRegister.
  *
  * @category Service
- * @package  OCA\SoftwareCatalog\Service
+ * @package  OCA\Stackiq\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  *
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
  */
@@ -106,15 +106,15 @@ class OrganisatieService {
 				organizationUuid: $organizationUuid
 			);
 
-			if ($organisationEntity !== null) {
-				$this->logger->info(
-					'OrganisatieService: Successfully created organization entity',
-					[
-						'organizationUuid' => $organizationUuid,
-						'entityId' => $organisationEntity->getId(),
-					]
-				);
-			}
+			// The createOrganisationEntityInternal() helper is declared non-nullable and
+			// throws on failure — the catch below is the real failure path.
+			$this->logger->info(
+				'OrganisatieService: Successfully created organization entity',
+				[
+					'organizationUuid' => $organizationUuid,
+					'entityId' => $organisationEntity->getId(),
+				]
+			);
 
 			return $organisationEntity;
 		} catch (\Exception $e) {
@@ -153,7 +153,7 @@ class OrganisatieService {
 			$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
 			$organisationEntity = $organisationMapper->findByUuid($organizationUuid);
 
-			// Map status from SoftwareCatalog to OpenRegister.
+			// Map status from Stackiq to OpenRegister.
 			$active = $this->mapStatus(status: $objectData['beoordeling'] ?? 'actief');
 
 			// Update the entity.
@@ -200,7 +200,7 @@ class OrganisatieService {
 	}//end getOrganisationService()
 
 	/**
-	 * Maps organization data from Software Catalog object to OpenRegister format.
+	 * Maps organization data from Stackiq object to OpenRegister format.
 	 *
 	 * @param array $objectData The organization object data.
 	 *
@@ -229,9 +229,9 @@ class OrganisatieService {
 	}//end mapOrganizationDataForOpenRegister()
 
 	/**
-	 * Maps status from Software Catalog to OpenRegister format.
+	 * Maps status from Stackiq to OpenRegister format.
 	 *
-	 * @param string $status The status from Software Catalog
+	 * @param string $status The status from Stackiq
 	 *
 	 * @return bool The mapped active status for OpenRegister
 	 *

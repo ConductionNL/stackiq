@@ -13,7 +13,7 @@ per-organisation **BIO coverage report**, and a declarative notification for
 overdue DPIA reviews.
 
 Specifications:
-[`openspec/specs/bio-compliance-assessment/spec.md`](../../openspec/specs/bio-compliance-assessment/spec.md)
+[`openspec/specs/bio-compliance-assessment/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/bio-compliance-assessment/spec.md)
 (new capability) and the `module-compliance-assessment` MODIFIED delta
 (BIO-measure column source on the compliance matrix).
 

@@ -13,21 +13,21 @@
  * not merely that a JSONResponse came back.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\ReviewController;
-use OCA\SoftwareCatalog\Service\ReviewAggregateService;
-use OCA\SoftwareCatalog\Service\ReviewService;
+use OCA\Stackiq\Controller\ReviewController;
+use OCA\Stackiq\Service\ReviewAggregateService;
+use OCA\Stackiq\Service\ReviewService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -37,11 +37,11 @@ use PHPUnit\Framework\TestCase;
  * Contract tests for the public review aggregate endpoint.
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package  OCA\Stackiq\Tests\Unit\Controller
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 class ReviewControllerContractTest extends TestCase {
 

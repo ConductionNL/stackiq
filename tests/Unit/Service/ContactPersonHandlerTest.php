@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
-use OCA\SoftwareCatalog\Service\SymfonyEmailService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -28,10 +28,10 @@ use ReflectionClass;
  * that was implemented to replace configuration-based role assignment.
  *
  * @category Tests
- * @package  OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  * @version  1.0.0
  */
 class ContactPersonHandlerTest extends TestCase {
@@ -104,7 +104,7 @@ class ContactPersonHandlerTest extends TestCase {
 
 		// Configure container to return settings service
 		$this->container->method('get')
-			->with('OCA\SoftwareCatalog\Service\SettingsService')
+			->with('OCA\Stackiq\Service\SettingsService')
 			->willReturn($this->settingsService);
 
 		// Create the ContactPersonHandler instance

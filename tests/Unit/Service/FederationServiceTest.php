@@ -8,23 +8,23 @@
  * detection, and the SSRF host guard with the local-federation allowlist.
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\SoftwareCatalog\Service\Federation\FederationConfig;
-use OCA\SoftwareCatalog\Service\Federation\FederationMerger;
-use OCA\SoftwareCatalog\Service\Federation\FederationService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\Federation\FederationConfig;
+use OCA\Stackiq\Service\Federation\FederationMerger;
+use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -86,7 +86,7 @@ class FederationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testUnavailableWithoutOpenCatalogi(): void {
-		$service = $this->makeService(['softwarecatalog']);
+		$service = $this->makeService(['stackiq']);
 		$this->assertFalse($service->isAvailable());
 
 		$status = $service->getStatus();
@@ -100,7 +100,7 @@ class FederationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnnounceDegradesWithoutOpenCatalogi(): void {
-		$service = $this->makeService(['softwarecatalog'], true);
+		$service = $this->makeService(['stackiq'], true);
 		$result = $service->announce();
 		$this->assertFalse($result['ok']);
 		$this->assertSame('OpenCatalogi unavailable', $result['reason']);
@@ -112,7 +112,7 @@ class FederationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnnounceNoopWhenDisabled(): void {
-		$service = $this->makeService(['softwarecatalog', 'opencatalogi'], false);
+		$service = $this->makeService(['stackiq', 'opencatalogi'], false);
 		$result = $service->announce();
 		$this->assertFalse($result['ok']);
 		$this->assertSame('federation disabled', $result['reason']);
@@ -135,7 +135,7 @@ class FederationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testDiscoverPeersDegrades(): void {
-		$service = $this->makeService(['softwarecatalog']);
+		$service = $this->makeService(['stackiq']);
 		$result = $service->discoverPeers();
 		$this->assertFalse($result['ok']);
 		$this->assertSame([], $result['peers']);
@@ -147,7 +147,7 @@ class FederationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testIsPeerSourced(): void {
-		$service = $this->makeService(['softwarecatalog']);
+		$service = $this->makeService(['stackiq']);
 		$this->assertTrue($service->isPeerSourced(['_source' => ['instance' => 'https://peer.example']]));
 		$this->assertFalse($service->isPeerSourced(['name' => 'local']));
 		$this->assertFalse($service->isPeerSourced(['_source' => ['instance' => '']]));
@@ -162,7 +162,7 @@ class FederationServiceTest extends TestCase {
 	 */
 	public function testStatusReportsPerPeerStaleAndAllowedState(): void {
 		$appManager = $this->createMock(IAppManager::class);
-		$appManager->method('getInstalledApps')->willReturn(['softwarecatalog', 'opencatalogi']);
+		$appManager->method('getInstalledApps')->willReturn(['stackiq', 'opencatalogi']);
 
 		$config = $this->createMock(FederationConfig::class);
 		$config->method('isEnabled')->willReturn(true);
@@ -210,7 +210,7 @@ class FederationServiceTest extends TestCase {
 	 */
 	public function testAddPeer(): void {
 		$appManager = $this->createMock(IAppManager::class);
-		$appManager->method('getInstalledApps')->willReturn(['softwarecatalog']);
+		$appManager->method('getInstalledApps')->willReturn(['stackiq']);
 
 		$stored = [];
 		$config = $this->createMock(FederationConfig::class);
@@ -257,7 +257,7 @@ class FederationServiceTest extends TestCase {
 	 */
 	public function testRemovePeer(): void {
 		$appManager = $this->createMock(IAppManager::class);
-		$appManager->method('getInstalledApps')->willReturn(['softwarecatalog']);
+		$appManager->method('getInstalledApps')->willReturn(['stackiq']);
 
 		$stored = ['https://peer.example'];
 		$config = $this->createMock(FederationConfig::class);
@@ -294,7 +294,7 @@ class FederationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPeerHostGuard(): void {
-		$service = $this->makeService(['softwarecatalog']);
+		$service = $this->makeService(['stackiq']);
 		$this->assertTrue($service->isPeerHostAllowed('https://directory.opencatalogi.nl'));
 		$this->assertFalse($service->isPeerHostAllowed('http://localhost:8081'));
 		$this->assertFalse($service->isPeerHostAllowed('http://127.0.0.1'));
@@ -310,7 +310,7 @@ class FederationServiceTest extends TestCase {
 	public function testLocalFederationAllowlist(): void {
 		$container = $this->createMock(ContainerInterface::class);
 		$appManager = $this->createMock(IAppManager::class);
-		$appManager->method('getInstalledApps')->willReturn(['softwarecatalog']);
+		$appManager->method('getInstalledApps')->willReturn(['stackiq']);
 		$config = $this->createMock(FederationConfig::class);
 		$config->method('getLocalFederationHosts')->willReturn(['127.0.0.1', 'localhost']);
 		$logger = $this->createMock(LoggerInterface::class);
@@ -513,7 +513,7 @@ class FederationServiceTest extends TestCase {
 	private function makePullServiceWithConfig(?object $directory, ?object $objectService, $config): FederationService {
 		$container = $this->createMock(ContainerInterface::class);
 		$appManager = $this->createMock(IAppManager::class);
-		$appManager->method('getInstalledApps')->willReturn(['softwarecatalog', 'opencatalogi']);
+		$appManager->method('getInstalledApps')->willReturn(['stackiq', 'opencatalogi']);
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$container->method('get')->willReturnCallback(

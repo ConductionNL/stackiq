@@ -1,23 +1,23 @@
 <?php
 
 /**
- * SoftwareCatalog Test Event Listener
+ * Stackiq Test Event Listener
  *
  * This file contains a simple test listener class for verifying that event
- * listeners work correctly in the SoftwareCatalog application.
+ * listeners work correctly in the Stackiq application.
  *
  * @category  EventListener
- * @package   OCA\SoftwareCatalog\EventListener
+ * @package   OCA\Stackiq\EventListener
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/OpenConnector
+ * @link      https://github.com/ConductionNL/integriq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\EventListener;
+namespace OCA\Stackiq\EventListener;
 
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -32,11 +32,11 @@ use Psr\Log\LoggerInterface;
  * triggered for testing purposes.
  *
  * @category EventListener
- * @package  OCA\SoftwareCatalog\EventListener
+ * @package  OCA\Stackiq\EventListener
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/OpenConnector
+ * @link     https://github.com/ConductionNL/integriq
  */
 class TestEventListener implements IEventListener {
 	/**
@@ -63,7 +63,7 @@ class TestEventListener implements IEventListener {
 	public function handle(Event $event): void {
 		// Log that we received ANY event first.
 		$this->logger->info(
-			'SoftwareCatalog TestEventListener: Event received!',
+			'Stackiq TestEventListener: Event received!',
 			[
 				'eventClass' => get_class($event),
 				'timestamp' => date('Y-m-d H:i:s'),
@@ -75,7 +75,7 @@ class TestEventListener implements IEventListener {
 		if (($event instanceof UserLoggedInEvent) === false) {
 			// Log other events we might receive.
 			$this->logger->debug(
-				'SoftwareCatalog TestEventListener: Received unhandled event',
+				'Stackiq TestEventListener: Received unhandled event',
 				[
 					'eventClass' => get_class($event),
 					'timestamp' => date('Y-m-d H:i:s'),
@@ -87,7 +87,7 @@ class TestEventListener implements IEventListener {
 		$user = $event->getUser();
 
 		$this->logger->info(
-			'SoftwareCatalog TestEventListener: User logged in successfully!',
+			'Stackiq TestEventListener: User logged in successfully!',
 			[
 				'userId' => $user->getUID(),
 				'userDisplayName' => $user->getDisplayName(),
@@ -100,7 +100,7 @@ class TestEventListener implements IEventListener {
 		// Test that we can access Nextcloud services.
 		try {
 			$this->logger->debug(
-				'SoftwareCatalog TestEventListener: Event listener is working correctly!',
+				'Stackiq TestEventListener: Event listener is working correctly!',
 				[
 					'message' => 'This confirms that event listeners are properly registered and triggered',
 					'userId' => $user->getUID(),
@@ -109,7 +109,7 @@ class TestEventListener implements IEventListener {
 			);
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog TestEventListener: Error in event processing',
+				'Stackiq TestEventListener: Error in event processing',
 				[
 					'exception' => $e->getMessage(),
 					'trace' => $e->getTraceAsString(),

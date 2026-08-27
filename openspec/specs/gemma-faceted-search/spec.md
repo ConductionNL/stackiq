@@ -5,12 +5,12 @@ TBD - created by archiving change gemma-faceted-search. Update Purpose after arc
 ## Requirements
 ### Requirement: Facet aggregation endpoint returns GEMMA dimension counts
 
-The system SHALL expose a facet aggregation endpoint (`GET /apps/softwarecatalog/api/facets/{schema}`, `schema` in `module`, `dienst`) that returns, for each supported GEMMA dimension (`referentiecomponent`, `standaard`, `applicatieservice`, `domein`), the list of distinct facet values present in the currently-filtered result set together with the count of matching objects for each value.
+The system SHALL expose a facet aggregation endpoint (`GET /apps/stackiq/api/facets/{schema}`, `schema` in `module`, `dienst`) that returns, for each supported GEMMA dimension (`referentiecomponent`, `standaard`, `applicatieservice`, `domein`), the list of distinct facet values present in the currently-filtered result set together with the count of matching objects for each value.
 
 #### Scenario: Facet counts returned for the module listing
 
 - GIVEN the `module` register contains 40 modules, 12 of which link to referentiecomponent "Zaakregistratiecomponent"
-- WHEN `GET /apps/softwarecatalog/api/facets/module` is called with no filters applied
+- WHEN `GET /apps/stackiq/api/facets/module` is called with no filters applied
 - THEN the response MUST include a `referentiecomponent` facet
 - AND that facet MUST contain an entry `{ "value": "Zaakregistratiecomponent", "count": 12 }`
 
@@ -23,7 +23,7 @@ The system SHALL expose a facet aggregation endpoint (`GET /apps/softwarecatalog
 
 #### Scenario: Unsupported schema is rejected
 
-- GIVEN `GET /apps/softwarecatalog/api/facets/contract` is called
+- GIVEN `GET /apps/stackiq/api/facets/contract` is called
 - WHEN `contract` is not one of the supported facet schemas (`module`, `dienst`)
 - THEN the response MUST have status 400
 - AND the response body MUST contain an error message naming the supported schemas
@@ -210,7 +210,7 @@ All facet dimension labels, facet value display strings sourced from the UI laye
 
 #### Scenario: Translation keys are in English
 
-- GIVEN the softwarecatalog `l10n` translation files
+- GIVEN the stackiq `l10n` translation files
 - WHEN the facet panel's translation keys are inspected
 - THEN each key MUST be an English identifier (e.g. `facetSaveAsView`), not a Dutch string, with the Dutch translation supplied as the `nl` value
 

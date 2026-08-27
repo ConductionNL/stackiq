@@ -2,27 +2,27 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <!--
- SoftwareCatalog app shell. Mounts CnAppRoot with the bundled manifest
+ Stackiq app shell. Mounts CnAppRoot with the bundled manifest
  and the customComponents registry; provides the `objectSidebarState`
  channel so detail pages (CnDetailPage) can drive a single
  host-rendered CnObjectSidebar through the #sidebar slot.
 
  Global modals/dialogs (`<Modals />`, `<Dialogs />`) stay mounted at
  the app root so legacy custom components (OrganisatieIndexView,
- SoftwareCatalogSettingsPage) can still trigger them through the
+ StackiqSettingsPage) can still trigger them through the
  navigationStore.modal channel.
 
  @spec openspec/changes/softwarecatalog-manifest-v1/tasks.md#task-4.3
 -->
 <template>
-	<div class="softwarecatalog-app-root">
+	<div class="stackiq-app-root">
 		<CnAppRoot
 			:aiCompanion="true"
 			:manifest="manifest"
 			:customComponents="customComponents"
 			:registry="registry"
 			:pageTypes="pageTypes"
-			appId="softwarecatalog"
+			appId="stackiq"
 			:translate="translateForApp"
 			:permissions="permissions"
 			:initialOrganisationUuid="activeOrganisationUuid"
@@ -183,8 +183,8 @@ export default {
 	 * @spec exclude Vue lifecycle hook — SPA shell bootstrap
 	 */
 	async created() {
-		// SoftwareCatalog stores still need to come up so legacy custom
-		// components (OrganisatieIndexView, SoftwareCatalogSettingsPage)
+		// Stackiq stores still need to come up so legacy custom
+		// components (OrganisatieIndexView, StackiqSettingsPage)
 		// keep working through the transition. CnAppRoot itself doesn't
 		// depend on them — the openregister dependency check happens via
 		// `manifest.dependencies` + `useAppStatus()`.
@@ -193,7 +193,7 @@ export default {
 		} catch (e) {
 			// eslint-disable-next-line no-console
 			console.warn(
-				'[softwarecatalog] settingsStore.loadSettings() failed; continuing with defaults',
+				'[stackiq] settingsStore.loadSettings() failed; continuing with defaults',
 				e,
 			)
 		}
@@ -216,12 +216,9 @@ export default {
 		 */
 		async loadOrganisations() {
 			try {
-				const response = await fetch(
-					generateUrl('/apps/softwarecatalog/api/me'),
-					{
-						headers: { requesttoken: OC.requestToken },
-					},
-				)
+				const response = await fetch(generateUrl('/apps/stackiq/api/me'), {
+					headers: { requesttoken: OC.requestToken },
+				})
 				if (!response.ok) return
 
 				const data = await response.json()
@@ -236,7 +233,7 @@ export default {
 			} catch (e) {
 				// eslint-disable-next-line no-console
 				console.warn(
-					'[softwarecatalog] Failed to load organisations; continuing single-tenant',
+					'[stackiq] Failed to load organisations; continuing single-tenant',
 					e,
 				)
 			}
@@ -252,7 +249,7 @@ export default {
 		 * @spec exclude i18n wrapper around @nextcloud/l10n translate
 		 */
 		translateForApp(key) {
-			return ncT('softwarecatalog', key)
+			return ncT('stackiq', key)
 		},
 	},
 }

@@ -1,24 +1,24 @@
 <?php
 
 /**
- * AangebodenGebruik Service for SoftwareCatalog
+ * AangebodenGebruik Service for Stackiq
  *
  * Handles operations related to offered usage (aangeboden gebruik) including
  * filtering gebruiks objects where the active organization is involved as
  * afnemer (consumer) or in deelnemers (participants).
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -36,12 +36,12 @@ use Psr\Log\LoggerInterface;
  * (participants) array, and for updating the @self property of gebruiks objects.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -241,7 +241,7 @@ class AangebodenGebruikService {
 			// Build next/previous links.
 			$nextLink = null;
 			$prevLink = null;
-			$consumerPath = '/index.php/apps/softwarecatalog/api/aangeboden-gebruik/afnemer';
+			$consumerPath = '/index.php/apps/stackiq/api/aangeboden-gebruik/afnemer';
 			if ($currentPage < $totalPages) {
 				$nextPage = $currentPage + 1;
 				$nextLink = "{$consumerPath}?_limit={$requestedLimit}&_source=database&page={$nextPage}";

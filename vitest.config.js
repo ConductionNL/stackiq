@@ -1,8 +1,8 @@
 /**
- * SPDX-FileCopyrightText: 2026 Conduction / SoftwareCatalog Contributors
+ * SPDX-FileCopyrightText: 2026 Conduction / Stackiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Vitest configuration for SoftwareCatalog frontend unit tests.
+ * Vitest configuration for Stackiq frontend unit tests.
  *
  * This OFFLINE suite (no Nextcloud runtime) targets PURE app-local logic that
  * the rendered UI exercises end-to-end but never asserts exactly:

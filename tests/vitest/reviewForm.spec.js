@@ -1,5 +1,5 @@
 /**
- * Unit tests for the submit-a-review form helpers (catalog-ratings, softwarecatalog#375).
+ * Unit tests for the submit-a-review form helpers (catalog-ratings, stackiq#375).
  *
  * The mandated security property under test: buildReviewSubmission() never
  * includes an `auteur` (or `status`, `id`, `_owner`, …) key — author

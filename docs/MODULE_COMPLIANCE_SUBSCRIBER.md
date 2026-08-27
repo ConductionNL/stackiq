@@ -2,7 +2,7 @@
 
 ## Overzicht
 
-De Module Compliance Subscriber is een nieuwe functionaliteit in de SoftwareCatalog app die automatisch de `standaarden` property van module objecten synchroniseert op basis van gekoppelde compliance objecten.
+De Module Compliance Subscriber is een nieuwe functionaliteit in de Stackiq app die automatisch de `standaarden` property van module objecten synchroniseert op basis van gekoppelde compliance objecten.
 
 ## Functionaliteit
 
@@ -55,8 +55,8 @@ $context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubsc
 $context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
 
 // Service registratie
-$context->registerService(\OCA\SoftwareCatalog\Service\ModuleComplianceService::class, function ($container) {
-    return new \OCA\SoftwareCatalog\Service\ModuleComplianceService(
+$context->registerService(\OCA\Stackiq\Service\ModuleComplianceService::class, function ($container) {
+    return new \OCA\Stackiq\Service\ModuleComplianceService(
         $container,
         $container->get(SettingsService::class),
         $container->get('Psr\Log\LoggerInterface')
@@ -99,10 +99,10 @@ Voor het testen van de functionaliteit is een test script beschikbaar:
 
 ```bash
 # Eenvoudige service test
-docker exec -u 33 master-nextcloud-1 php /var/www/html/apps-extra/softwarecatalog/test_module_compliance_simple.php
+docker exec -u 33 master-nextcloud-1 php /var/www/html/apps-extra/stackiq/test_module_compliance_simple.php
 
 # Volledige functionaliteit test (vereist geconfigureerde schemas)
-docker exec -u 33 master-nextcloud-1 php /var/www/html/apps-extra/softwarecatalog/test_module_compliance.php
+docker exec -u 33 master-nextcloud-1 php /var/www/html/apps-extra/stackiq/test_module_compliance.php
 ```
 
 ## Logging

@@ -1,6 +1,6 @@
 /**
  * Pure helpers for the ratings & reviews aggregate panel (catalog-ratings,
- * softwarecatalog#375).
+ * stackiq#375).
  *
  * Extracted out of ReviewsPanel.vue so the query-building and response
  * normalisation are unit-testable without mounting the component.

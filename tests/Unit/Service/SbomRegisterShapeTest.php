@@ -14,18 +14,18 @@
  * the properties ever drift back onto the wrong schema.
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
 use PHPUnit\Framework\TestCase;
 
@@ -156,7 +156,7 @@ class SbomRegisterShapeTest extends TestCase {
 		$props = $sbomComponent['properties'] ?? [];
 		$this->assertArrayHasKey(key: 'moduleVersion', array: $props, message: 'sbomComponent must relate back to its moduleVersie');
 
-		$voorzieningen = $this->register['components']['registers']['voorzieningen'] ?? [];
+		$voorzieningen = $this->register['components']['registers']['stackiq'] ?? [];
 		$this->assertContains(
 			needle: 'sbomComponent',
 			haystack: $voorzieningen['schemas'] ?? [],

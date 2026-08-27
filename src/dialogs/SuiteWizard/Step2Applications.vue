@@ -20,7 +20,7 @@
 		<p class="suite-wizard-step2__intro">
 			{{
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Attach the applications that make up this suite. Only applications already in the catalogue can be attached — creating a new application is not part of this wizard.',
 				)
 			}}
@@ -36,8 +36,8 @@
 			:loading="loading"
 			:multiple="true"
 			:closeOnSelect="false"
-			:inputLabel="t('softwarecatalog', 'Existing applications')"
-			:placeholder="t('softwarecatalog', 'Select one or more applications')"
+			:inputLabel="t('stackiq', 'Existing applications')"
+			:placeholder="t('stackiq', 'Select one or more applications')"
 			trackBy="uuid"
 			label="label"
 			@update:modelValue="onSelectionChange" />
@@ -145,7 +145,7 @@ export default {
 					&& !objectStore.objectTypeRegistry?.module
 				) {
 					objectStore.registerObjectType('module', 'module', registerId, {
-						registerSlug: 'voorzieningen',
+						registerSlug: 'stackiq',
 						schemaSlug: 'module',
 					})
 				}
@@ -159,7 +159,7 @@ export default {
 					error,
 				)
 				this.loadError = t(
-					'softwarecatalog',
+					'stackiq',
 					'Could not load applications. Please try again.',
 				)
 			} finally {

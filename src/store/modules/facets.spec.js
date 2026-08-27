@@ -248,14 +248,14 @@ describe('facets store — saved views', () => {
 					{
 						id: 1,
 						query: {
-							marker: 'softwarecatalog-gemma-facets',
+							marker: 'stackiq-gemma-facets',
 							gemmaSchema: 'module',
 						},
 					},
 					{
 						id: 2,
 						query: {
-							marker: 'softwarecatalog-gemma-facets',
+							marker: 'stackiq-gemma-facets',
 							gemmaSchema: 'service',
 						},
 					},
@@ -272,7 +272,7 @@ describe('facets store — saved views', () => {
 			{
 				id: 1,
 				query: {
-					marker: 'softwarecatalog-gemma-facets',
+					marker: 'stackiq-gemma-facets',
 					gemmaSchema: 'module',
 				},
 			},
@@ -294,7 +294,7 @@ describe('facets store — saved views', () => {
 		const created = {
 			id: 9,
 			name: 'My view',
-			query: { marker: 'softwarecatalog-gemma-facets', gemmaSchema: 'module' },
+			query: { marker: 'stackiq-gemma-facets', gemmaSchema: 'module' },
 		}
 		axios.post.mockResolvedValue({ data: { view: created } })
 
@@ -309,7 +309,7 @@ describe('facets store — saved views', () => {
 			expect.objectContaining({
 				name: 'My view',
 				query: expect.objectContaining({
-					marker: 'softwarecatalog-gemma-facets',
+					marker: 'stackiq-gemma-facets',
 					gemmaSchema: 'module',
 					filters: { referenceComponent: ['A'] },
 					search: 'zaak',

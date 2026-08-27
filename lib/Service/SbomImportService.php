@@ -22,11 +22,11 @@
  * set rather than a mixed old/new set; re-running the import starts clean.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
  *
@@ -36,7 +36,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -101,9 +101,9 @@ class SbomImportService {
 	 *
 	 * @return array<string, mixed> Import result summary.
 	 *
-	 * @throws \OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException When the
-	 *                                                                       document's format/version is not supported.
-	 *                                                                       No component is written in that case.
+	 * @throws \OCA\Stackiq\Exception\UnsupportedSbomFormatException When the
+	 *                                                               document's format/version is not supported.
+	 *                                                               No component is written in that case.
 	 * @throws RuntimeException When the target `moduleVersie` cannot be
 	 *                          resolved, or required configuration is missing.
 	 *
@@ -215,8 +215,8 @@ class SbomImportService {
 	 *
 	 * @return array{components: array<int, array<string, mixed>>, vulnerabilities: array<int, array{cveId: string, componentBomRef: string}>}
 	 *
-	 * @throws \OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException When
-	 *                                                                       the document's format/version is not supported.
+	 * @throws \OCA\Stackiq\Exception\UnsupportedSbomFormatException When
+	 *                                                               the document's format/version is not supported.
 	 *
 	 * @spec openspec/specs/sbom-import/spec.md#requirement-cyclonedx-sbom-files-are-parsed-into-a-normalized-component-list
 	 */

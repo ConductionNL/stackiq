@@ -808,7 +808,7 @@ export default {
 					// Note: Do not set Content-Type header for FormData - let browser set it with boundary
 					// Also remove OCS-APIREQUEST for file uploads as it interferes with multipart form data
 					const response = await fetch(
-						'/index.php/apps/softwarecatalog/api/archimate/import',
+						'/index.php/apps/stackiq/api/archimate/import',
 						{
 							method: 'POST',
 							headers: {
@@ -873,7 +873,7 @@ export default {
 				await withHeartbeat(async () => {
 					// Make the API call
 					const response = await fetch(
-						'/index.php/apps/softwarecatalog/api/archimate/export',
+						'/index.php/apps/stackiq/api/archimate/export',
 						{
 							method: 'POST',
 							headers: {
@@ -957,7 +957,7 @@ export default {
 				params.set('deelnames', String(this.includeDeelnames))
 				params.set('usage', String(this.includeGebruik))
 
-				const url = `/index.php/apps/softwarecatalog/api/archimate/export/organization/${encodeURIComponent(orgUuid)}?${params.toString()}`
+				const url = `/index.php/apps/stackiq/api/archimate/export/organization/${encodeURIComponent(orgUuid)}?${params.toString()}`
 
 				await withHeartbeat(async () => {
 					const response = await fetch(url, {
@@ -1209,7 +1209,7 @@ export default {
 		async loadOrganizations() {
 			try {
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/voorzieningen/config',
+					'/index.php/apps/stackiq/api/voorzieningen/config',
 					{
 						headers: {
 							'OCS-APIREQUEST': 'true',
@@ -1305,7 +1305,7 @@ export default {
 	padding: 0;
 	margin: -1px;
 	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
+	clip-path: inset(50%);
 	white-space: nowrap;
 	border: 0;
 }
@@ -2036,7 +2036,7 @@ button.omschrijving-item:disabled {
 	font-weight: 500;
 	color: var(--color-main-text);
 	margin-bottom: 0.5rem;
-	word-wrap: break-word;
+	overflow-wrap: break-word;
 }
 
 .error-meta {

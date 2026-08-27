@@ -4,7 +4,7 @@
  * Tests for the pure decisions behind the schema-slug migration.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Repair
+ * @package   OCA\Stackiq\Tests\Unit\Repair
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -16,10 +16,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Repair;
+namespace OCA\Stackiq\Tests\Unit\Repair;
 
-use OCA\SoftwareCatalog\Repair\RenameDutchSchemaSlugDecisions;
-use OCA\SoftwareCatalog\Repair\RenameDutchSchemaSlugs;
+use OCA\Stackiq\Repair\RenameDutchSchemaSlugDecisions;
+use OCA\Stackiq\Repair\RenameDutchSchemaSlugs;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,7 +30,7 @@ use PHPUnit\Framework\TestCase;
  *
  * phpcs:disable CustomSniffs.Functions.NamedParameters
  *
- * @covers \OCA\SoftwareCatalog\Repair\RenameDutchSchemaSlugDecisions
+ * @covers \OCA\Stackiq\Repair\RenameDutchSchemaSlugDecisions
  */
 final class RenameDutchSchemaSlugDecisionsTest extends TestCase {
 

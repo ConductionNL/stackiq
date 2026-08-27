@@ -46,11 +46,11 @@
  * - compliancy: `@self.organisation` (system-level owning organisation).
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organisation-merge/spec.md
  *
@@ -60,10 +60,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\OrganizationHandler;
+use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IGroupManager;
@@ -75,10 +75,10 @@ use Psr\Log\LoggerInterface;
  * Service orchestrating organisation-merge dry-run and execute.
  *
  * @category Service
- * @package  OCA\SoftwareCatalog\Service
+ * @package  OCA\Stackiq\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organisation-merge/spec.md
  *
@@ -472,7 +472,7 @@ class MergeOrganisatieService {
 	 * wrong here, and both fail silently:
 	 *
 	 * - `method_exists()` is **false** for every such accessor. That was
-	 *   softwarecatalog#490: the caller's re-point branch never ran, so a merge
+	 *   stackiq#490: the caller's re-point branch never ran, so a merge
 	 *   re-pointed nothing for `contract`/`compliancy` while still tombstoning
 	 *   the source organisation.
 	 * - `is_callable()` is **true** for ANY name on a class with `__call()`, so

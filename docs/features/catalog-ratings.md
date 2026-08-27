@@ -10,9 +10,9 @@ Turns the previously dormant `beoordeeling` (review) schema into a working,
 and closes the authorization hole it shipped with (world-readable, no
 create/update/delete rules, no attributable author). See
 [VNG Softwarecatalogus issue #49](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/49)
-and softwarecatalog#375.
+and stackiq#375.
 
-Specification: [`openspec/specs/catalog-ratings/spec.md`](../../openspec/specs/catalog-ratings/spec.md).
+Specification: [`openspec/specs/catalog-ratings/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/catalog-ratings/spec.md).
 
 ## Why it existed but didn't work
 
@@ -34,7 +34,7 @@ session, bound server-side by `ReviewService`; anything the client sends for
 `auteur` is discarded.
 
 ```
-POST /apps/softwarecatalog/api/reviews
+POST /apps/stackiq/api/reviews
 { "review": {"naam": "Solid intake flow", "waardering": 9, "beschrijvingLang": "..."},
   "subjectType": "module", "subjectId": "<module uuid>" }
 ```
@@ -92,7 +92,7 @@ approved reviews shows a null average / zero count rather than an error.
 
 - **No `DienstDetail` page yet.** The submit/aggregate backend is
   subject-type-agnostic (`module` or `dienst`), and `beoordeeling` already
-  supports a `diensten` relation, but the softwarecatalog manifest has no
+  supports a `diensten` relation, but the stackiq manifest has no
   `/diensten/:id` detail route today (`Diensten` is a `type: custom` faceted
   index with no per-row detail page) — that is a pre-existing gap unrelated
   to the authorization fix this change makes. Filed as a follow-up to wire

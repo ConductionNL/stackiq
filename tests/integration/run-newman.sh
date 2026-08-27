@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# SoftwareCatalog API-contract test runner (Newman / Postman).
+# Stackiq API-contract test runner (Newman / Postman).
 #
-# Runs tests/integration/softwarecatalog.postman_collection.json against a live
-# Nextcloud instance serving the softwarecatalog app. The collection is
+# Runs tests/integration/stackiq.postman_collection.json against a live
+# Nextcloud instance serving the stackiq app. The collection is
 # self-contained and idempotent: it seeds the OpenRegister objects it needs
 # (organisatie, component) and deletes them again in teardown.
 #
@@ -22,14 +22,14 @@
 set -euo pipefail
 
 # Re-exec under an exclusive flock so parallel agents serialise.
-LOCK_FILE="/tmp/uiaudit-softwarecatalog.lock"
+LOCK_FILE="/tmp/uiaudit-stackiq.lock"
 if [ "${SWC_NEWMAN_LOCKED:-}" != "1" ] && command -v flock >/dev/null 2>&1; then
   export SWC_NEWMAN_LOCKED=1
   exec flock "${LOCK_FILE}" "$0" "$@"
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COLLECTION="${SCRIPT_DIR}/softwarecatalog.postman_collection.json"
+COLLECTION="${SCRIPT_DIR}/stackiq.postman_collection.json"
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
 ADMIN_USER="${ADMIN_USER:-admin}"

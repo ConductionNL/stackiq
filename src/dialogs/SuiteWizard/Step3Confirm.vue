@@ -12,21 +12,21 @@
 <template>
 	<div class="suite-wizard-step3">
 		<dl class="suite-wizard-step3__summary">
-			<dt>{{ t('softwarecatalog', 'Name') }}</dt>
+			<dt>{{ t('stackiq', 'Name') }}</dt>
 			<dd>{{ payload.name }}</dd>
 
-			<dt>{{ t('softwarecatalog', 'Short description') }}</dt>
+			<dt>{{ t('stackiq', 'Short description') }}</dt>
 			<dd>{{ payload.shortDescription }}</dd>
 
 			<template v-if="payload.website">
-				<dt>{{ t('softwarecatalog', 'Website') }}</dt>
+				<dt>{{ t('stackiq', 'Website') }}</dt>
 				<dd>{{ payload.website }}</dd>
 			</template>
 		</dl>
 
 		<h3 class="suite-wizard-step3__heading">
 			{{
-				t('softwarecatalog', 'Applications ({count})', {
+				t('stackiq', 'Applications ({count})', {
 					count: applicationNames.length,
 				})
 			}}
@@ -37,7 +37,7 @@
 			</li>
 		</ul>
 		<p v-else class="suite-wizard-step3__empty">
-			{{ t('softwarecatalog', 'No applications attached yet.') }}
+			{{ t('stackiq', 'No applications attached yet.') }}
 		</p>
 	</div>
 </template>

@@ -4,13 +4,13 @@
  * Test stub for OCA\OpenRegister\Db\Organisation.
  *
  * The real Organisation is an NC AppFramework Entity whose accessors are
- * partly magic. This stub declares the concrete surface the SoftwareCatalog
+ * partly magic. This stub declares the concrete surface the Stackiq
  * unit tests exercise (uuid + parent + a couple of read accessors).
  *
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Stubs\Db
+ * @package  OCA\Stackiq\Tests\Stubs\Db
  */
 
 declare(strict_types=1);

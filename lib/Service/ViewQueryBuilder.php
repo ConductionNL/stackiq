@@ -1,17 +1,17 @@
 <?php
 
 /**
- * View Query Builder for SoftwareCatalog
+ * View Query Builder for Stackiq
  *
  * Extracts filter/sorting logic from ViewService to reduce CyclomaticComplexity,
  * NPathComplexity, and ExcessiveMethodLength on ViewService methods.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-6
  *
@@ -21,7 +21,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 /**
  * Builds and applies filters and sorting to view query option arrays.

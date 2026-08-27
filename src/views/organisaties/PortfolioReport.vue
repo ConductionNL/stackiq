@@ -22,12 +22,12 @@
 	<div class="portfolioReportView">
 		<div class="pr-header">
 			<h2 class="pr-title">
-				{{ t('softwarecatalog', 'Portfolio rationalization') }}
+				{{ t('stackiq', 'Portfolio rationalization') }}
 			</h2>
 			<p class="pr-intro">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						"TIME classification (Tolerate / Invest / Migrate / Eliminate) of an organisation's applications in use, combined with end-of-support exposure, cloud-transition share, and annualised contract cost.",
 					)
 				}}
@@ -36,23 +36,23 @@
 				<NcButton
 					variant="tertiary"
 					:disabled="!selectedOrg || loading"
-					:aria-label="t('softwarecatalog', 'Refresh report')"
+					:aria-label="t('stackiq', 'Refresh report')"
 					@click="loadReport">
 					<template #icon>
 						<NcLoadingIcon v-if="loading" :size="20" />
 						<Refresh v-else :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'Refresh') }}
+					{{ t('stackiq', 'Refresh') }}
 				</NcButton>
 				<NcButton
 					variant="secondary"
 					:disabled="!selectedOrg || loading"
-					:aria-label="t('softwarecatalog', 'Export CSV')"
+					:aria-label="t('stackiq', 'Export CSV')"
 					@click="exportCsv">
 					<template #icon>
 						<Download :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'Export CSV') }}
+					{{ t('stackiq', 'Export CSV') }}
 				</NcButton>
 			</div>
 		</div>
@@ -62,8 +62,8 @@
 				v-model="selectedOrg"
 				class="pr-orgSelect"
 				:options="organisationOptions"
-				:inputLabel="t('softwarecatalog', 'Organisation')"
-				:placeholder="t('softwarecatalog', 'Select an organisation')"
+				:inputLabel="t('stackiq', 'Organisation')"
+				:placeholder="t('stackiq', 'Select an organisation')"
 				trackBy="uuid"
 				label="label"
 				@update:modelValue="loadReport" />
@@ -71,10 +71,10 @@
 
 		<NcEmptyContent
 			v-if="!loading && !selectedOrg"
-			:name="t('softwarecatalog', 'Select an organisation')"
+			:name="t('stackiq', 'Select an organisation')"
 			:description="
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Pick an organisation above to render its portfolio rationalization report.',
 				)
 			">
@@ -97,7 +97,7 @@
 				data-testid="pr-truncated">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Showing the first {shown} of {total} applications in use for this organisation — the report is bounded to protect performance.',
 						{
 							shown: report.includedGebruiken,
@@ -110,7 +110,7 @@
 			<!-- TIME quadrant chart -->
 			<section class="pr-section" data-testid="pr-chart">
 				<h3 class="pr-sectionTitle">
-					{{ t('softwarecatalog', 'TIME quadrant counts') }}
+					{{ t('stackiq', 'TIME quadrant counts') }}
 				</h3>
 				<CnChartWidget
 					type="bar"
@@ -124,26 +124,26 @@
 			<!-- Per-quadrant omschrijving: EOL exposure, cloud-transition share, cost overlay -->
 			<section class="pr-section" data-testid="pr-summary">
 				<h3 class="pr-sectionTitle">
-					{{ t('softwarecatalog', 'Quadrant summary') }}
+					{{ t('stackiq', 'Quadrant summary') }}
 				</h3>
 				<table class="pr-table">
 					<thead>
 						<tr>
 							<th scope="col">
-								{{ t('softwarecatalog', 'Quadrant') }}
+								{{ t('stackiq', 'Quadrant') }}
 							</th>
-							<th scope="col">{{ t('softwarecatalog', 'Count') }}</th>
+							<th scope="col">{{ t('stackiq', 'Count') }}</th>
 							<th scope="col">
-								{{ t('softwarecatalog', 'EOL exposed') }}
-							</th>
-							<th scope="col">
-								{{ t('softwarecatalog', 'Cloud-transition share') }}
+								{{ t('stackiq', 'EOL exposed') }}
 							</th>
 							<th scope="col">
-								{{ t('softwarecatalog', 'Annualised cost') }}
+								{{ t('stackiq', 'Cloud-transition share') }}
 							</th>
 							<th scope="col">
-								{{ t('softwarecatalog', 'One-off cost') }}
+								{{ t('stackiq', 'Annualised cost') }}
+							</th>
+							<th scope="col">
+								{{ t('stackiq', 'One-off cost') }}
 							</th>
 						</tr>
 					</thead>
@@ -174,7 +174,7 @@
 			<!-- Gebruik-level rows, grouped by quadrant (Unclassified visible, not hidden) -->
 			<section class="pr-section" data-testid="pr-rows">
 				<h3 class="pr-sectionTitle">
-					{{ t('softwarecatalog', 'Applications in use') }}
+					{{ t('stackiq', 'Applications in use') }}
 				</h3>
 				<div v-for="group in groupedRows" :key="group.key" class="pr-group">
 					<h4 class="pr-groupTitle">
@@ -187,32 +187,30 @@
 					</h4>
 					<NcEmptyContent
 						v-if="group.rows.length === 0"
-						:name="
-							t('softwarecatalog', 'No applications in this quadrant')
-						" />
+						:name="t('stackiq', 'No applications in this quadrant')" />
 					<table v-else class="pr-table">
 						<thead>
 							<tr>
 								<th scope="col">
-									{{ t('softwarecatalog', 'Application') }}
+									{{ t('stackiq', 'Application') }}
 								</th>
 								<th scope="col">
-									{{ t('softwarecatalog', 'Rationale') }}
+									{{ t('stackiq', 'Rationale') }}
 								</th>
 								<th scope="col">
-									{{ t('softwarecatalog', 'Review date') }}
+									{{ t('stackiq', 'Review date') }}
 								</th>
 								<th scope="col">
-									{{ t('softwarecatalog', 'Lifecycle phase') }}
+									{{ t('stackiq', 'Lifecycle phase') }}
 								</th>
 								<th scope="col">
-									{{ t('softwarecatalog', 'EOL status') }}
+									{{ t('stackiq', 'EOL status') }}
 								</th>
 								<th scope="col">
-									{{ t('softwarecatalog', 'Hosting model') }}
+									{{ t('stackiq', 'Hosting model') }}
 								</th>
 								<th scope="col">
-									{{ t('softwarecatalog', 'Annualised cost') }}
+									{{ t('stackiq', 'Annualised cost') }}
 								</th>
 							</tr>
 						</thead>
@@ -229,17 +227,15 @@
 									<span
 										v-if="row.eol.passed"
 										class="pr-eol pr-eol--passed"
-										>{{ t('softwarecatalog', 'Passed') }}</span
+										>{{ t('stackiq', 'Passed') }}</span
 									>
 									<span
 										v-else-if="row.eolApproaching"
 										class="pr-eol pr-eol--approaching"
-										>{{
-											t('softwarecatalog', 'Approaching')
-										}}</span
+										>{{ t('stackiq', 'Approaching') }}</span
 									>
 									<span v-else class="pr-eol pr-eol--ok">{{
-										t('softwarecatalog', 'OK')
+										t('stackiq', 'OK')
 									}}</span>
 								</td>
 								<td>
@@ -399,7 +395,7 @@ export default {
 		chartSeries() {
 			return [
 				{
-					name: t('softwarecatalog', 'Applications'),
+					name: t('stackiq', 'Applications'),
 					data: this.quadrantSummary.map((row) => row.count),
 				},
 			]
@@ -509,7 +505,7 @@ export default {
 						'organization',
 						registerId,
 						{
-							registerSlug: 'voorzieningen',
+							registerSlug: 'stackiq',
 							schemaSlug: 'organization',
 						},
 					)
@@ -544,7 +540,7 @@ export default {
 			this.error = null
 			try {
 				const response = await axios.get(
-					generateUrl('/apps/softwarecatalog/api/portfolio-report'),
+					generateUrl('/apps/stackiq/api/portfolio-report'),
 					{
 						params: { organisation: this.selectedOrg.uuid },
 					},
@@ -554,7 +550,7 @@ export default {
 				this.report = null
 				this.error =
 					error?.response?.data?.message
-					|| t('softwarecatalog', 'Failed to load the portfolio report.')
+					|| t('stackiq', 'Failed to load the portfolio report.')
 			} finally {
 				this.loading = false
 			}
@@ -570,7 +566,7 @@ export default {
 		 */
 		exportCsv() {
 			const url = buildCsvExportUrl(
-				generateUrl('/apps/softwarecatalog/api/portfolio-report'),
+				generateUrl('/apps/stackiq/api/portfolio-report'),
 				this.selectedOrg?.uuid || '',
 			)
 			if (url === '') {
@@ -590,11 +586,11 @@ export default {
 		 */
 		quadrantLabel(key) {
 			const map = {
-				Tolerate: t('softwarecatalog', 'Tolerate'),
-				Invest: t('softwarecatalog', 'Invest'),
-				Migrate: t('softwarecatalog', 'Migrate'),
-				Eliminate: t('softwarecatalog', 'Eliminate'),
-				Unclassified: t('softwarecatalog', 'Unclassified'),
+				Tolerate: t('stackiq', 'Tolerate'),
+				Invest: t('stackiq', 'Invest'),
+				Migrate: t('stackiq', 'Migrate'),
+				Eliminate: t('stackiq', 'Eliminate'),
+				Unclassified: t('stackiq', 'Unclassified'),
 			}
 			return map[key] || key
 		},

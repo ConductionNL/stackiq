@@ -252,7 +252,7 @@ export default {
 
 			const voorzieningenRegister =
 				objectStore.settings.availableRegisters.find(
-					(register) => register.slug === 'voorzieningen',
+					(register) => register.slug === 'stackiq',
 				)
 
 			if (!voorzieningenRegister?.schemas) {
@@ -456,7 +456,7 @@ export default {
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		navigateToConfiguration(route) {
-			const settingsUrl = `${window.location.protocol}//${window.location.host}/index.php/settings/admin/softwarecatalog`
+			const settingsUrl = `${window.location.protocol}//${window.location.host}/index.php/settings/admin/stackiq`
 			window.open(settingsUrl, '_blank')
 		},
 

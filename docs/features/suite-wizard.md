@@ -10,9 +10,9 @@ product made up of one or more existing applications, e.g. "Centric
 Leefomgeving" — and attach its member applications in one guided pass. This
 replaces the retired incumbent "product" concept per
 [VNG Softwarecatalogus issue #242](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/242)
-and softwarecatalog#372.
+and stackiq#372.
 
-Specification: [`openspec/specs/suite-wizard/spec.md`](../../openspec/specs/suite-wizard/spec.md).
+Specification: [`openspec/specs/suite-wizard/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/suite-wizard/spec.md).
 
 ## Registering a suite
 
@@ -48,7 +48,7 @@ read from two directions.
 
 ## Data model
 
-`suite` is an OpenRegister schema in the `voorzieningen` register:
+`suite` is an OpenRegister schema in the `stackiq` register:
 
 | Field | Type | Notes |
 |-------|------|-------|

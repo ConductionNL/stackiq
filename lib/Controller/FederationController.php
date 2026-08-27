@@ -9,7 +9,7 @@
  * of all configured peers. All write/read paths delegate to FederationService;
  * no bespoke federation logic lives here.
  *
- * AUTH (ADR-005): every method is `#[AuthorizedAdminSetting(SoftwareCatalogAdmin::class)]`
+ * AUTH (ADR-005): every method is `#[AuthorizedAdminSetting(StackiqAdmin::class)]`
  * — Nextcloud's admin-settings middleware rejects any non-admin caller before
  * the controller body runs (matching the moderation controller's posture and the
  * service's admin-only intent), so an authenticated non-admin can never reach
@@ -17,11 +17,11 @@
  * OWASP A01:2021).
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/federated-catalog-sync/spec.md
  *
@@ -31,11 +31,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\AppInfo\Application;
-use OCA\SoftwareCatalog\Service\Federation\FederationService;
-use OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin;
+use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
@@ -64,10 +64,10 @@ class FederationController extends Controller {
 	 *
 	 * @return JSONResponse `{available, enabled, directoryUrl, peers, staleAfter, message}`.
 	 *
-	 * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md
 	 */
-	#[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function status(): JSONResponse {
 		return new JSONResponse(data: $this->federation->getStatus());
 	}//end status()
@@ -79,10 +79,10 @@ class FederationController extends Controller {
 	 *
 	 * @return JSONResponse `{ok, reason}` or a 400 when the peer is rejected.
 	 *
-	 * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md
 	 */
-	#[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function addPeer(string $peerUrl = ''): JSONResponse {
 		$result = $this->federation->addPeer($peerUrl);
 		if ($result['ok'] === false) {
@@ -99,10 +99,10 @@ class FederationController extends Controller {
 	 *
 	 * @return JSONResponse `{ok, reason}` or a 400 when the peer is unknown.
 	 *
-	 * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md
 	 */
-	#[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function removePeer(string $peerUrl = ''): JSONResponse {
 		$result = $this->federation->removePeer($peerUrl);
 		if ($result['ok'] === false) {
@@ -117,10 +117,10 @@ class FederationController extends Controller {
 	 *
 	 * @return JSONResponse `{ok, reason, peers}` or a 400 when federation is off/unavailable.
 	 *
-	 * @AuthorizedAdminSetting(settings=OCA\SoftwareCatalog\Settings\SoftwareCatalogAdmin)
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 * @spec                                                                               openspec/specs/federated-catalog-sync/spec.md
 	 */
-	#[AuthorizedAdminSetting(settings: SoftwareCatalogAdmin::class)]
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function pull(): JSONResponse {
 		$result = $this->federation->pullAllPeers();
 		if ($result['ok'] === false) {

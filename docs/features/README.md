@@ -50,7 +50,7 @@ The **Applications** (`/modules`) and **Services** (`/diensten`) index pages off
 
 **Key service:** `lib/Service/FacetService.php`
 **Controller:** `lib/Controller/FacetController.php`
-**Endpoint:** `GET /apps/softwarecatalog/api/facets/{schema}` (`schema`: `module` or `dienst`)
+**Endpoint:** `GET /apps/stackiq/api/facets/{schema}` (`schema`: `module` or `dienst`)
 
 ## Module Tracking
 
@@ -120,8 +120,8 @@ Software Catalogus can synchronise catalogue data across organisations via the o
 
 This enables a federated, collaborative catalogue across Dutch municipalities without a central authority.
 
-**Key service:** `lib/Service/SoftwareCatalogueService.php`
-**Subservices:** `lib/Service/SoftwareCatalogue/` (dedicated handlers per sync scenario)
+**Key service:** `lib/Service/StackiqService.php`
+**Subservices:** `lib/Service/Stackiq/` (dedicated handlers per sync scenario)
 
 ## Automatic User Provisioning
 

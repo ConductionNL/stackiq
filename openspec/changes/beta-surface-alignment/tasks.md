@@ -1,4 +1,4 @@
-# Tasks: Beta Cross-Surface Alignment — SoftwareCatalog
+# Tasks: Beta Cross-Surface Alignment — Stackiq
 
 ## 1. Derive canonical feature vocabulary
 
@@ -16,14 +16,14 @@
 
 ## 3. Reconcile product page (conduction-website)
 
-- [x] 3.1 Rewrite `src/pages/apps/softwarecatalog.mdx` hero: version `v0.2` (was `v1.1`), status Beta (was Stable)
+- [x] 3.1 Rewrite `src/pages/apps/stackiq.mdx` hero: version `v0.2` (was `v1.1`), status Beta (was Stable)
 - [x] 3.2 Rewrite intro paragraph and `FeatureList` around the verified feature list
 - [x] 3.3 Rewrite `RotatingCards` (Register / Assess / Federate) removing OpenConnector-discovery and Forum Standaardisatie claims
 - [x] 3.4 Rewrite `WidgetShelf` to the two real dashboard widgets (object statistics, management information)
 - [x] 3.5 Rewrite `Showcase` (contract approval, standards/ArchiMate, OpenCatalogi federation)
 - [x] 3.6 Rewrite `PairRow` — drop OpenConnector and LaunchPad (no code support), keep OpenRegister (hard dependency) + OpenCatalogi (optional)
 - [x] 3.7 Rewrite `CtaBanner` copy
-- [x] 3.8 Mirror all of the above in the NL i18n page (`i18n/nl/docusaurus-plugin-content-pages/apps/softwarecatalog.mdx`)
+- [x] 3.8 Mirror all of the above in the NL i18n page (`i18n/nl/docusaurus-plugin-content-pages/apps/stackiq.mdx`)
 
 ## 4. Reconcile docs
 

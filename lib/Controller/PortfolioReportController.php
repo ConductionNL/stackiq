@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Portfolio Rationalization Report Controller for SoftwareCatalog.
+ * Portfolio Rationalization Report Controller for Stackiq.
  *
  * Serves the per-organisation portfolio rationalization report (TIME
  * quadrant counts, EOL exposure, cloud-transition share, annualised cost)
@@ -9,11 +9,11 @@
  * scoped row set.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-report-and-csv-export-are-scoped-to-the-requesters-authorised-organisations
  *
@@ -23,10 +23,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
 use Exception;
-use OCA\SoftwareCatalog\Service\PortfolioReportService;
+use OCA\Stackiq\Service\PortfolioReportService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;

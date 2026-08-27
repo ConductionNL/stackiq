@@ -100,7 +100,7 @@ test.afterAll(async () => {
 
 /** Navigate to a moduleVersie's detail page and open the Components sidebar tab. */
 async function openComponentsTab(page: Page): Promise<void> {
-	// The in-app router is hash-mode: a bare `/apps/softwarecatalog/moduleversies/:id`
+	// The in-app router is hash-mode: a bare `/apps/stackiq/moduleversies/:id`
 	// path boots the SPA with an empty hash, so vue-router falls back to the
 	// Dashboard and the detail page (with its Components tab) never mounts. Deep
 	// links MUST carry the `#` route.
@@ -113,7 +113,7 @@ async function openComponentsTab(page: Page): Promise<void> {
 		waitUntil: 'domcontentloaded',
 	})
 	await page
-		.locator('.softwarecatalog-app-root')
+		.locator('.stackiq-app-root')
 		.first()
 		.waitFor({ state: 'attached', timeout: 30000 })
 	// The first-run walkthrough overlay intercepts pointer events — dismiss it
@@ -173,7 +173,19 @@ test('sbom-import upload-and-replace: uploading a CycloneDX file renders the com
 
 	const table = page.getByTestId('sbom-component-table')
 	await expect(table).toBeVisible()
-	await expect(table.getByText('lodash')).toBeVisible()
+	// `exact: true` is load-bearing, not tidiness. Each row renders the
+	// component NAME and its purl, so a substring match on 'lodash' resolves to
+	// two spans — `lodash` and `pkg:npm/lodash@4.17.21` — and Playwright's
+	// strict mode fails the assertion rather than picking one:
+	//
+	//     strict mode violation: ... resolved to 2 elements
+	//       1) <span>lodash</span>
+	//       2) <span>pkg:npm/lodash@4.17.21</span>
+	//
+	// The product was fine; the locator was ambiguous. Adding the purl column
+	// to the table is what made a previously-unique string match twice, so this
+	// broke without either the component or this test being touched.
+	await expect(table.getByText('lodash', { exact: true })).toBeVisible()
 	await expect(table.locator('tbody tr')).toHaveCount(3)
 
 	const summary = page.getByTestId('sbom-summary')
@@ -191,6 +203,14 @@ test('sbom-import upload-and-replace: uploading a CycloneDX file renders the com
 	})
 
 	await expect(table.locator('tbody tr')).toHaveCount(2)
+	// Deliberately asymmetric with the assertions above, and worth keeping that
+	// way. For ABSENCE the substring match is the stronger claim: it fails if
+	// any trace of lodash survives the replace, the purl included. `toHaveCount`
+	// also tolerates multiple matches, so strict mode never applies here.
 	await expect(table.getByText('lodash')).toHaveCount(0)
-	await expect(table.getByText('express')).toBeVisible()
+	// For PRESENCE it must be exact, for the same reason as above —
+	// 'express' matches both `express` and `pkg:npm/express@4.19.2`. This
+	// assertion never ran before: the lodash one above failed first and masked
+	// it, so fixing only that line would have surfaced this as the next failure.
+	await expect(table.getByText('express', { exact: true })).toBeVisible()
 })

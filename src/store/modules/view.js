@@ -86,7 +86,7 @@ export const useViewStore = defineStore('view', {
 					params.include_products = true
 				}
 
-				const url = generateUrl('/apps/softwarecatalog/api/views')
+				const url = generateUrl('/apps/stackiq/api/views')
 				const response = await axios.get(url, { params })
 
 				this.views = response.data.views ?? []
@@ -125,7 +125,7 @@ export const useViewStore = defineStore('view', {
 				}
 
 				const url = generateUrl(
-					'/apps/softwarecatalog/api/views/' + encodeURIComponent(viewId),
+					'/apps/stackiq/api/views/' + encodeURIComponent(viewId),
 				)
 				const response = await axios.get(url, { params })
 

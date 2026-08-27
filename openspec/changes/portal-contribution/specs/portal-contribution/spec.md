@@ -1,7 +1,7 @@
 # portal-contribution Specification
 
 **Status**: in-progress
-**Scope**: softwarecatalog
+**Scope**: stackiq
 **OpenSpec changes**:
 - `openspec/changes/portal-contribution/`
 
@@ -18,7 +18,7 @@ so no other organisation's data leaks.
 
 ### Requirement: Provider is a plain, dependency-free class (REQ-PORT-001)
 
-The app MUST ship `OCA\SoftwareCatalog\Portal\PortalContributionProvider` as a
+The app MUST ship `OCA\Stackiq\Portal\PortalContributionProvider` as a
 plain PHP class: no imports from portaliq, no `implements` clause, no `info.xml`
 dependency on portaliq, and no constructor dependencies. Portaliq discovers it by
 convention FQCN and duck-types it via `method_exists` (never `instanceof`), so
@@ -31,7 +31,7 @@ behaviour (ADR-046 amendment A1).
 - WHEN `new PortalContributionProvider()` is called
 - THEN the class instantiates without error
 - AND it declares no `implements` clause and no `use` of any portaliq symbol
-- @e2e exclude backend-only contract class with no softwarecatalog UI surface; the portal renders inside portaliq — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude backend-only contract class with no stackiq UI surface; the portal renders inside portaliq — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
 
 ### Requirement: Provider declares both v2 and v1 audience methods (REQ-PORT-002)
 
@@ -48,7 +48,7 @@ because the same `gebruik` object is scoped by a different property for each sid
 - THEN `getAudiences()` returns exactly `['vendor-org', 'participant-org']`
 - AND `getAudience()` returns `'vendor-org'`
 - AND the primary audience is a member of the audiences list
-- @e2e exclude backend-only contract methods with no softwarecatalog UI surface — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude backend-only contract methods with no stackiq UI surface — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
 
 ### Requirement: Contribution is a declarative, organisatie-scoped read manifest (REQ-PORT-003)
 
@@ -79,7 +79,7 @@ For `participant-org` the collections MUST be, in order: `participantGebruik`
 - AND `vendorContracts` declares `via: dienst`, scopeField `aanbieder`, and `minTrust: substantial`
 - AND `vendorCompliancy` declares `via: module` and scopeField `aanbieder`
 - AND `actions` and `notifications` are both empty
-- @e2e exclude manifest is consumed and rendered by portaliq, not by any softwarecatalog UI — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude manifest is consumed and rendered by portaliq, not by any stackiq UI — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
 
 #### Scenario: Participant subject receives the participant manifest
 
@@ -87,14 +87,14 @@ For `participant-org` the collections MUST be, in order: `participantGebruik`
 - WHEN `getContribution($subject)` is called
 - THEN it returns a manifest whose collections are exactly `participantGebruik` (scopeField `afnemer`) and `participantContracts` (`via: gebruik`, scopeField `afnemer`)
 - AND `actions` and `notifications` are both empty
-- @e2e exclude manifest consumed by portaliq, no softwarecatalog UI surface — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude manifest consumed by portaliq, no stackiq UI surface — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
 
 #### Scenario: Unserved audience receives null
 
 - GIVEN a subject array whose `audience` is `'client'` (or any unserved value, or absent)
 - WHEN `getContribution($subject)` is called
 - THEN it returns `null`
-- @e2e exclude backend-only fail-closed filter with no softwarecatalog UI surface — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
+- @e2e exclude backend-only fail-closed filter with no stackiq UI surface — covered by PHPUnit (tests/Unit/Portal/PortalContributionProviderTest.php)
 
 ### Requirement: Reads are field-projected to prevent cross-organisation leakage (REQ-PORT-004)
 
@@ -132,7 +132,7 @@ multi-hop path).
 
 - **Performance:** `getContribution()` is pure data assembly — no I/O, no
   container access; sub-millisecond by construction.
-- **Accessibility:** N/A in softwarecatalog — the rendering surface is portaliq's
+- **Accessibility:** N/A in stackiq — the rendering surface is portaliq's
   SPA (ADR-046), which owns WCAG compliance.
 - **Internationalization:** manifest labels ship in English source per fleet i18n
   policy; portaliq owns portal-side translation of contributed labels.

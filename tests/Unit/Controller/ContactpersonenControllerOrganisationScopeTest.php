@@ -14,25 +14,25 @@
  * absent from the response body — not merely on the HTTP envelope.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\OrganisationService;
-use OCA\SoftwareCatalog\Controller\ContactpersonenController;
-use OCA\SoftwareCatalog\Service\ContactpersoonService;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
+use OCA\Stackiq\Controller\ContactpersonenController;
+use OCA\Stackiq\Service\ContactpersoonService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -48,11 +48,11 @@ use Psr\Log\LoggerInterface;
  * GH#459 — organisation scope on the contact-person read-outs.
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package  OCA\Stackiq\Tests\Unit\Controller
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 
@@ -103,7 +103,7 @@ class ContactpersonenControllerOrganisationScopeTest extends TestCase {
 		// unconfigured mock — so every read returned an empty set and the
 		// organisation guard refused a caller reading their OWN organisation.
 		$this->controller = new ContactpersonenController(
-			'softwarecatalog',
+			'stackiq',
 			$this->createMock(IRequest::class),
 			$this->createMock(SettingsService::class),
 			$this->createMock(ContactPersonHandler::class),

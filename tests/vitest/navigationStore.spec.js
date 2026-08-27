@@ -1,8 +1,8 @@
 /**
- * SPDX-FileCopyrightText: 2026 Conduction / SoftwareCatalog Contributors
+ * SPDX-FileCopyrightText: 2026 Conduction / Stackiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Unit tests for the SoftwareCatalog UI navigation Pinia store
+ * Unit tests for the Stackiq UI navigation Pinia store
  * (src/store/modules/navigation.js): the single-active-modal/dialog
  * invariant, dialog-property passing, and the consume-once transferData
  * handoff used to ferry data between views without prop drilling. Driven
@@ -13,7 +13,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useNavigationStore } from '../../src/store/modules/navigation.js'
 
-describe('softwarecatalog navigation store', () => {
+describe('stackiq navigation store', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		vi.spyOn(console, 'log').mockImplementation(() => {})

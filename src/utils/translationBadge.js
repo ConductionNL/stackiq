@@ -21,7 +21,7 @@
 
 /**
  * Map of language codes to their human-readable English display names.
- * Kept intentionally small — covers the languages SoftwareCatalog content is
+ * Kept intentionally small — covers the languages Stackiq content is
  * authored in. Unknown codes fall back to the upper-cased code itself.
  *
  * @type {{[key: string]: string}}
@@ -103,6 +103,8 @@ export function shouldShowTranslationBadge(object, servedLang) {
  * @param {object} object     An OpenRegister object.
  * @param {string} servedLang The language currently served.
  * @return {?{sourceLanguage: string, sourceLanguageName: string, label: Function}}
+ *
+ * @spec openspec/specs/softwarecatalog-adopt-or-abstractions/spec.md
  */
 export function translationBadge(object, servedLang) {
 	if (!shouldShowTranslationBadge(object, servedLang)) return null
@@ -118,10 +120,12 @@ export function translationBadge(object, servedLang) {
 		 *
 		 * @param {function(string, object=): string} t Nextcloud translate fn.
 		 * @return {string} The localised "(translated from X)" label.
+		 *
+		 * @spec openspec/specs/softwarecatalog-adopt-or-abstractions/spec.md
 		 */
 		label(t) {
 			if (typeof t === 'function') {
-				return t('softwarecatalog', '(translated from {language})', {
+				return t('stackiq', '(translated from {language})', {
 					language: sourceLanguageName,
 				})
 			}

@@ -17,11 +17,11 @@
  * admin-gated step (ModerationService).
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  *
@@ -31,7 +31,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -270,7 +270,7 @@ class IntakeService {
 	 * FALSE, and because an object is not an array the array arm below cannot
 	 * rescue it — so this method used to return `null` for EVERY real save,
 	 * putting `uuid: null` in the submit response and the audit log
-	 * (softwarecatalog#490). `property_exists()` is the instrument
+	 * (stackiq#490). `property_exists()` is the instrument
 	 * `Entity::getter()` itself decides on; `method_exists()` is kept as the
 	 * second arm for genuinely concrete accessors, and the call is wrapped
 	 * because neither probe guarantees the other object's shape.

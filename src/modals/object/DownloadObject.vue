@@ -6,19 +6,19 @@ import { navigationStore, objectStore } from '../../store/store.js'
 	<NcDialog
 		v-if="navigationStore.modal === 'downloadObject'"
 		:name="
-			t('softwarecatalog', 'Download {name}', {
+			t('stackiq', 'Download {name}', {
 				name:
 					objectStore.objectItem?.['@self']?.name
 					|| objectStore.objectItem?.name
 					|| objectStore.objectItem?.['@self']?.title
 					|| objectStore.objectItem?.id
-					|| t('softwarecatalog', 'Publication'),
+					|| t('stackiq', 'Publication'),
 			})
 		"
 		size="normal"
 		:canClose="false">
 		<NcNoteCard v-if="success" type="success">
-			<p>{{ t('softwarecatalog', 'Object successfully downloaded') }}</p>
+			<p>{{ t('stackiq', 'Object successfully downloaded') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -29,17 +29,13 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{
-					success
-						? t('softwarecatalog', 'Close')
-						: t('softwarecatalog', 'Cancel')
-				}}
+				{{ success ? t('stackiq', 'Close') : t('stackiq', 'Cancel') }}
 			</NcButton>
 		</template>
 
 		<div v-if="!success" class="formContainer">
 			<div class="json-editor">
-				<label>{{ t('softwarecatalog', 'Object (JSON)') }}</label>
+				<label>{{ t('stackiq', 'Object (JSON)') }}</label>
 				<div :class="`codeMirrorContainer ${getTheme()}`">
 					<CodeMirror
 						v-model="objectItem.object"
@@ -131,7 +127,7 @@ export default {
 				this.error =
 					error.message
 					|| this.t(
-						'softwarecatalog',
+						'stackiq',
 						'An error occurred while downloading the object',
 					)
 			} finally {

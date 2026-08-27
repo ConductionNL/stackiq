@@ -10,7 +10,7 @@
  Stays `type: custom` (rather than a declarative `type: index` manifest
  page) purely because a declarative index page has no slot to inject the
  wizard's "New suite" action button — `CnIndexPage` itself self-fetches
- (`register="voorzieningen"` `schema="suite"` triggers the library's own
+ (`register="stackiq"` `schema="suite"` triggers the library's own
  self-fetch path, `CnIndexPage/useSelfFetchList.js`), identical to what a
  declarative type:index page gets for free.
 
@@ -19,16 +19,16 @@
 <template>
 	<div class="suites-index">
 		<CnIndexPage
-			:title="t('softwarecatalog', 'Suites')"
+			:title="t('stackiq', 'Suites')"
 			:description="
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Application suites — bundled products made up of one or more existing applications.',
 				)
 			"
 			:showTitle="true"
 			icon="PackageVariant"
-			register="voorzieningen"
+			register="stackiq"
 			schema="suite"
 			:columns="['name', 'shortDescription', 'website']"
 			:showAdd="false"
@@ -38,7 +38,7 @@
 					<template #icon>
 						<Plus :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'New suite') }}
+					{{ t('stackiq', 'New suite') }}
 				</NcButton>
 			</template>
 		</CnIndexPage>

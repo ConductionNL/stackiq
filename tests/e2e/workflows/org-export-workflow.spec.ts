@@ -25,7 +25,7 @@
  *   organisation's components) is NOT drivable in this dev container: every
  *   export endpoint returns "AMEF register ID is not configured" (HTTP 400/500)
  *   because the AMEF register + its element/view/relationship schemas are NOT
- *   provisioned here (the `softwarecatalog/api/settings/archimate` status
+ *   provisioned here (the `stackiq/api/settings/archimate` status
  *   reports model_count: 0, element_count: 0). Provisioning the entire AMEF
  *   register is a heavy environment-setup step, not an app change. The artifact
  *   leg is kept as a test.fixme that POSTs the export and asserts a well-formed
@@ -90,7 +90,7 @@ async function goToArchiMateSettings(page: Page): Promise<void> {
 	// network never goes idle and this wait can only ever time out or be
 	// satisfied by luck (ADR-074 rule 4). The real readiness signal is the
 	// heading assertion below, which waits for the SPA to actually mount.
-	await page.goto('/settings/admin/softwarecatalog', {
+	await page.goto('/settings/admin/stackiq', {
 		waitUntil: 'domcontentloaded',
 	})
 	await expect(
@@ -192,7 +192,7 @@ test('export workflow: the seeded export org is retrievable via findAll', async 
 // ---------------------------------------------------------------------------
 test.fixme('export workflow: produces an AMEF/ArchiMate artifact for the org (blocked: AMEF register not configured)', async () => {
 	const res = await apiCtx.get(
-		`/index.php/apps/softwarecatalog/api/archimate/export/organization/${seededOrgId}?modules=true&deelnames=true`,
+		`/index.php/apps/stackiq/api/archimate/export/organization/${seededOrgId}?modules=true&deelnames=true`,
 	)
 	expect(res.ok()).toBeTruthy()
 	const ct = res.headers()['content-type'] ?? ''

@@ -10,15 +10,15 @@
 		"completionConfigKey": "walkthrough_completed_version",
 		"tours": [
 			{
-				"id": "softwarecatalog:getting-started",
+				"id": "stackiq:getting-started",
 				"title": "Getting started",
 				"trigger": "first-visit",
 				"minAppVersion": "0.2.11",
 				"steps": [
-					{ "id": "welcome", "sinceVersion": "0.2.11", "placement": "center", "title": "Welcome to Software Catalog", "body": "Let's take a quick spin through your software catalogue — we'll register an organisation together so you can see how the pieces fit. You'll add the record yourself.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } },
-					{ "id": "go-organisaties", "sinceVersion": "0.2.11", "placement": "right", "body": "Organisations are the heart of your catalogue — they own the contracts, modules and compliance records you track. Open Organisations from the menu to get started.", "task": "Click Organisations in the menu", "target": { "kind": "nav-item", "ref": "Organisaties" }, "advanceOn": { "type": "route-match", "route": "Organisaties" } },
-					{ "id": "create-organisatie", "sinceVersion": "0.2.11", "placement": "bottom", "allowManualNext": true, "body": "Add your first organisation — give it a name and save. You can attach contracts, modules and compliance records to it afterwards.", "task": "Click New and save an organisation", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "voorzieningen", "schema": "organization", "capture": { "organisatieId": ":id" } } },
-					{ "id": "done", "sinceVersion": "0.2.11", "placement": "center", "title": "You're all set", "body": "Nicely done — your catalogue has its first organisation. Head back to the Dashboard to watch it grow, and reopen this tour anytime from the … menu.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } }
+					{ "id": "welcome", "sinceVersion": "0.2.11", "placement": "center", "title": "Welcome to Stackiq", "body": "Let's take a quick spin through your software catalogue. We'll register an organisation together so you can see how the pieces fit, and you'll add the record yourself.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } },
+					{ "id": "go-organisaties", "sinceVersion": "0.2.11", "placement": "right", "body": "Organisations are the heart of your catalogue: they own the contracts, modules and compliance records you track. Open Organisations from the menu to get started.", "task": "Click Organisations in the menu", "target": { "kind": "nav-item", "ref": "Organisaties" }, "advanceOn": { "type": "route-match", "route": "Organisaties" } },
+					{ "id": "create-organisatie", "sinceVersion": "0.2.11", "placement": "bottom", "allowManualNext": true, "body": "Add your first organisation. Give it a name and save. Contracts, modules and compliance records attach to it afterwards.", "task": "Click New and save an organisation", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "stackiq", "schema": "organization", "capture": { "organisatieId": ":id" } } },
+					{ "id": "done", "sinceVersion": "0.2.11", "placement": "center", "title": "Your catalogue has its first organisation", "body": "The Dashboard tracks the catalogue as it grows. The documentation covers the rest.", "task": "Open the documentation to keep going", "target": { "kind": "nav-item", "ref": "Documentation" }, "advanceOn": { "type": "manual" } }
 				]
 			}
 		]
@@ -146,7 +146,7 @@
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "BookOpenVariantOutline",
-			"href": "https://softwarecatalog.conduction.nl",
+			"href": "https://stackiq.conduction.nl",
 			"section": "footer",
 			"order": 90
 		},
@@ -157,6 +157,14 @@
 			"route": "FeaturesRoadmap",
 			"section": "footer",
 			"order": 95
+		},
+		{
+			"id": "FlowsMenu",
+			"label": "Flows",
+			"icon": "Sitemap",
+			"route": "Flows",
+			"section": "settings",
+			"order": 96
 		}
 	],
 	"pages": [
@@ -181,7 +189,7 @@
 				"columns": ["name", "type", "status", "website"],
 				"filter": { "status": ["Draft", "Active", "Inactive"] },
 				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			},
 			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs. config.filter excludes organisation-merge tombstones (status='merged') from the default listing per the organisation-merge spec — a merged-away source stays readable by direct UUID lookup (OrganisatieDetail route) but never appears in this index. 🔴 THIS FILTER IS COUPLED TO THE SCHEMA'S status ENUM AND WENT STALE: #520 translated the stored enum values and migrated the rows (Concept/Actief/Deactief/samengevoegd -> Draft/Active/Inactive/merged) but did NOT translate this list, so the index filtered on three values no row can hold any more. A value filter that matches nothing is not an error — OpenRegister answers 200 with total=0 — so the Organisations index rendered 'No items found' for every user and read as an empty catalogue. Measured on the running instance: ?status[]=Draft&status[]=Active returns the seeded row, ?status[]=Concept&status[]=Actief&status[]=Deactief returns total=0. Any future enum rename must move this list in the same commit."
 		},
@@ -195,7 +203,7 @@
 				"schema": "organization",
 				"_note": "ADR-062 rollout (round 2): this page did not exist before — organisatie objects (vendors, municipalities, collaborations) were only reachable as index cards with no detail view (codeberg softwarecatalog#76). Vendor/organisation archetype: the organisatie schema itself carries only catalogue-role fields (contactsUid, type, status, registratiestatus, samenwerkingtype, geregistreerdDoor, publicatie dates) because identity (name, website, e-mail, KvK) lives in the linked Nextcloud contact via contactsUid, not on this OR object — so the body leads with those 8 catalogue fields (2-col) rather than name/address. Top-right: a stats-block KPI card counting the organisation's own diensten, modules and contactpersonen (all FK-scoped via aanbieder/organisatie = @objectId) so a reader sees portfolio size at a glance without opening any list. Below: three FK object-lists — Services (dienst.aanbieder) and Applications (module.aanbieder) are the org's supply-side offerings; Contact persons (contactpersoon.organisatie) links to the existing ContactpersoonDetail page. Services still have no dedicated index/detail page (a real fleet gap, follow-up remains). Applications now do — bio-compliance-assessment added Modules/ModuleDetail (BBN level and DPIA tracking needed somewhere to live), so org-modules now carries `rowRoute: ModuleDetail` and a bbnLevel column; org-diensten's rowRoute stays intentionally omitted. An organisation does not communicate itself (contact happens through the linked NC contact), so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. Card-click navigation from the Organisaties index required a matching fix in OrganisatieCard.vue (the custom cardComponent never emitted the `click` event CnCardGrid/CnPageRenderer listen on for register+schema route resolution — clicking a card was previously a no-op).",
 				"widgets": [
-					{ "id": "org-data", "type": "data", "title": "Organisation", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "contactsUid", "type", "status", "registrationStatus", "samenwerkingtype", "registeredBy", "publicationDate", "depublicationDate" ] } },
+					{ "id": "org-data", "type": "data", "title": "Organisation", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "contactsUid", "type", "status", "registrationStatus", "samenwerkingtype", "registeredBy", "publicationDate", "depublicationDate" ], "overrides": { "status": { "editable": false }, "registeredBy": { "editable": false } } } },
 					{ "id": "org-stats-services", "type": "stats-block", "title": "Services", "icon": "ChartBar", "content": { "entries": [ { "title": "Services", "register": "@resolve:voorzieningen_register", "schema": "service", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
 					{ "id": "org-stats-applications", "type": "stats-block", "title": "Applications", "icon": "ChartBar", "content": { "entries": [ { "title": "Applications", "register": "@resolve:voorzieningen_register", "schema": "module", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
 					{ "id": "org-stats-contact-persons", "type": "stats-block", "title": "Contact persons", "icon": "ChartBar", "content": { "entries": [ { "title": "Contact persons", "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "metric": "count", "filter": { "organization": "@objectId" } } ] } },
@@ -222,7 +230,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -243,7 +251,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -270,7 +278,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -306,7 +314,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -335,7 +343,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -371,7 +379,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -454,7 +462,7 @@
 			"type": "custom",
 			"title": "Suites",
 			"component": "SuitesIndexView",
-			"_note": "suite-wizard: index of `suite` objects (an application suite — a bundled product made up of one or more existing applications, replacing the retired incumbent 'product' concept per VNG Softwarecatalogus #242 / softwarecatalog#372). Stays `type: custom` solely so the guided multi-step creation wizard's action button can sit in CnIndexPage's #actions slot alongside the self-fetch list (register=voorzieningen, schema=suite) — a declarative type:index page has no slot for it. Create/edit/delete of an individual suite outside the wizard still reuse the generic ObjectModal via CnIndexPage's own default form dialog."
+			"_note": "suite-wizard: index of `suite` objects (an application suite — a bundled product made up of one or more existing applications, replacing the retired incumbent 'product' concept per VNG Softwarecatalogus #242 / softwarecatalog#372). Stays `type: custom` solely so the guided multi-step creation wizard's action button can sit in CnIndexPage's #actions slot alongside the self-fetch list (register=stackiq, schema=suite) — a declarative type:index page has no slot for it. Create/edit/delete of an individual suite outside the wizard still reuse the generic ObjectModal via CnIndexPage's own default form dialog."
 		},
 		{
 			"id": "SuiteDetail",
@@ -480,7 +488,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -502,7 +510,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			},
 			"_note": "The register has NO dedicated 'standard' schema — GEMMA standards are `element` objects (the generic ArchiMate/GEMMA model-element schema, shared with referentiecomponenten, applications, capabilities, …) discriminated by `gemmaType`. Fixed a pre-existing bug: this page previously pointed at a non-existent `schema: \"standaard\"`, which would 404 on every fetch. Scoped with `filter.gemmaType: \"standaard\"` (see lib/Service/ArchiMateImportService.php's `extractGemmaType` comparisons and its `?gemmaType=referentiecomponent` query comment) so only standard-typed elements list here. REGISTER FIX (measured): `element` is declared under `components.registers.vng-gemma.schemas`, NOT under `voorzieningen`, so `@resolve:voorzieningen_register` produced `GET /api/objects/<voorzieningen>/element -> 404 {\"message\":\"Schema not found: 'element'\"}` on every load (CI trace, run 31981873526). Attaching `element` to `voorzieningen` was rejected deliberately: the request would then succeed and return an EMPTY list, because objects live per register and the AMEF elements are written to the AMEF one — a visible error traded for an invisible pass. Repointed at `@resolve:amef_register`, the second sentinel, provisioned in lib/AppInfo/Application.php::boot() from the `amef_config` blob exactly as `voorzieningen_register` is from `voorzieningen_config`."
 		},
@@ -534,7 +542,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -556,7 +564,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			},
 			"_note": "bio-compliance-assessment: BIO 2.0 measures reference catalog (design.md Decision 1/Decision 4), following the Standaarden/StandaardDetail index+detail pattern. Publicly readable (authorization.read: [\"public\"]) since it is a selection source for compliancy.bioMaatregel and the BIO coverage report (ComplianceMatrixView), not organisation-owned data."
 		},
@@ -584,7 +592,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -605,7 +613,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -636,7 +644,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -657,7 +665,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -686,7 +694,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -715,7 +723,7 @@
 					"enabled": true,
 					"showMetadata": true
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			},
 			"_note": "Fixed a pre-existing bug: `releaseDatum` is not a moduleVersie property (see lib/Settings/softwarecatalogus_register.json) — replaced with the real lifecycle field `datumInGebruik` (date the version went live), the closest analog to a release date."
 		},
@@ -748,7 +756,7 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -784,7 +792,7 @@
 						{ "id": "audit", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				},
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
 		},
 		{
@@ -817,8 +825,24 @@
 			"type": "roadmap",
 			"title": "Features & roadmap",
 			"config": {
-				"documentationUrl": "https://softwarecatalog.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl"
 			}
+		},
+		{
+			"id": "Flows",
+			"route": "/flows",
+			"type": "flows",
+			"title": "Flows",
+			"config": { "app": "stackiq" },
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. Rendered by the shared CnFlowsPage page type over OpenRegister's one native flow store (ADR-065), scoped to this app."
+		},
+		{
+			"id": "FlowDetail",
+			"route": "/flows/:id",
+			"type": "flow-detail",
+			"title": "Flow",
+			"config": { "app": "stackiq" },
+			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar so the canvas keeps full width."
 		}
 	]
 }

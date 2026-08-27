@@ -1,5 +1,5 @@
 OC.L10N.register(
-    "softwarecatalog",
+    "stackiq",
     {
     "AMEF elements" : "Amef elementen",
     "AMEF standards" : "Standaarden AMEF",
@@ -251,7 +251,7 @@ OC.L10N.register(
     "Short Description" : "Korte beschrijving",
     "Short description" : "Korte beschrijving",
     "Showing {showing} of {total} {type}" : "{showing} van {total} {type} weergegeven",
-    "Software Catalog Location URL" : "Softwarecatalogus locatie-URL",
+    "Stackiq Location URL" : "Stackiq locatie-URL",
     "Software Catalogus needs the OpenRegister app to store and manage data. Please install OpenRegister from the app store to get started." : "De Softwarecatalogus heeft de OpenRegister-app nodig om gegevens op te slaan en te beheren. Installeer OpenRegister vanuit de app store om te beginnen.",
     "Start date" : "Startdatum",
     "Status" : "Status",
@@ -380,7 +380,7 @@ OC.L10N.register(
     "Group members" : "Groepsleden",
     "Merge organisations" : "Organisaties samenvoegen",
     "End-of-life feed sync" : "Einde-ondersteuning-feedsynchronisatie",
-    "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Softwarecatalog never calls endoflife.date directly." : "Koppel catalogusproducten aan endoflife.date-productcycli die via OpenConnector zijn binnengehaald, zodat einde-ondersteuningsdata datagedreven blijft. Softwarecatalogus roept endoflife.date nooit rechtstreeks aan.",
+    "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Stackiq never calls endoflife.date directly." : "Koppel catalogusproducten aan endoflife.date-productcycli die via OpenConnector zijn binnengehaald, zodat einde-ondersteuningsdata datagedreven blijft. Stackiq roept endoflife.date nooit rechtstreeks aan.",
     "Loading EOL sync configuration…" : "EOL-synchronisatieconfiguratie laden…",
     "Save EOL sync settings" : "EOL-synchronisatie-instellingen opslaan",
     "Sync now" : "Nu synchroniseren",

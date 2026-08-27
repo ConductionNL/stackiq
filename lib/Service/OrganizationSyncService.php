@@ -4,41 +4,41 @@
  * Organization Synchronization Service
  *
  * This file contains the service class for synchronizing organizations and contact persons
- * between SoftwareCatalog objects and OpenRegister entities.
+ * between Stackiq objects and OpenRegister entities.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
+use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Db\OrganisationMapper;
 
 /**
  * Service for synchronizing organizations and contact persons.
  *
- * This service provides comprehensive synchronization between SoftwareCatalog objects
+ * This service provides comprehensive synchronization between Stackiq objects
  * and OpenRegister entities, ensuring data consistency and proper user management.
  *
  * @category Service
- * @package  OCA\SoftwareCatalog\Service
+ * @package  OCA\Stackiq\Service
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -995,7 +995,7 @@ class OrganizationSyncService {
 			$this->logger->debug(
 				'Ensuring organisation entity',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'organisatieId' => $organisationId,
 					'name' => ($objectData['name'] ?? 'Unknown'),
 					'status' => ($objectData['status'] ?? 'Unknown'),
@@ -1019,7 +1019,7 @@ class OrganizationSyncService {
 				$this->logger->debug(
 					'Existing entity found',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'organisatieId' => $organisationId,
 						'entityId' => $organisationEntity->getId(),
 						'shouldBeActive' => $shouldBeActive,
@@ -1031,7 +1031,7 @@ class OrganizationSyncService {
 					$this->logger->debug(
 						'Updating entity status',
 						[
-							'app' => 'softwarecatalog',
+							'app' => 'stackiq',
 							'organisatieId' => $organisationId,
 							'oldActive' => $organisationEntity->getActive(),
 							'newActive' => $shouldBeActive,
@@ -1087,7 +1087,7 @@ class OrganizationSyncService {
 						$this->logger->info(
 							'OrganizationSyncService: Found existing entity by slug, updating UUID to match object',
 							[
-								'app' => 'softwarecatalog',
+								'app' => 'stackiq',
 								'organisatieId' => $organisationId,
 								'oldEntityUuid' => $organisationEntity->getUuid(),
 								'slug' => $slug,
@@ -1116,7 +1116,7 @@ class OrganizationSyncService {
 				$this->logger->debug(
 					'Creating new organisation entity',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'organisatieId' => $organisationId,
 						'name' => ($objectData['name'] ?? 'Unknown'),
 					]
@@ -1128,7 +1128,7 @@ class OrganizationSyncService {
 					$this->logger->debug(
 						'New organisation entity created',
 						[
-							'app' => 'softwarecatalog',
+							'app' => 'stackiq',
 							'organisatieId' => $organisationId,
 							'entityId' => $organisationEntity->getId(),
 							'active' => $organisationEntity->getActive(),
@@ -1171,7 +1171,7 @@ class OrganizationSyncService {
 					$this->logger->error(
 						'❌ ORGANISATION ENTITY CREATION FAILED',
 						[
-							'app' => 'softwarecatalog',
+							'app' => 'stackiq',
 							'organisatieId' => $organisationId,
 						]
 					);
@@ -1183,7 +1183,7 @@ class OrganizationSyncService {
 			$this->logger->error(
 				'💥 ENSURE ORGANISATION ENTITY EXCEPTION',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'organisatieId' => $organisationObject->getId(),
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
@@ -1404,6 +1404,11 @@ class OrganizationSyncService {
 	private function updateOrganisationEntityUsers(object $organisationEntity, array $usernames, array &$stats): void {
 		try {
 			$organisationUuid = $organisationEntity->getUuid();
+			// OpenRegister is not on the analysis path, so the getUsers() call has no
+			// resolvable return type and sort() below cannot be checked without
+			// this. It is a list of usernames.
+			// phpcs:ignore Squiz.Commenting.InlineComment.DocBlock -- PHPStan only reads @var from a /** */ block.
+			/** @var array<string> $currentUsers */
 			$currentUsers = ($organisationEntity->getUsers() ?? []);
 
 			// Add admin users to ensure they're always included.
@@ -1601,7 +1606,7 @@ class OrganizationSyncService {
 
 				// Configuration.
 				'contactSchemaConfigured' => empty($contactSchema) === false,
-				'lastSyncTime' => $this->config->getValueString('softwarecatalog', 'last_sync_time', 'Never'),
+				'lastSyncTime' => $this->config->getValueString('stackiq', 'last_sync_time', 'Never'),
 
 				// Email configuration status.
 				'emailStatus' => $this->getEmailConfigurationStatus(),
@@ -1666,7 +1671,7 @@ class OrganizationSyncService {
 	 * @spec   openspec/specs/organization-sync/spec.md
 	 */
 	public function recordSyncTime(): void {
-		$this->config->setValueString('softwarecatalog', 'last_sync_time', date('Y-m-d H:i:s'));
+		$this->config->setValueString('stackiq', 'last_sync_time', date('Y-m-d H:i:s'));
 
 	}//end recordSyncTime()
 
@@ -1700,7 +1705,7 @@ class OrganizationSyncService {
 			$this->logger->info(
 				'🏢 ORGANIZATION PROCESSING STARTED',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'trigger' => 'ObjectCreatedEvent',
 					'organizationId' => $organizationUuid,
 					'organizationName' => ($objectData['name'] ?? 'Unknown'),
@@ -1727,7 +1732,7 @@ class OrganizationSyncService {
 				$this->logger->info(
 					'✅ ORGANISATION ENTITY CREATED/UPDATED',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'organizationUuid' => $organizationUuid,
 						'entityId' => $organisationEntity->getId(),
 						'entityActive' => $organisationEntity->getActive(),
@@ -1767,7 +1772,7 @@ class OrganizationSyncService {
 				$this->logger->error(
 					'❌ ORGANISATION ENTITY FAILED',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'organizationUuid' => $organizationUuid,
 						'error' => 'Failed to create/update organisation entity',
 					]
@@ -1781,7 +1786,7 @@ class OrganizationSyncService {
 			$this->logger->info(
 				'🏁 ORGANIZATION PROCESSING COMPLETED',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'organizationId' => $organizationUuid,
 					'stats' => $stats,
 					'processingTime' => $stats['duration'] . 's',
@@ -1794,7 +1799,7 @@ class OrganizationSyncService {
 			$this->logger->error(
 				'💥 ORGANIZATION PROCESSING EXCEPTION',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'organizationId' => $organizationObject->getUuid(),
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
@@ -1835,7 +1840,7 @@ class OrganizationSyncService {
 			$this->logger->info(
 				'👥 PROCESSING NESTED CONTACT PERSONS',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'organizationId' => $organizationUuid,
 					'contactCount' => count($contactPersons),
 				]
@@ -1963,7 +1968,7 @@ class OrganizationSyncService {
 			$this->logger->debug(
 				'Finding related contact persons',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'organizationId' => $organizationUuid,
 				]
 			);
@@ -2116,7 +2121,7 @@ class OrganizationSyncService {
 			$this->logger->info(
 				'👥 PROCESSING RELATED CONTACT PERSONS',
 				[
-					'app' => 'softwarecatalog',
+					'app' => 'stackiq',
 					'organizationId' => $organizationUuid,
 					'contactCount' => count($relatedContacts),
 				]
@@ -2279,7 +2284,7 @@ class OrganizationSyncService {
 				$this->logger->info(
 					'📧 FETCHING EXISTING CONTACT PERSON',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'organizationId' => $organizationUuid,
 						'contactId' => $existingContactId,
 						'email' => $email,
@@ -2311,7 +2316,7 @@ class OrganizationSyncService {
 				$this->logger->info(
 					'📧 CREATING NEW CONTACT PERSON OBJECT',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'organizationId' => $organizationUuid,
 						'email' => $email,
 						'name' => ($contactData['voornaam'] ?? '') . ' ' . ($contactData['achternaam'] ?? ''),
@@ -2393,7 +2398,7 @@ class OrganizationSyncService {
 				$this->logger->info(
 					'✅ CONTACT PERSON OBJECT READY',
 					[
-						'app' => 'softwarecatalog',
+						'app' => 'stackiq',
 						'organizationId' => $organizationUuid,
 						'contactId' => $contactObject->getUuid(),
 						'email' => $email,
@@ -2412,7 +2417,7 @@ class OrganizationSyncService {
 						$this->logger->info(
 							'Organisation entity missing for ' . $organizationUuid . ', creating backup entity',
 							[
-								'app' => 'softwarecatalog',
+								'app' => 'stackiq',
 								'contactId' => $contactObject->getUuid(),
 							]
 						);
@@ -2437,7 +2442,7 @@ class OrganizationSyncService {
 							$this->logger->error(
 								'Backup org entity creation failed',
 								[
-									'app' => 'softwarecatalog',
+									'app' => 'stackiq',
 									'organizationId' => $organizationUuid,
 									'error' => $backupEx->getMessage(),
 								]
@@ -2456,7 +2461,7 @@ class OrganizationSyncService {
 							$this->logger->info(
 								'Creating user account for contact person (org is active)',
 								[
-									'app' => 'softwarecatalog',
+									'app' => 'stackiq',
 									'contactId' => $contactObject->getUuid(),
 									'organizationId' => $organizationUuid,
 									'email' => $email,
@@ -2491,7 +2496,7 @@ class OrganizationSyncService {
 								$this->logger->debug(
 									'Saving contact with username via direct mapper update',
 									[
-										'app' => 'softwarecatalog',
+										'app' => 'stackiq',
 										'contactId' => $contactObject->getUuid(),
 										'username' => $user->getUID(),
 										'hasOrganisatie' => isset($contactObjectData['organization']) === true,
@@ -2514,7 +2519,7 @@ class OrganizationSyncService {
 									$this->logger->info(
 										'Contact saved with username',
 										[
-											'app' => 'softwarecatalog',
+											'app' => 'stackiq',
 											'contactId' => $contactObject->getUuid(),
 											'username' => $user->getUID(),
 										]
@@ -2523,7 +2528,7 @@ class OrganizationSyncService {
 									$this->logger->warning(
 										'Failed to save username to contact object (user was created)',
 										[
-											'app' => 'softwarecatalog',
+											'app' => 'stackiq',
 											'contactId' => $contactObject->getUuid(),
 											'username' => $user->getUID(),
 											'error' => $saveEx->getMessage(),
@@ -2550,7 +2555,7 @@ class OrganizationSyncService {
 								$this->logger->info(
 									'User account created',
 									[
-										'app' => 'softwarecatalog',
+										'app' => 'stackiq',
 										'contactId' => $contactObject->getUuid(),
 										'username' => $user->getUID(),
 									]
@@ -2561,7 +2566,7 @@ class OrganizationSyncService {
 								$this->logger->error(
 									'User account creation failed',
 									[
-										'app' => 'softwarecatalog',
+										'app' => 'stackiq',
 										'contactId' => $contactObject->getUuid(),
 										'email' => $email,
 									]
@@ -2679,7 +2684,7 @@ class OrganizationSyncService {
 					$this->logger->info(
 						'[EVENT] Organisation entity missing for ' . $organizationUuid . ', creating backup entity',
 						[
-							'app' => 'softwarecatalog',
+							'app' => 'stackiq',
 							'contactId' => $contactObject->getUuid(),
 						]
 					);
@@ -2704,7 +2709,7 @@ class OrganizationSyncService {
 						$this->logger->error(
 							'Backup org entity creation failed',
 							[
-								'app' => 'softwarecatalog',
+								'app' => 'stackiq',
 								'organizationId' => $organizationUuid,
 								'error' => $backupEx->getMessage(),
 							]
@@ -2793,7 +2798,7 @@ class OrganizationSyncService {
 							$this->logger->debug(
 								'[EVENT] Skipping contact - user account creation failed (likely no email)',
 								[
-									'app' => 'softwarecatalog',
+									'app' => 'stackiq',
 									'contactId' => $contactObject->getUuid(),
 								]
 							);

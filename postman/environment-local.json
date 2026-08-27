@@ -13,8 +13,8 @@
 			"enabled": true
 		},
 		{
-			"key": "softwarecatalog_api",
-			"value": "{{base_url}}/index.php/apps/softwarecatalog/api",
+			"key": "stackiq_api",
+			"value": "{{base_url}}/index.php/apps/stackiq/api",
 			"enabled": true
 		},
 		{
@@ -54,7 +54,7 @@
 		},
 		{
 			"key": "register_name",
-			"value": "voorzieningen",
+			"value": "stackiq",
 			"enabled": true
 		},
 		{

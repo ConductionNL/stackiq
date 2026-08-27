@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: 2026 Conduction / SoftwareCatalog Contributors
+ * SPDX-FileCopyrightText: 2026 Conduction / Stackiq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
  * A manifest page's `config.filter` values must exist in the schema enum they

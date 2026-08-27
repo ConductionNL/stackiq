@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Softwarecatalog SbomController.
+ * Stackiq SbomController.
  *
  * Upload endpoint for importing a Software Bill of Materials (CycloneDX
  * 1.5/1.6 JSON, optionally SPDX 2.x JSON) against a specific `moduleVersie`.
@@ -22,11 +22,11 @@
  * never reaches parsing and never changes the previous component set.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md
  *
@@ -36,11 +36,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\AppInfo\Application;
-use OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException;
-use OCA\SoftwareCatalog\Service\SbomImportService;
+use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Exception\UnsupportedSbomFormatException;
+use OCA\Stackiq\Service\SbomImportService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -68,6 +68,12 @@ class SbomController extends Controller {
 	 * per-object manage-ACL check on the target module (design: "admin
 	 * group membership OR manage-ACL on the target moduleVersie's parent
 	 * module").
+	 *
+	 * `software-catalog-admins` is FROZEN across the stackiq -> stackiq
+	 * rename: it is a Nextcloud group id, and membership is stored against that
+	 * literal in `oc_group_user`. Renaming it makes every membership check miss
+	 * without raising anything, so the app would silently drop the permissions
+	 * of everyone currently in the group.
 	 *
 	 * @var array<int,string>
 	 */

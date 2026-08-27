@@ -15,10 +15,10 @@ gemeentelijke herindeling. See
 [#60](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/60), and
 [#65](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/65).
 
-Specification: [`openspec/specs/multi-org-membership/spec.md`](../../openspec/specs/multi-org-membership/spec.md).
+Specification: [`openspec/specs/multi-org-membership/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/multi-org-membership/spec.md).
 
 Everything in this feature is built on OpenRegister's own, already-shipped
-`OrganisationService`/`OrganisationController` — SoftwareCatalog does not
+`OrganisationService`/`OrganisationController` — Stackiq does not
 store a separate membership record anywhere.
 
 ## Switching your active organisation
@@ -29,7 +29,7 @@ organisation's name. Opening it lists every organisation the user belongs
 to; picking a different one:
 
 1. Calls OpenRegister's own `POST /apps/openregister/api/organisations/{uuid}/set-active`
-   directly — SoftwareCatalog does not proxy this call.
+   directly — Stackiq does not proxy this call.
 2. OpenRegister verifies, server-side, that the caller is actually a member
    of that organisation (`Organisation::hasUser()`) before changing
    anything. A switch to an organisation the user does not belong to is
@@ -58,11 +58,11 @@ header switcher, opening a dialog for their currently-active organisation:
   flow, and never creates a Nextcloud account.
 - **Revoke access** — remove a member from the list.
 
-Both actions are authorised server-side by a new, SoftwareCatalog-specific
+Both actions are authorised server-side by a new, Stackiq-specific
 check (`OrganisationMembersController::authorizeBeheerder()`) that OpenRegister's
 own membership endpoints don't perform (OpenRegister's `join`/`leave` only
 recognise a Nextcloud admin or the organisation's single `owner` field as
-allowed to manage another user's membership — SoftwareCatalog's `beheerder`
+allowed to manage another user's membership — Stackiq's `beheerder`
 role is a separate, broader concept). The check requires **both**:
 
 1. The caller is authenticated and in the global `beheerder` Nextcloud group.
@@ -77,10 +77,10 @@ A beheerder of one organisation cannot grant or revoke access to a
 role.
 
 ```
-POST /apps/softwarecatalog/api/organisations/{uuid}/members
+POST /apps/stackiq/api/organisations/{uuid}/members
 { "userId": "j.devries" }
 
-DELETE /apps/softwarecatalog/api/organisations/{uuid}/members/{userId}
+DELETE /apps/stackiq/api/organisations/{uuid}/members/{userId}
 ```
 
 ## What this does not do
@@ -93,7 +93,7 @@ DELETE /apps/softwarecatalog/api/organisations/{uuid}/members/{userId}
   govern what each role may read within that organisation are unchanged
   (`vendor-visibility-rbac`).
 - **No cross-organisation data merge.** That is a different capability
-  ([organisation merge](organisation-merge.md), softwarecatalog#370).
+  ([organisation merge](organisation-merge.md), stackiq#370).
 
 ## Screenshots
 

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Software Catalog Portal Contribution Provider
+ * Stackiq Portal Contribution Provider
  *
- * Software Catalog's contribution to the shared Portaliq external portal (hydra
+ * Stackiq's contribution to the shared Portaliq external portal (hydra
  * ADR-046 + contract v2.1). Portaliq — the ONE shared portal for people WITHOUT
  * Nextcloud accounts — discovers this class by convention FQCN
  * (`OCA\{Namespace}\Portal\PortalContributionProvider`) and duck-types it via
@@ -24,7 +24,7 @@
  * accept/deny endpoint actions are deferred and documented in the design.
  *
  * @category Portal
- * @package  OCA\SoftwareCatalog\Portal
+ * @package  OCA\Stackiq\Portal
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -42,10 +42,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Portal;
+namespace OCA\Stackiq\Portal;
 
 /**
- * Declares what an external portal subject may see in the Software Catalog.
+ * Declares what an external portal subject may see in Stackiq.
  *
  * The contribution is a declarative manifest (pure data — no I/O, no
  * callbacks). All subject identity (subjectRef, audience, organisation, trust)
@@ -70,7 +70,7 @@ class PortalContributionProvider {
 	 *
 	 * @var string
 	 */
-	private const REGISTER = 'voorzieningen';
+	private const REGISTER = 'stackiq';
 
 	/**
 	 * The claim carrying the subject's organisatie UUID used to scope reads.
@@ -82,7 +82,7 @@ class PortalContributionProvider {
 	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
 	 *
-	 * The registry probes for this method first. Software Catalog serves
+	 * The registry probes for this method first. Stackiq serves
 	 * software suppliers (`vendor-org`, organisatie.type "Supplier") and the
 	 * municipalities/collaborations that consume that software (`participant-org`,
 	 * organisatie.type "Municipality" / "Collaboration" / "Community"). The two
@@ -116,7 +116,7 @@ class PortalContributionProvider {
 	 *
 	 * The subject array is server-derived by portaliq (subjectRef UUID,
 	 * audience, organisation, trust level low|substantial|high). Returns null
-	 * for any audience Software Catalog does not serve (fail-closed; the registry
+	 * for any audience Stackiq does not serve (fail-closed; the registry
 	 * already filters by audience, but a provider must not rely on that). This
 	 * wave declares READ collections only — no create-actions and no endpoint
 	 * actions (see design.md for the deferral rationale).
@@ -159,7 +159,7 @@ class PortalContributionProvider {
 	 */
 	private function vendorContribution(): array {
 		return [
-			'label' => 'Software Catalog',
+			'label' => 'Stackiq',
 			'collections' => [
 				[
 					'id' => 'vendorDiensten',
@@ -262,7 +262,7 @@ class PortalContributionProvider {
 	 */
 	private function participantContribution(): array {
 		return [
-			'label' => 'Software Catalog',
+			'label' => 'Stackiq',
 			'collections' => [
 				[
 					'id' => 'participantGebruik',

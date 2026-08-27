@@ -161,7 +161,7 @@ The system comes with pre-configured roles:
 
 To add new roles:
 
-1. **Update Code**: Modify '_defaultGroups' array in SoftwareCatalogueService.php
+1. **Update Code**: Modify '_defaultGroups' array in StackiqueService.php
 2. **Add Role Logic**: Implement custom logic if needed
 3. **Test Assignment**: Verify users get assigned to new roles
 
@@ -248,7 +248,7 @@ The system automatically assigns managers:
 ### Accessing Manager Data
 
 Managers are stored in Nextcloud user preferences:
-- **App**: 'softwarecatalog'
+- **App**: 'stackiq'
 - **Key**: 'manager'
 - **Value**: Manager username
 
@@ -282,23 +282,23 @@ Enable debug logging:
 
 1. **Nextcloud Logs**: Set log level to Debug in Nextcloud settings
 2. **Check Log Files**: Monitor '/var/log/nextcloud.log' or equivalent
-3. **Search Keywords**: Look for 'SoftwareCatalog' in logs
+3. **Search Keywords**: Look for 'Stackiq' in logs
 
 ### Log Examples
 
 **Successful Processing:**
 ```
-SoftwareCatalog: Successfully processed contactgegevens creation
-SoftwareCatalog: Created new group: gemeente_amsterdam
-SoftwareCatalog: Added user to role-based group: beheerder
-SoftwareCatalog: Set user manager: john.smith → jane.doe
+Stackiq: Successfully processed contactgegevens creation
+Stackiq: Created new group: gemeente_amsterdam
+Stackiq: Added user to role-based group: beheerder
+Stackiq: Set user manager: john.smith → jane.doe
 ```
 
 **Error Examples:**
 ```
-SoftwareCatalog: Failed to process contactgegevens: User creation failed
-SoftwareCatalog: Schema ID mismatch: expected 34, got 35
-SoftwareCatalog: Organization not found for UUID: 12345678-1234-1234-1234-123456789abc
+Stackiq: Failed to process contactgegevens: User creation failed
+Stackiq: Schema ID mismatch: expected 34, got 35
+Stackiq: Organization not found for UUID: 12345678-1234-1234-1234-123456789abc
 ```
 
 ## Performance Tuning

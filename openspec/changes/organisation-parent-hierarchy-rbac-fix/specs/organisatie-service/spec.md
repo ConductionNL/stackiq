@@ -6,7 +6,7 @@ This restores hierarchy modelling (gemeente/samenwerkingsverband, moederorganisa
 
 #### Scenario: Organisation created while another organisation is active
 - GIVEN a user whose active organisation is A
-- WHEN the user creates a new organisation B via the softwarecatalog
+- WHEN the user creates a new organisation B via the stackiq
   organisation-creation flow
 - THEN B's `parent` MUST equal A's uuid
 - AND the creating user MUST be able to read and write B immediately after

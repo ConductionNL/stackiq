@@ -41,7 +41,7 @@ or a set `datumTeruggetrokken` displays an end-of-support indicator in
 application listings and the detail view. Application listings SHALL offer an
 "EOL approaching" filter selecting gebruiken whose linked version's
 `datumEindeOndersteuning` falls within the app-config window
-`softwarecatalog/eol_warning_window_days` (default 180). EOL facts SHALL stay
+`stackiq/eol_warning_window_days` (default 180). EOL facts SHALL stay
 on `moduleVersie`; no end-of-support field SHALL be copied onto `gebruik`.
 
 #### Scenario: Past end-of-support shows an EOL indicator
@@ -111,7 +111,7 @@ The register SHALL declare two `x-openregister-notifications` rules (ADR-031
 dialect): `eol-approaching` on `moduleVersie` (scheduled,
 `datumEindeOndersteuning` within the EOL window) and `phaseout-approaching`
 on `gebruik` (scheduled, `startDatumUitTeFaseren` within the window), each
-with `nl` + `en` subjects and recipients `softwarecatalog-admins` group +
+with `nl` + `en` subjects and recipients `stackiq-admins` group +
 object-ACL manage. Both rules SHALL ship `enabled: false` until the engine's
 scheduled date-window filtering is confirmed; if unsupported, the OR engine
 gap SHALL be filed and referenced — the app SHALL NOT dispatch lifecycle
@@ -122,7 +122,7 @@ notifications imperatively.
 @e2e exclude Notification-engine dispatch; covered by integration tests against the OR notification engine once the date-window filter is confirmed.
 
 - **WHEN** the rules are enabled and a moduleVersie's `datumEindeOndersteuning` enters the warning window
-- **THEN** members of `softwarecatalog-admins` and manage-ACL holders receive the end-of-support notification
+- **THEN** members of `stackiq-admins` and manage-ACL holders receive the end-of-support notification
 - **AND** versions outside the window trigger nothing
 
 #### Scenario: Rules are declared in the canonical dialect

@@ -2,12 +2,12 @@
 status: done
 ---
 
-# softwarecatalog-manifest-v1 Specification
+# stackiq-manifest-v1 Specification
 
 ## Purpose
-Defines the version 1.0.0 architectural manifest that drives SoftwareCatalog's UI declaratively: schema-backed list pages become type "index", single-object pages become type "detail" with sidebar tabs, the settings page becomes type "settings", and only two custom-fallback pages remain. Register slugs are driven by the @resolve:voorzieningen_register sentinel for per-tenant configurability, the manifest validates against the nc-vue schema, and bootstrap mounts CnAppRoot with shallow-cloned registries.
+Defines the version 1.0.0 architectural manifest that drives Stackiq's UI declaratively: schema-backed list pages become type "index", single-object pages become type "detail" with sidebar tabs, the settings page becomes type "settings", and only two custom-fallback pages remain. Register slugs are driven by the @resolve:voorzieningen_register sentinel for per-tenant configurability, the manifest validates against the nc-vue schema, and bootstrap mounts CnAppRoot with shallow-cloned registries.
 ## Requirements
-### Requirement: REQ-SCMV1-1 SoftwareCatalog MUST ship `src/manifest.json`
+### Requirement: REQ-SCMV1-1 Stackiq MUST ship `src/manifest.json`
 
 The repository MUST contain `src/manifest.json` referencing the
 `@conduction/nextcloud-vue` app-manifest schema as its `$schema`
@@ -15,7 +15,7 @@ URL, with `version: "1.0.0"` and
 `dependencies: ["openregister"]`.
 
 #### Scenario: Manifest exists at the canonical path
-- GIVEN a SoftwareCatalog repository checkout
+- GIVEN a Stackiq repository checkout
 - WHEN reading `src/manifest.json`
 - THEN the file MUST exist
 - AND `manifest.version` MUST equal `"1.0.0"`
@@ -78,16 +78,16 @@ referencing `customComponents.js`.
 
 The `Settings` page MUST declare `type: "settings"` with
 `config.saveEndpoint` pointing at the existing
-`/index.php/apps/softwarecatalog/api/settings` endpoint. The
+`/index.php/apps/stackiq/api/settings` endpoint. The
 section orchestration MUST delegate to a custom component
-(`SoftwareCatalogSettingsPage`) registered in `customComponents.js`
+(`StackiqSettingsPage`) registered in `customComponents.js`
 while the library's settings orchestration matures.
 
 #### Scenario: Settings declares type=settings and delegates to custom registry
-- GIVEN `pages[]` contains `{ id: "Settings", route: "/settings", type: "settings", config: { saveEndpoint: "/index.php/apps/softwarecatalog/api/settings", sections: [...] } }`
+- GIVEN `pages[]` contains `{ id: "Settings", route: "/settings", type: "settings", config: { saveEndpoint: "/index.php/apps/stackiq/api/settings", sections: [...] } }`
 - WHEN `validateManifest()` runs
 - THEN it MUST return `{ valid: true, errors: [] }`
-- AND at least one section MUST reference `SoftwareCatalogSettingsPage` via `widgets[].component` or a `custom` widget
+- AND at least one section MUST reference `StackiqSettingsPage` via `widgets[].component` or a `custom` widget
 
 ### Requirement: REQ-SCMV1-6 The manifest version MUST be 1.0.0
 
@@ -140,7 +140,7 @@ exports.
 Every `index` and `detail` page's `config.register` MUST equal
 `"@resolve:voorzieningen_register"` (NOT a literal slug). This
 ensures per-tenant configurability — admins changing the
-SoftwareCatalog `voorzieningen_register` IAppConfig key see the
+Stackiq `voorzieningen_register` IAppConfig key see the
 manifest reflect that change without a rebuild.
 
 #### Scenario: No literal voorzieningen register slug
@@ -159,7 +159,7 @@ while the package's `exports` field only declares the `import`
 condition.
 
 #### Scenario: webpack alias exists
-- GIVEN `softwarecatalog/webpack.config.js`
+- GIVEN `stackiq/webpack.config.js`
 - WHEN reading the resolved webpack config
 - THEN `webpackConfig.resolve.alias['@nextcloud/axios$']` MUST equal `path.resolve(__dirname, 'node_modules/@nextcloud/axios/dist/index.js')`
 
