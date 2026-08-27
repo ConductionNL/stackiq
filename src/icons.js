@@ -57,6 +57,7 @@ import ShieldAlertOutline from 'vue-material-design-icons/ShieldAlertOutline.vue
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import ShieldOutline from 'vue-material-design-icons/ShieldOutline.vue'
+import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
@@ -109,6 +110,7 @@ export default {
 	ShieldCheckOutline,
 	ShieldLockOutline,
 	ShieldOutline,
+	Sitemap,
 	SourceBranch,
 	Star,
 	ViewDashboardOutline,
