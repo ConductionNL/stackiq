@@ -24,8 +24,9 @@
  *      This one shipped. The Standards pages read `schema: "element"` while
  *      naming `@resolve:voorzieningen_register`, and
  *      `lib/Settings/softwarecatalogus_register.json` attaches `element` to the
- *      SECOND register in the same file (`vng-gemma` / AMEF), not to
- *      `voorzieningen`. Declaring a schema is not attaching it: only an
+ *      SECOND register in the same file (`vng-gemma` / AMEF), not to the
+ *      catalog register (`stackiq`, formerly slugged `voorzieningen`).
+ *      Declaring a schema is not attaching it: only an
  *      attached schema is fetchable through `/api/objects/{register}/{schema}`,
  *      and since OpenRegister's 2026-08-16 change to
  *      `ObjectService::setSchema()` an unattached slug THROWS rather than
@@ -42,16 +43,16 @@
  * — a new sentinel must be a decision, not a silent gap.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\AppInfo
+ * @package   OCA\Stackiq\Tests\Unit\AppInfo
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\AppInfo;
+namespace OCA\Stackiq\Tests\Unit\AppInfo;
 
 use PHPUnit\Framework\TestCase;
 
@@ -68,7 +69,7 @@ class ManifestRegisterSentinelTest extends TestCase {
 	 * @var array<string, string>
 	 */
 	private const SENTINEL_REGISTERS = [
-		'voorzieningen_register' => 'voorzieningen',
+		'voorzieningen_register' => 'stackiq',
 		'amef_register' => 'vng-gemma',
 	];
 
@@ -138,8 +139,8 @@ class ManifestRegisterSentinelTest extends TestCase {
 	 * page's widgets carry their own `content.{register,schema}` and those hit
 	 * the same endpoint.
 	 *
-	 * @param mixed                     $node Current node.
-	 * @param array<int, array<string>> $out  Accumulator, by reference.
+	 * @param mixed $node Current node.
+	 * @param array<int, array<string>> $out Accumulator, by reference.
 	 *
 	 * @return void
 	 */
@@ -281,8 +282,8 @@ class ManifestRegisterSentinelTest extends TestCase {
 		);
 		$this->assertNotContains(
 			'element',
-			($registers['voorzieningen']['schemas'] ?? []),
-			'"element" is now attached to voorzieningen. If that was deliberate, '
+			($registers['stackiq']['schemas'] ?? []),
+			'"element" is now attached to the stackiq register. If that was deliberate, '
 			. 'note that it makes the Standards fetch SUCCEED and return an '
 			. 'empty list, because AMEF elements are written to the AMEF '
 			. 'register — a visible error traded for an invisible pass.'

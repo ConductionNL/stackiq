@@ -1,25 +1,25 @@
 <?php
 
 /**
- * View Controller for SoftwareCatalog
+ * View Controller for Stackiq
  *
  * Handles HTTP requests for view-related operations including querying views
  * with enrichment options for products and usage data.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/nextcloud/softwarecatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\Service\ViewService;
+use OCA\Stackiq\Service\ViewService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -34,12 +34,12 @@ use Psr\Log\LoggerInterface;
  * with optional enrichment capabilities for products, usage data (gebruik), and related information.
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/nextcloud/softwarecatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 class ViewController extends Controller {
 	/**
@@ -377,7 +377,7 @@ class ViewController extends Controller {
 
 		$documentation = [
 			'api_version' => '1.0.0',
-			'description' => 'SoftwareCatalog View API - Query and enrich ArchiMate views',
+			'description' => 'Stackiq View API - Query and enrich ArchiMate views',
 			'base_url' => '/api/views',
 			'endpoints' => [
 				[

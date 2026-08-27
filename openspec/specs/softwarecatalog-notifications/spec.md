@@ -2,7 +2,7 @@
 status: done
 ---
 
-# softwarecatalog-notifications Specification
+# stackiq-notifications Specification
 
 ## Purpose
 Declares x-openregister-notifications rules on the kwetsbaarheid, contract, moduleVersie, and beoordeeling schemas so the OpenRegister notification engine dispatches alerts on reported vulnerabilities, approaching contract expiry, newly published module versions, and submitted reviews. Each rule uses a working trigger type, targets admins, record manage-ACL holders, or a named group, and provides both Dutch and English subject strings.
@@ -21,13 +21,13 @@ non-existent property), and provide both `nl` and `en` subject strings.
 #### Scenario: Reported vulnerability urgently notifies admins and record managers
 
 - **WHEN** a `kwetsbaarheid` record is created
-- **THEN** the engine dispatches `nc-notification` + `email` to the `softwarecatalog-admins` group and the record's manage-ACL holders
+- **THEN** the engine dispatches `nc-notification` + `email` to the `stackiq-admins` group and the record's manage-ACL holders
 - **AND** the subject includes the vulnerability name, CVE code, and CVSS score in the recipient's locale (nl/en)
 
 #### Scenario: New review notifies record managers
 
 - **WHEN** a `beoordeeling` record is created
-- **THEN** the engine dispatches an `nc-notification` to the record's manage-ACL holders and the `softwarecatalog-admins` group
+- **THEN** the engine dispatches an `nc-notification` to the record's manage-ACL holders and the `stackiq-admins` group
 
 #### Scenario: Disabled-by-default contract expiry does not fire until confirmed
 

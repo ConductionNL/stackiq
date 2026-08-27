@@ -14,9 +14,9 @@ roadmap, and `eol-approaching` notification rule declared in
 what populates the field they already read.
 
 Specification:
-[`openspec/specs/eol-feed-integration/spec.md`](../../openspec/specs/eol-feed-integration/spec.md).
+[`openspec/specs/eol-feed-integration/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/eol-feed-integration/spec.md).
 
-## Architecture: softwarecatalog never calls endoflife.date
+## Architecture: stackiq never calls endoflife.date
 
 All fetching of endoflife.date data happens in the sibling **openconnector**
 `endoflife-date-source` change — a Source + Synchronization + Mapping that
@@ -33,7 +33,7 @@ openconnector (sibling repo, optional)
   endoflife-date-source: fetches endoflife.date → eolProduct/eolCycle objects
                           │  read-only, via ObjectService — NO HTTP here
                           ▼
-softwarecatalog (this feature)
+stackiq (this feature)
   module.eolProductSlug  ──┐  (mapping config, per product)
                             │
   EolSyncJob (scheduled) ─► EolSyncService ─► EolMatcherService
@@ -120,7 +120,7 @@ Reason codes surfaced in the settings status panel:
 - **Register slug** / **eolProduct schema slug** / **eolCycle schema slug**
   — pre-filled with the names the openconnector `endoflife-date-source`
   change provisions (`openconnector` / `eolProduct` / `eolCycle`). Editable
-  without a code change, since openconnector and softwarecatalog are
+  without a code change, since openconnector and stackiq are
   separate release trains and the provisioned names could differ.
 - **Sync interval (minutes)** — how often the scheduled job re-runs
   (minimum enforced: 5 minutes).
@@ -131,10 +131,10 @@ Reason codes surfaced in the settings status panel:
 ## API
 
 ```
-GET  /apps/softwarecatalog/api/eol-sync/config    — current configuration
-POST /apps/softwarecatalog/api/eol-sync/config    — update configuration
-POST /apps/softwarecatalog/api/eol-sync/trigger   — run a sync now, returns status
-GET  /apps/softwarecatalog/api/eol-sync/status     — last-recorded status
+GET  /apps/stackiq/api/eol-sync/config    — current configuration
+POST /apps/stackiq/api/eol-sync/config    — update configuration
+POST /apps/stackiq/api/eol-sync/trigger   — run a sync now, returns status
+GET  /apps/stackiq/api/eol-sync/status     — last-recorded status
 ```
 
 All four endpoints require Nextcloud admin-group authorization (the default

@@ -116,13 +116,13 @@ decomposed by extracting sync, module registration, and configuration logic
 into dedicated handler classes. The controller MUST retain only thin action
 methods (≤10 lines per ADR-003) that delegate to handlers. Class-level
 suppressions (ExcessiveClassLength, TooManyMethods, ExcessiveClassComplexity,
-CouplingBetweenObjects) and method-level suppressions on `syncSoftwareCatalogue`,
+CouplingBetweenObjects) and method-level suppressions on `syncStackiq`,
 `registerModules`, `syncOrganizations`, and `configureArchiMate` MUST all be
 removed.
 
-#### Scenario: syncSoftwareCatalogue decomposed into SyncHandler
+#### Scenario: syncStackiq decomposed into SyncHandler
 
-- GIVEN `SettingsController::syncSoftwareCatalogue()` has CC>10, NPath>200, and >100 lines
+- GIVEN `SettingsController::syncStackiq()` has CC>10, NPath>200, and >100 lines
 - WHEN the method is decomposed
 - THEN a `lib/Controller/Settings/SyncHandler.php` class MUST be created
 - AND it MUST expose `validateSyncConfig()`, `prepareSyncData()`, `executeSyncBatch()`, and `buildSyncResponse()` private methods
@@ -139,7 +139,7 @@ removed.
 
 - GIVEN `SettingsController` injects 10+ dependencies (CouplingBetweenObjects)
 - WHEN handlers are extracted
-- THEN `SyncHandler` MUST receive only `ObjectService` and `SoftwareCatalogueService`
+- THEN `SyncHandler` MUST receive only `ObjectService` and `StackiqService`
 - AND `ModuleRegistrationHandler` MUST receive only `ObjectService` and `ModuleRegistrationService`
 - AND the controller's constructor parameter count MUST drop below 13
 
@@ -157,9 +157,9 @@ removed.
 - THEN all tests MUST pass without modification
 - AND no behavioral change MUST occur (pure refactoring)
 
-### Requirement: REQ-DECOMP-002 SoftwareCatalogEventListener Decomposition
+### Requirement: REQ-DECOMP-002 StackiqEventListener Decomposition
 
-`lib/EventListener/SoftwareCatalogEventListener.php` (11 suppressions) MUST be
+`lib/EventListener/StackiqEventListener.php` (11 suppressions) MUST be
 decomposed by extracting event-specific handling logic into guard-clause-gated
 helper methods and a shared `ModuleEventProcessor` class. The monolithic
 `handleModuleCreated`, `handleModuleUpdated`, and `handleOrganizationEvent`
@@ -229,31 +229,31 @@ thresholds.
 - THEN the controller class MUST drop below 1000 lines
 - AND coupling MUST drop below 13 dependencies
 
-### Requirement: REQ-DECOMP-004 SoftwareCatalogueService Decomposition
+### Requirement: REQ-DECOMP-004 StackiqService Decomposition
 
-`lib/Service/SoftwareCatalogueService.php` (20 suppressions) MUST be
+`lib/Service/StackiqService.php` (20 suppressions) MUST be
 decomposed by splitting into focused service classes. This core service handles
 VNG Software Catalogus API synchronization with multiple concerns: API
 communication, data mapping, conflict resolution, and progress tracking.
 
 #### Scenario: Concerns extracted into sub-services
 
-- GIVEN `SoftwareCatalogueService` has 7+ class-level suppressions indicating an oversized god-class
+- GIVEN `StackiqService` has 7+ class-level suppressions indicating an oversized god-class
 - WHEN decomposed
-- THEN API communication methods MUST move to `lib/Service/SoftwareCatalogue/ApiClient.php`
-- AND data mapping MUST move to `lib/Service/SoftwareCatalogue/DataMapper.php`
-- AND conflict resolution MUST move to `lib/Service/SoftwareCatalogue/ConflictResolver.php`
+- THEN API communication methods MUST move to `lib/Service/Stackiq/ApiClient.php`
+- AND data mapping MUST move to `lib/Service/Stackiq/DataMapper.php`
+- AND conflict resolution MUST move to `lib/Service/Stackiq/ConflictResolver.php`
 
 #### Scenario: Existing handler pattern reused
 
-- GIVEN the codebase already has a `SoftwareCatalogue/` subdirectory with handler classes
+- GIVEN the codebase already has a `Stackiq/` subdirectory with handler classes
 - WHEN additional extraction follows this pattern
 - THEN consistency MUST be maintained
 - AND the existing handler injection pattern (constructor DI, delegation from parent service) MUST be reused without modification
 
 #### Scenario: Progress tracking isolated to ProgressTracker
 
-- GIVEN `SoftwareCatalogueService` methods contain progress tracking code interleaved with business logic
+- GIVEN `StackiqService` methods contain progress tracking code interleaved with business logic
 - WHEN decomposed
 - THEN progress tracking calls MUST be isolated to the existing `lib/Service/ProgressTracker.php` wrapper
 - AND business methods MUST contain no inline progress tracking code

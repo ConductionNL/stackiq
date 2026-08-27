@@ -47,8 +47,8 @@
  * version of this file died — `ReferenceError: smoke is not defined`.)
  *
  * The report/output paths differ from the root config deliberately: the
- * workflow uploads `server/apps/softwarecatalog/playwright-report/` and
- * `server/apps/softwarecatalog/test-results/`, so on CI the artefacts must
+ * workflow uploads `server/apps/stackiq/playwright-report/` and
+ * `server/apps/stackiq/test-results/`, so on CI the artefacts must
  * land at the APP ROOT. The root config's bare `reporter: 'list'` produces no
  * HTML report at all, which would make the upload step silently attach an
  * empty artifact (`if-no-files-found: ignore`) — a failing run with nothing

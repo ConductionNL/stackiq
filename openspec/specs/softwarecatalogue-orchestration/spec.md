@@ -2,7 +2,7 @@
 status: done
 ---
 
-# softwarecatalogue-orchestration Specification
+# stackique-orchestration Specification
 
 ## Purpose
 Coordinates the cross-service reactions to contact-person, organisation, and gebruiker lifecycle events: provisioning and linking Nextcloud user accounts, maintaining group membership and beheerder roles, mirroring organisations into OpenRegister, and sending welcome emails. It also blocks, restores, and reverts account access for gebruikers and exposes helpers for generic user groups, the user-manager hierarchy, and organisation structure.

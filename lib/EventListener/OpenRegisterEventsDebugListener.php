@@ -1,14 +1,14 @@
 <?php
 
 /**
- * OpenRegister Events Debug Listener for SoftwareCatalog
+ * OpenRegister Events Debug Listener for Stackiq
  *
  * A comprehensive debug listener that handles all OpenRegister events for debugging purposes
- * within the SoftwareCatalog application. This listener logs detailed information about
+ * within the Stackiq application. This listener logs detailed information about
  * OpenRegister events when debug mode is enabled.
  *
  * @category EventListener
- * @package  OCA\SoftwareCatalog\EventListener
+ * @package  OCA\Stackiq\EventListener
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2024 Conduction B.V.
@@ -16,14 +16,14 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://SoftwareCatalog.app
+ * @link https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\EventListener;
+namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -43,10 +43,10 @@ use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
 
 /**
- * Debug event listener for all OpenRegister events in SoftwareCatalog
+ * Debug event listener for all OpenRegister events in Stackiq
  *
  * This listener provides comprehensive debugging information for all OpenRegister events
- * received by the SoftwareCatalog app. It logs event details at info level and can be
+ * received by the Stackiq app. It logs event details at info level and can be
  * easily enabled/disabled.
  *
  * @template T of Event
@@ -111,7 +111,7 @@ class OpenRegisterEventsDebugListener implements IEventListener {
 		$this->logger->debug(
 			'OpenRegister debug listener triggered',
 			[
-				'app' => 'softwarecatalog',
+				'app' => 'stackiq',
 				'eventType' => $eventType,
 				'eventClass' => $eventClass,
 				'debugEnabled' => $this->debugEnabled,
@@ -119,7 +119,7 @@ class OpenRegisterEventsDebugListener implements IEventListener {
 		);
 
 		if ($this->debugEnabled === false) {
-			$this->logger->warning('SoftwareCatalog OpenRegister Debug: Debug disabled, skipping detailed logging.');
+			$this->logger->warning('Stackiq OpenRegister Debug: Debug disabled, skipping detailed logging.');
 
 			return;
 		}
@@ -128,9 +128,9 @@ class OpenRegisterEventsDebugListener implements IEventListener {
 
 		// Log comprehensive debug information.
 		$this->logger->info(
-			'[SoftwareCatalog] OPENREGISTER EVENT: {eventType} received from OpenRegister',
+			'[Stackiq] OPENREGISTER EVENT: {eventType} received from OpenRegister',
 			[
-				'app' => 'softwarecatalog',
+				'app' => 'stackiq',
 				'eventType' => $eventType,
 				'eventClass' => $eventClass,
 				'listenerClass' => self::class,
@@ -192,7 +192,7 @@ class OpenRegisterEventsDebugListener implements IEventListener {
 		}
 
 		$data['eventType'] = 'Unknown';
-		$data['note'] = 'Event type not specifically handled by SoftwareCatalog debug listener';
+		$data['note'] = 'Event type not specifically handled by Stackiq debug listener';
 		return $data;
 	}//end extractEventData()
 

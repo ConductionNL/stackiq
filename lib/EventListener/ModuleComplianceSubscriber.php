@@ -4,26 +4,26 @@
  * Module Compliance Subscriber.
  *
  * This file contains the subscriber class for handling module compliance updates
- * in the SoftwareCatalog application.
+ * in the Stackiq application.
  *
  * @category  EventListener
- * @package   OCA\SoftwareCatalog\EventListener
+ * @package   OCA\Stackiq\EventListener
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\EventListener;
+namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\SoftwareCatalog\Service\ModuleComplianceService;
-use OCA\SoftwareCatalog\Service\ModuleVersionService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\ModuleComplianceService;
+use OCA\Stackiq\Service\ModuleVersionService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -36,11 +36,11 @@ use Psr\Log\LoggerInterface;
  * synchronizes the 'standards' property based on linked compliance objects.
  *
  * @category EventListener
- * @package  OCA\SoftwareCatalog\EventListener
+ * @package  OCA\Stackiq\EventListener
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 class ModuleComplianceSubscriber implements IEventListener {
 	/**

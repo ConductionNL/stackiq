@@ -1,17 +1,17 @@
 <?php
 
 /**
- * Module Event Processor for SoftwareCatalog
+ * Module Event Processor for Stackiq
  *
- * Extracts shared module-event processing logic from SoftwareCatalogEventListener,
+ * Extracts shared module-event processing logic from StackiqEventListener,
  * reducing ExcessiveClassComplexity and CouplingBetweenObjects on the listener.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-6
  *
@@ -21,13 +21,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Handles shared module-event processing logic extracted from SoftwareCatalogEventListener.
+ * Handles shared module-event processing logic extracted from StackiqEventListener.
  *
  * This processor centralises the schema-ID lookup, early-guard, and delegation
  * steps that were duplicated across handleObjectCreated / handleObjectUpdated /
@@ -93,18 +93,18 @@ class ModuleEventProcessor {
 
 		if (in_array(needle: $status, haystack: ['actief', 'active']) !== true) {
 			$this->logger->debug(
-				'SoftwareCatalog: Skipping non-active organization creation',
+				'Stackiq: Skipping non-active organization creation',
 				['objectId' => $object->getUuid(), 'status' => $status]
 			);
 			return;
 		}
 
 		try {
-			$orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+			$orgSyncService = $this->container->get('OCA\Stackiq\Service\OrganizationSyncService');
 			$orgSyncService->processSpecificOrganization($object);
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog: Failed to process organization creation',
+				'Stackiq: Failed to process organization creation',
 				['objectId' => $object->getUuid(), 'exception' => $e->getMessage()]
 			);
 		}
@@ -164,16 +164,16 @@ class ModuleEventProcessor {
 		}
 
 		$this->logger->info(
-			'SoftwareCatalog: Processing organization deletion',
+			'Stackiq: Processing organization deletion',
 			['objectId' => $object->getUuid()]
 		);
 
 		try {
-			$orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+			$orgSyncService = $this->container->get('OCA\Stackiq\Service\OrganizationSyncService');
 			$orgSyncService->processSpecificOrganization($object);
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog: Failed to process organization deletion',
+				'Stackiq: Failed to process organization deletion',
 				['objectId' => $object->getUuid(), 'exception' => $e->getMessage()]
 			);
 		}
@@ -193,7 +193,7 @@ class ModuleEventProcessor {
 		$objectId = $object->getUuid();
 
 		$this->logger->info(
-			'SoftwareCatalog: Processing active organization update',
+			'Stackiq: Processing active organization update',
 			['objectId' => $objectId, 'status' => $status]
 		);
 
@@ -212,11 +212,11 @@ class ModuleEventProcessor {
 				_multitenancy: false
 			);
 
-			$orgSyncService = $this->container->get('OCA\SoftwareCatalog\Service\OrganizationSyncService');
+			$orgSyncService = $this->container->get('OCA\Stackiq\Service\OrganizationSyncService');
 			$orgSyncService->processSpecificOrganization($orgWithContacts);
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SoftwareCatalog: Failed to process organization update',
+				'Stackiq: Failed to process organization update',
 				['objectId' => $objectId, 'exception' => $e->getMessage()]
 			);
 		}//end try

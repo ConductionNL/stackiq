@@ -3,18 +3,18 @@
 # SPDX-License-Identifier: EUPL-1.2
 # SPDX-FileCopyrightText: 2026 Conduction B.V.
 #
-# Provision SoftwareCatalog's OpenRegister registers + schemas on a freshly
+# Provision Stackiq's OpenRegister registers + schemas on a freshly
 # installed Nextcloud, for the shared `E2E Tests (Playwright)` CI job.
 #
 # Wired up as the workflow's `playwright-seed-command`. That step runs AFTER
 # `php -S` is up and with cwd set to the Nextcloud server root, so this is
 # invoked as:
 #
-#     playwright-seed-command: 'bash apps/softwarecatalog/tests/e2e/ci-seed.sh'
+#     playwright-seed-command: 'bash apps/stackiq/tests/e2e/ci-seed.sh'
 #
 # WHY THIS IS NEEDED
 # ------------------
-# `occ app:enable softwarecatalog` runs the `InitializeSettings` post-migration
+# `occ app:enable stackiq` runs the `InitializeSettings` post-migration
 # repair step, which is supposed to import `lib/Settings/softwarecatalogus_register.json`
 # into OpenRegister. Two things make that unreliable as the sole fresh-install
 # path, and BOTH fail silently:
@@ -70,13 +70,13 @@ USER_PASS="${ADMIN_PASSWORD:-${NC_ADMIN_PASS:-admin}}"
 
 echo "[ci-seed] target: ${BASE}"
 
-# ── 1. Import the SoftwareCatalog configuration ──────────────────────────────
+# ── 1. Import the Stackiq configuration ──────────────────────────────
 # `settings#manualImport` is admin-only (no @NoAdminRequired) and
 # @NoCSRFRequired, so basic auth is sufficient. `force` is compared with
 # `=== true` in SettingsController::manualImport(), so it must arrive as a JSON
 # boolean — a form-encoded "true" is the *string* "true" and would be ignored,
 # silently giving us the version-guarded path this script exists to bypass.
-IMPORT_URL="${BASE}/index.php/apps/softwarecatalog/api/settings/import"
+IMPORT_URL="${BASE}/index.php/apps/stackiq/api/settings/import"
 echo "[ci-seed] POST ${IMPORT_URL} (force: true)"
 
 IMPORT_BODY="$(mktemp)"
@@ -94,7 +94,7 @@ echo "[ci-seed] import HTTP ${IMPORT_CODE}"
 head -c 3000 "$IMPORT_BODY"; echo
 
 if [ "$IMPORT_CODE" != "200" ]; then
-	echo "::error::SoftwareCatalog configuration import failed (HTTP ${IMPORT_CODE}). The e2e suite cannot resolve the voorzieningen register without it."
+	echo "::error::Stackiq configuration import failed (HTTP ${IMPORT_CODE}). The e2e suite cannot resolve the voorzieningen register without it."
 	exit 1
 fi
 
@@ -117,8 +117,12 @@ required = {
     # carries element / model / property-definition / relation / view, and the
     # Standaarden + StandaardDetail manifest pages read `element` from it via the
     # `@resolve:amef_register` sentinel. It was previously unchecked here, so an
-    # import that produced only `voorzieningen` reported a clean seed.
-    'registers': ['voorzieningen', 'vng-gemma'],
+    # import that produced only the catalog register reported a clean seed.
+    #
+    # `stackiq` is the catalog register's slug (renamed from `voorzieningen`;
+    # lib/Repair/MigrateRegisterSlug.php moves the row). `vng-gemma` deliberately
+    # keeps its name — it holds VNG reference data, not this app's own store.
+    'registers': ['stackiq', 'vng-gemma'],
     # The schemas the e2e fixtures create/read through, per _fixtures.ts
     # (organization, contactPerson, module, contract, moduleVersion) plus the
     # ones the spec-coverage index pages render.
@@ -148,7 +152,7 @@ if not slugs:
 missing = [s for s in required if s not in slugs]
 print(f'[ci-seed] {kind} present ({len(slugs)}): {sorted(s for s in slugs if s)}')
 if missing:
-    print(f'::error::SoftwareCatalog {kind} missing after import: {missing}')
+    print(f'::error::Stackiq {kind} missing after import: {missing}')
     sys.exit(1)
 print(f'[ci-seed] {kind} OK ({len(required)} required slugs present)')
 PY
@@ -165,7 +169,7 @@ curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 verify "$SCH_BODY" schemas
 
 # ── 3. Verify the APP-LEVEL mapping, not just OpenRegister ───────────────────
-# The register existing in OpenRegister and softwarecatalog KNOWING about it are
+# The register existing in OpenRegister and stackiq KNOWING about it are
 # two different facts. `tests/e2e/workflows/_fixtures.ts` resolves the register
 # id and every schema id from `GET /api/voorzieningen/config`, which reads the
 # `voorzieningen_config` app-config value written by the auto-configure pass of
@@ -173,7 +177,7 @@ verify "$SCH_BODY" schemas
 # and every fixture still dies on "voorzieningen register not configured".
 CFG_BODY="$(mktemp)"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/softwarecatalog/api/voorzieningen/config" -o "$CFG_BODY"
+	"${BASE}/index.php/apps/stackiq/api/voorzieningen/config" -o "$CFG_BODY"
 
 python3 - "$CFG_BODY" <<'PY'
 import json, sys
@@ -190,7 +194,7 @@ print(f'[ci-seed] voorzieningen config: {json.dumps(config)[:800]}')
 missing = [k for k in ('register', 'organisatie_schema', 'contactpersoon_schema',
                        'module_schema', 'contract_schema') if not config.get(k)]
 if missing:
-    print(f'::error::softwarecatalog has no register/schema mapping for: {missing}')
+    print(f'::error::stackiq has no register/schema mapping for: {missing}')
     print('::error::OpenRegister may be seeded, but the app cannot resolve it — '
           'every e2e fixture would fail with "voorzieningen register not configured".')
     sys.exit(1)
@@ -200,7 +204,7 @@ PY
 # ── 3b. The AMEF register: resolve it, PROBE IT, and give it rows ────────────
 # The Standaarden / StandaardDetail manifest pages read `schema: element`, which
 # lib/Settings/softwarecatalogus_register.json attaches to the `vng-gemma` (AMEF)
-# register and NOT to `voorzieningen`. They resolve it through the
+# register and NOT to the catalog register `stackiq`. They resolve it through the
 # `@resolve:amef_register` sentinel that lib/AppInfo/Application.php::boot()
 # provisions from the `amef_config` blob.
 #
@@ -221,7 +225,7 @@ PY
 # page's own `filter.gemmaType` falsifiable in both directions.
 AMEF_BODY="$(mktemp)"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/softwarecatalog/api/amef/config" -o "$AMEF_BODY"
+	"${BASE}/index.php/apps/stackiq/api/amef/config" -o "$AMEF_BODY"
 
 AMEF_REGISTER="$(
 	python3 - "$AMEF_BODY" <<'PY'
@@ -238,7 +242,7 @@ config = (body or {}).get('config') or {}
 print(f'[ci-seed] amef config: {json.dumps(config)[:400]}', file=sys.stderr)
 register = str(config.get('register') or config.get('register_id') or '')
 if not register:
-    print('::error::softwarecatalog has no AMEF register mapping — the '
+    print('::error::stackiq has no AMEF register mapping — the '
           '@resolve:amef_register sentinel would resolve to null and the '
           'Standards pages would fetch /api/objects/@resolve:amef_register/element.',
           file=sys.stderr)
@@ -368,7 +372,7 @@ if total_all <= total_std:
 print('[ci-seed] AMEF element fixtures verified (positive + negative control).')
 PY
 
-echo "[ci-seed] SoftwareCatalog registers + schemas provisioned."
+echo "[ci-seed] Stackiq registers + schemas provisioned."
 
 # ── 4. Warm the SPA so the first spec doesn't pay the cold start ─────────────
 # The shared workflow serves Nextcloud with `php -S 0.0.0.0:8080`. It now sets
@@ -381,9 +385,9 @@ echo "[ci-seed] SoftwareCatalog registers + schemas provisioned."
 # inside an assertion and keep drifting upward. Failures are ignored on
 # purpose: this is a warm-up, not a gate. The real checks are above and below.
 for path in \
-	"/index.php/apps/softwarecatalog/" \
-	"/index.php/apps/softwarecatalog/api/settings" \
-	"/index.php/apps/softwarecatalog/api/voorzieningen/config" \
+	"/index.php/apps/stackiq/" \
+	"/index.php/apps/stackiq/api/settings" \
+	"/index.php/apps/stackiq/api/voorzieningen/config" \
 	"/index.php/apps/openregister/api/registers?_limit=1"
 do
 	code="$(curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
@@ -405,13 +409,13 @@ done
 # response is actually JavaScript.
 APP_HTML="$(mktemp)"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/softwarecatalog/" -o "$APP_HTML" || true
+	"${BASE}/index.php/apps/stackiq/" -o "$APP_HTML" || true
 
 # `|| true` is load-bearing: grep exits 1 when it matches nothing, and under
 # `set -euo pipefail` that aborts the script right here — so the case the gate
 # below exists to explain (no bundle) would die with a bare non-zero exit and
 # none of the diagnosis. Let it fall through to the gate instead.
-BUNDLE_SRC="$(grep -oE 'src="[^"]*softwarecatalog-main[^"]*"' "$APP_HTML" \
+BUNDLE_SRC="$(grep -oE 'src="[^"]*stackiq-main[^"]*"' "$APP_HTML" \
 	| head -1 | sed 's/^src="//; s/"$//' || true)"
 
 if [ -n "$BUNDLE_SRC" ]; then
@@ -441,7 +445,7 @@ if [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
 			echo "[ci-seed] bundle verified as JavaScript."
 			;;
 		*)
-			echo "::error::The SoftwareCatalog frontend bundle did not serve as JavaScript (got: ${BUNDLE_INFO:-<not found>})."
+			echo "::error::The Stackiq frontend bundle did not serve as JavaScript (got: ${BUNDLE_INFO:-<not found>})."
 			echo "::error::The SPA cannot mount, so every UI spec would fail on a selector timeout with a misleading cause."
 			echo "::error::Check the 'Build app frontend' step — a missing bundle returns HTTP 200 text/html, not 404."
 			exit 1

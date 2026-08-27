@@ -23,7 +23,7 @@ class Heartbeat {
 		this.interval = interval
 		this.timer = null
 		this.isRunning = false
-		this.endpoint = '/index.php/apps/softwarecatalog/api/heartbeat'
+		this.endpoint = '/index.php/apps/stackiq/api/heartbeat'
 	}
 
 	/**

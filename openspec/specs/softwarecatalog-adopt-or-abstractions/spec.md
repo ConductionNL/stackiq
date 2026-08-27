@@ -2,17 +2,17 @@
 status: done
 ---
 
-# softwarecatalog-adopt-or-abstractions Specification
+# stackiq-adopt-or-abstractions Specification
 
 ## Purpose
-Aligns SoftwareCatalog with the shared OpenRegister and nc-vue abstractions: it ships an architectural manifest, resolves register and schema ids through RegisterResolverService instead of raw app-config, and stamps locale, translation-target, and tenant-organisation headers on OR fetches and writes. It also surfaces a translated-from badge in list views, adopts the tenant-context composable, and keeps all PHP code passing composer check:strict with container-run PHPUnit tests.
+Aligns Stackiq with the shared OpenRegister and nc-vue abstractions: it ships an architectural manifest, resolves register and schema ids through RegisterResolverService instead of raw app-config, and stamps locale, translation-target, and tenant-organisation headers on OR fetches and writes. It also surfaces a translated-from badge in list views, adopts the tenant-context composable, and keeps all PHP code passing composer check:strict with container-run PHPUnit tests.
 ## Requirements
-### Requirement: SoftwareCatalog MUST ship an architectural manifest at `src/manifest.json`
+### Requirement: Stackiq MUST ship an architectural manifest at `src/manifest.json`
 
-SoftwareCatalog MUST add `src/manifest.json` conforming to the
+Stackiq MUST add `src/manifest.json` conforming to the
 JSON Schema published by `@conduction/nextcloud-vue` at
 `src/schemas/app-manifest.schema.json`. The manifest MUST be loaded
-via `useAppManifest('softwarecatalog', bundledManifest)` in
+via `useAppManifest('stackiq', bundledManifest)` in
 `src/main.js`.
 
 The manifest MUST set:
@@ -29,13 +29,13 @@ The manifest MUST set:
 
 #### Scenario: Manifest loads on app boot
 
-- GIVEN SoftwareCatalog is installed and OR is enabled
+- GIVEN Stackiq is installed and OR is enabled
 - WHEN a user navigates to
-  `/index.php/apps/softwarecatalog`
-- THEN `useAppManifest('softwarecatalog', bundledManifest)` MUST
+  `/index.php/apps/stackiq`
+- THEN `useAppManifest('stackiq', bundledManifest)` MUST
   be called before vue-router mounts
 - AND on async-fetch of
-  `/index.php/apps/softwarecatalog/api/manifest` the loader MUST
+  `/index.php/apps/stackiq/api/manifest` the loader MUST
   silently fall back to bundled on non-200
 
 #### Scenario: Manifest validation fails build
@@ -65,9 +65,9 @@ The manifest MUST set:
 - AND existing sidebar functionality (org info, related apps)
   MUST continue to work
 
-### Requirement: SoftwareCatalog MUST consume `RegisterResolverService` for register / schema resolution
+### Requirement: Stackiq MUST consume `RegisterResolverService` for register / schema resolution
 
-SoftwareCatalog MUST resolve register / schema IDs via `OCA\OpenRegister\Service\RegisterResolverService`. The five PHP classes that currently resolve register / schema IDs via `IAppConfig::getValueString` MUST migrate to `RegisterResolverService::resolveForObjectType()`:
+Stackiq MUST resolve register / schema IDs via `OCA\OpenRegister\Service\RegisterResolverService`. The five PHP classes that currently resolve register / schema IDs via `IAppConfig::getValueString` MUST migrate to `RegisterResolverService::resolveForObjectType()`:
 
 - `lib/Service/ModuleComplianceService.php`
 - `lib/Service/GebruikSyncService.php`
@@ -106,9 +106,9 @@ feature flags) MUST remain on `IAppConfig`.
 - AND MUST fall back to legacy `getValueString` path
 - AND MUST log a deprecation warning
 
-### Requirement: SoftwareCatalog OR fetches MUST pass `?_lang={user locale}`
+### Requirement: Stackiq OR fetches MUST pass `?_lang={user locale}`
 
-All OR object fetches issued from SoftwareCatalog's frontend MUST
+All OR object fetches issued from Stackiq's frontend MUST
 include `?_lang={BCP47}` set to the user's Nextcloud locale (region
 tag stripped).
 
@@ -126,9 +126,9 @@ tag stripped).
 - WHEN `orClient.js` builds the URL
 - THEN `_lang=nl` MUST be the parameter value
 
-### Requirement: SoftwareCatalog OR writes MUST stamp `X-Translation-Target-Language` when editing a non-default language
+### Requirement: Stackiq OR writes MUST stamp `X-Translation-Target-Language` when editing a non-default language
 
-SoftwareCatalog OR writes MUST stamp `X-Translation-Target-Language` when editing a non-default language. When a user edits a translatable property in a non-default language, the PATCH/PUT request MUST include `X-Translation-Target-Language: {target}`.
+Stackiq OR writes MUST stamp `X-Translation-Target-Language` when editing a non-default language. When a user edits a translatable property in a non-default language, the PATCH/PUT request MUST include `X-Translation-Target-Language: {target}`.
 
 When sync services write content known to be in a specific
 language (e.g. GitHub README content in English), they MUST also
@@ -152,7 +152,7 @@ stamp the header.
   `X-Translation-Target-Language: en`
 - AND OR MUST store the value under the `en` slot
 
-### Requirement: SoftwareCatalog lists MUST display "(translated from {lang})" badge when served language differs from source
+### Requirement: Stackiq lists MUST display "(translated from {lang})" badge when served language differs from source
 
 Index views (Apps, Components, Organisations, Catalogs) MUST show
 a small "(translated from {sourceLanguage})" badge next to the
@@ -177,9 +177,9 @@ canonical nc-vue badge style.
 - WHEN the application appears in the apps index
 - THEN no translated-from badge MUST be rendered
 
-### Requirement: SoftwareCatalog MUST consume `useTenantContext()` from nc-vue when surfacing tenant-scoped OR data
+### Requirement: Stackiq MUST consume `useTenantContext()` from nc-vue when surfacing tenant-scoped OR data
 
-SoftwareCatalog MUST consume `useTenantContext()` from nc-vue when surfacing tenant-scoped OR data. Once `useTenantContext()` is exported from a versioned nc-vue release, SoftwareCatalog views that surface OR data MUST adopt the composable.
+Stackiq MUST consume `useTenantContext()` from nc-vue when surfacing tenant-scoped OR data. Once `useTenantContext()` is exported from a versioned nc-vue release, Stackiq views that surface OR data MUST adopt the composable.
 
 #### Scenario: Tenant switch refetches apps list
 
@@ -201,13 +201,13 @@ SoftwareCatalog MUST consume `useTenantContext()` from nc-vue when surfacing ten
 
 - GIVEN nc-vue's exported version does not yet include
   `useTenantContext`
-- WHEN SoftwareCatalog imports it (try/catch guarded)
+- WHEN Stackiq imports it (try/catch guarded)
 - THEN absence MUST NOT crash the app
 - AND views MUST behave as single-tenant
 
-### Requirement: SoftwareCatalog write paths MUST stamp `X-OpenRegister-Organisation` when a tenant is active
+### Requirement: Stackiq write paths MUST stamp `X-OpenRegister-Organisation` when a tenant is active
 
-SoftwareCatalog write paths MUST stamp `X-OpenRegister-Organisation` when a tenant is active. When a user writes (POST/PATCH/PUT) to an OR object via the `orClient.js` composable, the request MUST include `X-OpenRegister-Organisation: {activeOrganisationUuid}` when `useTenantContext().activeOrganisationUuid` is non-null.
+Stackiq write paths MUST stamp `X-OpenRegister-Organisation` when a tenant is active. When a user writes (POST/PATCH/PUT) to an OR object via the `orClient.js` composable, the request MUST include `X-OpenRegister-Organisation: {activeOrganisationUuid}` when `useTenantContext().activeOrganisationUuid` is non-null.
 
 #### Scenario: Header stamping on write
 
@@ -228,9 +228,9 @@ SoftwareCatalog write paths MUST stamp `X-OpenRegister-Organisation` when a tena
 - AND OR MUST stamp the active organisation from session
   (existing behaviour)
 
-### Requirement: SoftwareCatalog PHP code MUST pass `composer check:strict`
+### Requirement: Stackiq PHP code MUST pass `composer check:strict`
 
-All SoftwareCatalog PHP files MUST pass `composer check:strict`
+All Stackiq PHP files MUST pass `composer check:strict`
 (PHPCS, PHPMD, Psalm, PHPStan). This change MUST NOT introduce
 new warnings, and SHOULD fix any pre-existing warnings in the
 five files it touches.
@@ -238,17 +238,17 @@ five files it touches.
 #### Scenario: Strict check passes
 
 - GIVEN the change is applied
-- WHEN `composer check:strict` runs in the SoftwareCatalog
+- WHEN `composer check:strict` runs in the Stackiq
   container
 - THEN exit code MUST be 0
 - AND no new warnings MUST appear
 
-### Requirement: SoftwareCatalog PHPUnit tests MUST run inside the Nextcloud container
+### Requirement: Stackiq PHPUnit tests MUST run inside the Nextcloud container
 
 Per project policy, unit tests MUST be invoked via:
 
 ```
-docker exec -w /var/www/html/custom_apps/softwarecatalog nextcloud \
+docker exec -w /var/www/html/custom_apps/stackiq nextcloud \
   php vendor/bin/phpunit -c phpunit-unit.xml
 ```
 

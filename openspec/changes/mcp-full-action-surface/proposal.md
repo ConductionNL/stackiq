@@ -3,7 +3,7 @@ kind: code
 depends_on: []
 ---
 
-# softwarecatalog — full MCP action surface for hermiq (chat-drivable catalogue)
+# stackiq — full MCP action surface for hermiq (chat-drivable catalogue)
 
 ## Why
 
@@ -29,7 +29,7 @@ DI alias `OCA\OpenRegister\Mcp\IMcpToolProvider::decidesk`
 OpenRegister derives CRUD tools from `x-openregister-mcp` schema blocks
 (`openregister/lib/Mcp/`).
 
-**Relationship to `softwarecatalog-mcp-adoption` (active change,
+**Relationship to `stackiq-mcp-adoption` (active change,
 2026-07-13, `schema: conduction`):** that change specifies the read-only
 half — derived `search`/`get` tools on 9 curated schemas via a
 `register.d` fragment — and explicitly defers every write/action tool
@@ -37,7 +37,7 @@ half — derived `search`/`get` tools on 9 curated schemas via a
 there's a concrete agent workflow need", its `DEFERRED_QUESTIONS`). This
 change is that deferred follow-up, and it also has to correct the ground
 under it: **the register was since migrated to English slugs** and
-`softwarecatalog-mcp-adoption`'s fragment is written against schema names
+`stackiq-mcp-adoption`'s fragment is written against schema names
 that no longer exist. Verified against
 `lib/Settings/softwarecatalogus_register.json` at HEAD: the register
 contains `module`, `moduleVersion`, `service`, `organization`,
@@ -54,12 +54,12 @@ surfaces now (`Kwetsbaarheden`/`KwetsbaarheidDetail` and
 `ModerationService`, the `catalog-ratings` fragment), despite the
 monolith's leftover "niet daadwerkelijk gebruikt" description.
 
-**This change therefore supersedes `softwarecatalog-mcp-adoption`**: it
+**This change therefore supersedes `stackiq-mcp-adoption`**: it
 retains that change's curation reasoning (read-only derived tools, honest
 hints, filters cross-checked against real properties, AMEF exclusion, no
 raw writes on lifecycle-governed schemas) and re-grounds it on the English
 slugs, then adds the full action layer on top. Recommend archiving
-`softwarecatalog-mcp-adoption` as superseded when this change lands.
+`stackiq-mcp-adoption` as superseded when this change lands.
 
 ## What Changes
 
@@ -79,11 +79,11 @@ slugs, then adds the full action layer on top. Recommend archiving
    service; the app's own UI writes it through generic OR object CRUD.
    Every other schema's writes stay workflow-only (below).
 3. **Hand-written provider (code)** —
-   `lib/Mcp/SoftwareCatalogToolProvider.php`
-   (`OCA\SoftwareCatalog\Mcp`, implements
+   `lib/Mcp/StackiqToolProvider.php`
+   (`OCA\Stackiq\Mcp`, implements
    `OCA\OpenRegister\Mcp\IMcpToolProvider`), registered under the DI
-   alias `OCA\OpenRegister\Mcp\IMcpToolProvider::softwarecatalog`, tool
-   ids `softwarecatalog.{toolName}`. Dispatcher-only, decidesk-style:
+   alias `OCA\OpenRegister\Mcp\IMcpToolProvider::stackiq`, tool
+   ids `stackiq.{toolName}`. Dispatcher-only, decidesk-style:
    argument validation (`McpArgumentValidator` port) → per-object
    authorisation gate → delegation to the EXISTING workflow service.
    12 curated read tools and 17 write tools covering every real

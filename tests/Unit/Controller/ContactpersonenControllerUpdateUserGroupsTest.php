@@ -7,26 +7,26 @@
  * must NOT be able to update groups for a user in tenant B.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
-use OCA\SoftwareCatalog\Controller\ContactpersonenController;
-use OCA\SoftwareCatalog\Service\ContactpersoonService;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\SoftwareCatalogue\ContactPersonHandler;
+use OCA\Stackiq\Controller\ContactpersonenController;
+use OCA\Stackiq\Service\ContactpersoonService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -42,11 +42,11 @@ use Psr\Log\LoggerInterface;
  * Tests for updateUserGroups cross-tenant scope enforcement (SB1).
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package  OCA\Stackiq\Tests\Unit\Controller
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 
@@ -88,7 +88,7 @@ class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 		// that as "no organisation to compare", and a cross-tenant test passed
 		// straight through the check it exists to prove.
 		$this->controller = new ContactpersonenController(
-			'softwarecatalog',
+			'stackiq',
 			$this->createMock(IRequest::class),
 			$this->createMock(SettingsService::class),
 			$this->createMock(ContactPersonHandler::class),

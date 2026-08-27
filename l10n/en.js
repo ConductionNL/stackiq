@@ -1,5 +1,5 @@
 OC.L10N.register(
-    "softwarecatalog",
+    "stackiq",
     {
     "AMEF elements" : "AMEF elements",
     "AMEF standards" : "AMEF standards",

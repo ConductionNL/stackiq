@@ -1,25 +1,25 @@
 <?php
 
 /**
- * ArchiMate Service for SoftwareCatalog
+ * ArchiMate Service for Stackiq
  *
  * Handles import and export of ArchiMate XML files with round-trip fidelity.
  * Stores complete XML data as JSON blobs in the database and reconstructs
  * exact XML output during export.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
- * @author    SoftwareCatalog Team <info@conduction.nl>
+ * @package   OCA\Stackiq\Service
+ * @author    Stackiq Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://github.com/nextcloud/softwarecatalog
+ * @link      https://github.com/nextcloud/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
@@ -39,11 +39,11 @@ use Psr\Log\LoggerInterface;
  * 3. Export: Reconstruct exact XML from stored JSON blobs
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
- * @author    SoftwareCatalog Team <info@conduction.nl>
+ * @package   OCA\Stackiq\Service
+ * @author    Stackiq Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://github.com/nextcloud/softwarecatalog
+ * @link      https://github.com/nextcloud/stackiq
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -475,8 +475,8 @@ class ArchiMateService {
 				$options
 			);
 
-			// Generate file name: DD-MM-YYYY_Softwarecatalogus_AMEFF_export_OrgName.xml.
-			$fileName = date('d-m-Y') . '_Softwarecatalogus_AMEFF_export_' . str_replace(' ', '_', $orgName) . '.xml';
+			// Generate file name: DD-MM-YYYY_Stackiq_AMEFF_export_OrgName.xml.
+			$fileName = date('d-m-Y') . '_Stackiq_AMEFF_export_' . str_replace(' ', '_', $orgName) . '.xml';
 
 			return [
 				'success' => true,
@@ -642,10 +642,8 @@ class ArchiMateService {
 		// OPTIMIZATION: Removed debug logging from section processing.
 		$items = [];
 
-		// Safety check: ensure sectionData is an array.
-		if (is_array($sectionData) === false) {
-			return [];
-		}
+		// No is_array() safety check: $sectionData is declared array, so PHP
+		// rejects anything else at the call boundary before this could run.
 
 		// Get section structure configuration from AMEF config.
 		$config = $this->getSectionStructureConfig(sectionName: $sectionName);
@@ -974,7 +972,7 @@ class ArchiMateService {
 		} elseif (isset($data['Object ID']) === true) {
 			// Check if we have "Object ID" property directly.
 			$slug = $data['Object ID'];
-		} elseif ($identifier !== false && str_starts_with($identifier, 'id-') === true) {
+		} elseif (str_starts_with($identifier, 'id-') === true) {
 			// Fallback: extract from identifier (remove "id-" prefix if present).
 			$slug = substr($identifier, 3);
 		}
@@ -1027,9 +1025,9 @@ class ArchiMateService {
 
 		// PERFORMANCE OPTIMIZATION: Use parallel batch processing for large datasets.
 		$batchProcessingStartTime = microtime(true);
-		if (self::PERFORMANCE_OPTIMIZATIONS['parallel_processing'] === true
-			&& count($objects) > self::PERFORMANCE_OPTIMIZATIONS['batch_size']
-		) {
+		// PERFORMANCE_OPTIMIZATIONS['parallel_processing'] is a class constant set
+		// to true, so only the batch-size threshold decides this.
+		if (count($objects) > self::PERFORMANCE_OPTIMIZATIONS['batch_size']) {
 			$result = $this->saveObjectsInParallelBatches(
 				objects: $objects,
 				objectService: $objectService,
@@ -1169,9 +1167,9 @@ class ArchiMateService {
 			}//end try
 
 			// Memory cleanup between chunks.
-			if (self::PERFORMANCE_OPTIMIZATIONS['memory_cleanup'] !== false) {
-				$this->cleanupMemory();
-			}
+			// PERFORMANCE_OPTIMIZATIONS['memory_cleanup'] is a class constant set
+			// to true, so this was never conditional.
+			$this->cleanupMemory();
 		}//end foreach
 
 		// Store the aggregated result for statistics calculation.
@@ -1394,7 +1392,7 @@ class ArchiMateService {
 				$errorMessage .= "- {$item}\n";
 			}
 
-			$settingsHint = 'in the SoftwareCatalog settings before importing.';
+			$settingsHint = 'in the Stackiq settings before importing.';
 			$errorMessage .= "\nPlease configure the AMEF register and all required schema IDs $settingsHint";
 			$manualHint = 'or set them manually via the admin interface.';
 			$errorMessage .= "\nYou can use the auto-configuration feature $manualHint";
@@ -1617,7 +1615,7 @@ class ArchiMateService {
 	 * @spec openspec/specs/archimate-import/spec.md
 	 */
 	private function resolveConfiguredId(string $key): ?string {
-		$value = $this->config->getValueString('softwarecatalog', $key, '');
+		$value = $this->config->getValueString('stackiq', $key, '');
 		if (trim($value) === '') {
 			$this->logger->warning(
 				'ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string',
@@ -1641,7 +1639,7 @@ class ArchiMateService {
 
 		try {
 			// Get configuration from app config using the correct method.
-			$config = $this->config->getValueString('softwarecatalog', 'amef_config', '{}');
+			$config = $this->config->getValueString('stackiq', 'amef_config', '{}');
 			$decoded = json_decode($config, true);
 
 			if (is_array($decoded) === false) {
@@ -1759,15 +1757,15 @@ class ArchiMateService {
 
 		// Fallback to legacy individual app config keys if not present in JSON.
 		if ($rawRegisterId === null || $rawRegisterId === '') {
-			$rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register_id', '');
-			if ($this->config->getValueString('softwarecatalog', 'amef_register', '') !== '') {
+			$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register_id', '');
+			if ($this->config->getValueString('stackiq', 'amef_register', '') !== '') {
 				// If only the plain register key is configured, use it as the ID.
-				$rawRegisterId = $this->config->getValueString('softwarecatalog', 'amef_register', '');
+				$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register', '');
 			}
 		}
 
 		// Validate and normalize to positive int.
-		if ($rawRegisterId !== null && $rawRegisterId !== '' && is_numeric((string)$rawRegisterId) === true) {
+		if ($rawRegisterId !== '' && is_numeric((string)$rawRegisterId) === true) {
 			$registerId = (int)$rawRegisterId;
 			if ($registerId > 0) {
 				return $registerId;
@@ -2258,10 +2256,8 @@ class ArchiMateService {
 					// Default fallback.
 				};
 
-				if (isset($statistics[$sectionKey]) === false) {
-					continue;
-					// Skip unknown section types.
-				}
+				// No "skip unknown section types" guard: the branch above pins
+				// $sectionKey to a key $statistics always has, so it never fired.
 
 				// Determine if this object was created, updated, or had errors.
 				$objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
@@ -2346,14 +2342,13 @@ class ArchiMateService {
 			'total_errors' => 0,
 		];
 
-		foreach ($statistics as $section => $sectionStats) {
-			if ($section !== 'omschrijving') {
-				// Skip summary section itself.
-				$summary['total_objects_created'] += $sectionStats['created'];
-				$summary['total_objects_updated'] += $sectionStats['updated'];
-				$summary['total_objects_skipped'] += $sectionStats['skipped'];
-				$summary['total_errors'] += count($sectionStats['errors']);
-			}
+		// No "skip the summary section" guard: `omschrijving` is written into
+		// $statistics on the line AFTER this loop, so the loop can never see it.
+		foreach ($statistics as $sectionStats) {
+			$summary['total_objects_created'] += $sectionStats['created'];
+			$summary['total_objects_updated'] += $sectionStats['updated'];
+			$summary['total_objects_skipped'] += $sectionStats['skipped'];
+			$summary['total_errors'] += count($sectionStats['errors']);
 		}
 
 		$statistics['omschrijving'] = $summary;
@@ -3061,7 +3056,7 @@ class ArchiMateService {
 			$standardId = $source;
 		}
 
-		if ($refCompId !== false && $standardId === true) {
+		if ($standardId === true) {
 			// Initialize arrays if not exists.
 			if (isset($gemmaRelationshipMap[$refCompId]) === false) {
 				$gemmaRelationshipMap[$refCompId] = [

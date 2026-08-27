@@ -3,7 +3,7 @@ kind: code
 depends_on: []
 ---
 
-# softwarecatalog — contract approval per-object ownership guard (IDOR fix)
+# stackiq — contract approval per-object ownership guard (IDOR fix)
 
 ## Why
 

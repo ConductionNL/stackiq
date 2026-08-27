@@ -7,9 +7,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit;
+namespace OCA\Stackiq\Tests\Unit;
 
-use OCA\SoftwareCatalog\Controller\SettingsController;
+use OCA\Stackiq\Controller\SettingsController;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 

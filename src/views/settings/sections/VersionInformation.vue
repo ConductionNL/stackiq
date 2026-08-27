@@ -242,15 +242,14 @@
 			<div class="version-info-help">
 				<h3>About Version Information</h3>
 				<p>
-					This section displays version information for the Software
-					Catalog application and its configuration status.
+					This section displays version information for the Stackiq
+					application and its configuration status.
 				</p>
 
 				<h4>Application Version</h4>
 				<p>
-					Shows the currently installed version of the Software Catalog
-					app. This should match the version in your app store or
-					deployment.
+					Shows the currently installed version of the Stackiq app. This
+					should match the version in your app store or deployment.
 				</p>
 
 				<h4>Configured Version</h4>
@@ -364,7 +363,7 @@
  * Version Information Settings Component
  *
  * This component displays version information and provides auto-configuration
- * functionality for the Software Catalog application.
+ * functionality for the Stackiq application.
  *
  * @author Ruben Linde <info@conduction.nl>
  * @copyright 2023 Conduction B.V.

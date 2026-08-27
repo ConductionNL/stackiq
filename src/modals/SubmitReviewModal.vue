@@ -2,7 +2,7 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
   - SPDX-License-Identifier: EUPL-1.2
   -
-  - Submit-a-review modal (softwarecatalog#375). Own file per ADR-012
+  - Submit-a-review modal (stackiq#375). Own file per ADR-012
   - (modals live in their own component). Collects a title, a 1-10 rating,
   - and a testimonial, then POSTs to /api/reviews. The author is NEVER sent
   - by this form — ReviewController/ReviewService always derive it from the
@@ -15,14 +15,14 @@
 <template>
 	<NcDialog
 		v-if="show"
-		:name="t('softwarecatalog', 'Write a review')"
+		:name="t('stackiq', 'Write a review')"
 		size="small"
 		@closing="closeModal">
 		<div class="submit-review-modal">
 			<p class="modal-description">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Your review will be visible to other municipalities once an administrator approves it.',
 					)
 				}}
@@ -32,12 +32,9 @@
 				<div class="form-row">
 					<NcTextField
 						v-model="formData.name"
-						:label="t('softwarecatalog', 'Title')"
+						:label="t('stackiq', 'Title')"
 						:placeholder="
-							t(
-								'softwarecatalog',
-								'Summarise your experience in a few words',
-							)
+							t('stackiq', 'Summarise your experience in a few words')
 						"
 						required />
 				</div>
@@ -46,8 +43,8 @@
 					<NcSelect
 						v-model="selectedRating"
 						:options="ratingOptions"
-						:inputLabel="t('softwarecatalog', 'Rating (1-10)')"
-						:placeholder="t('softwarecatalog', 'Select a rating')"
+						:inputLabel="t('stackiq', 'Rating (1-10)')"
+						:placeholder="t('stackiq', 'Select a rating')"
 						label="label"
 						trackBy="value"
 						:reduce="(option) => option.value"
@@ -57,10 +54,10 @@
 				<div class="form-row">
 					<NcTextArea
 						v-model="formData.longDescription"
-						:label="t('softwarecatalog', 'Testimonial')"
+						:label="t('stackiq', 'Testimonial')"
 						:placeholder="
 							t(
-								'softwarecatalog',
+								'stackiq',
 								'What was your experience with this software?',
 							)
 						" />
@@ -72,7 +69,7 @@
 
 				<div class="dialog-actions">
 					<NcButton variant="secondary" @click="closeModal">
-						{{ t('softwarecatalog', 'Cancel') }}
+						{{ t('stackiq', 'Cancel') }}
 					</NcButton>
 					<NcButton
 						variant="primary"
@@ -81,7 +78,7 @@
 						<template #icon>
 							<NcLoadingIcon v-if="loading" :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Submit review') }}
+						{{ t('stackiq', 'Submit review') }}
 					</NcButton>
 				</div>
 			</form>
@@ -229,7 +226,7 @@ export default {
 				await apiRequest('reviews', { method: 'POST', body })
 				showSuccess(
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Thank you — your review was submitted for moderation',
 					),
 				)
@@ -238,7 +235,7 @@ export default {
 			} catch (submitError) {
 				this.error = submitError.message
 				showError(
-					t('softwarecatalog', 'Could not submit your review')
+					t('stackiq', 'Could not submit your review')
 						+ ': '
 						+ submitError.message,
 				)

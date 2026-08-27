@@ -302,7 +302,6 @@
         "Group members": "Group members",
         "Merge organisations": "Merge organisations",
         "End-of-life feed sync": "End-of-life feed sync",
-        "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Softwarecatalog never calls endoflife.date directly.": "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Softwarecatalog never calls endoflife.date directly.",
         "Loading EOL sync configuration…": "Loading EOL sync configuration…",
         "Save EOL sync settings": "Save EOL sync settings",
         "Sync now": "Sync now",
@@ -376,7 +375,6 @@
         "Import a CycloneDX or SPDX SBOM to see this version's components, licenses and any matching known vulnerabilities.": "Import a CycloneDX or SPDX SBOM to see this version's components, licenses and any matching known vulnerabilities.",
         "Confirmed match": "Confirmed match",
         "Possible match": "Possible match",
-        "Name": "Name",
         "Version": "Version",
         "Package URL": "Package URL",
         "Licenses": "Licenses",
@@ -429,15 +427,6 @@
         "Could not load applications. Please try again.": "Could not load applications. Please try again.",
         "Applications ({count})": "Applications ({count})",
         "No applications attached yet.": "No applications attached yet.",
-        "Approve": "Approve",
-        "Reject": "Reject",
-        "Nothing to moderate": "Nothing to moderate",
-        "Refresh queue": "Refresh queue",
-        "Registration moderation": "Registration moderation",
-        "Review anonymous catalog registrations. Approving an entry publishes it; rejecting leaves it hidden.": "Review anonymous catalog registrations. Approving an entry publishes it; rejecting leaves it hidden.",
-        "Loading pending registrations…": "Loading pending registrations…",
-        "There are no pending registrations right now.": "There are no pending registrations right now.",
-        "Could not load the moderation queue": "Could not load the moderation queue",
         "{label} approved and published": "{label} approved and published",
         "{label} rejected": "{label} rejected",
         "{label} has no identifier": "{label} has no identifier",
@@ -472,6 +461,7 @@
         "Current members": "Current members",
         "No members yet.": "No members yet.",
         "Revoke access": "Revoke access",
-        "Close": "Close"
+        "Close": "Close",
+        "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Stackiq never calls endoflife.date directly.": "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Stackiq never calls endoflife.date directly."
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Facet Service for SoftwareCatalog
+ * Facet Service for Stackiq
  *
  * Aggregates GEMMA-dimension facet counts (referenceComponent, standard,
  * applicationService, domain) across the `module` and `dienst` listings,
@@ -9,11 +9,11 @@
  * existing free-text search.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -23,7 +23,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -46,7 +46,7 @@ use RuntimeException;
  * by its own selection") facet counts over that map.
  *
  * @category Service
- * @package  OCA\SoftwareCatalog\Service
+ * @package  OCA\Stackiq\Service
  *
  * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
  *
@@ -130,7 +130,7 @@ class FacetService {
 		private readonly LoggerInterface $logger,
 		ICacheFactory $cacheFactory,
 	) {
-		$this->facetsCache = $cacheFactory->createDistributed(prefix: 'softwarecatalog_facets');
+		$this->facetsCache = $cacheFactory->createDistributed(prefix: 'stackiq_facets');
 
 	}//end __construct()
 

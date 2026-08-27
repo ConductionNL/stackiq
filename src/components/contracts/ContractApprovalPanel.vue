@@ -4,7 +4,7 @@
   -->
 <template>
 	<CnWidgetWrapper
-		:title="t('softwarecatalog', 'Approval')"
+		:title="t('stackiq', 'Approval')"
 		titleIconPosition="left"
 		:showRefresh="false"
 		:showRequestFeature="false">
@@ -15,14 +15,14 @@
 			<NcLoadingIcon
 				v-if="loading"
 				:size="32"
-				:name="t('softwarecatalog', 'Loading approval state')" />
+				:name="t('stackiq', 'Loading approval state')" />
 
 			<template v-else>
 				<!-- Delegation not configured: read-only notice, NO submit action. -->
 				<NcNoteCard v-if="!configured" type="warning">
 					{{
 						t(
-							'softwarecatalog',
+							'stackiq',
 							'Approval delegation is not configured on this instance. Contract approval is handled by decidesk; ask an administrator to install and enable it.',
 						)
 					}}
@@ -31,7 +31,7 @@
 				<!-- Read-only projected approval state. -->
 				<div class="contract-approval-panel__state">
 					<span class="contract-approval-panel__label">{{
-						t('softwarecatalog', 'Approval state')
+						t('stackiq', 'Approval state')
 					}}</span>
 					<CnStatusBadge
 						:status="approvalStateLabel"
@@ -39,7 +39,7 @@
 				</div>
 
 				<p v-if="decisionId" class="contract-approval-panel__decision">
-					{{ t('softwarecatalog', 'Decision reference') }}:
+					{{ t('stackiq', 'Decision reference') }}:
 					<code>{{ decisionId }}</code>
 				</p>
 
@@ -57,7 +57,7 @@
 						<template #icon>
 							<Check :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Submit for approval') }}
+						{{ t('stackiq', 'Submit for approval') }}
 					</NcButton>
 
 					<NcButton
@@ -68,7 +68,7 @@
 						<template #icon>
 							<Autorenew :size="20" />
 						</template>
-						{{ t('softwarecatalog', 'Submit renewal') }}
+						{{ t('stackiq', 'Submit renewal') }}
 					</NcButton>
 				</div>
 			</template>
@@ -133,7 +133,7 @@ export default {
 		 */
 		register: {
 			type: String,
-			default: 'voorzieningen',
+			default: 'stackiq',
 		},
 
 		/**
@@ -192,10 +192,10 @@ export default {
 		 */
 		approvalStateLabel() {
 			const map = {
-				none: t('softwarecatalog', 'Not submitted'),
-				pending: t('softwarecatalog', 'Pending decision'),
-				approved: t('softwarecatalog', 'Approved'),
-				rejected: t('softwarecatalog', 'Rejected'),
+				none: t('stackiq', 'Not submitted'),
+				pending: t('stackiq', 'Pending decision'),
+				approved: t('stackiq', 'Approved'),
+				rejected: t('stackiq', 'Rejected'),
 			}
 			return map[this.approvalState] || this.approvalState
 		},
@@ -234,16 +234,13 @@ export default {
 			this.error = ''
 			try {
 				const configUrl = generateUrl(
-					'/apps/softwarecatalog/api/contracts/approval/config',
+					'/apps/stackiq/api/contracts/approval/config',
 				)
 				const { data: config } = await axios.get(configUrl)
 				this.configured = Boolean(config.configured)
 				await this.loadContract()
 			} catch (e) {
-				this.error = t(
-					'softwarecatalog',
-					'Could not load the approval state.',
-				)
+				this.error = t('stackiq', 'Could not load the approval state.')
 			} finally {
 				this.loading = false
 			}
@@ -289,24 +286,21 @@ export default {
 			const path = isRenewal ? 'renewal' : 'submit'
 			try {
 				const url = generateUrl(
-					'/apps/softwarecatalog/api/contracts/{id}/approval/{path}',
+					'/apps/stackiq/api/contracts/{id}/approval/{path}',
 					{ id: String(this.objectId), path },
 				)
 				const { data } = await axios.post(url)
 				this.approvalState = data.approvalState || 'pending'
 				this.decisionId = data.decisionId || this.decisionId
 				showSuccess(
-					t(
-						'softwarecatalog',
-						'Contract submitted to decidesk for a decision.',
-					),
+					t('stackiq', 'Contract submitted to decidesk for a decision.'),
 				)
 			} catch (e) {
 				// Fail-closed: the contract stays In onderhandeling.
 				const msg =
 					e?.response?.data?.message
 					|| t(
-						'softwarecatalog',
+						'stackiq',
 						'Submitting the contract failed; it remains in negotiation.',
 					)
 				this.error = msg

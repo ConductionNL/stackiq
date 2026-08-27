@@ -22,7 +22,7 @@ import OrganisationMergePanel from './components/organisations/OrganisationMerge
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import DashboardCustomView from './views/Dashboard.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
-import SoftwareCatalogSettingsPage from './views/settings/SoftwareCatalogSettings.vue'
+import SoftwareCatalogSettingsPage from './views/settings/StackiqSettings.vue'
 
 export default {
 	// --- Lib gap: settings sub-section orchestration. ---

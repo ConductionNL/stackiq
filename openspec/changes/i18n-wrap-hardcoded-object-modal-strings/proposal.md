@@ -3,12 +3,12 @@ kind: code
 depends_on: []
 ---
 
-# softwarecatalog — wrap hardcoded English UI strings in `t()` across object-action modals and ArchiMate settings
+# stackiq — wrap hardcoded English UI strings in `t()` across object-action modals and ArchiMate settings
 
 ## Why
 
 ADR-004 requires ALL user-visible strings to go through
-`t(appName, 'text')` so `l10n/nl.json` can translate them. softwarecatalog
+`t(appName, 'text')` so `l10n/nl.json` can translate them. stackiq
 already runs its own translation-key tooling
 (`npm run test:l10n` → `tests/l10n/check-l10n.js` /
 `check-l10n-parity.js`), and that tooling reports 0 problems — but it only
@@ -17,7 +17,7 @@ have full-locale parity. It cannot detect prose that was never wrapped in
 `t()` at all, so a large amount of user-visible English text ships
 untranslatable regardless of the user's chosen NC locale.
 
-A repo-wide scan (`grep -c "t('softwarecatalog'" per .vue file`) found
+A repo-wide scan (`grep -c "t('stackiq'" per .vue file`) found
 **31 `.vue` files over 50 lines with zero `t()` calls**. Spot-checks confirm
 these are not trivial wrapper components — they contain real, user-facing
 prose:
@@ -62,7 +62,7 @@ prose:
   `CollapsibleSection.vue`, `StandardTabs.vue`, `Configuration.vue`,
   `DirectorySideBar.vue`, `SearchSideBar.vue`).
 
-Net effect: a Dutch-locale user of softwarecatalog sees English text
+Net effect: a Dutch-locale user of stackiq sees English text
 throughout the object-merge/upload/migration/mass-action modals and most
 of the admin settings screens — the exact silent English-fallback failure
 mode this sweep's i18n lens targets, just not via missing translation
@@ -72,7 +72,7 @@ turned into a key at all.
 ## What Changes
 
 - Wrap every user-visible literal string in the files above in
-  `t('softwarecatalog', '…')` (interpolated values via the standard `t()`
+  `t('stackiq', '…')` (interpolated values via the standard `t()`
   placeholder syntax where needed), following the same convention already
   used correctly elsewhere in the app (e.g. `ComplianceMatrixView.vue`,
   `PaginationComponent.vue`).

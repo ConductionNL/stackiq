@@ -4,11 +4,11 @@
  * Unit tests for FacetController's status-code mapping and filter parsing.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -18,10 +18,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\FacetController;
-use OCA\SoftwareCatalog\Service\FacetService;
+use OCA\Stackiq\Controller\FacetController;
+use OCA\Stackiq\Service\FacetService;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -54,7 +54,7 @@ class FacetControllerTest extends TestCase {
 		);
 
 		$controller = new FacetController(
-			appName: 'softwarecatalog',
+			appName: 'stackiq',
 			request: $request,
 			facetService: $facetService,
 			logger: $this->createMock(LoggerInterface::class)
@@ -82,7 +82,7 @@ class FacetControllerTest extends TestCase {
 		);
 
 		$controller = new FacetController(
-			appName: 'softwarecatalog',
+			appName: 'stackiq',
 			request: $request,
 			facetService: $facetService,
 			logger: $this->createMock(LoggerInterface::class)
@@ -116,7 +116,7 @@ class FacetControllerTest extends TestCase {
 		$logger->expects($this->once())->method('error');
 
 		$controller = new FacetController(
-			appName: 'softwarecatalog',
+			appName: 'stackiq',
 			request: $request,
 			facetService: $facetService,
 			logger: $logger
@@ -144,7 +144,7 @@ class FacetControllerTest extends TestCase {
 		$logger->expects($this->once())->method('error');
 
 		$controller = new FacetController(
-			appName: 'softwarecatalog',
+			appName: 'stackiq',
 			request: $request,
 			facetService: $facetService,
 			logger: $logger
@@ -196,7 +196,7 @@ class FacetControllerTest extends TestCase {
 		);
 
 		$controller = new FacetController(
-			appName: 'softwarecatalog',
+			appName: 'stackiq',
 			request: $request,
 			facetService: $facetService,
 			logger: $this->createMock(LoggerInterface::class)

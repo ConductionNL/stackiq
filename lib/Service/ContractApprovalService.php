@@ -8,7 +8,7 @@
  * expiring/`Verlopen` contract) to decidesk — the canonical fleet decision
  * authority (cross-app interface contract #1) — through the in-process
  * `IEventDispatcher` event contract (`OCA\Decidesk\Event\DecisionRequestedEvent`
- * / `DecisionConcludedEvent`). softwarecatalog keeps the contract RECORD locally
+ * / `DecisionConcludedEvent`). stackiq keeps the contract RECORD locally
  * and PROJECTS the decidesk outcome onto two catalog-local fields
  * (`approvalDecisionId`, `approvalState`).
  *
@@ -21,11 +21,11 @@
  * never set to `Actief` on local authority.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
  *
@@ -35,7 +35,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -57,16 +57,43 @@ use RuntimeException;
  */
 class ContractApprovalService {
 	/**
-	 * The fully-qualified decidesk request-event class — the in-process
-	 * existence guard (decidesk installed + autoloaded) for delegation.
+	 * The fully-qualified request-event class spellings, NEWEST FIRST — the
+	 * in-process existence guard (the decision app installed + autoloaded) for
+	 * delegation.
+	 *
+	 * TWO SPELLINGS because a cross-app event class name is a RUNTIME lookup
+	 * this app can only follow, never move. The decision app renamed from
+	 * OCA\Decidesk to OCA\Decidiq with no compatibility alias, and this constant
+	 * named only the old one — so `isDelegationConfigured()` returned false on an
+	 * instance where the app was installed, and contract approvals silently
+	 * stopped delegating. Measured: OCA\Decidiq\Event\DecisionRequestedEvent
+	 * EXISTS, OCA\Decidesk\Event\DecisionRequestedEvent MISSING.
+	 *
+	 * @var array<int, string>
 	 */
-	public const DECISION_REQUESTED_EVENT = '\\OCA\\Decidesk\\Event\\DecisionRequestedEvent';
+	public const DECISION_REQUESTED_EVENTS = [
+		'\\OCA\\Decidiq\\Event\\DecisionRequestedEvent',
+		'\\OCA\\Decidesk\\Event\\DecisionRequestedEvent',
+	];
 
 	/**
 	 * This consumer app id, stamped on the request event as `sourceApp` and
 	 * used by the conclusion listener to filter inbound events.
+	 *
+	 * FROZEN at `stackiq` through the app-id rename. This value is not
+	 * a name we own at read time — it is PERSISTED on decidesk's Decision rows
+	 * when the approval is raised, and `DecisionConcludedListener` matches
+	 * inbound conclusions against it. Every decision already open was stamped
+	 * `stackiq`; moving the constant makes the filter miss them, so
+	 * their outcomes are dropped on the floor and the contract never leaves
+	 * `In onderhandeling`. Nothing errors — a filtered-out event looks exactly
+	 * like an event that was never sent.
+	 *
+	 * It can only move in a coordinated change that also rewrites the stored
+	 * `sourceApp` on decidesk's existing rows, or that accepts both spellings
+	 * on the read side first.
 	 */
-	public const SOURCE_APP = 'softwarecatalog';
+	public const SOURCE_APP = 'stackiq';
 
 	/**
 	 * The decisionType raised for a first activation of an `In onderhandeling`
@@ -83,7 +110,7 @@ class ContractApprovalService {
 	/**
 	 * The catalog register slug that owns the contract record.
 	 */
-	public const SUBJECT_REGISTER = 'voorzieningen';
+	public const SUBJECT_REGISTER = 'stackiq';
 
 	/**
 	 * The contract schema slug.
@@ -150,8 +177,27 @@ class ContractApprovalService {
 	 * @spec openspec/specs/contract-decision-delegation/spec.md
 	 */
 	public function isDelegationConfigured(): bool {
-		return class_exists(self::DECISION_REQUESTED_EVENT);
+		return ($this->resolveRequestEventClass() !== null);
 	}//end isDelegationConfigured()
+
+	/**
+	 * The first request-event class that actually exists, or null.
+	 *
+	 * Resolving rather than assuming: this app can only follow the decision
+	 * app's namespace, and a hard-coded spelling turns a rename over there into
+	 * a silently disabled feature over here.
+	 *
+	 * @return string|null The event FQN, or null when the decision app is absent.
+	 */
+	private function resolveRequestEventClass(): ?string {
+		foreach (self::DECISION_REQUESTED_EVENTS as $candidate) {
+			if (class_exists($candidate) === true) {
+				return $candidate;
+			}
+		}
+
+		return null;
+	}//end resolveRequestEventClass()
 
 	/**
 	 * Raise a decidesk Decision for a contract approval or renewal.
@@ -179,9 +225,17 @@ class ContractApprovalService {
 	 * It is a payload discriminator, not a second responsibility.
 	 */
 	public function submitForApproval(string $contractUuid, bool $isRenewal = false): string {
-		if ($this->isDelegationConfigured() === false) {
-			// Fail closed — never auto-approve when decidesk is not installed.
-			throw new RuntimeException('Contract approval delegation is not available (decidesk event contract not installed).');
+		// Resolve ONCE and narrow here, rather than calling
+		// isDelegationConfigured() and resolving again below. Two lookups of the
+		// same thing can disagree — and the second one has no guard, so a null
+		// would reach `new $eventClass(...)` as a call on null. Psalm caught
+		// exactly that shape.
+		$eventClass = $this->resolveRequestEventClass();
+		if ($eventClass === null) {
+			// Fail closed — never auto-approve when the decision app is absent.
+			throw new RuntimeException(
+				'Contract approval delegation is not available (decision event contract not installed).'
+			);
 		}
 
 		$contract = $this->loadContract(contractUuid: $contractUuid);
@@ -196,7 +250,6 @@ class ContractApprovalService {
 			$decisionType = self::DECISION_TYPE_RENEWAL;
 		}
 
-		$eventClass = self::DECISION_REQUESTED_EVENT;
 		$event = new $eventClass(
 			self::SOURCE_APP,
 			self::SUBJECT_REGISTER,

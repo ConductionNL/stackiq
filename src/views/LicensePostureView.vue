@@ -2,25 +2,25 @@
 	<div class="postureView">
 		<div class="pv-header">
 			<h2 class="pv-title">
-				{{ t('softwarecatalog', 'License posture') }}
+				{{ t('stackiq', 'License posture') }}
 			</h2>
 			<p class="pv-intro">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Open-source vs closed-source posture of the applications you actually run, weighted by in-production deployment — with per-vendor and per-organisation breakdowns.',
 					)
 				}}
 			</p>
 			<NcButton
 				variant="tertiary"
-				:aria-label="t('softwarecatalog', 'Refresh data')"
+				:aria-label="t('stackiq', 'Refresh data')"
 				@click="loadData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Refresh') }}
+				{{ t('stackiq', 'Refresh') }}
 			</NcButton>
 		</div>
 
@@ -30,31 +30,31 @@
 			<!-- Portfolio posture -->
 			<section class="pv-section" data-testid="posture-portfolio">
 				<h3 class="pv-sectionTitle">
-					{{ t('softwarecatalog', 'Portfolio posture') }}
+					{{ t('stackiq', 'Portfolio posture') }}
 				</h3>
 				<div class="pv-kpis">
 					<div class="pv-kpi">
 						<span class="pv-kpiValue">{{ openSharePct }}</span>
 						<span class="pv-kpiLabel">{{
-							t('softwarecatalog', 'Open-source share (in production)')
+							t('stackiq', 'Open-source share (in production)')
 						}}</span>
 					</div>
 					<div class="pv-kpi">
 						<span class="pv-kpiValue">{{ portfolio.open }}</span>
 						<span class="pv-kpiLabel">{{
-							t('softwarecatalog', 'Open source')
+							t('stackiq', 'Open source')
 						}}</span>
 					</div>
 					<div class="pv-kpi">
 						<span class="pv-kpiValue">{{ portfolio.closed }}</span>
 						<span class="pv-kpiLabel">{{
-							t('softwarecatalog', 'Closed source')
+							t('stackiq', 'Closed source')
 						}}</span>
 					</div>
 					<div class="pv-kpi">
 						<span class="pv-kpiValue">{{ portfolio.unknown }}</span>
 						<span class="pv-kpiLabel">{{
-							t('softwarecatalog', 'Unknown')
+							t('stackiq', 'Unknown')
 						}}</span>
 					</div>
 				</div>
@@ -63,25 +63,25 @@
 			<!-- Per-vendor rollup -->
 			<section class="pv-section" data-testid="posture-vendor">
 				<h3 class="pv-sectionTitle">
-					{{ t('softwarecatalog', 'Per-vendor rollup') }}
+					{{ t('stackiq', 'Per-vendor rollup') }}
 				</h3>
 				<NcEmptyContent
 					v-if="vendorRows.length === 0"
-					:name="t('softwarecatalog', 'No in-production deployments')" />
+					:name="t('stackiq', 'No in-production deployments')" />
 				<table v-else class="pv-table">
 					<thead>
 						<tr>
-							<th scope="col">{{ t('softwarecatalog', 'Vendor') }}</th>
+							<th scope="col">{{ t('stackiq', 'Vendor') }}</th>
 							<th scope="col">
-								{{ t('softwarecatalog', 'Deployments') }}
+								{{ t('stackiq', 'Deployments') }}
 							</th>
-							<th scope="col">{{ t('softwarecatalog', 'Open') }}</th>
-							<th scope="col">{{ t('softwarecatalog', 'Closed') }}</th>
+							<th scope="col">{{ t('stackiq', 'Open') }}</th>
+							<th scope="col">{{ t('stackiq', 'Closed') }}</th>
 							<th scope="col">
-								{{ t('softwarecatalog', 'Unknown') }}
+								{{ t('stackiq', 'Unknown') }}
 							</th>
 							<th scope="col">
-								{{ t('softwarecatalog', 'Annual cost') }}
+								{{ t('stackiq', 'Annual cost') }}
 							</th>
 						</tr>
 					</thead>
@@ -104,19 +104,14 @@
 			<!-- Per-organisation report -->
 			<section class="pv-section" data-testid="posture-org">
 				<h3 class="pv-sectionTitle">
-					{{
-						t(
-							'softwarecatalog',
-							'Per-organisation open-source-first report',
-						)
-					}}
+					{{ t('stackiq', 'Per-organisation open-source-first report') }}
 				</h3>
 				<div class="pv-orgSelect">
 					<NcSelect
 						v-model="selectedOrg"
 						:options="organisationOptions"
-						:inputLabel="t('softwarecatalog', 'Organisation')"
-						:placeholder="t('softwarecatalog', 'Select an organisation')"
+						:inputLabel="t('stackiq', 'Organisation')"
+						:placeholder="t('stackiq', 'Select an organisation')"
 						trackBy="uuid"
 						label="label" />
 				</div>
@@ -128,27 +123,25 @@
 						<div class="pv-kpi">
 							<span class="pv-kpiValue">{{ orgSharePct }}</span>
 							<span class="pv-kpiLabel">{{
-								t('softwarecatalog', 'Open-source share')
+								t('stackiq', 'Open-source share')
 							}}</span>
 						</div>
 						<div class="pv-kpi">
 							<span class="pv-kpiValue">{{ orgPosture.open }}</span>
 							<span class="pv-kpiLabel">{{
-								t('softwarecatalog', 'Open source')
+								t('stackiq', 'Open source')
 							}}</span>
 						</div>
 						<div class="pv-kpi">
 							<span class="pv-kpiValue">{{ orgPosture.closed }}</span>
 							<span class="pv-kpiLabel">{{
-								t('softwarecatalog', 'Closed source')
+								t('stackiq', 'Closed source')
 							}}</span>
 						</div>
 					</div>
 					<div v-if="orgClosedContributors.length" class="pv-contributors">
 						<span class="pv-contribLabel"
-							>{{
-								t('softwarecatalog', 'Closed-source applications')
-							}}:</span
+							>{{ t('stackiq', 'Closed-source applications') }}:</span
 						>
 						<ul>
 							<li v-for="c in orgClosedContributors" :key="c.id">
@@ -332,7 +325,7 @@ export default {
 					vendorName:
 						this.organisatieIndex[row.vendorId]
 						|| row.vendorId
-						|| t('softwarecatalog', 'Unknown vendor'),
+						|| t('stackiq', 'Unknown vendor'),
 					deployments: row.deployments,
 					mix: {
 						openCount: row.mix[LICENSE_TYPE.OPEN] || 0,

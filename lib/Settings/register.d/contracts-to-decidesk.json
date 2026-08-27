@@ -5,7 +5,7 @@
         "properties": {
           "approvalDecisionId": {
             "type": "string",
-            "description": "PROJECTION FIELD. The id of the decidesk Decision (decisionType contract / contract-renewal) raised for this contract's approval/sign-off, resolved via the ADR-019 integration registry. Empty until the contract is submitted for approval. softwarecatalog never authors an approval decision locally; it raises it in decidesk and stores the returned id here for outcome reconciliation.",
+            "description": "PROJECTION FIELD. The id of the decidesk Decision (decisionType contract / contract-renewal) raised for this contract's approval/sign-off, resolved via the ADR-019 integration registry. Empty until the contract is submitted for approval. stackiq never authors an approval decision locally; it raises it in decidesk and stores the returned id here for outcome reconciliation.",
             "facetable": false,
             "title": "Approval decision id",
             "order": 20,
@@ -20,7 +20,7 @@
               "rejected"
             ],
             "default": "none",
-            "description": "PROJECTION of the decidesk outcome for the approval/renewal decision — distinct from the catalog lifecycle field `status`. `none` = no decision raised; `pending` = a decidesk Decision is open; `approved` = decidesk reported an adopting outcome (this is the ONLY thing that drives the `In onderhandeling -> Actief` transition on `status`); `rejected` = decidesk rejected/withdrew (status stays `In onderhandeling`). softwarecatalog NEVER sets `status = Actief` on its own authority — it is always a projection of an `approved` decidesk outcome. The date-driven `Actief -> Verlopen` expiry transition is catalog-local and is NOT a decision delegated to decidesk.",
+            "description": "PROJECTION of the decidesk outcome for the approval/renewal decision — distinct from the catalog lifecycle field `status`. `none` = no decision raised; `pending` = a decidesk Decision is open; `approved` = decidesk reported an adopting outcome (this is the ONLY thing that drives the `In onderhandeling -> Actief` transition on `status`); `rejected` = decidesk rejected/withdrew (status stays `In onderhandeling`). stackiq NEVER sets `status = Actief` on its own authority — it is always a projection of an `approved` decidesk outcome. The date-driven `Actief -> Verlopen` expiry transition is catalog-local and is NOT a decision delegated to decidesk.",
             "facetable": false,
             "title": "Approval state",
             "order": 21,

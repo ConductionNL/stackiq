@@ -4,14 +4,14 @@
  * Test stub for OCA\OpenRegister\Service\RegisterResolverService.
  *
  * The real service lives in the OpenRegister app, which is not available as a
- * Composer dependency in the SoftwareCatalog test environment. This stub
- * declares the public surface that softwarecatalog consumes (resolveSchemaId,
+ * Composer dependency in the Stackiq test environment. This stub
+ * declares the public surface that stackiq consumes (resolveSchemaId,
  * resolveRegisterId) so PHPUnit can create mocks against it.
  *
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Stubs\Service
+ * @package  OCA\Stackiq\Tests\Stubs\Service
  */
 
 declare(strict_types=1);
@@ -19,7 +19,7 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service;
 
 /**
- * Stub for RegisterResolverService with the surface used by SoftwareCatalog tests.
+ * Stub for RegisterResolverService with the surface used by Stackiq tests.
  */
 abstract class RegisterResolverService {
 

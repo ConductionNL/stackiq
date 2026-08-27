@@ -3,7 +3,7 @@ kind: code
 depends_on: []
 ---
 
-# softwarecatalog — drop unused own `apexcharts` dependency, scope `lodash` imports
+# stackiq — drop unused own `apexcharts` dependency, scope `lodash` imports
 
 ## Why
 
@@ -13,17 +13,17 @@ resolves to `3.54.1` (`node_modules/apexcharts/package.json`). A repo-wide
 grep for `apexcharts` under `src/` returns **zero matches** — the app never
 imports it directly, and `CnChartWidget` (nc-vue's chart component, which
 does depend on apexcharts) is never used either. Meanwhile
-`@conduction/nextcloud-vue` — which softwarecatalog already depends on —
+`@conduction/nextcloud-vue` — which stackiq already depends on —
 ships its own `apexcharts@^4.7.0`
 (`node_modules/@conduction/nextcloud-vue/package.json`), nested at
 `node_modules/@conduction/nextcloud-vue/node_modules/apexcharts` because
 the major-version ranges (`^3.50.0` vs `^4.7.0`) don't overlap and npm
 cannot dedupe them. Per the fleet convention ("apexcharts from nc-vue, not
-duplicated"), softwarecatalog is shipping a second, unused, mismatched
+duplicated"), stackiq is shipping a second, unused, mismatched
 copy of a large charting library (~500KB+ minified) in its own dependency
 tree for no functional benefit — pure bundle/install-size bloat.
 
-**Unscoped `lodash` imports.** softwarecatalog depends on the full
+**Unscoped `lodash` imports.** stackiq depends on the full
 `lodash` package (`package.json`) but only uses two functions from it:
 
 - `src/modals/object/ObjectModal.vue:226` — `import _ from 'lodash'`,
@@ -38,7 +38,7 @@ single-function call sites.
 
 ## What Changes
 
-- Remove `"apexcharts"` from softwarecatalog's own `package.json`
+- Remove `"apexcharts"` from stackiq's own `package.json`
   dependencies. The app has no direct usage; if a future feature needs
   charting, it MUST use nc-vue's `CnChartWidget` (which already brings its
   own apexcharts) rather than re-adding a direct dependency.

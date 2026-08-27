@@ -13,27 +13,27 @@
  * silently reappear.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/bound-unbounded-searchobjects-scans/tasks.md#task-5-1
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\SoftwareCatalog\Service\ArchiMateService;
-use OCA\SoftwareCatalog\Service\FacetService;
-use OCA\SoftwareCatalog\Service\OrganizationSyncService;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\ViewQueryBuilder;
-use OCA\SoftwareCatalog\Service\ViewService;
+use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\FacetService;
+use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\ViewQueryBuilder;
+use OCA\Stackiq\Service\ViewService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\ICache;

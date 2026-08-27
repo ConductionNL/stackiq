@@ -23,14 +23,14 @@ The ArchiMate import process follows these steps:
 #### 2. Testing Import API Endpoint
 ```bash
 # Test import from within Docker container (REQUIRED)
-docker exec -it nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+docker exec -it nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" \
   -u admin:admin \
   -F "archiMateFile=@/var/www/html/data/admin/files/GEMMA_smaller.xml" \
   -F "updateExisting=true" \
   -F "preserveIds=true"
 
 # Test with different options
-docker exec -it nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+docker exec -it nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" \
   -u admin:admin \
   -F "archiMateFile=@/var/www/html/data/admin/files/GEMMA_release.xml" \
   -F "updateExisting=false" \
@@ -40,13 +40,13 @@ docker exec -it nextcloud curl -X POST "http://localhost/index.php/apps/software
 #### 3. Monitoring Import Progress
 ```bash
 # Check import status
-docker exec -u 33 nextcloud php occ config:app:get softwarecatalog archimate_import_status
+docker exec -u 33 nextcloud php occ config:app:get stackiq archimate_import_status
 
 # Clear import status if needed
-docker exec -u 33 nextcloud php occ config:app:delete softwarecatalog archimate_import_status
+docker exec -u 33 nextcloud php occ config:app:delete stackiq archimate_import_status
 
 # Check if import is in progress
-docker exec -u 33 nextcloud php occ config:app:get softwarecatalog archimate_import_status | grep '"status"' | grep '"running"'
+docker exec -u 33 nextcloud php occ config:app:get stackiq archimate_import_status | grep '"status"' | grep '"running"'
 ```
 
 #### 4. Database Verification
@@ -69,10 +69,10 @@ docker exec database-mysql mysql -u nextcloud -pnextcloud nextcloud -e "SELECT u
 ##### Check Import Logs
 ```bash
 # View real-time import logs
-docker logs -f nextcloud | grep -E "ArchiMate|SoftwareCatalog|SYNCHRONOUS|batch|saveObjects"
+docker logs -f nextcloud | grep -E "ArchiMate|Stackiq|SYNCHRONOUS|batch|saveObjects"
 
 # View specific error logs
-docker logs nextcloud | grep -E "Error|Exception|Failed" | grep -E "ArchiMate|SoftwareCatalog" | tail -20
+docker logs nextcloud | grep -E "Error|Exception|Failed" | grep -E "ArchiMate|Stackiq" | tail -20
 
 # Check for specific processing steps
 docker logs nextcloud | grep -E "Starting synchronous|Completed processing|batch save" | tail -10
@@ -83,7 +83,7 @@ docker logs nextcloud | grep -E "Starting synchronous|Completed processing|batch
 1. **Import Already Running**
    ```bash
    # Clear import status to allow new import
-   docker exec -u 33 nextcloud php occ config:app:delete softwarecatalog archimate_import_status
+   docker exec -u 33 nextcloud php occ config:app:delete stackiq archimate_import_status
    ```
 
 2. **No Objects Created**
@@ -104,20 +104,20 @@ docker logs nextcloud | grep -E "Starting synchronous|Completed processing|batch
 #### 6. Import Configuration
 ```bash
 # Check AMEF configuration
-docker exec -u 33 nextcloud php occ config:app:get softwarecatalog amef_config
+docker exec -u 33 nextcloud php occ config:app:get stackiq amef_config
 
 # Check schema mappings
-docker exec -u 33 nextcloud php occ config:app:get softwarecatalog amef_schema_mappings
+docker exec -u 33 nextcloud php occ config:app:get stackiq amef_schema_mappings
 
 # Verify register and schema IDs
-docker exec -u 33 nextcloud php occ config:app:get softwarecatalog amef_register_id
-docker exec -u 33 nextcloud php occ config:app:get softwarecatalog amef_schema_ids
+docker exec -u 33 nextcloud php occ config:app:get stackiq amef_register_id
+docker exec -u 33 nextcloud php occ config:app:get stackiq amef_schema_ids
 ```
 
 #### 7. Performance Testing
 ```bash
 # Test with different batch sizes
-docker exec -it nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" \
+docker exec -it nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" \
   -u admin:admin \
   -F "archiMateFile=@/var/www/html/data/admin/files/GEMMA_smaller.xml" \
   -F "batch_size=50" \
@@ -152,7 +152,7 @@ docker stats nextcloud --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage
 
 4. **❌ DO NOT** test import without clearing previous status
    - Import status must be cleared if previous import failed
-   - Use `docker exec -u 33 nextcloud php occ config:app:delete softwarecatalog archimate_import_status`
+   - Use `docker exec -u 33 nextcloud php occ config:app:delete stackiq archimate_import_status`
 
 5. **❌ DO NOT** ignore memory usage during large imports
    - Monitor Docker container memory usage

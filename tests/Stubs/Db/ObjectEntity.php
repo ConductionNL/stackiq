@@ -12,7 +12,7 @@
  * Anything declared here that is MAGIC on the real ObjectEntity makes
  * `method_exists()` TRUE in the suite and FALSE in production. A test built on
  * such a stub cannot detect a `method_exists()` probe against an OpenRegister
- * entity — that is exactly how softwarecatalog#490 (the organisation merge
+ * entity — that is exactly how stackiq#490 (the organisation merge
  * re-pointing nothing while still tombstoning the source) stayed green for its
  * entire life.
  *
@@ -53,7 +53,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Stubs\Db
+ * @package  OCA\Stackiq\Tests\Stubs\Db
  */
 
 declare(strict_types=1);
@@ -63,7 +63,7 @@ namespace OCA\OpenRegister\Db;
 use BadFunctionCallException;
 
 /**
- * Stub for ObjectEntity with the surface used by SoftwareCatalog tests.
+ * Stub for ObjectEntity with the surface used by Stackiq tests.
  */
 abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityInterface {
 
@@ -99,7 +99,7 @@ abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityIn
 	 * mirroring the real entity: `Entity::getter()` resolves on
 	 * `property_exists()`, and `MergeOrganisatieService::readOwningOrganisation()`
 	 * probes the property first. Deleting it would leave the service's primary
-	 * probe untested. See softwarecatalog#490.
+	 * probe untested. See stackiq#490.
 	 *
 	 * @var string|null
 	 */

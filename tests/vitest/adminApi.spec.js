@@ -15,10 +15,10 @@ import {
 describe('adminApi.apiUrl', () => {
 	it('builds the app API URL, tolerating leading slashes', () => {
 		expect(apiUrl('federation/status')).toBe(
-			'/index.php/apps/softwarecatalog/api/federation/status',
+			'/index.php/apps/stackiq/api/federation/status',
 		)
 		expect(apiUrl('/federation/status')).toBe(
-			'/index.php/apps/softwarecatalog/api/federation/status',
+			'/index.php/apps/stackiq/api/federation/status',
 		)
 	})
 })
@@ -33,7 +33,7 @@ describe('adminApi.apiRequest', () => {
 		const data = await apiRequest('moderation/pending', {}, fetchImpl)
 		expect(data).toEqual({ ok: true, items: [] })
 		expect(fetchImpl).toHaveBeenCalledWith(
-			'/index.php/apps/softwarecatalog/api/moderation/pending',
+			'/index.php/apps/stackiq/api/moderation/pending',
 			expect.objectContaining({ method: 'GET' }),
 		)
 	})

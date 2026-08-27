@@ -7,9 +7,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\ContactpersonenController;
+use OCA\Stackiq\Controller\ContactpersonenController;
 use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\IUser;

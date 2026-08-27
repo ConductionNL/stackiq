@@ -117,7 +117,7 @@ jobs:
   quality:
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
-      app-name: softwarecatalog
+      app-name: stackiq
       php-version: "8.3"
       # THE LIST IS THE WHOLE DECLARED RANGE. appinfo/info.xml declares
       # <nextcloud min-version="32" max-version="34"/>, so 32, 33 and 34 each get
@@ -153,7 +153,7 @@ jobs:
       # `/var/www/html/custom_apps/openregister/...`, neither of which exists on
       # the CI runner (NC lives under `server/apps/`, no rewrite → `/index.php/...`).
       # Re-enable after the collection is rewritten to the CI base_url/paths +
-      # a seed step provisions the `voorzieningen` register/`module` schema.
+      # a seed step provisions the `stackiq` register/`module` schema.
       enable-newman: false
       newman-collection-path: "tests"
 
@@ -171,22 +171,22 @@ jobs:
       # declares only `smoke` + `chromium`.
       enable-playwright: true
       playwright-test-path: tests/e2e
-      # `occ app:enable softwarecatalog` runs InitializeSettings, but that
+      # `occ app:enable stackiq` runs InitializeSettings, but that
       # repair step has no user session (OpenRegister RBAC can deny it),
       # swallows its own exception as a warning, and imports with
-      # `force: false` — so a fresh install can come up with no `voorzieningen`
+      # `force: false` — so a fresh install can come up with no `stackiq`
       # register at all and nothing exits non-zero. The script imports
       # explicitly over the admin API and fails loudly if the registers,
       # schemas, or the app's own register→schema mapping still aren't there.
       # cwd for this step is the Nextcloud server root.
-      playwright-seed-command: 'bash apps/softwarecatalog/tests/e2e/ci-seed.sh'
+      playwright-seed-command: 'bash apps/stackiq/tests/e2e/ci-seed.sh'
 
       # Integration Tests (Newman) stays OFF here, deliberately. The
       # `enable-newman: false` further up is not a default nobody chose: it
       # records that the collection's requests hard-code
       # `/var/www/html/custom_apps/openregister/...` paths that do not exist on
       # a CI runner (Nextcloud lives under `server/apps/`, no rewrite), and that
-      # it assumes a seeded `voorzieningen` register / `module` schema. Turning
+      # it assumes a seeded `stackiq` register / `module` schema. Turning
       # it on would produce a guaranteed red whose cause is already written
       # down. Flipped back on in the commit that rewrites the collection to the
       # CI base_url and adds the seed step.
@@ -221,7 +221,12 @@ jobs:
       # Measured on this tree before enabling: PASSES, 188 of 235 tracked
       # frontend files in scope (l10n/ and docs/ excluded via .prettierignore /
       # .gitignore, which prettier 3 also reads).
-      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format"]'
+      # `check:schema-l10n` is a RATCHET, not a gate. Every string inside a form
+      # comes from the schema and is a key in THIS app's catalogue; an absent key
+      # renders the English source inside an otherwise translated form, silently.
+      # The fleet had 30,459 such strings, so this records the current count and
+      # fails only when it GROWS — burning it down stays an ordinary PR.
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format", "check:schema-l10n"]'
 
       # ── Coverage ratchet ─────────────────────────────────────────────────
       # `enable-coverage-guard` defaults to FALSE, which is why both

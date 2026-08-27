@@ -4,7 +4,7 @@
  * Bootstrap file for PHPUnit unit tests (minimal — no Nextcloud bootstrap required).
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests
+ * @package  OCA\Stackiq\Tests
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
@@ -22,6 +22,31 @@ define('PHPUNIT_RUN', 1);
 
 // Include Composer's autoloader.
 require_once __DIR__ . '/../vendor/autoload.php';
+
+// THE OpenRegister CONTRACT INTERFACES, OPTED INTO RATHER THAN AUTOLOADED.
+//
+// conduction/hydra-gates claims `OCA\OpenRegister\Contract\` as a RUNTIME psr-4
+// prefix, so consumers get these interfaces implicitly. That prefix is LONGER
+// than openregister's own `OCA\OpenRegister\` -> `lib/`, and PSR-4 is
+// longest-prefix-wins, so whichever app's autoloader registers first defines
+// OpenRegister's contract for the whole process (ConductionNL/.github#531).
+//
+// Note the stub prefixes registered just below are `OCA\OpenRegister\Db\` and
+// `...\Service\` — neither covers `...\Contract\`, so once hydra-gates stops
+// declaring it nothing else in this app resolves it.
+//
+// interface_exists() is order-independent — it asks whether the interface is
+// RESOLVABLE, not who registered first. Appending a fallback autoloader does
+// NOT work: spl_autoload_register appends relative to registration order, and
+// that order across independently loaded apps is what nobody controls.
+foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
+	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
+		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
+		if (file_exists($shipped) === true) {
+			require_once $shipped;
+		}
+	}
+}
 
 // Register OCP/NCU classes from nextcloud/ocp package.
 // nextcloud/ocp has no autoload section in its composer.json, so we register it manually.

@@ -20,11 +20,11 @@
  *   - a peer-sourced (federated mirror) entry is never publishable locally.
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  *
@@ -34,10 +34,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\PublicationController;
-use OCA\SoftwareCatalog\Service\PublicationService;
+use OCA\Stackiq\Controller\PublicationController;
+use OCA\Stackiq\Service\PublicationService;
 use OCP\AppFramework\Http;
 use OCP\IConfig;
 use OCP\IGroup;

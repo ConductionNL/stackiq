@@ -318,7 +318,7 @@ export default defineComponent({
 		 */
 		async performBulkSync() {
 			const response = await fetch(
-				'/index.php/apps/softwarecatalog/api/bulk-sync-standards',
+				'/index.php/apps/stackiq/api/bulk-sync-standards',
 				{
 					method: 'POST',
 					headers: {

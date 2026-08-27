@@ -1,25 +1,25 @@
 <?php
 
 /**
- * View Service for SoftwareCatalog
+ * View Service for Stackiq
  *
  * Handles view-specific operations including querying, enrichment with products,
  * and usage data (gebruik) integration.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
@@ -37,12 +37,12 @@ use Psr\Log\LoggerInterface;
  * data such as products, usage information (gebruik), and related data.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
@@ -93,7 +93,7 @@ class ViewService {
 		private readonly IUserSession $userSession,
 		ICacheFactory $cacheFactory,
 	) {
-		$this->viewsCache = $cacheFactory->createDistributed(prefix: 'softwarecatalog_views');
+		$this->viewsCache = $cacheFactory->createDistributed(prefix: 'stackiq_views');
 	}//end __construct()
 
 	/**

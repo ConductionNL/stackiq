@@ -3,7 +3,7 @@ kind: code
 depends_on: []
 ---
 
-# softwarecatalog — adopt OpenRegister integration leaves (contacts, calendar, deck, bookmarks)
+# stackiq — adopt OpenRegister integration leaves (contacts, calendar, deck, bookmarks)
 
 ## Why
 

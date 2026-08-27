@@ -113,7 +113,7 @@ describe('groupRowsByQuadrant', () => {
 })
 
 describe('buildCsvExportUrl', () => {
-	const base = '/index.php/apps/softwarecatalog/api/portfolio-report'
+	const base = '/index.php/apps/stackiq/api/portfolio-report'
 
 	it('builds a URL with the organisation and format=csv query params', () => {
 		const url = buildCsvExportUrl(base, 'org-a')

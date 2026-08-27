@@ -15,7 +15,7 @@ quadrant counts with existing end-of-support exposure
 [VNG Softwarecatalogus issue #54](https://github.com/VNG-Realisatie/Softwarecatalogus/issues/54).
 
 Specification:
-[`openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md`](../../openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md).
+[`openspec/specs/portfolio-rationalization-time/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/portfolio-rationalization-time/spec.md).
 
 > Screenshots of the report page are still pending a live-instance capture —
 > this document ships with the implementation; the Playwright-captured
@@ -58,7 +58,7 @@ never fork into two competing sources of the same fact.
 
 ## The portfolio rationalization report
 
-`GET /apps/softwarecatalog/api/portfolio-report?organisation={uuid}`
+`GET /apps/stackiq/api/portfolio-report?organisation={uuid}`
 
 Returns a bounded, organisation-scoped aggregate:
 
@@ -139,7 +139,7 @@ The controller resolves and checks the caller's organisation access
 
 ### CSV export
 
-`GET /apps/softwarecatalog/api/portfolio-report?organisation={uuid}&format=csv`
+`GET /apps/stackiq/api/portfolio-report?organisation={uuid}&format=csv`
 
 The **same** bounded, RBAC-scoped row set as the JSON report, serialised as
 CSV (one row per gebruik: organisation, module, TIME classification,

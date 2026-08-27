@@ -17,21 +17,21 @@
  * the query string asked for.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/vendor-visibility-rbac/spec.md
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\GebruikController;
-use OCA\SoftwareCatalog\Service\GebruikService;
+use OCA\Stackiq\Controller\GebruikController;
+use OCA\Stackiq\Service\GebruikService;
 use OCP\AppFramework\Http;
 use OCP\IConfig;
 use OCP\IGroup;
@@ -92,7 +92,7 @@ class GebruikControllerContractTest extends TestCase {
 		$this->config = $this->createMock(IConfig::class);
 
 		return new GebruikController(
-			'softwarecatalog',
+			'stackiq',
 			$request,
 			$this->userSession,
 			$this->groupManager,

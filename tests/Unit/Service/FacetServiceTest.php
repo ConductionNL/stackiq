@@ -9,11 +9,11 @@
  * scoping parity, and distributed caching + invalidation-key isolation.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -23,14 +23,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\SoftwareCatalog\Service\ArchiMateService;
-use OCA\SoftwareCatalog\Service\FacetService;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCA\SoftwareCatalog\Service\ViewQueryBuilder;
+use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\FacetService;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\ViewQueryBuilder;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\IUser;
@@ -54,7 +54,7 @@ use Psr\Log\LoggerInterface;
  * array, OCA\OpenRegister\Db\ObjectEntity given`) shipped green.
  *
  * @category Test
- * @package  OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service
  */
 final class FakeObjectEntity implements \JsonSerializable {
 

@@ -8,7 +8,7 @@
  * @copyright 2024
  * @license EUPL-1.2
  * @version 1.0.0
- * @see https://github.com/opencatalogi/softwarecatalog
+ * @see https://github.com/ConductionNL/stackiq
  */
 
 import { generateUrl } from '@nextcloud/router'
@@ -74,7 +74,7 @@ export const useOrganisatieStore = defineStore('organization', {
 
 			try {
 				const url = generateUrl(
-					'/apps/softwarecatalog/api/contactpersonen/organisation/{organisationId}',
+					'/apps/stackiq/api/contactpersonen/organisation/{organisationId}',
 					{
 						organisationId,
 					},
@@ -124,7 +124,7 @@ export const useOrganisatieStore = defineStore('organization', {
 
 			try {
 				const url = generateUrl(
-					'/apps/softwarecatalog/api/contactpersonen/{contactpersoonId}/convert-to-user',
+					'/apps/stackiq/api/contactpersonen/{contactpersoonId}/convert-to-user',
 					{
 						contactpersoonId,
 					},
@@ -172,7 +172,7 @@ export const useOrganisatieStore = defineStore('organization', {
 
 			try {
 				const url = generateUrl(
-					'/apps/softwarecatalog/api/contactpersonen/change-password',
+					'/apps/stackiq/api/contactpersonen/change-password',
 				)
 
 				const response = await fetch(url, {
@@ -221,7 +221,7 @@ export const useOrganisatieStore = defineStore('organization', {
 
 			try {
 				const url = generateUrl(
-					'/apps/softwarecatalog/api/contactpersonen/update-groups',
+					'/apps/stackiq/api/contactpersonen/update-groups',
 				)
 
 				const response = await fetch(url, {
@@ -273,7 +273,7 @@ export const useOrganisatieStore = defineStore('organization', {
 		async fetchUserInfo(contactpersoonId) {
 			try {
 				const url = generateUrl(
-					'/apps/softwarecatalog/api/contactpersonen/{contactpersoonId}/user-info',
+					'/apps/stackiq/api/contactpersonen/{contactpersoonId}/user-info',
 					{
 						contactpersoonId,
 					},
@@ -317,7 +317,7 @@ export const useOrganisatieStore = defineStore('organization', {
 		async fetchContactPersonsWithUserDetails(organizationUuid) {
 			try {
 				const url = generateUrl(
-					`/apps/softwarecatalog/api/contactpersonen/organisation/${organizationUuid}/with-user-details`,
+					`/apps/stackiq/api/contactpersonen/organisation/${organizationUuid}/with-user-details`,
 				)
 
 				const response = await fetch(url, {
@@ -365,7 +365,7 @@ export const useOrganisatieStore = defineStore('organization', {
 		async fetchAvailableGroups() {
 			try {
 				const url = generateUrl(
-					'/apps/softwarecatalog/api/contactpersonen/available-groups',
+					'/apps/stackiq/api/contactpersonen/available-groups',
 				)
 
 				const response = await fetch(url, {
@@ -424,7 +424,7 @@ export const useOrganisatieStore = defineStore('organization', {
 		async disableUser(contactpersoonId) {
 			try {
 				const response = await fetch(
-					`/index.php/apps/softwarecatalog/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/disable`,
+					`/index.php/apps/stackiq/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/disable`,
 					{
 						method: 'POST',
 						headers: {
@@ -453,7 +453,7 @@ export const useOrganisatieStore = defineStore('organization', {
 		async enableUser(contactpersoonId) {
 			try {
 				const response = await fetch(
-					`/index.php/apps/softwarecatalog/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/enable`,
+					`/index.php/apps/stackiq/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/enable`,
 					{
 						method: 'POST',
 						headers: {
@@ -483,7 +483,7 @@ export const useOrganisatieStore = defineStore('organization', {
 		 */
 		async dryRunMerge(sourceUuid, targetUuid) {
 			const url = generateUrl(
-				'/apps/softwarecatalog/api/organisaties/{sourceUuid}/merge/dry-run',
+				'/apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run',
 				{
 					sourceUuid,
 				},
@@ -521,7 +521,7 @@ export const useOrganisatieStore = defineStore('organization', {
 		 */
 		async executeMerge(sourceUuid, targetUuid) {
 			const url = generateUrl(
-				'/apps/softwarecatalog/api/organisaties/{sourceUuid}/merge',
+				'/apps/stackiq/api/organisaties/{sourceUuid}/merge',
 				{
 					sourceUuid,
 				},
@@ -563,7 +563,7 @@ export const useOrganisatieStore = defineStore('organization', {
 				)
 
 				const response = await fetch(
-					'/index.php/apps/softwarecatalog/api/contactpersonen/bulk-user-info',
+					'/index.php/apps/stackiq/api/contactpersonen/bulk-user-info',
 					{
 						method: 'POST',
 						headers: {
@@ -605,7 +605,7 @@ export const useOrganisatieStore = defineStore('organization', {
 		 * Fetch an organisation's current members (Nextcloud user ids).
 		 * Consumes OpenRegister's own `GET /api/organisations/{uuid}`
 		 * directly — already gated by `hasAccessToOrganisation()` — rather
-		 * than adding a SoftwareCatalog read endpoint for the same data.
+		 * than adding a Stackiq read endpoint for the same data.
 		 *
 		 * @param {string} uuid The organisation UUID.
 		 * @return {Promise<string[]>} The member user ids.
@@ -637,7 +637,7 @@ export const useOrganisatieStore = defineStore('organization', {
 
 		/**
 		 * Grant an existing Nextcloud user access to an organisation.
-		 * Server-side, this is authorized by SoftwareCatalog's
+		 * Server-side, this is authorized by Stackiq's
 		 * `beheerder`-of-this-organisation guard, then delegated to
 		 * OpenRegister's own `OrganisationService::joinOrganisation()`.
 		 *
@@ -648,7 +648,7 @@ export const useOrganisatieStore = defineStore('organization', {
 		 */
 		async grantAccess(uuid, userId) {
 			const url = generateUrl(
-				'/apps/softwarecatalog/api/organisations/{uuid}/members',
+				'/apps/stackiq/api/organisations/{uuid}/members',
 				{ uuid },
 			)
 
@@ -682,7 +682,7 @@ export const useOrganisatieStore = defineStore('organization', {
 		 */
 		async revokeAccess(uuid, userId) {
 			const url = generateUrl(
-				'/apps/softwarecatalog/api/organisations/{uuid}/members/{userId}',
+				'/apps/stackiq/api/organisations/{uuid}/members/{userId}',
 				{ uuid, userId },
 			)
 

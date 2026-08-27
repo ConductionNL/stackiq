@@ -1,23 +1,23 @@
 <?php
 
 /**
- * Repair step that initializes SoftwareCatalog settings on install/upgrade.
+ * Repair step that initializes Stackiq settings on install/upgrade.
  *
  * @category  Repair
- * @package   OCA\SoftwareCatalog\Repair
+ * @package   OCA\Stackiq\Repair
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Repair;
+namespace OCA\Stackiq\Repair;
 
-use OCA\SoftwareCatalog\AppInfo\Application;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -26,12 +26,12 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Repair step that initializes SoftwareCatalog settings on install/upgrade.
+ * Repair step that initializes Stackiq settings on install/upgrade.
  *
  * This runs only during app install or upgrade, not on every request.
  *
  * @category Repair
- * @package  OCA\SoftwareCatalog\Repair
+ * @package  OCA\Stackiq\Repair
  *
  * @spec openspec/specs/repair-init/spec.md
  */
@@ -60,7 +60,7 @@ class InitializeSettings implements IRepairStep {
 	 * @spec openspec/specs/repair-init/spec.md
 	 */
 	public function getName(): string {
-		return 'Initialize SoftwareCatalog settings';
+		return 'Initialize Stackiq settings';
 	}//end getName()
 
 	/**
@@ -95,7 +95,7 @@ class InitializeSettings implements IRepairStep {
 			}
 
 			$output->info('Initializing settings for version ' . $currentAppVersion);
-			$this->logger->info('SoftwareCatalog repair: Starting initialization for version ' . $currentAppVersion);
+			$this->logger->info('Stackiq repair: Starting initialization for version ' . $currentAppVersion);
 
 			// @spec openspec/specs/contract-administration/spec.md
 			// Seed window defaults only when the admin has not set them, so
@@ -145,18 +145,18 @@ class InitializeSettings implements IRepairStep {
 			if (empty($result['errors']) === false) {
 				foreach ($result['errors'] as $error) {
 					$output->warning('Initialization warning: ' . $error);
-					$this->logger->warning('SoftwareCatalog repair: ' . $error);
+					$this->logger->warning('Stackiq repair: ' . $error);
 				}
 			}
 
 			$output->info('Settings initialization completed');
-			$this->logger->info('SoftwareCatalog repair: Initialization completed', ['result' => $result]);
+			$this->logger->info('Stackiq repair: Initialization completed', ['result' => $result]);
 		} catch (\Exception $e) {
 			// Still mark as initialized to prevent repeated failures.
 			$currentAppVersion = $this->appManager->getAppVersion(Application::APP_ID);
 			$this->config->setValueString(Application::APP_ID, 'last_initialized_version', $currentAppVersion);
 			$output->warning('Settings initialization failed: ' . $e->getMessage());
-			$this->logger->error('SoftwareCatalog repair: Initialization failed', ['exception' => $e->getMessage()]);
+			$this->logger->error('Stackiq repair: Initialization failed', ['exception' => $e->getMessage()]);
 		}//end try
 
 		$output->advance(1);

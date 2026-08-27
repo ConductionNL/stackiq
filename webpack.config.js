@@ -13,7 +13,7 @@ webpackConfig.stats = {
 	modules: false,
 }
 
-const appId = 'softwarecatalog'
+const appId = 'stackiq'
 webpackConfig.entry = {
 	main: {
 		import: path.join(__dirname, 'src', 'main.js'),
@@ -89,7 +89,7 @@ if (useLocalLib) {
 		useLocalLib = false
 		// eslint-disable-next-line no-console
 		console.warn(
-			`[softwarecatalog] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
+			`[stackiq] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
 				+ "it does not satisfy this app's declared range. Building against the npm dist.",
 		)
 	}

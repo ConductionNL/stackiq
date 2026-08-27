@@ -51,7 +51,7 @@
 				<template #icon>
 					<AccountMultipleIcon :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Manage members') }}
+				{{ t('stackiq', 'Manage members') }}
 			</NcActionButton>
 		</NcActions>
 		<NcNoteCard
@@ -151,7 +151,7 @@ export default {
 			return resolveActiveOrganisationName(
 				this.organisations,
 				this.activeOrganisationUuid,
-				this.t('softwarecatalog', 'Select an organisation'),
+				this.t('stackiq', 'Select an organisation'),
 			)
 		},
 
@@ -208,7 +208,7 @@ export default {
 				const error = resolveSwitchError(
 					response.ok,
 					body,
-					this.t('softwarecatalog', 'Failed to switch organisation'),
+					this.t('stackiq', 'Failed to switch organisation'),
 				)
 				if (error) {
 					throw new Error(error)

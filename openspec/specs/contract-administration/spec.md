@@ -49,7 +49,7 @@ does it expire" is answerable in place.
 
 The Contracten index SHALL offer an "expiring soon" filter selecting active
 contracts whose `eindDatum` falls within a configurable window (app-config
-`softwarecatalog/contract_expiry_window_days`, default 90). The filter SHALL
+`stackiq/contract_expiry_window_days`, default 90). The filter SHALL
 be a query over `eindDatum` — "expiring" is never a stored status.
 
 #### Scenario: Expiring-soon filter shows only contracts in the window
@@ -96,7 +96,7 @@ the rule SHALL stay disabled — no app-local notification dispatch (ADR-031).
 @e2e exclude Notification-engine dispatch; covered by PHPUnit/integration tests against the OR notification engine and a Newman check on the rule declaration.
 
 - **WHEN** an `Actief` contract's `eindDatum` enters the notification window and the scheduled rule evaluates
-- **THEN** members of the `softwarecatalog-admins` group and users with manage ACL on the record receive the contract-expiry notification
+- **THEN** members of the `stackiq-admins` group and users with manage ACL on the record receive the contract-expiry notification
 - **AND** a contract outside the window or not `Actief` triggers nothing
 
 ### Requirement: Annualised cost is derived and totalled

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Softwarecatalog MergeController.
+ * Stackiq MergeController.
  *
  * Admin-triggered organisation-merge endpoints (VNG Softwarecatalogus #141):
  * dry-run preview and execute for folding a source organisation into a
@@ -15,11 +15,11 @@
  * organisations they don't manage (IDOR / OWASP A01:2021).
  *
  * @category  Controller
- * @package   OCA\SoftwareCatalog\Controller
+ * @package   OCA\Stackiq\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organisation-merge/spec.md#requirement-both-merge-endpoints-must-be-admin-only-with-an-explicit-per-object-authorization-guard
  *
@@ -29,10 +29,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\AppInfo\Application;
-use OCA\SoftwareCatalog\Service\MergeOrganisatieService;
+use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Service\MergeOrganisatieService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;

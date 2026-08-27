@@ -5,7 +5,7 @@
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ArchiMateService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/OrganizationSyncService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/SettingsService.php"/>
-  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/SoftwareCatalogue/OrganizationHandler.php"/>
-  <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Service/SoftwareCatalogueService.php" method="__construct"/>
-  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/SoftwareCatalogueService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/Stackiq/OrganizationHandler.php"/>
+  <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Service/StackiqService.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/StackiqService.php"/>
 </phpmd-baseline>

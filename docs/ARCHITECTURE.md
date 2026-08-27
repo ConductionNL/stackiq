@@ -8,8 +8,8 @@ The Software Catalog app is a Nextcloud application that provides automated user
 
 ### Core Services
 
-#### SoftwareCatalogueService
-**Location**: 'lib/Service/SoftwareCatalogueService.php'
+#### StackiqueService
+**Location**: 'lib/Service/StackiqueService.php'
 
 The main service handling all user and organization management logic:
 - User account creation and management
@@ -28,7 +28,7 @@ The main service handling all user and organization management logic:
 #### OrganizationSyncService
 **Location**: 'lib/Service/OrganizationSyncService.php'
 
-**NEW**: The dedicated service for organization synchronization between SoftwareCatalog objects and OpenRegister entities:
+**NEW**: The dedicated service for organization synchronization between Stackiq objects and OpenRegister entities:
 - Comprehensive organization and contact person synchronization
 - User account management for contact persons
 - Organization entity creation and management
@@ -77,8 +77,8 @@ Handles automated email notifications:
 
 ### Event Handling (Legacy)
 
-#### SoftwareCatalogEventListener
-**Location**: 'lib/EventListener/SoftwareCatalogEventListener.php'
+#### StackiqEventListener
+**Location**: 'lib/EventListener/StackiqEventListener.php'
 
 **NOTE**: Event listeners are now primarily used for contact person processing, while organization synchronization uses the cron-based system.
 
@@ -149,11 +149,11 @@ Handles application initialization:
 ```
 1. Contactgegevens Object Created/Updated
    ↓
-2. SoftwareCatalogEventListener receives event
+2. StackiqEventListener receives event
    ↓
 3. Event routed to handleObjectCreated/Updated
    ↓
-4. SoftwareCatalogueService.processContactgegevens()
+4. StackiqueService.processContactgegevens()
    ↓
 5. Username generation from name fields
    ↓
@@ -173,11 +173,11 @@ Handles application initialization:
 ```
 1. Organization Object Created/Updated
    ↓
-2. SoftwareCatalogEventListener receives event (legacy)
+2. StackiqEventListener receives event (legacy)
    ↓
 3. Event routed to handleObjectCreated/Updated
    ↓
-4. SoftwareCatalogueService.processOrganization()
+4. StackiqueService.processOrganization()
    ↓
 5. Organization group creation (if needed)
    ↓
@@ -272,7 +272,7 @@ Handles application initialization:
 ### Manual Synchronization
 
 #### API Endpoint
-- **URL**: `POST /apps/softwarecatalog/api/settings/sync`
+- **URL**: `POST /apps/stackiq/api/settings/sync`
 - **Authentication**: Required (admin or authorized user)
 - **Response**: JSON with sync results and statistics
 
@@ -403,8 +403,8 @@ The system supports multiple register types:
 
 ### Adding New Object Types
 
-1. Add event handling in SoftwareCatalogEventListener
-2. Create processing method in SoftwareCatalogueService
+1. Add event handling in StackiqEventListener
+2. Create processing method in StackiqueService
 3. Update schema configuration in SettingsService
 4. Add documentation for new workflow
 
@@ -454,7 +454,7 @@ The system supports multiple register types:
 ### File Structure
 
 ```
-softwarecatalog/
+stackiq/
 ├── appinfo/
 │   ├── routes.php              # API endpoint definitions
 │   └── info.xml               # App metadata
@@ -466,7 +466,7 @@ softwarecatalog/
 │   ├── Controller/             # API controllers
 │   ├── EventListener/          # Event handling
 │   ├── Service/               # Business logic
-│   │   ├── SoftwareCatalogueService.php
+│   │   ├── StackiqueService.php
 │   │   ├── OrganizationSyncService.php  # NEW
 │   │   ├── SettingsService.php
 │   │   └── EmailService.php
@@ -516,20 +516,20 @@ softwarecatalog/
 docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "organizationsyncservice"
 
 # Check sync status
-curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync-status'
+curl -u 'admin:admin' 'http://localhost/index.php/apps/stackiq/api/settings/sync-status'
 
 # Manual sync trigger
-curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync'
+curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/stackiq/api/settings/sync'
 ``` 
 ## OpenRegister Abstraction Adoption
 
-SoftwareCatalog is an OpenRegister-backed app (ADR-001: all data in OR).
+Stackiq is an OpenRegister-backed app (ADR-001: all data in OR).
 This section documents how it adopts the fleet-wide OR abstractions.
 
 ### Architectural manifest (ADR-024)
 
 `src/manifest.json` declares the app's menu and pages and is loaded via
-`useAppManifest('softwarecatalog', bundledManifest)` in `src/main.js`. It
+`useAppManifest('stackiq', bundledManifest)` in `src/main.js`. It
 sets `dependencies: ["openregister"]`. Validate it locally with
 `npm run check:manifest` (Ajv schema validation with a structural-lint
 fallback when the published schema is not resolvable).
@@ -576,5 +576,5 @@ object's `sourceLanguage` metadata. The badge label is i18n-keyed
 The write-header helper already supports stamping
 `X-OpenRegister-Organisation`. Full tenant-switch reactivity (refetch on
 switch, navigate-back on detail) trails the nc-vue `useTenantContext()`
-release and is tracked in the `softwarecatalog-adopt-or-abstractions`
+release and is tracked in the `stackiq-adopt-or-abstractions`
 change (Phase 4).

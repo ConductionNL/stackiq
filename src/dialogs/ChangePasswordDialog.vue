@@ -21,13 +21,13 @@
 
 <template>
 	<NcDialog
-		:name="t('softwarecatalog', 'Change Password')"
+		:name="t('stackiq', 'Change Password')"
 		size="small"
 		@closing="$emit('close')">
 		<div class="password-dialog">
 			<p class="dialog-description">
 				{{
-					t('softwarecatalog', 'Change password for user: {username}', {
+					t('stackiq', 'Change password for user: {username}', {
 						username,
 					})
 				}}
@@ -37,14 +37,14 @@
 				<NcTextField
 					v-model="newPassword"
 					type="password"
-					:label="t('softwarecatalog', 'New password')"
-					:placeholder="t('softwarecatalog', 'Enter new password')"
+					:label="t('stackiq', 'New password')"
+					:placeholder="t('stackiq', 'Enter new password')"
 					class="compact-input" />
 			</div>
 
 			<!-- Password Requirements -->
 			<div class="password-requirements">
-				<h4>{{ t('softwarecatalog', 'Password Requirements:') }}</h4>
+				<h4>{{ t('stackiq', 'Password Requirements:') }}</h4>
 				<ul class="requirements-list">
 					<li :class="{ 'requirement-met': passwordValidation.minLength }">
 						<CheckCircle
@@ -52,7 +52,7 @@
 							:size="16"
 							class="check-icon" />
 						<CloseCircle v-else :size="16" class="close-icon" />
-						{{ t('softwarecatalog', 'At least 10 characters') }}
+						{{ t('stackiq', 'At least 10 characters') }}
 					</li>
 					<li
 						:class="{
@@ -63,7 +63,7 @@
 							:size="16"
 							class="check-icon" />
 						<CloseCircle v-else :size="16" class="close-icon" />
-						{{ t('softwarecatalog', 'At least one uppercase letter') }}
+						{{ t('stackiq', 'At least one uppercase letter') }}
 					</li>
 					<li
 						:class="{
@@ -74,7 +74,7 @@
 							:size="16"
 							class="check-icon" />
 						<CloseCircle v-else :size="16" class="close-icon" />
-						{{ t('softwarecatalog', 'At least one lowercase letter') }}
+						{{ t('stackiq', 'At least one lowercase letter') }}
 					</li>
 					<li :class="{ 'requirement-met': passwordValidation.hasNumber }">
 						<CheckCircle
@@ -82,7 +82,7 @@
 							:size="16"
 							class="check-icon" />
 						<CloseCircle v-else :size="16" class="close-icon" />
-						{{ t('softwarecatalog', 'At least one number') }}
+						{{ t('stackiq', 'At least one number') }}
 					</li>
 					<li
 						:class="{
@@ -94,10 +94,7 @@
 							class="check-icon" />
 						<CloseCircle v-else :size="16" class="close-icon" />
 						{{
-							t(
-								'softwarecatalog',
-								'At least one special character (!@#$%^&*)',
-							)
+							t('stackiq', 'At least one special character (!@#$%^&*)')
 						}}
 					</li>
 					<li :class="{ 'requirement-met': passwordValidation.notPwned }">
@@ -112,7 +109,7 @@
 						<CloseCircle v-else :size="16" class="close-icon" />
 						{{
 							t(
-								'softwarecatalog',
+								'stackiq',
 								'Password has not appeared in known data breaches',
 							)
 						}}
@@ -122,7 +119,7 @@
 
 			<div class="dialog-actions">
 				<NcButton variant="secondary" @click="$emit('close')">
-					{{ t('softwarecatalog', 'Cancel') }}
+					{{ t('stackiq', 'Cancel') }}
 				</NcButton>
 				<NcButton
 					variant="primary"
@@ -133,7 +130,7 @@
 					<template #icon>
 						<NcLoadingIcon v-if="passwordLoading" :size="20" />
 					</template>
-					{{ t('softwarecatalog', 'Save') }}
+					{{ t('stackiq', 'Save') }}
 				</NcButton>
 			</div>
 		</div>
@@ -395,7 +392,7 @@ export default {
 					{
 						method: 'GET',
 						headers: {
-							'User-Agent': 'Nextcloud-SoftwareCatalog',
+							'User-Agent': 'Nextcloud-Stackiq',
 						},
 					},
 				)
@@ -445,7 +442,7 @@ export default {
 			if (!this.newPassword || this.newPassword.length < 10) {
 				showError(
 					this.t(
-						'softwarecatalog',
+						'stackiq',
 						'Password must be at least 10 characters long',
 					),
 				)
@@ -456,16 +453,13 @@ export default {
 				if (this.isPasswordPwned) {
 					showError(
 						this.t(
-							'softwarecatalog',
+							'stackiq',
 							'This password has been found in data breaches and is not secure. Please choose a different password.',
 						),
 					)
 				} else {
 					showError(
-						this.t(
-							'softwarecatalog',
-							'Password does not meet all requirements',
-						),
+						this.t('stackiq', 'Password does not meet all requirements'),
 					)
 				}
 				return
@@ -478,13 +472,11 @@ export default {
 					this.username,
 					this.newPassword,
 				)
-				showSuccess(
-					this.t('softwarecatalog', 'Password changed successfully'),
-				)
+				showSuccess(this.t('stackiq', 'Password changed successfully'))
 				this.$emit('saved')
 			} catch (error) {
 				showError(
-					this.t('softwarecatalog', 'Failed to change password: {error}', {
+					this.t('stackiq', 'Failed to change password: {error}', {
 						error: error.message,
 					}),
 				)

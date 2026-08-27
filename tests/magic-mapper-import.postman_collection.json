@@ -125,13 +125,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base_url}}/registers?slug=voorzieningen",
+					"raw": "{{base_url}}/registers?slug=stackiq",
 					"host": ["{{base_url}}"],
 					"path": ["registers"],
 					"query": [
 						{
 							"key": "slug",
-							"value": "voorzieningen"
+							"value": "stackiq"
 						}
 					]
 				}
@@ -269,13 +269,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base_url}}/objects?register=voorzieningen&schema=module&_limit=5",
+					"raw": "{{base_url}}/objects?register=stackiq&schema=module&_limit=5",
 					"host": ["{{base_url}}"],
 					"path": ["objects"],
 					"query": [
 						{
 							"key": "register",
-							"value": "voorzieningen"
+							"value": "stackiq"
 						},
 						{
 							"key": "schema",

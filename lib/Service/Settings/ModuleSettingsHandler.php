@@ -1,17 +1,17 @@
 <?php
 
 /**
- * Module Settings Handler for SoftwareCatalog
+ * Module Settings Handler for Stackiq
  *
  * Extracted from SettingsService to reduce ExcessiveClassLength and TooManyMethods.
  * Handles module-domain configuration operations.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service\Settings
+ * @package   OCA\Stackiq\Service\Settings
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-1
  *
@@ -21,7 +21,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\Settings;
+namespace OCA\Stackiq\Service\Settings;
 
 use InvalidArgumentException;
 use OCP\IAppConfig;
@@ -42,7 +42,7 @@ class ModuleSettingsHandler {
 	 *
 	 * @var string
 	 */
-	private const APP_NAME = 'softwarecatalog';
+	private const APP_NAME = 'stackiq';
 
 	/**
 	 * Constructor.

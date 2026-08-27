@@ -3,7 +3,7 @@
 ## 🚀 One-Line Full Test
 
 ```bash
-cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/compare_archimate.php
+cd /home/rubenlinde/nextcloud-docker-dev && docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/compare_archimate.php
 ```
 
 This command will:
@@ -17,22 +17,22 @@ This command will:
 
 ### Import Test
 ```bash
-docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import" -H "Content-Type: application/json" -u admin:admin -d '{"file_path": "/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml"}'
+docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import" -H "Content-Type: application/json" -u admin:admin -d '{"file_path": "/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml"}'
 ```
 
 ### Export Test
 ```bash
-docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/export" -H "Content-Type: application/json" -u admin:admin -d '{}' > /tmp/test_export.xml
+docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/export" -H "Content-Type: application/json" -u admin:admin -d '{}' > /tmp/test_export.xml
 ```
 
 ### Database Inspection
 ```bash
-docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_db.php
+docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_db.php
 ```
 
 ### Clear Status
 ```bash
-docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import/cancel" -u admin:admin
+docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import/cancel" -u admin:admin
 ```
 
 ## 🎯 Expected Results
@@ -67,12 +67,12 @@ Folders compared: X
 ## 🔧 Troubleshooting
 
 ### If Import Fails
-1. Check file exists: `docker-compose exec nextcloud ls -la /var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml`
-2. Clear status: `docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/softwarecatalog/api/archimate/import/cancel" -u admin:admin`
+1. Check file exists: `docker-compose exec nextcloud ls -la /var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml`
+2. Clear status: `docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/stackiq/api/archimate/import/cancel" -u admin:admin`
 3. Check logs: `docker-compose exec nextcloud tail -n 50 /var/www/html/data/nextcloud.log`
 
 ### If Export is Empty
-1. Verify import worked: `docker-compose exec nextcloud php /var/www/html/apps-extra/softwarecatalog/debug_db.php`
+1. Verify import worked: `docker-compose exec nextcloud php /var/www/html/apps-extra/stackiq/debug_db.php`
 2. Check object counts in database
 3. Re-run import if needed
 

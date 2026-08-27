@@ -10,11 +10,11 @@
  * parser) is ever reached on a rejected upload.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Controller
+ * @package   OCA\Stackiq\Tests\Unit\Controller
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
  *
@@ -24,10 +24,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\SbomController;
-use OCA\SoftwareCatalog\Service\SbomImportService;
+use OCA\Stackiq\Controller\SbomController;
+use OCA\Stackiq\Service\SbomImportService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
@@ -301,7 +301,7 @@ class SbomControllerTest extends TestCase {
 	/**
 	 * REGRESSION: a non-existent `moduleVersieUuid` returns 404, not 500.
 	 *
-	 * Confirmed live: `GET /apps/softwarecatalog/api/moduleversies/{uuid}/sbom`
+	 * Confirmed live: `GET /apps/stackiq/api/moduleversies/{uuid}/sbom`
 	 * for a well-formed but non-existent uuid 500'd with an uncaught
 	 * `OCP\AppFramework\Db\DoesNotExistException` ("Object with identifier
 	 * '...' not found in any magic table") — OpenRegister's real

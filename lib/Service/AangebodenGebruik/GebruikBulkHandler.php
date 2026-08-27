@@ -1,17 +1,17 @@
 <?php
 
 /**
- * Gebruik Bulk Handler for SoftwareCatalog
+ * Gebruik Bulk Handler for Stackiq
  *
  * Handles bulk-create operations for AangebodenGebruik objects, extracted from
  * AangebodenGebruikService to reduce ExcessiveClassLength on that service.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service\AangebodenGebruik
+ * @package   OCA\Stackiq\Service\AangebodenGebruik
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-7
  *
@@ -21,7 +21,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service\AangebodenGebruik;
+namespace OCA\Stackiq\Service\AangebodenGebruik;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Log\LoggerInterface;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 //
-// Icon registry for softwarecatalog (ADR-077 semantic icon vocabulary).
+// Icon registry for stackiq (ADR-077 semantic icon vocabulary).
 //
 // CnAppNav, CnIcon, CnIndexPage / CnDetailPage headers and empty states resolve
 // an `icon` by PascalCase name through the registry that `registerIcons()`
@@ -57,6 +57,7 @@ import ShieldAlertOutline from 'vue-material-design-icons/ShieldAlertOutline.vue
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import ShieldOutline from 'vue-material-design-icons/ShieldOutline.vue'
+import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
@@ -109,6 +110,7 @@ export default {
 	ShieldCheckOutline,
 	ShieldLockOutline,
 	ShieldOutline,
+	Sitemap,
 	SourceBranch,
 	Star,
 	ViewDashboardOutline,

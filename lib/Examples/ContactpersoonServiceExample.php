@@ -7,30 +7,30 @@
  * method to retrieve contact persons for an organization with their user details spliced in.
  *
  * @category  Example
- * @package   OCA\SoftwareCatalog\Examples
+ * @package   OCA\Stackiq\Examples
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Examples;
+namespace OCA\Stackiq\Examples;
 
-use OCA\SoftwareCatalog\Service\ContactpersoonService;
+use OCA\Stackiq\Service\ContactpersoonService;
 use Psr\Log\LoggerInterface;
 
 /**
  * Example class demonstrating ContactpersoonService usage.
  *
  * @category Example
- * @package  OCA\SoftwareCatalog\Examples
+ * @package  OCA\Stackiq\Examples
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
- * @link     https://codeberg.org/Conduction/SoftwareCatalog
+ * @link     https://github.com/ConductionNL/stackiq
  */
 class ContactpersoonServiceExample {
 	/**

@@ -7,10 +7,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Controller;
+namespace OCA\Stackiq\Tests\Unit\Controller;
 
-use OCA\SoftwareCatalog\Controller\SettingsController;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Controller\SettingsController;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
@@ -23,7 +23,7 @@ use ReflectionMethod;
  *
  * `PUT /api/settings` → `settings#update` is the canonical write in
  * OpenRegister's AppHost dialect; `POST /api/settings` → `settings#create`
- * is the legacy alias. SoftwareCatalog ships its own SettingsController, so
+ * is the legacy alias. Stackiq ships its own SettingsController, so
  * AppHost's generic controller is never aliased in and the leaf owes both
  * methods itself. Before this change `PUT /api/settings` answered 405.
  *

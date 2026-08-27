@@ -537,7 +537,6 @@
         "Last run: {matched} matched, {skipped} skipped, at {time}.": "Last run: {matched} matched, {skipped} skipped, at {time}.",
         "Loading EOL sync configuration…": "Loading EOL sync configuration…",
         "Loading merge status": "Loading merge status",
-        "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Softwarecatalog never calls endoflife.date directly.": "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Softwarecatalog never calls endoflife.date directly.",
         "Merge organisation": "Merge organisation",
         "Merge organisations": "Merge organisations",
         "never": "never",
@@ -688,6 +687,8 @@
         "Could not update the {label}": "Could not update the {label}",
         "Add a new contact person to organisation: {name}": "Add a new contact person to organisation: {name}",
         "Failed to add contact person: {error}": "Failed to add contact person: {error}",
-        "Invalid contact person data structure": "Invalid contact person data structure"
+        "Invalid contact person data structure": "Invalid contact person data structure",
+        "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Stackiq never calls endoflife.date directly.": "Match catalog products to endoflife.date product cycles ingested via OpenConnector, to keep end-of-support dates data-driven. Stackiq never calls endoflife.date directly.",
+        "Stackiq Location URL": "Stackiq Location URL"
     }
 }

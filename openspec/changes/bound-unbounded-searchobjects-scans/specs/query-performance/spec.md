@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Every `searchObjects()` call MUST set an explicit `_limit`
-Every call to `OCA\OpenRegister\Service\ObjectService::searchObjects()` from softwarecatalog's `lib/` MUST pass an explicit `_limit` key in its query array.
+Every call to `OCA\OpenRegister\Service\ObjectService::searchObjects()` from stackiq's `lib/` MUST pass an explicit `_limit` key in its query array.
 Omitting `_limit` causes `MagicSearchHandler::searchObjects()` to
 call `setMaxResults(null)`, which removes the LIMIT clause entirely and
 fetches every row in the target register/schema table into PHP memory.

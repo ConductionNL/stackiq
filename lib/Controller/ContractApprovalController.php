@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Softwarecatalog ContractApprovalController.
+ * Stackiq ContractApprovalController.
  *
  * Thin HTTP seam for delegating a contract approval / sign-off / renewal
  * DECISION to decidesk (cross-app interface contract #1) via the in-process
@@ -24,7 +24,7 @@
  * server-side, before any decidesk event is dispatched.
  *
  * @category Controller
- * @package  OCA\SoftwareCatalog\Controller
+ * @package  OCA\Stackiq\Controller
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -32,7 +32,7 @@
  *
  * @version GIT: <git_id>
  *
- * @link https://codeberg.org/Conduction/softwarecatalog
+ * @link https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
  *
@@ -42,10 +42,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Controller;
+namespace OCA\Stackiq\Controller;
 
-use OCA\SoftwareCatalog\AppInfo\Application;
-use OCA\SoftwareCatalog\Service\ContractApprovalService;
+use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Service\ContractApprovalService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;

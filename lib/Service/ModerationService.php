@@ -5,7 +5,7 @@
  *
  * The admin-only counterpart to IntakeService (organisatie) and
  * ReviewService (beoordeeling) — a single generalised mechanism, not two
- * parallel ones (catalog-ratings, softwarecatalog#375: "reuse the
+ * parallel ones (catalog-ratings, stackiq#375: "reuse the
  * ModerationQueue.vue pattern... do not invent a second moderation
  * mechanism"). Every method takes an explicit `$type` selecting which
  * moderated type/field/values to operate on; it defaults to the original
@@ -28,11 +28,11 @@
  * ModerationController.
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
@@ -43,7 +43,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

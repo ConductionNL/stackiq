@@ -2,25 +2,25 @@
 	<div class="roadmapView">
 		<div class="rm-header">
 			<h2 class="rm-title">
-				{{ t('softwarecatalog', 'Portfolio roadmap') }}
+				{{ t('stackiq', 'Portfolio roadmap') }}
 			</h2>
 			<p class="rm-intro">
 				{{
 					t(
-						'softwarecatalog',
+						'stackiq',
 						'Applications in use for an organisation, grouped by lifecycle phase and ordered by nearest urgency (end-of-support, phase-out or planned replacement).',
 					)
 				}}
 			</p>
 			<NcButton
 				variant="tertiary"
-				:aria-label="t('softwarecatalog', 'Refresh data')"
+				:aria-label="t('stackiq', 'Refresh data')"
 				@click="loadData">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Refresh v-else :size="20" />
 				</template>
-				{{ t('softwarecatalog', 'Refresh') }}
+				{{ t('stackiq', 'Refresh') }}
 			</NcButton>
 		</div>
 
@@ -29,8 +29,8 @@
 				v-model="selectedOrg"
 				class="rm-orgSelect"
 				:options="organisationOptions"
-				:inputLabel="t('softwarecatalog', 'Organisation')"
-				:placeholder="t('softwarecatalog', 'Select an organisation')"
+				:inputLabel="t('stackiq', 'Organisation')"
+				:placeholder="t('stackiq', 'Select an organisation')"
 				trackBy="uuid"
 				label="label"
 				@update:modelValue="onOrgChange" />
@@ -38,10 +38,10 @@
 
 		<NcEmptyContent
 			v-if="!loading && !selectedOrg"
-			:name="t('softwarecatalog', 'Select an organisation')"
+			:name="t('stackiq', 'Select an organisation')"
 			:description="
 				t(
-					'softwarecatalog',
+					'stackiq',
 					'Pick an organisation above to render its lifecycle roadmap.',
 				)
 			">
@@ -61,7 +61,7 @@
 				</h3>
 				<NcEmptyContent
 					v-if="group.entries.length === 0"
-					:name="t('softwarecatalog', 'No applications in this phase')" />
+					:name="t('stackiq', 'No applications in this phase')" />
 				<ul v-else class="rm-list">
 					<li
 						v-for="entry in group.entries"
@@ -73,42 +73,37 @@
 								v-if="entry.eol.passed"
 								class="rm-badge rm-badge--eol">
 								<AlertCircle :size="14" />
-								{{ t('softwarecatalog', 'End of support passed') }}
+								{{ t('stackiq', 'End of support passed') }}
 							</span>
 							<span
 								v-else-if="entry.eolApproaching"
 								class="rm-badge rm-badge--warn">
 								<ClockAlert :size="14" />
-								{{
-									t(
-										'softwarecatalog',
-										'End of support approaching',
-									)
-								}}
+								{{ t('stackiq', 'End of support approaching') }}
 							</span>
 							<span
 								v-if="entry.eol.withdrawn"
 								class="rm-badge rm-badge--eol">
 								<CloseCircle :size="14" />
-								{{ t('softwarecatalog', 'Withdrawn') }}
+								{{ t('stackiq', 'Withdrawn') }}
 							</span>
 						</div>
 						<div class="rm-entryDates">
 							<span v-if="entry.eol.endDate"
-								>{{ t('softwarecatalog', 'End of support') }}:
+								>{{ t('stackiq', 'End of support') }}:
 								{{ entry.eol.endDate }}</span
 							>
 							<span v-if="entry.phaseOutDate"
-								>{{ t('softwarecatalog', 'Phase-out') }}:
+								>{{ t('stackiq', 'Phase-out') }}:
 								{{ entry.phaseOutDate }}</span
 							>
 							<span v-if="entry.replacementDate"
-								>{{ t('softwarecatalog', 'Planned replacement') }}:
+								>{{ t('stackiq', 'Planned replacement') }}:
 								{{ entry.replacementDate }}</span
 							>
 						</div>
 						<div v-if="entry.replacementName" class="rm-replacement">
-							{{ t('softwarecatalog', 'Successor') }}:
+							{{ t('stackiq', 'Successor') }}:
 							<button
 								type="button"
 								class="rm-link"
@@ -364,7 +359,7 @@ export default {
 			// Register the object type from the resolved config before fetching —
 			// the slug-based auto-registration only fires when the settings
 			// `availableRegisters` carries a register slugged exactly
-			// 'voorzieningen', which is not guaranteed on every instance. Without
+			// 'stackiq', which is not guaranteed on every instance. Without
 			// this the nc-vue object store throws "Object type <type> is not
 			// registered".
 			if (
@@ -415,7 +410,7 @@ export default {
 					this.moduleIndex[moduleUuid]?.name
 					|| data.module?.name
 					|| moduleUuid
-					|| t('softwarecatalog', 'Unknown application'),
+					|| t('stackiq', 'Unknown application'),
 
 				eol,
 				eolApproaching: versie
@@ -457,12 +452,12 @@ export default {
 		 */
 		phaseLabel(phase) {
 			const map = {
-				[PHASE.UNKNOWN]: t('softwarecatalog', 'Unknown'),
-				[PHASE.ACQUISITION]: t('softwarecatalog', 'Acquisition'),
-				[PHASE.PLANNED]: t('softwarecatalog', 'Planned'),
-				[PHASE.PRODUCTION]: t('softwarecatalog', 'In production'),
-				[PHASE.PHASING_OUT]: t('softwarecatalog', 'Phasing out'),
-				[PHASE.PHASED_OUT]: t('softwarecatalog', 'Phased out'),
+				[PHASE.UNKNOWN]: t('stackiq', 'Unknown'),
+				[PHASE.ACQUISITION]: t('stackiq', 'Acquisition'),
+				[PHASE.PLANNED]: t('stackiq', 'Planned'),
+				[PHASE.PRODUCTION]: t('stackiq', 'In production'),
+				[PHASE.PHASING_OUT]: t('stackiq', 'Phasing out'),
+				[PHASE.PHASED_OUT]: t('stackiq', 'Phased out'),
 			}
 			return map[phase] || phase
 		},

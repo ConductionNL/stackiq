@@ -5,11 +5,11 @@
  * and the end-to-end match-and-stamp orchestration.
  *
  * @category  Tests
- * @package   OCA\SoftwareCatalog\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
  * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
@@ -21,12 +21,12 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\SoftwareCatalog\Service\EolMatcherService;
-use OCA\SoftwareCatalog\Service\EolSyncService;
-use OCA\SoftwareCatalog\Service\SettingsService;
+use OCA\Stackiq\Service\EolMatcherService;
+use OCA\Stackiq\Service\EolSyncService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -150,7 +150,7 @@ class EolSyncServiceTest extends TestCase {
 
 	/**
 	 * Module/moduleVersie schema not configured degrades gracefully (a
-	 * fresh install where softwarecatalog itself is not yet configured).
+	 * fresh install where stackiq itself is not yet configured).
 	 *
 	 * @return void
 	 */

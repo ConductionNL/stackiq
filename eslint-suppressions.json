@@ -394,7 +394,7 @@
       "count": 2
     }
   },
-  "src/store/plugins/softwarecatalogPlugin.js": {
+  "src/store/plugins/stackiqPlugin.js": {
     "no-console": {
       "count": 5
     },
@@ -474,7 +474,7 @@
       "count": 1
     }
   },
-  "src/views/settings/SoftwareCatalogSettings.vue": {
+  "src/views/settings/StackiqSettings.vue": {
     "jsdoc/require-param-type": {
       "count": 3
     },

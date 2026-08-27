@@ -20,11 +20,11 @@
  * "Alternative considered").
  *
  * @category  Service
- * @package   OCA\SoftwareCatalog\Service
+ * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link      https://codeberg.org/Conduction/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md#requirement-cyclonedx-sbom-files-are-parsed-into-a-normalized-component-list
  *
@@ -34,9 +34,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Service;
+namespace OCA\Stackiq\Service;
 
-use OCA\SoftwareCatalog\Exception\UnsupportedSbomFormatException;
+use OCA\Stackiq\Exception\UnsupportedSbomFormatException;
 
 /**
  * Pure CycloneDX 1.5/1.6 (+ optional SPDX 2.x) SBOM parser.

@@ -1,7 +1,7 @@
 # Organization Synchronization Testing Guide
 
 **Date:** July 24, 2025  
-**App:** SoftwareCatalog  
+**App:** Stackiq  
 **Feature:** Organization Synchronization with OpenRegister
 
 ## 🚨 ESSENTIAL INFORMATION FOR NEW CONVERSATION
@@ -15,16 +15,16 @@
 
 ### Critical API Endpoints
 
-#### SoftwareCatalog Sync API (NEW)
+#### Stackiq Sync API (NEW)
 ```bash
 # Manual sync trigger
-curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync'
+curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/stackiq/api/settings/sync'
 
 # Get sync status
-curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync-status'
+curl -u 'admin:admin' 'http://localhost/index.php/apps/stackiq/api/settings/sync-status'
 
 # Check sync configuration
-curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings'
+curl -u 'admin:admin' 'http://localhost/index.php/apps/stackiq/api/settings'
 ```
 
 #### OpenRegister API (Authenticated)
@@ -94,10 +94,10 @@ docker-compose exec -u 33 nextcloud php /var/www/html/occ user:info {username} |
 
 #### Configuration
 ```bash
-# Check SoftwareCatalog configuration
-docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwarecatalog voorzieningen_organisatie_schema
-docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwarecatalog voorzieningen_contactpersoon_schema
-docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get softwarecatalog voorzieningen_register
+# Check Stackiq configuration
+docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get stackiq voorzieningen_organisatie_schema
+docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get stackiq voorzieningen_contactpersoon_schema
+docker-compose exec -u 33 nextcloud php /var/www/html/occ config:app:get stackiq voorzieningen_register
 ```
 
 ### Log Reading
@@ -110,8 +110,8 @@ docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log
 # Filter for OrganizationSyncService events (NEW)
 docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "organizationsyncservice"
 
-# Filter for SoftwareCatalog events
-docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "softwarecatalog"
+# Filter for Stackiq events
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "stackiq"
 
 # Filter for specific organization UUID
 docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep "{UUID}"
@@ -166,7 +166,7 @@ docker-compose exec nextcloud grep -i "organizationcontactsyncjob" /var/www/html
 #### 1. Cron-Based Synchronization (PRIORITY)
 - **Status**: ✅ Code implemented, 🔄 Testing needed
 - **Background Job**: `OrganizationContactSyncJob` runs every 5 minutes
-- **Manual Trigger**: `POST /apps/softwarecatalog/api/settings/sync`
+- **Manual Trigger**: `POST /apps/stackiq/api/settings/sync`
 - **Expected**: Organizations synchronized, entities created, users managed
 - **Logging**: Comprehensive step-by-step logging in `OrganizationSyncService`
 
@@ -184,7 +184,7 @@ docker-compose exec nextcloud grep -i "organizationcontactsyncjob" /var/www/html
 #### 3. User Status Management
 - **Status**: ✅ Implemented, 🔄 Testing needed
 - **Test**: Change organization `beoordeling` from `actief` to `inactief`
-- **Expected**: Only SoftwareCatalog users deactivated, admin users protected
+- **Expected**: Only Stackiq users deactivated, admin users protected
 
 ### Known Issues and Solutions
 
@@ -206,7 +206,7 @@ docker-compose exec nextcloud grep -i "organizationcontactsyncjob" /var/www/html
 #### 4. UUID Format Mismatch (CURRENT ISSUE)
 - **Problem**: Organization object UUIDs use standard format (with hyphens: `ddaf232b-acbc-4396-946d-f80ccc2d3eb1`) but OpenRegister expects 32-character hex strings (without hyphens: `ddaf232bacbc4396946df80ccc2d3eb1`)
 - **Error**: `"Field 'uuid' doesn't have a default value"` when creating organization entities
-- **Root Cause**: OpenConnector tries to create organization entity immediately, before SoftwareCatalog event listener can process it
+- **Root Cause**: OpenConnector tries to create organization entity immediately, before Stackiq event listener can process it
 - **Solution**: ✅ Implemented UUID format conversion in `createOrganisationInOpenRegister()` method
 - **Status**: 🔄 **PARTIALLY FIXED** - Works for authenticated API calls, but OpenConnector still has the issue
 - **Next Steps**: Need to fix OpenConnector's `ObjectService::createFromArray()` method to handle UUID format conversion
@@ -244,17 +244,17 @@ docker-compose exec nextcloud curl -s -u 'admin:admin' -H 'Content-Type: applica
 }'
 ```
 
-This will trigger the same SoftwareCatalog event listener and test our UUID fix without the OpenConnector issue.
+This will trigger the same Stackiq event listener and test our UUID fix without the OpenConnector issue.
 
 ### Debugging Commands
 
 #### Synchronization Testing (NEW)
 ```bash
 # Test manual synchronization
-curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync'
+curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/stackiq/api/settings/sync'
 
 # Check sync status
-curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync-status'
+curl -u 'admin:admin' 'http://localhost/index.php/apps/stackiq/api/settings/sync-status'
 
 # Monitor synchronization logs
 docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "organizationsyncservice"
@@ -279,8 +279,8 @@ docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -E
 ```
 
 ### File Locations
-- **Main Service**: `/var/www/html/apps-extra/softwarecatalog/lib/Service/SoftwareCatalogueService.php`
-- **Event Listener**: `/var/www/html/apps-extra/softwarecatalog/lib/EventListener/SoftwareCatalogEventListener.php`
+- **Main Service**: `/var/www/html/apps-extra/stackiq/lib/Service/StackiqueService.php`
+- **Event Listener**: `/var/www/html/apps-extra/stackiq/lib/EventListener/StackiqEventListener.php`
 - **Logs**: `/var/www/html/data/nextcloud.log`
 - **Configuration**: `/var/www/html/config/config.php`
 
@@ -300,7 +300,7 @@ This document provides comprehensive testing scenarios for the organization sync
 ### Configuration Verification
 Before testing, verify the Software Catalog configuration:
 ```bash
-docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings'"
+docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/stackiq/api/settings'"
 ```
 
 Expected configuration:
@@ -318,7 +318,7 @@ Expected configuration:
 #### 0.1 Manual Synchronization Test
 1. Trigger manual synchronization:
 ```bash
-curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync'
+curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/stackiq/api/settings/sync'
 ```
 
 2. Monitor the logs for detailed execution steps:
@@ -328,7 +328,7 @@ docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i
 
 3. Check sync status:
 ```bash
-curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync-status'
+curl -u 'admin:admin' 'http://localhost/index.php/apps/stackiq/api/settings/sync-status'
 ```
 
 **Expected Log Output**:
@@ -366,12 +366,12 @@ docker-compose exec -u 33 nextcloud php /var/www/html/occ background:job:list | 
 **Objective**: Verify that creating an `organisatie` object in OpenRegister triggers synchronization to create a corresponding organization in OpenRegister.
 
 **Test Steps**:
-1. Create a new `organisatie` object in the voorzieningen register:
+1. Create a new `organisatie` object in the stackiq register:
 ```bash
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X POST -d '{\"naam\":\"Test Organization Create\",\"website\":\"https://test-create.org\",\"type\":\"Leverancier\",\"status\":\"actief\"}' 'http://localhost/index.php/apps/openregister/api/objects/6/35'"
 ```
 
-2. Verify the object was created in the voorzieningen register:
+2. Verify the object was created in the stackiq register:
 ```bash
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35?_limit=800' | grep 'Test Organization Create'"
 ```
@@ -382,7 +382,7 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 ```
 
 **Expected Results**:
-- Organization object created in voorzieningen register with status "actief"
+- Organization object created in stackiq register with status "actief"
 - Corresponding organization created in OpenRegister with status "active"
 - UUID preserved between both systems
 
@@ -396,7 +396,7 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X PUT -d '{\"naam\":\"Updated Test Organization\",\"website\":\"https://updated-test.org\",\"type\":\"Leverancier\",\"status\":\"inactief\"}' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
 ```
 
-2. Verify the update in voorzieningen register:
+2. Verify the update in stackiq register:
 ```bash
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
 ```
@@ -407,7 +407,7 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 ```
 
 **Expected Results**:
-- Organization updated in voorzieningen register with status "inactief"
+- Organization updated in stackiq register with status "inactief"
 - Corresponding organization updated in OpenRegister with status "inactive"
 - All other fields properly synchronized
 
@@ -421,7 +421,7 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -X DELETE 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
 ```
 
-2. Verify the deletion in voorzieningen register:
+2. Verify the deletion in stackiq register:
 ```bash
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
 ```
@@ -432,7 +432,7 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 ```
 
 **Expected Results**:
-- Organization deleted from voorzieningen register
+- Organization deleted from stackiq register
 - Corresponding organization deactivated in OpenRegister
 - All users in the organization deactivated
 
@@ -493,9 +493,9 @@ docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' 'http://
 - All users in organization follow organization status
 - User accounts properly activated/deactivated in Nextcloud
 
-### 7. SoftwareCatalog-Specific User Activation/Deactivation Test
+### 7. Stackiq-Specific User Activation/Deactivation Test
 
-**Objective**: Verify that when an organization status changes, only SoftwareCatalog-specific users (from contactpersoon objects) are activated/deactivated, while admin group users remain unaffected.
+**Objective**: Verify that when an organization status changes, only Stackiq-specific users (from contactpersoon objects) are activated/deactivated, while admin group users remain unaffected.
 
 **Test Steps**:
 
@@ -529,7 +529,7 @@ docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:list | grep -E "
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X PUT -d '{\"naam\":\"Test Org with Users\",\"website\":\"https://test-users.org\",\"type\":\"Leverancier\",\"beoordeling\":\"inactief\"}' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
 ```
 
-5. Verify SoftwareCatalog users are deactivated but admin users remain active:
+5. Verify Stackiq users are deactivated but admin users remain active:
 ```bash
 # Check user status after deactivation
 docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:list | grep -E "john.doe|jane.smith|admin"
@@ -539,7 +539,7 @@ docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info admin
 ```
 
 **Expected Results**:
-- SoftwareCatalog users (john.doe, jane.smith) are deactivated
+- Stackiq users (john.doe, jane.smith) are deactivated
 - Admin group users remain active and unaffected
 - Organization status shows as "inactief"
 
@@ -549,7 +549,7 @@ docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info admin
 docker exec -it -u 33 master-nextcloud-1 bash -c "curl -u 'admin:admin' -H 'Content-Type: application/json' -X PUT -d '{\"naam\":\"Test Org with Users\",\"website\":\"https://test-users.org\",\"type\":\"Leverancier\",\"beoordeling\":\"actief\"}' 'http://localhost/index.php/apps/openregister/api/objects/6/35/{ORGANIZATION_ID}'"
 ```
 
-2. Verify SoftwareCatalog users are reactivated:
+2. Verify Stackiq users are reactivated:
 ```bash
 # Check user status after reactivation
 docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:list | grep -E "john.doe|jane.smith|admin"
@@ -561,7 +561,7 @@ docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info admin
 ```
 
 **Expected Results**:
-- SoftwareCatalog users (john.doe, jane.smith) are reactivated
+- Stackiq users (john.doe, jane.smith) are reactivated
 - Admin group users remain active
 - Organization status shows as "actief"
 
@@ -637,7 +637,7 @@ docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info regular.use
 
 **Expected Results**:
 - Admin users (admin, testadmin) remain active
-- Regular SoftwareCatalog user (regular.user) is deactivated
+- Regular Stackiq user (regular.user) is deactivated
 - Admin group users are completely protected from organization status changes
 
 ### 10. Bulk User Management Test
@@ -936,8 +936,8 @@ docker-compose exec nextcloud curl -X POST "http://localhost/index.php/apps/open
 **Current Status**: 
 - ✅ **Endpoint accessible**: The OpenConnector endpoint is working and accessible from within the Docker container
 - ❌ **UUID Issue**: Currently getting "Field 'uuid' doesn't have a default value" error when creating organization entities
-- 🔄 **Fix in progress**: UUID format conversion implemented in SoftwareCatalog service (standard UUID with hyphens → 32-char hex string)
-- ⚠️ **OpenConnector Issue**: The error occurs in OpenConnector before SoftwareCatalog event listener can process it
+- 🔄 **Fix in progress**: UUID format conversion implemented in Stackiq service (standard UUID with hyphens → 32-char hex string)
+- ⚠️ **OpenConnector Issue**: The error occurs in OpenConnector before Stackiq event listener can process it
 
 **Expected Results** (once UUID issue is resolved):
 - Organization object created successfully via OpenConnector
@@ -1010,17 +1010,17 @@ docker exec -u 33 master-nextcloud-1 php /var/www/html/occ user:info anonymous.c
 
 ### Check Event Logs
 ```bash
-docker logs master-nextcloud-1 --since 10m | grep -E "\[SoftwareCatalog\]|\[ObjectCreatedEvent\]|\[ObjectUpdatedEvent\]|\[ObjectDeletedEvent\]"
+docker logs master-nextcloud-1 --since 10m | grep -E "\[Stackiq\]|\[ObjectCreatedEvent\]|\[ObjectUpdatedEvent\]|\[ObjectDeletedEvent\]"
 ```
 
 ### Check App Status
 ```bash
-docker exec -u 33 master-nextcloud-1 php /var/www/html/occ app:list | grep softwarecatalog
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ app:list | grep stackiq
 ```
 
 ### Enable App if Needed
 ```bash
-docker exec -u 33 master-nextcloud-1 php /var/www/html/occ app:enable softwarecatalog
+docker exec -u 33 master-nextcloud-1 php /var/www/html/occ app:enable stackiq
 ```
 
 ### Check Nextcloud Logs

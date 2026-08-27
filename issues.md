@@ -223,7 +223,7 @@ Previously closed (2026-02-22): #185, #266, #267, #286, #294, #300, #302, #307, 
 
 **Summary:** As a gebruik-beheerder, we want suppliers (aanbod-beheerder) to not see our application landscapes and connections. The RBAC model scopes data visibility per organization — the page itself may be accessible, but aanbod-beheerder should only see their own organization's data.
 
-**RBAC Reference:** See `softwarecatalog/lib/Settings/softwarecatalogus_register.json`:
+**RBAC Reference:** See `stackiq/lib/Settings/softwarecatalogus_register.json`:
 - `module` (applicatie) schema → `authorization.read`: `{ "group": "aanbod-beheerder", "match": { "_organisation": "$organisation" } }` — own org only
 - `koppeling` schema → `authorization.read`: `{ "group": "aanbod-beheerder", "match": { "_organisation": "$organisation" } }` — own org only
 
@@ -1778,7 +1778,7 @@ Previously closed (2026-02-22): #185, #266, #267, #286, #294, #300, #302, #307, 
 
 **Summary:** Contact persons of **gemeenten** (municipalities) are publicly visible but should NOT be. Note: contact persons of **leveranciers** (vendors) ARE expected to be publicly visible — only gemeente/samenwerking contact persons should be hidden.
 
-**RBAC Reference:** See `softwarecatalog/lib/Settings/softwarecatalogus_register.json` → `contactpersoon` schema → `authorization` block. The `contactpersoon` schema does NOT have `public` read access. Leverancier contact persons are exposed via **publications** (which extend contactpersonen), not via direct public access to the contactpersoon schema.
+**RBAC Reference:** See `stackiq/lib/Settings/softwarecatalogus_register.json` → `contactpersoon` schema → `authorization` block. The `contactpersoon` schema does NOT have `public` read access. Leverancier contact persons are exposed via **publications** (which extend contactpersonen), not via direct public access to the contactpersoon schema.
 
 **Acceptance Criteria:**
 - [x] [API] Contact persons of **leveranciers** ARE visible on public pages (this is expected/correct behavior)

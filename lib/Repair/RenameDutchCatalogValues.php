@@ -18,7 +18,7 @@
  * Idempotent: an already-migrated row simply matches no WHERE clause.
  *
  * @category  Repair
- * @package   OCA\SoftwareCatalog\Repair
+ * @package   OCA\Stackiq\Repair
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -30,7 +30,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Repair;
+namespace OCA\Stackiq\Repair;
 
 use OCP\DB\Exception;
 use OCP\IDBConnection;
@@ -138,9 +138,9 @@ class RenameDutchCatalogValues implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param IDBConnection                 $db        Database connection.
-	 * @param LoggerInterface               $logger    Logger.
-	 * @param RenameDutchCatalogDecisions   $decisions Column-name predicates.
+	 * @param IDBConnection $db Database connection.
+	 * @param LoggerInterface $logger Logger.
+	 * @param RenameDutchCatalogDecisions $decisions Column-name predicates.
 	 */
 	public function __construct(
 		private readonly IDBConnection $db,
@@ -155,7 +155,7 @@ class RenameDutchCatalogValues implements IRepairStep {
 	 * @return string
 	 */
 	public function getName(): string {
-		return 'Translate stored Dutch SoftwareCatalog enum values';
+		return 'Translate stored Dutch Stackiq enum values';
 	}//end getName()
 
 	/**
@@ -164,11 +164,13 @@ class RenameDutchCatalogValues implements IRepairStep {
 	 * @param IOutput $output Repair output.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/english-vocabulary-migration/spec.md#requirement-the-migration-is-non-destructive-and-idempotent
 	 */
 	public function run(IOutput $output): void {
 		$tables = $this->shardTables();
 		if ($tables === []) {
-			$output->info('RenameDutchCatalogValues: no SoftwareCatalog shard tables on this install; nothing to do.');
+			$output->info('RenameDutchCatalogValues: no Stackiq shard tables on this install; nothing to do.');
 			return;
 		}
 
@@ -195,10 +197,10 @@ class RenameDutchCatalogValues implements IRepairStep {
 	/**
 	 * Rewrite one value in one column.
 	 *
-	 * @param string $table  Shard table.
+	 * @param string $table Shard table.
 	 * @param string $column Column name.
-	 * @param string $old    Stored Dutch value.
-	 * @param string $new    English replacement.
+	 * @param string $old Stored Dutch value.
+	 * @param string $new English replacement.
 	 *
 	 * @return int Rows affected.
 	 */

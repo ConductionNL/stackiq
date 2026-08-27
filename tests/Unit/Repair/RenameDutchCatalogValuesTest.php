@@ -4,7 +4,7 @@
  * Tests for the stored-enum-value migration's map.
  *
  * @category  Test
- * @package   OCA\SoftwareCatalog\Tests\Unit\Repair
+ * @package   OCA\Stackiq\Tests\Unit\Repair
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -16,10 +16,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\Tests\Unit\Repair;
+namespace OCA\Stackiq\Tests\Unit\Repair;
 
-use OCA\SoftwareCatalog\Repair\RenameDutchCatalogDecisions;
-use OCA\SoftwareCatalog\Repair\RenameDutchCatalogValues;
+use OCA\Stackiq\Repair\RenameDutchCatalogDecisions;
+use OCA\Stackiq\Repair\RenameDutchCatalogValues;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -31,8 +31,8 @@ use ReflectionClass;
  *
  * phpcs:disable CustomSniffs.Functions.NamedParameters
  *
- * @covers \OCA\SoftwareCatalog\Repair\RenameDutchCatalogValues
- * @covers \OCA\SoftwareCatalog\Repair\RenameDutchCatalogDecisions
+ * @covers \OCA\Stackiq\Repair\RenameDutchCatalogValues
+ * @covers \OCA\Stackiq\Repair\RenameDutchCatalogDecisions
  */
 final class RenameDutchCatalogValuesTest extends TestCase {
 

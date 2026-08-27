@@ -3,7 +3,7 @@ kind: code
 depends_on: []
 ---
 
-# softwarecatalog — bound unbounded `searchObjects()` full-table scans
+# stackiq — bound unbounded `searchObjects()` full-table scans
 
 ## Why
 
@@ -17,7 +17,7 @@ opposite failure mode from the more common "default-limit truncates
 results" bug: here, forgetting `_limit` silently removes the safety net.
 
 A repo-wide audit of every non-test `searchObjects()` call site in
-`softwarecatalog/lib/` found **25 of 29 call sites never set `_limit`**
+`stackiq/lib/` found **25 of 29 call sites never set `_limit`**
 (verified by grepping the 20 lines preceding each call for `_limit`; the 4
 exceptions are `ArchiMateService.php:378/397/412/435`, which do set an
 explicit `_limit`). These are full, unbounded register/schema scans on
