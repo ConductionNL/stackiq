@@ -284,6 +284,14 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		await page.waitForTimeout(2500)
 		await dismissSupportDialog(page)
 
+		// Back to the index: the edit happened on the record's DETAIL page,
+		// because the row's Edit action routes there now instead of opening a
+		// modal over the list. Without this the list assertion below would run
+		// against the detail page and fail as 'row not found', which reads like
+		// the save not persisting rather than the test being on the wrong page.
+		await gotoAppRoute(page, '/contactpersonen')
+		await dismissSupportDialog(page)
+
 		// The edited job title is now rendered in the list (Table view) —
 		// PERSISTED. `functie` is one of the page's declared columns.
 		await showTable(page)

@@ -750,7 +750,10 @@ OC.L10N.register(
         "Release notes & artefacts": "Releasenotes en artefacten",
         "Exposure": "Blootstelling",
         "Audit trail": "Audittrail",
-        "Flow": "Flow"
+        "Flow": "Flow",
+        "Where the automation lives": "Waar de automatisering zit",
+        "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.": "Flows zijn wat er gebeurt zonder dat iemand klikt: een herinnering voordat een termijn verstrijkt, een bevestiging bij indiening. Hier lees en bewerk je ze. Je hoeft nu niets te bouwen.",
+        "Open Flows in the menu": "Open Flows in het menu"
     },
     "nplurals=2; plural=(n != 1);"
 )
