@@ -63,6 +63,40 @@ import {
 	type VoorzieningenConfig,
 } from './_fixtures'
 
+/**
+ * Wait for the edit dialog after an `Edit` row action, wherever it opens.
+ *
+ * Since nextcloud-vue 2.21 (#806) a record whose schema has a same-schema
+ * DETAIL page is edited on that page, not in a modal launched from the table:
+ * the modal renders only the schema's flat scalars and cannot express a record
+ * whose related rows live elsewhere. `CnPageRenderer` sets `editOpensDetail`
+ * from `detailPageByRegisterSchema`.
+ *
+ * Which route applies is a property of the SCHEMA, so this branches instead of
+ * assuming. Either way it returns a real, visible edit dialog — the assertion
+ * is not weakened, only its route.
+ *
+ * @param page The Playwright page.
+ * @return The visible edit dialog locator.
+ */
+async function editDialogAfterEdit(page: import('@playwright/test').Page) {
+	const dialog = page.locator('[role="dialog"], .modal-container').first()
+	const direct = await dialog
+		.waitFor({ state: 'visible', timeout: 5000 })
+		.then(() => true)
+		.catch(() => false)
+	if (!direct) {
+		const headerEdit = page.getByRole('button', { name: /^Edit$/ }).first()
+		await expect(
+			headerEdit,
+			'detail page header Edit button visible',
+		).toBeVisible({ timeout: 15000 })
+		await headerEdit.click()
+		await dialog.waitFor({ state: 'visible', timeout: 15000 })
+	}
+	return dialog
+}
+
 let apiCtx: APIRequestContext
 let cfg: VoorzieningenConfig
 
@@ -204,8 +238,7 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 
 		await openRowActions(page, contactsUid)
 		await clickAction(page, 'Edit')
-		const editDialog = page.locator('[role="dialog"], .modal-container').first()
-		await editDialog.waitFor({ state: 'visible', timeout: 15000 })
+		const editDialog = await editDialogAfterEdit(page)
 
 		// The editor is populated from the persisted row — the values we created
 		// read back into the form (detail read-back persistence).
@@ -231,8 +264,7 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		await openRowActions(page, contactsUid)
 		await clickAction(page, 'Edit')
 
-		const editDialog = page.locator('[role="dialog"], .modal-container').first()
-		await editDialog.waitFor({ state: 'visible', timeout: 15000 })
+		const editDialog = await editDialogAfterEdit(page)
 		// The edit form is pre-filled with the existing UID — proves the row
 		// loaded into the editor (read-back persistence).
 		await expect(
