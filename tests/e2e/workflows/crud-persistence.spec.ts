@@ -181,9 +181,11 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 	// pre-fill assertion below (the editor loads the row's stored values) and by
 	// the data-layer findAll cross-check. Re-enable once the deployed shell
 	// renders an object-data detail surface for the View action.
-	test.fixme('detail (View) -> shows the entered field values', async ({
-		page,
-	}) => {
+	test('detail (View) -> shows the entered field values', async ({ page }) => {
+		test.fixme(
+			true,
+			"the deployed nextcloud-vue CnIndexPage shell opens Nextcloud's generic right sidebar (Files / Notes / Tags / Audit trail) for the View action rather than an object-data detail panel, so the stored field values are not rendered for a UI assertion. A deployed-shell limitation, not a stackiq bug: persistence is proven by the Edit form pre-fill assertion below and the data-layer findAll cross-check.",
+		)
 		await gotoAppRoute(page, '/contactpersonen')
 		await dismissSupportDialog(page)
 
