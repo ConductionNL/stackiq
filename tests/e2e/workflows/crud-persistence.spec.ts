@@ -204,6 +204,11 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 
 		await openRowActions(page, contactsUid)
 		await clickAction(page, 'Edit')
+		// Edit on an index row NAVIGATES to the detail page now rather than
+		// opening a modal over the list (@conduction/nextcloud-vue 2.21.0):
+		// a record with its own detail page is edited there. The form is one
+		// click further on.
+		await page.getByTestId('cn-detail-page-edit').click()
 		const editDialog = page.locator('[role="dialog"], .modal-container').first()
 		await editDialog.waitFor({ state: 'visible', timeout: 15000 })
 
@@ -231,6 +236,11 @@ test.describe('Contactpersoon CRUD-persistence', () => {
 		await openRowActions(page, contactsUid)
 		await clickAction(page, 'Edit')
 
+		// Edit on an index row NAVIGATES to the detail page now rather than
+		// opening a modal over the list (@conduction/nextcloud-vue 2.21.0):
+		// a record with its own detail page is edited there. The form is one
+		// click further on.
+		await page.getByTestId('cn-detail-page-edit').click()
 		const editDialog = page.locator('[role="dialog"], .modal-container').first()
 		await editDialog.waitFor({ state: 'visible', timeout: 15000 })
 		// The edit form is pre-filled with the existing UID — proves the row
