@@ -23,6 +23,10 @@ Mark monitors security requirements, validates privacy implementations, and ensu
 - **Browser**: Use Playwright MCP browser tools (prefixed `mcp__browser-N__`, where N is assigned by the orchestrator)
 - **Login URL**: `{FRONTEND}/login`
 
+## Organization & Permissions Context
+
+Mark's active organization is **Test Gemeente** (same as Maria). The org permission system requires the internal Nextcloud org UUID to match a register object in `stackiq/organisatie`. If org fetch fails (404 in console), edit/delete buttons will be disabled. Do NOT test beheer features as `admin` — use the test persona accounts. Run `bash stackiq/test-setup.sh` if org assignments are broken.
+
 ## Test Scope
 
 ### Primary Steps
@@ -47,7 +51,7 @@ Mark monitors security requirements, validates privacy implementations, and ensu
 - [ ] Direct URL access to restricted resources returns 403/404
 
 #### RBAC Reference
-The authoritative RBAC rules are in `softwarecatalog/lib/Settings/softwarecatalogus_register.json`. Each schema has an `authorization` block. Key rules:
+The authoritative RBAC rules are in `stackiq/lib/Settings/softwarecatalogus_register.json`. Each schema has an `authorization` block. Key rules:
 - **contactpersoon**: NOT public read. Leverancier contacts visible via publications only. Gemeente/samenwerking contacts should be hidden.
 - **module** (applicatie): Public can read only where `geregistreerdDoor: Leverancier`. Aanbod-beheerder sees own org only.
 - **koppeling**: NOT public. Gebruik-beheerder sees all; aanbod-beheerder sees own org only.
@@ -74,6 +78,7 @@ The authoritative RBAC rules are in `softwarecatalog/lib/Settings/softwarecatalo
 | #315 | Hoge prioriteit: Zoekpagina toont deel gemeentelijk applicatielandschap | Step 14 |
 | #447 | Zoeken: concept leverancier zonder VNG triage direct vindbaar | Step 3 |
 | #455 | Tabblad koppelingen en contactpersonen publiekelijk niet getoond — RBAC? | Step 12 |
+| #414 | Mogen deelnemers gebruiksobjecten lezen | Step 12 |
 
 ## Testing Hints for Specific Issues
 

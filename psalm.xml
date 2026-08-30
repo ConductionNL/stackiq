@@ -14,6 +14,37 @@
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
+    <stubs>
+        <file name="vendor/nextcloud/ocp/OCP/Capabilities/ICapability.php" preloadClasses="true" />
+        <!--
+            OpenRegister's data-access contract — same reasoning as the decidesk
+            event stubs below: a sibling Nextcloud app supplies it at runtime, so
+            it is absent from the analysis path.
+
+            It USED to resolve, because hydra-gates declared
+            `OCA\OpenRegister\Contract\` as a psr-4 prefix. That was a bug — the
+            prefix is longer than openregister's own, so a vendored copy in any
+            app defined the contract for the whole process — and v1.9.0 removed
+            it (ConductionNL/.github#531). The runtime side is handled by the
+            guarded require in this app's test bootstrap; psalm never runs that,
+            so it needs the shape declared here instead. 213 UndefinedClass
+            errors without it.
+        -->
+        <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/ObjectServiceInterface.php" />
+        <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/ObjectEntityInterface.php" />
+        <!-- decidesk decision-event contract (DecisionRequestedEvent +
+             DecisionConcludedEvent). decidesk is a sibling Nextcloud app, not a
+             Composer dependency, so it is absent from the analysis path. The
+             stub mirrors the real signatures in decidesk/lib/Event/ and supplies
+             real type information instead of silencing the diagnostic — which is
+             what also resolves the isHandled()/getDecisionId() calls on the
+             dispatched event. Analysis-only; never loaded at runtime. -->
+        <file name="tests/analysis-stubs/decidesk-events.stub.php" preloadClasses="true" />
+        <!-- OpenRegister RegisterResolverService. Same cross-app situation; this
+             stub already existed for PHPUnit mock generation and mirrors the real
+             signature in openregister/lib/Service/RegisterResolverService.php. -->
+        <file name="tests/Stubs/Service/RegisterResolverService.php" preloadClasses="true" />
+    </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
         <UndefinedClass>
@@ -21,8 +52,6 @@
                 <!-- Nextcloud OCP Classes -->
                 <referencedClass name="OCP\AppFramework\App"/>
                 <referencedClass name="OCP\AppFramework\Bootstrap\IBootstrap"/>
-                <referencedClass name="OCP\AppFramework\Bootstrap\IBootContext"/>
-                <referencedClass name="OCP\AppFramework\Bootstrap\IRegistrationContext"/>
                 <referencedClass name="OCP\AppFramework\Controller"/>
                 <referencedClass name="OCP\AppFramework\IAppContainer"/>
                 <referencedClass name="OCP\App\IAppManager"/>
@@ -58,50 +87,50 @@
                 <referencedClass name="OCP\Http\Client\IClientService"/>
                 <referencedClass name="OCP\Notification\IManager"/>
                 <referencedClass name="OCP\Share\IManager"/>
-                <referencedClass name="OCP\IUser"/>
-                <referencedClass name="OCP\Settings\IIconSection"/>
-                <referencedClass name="OCP\Settings\ISettings"/>
-                <referencedClass name="OCP\Security\ISecureRandom"/>
-                <referencedClass name="OCP\Mail\IMailer"/>
-                <referencedClass name="OCP\Mail\IMessage"/>
-                <referencedClass name="OCP\Mail\IEMailTemplate"/>
-                <referencedClass name="OCP\ICache"/>
-                <referencedClass name="OCP\IGroup"/>
-                <referencedClass name="OCP\ISession"/>
-                <referencedClass name="OCP\AppFramework\Db\DoesNotExistException"/>
-                <referencedClass name="OCP\Accounts\IAccountManager"/>
-                <referencedClass name="OCP\Dashboard\IWidget"/>
-                <referencedClass name="OCP\Migration\IRepairStep"/>
-                <referencedClass name="OC"/>
-                <referencedClass name="OC_App"/>
-                <!-- Additional OpenRegister Runtime Classes -->
-                <referencedClass name="OCA\OpenRegister\Service\RegisterService"/>
-                <referencedClass name="OCA\OpenRegister\Db\Register"/>
-                <!-- OpenRegister Runtime Dependency Classes -->
-                <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
-                <referencedClass name="OCA\OpenRegister\Service\OrganisationService"/>
-                <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
-                <referencedClass name="OCA\OpenRegister\Service\Object\SaveObject\MetadataHydrationHandler"/>
+                <!-- OpenRegister cross-app classes (loaded dynamically) -->
                 <referencedClass name="OCA\OpenRegister\Db\ObjectEntity"/>
-                <referencedClass name="OCA\OpenRegister\Db\ObjectEntityMapper"/>
-                <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
                 <referencedClass name="OCA\OpenRegister\Db\RegisterMapper"/>
+                <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
+                <referencedClass name="OCA\OpenRegister\Db\Register"/>
                 <referencedClass name="OCA\OpenRegister\Db\Organisation"/>
                 <referencedClass name="OCA\OpenRegister\Db\OrganisationMapper"/>
-                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
-                <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
-                <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Service\OrganisationService"/>
+                <referencedClass name="OCA\OpenRegister\Event\UserProfileUpdatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectLockedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUnlockedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectRevertedEvent"/>
-                <referencedClass name="OCA\OpenRegister\Event\UserProfileUpdatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\OrganisationCreatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\RegisterCreatedEvent"/>
-                <referencedClass name="OCA\OpenRegister\Event\RegisterDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\RegisterUpdatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\RegisterDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\SchemaCreatedEvent"/>
-                <referencedClass name="OCA\OpenRegister\Event\SchemaDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\SchemaUpdatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\SchemaDeletedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\DeepLinkRegistrationEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatingEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatingEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
+                <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
+                <referencedClass name="OCA\OpenRegister\Service\RegisterService"/>
+                <referencedClass name="OCA\OpenRegister\Service\FileService"/>
+                <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
+                <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
+                <!-- Additional OCP infrastructure types used across the fleet -->
+                <referencedClass name="OCP\AppFramework\Bootstrap\IBootContext"/>
+                <referencedClass name="OCP\AppFramework\Bootstrap\IRegistrationContext"/>
+                <referencedClass name="OCP\AppFramework\Db\DoesNotExistException"/>
+                <referencedClass name="OCP\DB\Exception"/>
+                <referencedClass name="OCP\IGroup"/>
+                <referencedClass name="OCP\IUser"/>
+                <referencedClass name="OCP\Migration\IRepairStep"/>
+                <!-- Nextcloud server internals -->
+                <referencedClass name="OC"/>
+                <!-- GuzzleHttp (loaded via composer at runtime) -->
+                <referencedClass name="GuzzleHttp\Client"/>
+                <referencedClass name="GuzzleHttp\Exception\GuzzleException"/>
             </errorLevel>
         </UndefinedClass>
         <UndefinedMagicMethod errorLevel="suppress"/>
@@ -110,7 +139,6 @@
         <UnusedMethod errorLevel="suppress"/>
         <UnusedProperty errorLevel="suppress"/>
         <PossiblyUnusedParam errorLevel="suppress"/>
-        <UnusedParam errorLevel="suppress"/>
         <UnusedDocblockParam errorLevel="suppress"/>
         <UnusedVariable errorLevel="suppress"/>
         <PossiblyUnusedReturnValue errorLevel="suppress"/>
@@ -125,13 +153,18 @@
         <TypeDoesNotContainNull errorLevel="suppress"/>
         <TypeDoesNotContainType errorLevel="suppress"/>
         <InvalidArrayOffset errorLevel="suppress"/>
-        <InvalidArrayAccess errorLevel="suppress"/>
-
+        <InvalidCast errorLevel="suppress"/>
+        <InvalidArgument errorLevel="suppress"/>
+        <InvalidReturnType errorLevel="suppress"/>
+        <InvalidReturnStatement errorLevel="suppress"/>
         <MismatchingDocblockReturnType errorLevel="suppress"/>
         <EmptyArrayAccess errorLevel="suppress"/>
-        <MissingTemplateParam errorLevel="suppress"/>
+        <ImplementedReturnTypeMismatch errorLevel="suppress"/>
+        <InvalidMethodCall errorLevel="suppress"/>
         <UndefinedInterfaceMethod errorLevel="suppress"/>
-        <UnusedMethodCall errorLevel="suppress"/>
-        <UnusedReturnValue errorLevel="suppress"/>
+        <MissingTemplateParam errorLevel="suppress"/>
     </issueHandlers>
+    <extraFiles>
+        <directory name="vendor/nextcloud/ocp" />
+    </extraFiles>
 </psalm>

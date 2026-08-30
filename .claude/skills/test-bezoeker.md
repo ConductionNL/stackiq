@@ -47,6 +47,11 @@ This persona tests everything an **unauthenticated user** sees. The search page 
 | #448 | Overzichtspagina's: vormgeving inconsistent | Verify dienst/koppeling detail pages match applicatie layout |
 | #453 | Zoeken: filters van slag met filter Type=Koppeling | Verify Type=Koppeling filter correctly scopes other facets |
 | #455 | Tabblad koppelingen en contactpersonen publiekelijk niet getoond | Verify Koppelingen and Contactpersonen tabs visible on public app detail pages |
+| #205 | Gedepubliceerde applicatie nog vindbaar | Verify depublished applications do NOT appear in public search |
+| #333 | UUID uit filters refcomp en standaarden | Verify reference component and standards filters show names, not UUIDs |
+| #398 | Zoeken: Filter met UUID's onder leveranciers | Verify leverancier filter shows readable names, not UUIDs |
+| #438 | Zoeken: verschillende vormgeving Diensten na filteren | Verify dienst card layout is consistent across filter combinations |
+| #440 | Zoeken: Organisatietype teveel aan opties | Verify Organisatietype filter shows only 4 options: gemeente, samenwerking, leverancier, community |
 
 ## Acceptance Criteria Reference
 
@@ -124,12 +129,12 @@ As an unauthenticated visitor, you should only see data that has `"public"` read
 1. Navigate to an application detail page of a **leverancier** application
 2. Check if contact person information is visible
 3. **Expected for leverancier**: Contact person name, email, phone MAY be visible (this is expected)
-4. Check the API directly: `curl {BACKEND}/index.php/apps/openregister/api/objects/voorzieningen/module?_extend[]=contactpersonen&_limit=5`
+4. Check the API directly: `curl {BACKEND}/index.php/apps/openregister/api/objects/stackiq/module?_extend[]=contactpersonen&_limit=5`
 5. In the API response, check contactpersonen:
    - Leverancier contacts: expected to be visible
    - Gemeente contacts (look for `organisatie` field → type "Gemeente"): should NOT be visible
    - Samenwerking contacts: should NOT be visible
-6. Also check: `curl {BACKEND}/index.php/apps/openregister/api/objects/voorzieningen/contactpersoon?_limit=5` (without auth — should return 0 results since contactpersoon is not public)
+6. Also check: `curl {BACKEND}/index.php/apps/openregister/api/objects/stackiq/contactpersoon?_limit=5` (without auth — should return 0 results since contactpersoon is not public)
 
 ### Step 9: Additional Checks
 1. Check that the search page paginates correctly
@@ -139,7 +144,7 @@ As an unauthenticated visitor, you should only see data that has `"public"` read
 
 ## Output Format
 
-Write results to: `softwarecatalog/test-results/bezoeker/results-public.md`
+Write results to: `stackiq/test-results/bezoeker/results-public.md`
 
 Use this format:
 - Header with persona name, date, environment

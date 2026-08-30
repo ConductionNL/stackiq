@@ -1,0 +1,27 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:5f3c8e2a-1b4d-4a6e-9f0c-7d2e1a3b4c5d",
+  "version": 1,
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+      "name": "log4j-core",
+      "version": "2.14.1",
+      "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+      "licenses": [
+        { "license": { "id": "Apache-2.0" } }
+      ]
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "id": "CVE-2021-44228",
+      "source": { "name": "NVD" },
+      "affects": [
+        { "ref": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" }
+      ]
+    }
+  ]
+}

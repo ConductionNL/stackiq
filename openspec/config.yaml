@@ -2,19 +2,19 @@ schema: conduction
 
 context: |
   Project: Software Catalog
-  Repo: ConductionNL/SoftwareCatalog
+  Repo: ConductionNL/stackiq
   Type: Nextcloud App (PHP backend + Vue 2.7 frontend)
   Description: VNG Software Catalog — AMEF/GEMMA + Voorzieningen registry of municipal
     software (organisaties, diensten, modules, gebruik, contracten, compliancy,
     kwetsbaarheden) built on OpenRegister.
   Key components: Dashboard, Settings, Aanbod (offers), Aangeboden gebruik, Contactpersonen
   Database: PostgreSQL (via OpenRegister's ObjectService)
-  Mount path: /var/www/html/custom_apps/softwarecatalog
+  Mount path: /var/www/html/custom_apps/stackiq
 
   Architecture:
     Pattern: Thin client — Software Catalog owns no domain tables
     Data layer: OpenRegister (JSON object storage with schema validation)
-    Registers: voorzieningen (Voorzieningen) + vng-gemma (AMEF)
+    Registers: stackiq (Voorzieningen) + vng-gemma (AMEF)
     Frontend: Vue 2.7 + Pinia stores querying OpenRegister API directly
     Backend: SettingsController + register import + aanbod/gebruik services
 
@@ -23,16 +23,27 @@ context: |
 
 rules:
   proposal:
+    - Reference shared nextcloud-app spec for app structure requirements
+    - "ADR-011: Check OpenRegister core for existing functionality before proposing new features"
     - Reference hydra ADR-046 (portaliq) for external-portal contributions
     - Consider impact on other Conduction apps
   specs:
+    - "ADR-009: Include test scenarios for all MUST/SHALL requirements"
     - Use Schema.org type annotations for all entities
     - Specify which Nextcloud OCP interfaces are used for integration features
   design:
+    - "ADR-001: All data MUST be stored via OpenRegister — no custom database tables"
+    - "ADR-012: MUST use @conduction/nextcloud-vue components (CnIndexPage, CnDashboardPage, CnFormDialog, CnDataTable) — do NOT create custom equivalents"
+    - "ADR-008: Follow Controller → Service → Mapper layering pattern"
+    - "ADR-003: MUST use NL Design System tokens via Nextcloud CSS variables — no hardcoded colors"
     - Uses OpenRegister API directly from frontend (no own backend CRUD)
     - Register config in lib/Settings/softwarecatalogus_register.json (OpenAPI 3.0.0 format)
     - Imported via ConfigurationService::importFromApp() in repair step
   tasks:
+    - "ADR-010: MUST include documentation task with browser screenshots using Playwright MCP"
+    - "ADR-009: MUST include unit test tasks — minimum 75% coverage for new code"
+    - "ADR-005: MUST include i18n tasks — Dutch and English translations required"
+    - "ADR-010: Every user-facing feature MUST have docs in docs/features/ with screenshots"
     - Test with OpenRegister to verify schema validation works
   review:
     - Cross-reference shared specs and ADRs

@@ -110,7 +110,7 @@ GET /api/contactpersonen/organisation/{organizationUuid}/with-user-details
 ### Service Usage
 
 ```php
-use OCA\SoftwareCatalog\Service\ContactpersoonService;
+use OCA\Stackiq\Service\ContactpersoonService;
 
 // Inject the service
 $contactpersoonService = $container->get(ContactpersoonService::class);
@@ -197,7 +197,7 @@ The method provides detailed logging at different levels:
 
 ## Related Files
 
-- `softwarecatalog/lib/Service/ContactpersoonService.php` - Main service implementation
-- `softwarecatalog/lib/Controller/ContactpersonenController.php` - API controller
-- `softwarecatalog/appinfo/routes.php` - API route definition
-- `softwarecatalog/lib/Examples/ContactpersoonServiceExample.php` - Usage examples
+- `stackiq/lib/Service/ContactpersoonService.php` - Main service implementation
+- `stackiq/lib/Controller/ContactpersonenController.php` - API controller
+- `stackiq/appinfo/routes.php` - API route definition
+- `stackiq/lib/Examples/ContactpersoonServiceExample.php` - Usage examples

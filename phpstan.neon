@@ -1,17 +1,40 @@
+# Stackiq — Conduction PHPStan config.
+#
+# The shared base is the single source of truth. Everything here is either the
+# app's own tracked debt or an ignore naming a symbol that exists in no other
+# fleet app. Anything you are tempted to add that another app would also need
+# belongs in the base, not here.
+includes:
+    - vendor/conduction/hydra-gates/quality-config/phpstan-base.neon
+    # Per-app tracked lint debt (auto-generated via `phpstan --generate-baseline`).
+    - phpstan-baseline.neon
+
 parameters:
-    level: 5
-    paths:
-        - lib
-    bootstrapFiles:
-        - vendor/autoload.php
-    excludePaths:
-        - vendor
-        - vendor-bin
-    scanDirectories:
-        - vendor/nextcloud/ocp
-    reportUnmatchedIgnoredErrors: false
+    # App-specific only. The base already sets level, paths, bootstrapFiles,
+    # excludePaths, scanDirectories and every fleet-wide ignore.
+    scanFiles:
+        # decidesk decision-event contract (DecisionRequestedEvent +
+        # DecisionConcludedEvent). decidesk is a sibling Nextcloud app, not a
+        # Composer dependency, so it is genuinely absent from the CI analysis
+        # path. The stub mirrors the real signatures in decidesk/lib/Event/ and
+        # supplies real type information rather than silencing the diagnostic —
+        # that is what also resolves the six `Call to method X() on an unknown
+        # class` errors that a bare ignore pattern cannot fix. Analysis-only;
+        # never loaded at runtime or by PHPUnit.
+        - tests/analysis-stubs/decidesk-events.stub.php
+
     ignoreErrors:
-        # Nextcloud internal classes that PHPStan might not recognize
-        - '#Call to an undefined method OC::#'
-        - '#Class OC not found#'
-        - '#Access to static property \$server on an unknown class OC#'
+        # OrganizationSyncService's `if ($contactObject !== null)` at the top of
+        # the contact-person loop. saveObject() returns a non-nullable
+        # ObjectEntityInterface, so the guard is provably true — the code a few
+        # lines ABOVE it already dereferences $contactObject unconditionally,
+        # which is the giveaway.
+        #
+        # Left in place rather than removed because the block it wraps is 243
+        # lines: deleting the `if` is a pure re-indentation of a quarter of the
+        # method, which is a large, review-hostile diff for zero behaviour
+        # change. Worth doing when that method is next touched for real.
+        -
+            message: '#Strict comparison using !== between OCA\\OpenRegister\\Contract\\ObjectEntityInterface and null will always evaluate to true#'
+            identifier: notIdentical.alwaysTrue
+            path: lib/Service/OrganizationSyncService.php

@@ -1,11 +1,9 @@
 <script setup>
-import { objectStore, navigationStore, catalogStore } from '../../store/store.js'
+import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog name="Upload Object"
-		size="normal"
-		:can-close="false">
+	<NcDialog name="Upload Object" size="normal" :canClose="false">
 		<NcNoteCard v-if="success" type="success">
 			<p>Object successfully uploaded</p>
 		</NcNoteCard>
@@ -14,7 +12,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 		</NcNoteCard>
 
 		<template #actions>
-			<NcButton v-if="registers?.value?.id && !schemas?.value?.id"
+			<NcButton
+				v-if="registers?.value?.id && !schemas?.value?.id"
 				:disabled="loading"
 				@click="registers.value = null">
 				<template #icon>
@@ -22,7 +21,8 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				</template>
 				Back to Register
 			</NcButton>
-			<NcButton v-if="registers.value?.id && schemas.value?.id"
+			<NcButton
+				v-if="registers.value?.id && schemas.value?.id"
 				:disabled="loading"
 				@click="schemas.value = null">
 				<template #icon>
@@ -30,16 +30,21 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 				</template>
 				Back to Schema
 			</NcButton>
-			<NcButton
-				@click="closeModal">
+			<NcButton @click="closeModal">
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
 				{{ success ? 'Close' : 'Cancel' }}
 			</NcButton>
-			<NcButton v-if="success === null"
-				:disabled="!registers.value?.id || !schemas.value?.id || loading || !validateJson(object)"
-				type="primary"
+			<NcButton
+				v-if="success === null"
+				:disabled="
+					!registers.value?.id
+					|| !schemas.value?.id
+					|| loading
+					|| !validateJson(object)
+				"
+				variant="primary"
 				@click="uploadObject()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
@@ -52,46 +57,46 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 		<div v-if="!success" class="formContainer">
 			<div v-if="registers?.value?.id && success === null">
 				<b>Register:</b> {{ registers.value.label }}
-				<NcButton @click="registers.value = null">
-					Edit Register
-				</NcButton>
+				<NcButton @click="registers.value = null"> Edit Register </NcButton>
 			</div>
 			<div v-if="schemas.value?.id && success === null">
 				<b>Schema:</b> {{ schemas.value.label }}
-				<NcButton @click="schemas.value = null">
-					Edit Schema
-				</NcButton>
+				<NcButton @click="schemas.value = null"> Edit Schema </NcButton>
 			</div>
 
 			<!-- STAGE 1 -->
 			<div v-if="!registers?.value?.id">
-				<NcSelect v-bind="registers"
+				<NcSelect
+					v-bind="registers"
 					v-model="registers.value"
-					input-label="Register"
+					inputLabel="Register"
 					:loading="registersLoading"
 					:disabled="loading" />
 			</div>
 
 			<!-- STAGE 2 -->
 			<div v-if="registers?.value?.id && !schemas?.value?.id">
-				<NcSelect v-bind="schemas"
+				<NcSelect
+					v-bind="schemas"
 					v-model="schemas.value"
-					input-label="Schemas"
+					inputLabel="Schemas"
 					:loading="schemasLoading"
 					:disabled="loading" />
 			</div>
 
 			<!-- STAGE 3 -->
 			<div v-if="registers.value?.id && schemas.value?.id">
-				<NcSelect v-bind="mappings"
+				<NcSelect
+					v-bind="mappings"
 					v-model="mappings.value"
-					input-label="Mappings"
+					inputLabel="Mappings"
 					:loading="mappingsLoading"
 					:disabled="loading || !mappings.options?.length" />
 
 				<div :class="`codeMirrorContainer ${getTheme()}`">
 					<p>Object</p>
-					<CodeMirror v-model="object"
+					<CodeMirror
+						v-model="object"
 						:basic="true"
 						:dark="getTheme() === 'dark'"
 						:lang="json()"
@@ -111,6 +116,7 @@ import { objectStore, navigationStore, catalogStore } from '../../store/store.js
 </template>
 
 <script>
+import { json, jsonParseLinter } from '@codemirror/lang-json'
 import {
 	NcButton,
 	NcDialog,
@@ -118,14 +124,12 @@ import {
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
-import { getTheme } from '../../services/getTheme.js'
-import { json, jsonParseLinter } from '@codemirror/lang-json'
 import CodeMirror from 'vue-codemirror6'
-
-import Cancel from 'vue-material-design-icons/Cancel.vue'
-import Upload from 'vue-material-design-icons/Upload.vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import AutoFix from 'vue-material-design-icons/AutoFix.vue'
+import Cancel from 'vue-material-design-icons/Cancel.vue'
+import Upload from 'vue-material-design-icons/Upload.vue'
+import { getTheme } from '../../services/getTheme.js'
 
 export default {
 	name: 'UploadObject',
@@ -139,6 +143,7 @@ export default {
 		Cancel,
 		Upload,
 	},
+
 	data() {
 		return {
 			object: '{}',
@@ -154,16 +159,25 @@ export default {
 			hasUpdated: false,
 		}
 	},
+
+	/**
+	 * @spec openspec/specs/fe-object-modals/spec.md
+	 */
 	mounted() {
 		this.initializeMappings()
 		this.initializeSchemas()
 		this.initializeRegisters()
 	},
+
 	methods: {
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		initializeMappings() {
 			this.mappingsLoading = true
 
-			objectStore.getMappings()
+			objectStore
+				.getMappings()
 				.then(({ data }) => {
 					this.mappings = {
 						multiple: false,
@@ -179,10 +193,15 @@ export default {
 					this.mappingsLoading = false
 				})
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		initializeSchemas() {
 			this.schemasLoading = true
 
-			catalogStore.refreshSchemaList()
+			catalogStore
+				.refreshSchemaList()
 				.then(() => {
 					this.schemas = {
 						multiple: false,
@@ -198,10 +217,15 @@ export default {
 					this.schemasLoading = false
 				})
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		initializeRegisters() {
 			this.registersLoading = true
 
-			catalogStore.refreshCatalogiList()
+			catalogStore
+				.refreshCatalogiList()
 				.then(() => {
 					this.registers = {
 						multiple: false,
@@ -217,6 +241,10 @@ export default {
 					this.registersLoading = false
 				})
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		closeModal() {
 			navigationStore.setModal(false)
 			this.success = null
@@ -228,6 +256,10 @@ export default {
 				url: '',
 			}
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async uploadObject() {
 			this.loading = true
 
@@ -239,21 +271,35 @@ export default {
 				schemas: '',
 			}
 
-			objectStore.saveObject(newObject)
+			objectStore
+				.saveObject(newObject)
 				.then(({ response }) => {
 					this.success = response.ok
 					this.error = false
 					response.ok && setTimeout(this.closeModal, 2000)
-				}).catch((error) => {
+				})
+				.catch((error) => {
 					this.success = false
-					this.error = error.message || 'An error occurred while uploading the object'
-				}).finally(() => {
+					this.error =
+						error.message
+						|| 'An error occurred while uploading the object'
+				})
+				.finally(() => {
 					this.loading = false
 				})
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		prettifyJson() {
 			this.object = JSON.stringify(JSON.parse(this.object), null, 2)
 		},
+
+		/**
+		 * @param json
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		validateJson(json) {
 			try {
 				JSON.parse(json)
@@ -291,12 +337,15 @@ export default {
 	border-radius: 0 !important;
 	border: none !important;
 }
+
 .codeMirrorContainer :deep(.cm-editor) {
 	outline: none !important;
 }
+
 .codeMirrorContainer.light > .vue-codemirror {
 	border: 1px dotted silver;
 }
+
 .codeMirrorContainer.dark > .vue-codemirror {
 	border: 1px dotted grey;
 }
@@ -306,6 +355,7 @@ export default {
 .codeMirrorContainer.light :deep(.ͼe) {
 	color: #448c27;
 }
+
 .codeMirrorContainer.dark :deep(.ͼe) {
 	color: #88c379;
 }
@@ -314,6 +364,7 @@ export default {
 .codeMirrorContainer.light :deep(.ͼc) {
 	color: #221199;
 }
+
 .codeMirrorContainer.dark :deep(.ͼc) {
 	color: #8d64f7;
 }
@@ -322,6 +373,7 @@ export default {
 .codeMirrorContainer.light :deep(.ͼb) {
 	color: #770088;
 }
+
 .codeMirrorContainer.dark :deep(.ͼb) {
 	color: #be55cd;
 }
@@ -330,6 +382,7 @@ export default {
 .codeMirrorContainer.light :deep(.ͼd) {
 	color: #d19a66;
 }
+
 .codeMirrorContainer.dark :deep(.ͼd) {
 	color: #9d6c3a;
 }
@@ -343,26 +396,29 @@ export default {
 .codeMirrorContainer.light :deep(.cm-line)::selection,
 .codeMirrorContainer.light :deep(.cm-line) ::selection {
 	background-color: #d7eaff !important;
-    color: black;
+	color: black;
 }
+
 .codeMirrorContainer.dark :deep(.cm-line)::selection,
 .codeMirrorContainer.dark :deep(.cm-line) ::selection {
 	background-color: #8fb3e6 !important;
-    color: black;
+	color: black;
 }
 
 /* string */
 .codeMirrorContainer.light :deep(.cm-line .ͼe)::selection {
-    color: #2d770f;
+	color: #2d770f;
 }
+
 .codeMirrorContainer.dark :deep(.cm-line .ͼe)::selection {
-    color: #104e0c;
+	color: #104e0c;
 }
 
 /* boolean */
 .codeMirrorContainer.light :deep(.cm-line .ͼc)::selection {
 	color: #221199;
 }
+
 .codeMirrorContainer.dark :deep(.cm-line .ͼc)::selection {
 	color: #4026af;
 }
@@ -371,6 +427,7 @@ export default {
 .codeMirrorContainer.light :deep(.cm-line .ͼb)::selection {
 	color: #770088;
 }
+
 .codeMirrorContainer.dark :deep(.cm-line .ͼb)::selection {
 	color: #770088;
 }
@@ -379,6 +436,7 @@ export default {
 .codeMirrorContainer.light :deep(.cm-line .ͼd)::selection {
 	color: #8c5c2c;
 }
+
 .codeMirrorContainer.dark :deep(.cm-line .ͼd)::selection {
 	color: #623907;
 }

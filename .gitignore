@@ -1,30 +1,88 @@
+# IDE
 /.idea/
 /*.iml
 *.Identifier
 
+# Dependencies
 /vendor/
 /vendor-bin/*/vendor/
+/node_modules/
 
+# Build artifacts
+/js/
+
+# Documentation
+/docs/node_modules/
+/docs/build/
+/docs/.docusaurus/
+/website/node_modules/
+/website/.docusaurus/
+.docusaurus
+
+# Testing & Quality
 /.php-cs-fixer.cache
 /tests/.phpunit.cache
+/.phpunit.cache/
+.phpunit.cache/
+.phpunit.result.cache
+/coverage/
+/coverage-frontend/
+/phpmetrics/
+/quality-reports/
+/phpqa/
 
-/node_modules/
-/js/
+# Nextcloud
 /custom_apps/
 /config/
 
-/coverage/
-/coverage-frontend/
+# OS
+.DS_Store
+Thumbs.db
 
-# Data files
+# Claude Code
+.claude/worktrees/
+
+# Repo-specific
 /data/
 *.csv
-
-# Test artifacts (generated per run — only .md results are committed)
-/test-results/**/*.json
-/test-results/**/*.html
-/test-results/**/*.png
 /reacties/screenshots/
-
-# Sync timestamp (local only)
 .last-update
+/coverage-vitest/
+/coverage/
+.hydra/
+
+# Playwright e2e artefacts
+#
+# `tests/e2e/.auth/` holds the storageState written by globalSetup — a live
+# Nextcloud session cookie for the admin user. It was COMMITTED
+# (tests/e2e/.auth/admin.json), which is both a credential in git history and a
+# correctness hazard: a stale session against whatever instance last generated
+# it makes an unauthenticated run look like a dead bundle (see the comment in
+# tests/e2e/smoke/app-mounts.spec.ts, which already documented the symptom).
+# globalSetup recreates it on every run, so nothing depends on it being there.
+tests/e2e/.auth/
+tests/e2e/playwright-report/
+tests/e2e/test-results/
+# The CI config (tests/e2e/playwright.config.ts) writes its report and its
+# per-test output to the APP ROOT instead, because that is where the shared
+# workflow's upload-artifact steps look:
+# server/apps/<app>/playwright-report/ and .../test-results/.
+# The previous `/test-results/**/*.json` style entries ignored only three file
+# extensions inside that directory, so traces (.zip) and the directory itself
+# were still tracked candidates.
+/playwright-report/
+/test-results/
+
+# Agent/test scratch and tool caches — generated, never source.
+# Added by the 2026-08-25 fleet hygiene sweep (ADR-100 Decision 2).
+.stale/
+/.e2e-state/
+.phpunit.cache
+
+# Build and test transcripts written at the repo ROOT by local tooling. These
+# were tracked, so every local build produced a commit-shaped diff, and every
+# such commit triggered the full Code Quality suite — 34 jobs deciding a
+# changed log file. Root-anchored on purpose: .claude/skills/*/examples/*.log
+# are gate FIXTURES, not artefacts, and must stay tracked.
+/*.log
+/changed.tsv

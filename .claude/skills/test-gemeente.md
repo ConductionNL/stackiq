@@ -23,6 +23,16 @@ Maria manages her municipality's software landscape in the Softwarecatalogus. Sh
 - **Browser**: Use Playwright MCP browser tools (prefixed `mcp__browser-N__`, where N is assigned by the orchestrator)
 - **Login URL**: `{FRONTEND}/login`
 
+## Organization & Permissions Context
+
+Maria's active organization is **Test Gemeente**. The internal Nextcloud org UUID matches a register object in `stackiq/organisatie`, which is required for edit/delete permissions to work.
+
+- **Beheer tables** show objects based on RBAC rules — gebruik-beheerder can see ALL objects (not just own org) for most schemas
+- **Edit/Delete buttons** require the org data fetch to succeed — if you see disabled actions or missing buttons, check for org fetch 404 errors in the console
+- **Do NOT test beheer as admin** — admin's "Default Organisation" has no register object, so org fetch always fails and permissions are broken
+- The test setup script (`bash stackiq/test-setup.sh`) creates test objects as maria.vanderberg so they get the correct org assignment
+- If beheer tables are empty or missing expected test objects, run the test setup script
+
 ## Test Scope
 
 ### Primary Steps
@@ -82,6 +92,10 @@ Maria manages her municipality's software landscape in the Softwarecatalogus. Sh
 | #346 | Zoeken: paginering werkt niet | Step 14 |
 | #347 | Zoeken: Dienstkaartje toont array | **MOVED → bezoeker** (public search page) |
 | #349 | Zoeken: UUID's onder standaarden filter | Step 14 |
+| #261 | Wizards: pas te testen na RBAC | Step 10 |
+| #311 | Altijd inlog-account en -organisatie tonen | Step 4 |
+| #331 | Koppeling relatie Applicatie | Step 11 |
+| #418 | Performance: applicaties dropdown traag bij dienst wizard | Step 10 |
 
 ## Acceptance Criteria Reference
 

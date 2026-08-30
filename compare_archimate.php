@@ -616,13 +616,13 @@ class ArchiMateComparator
 try {
     $comparator = new ArchiMateComparator();
     
-    $originalFile = '/var/www/html/apps-extra/softwarecatalog/lib/Settings/GEMMA_release.xml';
+    $originalFile = '/var/www/html/apps-extra/stackiq/lib/Settings/GEMMA_release.xml';
     $exportedFile = '/tmp/archimate_export_latest.xml';
     
     // First, generate a fresh export
     echo "Generating fresh export...\n";
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, 'http://localhost/index.php/apps/softwarecatalog/api/archimate/export');
+    curl_setopt($ch, CURLOPT_URL, 'http://localhost/index.php/apps/stackiq/api/archimate/export');
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, '{}');
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);

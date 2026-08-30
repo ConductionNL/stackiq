@@ -1,0 +1,91 @@
+{
+  "spec": "openspec/changes/stackiq-store-migration",
+  "verified": [
+    {
+      "task": "1.1",
+      "file": "openspec/changes/stackiq-store-migration/specs/stackiq-store-migration/spec.md",
+      "ok": true,
+      "note": "Spec file exists in repo; added to development in commit 25909fa"
+    },
+    {
+      "task": "2.1",
+      "file": "src/store/modules/object.js",
+      "ok": true,
+      "note": "createObjectStore('object', { plugins: [filesPlugin(), auditTrailsPlugin(), relationsPlugin(), stackiqPlugin()] }) confirmed"
+    },
+    {
+      "task": "2.2",
+      "file": "src/store/plugins/stackiqPlugin.js",
+      "ok": true,
+      "note": "Imports buildHeaders + buildQueryString from @conduction/nextcloud-vue; exports factory returning { name, state, getters, actions }"
+    },
+    {
+      "task": "2.3",
+      "file": "src/store/modules/navigation.js",
+      "ok": true,
+      "note": "defineStore — UI state (menu/modal/dialog/transferData); no OpenRegister register/schema references"
+    },
+    {
+      "task": "2.3",
+      "file": "src/store/modules/settings.js",
+      "ok": true,
+      "note": "defineStore — settings load/save + ArchiMate polling; non-OpenRegister CRUD"
+    },
+    {
+      "task": "2.3",
+      "file": "src/store/modules/catalog.js",
+      "ok": true,
+      "note": "defineStore — placeholder catalog state; no OpenRegister CRUD surface"
+    },
+    {
+      "task": "2.3",
+      "file": "src/store/modules/organisatie.js",
+      "ok": true,
+      "note": "defineStore — contactpersoon endpoints + user management; non-OpenRegister APIs"
+    },
+    {
+      "task": "2.4",
+      "file": "src/store/store.js",
+      "ok": true,
+      "note": "32 import statements across 30 files confirmed; all objectStore importers working"
+    },
+    {
+      "task": "3.1",
+      "file": "src/store/plugins/stackiqPlugin.js",
+      "ok": true,
+      "note": "jsdoc/no-defaults x4 cleared in commit f7ecaf6; 77 jsdoc/check-alignment warnings cleared in this PR"
+    },
+    {
+      "task": "4.1",
+      "file": "openspec/changes/stackiq-store-migration/design.md",
+      "ok": true,
+      "note": "@resolve: sentinel gap documented under Gap 1"
+    },
+    {
+      "task": "4.2",
+      "file": "openspec/changes/stackiq-store-migration/design.md",
+      "ok": true,
+      "note": "liveUpdatesPlugin gap documented under Gap 2"
+    },
+    {
+      "task": "5.1",
+      "file": "src/",
+      "ok": true,
+      "note": "npx eslint src/ — 0 errors; src/store/ 27 warnings (down from 104)"
+    },
+    {
+      "task": "5.2",
+      "file": "tests/validate-manifest.js",
+      "ok": true,
+      "note": "Pre-existing ajv-formats TypeError; documented as out-of-scope tooling bug"
+    },
+    {
+      "task": "5.3",
+      "file": "webpack.config.js",
+      "ok": true,
+      "note": "webpack --mode production: 0 errors, 2 pre-existing size warnings"
+    }
+  ],
+  "stubs": [],
+  "missing_routes": []
+}

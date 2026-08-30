@@ -243,7 +243,7 @@ curl -u 'admin:admin' 'http://localhost/index.php/apps/openregister/api/organisa
 docker-compose exec -u 33 nextcloud php /var/www/html/occ user:info {username}
 
 # Check logs
-docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -E "SoftwareCatalogue|ownership|UUID"
+docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -E "Stackiq|ownership|UUID"
 ```
 
 ## Implementation Notes

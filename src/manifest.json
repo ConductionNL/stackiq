@@ -1,0 +1,875 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+		"setup": {
+			"version": 1,
+			"completionConfigKey": "setup_completed_version",
+			"steps": [
+				{
+					"id": "welcome",
+					"type": "info",
+					"title": "Welcome",
+					"body": "A short setup to get this app ready. Nothing here is required; you can close it and come back later."
+				},
+				{
+					"id": "demo-data",
+					"type": "run-action",
+					"action": "install-demo-data",
+					"title": "Demo data (optional)",
+					"required": false,
+					"body": "Load a small example dataset so the lists, detail pages and dashboards show a working product straight away. The data is obviously sample data, it is safe to run more than once, and it can be removed afterwards. Skip this on a production install."
+				},
+				{
+					"id": "done",
+					"type": "summary",
+					"title": "All set"
+				}
+			]
+		},
+	"version": "1.1.0",
+	"dependencies": [
+		"openregister"
+	],
+	"walkthrough": {
+		"enabled": true,
+		"version": 1,
+		"completionConfigKey": "walkthrough_completed_version",
+		"tours": [
+			{
+				"id": "stackiq:getting-started",
+				"title": "Getting started",
+				"trigger": "first-visit",
+				"minAppVersion": "0.2.11",
+				"steps": [
+					{ "id": "welcome", "sinceVersion": "0.2.11", "placement": "center", "title": "Welcome to Stackiq", "body": "Let's take a quick spin through your software catalogue. We'll register an organisation together so you can see how the pieces fit, and you'll add the record yourself.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } },
+					{ "id": "go-organisaties", "sinceVersion": "0.2.11", "placement": "right", "body": "Organisations are the heart of your catalogue: they own the contracts, modules and compliance records you track. Open Organisations from the menu to get started.", "task": "Click Organisations in the menu", "target": { "kind": "nav-item", "ref": "Organisaties" }, "advanceOn": { "type": "route-match", "route": "Organisaties" } },
+					{ "id": "create-organisatie", "sinceVersion": "0.2.11", "placement": "bottom", "allowManualNext": true, "body": "Add your first organisation. Give it a name and save. Contracts, modules and compliance records attach to it afterwards.", "task": "Click New and save an organisation", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "stackiq", "schema": "organization", "capture": { "organisatieId": ":id" } } },
+					{ "id": "see-flows", "sinceVersion": "1.1.0", "placement": "right", "optional": true, "allowManualNext": true, "title": "Where the automation lives", "body": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.", "task": "Open Flows in the menu", "target": {"kind": "nav-item", "ref": "Flows"}, "advanceOn": {"type": "route-match", "route": "Flows"} },
+					{ "id": "done", "sinceVersion": "0.2.11", "placement": "center", "title": "Your catalogue has its first organisation", "body": "The Dashboard tracks the catalogue as it grows. The documentation covers the rest.", "task": "Open the documentation to keep going", "target": { "kind": "nav-item", "ref": "Documentation" }, "advanceOn": { "type": "manual" } }
+				]
+			}
+		]
+	},
+	"menu": [
+		{
+			"id": "Dashboard",
+			"label": "Dashboard",
+			"icon": "ViewDashboardOutline",
+			"route": "Dashboard",
+			"order": 10
+		},
+		{
+			"id": "Organisaties",
+			"label": "Organisations",
+			"icon": "OfficeBuildingOutline",
+			"route": "Organisaties",
+			"order": 20
+		},
+		{
+			"id": "Modules",
+			"label": "Applications",
+			"icon": "ApplicationOutline",
+			"route": "Modules",
+			"order": 25
+		},
+		{
+			"id": "Suites",
+			"label": "Suites",
+			"icon": "ViewGridOutline",
+			"route": "Suites",
+			"order": 27
+		},
+		{
+			"id": "Diensten",
+			"label": "Services",
+			"icon": "Domain",
+			"route": "Diensten",
+			"order": 30
+		},
+		{
+			"id": "Contracten",
+			"label": "Contracts",
+			"icon": "FileSign",
+			"route": "Contracten",
+			"order": 40
+		},
+		{
+			"id": "Standaarden",
+			"label": "Standards",
+			"icon": "ClipboardCheckOutline",
+			"route": "Standaarden",
+			"order": 50
+		},
+		{
+			"id": "BioMaatregelen",
+			"label": "BIO measures",
+			"icon": "ShieldOutline",
+			"route": "BioMaatregelen",
+			"order": 55
+		},
+		{
+			"id": "Reviews",
+			"label": "Reviews",
+			"icon": "CommentOutline",
+			"route": "Reviews",
+			"order": 60
+		},
+		{
+			"id": "Komplianties",
+			"label": "Compliance",
+			"icon": "ClipboardCheckOutline",
+			"route": "Komplianties",
+			"order": 70
+		},
+		{
+			"id": "ComplianceMatrix",
+			"label": "Compliance matrix",
+			"icon": "ClipboardCheckOutline",
+			"route": "ComplianceMatrix",
+			"order": 75
+		},
+		{
+			"id": "ReportsCompliance",
+			"label": "Reports & Compliance",
+			"icon": "ChartBoxOutline",
+			"order": 78
+		},
+		{
+			"id": "Moduleversies",
+			"label": "Module versions",
+			"icon": "PuzzleOutline",
+			"route": "Moduleversies",
+			"order": 80
+		},
+		{
+			"id": "Kwetsbaarheden",
+			"label": "Vulnerabilities",
+			"icon": "ShieldAlertOutline",
+			"route": "Kwetsbaarheden",
+			"order": 82
+		},
+		{
+			"id": "LifecycleRoadmap",
+			"label": "Portfolio roadmap",
+			"icon": "MapOutline",
+			"route": "LifecycleRoadmap",
+			"order": 85
+		},
+		{
+			"id": "LicensePosture",
+			"label": "License posture",
+			"icon": "ChartLine",
+			"route": "LicensePosture",
+			"order": 86
+		},
+		{
+			"id": "PortfolioReport",
+			"label": "Portfolio rationalization",
+			"icon": "BriefcaseOutline",
+			"route": "PortfolioReport",
+			"order": 87
+		},
+		{
+			"id": "Documentation",
+			"label": "Documentation",
+			"icon": "BookOpenVariantOutline",
+			"href": "https://stackiq.conduction.nl",
+			"section": "footer",
+			"order": 90
+		},
+		{
+			"id": "FeaturesRoadmapMenu",
+			"label": "Features & roadmap",
+			"icon": "MapMarkerPath",
+			"route": "FeaturesRoadmap",
+			"section": "footer",
+			"order": 95
+		},
+		{
+			"id": "FlowsMenu",
+			"label": "Flows",
+			"icon": "Sitemap",
+			"route": "Flows",
+			"section": "settings",
+			"order": 96
+		}
+	],
+	"pages": [
+		{
+			"id": "Dashboard",
+			"route": "/",
+			"type": "custom",
+			"title": "Dashboard",
+			"component": "DashboardCustomView",
+			"_note": "Bespoke landing dashboard: composes CnDashboardPage with hand-authored named widget slots (a management info-box with deep-links and two custom statistics tables that render per-object-type counts with inline navigation). No standard dashboard config expresses these non-KPI slot bodies."
+		},
+		{
+			"id": "Organisaties",
+			"route": "/organisaties",
+			"type": "index",
+			"title": "Organisation relationships",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "organization",
+				"viewMode": "cards",
+				"cardComponent": "OrganisatieCard",
+				"columns": ["name", "type", "status", "website"],
+				"filter": { "status": ["Draft", "Active", "Inactive"] },
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://stackiq.conduction.nl"
+			},
+			"_note": "Decomposed from the bespoke OrganisatieIndexView to a standard type:index (Phase 8): renders organisatie OR objects as a card grid via config.cardComponent=OrganisatieCard. The card keeps its inline contactpersoon toggle internally; CnIndexPage provides the toolbar, search, view-toggle and create/edit/delete dialogs. config.filter excludes organisation-merge tombstones (status='merged') from the default listing per the organisation-merge spec — a merged-away source stays readable by direct UUID lookup (OrganisatieDetail route) but never appears in this index. 🔴 THIS FILTER IS COUPLED TO THE SCHEMA'S status ENUM AND WENT STALE: #520 translated the stored enum values and migrated the rows (Concept/Actief/Deactief/samengevoegd -> Draft/Active/Inactive/merged) but did NOT translate this list, so the index filtered on three values no row can hold any more. A value filter that matches nothing is not an error — OpenRegister answers 200 with total=0 — so the Organisations index rendered 'No items found' for every user and read as an empty catalogue. Measured on the running instance: ?status[]=Draft&status[]=Active returns the seeded row, ?status[]=Concept&status[]=Actief&status[]=Deactief returns total=0. Any future enum rename must move this list in the same commit."
+		},
+		{
+			"id": "OrganisatieDetail",
+			"route": "/organisaties/:id",
+			"type": "detail",
+			"title": "Organisation",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "organization",
+				"_note": "ADR-062 rollout (round 2): this page did not exist before — organisatie objects (vendors, municipalities, collaborations) were only reachable as index cards with no detail view (codeberg softwarecatalog#76). Vendor/organisation archetype: the organisatie schema itself carries only catalogue-role fields (contactsUid, type, status, registratiestatus, samenwerkingtype, geregistreerdDoor, publicatie dates) because identity (name, website, e-mail, KvK) lives in the linked Nextcloud contact via contactsUid, not on this OR object — so the body leads with those 8 catalogue fields (2-col) rather than name/address. Top-right: a stats-block KPI card counting the organisation's own diensten, modules and contactpersonen (all FK-scoped via aanbieder/organisatie = @objectId) so a reader sees portfolio size at a glance without opening any list. Below: three FK object-lists — Services (dienst.aanbieder) and Applications (module.aanbieder) are the org's supply-side offerings; Contact persons (contactpersoon.organisatie) links to the existing ContactpersoonDetail page. Services still have no dedicated index/detail page (a real fleet gap, follow-up remains). Applications now do — bio-compliance-assessment added Modules/ModuleDetail (BBN level and DPIA tracking needed somewhere to live), so org-modules now carries `rowRoute: ModuleDetail` and a bbnLevel column; org-diensten's rowRoute stays intentionally omitted. An organisation does not communicate itself (contact happens through the linked NC contact), so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. Card-click navigation from the Organisaties index required a matching fix in OrganisatieCard.vue (the custom cardComponent never emitted the `click` event CnCardGrid/CnPageRenderer listen on for register+schema route resolution — clicking a card was previously a no-op).",
+				"widgets": [
+					{ "id": "org-data", "type": "data", "title": "Organisation", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "contactsUid", "type", "status", "registrationStatus", "samenwerkingtype", "registeredBy", "publicationDate", "depublicationDate" ], "overrides": { "status": { "editable": false }, "registeredBy": { "editable": false } } } },
+					{ "id": "org-stats-services", "type": "stats-block", "title": "Services", "icon": "ChartBar", "content": { "entries": [ { "title": "Services", "register": "@resolve:voorzieningen_register", "schema": "service", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
+					{ "id": "org-stats-applications", "type": "stats-block", "title": "Applications", "icon": "ChartBar", "content": { "entries": [ { "title": "Applications", "register": "@resolve:voorzieningen_register", "schema": "module", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
+					{ "id": "org-stats-contact-persons", "type": "stats-block", "title": "Contact persons", "icon": "ChartBar", "content": { "entries": [ { "title": "Contact persons", "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "metric": "count", "filter": { "organization": "@objectId" } } ] } },
+					{ "id": "org-diensten", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "service", "filter": { "provider": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
+					{ "id": "org-modules", "type": "object-list", "title": "Applications", "icon": "Package", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "provider": "@objectId" }, "columns": [ { "key": "licentietype", "label": "License type" }, { "key": "bbnLevel", "label": "BBN level" } ], "limit": 25, "rowRoute": "ModuleDetail", "emptyText": "No applications registered for this organisation yet" } },
+					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "filter": { "organization": "@objectId" }, "columns": [ { "key": "role", "label": "Function" }, { "key": "roles", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "org-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "6", "widgetId": "org-stats-services", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "7", "widgetId": "org-stats-applications", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "8", "widgetId": "org-stats-contact-persons", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "3", "widgetId": "org-diensten", "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "4", "widgetId": "org-modules", "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "5", "widgetId": "org-contactpersonen", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"bodyWidgets": [
+					{ "id": "org-merge", "component": "OrganisationMergePanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "Contactpersonen",
+			"route": "/contactpersonen",
+			"type": "index",
+			"title": "Contact roles",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "contactPerson",
+				"columns": [
+					"contactsUid",
+					"role",
+					"roles",
+					"organisatie"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "ContactpersoonDetail",
+			"route": "/contactpersonen/:id",
+			"type": "detail",
+			"title": "Contact role",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "contactPerson",
+				"_note": "Person archetype (a contact ROLE at an organisation). Body leads with the person's role data (function, roles, notification preferences, the linked Nextcloud contactsUid) 8-wide, with a Related panel 4-wide surfacing the owning organisation and any records that reference this person. The contactpersoon schema declares NO email/calendar linkedType (communication is handled through the linked Nextcloud contact via contactsUid, not stored on this catalogue role), so per the comms hard-rule NO Emails/Meetings widgets are placed on the body. Audit trail is rarely consulted for a contact role, so it stays as a sidebar tab.",
+				"widgets": [
+					{ "id": "cp-data", "type": "data", "title": "Contact role", "icon": "AccountBoxOutline", "content": { "columns": 2 } },
+					{ "id": "cp-related", "type": "related", "title": "Organisation & links", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "cp-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "2", "widgetId": "cp-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "ModuleDetail",
+			"route": "/modules/:id",
+			"type": "detail",
+			"title": "Application",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "module",
+				"_note": "bio-compliance-assessment: catalog archetype (an offered application). Body: application data 8-wide top-left (naam, descriptions, website, contactpersoon, hosting/licence fields, then the new BBN level and DPIA status/dates/document-reference/verwerkingsregister fields) with a Documentation files panel 4-wide top-right. Below, a Related panel surfaces the vendor (aanbieder) and linked services/couplings, then two object-lists: compliance claims (compliancy records — both GEMMA standards and, since this change, BIO measures — filtered by module=@objectId) and application versions (moduleVersie filtered by module=@objectId). An application does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"widgets": [
+					{ "id": "md-data", "type": "data", "title": "Application", "icon": "Package", "content": { "columns": 2, "include": [ "name", "beschrijvingKort", "beschrijvingLang", "website", "provider", "contactpersoon", "cloudDienstverleningsmodel", "hostingJurisdiction", "hostingLocation", "licentietype", "licence", "bbnLevel", "dpiaStatus", "dpiaDate", "dpiaNextAssessment", "dpiaDocumentRef", "verwerkingsregisterRef" ] } },
+					{ "id": "md-files", "type": "integration", "integrationId": "files", "title": "Documentation", "icon": "BookOpenVariant" },
+					{ "id": "md-related", "type": "related", "title": "Vendor & services", "icon": "LinkVariant" },
+					{ "id": "md-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@objectId" }, "columns": [ { "key": "standardVersion", "label": "Standard" }, { "key": "bioMaatregel", "label": "BIO measure" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
+					{ "id": "md-versions", "type": "object-list", "title": "Application versions", "icon": "SourceBranch", "content": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersion", "filter": { "module": "@objectId" }, "columns": [ { "key": "version", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ModuleversieDetail", "allowCreate": false, "emptyText": "No versions registered yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "md-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "2", "widgetId": "md-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "md-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "4", "widgetId": "md-compliance", "gridX": 0, "gridY": 8, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "5", "widgetId": "md-versions", "gridX": 6, "gridY": 8, "gridWidth": 6, "gridHeight": 4 }
+				],
+				"bodyWidgets": [
+					{ "id": "md-reviews", "component": "ReviewsPanel", "props": { "objectId": "@objectId", "subjectType": "module" }, "placement": "end", "colSpan": 12 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "Contracten",
+			"route": "/contracten",
+			"type": "index",
+			"title": "Contracts",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "contract",
+				"columns": [
+					"contractNumber",
+					"contractType",
+					"startDate",
+					"endDate",
+					"cost",
+					"status"
+				],
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "Active", "filter": { "status": "Active" }, "icon": "CheckCircle" },
+					{ "label": "Expiring / expired", "filter": { "status": "Expired" }, "icon": "AlertCircle" },
+					{ "label": "In negotiation", "filter": { "status": "In negotiation" }, "icon": "Handshake" }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "ContractDetail",
+			"route": "/contracten/:id",
+			"type": "detail",
+			"title": "Contract",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "contract",
+				"_note": "Document / agreement archetype. The reader of a contract needs terms and money up front, then the paperwork. Body: contract data (number, type, start/end dates, cost + period, status, both nested contact persons, documentReferentie, remarks) spans 8-wide top-left; a Documents (files) panel spans 4-wide full-height on the right because the signed contract, addenda and evidence are the primary attachments. Below the data, a Related panel links the contract's service (dienst) and usage (gebruik). A KPI stat surfaces the contract value at a glance. The contract schema declares NO email/calendar linkedType, so per the comms hard-rule NO Emails/Meetings widgets appear on the body (circulation happens via the linked Nextcloud contacts, not the catalogue record). Per the sidebar hard rule, the ContractApprovalPanel (decidesk-delegated approval workflow — a per-record action, not primary reading) moved OUT of the sidebar into a declarative body section (config.bodyWidgets, placed after the related row) so the sidebar stays audit-only. FIX (softwarecatalog audit): the panel previously rendered bare below the grid (CnBodySections gives a section only a plain `<h3>`, no card chrome) — ContractApprovalPanel now wraps its own content in CnWidgetWrapper (title + CheckCircleOutline icon), matching the chrome every other body widget carries; the now-redundant bodyWidgets `title` was dropped so the h3 doesn't duplicate it. Layout also reworked: ct-data (Contract details) now anchors gridX0/gridY0 spanning the full grid height so no whitespace hole sits between the KPI stat and the Files panel, ct-value moved to the top of the right column above ct-files, and ct-data's height was bumped from 5 to 7 (9 scalar contract fields at 2 columns need 5 rows; height5 was clipping the last row).",
+				"widgets": [
+					{ "id": "ct-value", "type": "stat", "title": "Contract value", "icon": "CurrencyEur", "content": { "label": "Contract value", "format": "currency", "source": { "register": "@resolve:voorzieningen_register", "schema": "contract", "metric": "sum", "field": "cost", "filter": { "id": "@objectId" } } } },
+					{ "id": "ct-data", "type": "data", "title": "Contract details", "icon": "FileSign", "content": { "columns": 2 } },
+					{ "id": "ct-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
+					{ "id": "ct-related", "type": "related", "title": "Service & usage", "icon": "LinkVariant" },
+					{ "id": "ct-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ct-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 7 },
+					{ "id": "2", "widgetId": "ct-value", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "3", "widgetId": "ct-files", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 5 },
+					{ "id": "4", "widgetId": "ct-related", "gridX": 0, "gridY": 7, "gridWidth": 12, "gridHeight": 3 },
+					{ "id": "5", "widgetId": "ct-decisions", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"bodyWidgets": [
+					{ "id": "ct-approval", "component": "ContractApprovalPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "Modules",
+			"route": "/modules",
+			"type": "custom",
+			"title": "Applications",
+			"component": "FacetedCatalogIndexView",
+			"_note": "Faceted index page (gemma-faceted-search): CnFacetSidebar (live GEMMA-dimension counts from FacetService) + a standalone CnIndexPage narrowed via { id: matchedObjectIds }. Stays custom rather than type:index — see customComponents.js's FacetedCatalogIndexView entry for why CnIndexPage's own embedded facet sidebar cannot drive this narrowing. bio-compliance-assessment: bbnLevel/dpiaStatus columns + BBN/DPIA quickFilters reconciled onto this page after gemma-faceted-search (#382) merged — see FacetedCatalogIndexView.vue's quickFilters prop docblock for how the quick filter's field constraints compose with the facet { id: ... } narrowing (disjoint keys, additive AND, no clobber).",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "module",
+				"description": "Browse the application (module) catalogue, filtered by GEMMA architecture dimension.",
+				"columns": [
+					"name",
+					"provider",
+					"type",
+					"licentietype",
+					"publicationDate",
+					"bbnLevel",
+					"dpiaStatus"
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "BBN1",
+						"filter": {
+							"bbnLevel": "BBN1"
+						}
+					},
+					{
+						"label": "BBN2",
+						"filter": {
+							"bbnLevel": "BBN2"
+						}
+					},
+					{
+						"label": "BBN3",
+						"filter": {
+							"bbnLevel": "BBN3"
+						}
+					},
+					{
+						"label": "Without DPIA (BBN2+)",
+						"filter": {
+							"bbnLevel": ["BBN2", "BBN3"],
+							"dpiaStatus": ["not required", "required"]
+						},
+						"icon": "AlertCircle"
+					}
+				]
+			}
+		},
+		{
+			"id": "Diensten",
+			"route": "/diensten",
+			"type": "custom",
+			"title": "Services",
+			"component": "FacetedCatalogIndexView",
+			"_note": "Faceted index page (gemma-faceted-search) — see the Modules page's _note; identical component, schema: dienst. GEMMA links are transitive via dienst.modules (FacetService resolves them server-side).",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "service",
+				"description": "Browse the service (dienst) catalogue, filtered by GEMMA architecture dimension.",
+				"columns": [
+					"name",
+					"provider",
+					"type",
+					"publicationDate"
+				]
+			}
+		},
+		{
+			"id": "Suites",
+			"route": "/suites",
+			"type": "custom",
+			"title": "Suites",
+			"component": "SuitesIndexView",
+			"_note": "suite-wizard: index of `suite` objects (an application suite — a bundled product made up of one or more existing applications, replacing the retired incumbent 'product' concept per VNG Softwarecatalogus #242 / softwarecatalog#372). Stays `type: custom` solely so the guided multi-step creation wizard's action button can sit in CnIndexPage's #actions slot alongside the self-fetch list (register=stackiq, schema=suite) — a declarative type:index page has no slot for it. Create/edit/delete of an individual suite outside the wizard still reuse the generic ObjectModal via CnIndexPage's own default form dialog."
+		},
+		{
+			"id": "SuiteDetail",
+			"route": "/suites/:id",
+			"type": "detail",
+			"title": "Suite",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "suite",
+				"_note": "suite-wizard: catalog archetype (a bundled product made up of one or more existing applications). Body: suite data 8-wide (naam, beschrijvingKort, beschrijvingLang, website, logo, contactpersoon) with a Related panel 4-wide surfacing both the contact person and the attached applications (`applicaties`) — the latter via the platform's generic bidirectional relation index (the same `/uses`+`/used` mechanism `md-related` on ModuleDetail already relies on, which is also how a module's own detail page surfaces which suite(s) include it, with no ModuleDetail change needed). A suite does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"widgets": [
+					{ "id": "suite-data", "type": "data", "title": "Suite", "icon": "Package", "content": { "columns": 2, "include": [ "name", "beschrijvingKort", "beschrijvingLang", "website", "logo", "contactpersoon" ] } },
+					{ "id": "suite-related", "type": "related", "title": "Applications & contact", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "suite-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
+					{ "id": "2", "widgetId": "suite-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 6 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "Standaarden",
+			"route": "/standaarden",
+			"type": "index",
+			"title": "Standards",
+			"config": {
+				"register": "@resolve:amef_register",
+				"schema": "element",
+				"filter": { "gemmaType": "standaard" },
+				"columns": [
+					"name",
+					"gemmaThema",
+					"gemmaStatus",
+					"url"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			},
+			"_note": "The register has NO dedicated 'standard' schema — GEMMA standards are `element` objects (the generic ArchiMate/GEMMA model-element schema, shared with referentiecomponenten, applications, capabilities, …) discriminated by `gemmaType`. Fixed a pre-existing bug: this page previously pointed at a non-existent `schema: \"standaard\"`, which would 404 on every fetch. Scoped with `filter.gemmaType: \"standaard\"` (see lib/Service/ArchiMateImportService.php's `extractGemmaType` comparisons and its `?gemmaType=referentiecomponent` query comment) so only standard-typed elements list here. REGISTER FIX (measured): `element` is declared under `components.registers.vng-gemma.schemas`, NOT under `voorzieningen`, so `@resolve:voorzieningen_register` produced `GET /api/objects/<voorzieningen>/element -> 404 {\"message\":\"Schema not found: 'element'\"}` on every load (CI trace, run 31981873526). Attaching `element` to `voorzieningen` was rejected deliberately: the request would then succeed and return an EMPTY list, because objects live per register and the AMEF elements are written to the AMEF one — a visible error traded for an invisible pass. Repointed at `@resolve:amef_register`, the second sentinel, provisioned in lib/AppInfo/Application.php::boot() from the `amef_config` blob exactly as `voorzieningen_register` is from `voorzieningen_config`."
+		},
+		{
+			"id": "StandaardDetail",
+			"route": "/standaarden/:id",
+			"type": "detail",
+			"title": "Standard",
+			"config": {
+				"register": "@resolve:amef_register",
+				"schema": "element",
+				"_note": "Catalog archetype (a normative GEMMA standard). What matters about a standard is (a) its definition, (b) the specification documents, and (c) the ecosystem around it: which modules implement it and what compliance records claim it. Body: standard data 8-wide top-left (name, gemmaThema, gemmaStatus, documentation, url, versieaanduiding, beschikbaarheid — the `element` schema's GEMMA-standard fields); a Specification documents (files) panel 4-wide top-right for the published spec/PDFs. Below, a Related panel surfaces the element's own FK web (standaardVersies, aanbevolenVoorReferentiecomponent, verplichteVoorReferentiecomponent, gekoppeldeStandaardVersies — all self-references into other `element` objects), then a compliancy object-list shows every compliance claim naming this standard (compliancy.standaardGemma matched to the standard's own `name`) so a reader sees adoption at a glance. FIX: the register has no dedicated 'standard' schema — this page previously pointed at a non-existent `schema: \"standaard\"` (guaranteed fetch failure); corrected to `element` (the shared GEMMA/ArchiMate element schema, discriminated by `gemmaType`). A standard does not communicate, so per the comms hard-rule NO Emails/Meetings/Talk widgets appear. Audit trail stays a sidebar tab. REGISTER FIX: the page-level register moved from `@resolve:voorzieningen_register` to `@resolve:amef_register` for the same reason as the Standaarden index — `element` is attached to the AMEF register, not to voorzieningen, and an unattached slug now throws rather than resolving globally. The nested `st-compliance` object-list deliberately KEEPS `@resolve:voorzieningen_register`: `compliancy` really does live in voorzieningen, and a detail page's widgets carry their own register.",
+				"widgets": [
+					{ "id": "st-data", "type": "data", "title": "Standard", "icon": "ShieldCheckOutline", "content": { "columns": 2 } },
+					{ "id": "st-files", "type": "integration", "integrationId": "files", "title": "Specification documents", "icon": "FolderOutline" },
+					{ "id": "st-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "st-compliance", "type": "object-list", "title": "Compliance claims for this standard", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "standardGemma": "@object.name" }, "columns": [ { "key": "module", "label": "Module" }, { "key": "standardVersion", "label": "Standard version" }, { "key": "url", "label": "Evidence URL" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "st-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "2", "widgetId": "st-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "st-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "4", "widgetId": "st-compliance", "gridX": 0, "gridY": 4, "gridWidth": 8, "gridHeight": 4 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "BioMaatregelen",
+			"route": "/bio-maatregelen",
+			"type": "index",
+			"title": "BIO measures",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "bioMeasure",
+				"columns": [
+					"code",
+					"name",
+					"thema",
+					"bioVersion",
+					"bbnNiveau"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			},
+			"_note": "bio-compliance-assessment: BIO 2.0 measures reference catalog (design.md Decision 1/Decision 4), following the Standaarden/StandaardDetail index+detail pattern. Publicly readable (authorization.read: [\"public\"]) since it is a selection source for compliancy.bioMaatregel and the BIO coverage report (ComplianceMatrixView), not organisation-owned data."
+		},
+		{
+			"id": "BioMaatregelDetail",
+			"route": "/bio-maatregelen/:id",
+			"type": "detail",
+			"title": "BIO measure",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "bioMeasure",
+				"_note": "Catalog archetype (a BIO 2.0 measure), mirroring StandaardDetail's shape for the parallel bioMaatregel relation (design.md Decision 1: compliancy links to a standaardversie OR a bioMaatregel, never a third parallel model). Body: measure data 8-wide (code, naam, omschrijving, thema, bioVersie, bbnNiveau, bron). Below, a compliancy object-list shows every compliance claim referencing this measure (compliancy.bioMaatregel = @objectId), mirroring how StandaardDetail's st-compliance widget shows claims for a standard.",
+				"widgets": [
+					{ "id": "bm-data", "type": "data", "title": "BIO measure", "icon": "ShieldCheckOutline", "content": { "columns": 2 } },
+					{ "id": "bm-compliance", "type": "object-list", "title": "Compliance claims for this measure", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "bioMeasure": "@objectId" }, "columns": [ { "key": "module", "label": "Module" }, { "key": "url", "label": "Evidence URL" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "bm-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "2", "widgetId": "bm-compliance", "gridX": 0, "gridY": 4, "gridWidth": 12, "gridHeight": 4 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "Reviews",
+			"route": "/reviews",
+			"type": "index",
+			"title": "Reviews",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "assessment",
+				"columns": [
+					"name",
+					"auteur",
+					"rating",
+					"status"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "ReviewDetail",
+			"route": "/reviews/:id",
+			"type": "detail",
+			"title": "Review",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "assessment",
+				"_note": "Review / assessment archetype (beoordeeling). A review is read for its verdict then its subject: body leads with the review data (name, short + long markdown description, score) 8-wide left, a prominent score stat (waardering) top-right, and a Related panel + supporting-evidence Files panel stacked beneath it surfacing the reviewed subjects — the beoordeeling links modules[], diensten[] and koppelingen[] (the things assessed) plus its gebruik context. A review does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. FIX (softwarecatalog audit): rv-data (Review) now anchors gridX0/gridY0 so the left column starts flush with the right column instead of a whitespace hole opening up beside the score stat; rv-score/rv-related/rv-files were re-stacked in the right column to match rv-data's height. rv-related's title shortened from 'Reviewed modules & services' (truncated to 'Reviewed modules & s…' in the widget header) to 'Reviewed modules'.",
+				"widgets": [
+					{ "id": "rv-score", "type": "stat", "title": "Rating", "icon": "Star", "content": { "label": "Rating", "icon": "Star", "source": { "register": "@resolve:voorzieningen_register", "schema": "assessment", "metric": "avg", "field": "rating", "filter": { "id": "@objectId" } } } },
+					{ "id": "rv-data", "type": "data", "title": "Review", "icon": "NoteTextOutline", "content": { "columns": 2 } },
+					{ "id": "rv-related", "type": "related", "title": "Reviewed modules", "icon": "LinkVariant" },
+					{ "id": "rv-files", "type": "integration", "integrationId": "files", "title": "Supporting evidence", "icon": "FolderOutline" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "rv-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "2", "widgetId": "rv-score", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "3", "widgetId": "rv-related", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "4", "widgetId": "rv-files", "gridX": 8, "gridY": 5, "gridWidth": 4, "gridHeight": 3 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "Komplianties",
+			"route": "/komplianties",
+			"type": "index",
+			"title": "Compliance",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "compliancy",
+				"columns": [
+					"module",
+					"standardVersion",
+					"standardGemma",
+					"url"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "KompliantieDetail",
+			"route": "/komplianties/:id",
+			"type": "detail",
+			"title": "Compliance",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "compliancy",
+				"_note": "Compliance-claim archetype (compliancy). A compliance record asserts that a MODULE satisfies a STANDARD (version), backed by evidence. The claim is only credible with its evidence, so the body pairs the claim data 8-wide (module, standaardversie, standaardGemma, evidence URL and bewijsReferentie) with an Evidence documents (files) panel 4-wide full-height on the right — the bewijs file attachment is the whole point of the record. Below, a Related panel links the two subjects of the claim (module + standard/element) for one-click navigation to either side. A compliance record does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"widgets": [
+					{ "id": "cm-data", "type": "data", "title": "Compliance claim", "icon": "ShieldCheckOutline", "content": { "columns": 2 } },
+					{ "id": "cm-files", "type": "integration", "integrationId": "files", "title": "Evidence documents", "icon": "FolderOutline" },
+					{ "id": "cm-related", "type": "related", "title": "Module & standard", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "cm-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "2", "widgetId": "cm-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 7 },
+					{ "id": "3", "widgetId": "cm-related", "gridX": 0, "gridY": 4, "gridWidth": 8, "gridHeight": 3 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "ComplianceMatrix",
+			"route": "/compliance-matrix",
+			"type": "custom",
+			"title": "Compliance matrix",
+			"component": "ComplianceMatrixView",
+			"_note": "Filter-first cross-tab grid of modules (rows) against user-selected GEMMA standard versions (columns), where each cell is a tri-state (verified-with-evidence / claimed / none). No standard index or detail type expresses a two-dimensional matrix whose columns are chosen at runtime."
+		},
+		{
+			"id": "Moduleversies",
+			"route": "/moduleversies",
+			"type": "index",
+			"title": "Module versions",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "moduleVersion",
+				"columns": [
+					"version",
+					"module",
+					"dateInUse",
+					"status"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			},
+			"_note": "Fixed a pre-existing bug: `releaseDatum` is not a moduleVersie property (see lib/Settings/softwarecatalogus_register.json) — replaced with the real lifecycle field `datumInGebruik` (date the version went live), the closest analog to a release date."
+		},
+		{
+			"id": "ModuleversieDetail",
+			"route": "/moduleversies/:id",
+			"type": "detail",
+			"title": "Module version",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "moduleVersion",
+				"_note": "Catalog / release archetype (moduleVersie — a released version of a module). Two questions dominate: what is this release and where is it in its lifecycle. Body: version data 8-wide (versie, package description, short + long markdown, status, geregistreerdDoor and the four lifecycle dates: in ontwikkeling / in gebruik / einde ondersteuning / teruggetrokken) with a Related panel 4-wide surfacing the parent module and its usages (gebruiken). Below, a compliancy object-list shows every compliance claim recorded against the parent module (compliance is tracked at module level via module.compliancy), and a release-notes / package Files panel holds changelogs and artefacts. A module version does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"widgets": [
+					{ "id": "mv-data", "type": "data", "title": "Version details", "icon": "Package", "content": { "columns": 2 } },
+					{ "id": "mv-related", "type": "related", "title": "Module & usage", "icon": "LinkVariant" },
+					{ "id": "mv-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@object.module" }, "columns": [ { "key": "standardGemma", "label": "Standard" }, { "key": "standardVersion", "label": "Version" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
+					{ "id": "mv-files", "type": "integration", "integrationId": "files", "title": "Release notes & artefacts", "icon": "FolderOutline" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "mv-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "mv-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 5 },
+					{ "id": "3", "widgetId": "mv-compliance", "gridX": 0, "gridY": 5, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "4", "widgetId": "mv-files", "gridX": 8, "gridY": 5, "gridWidth": 4, "gridHeight": 4 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "components", "label": "Components", "icon": "Package", "component": "SbomComponentsPanel" },
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "Kwetsbaarheden",
+			"route": "/kwetsbaarheden",
+			"type": "custom",
+			"title": "Vulnerabilities",
+			"component": "KwetsbaarhedenView",
+			"_note": "Custom vulnerability index over the kwetsbaarheid schema: a CVSS-derived severity band, affected-application count and exposed-in-production-usage count, plus severity-band quick-filter tabs — none of which a built-in type='index' (schema columns + exact-match quick filters) expresses. Create/edit/delete reuse the app's generic ObjectModal (kwetsbaarheid is already a generic modal type); reporting a vulnerability here is what makes the shipped vulnerability-reported notification reachable. Severity is derived from cvssScore, never stored."
+		},
+		{
+			"id": "KwetsbaarheidDetail",
+			"route": "/kwetsbaarheden/:id",
+			"type": "detail",
+			"title": "Vulnerability",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "vulnerability",
+				"_note": "Vulnerability detail. Body: the vulnerability data (naam, cveCode, cvssScore, short + long description) 8-wide with a Related panel 4-wide surfacing the affected applications (kwetsbaarheid.modules). An Exposure sidebar tab renders VulnerabilityExposurePanel — the read-time join to the in-production usages exposed to this CVE, each with its consuming organisation (afnemer) and deployed version (computed on demand, never stored). A vulnerability does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"widgets": [
+					{ "id": "kw-data", "type": "data", "title": "Vulnerability", "content": { "columns": 2 } },
+					{ "id": "kw-related", "type": "related", "title": "Affected applications" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "kw-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "2", "widgetId": "kw-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "exposure", "label": "Exposure", "icon": "ShieldOutline", "component": "VulnerabilityExposurePanel" },
+						{ "id": "audit", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "LicensePosture",
+			"route": "/license-posture",
+			"type": "custom",
+			"title": "License posture",
+			"component": "LicensePostureView",
+			"_note": "Portfolio software-license posture (SAM overview): open-source vs closed-source share of the IN-PRODUCTION portfolio (weighted by deployment, not catalogue rows), a per-vendor rollup (deployments + licence mix + annualised cost CONSUMED from contract-administration's totalAnnualisedCost, never re-derived), and a per-organisation open-source-first report. All derived at query time via the licensePosture util — no stored posture, no app-local aggregation engine. No built-in index/detail type expresses a multi-axis read-only aggregation dashboard."
+		},
+		{
+			"id": "LifecycleRoadmap",
+			"route": "/portfolio-roadmap",
+			"type": "custom",
+			"title": "Portfolio roadmap",
+			"component": "LifecycleRoadmapView",
+			"_note": "Per-organisation roadmap: the selected organisation's applications-in-use grouped into derived lifecycle-phase swimlanes (Onbekend first) and ordered within each lane by nearest urgency (end-of-support / phase-out / planned replacement). No standard index/roadmap type derives and groups by computed lifecycle phase."
+		},
+		{
+			"id": "PortfolioReport",
+			"route": "/portfolio-report",
+			"type": "custom",
+			"title": "Portfolio rationalization",
+			"component": "PortfolioReportView",
+			"_note": "Gartner TIME rationalization report (openspec/changes/portfolio-rationalization-time): a per-organisation, RBAC-scoped, bounded server-side aggregate (GET /api/portfolio-report) combining TIME quadrant counts (Tolerate/Invest/Migrate/Eliminate + Unclassified) with EOL exposure (application-lifecycle-tracking derivation), cloud-transition share (cloudDienstverleningsmodel), and annualised cost overlay (contract-administration derivation) per quadrant, plus a CSV export of the underlying rows. Unlike LifecycleRoadmap/LicensePosture (which derive client-side over full collections), this report reads a single composed backend endpoint so aggregation stays bounded and organisation-scoped server-side per design.md Decision 3/4 — no built-in index/detail/dashboard type expresses a fetched, pre-aggregated multi-metric report with a CSV export variant."
+		},
+		{
+			"id": "FeaturesRoadmap",
+			"route": "/features-roadmap",
+			"type": "roadmap",
+			"title": "Features & roadmap",
+			"config": {
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "Flows",
+			"route": "/flows",
+			"type": "index",
+			"title": "Flows",
+			"config": { "entitySource": "flows", "app": "stackiq" },
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source (config.entitySource) rather than the deprecated `flows` page type, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app."
+		},
+		{
+			"id": "FlowDetail",
+			"route": "/flows/:id",
+			"type": "flow",
+			"title": "Flow",
+			"config": { "app": "stackiq" },
+			"sidebarComponent": "FlowDetailSidebar",
+			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors pipelinq#1490."
+		}
+	]
+}

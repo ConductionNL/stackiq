@@ -2,7 +2,7 @@
 
 Date: 2026-03-01
 Reviewer: Claude (automated code review)
-Scope: Changes across openregister (docs/rbac-rewrite), softwarecatalog (development), opencatalogi (feature/newopenregister)
+Scope: Changes across openregister (docs/rbac-rewrite), stackiq (development), opencatalogi (feature/newopenregister)
 
 ---
 
@@ -149,7 +149,7 @@ Same as #4 -- no `_fileOriginalNames` references exist anywhere in the codebase.
 
 ## 6. softwarecatalogus_register.json - RBAC format
 
-**File:** `softwarecatalog/lib/Settings/softwarecatalogus_register.json`
+**File:** `stackiq/lib/Settings/softwarecatalogus_register.json`
 
 **FINDING: FORMAT CORRECT, BUT BACKEND SUPPORT INCOMPLETE**
 
@@ -200,7 +200,7 @@ This is correctly formatted. Only `gebruik-beheerder` and `admin` group members 
 
 ## 7. OrganizationSyncService.php - ObjectEntityMapper::update() pattern
 
-**File:** `softwarecatalog/lib/Service/OrganizationSyncService.php`
+**File:** `stackiq/lib/Service/OrganizationSyncService.php`
 
 **FINDING: OK - CORRECT PATTERN FOR THIS USE CASE**
 
@@ -235,7 +235,7 @@ For sync operations, skipping events is actually desirable (prevents recursion).
 
 ## 8. ContactpersoonService.php - Same mapper pattern + recursion guard
 
-**File:** `softwarecatalog/lib/Service/ContactpersoonService.php`
+**File:** `stackiq/lib/Service/ContactpersoonService.php`
 
 **FINDING: OK - NECESSARY FIX**
 
@@ -264,7 +264,7 @@ When `OrganisationMapper::findByUuid()` throws `DoesNotExistException`, the code
 
 ## 9. ContactPersonHandler.php - sanitizeEmailForUsername()
 
-**File:** `softwarecatalog/lib/Service/SoftwareCatalogue/ContactPersonHandler.php`
+**File:** `stackiq/lib/Service/Stackique/ContactPersonHandler.php`
 
 **FINDING: OK - NEW, NECESSARY UTILITY**
 
@@ -287,7 +287,7 @@ The `sanitizeEmailForUsername()` method:
 
 ## 10. UserProfileUpdatedEventListener.php - MetadataHydrationHandler
 
-**File:** `softwarecatalog/lib/EventListener/UserProfileUpdatedEventListener.php`
+**File:** `stackiq/lib/EventListener/UserProfileUpdatedEventListener.php`
 
 **FINDING: OK - NECESSARY WORKAROUND**
 
@@ -313,7 +313,7 @@ The `findContactpersoon()` method with email fallback is also a good addition. I
 
 **FINDING: NOT IN SCOPE**
 
-No Vue modal changes appear in the softwarecatalog `development` branch diff. The `src/modals/` directory is not modified. This item may have been intended for a different branch or repository.
+No Vue modal changes appear in the stackiq `development` branch diff. The `src/modals/` directory is not modified. This item may have been intended for a different branch or repository.
 
 **Verdict:** N/A -- no changes found to review.
 
@@ -378,7 +378,7 @@ $universalOrderFields = ['_uuid', '_created', '_updated', '_published', '_depubl
 2. **fix: Handle serialized schema arrays in QueryHandler property authorization check** -- QueryHandler.php
 3. (ExportService changes can stay as-is -- they're part of the broader export rewrite)
 
-### softwarecatalog (development)
+### stackiq (development)
 1. **fix(#434): Use mapper for sync operations to avoid validation cascades** -- OrganizationSyncService, ContactpersoonService, UserProfileUpdatedEventListener
 2. **feat(#392): Add email sanitization for username generation** -- ContactPersonHandler
 3. **chore: Update register.json schema config** -- softwarecatalogus_register.json (rollen enum, table defaults, auth rules, version bump)

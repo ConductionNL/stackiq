@@ -16,6 +16,7 @@ export const useCatalogStore = defineStore('catalog', {
 	getters: {
 		/**
 		 * Get the current catalog
+		 *
 		 * @param {object} state - The store state
 		 * @return {object | null} The current catalog or null
 		 */
@@ -23,6 +24,7 @@ export const useCatalogStore = defineStore('catalog', {
 
 		/**
 		 * Check if loading
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if loading
 		 */
@@ -30,6 +32,7 @@ export const useCatalogStore = defineStore('catalog', {
 
 		/**
 		 * Get error message
+		 *
 		 * @param {object} state - The store state
 		 * @return {string|null} Error message or null
 		 */
@@ -39,6 +42,7 @@ export const useCatalogStore = defineStore('catalog', {
 	actions: {
 		/**
 		 * Set loading state
+		 *
 		 * @param {boolean} loading - Loading state
 		 */
 		setLoading(loading) {
@@ -47,6 +51,7 @@ export const useCatalogStore = defineStore('catalog', {
 
 		/**
 		 * Set error message
+		 *
 		 * @param {string|null} error - Error message
 		 */
 		setError(error) {
@@ -55,6 +60,7 @@ export const useCatalogStore = defineStore('catalog', {
 
 		/**
 		 * Set current catalog
+		 *
 		 * @param {object | null} catalog - Catalog object
 		 */
 		setCurrentCatalog(catalog) {
@@ -63,6 +69,8 @@ export const useCatalogStore = defineStore('catalog', {
 
 		/**
 		 * Clear error
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		clearError() {
 			this.error = null
@@ -70,6 +78,8 @@ export const useCatalogStore = defineStore('catalog', {
 
 		/**
 		 * Reset store state
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		reset() {
 			this.catalogs = []

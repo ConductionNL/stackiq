@@ -1,23 +1,23 @@
 <!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
- - @license AGPL-3.0-or-later
+ - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - This program is free software: you can redistribute it and/or modify
- - it under the terms of the GNU Affero General Public License as
- - published by the Free Software Foundation, either version 3 of the
- - License, or (at your option) any later version.
+ - Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+ - the European Commission – subsequent versions of the EUPL (the "Licence");
+ - You may not use this work except in compliance with the Licence.
+ - You may obtain a copy of the Licence at:
  -
- - This program is distributed in the hope that it will be useful,
- - but WITHOUT ANY WARRANTY; without even the implied warranty of
- - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- - GNU Affero General Public License for more details.
+ - https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - You should have received a copy of the GNU Affero General Public License
- - along with this program. If not, see <http://www.gnu.org/licenses/>.
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the Licence is distributed on an "AS IS" basis,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the Licence for the specific language governing permissions and
+ - limitations under the Licence.
  -->
 
 <template>
-	<NcSettingsSection :name="name" :description="description" :doc-url="docUrl">
+	<NcSettingsSection :name="name" :description="description" :docUrl="docUrl">
 		<div class="collapsible-section">
 			<!-- Section Header with Controls -->
 			<div class="section-header">
@@ -34,7 +34,7 @@
 					<!-- Save Button -->
 					<NcButton
 						v-if="showSaveButton && !loading"
-						type="primary"
+						variant="primary"
 						:disabled="saving || !canSave"
 						@click="handleSave">
 						<template #icon>
@@ -47,7 +47,7 @@
 					<!-- Refresh Button -->
 					<NcButton
 						v-if="showRefreshButton && !loading"
-						type="secondary"
+						variant="secondary"
 						:disabled="refreshing"
 						@click="handleRefresh">
 						<template #icon>
@@ -60,7 +60,7 @@
 					<!-- Info Button -->
 					<NcButton
 						v-if="hasInfoContent"
-						type="tertiary-no-background"
+						variant="tertiary-no-background"
 						:aria-label="'Show information about ' + name"
 						@click="showInfoModal = true">
 						<template #icon>
@@ -70,8 +70,10 @@
 
 					<!-- Collapse Toggle -->
 					<NcButton
-						type="tertiary-no-background"
-						:aria-label="isExpanded ? 'Collapse section' : 'Expand section'"
+						variant="tertiary-no-background"
+						:aria-label="
+							isExpanded ? 'Collapse section' : 'Expand section'
+						"
 						@click="toggleExpanded">
 						<template #icon>
 							<ChevronUp v-if="isExpanded" :size="20" />
@@ -96,26 +98,23 @@
 			</div>
 		</div>
 
-		<!-- Info Modal -->
-		<NcModal
+		<!-- Info Modal — own file per ADR-004/ADR-012 -->
+		<CollapsibleSectionInfoModal
 			v-if="showInfoModal"
+			:name="name"
 			@close="showInfoModal = false">
-			<div class="info-modal">
-				<div class="modal-header">
-					<h2>{{ name }} - Information</h2>
-				</div>
-				<div class="modal-content">
-					<slot name="info-content">
-						<p>No additional information available.</p>
-					</slot>
-				</div>
-				<div class="modal-footer">
-					<NcButton @click="showInfoModal = false">
-						Close
-					</NcButton>
-				</div>
-			</div>
-		</NcModal>
+			<!--
+				BOTH slot names are honoured, matching AlwaysVisibleSection: this
+				section has always used `info-content`, and `info` is accepted as an
+				alias so the two sections share one slot API and no caller can be
+				silently empty. The empty-state paragraph is the last fallback.
+			-->
+			<slot name="info-content">
+				<slot name="info">
+					<p>No additional information available.</p>
+				</slot>
+			</slot>
+		</CollapsibleSectionInfoModal>
 	</NcSettingsSection>
 </template>
 
@@ -128,23 +127,18 @@
  *
  * @author Ruben Linde <info@conduction.nl>
  * @copyright 2023 Conduction B.V.
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  * @version 1.0.0
  */
 
-import {
-	NcSettingsSection,
-	NcButton,
-	NcLoadingIcon,
-	NcModal,
-} from '@nextcloud/vue'
-
+import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
+import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
+import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 // Icons
 import Save from 'vue-material-design-icons/ContentSave.vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Information from 'vue-material-design-icons/Information.vue'
-import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
-import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import CollapsibleSectionInfoModal from '../modals/CollapsibleSectionInfoModal.vue'
 
 export default {
 	name: 'CollapsibleSection',
@@ -153,12 +147,12 @@ export default {
 		NcSettingsSection,
 		NcButton,
 		NcLoadingIcon,
-		NcModal,
 		Save,
 		Refresh,
 		Information,
 		ChevronUp,
 		ChevronDown,
+		CollapsibleSectionInfoModal,
 	},
 
 	props: {
@@ -279,6 +273,8 @@ export default {
 	methods: {
 		/**
 		 * Toggle section expanded state
+		 *
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		toggleExpanded() {
 			this.isExpanded = !this.isExpanded
@@ -286,6 +282,8 @@ export default {
 
 		/**
 		 * Handle save button click
+		 *
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleSave() {
 			this.$emit('save')
@@ -293,6 +291,8 @@ export default {
 
 		/**
 		 * Handle refresh button click
+		 *
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleRefresh() {
 			this.$emit('refresh')
@@ -362,71 +362,14 @@ export default {
 	padding: 40px 0;
 }
 
-/* Info Modal Styles */
-.info-modal {
-	padding: 20px;
-	max-width: 600px;
-	max-height: 80vh;
-	overflow-y: auto;
-}
+/* The info-modal styles live with the modal in
+   src/modals/CollapsibleSectionInfoModal.vue */
 
-.modal-header {
-	margin-bottom: 16px;
-	padding-bottom: 16px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.modal-header h2 {
-	margin: 0;
-	font-size: 20px;
-	font-weight: 600;
-	color: var(--color-main-text);
-}
-
-.modal-content {
-	margin-bottom: 20px;
-	line-height: 1.6;
-}
-
-.modal-content :deep(h3) {
-	margin-top: 20px;
-	margin-bottom: 12px;
-	font-size: 16px;
-	font-weight: 600;
-}
-
-.modal-content :deep(h4) {
-	margin-top: 16px;
-	margin-bottom: 8px;
-	font-size: 14px;
-	font-weight: 600;
-}
-
-.modal-content :deep(ul) {
-	padding-left: 20px;
-	margin-bottom: 16px;
-}
-
-.modal-content :deep(li) {
-	margin-bottom: 4px;
-}
-
-.modal-content :deep(p) {
-	margin-bottom: 12px;
-}
-
-.modal-content :deep(code) {
-	background-color: var(--color-background-dark);
-	padding: 2px 6px;
-	border-radius: 4px;
-	font-family: monospace;
-	font-size: 13px;
-}
-
-.modal-footer {
-	display: flex;
-	justify-content: flex-end;
-	padding-top: 16px;
-	border-top: 1px solid var(--color-border);
+/* WCAG 2.3.3 — the expand animation is decorative; a reduced-motion user gets
+   the expanded section immediately instead of the slide. */
+@media (prefers-reduced-motion: reduce) {
+	.section-content {
+		animation: none;
+	}
 }
 </style>

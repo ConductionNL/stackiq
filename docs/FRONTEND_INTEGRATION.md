@@ -13,7 +13,7 @@ Added a new method `fetchContactPersonsWithUserDetails()` to the Pinia store:
 ```javascript
 async fetchContactPersonsWithUserDetails(organizationUuid) {
     try {
-        const url = generateUrl(`/apps/softwarecatalog/api/contactpersonen/organisation/${organizationUuid}/with-user-details`)
+        const url = generateUrl(`/apps/stackiq/api/contactpersonen/organisation/${organizationUuid}/with-user-details`)
         
         const response = await fetch(url, {
             method: 'GET',
@@ -201,7 +201,7 @@ To test the integration:
 
 ## Related Files
 
-- `softwarecatalog/src/store/modules/organisatie.js` - Store with new API method
-- `softwarecatalog/src/components/ContactpersonenList.vue` - Component with enhanced data loading
-- `softwarecatalog/lib/Service/ContactpersoonService.php` - Backend service
-- `softwarecatalog/lib/Controller/ContactpersonenController.php` - API controller
+- `stackiq/src/store/modules/organisatie.js` - Store with new API method
+- `stackiq/src/components/ContactpersonenList.vue` - Component with enhanced data loading
+- `stackiq/lib/Service/ContactpersoonService.php` - Backend service
+- `stackiq/lib/Controller/ContactpersonenController.php` - API controller
