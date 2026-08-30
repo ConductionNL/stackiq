@@ -121,7 +121,17 @@ async function fillDetails(page: Page): Promise<void> {
 /** Attach one seeded module through the real NcSelect multi-picker. */
 async function attachApplication(page: Page, name: string): Promise<void> {
 	const w = wizard(page)
-	const picker = w.locator('.suite-wizard-step2 .vs__search input').first()
+	// `.vs__search` no longer identifies the input on its own: the component
+	// library now also puts that class on a wrapper, so `.first()` resolved to
+	//   <div class="input-field input-field--label-outside vs__search">
+	// and `fill()` refused it with "Element is not an <input>, <textarea>,
+	// <select> or [contenteditable]". Demand an actual input, whether the class
+	// sits on it or on an ancestor, so this survives the markup moving again.
+	const picker = w
+		.locator(
+			'.suite-wizard-step2 input.vs__search, .suite-wizard-step2 .vs__search input',
+		)
+		.first()
 	await picker.click()
 	await picker.fill(name)
 	// The option list is teleported to body by vue-select, so it is queried on
@@ -176,7 +186,17 @@ test('suite wizard: the applications step offers existing modules and no create 
 	// The picker offers a module that genuinely exists in the register — the
 	// one this run seeded. If the step invented its own options, or fetched
 	// nothing, this fails.
-	const picker = w.locator('.suite-wizard-step2 .vs__search input').first()
+	// `.vs__search` no longer identifies the input on its own: the component
+	// library now also puts that class on a wrapper, so `.first()` resolved to
+	//   <div class="input-field input-field--label-outside vs__search">
+	// and `fill()` refused it with "Element is not an <input>, <textarea>,
+	// <select> or [contenteditable]". Demand an actual input, whether the class
+	// sits on it or on an ancestor, so this survives the markup moving again.
+	const picker = w
+		.locator(
+			'.suite-wizard-step2 input.vs__search, .suite-wizard-step2 .vs__search input',
+		)
+		.first()
 	await picker.click()
 	await picker.fill(APP_A)
 	await expect(

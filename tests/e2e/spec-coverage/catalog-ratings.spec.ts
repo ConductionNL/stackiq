@@ -173,7 +173,15 @@ async function submitReview(
 		.getByRole('textbox', { name: /^Title/ })
 		.first()
 		.fill(reviewTitle)
-	const rater = dialog.locator('.vs__search input').first()
+	// `.vs__search` no longer identifies the input on its own: the component
+	// library now also puts that class on a wrapper, so `.first()` resolved to
+	//   <div class="input-field input-field--label-outside vs__search">
+	// and `fill()` refused it with "Element is not an <input>, <textarea>,
+	// <select> or [contenteditable]". Demand an actual input, whether the class
+	// sits on it or on an ancestor, so this survives the markup moving again.
+	const rater = dialog
+		.locator('input.vs__search, .vs__search input')
+		.first()
 	await rater.click()
 	await page
 		.locator('.vs__dropdown-option', { hasText: new RegExp(`^${rating}$`) })
