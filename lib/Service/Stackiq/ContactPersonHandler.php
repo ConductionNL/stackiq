@@ -1414,7 +1414,7 @@ class ContactPersonHandler {
 
 				if (empty($maintainerGroup) === false) {
 					$user = $this->_userManager->get($username);
-					if ($user !== false && $maintainerGroup->inGroup($user) === false) {
+					if ($user !== null && $maintainerGroup->inGroup($user) === false) {
 						$maintainerGroup->addUser($user);
 					}
 				}
