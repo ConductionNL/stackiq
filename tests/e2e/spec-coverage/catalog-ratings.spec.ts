@@ -179,9 +179,7 @@ async function submitReview(
 	// and `fill()` refused it with "Element is not an <input>, <textarea>,
 	// <select> or [contenteditable]". Demand an actual input, whether the class
 	// sits on it or on an ancestor, so this survives the markup moving again.
-	const rater = dialog
-		.locator('input.vs__search, .vs__search input')
-		.first()
+	const rater = dialog.locator('input.vs__search, .vs__search input').first()
 	await rater.click()
 	await page
 		.locator('.vs__dropdown-option', { hasText: new RegExp(`^${rating}$`) })
