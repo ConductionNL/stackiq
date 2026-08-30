@@ -42,7 +42,7 @@
   "dependencies": {
     "@babel/core": "^7.22.9",
     "@codemirror/lang-json": "^6.0.0",
-    "@conduction/nextcloud-vue": "^2.24.2",
+    "@conduction/nextcloud-vue": "^2.24.3",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/capabilities": "^1.2.1",
@@ -127,8 +127,8 @@
     "stylelint-webpack-plugin": "^5.0.1",
     "ts-jest": "^29.2.3",
     "ts-loader": "^9.5.1",
-    "typescript": "^7.0.2",
-    "vitest": "^3.2.7",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.11",
     "vue-eslint-parser": "^10.3.0"
   },
   "prettier": "@nextcloud/prettier-config"
