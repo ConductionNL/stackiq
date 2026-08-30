@@ -183,9 +183,11 @@ test('the create action opens the create dialog', async ({ page }) => {
 // exactly like a passing test, and this one hid the fact that the whole create
 // path had moved.
 // ---------------------------------------------------------------------------
-test.fixme('UI create -> new organisation card appears (unverified: body still drives the removed ObjectModal cascade)', async ({
-	page,
-}) => {
+test('UI create -> new organisation card appears', async ({ page }) => {
+	test.fixme(
+		true,
+		'unverified: the body still drives the removed ObjectModal cascade',
+	)
 	await navClickTo(page, 'Organisations')
 	await dismissSupportDialog(page)
 	const uiOrgName = `${RUN_ID} UI Organisatie`

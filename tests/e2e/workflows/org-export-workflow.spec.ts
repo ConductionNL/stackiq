@@ -190,7 +190,8 @@ test('export workflow: the seeded export org is retrievable via findAll', async 
 // container; every export endpoint returns "AMEF register ID is not
 // configured"). Asserts a real AMEF/ArchiMate XML artifact once configured.
 // ---------------------------------------------------------------------------
-test.fixme('export workflow: produces an AMEF/ArchiMate artifact for the org (blocked: AMEF register not configured)', async () => {
+test('export workflow: produces an AMEF/ArchiMate artifact for the org', async () => {
+	test.fixme(true, 'blocked: the AMEF register is not configured on this instance')
 	const res = await apiCtx.get(
 		`/index.php/apps/stackiq/api/archimate/export/organization/${seededOrgId}?modules=true&deelnames=true`,
 	)
