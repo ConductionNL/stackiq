@@ -1,18 +1,35 @@
 <script setup>
-import { objectStore, navigationStore } from '../../store/store.js'
+import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog v-if="navigationStore.dialog === 'deleteObject'"
-		:name="'Delete ' + (objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id || 'Publication')"
+	<NcDialog
+		v-if="navigationStore.dialog === 'deleteObject'"
+		:name="
+			t('stackiq', 'Delete {name}', {
+				name:
+					objectStore.objectItem?.['@self']?.name
+					|| objectStore.objectItem?.name
+					|| objectStore.objectItem?.['@self']?.title
+					|| objectStore.objectItem?.id
+					|| t('stackiq', 'Publication'),
+			})
+		"
 		size="normal"
-		:can-close="false">
+		:canClose="false">
 		<p v-if="success === null">
-			Do you want to permanently delete <b>{{ objectStore.objectItem?.['@self']?.name || objectStore.objectItem?.name || objectStore.objectItem?.['@self']?.title || objectStore.objectItem?.id }}</b>? This action cannot be undone.
+			{{ t('stackiq', 'Do you want to permanently delete') }}
+			<b>{{
+				objectStore.objectItem?.['@self']?.name
+				|| objectStore.objectItem?.name
+				|| objectStore.objectItem?.['@self']?.title
+				|| objectStore.objectItem?.id
+			}}</b
+			>{{ t('stackiq', '? This action cannot be undone.') }}
 		</p>
 
 		<NcNoteCard v-if="success" type="success">
-			<p>Publication successfully deleted</p>
+			<p>{{ t('stackiq', 'Publication successfully deleted') }}</p>
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
@@ -23,31 +40,27 @@ import { objectStore, navigationStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ success === null ? 'Cancel' : 'Close' }}
+				{{
+					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
+				}}
 			</NcButton>
 			<NcButton
 				v-if="success === null"
 				:disabled="loading"
-				type="error"
+				variant="error"
 				@click="deleteObject()">
 				<template #icon>
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<TrashCanOutline v-if="!loading" :size="20" />
 				</template>
-				Delete
+				{{ t('stackiq', 'Delete') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcLoadingIcon,
-	NcNoteCard,
-} from '@nextcloud/vue'
-
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
 
@@ -62,6 +75,7 @@ export default {
 		TrashCanOutline,
 		Cancel,
 	},
+
 	data() {
 		return {
 			success: null,
@@ -70,7 +84,11 @@ export default {
 			closeModalTimeout: null,
 		}
 	},
+
 	methods: {
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		closeDialog() {
 			navigationStore.setDialog(false)
 			clearTimeout(this.closeModalTimeout)
@@ -78,6 +96,10 @@ export default {
 			this.loading = false
 			this.error = false
 		},
+
+		/**
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
 		async deleteObject() {
 			this.loading = true
 
@@ -88,7 +110,12 @@ export default {
 				this.closeModalTimeout = setTimeout(this.closeDialog, 2000)
 			} catch (error) {
 				this.success = false
-				this.error = error.message || 'An error occurred while deleting the publication'
+				this.error =
+					error.message
+					|| this.t(
+						'stackiq',
+						'An error occurred while deleting the publication',
+					)
 			} finally {
 				this.loading = false
 			}

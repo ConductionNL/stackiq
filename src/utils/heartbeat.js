@@ -5,7 +5,7 @@
  * keep-alive requests during long operations.
  *
  * @author Conduction B.V. <info@conduction.nl>
- * @license AGPL-3.0-or-later
+ * @license EUPL-1.2
  * @version 1.0.0
  */
 
@@ -13,23 +13,24 @@
  * Heartbeat class for managing keep-alive requests
  */
 class Heartbeat {
-
 	/**
 	 * Create a new heartbeat instance
 	 *
 	 * @param {number} interval - Heartbeat interval in milliseconds (default: 30000 = 30s)
+	 * @spec exclude class constructor — DI/initialization only
 	 */
 	constructor(interval = 30000) {
 		this.interval = interval
 		this.timer = null
 		this.isRunning = false
-		this.endpoint = '/index.php/apps/softwarecatalog/api/heartbeat'
+		this.endpoint = '/index.php/apps/stackiq/api/heartbeat'
 	}
 
 	/**
 	 * Start sending heartbeat requests
 	 *
 	 * @return {void}
+	 * @spec openspec/specs/fe-stores/spec.md
 	 */
 	start() {
 		if (this.isRunning) {
@@ -52,6 +53,7 @@ class Heartbeat {
 	 * Stop sending heartbeat requests
 	 *
 	 * @return {void}
+	 * @spec openspec/specs/fe-stores/spec.md
 	 */
 	stop() {
 		if (!this.isRunning) {
@@ -73,6 +75,7 @@ class Heartbeat {
 	 *
 	 * @private
 	 * @return {void}
+	 * @spec openspec/specs/fe-stores/spec.md
 	 */
 	async sendHeartbeat() {
 		try {
@@ -89,7 +92,11 @@ class Heartbeat {
 			})
 
 			if (!response.ok) {
-				console.warn('Heartbeat request failed:', response.status, response.statusText)
+				console.warn(
+					'Heartbeat request failed:',
+					response.status,
+					response.statusText,
+				)
 			} else {
 				console.debug('Heartbeat sent successfully')
 			}
@@ -106,7 +113,6 @@ class Heartbeat {
 	get running() {
 		return this.isRunning
 	}
-
 }
 
 // Export singleton instance for global use
@@ -117,6 +123,7 @@ const heartbeat = new Heartbeat()
  *
  * @param {number} interval - Optional custom interval in milliseconds
  * @return {void}
+ * @spec openspec/specs/fe-stores/spec.md
  */
 export function startHeartbeat(interval) {
 	if (interval) {
@@ -129,6 +136,7 @@ export function startHeartbeat(interval) {
  * Stop heartbeat
  *
  * @return {void}
+ * @spec openspec/specs/fe-stores/spec.md
  */
 export function stopHeartbeat() {
 	heartbeat.stop()
@@ -138,6 +146,7 @@ export function stopHeartbeat() {
  * Check if heartbeat is running
  *
  * @return {boolean} True if running
+ * @spec openspec/specs/fe-stores/spec.md
  */
 export function isHeartbeatRunning() {
 	return heartbeat.running
@@ -149,6 +158,7 @@ export function isHeartbeatRunning() {
  * @param {Function} operation - Async function to execute
  * @param {number} interval - Optional heartbeat interval in milliseconds
  * @return {Promise} Promise that resolves with the operation result
+ * @spec openspec/specs/fe-stores/spec.md
  */
 export async function withHeartbeat(operation, interval = 30000) {
 	try {

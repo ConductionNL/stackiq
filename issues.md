@@ -1,6 +1,6 @@
 # Softwarecatalogus - Issues In Review
 
-**Date:** 2026-03-05
+**Date:** 2026-03-09
 **Source:** [VNG-Realisatie Project Board #17, View 22](https://github.com/orgs/VNG-Realisatie/projects/17/views/22)
 
 > Zie ook: [aanvullende-informatie.md](aanvullende-informatie.md) voor het overzicht van alle IGS-gelabelde issues (nieuw, overleg, review).
@@ -8,7 +8,7 @@
 ## Summary
 
 - **Total open issues on GitHub:** 207
-- **IGS issues (detailed with acceptance criteria):** 136 (was 130, +6 new issues)
+- **IGS issues (detailed with acceptance criteria):** 137 (was 136, +1 new issue)
 - **Other issues (summary table):** 79
 - **Issues closed since last update:** 58 (see closed list below)
 - **Reopened issues:** 3 (#6, #15, #23 — removed from closed list)
@@ -43,13 +43,17 @@ Previously closed (2026-02-22): #185, #266, #267, #286, #294, #300, #302, #307, 
 
 **Reopened:** #6, #15, #23 (previously listed as closed, now open again on GitHub)
 
+### New Issues Added (2026-03-09)
+
+1 new issue synced: #457
+
 ### New Issues Added (2026-03-04)
 
 15 new issues synced: #187, #443, #444, #445, #446, #447, #448, #449, #450, #451, #452, #453, #454, #455, #456
 
 ---
 
-## IGS Issues (In Review) — 136 issues
+## IGS Issues (In Review) — 137 issues
 
 ### #6: Als aanbod-beheerder wil ik kunnen registreren welke standaarden door mijn pakket worden ondersteund en eventueel testrapporten beschikbaar stellen
 
@@ -219,7 +223,7 @@ Previously closed (2026-02-22): #185, #266, #267, #286, #294, #300, #302, #307, 
 
 **Summary:** As a gebruik-beheerder, we want suppliers (aanbod-beheerder) to not see our application landscapes and connections. The RBAC model scopes data visibility per organization — the page itself may be accessible, but aanbod-beheerder should only see their own organization's data.
 
-**RBAC Reference:** See `softwarecatalog/lib/Settings/softwarecatalogus_register.json`:
+**RBAC Reference:** See `stackiq/lib/Settings/softwarecatalogus_register.json`:
 - `module` (applicatie) schema → `authorization.read`: `{ "group": "aanbod-beheerder", "match": { "_organisation": "$organisation" } }` — own org only
 - `koppeling` schema → `authorization.read`: `{ "group": "aanbod-beheerder", "match": { "_organisation": "$organisation" } }` — own org only
 
@@ -1774,7 +1778,7 @@ Previously closed (2026-02-22): #185, #266, #267, #286, #294, #300, #302, #307, 
 
 **Summary:** Contact persons of **gemeenten** (municipalities) are publicly visible but should NOT be. Note: contact persons of **leveranciers** (vendors) ARE expected to be publicly visible — only gemeente/samenwerking contact persons should be hidden.
 
-**RBAC Reference:** See `softwarecatalog/lib/Settings/softwarecatalogus_register.json` → `contactpersoon` schema → `authorization` block. The `contactpersoon` schema does NOT have `public` read access. Leverancier contact persons are exposed via **publications** (which extend contactpersonen), not via direct public access to the contactpersoon schema.
+**RBAC Reference:** See `stackiq/lib/Settings/softwarecatalogus_register.json` → `contactpersoon` schema → `authorization` block. The `contactpersoon` schema does NOT have `public` read access. Leverancier contact persons are exposed via **publications** (which extend contactpersonen), not via direct public access to the contactpersoon schema.
 
 **Acceptance Criteria:**
 - [x] [API] Contact persons of **leveranciers** ARE visible on public pages (this is expected/correct behavior)
@@ -2164,6 +2168,25 @@ Previously closed (2026-02-22): #185, #266, #267, #286, #294, #300, #302, #307, 
 - [ ] [UI] All wizard completion pages have consistent layout and messaging structure
 
 **Key Context from Comments:** Related to #445 (dienst wizard issues). The reporter found 4 specific inconsistencies between the Applicatie, Dienst, and Koppeling wizard flows.
+
+---
+
+### #457: Koppeling: verwijderen geeft een 400-error
+
+**Labels:** Aanbod, IGS nieuw
+**Test Step:** Step 11
+
+**Summary:** Deleting a koppeling (both imported and newly created) returns a 400 error. The bug is reproducible via Dashboard > Koppelingen overzicht > Bekijken > Acties > Verwijderen. Tested with multiple koppelingen, including those without any gemeente usage.
+
+**Acceptance Criteria:**
+- [ ] [API] DELETE request for a koppeling object returns 200/204 (not 400)
+- [ ] [API] Deleting a koppeling that has no gemeente usage succeeds without error
+- [ ] [API] Deleting an imported koppeling succeeds without error
+- [ ] [API] Deleting a newly created koppeling succeeds without error
+- [ ] [UI] Clicking "Verwijderen" in the koppeling detail page removes the koppeling without error
+- [ ] [UI] After successful deletion, the koppeling no longer appears in the koppelingen overzicht
+
+**Key Context from Comments:** Bug reported by @Makkmetp. Affects both imported and manually created koppelingen. Related to koppeling management flow (Step 11). Screenshots show the 400 error in the browser.
 
 ---
 
@@ -3427,6 +3450,25 @@ Previously closed (2026-02-22): #185, #266, #267, #286, #294, #300, #302, #307, 
 
 ---
 
+### #457: Koppeling: verwijderen geeft een 400-error
+
+**Labels:** Aanbod, IGS nieuw
+**Test Step:** Step 11
+
+**Summary:** Deleting a koppeling (both imported and newly created) returns a 400 error. The bug is reproducible via Dashboard > Koppelingen overzicht > Bekijken > Acties > Verwijderen. Tested with multiple koppelingen, including those without any gemeente usage.
+
+**Acceptance Criteria:**
+- [ ] [API] DELETE request for a koppeling object returns 200/204 (not 400)
+- [ ] [API] Deleting a koppeling that has no gemeente usage succeeds without error
+- [ ] [API] Deleting an imported koppeling succeeds without error
+- [ ] [API] Deleting a newly created koppeling succeeds without error
+- [ ] [UI] Clicking "Verwijderen" in the koppeling detail page removes the koppeling without error
+- [ ] [UI] After successful deletion, the koppeling no longer appears in the koppelingen overzicht
+
+**Key Context from Comments:** Bug reported by @Makkmetp. Affects both imported and manually created koppelingen. Related to koppeling management flow (Step 11). Screenshots show the 400 error in the browser.
+
+---
+
 ### #187: Tekstvoorstellen
 
 **Labels:** Aanbod, Tekstuele wijzigingen
@@ -3587,7 +3629,7 @@ The following issues are questions, PvE requirements, infrastructure tasks, test
 | Step 7 | Product aanmaken (applicaties) | 36 | 2 | 38 |
 | Step 9 | Dienst wizard | 17 | 0 | 17 |
 | Step 10 | Gebruik melden en beheren | 9 | 1 | 10 |
-| Step 11 | Koppeling wizard | 13 | 0 | 13 |
+| Step 11 | Koppeling wizard | 14 | 0 | 14 |
 | Step 12 | Privacy en zichtbaarheid | 4 | 4 | 8 |
 | Step 13 | Excel export | 2 | 1 | 3 |
 | Step 14 | Zoeken en resultaten | 12 | 2 | 14 |
@@ -3602,7 +3644,7 @@ The following issues are questions, PvE requirements, infrastructure tasks, test
 | Step 24 | AMEFF export | 0 | 1 | 1 |
 | General | Cross-cutting / multiple steps | 3 | 2 | 5 |
 | Infra | Infrastructure / non-testable | 1 | 3 | 4 |
-| **Total** | | **136** | **38** | **174** |
+| **Total** | | **137** | **38** | **175** |
 
 > Note: Some issues with broad scope (General/Infra) are not mapped to a specific test step.
 

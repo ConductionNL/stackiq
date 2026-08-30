@@ -1,9 +1,9 @@
 {
     "openapi": "3.0.3",
     "info": {
-        "title": "softwarecatalog",
-        "version": "0.0.1",
-        "description": "Software Catalog",
+        "title": "stackiq",
+        "version": "0.1.142-beta.20260820200443",
+        "description": "Stackiq",
         "license": {
             "name": "agpl"
         }

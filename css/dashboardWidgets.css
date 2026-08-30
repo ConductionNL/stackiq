@@ -1,8 +1,8 @@
-.icon-softwarecatalog-widget {
-  background-image: url("../img/app-dark.svg");
-  filter: var(--background-invert-if-dark);
+.icon-stackiq-widget {
+	background-image: url('../img/app-dark.svg');
+	filter: var(--background-invert-if-dark);
 }
 
-body.theme--dark .icon-softwarecatalog-widget {
-  background-image: url("../img/app.svg");
+body.theme--dark .icon-stackiq-widget {
+	background-image: url('../img/app.svg');
 }

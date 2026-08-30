@@ -1,0 +1,636 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Parameter \\#2 \\$listener of method OCP\\\\AppFramework\\\\Bootstrap\\\\IRegistrationContext\\:\\:registerEventListener\\(\\) expects class\\-string\\<OCP\\\\EventDispatcher\\\\IEventListener\\<OCP\\\\EventDispatcher\\\\Event\\>\\>, 'OCA\\\\\\\\Stackiq\\\\\\\\EventListener\\\\\\\\UserProfileUpdatedEventListener' given\\.$#"
+			count: 1
+			path: lib/AppInfo/Application.php
+
+		-
+			message: "#^Expression in empty\\(\\) is always falsy\\.$#"
+			count: 3
+			path: lib/Controller/AangebodenGebruikController.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 3
+			path: lib/Controller/AangebodenGebruikController.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between string and true will always evaluate to false\\.$#"
+			count: 3
+			path: lib/Controller/AangebodenGebruikController.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 3
+			path: lib/Controller/AangebodenGebruikController.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Controller\\\\ContactpersonenController\\:\\:\\$secureRandom is never read, only written\\.$#"
+			count: 1
+			path: lib/Controller/ContactpersonenController.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Controller\\\\ContactpersonenController\\:\\:\\$settingsService is never read, only written\\.$#"
+			count: 1
+			path: lib/Controller/ContactpersonenController.php
+
+		-
+			message: "#^Variable \\$_FILES on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 2
+			path: lib/Controller/SettingsController.php
+
+		-
+			message: "#^Variable \\$data on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Controller/SettingsController.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Dashboard\\\\ConceptOrganisatiesWidget\\:\\:\\$url is never read, only written\\.$#"
+			count: 1
+			path: lib/Dashboard/ConceptOrganisatiesWidget.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between false and true will always evaluate to false\\.$#"
+			count: 1
+			path: lib/EventListener/UserProfileUpdatedEventListener.php
+
+		-
+			message: "#^Type OCA\\\\OpenRegister\\\\Event\\\\UserProfileUpdatedEvent in generic type OCP\\\\EventDispatcher\\\\IEventListener\\<OCA\\\\OpenRegister\\\\Event\\\\UserProfileUpdatedEvent\\> in PHPDoc tag @implements is not subtype of template type T of OCP\\\\EventDispatcher\\\\Event of interface OCP\\\\EventDispatcher\\\\IEventListener\\.$#"
+			count: 1
+			path: lib/EventListener/UserProfileUpdatedEventListener.php
+
+		-
+			message: "#^Variable \\$emailCandidate in empty\\(\\) always exists and is not falsy\\.$#"
+			count: 1
+			path: lib/EventListener/UserProfileUpdatedEventListener.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\AanbodService\\:\\:\\$config is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/AanbodService.php
+
+		-
+			message: "#^Cannot unset offset 'next' on array\\{results\\: array\\<int\\<0, max\\>, mixed\\>, total\\: int\\<0, max\\>, pages\\: int, page\\: mixed, limit\\: mixed, offset\\: mixed\\}\\.$#"
+			count: 1
+			path: lib/Service/AangebodenGebruikService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:checkOrganisationOwnership\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/AangebodenGebruikService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getAllObjectsForSchema\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/AangebodenGebruikService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getApplicationsOwnedByOrganisation\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/AangebodenGebruikService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getKoppelingenConfiguration\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/AangebodenGebruikService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getObjectsRelatedToUuid\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/AangebodenGebruikService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:\\$config is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/AangebodenGebruikService.php
+
+		-
+			message: "#^Strict comparison using \\!\\=\\= between null and null will always evaluate to false\\.$#"
+			count: 2
+			path: lib/Service/AangebodenGebruikService.php
+
+		-
+			message: "#^\\(SimpleXMLElement\\|null\\) does not accept string\\.$#"
+			count: 17
+			path: lib/Service/ArchiMateExportService.php
+
+		-
+			message: "#^Cannot call method addAttribute\\(\\) on array\\<int, string\\>\\.$#"
+			count: 2
+			path: lib/Service/ArchiMateExportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateExportService\\:\\:addDataToXmlNode\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateExportService.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateExportService.php
+
+		-
+			message: "#^SimpleXMLElement does not accept string\\.$#"
+			count: 2
+			path: lib/Service/ArchiMateExportService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between 0\\|1\\|false and true will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateExportService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between SimpleXMLElement\\|false and null will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateExportService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between array\\<SimpleXMLElement\\> and true will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateExportService.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between \\(array\\|float\\|int\\) and 0 results in an error\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Constant OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:CONFIG_KEYS is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:calculateOptimizedStatistics\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:debugViewNodeHierarchy\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:extractNodesRecursively\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:isAssoc\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:logMemoryUsage\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsDirectToService\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsInParallelBatches\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsInSingleBatch\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:transformSectionObjectsBatch\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:transformViewsOptimized\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Negated boolean expression is always false\\.$#"
+			count: 4
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Offset 'created' on array\\{created\\: int\\<0, max\\>, updated\\: int\\<0, max\\>, unchanged\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Offset 'elements'\\|'organizations'\\|'property_definitions'\\|'relationships'\\|'views' on array\\{elements\\: array\\{created\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>, unchanged\\: int\\<0, max\\>, updated\\: int\\<0, max\\>\\}, organizations\\: array\\{created\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>, unchanged\\: int\\<0, max\\>, updated\\: int\\<0, max\\>\\}, relationships\\: array\\{created\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>, unchanged\\: int\\<0, max\\>, updated\\: int\\<0, max\\>\\}, views\\: array\\{created\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>, unchanged\\: int\\<0, max\\>, updated\\: int\\<0, max\\>\\}, property_definitions\\: array\\{created\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>, unchanged\\: int\\<0, max\\>, updated\\: int\\<0, max\\>\\}\\} in isset\\(\\) always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Offset 'errors' on array\\{created\\: int\\<0, max\\>, updated\\: int\\<0, max\\>, unchanged\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Offset 'saved' on array\\{saved\\: array, updated\\: array, unchanged\\: array, invalid\\: array, countsBySchema\\: array\\<array\\{saved\\: int\\<0, max\\>, updated\\: int\\<0, max\\>, unchanged\\: int\\<0, max\\>, invalid\\: int\\<0, max\\>\\}\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Offset 'unchanged' on array\\{created\\: int\\<0, max\\>, updated\\: int\\<0, max\\>, unchanged\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Offset 'unchanged' on array\\{saved\\: array, updated\\: array, unchanged\\: array, invalid\\: array, countsBySchema\\: array\\<array\\{saved\\: int\\<0, max\\>, updated\\: int\\<0, max\\>, unchanged\\: int\\<0, max\\>, invalid\\: int\\<0, max\\>\\}\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Offset 'updated' on array\\{created\\: int\\<0, max\\>, updated\\: int\\<0, max\\>, unchanged\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Offset 'updated' on array\\{saved\\: array, updated\\: array, unchanged\\: array, invalid\\: array, countsBySchema\\: array\\<array\\{saved\\: int\\<0, max\\>, updated\\: int\\<0, max\\>, unchanged\\: int\\<0, max\\>, invalid\\: int\\<0, max\\>\\}\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:\\$rootFolder is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 2
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between false and true will always evaluate to false\\.$#"
+			count: 3
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between int\\|null and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between string\\|null and false will always evaluate to false\\.$#"
+			count: 2
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between string\\|null and true will always evaluate to false\\.$#"
+			count: 2
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 2
+			path: lib/Service/ArchiMateImportService.php
+
+		-
+			message: "#^Constant OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:CONFIG_KEYS is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:calculateObjectStatistics\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:calculateOptimizedStatistics\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:convertToOpenRegisterObjects\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:findItemsInSection\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:getAmefSchemaIdForType\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:getVoorzieningenConfig\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:initializeCache\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:isOperationInProgress\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:logMemoryUsage\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:saveObjectsToDatabase\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:transformArchiMateXmlToObjectsBatch\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Negated boolean expression is always false\\.$#"
+			count: 4
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Offset 'elements'\\|'organizations'\\|'property_definitions'\\|'relationships'\\|'views' on array\\{elements\\: array\\{created\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>, skipped\\: int\\<0, max\\>, updated\\: int\\<0, max\\>\\}, organizations\\: array\\{created\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>, skipped\\: int\\<0, max\\>, updated\\: int\\<0, max\\>\\}, relationships\\: array\\{created\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>, skipped\\: int\\<0, max\\>, updated\\: int\\<0, max\\>\\}, views\\: array\\{created\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>, skipped\\: int\\<0, max\\>, updated\\: int\\<0, max\\>\\}, property_definitions\\: array\\{created\\: int\\<0, max\\>, errors\\: array\\<int\\<0, max\\>, mixed\\>, skipped\\: int\\<0, max\\>, updated\\: int\\<0, max\\>\\}\\} in isset\\(\\) always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:\\$lastSaveTimingBreakdown is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:\\$rootFolder is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:\\$userSession is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between false and true will always evaluate to false\\.$#"
+			count: 3
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between string\\|null and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between string\\|null and true will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 2
+			path: lib/Service/ArchiMateService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ContactpersoonService\\:\\:\\$config is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/ContactpersoonService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ContactpersoonService\\:\\:\\$groupHandler is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/ContactpersoonService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between OCP\\\\IUser\\|null and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/ContactpersoonService.php
+
+		-
+			message: "#^Variable \\$gebruikSchema on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/GebruikService.php
+
+		-
+			message: "#^Variable \\$registerId on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/GebruikService.php
+
+		-
+			message: "#^Offset 'uuid' on array\\{standaardVersies\\: array\\} on left side of \\?\\? does not exist\\.$#"
+			count: 1
+			path: lib/Service/ModuleComplianceService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\OrganisatieService\\:\\:getActiveOrganisationUuid\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/OrganisatieService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\OrganisatieService\\:\\:\\$config is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/OrganisatieService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\OrganisatieService\\:\\:\\$organizationHandler is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/OrganisatieService.php
+
+		-
+			message: "#^Cannot unset offset 'organization' on array\\{username\\: string\\}\\.$#"
+			count: 1
+			path: lib/Service/OrganizationSyncService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\OrganizationSyncService\\:\\:jsonContains\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/OrganizationSyncService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\OrganizationSyncService\\:\\:jsonExtract\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/OrganizationSyncService.php
+
+		-
+			message: "#^Offset 'organization' on array\\{username\\: string\\} on left side of \\?\\? does not exist\\.$#"
+			count: 1
+			path: lib/Service/OrganizationSyncService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between mixed and null will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/OrganizationSyncService.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between 105 and 0 is always true\\.$#"
+			count: 1
+			path: lib/Service/ProgressTracker.php
+
+		-
+			message: "#^Offset 'id' does not exist on array\\{schemas\\: array\\<int\\<0, max\\>, mixed\\>\\}\\.$#"
+			count: 1
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Offset 'id' on array\\{schemas\\: array\\<int\\<0, max\\>, mixed\\>\\} on left side of \\?\\? does not exist\\.$#"
+			count: 2
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Offset 'schemas' on array\\{schemas\\: array\\<int\\<0, max\\>, mixed\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 3
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\SettingsService\\:\\:\\$request is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 2
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between bool and null will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Variable \\$config in isset\\(\\) always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\Stackiq\\\\ContactPersonHandler\\:\\:addUserToGroup\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\Stackiq\\\\ContactPersonHandler\\:\\:ensureUniqueUsername\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\Stackiq\\\\ContactPersonHandler\\:\\:getAllowedRoleGroups\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\Stackiq\\\\ContactPersonHandler\\:\\:getOrganizationGroup\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Offset 'organization' on array\\{username\\: string\\} on left side of \\?\\? does not exist\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Offset 'organisation' on array\\{username\\: string\\} on left side of \\?\\? does not exist\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Offset 'rollen' on array\\{username\\: mixed\\} on left side of \\?\\? does not exist\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\Stackiq\\\\ContactPersonHandler\\:\\:\\$_config is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Result of \\|\\| is always true\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between OCP\\\\IUser\\|null and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Variable \\$currentRollen in empty\\(\\) always exists and is always falsy\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Variable \\$username on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/ContactPersonHandler.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between 0\\|1\\|false and true will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/Stackiq/GroupHandler.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:activateContactpersonenForOrganization\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/StackiqService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:activateUsersForOrganization\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/StackiqService.php
+
+		-
+			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:ensureContactPersonInOrganization\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/StackiqService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:\\$_organizationHandler is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/StackiqService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\StackiqService\\:\\:\\$appName is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/StackiqService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\SymfonyEmailService\\:\\:\\$config is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/SymfonyEmailService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\ViewService\\:\\:\\$config is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/ViewService.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Settings\\\\StackiqAdmin\\:\\:\\$config is never read, only written\\.$#"
+			count: 1
+			path: lib/Settings/StackiqAdmin.php
+
+		-
+			message: "#^Property OCA\\\\Stackiq\\\\Settings\\\\StackiqAdmin\\:\\:\\$l10n is never read, only written\\.$#"
+			count: 1
+			path: lib/Settings/StackiqAdmin.php
+
+		-
+			message: "#^Dead catch \\- Exception is never thrown in the try block\\.$#"
+			count: 1
+			path: lib/Controller/SbomController.php

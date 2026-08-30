@@ -219,12 +219,12 @@ Production systems have dozens of organisations:
 ```bash
 # Run all Koppelingen-Gebruik tests
 docker exec -u 33 master-nextcloud-1 bash -c \
-  "cd /var/www/html/apps-extra/softwarecatalog && \
+  "cd /var/www/html/apps-extra/stackiq && \
    vendor/bin/phpunit tests/Integration/KoppelingenGebruikIntegrationTest.php --testdox"
 
 # Run only the comprehensive 3-org matrix test
 docker exec -u 33 master-nextcloud-1 bash -c \
-  "cd /var/www/html/apps-extra/softwarecatalog && \
+  "cd /var/www/html/apps-extra/stackiq && \
    vendor/bin/phpunit tests/Integration/KoppelingenGebruikIntegrationTest.php \
    --filter testThreeOrganisationAccessControlMatrix --testdox"
 ```

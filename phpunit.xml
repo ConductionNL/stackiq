@@ -1,20 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
          bootstrap="tests/bootstrap.php"
-         colors="true">
+         colors="true"
+         cacheDirectory=".phpunit.cache"
+         defaultTestSuite="Unit Tests"
+         executionOrder="depends,defects"
+         requireCoverageMetadata="false"
+         beStrictAboutCoverageMetadata="true"
+         beStrictAboutOutputDuringTests="true"
+         failOnRisky="true"
+         failOnWarning="false"
+         failOnDeprecation="false">
+
     <testsuites>
         <testsuite name="Unit Tests">
-            <directory>tests/unit</directory>
+            <directory>tests/Unit</directory>
         </testsuite>
         <testsuite name="Integration Tests">
             <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
 
-    <coverage processUncoveredFiles="true">
+    <source>
         <include>
             <directory suffix=".php">lib/</directory>
         </include>
+        <exclude>
+            <!--
+                FIRST coverage exclusion in this repo, so it is spelled out.
+
+                This repair step's body is ALTER TABLE / UPDATE against shard
+                tables resolved at runtime, and it cannot be unit-tested: mocking
+                IDBConnection needs doctrine/dbal, which this app does not
+                install, and OCP's IQueryBuilder references
+                Doctrine\DBAL\ParameterType, so createMock() throws before any
+                assertion runs. run()/inScopeShardTables()/columnsOf()/exec()
+                therefore have no reachable unit path and would sit permanently
+                uncovered.
+
+                Excluded from MEASUREMENT only. The decision logic IS tested:
+                tests/Unit/Repair/RenameDutchCatalogColumnsTest.php pins the
+                GEMMA/ArchiMate exemption — five schemas whose property names are
+                an external import's wire format, which this step must never
+                migrate — plus the ambiguous-rename refusal and the map
+                invariants. Those tests still run on every job.
+
+                Sibling apps openbuild and decidesk already exclude lib/Migration/
+                for the same reason: DDL against a live database is integration
+                territory, not unit territory.
+            -->
+            <file>lib/Repair/RenameDutchCatalogColumns.php</file>
+        </exclude>
+    </source>
+
+    <coverage>
+        <report>
+            <clover outputFile="coverage/clover.xml"/>
+            <html outputDirectory="coverage/html"/>
+            <text outputFile="php://stdout" showUncoveredFiles="false"/>
+        </report>
     </coverage>
+
+    <php>
+        <env name="PHPUNIT_RUN" value="1"/>
+    </php>
 </phpunit>

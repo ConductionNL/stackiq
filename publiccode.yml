@@ -1,0 +1,66 @@
+publiccodeYmlVersion: "0.4"
+
+name: Stackiq
+url: "https://github.com/ConductionNL/stackiq"
+softwareVersion: "0.2.2"
+releaseDate: "2026-05-26"
+developmentStatus: stable
+softwareType: "standalone/other"
+
+platforms:
+  - nextcloud
+
+categories:
+  - it-asset-management
+  - knowledge-management
+
+description:
+  en:
+    shortDescription: >
+      Software catalog and IT asset registry for Nextcloud.
+    longDescription: >
+      Software Catalogs provides a centralised registry for managing software assets,
+      applications, and IT components within Nextcloud. It enables organisations to
+      catalogue their software landscape, track licenses, and maintain an overview of
+      deployed applications. Built on Open Register, it integrates with Nextcloud's
+      collaboration ecosystem and supports Dutch government software inventory
+      requirements.
+    features:
+      - Software asset cataloguing
+      - License tracking
+      - Application landscape overview
+      - Integration with Nextcloud collaboration tools
+
+  nl:
+    shortDescription: >
+      Softwarecatalogus en IT-activaregistratie voor Nextcloud.
+    longDescription: >
+      Software Catalogs biedt een gecentraliseerd register voor het beheren van
+      softwareactiva, applicaties en IT-componenten binnen Nextcloud. Het stelt
+      organisaties in staat hun softwarelandschap te catalogiseren, licenties bij
+      te houden en een overzicht te bewaren van geïmplementeerde applicaties.
+      Gebouwd op Open Register integreert het met het Nextcloud-ecosysteem en
+      ondersteunt de vereisten voor softwareinventarisatie van de Nederlandse overheid.
+    features:
+      - Softwareactiva catalogiseren
+      - Licentiebeheer
+      - Overzicht applicatielandschap
+      - Integratie met Nextcloud-samenwerkingstools
+
+legal:
+  license: EUPL-1.2
+  mainCopyrightOwner: "Conduction B.V."
+  repoOwner: "Conduction B.V."
+
+maintenance:
+  type: community
+  contacts:
+    - name: Conduction B.V.
+      email: info@conduction.nl
+      affiliation: Conduction B.V.
+
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - nl
+    - en

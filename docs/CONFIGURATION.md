@@ -84,6 +84,22 @@ After configuration:
 2. Verify schema IDs are correctly mapped
 3. Test with a sample object creation
 
+## How Register and Schema Changes Reach an Installed Instance
+
+The app's register/schema definitions live in `lib/Settings/softwarecatalogus_register.json` (the "monolith"). On install and upgrade, the `InitializeSettings` repair step calls `SettingsService::loadSettings()`, which reads that file, merges any fragment files (see below), computes a version string, and hands both to OpenRegister's `ConfigurationService::importFromApp()`. OpenRegister only actually writes registers/schemas/objects when that version string is **newer** than the one already stored for this app — so the version string is the single thing that decides whether your register/schema change ever reaches a running instance.
+
+### Preferred: drop an ADR-037 fragment file
+
+Add your change as its own file under `lib/Settings/register.d/<your-change>.json` instead of editing the monolith directly (see `lib/Settings/register.d/README.md`). Fragments are OpenAPI `components.schemas` / `paths` objects that get deep-merged onto the monolith at load time. Because each change owns a disjoint file, concurrent builds never conflict, and there is no need to remember to bump anything by hand — every fragment's own content is automatically folded into the import version.
+
+### If you must edit the monolith directly
+
+You can still edit `softwarecatalogus_register.json` directly (several changes have). As of the `register-import-reliability` fix, `loadSettings()` folds an md5 hash of the monolith file's own raw content into the computed version (`+base.<md5-8>`), alongside the existing fragment-file hash (`+frag.<md5-8>`). This means **any** change to the monolith — not just a fragment addition — now produces a version OpenRegister has not seen before and triggers a re-import automatically. You no longer need to remember to bump `info.version` by hand for the change to reach an instance, though doing so is still good practice for human-readable changelogs.
+
+### If an import looks successful but nothing changed
+
+After every import attempt, `loadSettings()` verifies that every schema slug declared in the effective (monolith + fragments) register actually resolves in OpenRegister, and that the schema ids this app tracks for its own object types (`organization`, `contactpersoon`) are non-null. Any mismatch is logged as a WARNING and recorded — check the settings status payload's `registerVerification` field (`GET /api/settings/status` equivalent, surfaced via `SettingsService::getConfigurationStatus()`) for `ok: false` and a `message` explaining that the most recent import did not fully reach OpenRegister. If you see this, re-run the import (`POST /api/settings/import {"force": true}`) and check the server log for the `SettingsService: register verification found...` warning lines naming the specific schema slugs or object types involved.
+
 ## Object Schema Requirements
 
 ### Contactgegevens Object
@@ -145,7 +161,7 @@ The system comes with pre-configured roles:
 
 To add new roles:
 
-1. **Update Code**: Modify '_defaultGroups' array in SoftwareCatalogueService.php
+1. **Update Code**: Modify '_defaultGroups' array in StackiqueService.php
 2. **Add Role Logic**: Implement custom logic if needed
 3. **Test Assignment**: Verify users get assigned to new roles
 
@@ -232,7 +248,7 @@ The system automatically assigns managers:
 ### Accessing Manager Data
 
 Managers are stored in Nextcloud user preferences:
-- **App**: 'softwarecatalog'
+- **App**: 'stackiq'
 - **Key**: 'manager'
 - **Value**: Manager username
 
@@ -266,23 +282,23 @@ Enable debug logging:
 
 1. **Nextcloud Logs**: Set log level to Debug in Nextcloud settings
 2. **Check Log Files**: Monitor '/var/log/nextcloud.log' or equivalent
-3. **Search Keywords**: Look for 'SoftwareCatalog' in logs
+3. **Search Keywords**: Look for 'Stackiq' in logs
 
 ### Log Examples
 
 **Successful Processing:**
 ```
-SoftwareCatalog: Successfully processed contactgegevens creation
-SoftwareCatalog: Created new group: gemeente_amsterdam
-SoftwareCatalog: Added user to role-based group: beheerder
-SoftwareCatalog: Set user manager: john.smith → jane.doe
+Stackiq: Successfully processed contactgegevens creation
+Stackiq: Created new group: gemeente_amsterdam
+Stackiq: Added user to role-based group: beheerder
+Stackiq: Set user manager: john.smith → jane.doe
 ```
 
 **Error Examples:**
 ```
-SoftwareCatalog: Failed to process contactgegevens: User creation failed
-SoftwareCatalog: Schema ID mismatch: expected 34, got 35
-SoftwareCatalog: Organization not found for UUID: 12345678-1234-1234-1234-123456789abc
+Stackiq: Failed to process contactgegevens: User creation failed
+Stackiq: Schema ID mismatch: expected 34, got 35
+Stackiq: Organization not found for UUID: 12345678-1234-1234-1234-123456789abc
 ```
 
 ## Performance Tuning

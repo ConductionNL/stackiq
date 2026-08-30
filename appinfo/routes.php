@@ -3,30 +3,48 @@
 declare(strict_types=1);
 
 /**
- * SoftwareCatalog Routes Configuration
+ * Stackiq Routes Configuration
  *
- * This file defines the API routes for the SoftwareCatalog application.
+ * This file defines the API routes for the Stackiq application.
  *
  * @category Configuration
- * @package  OCA\SoftwareCatalog
+ * @package  OCA\Stackiq
  * @version  1.0.0
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
- * @link     https://github.com/ConductionNL/SoftwareCatalog
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://github.com/ConductionNL/stackiq
  */
 
 return [
     'routes' => [
-        // Dashboard route
+        // Dashboard routes
         ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
+        ['name' => 'dashboard#index', 'url' => '/api/dashboard', 'verb' => 'GET'],
+
+        // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog).
+        ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+        ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+
+        // Contract approval delegation to decidesk (in-process IEventDispatcher; fail-closed).
+        // Outcome is projected by DecisionConcludedListener, not an HTTP callback.
+        // @spec openspec/changes/stackiq-delegation-via-events/specs/contract-decision-delegation/spec.md
+        ['name' => 'contractApproval#config', 'url' => '/api/contracts/approval/config', 'verb' => 'GET'],
+        ['name' => 'contractApproval#submit', 'url' => '/api/contracts/{contractUuid}/approval/submit', 'verb' => 'POST'],
+        ['name' => 'contractApproval#submitRenewal', 'url' => '/api/contracts/{contractUuid}/approval/renewal', 'verb' => 'POST'],
 
         // Core Settings API routes (minimal, for basic app functionality)
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
+        // Canonical AppHost write verb. `settings#create` (POST, above) is the
+        // legacy alias and delegates to `update()`; both are kept.
+        // @spec openspec/specs/method-decomposition/spec.md#requirement-settingscontroller-settings-crud-endpoints-req-decomp-013
+        ['name' => 'settings#update', 'url' => '/api/settings', 'verb' => 'PUT'],
         ['name' => 'settings#load', 'url' => '/api/settings/load', 'verb' => 'GET'],
         ['name' => 'settings#initialize', 'url' => '/api/settings/initialize', 'verb' => 'POST'],
         ['name' => 'settings#status', 'url' => '/api/settings/status', 'verb' => 'GET'],
-        ['name' => 'settings#auto_configure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
+        ['name' => 'settings#stats', 'url' => '/api/settings/stats', 'verb' => 'GET'],
+        ['name' => 'settings#autoConfigure', 'url' => '/api/settings/auto-configure', 'verb' => 'POST'],
+        ['name' => 'settings#consolidatedAutoConfigure', 'url' => '/api/settings/consolidated-auto-configure', 'verb' => 'POST'],
         ['name' => 'settings#debug', 'url' => '/api/settings/debug', 'verb' => 'GET'],
 
         // Separate endpoints for performance optimization
@@ -47,26 +65,28 @@ return [
         ['name' => 'settings#resetAutoConfig', 'url' => '/api/settings/reset-auto-config', 'verb' => 'POST'],
 
         // Email management routes
-        ['name' => 'settings#send_test_email', 'url' => '/api/email/test', 'verb' => 'POST'],
-        ['name' => 'settings#test_email_connection', 'url' => '/api/email/test-connection', 'verb' => 'POST'],
-        ['name' => 'settings#get_email_settings', 'url' => '/api/settings/email', 'verb' => 'GET'],
-        ['name' => 'settings#update_email_settings', 'url' => '/api/settings/email', 'verb' => 'POST'],
+        ['name' => 'settings#sendTestEmail', 'url' => '/api/email/test', 'verb' => 'POST'],
+        ['name' => 'settings#testEmailConnection', 'url' => '/api/email/test-connection', 'verb' => 'POST'],
+        ['name' => 'settings#getEmailSettings', 'url' => '/api/settings/email', 'verb' => 'GET'],
+        ['name' => 'settings#updateEmailSettings', 'url' => '/api/settings/email', 'verb' => 'POST'],
 
         // Email template management routes
-        ['name' => 'settings#get_email_templates', 'url' => '/api/email/templates', 'verb' => 'GET'],
-        ['name' => 'settings#get_email_template', 'url' => '/api/email/templates/{templateName}', 'verb' => 'GET'],
-        ['name' => 'settings#update_email_template', 'url' => '/api/email/templates/{templateName}', 'verb' => 'POST'],
-        ['name' => 'settings#get_email_template_default', 'url' => '/api/email/templates/{templateName}/default', 'verb' => 'GET'],
-        ['name' => 'settings#get_email_template_variables', 'url' => '/api/email/templates/{templateName}/variables', 'verb' => 'GET'],
+        ['name' => 'settings#getEmailTemplates', 'url' => '/api/email/templates', 'verb' => 'GET'],
+        ['name' => 'settings#getEmailTemplate', 'url' => '/api/email/templates/{templateName}', 'verb' => 'GET'],
+        ['name' => 'settings#updateEmailTemplate', 'url' => '/api/email/templates/{templateName}', 'verb' => 'POST'],
+        ['name' => 'settings#getEmailTemplateDefault', 'url' => '/api/email/templates/{templateName}/default', 'verb' => 'GET'],
+        ['name' => 'settings#getEmailTemplateVariables', 'url' => '/api/email/templates/{templateName}/variables', 'verb' => 'GET'],
 
-        // Health check endpoint
-        ['name' => 'settings#health_check', 'url' => '/api/health', 'verb' => 'GET'],
+        // Note: /api/health is served by settings#status above
 
         // Configuration cache management
-        ['name' => 'settings#clear_cache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
+        ['name' => 'settings#clearCache', 'url' => '/api/settings/clear-cache', 'verb' => 'POST'],
 
-        // Force re-initialization endpoint
-        ['name' => 'settings#force_reinit', 'url' => '/api/settings/force-reinit', 'verb' => 'POST'],
+        // SBOM (Software Bill of Materials) import routes — CycloneDX/SPDX
+        // upload scoped to a single moduleVersie, and its status.
+        // @spec openspec/specs/sbom-import/spec.md
+        ['name' => 'sbom#importSbom', 'url' => '/api/moduleversies/{moduleVersieUuid}/sbom', 'verb' => 'POST'],
+        ['name' => 'sbom#getSbomImportStatus', 'url' => '/api/moduleversies/{moduleVersieUuid}/sbom', 'verb' => 'GET'],
 
         // ArchiMate import/export routes
         ['name' => 'settings#importArchiMate', 'url' => '/api/archimate/import', 'verb' => 'POST'],
@@ -80,16 +100,16 @@ return [
         ['name' => 'settings#killArchiMateImport', 'url' => '/api/archimate/import/kill', 'verb' => 'POST'], // deprecated
         ['name' => 'settings#clearArchiMateExportStatus', 'url' => '/api/archimate/status/export/clear', 'verb' => 'POST'],
 
-        ['name' => 'settings#test_archimate_round_trip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
+        ['name' => 'settings#testArchiMateRoundTrip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
 
         // User Groups management routes
-        ['name' => 'settings#get_generic_user_groups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],
-        ['name' => 'settings#set_generic_user_groups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'POST'],
-        ['name' => 'settings#get_organization_admin_groups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'GET'],
-        ['name' => 'settings#set_organization_admin_groups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'POST'],
-        ['name' => 'settings#get_super_user_groups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'GET'],
-        ['name' => 'settings#set_super_user_groups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'POST'],
-        ['name' => 'settings#get_all_groups', 'url' => '/api/settings/user-groups/all', 'verb' => 'GET'],
+        ['name' => 'settings#getGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],
+        ['name' => 'settings#setGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'POST'],
+        ['name' => 'settings#getOrganizationAdminGroups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'GET'],
+        ['name' => 'settings#setOrganizationAdminGroups', 'url' => '/api/settings/user-groups/organization-admin', 'verb' => 'POST'],
+        ['name' => 'settings#getSuperUserGroups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'GET'],
+        ['name' => 'settings#setSuperUserGroups', 'url' => '/api/settings/user-groups/super-user', 'verb' => 'POST'],
+        ['name' => 'settings#getAllGroups', 'url' => '/api/settings/user-groups/all', 'verb' => 'GET'],
 
         // Progress streaming routes
         ['name' => 'settings#getProgress', 'url' => '/api/progress/{operationId}', 'verb' => 'GET'],
@@ -143,7 +163,6 @@ return [
         ['name' => 'contactpersonen#changePassword', 'url' => '/api/contactpersonen/change-password', 'verb' => 'POST'],
         ['name' => 'contactpersonen#updateUserGroups', 'url' => '/api/contactpersonen/update-groups', 'verb' => 'POST'],
         ['name' => 'contactpersonen#getUserInfo', 'url' => '/api/contactpersonen/{contactpersoonId}/user-info', 'verb' => 'GET'],
-        ['name' => 'contactpersonen#testBulkUserInfo', 'url' => '/api/contactpersonen/test-bulk-user-info', 'verb' => 'GET'],
         ['name' => 'contactpersonen#getBulkUserInfo', 'url' => '/api/contactpersonen/bulk-user-info', 'verb' => 'POST'],
         ['name' => 'contactpersonen#getAvailableGroups', 'url' => '/api/contactpersonen/available-groups', 'verb' => 'GET'],
         ['name' => 'contactpersonen#disableUser', 'url' => '/api/contactpersonen/{contactpersoonId}/disable', 'verb' => 'POST'],
@@ -159,6 +178,14 @@ return [
         ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
 
         // ========================================================================
+        // FACET API ENDPOINTS - GEMMA-dimension facet aggregation for the
+        // module/dienst index pages (gemma-faceted-search)
+        // ========================================================================
+
+        // @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
+        ['name' => 'facet#getFacets', 'url' => '/api/facets/{schema}', 'verb' => 'GET'],
+
+        // ========================================================================
         // AANBOD API ENDPOINTS - Unified API for all aanbod types
         // ========================================================================
 
@@ -167,12 +194,58 @@ return [
         ['name' => 'aanbod#acceptAanbod', 'url' => '/api/aanbod/{uuid}/accept', 'verb' => 'PUT'],
         ['name' => 'aanbod#denyAanbod', 'url' => '/api/aanbod/{uuid}/deny', 'verb' => 'DELETE'],
 
+        // OPEN-DATA PUBLISH ENDPOINTS — set/clear publicatiedatum (the live OR
+        // RBAC publish gate). Authenticated + per-object ownership guard (IDOR-safe).
+        ['name' => 'publication#publish', 'url' => '/api/publication/{objectType}/{uuid}/publish', 'verb' => 'PUT'],
+        ['name' => 'publication#depublish', 'url' => '/api/publication/{objectType}/{uuid}/depublish', 'verb' => 'DELETE'],
+
+        // ANONYMOUS REGISTRATION INTAKE — public, write-only to the moderation
+        // queue (lands as registratiestatus=pending, no publicatiedatum → invisible
+        // until an admin approves). Anti-spam rate-limited.
+        ['name' => 'intake#submit', 'url' => '/api/intake/register', 'verb' => 'POST'],
+
+        // REGISTRATION / REVIEW MODERATION / APPROVAL QUEUE — admin-gated
+        // (AuthorizedAdminSetting). Selects organisatie (default) or
+        // beoordeeling via the `type` query param — one generalised
+        // mechanism, see ModerationService.
+        ['name' => 'moderation#pending', 'url' => '/api/moderation/pending', 'verb' => 'GET'],
+        ['name' => 'moderation#approve', 'url' => '/api/moderation/{uuid}/approve', 'verb' => 'POST'],
+        ['name' => 'moderation#reject', 'url' => '/api/moderation/{uuid}/reject', 'verb' => 'POST'],
+
+        // CATALOG RATINGS (stackiq#375) — authenticated review
+        // submission (author/status always server-stamped, never from the
+        // client) + public approved-only aggregate for module/dienst detail.
+        ['name' => 'review#submit', 'url' => '/api/reviews', 'verb' => 'POST'],
+        ['name' => 'review#aggregate', 'url' => '/api/reviews/aggregate', 'verb' => 'GET'],
+
+        // ORGANISATION MERGE (gemeentelijke herindeling / leveranciersovername) —
+        // admin-gated (isAdmin guard in the controller body, no-admin-idor safe).
+        // @spec openspec/specs/organisation-merge/spec.md#requirement-both-merge-endpoints-must-be-admin-only-with-an-explicit-per-object-authorization-guard
+        ['name' => 'merge#dryRun', 'url' => '/api/organisaties/{uuid}/merge/dry-run', 'verb' => 'POST'],
+        ['name' => 'merge#execute', 'url' => '/api/organisaties/{uuid}/merge', 'verb' => 'POST'],
+
+        // SELF-SERVICE COLLEAGUE ACCESS (multi-org-membership) — beheerder-of-this-
+        // organisation gated (authorizeBeheerder() guard in the controller body,
+        // no-admin-idor safe). Delegates the actual membership mutation to
+        // OpenRegister's OrganisationService::joinOrganisation()/leaveOrganisation().
+        // @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
+        ['name' => 'organisationMembers#grant', 'url' => '/api/organisations/{uuid}/members', 'verb' => 'POST'],
+        ['name' => 'organisationMembers#revoke', 'url' => '/api/organisations/{uuid}/members/{userId}', 'verb' => 'DELETE'],
+
+        // FEDERATION SETTINGS / MANUAL PULL — admin-gated (AuthorizedAdminSetting).
+        ['name' => 'federation#status', 'url' => '/api/federation/status', 'verb' => 'GET'],
+        ['name' => 'federation#addPeer', 'url' => '/api/federation/peers', 'verb' => 'POST'],
+        ['name' => 'federation#removePeer', 'url' => '/api/federation/peers', 'verb' => 'DELETE'],
+        ['name' => 'federation#pull', 'url' => '/api/federation/pull', 'verb' => 'POST'],
+
         // ========================================================================
         // AANGEBODEN GEBRUIK API ENDPOINTS - Custom Objects API for Gebruiks (Legacy)
         // ========================================================================
 
         // AangebodenGebruik API endpoints for filtering gebruiks by organization involvement
         ['name' => 'aangebodenGebruik#getGebruiksWhereAfnemer', 'url' => '/api/aangeboden-gebruik/afnemer', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#getAllGebruiksForAmbtenaar', 'url' => '/api/aangeboden-gebruik/ambtenaar', 'verb' => 'GET'],
+        ['name' => 'aangebodenGebruik#getSingleGebruikForAmbtenaar', 'url' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}', 'verb' => 'GET'],
         ['name' => 'aangebodenGebruik#getGebruiksWhereDeelnemers', 'url' => '/api/aangeboden-gebruik/deelnemers', 'verb' => 'GET'],
         ['name' => 'aangebodenGebruik#setGebruikSelfToActiveOrg', 'url' => '/api/aangeboden-gebruik/{gebruikId}/set-self', 'verb' => 'PUT'],
         ['name' => 'aangebodenGebruik#deleteGebruikAsAfnemer', 'url' => '/api/aangeboden-gebruik/{gebruikId}/deny', 'verb' => 'DELETE'],
@@ -203,9 +276,31 @@ return [
         ['name' => 'settings#getCronjobUsers', 'url' => '/api/settings/cronjobs/users', 'verb' => 'GET'],
         ['name' => 'settings#getCronjobOrganisations', 'url' => '/api/settings/cronjobs/organisations', 'verb' => 'GET'],
 
+        // ========================================================================
+        // EOL FEED SYNC API ENDPOINTS (eol-feed-integration)
+        // ========================================================================
+
+        ['name' => 'settings#getEolSyncConfig', 'url' => '/api/eol-sync/config', 'verb' => 'GET'],
+        ['name' => 'settings#updateEolSyncConfig', 'url' => '/api/eol-sync/config', 'verb' => 'POST'],
+        ['name' => 'settings#triggerEolSync', 'url' => '/api/eol-sync/trigger', 'verb' => 'POST'],
+        ['name' => 'settings#getEolSyncStatus', 'url' => '/api/eol-sync/status', 'verb' => 'GET'],
+
         // Gebruik by group
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],
         ['name' => 'gebruik#getGebruikenForDeelnemer', 'url' => '/api/gebruik/deelnemer', 'verb' => 'GET'],
 
+        // Portfolio rationalization report (TIME quadrants + EOL + cloud + cost), JSON or CSV (?format=csv).
+        // @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
+        ['name' => 'portfolioReport#index', 'url' => '/api/portfolio-report', 'verb' => 'GET'],
+
+        // SPA catch-all — serves the Vue app for any frontend route (history mode routing)
+        // `postfix` keeps this SPA catch-all from colliding with the bare-root
+        // `dashboard#page` route above: both entries target the same
+        // controller#method, so without a postfix they generate the same
+        // internal route name and the later one silently displaces the first —
+        // which 404'd the app's own entry point (`/apps/stackiq/`) for
+        // every user, because this route's `path` requirement ('.+') can never
+        // match an empty path.
+        ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => ''], 'postfix' => 'spa'],
     ],
 ];

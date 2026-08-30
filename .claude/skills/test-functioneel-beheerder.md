@@ -24,6 +24,14 @@ Peter has full system access. He activates organizations, manages users, maintai
 - **Login URL**: `{FRONTEND}/login`
 - **Backend Admin**: `{BACKEND}/` ({ADMIN_USER}:{ADMIN_PASS})
 
+## Organization & Permissions Context
+
+Peter's account (`peter.vandijk@test.nl`) is in the Default Organisation. **Important**: the admin user (`admin`) has a known limitation — "Default Organisation" has no matching register object in `stackiq/organisatie`, which causes org fetch 404 errors and disables edit/delete in beheer.
+
+- **For frontend beheer testing**: Log in as `peter.vandijk@test.nl` (NOT `admin`). Peter has full admin group membership and a proper org assignment.
+- **For Nextcloud backend testing** (OpenCatalogi admin, OpenRegister config): Use `admin:admin` via the backend URL — these features don't depend on the org permission system.
+- If you see "org fetch error" or disabled edit/delete buttons, the active org UUID doesn't have a matching register object. Run `bash stackiq/test-setup.sh` to fix org assignments.
+
 ## Test Scope
 
 ### Primary Steps
@@ -73,6 +81,22 @@ Peter has full system access. He activates organizations, manages users, maintai
 | #187 | Tekstvoorstellen (remaining text changes) | Step 7 |
 | #449 | Handleiding facets configureren klopt niet | Step 21 |
 | #450 | Back-end: Icoon voor publiceren verwijderen | Step 6 |
+| #23 | Data migratie verificatie | Step 19 |
+| #65 | Collega's toegang geven (contactpersonen beheer) | Step 5 |
+| #182 | Algemene voorwaarden, Privacyverklaring, Disclaimer, FAQ | Step 21 |
+| #188 | Aanmeldproces | Step 3 |
+| #208 | NC Dashboard organisatie overzicht table issue | Step 23 |
+| #209 | Help knop gaat naar niet bestaande pagina | Step 23 |
+| #231 | AMEFF exports foutmelding bij import in Archi | Step 24 |
+| #255 | Dashboard welkomstekst | Step 23 |
+| #268 | Dashboard tekst aanpassen na inloggen | Step 23 |
+| #329 | Teksten SWC definitief (PowerPoint vergelijking) | Step 7 |
+| #336 | Views | Step 22 |
+| #338 | Dashboard en Inloggen | Step 23 |
+| #339 | Activeren gebruikers | Step 3 |
+| #411 | Vraag: Required eisen uitgezet voor dataimport | Step 19 |
+| #417 | Vraag: Andere email adressen voor contactpersonen | Step 5 |
+| #431 | Aanmeldproces: tussenvoegsel niet meer aanwezig | Step 3 |
 
 ## Acceptance Criteria Reference
 
@@ -152,7 +176,7 @@ Peter has full system access. He activates organizations, manages users, maintai
    **Test — Merge organizations via backend**:
    1. Navigate to `{BACKEND}/index.php/apps/openregister`
    2. Click **"Search / Views"** in the left sidebar
-   3. In the filter area, select register: **"voorzieningen"** and schema: **"organisatie"**
+   3. In the filter area, select register: **"stackiq"** and schema: **"organisatie"**
    4. Find the source organization "Test Leverancier BV (oud)" in the results
    5. Click the **three-dot menu** (⋮) on the right of the row → click **"Merge"**
    6. A merge dialog should open — select the **target organization** "Test Leverancier BV"

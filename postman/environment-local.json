@@ -2,42 +2,186 @@
 	"id": "softcat-local",
 	"name": "Softwarecatalogus - Local",
 	"values": [
-		{ "key": "base_url", "value": "http://localhost:8080", "enabled": true },
-		{ "key": "openregister_api", "value": "{{base_url}}/index.php/apps/openregister/api", "enabled": true },
-		{ "key": "softwarecatalog_api", "value": "{{base_url}}/index.php/apps/softwarecatalog/api", "enabled": true },
-		{ "key": "opencatalogi_api", "value": "{{base_url}}/index.php/apps/opencatalogi/api", "enabled": true },
-		{ "key": "ocs_api", "value": "{{base_url}}/ocs/v2.php", "enabled": true },
-		{ "key": "admin_user", "value": "admin", "enabled": true },
-		{ "key": "admin_pass", "value": "admin", "enabled": true },
-		{ "key": "test_password", "value": "WelcomeToTest2026", "enabled": true },
-		{ "key": "current_user", "value": "", "enabled": true },
-		{ "key": "current_password", "value": "", "enabled": true },
-		{ "key": "register_name", "value": "voorzieningen", "enabled": true },
-		{ "key": "register_id", "value": "3", "enabled": true },
-		{ "key": "schema_applicatie", "value": "module", "enabled": true },
-		{ "key": "schema_contactpersoon", "value": "contactpersoon", "enabled": true },
-		{ "key": "schema_dienst", "value": "dienst", "enabled": true },
-		{ "key": "schema_koppeling", "value": "koppeling", "enabled": true },
-		{ "key": "schema_organisatie", "value": "organisatie", "enabled": true },
-		{ "key": "schema_gebruik", "value": "gebruik", "enabled": true },
-		{ "key": "register_gemma", "value": "vng-gemma", "enabled": true },
-		{ "key": "schema_view", "value": "view", "enabled": true },
-		{ "key": "lever_nc_uuid", "value": "", "enabled": true },
-		{ "key": "lever_reg_uuid", "value": "", "enabled": true },
-		{ "key": "gemeente_nc_uuid", "value": "", "enabled": true },
-		{ "key": "gemeente_reg_uuid", "value": "", "enabled": true },
-		{ "key": "samenwerking_nc_uuid", "value": "", "enabled": true },
-		{ "key": "samenwerking_reg_uuid", "value": "", "enabled": true },
-		{ "key": "lever2_nc_uuid", "value": "", "enabled": true },
-		{ "key": "lever2_reg_uuid", "value": "", "enabled": true },
-		{ "key": "lever_app_uuid", "value": "", "enabled": true },
-		{ "key": "lever2_app_uuid", "value": "", "enabled": true },
-		{ "key": "gemeente_app_uuid", "value": "", "enabled": true },
-		{ "key": "lever_dienst_uuid", "value": "", "enabled": true },
-		{ "key": "jan_contact_uuid", "value": "", "enabled": true },
-		{ "key": "maria_contact_uuid", "value": "", "enabled": true },
-		{ "key": "mark_contact_uuid", "value": "", "enabled": true },
-		{ "key": "linda_contact_uuid", "value": "", "enabled": true }
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"enabled": true
+		},
+		{
+			"key": "openregister_api",
+			"value": "{{base_url}}/index.php/apps/openregister/api",
+			"enabled": true
+		},
+		{
+			"key": "stackiq_api",
+			"value": "{{base_url}}/index.php/apps/stackiq/api",
+			"enabled": true
+		},
+		{
+			"key": "opencatalogi_api",
+			"value": "{{base_url}}/index.php/apps/opencatalogi/api",
+			"enabled": true
+		},
+		{
+			"key": "ocs_api",
+			"value": "{{base_url}}/ocs/v2.php",
+			"enabled": true
+		},
+		{
+			"key": "admin_user",
+			"value": "admin",
+			"enabled": true
+		},
+		{
+			"key": "admin_pass",
+			"value": "admin",
+			"enabled": true
+		},
+		{
+			"key": "test_password",
+			"value": "WelcomeToTest2026",
+			"enabled": true
+		},
+		{
+			"key": "current_user",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "current_password",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "register_name",
+			"value": "stackiq",
+			"enabled": true
+		},
+		{
+			"key": "register_id",
+			"value": "3",
+			"enabled": true
+		},
+		{
+			"key": "schema_applicatie",
+			"value": "module",
+			"enabled": true
+		},
+		{
+			"key": "schema_contactpersoon",
+			"value": "contactpersoon",
+			"enabled": true
+		},
+		{
+			"key": "schema_dienst",
+			"value": "dienst",
+			"enabled": true
+		},
+		{
+			"key": "schema_koppeling",
+			"value": "koppeling",
+			"enabled": true
+		},
+		{
+			"key": "schema_organisatie",
+			"value": "organisatie",
+			"enabled": true
+		},
+		{
+			"key": "schema_gebruik",
+			"value": "gebruik",
+			"enabled": true
+		},
+		{
+			"key": "register_gemma",
+			"value": "vng-gemma",
+			"enabled": true
+		},
+		{
+			"key": "schema_view",
+			"value": "view",
+			"enabled": true
+		},
+		{
+			"key": "lever_nc_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "lever_reg_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "gemeente_nc_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "gemeente_reg_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "samenwerking_nc_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "samenwerking_reg_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "lever2_nc_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "lever2_reg_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "lever_app_uuid",
+			"value": "00764440-cd3b-52fb-99ac-4e1b9189c324",
+			"enabled": true
+		},
+		{
+			"key": "lever2_app_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "gemeente_app_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "lever_dienst_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "jan_contact_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "maria_contact_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "mark_contact_uuid",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "linda_contact_uuid",
+			"value": "",
+			"enabled": true
+		}
 	],
 	"_postman_variable_scope": "environment"
 }

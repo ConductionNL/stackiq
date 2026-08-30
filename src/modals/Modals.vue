@@ -1,8 +1,9 @@
 <template>
 	<div>
 		<!-- Organisatie Modals -->
-		<ObjectModal v-if="navigationStore.modal === 'organisatie'"
-			object-type-key="organisatie" />
+		<ObjectModal
+			v-if="navigationStore.modal === 'organization'"
+			objectTypeKey="organization" />
 		<ViewObject v-if="navigationStore.modal === 'viewOrganisatie'" />
 		<UploadObject v-if="navigationStore.modal === 'uploadOrganisatie'" />
 		<LockObject v-if="navigationStore.modal === 'lockOrganisatie'" />
@@ -10,8 +11,9 @@
 		<MergeObject v-if="navigationStore.modal === 'mergeOrganisatie'" />
 
 		<!-- Generic Object Edit Modal for other object types (contactpersoon, etc.) -->
-		<ObjectModal v-if="genericObjectModalType"
-			:object-type-key="genericObjectModalType" />
+		<ObjectModal
+			v-if="genericObjectModalType"
+			:objectTypeKey="genericObjectModalType" />
 
 		<!-- View modals for other object types -->
 		<ViewObject v-if="navigationStore.modal === 'viewContactpersoon'" />
@@ -19,30 +21,30 @@
 </template>
 
 <script>
-import { navigationStore } from '../store/store.js'
-import ObjectModal from './object/ObjectModal.vue'
-import ViewObject from './object/ViewObject.vue'
-import UploadObject from './object/UploadObject.vue'
 import LockObject from './object/LockObject.vue'
-import MigrationObject from './object/MigrationObject.vue'
 import MergeObject from './object/MergeObject.vue'
+import MigrationObject from './object/MigrationObject.vue'
+import ObjectModal from './object/ObjectModal.vue'
+import UploadObject from './object/UploadObject.vue'
+import ViewObject from './object/ViewObject.vue'
+import { navigationStore } from '../store/store.js'
 
 /**
  * Object types that should use the generic ObjectModal for editing.
- * 'organisatie' is excluded because it has its own dedicated condition above.
+ * 'organization' is excluded because it has its own dedicated condition above.
  */
 const GENERIC_MODAL_OBJECT_TYPES = [
-	'contactpersoon',
-	'gebruik',
+	'contactPerson',
+	'usage',
 	'contract',
-	'koppeling',
+	'connection',
 	'module',
 	'suite',
-	'dienst',
-	'kwetsbaarheid',
-	'beoordeeling',
+	'service',
+	'vulnerability',
+	'assessment',
 	'compliancy',
-	'moduleVersie',
+	'moduleVersion',
 	'sector',
 ]
 
@@ -56,12 +58,23 @@ export default {
 		MigrationObject,
 		MergeObject,
 	},
+
+	/**
+	 * @spec exclude Pinia store wiring in setup() — bootstrap plumbing
+	 */
+	setup() {
+		return {
+			navigationStore,
+		}
+	},
+
 	computed: {
 		/**
 		 * Returns the object type if the current modal matches a generic object type,
 		 * or null if the modal is not a generic object edit modal.
 		 *
 		 * @return {string|null} The object type key, or null
+		 * @spec exclude computed passthrough of navigation store modal type — DI getter
 		 */
 		genericObjectModalType() {
 			const modal = navigationStore.modal
@@ -70,11 +83,6 @@ export default {
 			}
 			return GENERIC_MODAL_OBJECT_TYPES.includes(modal) ? modal : null
 		},
-	},
-	setup() {
-		return {
-			navigationStore,
-		}
 	},
 }
 </script>

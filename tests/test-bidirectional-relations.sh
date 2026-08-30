@@ -7,7 +7,7 @@ set -e
 
 BASE_URL="http://localhost:8080/index.php/apps/openregister/api/objects"
 AUTH="admin:admin"
-REGISTER_ID=2  # voorzieningen
+REGISTER_ID=2  # stackiq
 ORGANISATIE_SCHEMA_ID=24
 CONTACTPERSOON_SCHEMA_ID=23
 

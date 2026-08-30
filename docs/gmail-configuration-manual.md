@@ -68,7 +68,7 @@ Fill in the following settings:
 
 | Setting | Value | Example |
 |---------|--------|---------|
-| **Sender Email** | `your-email@gmail.com` | `softwarecatalog@yourorg.com` |
+| **Sender Email** | `your-email@gmail.com` | `stackiq@yourorg.com` |
 | **Sender Name** | `Your Organization Name` | `Software Catalog Team` |
 
 ### Configure Email Types (Optional)

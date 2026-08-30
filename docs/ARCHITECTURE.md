@@ -8,8 +8,8 @@ The Software Catalog app is a Nextcloud application that provides automated user
 
 ### Core Services
 
-#### SoftwareCatalogueService
-**Location**: 'lib/Service/SoftwareCatalogueService.php'
+#### StackiqueService
+**Location**: 'lib/Service/StackiqueService.php'
 
 The main service handling all user and organization management logic:
 - User account creation and management
@@ -28,7 +28,7 @@ The main service handling all user and organization management logic:
 #### OrganizationSyncService
 **Location**: 'lib/Service/OrganizationSyncService.php'
 
-**NEW**: The dedicated service for organization synchronization between SoftwareCatalog objects and OpenRegister entities:
+**NEW**: The dedicated service for organization synchronization between Stackiq objects and OpenRegister entities:
 - Comprehensive organization and contact person synchronization
 - User account management for contact persons
 - Organization entity creation and management
@@ -77,8 +77,8 @@ Handles automated email notifications:
 
 ### Event Handling (Legacy)
 
-#### SoftwareCatalogEventListener
-**Location**: 'lib/EventListener/SoftwareCatalogEventListener.php'
+#### StackiqEventListener
+**Location**: 'lib/EventListener/StackiqEventListener.php'
 
 **NOTE**: Event listeners are now primarily used for contact person processing, while organization synchronization uses the cron-based system.
 
@@ -149,11 +149,11 @@ Handles application initialization:
 ```
 1. Contactgegevens Object Created/Updated
    ↓
-2. SoftwareCatalogEventListener receives event
+2. StackiqEventListener receives event
    ↓
 3. Event routed to handleObjectCreated/Updated
    ↓
-4. SoftwareCatalogueService.processContactgegevens()
+4. StackiqueService.processContactgegevens()
    ↓
 5. Username generation from name fields
    ↓
@@ -173,11 +173,11 @@ Handles application initialization:
 ```
 1. Organization Object Created/Updated
    ↓
-2. SoftwareCatalogEventListener receives event (legacy)
+2. StackiqEventListener receives event (legacy)
    ↓
 3. Event routed to handleObjectCreated/Updated
    ↓
-4. SoftwareCatalogueService.processOrganization()
+4. StackiqueService.processOrganization()
    ↓
 5. Organization group creation (if needed)
    ↓
@@ -272,7 +272,7 @@ Handles application initialization:
 ### Manual Synchronization
 
 #### API Endpoint
-- **URL**: `POST /apps/softwarecatalog/api/settings/sync`
+- **URL**: `POST /apps/stackiq/api/settings/sync`
 - **Authentication**: Required (admin or authorized user)
 - **Response**: JSON with sync results and statistics
 
@@ -403,8 +403,8 @@ The system supports multiple register types:
 
 ### Adding New Object Types
 
-1. Add event handling in SoftwareCatalogEventListener
-2. Create processing method in SoftwareCatalogueService
+1. Add event handling in StackiqEventListener
+2. Create processing method in StackiqueService
 3. Update schema configuration in SettingsService
 4. Add documentation for new workflow
 
@@ -454,7 +454,7 @@ The system supports multiple register types:
 ### File Structure
 
 ```
-softwarecatalog/
+stackiq/
 ├── appinfo/
 │   ├── routes.php              # API endpoint definitions
 │   └── info.xml               # App metadata
@@ -466,7 +466,7 @@ softwarecatalog/
 │   ├── Controller/             # API controllers
 │   ├── EventListener/          # Event handling
 │   ├── Service/               # Business logic
-│   │   ├── SoftwareCatalogueService.php
+│   │   ├── StackiqueService.php
 │   │   ├── OrganizationSyncService.php  # NEW
 │   │   ├── SettingsService.php
 │   │   └── EmailService.php
@@ -516,8 +516,65 @@ softwarecatalog/
 docker-compose exec nextcloud tail -f /var/www/html/data/nextcloud.log | grep -i "organizationsyncservice"
 
 # Check sync status
-curl -u 'admin:admin' 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync-status'
+curl -u 'admin:admin' 'http://localhost/index.php/apps/stackiq/api/settings/sync-status'
 
 # Manual sync trigger
-curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/softwarecatalog/api/settings/sync'
+curl -u 'admin:admin' -X POST 'http://localhost/index.php/apps/stackiq/api/settings/sync'
 ``` 
+## OpenRegister Abstraction Adoption
+
+Stackiq is an OpenRegister-backed app (ADR-001: all data in OR).
+This section documents how it adopts the fleet-wide OR abstractions.
+
+### Architectural manifest (ADR-024)
+
+`src/manifest.json` declares the app's menu and pages and is loaded via
+`useAppManifest('stackiq', bundledManifest)` in `src/main.js`. It
+sets `dependencies: ["openregister"]`. Validate it locally with
+`npm run check:manifest` (Ajv schema validation with a structural-lint
+fallback when the published schema is not resolvable).
+
+### Register / schema resolution
+
+Register and schema IDs are resolved through
+`SettingsService::getSchemaIdForObjectType()` and
+`getRegisterIdForObjectType()`. These methods consolidate the lookup across
+the AMEF and Voorzieningen register configurations and cache results
+in-memory, so individual services do not re-derive register/schema IDs from
+raw app-config keys. Non-register tunables (sync intervals, feature flags,
+email/group settings) intentionally remain on `IAppConfig` directly.
+
+> When OpenRegister ships its shared `RegisterResolverService`
+> (`openregister/openspec/changes/register-resolver-service/`), the in-app
+> resolver becomes a thin adapter over it. Until that class is merged the
+> app keeps its own resolver (ADR-022: consume only shipped OR APIs).
+
+### i18n language negotiation (ADR-025)
+
+All OR object reads issued from the frontend stamp `?_lang={language}` with
+the user's Nextcloud language (region tag stripped, e.g. `en_GB` → `en`).
+The logic lives in `src/composables/orClient.js`:
+
+- `resolveLanguage()` — derive the bare language code.
+- `withLanguageParam(url)` — append `_lang` (without clobbering an existing
+  one or an existing query string).
+- `buildWriteHeaders(base, { targetLang, organisation })` — layer the
+  optional `X-Translation-Target-Language` and `X-OpenRegister-Organisation`
+  headers onto a write.
+
+Writes that edit a specific (non-default) language variant pass `targetLang`
+through `patchObject(type, id, changes, targetLang)`, which stamps
+`X-Translation-Target-Language` so OR writes into the correct language slot.
+
+`src/utils/translationBadge.js` computes a `(translated from {language})`
+badge descriptor for index rows where the served language differs from the
+object's `sourceLanguage` metadata. The badge label is i18n-keyed
+(`(translated from {language})`, present in all l10n files).
+
+### Multi-tenancy readiness
+
+The write-header helper already supports stamping
+`X-OpenRegister-Organisation`. Full tenant-switch reactivity (refetch on
+switch, navigate-back on detail) trails the nc-vue `useTenantContext()`
+release and is tracked in the `stackiq-adopt-or-abstractions`
+change (Phase 4).

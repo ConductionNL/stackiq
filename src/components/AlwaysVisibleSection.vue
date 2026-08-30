@@ -1,29 +1,29 @@
 <!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
- - @license AGPL-3.0-or-later
+ - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - This program is free software: you can redistribute it and/or modify
- - it under the terms of the GNU Affero General Public License as
- - published by the Free Software Foundation, either version 3 of the
- - License, or (at your option) any later version.
+ - Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+ - the European Commission – subsequent versions of the EUPL (the "Licence");
+ - You may not use this work except in compliance with the Licence.
+ - You may obtain a copy of the Licence at:
  -
- - This program is distributed in the hope that it will be useful,
- - but WITHOUT ANY WARRANTY; without even the implied warranty of
- - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- - GNU Affero General Public License for more details.
+ - https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
- - You should have received a copy of the GNU Affero General Public License
- - along with this program. If not, see <http://www.gnu.org/licenses/>.
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the Licence is distributed on an "AS IS" basis,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the Licence for the specific language governing permissions and
+ - limitations under the Licence.
  -->
 
 <template>
-	<NcSettingsSection :name="name" :description="description" :doc-url="docUrl">
+	<NcSettingsSection :name="name" :description="description" :docUrl="docUrl">
 		<!-- Header actions positioned at top-right of the section title area -->
 		<div class="section-header-actions">
 			<div class="header-buttons">
 				<NcButton
 					v-if="showSaveButton"
-					type="primary"
+					variant="primary"
 					:disabled="loading || saving || !canSave"
 					class="title-save-button"
 					@click="handleSave">
@@ -36,7 +36,7 @@
 
 				<NcButton
 					v-if="showRefreshButton"
-					type="secondary"
+					variant="secondary"
 					:disabled="loading || refreshing"
 					class="title-refresh-button"
 					@click="handleRefresh">
@@ -49,7 +49,7 @@
 
 				<NcButton
 					v-if="hasInfoContent"
-					type="tertiary-no-background"
+					variant="tertiary-no-background"
 					:aria-label="'Show information about ' + name"
 					@click="showInfoModal = true">
 					<template #icon>
@@ -81,33 +81,43 @@
 			</div>
 		</div>
 
-		<!-- Info Modal -->
-		<NcModal
+		<!-- Info Modal — own file per ADR-004/ADR-012 -->
+		<AlwaysVisibleSectionInfoModal
 			v-if="hasInfoContent"
+			:name="name"
 			:show="showInfoModal"
-			:title="name + ' Information'"
-			:name="name + ' Info'"
 			@close="showInfoModal = false">
-			<div class="info-content">
+			<!--
+				BOTH slot names are honoured. `info-content` wins when supplied and
+				`info` is the fallback, so no caller can be silently empty.
+
+				This section only ever declared `info`, but four of its five callers
+				(UserGroupsConfiguration, EmailConfiguration, ArchiMateImportExport,
+				OrganizationSynchronization) pass `#info-content` — the name
+				CollapsibleSection uses. They all set `:has-info-content="true"`, so
+				the (i) button rendered and opened a completely EMPTY modal.
+			-->
+			<slot name="info-content">
 				<slot name="info" />
-			</div>
-		</NcModal>
+			</slot>
+		</AlwaysVisibleSectionInfoModal>
 	</NcSettingsSection>
 </template>
 
 <script>
+import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
 import { defineComponent } from 'vue'
-import { NcSettingsSection, NcButton, NcLoadingIcon, NcModal } from '@nextcloud/vue'
 import Save from 'vue-material-design-icons/ContentSave.vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Information from 'vue-material-design-icons/Information.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
+import AlwaysVisibleSectionInfoModal from '../modals/AlwaysVisibleSectionInfoModal.vue'
 
 /**
  * Always Visible Section component
  * Always shows content without toggle functionality
  *
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2
  * @version  1.0.0
  */
 export default defineComponent({
@@ -117,10 +127,10 @@ export default defineComponent({
 		NcSettingsSection,
 		NcButton,
 		NcLoadingIcon,
-		NcModal,
 		Save,
 		Refresh,
 		Information,
+		AlwaysVisibleSectionInfoModal,
 	},
 
 	props: {
@@ -238,6 +248,8 @@ export default defineComponent({
 	methods: {
 		/**
 		 * Handle save button click
+		 *
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleSave() {
 			this.$emit('save')
@@ -245,6 +257,8 @@ export default defineComponent({
 
 		/**
 		 * Handle refresh button click
+		 *
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		handleRefresh() {
 			this.$emit('refresh')
@@ -254,68 +268,68 @@ export default defineComponent({
 </script>
 
 <style scoped>
-	.section-title-with-buttons {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		width: 100%;
-	}
-
-.header-buttons {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+.section-title-with-buttons {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
 }
 
-	.title-save-button {
-		margin-left: auto;
-	}
+.header-buttons {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
 
-	.title-refresh-button {
-		margin-left: 8px;
-	}
+.title-save-button {
+	margin-left: auto;
+}
 
-	.always-visible-section {
-		width: 100%;
-	}
+.title-refresh-button {
+	margin-left: 8px;
+}
+
+.always-visible-section {
+	width: 100%;
+}
 
 /* Place header actions container in the top-right corner of the section */
 .section-header-actions {
-    position: absolute;
-    top: 6px; /* align with title baseline */
-    right: 0;
-    z-index: 1;
+	position: absolute;
+	top: 6px; /* align with title baseline */
+	right: 0;
+	z-index: 1;
 }
 
 /* Ensure the parent has relative context */
 .settings-section {
-    position: relative;
+	position: relative;
 }
 
-	.section-content {
-		margin-top: 1rem;
-	}
+.section-content {
+	margin-top: 1rem;
+}
 
-	.loading-icon {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		padding: 2rem;
-	}
+.loading-icon {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 2rem;
+}
 
-	.loading-text {
-		text-align: center;
-		margin-top: -8px;
-		color: var(--color-text-lighter);
-	}
+.loading-text {
+	text-align: center;
+	margin-top: -8px;
+	color: var(--color-text-lighter);
+}
 
-	.info-content {
-		max-width: 600px;
-		line-height: 1.6;
-	}
+/* .info-content lives with the modal in src/modals/AlwaysVisibleSectionInfoModal.vue */
 
-	/* Responsive */
-	@media (max-width: 768px) {
-		.title-buttons { width: 100%; justify-content: flex-end; }
+/* Responsive */
+@media (max-width: 768px) {
+	.title-buttons {
+		width: 100%;
+		justify-content: flex-end;
 	}
+}
 </style>

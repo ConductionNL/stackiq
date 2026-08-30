@@ -283,15 +283,15 @@ The API is designed to support future enhancements:
 
 ```bash
 # Test basic functionality
-curl -X GET "http://localhost/index.php/apps/softwarecatalog/api/views" \\
+curl -X GET "http://localhost/index.php/apps/stackiq/api/views" \\
   -H "Content-Type: application/json"
 
 # Test with enrichment
-curl -X GET "http://localhost/index.php/apps/softwarecatalog/api/views?include_products=true" \\
+curl -X GET "http://localhost/index.php/apps/stackiq/api/views?include_products=true" \\
   -H "Content-Type: application/json"
 
 # Test specific view
-curl -X GET "http://localhost/index.php/apps/softwarecatalog/api/views/view-lv01" \\
+curl -X GET "http://localhost/index.php/apps/stackiq/api/views/view-lv01" \\
   -H "Content-Type: application/json"
 ```
 

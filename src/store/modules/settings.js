@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { defineStore } from 'pinia'
 
 /**
  * Settings store for managing all settings-related state and business logic
@@ -12,7 +12,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
  * - Register and schema management
  *
  * @author   Conduction b.v. <info@conduction.nl>
- * @license  AGPL-3.0-or-later
+ * @license  EUPL-1.2
  * @version  1.0.0
  */
 export const useSettingsStore = defineStore('settings', {
@@ -148,17 +148,38 @@ export const useSettingsStore = defineStore('settings', {
 		error: null,
 		importError: null,
 		exportError: null,
+
+		// OpenRegister dependency check
+		openRegisters: false,
+		isAdmin: false,
 	}),
 
 	getters: {
 		/**
+		 * Whether the OpenRegister app is installed
+		 *
+		 * @param {object} state - The store state
+		 * @return {boolean} True if OpenRegister is installed
+		 */
+		hasOpenRegisters: (state) => state.openRegisters,
+
+		/**
+		 * Whether the current user is an admin
+		 *
+		 * @param {object} state - The store state
+		 * @return {boolean} True if the user is an admin
+		 */
+		getIsAdmin: (state) => state.isAdmin,
+
+		/**
 		 * Get register options for dropdowns
+		 *
 		 * @param {object} state - The store state
 		 * @return {Array} Array of register options
 		 */
 		registerOptions: (state) => {
 			if (!state.settings.availableRegisters) return []
-			return state.settings.availableRegisters.map(register => ({
+			return state.settings.availableRegisters.map((register) => ({
 				label: register.title || register.name || `Register ${register.id}`,
 				value: register.id.toString(),
 			}))
@@ -166,12 +187,17 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Get Voorzieningen schema options
+		 *
 		 * @param {object} state - The store state
 		 * @return {Array} Array of schema options
 		 */
 		voorzieningenSchemaOptions: (state) => {
-			if (!state.voorzieningenSchemas || !Array.isArray(state.voorzieningenSchemas)) return []
-			return state.voorzieningenSchemas.map(schema => ({
+			if (
+				!state.voorzieningenSchemas
+				|| !Array.isArray(state.voorzieningenSchemas)
+			)
+				return []
+			return state.voorzieningenSchemas.map((schema) => ({
 				label: schema.title || schema.name || `Schema ${schema.id}`,
 				value: schema.id.toString(),
 			}))
@@ -179,12 +205,13 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Get AMEF schema options
+		 *
 		 * @param {object} state - The store state
 		 * @return {Array} Array of schema options
 		 */
 		amefSchemaOptions: (state) => {
 			if (!state.amefSchemas || !Array.isArray(state.amefSchemas)) return []
-			return state.amefSchemas.map(schema => ({
+			return state.amefSchemas.map((schema) => ({
 				label: schema.title || schema.name || `Schema ${schema.id}`,
 				value: schema.id.toString(),
 			}))
@@ -192,6 +219,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Check if any operation is running
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if any operation is running
 		 */
@@ -201,6 +229,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Check if register dropdowns should show loading state
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if registers are loading
 		 */
@@ -210,6 +239,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Check if voorzieningen schema dropdowns should show loading state
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if voorzieningen schemas are loading
 		 */
@@ -219,6 +249,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Check if AMEF schema dropdowns should show loading state
+		 *
 		 * @param {object} state - The store state
 		 * @return {boolean} True if AMEF schemas are loading
 		 */
@@ -228,6 +259,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Get formatted statistics for display
+		 *
 		 * @param {object} state - The store state
 		 * @return {Array} Array of formatted statistics rows
 		 */
@@ -235,7 +267,8 @@ export const useSettingsStore = defineStore('settings', {
 			const stats = []
 			// Voorzieningen statistics
 			if (state.statistics.voorzieningen.configured) {
-				const voorzieningenCounts = state.statistics.voorzieningen.object_counts
+				const voorzieningenCounts =
+					state.statistics.voorzieningen.object_counts
 				const voorzieningenSchemaMap = {
 					totalOrganisatieObjects: 'Organisatie',
 					totalContactpersoonObjects: 'Contactpersoon',
@@ -256,14 +289,16 @@ export const useSettingsStore = defineStore('settings', {
 					totalModuleVersieObjects: 'Module Versie',
 					totalSectorObjects: 'Sector',
 				}
-				Object.entries(voorzieningenSchemaMap).forEach(([countKey, displayName]) => {
-					stats.push({
-						register: 'Voorzieningen',
-						type: displayName,
-						count: voorzieningenCounts[countKey] || 0,
-						configured: true,
-					})
-				})
+				Object.entries(voorzieningenSchemaMap).forEach(
+					([countKey, displayName]) => {
+						stats.push({
+							register: 'Voorzieningen',
+							type: displayName,
+							count: voorzieningenCounts[countKey] || 0,
+							configured: true,
+						})
+					},
+				)
 			}
 			// AMEF statistics
 			if (state.statistics.amef.configured) {
@@ -312,6 +347,7 @@ export const useSettingsStore = defineStore('settings', {
 	actions: {
 		/**
 		 * Set loading state
+		 *
 		 * @param {boolean} loading - Loading state
 		 */
 		setLoading(loading) {
@@ -320,6 +356,7 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Set error message
+		 *
 		 * @param {string|null} error - Error message
 		 */
 		setError(error) {
@@ -328,6 +365,8 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Clear error
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		clearError() {
 			this.error = null
@@ -335,16 +374,22 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load statistics from the objects/counts endpoint
+		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadStatistics() {
 			this.loadingStatistics = true
 
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/objects/counts',
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const data = await response.json()
@@ -352,7 +397,8 @@ export const useSettingsStore = defineStore('settings', {
 				if (data.success && data.counts) {
 					// Update statistics with object counts
 					if (data.counts.voorzieningen) {
-						this.statistics.voorzieningen.object_counts = data.counts.voorzieningen
+						this.statistics.voorzieningen.object_counts =
+							data.counts.voorzieningen
 						this.statistics.voorzieningen.configured = true
 					}
 					if (data.counts.amef) {
@@ -364,7 +410,6 @@ export const useSettingsStore = defineStore('settings', {
 					console.error('Statistics API error:', data.error)
 					this.setError(data.error || 'Failed to load statistics')
 				}
-
 			} catch (error) {
 				console.error('Failed to load statistics:', error)
 				this.setError('Failed to load statistics: ' + error.message)
@@ -375,6 +420,8 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load all settings from the API
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadSettings() {
 			// Prevent multiple simultaneous calls
@@ -388,12 +435,17 @@ export const useSettingsStore = defineStore('settings', {
 
 			try {
 				// Load basic settings first (minimal data)
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				const response = await fetch('/index.php/apps/stackiq/api/settings')
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success !== false) {
+					// OpenRegister dependency check
+					this.openRegisters = data.openRegisters ?? false
+					this.isAdmin = data.isAdmin ?? false
 					// Basic app settings
 					this.settings.availableRegisters = data.availableRegisters || []
 					this.settings.catalogLocation = data.catalogLocation || ''
@@ -414,13 +466,18 @@ export const useSettingsStore = defineStore('settings', {
 						this.loadVoorzieningenConfig(),
 						this.loadGeneralConfig(),
 						this.loadSyncConfig(),
-					]).then(() => {
-						// After focused loads, map register selections and schema choices from their configs
-						this.populateRegisterSelectionsFromFocused()
-						this.populateSchemaSelectionsFromFocused()
-					}).catch(error => {
-						console.error('Some focused endpoints failed to load:', error)
-					})
+					])
+						.then(() => {
+							// After focused loads, map register selections and schema choices from their configs
+							this.populateRegisterSelectionsFromFocused()
+							this.populateSchemaSelectionsFromFocused()
+						})
+						.catch((error) => {
+							console.error(
+								'Some focused endpoints failed to load:',
+								error,
+							)
+						})
 				} else {
 					this.setError(data.error || 'Failed to load settings')
 				}
@@ -436,6 +493,8 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Load essential data for OpenRegister configuration dropdowns
 		 * Only loads the data needed for register/schema selection
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadOpenRegisterEssentials() {
 			this.clearError()
@@ -443,13 +502,18 @@ export const useSettingsStore = defineStore('settings', {
 			try {
 				// Load available registers first (needed for register dropdowns)
 				this.loadingRegisters = true
-				const settingsResponse = await fetch('/index.php/apps/softwarecatalog/api/settings')
+				const settingsResponse = await fetch(
+					'/index.php/apps/stackiq/api/settings',
+				)
 				if (!settingsResponse.ok) {
-					throw new Error(`HTTP ${settingsResponse.status}: ${settingsResponse.statusText}`)
+					throw new Error(
+						`HTTP ${settingsResponse.status}: ${settingsResponse.statusText}`,
+					)
 				}
 				const settingsData = await settingsResponse.json()
 				if (settingsData.success !== false) {
-					this.settings.availableRegisters = settingsData.availableRegisters || []
+					this.settings.availableRegisters =
+						settingsData.availableRegisters || []
 					this.versionInfo = settingsData.versionInfo || {}
 					this.initializeConfiguration()
 				}
@@ -466,10 +530,11 @@ export const useSettingsStore = defineStore('settings', {
 				// After both configs loaded, populate selections
 				this.populateRegisterSelectionsFromFocused()
 				this.populateSchemaSelectionsFromFocused()
-
 			} catch (error) {
 				console.error('Failed to load OpenRegister essentials:', error)
-				this.setError('Failed to load OpenRegister configuration: ' + error.message)
+				this.setError(
+					'Failed to load OpenRegister configuration: ' + error.message,
+				)
 			} finally {
 				this.loadingRegisters = false
 			}
@@ -477,13 +542,19 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load Voorzieningen configuration with focused loading state
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadVoorzieningenConfigFocused() {
 			this.loadingVoorzieningenSchemas = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/voorzieningen/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.config) {
@@ -498,13 +569,19 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load AMEF configuration with focused loading state
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadAmefConfigFocused() {
 			this.loadingAmefSchemas = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/amef/config')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/amef/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.config) {
@@ -522,6 +599,7 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {string} catalogLocation - The new catalog location URL
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async updateCatalogLocation(catalogLocation) {
 			try {
@@ -537,6 +615,7 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {number} syncTimeWindow - The new sync time window value
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async updateSyncTimeWindow(syncTimeWindow) {
 			try {
@@ -551,18 +630,24 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load general configuration from focused endpoint
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadGeneralConfig() {
 			this.loadingGeneralSettings = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/general/config', {
-					headers: {
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/settings/general/config',
+					{
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+						},
 					},
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const data = await response.json()
@@ -580,23 +665,30 @@ export const useSettingsStore = defineStore('settings', {
 		 * Load organization synchronization configuration from focused endpoint
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadSyncConfig() {
 			this.loadingSyncSettings = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/sync/config', {
-					headers: {
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/settings/sync/config',
+					{
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+						},
 					},
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const data = await response.json()
 				if (data.success && data.config) {
-					this.settings.syncTimeWindow = parseInt(data.config.syncTimeWindow) || 10
+					this.settings.syncTimeWindow =
+						parseInt(data.config.syncTimeWindow) || 10
 				}
 			} catch (error) {
 				console.error('Failed to load sync config:', error)
@@ -607,13 +699,19 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load version information from focused endpoint
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadVersionInfo() {
 			this.loadingVersionInfo = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/version')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/settings/version',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success !== false) {
@@ -628,13 +726,19 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load ArchiMate status from focused endpoint
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadArchiMateStatus() {
 			this.loadingArchiMateStatus = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/archimate/status',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.status) {
@@ -654,18 +758,25 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load object counts from focused endpoint
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadObjectCounts() {
 			this.loadingObjectCounts = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/objects/counts')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/objects/counts',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.counts) {
 					if (data.counts.voorzieningen) {
-						this.statistics.voorzieningen.object_counts = data.counts.voorzieningen
+						this.statistics.voorzieningen.object_counts =
+							data.counts.voorzieningen
 					}
 					if (data.counts.amef) {
 						this.statistics.amef.object_counts = data.counts.amef
@@ -681,13 +792,19 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load email configuration from focused endpoint
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadEmailConfig() {
 			this.loadingEmailConfig = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/email/config')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/email/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.emailSettings) {
@@ -703,13 +820,19 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load user groups configuration from focused endpoint
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadUserGroupsConfig() {
 			this.loadingUserGroups = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/user-groups/config')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/user-groups/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.config) {
@@ -721,7 +844,9 @@ export const useSettingsStore = defineStore('settings', {
 					this.allGroups = data.config.allGroups || []
 					// Populate top-level arrays used by components
 					this.genericUserGroups = [...(data.config.generic || [])]
-					this.organizationAdminGroups = [...(data.config.organizationAdmin || [])]
+					this.organizationAdminGroups = [
+						...(data.config.organizationAdmin || []),
+					]
 					this.superUserGroups = [...(data.config.superUser || [])]
 				}
 			} catch (error) {
@@ -733,9 +858,13 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Load only user groups configuration (for individual component refresh)
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadUserGroupsOnly() {
-			const response = await fetch('/index.php/apps/softwarecatalog/api/user-groups/config')
+			const response = await fetch(
+				'/index.php/apps/stackiq/api/user-groups/config',
+			)
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 			}
@@ -749,7 +878,9 @@ export const useSettingsStore = defineStore('settings', {
 				this.allGroups = data.config.allGroups || []
 				// Populate top-level arrays used by components
 				this.genericUserGroups = [...(data.config.generic || [])]
-				this.organizationAdminGroups = [...(data.config.organizationAdmin || [])]
+				this.organizationAdminGroups = [
+					...(data.config.organizationAdmin || []),
+				]
 				this.superUserGroups = [...(data.config.superUser || [])]
 			}
 		},
@@ -757,12 +888,18 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Load AMEF configuration from focused endpoint
 		 * Used in full settings load - doesn't interfere with focused loading states
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadAmefConfig() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/amef/config')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/amef/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.config) {
@@ -777,12 +914,18 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Load Voorzieningen configuration from focused endpoint
 		 * Used in full settings load - doesn't interfere with focused loading states
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadVoorzieningenConfig() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/voorzieningen/config',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.config) {
@@ -796,6 +939,8 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Initialize configuration object
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		initializeConfiguration() {
 			// Initialize register-specific configuration
@@ -827,12 +972,19 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Populate register selections using the focused endpoint configs
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		populateRegisterSelectionsFromFocused() {
 			// Voorzieningen register
-			if (this.voorzieningenRawConfig && this.voorzieningenRawConfig.register) {
+			if (
+				this.voorzieningenRawConfig
+				&& this.voorzieningenRawConfig.register
+			) {
 				const regId = this.voorzieningenRawConfig.register.toString()
-				const reg = this.settings.availableRegisters.find(r => r.id.toString() === regId)
+				const reg = this.settings.availableRegisters.find(
+					(r) => r.id.toString() === regId,
+				)
 				if (reg) {
 					this.voorzieningenRegister = {
 						label: reg.title || reg.name || `Register ${reg.id}`,
@@ -842,9 +994,16 @@ export const useSettingsStore = defineStore('settings', {
 				}
 			}
 			// AMEF register (singular key only; fallback kept for robustness)
-			if (this.amefRawConfig && (this.amefRawConfig.register || this.amefRawConfig.register_id)) {
-				const regId = (this.amefRawConfig.register || this.amefRawConfig.register_id).toString()
-				const reg = this.settings.availableRegisters.find(r => r.id.toString() === regId)
+			if (
+				this.amefRawConfig
+				&& (this.amefRawConfig.register || this.amefRawConfig.register_id)
+			) {
+				const regId = (
+					this.amefRawConfig.register || this.amefRawConfig.register_id
+				).toString()
+				const reg = this.settings.availableRegisters.find(
+					(r) => r.id.toString() === regId,
+				)
 				if (reg) {
 					this.amefRegister = {
 						label: reg.title || reg.name || `Register ${reg.id}`,
@@ -857,12 +1016,17 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Populate schema selections using the focused endpoint configs
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		populateSchemaSelectionsFromFocused() {
 			const findOption = (schemaId, options) => {
 				if (!schemaId || !options || !Array.isArray(options)) return null
 				const id = schemaId.toString()
-				return options.find(o => o && o.value && o.value.toString() === id) || null
+				return (
+					options.find((o) => o && o.value && o.value.toString() === id)
+					|| null
+				)
 			}
 
 			// Voorzieningen schemas - updated mapping to match current schema structure
@@ -884,7 +1048,10 @@ export const useSettingsStore = defineStore('settings', {
 			]
 			vMap.forEach(([cfgKey, uiKey]) => {
 				if (vc[cfgKey]) {
-					const opt = findOption(vc[cfgKey], this.voorzieningenSchemaOptions)
+					const opt = findOption(
+						vc[cfgKey],
+						this.voorzieningenSchemaOptions,
+					)
 					if (opt) {
 						this.configuration[uiKey].schema = opt
 					}
@@ -894,36 +1061,63 @@ export const useSettingsStore = defineStore('settings', {
 			// AMEF schemas - updated to match new key structure
 			const ac = this.amefRawConfig || {}
 			if (ac.organization_schema || ac.organizations_schema) {
-				const opt = findOption((ac.organization_schema || ac.organizations_schema), this.amefSchemaOptions)
+				const opt = findOption(
+					ac.organization_schema || ac.organizations_schema,
+					this.amefSchemaOptions,
+				)
 				if (opt) this.configuration.amef_organization_schema.schema = opt
 			}
 			if (ac.element_schema || ac.elements_schema) {
-				const opt = findOption((ac.element_schema || ac.elements_schema), this.amefSchemaOptions)
+				const opt = findOption(
+					ac.element_schema || ac.elements_schema,
+					this.amefSchemaOptions,
+				)
 				if (opt) this.configuration.amef_element_schema.schema = opt
 			}
 			if (ac.relation_schema || ac.relationships_schema) {
-				const opt = findOption((ac.relation_schema || ac.relationships_schema), this.amefSchemaOptions)
+				const opt = findOption(
+					ac.relation_schema || ac.relationships_schema,
+					this.amefSchemaOptions,
+				)
 				if (opt) this.configuration.amef_relation_schema.schema = opt
 			}
 			if (ac.view_schema || ac.views_schema) {
-				const opt = findOption((ac.view_schema || ac.views_schema), this.amefSchemaOptions)
+				const opt = findOption(
+					ac.view_schema || ac.views_schema,
+					this.amefSchemaOptions,
+				)
 				if (opt) this.configuration.amef_view_schema.schema = opt
 			}
 			if (ac.model_schema || ac.models_schema) {
-				const opt = findOption((ac.model_schema || ac.models_schema), this.amefSchemaOptions)
+				const opt = findOption(
+					ac.model_schema || ac.models_schema,
+					this.amefSchemaOptions,
+				)
 				if (opt) this.configuration.amef_model_schema.schema = opt
 			}
 
-			if (ac.property_definition_schema || ac['property-definition_schema'] || ac.property_definitions_schema) {
-				const opt = findOption((ac.property_definition_schema || ac['property-definition_schema'] || ac.property_definitions_schema), this.amefSchemaOptions)
-				if (opt) this.configuration.amef_property_definition_schema.schema = opt
+			if (
+				ac.property_definition_schema
+				|| ac['property-definition_schema']
+				|| ac.property_definitions_schema
+			) {
+				const opt = findOption(
+					ac.property_definition_schema
+						|| ac['property-definition_schema']
+						|| ac.property_definitions_schema,
+					this.amefSchemaOptions,
+				)
+				if (opt)
+					this.configuration.amef_property_definition_schema.schema = opt
 			}
 		},
 
 		/**
 		 * Import ArchiMate file with proper error handling (async approach)
+		 *
 		 * @param {('speed'|'memory')} processingMode Processing strategy
 		 * @return {void}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		importArchiMateFile(processingMode = 'speed') {
 			if (!this.selectedFile) {
@@ -948,37 +1142,41 @@ export const useSettingsStore = defineStore('settings', {
 				formData.append('deleteOrphaned', this.importOptions.deleteOrphaned)
 				formData.append('preserveIds', 'true')
 				formData.append('processingMode', processingMode)
-				fetch('/index.php/apps/softwarecatalog/api/archimate/import', {
+				fetch('/index.php/apps/stackiq/api/archimate/import', {
 					method: 'POST',
 					headers: { 'X-Requested-With': 'XMLHttpRequest' },
 					body: formData,
-				}).then(response => {
-					if (response.status === 500) {
-						this.stopStatusPolling()
-						this.isImportRunning = false
-						this.archimateStatus.import = {
-							status: 'failed',
-							current_step: 'Import failed',
-							progress: 0,
-							statistics: null,
-							error: 'Server error (500)',
-						}
-						showError('Import failed: Server error. Please try with a smaller file or check server logs.')
-					}
-				}).catch(error => {
-					if (error.name !== 'AbortError') {
-						this.stopStatusPolling()
-						this.isImportRunning = false
-						this.archimateStatus.import = {
-							status: 'failed',
-							current_step: 'Import failed',
-							progress: 0,
-							statistics: null,
-							error: error.message,
-						}
-						showError('Import failed: ' + error.message)
-					}
 				})
+					.then((response) => {
+						if (response.status === 500) {
+							this.stopStatusPolling()
+							this.isImportRunning = false
+							this.archimateStatus.import = {
+								status: 'failed',
+								current_step: 'Import failed',
+								progress: 0,
+								statistics: null,
+								error: 'Server error (500)',
+							}
+							showError(
+								'Import failed: Server error. Please try with a smaller file or check server logs.',
+							)
+						}
+					})
+					.catch((error) => {
+						if (error.name !== 'AbortError') {
+							this.stopStatusPolling()
+							this.isImportRunning = false
+							this.archimateStatus.import = {
+								status: 'failed',
+								current_step: 'Import failed',
+								progress: 0,
+								statistics: null,
+								error: error.message,
+							}
+							showError('Import failed: ' + error.message)
+						}
+					})
 			} catch (error) {
 				this.stopStatusPolling()
 				this.isImportRunning = false
@@ -991,6 +1189,8 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Start status polling with more frequent initial polls
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		startStatusPolling() {
 			if (this.statusPollingInterval) {
@@ -1006,6 +1206,8 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Stop status polling
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		stopStatusPolling() {
 			if (this.statusPollingInterval) {
@@ -1021,6 +1223,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Prevents concurrent calls to avoid stacking requests
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async refreshArchiMateStatus() {
 			if (this.isStatusPolling) {
@@ -1028,9 +1231,13 @@ export const useSettingsStore = defineStore('settings', {
 			}
 			this.isStatusPolling = true
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status')
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/archimate/status',
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const data = await response.json()
 				if (data.success && data.status) {
@@ -1050,16 +1257,21 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Clear ArchiMate import status
+		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async clearImportStatus() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status/import/clear', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/archimate/status/import/clear',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
 					},
-				})
+				)
 
 				if (response.ok) {
 					// Stop polling
@@ -1080,26 +1292,35 @@ export const useSettingsStore = defineStore('settings', {
 
 					showSuccess('ArchiMate import status cleared successfully')
 				} else {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 			} catch (error) {
 				console.error('Failed to clear import status:', error)
-				showError('Failed to clear ArchiMate import status: ' + error.message)
+				showError(
+					'Failed to clear ArchiMate import status: ' + error.message,
+				)
 			}
 		},
 
 		/**
 		 * Clear ArchiMate export status
+		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async clearExportStatus() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/status/export/clear', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/archimate/status/export/clear',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
 					},
-				})
+				)
 
 				if (response.ok) {
 					// Stop polling
@@ -1120,11 +1341,15 @@ export const useSettingsStore = defineStore('settings', {
 
 					showSuccess('ArchiMate export status cleared successfully')
 				} else {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 			} catch (error) {
 				console.error('Failed to clear export status:', error)
-				showError('Failed to clear ArchiMate export status: ' + error.message)
+				showError(
+					'Failed to clear ArchiMate export status: ' + error.message,
+				)
 			}
 		},
 
@@ -1134,11 +1359,12 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {object} register Selected register object
 		 * @return {void}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		handleVoorzieningenRegisterChange(register) {
 			if (register) {
 				const selectedRegister = this.settings.availableRegisters.find(
-					r => r.id.toString() === register.value,
+					(r) => r.id.toString() === register.value,
 				)
 				this.voorzieningenSchemas = selectedRegister?.schemas || []
 			} else {
@@ -1152,11 +1378,12 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {object} register Selected register object
 		 * @return {void}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		handleAmefRegisterChange(register) {
 			if (register) {
 				const selectedRegister = this.settings.availableRegisters.find(
-					r => r.id.toString() === register.value,
+					(r) => r.id.toString() === register.value,
 				)
 				this.amefSchemas = selectedRegister?.schemas || []
 			} else {
@@ -1169,6 +1396,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * This method can be expanded to add validation logic
 		 *
 		 * @return {void}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		validateConfiguration() {
 			// Configuration validation logic can be added here
@@ -1178,6 +1406,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Save configuration to backend using focused endpoints
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async saveConfiguration() {
 			try {
@@ -1206,16 +1435,17 @@ export const useSettingsStore = defineStore('settings', {
 				if (this.amefRegister?.value) {
 					amefConfig.register = this.amefRegister.value
 				}
-				amefKeys.forEach(configKey => {
+				amefKeys.forEach((configKey) => {
 					const config = this.configuration[configKey]
 					if (config && config.schema) {
-						amefConfig[amefMap[configKey]] = config.schema.value || config.schema
+						amefConfig[amefMap[configKey]] =
+							config.schema.value || config.schema
 					}
 				})
 
 				if (Object.keys(amefConfig).length > 0) {
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/amef/config', {
+						fetch('/index.php/apps/stackiq/api/amef/config', {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/json',
@@ -1262,16 +1492,17 @@ export const useSettingsStore = defineStore('settings', {
 				if (this.voorzieningenRegister?.value) {
 					voorzieningenConfig.register = this.voorzieningenRegister.value
 				}
-				voorzieningenKeys.forEach(configKey => {
+				voorzieningenKeys.forEach((configKey) => {
 					const config = this.configuration[configKey]
 					if (config && config.schema) {
-						voorzieningenConfig[vzMap[configKey]] = config.schema.value || config.schema
+						voorzieningenConfig[vzMap[configKey]] =
+							config.schema.value || config.schema
 					}
 				})
 
 				if (Object.keys(voorzieningenConfig).length > 0) {
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/voorzieningen/config', {
+						fetch('/index.php/apps/stackiq/api/voorzieningen/config', {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/json',
@@ -1283,15 +1514,25 @@ export const useSettingsStore = defineStore('settings', {
 				}
 
 				// Save user groups configuration
-				if (this.genericUserGroups.length > 0 || this.organizationAdminGroups.length > 0 || this.superUserGroups.length > 0) {
+				if (
+					this.genericUserGroups.length > 0
+					|| this.organizationAdminGroups.length > 0
+					|| this.superUserGroups.length > 0
+				) {
 					const userGroupsConfig = {
-						generic: this.genericUserGroups.filter(group => group && group.trim()),
-						organizationAdmin: this.organizationAdminGroups.filter(group => group && group.trim()),
-						superUser: this.superUserGroups.filter(group => group && group.trim()),
+						generic: this.genericUserGroups.filter(
+							(group) => group && group.trim(),
+						),
+						organizationAdmin: this.organizationAdminGroups.filter(
+							(group) => group && group.trim(),
+						),
+						superUser: this.superUserGroups.filter(
+							(group) => group && group.trim(),
+						),
 					}
 
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/user-groups/config', {
+						fetch('/index.php/apps/stackiq/api/user-groups/config', {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/json',
@@ -1303,9 +1544,12 @@ export const useSettingsStore = defineStore('settings', {
 				}
 
 				// Save email settings
-				if (this.emailSettings && Object.keys(this.emailSettings).length > 0) {
+				if (
+					this.emailSettings
+					&& Object.keys(this.emailSettings).length > 0
+				) {
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/email/config', {
+						fetch('/index.php/apps/stackiq/api/email/config', {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/json',
@@ -1319,23 +1563,26 @@ export const useSettingsStore = defineStore('settings', {
 				// Save general settings (catalog location)
 				if (this.settings.catalogLocation !== undefined) {
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/settings/general/config', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
+						fetch(
+							'/index.php/apps/stackiq/api/settings/general/config',
+							{
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json',
+									'X-Requested-With': 'XMLHttpRequest',
+								},
+								body: JSON.stringify({
+									catalogLocation: this.settings.catalogLocation,
+								}),
 							},
-							body: JSON.stringify({
-								catalogLocation: this.settings.catalogLocation,
-							}),
-						}),
+						),
 					)
 				}
 
 				// Save organization synchronization settings
 				if (this.settings.syncTimeWindow !== undefined) {
 					savePromises.push(
-						fetch('/index.php/apps/softwarecatalog/api/settings/sync/config', {
+						fetch('/index.php/apps/stackiq/api/settings/sync/config', {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/json',
@@ -1354,11 +1601,15 @@ export const useSettingsStore = defineStore('settings', {
 					// Check all responses
 					for (const response of responses) {
 						if (!response.ok) {
-							throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+							throw new Error(
+								`HTTP ${response.status}: ${response.statusText}`,
+							)
 						}
 						const result = await response.json()
 						if (!result.success) {
-							throw new Error(result.message || 'Unknown error occurred')
+							throw new Error(
+								result.message || 'Unknown error occurred',
+							)
 						}
 					}
 
@@ -1379,20 +1630,26 @@ export const useSettingsStore = defineStore('settings', {
 		 * Sets up the entire application configuration in one operation
 		 *
 		 * @return {Promise<object>} Configuration result
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async consolidatedAutoConfigure() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/auto-configure', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/settings/auto-configure',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify({ force: true }),
 					},
-					body: JSON.stringify({ force: true }),
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const result = await response.json()
@@ -1402,7 +1659,10 @@ export const useSettingsStore = defineStore('settings', {
 					await this.loadSettings()
 					showSuccess('Auto-configuration completed successfully')
 				} else {
-					showError('Auto-configuration failed: ' + (result.message || 'Unknown error'))
+					showError(
+						'Auto-configuration failed: '
+							+ (result.message || 'Unknown error'),
+					)
 				}
 
 				return result
@@ -1410,7 +1670,8 @@ export const useSettingsStore = defineStore('settings', {
 				console.error('Failed to perform auto-configuration:', error)
 				const errorResult = {
 					success: false,
-					message: 'Failed to perform auto-configuration: ' + error.message,
+					message:
+						'Failed to perform auto-configuration: ' + error.message,
 				}
 				showError(errorResult.message)
 				return errorResult
@@ -1420,20 +1681,27 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Reset auto-configuration flag and optionally schema/register keys
 		 * Calls POST /api/settings/reset-auto-config
+		 *
 		 * @return {Promise<object>} Result
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async resetAutoConfig() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/reset-auto-config', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/settings/reset-auto-config',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify({ resetConfiguration: false }),
 					},
-					body: JSON.stringify({ resetConfiguration: false }),
-				})
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const result = await response.json()
 				// Refresh version info after reset
@@ -1447,19 +1715,26 @@ export const useSettingsStore = defineStore('settings', {
 		/**
 		 * Force update: forced import + version sync
 		 * Calls POST /api/settings/force-update
+		 *
 		 * @return {Promise<object>} Result
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async forceUpdate() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/settings/force-update', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/settings/force-update',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
 					},
-				})
+				)
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const result = await response.json()
 				// Reload all settings so UI reflects the new configuration fully
@@ -1474,6 +1749,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * Save email settings
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async saveEmailSettings() {
 			try {
@@ -1489,23 +1765,29 @@ export const useSettingsStore = defineStore('settings', {
 		 * Test email connection
 		 *
 		 * @return {Promise<object>} Test result
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async testEmailConnection() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/email/test', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/email/test',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify({
+							type: 'connection',
+							settings: this.emailSettings,
+						}),
 					},
-					body: JSON.stringify({
-						type: 'connection',
-						settings: this.emailSettings,
-					}),
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const result = await response.json()
@@ -1513,7 +1795,10 @@ export const useSettingsStore = defineStore('settings', {
 				if (result.success) {
 					showSuccess('Email connection test successful')
 				} else {
-					showError('Email connection test failed: ' + (result.message || 'Unknown error'))
+					showError(
+						'Email connection test failed: '
+							+ (result.message || 'Unknown error'),
+					)
 				}
 
 				return result
@@ -1533,24 +1818,31 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {string} testEmail Test email address
 		 * @return {Promise<object>} Test result
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async sendTestEmail(testEmail = '') {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/email/test', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/email/test',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify({
+							type: 'send',
+							testEmail:
+								testEmail || this.emailSettings.testReceiverOverride,
+							settings: this.emailSettings,
+						}),
 					},
-					body: JSON.stringify({
-						type: 'send',
-						testEmail: testEmail || this.emailSettings.testReceiverOverride,
-						settings: this.emailSettings,
-					}),
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const result = await response.json()
@@ -1558,7 +1850,10 @@ export const useSettingsStore = defineStore('settings', {
 				if (result.success) {
 					showSuccess('Test email sent successfully')
 				} else {
-					showError('Failed to send test email: ' + (result.message || 'Unknown error'))
+					showError(
+						'Failed to send test email: '
+							+ (result.message || 'Unknown error'),
+					)
 				}
 
 				return result
@@ -1578,6 +1873,7 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {string} format Export format
 		 * @return {void}
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async exportToArchiMate(format = 'xml') {
 			this.exporting = true
@@ -1585,7 +1881,8 @@ export const useSettingsStore = defineStore('settings', {
 			try {
 				const requestData = {
 					format,
-					includeRelationships: this.exportOptions.includeRelationships ?? true,
+					includeRelationships:
+						this.exportOptions.includeRelationships ?? true,
 					includeViews: this.exportOptions.includeViews ?? true,
 					organizationSpecific: false,
 					selectedSchemas: [],
@@ -1593,29 +1890,42 @@ export const useSettingsStore = defineStore('settings', {
 				const link = document.createElement('a')
 				link.style.display = 'none'
 				document.body.appendChild(link)
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/export', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-					body: JSON.stringify(requestData),
-				})
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/archimate/export',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
+						body: JSON.stringify(requestData),
+					},
+				)
 				if (response.status === 500) {
 					const errorData = await response.json()
 					throw new Error(errorData.message || 'Server error occurred')
 				}
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 				const contentType = response.headers.get('content-type')
 				if (contentType && contentType.includes('application/json')) {
 					const errorData = await response.json()
-					throw new Error(errorData.message || errorData.error || 'Export failed')
+					throw new Error(
+						errorData.message || errorData.error || 'Export failed',
+					)
 				}
 				const blob = await response.blob()
 				const url = window.URL.createObjectURL(blob)
-				const contentDisposition = response.headers.get('content-disposition')
+				const contentDisposition =
+					response.headers.get('content-disposition')
 				let fileName = `archimate_export_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.xml`
 				if (contentDisposition) {
-					const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+					const fileNameMatch = contentDisposition.match(
+						/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+					)
 					if (fileNameMatch) {
 						fileName = fileNameMatch[1].replace(/['"]/g, '')
 					}
@@ -1638,19 +1948,25 @@ export const useSettingsStore = defineStore('settings', {
 		 * Test ArchiMate round-trip functionality
 		 *
 		 * @return {Promise<object>} Test result
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async testRoundTrip() {
 			try {
-				const response = await fetch('/index.php/apps/softwarecatalog/api/archimate/test-round-trip', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Requested-With': 'XMLHttpRequest',
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/archimate/test-round-trip',
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-Requested-With': 'XMLHttpRequest',
+						},
 					},
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+					throw new Error(
+						`HTTP ${response.status}: ${response.statusText}`,
+					)
 				}
 
 				const result = await response.json()
@@ -1658,7 +1974,10 @@ export const useSettingsStore = defineStore('settings', {
 				if (result.success) {
 					showSuccess('Round-trip test completed successfully')
 				} else {
-					showError('Round-trip test failed: ' + (result.message || 'Unknown error'))
+					showError(
+						'Round-trip test failed: '
+							+ (result.message || 'Unknown error'),
+					)
 				}
 
 				return result
@@ -1675,6 +1994,8 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Cleanup method to stop polling when store is destroyed
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		cleanup() {
 			this.stopStatusPolling()
@@ -1683,6 +2004,8 @@ export const useSettingsStore = defineStore('settings', {
 
 		/**
 		 * Reset store state
+		 *
+		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		reset() {
 			this.stopStatusPolling()

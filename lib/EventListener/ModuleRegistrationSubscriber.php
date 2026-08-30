@@ -1,94 +1,96 @@
 <?php
+
 /**
  * Module Registration Subscriber.
  *
- * Event subscriber that auto-sets geregistreerdDoor on module objects
+ * Event subscriber that auto-sets registeredBy on module objects
  * based on the owning organisation's type.
  *
  * @category  EventListener
- * @package   OCA\SoftwareCatalog\EventListener
+ * @package   OCA\Stackiq\EventListener
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license   AGPL-3.0-or-later https://www.gnu.org/licenses/agpl-3.0.html
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
- * @link      https://github.com/ConductionNL/SoftwareCatalog
+ * @link      https://github.com/ConductionNL/stackiq
  */
 
 declare(strict_types=1);
 
-namespace OCA\SoftwareCatalog\EventListener;
+namespace OCA\Stackiq\EventListener;
 
-use OCA\SoftwareCatalog\Service\ModuleRegistrationService;
-use OCA\SoftwareCatalog\Service\SettingsService;
-use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use Psr\Log\LoggerInterface;
+use OCA\Stackiq\Service\ModuleRegistrationService;
+use OCA\Stackiq\Service\SettingsService;
+use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
- * Event subscriber that auto-sets geregistreerdDoor on module objects
+ * Event subscriber that auto-sets registeredBy on module objects
  * based on the owning organisation's type.
  *
  * @category EventListener
- * @package  OCA\SoftwareCatalog\EventListener
+ * @package  OCA\Stackiq\EventListener
  */
-class ModuleRegistrationSubscriber implements IEventListener
-{
-    /**
-     * Constructor for ModuleRegistrationSubscriber.
-     *
-     * @param ContainerInterface $container The DI container
-     */
-    public function __construct(
-        private readonly ContainerInterface $container
-    ) {
-    }//end __construct()
+class ModuleRegistrationSubscriber implements IEventListener {
+	/**
+	 * Constructor for ModuleRegistrationSubscriber.
+	 *
+	 * @param ContainerInterface $container The DI container
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+	) {
+	}//end __construct()
 
-    /**
-     * Handle the event.
-     *
-     * @param Event $event The event to handle
-     *
-     * @return void
-     */
-    public function handle(Event $event): void
-    {
-        if (($event instanceof ObjectCreatedEvent) === false && ($event instanceof ObjectUpdatedEvent) === false) {
-            return;
-        }
+	/**
+	 * Handle the event.
+	 *
+	 * @param Event $event The event to handle
+	 *
+	 * @return void
+	 */
+	public function handle(Event $event): void {
+		if (($event instanceof ObjectCreatedEvent) === false && ($event instanceof ObjectUpdatedEvent) === false) {
+			return;
+		}
 
-        if ($event instanceof ObjectCreatedEvent) {
-            $object = $event->getObject();
-        } else if ($event instanceof ObjectUpdatedEvent) {
-            $object = $event->getNewObject();
-        } else {
-            return;
-        }
+		$object = null;
+		if ($event instanceof ObjectCreatedEvent) {
+			$object = $event->getObject();
+		} elseif ($event instanceof ObjectUpdatedEvent) {
+			$object = $event->getNewObject();
+		}
 
-        $objectSchemaId = $object->getSchema();
+		if ($object === null) {
+			return;
+		}
 
-        // Check if this is a module object.
-        $settingsService = $this->container->get(SettingsService::class);
-        $moduleSchemaId  = $settingsService->getSchemaIdForObjectType('module');
+		$objectSchemaId = $object->getSchema();
 
-        if ($moduleSchemaId === null || (int) $objectSchemaId !== (int) $moduleSchemaId) {
-            return;
-        }
+		// Check if this is a module object.
+		$settingsService = $this->container->get(SettingsService::class);
+		$moduleSchemaId = $settingsService->getSchemaIdForObjectType('module');
 
-        try {
-            $moduleRegistrationService = $this->container->get(ModuleRegistrationService::class);
-            $moduleRegistrationService->handleModuleRegistration($object);
-        } catch (\Exception $e) {
-            $logger = $this->container->get(LoggerInterface::class);
-            $logger->error(
-                    'ModuleRegistrationSubscriber: Failed to handle module registration',
-                    [
-                        'objectId'  => $object->getId(),
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
-        }
-    }//end handle()
+		if ($moduleSchemaId === null || (int)$objectSchemaId !== (int)$moduleSchemaId) {
+			return;
+		}
+
+		try {
+			$registrationSvc = $this->container->get(ModuleRegistrationService::class);
+			$registrationSvc->handleModuleRegistration($object);
+		} catch (\Exception $e) {
+			$logger = $this->container->get(LoggerInterface::class);
+			$logger->error(
+				'ModuleRegistrationSubscriber: Failed to handle module registration',
+				[
+					'objectId' => $object->getId(),
+					'exception' => $e->getMessage(),
+				]
+			);
+		}
+	}//end handle()
 }//end class
