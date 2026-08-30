@@ -787,7 +787,7 @@ class ContactPersonHandler {
 				}
 			}
 
-			if ($group !== false && $group->inGroup($user) === false) {
+			if ($group !== null && $group->inGroup($user) === false) {
 				$group->addUser($user);
 				$this->_logger->info(
 					'Added user to group',
@@ -913,7 +913,7 @@ class ContactPersonHandler {
 			foreach ($allPossibleRoleGroups as $roleGroup) {
 				if ($roleGroup !== $newRoleGroup) {
 					$group = $this->_groupManager->get($roleGroup);
-					if ($group !== false && $group->inGroup($user) === true) {
+					if ($group !== null && $group->inGroup($user) === true) {
 						$group->removeUser($user);
 						$this->_logger->info(
 							'Removed user from old organization type role group',
@@ -1414,7 +1414,7 @@ class ContactPersonHandler {
 
 				if (empty($maintainerGroup) === false) {
 					$user = $this->_userManager->get($username);
-					if ($user !== false && $maintainerGroup->inGroup($user) === false) {
+					if ($user !== null && $maintainerGroup->inGroup($user) === false) {
 						$maintainerGroup->addUser($user);
 					}
 				}
