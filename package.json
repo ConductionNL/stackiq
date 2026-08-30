@@ -128,7 +128,7 @@
     "ts-jest": "^29.2.3",
     "ts-loader": "^9.5.1",
     "typescript": "^6.0.3",
-    "vitest": "^3.2.7",
+    "vitest": "^4.1.11",
     "vue-eslint-parser": "^10.3.0"
   },
   "prettier": "@nextcloud/prettier-config"
