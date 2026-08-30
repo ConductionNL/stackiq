@@ -2092,7 +2092,7 @@ class StackiqService {
 
 				if (empty($username) === false) {
 					$user = $userManager->get($username);
-					if ($user !== false && $user->isEnabled() === false) {
+					if ($user !== null && $user->isEnabled() === false) {
 						$user->setEnabled(true);
 						$activatedCount++;
 
@@ -2184,7 +2184,7 @@ class StackiqService {
 
 				if (empty($username) === false) {
 					$user = $userManager->get($username);
-					if ($user !== false && $user->isEnabled() === true) {
+					if ($user !== null && $user->isEnabled() === true) {
 						$user->setEnabled(false);
 						$deactivatedCount++;
 
@@ -2268,7 +2268,7 @@ class StackiqService {
 			foreach ($softwareCatalogUsers as $username) {
 				try {
 					$user = $userManager->get($username);
-					if ($user !== false && $user->isEnabled() === false) {
+					if ($user !== null && $user->isEnabled() === false) {
 						$user->setEnabled(true);
 						$activatedUsers[] = $username;
 						$this->_logger->debug(
@@ -2278,7 +2278,7 @@ class StackiqService {
 								'username' => $username,
 							]
 						);
-					} elseif ($user !== false && $user->isEnabled() === true) {
+					} elseif ($user !== null && $user->isEnabled() === true) {
 						$this->_logger->debug(
 							'StackiqService: Stackiq user already active',
 							[
@@ -2376,7 +2376,7 @@ class StackiqService {
 			foreach ($softwareCatalogUsers as $username) {
 				try {
 					$user = $userManager->get($username);
-					if ($user !== false && $user->isEnabled() === true) {
+					if ($user !== null && $user->isEnabled() === true) {
 						$user->setEnabled(false);
 						$deactivatedUsers[] = $username;
 						$this->_logger->debug(
@@ -2386,7 +2386,7 @@ class StackiqService {
 								'username' => $username,
 							]
 						);
-					} elseif ($user !== false && $user->isEnabled() === false) {
+					} elseif ($user !== null && $user->isEnabled() === false) {
 						$this->_logger->debug(
 							'StackiqService: Stackiq user already inactive',
 							[

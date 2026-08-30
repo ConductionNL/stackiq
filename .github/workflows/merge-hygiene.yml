@@ -33,7 +33,7 @@ jobs:
     name: Conflict markers and PHP syntax
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Conflict markers, anywhere in the tree we author. A marker means a merge
       # was committed half-finished; every downstream signal from that commit is
