@@ -21,10 +21,17 @@ import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import DashboardCustomView from './views/Dashboard.vue'
+import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import SoftwareCatalogSettingsPage from './views/settings/StackiqSettings.vue'
 
 export default {
+	// --- Flows (ADR-110 Decision 4). Only the SIDEBAR is an app component;
+	//     the list and the canvas are the shared `flows` / `flow-detail`
+	//     manifest page types. CnFlowSidebar has to mount in the NC app
+	//     sidebar for the canvas to keep full width. ---
+	FlowDetailSidebar: { kind: 'page', component: FlowDetailSidebar },
+
 	// --- Lib gap: settings sub-section orchestration. ---
 	// Multi-tab nav + ArchiMate status polling + register selector that
 	// the lib's type:'settings' rich-section widgets can't express yet.
