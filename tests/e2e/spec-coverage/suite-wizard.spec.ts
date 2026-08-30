@@ -121,7 +121,7 @@ async function fillDetails(page: Page): Promise<void> {
 /** Attach one seeded module through the real NcSelect multi-picker. */
 async function attachApplication(page: Page, name: string): Promise<void> {
 	const w = wizard(page)
-	const picker = w.locator('.suite-wizard-step2 .vs__search').first()
+	const picker = w.locator('.suite-wizard-step2 .vs__search input').first()
 	await picker.click()
 	await picker.fill(name)
 	// The option list is teleported to body by vue-select, so it is queried on
@@ -176,7 +176,7 @@ test('suite wizard: the applications step offers existing modules and no create 
 	// The picker offers a module that genuinely exists in the register — the
 	// one this run seeded. If the step invented its own options, or fetched
 	// nothing, this fails.
-	const picker = w.locator('.suite-wizard-step2 .vs__search').first()
+	const picker = w.locator('.suite-wizard-step2 .vs__search input').first()
 	await picker.click()
 	await picker.fill(APP_A)
 	await expect(

@@ -173,7 +173,7 @@ async function submitReview(
 		.getByRole('textbox', { name: /^Title/ })
 		.first()
 		.fill(reviewTitle)
-	const rater = dialog.locator('.vs__search').first()
+	const rater = dialog.locator('.vs__search input').first()
 	await rater.click()
 	await page
 		.locator('.vs__dropdown-option', { hasText: new RegExp(`^${rating}$`) })
