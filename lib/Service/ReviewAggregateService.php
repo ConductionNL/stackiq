@@ -43,7 +43,7 @@ class ReviewAggregateService {
 	/**
 	 * The catalog object type reviews live on.
 	 */
-	public const REVIEW_TYPE = 'assessment';
+	public const REVIEW_TYPE = 'software-review';
 
 	/**
 	 * Public-visible moderation state.

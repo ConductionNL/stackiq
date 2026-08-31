@@ -119,7 +119,7 @@ class SettingsService {
 	 * @var array<string, string>
 	 */
 	public const LEGACY_SCHEMA_KEY = [
-		'assessment' => 'beoordeeling_schema',
+		'software-review' => 'beoordeeling_schema',
 		'bioMeasure' => 'bioMaatregel_schema',
 		'connection' => 'koppeling_schema',
 		'contactPerson' => 'contactpersoon_schema',
@@ -907,7 +907,7 @@ class SettingsService {
 			// (`koppeling_gebruik_schema`). Renaming a subset would resolve some
 			// types and silently leave others reporting "not configured", which is
 			// how the ratings feature died once already. Tracked as its own change.
-			'assessment' => 'beoordeeling_schema',
+			'software-review' => 'beoordeeling_schema',
 			'service' => 'dienst_schema',
 			'usage' => 'gebruik_schema',
 			'contract' => 'contract_schema',
@@ -4143,7 +4143,7 @@ class SettingsService {
 				'usage' => 'gebruik_schema',
 				'contract' => 'contract_schema',
 				'connection' => 'koppeling_schema',
-				'assessment' => 'beoordeeling_schema',
+				'software-review' => 'beoordeeling_schema',
 				'module' => 'module_schema',
 				'compliancy' => 'compliancy_schema',
 				'moduleversie' => 'moduleVersie_schema',
