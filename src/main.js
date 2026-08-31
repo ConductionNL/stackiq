@@ -27,7 +27,7 @@ import {
 } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { createApp, h } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import CatalogPanels from './components/CatalogPanels.vue'
 import customComponents from './customComponents.js'
@@ -160,7 +160,14 @@ async function bootstrap() {
 	)
 
 	const router = createRouter({
-		history: createWebHashHistory(generateUrl('/apps/stackiq')),
+		// History mode: clean path URLs and working deep-links
+		// (/apps/stackiq/organisaties/{id}). This relies on the AppHost SPA
+		// catch-all serving the SPA index on any sub-path — verified before
+		// the switch: /apps/stackiq/organisaties, /contracten and
+		// /organisaties/abc-123 all return 200 with the app shell. Without
+		// that route a deep link 404s at the SERVER on reload, which is the
+		// reason apps fell back to hash mode (fleet #133).
+		history: createWebHistory(generateUrl('/apps/stackiq')),
 		routes: routesFromManifest(resolvedManifest),
 	})
 
