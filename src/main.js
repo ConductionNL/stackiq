@@ -14,6 +14,7 @@ import {
 	buildManifest,
 	defaultPageTypes,
 	registerBuiltinDashboardWidgets,
+	registerDashboardWidget,
 	registerIcons,
 	registerTranslations,
 	resolveManifestSentinels,
@@ -28,6 +29,7 @@ import { generateUrl } from '@nextcloud/router'
 import { createApp, h } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
+import CatalogPanels from './components/CatalogPanels.vue'
 import customComponents from './customComponents.js'
 import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
@@ -54,6 +56,22 @@ registerIcons(appIcons)
 // render "Widget not available". This app uses `stat` and `stats-block` widgets
 // in detail-page widget slots, so the explicit call is load-bearing.
 registerBuiltinDashboardWidgets()
+
+// The dashboard's info box + the two object-statistics tables, moved out of the
+// old hand-written Dashboard view so the dashboard could become a declarative
+// `type:"dashboard"` page. The KPI tiles beside it are manifest `stat` widgets.
+//
+// ⚠️ A dashboard widget TYPE resolves against the LIBRARY's widget catalog (this
+// call), not the app's `registry` prop — that one is for page components and
+// slot overrides. An unregistered type renders "Widget not available" and logs
+// nothing at all.
+registerDashboardWidget('catalog-panels', {
+	renderer: CatalogPanels,
+	defaultContent: {},
+	displayName: 'Catalogue panels',
+	icon: 'DatabaseOutline',
+	card: true,
+})
 try {
 	registerTranslations()
 } catch (e) {
