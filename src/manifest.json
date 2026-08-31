@@ -197,10 +197,151 @@
 		{
 			"id": "Dashboard",
 			"route": "/",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Dashboard",
-			"component": "DashboardCustomView",
-			"_note": "Bespoke landing dashboard: composes CnDashboardPage with hand-authored named widget slots (a management info-box with deep-links and two custom statistics tables that render per-object-type counts with inline navigation). No standard dashboard config expresses these non-KPI slot bodies."
+			"config": {
+				"widgets": [
+					{
+						"id": "kpi-organisations",
+						"type": "stat",
+						"title": "Organisaties",
+						"content": {
+							"label": "Organisaties",
+							"icon": "OfficeBuilding",
+							"route": {
+								"name": "Organisaties"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "@resolve:voorzieningen_register",
+								"schema": "organization",
+								"metric": "count"
+							}
+						}
+					},
+					{
+						"id": "kpi-modules",
+						"type": "stat",
+						"title": "Modules",
+						"content": {
+							"label": "Modules",
+							"icon": "Package",
+							"route": {
+								"name": "Modules"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "@resolve:voorzieningen_register",
+								"schema": "module",
+								"metric": "count"
+							}
+						}
+					},
+					{
+						"id": "kpi-services",
+						"type": "stat",
+						"title": "Diensten",
+						"content": {
+							"label": "Diensten",
+							"icon": "Web",
+							"route": {
+								"name": "Diensten"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "@resolve:voorzieningen_register",
+								"schema": "service",
+								"metric": "count"
+							}
+						}
+					},
+					{
+						"id": "kpi-contracts",
+						"type": "stat",
+						"title": "Contracten",
+						"content": {
+							"label": "Contracten",
+							"icon": "FileDocument",
+							"route": {
+								"name": "Contracten"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "@resolve:voorzieningen_register",
+								"schema": "contract",
+								"metric": "count"
+							}
+						}
+					},
+					{
+						"id": "catalog-panels",
+						"type": "catalog-panels",
+						"title": "Object statistieken",
+						"_note": "The management info-box and the two per-object-type statistics tables, moved out of the former hand-written Dashboard view into src/components/CatalogPanels.vue. Registered as a widget TYPE via registerDashboardWidget() in main.js: CnDashboardPage resolves a widget's type against the LIBRARY catalog, not the app registry, and an unregistered type renders 'Widget not available' silently."
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "kpi-organisations",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "kpi-modules",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "kpi-services",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "kpi-contracts",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "5",
+						"widgetId": "catalog-panels",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 8,
+						"showTitle": false,
+						"borderless": true
+					}
+				]
+			},
+			"_note": "Was type:'custom' rendering a bespoke view. The four KPI tiles are declarative `stat` widgets counted by OpenRegister; the non-KPI slot bodies live on as the `catalog-panels` widget."
 		},
 		{
 			"id": "Organisaties",
