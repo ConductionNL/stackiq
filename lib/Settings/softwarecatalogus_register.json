@@ -890,7 +890,7 @@
               "magicMapping": true,
               "autoCreateTable": true
             },
-            "assessment": {
+            "software-review": {
               "magicMapping": true,
               "autoCreateTable": true
             },
@@ -3941,7 +3941,7 @@
           }
         }
       },
-      "assessment": {
+      "software-review": {
         "uri": null,
         "slug": "software-review",
         "x-openregister-notifications": {

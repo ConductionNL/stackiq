@@ -27,7 +27,7 @@
       }
     },
     "schemas": {
-      "assessment": {
+      "software-review": {
         "properties": {
           "auteur": {
             "type": "string",
