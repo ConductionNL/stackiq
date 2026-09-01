@@ -31,7 +31,7 @@
  * Run:  npx playwright test --project smoke
  */
 
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 const ROUTES = [
 	{ name: 'app root', path: '/index.php/apps/stackiq/' },

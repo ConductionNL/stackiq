@@ -1,3 +1,6 @@
+import type { APIRequestContext } from '@playwright/test'
+import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'
+
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
@@ -30,22 +33,20 @@
  *
  * @spec openspec/specs/gemma-faceted-search/spec.md
  */
-import { test, expect } from '@playwright/test'
-import type { APIRequestContext } from '@playwright/test'
+import { expect, test } from '@playwright/test'
+import {
+	createObject,
+	deleteObject,
+	newApiContext,
+	resolveConfig,
+	RUN_ID,
+} from '../workflows/_fixtures.ts'
 import {
 	APP_MAIN,
 	collectAppErrors,
 	expectNoAppErrors,
 	navClickTo,
-} from './_helpers'
-import {
-	RUN_ID,
-	createObject,
-	deleteObject,
-	newApiContext,
-	resolveConfig,
-	type VoorzieningenConfig,
-} from '../workflows/_fixtures'
+} from './_helpers.ts'
 
 const FACETS = '/index.php/apps/stackiq/api/facets'
 /** The four GEMMA dimensions the endpoint must always describe. */
@@ -120,7 +121,7 @@ test('facets: the response carries all four GEMMA dimensions, empty ones as [] n
 	// rather than a weaker version of it.
 	for (const dim of DIMENSIONS) {
 		expect(
-			Object.prototype.hasOwnProperty.call(body, dim),
+			Object.hasOwn(body, dim),
 			`dimension "${dim}" is missing from the response`,
 		).toBe(true)
 		expect(

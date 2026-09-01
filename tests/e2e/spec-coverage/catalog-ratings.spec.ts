@@ -1,3 +1,7 @@
+import type { APIRequestContext } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'
+
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
@@ -28,13 +32,16 @@
  *
  * @spec openspec/specs/catalog-ratings/spec.md
  */
+import { expect, request as playwrightRequest, test } from '@playwright/test'
 import {
-	test,
-	expect,
-	request as playwrightRequest,
-	type Page,
-} from '@playwright/test'
-import type { APIRequestContext } from '@playwright/test'
+	BASE_URL,
+	createObject,
+	deleteObject,
+	findAll,
+	newApiContext,
+	resolveConfig,
+	RUN_ID,
+} from '../workflows/_fixtures.ts'
 import {
 	APP_BASE,
 	APP_MAIN,
@@ -43,19 +50,8 @@ import {
 	dismissSupportDialog,
 	dismissWalkthrough,
 	expectNoAppErrors,
-	gotoAppRoute,
 	navClickTo,
-} from './_helpers'
-import {
-	BASE_URL,
-	RUN_ID,
-	createObject,
-	findAll,
-	newApiContext,
-	resolveConfig,
-	deleteObject,
-	type VoorzieningenConfig,
-} from '../workflows/_fixtures'
+} from './_helpers.ts'
 
 const MODULE_NAME = `Review subject ${RUN_ID}`
 /** Unique per test so the moderation queue row this test acts on is its own. */

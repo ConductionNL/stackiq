@@ -12,14 +12,14 @@
  * (src/main.js), the resolved manifest is what the router serves, so the
  * roadmap page renders its real content.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	gotoAppRoute,
+	APP_MAIN,
+	appNav,
 	collectAppErrors,
 	expectNoAppErrors,
-	appNav,
-	APP_MAIN,
-} from './_helpers'
+	gotoAppRoute,
+} from './_helpers.ts'
 
 test('features-roadmap: deep-link route mounts the roadmap surface', async ({
 	page,
