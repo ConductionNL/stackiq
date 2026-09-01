@@ -33,6 +33,7 @@ import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
 import Database from 'vue-material-design-icons/Database.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
+import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
 import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
@@ -61,6 +62,7 @@ import ShieldOutline from 'vue-material-design-icons/ShieldOutline.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import Star from 'vue-material-design-icons/Star.vue'
+import TransitConnectionVariant from 'vue-material-design-icons/TransitConnectionVariant.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
 import ViewModule from 'vue-material-design-icons/ViewModule.vue'
@@ -88,6 +90,7 @@ export default {
 	Database,
 	Domain,
 	Eye,
+	EyeOutline,
 	FileDocument,
 	FileDocumentEdit,
 	FileSign,
@@ -116,6 +119,7 @@ export default {
 	Sitemap,
 	SourceBranch,
 	Star,
+	TransitConnectionVariant,
 	ViewDashboardOutline,
 	ViewGridOutline,
 	ViewModule,

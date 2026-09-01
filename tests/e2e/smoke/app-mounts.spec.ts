@@ -37,7 +37,7 @@ const ROUTES = [
 	{ name: 'app root', path: '/index.php/apps/stackiq/' },
 	{
 		name: 'organisations sub-route',
-		path: '/index.php/apps/stackiq/#/organisaties',
+		path: '/index.php/apps/stackiq/organisaties',
 	},
 ]
 

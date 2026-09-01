@@ -67,8 +67,9 @@ async function gotoAppRoute(page: Page, route: string): Promise<void> {
 	// The in-app router runs in hash mode, so deep links are `#<route>`. A bare
 	// path form boots the SPA but leaves the hash empty, so vue-router falls back
 	// to the default `/` (Dashboard) and the requested surface never mounts.
-	// Navigate via the hash; the dashboard is `#/`.
-	const url = route === '/' ? `${APP_BASE}#/` : `${APP_BASE}#${route}`
+	// History mode: a deep link is a plain path (the dashboard is `/`).
+	const base = APP_BASE.endsWith('/') ? APP_BASE.slice(0, -1) : APP_BASE
+	const url = route === '/' ? `${base}/` : `${base}${route}`
 	// Use `domcontentloaded`, not `networkidle`: the app fires a periodic
 	// heartbeat / keep-alive poll, so the network never goes idle and a
 	// `networkidle` wait times out at 60s. The explicit shell/main waits below

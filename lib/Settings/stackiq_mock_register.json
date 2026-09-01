@@ -513,7 +513,7 @@
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
         "version": "0.3.1",
         "omschrijving": "",
-        "icon": "Link",
+        "icon": "TransitConnectionVariant",
         "required": [
           "name"
         ],
@@ -1389,7 +1389,7 @@
         "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
         "version": "0.1.1",
         "omschrijving": "",
-        "icon": "FileDocumentEdit",
+        "icon": "FileSign",
         "archive": [],
         "source": "internal",
         "hardValidation": false,
@@ -6735,7 +6735,7 @@
         "description": "AMEF View - Architectuur views en diagrammen uit het ArchiMate model",
         "version": "0.0.7",
         "omschrijving": "",
-        "icon": "Eye",
+        "icon": "EyeOutline",
         "required": [
           "identifier",
           "type",
@@ -7153,7 +7153,7 @@
         "description": "Schema voor kwetsbaarheden. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
         "version": "1.0.20",
         "omschrijving": "",
-        "icon": "ShieldAlert",
+        "icon": "ShieldAlertOutline",
         "required": [
           "name",
           "shortDescription",
