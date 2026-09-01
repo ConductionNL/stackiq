@@ -5,9 +5,9 @@
 				<h3 class="infoBoxTitle">Beheer van Organisaties</h3>
 				<p class="infoBoxText">
 					Organisaties kunnen worden geaccepteerd en beheerd via de
-					organisaties pagina. Het aanmaken en bewerken van gebruikers
-					gaat ook via de organisatie pagina, omdat deze onderdeel zijn
-					van organisaties.
+					organisaties pagina. Het aanmaken en bewerken van gebruikers gaat
+					ook via de organisatie pagina, omdat deze onderdeel zijn van
+					organisaties.
 				</p>
 				<div class="infoBoxActions">
 					<NcButton variant="primary" @click="navigateToOrganizations">
@@ -171,7 +171,6 @@ export default {
 	},
 
 	computed: {
-
 		/**
 		 * Get object statistics for the table display
 		 *
