@@ -122,11 +122,18 @@ async function openComponentsTab(page: Page): Promise<void> {
 	// The detail page mounts with its right-hand sidebar collapsed, and the
 	// Components / History tabs live INSIDE that sidebar — present in the DOM but
 	// not visible, so a direct tab click waits forever. Open the sidebar first.
-	const openSidebar = page.getByRole('button', { name: 'Open sidebar' })
+	const openSidebar = page.getByRole('button', {
+		name: /Open sidebar|Zijbalk openen/i,
+	})
 	if (await openSidebar.isVisible().catch(() => false)) {
 		await openSidebar.click()
 	}
-	await page.getByRole('tab', { name: 'Components' }).click()
+	// The e2e instance runs DUTCH. The manifest labels this tab "Components"
+	// and l10n/nl.json maps it to "Componenten", so pinning the English source
+	// waits for a tab that never appears and the test dies on a 60s timeout
+	// that reads like a missing feature. Matching either spelling keeps the
+	// spec honest on both locales.
+	await page.getByRole('tab', { name: /Components|Componenten/i }).click()
 }
 
 // ---------------------------------------------------------------------------
