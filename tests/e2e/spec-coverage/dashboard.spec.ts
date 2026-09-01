@@ -31,19 +31,28 @@ test('dashboard: renders the overview surface (stat tiles and the object statist
 	// heading; that surface was replaced when the KPI tiles landed, and this
 	// spec kept asserting the old one.
 	//
-	// Labels are asserted in DUTCH because the e2e instance runs Dutch, and
-	// they are NOT all identical to the manifest source: the manifest says
-	// "Services" and nl.json maps it to "Diensten". Asserting the English
-	// source here would pass only on an English instance.
-	for (const label of ['Organisaties', 'Modules', 'Diensten', 'Contracten']) {
+	// Matched against BOTH the manifest source and its nl.json translation.
+	// Two of these differ between the two: the manifest says "Services" and
+	// "Object statistics", which nl.json maps to "Diensten" and "Object
+	// statistieken". Pinning either one couples the spec to whichever locale
+	// the instance happens to boot in, and that is exactly how the previous
+	// version of this test failed: it asserted Dutch against an instance
+	// rendering the English source.
+	const tiles: RegExp[] = [
+		/Organisaties/,
+		/Modules/,
+		/Services|Diensten/,
+		/Contracten/,
+	]
+	for (const label of tiles) {
 		await expect(
-			main.getByText(label, { exact: false }).first(),
-			`the ${label} stat tile must render`,
+			main.getByText(label).first(),
+			`the ${label.source} stat tile must render`,
 		).toBeVisible({ timeout: 30000 })
 	}
 
 	await expect(
-		main.getByText('Object statistieken', { exact: false }).first(),
+		main.getByText(/Object statistics|Object statistieken/).first(),
 		'the object statistics panel must render',
 	).toBeVisible({ timeout: 30000 })
 
