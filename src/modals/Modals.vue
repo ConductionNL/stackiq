@@ -42,7 +42,7 @@ const GENERIC_MODAL_OBJECT_TYPES = [
 	'suite',
 	'service',
 	'vulnerability',
-	'assessment',
+	'software-review',
 	'compliancy',
 	'moduleVersion',
 	'sector',
