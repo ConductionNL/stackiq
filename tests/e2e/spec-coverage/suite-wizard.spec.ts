@@ -316,7 +316,12 @@ test('suite wizard: submit creates the suite with both attached modules', async 
 	// What a user DOES see on success is the navigation to the new suite's
 	// detail page, so that is asserted instead — a real, observable outcome
 	// rather than a weakened one.
-	await expect(page).toHaveURL(/#\/suites\/[^/]+$/, { timeout: 30000 })
+	// Matches the hash form AND the path form. The shell navigates to
+	// /apps/stackiq/suites/<uuid> here, with no "#", so a hash-only pattern
+	// waited the full 30s while the browser was already sitting on the right
+	// detail page. The uuid is what proves the suite was created; whether the
+	// router spells it with a hash is not what this test is about.
+	await expect(page).toHaveURL(/(?:#)?\/suites\/[^/]+$/, { timeout: 30000 })
 
 	// The suite really was persisted, with BOTH modules in `applicaties`.
 	// Read back through the register the UI wrote to.
