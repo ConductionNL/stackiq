@@ -10,14 +10,14 @@
  * "Ga naar Organisaties" navigation button which routes to the organisaties
  * index (navigationStore.setSelected('organisaties')).
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	gotoAppRoute,
-	navClickTo,
+	APP_MAIN,
 	collectAppErrors,
 	expectNoAppErrors,
-	APP_MAIN,
-} from './_helpers'
+	gotoAppRoute,
+	navClickTo,
+} from './_helpers.ts'
 
 test('dashboard: renders the overview surface (stat tiles and the object statistics panel)', async ({
 	page,

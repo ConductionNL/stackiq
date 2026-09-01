@@ -1,3 +1,7 @@
+import type { APIRequestContext } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'
+
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
@@ -26,22 +30,20 @@
  *
  * @spec openspec/specs/suite-wizard/spec.md
  */
-import { test, expect, type Page } from '@playwright/test'
+import { expect, test } from '@playwright/test'
+import {
+	cleanupByToken,
+	createObject,
+	newApiContext,
+	resolveConfig,
+	RUN_ID,
+} from '../workflows/_fixtures.ts'
 import {
 	APP_MAIN,
 	collectAppErrors,
 	expectNoAppErrors,
 	navClickTo,
-} from './_helpers'
-import {
-	RUN_ID,
-	cleanupByToken,
-	createObject,
-	newApiContext,
-	resolveConfig,
-	type VoorzieningenConfig,
-} from '../workflows/_fixtures'
-import type { APIRequestContext } from '@playwright/test'
+} from './_helpers.ts'
 
 const APP_A = `Suite member A ${RUN_ID}`
 const APP_B = `Suite member B ${RUN_ID}`

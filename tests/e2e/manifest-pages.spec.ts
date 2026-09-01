@@ -33,8 +33,10 @@
  * and carry standalone `@e2e exclude` directives in their spec blocks.
  */
 
-import { test, expect, type Page } from '@playwright/test'
-import { APP_PATH } from './base-url'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { APP_PATH } from './base-url.ts'
 
 // Was the hardcoded pretty path `/apps/stackiq`. See the APP_PATH
 // docblock in tests/e2e/base-url.ts: without a rewrite rule that path is not a

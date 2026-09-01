@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
@@ -10,8 +12,8 @@
  * buttons, view toggles, empty-state, dashboard widgets, settings sections) —
  * no Vue `$data`/`__vue__` patching.
  */
-import { expect, type Page } from '@playwright/test'
-import { APP_PATH } from '../base-url'
+import { expect } from '@playwright/test'
+import { APP_PATH } from '../base-url.ts'
 
 // Was the hardcoded pretty path `/apps/stackiq`, which only resolves
 // behind a rewrite rule. See the APP_PATH docblock in tests/e2e/base-url.ts —

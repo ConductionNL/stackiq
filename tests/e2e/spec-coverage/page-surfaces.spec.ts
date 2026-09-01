@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
@@ -34,13 +36,13 @@
  * @spec openspec/specs/portfolio-rationalization-time/spec.md
  * @spec openspec/specs/eol-feed-integration/spec.md
  */
-import { test, expect, type Page } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
 	APP_MAIN,
 	collectAppErrors,
 	expectNoAppErrors,
 	navClickTo,
-} from './_helpers'
+} from './_helpers.ts'
 
 /**
  * The four GEMMA dimensions `FacetedCatalogIndexView` declares in
