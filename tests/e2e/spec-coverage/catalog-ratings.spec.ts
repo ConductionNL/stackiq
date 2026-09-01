@@ -8,7 +8,7 @@
  *                                               ModuleDetail (/modules/:id)
  *   src/modals/SubmitReviewModal.vue            "Write a review"
  *   src/views/settings/sections/ModerationQueue.vue
- *                                               reused for type="assessment"
+ *                                               reused for type="software-review"
  *                                               at /settings/admin/stackiq
  *   manifest page `Reviews` (/reviews)          the reviews index
  *
@@ -79,7 +79,7 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
 	if (!ctx || !config) return
-	for (const schema of ['assessment', 'module']) {
+	for (const schema of ['software-review', 'module']) {
 		const rows = await findAll(ctx, config.register, schema)
 		for (const row of rows) {
 			if (JSON.stringify(row).includes(RUN_ID)) {
@@ -136,7 +136,7 @@ async function newAnonymousContext(): Promise<APIRequestContext> {
 
 /** Open the seeded module's detail page and wait for the reviews panel. */
 async function openModuleReviews(page: Page): Promise<void> {
-	await page.goto(`${APP_BASE.replace(/\/$/, "")}/modules/${moduleUuid}`, {
+	await page.goto(`${APP_BASE.replace(/\/$/, '')}/modules/${moduleUuid}`, {
 		waitUntil: 'domcontentloaded',
 	})
 	await page
@@ -379,7 +379,7 @@ test('reviews: a module with no approved reviews shows the empty aggregate, not 
 	})
 	expect(uuid, 'isolated module fixture has no uuid').not.toBe('')
 
-	await page.goto(`${APP_BASE.replace(/\/$/, "")}/modules/${uuid}`, {
+	await page.goto(`${APP_BASE.replace(/\/$/, '')}/modules/${uuid}`, {
 		waitUntil: 'domcontentloaded',
 	})
 	await page
@@ -538,7 +538,7 @@ test('reviews: an anonymous POST cannot create a review', async () => {
 	const rows = await findAll(
 		ctx,
 		config.register,
-		'assessment',
+		'software-review',
 		`Anon review ${RUN_ID}`,
 	)
 	expect(
@@ -570,7 +570,7 @@ test('reviews: a client-supplied auteur/status is stripped, not stored', async (
 		`POST /api/reviews returned ${res.status()}: ${await res.text()}`,
 	).toBeLessThan(300)
 
-	const rows = await findAll(ctx, config.register, 'assessment', reviewTitle)
+	const rows = await findAll(ctx, config.register, 'software-review', reviewTitle)
 	const stored = rows.find((r) => String(r.name ?? '') === reviewTitle)
 	expect(stored, 'the review was not persisted at all').toBeTruthy()
 	// The client-supplied author was IGNORED — the session identity won.
