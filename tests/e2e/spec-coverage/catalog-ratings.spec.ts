@@ -136,7 +136,7 @@ async function newAnonymousContext(): Promise<APIRequestContext> {
 
 /** Open the seeded module's detail page and wait for the reviews panel. */
 async function openModuleReviews(page: Page): Promise<void> {
-	await page.goto(`${APP_BASE.replace(/\/$/, "")}/modules/${moduleUuid}`, {
+	await page.goto(`${APP_BASE.replace(/\/$/, '')}/modules/${moduleUuid}`, {
 		waitUntil: 'domcontentloaded',
 	})
 	await page
@@ -379,7 +379,7 @@ test('reviews: a module with no approved reviews shows the empty aggregate, not 
 	})
 	expect(uuid, 'isolated module fixture has no uuid').not.toBe('')
 
-	await page.goto(`${APP_BASE.replace(/\/$/, "")}/modules/${uuid}`, {
+	await page.goto(`${APP_BASE.replace(/\/$/, '')}/modules/${uuid}`, {
 		waitUntil: 'domcontentloaded',
 	})
 	await page
