@@ -47,7 +47,7 @@ class ReviewService {
 	/**
 	 * The catalog object type reviews live on.
 	 */
-	public const REVIEW_TYPE = 'assessment';
+	public const REVIEW_TYPE = 'software-review';
 
 	/**
 	 * Moderation state of a freshly-submitted review — mirrors

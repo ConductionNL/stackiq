@@ -769,7 +769,7 @@
 			"title": "Reviews",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "assessment",
+				"schema": "software-review",
 				"columns": [
 					"name",
 					"auteur",
@@ -790,10 +790,10 @@
 			"title": "Review",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "assessment",
+				"schema": "software-review",
 				"_note": "Review / assessment archetype (beoordeeling). A review is read for its verdict then its subject: body leads with the review data (name, short + long markdown description, score) 8-wide left, a prominent score stat (waardering) top-right, and a Related panel + supporting-evidence Files panel stacked beneath it surfacing the reviewed subjects — the beoordeeling links modules[], diensten[] and koppelingen[] (the things assessed) plus its gebruik context. A review does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. FIX (softwarecatalog audit): rv-data (Review) now anchors gridX0/gridY0 so the left column starts flush with the right column instead of a whitespace hole opening up beside the score stat; rv-score/rv-related/rv-files were re-stacked in the right column to match rv-data's height. rv-related's title shortened from 'Reviewed modules & services' (truncated to 'Reviewed modules & s…' in the widget header) to 'Reviewed modules'.",
 				"widgets": [
-					{ "id": "rv-score", "type": "stat", "title": "Rating", "icon": "Star", "content": { "label": "Rating", "icon": "Star", "source": { "register": "@resolve:voorzieningen_register", "schema": "assessment", "metric": "avg", "field": "rating", "filter": { "id": "@objectId" } } } },
+					{ "id": "rv-score", "type": "stat", "title": "Rating", "icon": "Star", "content": { "label": "Rating", "icon": "Star", "source": { "register": "@resolve:voorzieningen_register", "schema": "software-review", "metric": "avg", "field": "rating", "filter": { "id": "@objectId" } } } },
 					{ "id": "rv-data", "type": "data", "title": "Review", "icon": "NoteTextOutline", "content": { "columns": 2 } },
 					{ "id": "rv-related", "type": "related", "title": "Reviewed modules", "icon": "LinkVariant" },
 					{ "id": "rv-files", "type": "integration", "integrationId": "files", "title": "Supporting evidence", "icon": "FolderOutline" }

@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "stackiq demo data",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
   },
   "x-openregister": {
@@ -27,7 +27,7 @@
       }
     },
     "schemas": {
-      "assessment": {
+      "software-review": {
         "properties": {
           "auteur": {
             "type": "string",
@@ -104,7 +104,7 @@
                 "handling": "related-object"
               },
               "$ref": "#/components/schemas/module",
-              "inversedBy": "assessment"
+              "inversedBy": "software-review"
             }
           },
           "diensten": {
@@ -211,7 +211,7 @@
           "rating"
         ],
         "uri": null,
-        "slug": "assessment",
+        "slug": "software-review",
         "x-openregister-notifications": {
           "review-submitted": {
             "trigger": {
@@ -7303,7 +7303,7 @@
       {
         "@self": {
           "register": "stackiq",
-          "schema": "assessment",
+          "schema": "software-review",
           "slug": "assessment-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
@@ -7326,7 +7326,7 @@
       {
         "@self": {
           "register": "stackiq",
-          "schema": "assessment",
+          "schema": "software-review",
           "slug": "assessment-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
@@ -7349,7 +7349,7 @@
       {
         "@self": {
           "register": "stackiq",
-          "schema": "assessment",
+          "schema": "software-review",
           "slug": "assessment-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",
@@ -8872,7 +8872,7 @@
       {
         "@self": {
           "register": "vng-gemma",
-          "schema": "assessment",
+          "schema": "software-review",
           "slug": "assessment-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
@@ -8895,7 +8895,7 @@
       {
         "@self": {
           "register": "vng-gemma",
-          "schema": "assessment",
+          "schema": "software-review",
           "slug": "assessment-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
@@ -8918,7 +8918,7 @@
       {
         "@self": {
           "register": "vng-gemma",
-          "schema": "assessment",
+          "schema": "software-review",
           "slug": "assessment-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",
