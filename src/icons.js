@@ -34,6 +34,7 @@ import Database from 'vue-material-design-icons/Database.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
+import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
@@ -65,6 +66,7 @@ import TransitConnectionVariant from 'vue-material-design-icons/TransitConnectio
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
 import ViewModule from 'vue-material-design-icons/ViewModule.vue'
+import Web from 'vue-material-design-icons/Web.vue'
 
 export default {
 	AccountBoxOutline,
@@ -89,6 +91,7 @@ export default {
 	Domain,
 	Eye,
 	EyeOutline,
+	FileDocument,
 	FileDocumentEdit,
 	FileSign,
 	FolderOutline,
@@ -120,4 +123,5 @@ export default {
 	ViewDashboardOutline,
 	ViewGridOutline,
 	ViewModule,
+	Web,
 }

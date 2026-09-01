@@ -246,9 +246,9 @@
 					{
 						"id": "kpi-services",
 						"type": "stat",
-						"title": "Diensten",
+						"title": "Services",
 						"content": {
-							"label": "Diensten",
+							"label": "Services",
 							"icon": "Web",
 							"route": {
 								"name": "Diensten"
@@ -288,7 +288,7 @@
 					{
 						"id": "catalog-panels",
 						"type": "catalog-panels",
-						"title": "Object statistieken",
+						"title": "Object statistics",
 						"_note": "The management info-box and the two per-object-type statistics tables, moved out of the former hand-written Dashboard view into src/components/CatalogPanels.vue. Registered as a widget TYPE via registerDashboardWidget() in main.js: CnDashboardPage resolves a widget's type against the LIBRARY catalog, not the app registry, and an unregistered type renders 'Widget not available' silently."
 					}
 				],
