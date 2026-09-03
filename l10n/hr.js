@@ -278,7 +278,10 @@ OC.L10N.register(
         "Stale": "Stale",
         "Subscribe to peer catalogs and pull their published entries into this instance.": "Subscribe to peer catalogs and pull their published entries into this instance.",
         "Subscribed peers": "Subscribed peers",
-        "There are no pending registrations right now.": "There are no pending registrations right now."
+        "There are no pending registrations right now.": "There are no pending registrations right now.",
+        "Reports": "Izvješća",
+        "Pick a report to open it.": "Odaberite izvješće da ga otvorite.",
+        "Overlapping and ageing software across the portfolio.": "Preklapajući i zastarjeli softver u portfelju."
     },
     "nplurals=2; plural=(n != 1);"
 )

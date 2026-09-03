@@ -760,7 +760,10 @@ OC.L10N.register(
         "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.": "Flows zijn wat er gebeurt zonder dat iemand klikt: een herinnering voordat een termijn verstrijkt, een bevestiging bij indiening. Hier lees en bewerk je ze. Je hoeft nu niets te bouwen.",
         "Open Flows in the menu": "Open Flows in het menu",
         "Modules": "Modules",
-        "Object statistics": "Object statistieken"
+        "Object statistics": "Object statistieken",
+        "Reports": "Rapporten",
+        "Pick a report to open it.": "Kies een rapport om het te openen.",
+        "Overlapping and ageing software across the portfolio.": "Overlappende en verouderde software in de portfolio."
     },
     "nplurals=2; plural=(n != 1);"
 )

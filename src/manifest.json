@@ -162,13 +162,6 @@
 			"order": 86
 		},
 		{
-			"id": "PortfolioReport",
-			"label": "Portfolio rationalization",
-			"icon": "BriefcaseOutline",
-			"route": "PortfolioReport",
-			"order": 87
-		},
-		{
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "BookOpenVariantOutline",
@@ -177,12 +170,20 @@
 			"order": 90
 		},
 		{
+			"id": "ReportsMenu",
+			"label": "Reports",
+			"icon": "ChartBoxOutline",
+			"route": "Reports",
+			"section": "footer",
+			"order": 95
+		},
+		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
 			"icon": "MapMarkerPath",
 			"route": "FeaturesRoadmap",
 			"section": "footer",
-			"order": 95
+			"order": 100
 		},
 		{
 			"id": "FlowsMenu",
@@ -977,6 +978,25 @@
 			"title": "Portfolio roadmap",
 			"component": "LifecycleRoadmapView",
 			"_note": "Per-organisation roadmap: the selected organisation's applications-in-use grouped into derived lifecycle-phase swimlanes (Onbekend first) and ordered within each lane by nearest urgency (end-of-support / phase-out / planned replacement). No standard index/roadmap type derives and groups by computed lifecycle phase."
+		},
+		{
+			"id": "Reports",
+			"route": "/reports",
+			"type": "reports",
+			"title": "Reports",
+			"config": {
+				"description": "Pick a report to open it.",
+				"cards": [
+					{
+						"id": "PortfolioReport",
+						"label": "Portfolio rationalization",
+						"description": "Overlapping and ageing software across the portfolio.",
+						"icon": "BriefcaseOutline",
+						"route": "PortfolioReport"
+					}
+				]
+			},
+			"_note": "ADR-112 / ADR-114 Decision 3. Stackiq already had one report and it was a main-nav entry at order 87. Nothing is invented: the PortfolioReport page is untouched and stays routable at /portfolio-report, and only its menu entry moves. The catalogue index pages are NOT carded — they are the data itself, not a reading of it, and ADR-097 keeps a domain of the work in the main nav."
 		},
 		{
 			"id": "PortfolioReport",

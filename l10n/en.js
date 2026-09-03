@@ -697,7 +697,10 @@ OC.L10N.register(
         "Invalid contactpersoon data structure": "Invalid contactpersoon data structure",
         "Where the automation lives": "Where the automation lives",
         "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.",
-        "Open Flows in the menu": "Open Flows in the menu"
+        "Open Flows in the menu": "Open Flows in the menu",
+        "Reports": "Reports",
+        "Pick a report to open it.": "Pick a report to open it.",
+        "Overlapping and ageing software across the portfolio.": "Overlapping and ageing software across the portfolio."
     },
     "nplurals=2; plural=(n != 1);"
 )
