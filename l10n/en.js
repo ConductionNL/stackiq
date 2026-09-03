@@ -3,6 +3,8 @@ OC.L10N.register(
     {
         "AMEF elements": "AMEF elements",
         "AMEF standards": "AMEF standards",
+        "ArchiMate element": "ArchiMate element",
+        "Id of the ArchiMate element this usage is shown on.": "Id of the ArchiMate element this usage is shown on.",
         "Acquisition start date": "Acquisition start date",
         "Algorithm": "Algorithm",
         "Application A": "Application A",

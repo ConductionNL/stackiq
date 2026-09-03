@@ -2656,7 +2656,7 @@
         "slug": "usage",
         "title": "Usage",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.4.1",
+        "version": "1.5.0",
         "omschrijving": "",
         "icon": "Gauge",
         "x-openregister-notifications": {
@@ -3008,6 +3008,14 @@
             "items": {
               "type": "string"
             }
+          },
+          "elementRef": {
+            "description": "Id of the ArchiMate element this usage is shown on.",
+            "type": "string",
+            "visible": false,
+            "order": 23,
+            "facetable": false,
+            "title": "ArchiMate element"
           },
           "koppelingen": {
             "description": "De koppelingen die gebruikt worden binnen dit productgebruik",
