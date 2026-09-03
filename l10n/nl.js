@@ -8,6 +8,8 @@ OC.L10N.register(
         "All set": "Klaar",
         "AMEF elements": "Amef elementen",
         "AMEF standards": "Standaarden AMEF",
+        "ArchiMate element": "ArchiMate-element",
+        "Id of the ArchiMate element this usage is shown on.": "Id van het ArchiMate-element waarop dit gebruik wordt getoond.",
         "Acquisition start date": "Startdatum Verwerving",
         "Algorithm": "Algoritme",
         "Application A": "Applicatie A",
