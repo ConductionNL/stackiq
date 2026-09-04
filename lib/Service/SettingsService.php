@@ -719,11 +719,14 @@ class SettingsService {
 
 			$registerId = (string)$publicationRegister->getId();
 
-			// Find page, menu, and theme schemas that have data in magic mapper tables.
-			// We look for schemas by slug and check if they have associated data.
+			// Find the theme schema that has data in magic mapper tables.
+			//
+			// `page` and `menu` were here too, until opencatalogi retired its CMS
+			// and those moved to Portaliq. Writing `page_schema` / `menu_schema`
+			// into opencatalogi's app config now points it at schemas that no
+			// longer exist there, which reads as a configured integration and
+			// resolves to nothing.
 			$schemas = $schemaMapper->findAll();
-			$pageSchemaId = null;
-			$menuSchemaId = null;
 			$themeSchemaId = null;
 
 			foreach ($schemas as $schema) {
@@ -734,15 +737,7 @@ class SettingsService {
 				$tableName = 'oc_openregister_table_' . $registerId . '_' . $schemaId;
 
 				// Try to find schemas that have actual data.
-				if ($slug === 'page' && $pageSchemaId === null) {
-					if ($this->tableHasData(tableName: $tableName) === true) {
-						$pageSchemaId = (string)$schemaId;
-					}
-				} elseif ($slug === 'menu' && $menuSchemaId === null) {
-					if ($this->tableHasData(tableName: $tableName) === true) {
-						$menuSchemaId = (string)$schemaId;
-					}
-				} elseif ($slug === 'theme' && $themeSchemaId === null) {
+				if ($slug === 'theme' && $themeSchemaId === null) {
 					if ($this->tableHasData(tableName: $tableName) === true) {
 						$themeSchemaId = (string)$schemaId;
 					}
@@ -751,20 +746,6 @@ class SettingsService {
 
 			// Set the opencatalogi app configuration.
 			$configured = [];
-
-			if ($pageSchemaId !== null) {
-				$this->config->setValueString('opencatalogi', 'page_schema', $pageSchemaId);
-				$this->config->setValueString('opencatalogi', 'page_register', $registerId);
-				$configured['page_schema'] = $pageSchemaId;
-				$configured['page_register'] = $registerId;
-			}
-
-			if ($menuSchemaId !== null) {
-				$this->config->setValueString('opencatalogi', 'menu_schema', $menuSchemaId);
-				$this->config->setValueString('opencatalogi', 'menu_register', $registerId);
-				$configured['menu_schema'] = $menuSchemaId;
-				$configured['menu_register'] = $registerId;
-			}
 
 			if ($themeSchemaId !== null) {
 				$this->config->setValueString('opencatalogi', 'theme_schema', $themeSchemaId);
