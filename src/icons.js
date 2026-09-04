@@ -62,6 +62,7 @@ import ShieldOutline from 'vue-material-design-icons/ShieldOutline.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import Star from 'vue-material-design-icons/Star.vue'
+import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import TransitConnectionVariant from 'vue-material-design-icons/TransitConnectionVariant.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
@@ -119,6 +120,7 @@ export default {
 	Sitemap,
 	SourceBranch,
 	Star,
+	StoreOutline,
 	TransitConnectionVariant,
 	ViewDashboardOutline,
 	ViewGridOutline,

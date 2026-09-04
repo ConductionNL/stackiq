@@ -765,7 +765,9 @@ OC.L10N.register(
         "Object statistics": "Object statistieken",
         "Reports": "Rapporten",
         "Pick a report to open it.": "Kies een rapport om het te openen.",
-        "Overlapping and ageing software across the portfolio.": "Overlappende en verouderde software in de portfolio."
+        "Overlapping and ageing software across the portfolio.": "Overlappende en verouderde software in de portfolio.",
+        "Store": "Store",
+        "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Installeer registers, schema's en flows die andere organisaties hebben gepubliceerd."
     },
     "nplurals=2; plural=(n != 1);"
 )
