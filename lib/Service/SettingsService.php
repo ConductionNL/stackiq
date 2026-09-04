@@ -131,6 +131,14 @@ class SettingsService {
 	];
 
 	/**
+	 * OpenRegister's shared organisation projection.
+	 *
+	 * `nc-` prefixed by OpenRegister so it cannot collide with a leaf app's own
+	 * `organization`, which has to keep working until every app has migrated.
+	 */
+	private const SHARED_ORGANISATION_SCHEMA = 'nc-organisation';
+
+	/**
 	 * SettingsService constructor
 	 *
 	 * @param IAppConfig $config App configuration interface
@@ -925,6 +933,26 @@ class SettingsService {
 			}
 		}
 
+		// LAST, deliberately. The organisation is OpenRegister's now — a schema
+		// slug is global per organisation, so this app shipping its own
+		// `organization` is what collided with opencatalogi's — and
+		// `nc-organisation` is the projection every app shares.
+		//
+		// But it resolves only when nothing local did. Putting it FIRST was the
+		// obvious shape and the wrong one: the projection always exists, so it
+		// would win on an instance that has not yet run
+		// `openregister:organisations:adopt`, and that instance's rows still
+		// live in the local schema. Every picker would come back empty with
+		// nothing reporting why.
+		//
+		// This ordering needs no operator timing. An un-migrated instance keeps
+		// resolving locally; a fresh install has no local schema and lands on the
+		// projection; and once `prune-retired` has removed the local schema, so
+		// does a migrated one.
+		if ($result === null && $objectType === 'organization') {
+			$result = $this->sharedOrganisationSchemaId();
+		}
+
 		if ($objectType === 'contactPerson' && $result === null) {
 			$schemaId = $voorzieningenConfig['contactpersoon_schema'];
 			if (empty($schemaId) === false) {
@@ -992,6 +1020,46 @@ class SettingsService {
 
 		return $result;
 	}//end getSchemaIdForObjectType()
+
+	/**
+	 * The id of OpenRegister's shared organisation projection, or null.
+	 *
+	 * `nc-organisation` is a read-only virtual schema OpenRegister serves from
+	 * its always-available `directory` register, alongside `nc-user` and
+	 * `nc-group`. Every app can reference it, which is the point: this app
+	 * shipping its own `organization` schema is what collided with
+	 * opencatalogi's, since a schema slug is global per organisation.
+	 *
+	 * Resolved lazily and failing to null, because an OpenRegister too old to
+	 * carry the projection must fall through to this app's own schema rather
+	 * than resolving organisations to nothing.
+	 *
+	 * @return int|null The schema id, or null when it cannot be resolved.
+	 *
+	 * @spec openspec/changes/stackiq-uses-the-shared-organisation/specs/shared-organisation/spec.md#requirement-the-organisation-is-openregisters-req-sso-101
+	 */
+	private function sharedOrganisationSchemaId(): ?int {
+		if ($this->isOpenRegisterInstalled() === false) {
+			return null;
+		}
+
+		try {
+			$schemaMapper = $this->container->get('OCA\\OpenRegister\\Db\\SchemaMapper');
+			$schema = $schemaMapper->find(self::SHARED_ORGANISATION_SCHEMA);
+		} catch (\Throwable $e) {
+			$this->logger->debug(
+				'SettingsService: the shared organisation projection is unavailable',
+				['error' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		if ($schema === null) {
+			return null;
+		}
+
+		return (int)$schema->getId();
+	}//end sharedOrganisationSchemaId()
 
 	/**
 	 * The app-config key an object type's schema id is stored under.
