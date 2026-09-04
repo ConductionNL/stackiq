@@ -281,7 +281,9 @@ OC.L10N.register(
         "There are no pending registrations right now.": "There are no pending registrations right now.",
         "Reports": "Pārskati",
         "Pick a report to open it.": "Izvēlieties pārskatu, lai to atvērtu.",
-        "Overlapping and ageing software across the portfolio.": "Pārklājoša un novecojoša programmatūra portfelī."
+        "Overlapping and ageing software across the portfolio.": "Pārklājoša un novecojoša programmatūra portfelī.",
+        "Store": "Veikals",
+        "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Instalējiet reģistrus, shēmas un plūsmas, ko publicējušas citas organizācijas."
     },
     "nplurals=2; plural=(n != 1);"
 )

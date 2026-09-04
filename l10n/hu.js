@@ -281,7 +281,9 @@ OC.L10N.register(
         "There are no pending registrations right now.": "There are no pending registrations right now.",
         "Reports": "Jelentések",
         "Pick a report to open it.": "Válasszon egy jelentést a megnyitásához.",
-        "Overlapping and ageing software across the portfolio.": "Átfedő és elavuló szoftverek a portfólióban."
+        "Overlapping and ageing software across the portfolio.": "Átfedő és elavuló szoftverek a portfólióban.",
+        "Store": "Áruház",
+        "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Telepítsen más szervezetek által közzétett nyilvántartásokat, sémákat és folyamatokat."
     },
     "nplurals=2; plural=(n != 1);"
 )

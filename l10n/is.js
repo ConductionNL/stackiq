@@ -281,7 +281,9 @@ OC.L10N.register(
         "There are no pending registrations right now.": "There are no pending registrations right now.",
         "Reports": "Skýrslur",
         "Pick a report to open it.": "Veldu skýrslu til að opna hana.",
-        "Overlapping and ageing software across the portfolio.": "Skarast og eldist hugbúnaður í eignasafninu."
+        "Overlapping and ageing software across the portfolio.": "Skarast og eldist hugbúnaður í eignasafninu.",
+        "Store": "Verslun",
+        "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Settu upp skrár, skemu og flæði sem aðrar stofnanir hafa birt."
     },
     "nplurals=2; plural=(n != 1);"
 )

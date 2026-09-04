@@ -281,7 +281,9 @@ OC.L10N.register(
         "There are no pending registrations right now.": "There are no pending registrations right now.",
         "Reports": "Εκθέσεις",
         "Pick a report to open it.": "Επιλέξτε μια αναφορά για να την ανοίξετε.",
-        "Overlapping and ageing software across the portfolio.": "Επικαλυπτόμενο και παλαιό λογισμικό στο χαρτοφυλάκιο."
+        "Overlapping and ageing software across the portfolio.": "Επικαλυπτόμενο και παλαιό λογισμικό στο χαρτοφυλάκιο.",
+        "Store": "Κατάστημα",
+        "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Εγκαταστήστε μητρώα, σχήματα και ροές που έχουν δημοσιεύσει άλλοι οργανισμοί."
     },
     "nplurals=2; plural=(n != 1);"
 )
