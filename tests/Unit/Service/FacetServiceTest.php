@@ -212,7 +212,7 @@ class FacetServiceTest extends TestCase {
 
 		$this->expectException(\InvalidArgumentException::class);
 		$this->expectExceptionMessageMatches('/module.*service|service.*module/');
-		$service->getFacets(schema: 'contract');
+		$service->getFacets(schema: 'catalogContract');
 
 	}//end testGetFacetsThrowsForUnsupportedSchema()
 

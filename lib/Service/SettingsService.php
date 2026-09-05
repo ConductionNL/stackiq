@@ -120,6 +120,14 @@ class SettingsService {
 	 */
 	public const LEGACY_SCHEMA_KEY = [
 		'software-review' => 'beoordeeling_schema',
+		// Not a Dutch-to-English legacy key like the rest, but the same
+		// mechanism: `contract` collided with shillinq's and pipelinq's, all
+		// three carrying `contractNumber`, so shillinq owns the contract and
+		// this became the catalogue facet. The config KEY stays
+		// `contract_schema` because it is live persisted state, and without
+		// this entry the default `<type>_schema` rule would look for
+		// `catalogContract_schema` and resolve nothing.
+		'catalogContract' => 'contract_schema',
 		'bioMeasure' => 'bioMaatregel_schema',
 		'connection' => 'koppeling_schema',
 		'contactPerson' => 'contactpersoon_schema',
@@ -306,7 +314,7 @@ class SettingsService {
 					'contactPerson',
 					'organization',
 					'usage',
-					'contract',
+					'catalogContract',
 					'connection',
 					'software-review',
 					'module',
@@ -899,7 +907,7 @@ class SettingsService {
 			'software-review' => 'beoordeeling_schema',
 			'service' => 'dienst_schema',
 			'usage' => 'gebruik_schema',
-			'contract' => 'contract_schema',
+			'catalogContract' => 'contract_schema',
 			'connection' => 'koppeling_schema',
 			'suite' => 'suite_schema',
 			'vulnerability' => 'kwetsbaarheid_schema',
@@ -4086,7 +4094,7 @@ class SettingsService {
 				'contactPerson',
 				'organization',
 				'usage',
-				'contract',
+				'catalogContract',
 				'connection',
 				'software-review',
 				'module',
@@ -4190,7 +4198,7 @@ class SettingsService {
 				'service' => 'dienst_schema',
 				'vulnerability' => 'kwetsbaarheid_schema',
 				'usage' => 'gebruik_schema',
-				'contract' => 'contract_schema',
+				'catalogContract' => 'contract_schema',
 				'connection' => 'koppeling_schema',
 				'software-review' => 'beoordeeling_schema',
 				'module' => 'module_schema',

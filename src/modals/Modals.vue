@@ -36,7 +36,7 @@ import { navigationStore } from '../store/store.js'
 const GENERIC_MODAL_OBJECT_TYPES = [
 	'contactPerson',
 	'usage',
-	'contract',
+	'catalogContract',
 	'connection',
 	'module',
 	'suite',

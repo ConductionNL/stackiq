@@ -131,7 +131,7 @@ required = {
     # place that names them outside the register JSON, and it is checked after
     # the import — which is what caught the rename here rather than in a spec.
     'schemas': [
-        'organization', 'contactPerson', 'module', 'contract',
+        'organization', 'contactPerson', 'module', 'catalogContract',
         'moduleVersion', 'vulnerability', 'compliancy', 'suite',
     ],
 }[kind]

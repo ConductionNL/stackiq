@@ -125,7 +125,7 @@ class SettingsServiceCatalogTypeResolutionTest extends TestCase {
 			'module' => 50,
 			'service' => 36,
 			'usage' => 40,
-			'contract' => 41,
+			'catalogContract' => 41,
 			'connection' => 42,
 			'suite' => 35,
 			'vulnerability' => 37,
