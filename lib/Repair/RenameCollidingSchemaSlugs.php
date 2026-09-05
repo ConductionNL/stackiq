@@ -72,6 +72,13 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 	 */
 	private const RENAMES = [
 		'contract' => ['to' => 'catalogContract', 'with' => 'shillinq'],
+		// `service` reaches this step from RenameDutchSchemaSlugs, which renames
+		// `dienst` to `service` — onto a slug shillinq and pipelinq already
+		// claimed. The Dutch map cannot carry this itself: its planner forbids
+		// two sources targeting one name, and `dienst` and `service` would both
+		// have to point at `catalogService`. Ordering does it instead. The Dutch
+		// pass runs first and lands on `service`; this pass then moves it.
+		'service' => ['to' => 'catalogService', 'with' => 'shillinq, pipelinq'],
 	];
 
 	/**

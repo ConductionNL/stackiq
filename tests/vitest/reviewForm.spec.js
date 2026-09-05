@@ -84,10 +84,10 @@ describe('reviewForm.buildReviewSubmission', () => {
 			'Great service',
 			6,
 			'',
-			'service',
+			'catalogService',
 			'dienst-uuid-1',
 		)
-		expect(body.subjectType).toBe('service')
+		expect(body.subjectType).toBe('catalogService')
 		expect(body.subjectId).toBe('dienst-uuid-1')
 	})
 })

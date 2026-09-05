@@ -117,7 +117,7 @@ describe('facets.fetchFacets', () => {
 	it('requests the bare schema URL (no ?) when no options are given', async () => {
 		axios.get.mockResolvedValue({ data: {} })
 
-		await fetchFacets('service')
+		await fetchFacets('catalogService')
 
 		const [calledUrl] = axios.get.mock.calls[0]
 		expect(calledUrl).toBe('/apps/stackiq/api/facets/service')

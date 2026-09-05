@@ -133,7 +133,7 @@ class SettingsService {
 		'contactPerson' => 'contactpersoon_schema',
 		'moduleVersion' => 'moduleVersie_schema',
 		'organization' => 'organisatie_schema',
-		'service' => 'dienst_schema',
+		'catalogService' => 'dienst_schema',
 		'usage' => 'gebruik_schema',
 		'vulnerability' => 'kwetsbaarheid_schema',
 	];
@@ -309,7 +309,7 @@ class SettingsService {
 				'objectTypes' => [
 					'sector',
 					'suite',
-					'service',
+					'catalogService',
 					'vulnerability',
 					'contactPerson',
 					'organization',
@@ -905,7 +905,7 @@ class SettingsService {
 			// types and silently leave others reporting "not configured", which is
 			// how the ratings feature died once already. Tracked as its own change.
 			'software-review' => 'beoordeeling_schema',
-			'service' => 'dienst_schema',
+			'catalogService' => 'dienst_schema',
 			'usage' => 'gebruik_schema',
 			'catalogContract' => 'contract_schema',
 			'connection' => 'koppeling_schema',
@@ -4089,7 +4089,7 @@ class SettingsService {
 			$expectedSlugs = [
 				'sector',
 				'suite',
-				'service',
+				'catalogService',
 				'vulnerability',
 				'contactPerson',
 				'organization',
@@ -4195,7 +4195,7 @@ class SettingsService {
 				'organization' => 'organisatie_schema',
 				'contactPerson' => 'contactpersoon_schema',
 				'suite' => 'suite_schema',
-				'service' => 'dienst_schema',
+				'catalogService' => 'dienst_schema',
 				'vulnerability' => 'kwetsbaarheid_schema',
 				'usage' => 'gebruik_schema',
 				'catalogContract' => 'contract_schema',

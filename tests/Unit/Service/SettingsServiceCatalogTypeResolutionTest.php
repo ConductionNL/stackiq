@@ -123,7 +123,7 @@ class SettingsServiceCatalogTypeResolutionTest extends TestCase {
 
 		$types = [
 			'module' => 50,
-			'service' => 36,
+			'catalogService' => 36,
 			'usage' => 40,
 			'catalogContract' => 41,
 			'connection' => 42,

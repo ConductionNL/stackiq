@@ -164,7 +164,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'vendorDiensten',
 					'register' => self::REGISTER,
-					'schema' => 'service',
+					'schema' => 'catalogService',
 					'scopeField' => 'provider',
 					'scopeClaim' => self::ORG_CLAIM,
 					'label' => 'My services',

@@ -75,7 +75,7 @@ describe('facets store — filter/search state', () => {
 	it('module and dienst state are independent', () => {
 		const store = useFacetStore()
 		store.setFilter('module', 'referenceComponent', ['A'])
-		store.setFilter('service', 'referenceComponent', ['B'])
+		store.setFilter('catalogService', 'referenceComponent', ['B'])
 		expect(store.module.activeFilters.referenceComponent).toEqual(['A'])
 		expect(store.service.activeFilters.referenceComponent).toEqual(['B'])
 	})
@@ -165,11 +165,11 @@ describe('facets store — URL query round-trip (_gf_ prefixed keys)', () => {
 
 	it('round-trips filtersToQuery -> setFiltersFromQuery', () => {
 		const store = useFacetStore()
-		store.setFilter('service', 'domain', ['Bedrijfsvoering', 'Dienstverlening'])
-		store.setSearch('service', 'stuf')
+		store.setFilter('catalogService', 'domain', ['Bedrijfsvoering', 'Dienstverlening'])
+		store.setSearch('catalogService', 'stuf')
 
-		const query = store.filtersToQuery('service')
-		store.setFiltersFromQuery('service', query)
+		const query = store.filtersToQuery('catalogService')
+		store.setFiltersFromQuery('catalogService', query)
 
 		expect(store.service.activeFilters).toEqual({
 			domain: ['Bedrijfsvoering', 'Dienstverlening'],
