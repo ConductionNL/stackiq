@@ -319,7 +319,7 @@
 							},
 							"source": {
 								"register": "@resolve:voorzieningen_register",
-								"schema": "contract",
+								"schema": "catalogContract",
 								"metric": "count"
 							}
 						}
@@ -530,7 +530,7 @@
 			"title": "Contracts",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "contract",
+				"schema": "catalogContract",
 				"columns": [
 					"contractNumber",
 					"contractType",
@@ -559,10 +559,10 @@
 			"title": "Contract",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
-				"schema": "contract",
+				"schema": "catalogContract",
 				"_note": "Document / agreement archetype. The reader of a contract needs terms and money up front, then the paperwork. Body: contract data (number, type, start/end dates, cost + period, status, both nested contact persons, documentReferentie, remarks) spans 8-wide top-left; a Documents (files) panel spans 4-wide full-height on the right because the signed contract, addenda and evidence are the primary attachments. Below the data, a Related panel links the contract's service (dienst) and usage (gebruik). A KPI stat surfaces the contract value at a glance. The contract schema declares NO email/calendar linkedType, so per the comms hard-rule NO Emails/Meetings widgets appear on the body (circulation happens via the linked Nextcloud contacts, not the catalogue record). Per the sidebar hard rule, the ContractApprovalPanel (decidesk-delegated approval workflow — a per-record action, not primary reading) moved OUT of the sidebar into a declarative body section (config.bodyWidgets, placed after the related row) so the sidebar stays audit-only. FIX (softwarecatalog audit): the panel previously rendered bare below the grid (CnBodySections gives a section only a plain `<h3>`, no card chrome) — ContractApprovalPanel now wraps its own content in CnWidgetWrapper (title + CheckCircleOutline icon), matching the chrome every other body widget carries; the now-redundant bodyWidgets `title` was dropped so the h3 doesn't duplicate it. Layout also reworked: ct-data (Contract details) now anchors gridX0/gridY0 spanning the full grid height so no whitespace hole sits between the KPI stat and the Files panel, ct-value moved to the top of the right column above ct-files, and ct-data's height was bumped from 5 to 7 (9 scalar contract fields at 2 columns need 5 rows; height5 was clipping the last row).",
 				"widgets": [
-					{ "id": "ct-value", "type": "stat", "title": "Contract value", "icon": "CurrencyEur", "content": { "label": "Contract value", "format": "currency", "source": { "register": "@resolve:voorzieningen_register", "schema": "contract", "metric": "sum", "field": "cost", "filter": { "id": "@objectId" } } } },
+					{ "id": "ct-value", "type": "stat", "title": "Contract value", "icon": "CurrencyEur", "content": { "label": "Contract value", "format": "currency", "source": { "register": "@resolve:voorzieningen_register", "schema": "catalogContract", "metric": "sum", "field": "cost", "filter": { "id": "@objectId" } } } },
 					{ "id": "ct-data", "type": "data", "title": "Contract details", "icon": "FileSign", "content": { "columns": 2 } },
 					{ "id": "ct-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
 					{ "id": "ct-related", "type": "related", "title": "Service & usage", "icon": "LinkVariant" },

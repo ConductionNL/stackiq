@@ -1136,7 +1136,7 @@
           "autoPublish": true
         }
       },
-      "contract": {
+      "catalogContract": {
         "properties": {
           "approvalDecisionId": {
             "type": "string",
@@ -1345,7 +1345,7 @@
           "status"
         ],
         "uri": null,
-        "slug": "contract",
+        "slug": "catalogContract",
         "x-openregister-notifications": {
           "contract-expiry": {
             "trigger": {
@@ -7608,7 +7608,7 @@
       {
         "@self": {
           "register": "stackiq",
-          "schema": "contract",
+          "schema": "catalogContract",
           "slug": "contract-contract-1-1"
         },
         "service": {},
@@ -7639,7 +7639,7 @@
       {
         "@self": {
           "register": "stackiq",
-          "schema": "contract",
+          "schema": "catalogContract",
           "slug": "contract-contract-2-2"
         },
         "service": {},
@@ -7670,7 +7670,7 @@
       {
         "@self": {
           "register": "stackiq",
-          "schema": "contract",
+          "schema": "catalogContract",
           "slug": "contract-contract-3-3"
         },
         "service": {},
@@ -9177,7 +9177,7 @@
       {
         "@self": {
           "register": "vng-gemma",
-          "schema": "contract",
+          "schema": "catalogContract",
           "slug": "contract-contract-1-1"
         },
         "service": {},
@@ -9208,7 +9208,7 @@
       {
         "@self": {
           "register": "vng-gemma",
-          "schema": "contract",
+          "schema": "catalogContract",
           "slug": "contract-contract-2-2"
         },
         "service": {},
@@ -9239,7 +9239,7 @@
       {
         "@self": {
           "register": "vng-gemma",
-          "schema": "contract",
+          "schema": "catalogContract",
           "slug": "contract-contract-3-3"
         },
         "service": {},

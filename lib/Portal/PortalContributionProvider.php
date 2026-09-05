@@ -201,7 +201,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'vendorContracts',
 					'register' => self::REGISTER,
-					'schema' => 'contract',
+					'schema' => 'catalogContract',
 					'scopeField' => 'provider',
 					'via' => 'service',
 					'scopeClaim' => self::ORG_CLAIM,
@@ -288,7 +288,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'participantContracts',
 					'register' => self::REGISTER,
-					'schema' => 'contract',
+					'schema' => 'catalogContract',
 					'scopeField' => 'consumer',
 					'via' => 'usage',
 					'scopeClaim' => self::ORG_CLAIM,
