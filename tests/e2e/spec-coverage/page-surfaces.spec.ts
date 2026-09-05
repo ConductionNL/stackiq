@@ -131,8 +131,23 @@ test('portfolio rationalization: PortfolioReport renders its report chrome', asy
 	await gotoAppRoute(page, '/reports')
 	const reports = page.locator(APP_MAIN).first()
 	await expect(reports).toBeVisible({ timeout: 30000 })
-	await reports
-		.getByRole('link', { name: 'Portfolio rationalization', exact: true })
+
+	// 🔴 THE CARD'S ACCESSIBLE NAME IS NOT ITS LABEL. CnReportsPage wraps the
+	// whole card in one `<a>` — title, description and category — so its
+	// accessible name is all three concatenated and
+	// `getByRole('link', {name: 'Portfolio rationalization', exact: true})`
+	// matches nothing. It is addressed by its own testid and its title span.
+	const cards = reports.locator('[data-testid="cn-report-card"]')
+	// LIVENESS CONTROL: the grid rendered at all, so a card that does not match
+	// below is a missing card rather than a page that never mounted.
+	await expect(cards.first()).toBeVisible({ timeout: 30000 })
+
+	await cards
+		.filter({
+			has: page.locator(
+				'.cn-reports-page__card-title:text-is("Portfolio rationalization")',
+			),
+		})
 		.first()
 		.click()
 
