@@ -41,6 +41,7 @@ import {
 	APP_MAIN,
 	collectAppErrors,
 	expectNoAppErrors,
+	gotoAppRoute,
 	navClickTo,
 } from './_helpers.ts'
 
@@ -120,7 +121,20 @@ test('portfolio rationalization: PortfolioReport renders its report chrome', asy
 	page,
 }) => {
 	const bag = collectAppErrors(page)
-	await navClickTo(page, 'Portfolio rationalization')
+
+	// 🔴 THE CARD IS ITS ONLY ENTRY POINT. This clicked a nav entry called
+	// "Portfolio rationalization" until #942 moved the report onto the Reports
+	// page as a card (ADR-112: a report is a card OR an entry, never both).
+	// There is no such nav link any more, so the click waited 30s for a locator
+	// that can never resolve — which reads as a broken page rather than a
+	// retired menu entry.
+	await gotoAppRoute(page, '/reports')
+	const reports = page.locator(APP_MAIN).first()
+	await expect(reports).toBeVisible({ timeout: 30000 })
+	await reports
+		.getByRole('link', { name: 'Portfolio rationalization', exact: true })
+		.first()
+		.click()
 
 	const main = page.locator(APP_MAIN).first()
 	await expect(main).toBeVisible({ timeout: 30000 })
