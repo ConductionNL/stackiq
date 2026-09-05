@@ -702,7 +702,9 @@ OC.L10N.register(
         "Open Flows in the menu": "Open Flows in the menu",
         "Reports": "Reports",
         "Pick a report to open it.": "Pick a report to open it.",
-        "Overlapping and ageing software across the portfolio.": "Overlapping and ageing software across the portfolio."
+        "Overlapping and ageing software across the portfolio.": "Overlapping and ageing software across the portfolio.",
+        "xmlns": "xmlns",
+        "xsi": "xsi"
     },
     "nplurals=2; plural=(n != 1);"
 )

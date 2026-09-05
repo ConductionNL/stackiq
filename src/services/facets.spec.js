@@ -120,7 +120,7 @@ describe('facets.fetchFacets', () => {
 		await fetchFacets('catalogService')
 
 		const [calledUrl] = axios.get.mock.calls[0]
-		expect(calledUrl).toBe('/apps/stackiq/api/facets/service')
+		expect(calledUrl).toBe('/apps/stackiq/api/facets/catalogService')
 	})
 
 	it('returns the response body', async () => {
