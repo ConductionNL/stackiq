@@ -156,19 +156,33 @@ test('facets: an unsupported schema is rejected with 400 naming the supported on
 		message,
 		`error message did not name the supported schemas: ${message}`,
 	).toMatch(/module/)
-	expect(message).toMatch(/service/)
+	// `catalogService`, not `/service/`. #958 namespaced the slug and this
+	// regex is case-sensitive, so it stopped matching the very name it is here
+	// to check — the message read "Supported schemas: module, catalogService"
+	// and the assertion still failed.
+	expect(message).toMatch(/catalogService/)
 
 	// The supported set is also machine-readable, and must be exactly the two.
 	// ⚠️ `Array.prototype.sort()` sorts IN PLACE and returns the sorted array,
 	// so the expected literal has to be sorted too — comparing a sorted actual
 	// against `['catalogService', 'module']` could never have held whichever names the
 	// service used. Copy before sorting so the response body is not mutated.
-	expect([...(body?.supportedSchemas ?? [])].sort()).toEqual(['module', 'catalogService'])
+	// SORTED, and the rename moved which one comes first. `'catalogService'`
+	// sorts before `'module'` (ASCII 'c' < 'm'), where the pre-#958 `'service'`
+	// sorted after it. This literal kept the old ORDER with the new NAME, so it
+	// could not have held either — it was simply never reached, because the
+	// assertion above threw first.
+	expect([...(body?.supportedSchemas ?? [])].sort()).toEqual([
+		'catalogService',
+		'module',
+	])
 
 	// Control: the same endpoint shape with a SUPPORTED schema is a 200, so the
 	// 400 above is about the schema and not about the route being broken.
-	const ok = await ctx.get(`${FACETS}/service`)
-	expect(ok.status(), `GET ${FACETS}/service returned ${ok.status()}`).toBe(200)
+	const ok = await ctx.get(`${FACETS}/catalogService`)
+	expect(ok.status(), `GET ${FACETS}/catalogService returned ${ok.status()}`).toBe(
+		200,
+	)
 })
 
 // ⚠️ `no-text-query-returns-facets-over-the-full-rbac-scoped-set` IS DELIBERATELY
