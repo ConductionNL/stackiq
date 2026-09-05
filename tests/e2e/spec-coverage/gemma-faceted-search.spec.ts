@@ -149,7 +149,7 @@ test('facets: an unsupported schema is rejected with 400 naming the supported on
 	// to reject — so both names are asserted, not just a non-2xx.
 	//
 	// ⚠️ The supported set is `FacetService::SUPPORTED_SCHEMAS = ['module',
-	// 'service']`. This assertion used to look for `dienst`, the pre-#518 Dutch
+	// 'catalogService']`. This assertion used to look for `dienst`, the pre-#518 Dutch
 	// slug, and so did the 200 control below — a slug rename moved the API and
 	// left the test naming a schema the service has never heard of.
 	expect(
@@ -161,9 +161,9 @@ test('facets: an unsupported schema is rejected with 400 naming the supported on
 	// The supported set is also machine-readable, and must be exactly the two.
 	// ⚠️ `Array.prototype.sort()` sorts IN PLACE and returns the sorted array,
 	// so the expected literal has to be sorted too — comparing a sorted actual
-	// against `['service', 'module']` could never have held whichever names the
+	// against `['catalogService', 'module']` could never have held whichever names the
 	// service used. Copy before sorting so the response body is not mutated.
-	expect([...(body?.supportedSchemas ?? [])].sort()).toEqual(['module', 'service'])
+	expect([...(body?.supportedSchemas ?? [])].sort()).toEqual(['module', 'catalogService'])
 
 	// Control: the same endpoint shape with a SUPPORTED schema is a 200, so the
 	// 400 above is about the schema and not about the route being broken.

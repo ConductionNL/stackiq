@@ -40,7 +40,7 @@ const GENERIC_MODAL_OBJECT_TYPES = [
 	'connection',
 	'module',
 	'suite',
-	'service',
+	'catalogService',
 	'vulnerability',
 	'software-review',
 	'compliancy',

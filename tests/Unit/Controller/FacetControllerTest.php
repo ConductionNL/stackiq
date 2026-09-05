@@ -93,7 +93,7 @@ class FacetControllerTest extends TestCase {
 		$this->assertSame(400, $response->getStatus());
 		$data = $response->getData();
 		$this->assertContains('module', $data['supportedSchemas']);
-		$this->assertContains('service', $data['supportedSchemas']);
+		$this->assertContains('catalogService', $data['supportedSchemas']);
 
 	}//end testGetFacetsReturns400ForUnsupportedSchema()
 

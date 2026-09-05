@@ -824,7 +824,7 @@
           "sector",
           "suite",
           "module",
-          "service",
+          "catalogService",
           "vulnerability",
           "contactPerson",
           "organization",
@@ -1321,9 +1321,9 @@
           }
         }
       },
-      "service": {
+      "catalogService": {
         "uri": null,
-        "slug": "service",
+        "slug": "catalogService",
         "x-schema-org": "schema:Service",
         "title": "Service",
         "description": "Een specifiek aanbod van een dienst op een of meerdere applicaties door een leverancier",
@@ -3044,7 +3044,7 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/service"
+              "$ref": "#/components/schemas/catalogService"
             }
           },
           "cloudDienstverleningsmodel": {
@@ -3296,7 +3296,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/service"
+            "$ref": "#/components/schemas/catalogService"
           },
           "usage": {
             "description": "Het gebruik van de voorziening waarop dit contract betrekking heeft",
@@ -3785,7 +3785,7 @@
             "objectConfiguration": {
               "handling": "related-object"
             },
-            "$ref": "#/components/schemas/service",
+            "$ref": "#/components/schemas/catalogService",
             "inversedBy": "koppelingen"
           },
           "registeredBy": {
@@ -4050,7 +4050,7 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/service"
+              "$ref": "#/components/schemas/catalogService"
             }
           },
           "koppelingen": {
@@ -7058,7 +7058,7 @@
               "objectConfiguration": {
                 "handling": "related-object"
               },
-              "$ref": "#/components/schemas/service",
+              "$ref": "#/components/schemas/catalogService",
               "inversedBy": "modules"
             }
           },
