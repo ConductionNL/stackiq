@@ -35,7 +35,17 @@
  *
  * There is deliberately NO default. An unset target must abort the run loudly
  * rather than silently choose a shared instance.
+ *
+ * NAMING THE SHARED INSTANCE
+ * --------------------------
+ * A target that IS the shared instance still has to be said out loud. The
+ * resolved value goes through `assertInstancePermitted`, which refuses
+ * loopback port 80 or 8080 unless the run set STACKIQ_E2E_ALLOW_SHARED_INSTANCE
+ * (or the fleet-wide E2E_ALLOW_SHARED_INSTANCE) to that same origin. See
+ * tests/e2e/shared-instance.ts.
  */
+
+import { assertInstancePermitted } from './shared-instance.ts'
 
 const CANDIDATES = [
 	'PLAYWRIGHT_BASE_URL',
@@ -54,7 +64,7 @@ export function resolveBaseUrl(): string {
 	for (const name of CANDIDATES) {
 		const value = process.env[name]
 		if (value && value.trim() !== '') {
-			return value.trim().replace(/\/+$/, '')
+			return assertInstancePermitted(value.trim().replace(/\/+$/, ''))
 		}
 	}
 
