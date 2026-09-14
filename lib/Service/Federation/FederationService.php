@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Federation;
 
+use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -63,6 +64,9 @@ class FederationService {
 	 * @param FederationMerger $merger The merge/staleness reconciler.
 	 * @param SettingsService|null $settingsService Resolves the mirror register/schema (lazy/optional).
 	 * @param LoggerInterface $logger Logger.
+	 * @param ConnectionReportService|null $connectionReports Tells integriq what a peer change or a pull met.
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -71,6 +75,7 @@ class FederationService {
 		private readonly FederationMerger $merger,
 		private readonly ?SettingsService $settingsService,
 		private readonly LoggerInterface $logger,
+		private readonly ?ConnectionReportService $connectionReports = null,
 	) {
 	}//end __construct()
 
@@ -141,9 +146,13 @@ class FederationService {
 	 *
 	 * @param string $peerUrl The peer base URL.
 	 *
+	 * A new peer asks integriq to resolve the federation connection again
+	 * (adopt-connection-registry).
+	 *
 	 * @return array{ok:bool, reason:string} Result for the settings UI.
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function addPeer(string $peerUrl): array {
 		$peerUrl = trim($peerUrl);
@@ -162,6 +171,7 @@ class FederationService {
 
 		$peers[] = $peerUrl;
 		$this->config->setPeers(array_values($peers));
+		$this->connectionReports?->federationPeersChanged(status: $this->getStatus());
 		return ['ok' => true, 'reason' => 'peer added'];
 	}//end addPeer()
 
@@ -170,9 +180,13 @@ class FederationService {
 	 *
 	 * @param string $peerUrl The peer base URL.
 	 *
+	 * A removed peer asks integriq to resolve the federation connection again
+	 * (adopt-connection-registry).
+	 *
 	 * @return array{ok:bool, reason:string} Result for the settings UI.
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function removePeer(string $peerUrl): array {
 		$peerUrl = trim($peerUrl);
@@ -184,6 +198,7 @@ class FederationService {
 
 		$this->config->setPeers($filtered);
 		$this->config->setPeerFailures($peerUrl, 0);
+		$this->connectionReports?->federationPeersChanged(status: $this->getStatus());
 		return ['ok' => true, 'reason' => 'peer removed'];
 	}//end removePeer()
 
@@ -278,11 +293,29 @@ class FederationService {
 	 * independently so one unreachable peer cannot block the rest. Returns a
 	 * per-peer result summary for logging / the admin UI.
 	 *
+	 * Tells integriq what the pull met, from the Pull now button and from
+	 * FederationSyncJob alike (adopt-connection-registry).
+	 *
+	 * @return array{ok:bool, reason:string, peers:array<int,array<string,mixed>>}
+	 *
+	 * @spec openspec/specs/federated-catalog-sync/spec.md
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
+	 */
+	public function pullAllPeers(): array {
+		$result = $this->pullEveryPeer();
+		$this->connectionReports?->federationPulled(pull: $result);
+
+		return $result;
+	}//end pullAllPeers()
+
+	/**
+	 * Pull every subscribed peer, one at a time.
+	 *
 	 * @return array{ok:bool, reason:string, peers:array<int,array<string,mixed>>}
 	 *
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 */
-	public function pullAllPeers(): array {
+	private function pullEveryPeer(): array {
 		if ($this->config->isEnabled() === false) {
 			return ['ok' => false, 'reason' => 'federation disabled', 'peers' => []];
 		}
@@ -297,7 +330,7 @@ class FederationService {
 		}
 
 		return ['ok' => true, 'reason' => 'ok', 'peers' => $results];
-	}//end pullAllPeers()
+	}//end pullEveryPeer()
 
 	/**
 	 * Pull one peer's published catalog and reconcile it into local mirrors.

@@ -53,6 +53,7 @@ import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutli
 import Package from 'vue-material-design-icons/Package.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
+import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
 import PuzzleOutline from 'vue-material-design-icons/PuzzleOutline.vue'
 import ShieldAlert from 'vue-material-design-icons/ShieldAlert.vue'
 import ShieldAlertOutline from 'vue-material-design-icons/ShieldAlertOutline.vue'
@@ -111,6 +112,7 @@ export default {
 	Package,
 	PackageVariant,
 	PackageVariantClosed,
+	PowerPlugOutline,
 	PuzzleOutline,
 	ShieldAlert,
 	ShieldAlertOutline,

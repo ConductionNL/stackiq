@@ -17,6 +17,7 @@
 
 <template>
 	<AlwaysVisibleSection
+		id="section-eol-sync"
 		:name="t('stackiq', 'End-of-life feed sync')"
 		:description="
 			t(
