@@ -360,7 +360,7 @@ class ConnectionReportService {
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
-	public function refresh(string $key): bool {
+	private function refresh(string $key): bool {
 		$eventClass = $this->resolveEventClass(eventClass: self::REFRESH_EVENT);
 		if ($eventClass === null) {
 			return false;
@@ -383,7 +383,7 @@ class ConnectionReportService {
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
-	public function report(string $key, string $status, string $message): bool {
+	private function report(string $key, string $status, string $message): bool {
 		$eventClass = $this->resolveEventClass(eventClass: self::STATUS_EVENT);
 		if ($eventClass === null) {
 			return false;

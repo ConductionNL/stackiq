@@ -484,6 +484,6 @@ class ConnectionReportServiceTest extends TestCase {
 		$service = new ConnectionReportService(eventDispatcher: $dispatcher, emailService: $this->emailService, logger: $this->logger);
 
 		$this->assertFalse(condition: $service->eolSyncRan(runStatus: ['available' => false, 'reason' => 'disabled']));
-		$this->assertFalse(condition: $service->refresh(key: ConnectionReportService::KEY_FEDERATION));
+		$this->assertFalse(condition: $service->eolSyncConfigSaved(config: ['enabled' => true]));
 	}//end testAThrowingListenerNeverEscapes()
 }//end class
