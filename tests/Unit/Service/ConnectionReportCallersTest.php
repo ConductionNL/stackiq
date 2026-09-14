@@ -118,7 +118,7 @@ class ConnectionReportCallersTest extends TestCase {
 		$reports     = $this->reporter();
 		$reports->expects($this->once())->method('federationPeersChanged')->with(
 			$this->callback(
-				static fn (array $status): bool => $status['available'] === false
+				callback: static fn (array $status): bool => $status['available'] === false
 					&& $status['peers'][0]['url'] === 'https://peer.example'
 			)
 		);
@@ -200,7 +200,13 @@ class ConnectionReportCallersTest extends TestCase {
 	 * @return EolSyncService
 	 */
 	private function eol(?ConnectionReportService $reports, bool $enabled): EolSyncService {
-		$config = ['enabled' => $enabled, 'register' => 'integriq', 'productSchema' => 'eol_product', 'cycleSchema' => 'eol_cycle', 'intervalSeconds' => 86400];
+		$config = [
+			'enabled' => $enabled,
+			'register' => 'integriq',
+			'productSchema' => 'eol_product',
+			'cycleSchema' => 'eol_cycle',
+			'intervalSeconds' => 86400,
+		];
 
 		$settings = $this->createMock(originalClassName: SettingsService::class);
 		$settings->method('getEolSyncConfig')->willReturn($config);
@@ -227,7 +233,7 @@ class ConnectionReportCallersTest extends TestCase {
 	public function testAnEolSaveAsksForARefresh(): void {
 		$reports = $this->reporter();
 		$reports->expects($this->once())->method('eolSyncConfigSaved')->with(
-			$this->callback(static fn (array $config): bool => $config['enabled'] === false && $config['register'] === 'integriq')
+			$this->callback(callback: static fn (array $config): bool => $config['enabled'] === false && $config['register'] === 'integriq')
 		);
 
 		$result = $this->eol(reports: $reports, enabled: false)->updateConfig(['enabled' => false]);
@@ -243,7 +249,10 @@ class ConnectionReportCallersTest extends TestCase {
 	public function testAnEolRunReportsTheStatusItRecorded(): void {
 		$reports = $this->reporter();
 		$reports->expects($this->once())->method('eolSyncRan')->with(
-			$this->callback(static fn (array $status): bool => $status['available'] === false && $status['reason'] === 'openregister-not-installed')
+			$this->callback(
+				callback: static fn (array $status): bool => $status['available'] === false
+					&& $status['reason'] === 'openregister-not-installed'
+			)
 		);
 
 		$status = $this->eol(reports: $reports, enabled: true)->run();

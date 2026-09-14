@@ -87,20 +87,20 @@ class SettingsControllerConnectionReportTest extends TestCase {
 		}
 
 		return new SettingsController(
-			'stackiq',
-			$request,
-			$this->createMock(originalClassName: IAppConfig::class),
-			$this->createMock(originalClassName: ContainerInterface::class),
-			$this->createMock(originalClassName: IAppManager::class),
-			$groups,
-			$session,
-			$this->settingsService,
-			$this->createMock(originalClassName: OrganizationSyncService::class),
-			$this->createMock(originalClassName: ArchiMateService::class),
-			$this->createMock(originalClassName: ProgressTracker::class),
-			$this->createMock(originalClassName: EolSyncService::class),
-			$this->createMock(originalClassName: LoggerInterface::class),
-			$reports
+			appName: 'stackiq',
+			request: $request,
+			config: $this->createMock(originalClassName: IAppConfig::class),
+			container: $this->createMock(originalClassName: ContainerInterface::class),
+			appManager: $this->createMock(originalClassName: IAppManager::class),
+			groupManager: $groups,
+			userSession: $session,
+			settingsService: $this->settingsService,
+			orgSyncSvc: $this->createMock(originalClassName: OrganizationSyncService::class),
+			archiMateService: $this->createMock(originalClassName: ArchiMateService::class),
+			progressTracker: $this->createMock(originalClassName: ProgressTracker::class),
+			eolSyncService: $this->createMock(originalClassName: EolSyncService::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			connectionReports: $reports
 		);
 	}//end makeController()
 
@@ -143,7 +143,8 @@ class SettingsControllerConnectionReportTest extends TestCase {
 		$controller = $this->makeController(params: ['emailSettings' => ['enabled' => true]], reports: $reports, writeFails: true);
 
 		$this->assertSame(expected: Http::STATUS_INTERNAL_SERVER_ERROR, actual: $controller->updateEmailSettings()->getStatus());
-		$this->assertSame(expected: 500, actual: $this->makeController(params: ['emailSettings' => []], reports: $reports, writeFails: true)->update()->getStatus());
+		$generic = $this->makeController(params: ['emailSettings' => []], reports: $reports, writeFails: true);
+		$this->assertSame(expected: Http::STATUS_INTERNAL_SERVER_ERROR, actual: $generic->update()->getStatus());
 	}//end testAFailedSaveAsksForNothing()
 
 	/**
@@ -154,7 +155,8 @@ class SettingsControllerConnectionReportTest extends TestCase {
 	public function testTheResponseIsTheSameWithAndWithoutTheReporter(): void {
 		$params = ['emailSettings' => ['enabled' => false]];
 
-		$with    = $this->makeController(params: $params, reports: $this->createMock(originalClassName: ConnectionReportService::class))->updateEmailSettings();
+		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
+		$with    = $this->makeController(params: $params, reports: $reports)->updateEmailSettings();
 		$without = $this->makeController(params: $params, reports: null)->updateEmailSettings();
 
 		$this->assertSame(expected: $without->getData(), actual: $with->getData());

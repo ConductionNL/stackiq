@@ -178,8 +178,12 @@ if (!defined('OC_CONSOLE')) {
 // when the real classes are absent. They sit two directories deep on purpose:
 // the tests/Stubs glob in tests/bootstrap.php loads one level and would shadow
 // a real integriq before Nextcloud boots.
+// Without a booted Nextcloud or OCP on the autoload path the stubs' parent
+// class is missing, so they are skipped rather than fatal.
 foreach (['ConnectionStatusReportedEvent', 'ConnectionRefreshRequestedEvent'] as $integriqStubEvent) {
-	if (class_exists('\\OCA\\Integriq\\Event\\' . $integriqStubEvent) === false) {
+	if (class_exists('\\OCP\\EventDispatcher\\Event') === true
+		&& class_exists('\\OCA\\Integriq\\Event\\' . $integriqStubEvent) === false
+	) {
 		require_once __DIR__ . '/Stubs/Integriq/Event/' . $integriqStubEvent . '.php';
 	}
 }
