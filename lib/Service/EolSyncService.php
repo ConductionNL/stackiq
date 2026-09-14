@@ -57,12 +57,16 @@ class EolSyncService {
 	 * @param EolMatcherService $matcher The pure matching/stamping logic.
 	 * @param ITimeFactory $timeFactory The time factory (sync-run timestamp).
 	 * @param LoggerInterface $logger The logger.
+	 * @param ConnectionReportService|null $connectionReports Tells integriq what a save or a run met.
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function __construct(
 		private readonly SettingsService $settingsService,
 		private readonly EolMatcherService $matcher,
 		private readonly ITimeFactory $timeFactory,
 		private readonly LoggerInterface $logger,
+		private readonly ?ConnectionReportService $connectionReports = null,
 	) {
 	}//end __construct()
 
@@ -82,12 +86,19 @@ class EolSyncService {
 	 *
 	 * @param array $data The submitted configuration fields.
 	 *
+	 * The save asks integriq to resolve the end-of-life feed connection again
+	 * (adopt-connection-registry).
+	 *
 	 * @return array The persisted configuration result.
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function updateConfig(array $data): array {
-		return $this->settingsService->updateEolSyncConfig($data);
+		$result = $this->settingsService->updateEolSyncConfig($data);
+		$this->connectionReports?->eolSyncConfigSaved(config: (array) ($result['config'] ?? []));
+
+		return $result;
 	}//end updateConfig()
 
 	/**
@@ -226,7 +237,7 @@ class EolSyncService {
 			'skipped' => $totalSkipped,
 			'lastRunAt' => $fetchedAt,
 		];
-		$this->settingsService->setEolSyncStatus($status);
+		$this->recordStatus(status: $status);
 
 		return $status;
 	}//end run()
@@ -476,8 +487,22 @@ class EolSyncService {
 			'skipped' => 0,
 			'lastRunAt' => $this->timeFactory->getDateTime()->format(\DateTimeInterface::ATOM),
 		];
-		$this->settingsService->setEolSyncStatus($status);
+		$this->recordStatus(status: $status);
 
 		return $status;
 	}//end degrade()
+
+	/**
+	 * Record a run's status, and tell integriq what the run met.
+	 *
+	 * @param array{available: bool, reason: string|null, matched: int, skipped: int, lastRunAt: string|null} $status The run status.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
+	 */
+	private function recordStatus(array $status): void {
+		$this->settingsService->setEolSyncStatus($status);
+		$this->connectionReports?->eolSyncRan(runStatus: $status);
+	}//end recordStatus()
 }//end class

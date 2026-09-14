@@ -39,6 +39,7 @@ use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
 use OCA\Stackiq\Service\ArchiMateExportService;
 use OCA\Stackiq\Service\ArchiMateImportService;
 use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\ContractApprovalService;
 use OCA\Stackiq\Service\ContractStatusService;
@@ -674,7 +675,11 @@ class Application extends App implements IBootstrap {
 					config: $container->get(FederationConfig::class),
 					merger: $container->get(FederationMerger::class),
 					settingsService: $container->get(SettingsService::class),
-					logger: $container->get(LoggerInterface::class)
+					logger: $container->get(LoggerInterface::class),
+					// The integriq connection report (adopt-connection-registry). Passed by
+					// name: this factory is hand-built, so the constructor default of null
+					// would otherwise switch every federation report off without a sound.
+					connectionReports: $container->get(ConnectionReportService::class)
 				);
 			}
 		);
@@ -706,7 +711,9 @@ class Application extends App implements IBootstrap {
 					settingsService: $container->get(SettingsService::class),
 					matcher: $container->get(EolMatcherService::class),
 					timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-					logger: $container->get(LoggerInterface::class)
+					logger: $container->get(LoggerInterface::class),
+					// Same reason as the FederationService factory above.
+					connectionReports: $container->get(ConnectionReportService::class)
 				);
 			}
 		);

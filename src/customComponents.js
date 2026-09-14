@@ -17,6 +17,7 @@
 //   - openspec/changes/stackiq-manifest-v1/design.md
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
+import { generateUrl } from '@nextcloud/router'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
@@ -31,8 +32,19 @@ import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
+import { createConnectionHandlers } from './services/connectionRegistry.js'
 
 export default {
+	// Header-action handler: the Integrations page's Add integration
+	// (adopt-connection-registry). A FUNCTION, because it leaves the app for
+	// integriq's Connections overview and a header action's `navigate` only
+	// pushes a route inside this app. CnIndexPage resolves a handler name
+	// against this map.
+	...createConnectionHandlers({
+		generateUrl,
+		assign: (url) => window.location.assign(url),
+	}),
+
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
 	// the `cardComponent` of the now-decomposed Organisaties type='index' page
 	// (Phase 8). CnIndexPage's cardComponent config closed the prior lib gap.

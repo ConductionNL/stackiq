@@ -704,7 +704,20 @@ OC.L10N.register(
         "xmlns": "xmlns",
         "xsi": "xsi",
         "Pre-filled with the names the Integriq endoflife-date-source change provisions. Change them if your instance uses different names, no code change required.": "Pre-filled with the names the Integriq endoflife-date-source change provisions. Change them if your instance uses different names, no code change required.",
-        "the configured register or schema could not be found. Is the Integriq endoflife-date-source change installed?": "the configured register or schema could not be found. Is the Integriq endoflife-date-source change installed?"
+        "the configured register or schema could not be found. Is the Integriq endoflife-date-source change installed?": "the configured register or schema could not be found. Is the Integriq endoflife-date-source change installed?",
+        "Integrations": "Integrations",
+        "Status message": "Status message",
+        "Last checked": "Last checked",
+        "All connections": "All connections",
+        "Add integration": "Add integration",
+        "Open settings": "Open settings",
+        "Configured": "Configured",
+        "Limited": "Limited",
+        "Not configured": "Not configured",
+        "Simulated": "Simulated",
+        "Not available": "Not available",
+        "Error": "Error",
+        "Settings": "Settings"
     },
     "nplurals=2; plural=(n != 1);"
 )
