@@ -26,7 +26,7 @@ Stackiq SHALL declare `email`, `federation` and `eol-feed` in `lib/Settings/conn
 - **AND** every `#section-…` anchor SHALL be an id in a settings section component
 
 #### Scenario: The null transport reads simulated, and an empty one does not
-@e2e exclude Rule 3 runs in integriq against app config; tests/Unit/Settings/ConnectionsDeclarationTest.php applies the declared values the way integriq's reader does.
+@e2e tests/e2e/workflows/integrations-page.spec.ts
 
 - **GIVEN** integriq has synced stackiq's declaration
 - **WHEN** `email_transport_type` holds `null`
@@ -54,7 +54,7 @@ When a save writes the settings of a declared connection, stackiq SHALL send `Co
 - **AND** the message SHALL name the failing peer's host and not its path
 
 #### Scenario: An EOL run without integriq's register reads not configured
-@e2e exclude The run's outcome depends on integriq's register on the instance; tests/Unit/Service/EolSyncServiceConnectionReportTest.php asserts the report per reason.
+@e2e exclude The run's outcome depends on integriq's register on the instance; tests/Unit/Service/ConnectionReportServiceTest.php asserts the report per reason, and tests/Unit/Service/ConnectionReportCallersTest.php that a run hands it over.
 
 - **GIVEN** EOL sync is switched on
 - **WHEN** a run cannot find the `eol_product` or `eol_cycle` schema
