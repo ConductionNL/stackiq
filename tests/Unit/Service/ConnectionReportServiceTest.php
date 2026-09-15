@@ -243,7 +243,8 @@ class ConnectionReportServiceTest extends TestCase {
 		$service = $this->service();
 
 		$service->federationPeersChanged(status: ['available' => false, 'enabled' => true, 'peers' => [['url' => 'https://a.example']]]);
-		$service->federationPeersChanged(status: ['available' => true, 'enabled' => false, 'peers' => [['url' => 'https://a.example']]]);
+		// Off with no peers: the switch outranks "no peer catalog", so nothing is reported.
+		$service->federationPeersChanged(status: ['available' => true, 'enabled' => false, 'peers' => []]);
 		$service->federationPeersChanged(status: ['available' => true, 'enabled' => true, 'peers' => []]);
 		$this->assertFalse(
 			condition: $service->federationPeersChanged(status: ['available' => true, 'enabled' => true, 'peers' => [['url' => 'https://a.example']]])
