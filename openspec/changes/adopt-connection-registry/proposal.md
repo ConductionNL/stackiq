@@ -25,7 +25,7 @@ Hydra change `connection-registry` (hydra#667, amended in hydra#673 and hydra#67
 - A federation pull and an EOL sync run report their outcome. Both run on a schedule or on the admin's button, never on a page request.
 - An Integrations page under the settings gear, over integriq's `app_connection` schema, preset to `app=stackiq`, admin only, and only shown when integriq is installed.
 - Add integration opens `/apps/integriq/connections?app=stackiq&link=1`.
-- Local `connectionStatus` and `connectionSettingsLabel` formatters with all six statuses, and the strings in English and Dutch.
+- The `connectionStatus` and `connectionSettingsLabel` formatters come from `@conduction/nextcloud-vue` 3.2.0, which labels all seven statuses. The page strings are in English and Dutch.
 
 ## Depends on
 

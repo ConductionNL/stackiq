@@ -78,10 +78,10 @@ A message names a peer by host only, never by its full URL, and cuts a failure r
 
 - `src/manifest.d/connection-registry.json`: an `index` page `Integrations` at `/settings/integrations`, `requiresApp` integriq, `permission: admin`, `showAdd: false`, and the columns connection, status, status message, last checked and settings.
 - Its menu entry `IntegrationsMenu` sits in the settings gear with `query: {app: stackiq}`, `permission: admin` and `visibleIf.appInstalled: integriq`.
-- `src/services/connectionRegistry.js` holds the two formatters and `openIntegriqConnections`.
-- `App.vue` passes the formatters through CnAppRoot's `formatters` prop. It passed none before this change. `src/customComponents.js` carries the handler, because CnIndexPage resolves a header action's handler against `customComponents`.
+- `src/services/connectionRegistry.js` holds `openIntegriqConnections`.
+- `App.vue` passes no `formatters`: CnAppRoot supplies the two built-ins. `src/customComponents.js` carries the handler, because CnIndexPage resolves a header action's handler against `customComponents`.
 
-**Formatters.** The installed `@conduction/nextcloud-vue` 2.39.0 ships no `connectionStatus` built-in, so stackiq carries a local copy with all six labels, `limited` included.
+**Formatters.** `@conduction/nextcloud-vue` 3.2.0 ships `connectionStatus` and `connectionSettingsLabel` as built-ins, `disabled` included (nextcloud-vue#1173). Stackiq carried a local copy while it resolved 2.39.0, and dropped it on moving to 3.2.0.
 
 ## D4. Contract misfits
 

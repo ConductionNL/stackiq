@@ -22,7 +22,6 @@
 			:customComponents="customComponents"
 			:registry="registry"
 			:pageTypes="pageTypes"
-			:formatters="formatters"
 			appId="stackiq"
 			:translate="translateForApp"
 			:permissions="permissions"
@@ -76,7 +75,6 @@ import OrganisationSwitcher from './components/organisations/OrganisationSwitche
 import Dialogs from './dialogs/Dialogs.vue'
 import Modals from './modals/Modals.vue'
 import { setActiveOrganisationUuid } from './composables/orClient.js'
-import { createConnectionFormatters } from './services/connectionRegistry.js'
 import { settingsStore } from './store/store.js'
 
 export default {
@@ -150,15 +148,6 @@ export default {
 
 	data() {
 		return {
-			/**
-			 * Named cell formatters merged over CnAppRoot's built-ins.
-			 * `connectionStatus` and `connectionSettingsLabel` render the
-			 * Integrations page (adopt-connection-registry); nextcloud-vue
-			 * 2.39.0 ships neither as a built-in. Before this change the app
-			 * passed no formatters at all.
-			 */
-			formatters: createConnectionFormatters((source) => ncT('stackiq', source)),
-
 			objectSidebarState: reactive({
 				active: false,
 				open: true,
