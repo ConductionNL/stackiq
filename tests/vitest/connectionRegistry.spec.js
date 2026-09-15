@@ -29,9 +29,14 @@ const fragment = JSON.parse(read('src', 'manifest.d', 'connection-registry.json'
 const page = fragment.pages.find((p) => p.id === 'Integrations')
 const menu = fragment.menu.find((m) => m.id === 'IntegrationsMenu')
 
-/** The installed library's built-in formatter module, as source text. */
-const builtInFormattersSource = () =>
-	read('node_modules', '@conduction', 'nextcloud-vue', 'src', 'utils', 'builtInFormatters.js')
+/**
+ * The installed library's built-in formatter module, as source text.
+ *
+ * @return {string} The module source.
+ */
+function builtInFormattersSource() {
+	return read('node_modules', '@conduction', 'nextcloud-vue', 'src', 'utils', 'builtInFormatters.js')
+}
 
 /**
  * The formatter names the installed @conduction/nextcloud-vue registers as
