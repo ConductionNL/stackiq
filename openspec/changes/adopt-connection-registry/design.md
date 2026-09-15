@@ -42,7 +42,7 @@ The `null` transport still reads Simulated: rule 3 sits above every report.
 | Stackiq sees | Status | Message |
 |---|---|---|
 | OpenCatalogi not installed | `unavailable` | "Federation needs the OpenCatalogi app, and it is not installed." |
-| `federation_enabled` off | `unconfigured` | names the `occ` command |
+| `federation_enabled` off | nothing: the refresh alone, and the switch makes integriq read `disabled` with the declared message | |
 | No peers | `unconfigured` | "Federation is on, and no peer catalog is added yet." |
 | Ready | nothing | the refresh alone, so the row reads the declared "Not checked yet" |
 
@@ -56,14 +56,14 @@ The `null` transport still reads Simulated: rule 3 sits above every report.
 
 A message names a peer by host only, never by its full URL, and cuts a failure reason at 160 characters.
 
-**End-of-life feed, on an EOL sync settings save.** A refresh, and `unconfigured` when `enabled` is off. Otherwise the row reads "Not checked yet" until the next run.
+**End-of-life feed, on an EOL sync settings save.** A refresh and no report. When `enabled` is off the switch makes integriq read `disabled`. Otherwise the row reads "Not checked yet" until the next run.
 
 **End-of-life feed, after a run** (Sync now, or `EolSyncJob`). `EolSyncService::run()` already records a status. The report maps its `reason`:
 
 | Reason | Status |
 |---|---|
 | none, the run completed | `configured`, with the matched and skipped counts |
-| `disabled` | `unconfigured` |
+| `disabled` | nothing, the switch says it |
 | `openregister-not-installed` | `unavailable` |
 | `object-service-unavailable` | `error` |
 | `module-schema-not-configured` | `unconfigured` |
@@ -85,8 +85,8 @@ A message names a peer by host only, never by its full URL, and cuts a failure r
 
 ## D4. Contract misfits
 
-- **A boolean app-config key.** `federation_enabled` is typed boolean. Integriq's reader answers `typed` for a type conflict, which counts as filled, so a `requiredConfig` on it would read Configured while federation is off. The contract has no way to say "filled and true". `reportedOnly` works around it.
-- **A flag inside a blob.** `eol_sync_config` holds `{"enabled": false, …}`. `adapter.jsonPath` reads inside a blob, but only rule 3 uses it, and "switched off" is not "simulated". A `requiredConfig` with a JSON path would fit this row.
+- **A boolean app-config key.** `federation_enabled` is typed boolean, and a stored `false` counted as filled. Resolved by hydra#676 (`false` reads empty) and hydra#677: the row declares `switch: {"configKey": "federation_enabled"}` and reads `disabled` while it is off.
+- **A flag inside a blob.** `eol_sync_config` holds `{"enabled": false, …}`. Resolved by hydra#677: the row declares `switch: {"configKey": "eol_sync_config", "jsonPath": "enabled"}`. An unset blob has no `enabled` and reads off, which matches `SettingsService::getEolSyncConfig()`'s default.
 - **Completeness that depends on the adapter.** Email needs different keys per transport. `requiredConfig` is one fixed list.
 - **Gate 116's vendored schema is behind integriq.** `hydra-gates/scripts/schemas/connections.schema.json` on `.github` `main` has no `jsonPath`, `simulatedValues` or `reportedOnly`, so gate 116 warns on every file that uses the hydra#673 fields. The file validates against integriq's own schema on `development`.
 

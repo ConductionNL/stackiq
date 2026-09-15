@@ -226,15 +226,13 @@ class ConnectionReportCallersTest extends TestCase {
 	}//end eol()
 
 	/**
-	 * An EOL settings save hands the saved config to the reporter.
+	 * An EOL settings save asks the reporter for a refresh.
 	 *
 	 * @return void
 	 */
 	public function testAnEolSaveAsksForARefresh(): void {
 		$reports = $this->reporter();
-		$reports->expects($this->once())->method('eolSyncConfigSaved')->with(
-			$this->callback(callback: static fn (array $config): bool => $config['enabled'] === false && $config['register'] === 'integriq')
-		);
+		$reports->expects($this->once())->method('eolSyncConfigSaved')->with();
 
 		$result = $this->eol(reports: $reports, enabled: false)->updateConfig(['enabled' => false]);
 

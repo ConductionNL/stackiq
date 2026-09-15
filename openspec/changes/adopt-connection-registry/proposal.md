@@ -18,7 +18,7 @@ Hydra change `connection-registry` (hydra#667, amended in hydra#673 and hydra#67
 
 - New `lib/Settings/connections.json` with three connections: `email`, `federation` and `eol-feed`.
 - `email` names `email_transport_type` as its adapter key, and only `null` reads Simulated. An empty value is not simulated: stackiq falls back to SMTP.
-- `federation` and `eol-feed` are `reportedOnly`. Only stackiq can see OpenCatalogi, `federation_enabled` (a boolean key) and the sync outcome.
+- `federation` and `eol-feed` are `reportedOnly`. Only stackiq can see OpenCatalogi, the peers and the sync outcome. Each declares its on/off setting as a `switch` (hydra#677): `federation_enabled`, and `enabled` inside `eol_sync_config`, so a switched-off feature reads Switched off.
 - `eol-feed` offers integriq's `endoflife-date` source as its template.
 - The three settings sections get stable ids: `section-email`, `section-federation` and `section-eol-sync`.
 - An email settings save, a peer add or remove, and an EOL sync settings save send `ConnectionRefreshRequestedEvent` for that connection, then report what stackiq can see.

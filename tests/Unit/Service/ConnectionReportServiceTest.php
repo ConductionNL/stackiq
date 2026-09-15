@@ -235,7 +235,7 @@ class ConnectionReportServiceTest extends TestCase {
 	}//end testAFailingEmailReadNeverEscapes()
 
 	/**
-	 * A peer change refreshes, and reports only a state that blocks federation.
+	 * A peer change refreshes, and reports only a state that blocks federation, never the switch.
 	 *
 	 * @return void
 	 */
@@ -254,7 +254,6 @@ class ConnectionReportServiceTest extends TestCase {
 				'refresh:federation',
 				'report:federation:unavailable',
 				'refresh:federation',
-				'report:federation:unconfigured',
 				'refresh:federation',
 				'report:federation:unconfigured',
 				'refresh:federation',
@@ -262,8 +261,7 @@ class ConnectionReportServiceTest extends TestCase {
 			actual: $this->sentSummary()
 		);
 		$this->assertStringContainsString(needle: 'OpenCatalogi', haystack: $this->sent[1]->message);
-		$this->assertStringContainsString(needle: 'federation_enabled', haystack: $this->sent[3]->message);
-		$this->assertStringContainsString(needle: 'no peer catalog', haystack: $this->sent[5]->message);
+		$this->assertStringContainsString(needle: 'no peer catalog', haystack: $this->sent[4]->message);
 	}//end testAPeerChangeReportsOnlyABlockingState()
 
 	/**
@@ -284,7 +282,10 @@ class ConnectionReportServiceTest extends TestCase {
 			actual: $service->describePull(pull: ['ok' => true, 'peers' => [['peer' => 'https://a.example'] + $ok]])
 		);
 		$this->assertSame(expected: 'unconfigured', actual: $service->describePull(pull: ['ok' => true, 'peers' => []])[0]);
-		$this->assertSame(expected: 'unconfigured', actual: $service->describePull(pull: ['ok' => false, 'reason' => 'federation disabled'])[0]);
+		$this->assertNull(
+			actual: $service->describePull(pull: ['ok' => false, 'reason' => 'federation disabled']),
+			message: 'the federation switch reads a switched-off pull, so nothing is reported'
+		);
 		$this->assertSame(expected: 'unavailable', actual: $service->describePull(pull: ['ok' => false, 'reason' => 'OpenCatalogi unavailable'])[0]);
 		$this->assertSame(
 			expected: ['error', 'The last federation pull failed: something else'],
@@ -345,33 +346,38 @@ class ConnectionReportServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPullReportsWithoutARefresh(): void {
-		$this->assertTrue(condition: $this->service()->federationPulled(pull: ['ok' => false, 'reason' => 'federation disabled']));
-		$this->assertSame(expected: ['report:federation:unconfigured'], actual: $this->sentSummary());
+		$service = $this->service();
+
+		$this->assertFalse(condition: $service->federationPulled(pull: ['ok' => false, 'reason' => 'federation disabled']));
+		$this->assertTrue(condition: $service->federationPulled(pull: ['ok' => false, 'reason' => 'OpenCatalogi unavailable']));
+		$this->assertSame(expected: ['report:federation:unavailable'], actual: $this->sentSummary());
 	}//end testAPullReportsWithoutARefresh()
 
 	/**
-	 * An EOL settings save refreshes, and reports only a switched-off sync.
+	 * An EOL settings save refreshes and reports nothing, and a switched-off run reports nothing.
+	 *
+	 * The `eol-feed` switch reads `enabled` inside `eol_sync_config`, so
+	 * integriq resolves `disabled` itself.
 	 *
 	 * @return void
 	 */
-	public function testAnEolSaveReportsOnlyASwitchedOffSync(): void {
+	public function testAnEolSaveOnlyRefreshes(): void {
 		$service = $this->service();
 
-		$this->assertTrue(condition: $service->eolSyncConfigSaved(config: ['enabled' => false]));
-		$this->assertFalse(condition: $service->eolSyncConfigSaved(config: ['enabled' => true]));
+		$this->assertTrue(condition: $service->eolSyncConfigSaved());
+		$this->assertFalse(condition: $service->eolSyncRan(runStatus: ['available' => false, 'reason' => 'disabled']));
 
-		$this->assertSame(expected: ['refresh:eol-feed', 'report:eol-feed:unconfigured', 'refresh:eol-feed'], actual: $this->sentSummary());
-	}//end testAnEolSaveReportsOnlyASwitchedOffSync()
+		$this->assertSame(expected: ['refresh:eol-feed'], actual: $this->sentSummary());
+	}//end testAnEolSaveOnlyRefreshes()
 
 	/**
-	 * Every reason EolSyncService records maps to a status, and an unknown one reads error.
+	 * Every reason EolSyncService records maps to a status, a switched-off sync to nothing, and an unknown one reads error.
 	 *
 	 * @return void
 	 */
 	public function testEachEolRunOutcomeMapsToTheDesignedStatus(): void {
 		$service  = $this->service();
 		$expected = [
-			'disabled' => 'unconfigured',
 			'openregister-not-installed' => 'unavailable',
 			'object-service-unavailable' => 'error',
 			'module-schema-not-configured' => 'unconfigured',
@@ -386,6 +392,7 @@ class ConnectionReportServiceTest extends TestCase {
 			);
 		}
 
+		$this->assertNull(actual: $service->describeEolRun(runStatus: ['available' => false, 'reason' => 'disabled']));
 		$this->assertStringContainsString(
 			needle: 'endoflife.date source in integriq',
 			haystack: $service->describeEolRun(runStatus: ['available' => false, 'reason' => 'eol-register-or-schema-not-found'])[1]
@@ -413,7 +420,7 @@ class ConnectionReportServiceTest extends TestCase {
 
 		$recorded = array_values(array_unique($matches[1]));
 		sort($recorded);
-		$known = array_keys(ConnectionReportService::EOL_REASONS);
+		$known = [...array_keys(ConnectionReportService::EOL_REASONS), ConnectionReportService::EOL_REASON_SWITCHED_OFF];
 		sort($known);
 
 		$this->assertNotSame(expected: [], actual: $recorded);
@@ -435,8 +442,8 @@ class ConnectionReportServiceTest extends TestCase {
 		$this->assertFalse(condition: $service->emailSettingsSaved());
 		$this->assertFalse(condition: $service->federationPeersChanged(status: ['available' => false]));
 		$this->assertFalse(condition: $service->federationPulled(pull: ['ok' => false, 'reason' => 'federation disabled']));
-		$this->assertFalse(condition: $service->eolSyncConfigSaved(config: ['enabled' => false]));
-		$this->assertFalse(condition: $service->eolSyncRan(runStatus: ['available' => false, 'reason' => 'disabled']));
+		$this->assertFalse(condition: $service->eolSyncConfigSaved());
+		$this->assertFalse(condition: $service->eolSyncRan(runStatus: ['available' => false, 'reason' => 'object-service-unavailable']));
 	}//end testWithoutIntegriqNothingIsSentOrLogged()
 
 	/**
@@ -483,7 +490,7 @@ class ConnectionReportServiceTest extends TestCase {
 
 		$service = new ConnectionReportService(eventDispatcher: $dispatcher, emailService: $this->emailService, logger: $this->logger);
 
-		$this->assertFalse(condition: $service->eolSyncRan(runStatus: ['available' => false, 'reason' => 'disabled']));
-		$this->assertFalse(condition: $service->eolSyncConfigSaved(config: ['enabled' => true]));
+		$this->assertFalse(condition: $service->eolSyncRan(runStatus: ['available' => false, 'reason' => 'object-service-unavailable']));
+		$this->assertFalse(condition: $service->eolSyncConfigSaved());
 	}//end testAThrowingListenerNeverEscapes()
 }//end class

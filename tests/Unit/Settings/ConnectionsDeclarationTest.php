@@ -36,10 +36,12 @@ use PHPUnit\Framework\TestCase;
  *
  * The rules mirror integriq's `lib/Settings/connections.schema.json` on
  * `development` field for field, including the hydra#673 amendments
- * (`adapter.jsonPath`, `adapter.simulatedValues`, `reportedOnly`). That schema
- * is not a dependency of this repo, so the rules are restated here. The file
- * was also validated against the schema itself, fetched from integriq
- * `development` with `gh api`, when this test was written.
+ * (`adapter.jsonPath`, `adapter.simulatedValues`, `reportedOnly`) and the
+ * hydra#677 ones (`switch`, `disabledMessage`). That schema is not a
+ * dependency of this repo, so the rules are restated here. The file was also
+ * validated against the schema itself, fetched from integriq `development`
+ * with `gh api` (last changed in 64b437fc2df24827985ce6e919fe5e47c5205617,
+ * integriq#2024), when each amendment was adopted.
  *
  * @coversNothing
  */
@@ -61,6 +63,8 @@ class ConnectionsDeclarationTest extends TestCase {
 		'reportedOnly'        => 'boolean',
 		'available'           => 'boolean',
 		'unavailableMessage'  => 'string',
+		'switch'              => 'array',
+		'disabledMessage'     => 'string',
 		'unconfiguredMessage' => 'string',
 		'sourceTemplate'      => 'string',
 	];
@@ -75,6 +79,17 @@ class ConnectionsDeclarationTest extends TestCase {
 		'jsonPath'         => 'string',
 		'simulatedValues'  => 'array',
 		'simulatedMessage' => 'string',
+	];
+
+	/**
+	 * The fields the schema allows inside `switch`, with their JSON type.
+	 *
+	 * @var array<string, string>
+	 */
+	private const SWITCH_FIELD_TYPES = [
+		'configKey' => 'string',
+		'jsonPath'  => 'string',
+		'offValues' => 'array',
 	];
 
 	/**
@@ -186,6 +201,11 @@ class ConnectionsDeclarationTest extends TestCase {
 				$this->assertSame(expected: self::FIELD_TYPES[$field], actual: $this->jsonType(value: $value), message: $key . '.' . $field);
 			}
 
+			foreach (($connection['switch'] ?? []) as $field => $value) {
+				$this->assertArrayHasKey(key: $field, array: self::SWITCH_FIELD_TYPES, message: $key . '.switch.' . $field . ' is not a schema field');
+				$this->assertSame(expected: self::SWITCH_FIELD_TYPES[$field], actual: $this->jsonType(value: $value), message: $key . '.switch.' . $field);
+			}
+
 			foreach (($connection['adapter'] ?? []) as $field => $value) {
 				$this->assertArrayHasKey(key: $field, array: self::ADAPTER_FIELD_TYPES, message: $key . '.adapter.' . $field . ' is not a schema field');
 				$this->assertSame(expected: self::ADAPTER_FIELD_TYPES[$field], actual: $this->jsonType(value: $value), message: $key . '.adapter.' . $field);
@@ -281,8 +301,9 @@ class ConnectionsDeclarationTest extends TestCase {
 	/**
 	 * Federation and the end-of-life feed are reported only, and neither guesses from settings.
 	 *
-	 * `federation_enabled` is a boolean key, which integriq's reader counts as
-	 * filled whatever it holds, and `eol_sync_config` is filled after any save.
+	 * A filled `federation_enabled` or `eol_sync_config` says the feature may
+	 * run, not that a peer or the feed answered, so neither is required config.
+	 * Each carries its on/off setting as a `switch` instead.
 	 *
 	 * @return void
 	 */
@@ -299,6 +320,34 @@ class ConnectionsDeclarationTest extends TestCase {
 		$this->assertArrayNotHasKey(key: 'reportedOnly', array: $byKey['email']);
 		$this->assertArrayNotHasKey(key: 'requiredConfig', array: $byKey['email']);
 	}//end testFederationAndTheFeedAreReportedOnly()
+
+	/**
+	 * Federation and the end-of-life sync are switched off through the settings stackiq reads.
+	 *
+	 * Neither switch lists `offValues`, so integriq reads it as off when the
+	 * value is empty: unset, `false`, `0`, or a missing `enabled` inside the
+	 * blob (hydra connection-registry D2, D4 rule 2b, D12 items 6 and 7). Both
+	 * defaults in the code are off, so an unset key reading off is the truth.
+	 *
+	 * @return void
+	 */
+	public function testFederationAndTheSyncDeclareTheirSwitches(): void {
+		$byKey = $this->connectionsByKey();
+
+		$this->assertSame(expected: ['configKey' => 'federation_enabled'], actual: $byKey['federation']['switch']);
+		$this->assertSame(expected: ['configKey' => 'eol_sync_config', 'jsonPath' => 'enabled'], actual: $byKey['eol-feed']['switch']);
+		$this->assertArrayNotHasKey(key: 'switch', array: $byKey['email']);
+		foreach (['federation', 'eol-feed'] as $key) {
+			$this->assertStringContainsString(needle: 'switched off', haystack: $byKey[$key]['disabledMessage'], message: $key);
+		}
+
+		$federation = (string) file_get_contents($this->root() . '/lib/Service/Federation/FederationConfig.php');
+		$this->assertStringContainsString(needle: "getValueBool(Application::APP_ID, 'federation_enabled', false)", haystack: $federation);
+
+		$settings = (string) file_get_contents($this->root() . '/lib/Service/SettingsService.php');
+		$this->assertStringContainsString(needle: "EOL_SYNC_CONFIG_KEY = 'eol_sync_config'", haystack: $settings);
+		$this->assertStringContainsString(needle: "'enabled' => (\$decoded['enabled'] ?? false) === true", haystack: $settings);
+	}//end testFederationAndTheSyncDeclareTheirSwitches()
 
 	/**
 	 * The end-of-life feed offers integriq's endoflife.date source.

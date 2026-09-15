@@ -13,7 +13,7 @@ Admins see stackiq's outside connections on one page, with a status stackiq can 
 
 ### Requirement: REQ-STACKIQ-CONN-001 Stackiq declares its outside connections in one static file
 
-Stackiq SHALL declare `email`, `federation` and `eol-feed` in `lib/Settings/connections.json` in the shape of hydra connection-registry design D2 (hydra REQ-CONN-001). The `email` entry SHALL name `email_transport_type` as its adapter key with `simulatedValues` holding `null` and not the empty string, because an empty transport sends mail through SMTP. The `federation` and `eol-feed` entries SHALL be `reportedOnly`. The `eol-feed` entry SHALL offer integriq's `endoflife-date` source template. Every `settingsUrl` SHALL point at a section id that exists in the admin settings page.
+Stackiq SHALL declare `email`, `federation` and `eol-feed` in `lib/Settings/connections.json` in the shape of hydra connection-registry design D2 (hydra REQ-CONN-001). The `email` entry SHALL name `email_transport_type` as its adapter key with `simulatedValues` holding `null` and not the empty string, because an empty transport sends mail through SMTP. The `federation` and `eol-feed` entries SHALL be `reportedOnly`. The `federation` entry SHALL declare `federation_enabled` as its `switch`, and the `eol-feed` entry SHALL declare `enabled` inside `eol_sync_config` as its `switch`, so a switched-off feature reads `disabled` (hydra connection-registry D12 items 6, 7 and 9). The `eol-feed` entry SHALL offer integriq's `endoflife-date` source template. Every `settingsUrl` SHALL point at a section id that exists in the admin settings page.
 
 #### Scenario: The declaration names this app and passes integriq's schema
 @e2e exclude A static file with no browser surface; tests/Unit/Settings/ConnectionsDeclarationTest.php checks the shape, the app id, unique keys and the anchors.
@@ -25,6 +25,14 @@ Stackiq SHALL declare `email`, `federation` and `eol-feed` in `lib/Settings/conn
 - **AND** every key SHALL be unique
 - **AND** every `#section-…` anchor SHALL be an id in a settings section component
 
+#### Scenario: Switched-off federation and a switched-off sync read disabled
+@e2e exclude The rule lives in integriq's resolver; tests/Unit/Settings/ConnectionsDeclarationTest.php asserts both switches and that the code reads the same keys with an off default.
+
+- **GIVEN** integriq has synced stackiq's declaration
+- **WHEN** `federation_enabled` holds `false`, or `eol_sync_config` holds `{"enabled": false}`
+- **THEN** integriq's rule 2b SHALL resolve that row as `disabled`
+- **AND** stackiq SHALL send no report that says the feature is off
+
 #### Scenario: The null transport reads simulated, and an empty one does not
 @e2e tests/e2e/workflows/integrations-page.spec.ts
 
@@ -35,7 +43,7 @@ Stackiq SHALL declare `email`, `federation` and `eol-feed` in `lib/Settings/conn
 
 ### Requirement: REQ-STACKIQ-CONN-002 A save asks integriq to look again, and a run reports what it met
 
-When a save writes the settings of a declared connection, stackiq SHALL send `ConnectionRefreshRequestedEvent` with app `stackiq` and that key, and SHALL send it before any report for that key (hydra REQ-CONN-004, hydra#674). An email settings save SHALL then report what `SymfonyEmailService::isEmailSystemConfigured()` sees. A peer add or remove SHALL report OpenCatalogi missing as `unavailable`, and federation off or without peers as `unconfigured`. A federation pull SHALL report every peer answering as `configured`, some as `limited` and none as `error`. An EOL sync run SHALL report its recorded outcome. A message SHALL name a peer by host only. Both events SHALL be named by string and sent only when the class exists. Neither SHALL change the response of the request, job or run that sent it. No page request SHALL send an event.
+When a save writes the settings of a declared connection, stackiq SHALL send `ConnectionRefreshRequestedEvent` with app `stackiq` and that key, and SHALL send it before any report for that key (hydra REQ-CONN-004, hydra#674). An email settings save SHALL then report what `SymfonyEmailService::isEmailSystemConfigured()` sees. A peer add or remove SHALL report OpenCatalogi missing as `unavailable`, and federation without peers as `unconfigured`. Switched-off federation and a switched-off EOL sync SHALL send the refresh and no report, from a save, a pull or a run, because the row's switch says it. A federation pull SHALL report every peer answering as `configured`, some as `limited` and none as `error`. An EOL sync run SHALL report its recorded outcome. A message SHALL name a peer by host only. Both events SHALL be named by string and sent only when the class exists. Neither SHALL change the response of the request, job or run that sent it. No page request SHALL send an event.
 
 #### Scenario: Saving email settings refreshes, then reports
 @e2e exclude The event is not observable from a browser; tests/Unit/Service/ConnectionReportServiceTest.php and tests/Unit/Controller/SettingsControllerConnectionReportTest.php assert the order and the unchanged response.

@@ -96,7 +96,7 @@ class EolSyncService {
 	 */
 	public function updateConfig(array $data): array {
 		$result = $this->settingsService->updateEolSyncConfig($data);
-		$this->connectionReports?->eolSyncConfigSaved(config: (array) ($result['config'] ?? []));
+		$this->connectionReports?->eolSyncConfigSaved();
 
 		return $result;
 	}//end updateConfig()
