@@ -99,9 +99,14 @@ test.describe('Integrations over the connection registry', () => {
 		}
 
 		await openIntegrations(page)
+		// Match a row through its Connection cell. A row's accessible name
+		// starts with its "Select row" checkbox, so a name anchored on the
+		// title can never match (keepiq#717).
 		for (const { title } of DECLARED) {
 			await expect(
-				page.getByRole('row', { name: new RegExp(`^${title}\\b`, 'i') }),
+				page.getByRole('row').filter({
+					has: page.getByRole('cell', { name: title, exact: true }),
+				}),
 			).toHaveCount(1)
 		}
 	})
