@@ -157,7 +157,9 @@ export default {
 			 * 2.39.0 ships neither as a built-in. Before this change the app
 			 * passed no formatters at all.
 			 */
-			formatters: createConnectionFormatters((source) => ncT('stackiq', source)),
+			formatters: createConnectionFormatters((source) =>
+				ncT('stackiq', source),
+			),
 
 			objectSidebarState: reactive({
 				active: false,
