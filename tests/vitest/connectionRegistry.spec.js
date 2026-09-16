@@ -77,8 +77,12 @@ describe('Add integration handler', () => {
 
 		handlers.openIntegriqConnections()
 
-		expect(INTEGRIQ_CONNECTIONS_PATH).toBe('/apps/integriq/connections?app=stackiq&link=1')
-		expect(opened).toEqual(['/index.php/apps/integriq/connections?app=stackiq&link=1'])
+		expect(INTEGRIQ_CONNECTIONS_PATH).toBe(
+			'/apps/integriq/connections?app=stackiq&link=1',
+		)
+		expect(opened).toEqual([
+			'/index.php/apps/integriq/connections?app=stackiq&link=1',
+		])
 	})
 })
 
@@ -110,19 +114,31 @@ describe('the Integrations page declaration', () => {
 
 	it('names only formatters the library ships and handlers that exist, and wires the handler into the app', () => {
 		const registry = shellFormatterRegistry()
-		const handlers = createConnectionHandlers({ generateUrl: (p) => p, assign: () => {} })
+		const handlers = createConnectionHandlers({
+			generateUrl: (p) => p,
+			assign: () => {},
+		})
 
-		expect(typeof registry.date, 'the built-in formatter map was read').toBe('function')
-		const named = page.config.columns.filter((c) => c.formatter).map((c) => c.formatter)
+		expect(typeof registry.date, 'the built-in formatter map was read').toBe(
+			'function',
+		)
+		const named = page.config.columns
+			.filter((c) => c.formatter)
+			.map((c) => c.formatter)
 		expect(named.sort()).toEqual(['connectionSettingsLabel', 'connectionStatus'])
 		for (const formatter of named) {
-			expect(typeof registry[formatter], `@conduction/nextcloud-vue ships ${formatter}`).toBe('function')
+			expect(
+				typeof registry[formatter],
+				`@conduction/nextcloud-vue ships ${formatter}`,
+			).toBe('function')
 		}
 		for (const action of page.config.headerActions) {
 			expect(typeof handlers[action.handler], action.handler).toBe('function')
 		}
 
-		expect(read('src', 'customComponents.js')).toMatch(/^\t\.\.\.createConnectionHandlers\(\{$/m)
+		expect(read('src', 'customComponents.js')).toMatch(
+			/^\t\.\.\.createConnectionHandlers\(\{$/m,
+		)
 	})
 
 	// The library labels all seven statuses. A copy of the formatter passed to
@@ -151,7 +167,10 @@ describe('the Integrations page declaration', () => {
 
 	it('names an icon src/icons.js registers', () => {
 		const icons = read('src', 'icons.js')
-		for (const icon of [menu.icon, ...page.config.headerActions.map((a) => a.icon)]) {
+		for (const icon of [
+			menu.icon,
+			...page.config.headerActions.map((a) => a.icon),
+		]) {
 			expect(icons).toContain(`\n\t${icon},`)
 		}
 	})
