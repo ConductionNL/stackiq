@@ -84,6 +84,26 @@ class ConnectionReportService {
 	public const KEY_EOL = 'eol-feed';
 
 	/**
+	 * The pull reason FederationService records for switched-off federation, which is never reported.
+	 *
+	 * The `federation` switch in lib/Settings/connections.json reads
+	 * `federation_enabled`, so integriq shows `disabled` without a report
+	 * (hydra connection-registry D4 rule 2b).
+	 *
+	 * @var string
+	 */
+	public const PULL_REASON_SWITCHED_OFF = 'federation disabled';
+
+	/**
+	 * The EOL sync degrade reason for a switched-off sync, which is never reported.
+	 *
+	 * The `eol-feed` switch reads `enabled` inside `eol_sync_config` itself.
+	 *
+	 * @var string
+	 */
+	public const EOL_REASON_SWITCHED_OFF = 'disabled';
+
+	/**
 	 * The longest failure reason a message carries.
 	 *
 	 * @var int
@@ -93,15 +113,13 @@ class ConnectionReportService {
 	/**
 	 * What each EOL sync degrade reason means for the row, as status and message.
 	 *
-	 * The reasons are the ones EolSyncService::degrade() records.
+	 * The reasons are the ones EolSyncService::degrade() records, apart from
+	 * `disabled`: the `eol-feed` switch in lib/Settings/connections.json reads
+	 * a switched-off sync itself, so that reason reports nothing.
 	 *
 	 * @var array<string, array{0: string, 1: string}>
 	 */
 	public const EOL_REASONS = [
-		'disabled' => [
-			'unconfigured',
-			'End-of-life sync is switched off. Switch it on in the End-of-life feed sync section.',
-		],
 		'openregister-not-installed' => [
 			'unavailable',
 			'The end-of-life sync needs OpenRegister, and it is not installed.',
@@ -203,6 +221,9 @@ class ConnectionReportService {
 	 *
 	 * A ready federation gets no report: only a pull can tell whether the peers
 	 * answer, so the row reads the declared "Not checked yet" until then.
+	 * Switched-off federation gets none either: the `federation` switch in
+	 * lib/Settings/connections.json reads `federation_enabled` itself, and
+	 * integriq shows `disabled`.
 	 *
 	 * @param array<string, mixed> $status The result of FederationService::getStatus().
 	 *
@@ -215,9 +236,13 @@ class ConnectionReportService {
 			return false;
 		}
 
+		$available = ($status['available'] ?? false) === true;
+		if ($available === true && ($status['enabled'] ?? false) !== true) {
+			return false;
+		}
+
 		$blocked = $this->federationBlocker(
-			available: ($status['available'] ?? false) === true,
-			enabled: ($status['enabled'] ?? false) === true,
+			available: $available,
 			peerCount: count((array) ($status['peers'] ?? []))
 		);
 		if ($blocked === null) {
@@ -237,7 +262,12 @@ class ConnectionReportService {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function federationPulled(array $pull): bool {
-		[$status, $message] = $this->describePull(pull: $pull);
+		$described = $this->describePull(pull: $pull);
+		if ($described === null) {
+			return false;
+		}
+
+		[$status, $message] = $described;
 
 		return $this->report(key: self::KEY_FEDERATION, status: $status, message: $message);
 	}//end federationPulled()
@@ -247,16 +277,19 @@ class ConnectionReportService {
 	 *
 	 * @param array<string, mixed> $pull The result of FederationService::pullAllPeers().
 	 *
-	 * @return array{0: string, 1: string} The status and the message.
+	 * @return array{0: string, 1: string}|null The status and the message, or null when federation is switched off.
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
-	public function describePull(array $pull): array {
+	public function describePull(array $pull): ?array {
 		$reason = (string) ($pull['reason'] ?? '');
 		if (($pull['ok'] ?? false) !== true) {
+			if ($reason === self::PULL_REASON_SWITCHED_OFF) {
+				return null;
+			}
+
 			$blocked = $this->federationBlocker(
 				available: $reason !== 'OpenCatalogi unavailable',
-				enabled: $reason !== 'federation disabled',
 				peerCount: 1
 			);
 
@@ -291,26 +324,18 @@ class ConnectionReportService {
 	}//end describePull()
 
 	/**
-	 * After an EOL sync settings save: refresh, then report a switched-off sync.
+	 * After an EOL sync settings save: refresh, and send no report.
 	 *
-	 * @param array<string, mixed> $config The configuration as saved.
+	 * The save may have switched the sync on or off, and the `eol-feed` switch
+	 * in lib/Settings/connections.json reads `enabled` inside
+	 * `eol_sync_config` itself. A run reports what the sync met.
 	 *
-	 * @return bool True when a report was sent.
+	 * @return bool True when the refresh was sent.
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
-	public function eolSyncConfigSaved(array $config): bool {
-		if ($this->refresh(key: self::KEY_EOL) === false) {
-			return false;
-		}
-
-		if (($config['enabled'] ?? false) === true) {
-			return false;
-		}
-
-		[$status, $message] = self::EOL_REASONS['disabled'];
-
-		return $this->report(key: self::KEY_EOL, status: $status, message: $message);
+	public function eolSyncConfigSaved(): bool {
+		return $this->refresh(key: self::KEY_EOL);
 	}//end eolSyncConfigSaved()
 
 	/**
@@ -323,7 +348,12 @@ class ConnectionReportService {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function eolSyncRan(array $runStatus): bool {
-		[$status, $message] = $this->describeEolRun(runStatus: $runStatus);
+		$described = $this->describeEolRun(runStatus: $runStatus);
+		if ($described === null) {
+			return false;
+		}
+
+		[$status, $message] = $described;
 
 		return $this->report(key: self::KEY_EOL, status: $status, message: $message);
 	}//end eolSyncRan()
@@ -333,11 +363,11 @@ class ConnectionReportService {
 	 *
 	 * @param array<string, mixed> $runStatus The status EolSyncService::run() recorded.
 	 *
-	 * @return array{0: string, 1: string} The status and the message.
+	 * @return array{0: string, 1: string}|null The status and the message, or null when the sync is switched off.
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
-	public function describeEolRun(array $runStatus): array {
+	public function describeEolRun(array $runStatus): ?array {
 		if (($runStatus['available'] ?? false) === true) {
 			return [
 				'configured',
@@ -347,6 +377,9 @@ class ConnectionReportService {
 		}
 
 		$reason = (string) ($runStatus['reason'] ?? '');
+		if ($reason === self::EOL_REASON_SWITCHED_OFF) {
+			return null;
+		}
 
 		return (self::EOL_REASONS[$reason] ?? ['error', 'The last end-of-life sync stopped: ' . $this->shorten(text: $reason)]);
 	}//end describeEolRun()
@@ -416,22 +449,17 @@ class ConnectionReportService {
 	/**
 	 * The state that keeps federation from pulling at all, or null when none does.
 	 *
+	 * Switched-off federation is not a blocker here: the callers leave it to the
+	 * row's switch, which integriq reads itself.
+	 *
 	 * @param bool $available Whether OpenCatalogi is installed.
-	 * @param bool $enabled   Whether federation_enabled is on.
 	 * @param int  $peerCount How many peers are configured.
 	 *
 	 * @return array{0: string, 1: string}|null The status and the message, or null.
 	 */
-	private function federationBlocker(bool $available, bool $enabled, int $peerCount): ?array {
+	private function federationBlocker(bool $available, int $peerCount): ?array {
 		if ($available === false) {
 			return ['unavailable', 'Federation needs the OpenCatalogi app, and it is not installed.'];
-		}
-
-		if ($enabled === false) {
-			return [
-				'unconfigured',
-				'Federation is switched off. Run occ config:app:set stackiq federation_enabled --value=true --type=boolean.',
-			];
 		}
 
 		if ($peerCount === 0) {
