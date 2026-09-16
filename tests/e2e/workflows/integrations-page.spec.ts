@@ -35,7 +35,8 @@ import { expect, test } from '@playwright/test'
 import { APP_PATH } from '../base-url.ts'
 
 /** Integriq's objects endpoint for stackiq's connection rows. */
-const CONNECTIONS_API = '/index.php/apps/openregister/api/objects/integriq/app_connection?app=stackiq&_limit=50'
+const CONNECTIONS_API =
+	'/index.php/apps/openregister/api/objects/integriq/app_connection?app=stackiq&_limit=50'
 
 /** Stackiq's email settings endpoint, admin only. */
 const EMAIL_SETTINGS_API = `${APP_PATH}/api/settings/email`
@@ -56,7 +57,9 @@ const JSON_HEADERS = { 'OCS-APIRequest': 'true', Accept: 'application/json' }
  * @param request An admin request context.
  * @return The rows by key.
  */
-async function rowsByKey(request: APIRequestContext): Promise<Record<string, Record<string, unknown>>> {
+async function rowsByKey(
+	request: APIRequestContext,
+): Promise<Record<string, Record<string, unknown>>> {
 	const res = await request.get(CONNECTIONS_API, { headers: JSON_HEADERS })
 	expect(res.ok(), `list integriq/app_connection -> ${res.status()}`).toBeTruthy()
 	const body = await res.json()
@@ -75,31 +78,48 @@ async function rowsByKey(request: APIRequestContext): Promise<Record<string, Rec
  * @param page The Playwright page.
  */
 async function openIntegrations(page: Page): Promise<void> {
-	await page.goto(`${APP_PATH}/settings/integrations?app=stackiq`, { timeout: 60_000 })
+	await page.goto(`${APP_PATH}/settings/integrations?app=stackiq`, {
+		timeout: 60_000,
+	})
 	await expect(page.locator('.cn-index-page')).toBeVisible({ timeout: 30_000 })
 }
 
 test.describe('Integrations over the connection registry', () => {
-	test('lists the three declared connections, all of them stackiq\'s', async ({ page }) => {
+	test("lists the three declared connections, all of them stackiq's", async ({
+		page,
+	}) => {
 		const byKey = await rowsByKey(page.request)
 		expect(Object.keys(byKey).sort()).toEqual(DECLARED.map((d) => d.key).sort())
 
 		// Every row links to a section of stackiq's own admin page.
 		for (const { key } of DECLARED) {
-			expect(String(byKey[key]?.settingsUrl ?? ''), key).toMatch(/^\/settings\/admin\/stackiq#section-/)
+			expect(String(byKey[key]?.settingsUrl ?? ''), key).toMatch(
+				/^\/settings\/admin\/stackiq#section-/,
+			)
 		}
 
 		await openIntegrations(page)
 		for (const { title } of DECLARED) {
-			await expect(page.getByRole('row', { name: new RegExp(`^${title}\\b`, 'i') })).toHaveCount(1)
+			await expect(
+				page.getByRole('row', { name: new RegExp(`^${title}\\b`, 'i') }),
+			).toHaveCount(1)
 		}
 	})
 
-	test('reads Simulated once the null transport is saved, and not before', async ({ page }) => {
-		const before = await page.request.get(EMAIL_SETTINGS_API, { headers: JSON_HEADERS })
+	test('reads Simulated once the null transport is saved, and not before', async ({
+		page,
+	}) => {
+		const before = await page.request.get(EMAIL_SETTINGS_API, {
+			headers: JSON_HEADERS,
+		})
 		expect(before.ok(), `email settings read -> ${before.status()}`).toBeTruthy()
-		const previous = String((await before.json())?.emailSettings?.transportType ?? 'smtp')
-		test.skip(previous === 'null', 'This instance already runs the null transport, so there is no change to observe.')
+		const previous = String(
+			(await before.json())?.emailSettings?.transportType ?? 'smtp',
+		)
+		test.skip(
+			previous === 'null',
+			'This instance already runs the null transport, so there is no change to observe.',
+		)
 
 		/**
 		 * The email row's status, read without asserting: a throw inside
@@ -108,9 +128,14 @@ test.describe('Integrations over the connection registry', () => {
 		 * @return The status, or '' when the row is missing.
 		 */
 		const emailStatus = async (): Promise<string> => {
-			const list = await page.request.get(CONNECTIONS_API, { headers: JSON_HEADERS })
+			const list = await page.request.get(CONNECTIONS_API, {
+				headers: JSON_HEADERS,
+			})
 			const rows = list.ok() ? ((await list.json()).results ?? []) : []
-			const row = rows.find((r: Record<string, unknown>) => r.key === 'email' && r.app === 'stackiq')
+			const row = rows.find(
+				(r: Record<string, unknown>) =>
+					r.key === 'email' && r.app === 'stackiq',
+			)
 			return String(row?.status ?? '')
 		}
 
@@ -137,7 +162,9 @@ test.describe('Integrations over the connection registry', () => {
 		await expect.poll(emailStatus, { timeout: 15_000 }).not.toBe('simulated')
 	})
 
-	test('sends Add integration to integriq instead of offering a form', async ({ page }) => {
+	test('sends Add integration to integriq instead of offering a form', async ({
+		page,
+	}) => {
 		await openIntegrations(page)
 
 		// No generic Add button: a row nothing declared has nothing to check.
@@ -147,8 +174,14 @@ test.describe('Integrations over the connection registry', () => {
 		// catalogues this change ships, and nothing forces the E2E locale.
 		await page.locator('[data-testid="cn-actions"] button').first().click()
 		await Promise.all([
-			page.waitForURL(/\/apps\/integriq\/connections\?app=stackiq&link=1$/, { timeout: 30_000 }),
-			page.getByRole('menuitem', { name: /Add integration|Integratie toevoegen/i }).click(),
+			page.waitForURL(/\/apps\/integriq\/connections\?app=stackiq&link=1$/, {
+				timeout: 30_000,
+			}),
+			page
+				.getByRole('menuitem', {
+					name: /Add integration|Integratie toevoegen/i,
+				})
+				.click(),
 		])
 	})
 })
