@@ -126,7 +126,12 @@ return [
         // ArchiMate focused endpoints
         ['name' => 'settings#getArchiMateConfig', 'url' => '/api/archimate/config', 'verb' => 'GET'],
         ['name' => 'settings#updateArchiMateConfig', 'url' => '/api/archimate/config', 'verb' => 'POST'],
-        ['name' => 'settings#getArchiMateConfig', 'url' => '/api/archimate/status', 'verb' => 'GET'],
+        // A route name carries no URL, so without a 'postfix' this entry and the
+        // GET '/api/archimate/config' one above register under the same name and
+        // only the last declared survives. This one won on line order, which left
+        // the config read a 404 and made the store's polling endpoint depend on
+        // nothing but the order of these two lines.
+        ['name' => 'settings#getArchiMateConfig', 'url' => '/api/archimate/status', 'verb' => 'GET', 'postfix' => 'Status'],
 
         // Email focused endpoints
         ['name' => 'settings#getEmailConfig', 'url' => '/api/email/config', 'verb' => 'GET'],
