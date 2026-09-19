@@ -45,6 +45,12 @@
              stub already existed for PHPUnit mock generation and mirrors the real
              signature in openregister/lib/Service/RegisterResolverService.php. -->
         <file name="tests/Stubs/Service/RegisterResolverService.php" preloadClasses="true" />
+        <!-- Integriq's connection-registry events (adopt-connection-registry).
+             ConnectionReportService names them by string behind class_exists
+             (ADR-041). The stubs mirror integriq/lib/Event/ on development, so
+             psalm sees the constructor the service builds. -->
+        <file name="tests/Stubs/Integriq/Event/ConnectionStatusReportedEvent.php" />
+        <file name="tests/Stubs/Integriq/Event/ConnectionRefreshRequestedEvent.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
