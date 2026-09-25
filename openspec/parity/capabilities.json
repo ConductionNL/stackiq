@@ -1,0 +1,2910 @@
+{
+	"comparedOn": "2026-09-25",
+	"category": "Stackiq is a software and application catalogue for public-sector organisations, mapped to the GEMMA reference architecture. It does two jobs in one product: it is the back office and API of a national, public market-transparency catalogue (suppliers publish what they offer, municipalities record what they use and how it connects, everything is plotted on GEMMA reference components), and it gives one organisation a portfolio view of its own landscape (contracts, lifecycle, licences, vulnerabilities, compliance). So it competes first with the VNG GEMMA Softwarecatalogus it is built to succeed (its requirements are the VNG issues in issues.md), second with application portfolio and enterprise architecture tools that municipalities buy for the same landscape (SAP LeanIX, BlueDolphin), and third with the CMDB and IT asset tools that already hold a municipality's software list (GLPI, TOPdesk). It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose. Correct this paragraph if the category is wrong: the areas, the phrasing and the columns all follow from it.",
+	"columnsWhy": "Five competitor columns. VNG GEMMA Softwarecatalogus is the incumbent and the requirement source. SAP LeanIX is the application portfolio management reference and BlueDolphin (ValueBlue) the Dutch ArchiMate-first EA tool sold to municipalities. GLPI is the open-source ITAM and CMDB with the deepest research on file (a source reading by the procest lane on 2026-09-14 on top of the docs pass), and TOPdesk is the service management and CMDB suite most Dutch municipalities already run. Left out: Backstage, Port, Cortex, OpsLevel, Compass and other developer portals (a different buyer and a catalog-info.yaml model); ServiceNow CMDB, Flexera/Snow, BMC Helix and Alfabet (enterprise-priced, and the licence and SAM rows below already carry the ideas they would add); Ardoq, MEGA HOPEX, BiZZdesign, Sparx, Archi and the other EA tools (LeanIX and BlueDolphin stand for the class); i-doit, Snipe-IT, Lansweeper, OCS, Ralph, NetBox, Device42 and CMDBuild (discovery and hardware, where GLPI stands for the open-source class); and Atlas Governance, Kong, Gravitee, Apigee, Postman, SwaggerHub, Stoplight, RapidAPI and Sensus BPM, which are linked to softwarecatalog in the intelligence database but are board, API gateway or process tools and noise for this product.",
+	"corpus": {
+		"repo": "ConductionNL/concurrentie-analyse (intelligence database)",
+		"file": "competitor_features, canonical_features and competitor_apps for app_slug softwarecatalog; stackiq issues.md for the VNG requirements"
+	},
+	"systems": [
+		{
+			"key": "stackiq",
+			"name": "Stackiq",
+			"vendor": "Conduction",
+			"isSelf": true,
+			"readOn": "2026-09-25"
+		},
+		{
+			"key": "vng-softwarecatalogus",
+			"name": "GEMMA Softwarecatalogus",
+			"vendor": "VNG Realisatie",
+			"readOn": "2026-07-23",
+			"evidenceGrade": "docs-only",
+			"unknownReason": "Not covered by the 20 intelligence rows for this system (a docs pass dated 2026-04-12 and 2026-07-23); the public site was not driven."
+		},
+		{
+			"key": "sap-leanix",
+			"name": "SAP LeanIX",
+			"vendor": "SAP",
+			"readOn": "2026-07-23",
+			"evidenceGrade": "docs-only",
+			"unknownReason": "Not covered by the 24 intelligence rows for this system (docs passes dated 2026-04-12 and 2026-07-23); no trial was opened."
+		},
+		{
+			"key": "bluedolphin",
+			"name": "BlueDolphin",
+			"vendor": "ValueBlue",
+			"readOn": "2026-07-23",
+			"evidenceGrade": "docs-only",
+			"unknownReason": "Not covered by the 22 intelligence rows for this system (docs passes dated 2026-04-12 and 2026-07-23); no trial was opened."
+		},
+		{
+			"key": "glpi",
+			"name": "GLPI",
+			"vendor": "Teclib",
+			"readOn": "2026-07-23",
+			"evidenceGrade": "docs-only",
+			"unknownReason": "Not covered by the GLPI rows read for this product (a docs pass dated 2026-07-23) or by the procest lane's source reading of 2026-09-14, which answered case-management questions."
+		},
+		{
+			"key": "topdesk",
+			"name": "TOPdesk",
+			"vendor": "TOPdesk",
+			"readOn": "2026-07-23",
+			"evidenceGrade": "docs-only",
+			"unknownReason": "Not covered by the 50 intelligence rows for this system (docs passes dated 2026-04-10 to 2026-07-23); the product was not driven."
+		}
+	],
+	"areas": [
+		{
+			"key": "landscape",
+			"name": "Application landscape register",
+			"name_nl": "Applicatielandschap registreren"
+		},
+		{
+			"key": "connections",
+			"name": "Integrations and dependencies",
+			"name_nl": "Koppelingen en afhankelijkheden"
+		},
+		{
+			"key": "architecture",
+			"name": "GEMMA and ArchiMate",
+			"name_nl": "GEMMA en ArchiMate"
+		},
+		{
+			"key": "compliance",
+			"name": "Standards, BIO and compliance",
+			"name_nl": "Standaarden, BIO en compliance"
+		},
+		{
+			"key": "market",
+			"name": "Supplier offering and market transparency",
+			"name_nl": "Aanbod en markttransparantie"
+		},
+		{
+			"key": "lifecycle",
+			"name": "Lifecycle, roadmap and rationalisation",
+			"name_nl": "Levenscyclus, roadmap en rationalisatie"
+		},
+		{
+			"key": "contracts",
+			"name": "Contracts, licences and costs",
+			"name_nl": "Contracten, licenties en kosten"
+		},
+		{
+			"key": "security",
+			"name": "Vulnerabilities and software supply chain",
+			"name_nl": "Kwetsbaarheden en softwareketen"
+		},
+		{
+			"key": "organisations",
+			"name": "Organisations, accounts and access",
+			"name_nl": "Organisaties, accounts en toegang"
+		},
+		{
+			"key": "sharing",
+			"name": "Open data, federation and APIs",
+			"name_nl": "Open data, federatie en API's"
+		},
+		{
+			"key": "insight",
+			"name": "Search, dashboards and reports",
+			"name_nl": "Zoeken, dashboards en rapportages"
+		},
+		{
+			"key": "operations",
+			"name": "Discovery and IT operations",
+			"name_nl": "Discovery en IT-beheer"
+		}
+	],
+	"providers": [
+		{
+			"key": "stackiq",
+			"name": "Stackiq",
+			"kind": "self"
+		},
+		{
+			"key": "openregister",
+			"name": "OpenRegister",
+			"kind": "app"
+		},
+		{
+			"key": "opencatalogi",
+			"name": "OpenCatalogi",
+			"kind": "app"
+		},
+		{
+			"key": "decidiq",
+			"name": "Decidiq (app id decidesk)",
+			"kind": "app"
+		},
+		{
+			"key": "integriq",
+			"name": "Integriq (app id openconnector)",
+			"kind": "app"
+		},
+		{
+			"key": "portaliq",
+			"name": "Portaliq",
+			"kind": "app"
+		},
+		{
+			"key": "nextcloud",
+			"name": "Nextcloud",
+			"kind": "platform"
+		}
+	],
+	"capabilities": [
+		{
+			"id": "land-register-application",
+			"area": "landscape",
+			"name": "Register an application your organisation uses, with its supplier, description and status.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "yes",
+			"bluedolphin": "yes",
+			"glpi": "partial",
+			"topdesk": "partial",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48836 'Municipal application landscape registration' (2026-07-23): Municipalities register which software packages they use; auto-plotted on the GEMMA reference component map. | docs, intelligence competitor_features#27550 'Application Landscape Mapping' (2026-04-12): Map and export municipality application landscape",
+				"sap-leanix": "docs, intelligence competitor_features#48860 'Fact Sheet data model (Application / IT Component / Provider)' (2026-07-23): Structured fact sheets are the core inventory unit for applications, components and providers. | docs, intelligence competitor_features#27422 'Fact Sheets & Data Model' (2026-04-12): Flexible data model for applications, processes, IT components",
+				"bluedolphin": "docs, intelligence competitor_features#48965 'Application Portfolio Management' (2026-07-23): APM integrated with the overall EA repository. | docs, intelligence competitor_features#27460 'Application Portfolio Management' (2026-04-12): Map applications to business goals and functions",
+				"glpi": "docs, intelligence competitor_features#48900 'Software inventory & catalog' (2026-07-23): Detects installed software and normalises into a software catalog. | docs, intelligence competitor_features#3267 'Software Catalog' (2026-03-28): Manage software licenses and installations | Rated partial because software is an inventoried asset, not a described application.",
+				"topdesk": "docs, intelligence competitor_features#48926 'Asset Management / CMDB' (2026-07-23): Register assets, users, relations and replacement timelines in one overview. | docs, intelligence competitor_features#27387 'CMDB / Configuration Management' (2026-04-12): Configuration database for registering IT objects like laptops, software, infrastructure | Rated partial because software is a CMDB object among assets.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-application-modules",
+			"area": "landscape",
+			"name": "Break an application into modules and see which module belongs to which product.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "partial",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48860 'Fact Sheet data model (Application / IT Component / Provider)' (2026-07-23): Structured fact sheets are the core inventory unit for applications, components and providers. | Rated partial because fact sheets separate Application from IT Component.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-module-versions",
+			"area": "landscape",
+			"name": "Record the released versions of a module, with the date each came into use.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "partial",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48900 'Software inventory & catalog' (2026-07-23): Detects installed software and normalises into a software catalog. | Rated partial because installed versions come from inventory.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-usage-record",
+			"area": "landscape",
+			"name": "Record that your organisation uses a module, as a usage separate from the product itself.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "partial",
+			"bluedolphin": "partial",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48836 'Municipal application landscape registration' (2026-07-23): Municipalities register which software packages they use; auto-plotted on the GEMMA reference component map.",
+				"sap-leanix": "docs, intelligence competitor_features#48860 'Fact Sheet data model (Application / IT Component / Provider)' (2026-07-23): Structured fact sheets are the core inventory unit for applications, components and providers.",
+				"bluedolphin": "docs, intelligence competitor_features#48965 'Application Portfolio Management' (2026-07-23): APM integrated with the overall EA repository.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-suite",
+			"area": "landscape",
+			"name": "Bundle several existing applications into one suite that is offered as a single product.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-services",
+			"area": "landscape",
+			"name": "Register a service a supplier delivers on top of one or more applications, such as hosting or support.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "partial",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48838 'Supplier product offering (aanbod) registration' (2026-07-23): ICT suppliers publish their product offering for the municipal market with global functionality descriptions. | Rated partial because offering registration covers products; services not named in the reading.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-sectors",
+			"area": "landscape",
+			"name": "Tag applications with the government sectors they are meant for.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-application-owner",
+			"area": "landscape",
+			"name": "Name the business owner and the technical owner responsible for an application.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "partial",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48865 'Survey campaigns for data collection' (2026-07-23): Crowd-sources data quality via targeted surveys to app owners. | Rated partial because surveys go to application owners, so ownership is modelled.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-custom-fields",
+			"area": "landscape",
+			"name": "Add your own fields to an application without a developer changing the data model.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48860 'Fact Sheet data model (Application / IT Component / Provider)' (2026-07-23): Structured fact sheets are the core inventory unit for applications, components and providers. | Rated yes because flexible fact sheet data model.",
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141835 '11.17 Custom object type management': GLPI 11 ships admin-defined itemtypes with custom fields and capabilities (`src/Glpi/CustomObject/AbstractDefinition.php`, `src/Glpi/Asset/AssetDefinition.php`, `src/Glpi/Asset/CustomFieldDefinition.php`), but the machin | Rated yes because custom asset definitions and custom fields, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-bulk-import",
+			"area": "landscape",
+			"name": "Import an existing application list in bulk from a spreadsheet or file.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "partial",
+			"bluedolphin": "yes",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#27428 'EAM Automation' (2026-04-12): Automated data collection from ServiceNow, Jira, cloud providers | Rated partial because automated collection from ServiceNow, Jira and cloud.",
+				"bluedolphin": "docs, intelligence competitor_features#48971 'Data import (Excel)' (2026-07-23): Bulk import of application/portfolio data.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-migrate-legacy",
+			"area": "landscape",
+			"name": "Bring over what was registered in the previous catalogue so nobody has to type it in again.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-detail-page",
+			"area": "landscape",
+			"name": "Open one application and see its versions, usages, contracts and compliance on one page.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "partial",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48836 'Municipal application landscape registration' (2026-07-23): Municipalities register which software packages they use; auto-plotted on the GEMMA reference component map.",
+				"sap-leanix": "docs, intelligence competitor_features#48860 'Fact Sheet data model (Application / IT Component / Provider)' (2026-07-23): Structured fact sheets are the core inventory unit for applications, components and providers. | Rated yes because fact sheet is the per-application page.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-bulk-edit",
+			"area": "landscape",
+			"name": "Select many catalogue entries at once and publish, lock or delete them together.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-duplicate-merge",
+			"area": "landscape",
+			"name": "Merge two catalogue entries that turn out to describe the same thing.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-data-quality-survey",
+			"area": "landscape",
+			"name": "Ask application owners through a survey to confirm or correct their entries.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "yes",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48865 'Survey campaigns for data collection' (2026-07-23): Crowd-sources data quality via targeted surveys to app owners. | docs, intelligence competitor_features#27423 'Survey-Based Data Collection' (2026-04-12): Crowdsource architecture data from application owners",
+				"bluedolphin": "docs, intelligence competitor_features#48974 'Questionnaires / data collection' (2026-07-23): Surveys to gather portfolio data from stakeholders.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-completeness-score",
+			"area": "landscape",
+			"name": "See how complete and up to date each application's entry is, as a score.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-demo-data",
+			"area": "landscape",
+			"name": "Load a set of example data so a new installation can be tried out straight away.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-guided-wizard",
+			"area": "landscape",
+			"name": "Add an application, service or connection through a step-by-step wizard instead of a bare form.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-sbom-components",
+			"area": "landscape",
+			"name": "See the third-party components a module version is built from.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "land-hosting-model",
+			"area": "landscape",
+			"name": "Record whether an application runs on premises, as SaaS or at a hosting party.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "partial",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48864 'SaaS Management & discovery' (2026-07-23): Discovers SaaS usage and shadow IT, integrates with the fact sheet model. | Rated partial because SaaS is tracked as a class of application.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-register-connection",
+			"area": "connections",
+			"name": "Register a connection between two applications, with its direction and the standard it uses.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "yes",
+			"bluedolphin": "partial",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48842 'Application-to-application connection registry (koppelingen)' (2026-07-23): Records interfaces/connections between registered applications.",
+				"sap-leanix": "docs, intelligence competitor_features#27421 'Integration Architecture' (2026-04-12): Visualize data flows and integration patterns between applications",
+				"bluedolphin": "docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling. | Rated partial because ArchiMate flow relations.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-external-provision",
+			"area": "connections",
+			"name": "Record a connection from an application to a national provision such as a basisregistratie.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48841 'National provisions (landelijke voorzieningen) linking' (2026-07-23): Records links between applications and national government provisions.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-list-page",
+			"area": "connections",
+			"name": "Browse all connections in the catalogue in one list and open each one.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "partial",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48842 'Application-to-application connection registry (koppelingen)' (2026-07-23): Records interfaces/connections between registered applications.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-per-application",
+			"area": "connections",
+			"name": "See every connection an application has, from that application's own page.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "partial",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48842 'Application-to-application connection registry (koppelingen)' (2026-07-23): Records interfaces/connections between registered applications.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-diagram",
+			"area": "connections",
+			"name": "See the connections between applications drawn as a diagram.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "yes",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48869 'Architecture diagrams / free-draw' (2026-07-23): Auto-generated and manual architecture diagrams from the data model. | docs, intelligence competitor_features#27421 'Integration Architecture' (2026-04-12): Visualize data flows and integration patterns between applications",
+				"bluedolphin": "docs, intelligence competitor_features#48968 'Free-form diagramming' (2026-07-23): Freeform diagrams alongside formal models. | docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling.",
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#145369 'C-case-core-38 The graph of what a case is linked to is drawn, and exported.': glpi: Impact graph (Tools, front/impactitem.php, impactcsv.php, src/Impact.php) Lane findings: D-glpi-40. | Rated yes because impact graph, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-impact-analysis",
+			"area": "connections",
+			"name": "Before changing or retiring an application, see what depends on it.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "yes",
+			"glpi": "yes",
+			"topdesk": "partial",
+			"stackiq": "unknown",
+			"evidence": {
+				"bluedolphin": "docs, intelligence competitor_features#48967 'Multi-modal analysis (gaps / dependencies)' (2026-07-23): Analyses ArchiMate/BPMN/free-form models to surface gaps and weak dependencies.",
+				"glpi": "docs, intelligence competitor_features#48902 'CMDB & configuration relations' (2026-07-23): CI relationships and impact analysis.",
+				"topdesk": "docs, intelligence competitor_features#48926 'Asset Management / CMDB' (2026-07-23): Register assets, users, relations and replacement timelines in one overview. | Rated partial because relations between assets.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-usage-of-connection",
+			"area": "connections",
+			"name": "Record that your organisation actually runs a given connection, not only that it exists.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-shared-with-others",
+			"area": "connections",
+			"name": "See which connections you run together with other organisations.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-type-filter",
+			"area": "connections",
+			"name": "Filter connections by type, such as an API, a file exchange or a message.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-api-catalogue",
+			"area": "connections",
+			"name": "Keep the APIs an application exposes in the catalogue next to the application.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#27425 'API Management' (2026-04-12): Catalog and manage APIs across the application landscape",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-export-graph",
+			"area": "connections",
+			"name": "Export the graph of what an application is linked to, for use elsewhere.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#145369 'C-case-core-38 The graph of what a case is linked to is drawn, and exported.': glpi: Impact graph (Tools, front/impactitem.php, impactcsv.php, src/Impact.php) Lane findings: D-glpi-40. | Rated yes because impactcsv export, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "conn-integration-registry",
+			"area": "connections",
+			"name": "Add and check the organisation's outside integrations from one integrations overview.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-refcomp-mapping",
+			"area": "architecture",
+			"name": "Place an application on the GEMMA reference components it fulfils.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48835 'Reference component mapping (referentiecomponenten)' (2026-07-23): Maps each registered software product onto GEMMA reference components/domains so functionality is comparable across suppliers. | docs, intelligence competitor_features#27551 'Reference Component Linking' (2026-04-12): Link software to GEMMA reference components",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-gemma-views",
+			"area": "architecture",
+			"name": "Open a GEMMA architecture view with your own applications drawn inside it.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48836 'Municipal application landscape registration' (2026-07-23): Municipalities register which software packages they use; auto-plotted on the GEMMA reference component map. | Rated yes because landscape auto-plotted on the reference component map.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-shared-overlay",
+			"area": "architecture",
+			"name": "On a GEMMA view, see which applications you share with partner organisations, drawn differently from your own.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "partial",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48844 'Municipal cooperation / shared-service management' (2026-07-23): Manages gemeente-samenwerking (shared service centres) registering a joint landscape.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-import-amef",
+			"area": "architecture",
+			"name": "Import an ArchiMate model file in the Open Group exchange format.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "yes",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"bluedolphin": "docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling. | docs, intelligence competitor_features#27459 'ArchiMate & BPMN Support' (2026-04-12): Full ArchiMate and BPMN modeling in one platform | Rated yes because full ArchiMate support; import format not named in the reading.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-export-amef",
+			"area": "architecture",
+			"name": "Export the catalogue as an ArchiMate file that opens in Archi or another modelling tool.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "partial",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#27554 'ArchiMate Export' (2026-04-12): Export to ArchiMate format for use in architecture tools",
+				"bluedolphin": "docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-export-org",
+			"area": "architecture",
+			"name": "Export one organisation's landscape plotted on GEMMA as its own ArchiMate file.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#27550 'Application Landscape Mapping' (2026-04-12): Map and export municipality application landscape | docs, intelligence competitor_features#27554 'ArchiMate Export' (2026-04-12): Export to ArchiMate format for use in architecture tools | Rated yes because map and export the municipality's landscape.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-round-trip",
+			"area": "architecture",
+			"name": "Check that a model survives import and export without losing elements or relations.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-import-progress",
+			"area": "architecture",
+			"name": "Follow a long model import while it runs, and cancel it if needed.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-gemma-api",
+			"area": "architecture",
+			"name": "Retrieve the GEMMA architecture itself through an API.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-definitions",
+			"area": "architecture",
+			"name": "Read the definition of a GEMMA term in place while working in the catalogue.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-capability-map",
+			"area": "architecture",
+			"name": "Map applications to business capabilities or functions and see the map.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "yes",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48861 'Business capability modeling' (2026-07-23): Maps applications to a business capability map for portfolio rationalisation. | docs, intelligence competitor_features#27420 'Business Capability Mapping' (2026-04-12): Map applications to business capabilities and processes",
+				"bluedolphin": "docs, intelligence competitor_features#27460 'Application Portfolio Management' (2026-04-12): Map applications to business goals and functions",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-modelling",
+			"area": "architecture",
+			"name": "Draw and edit architecture models yourself inside the tool.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "yes",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48869 'Architecture diagrams / free-draw' (2026-07-23): Auto-generated and manual architecture diagrams from the data model.",
+				"bluedolphin": "docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling. | docs, intelligence competitor_features#48968 'Free-form diagramming' (2026-07-23): Freeform diagrams alongside formal models.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-process-mapping",
+			"area": "architecture",
+			"name": "Model business processes and link them to the applications that support them.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "yes",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"bluedolphin": "docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling. | docs, intelligence competitor_features#27464 'Process Mapping' (2026-04-12): Map processes, applications, data, and technology",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-scenarios",
+			"area": "architecture",
+			"name": "Model a future-state landscape and compare it with today's.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "partial",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#27419 'IT Transformation' (2026-04-12): Plan and execute cloud migrations and modernization | Rated partial because transformation planning.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-gap-analysis",
+			"area": "architecture",
+			"name": "Find reference components that no application in your landscape covers.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "yes",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"bluedolphin": "docs, intelligence competitor_features#48967 'Multi-modal analysis (gaps / dependencies)' (2026-07-23): Analyses ArchiMate/BPMN/free-form models to surface gaps and weak dependencies.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "arch-ai-diagram",
+			"area": "architecture",
+			"name": "Have a diagram drafted for you by an assistant from a description.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "yes",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"bluedolphin": "docs, intelligence competitor_features#48970 'AI-powered diagramming' (2026-07-23): AI assists diagram generation. | docs, intelligence competitor_features#27461 'AI-Powered Diagramming' (2026-04-12): Auto-generate BPMN diagrams with built-in AI",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-standards-register",
+			"area": "compliance",
+			"name": "Browse a register of the standards applications are expected to support.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48840 'Standards support declaration' (2026-07-23): Suppliers declare which standards (StUF, ZGW/Zaakgericht APIs, etc.) a product supports. | docs, intelligence competitor_features#27556 'Standards Mapping' (2026-04-12): Map software to Forum Standaardisatie standards",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-declare-standard",
+			"area": "compliance",
+			"name": "Declare that an application supports a specific version of a standard.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48840 'Standards support declaration' (2026-07-23): Suppliers declare which standards (StUF, ZGW/Zaakgericht APIs, etc.) a product supports.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-evidence",
+			"area": "compliance",
+			"name": "Attach a test report or other evidence to a compliance claim.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-verified-vs-claimed",
+			"area": "compliance",
+			"name": "Tell a verified compliance claim apart from one the supplier only asserts.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-matrix",
+			"area": "compliance",
+			"name": "See applications against chosen standards in one matrix, cell by cell.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-bulk-sync-standards",
+			"area": "compliance",
+			"name": "Bring the standards set of many applications up to date in one action.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-bio-measures",
+			"area": "compliance",
+			"name": "Browse the BIO information security measures with their theme and level.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-bio-assessment",
+			"area": "compliance",
+			"name": "Record which BIO measures an application meets and which it does not.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-dpia",
+			"area": "compliance",
+			"name": "Record whether a data protection impact assessment has been done for an application.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-forum-standaardisatie",
+			"area": "compliance",
+			"name": "Check an application against the Forum Standaardisatie comply-or-explain list.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#27556 'Standards Mapping' (2026-04-12): Map software to Forum Standaardisatie standards",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-health-scoring",
+			"area": "compliance",
+			"name": "Score the correctness and completeness of the register against a rule set.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "comp-audit-questionnaire",
+			"area": "compliance",
+			"name": "Send a compliance questionnaire to a supplier and keep the answers with the application.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "partial",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"bluedolphin": "docs, intelligence competitor_features#48974 'Questionnaires / data collection' (2026-07-23): Surveys to gather portfolio data from stakeholders. | Rated partial because questionnaires collect portfolio data.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-supplier-offering",
+			"area": "market",
+			"name": "As a supplier, publish the applications and services you offer to government.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48838 'Supplier product offering (aanbod) registration' (2026-07-23): ICT suppliers publish their product offering for the municipal market with global functionality descriptions. | docs, intelligence competitor_features#27555 'Vendor Registration' (2026-04-12): ICT providers register their software offerings",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-offer-accept",
+			"area": "market",
+			"name": "As a supplier, accept or decline a usage another organisation has claimed of your product.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-find-software",
+			"area": "market",
+			"name": "Find software for a task by filtering the whole market on reference component and standard.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#27553 'ICT Market Orientation' (2026-04-12): Find and compare software from registered ICT providers",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-supplier-directory",
+			"area": "market",
+			"name": "Browse all organisations that offer applications or services, with search and filters.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-compare-peers",
+			"area": "market",
+			"name": "See which software comparable organisations use for the same reference component.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48837 'Cross-municipality software comparison' (2026-07-23): Municipalities compare used software and connections with peer gemeenten; core network-effect value. | docs, intelligence competitor_features#27552 'Municipality Comparison' (2026-04-12): Compare application landscapes between municipalities",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-who-uses-it",
+			"area": "market",
+			"name": "See which organisations use a given application.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48837 'Cross-municipality software comparison' (2026-07-23): Municipalities compare used software and connections with peer gemeenten; core network-effect value.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-contact-peers",
+			"area": "market",
+			"name": "Get in touch with other organisations that use the same product.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#27557 'Contact & Collaboration' (2026-04-12): Connect with municipalities using similar products",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-supplier-roadmap",
+			"area": "market",
+			"name": "Read a supplier's declared roadmap and planned releases for a product.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48839 'Product roadmap / planning declaration' (2026-07-23): Suppliers declare product planning and release roadmap per product.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-reviews",
+			"area": "market",
+			"name": "Write a review with a rating of an application you use.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-review-moderation",
+			"area": "market",
+			"name": "Hold a submitted review for moderation before others can read it.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-rating-aggregate",
+			"area": "market",
+			"name": "See the average rating and number of reviews of an application.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-contacts-per-product",
+			"area": "market",
+			"name": "Name different contact persons per product a supplier offers.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-vendor-master-data",
+			"area": "market",
+			"name": "Keep one record per supplier that every product and contract points to.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48860 'Fact Sheet data model (Application / IT Component / Provider)' (2026-07-23): Structured fact sheets are the core inventory unit for applications, components and providers. | Rated yes because Provider fact sheet.",
+				"topdesk": "docs, intelligence competitor_features#48932 'Contract & vendor management' (2026-07-23): Track supplier contracts and operational agreements.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-hide-landscape-from-vendors",
+			"area": "market",
+			"name": "Keep your application landscape and connections hidden from suppliers.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "mkt-free-public-service",
+			"area": "market",
+			"name": "Use the catalogue free of charge as a municipality or supplier.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "no",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48845 'Public open-access catalog' (2026-07-23): Catalog is publicly browsable; free to use for municipalities and suppliers.",
+				"sap-leanix": "docs, intelligence competitor_features#48871 'Cloud-only SaaS, per-application tiered pricing' (2026-07-23): GAP: no self-host; priced per application tier (400/600/1000 apps), considered expensive.",
+				"glpi": "docs, intelligence competitor_features#48912 '100% open source (GPL)' (2026-07-23): Fully GPL; no license fees, broad device coverage.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-phase",
+			"area": "lifecycle",
+			"name": "See which lifecycle phase each application in use is in, such as planned, in use or being phased out.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "no",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "partial",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48846 'No lifecycle / contract / vulnerability tracking' (2026-07-23): GAP: registry only -- no EOL, contract, vulnerability or CMDB asset lifecycle management.",
+				"sap-leanix": "docs, intelligence competitor_features#48863 'Technology risk & obsolescence (EOL/lifecycle)' (2026-07-23): Tracks technology lifecycle, end-of-life and obsolescence risk. | docs, intelligence competitor_features#48862 'Application Portfolio Management' (2026-07-23): Rationalise, assess and plan the application portfolio (TIME/6R).",
+				"topdesk": "docs, intelligence competitor_features#48926 'Asset Management / CMDB' (2026-07-23): Register assets, users, relations and replacement timelines in one overview. | Rated partial because replacement timelines on assets.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-eol-warning",
+			"area": "lifecycle",
+			"name": "Get a warning before an application or version falls out of support.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "no",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48846 'No lifecycle / contract / vulnerability tracking' (2026-07-23): GAP: registry only -- no EOL, contract, vulnerability or CMDB asset lifecycle management.",
+				"sap-leanix": "docs, intelligence competitor_features#48863 'Technology risk & obsolescence (EOL/lifecycle)' (2026-07-23): Tracks technology lifecycle, end-of-life and obsolescence risk. | docs, intelligence competitor_features#27418 'Technology Risk Management' (2026-04-12): Track technology obsolescence and end-of-life risks",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-eol-feed",
+			"area": "lifecycle",
+			"name": "Fill in end-of-support dates automatically from a public end-of-life feed.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "partial",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48863 'Technology risk & obsolescence (EOL/lifecycle)' (2026-07-23): Tracks technology lifecycle, end-of-life and obsolescence risk. | Rated partial because obsolescence tracking; source of dates not named.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-roadmap",
+			"area": "lifecycle",
+			"name": "See per organisation which applications are replaced when, on a roadmap.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "no",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48846 'No lifecycle / contract / vulnerability tracking' (2026-07-23): GAP: registry only -- no EOL, contract, vulnerability or CMDB asset lifecycle management.",
+				"sap-leanix": "docs, intelligence competitor_features#48862 'Application Portfolio Management' (2026-07-23): Rationalise, assess and plan the application portfolio (TIME/6R).",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-planned-replacement",
+			"area": "lifecycle",
+			"name": "Record which application is planned to replace another.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-time-classification",
+			"area": "lifecycle",
+			"name": "Classify each application as tolerate, invest, migrate or eliminate.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48862 'Application Portfolio Management' (2026-07-23): Rationalise, assess and plan the application portfolio (TIME/6R).",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-overlap",
+			"area": "lifecycle",
+			"name": "Find applications that overlap because they fulfil the same reference component.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "partial",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48861 'Business capability modeling' (2026-07-23): Maps applications to a business capability map for portfolio rationalisation. | Rated partial because rationalisation through capability map.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-rationalisation-report",
+			"area": "lifecycle",
+			"name": "Open a report of overlapping and ageing software for rationalisation.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48862 'Application Portfolio Management' (2026-07-23): Rationalise, assess and plan the application portfolio (TIME/6R). | docs, intelligence competitor_features#48868 'CXO dashboards & reporting' (2026-07-23): Executive dashboards and role-based reports.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-version-in-use",
+			"area": "lifecycle",
+			"name": "Record which version of an application your organisation currently runs.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-new-version-notice",
+			"area": "lifecycle",
+			"name": "Get notified when a supplier publishes a new version of an application you use.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-tech-obsolescence",
+			"area": "lifecycle",
+			"name": "Track the lifecycle of the underlying technology, such as a database or framework, not only the application.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48863 'Technology risk & obsolescence (EOL/lifecycle)' (2026-07-23): Tracks technology lifecycle, end-of-life and obsolescence risk. | docs, intelligence competitor_features#27418 'Technology Risk Management' (2026-04-12): Track technology obsolescence and end-of-life risks",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-strategy-link",
+			"area": "lifecycle",
+			"name": "Link applications to the strategic goals they serve.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "yes",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"bluedolphin": "docs, intelligence competitor_features#27466 'Strategy Alignment' (2026-04-12): Connect architecture to strategic objectives",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "life-maintenance-window",
+			"area": "lifecycle",
+			"name": "Follow planned maintenance announced for an application.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-register",
+			"area": "contracts",
+			"name": "Register a contract for a service with its number, type, term and cost.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "no",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48846 'No lifecycle / contract / vulnerability tracking' (2026-07-23): GAP: registry only -- no EOL, contract, vulnerability or CMDB asset lifecycle management.",
+				"glpi": "docs, intelligence competitor_features#48905 'Financial & contract management' (2026-07-23): Purchase, contract, warranty and budget tracking against assets. | source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#145509 'C-parties-and-contacts-1 A contract is a record with its own term and costs, linked to the party it binds and the cases raised under it': glpi: Contracts (Management, Contracts, front/contract_item.php, contractcost.php, ticket_contract.php) Lane findings: D-glpi-49.",
+				"topdesk": "docs, intelligence competitor_features#48932 'Contract & vendor management' (2026-07-23): Track supplier contracts and operational agreements.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-expiry-alert",
+			"area": "contracts",
+			"name": "Get warned before a contract expires.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "no",
+			"sap-leanix": "partial",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48846 'No lifecycle / contract / vulnerability tracking' (2026-07-23): GAP: registry only -- no EOL, contract, vulnerability or CMDB asset lifecycle management.",
+				"sap-leanix": "docs, intelligence competitor_features#27427 'SaaS Management' (2026-04-12): Track SaaS usage, costs, and renewal dates | Rated partial because SaaS renewal dates.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-status",
+			"area": "contracts",
+			"name": "See each contract's status move from active to expiring to expired on its own.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-approval",
+			"area": "contracts",
+			"name": "Only let a contract become active after an approval decision is recorded.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-renewal",
+			"area": "contracts",
+			"name": "Raise a renewal of a contract as a decision and see its outcome on the contract.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-per-application",
+			"area": "contracts",
+			"name": "See the contracts behind an application from that application's page.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48905 'Financial & contract management' (2026-07-23): Purchase, contract, warranty and budget tracking against assets. | Rated yes because contracts tracked against assets.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-yearly-cost",
+			"area": "contracts",
+			"name": "See what the portfolio costs per year across its contracts.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "partial",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#27427 'SaaS Management' (2026-04-12): Track SaaS usage, costs, and renewal dates | Rated partial because SaaS cost.",
+				"glpi": "docs, intelligence competitor_features#3271 'Financial Management' (2026-03-28): TCO tracking with procurement and contracts | docs, intelligence competitor_features#48905 'Financial & contract management' (2026-07-23): Purchase, contract, warranty and budget tracking against assets.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-licence-model",
+			"area": "contracts",
+			"name": "Record the licence model of an application, such as open source, per user or per organisation.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48901 'License management' (2026-07-23): Track license entitlements, compliance and expirations.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-licence-posture",
+			"area": "contracts",
+			"name": "See the licence posture of the whole portfolio, such as the share that is open source.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-seat-count",
+			"area": "contracts",
+			"name": "Track the number of licences bought against the number in use.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48901 'License management' (2026-07-23): Track license entitlements, compliance and expirations. | docs, intelligence competitor_features#3270 'License Management' (2026-03-28): Track software licenses, compliance, and expiration",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-effective-licence-position",
+			"area": "contracts",
+			"name": "Compute entitlement against measured consumption to defend a licence audit.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-budget",
+			"area": "contracts",
+			"name": "Charge software costs against a budget with a period.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#145790 'C-reporting-1 A budget the case costs are charged against, with a period.': glpi: Budgets (Management, Budgets, front/budget.php) Lane findings: D-glpi-37. | Rated yes because budgets, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-depreciation",
+			"area": "contracts",
+			"name": "Depreciate the purchase cost of software over its useful life.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "partial",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#3271 'Financial Management' (2026-03-28): TCO tracking with procurement and contracts | Rated partial because TCO tracking.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-documents",
+			"area": "contracts",
+			"name": "Keep the signed contract document with the contract record.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ctr-saas-spend",
+			"area": "contracts",
+			"name": "See SaaS subscriptions and their spend, including ones bought outside IT.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48864 'SaaS Management & discovery' (2026-07-23): Discovers SaaS usage and shadow IT, integrates with the fact sheet model. | docs, intelligence competitor_features#27427 'SaaS Management' (2026-04-12): Track SaaS usage, costs, and renewal dates",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "sec-vulnerability-register",
+			"area": "security",
+			"name": "Register a known vulnerability with its CVE code and severity score.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "no",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48846 'No lifecycle / contract / vulnerability tracking' (2026-07-23): GAP: registry only -- no EOL, contract, vulnerability or CMDB asset lifecycle management.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "sec-affected-versions",
+			"area": "security",
+			"name": "Link a vulnerability to the module versions it affects.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "sec-exposure",
+			"area": "security",
+			"name": "See which organisations and usages are exposed to a vulnerability.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "sec-vulnerability-alert",
+			"area": "security",
+			"name": "Get an alert when a vulnerability is reported for software you use.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "sec-sbom-import",
+			"area": "security",
+			"name": "Import a software bill of materials in CycloneDX or SPDX for a version.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "sec-cve-feed",
+			"area": "security",
+			"name": "Match the catalogue automatically against a public CVE feed.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "sec-risk-score",
+			"area": "security",
+			"name": "Give each application a risk score from its vulnerabilities and support status.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "partial",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#27418 'Technology Risk Management' (2026-04-12): Track technology obsolescence and end-of-life risks | Rated partial because technology risk.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "sec-patch-status",
+			"area": "security",
+			"name": "See whether the version you run has been patched against a given vulnerability.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "sec-vulnerability-page",
+			"area": "security",
+			"name": "Browse all vulnerabilities in one list and open the details of each.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-register",
+			"area": "organisations",
+			"name": "Register an organisation, such as a municipality, supplier or cooperation, with its type.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#27555 'Vendor Registration' (2026-04-12): ICT providers register their software offerings | docs, intelligence competitor_features#48836 'Municipal application landscape registration' (2026-07-23): Municipalities register which software packages they use; auto-plotted on the GEMMA reference component map.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-self-registration",
+			"area": "organisations",
+			"name": "Let a new organisation sign itself up without an account.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-moderation",
+			"area": "organisations",
+			"name": "Review a self-registered organisation in a queue before it becomes active.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-status",
+			"area": "organisations",
+			"name": "Move an organisation between concept, active and inactive.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-contact-persons",
+			"area": "organisations",
+			"name": "Keep the contact persons of an organisation with their roles.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "partial",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#27557 'Contact & Collaboration' (2026-04-12): Connect with municipalities using similar products",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-contact-to-account",
+			"area": "organisations",
+			"name": "Turn a contact person into a user account with the right role automatically.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-invite-colleagues",
+			"area": "organisations",
+			"name": "Give a colleague access to your organisation's part of the catalogue.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-multi-membership",
+			"area": "organisations",
+			"name": "Act for more than one organisation with one account and switch between them.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-cooperation",
+			"area": "organisations",
+			"name": "Register a cooperation of organisations and the landscape they share.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48844 'Municipal cooperation / shared-service management' (2026-07-23): Manages gemeente-samenwerking (shared service centres) registering a joint landscape.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-merge",
+			"area": "organisations",
+			"name": "Merge two organisations after a municipal reorganisation or takeover, keeping their relations.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-merge-dry-run",
+			"area": "organisations",
+			"name": "See what a merge of organisations would change before it is carried out.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "partial",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#146004 'C-configuration-95 The product shows what an import or a migration will change before it writes.': glpi: Form export and import (Form/ExportController.php, Form/Import/Step1IndexController.php through Step4ExecuteController.php) Lane findings: D-glpi-11. | Rated partial because import previews before writing; not for merges, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-roles",
+			"area": "organisations",
+			"name": "Map catalogue roles such as administrator, buyer and civil servant onto user groups.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141837 '11.19 User, role and department administration in the app': `/front/user.form.php`, `/front/profile.form.php` (`src/Profile.php`, `src/ProfileRight.php:46`), `/front/group.form.php`, and the three-way user x profile x entity grant `src/Profile_User.php:320` with a recursive flag  | Rated yes because user, profile and entity administration, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-data-segregation",
+			"area": "organisations",
+			"name": "Keep each organisation's records visible only to that organisation unless published.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48910 'Multi-entity (tenant) segregation' (2026-07-23): Hierarchical entities for multi-org / multi-department isolation.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-hierarchy",
+			"area": "organisations",
+			"name": "Make the first user of an organisation its administrator and manager of later users.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-sso",
+			"area": "organisations",
+			"name": "Sign in with the organisation's own identity provider.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48908 'LDAP / SSO' (2026-07-23): Directory authentication and SSO.",
+				"topdesk": "docs, intelligence competitor_features#48935 'SSO integration' (2026-07-23): SAML / SSO authentication.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-directory-sync",
+			"area": "organisations",
+			"name": "Keep users and groups in step with a directory such as LDAP.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48908 'LDAP / SSO' (2026-07-23): Directory authentication and SSO. | source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141776 '5.11 Contact import and change subscriptions from registries': LDAP import and periodic re-sync of users and groups (`src/AuthLDAP.php`, `/front/ldap.import.php`, `/front/ldap.group.import.php`) with `src/RuleRight.php` mapping directory attributes to profiles; nothing subscribes to",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-password-change",
+			"area": "organisations",
+			"name": "Change your own password and see your own account details.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "org-activation-mail",
+			"area": "organisations",
+			"name": "Send registration, activation and account mails from templates an administrator can edit.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141830 '11.12 E-mail template library': `src/NotificationTemplate.php` with per-language bodies (`src/NotificationTemplateTranslation.php`), bound to events and delivery modes by `src/Notification_NotificationTemplate.php`, at `/front/notificationtemplate.php` | Rated yes because notification templates, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-public-browse",
+			"area": "sharing",
+			"name": "Let anyone browse the published catalogue without signing in.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48845 'Public open-access catalog' (2026-07-23): Catalog is publicly browsable; free to use for municipalities and suppliers.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-publish",
+			"area": "sharing",
+			"name": "Publish or withdraw a single catalogue entry as open data.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-open-data-privacy",
+			"area": "sharing",
+			"name": "Publish usage as open data without exposing personal contact details.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-federation-announce",
+			"area": "sharing",
+			"name": "Announce your catalogue in a shared directory so other catalogues can find it.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-federation-pull",
+			"area": "sharing",
+			"name": "Pull published entries from peer catalogues, marked with where they came from.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-federation-peers",
+			"area": "sharing",
+			"name": "Add or remove the peer catalogues you exchange with.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-rest-api",
+			"area": "sharing",
+			"name": "Read and write catalogue data through a REST API.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "yes",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48867 'REST & GraphQL API' (2026-07-23): Programmatic access to the workspace graph.",
+				"bluedolphin": "docs, intelligence competitor_features#48972 'REST API' (2026-07-23): Programmatic integration with other systems.",
+				"glpi": "docs, intelligence competitor_features#48907 'REST API (HLAPI 2.x)' (2026-07-23): High-level REST API expanding object coverage in GLPI 11.",
+				"topdesk": "docs, intelligence competitor_features#48933 'REST API' (2026-07-23): Open REST API for integrations.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-public-api",
+			"area": "sharing",
+			"name": "Give developers a secure public API over the supplier offering.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "no",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141847 '12.19 Public data API with certificates or API keys': the API is fully authenticated, never public: user tokens plus optional app tokens with IP allow-listing (`apirest.md:62-67`, `src/APIClient.php:42`) and OAuth2 with scopes (`src/Glpi/OAuth/`). No anonymous public datase | Rated no because API is always authenticated, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-api-docs",
+			"area": "sharing",
+			"name": "Read generated documentation of the catalogue API.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141846 '12.18 OpenAPI documentation': auto-generated from route attributes: `src/Glpi/Api/HL/OpenAPIGenerator.php` with `src/Glpi/Api/HL/Doc/`, versioned per route (`#[RouteVersion]`, router at `src/Glpi/Api/HL/Router.php:98`); the legacy API is documented i | Rated yes because OpenAPI generator, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-export",
+			"area": "sharing",
+			"name": "Export your own catalogue data for use elsewhere.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "yes",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#27550 'Application Landscape Mapping' (2026-04-12): Map and export municipality application landscape",
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141818 '10.3 Export list results to CSV or XLSX': `src/Glpi/Search/Output/Csv.php`, `Xlsx.php`, `Ods.php` and `Pdf.php`, mapped at `src/Glpi/Search/SearchEngine.php:108-130` | Rated yes because CSV, XLSX, ODS, PDF export, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-portal",
+			"area": "sharing",
+			"name": "Show catalogue content on a shared external portal next to other apps' content.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-ai-assistant",
+			"area": "sharing",
+			"name": "Let an AI assistant query and update the catalogue through a tool interface.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-itsm-integration",
+			"area": "sharing",
+			"name": "Exchange application data with the organisation's service management tool.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "yes",
+			"glpi": "unknown",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48866 'Out-of-the-box integrations (ServiceNow, Signavio, SAP)' (2026-07-23): Pre-built connectors sync CMDB, process and ERP data.",
+				"bluedolphin": "docs, intelligence competitor_features#48973 'TOPdesk integration' (2026-07-23): Connector to TOPdesk asset/service data. | docs, intelligence competitor_features#27465 'TOPdesk Integration' (2026-04-12): Available on TOPdesk Marketplace for IT landscape insights",
+				"topdesk": "docs, intelligence competitor_features#48934 'Marketplace integrations (Lansweeper, ValueBlue)' (2026-07-23): Pre-built connectors incl. Lansweeper discovery and ValueBlue EA. | docs, intelligence competitor_features#27391 'Marketplace Integrations' (2026-04-12): TOPdesk Marketplace with third-party integrations including Lansweeper, BlueDolphin",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-webhooks",
+			"area": "sharing",
+			"name": "Notify another system automatically when a catalogue entry changes.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "share-self-hosted",
+			"area": "sharing",
+			"name": "Run the catalogue on your own infrastructure instead of the vendor's cloud.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "no",
+			"bluedolphin": "no",
+			"glpi": "yes",
+			"topdesk": "partial",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48871 'Cloud-only SaaS, per-application tiered pricing' (2026-07-23): GAP: no self-host; priced per application tier (400/600/1000 apps), considered expensive.",
+				"bluedolphin": "docs, intelligence competitor_features#27467 'SaaS Platform' (2026-04-12): Cloud-native SaaS, no installation required",
+				"glpi": "docs, intelligence competitor_features#48912 '100% open source (GPL)' (2026-07-23): Fully GPL; no license fees, broad device coverage.",
+				"topdesk": "docs, intelligence competitor_features#26346 'SaaS Platform' (2026-04-10): Cloud-hosted SaaS platform with automatic updates | Rated partial because offered as SaaS; on-premises not in the reading.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-faceted-search",
+			"area": "insight",
+			"name": "Search the catalogue and narrow the results with facets such as reference component and supplier.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "partial",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#27553 'ICT Market Orientation' (2026-04-12): Find and compare software from registered ICT providers",
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141806 '9.2 Advanced search with per-case-type fields': the search engine is strong, with ~160 ticket search options (`src/Ticket.php:2670`), nested criteria groups, `AND`/`OR`/`AND NOT`/`OR NOT` (`src/Glpi/Search/SearchEngine.php:551-564`), cross-itemtype meta-criteria, but  | Rated yes because search engine with nested criteria, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-saved-view",
+			"area": "insight",
+			"name": "Save a filtered view of the catalogue and open it again later.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141807 '9.3 Personal saved searches': `src/SavedSearch.php:52`, `is_private` default 1, personal ordering (`:824`) and a default per itemtype (`src/SavedSearch_User.php:94-115`), at `/front/savedsearch.php` | Rated yes because saved searches, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-dashboard",
+			"area": "insight",
+			"name": "Open a dashboard with counts of organisations, applications and contracts.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48868 'CXO dashboards & reporting' (2026-07-23): Executive dashboards and role-based reports. | docs, intelligence competitor_features#27424 'Dashboards & Reports' (2026-04-12): Real-time dashboards for CIO-level reporting",
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141816 '10.1 Configurable KPI dashboards (count, gauge, chart)': `src/Glpi/Dashboard/Grid.php:67` with 20 widget types: pie, donut, half pie/donut, bars, lines, areas, stacked and horizontal variants, big number, multiple numbers, summary numbers, markdown, search result, article list",
+				"topdesk": "docs, intelligence competitor_features#48936 'Reporting & dashboards' (2026-07-23): Operational reporting and dashboards.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-concept-orgs-widget",
+			"area": "insight",
+			"name": "See organisations still waiting in concept on the Nextcloud dashboard.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-reports-page",
+			"area": "insight",
+			"name": "Pick a ready-made report from a list and open it.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#145791 'C-reporting-2 A canned report the product ships, run without building it.': glpi: Reports (Tools, Reports, front/report.default.php, report.dynamic.php, report.year.php, report.state.php, report.reservation.php, report.contract.php) Lane findings: D-glpi-35. | Rated yes because canned reports, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-custom-report",
+			"area": "insight",
+			"name": "Build your own report over the whole portfolio and export it.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48868 'CXO dashboards & reporting' (2026-07-23): Executive dashboards and role-based reports.",
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141816 '10.1 Configurable KPI dashboards (count, gauge, chart)': `src/Glpi/Dashboard/Grid.php:67` with 20 widget types: pie, donut, half pie/donut, bars, lines, areas, stacked and horizontal variants, big number, multiple numbers, summary numbers, markdown, search result, article list",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-export-list",
+			"area": "insight",
+			"name": "Export a filtered list to a spreadsheet.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141818 '10.3 Export list results to CSV or XLSX': `src/Glpi/Search/Output/Csv.php`, `Xlsx.php`, `Ods.php` and `Pdf.php`, mapped at `src/Glpi/Search/SearchEngine.php:108-130` | Rated yes because source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-scheduled-report",
+			"area": "insight",
+			"name": "Have a report sent to named people on a schedule.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-audit-trail",
+			"area": "insight",
+			"name": "Look back at who changed what in the catalogue, and when.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141820 '10.5 Audit or event log viewer with filters and export': two logs, both searchable and exportable through the search engine: `src/Log.php:48` field-level object history (Historical tab, `src/Ticket.php:887`) and `src/Glpi/Event.php:63` the system/event log at `/front/logs.php` | source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141852 '13.9 Audit trail including reads and views': writes are covered thoroughly: `src/Log.php:48` field-level history on every object, `src/Glpi/Event.php:63` the system log including logins (`src/Auth.php:1149-1163`), `src/RuleMatchedLog.php` for rule decisions. Reads  | Rated yes because field-level history, source-read 2026-09-14.",
+				"topdesk": "docs, intelligence competitor_features#26345 'Audit Trail' (2026-04-10): Complete audit trail of all service management actions",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-live-updates",
+			"area": "insight",
+			"name": "See a list update by itself when someone else changes an entry.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "partial",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"bluedolphin": "docs, intelligence competitor_features#48969 'Real-time collaboration' (2026-07-23): Multiple stakeholders collaborate on models. | Rated partial because real-time collaboration on models.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-notifications",
+			"area": "insight",
+			"name": "Receive in-app notifications about changes that concern you.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "partial",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141783 '6.8 In-app notifications (bell)': `MODE_AJAX` is a wired delivery mode (`src/Notification_NotificationTemplate.php:55-59`, `getModes()` at `:381-398`, implementation `src/NotificationAjax.php`), rendering as a browser toast rather than a persistent inbox | Rated partial because toast delivery, not an inbox, source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-cost-report",
+			"area": "insight",
+			"name": "See a report of software cost per organisation or per domain.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "partial",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#3271 'Financial Management' (2026-03-28): TCO tracking with procurement and contracts",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-feature-roadmap",
+			"area": "insight",
+			"name": "See in the app which features are available, in beta or coming soon.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-progress",
+			"area": "insight",
+			"name": "Follow the progress of a long synchronisation or import.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#145875 'C-configuration-20 A long running administrative operation reports its progress.': glpi: Progress on a long operation (src/Glpi/Controller/ProgressController.php, Traits/AsyncOperationProgressControllerTrait.php) Lane findings: D-glpi-29. | Rated yes because source-read 2026-09-14.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ins-kb",
+			"area": "insight",
+			"name": "Keep knowledge articles about applications in a searchable knowledge base.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48909 'Knowledge base' (2026-07-23): Built-in KB with FAQ publishing.",
+				"topdesk": "docs, intelligence competitor_features#48931 'Knowledge base' (2026-07-23): Knowledge management and published articles.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-agent-inventory",
+			"area": "operations",
+			"name": "Discover the software installed on workstations and servers automatically with an agent.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48899 'Native inventory (GLPI Agent)' (2026-07-23): Built-in agent (ex-FusionInventory) discovers hardware/software automatically. | docs, intelligence competitor_features#3269 'Inventory' (2026-03-28): Automatic inventory discovery with FusionInventory agent",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-network-discovery",
+			"area": "operations",
+			"name": "Discover devices on the network automatically.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48911 'Network / SNMP discovery' (2026-07-23): SNMP network equipment inventory.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-saas-discovery",
+			"area": "operations",
+			"name": "Discover SaaS applications in use that nobody registered.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "yes",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"sap-leanix": "docs, intelligence competitor_features#48864 'SaaS Management & discovery' (2026-07-23): Discovers SaaS usage and shadow IT, integrates with the fact sheet model.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-hardware-assets",
+			"area": "operations",
+			"name": "Register hardware such as laptops and servers alongside software.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#3266 'IT Asset Management' (2026-03-28): Track hardware, software, and network assets",
+				"topdesk": "docs, intelligence competitor_features#27388 'Asset Management' (2026-04-12): Track hardware and software assets, locations, and assignments",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-ci-relations",
+			"area": "operations",
+			"name": "Record configuration items and their relations in a CMDB.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "no",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"vng-softwarecatalogus": "docs, intelligence competitor_features#48846 'No lifecycle / contract / vulnerability tracking' (2026-07-23): GAP: registry only -- no EOL, contract, vulnerability or CMDB asset lifecycle management.",
+				"glpi": "docs, intelligence competitor_features#48902 'CMDB & configuration relations' (2026-07-23): CI relationships and impact analysis.",
+				"topdesk": "docs, intelligence competitor_features#48926 'Asset Management / CMDB' (2026-07-23): Register assets, users, relations and replacement timelines in one overview. | docs, intelligence competitor_features#27387 'CMDB / Configuration Management' (2026-04-12): Configuration database for registering IT objects like laptops, software, infrastructure",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-reconciliation",
+			"area": "operations",
+			"name": "Deduplicate and reconcile records that arrive from several sources.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-tickets",
+			"area": "operations",
+			"name": "Log incidents and requests against an application.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48903 'ITIL helpdesk / ticketing' (2026-07-23): Full incident/request ticketing with the assets module.",
+				"topdesk": "docs, intelligence competitor_features#48927 'Incident / ticket management' (2026-07-23): Core ITSM incident and request handling.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-change",
+			"area": "operations",
+			"name": "Run a change on an application through an approval workflow.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#3277 'Change Management' (2026-03-28): ITIL change management with approval workflows",
+				"topdesk": "docs, intelligence competitor_features#48929 'Change management' (2026-07-23): Structured change workflows with action sequences.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-sla",
+			"area": "operations",
+			"name": "Track service level targets for an application or supplier.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48904 'SLA management' (2026-07-23): SLA targets and escalation rules.",
+				"topdesk": "docs, intelligence competitor_features#48930 'SLA management' (2026-07-23): Service-level target tracking and reporting.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-self-service",
+			"area": "operations",
+			"name": "Let end users request software through a self-service portal.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"topdesk": "docs, intelligence competitor_features#48928 'Self-service portal' (2026-07-23): End-user portal for requests and knowledge, reduces direct support load.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-plugins",
+			"area": "operations",
+			"name": "Extend the product with plugins installed from a marketplace.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "yes",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"glpi": "docs, intelligence competitor_features#48906 'Plugin ecosystem' (2026-07-23): Large plugin marketplace (FormCreator, GenericObject, etc.). | source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#145919 'C-configuration-48 An extension is found, installed, updated and removed from inside the product.': glpi: Marketplace (Setup, Plugins, front/marketplace.php, marketplace.download.php, front/plugin.php) Lane findings: D-glpi-45.",
+				"topdesk": "docs, intelligence competitor_features#27391 'Marketplace Integrations' (2026-04-12): TOPdesk Marketplace with third-party integrations including Lansweeper, BlueDolphin",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-mobile",
+			"area": "operations",
+			"name": "Use the product from a native mobile app.",
+			"origin": "competitor",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "yes",
+			"stackiq": "unknown",
+			"evidence": {
+				"topdesk": "docs, intelligence competitor_features#48937 'Mobile app' (2026-07-23): Native mobile operator app.",
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		},
+		{
+			"id": "ops-scheduled-sync",
+			"area": "operations",
+			"name": "Run the organisation and contact synchronisation on a schedule and see when it last ran.",
+			"origin": "own-code",
+			"vng-softwarecatalogus": "unknown",
+			"sap-leanix": "unknown",
+			"bluedolphin": "unknown",
+			"glpi": "unknown",
+			"topdesk": "unknown",
+			"stackiq": "unknown",
+			"evidence": {
+				"stackiq": "not checked: the code reading for this row is under way"
+			}
+		}
+	],
+	"pending": []
+}
