@@ -27,6 +27,7 @@ namespace OCA\Stackiq\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
@@ -84,8 +85,11 @@ class SettingsController extends Controller {
 	 * @param ProgressTracker $progressTracker The progress tracking service.
 	 * @param EolSyncService $eolSyncService The EOL feed sync orchestration service.
 	 * @param LoggerInterface $logger The logger instance.
+	 * @param ConnectionReportService|null $connectionReports Asks integriq to look again after an email settings save.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function __construct(
 		$appName,
@@ -101,6 +105,7 @@ class SettingsController extends Controller {
 		private readonly ProgressTracker $progressTracker,
 		private readonly EolSyncService $eolSyncService,
 		private readonly LoggerInterface $logger,
+		private readonly ?ConnectionReportService $connectionReports = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -431,9 +436,14 @@ class SettingsController extends Controller {
 	 * @param array<string,mixed> $data The raw request params.
 	 * @param array<string,mixed> $result The result accumulator (passed by reference).
 	 *
+	 * After the write it asks integriq to resolve the email connection again
+	 * (adopt-connection-registry). That never throws, does nothing without
+	 * integriq, and never changes the response.
+	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-3
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	private function applyEmailSettingsUpdate(array $data, array &$result): void {
 		if (isset($data['emailSettings']) === false) {
@@ -441,6 +451,7 @@ class SettingsController extends Controller {
 		}
 
 		$result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
+		$this->connectionReports?->emailSettingsSaved();
 
 	}//end applyEmailSettingsUpdate()
 
@@ -2025,6 +2036,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 * @spec   openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function updateEmailSettings(): JSONResponse {
 		$currentUser = $this->userSession->getUser();
@@ -2041,6 +2053,7 @@ class SettingsController extends Controller {
 			$emailSettings = $data['emailSettings'] ?? $data;
 
 			$updatedSettings = $this->settingsService->updateEmailSettings($emailSettings);
+			$this->connectionReports?->emailSettingsSaved();
 
 			return new JSONResponse(
 				[

@@ -12,6 +12,7 @@
 
 <template>
 	<AlwaysVisibleSection
+		id="section-federation"
 		:name="t('stackiq', 'Catalog federation')"
 		:description="
 			t(

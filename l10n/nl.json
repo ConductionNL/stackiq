@@ -776,6 +776,19 @@
         "xmlns": "xmlns",
         "xsi": "xsi",
         "Pre-filled with the names the Integriq endoflife-date-source change provisions. Change them if your instance uses different names, no code change required.": "Vooraf ingevuld met de namen die de Integriq-wijziging endoflife-date-source aanmaakt. Wijzig ze als uw omgeving andere namen gebruikt, geen codewijziging nodig.",
-        "the configured register or schema could not be found. Is the Integriq endoflife-date-source change installed?": "het geconfigureerde register of schema kon niet worden gevonden. Is de Integriq-wijziging endoflife-date-source geïnstalleerd?"
+        "the configured register or schema could not be found. Is the Integriq endoflife-date-source change installed?": "het geconfigureerde register of schema kon niet worden gevonden. Is de Integriq-wijziging endoflife-date-source geïnstalleerd?",
+        "Integrations": "Koppelingen",
+        "Status message": "Statusbericht",
+        "Last checked": "Laatst gecontroleerd",
+        "All connections": "Alle verbindingen",
+        "Add integration": "Integratie toevoegen",
+        "Open settings": "Instellingen openen",
+        "Configured": "Ingericht",
+        "Limited": "Beperkt",
+        "Not configured": "Niet geconfigureerd",
+        "Simulated": "Gesimuleerd",
+        "Not available": "Niet beschikbaar",
+        "Error": "Fout",
+        "Settings": "Instellingen"
     }
 }

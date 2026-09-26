@@ -1,0 +1,46 @@
+{
+    "app": "stackiq",
+    "connections": [
+        {
+            "key": "email",
+            "title": "Email",
+            "description": "Sends registration, activation and account mails to organisations and their users.",
+            "order": 10,
+            "settingsUrl": "/settings/admin/stackiq#section-email",
+            "adapter": {
+                "configKey": "email_transport_type",
+                "simulatedValues": ["null"],
+                "simulatedMessage": "The null transport is selected, so no mail leaves stackiq. Pick a real transport in the Email configuration section."
+            },
+            "unconfiguredMessage": "Not checked yet. Save the Email configuration section, and stackiq checks the settings."
+        },
+        {
+            "key": "federation",
+            "title": "Catalog federation",
+            "description": "Announces this catalog to directory.opencatalogi.nl and pulls published entries from peer catalogs, through OpenCatalogi.",
+            "order": 20,
+            "settingsUrl": "/settings/admin/stackiq#section-federation",
+            "reportedOnly": true,
+            "switch": {
+                "configKey": "federation_enabled"
+            },
+            "disabledMessage": "Federation is switched off. Set the federation_enabled app setting to true with occ to switch it on.",
+            "unconfiguredMessage": "Not checked yet. Choose Pull now in the Catalog federation section to check the peers."
+        },
+        {
+            "key": "eol-feed",
+            "title": "End-of-life feed",
+            "description": "Reads product cycles from endoflife.date through integriq, and stamps end-of-support dates on module versions.",
+            "order": 30,
+            "settingsUrl": "/settings/admin/stackiq#section-eol-sync",
+            "reportedOnly": true,
+            "switch": {
+                "configKey": "eol_sync_config",
+                "jsonPath": "enabled"
+            },
+            "disabledMessage": "End-of-life sync is switched off. Switch it on in the End-of-life feed sync section.",
+            "sourceTemplate": "endoflife-date",
+            "unconfiguredMessage": "Not checked yet. Choose Sync now in the End-of-life feed sync section."
+        }
+    ]
+}
