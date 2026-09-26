@@ -492,7 +492,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "yes",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -507,7 +507,8 @@
 			"evidence": {
 				"sap-leanix": "docs, intelligence competitor_features#48865 'Survey campaigns for data collection' (2026-07-23): Crowd-sources data quality via targeted surveys to app owners. | docs, intelligence competitor_features#27423 'Survey-Based Data Collection' (2026-04-12): Crowdsource architecture data from application owners",
 				"bluedolphin": "docs, intelligence competitor_features#48974 'Questionnaires / data collection' (2026-07-23): Surveys to gather portfolio data from stakeholders.",
-				"stackiq": "No survey, attestation or owner-confirmation code in lib/ or src/ (searched survey/enquete/confirm entry)"
+				"stackiq": "No survey, attestation or owner-confirmation code in lib/ or src/ (searched survey/enquete/confirm entry)",
+				"glpi": "source read at 11.0.9: the native form builder (src/Glpi/Form/Form.php:92) only has ITIL destinations, src/Glpi/Form/Destination/ holds FormDestinationTicket, FormDestinationChange and FormDestinationProblem, so a form answer opens a ticket but never confirms or updates an appliance record; the only 'survey' in core is ticket satisfaction (src/Central.php:220). No owner review campaign exists."
 			}
 		},
 		{
@@ -518,7 +519,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -531,7 +532,8 @@
 			"providerHow": "read-from-code",
 			"note": "No page scores how complete or current an entry is.",
 			"evidence": {
-				"stackiq": "No completeness or data-quality score in lib/ or src/ (searched completeness/volledigheid/score outside reviews)"
+				"stackiq": "No completeness or data-quality score in lib/ or src/ (searched completeness/volledigheid/score outside reviews)",
+				"glpi": "source read at 11.0.9: grep -ril 'completeness' over src/ templates/ locales/glpi.pot returns nothing; no score of how filled in an item is exists in core."
 			}
 		},
 		{
@@ -542,7 +544,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "yes",
 			"built": {
@@ -555,7 +557,8 @@
 			"providerHow": "read-from-code",
 			"note": "An admin picks the demo dataset in the setup wizard and it is imported through OpenRegister. Admin-only, which suits an installation task.",
 			"evidence": {
-				"stackiq": "src/manifest.json:3 setup wizard step load-demo-data (:24); lib/Controller/SetupController.php:202 runAction load-demo-data (AuthorizedAdminSetting); lib/Service/DemoDataService.php:202 install() imports lib/Settings/stackiq_mock_register.json (120 objects, 6 per schema) through OpenRegister ConfigurationService::importFromApp"
+				"stackiq": "src/manifest.json:3 setup wizard step load-demo-data (:24); lib/Controller/SetupController.php:202 runAction load-demo-data (AuthorizedAdminSetting); lib/Service/DemoDataService.php:202 install() imports lib/Settings/stackiq_mock_register.json (120 objects, 6 per schema) through OpenRegister ConfigurationService::importFromApp",
+				"glpi": "source read at 11.0.9: grep -ril 'demo data\\|sample data' over src/ templates/ locales/glpi.pot returns nothing and src/Glpi/Console/ has no demo loader; example data exists only as test fixtures under tests/, not shipped as a feature."
 			}
 		},
 		{
@@ -566,7 +569,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
@@ -579,7 +582,8 @@
 			"providerHow": "read-from-code",
 			"note": "Only suites get a step-by-step wizard. Applications and services are added through a plain form, and connections have no page at all.",
 			"evidence": {
-				"stackiq": "src/dialogs/SuiteWizardDialog.vue (3 steps) is the only wizard, opened from src/views/suites/SuitesIndexView.vue:46; applications, services and connections use the bare CnIndexPage form (FacetedCatalogIndexView.vue:108) or nothing"
+				"stackiq": "src/dialogs/SuiteWizardDialog.vue (3 steps) is the only wizard, opened from src/views/suites/SuitesIndexView.vue:46; applications, services and connections use the bare CnIndexPage form (FacetedCatalogIndexView.vue:108) or nothing",
+				"glpi": "source read at 11.0.9: grep -ril 'wizard' over src/ templates/ locales/glpi.pot returns nothing for item creation; appliances are added through the plain form only (install/mysql/glpi-empty.sql:8935 glpi_appliances has no is_template column)."
 			}
 		},
 		{
@@ -590,7 +594,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "yes",
 			"built": {
@@ -603,7 +607,8 @@
 			"providerHow": "read-from-code",
 			"note": "A module version's page lists the third-party components imported from its SBOM.",
 			"evidence": {
-				"stackiq": "src/components/sbom/SbomComponentsPanel.vue lists sbomComponent rows (name/version/purl/licenses) as the ModuleversieDetail 'Components' sidebar tab (src/manifest.json:961); register.json:7920 sbomComponent schema"
+				"stackiq": "src/components/sbom/SbomComponentsPanel.vue lists sbomComponent rows (name/version/purl/licenses) as the ModuleversieDetail 'Components' sidebar tab (src/manifest.json:961); register.json:7920 sbomComponent schema",
+				"glpi": "source read at 11.0.9: grep -ril 'sbom\\|cyclonedx\\|spdx' over src/ templates/ locales/glpi.pot returns nothing; software versions carry no component list (install/mysql/glpi-empty.sql:6900 glpi_softwareversions)."
 			}
 		},
 		{
@@ -614,7 +619,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "partial",
 			"topdesk": "unknown",
 			"stackiq": "yes",
 			"built": {
@@ -630,7 +635,8 @@
 			"note": "The application form records on-premises, IaaS, PaaS or SaaS plus hosting location and jurisdiction. There is no field naming the hosting party itself.",
 			"evidence": {
 				"sap-leanix": "docs, intelligence competitor_features#48864 'SaaS Management & discovery' (2026-07-23): Discovers SaaS usage and shadow IT, integrates with the fact sheet model. | Rated partial because SaaS is tracked as a class of application.",
-				"stackiq": "register.json:6869 module.cloudDienstverleningsmodel enum On-premises, IaaS, PaaS, SaaS; register.json:6906 hostingLocation and hostingJurisdiction; usage.cloudDienstverleningsmodel (register.json:3050); on ModuleDetail md-data include (src/manifest.json:500)"
+				"stackiq": "register.json:6869 module.cloudDienstverleningsmodel enum On-premises, IaaS, PaaS, SaaS; register.json:6906 hostingLocation and hostingJurisdiction; usage.cloudDienstverleningsmodel (register.json:3050); on ModuleDetail md-data include (src/manifest.json:500)",
+				"glpi": "source read at 11.0.9: no hosting model field; the closest holders are the admin editable Environment dropdown on an appliance, src/Appliance.php:277 ApplianceEnvironment search option (install/mysql/glpi-empty.sql:8945 applianceenvironments_id), plus locations_id and the Appliance type dropdown. grep -i 'saas' over src/ finds nothing; 'On-premise' in locales/glpi.pot:12997 is only an icon label. Reached on: Management > Appliances, Environment field."
 			}
 		},
 		{
@@ -641,7 +647,7 @@
 			"vng-softwarecatalogus": "yes",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "partial",
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
@@ -657,7 +663,8 @@
 			"note": "The field for a national provision exists on the connection schema, but with no connection page nobody can fill it in stackiq.",
 			"evidence": {
 				"vng-softwarecatalogus": "docs, intelligence competitor_features#48841 'National provisions (landelijke voorzieningen) linking' (2026-07-23): Records links between applications and national government provisions.",
-				"stackiq": "register.json:3720 connection.nonMunicipalProvision -> element filtered gemmaType 'Buitengemeentenlijke voorziening'; no page for connection"
+				"stackiq": "register.json:3720 connection.nonMunicipalProvision -> element filtered gemmaType 'Buitengemeentenlijke voorziening'; no page for connection",
+				"glpi": "source read at 11.0.9: no national provision concept (grep -ril 'basisregistratie' src/ locales/glpi.pot returns nothing); a provision can be held as another Appliance and linked through an impact relation, install/mysql/glpi-empty.sql:1247 glpi_impactrelations (source item, impacted item, name), with Appliance enabled for impact at src/autoload/CFG_GLPI.php:649. Reached on: Appliance > Impact analysis tab, Add relation."
 			}
 		},
 		{
@@ -668,7 +675,7 @@
 			"vng-softwarecatalogus": "partial",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -684,7 +691,8 @@
 			"note": "There is no list of connections in the catalogue. The Integrations page lists outside integrations, a different thing.",
 			"evidence": {
 				"vng-softwarecatalogus": "docs, intelligence competitor_features#48842 'Application-to-application connection registry (koppelingen)' (2026-07-23): Records interfaces/connections between registered applications.",
-				"stackiq": "No manifest page with schema connection (src/manifest.json and src/manifest.d/*.json); the Integrations page (src/manifest.d/connection-registry.json:23) lists integriq app_connection, explicitly not stackiq's connection schema (its _note)"
+				"stackiq": "No manifest page with schema connection (src/manifest.json and src/manifest.d/*.json); the Integrations page (src/manifest.d/connection-registry.json:23) lists integriq app_connection, explicitly not stackiq's connection schema (its _note)",
+				"glpi": "source read at 11.0.9: src/ImpactRelation.php:39 ImpactRelation has only prepareInputForAdd and getIDFromInput (src/ImpactRelation.php:47, :107), no search options and no list page; relations are only seen per item in the Impact analysis tab (src/Impact.php:91)."
 			}
 		},
 		{
@@ -695,7 +703,7 @@
 			"vng-softwarecatalogus": "partial",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "yes",
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
@@ -711,7 +719,8 @@
 			"note": "Connections that reference an application should appear among the untyped related objects on its page, but there is no connections section and nothing to open. The dedicated per-application endpoint is API only.",
 			"evidence": {
 				"vng-softwarecatalogus": "docs, intelligence competitor_features#48842 'Application-to-application connection registry (koppelingen)' (2026-07-23): Records interfaces/connections between registered applications.",
-				"stackiq": "src/manifest.json:502 ModuleDetail md-related generic Related panel (OpenRegister /uses + /used merged into an Objects tab); register.json:7064 module.koppelingen is hideOnForm and not in md-data include (:500); lib/Controller/AangebodenGebruikController.php:208 GET /api/koppelingen-gebruik/{uuid} (public) has no caller in src/"
+				"stackiq": "src/manifest.json:502 ModuleDetail md-related generic Related panel (OpenRegister /uses + /used merged into an Objects tab); register.json:7064 module.koppelingen is hideOnForm and not in md-data include (:500); lib/Controller/AangebodenGebruikController.php:208 GET /api/koppelingen-gebruik/{uuid} (public) has no caller in src/",
+				"glpi": "source read at 11.0.9: src/Impact.php:91 getTabNameForItem adds the 'Impact analysis' tab (src/Impact.php:80) to every impact enabled itemtype, Appliance and Software included (src/autoload/CFG_GLPI.php:649 and :663), with a list view src/Impact.php:270 displayListView of every related item in both directions. Reached on: Management > Appliances > Impact analysis tab."
 			}
 		},
 		{
@@ -739,7 +748,7 @@
 			"evidence": {
 				"sap-leanix": "docs, intelligence competitor_features#48869 'Architecture diagrams / free-draw' (2026-07-23): Auto-generated and manual architecture diagrams from the data model. | docs, intelligence competitor_features#27421 'Integration Architecture' (2026-04-12): Visualize data flows and integration patterns between applications",
 				"bluedolphin": "docs, intelligence competitor_features#48968 'Free-form diagramming' (2026-07-23): Freeform diagrams alongside formal models. | docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling.",
-				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#145369 'C-case-core-38 The graph of what a case is linked to is drawn, and exported.': glpi: Impact graph (Tools, front/impactitem.php, impactcsv.php, src/Impact.php) Lane findings: D-glpi-40. | Rated yes because impact graph, source-read 2026-09-14.",
+				"glpi": "source read at 11.0.9: src/Impact.php:252 displayGraphView and src/Impact.php:1559 makeDataForCytoscape draw the relation network, with editing tools add asset, add relation, add group at src/Impact.php:1160. Reached on: Appliance > Impact analysis tab, graph view.",
 				"stackiq": "No diagram rendering in src/ (no graph library; src/store/modules/view.js GET /api/views has no importer outside itself); lib/Service/ArchiMateExportService.php exports GEMMA views as ArchiMate XML without koppeling objects (no 'koppeling' in lib/Service/ArchiMate*)"
 			}
 		},
@@ -765,7 +774,7 @@
 			"note": "The only way to see what depends on an application is the generic list of objects that reference it, which OpenRegister's relation index fills. There is no impact view or retirement check.",
 			"evidence": {
 				"bluedolphin": "docs, intelligence competitor_features#48967 'Multi-modal analysis (gaps / dependencies)' (2026-07-23): Analyses ArchiMate/BPMN/free-form models to surface gaps and weak dependencies.",
-				"glpi": "docs, intelligence competitor_features#48902 'CMDB & configuration relations' (2026-07-23): CI relationships and impact analysis.",
+				"glpi": "source read at 11.0.9: src/Impact.php:49 class Impact 'Impact analysis', src/Impact.php:713 bfs walks the graph by direction and src/Impact.php:612 buildListData lists what is impacted, with ongoing tickets, problems and changes on impacted items (src/Impact.php:313). Reached on: Tools > Impact analysis (src/Html.php:1309) and the item's Impact analysis tab.",
 				"topdesk": "docs, intelligence competitor_features#48926 'Asset Management / CMDB' (2026-07-23): Register assets, users, relations and replacement timelines in one overview. | Rated partial because relations between assets.",
 				"stackiq": "src/manifest.json:502 ModuleDetail md-related (library CnRelatedObjectsWidget: /used lists every object that references this module: usages, connections, suites, services, vulnerabilities); no dependency or impact computation in lib/ or src/"
 			}
@@ -778,7 +787,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -791,7 +800,8 @@
 			"providerHow": "read-from-code",
 			"note": "The type field exists but there is no connection list to filter.",
 			"evidence": {
-				"stackiq": "register.json:3563 connection.type enum (file transfer, digikoppeling, message que, webservices, api, ...) exists, but no connection list page to filter"
+				"stackiq": "register.json:3563 connection.type enum (file transfer, digikoppeling, message que, webservices, api, ...) exists, but no connection list page to filter",
+				"glpi": "source read at 11.0.9: install/mysql/glpi-empty.sql:1247 glpi_impactrelations has only a free name besides the two endpoints, no connection type (API, file, message), so there is nothing to filter on; the graph settings (src/Impact.php:1167 impact_settings) cover depth and direction."
 			}
 		},
 		{
@@ -802,7 +812,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "partial",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -816,7 +826,8 @@
 			"note": "Stackiq has no record for an API an application exposes.",
 			"evidence": {
 				"sap-leanix": "docs, intelligence competitor_features#27425 'API Management' (2026-04-12): Catalog and manage APIs across the application landscape",
-				"stackiq": "No API/interface schema in register.json (schemas listed at register.json:1034-7920); connection.type 'api' is only a transport label"
+				"stackiq": "No API/interface schema in register.json (schemas listed at register.json:1034-7920); connection.type 'api' is only a transport label",
+				"glpi": "source read at 11.0.9: no API entity in core, grep -ril 'openapi' src/*.php finds no itemtype for exposed APIs; an admin can define an 'API' custom asset type (src/Html.php:1330 Setup > Asset definitions, src/Glpi/Asset/AssetDefinition.php) and attach it to the application as an Appliance item (src/Appliance_Item.php:45) or impact relation (install/mysql/glpi-empty.sql:1247). Reached on: Setup > Asset definitions, then Appliance > Items tab."
 			}
 		},
 		{
@@ -842,7 +853,7 @@
 			"featureConfidence": "low",
 			"note": "The organisation ArchiMate export carries modules and usages but not connections, so an application's link graph cannot be exported.",
 			"evidence": {
-				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#145369 'C-case-core-38 The graph of what a case is linked to is drawn, and exported.': glpi: Impact graph (Tools, front/impactitem.php, impactcsv.php, src/Impact.php) Lane findings: D-glpi-40. | Rated yes because impactcsv export, source-read 2026-09-14.",
+				"glpi": "source read at 11.0.9: front/impactcsv.php streams Glpi\\Csv\\ImpactCsvExport for an item, linked from the impact list view at src/Impact.php:393; the graph Download button src/Impact.php:1165 calls js/impact.js:2528 download, which writes PNG (js/impact.js:2539) or JPEG (js/impact.js:2546). Reached on: Appliance > Impact analysis tab, Download and CSV export.",
 				"stackiq": "src/views/settings/sections/ArchiMateImportExport.vue:571 org export options are Modules, Deelnames, Gebruik only; lib/Controller/SettingsController.php:1685 exportOrgArchiMate; no koppeling handling in lib/Service/ArchiMate*"
 			}
 		},
@@ -854,7 +865,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "partial",
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
@@ -867,7 +878,8 @@
 			"providerHow": "read-from-code",
 			"note": "With integriq installed, an admin sees stackiq's three integrations and their checked status on one page, and Add integration opens integriq. Without integriq the page is hidden, and the checking is integriq's.",
 			"evidence": {
-				"stackiq": "src/manifest.d/connection-registry.json:23 Integrations page (register integriq, schema app_connection) with visibleIf appInstalled 'integriq' (:17) and permission admin (:15,:27); Add integration handler leaves for integriq (src/services/connectionRegistry.js:43); rows synced from lib/Settings/connections.json (email, federation, eol-feed); status worked out by integriq"
+				"stackiq": "src/manifest.d/connection-registry.json:23 Integrations page (register integriq, schema app_connection) with visibleIf appInstalled 'integriq' (:17) and permission admin (:15,:27); Add integration handler leaves for integriq (src/services/connectionRegistry.js:43); rows synced from lib/Settings/connections.json (email, federation, eol-feed); status worked out by integriq",
+				"glpi": "source read at 11.0.9: outside integrations are set up on separate Setup pages, not one overview: src/Html.php:1331 Webhook, src/Html.php:1333 OAuthClient and MailCollector, Auth (LDAP, SSO) on src/Html.php:1332; src/Webhook.php:64 Webhook and src/OAuthClient.php:45 OAuthClient each have their own list. Reached on: Setup > Webhooks, Setup > OAuth clients, Setup > Authentication."
 			}
 		},
 		{
@@ -878,7 +890,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "yes",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
@@ -894,7 +906,8 @@
 			"note": "Works end to end but only a Nextcloud admin can import: the endpoint rejects non-admins and the upload control lives only on the admin settings page.",
 			"evidence": {
 				"bluedolphin": "docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling. | docs, intelligence competitor_features#27459 'ArchiMate & BPMN Support' (2026-04-12): Full ArchiMate and BPMN modeling in one platform | Rated yes because full ArchiMate support; import format not named in the reading.",
-				"stackiq": "appinfo/routes.php:96 POST /api/archimate/import -> lib/Controller/SettingsController.php:1490 importArchiMate (isAdmin check :1496) -> lib/Service/ArchiMateImportService.php (5961 lines); UI src/views/settings/sections/ArchiMateImportExport.vue:32 file input + :791 importArchiMateFile"
+				"stackiq": "appinfo/routes.php:96 POST /api/archimate/import -> lib/Controller/SettingsController.php:1490 importArchiMate (isAdmin check :1496) -> lib/Service/ArchiMateImportService.php (5961 lines); UI src/views/settings/sections/ArchiMateImportExport.vue:32 file input + :791 importArchiMateFile",
+				"glpi": "source read at 11.0.9: grep -ril 'archimate\\|gemma\\|togaf' over src/ templates/ locales/glpi.pot returns nothing; no model import exists."
 			}
 		},
 		{
@@ -905,7 +918,7 @@
 			"vng-softwarecatalogus": "yes",
 			"sap-leanix": "unknown",
 			"bluedolphin": "partial",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
@@ -922,7 +935,8 @@
 			"evidence": {
 				"vng-softwarecatalogus": "docs, intelligence competitor_features#27554 'ArchiMate Export' (2026-04-12): Export to ArchiMate format for use in architecture tools",
 				"bluedolphin": "docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling.",
-				"stackiq": "appinfo/routes.php:97 POST /api/archimate/export -> lib/Controller/SettingsController.php:1615 exportArchiMate (admin or org-admin via verifyOrgExportPermission :1735) -> lib/Service/ArchiMateService.php:232 exportToArchiMate (docblock: organization filter 'currently not implemented'); UI ArchiMateImportExport.vue:591 'Export Base' button"
+				"stackiq": "appinfo/routes.php:97 POST /api/archimate/export -> lib/Controller/SettingsController.php:1615 exportArchiMate (admin or org-admin via verifyOrgExportPermission :1735) -> lib/Service/ArchiMateService.php:232 exportToArchiMate (docblock: organization filter 'currently not implemented'); UI ArchiMateImportExport.vue:591 'Export Base' button",
+				"glpi": "source read at 11.0.9: grep -ril 'archimate' over src/ templates/ locales/glpi.pot returns nothing; exports are CSV, PDF and spreadsheet search output (src/Glpi/Csv/) only."
 			}
 		},
 		{
@@ -933,7 +947,7 @@
 			"vng-softwarecatalogus": "yes",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
@@ -949,7 +963,8 @@
 			"note": "Complete logic, but reachable only on the admin settings page; an ordinary organisation user cannot export its own landscape from a stackiq page.",
 			"evidence": {
 				"vng-softwarecatalogus": "docs, intelligence competitor_features#27550 'Application Landscape Mapping' (2026-04-12): Map and export municipality application landscape | docs, intelligence competitor_features#27554 'ArchiMate Export' (2026-04-12): Export to ArchiMate format for use in architecture tools | Rated yes because map and export the municipality's landscape.",
-				"stackiq": "appinfo/routes.php:98 GET /api/archimate/export/organization/{organizationUuid} -> lib/Controller/SettingsController.php:1685 exportOrgArchiMate -> lib/Service/ArchiMateService.php:302 -> lib/Service/ArchiMateExportService.php:2734 copyAndEnrichViews nests the org's applications in GEMMA view copies; UI ArchiMateImportExport.vue:602 'Organization Export' with Modules/Deelnames/Gebruik checkboxes"
+				"stackiq": "appinfo/routes.php:98 GET /api/archimate/export/organization/{organizationUuid} -> lib/Controller/SettingsController.php:1685 exportOrgArchiMate -> lib/Service/ArchiMateService.php:302 -> lib/Service/ArchiMateExportService.php:2734 copyAndEnrichViews nests the org's applications in GEMMA view copies; UI ArchiMateImportExport.vue:602 'Organization Export' with Modules/Deelnames/Gebruik checkboxes",
+				"glpi": "source read at 11.0.9: grep -ril 'archimate\\|gemma' over src/ templates/ locales/glpi.pot returns nothing; no GEMMA plotting or per entity model export."
 			}
 		},
 		{
@@ -960,7 +975,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -975,7 +990,8 @@
 			"featureConfidence": "medium",
 			"note": "There is an endpoint, but its comparison is broken (a missing key against a placeholder string) and no page calls it. The compare_archimate.py/.php scripts in the repo root are developer tools, not a user capability.",
 			"evidence": {
-				"stackiq": "appinfo/routes.php:107 POST /api/archimate/test-round-trip -> lib/Controller/SettingsController.php:2886 (@NoAdminRequired, any logged-in user) -> lib/Service/ArchiMateService.php:1496 testRoundTrip: reads $importResult['imported_count'] (:1528), a key no import path sets, and compares it to exportToArchiMate's 'exported_count' which is the literal string 'calculated_in_export_service' (:271), so it can never report success; it also imports a test model into the live register"
+				"stackiq": "appinfo/routes.php:107 POST /api/archimate/test-round-trip -> lib/Controller/SettingsController.php:2886 (@NoAdminRequired, any logged-in user) -> lib/Service/ArchiMateService.php:1496 testRoundTrip: reads $importResult['imported_count'] (:1528), a key no import path sets, and compares it to exportToArchiMate's 'exported_count' which is the literal string 'calculated_in_export_service' (:271), so it can never report success; it also imports a test model into the live register",
+				"glpi": "source read at 11.0.9: there is no model import or export to round trip, grep -ril 'archimate' over src/ templates/ locales/glpi.pot returns nothing."
 			}
 		},
 		{
@@ -986,7 +1002,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -1001,7 +1017,8 @@
 			"featureConfidence": "medium",
 			"note": "The import runs as one blocking request with a spinner. The cancel endpoint calls a missing method and import progress is never recorded, so neither following nor cancelling works.",
 			"evidence": {
-				"stackiq": "appinfo/routes.php:103 POST /api/archimate/import/cancel -> lib/Service/SettingsService.php:5200 calls ArchiMateService::cancelArchiMateImport(), which does not exist in lib/Service/ArchiMateService.php (Error, not caught by catch(\\Exception)); routes.php:119-120 /api/progress/{operationId} read ProgressTracker, but the ArchiMate import never writes to it (only SbomImportService gets it, lib/AppInfo/Application.php:507); ArchiMateImportExport.vue:538 shows only a spinner, no cancel button"
+				"stackiq": "appinfo/routes.php:103 POST /api/archimate/import/cancel -> lib/Service/SettingsService.php:5200 calls ArchiMateService::cancelArchiMateImport(), which does not exist in lib/Service/ArchiMateService.php (Error, not caught by catch(\\Exception)); routes.php:119-120 /api/progress/{operationId} read ProgressTracker, but the ArchiMate import never writes to it (only SbomImportService gets it, lib/AppInfo/Application.php:507); ArchiMateImportExport.vue:538 shows only a spinner, no cancel button",
+				"glpi": "source read at 11.0.9: no model import exists (grep -ril 'archimate' src/ returns nothing), so there is no import to follow; the generic progress endpoint src/Glpi/Controller/ProgressController.php serves other long operations."
 			}
 		},
 		{
@@ -1012,7 +1029,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
@@ -1027,7 +1044,8 @@
 			"featureConfidence": "low",
 			"note": "You can open a standard's page and read its definition, but reference components and other GEMMA terms have no page and there is no inline definition where they appear.",
 			"evidence": {
-				"stackiq": "src/manifest.json StandaardDetail /standaarden/:id st-data widget shows all element fields (documentation, gemmaNotes) of a standard; FacetedCatalogIndexView.vue:150 shows reference components by name only"
+				"stackiq": "src/manifest.json StandaardDetail /standaarden/:id st-data widget shows all element fields (documentation, gemmaNotes) of a standard; FacetedCatalogIndexView.vue:150 shows reference components by name only",
+				"glpi": "source read at 11.0.9: grep -ril 'gemma\\|glossary' over src/ templates/ locales/glpi.pot returns nothing; no reference term definitions ship in core."
 			}
 		},
 		{
@@ -1038,7 +1056,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "yes",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
@@ -1055,7 +1073,8 @@
 			"evidence": {
 				"sap-leanix": "docs, intelligence competitor_features#48861 'Business capability modeling' (2026-07-23): Maps applications to a business capability map for portfolio rationalisation. | docs, intelligence competitor_features#27420 'Business Capability Mapping' (2026-04-12): Map applications to business capabilities and processes",
 				"bluedolphin": "docs, intelligence competitor_features#27460 'Application Portfolio Management' (2026-04-12): Map applications to business goals and functions",
-				"stackiq": "module.referenceComponents / usage.usedForReferenceComponents in lib/Settings/softwarecatalogus_register.json hold the application-to-reference-component mapping; lib/Service/ArchiMateExportService.php:2734 draws it only into exported view copies"
+				"stackiq": "module.referenceComponents / usage.usedForReferenceComponents in lib/Settings/softwarecatalogus_register.json hold the application-to-reference-component mapping; lib/Service/ArchiMateExportService.php:2734 draws it only into exported view copies",
+				"glpi": "source read at 11.0.9: grep -rli 'business capabilit\\|business process' over src/ and locales/glpi.pot returns nothing; 'Capacity' in src/Glpi/Asset/Capacity.php is a feature toggle for custom assets, not a business capability."
 			}
 		},
 		{
@@ -1066,7 +1085,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "yes",
-			"glpi": "unknown",
+			"glpi": "partial",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -1081,7 +1100,8 @@
 			"evidence": {
 				"sap-leanix": "docs, intelligence competitor_features#48869 'Architecture diagrams / free-draw' (2026-07-23): Auto-generated and manual architecture diagrams from the data model.",
 				"bluedolphin": "docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling. | docs, intelligence competitor_features#48968 'Free-form diagramming' (2026-07-23): Freeform diagrams alongside formal models.",
-				"stackiq": "src/manifest.json has no page for the view or element schema beyond Standaarden; no diagram editor in src/views or src/components"
+				"stackiq": "src/manifest.json has no page for the view or element schema beyond Standaarden; no diagram editor in src/views or src/components",
+				"glpi": "source read at 11.0.9: the impact graph is an editable diagram, src/Impact.php:1160 add asset, add relation and add group tools, groups stored in install/mysql/glpi-empty.sql:1264 glpi_impactcompounds and node positions in install/mysql/glpi-empty.sql:1276 glpi_impactitems; it draws dependency graphs only, with no architecture notation or views. Reached on: Appliance > Impact analysis tab, graph edit mode."
 			}
 		},
 		{
@@ -1092,7 +1112,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "yes",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -1106,7 +1126,8 @@
 			"note": "Business processes are not modelled; the only link applications have is to GEMMA reference components.",
 			"evidence": {
 				"bluedolphin": "docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling. | docs, intelligence competitor_features#27464 'Process Mapping' (2026-04-12): Map processes, applications, data, and technology",
-				"stackiq": "no process schema in lib/Settings/softwarecatalogus_register.json (20 schemas listed under components.schemas); no process page in src/manifest.json"
+				"stackiq": "no process schema in lib/Settings/softwarecatalogus_register.json (20 schemas listed under components.schemas); no process page in src/manifest.json",
+				"glpi": "source read at 11.0.9: grep -rli 'business process' over src/ and locales/glpi.pot returns nothing; no process itemtype to link to applications."
 			}
 		},
 		{
@@ -1117,7 +1138,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -1131,7 +1152,8 @@
 			"note": "Planned usage and planned replacements exist per record, but there is no future-state model and no comparison with today.",
 			"evidence": {
 				"sap-leanix": "docs, intelligence competitor_features#27419 'IT Transformation' (2026-04-12): Plan and execute cloud migrations and modernization | Rated partial because transformation planning.",
-				"stackiq": "searched src/manifest.json and the register for scenario/future-state/toekomst: nothing; usage.status 'Planned' and plannedReplacement (register) are per-usage fields, not a comparable landscape"
+				"stackiq": "searched src/manifest.json and the register for scenario/future-state/toekomst: nothing; usage.status 'Planned' and plannedReplacement (register) are per-usage fields, not a comparable landscape",
+				"glpi": "source read at 11.0.9: grep -rli 'future state\\|what-if\\|scenario' over src/*.php returns nothing; the impact graph (src/Impact.php:49) shows only the current relations, with no plateau or target landscape."
 			}
 		},
 		{
@@ -1142,7 +1164,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "yes",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -1156,7 +1178,8 @@
 			"note": "No report or view lists reference components that no application in your landscape covers.",
 			"evidence": {
 				"bluedolphin": "docs, intelligence competitor_features#48967 'Multi-modal analysis (gaps / dependencies)' (2026-07-23): Analyses ArchiMate/BPMN/free-form models to surface gaps and weak dependencies.",
-				"stackiq": "grep for uncovered/gap/coverage in lib and src found nothing; lib/Service/FacetService.php counts modules per reference component but never lists components with zero coverage"
+				"stackiq": "grep for uncovered/gap/coverage in lib and src found nothing; lib/Service/FacetService.php counts modules per reference component but never lists components with zero coverage",
+				"glpi": "source read at 11.0.9: no reference component model to compare against, grep -ril 'gemma\\|reference component' over src/ locales/glpi.pot returns nothing; appliances are typed only by the free Appliance type dropdown (install/mysql/glpi-empty.sql:8941)."
 			}
 		},
 		{
@@ -1167,7 +1190,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "yes",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
@@ -1181,7 +1204,8 @@
 			"note": "Nothing drafts diagrams.",
 			"evidence": {
 				"bluedolphin": "docs, intelligence competitor_features#48970 'AI-powered diagramming' (2026-07-23): AI assists diagram generation. | docs, intelligence competitor_features#27461 'AI-Powered Diagramming' (2026-04-12): Auto-generate BPMN diagrams with built-in AI",
-				"stackiq": "no diagram generation in lib/Service or src; no AI integration for diagrams"
+				"stackiq": "no diagram generation in lib/Service or src; no AI integration for diagrams",
+				"glpi": "source read at 11.0.9: grep -rli 'openai\\|llm\\|mistral\\|chatgpt\\|artificial intelligence' over src/ templates/ returns nothing; diagrams are drawn by hand in the impact graph (src/Impact.php:1160)."
 			}
 		},
 		{
@@ -1192,7 +1216,7 @@
 			"vng-softwarecatalogus": "yes",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "yes",
 			"built": {
@@ -1208,7 +1232,8 @@
 			"note": "The GEMMA standards imported with the AMEF model are browsable on their own page with a detail view that lists compliance claims.",
 			"evidence": {
 				"vng-softwarecatalogus": "docs, intelligence competitor_features#48840 'Standards support declaration' (2026-07-23): Suppliers declare which standards (StUF, ZGW/Zaakgericht APIs, etc.) a product supports. | docs, intelligence competitor_features#27556 'Standards Mapping' (2026-04-12): Map software to Forum Standaardisatie standards",
-				"stackiq": "src/manifest.json page Standaarden /standaarden (index on @resolve:amef_register schema element, filter gemmaType=standaard, columns name/gemmaThema/gemmaStatus/url) and StandaardDetail /standaarden/:id with compliance claims per standard; menu entry Standards (order 50)"
+				"stackiq": "src/manifest.json page Standaarden /standaarden (index on @resolve:amef_register schema element, filter gemmaType=standaard, columns name/gemmaThema/gemmaStatus/url) and StandaardDetail /standaarden/:id with compliance claims per standard; menu entry Standards (order 50)",
+				"glpi": "source read at 11.0.9: no standards itemtype, grep -ril 'standaard\\|forum standaardisatie' src/ locales/glpi.pot returns nothing and the word standard in src/Appliance.php occurs only in addStandardTab (src/Appliance.php:100)."
 			}
 		},
 		{
@@ -1219,7 +1244,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "partial",
 			"topdesk": "unknown",
 			"stackiq": "yes",
 			"built": {
@@ -1234,7 +1259,8 @@
 			"featureConfidence": "high",
 			"note": "Evidence can be attached as a file, a URL or a Nextcloud Files link on the compliance claim's page.",
 			"evidence": {
-				"stackiq": "lib/Settings/softwarecatalogus_register.json compliancy.evidence (file, pdf/jpeg/png/doc, 10 MB), compliancy.url, compliancy.evidenceReference; src/manifest.json KompliantieDetail cm-files widget type integration integrationId files 'Evidence documents'"
+				"stackiq": "lib/Settings/softwarecatalogus_register.json compliancy.evidence (file, pdf/jpeg/png/doc, 10 MB), compliancy.url, compliancy.evidenceReference; src/manifest.json KompliantieDetail cm-files widget type integration integrationId files 'Evidence documents'",
+				"glpi": "source read at 11.0.9: any document can be attached to an appliance through the Documents tab, src/Appliance.php:100 Document_Item tab and src/Document_Item.php:46, stored in install/mysql/glpi-empty.sql:2585 glpi_documents; there is no compliance claim to attach it to. Reached on: Management > Appliances > Documents tab."
 			}
 		},
 		{
@@ -1245,7 +1271,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
@@ -1260,7 +1286,8 @@
 			"featureConfidence": "high",
 			"note": "The matrix separates claims with evidence from claims without, but 'verified' only means evidence is attached: no one reviews or approves the evidence, so a supplier-uploaded document counts as verified.",
 			"evidence": {
-				"stackiq": "src/utils/complianceMatrix.js:9-17 cell state verified = compliancy record with evidence (hasEvidence :107 checks evidence/evidenceReference/url), claimed = link without evidence; rendered by src/views/ComplianceMatrixView.vue"
+				"stackiq": "src/utils/complianceMatrix.js:9-17 cell state verified = compliancy record with evidence (hasEvidence :107 checks evidence/evidenceReference/url), claimed = link without evidence; rendered by src/views/ComplianceMatrixView.vue",
+				"glpi": "source read at 11.0.9: no compliance claim model, grep -rli 'complian' over src/Appliance.php src/Software.php returns nothing; nothing to mark verified or claimed (src/Appliance.php:46 fields are inventory and management fields only)."
 			}
 		},
 		{
