@@ -568,7 +568,7 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "no",
+			"glpi": "partial",
 			"topdesk": "unknown",
 			"stackiq": "yes",
 			"built": {
@@ -584,7 +584,7 @@
 				"stackiq": "src/manifest.json:3 setup wizard step load-demo-data (:24); lib/Controller/SetupController.php:202 runAction load-demo-data (AuthorizedAdminSetting); lib/Service/DemoDataService.php:202 install() imports lib/Settings/stackiq_mock_register.json (120 objects, 6 per schema) through OpenRegister ConfigurationService::importFromApp",
 				"topdesk": "unknown: no example data set is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "unknown: the catalogue is one hosted service; no loadable example data set is described (a \"VNG Realisatie Demo\" supplier appears in the live data); searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/Beschrijving%20exportbestanden (read 2026-09-26)",
-				"glpi": "source read at 11.0.9: grep -ril 'demo data\\|sample data' over src/ templates/ locales/glpi.pot returns nothing and src/Glpi/Console/ has no demo loader; example data exists only as test fixtures under tests/, not shipped as a feature."
+				"glpi": "source read at 11.0.9: on a clean install dashboards render placeholder figures from src/Glpi/Dashboard/FakeProvider.php:65 FakeProvider, with the banner 'You are viewing demonstration data.' and a 'Disable demonstration' button (src/Glpi/Dashboard/Grid.php:427, :428, :448); CHANGELOG.md 11.0.0 lists it. No example records (applications, contracts, suppliers) are loaded; the console entry point src/Glpi/Console/Application.php:66 has no demo data command. Reached on: Home > Dashboard on a fresh install."
 			}
 		},
 		{
