@@ -179,9 +179,9 @@
 			"note": "An application with supplier and description can be registered on the Modules page, but the module schema has no status field, and the per-organisation usage that carries a status has no page to create it on. The Modules list also cannot open ModuleDetail: its standalone CnIndexPage (FacetedCatalogIndexView.vue:108-117) binds no @view/@row-click, so the View action is inert.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/30355: \"klik dan op de knop + achter de beschrijving van het pakket om het pakket toe te voegen aan je omgeving ... Pakketversie ... Referentiecomponenten ... Vul onder Planning bij Status in gebruik in\" (read 2026-09-26); https://www.softwarecatalogus.nl/hoe-werkt-de-catalogus: \"Wanneer Gemeenten en samenwerkingen hun applicatielandschap hebben ingevoerd, wordt deze automatisch geplot op de GEMMA referentiecomponentenkaart\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Pakketten > Voeg pakket toe.",
-				"sap-leanix": "docs, intelligence competitor_features#48860 'Fact Sheet data model (Application / IT Component / Provider)' (2026-07-23): Structured fact sheets are the core inventory unit for applications, components and providers. | docs, intelligence competitor_features#27422 'Fact Sheets & Data Model' (2026-04-12): Flexible data model for applications, processes, IT components",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines: 'Applications are software systems or programs that process or analyze business data'; application fact sheet with description and lifecycle, supplier via 'provider -> IT component -> application relation' (https://help.sap.com/docs/leanix/ea/provider-modeling-guidelines) (read 2026-09-26). Reached on: Inventory > Application fact sheet.",
 				"bluedolphin": "docs, intelligence competitor_features#48965 'Application Portfolio Management' (2026-07-23): APM integrated with the overall EA repository. | docs, intelligence competitor_features#27460 'Application Portfolio Management' (2026-04-12): Map applications to business goals and functions",
-				"glpi": "source read at 11.0.9: src/Appliance.php:46 class Appliance is GLPI's application itemtype; install/mysql/glpi-empty.sql:8935 glpi_appliances carries name, comment (description), manufacturers_id and states_id (status); src/Appliance.php:350 search option Status; supplier through the Management tab Infocom (install/mysql/glpi-empty.sql:3263 glpi_infocoms.suppliers_id) and Contract_Item (src/Appliance.php:99); menu src/Html.php:1300 lists Appliance under Management, served by src/Glpi/Kernel/Listener/RequestListener/LegacyItemtypeRouteListener.php:100. Reached on: Management > Appliances (front/appliance.php).",
+				"glpi": "source read at 11.0.9: src/Appliance.php:46 class Appliance is GLPI's application itemtype; install/mysql/glpi-empty.sql:8935 glpi_appliances carries name, comment (description), manufacturers_id and states_id (status); src/Appliance.php:350 search option Status; supplier through the Management tab Infocom (install/mysql/glpi-empty.sql:3263 glpi_infocoms.suppliers_id) and Contract_Item (src/Appliance.php:99); menu src/Html.php:1300 lists Appliance under Management, served by src/Glpi/Kernel/Listener/RequestListener/LegacyItemtypeRouteListener.php:100. Reached on: Management > Appliances (front/appliance.php). Driven on the lab at 11.0.9 (2026-09-26): created the appliance \"Zaaksysteem lab\" with a description through /front/appliance.form.php; it appears in the Appliances list and CSV export.",
 				"topdesk": "https://docs.topdesk.com/en/migrating-objects-to-asset-management.html: \"In the new Asset Management you design your own template for each type of asset you have\" (read 2026-09-26); https://docs.topdesk.com/en/managing-licences-in-asset-management.html: \"Create a new template for software cards\" (read 2026-09-26). Applications are a self-designed asset type, no application model ships. Reached on: Modules > Asset Management > Template Designer / Asset overview > New.",
 				"stackiq": "src/manifest.json:592 Modules page (FacetedCatalogIndexView, schema module) with the library CnIndexPage create form at src/views/FacetedCatalogIndexView.vue:108; lib/Settings/softwarecatalogus_register.json:6777 module schema has name, shortDescription/longDescription and provider (Supplier) but NO status property; status lives on usage (register.json:2654, enum Acquisition..In production) which has no page"
 			}
@@ -192,7 +192,7 @@
 			"name": "Break an application into modules and see which module belongs to which product.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "unknown",
-			"sap-leanix": "partial",
+			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
 			"topdesk": "unknown",
@@ -209,7 +209,7 @@
 			"featureConfidence": "low",
 			"note": "Stackiq's 'module' is the whole application, so there is no breakdown of one application into modules. The nearest thing is a suite (product) listing its applications, which answers 'which module belongs to which product' but not the decomposition.",
 			"evidence": {
-				"sap-leanix": "docs, intelligence competitor_features#48860 'Fact Sheet data model (Application / IT Component / Provider)' (2026-07-23): Structured fact sheets are the core inventory unit for applications, components and providers. | Rated partial because fact sheets separate Application from IT Component.",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines: 'Applications often consist of multiple entities or modules within a common ecosystem or platform', modeled as parent/child hierarchy, e.g. Adobe Photoshop as child of Adobe Creative Cloud (read 2026-09-26). Reached on: Application fact sheet > parent/child relations.",
 				"stackiq": "register.json:1135 suite schema with applications[] (register.json:1231); src/manifest.json:674 SuiteDetail with suite-related panel; no schema breaks one application into sub-modules (module IS the application, register.json:6777 title 'Application')",
 				"topdesk": "unknown: assets can be linked parent to child, but no application module concept is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "unknown: the docs model a pakket and its pakketversies only, no module level is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/Beschrijving%20exportbestanden (read 2026-09-26)",
@@ -222,7 +222,7 @@
 			"name": "Record the released versions of a module, with the date each came into use.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "partial",
-			"sap-leanix": "unknown",
+			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
 			"topdesk": "unknown",
@@ -242,7 +242,8 @@
 				"glpi": "source read at 11.0.9: src/SoftwareVersion.php:42 SoftwareVersion child of Software, table install/mysql/glpi-empty.sql:6900 glpi_softwareversions with name, states_id, operatingsystems_id but no release or in-use date; the only date is per installation, install/mysql/glpi-empty.sql:1074 glpi_items_softwareversions.date_install. Reached on: Assets > Software > Versions tab (front/softwareversion.form.php).",
 				"stackiq": "src/manifest.json:915 Moduleversies type:index (columns version, module, dateInUse, status) + :937 ModuleversieDetail; register.json:7649 moduleVersion schema with dateInUse (register.json:7746), dateInDevelopment, dateEndSupport, dateWithdrawn",
 				"topdesk": "unknown: no version records per application or module are described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
-				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier: \"Titel is de naam van uw productversie ... Status geeft aan of uw product in ontwikkeling, in productie, of teruggetrokken is ... startdata van ontwikkeling, test en distributie\" (read 2026-09-26). Versions are recorded per package (pakketversie), not per module. Reached on: Supplier login > Productportfolio > product > plus (versie toevoegen)."
+				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier: \"Titel is de naam van uw productversie ... Status geeft aan of uw product in ontwikkeling, in productie, of teruggetrokken is ... startdata van ontwikkeling, test en distributie\" (read 2026-09-26). Versions are recorded per package (pakketversie), not per module. Reached on: Supplier login > Productportfolio > product > plus (versie toevoegen).",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines: 'if versioning is relevant ... you can capture it in the Release field of the application fact sheets'; each fact sheet carries lifecycle phase dates, but the guide says 'versioning for applications doesn't add significant value' (read 2026-09-26). Reached on: Application fact sheet > Name and Description > Release."
 			}
 		},
 		{
@@ -251,7 +252,7 @@
 			"name": "Bundle several existing applications into one suite that is offered as a single product.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "unknown",
-			"sap-leanix": "unknown",
+			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
 			"topdesk": "unknown",
@@ -271,6 +272,7 @@
 				"stackiq": "src/dialogs/SuiteWizardDialog.vue:183 onSubmit saves a suite via objectStore.saveObject('suite') with applications[] (src/utils/suiteWizard.js:44 requires at least one); mounted by src/views/suites/SuitesIndexView.vue:46 on manifest page Suites (src/manifest.json:666)",
 				"topdesk": "unknown: no suite bundling is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "unknown: no bundling of packages into a suite is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines: 'Adobe Creative Cloud is a suite that bundles various applications ... It is modeled as the parent entity'; a platform fact sheet can group applications. Modeled for the buyer's own inventory, not as a product offered to others (read 2026-09-26). Reached on: Application fact sheet hierarchy, Platform fact sheet.",
 				"glpi": "source read at 11.0.9: src/autoload/CFG_GLPI.php:562 appliance_types contains Appliance and Software, so an Appliance can bundle existing appliances and software through src/Appliance_Item.php:45 (table install/mysql/glpi-empty.sql:8979 glpi_appliances_items). There is no notion of offering the bundle as a product to others. Reached on: Management > Appliances > Items tab."
 			}
 		},
@@ -280,7 +282,7 @@
 			"name": "Register a service a supplier delivers on top of applications, such as hosting or support.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "partial",
-			"sap-leanix": "unknown",
+			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
 			"topdesk": "yes",
@@ -300,6 +302,7 @@
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/pakketversies: facet \"Ondersteunde technologie: On-premise, Dienst - Software as a Service (SAAS)\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/30355: \"Onder het tabblad Technologie selecteer je de onderliggende technieken van het pakket. Veelal Saas of on-premise\" (read 2026-09-26). Hosting as SaaS is a property of a package version, no separate service record (hosting, support) is documented. Reached on: Alle pakketversies > filter Ondersteunde technologie.",
 				"stackiq": "src/manifest.json:647 Diensten page (FacetedCatalogIndexView, schema catalogService) with the CnIndexPage create form; register.json:1324 catalogService with provider (required), modules[] (register.json:1419) and type enum Functional/Application/Technical management, Implementation support, Training, Licence reseller (register.json:1459)",
 				"topdesk": "https://docs.topdesk.com/en/managing-your-service-and-supplier-contracts.html: \"Services you offer may rely on services of external suppliers. These services are called underpinning services. TOPdesk allows you to link your services to supplier services\" (read 2026-09-26); https://docs.topdesk.com/en/linking-assets-to-cards.html: \"On Call, Change (Activity), Operational Activity, Knowledge Item, Problem, and Service cards, you can link multiple assets in one go\" (read 2026-09-26). Reached on: Modules > Contract Management and SLM > Service card > Links > Assets.",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/it-component-modeling-guidelines: IT component subtype 'Service : Services refer to the provisioning of services related to IT components (usually provided by a 3rd party) ... Examples: Maintenance/Support Service ... Hosting Service'; linked to providers (read 2026-09-26). Reached on: Inventory > IT Component fact sheet, subtype Service.",
 				"glpi": "source read at 11.0.9: no supplier service itemtype; services are held as contracts, src/ContractType.php:37 admin dropdown of contract types (for example hosting or support), install/mysql/glpi-empty.sql:1550 glpi_contracts_suppliers ties the contract to a Supplier and install/mysql/glpi-empty.sql:1536 glpi_contracts_items ties it to the Appliance or Software it covers. Reached on: Management > Contracts (front/contract.php), Suppliers tab."
 			}
 		},
@@ -309,7 +312,7 @@
 			"name": "Tag applications with the government sectors they are meant for.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "partial",
-			"sap-leanix": "unknown",
+			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
 			"topdesk": "unknown",
@@ -327,6 +330,7 @@
 				"stackiq": "register.json:1034 sector schema (name, description only); no schema property references #/components/schemas/sector (grep found none), no manifest page for sector; only the admin schema mapping in src/views/settings/sections/OpenRegisterIntegration.vue:395",
 				"topdesk": "unknown: the TOPdesk documentation is about service management and does not cover this; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/pakketversies: facets \"Domein\" (Bestuur, Fysieke leefomgeving, Sociaal domein, ...) and \"Doelgroep\" (Gemeente, Generiek, Inwoners en ondernemers, Ketenpartners) (read 2026-09-26). Domains are municipal policy domains, the catalogue serves municipalities only, not other government sectors. Reached on: Alle pakketversies > filters Domein, Doelgroep.",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/tags-and-custom-fields: tags and tag groups for 'quick, high-level classification', filterable and usable as reporting views; no predefined government sector list is documented (read 2026-09-26). Reached on: Fact sheet > Tags.",
 				"glpi": "source read at 11.0.9: no government sector concept, grep -i 'sector' over src/*.php and locales/glpi.pot hits only menu sectorization (src/Html.php:1019); the nearest holder is the single-valued Appliance type dropdown install/mysql/glpi-empty.sql:8941 appliancetypes_id, or an admin custom dropdown (install/mysql/glpi-empty.sql:10113 glpi_dropdowns_dropdowndefinitions) used as a field of a custom asset. Multi-valued tagging needs the separate tag plugin (github.com/pluginsGLPI/tag, not read). Reached on: Management > Appliances, Appliance type field."
 			}
 		},
@@ -336,7 +340,7 @@
 			"name": "Name the business owner and the technical owner responsible for an application.",
 			"origin": "competitor",
 			"vng-softwarecatalogus": "unknown",
-			"sap-leanix": "partial",
+			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
 			"glpi": "yes",
 			"topdesk": "partial",
@@ -353,11 +357,11 @@
 			"featureConfidence": "low",
 			"note": "One contact person per application can be set, but there is no separate business owner and technical owner. ModuleDetail's data widget includes 'contactpersoon', a key the schema no longer has, so the contact may not show there.",
 			"evidence": {
-				"sap-leanix": "docs, intelligence competitor_features#48865 'Survey campaigns for data collection' (2026-07-23): Crowd-sources data quality via targeted surveys to app owners. | Rated partial because surveys go to application owners, so ownership is modelled.",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/subscription-roles: 'Define roles that map to your organization's positions, such as application owner', with subscription types 'Responsible, Accountable, Observer' per fact sheet (read 2026-09-26). Reached on: Fact sheet > Subscriptions; Administration > Subscription Roles.",
 				"stackiq": "register.json:6856 module.contactPerson is a single related contactPerson; register.json:1786 contactPerson has free-text role (job title) and a roles enum of catalogue roles (Aanbod-beheerder, Gebruik-beheerder, ...), no business/technical owner distinction; shown on ModuleDetail md-data (src/manifest.json:500 lists the stale key 'contactpersoon', not 'contactPerson')",
 				"topdesk": "https://docs.topdesk.com/en/designing-templates-for-assets.html: \"Assignment widget : assigns locations and persons to the asset\" (read 2026-09-26). No separate business and technical owner roles are described. Reached on: Asset card > Assignment widget.",
 				"vng-softwarecatalogus": "unknown: the landscape entry fields listed (pakketversie, referentiecomponenten, technologie, status) include no business or technical owner; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/node/30355 (read 2026-09-26)",
-				"glpi": "source read at 11.0.9: install/mysql/glpi-empty.sql:8935 glpi_appliances holds users_id and users_id_tech; src/Appliance.php:186 search option User and src/Appliance.php:195 Group (business side), src/Appliance.php:240 'Technician in charge' and the 'Group in charge' option a few lines below (technical side). Reached on: Management > Appliances, form fields User, Group, Technician in charge, Group in charge."
+				"glpi": "source read at 11.0.9: install/mysql/glpi-empty.sql:8935 glpi_appliances holds users_id and users_id_tech; src/Appliance.php:186 search option User and src/Appliance.php:195 Group (business side), src/Appliance.php:240 'Technician in charge' and the 'Group in charge' option a few lines below (technical side). Reached on: Management > Appliances, form fields User, Group, Technician in charge, Group in charge. Driven on the lab at 11.0.9 (2026-09-26): the saved appliance holds users_id and users_id_tech (glpi_appliances row 1), shown as User and Technician in charge."
 			}
 		},
 		{
@@ -382,8 +386,8 @@
 			"providerHow": "read-from-code",
 			"note": "Stackiq offers no way to add fields. Editing the schema in OpenRegister's own admin UI is possible there, but that is an OpenRegister feature, not a stackiq page.",
 			"evidence": {
-				"sap-leanix": "docs, intelligence competitor_features#48860 'Fact Sheet data model (Application / IT Component / Provider)' (2026-07-23): Structured fact sheets are the core inventory unit for applications, components and providers. | Rated yes because flexible fact sheet data model.",
-				"glpi": "source read at 11.0.9: native custom fields exist only for admin defined custom asset types, src/Glpi/Asset/CustomFieldDefinition.php:52 child of AssetDefinition (install/mysql/glpi-empty.sql:10159 glpi_assets_customfielddefinitions keyed on assets_assetdefinitions_id), set up under Setup > Asset definitions (src/Html.php:1330). The core Appliance and Software types take no custom fields in core; that needs the fields plugin, read at pluginsGLPI/fields tag 1.24.5, inc/container.class.php:91 containers with a list of itemtypes. Reached on: Setup > Asset definitions > Custom fields; or plugin Fields.",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/fact-sheet-fields: 'Adding a Custom Field ... To add a custom field, follow these steps'; https://help.sap.com/docs/leanix/ea/tags-and-custom-fields: custom fields as text, dates, numbers, set in the meta model configuration by an admin (read 2026-09-26). Reached on: Administration > Meta Model Configuration > Fact Sheet Fields.",
+				"glpi": "source read at 11.0.9: native custom fields exist only for admin defined custom asset types, src/Glpi/Asset/CustomFieldDefinition.php:52 child of AssetDefinition (install/mysql/glpi-empty.sql:10159 glpi_assets_customfielddefinitions keyed on assets_assetdefinitions_id), set up under Setup > Asset definitions (src/Html.php:1330). The core Appliance and Software types take no custom fields in core; that needs the fields plugin, read at pluginsGLPI/fields tag 1.24.5, inc/container.class.php:91 containers with a list of itemtypes. Reached on: Setup > Asset definitions > Custom fields; or plugin Fields. Driven on the lab at 11.0.9 (2026-09-26): Setup > Asset definitions (/front/asset/assetdefinition.php) is where custom asset types and their fields are defined; appliances themselves take no custom fields in core.",
 				"stackiq": "Looked in src/manifest.json, src/views, lib/Controller: no field-definition or schema-extension UI in stackiq; the data model is fixed in lib/Settings/softwarecatalogus_register.json",
 				"topdesk": "https://docs.topdesk.com/en/creating-new-fields.html: \"Whether it is a contact person, a purchase price, or a reminder date ... Use fields in a fieldset or dataset widget to register any useful information about an asset\" (read 2026-09-26). Reached on: Asset Management > Template Designer > Fields.",
 				"vng-softwarecatalogus": "unknown: no user-defined fields are described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)"
@@ -395,7 +399,7 @@
 			"name": "Import an existing application list in bulk from a spreadsheet or file.",
 			"origin": "competitor",
 			"vng-softwarecatalogus": "no",
-			"sap-leanix": "partial",
+			"sap-leanix": "yes",
 			"bluedolphin": "yes",
 			"glpi": "partial",
 			"topdesk": "yes",
@@ -410,7 +414,7 @@
 			"providerHow": "read-from-code",
 			"note": "The generic index page offers a file import (CSV per schema, or a register-wide JSON/Excel) that OpenRegister executes. Nothing stackiq-specific maps a spreadsheet's supplier names to organisation references, so relation columns must already hold identifiers.",
 			"evidence": {
-				"sap-leanix": "docs, intelligence competitor_features#27428 'EAM Automation' (2026-04-12): Automated data collection from ServiceNow, Jira, cloud providers | Rated partial because automated collection from ServiceNow, Jira and cloud.",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/importing-fact-sheet-data-through-excel-file and https://help.sap.com/docs/leanix/ea/adding-and-editing-data-in-fact-sheets: 'using the import option, you can update multiple fact sheets in bulk' via Excel export and import (read 2026-09-26). Reached on: Inventory > Import (Excel).",
 				"bluedolphin": "docs, intelligence competitor_features#48971 'Data import (Excel)' (2026-07-23): Bulk import of application/portfolio data.",
 				"stackiq": "Library CnIndexPage (@conduction/nextcloud-vue 2.55.1, package-lock) showMassImport default true (CnIndexPage.vue:1599) and self-mode handleMassImport (selfModeActions.js:168) POSTs to /apps/openregister/api/registers/{register}/import with the schema for CSV (selfModeIO.js:82); rendered on the Modules page's CnIndexPage (src/views/FacetedCatalogIndexView.vue:108)",
 				"topdesk": "https://docs.topdesk.com/en/generate-import-file.html: \"Importing assets speeds up this task ... export an asset template to XLSX format\" (read 2026-09-26); https://docs.topdesk.com/en/creating-a-new-import.html: \"You can use a file (CSV or XLSX), connect with an MS SQL database or import from Microsoft Intune , or Lansweeper\" (read 2026-09-26). Reached on: Settings > Import settings > Asset Management imports.",
@@ -442,7 +446,7 @@
 			"note": "The application page shows versions and compliance claims, and usages only as untyped entries in the generic Related panel. Contracts are not shown. The page cannot be opened from the Applications list itself, and its data widget asks for three field names the schema no longer has, so the descriptions do not render.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/pakket/archi: package page shows versions with status and start dates, \"Pakket geschikt voor (GEMMA 2) Ingevuld door (28)\", and per version the mandatory and recommended standards with support, compliancy and testrapport (read 2026-09-26). No contracts on the page. Reached on: Alle pakketten > package name.",
-				"sap-leanix": "docs, intelligence competitor_features#48860 'Fact Sheet data model (Application / IT Component / Provider)' (2026-07-23): Structured fact sheets are the core inventory unit for applications, components and providers. | Rated yes because fact sheet is the per-application page.",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines and https://help.sap.com/docs/leanix/ea/adding-and-editing-data-in-fact-sheets: the application fact sheet holds lifecycle, relations to IT components, organizations, interfaces, cost on relations, and a Relations Explorer on one fact sheet (read 2026-09-26). Reached on: Inventory > Application fact sheet.",
 				"stackiq": "src/manifest.json:491 ModuleDetail: md-versions (:504), md-compliance (:503), md-related generic Related panel (:502); no contract widget (catalogContract links to service/usage, register.json:3250, not to module); md-data include lists stale keys beschrijvingKort/beschrijvingLang/contactpersoon (:500)",
 				"topdesk": "https://docs.topdesk.com/en/designing-templates-for-assets.html: twelve widgets incl. \"History\", \"Relationships\", \"Relationship grid\", \"Documents\" (read 2026-09-26); https://docs.topdesk.com/en/linking-assets-to-cards.html: assets linked to calls, changes, services (read 2026-09-26). Versions and compliance are not part of it. Reached on: Asset card.",
 				"glpi": "source read at 11.0.9: src/Appliance.php:98 onwards defineTabs puts Items, Contracts, Documents, Management (Infocom), Certificates, Domains, Knowledge base, Tickets, Problems, Changes and Impact on the one appliance page; versions sit on the separate Software page (src/SoftwareVersion.php:42), and no compliance tab exists (grep -i 'complian' src/Appliance.php returns nothing). Reached on: Management > Appliances > appliance form tabs."
@@ -454,7 +458,7 @@
 			"name": "Select many catalogue entries at once and publish, lock or delete them together.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "unknown",
-			"sap-leanix": "unknown",
+			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
 			"glpi": "yes",
 			"topdesk": "partial",
@@ -474,7 +478,8 @@
 				"stackiq": "Library CnIndexPage mass delete/copy/export (showMassDelete default true, CnIndexPage.vue:1617; selfModeActions.js:63 handleMassDelete) on index pages; stackiq's MassPublishObjects/MassLockObjects dialogs (src/dialogs/Dialogs.vue:8-14) are only opened from src/modals/object/ViewObject.vue:4865, and ViewObject is only mounted for modals 'viewOrganisatie'/'viewContactpersoon' (src/modals/Modals.vue:7,19) which nothing in src/ sets",
 				"topdesk": "https://docs.topdesk.com/en/editing-assets-in-bulk.html: \"select multiple assets by ticking their boxes ... You can use bulk edit for updating up to 500 assets\" (read 2026-09-26); editable are assignments, drop-down, date, number, text and checkbox fields. Bulk publish or delete is not described. Reached on: Asset Management > Asset overview > select > bulk edit.",
 				"vng-softwarecatalogus": "unknown: no multi-select publish, lock or delete is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
-				"glpi": "source read at 11.0.9: every search list offers massive actions, src/MassiveAction.php:666 Update (any field, for example status), src/MassiveAction.php:698 Put in trashbin, src/MassiveAction.php:652 Delete permanently, src/MassiveAction.php:656 Restore. There is no publish state; locking applies to inventory fields only. Reached on: any list, for example Management > Appliances, Actions button."
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/adding-and-editing-data-in-fact-sheets: 'switch to table view in the inventory, you can perform inline editing across multiple fact sheets'; https://help.sap.com/docs/leanix/ea/archiving-deleting-and-recovering-fact-sheets: 'Archiving Fact Sheets in Bulk' through an Excel action column. No publish or lock action is documented (read 2026-09-26). Reached on: Inventory > Table view; Excel import with action column.",
+				"glpi": "source read at 11.0.9: every search list offers massive actions, src/MassiveAction.php:666 Update (any field, for example status), src/MassiveAction.php:698 Put in trashbin, src/MassiveAction.php:652 Delete permanently, src/MassiveAction.php:656 Restore. There is no publish state; locking applies to inventory fields only. Reached on: any list, for example Management > Appliances, Actions button. Driven on the lab at 11.0.9 (2026-09-26): the Appliances list carries the massive actions control."
 			}
 		},
 		{
@@ -501,6 +506,7 @@
 				"stackiq": "src/components/organisations/OrganisationMergePanel.vue:46 (admin-only controls) mounted as OrganisatieDetail bodyWidget org-merge (src/manifest.json:430); lib/Controller/MergeController.php:106 execute with isAdmin check at :142; generic src/modals/object/MergeObject.vue only mounted for modal 'mergeOrganisatie' which nothing sets",
 				"topdesk": "https://docs.topdesk.com/en/migration-status.html: \"You cannot merge the two cards into one card\" (read 2026-09-26); https://tip.topdesk.com/c/239-ai-cmdb-monitoring-: roadmap card in column \"Under consideration\", \"AI can continuously scan your configuration database for duplicate records ... and surfaces them for review\" (read 2026-09-26)",
 				"vng-softwarecatalogus": "unknown: no merge of entries is described; the news page only mentions a pseudo-supplier \"Open Source Pakketten\" created against duplicate spellings; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/nieuws (read 2026-09-26)",
+				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea (all 663 EA pages grepped for merge); duplicates are handled by archiving (https://help.sap.com/docs/leanix/ea/archiving-deleting-and-recovering-fact-sheets 'removing outdated or duplicate fact sheets'), no merge of two fact sheets is documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: src/Software.php:109 'Merging' tab on a recursive software, src/Software.php:926 showMergeCandidates lists same named software, src/Software.php:997 massive action Merge, src/Software.php:1011 private function merge moves versions and licences into the kept entry; dropdowns get Replace, src/CommonDropdown.php:680. Reached on: Assets > Software > Merging tab."
 			}
 		},
@@ -525,7 +531,7 @@
 			"providerHow": "read-from-code",
 			"note": "Nothing asks owners to confirm or correct their entries.",
 			"evidence": {
-				"sap-leanix": "docs, intelligence competitor_features#48865 'Survey campaigns for data collection' (2026-07-23): Crowd-sources data quality via targeted surveys to app owners. | docs, intelligence competitor_features#27423 'Survey-Based Data Collection' (2026-04-12): Crowdsource architecture data from application owners",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/reviewing-responses: 'Review and approve survey responses before they are saved to fact sheets'; https://help.sap.com/docs/leanix/ea/application-modernization-collect-data: 'Create a new survey to get key information from application or business owners' (read 2026-09-26). Reached on: Surveys.",
 				"bluedolphin": "docs, intelligence competitor_features#48974 'Questionnaires / data collection' (2026-07-23): Surveys to gather portfolio data from stakeholders.",
 				"stackiq": "No survey, attestation or owner-confirmation code in lib/ or src/ (searched survey/enquete/confirm entry)",
 				"topdesk": "unknown: Survey Management runs general surveys (and \"will reach end of life ... November 2026\"), not confirmation of entries by owners; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -539,7 +545,7 @@
 			"name": "See how complete and up to date each application's entry is, as a score.",
 			"origin": "competitor",
 			"vng-softwarecatalogus": "partial",
-			"sap-leanix": "unknown",
+			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
 			"glpi": "no",
 			"topdesk": "unknown",
@@ -557,6 +563,7 @@
 				"stackiq": "No completeness or data-quality score in lib/ or src/ (searched completeness/volledigheid/score outside reviews)",
 				"topdesk": "unknown: the only readiness score described is the AI readiness score for the knowledge base; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/voortgang-verbeteren: \"Met het aantal sterren (*) wordt een indicatie van volledigheid van ingevulde gegevens aangegeven\", criteria include referentiecomponenten filled, statuses, koppelingen and \"Datum laatste wijziging is recenter dan 3 maanden geleden\" (read 2026-09-26). Scored per organisation, not per application entry. Reached on: Homepage block Voortgang gemeenten; organisation page header.",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/fact-sheet-completeness: 'The fact sheet completion score measures how much of the required data has been filled out for a fact sheet ... You can view the fact sheet completion score in the fact sheet's header' (read 2026-09-26). Reached on: Fact sheet header > completion score.",
 				"glpi": "source read at 11.0.9: grep -ril 'completeness' over src/ templates/ locales/glpi.pot returns nothing; no score of how filled in an item is exists in core. The item form tabs (src/Appliance.php:98 onwards) show no score."
 			}
 		},
@@ -584,7 +591,8 @@
 				"stackiq": "src/manifest.json:3 setup wizard step load-demo-data (:24); lib/Controller/SetupController.php:202 runAction load-demo-data (AuthorizedAdminSetting); lib/Service/DemoDataService.php:202 install() imports lib/Settings/stackiq_mock_register.json (120 objects, 6 per schema) through OpenRegister ConfigurationService::importFromApp",
 				"topdesk": "unknown: no example data set is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "unknown: the catalogue is one hosted service; no loadable example data set is described (a \"VNG Realisatie Demo\" supplier appears in the live data); searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/Beschrijving%20exportbestanden (read 2026-09-26)",
-				"glpi": "source read at 11.0.9: on a clean install dashboards render placeholder figures from src/Glpi/Dashboard/FakeProvider.php:65 FakeProvider, with the banner 'You are viewing demonstration data.' and a 'Disable demonstration' button (src/Glpi/Dashboard/Grid.php:427, :428, :448); CHANGELOG.md 11.0.0 lists it. No example records (applications, contracts, suppliers) are loaded; the console entry point src/Glpi/Console/Application.php:66 has no demo data command. Reached on: Home > Dashboard on a fresh install."
+				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea; demo and sandbox workspaces are mentioned (https://help.sap.com/docs/leanix/ea/automations 'Demo and sandbox workspaces allow up to 10,000 automations per month') but loading an example data set into a workspace is not described (read 2026-09-26)",
+				"glpi": "source read at 11.0.9: on a clean install dashboards render placeholder figures from src/Glpi/Dashboard/FakeProvider.php:65 FakeProvider, with the banner 'You are viewing demonstration data.' and a 'Disable demonstration' button (src/Glpi/Dashboard/Grid.php:427, :428, :448); CHANGELOG.md 11.0.0 lists it. No example records (applications, contracts, suppliers) are loaded; the console entry point src/Glpi/Console/Application.php:66 has no demo data command. Reached on: Home > Dashboard on a fresh install. Driven on the lab at 11.0.9 (2026-09-26): glpi_configs.is_demo_dashboards is 1 on the fresh install, so the dashboard cards come from FakeProvider until an administrator disables the demonstration."
 			}
 		},
 		{
@@ -611,6 +619,7 @@
 				"stackiq": "src/dialogs/SuiteWizardDialog.vue (3 steps) is the only wizard, opened from src/views/suites/SuitesIndexView.vue:46; applications, services and connections use the bare CnIndexPage form (FacetedCatalogIndexView.vue:108) or nothing",
 				"topdesk": "unknown: wizards exist for imports and migration, not for adding an application; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "unknown: the manuals describe forms (\"Hierna opent een formulier\"), no step-by-step wizard; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/node/30355 (read 2026-09-26)",
+				"sap-leanix": "unknown: https://help.sap.com/docs/leanix/ea/creating-fact-sheets describes creating a fact sheet in the inventory with reference catalog suggestions and duplicate hints, not a step by step wizard; wizards are documented only for KPI and integration mapping configuration (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: grep -ril 'wizard' over src/ templates/ locales/glpi.pot returns nothing for item creation; appliances are added through the plain form only (install/mysql/glpi-empty.sql:8935 glpi_appliances has no is_template column)."
 			}
 		},
@@ -620,7 +629,7 @@
 			"name": "See the third-party components a module version is built from.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "unknown",
-			"sap-leanix": "unknown",
+			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
 			"glpi": "no",
 			"topdesk": "unknown",
@@ -638,6 +647,7 @@
 				"stackiq": "src/components/sbom/SbomComponentsPanel.vue lists sbomComponent rows (name/version/purl/licenses) as the ModuleversieDetail 'Components' sidebar tab (src/manifest.json:961); register.json:7920 sbomComponent schema",
 				"topdesk": "unknown: no software components per version are described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "unknown: no third-party component list per version is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/Beschrijving%20exportbestanden (read 2026-09-26)",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/uploading-sboms-from-fact-sheets: 'Upload SBOM files directly from a microservice fact sheet'; https://help.sap.com/docs/leanix/ea/tech-stack-discovery-from-sboms: 'the system automatically analyzes the SBOM components and builds a structured view of your technology stack'. Part of SAP LeanIX Technology Risk and Compliance (read 2026-09-26). Reached on: Microservice fact sheet > SBOM (Technology Risk and Compliance).",
 				"glpi": "source read at 11.0.9: grep -ril 'sbom\\|cyclonedx\\|spdx' over src/ templates/ locales/glpi.pot returns nothing; software versions carry no component list (install/mysql/glpi-empty.sql:6900 glpi_softwareversions)."
 			}
 		},
@@ -647,7 +657,7 @@
 			"name": "Record whether an application runs on premises, as SaaS or at a hosting party.",
 			"origin": "competitor",
 			"vng-softwarecatalogus": "yes",
-			"sap-leanix": "partial",
+			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
 			"topdesk": "unknown",
@@ -664,7 +674,7 @@
 			"featureConfidence": "medium",
 			"note": "The application form records on-premises, IaaS, PaaS or SaaS plus hosting location and jurisdiction. There is no field naming the hosting party itself.",
 			"evidence": {
-				"sap-leanix": "docs, intelligence competitor_features#48864 'SaaS Management & discovery' (2026-07-23): Discovers SaaS usage and shadow IT, integrates with the fact sheet model. | Rated partial because SaaS is tracked as a class of application.",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/applications-in-reference-catalog lists application fields 'Hosting Type' and 'Hosting Description'; https://help.sap.com/docs/leanix/ea/configuring-kpis filters applications on 'Hosting Type = \"Cloud\"'; IT component subtypes SaaS, IaaS, PaaS, Hardware (read 2026-09-26). Reached on: Application fact sheet > Hosting Type.",
 				"stackiq": "register.json:6869 module.cloudDienstverleningsmodel enum On-premises, IaaS, PaaS, SaaS; register.json:6906 hostingLocation and hostingJurisdiction; usage.cloudDienstverleningsmodel (register.json:3050); on ModuleDetail md-data include (src/manifest.json:500)",
 				"topdesk": "unknown: only possible as a self-defined field; no hosting model is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/30355: \"Indien een leverancier zowel SaaS als On premise ondersteunt, kan je aangeven welke van deze twee varianten gebruikt wordt binnen de gemeente\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Pakketten > toevoegen > tabblad Technologie.",
@@ -677,7 +687,7 @@
 			"name": "Record a connection from an application to a national provision such as a basisregistratie.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "yes",
-			"sap-leanix": "unknown",
+			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
 			"topdesk": "unknown",
@@ -697,6 +707,7 @@
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Opvoeren%20koppeling%20iJw%20en%20iWmo: \"De richting van het berichtenverkeer, de landelijke voorziening waarmee gekoppeld is/wordt, in dit geval GGK\" (read 2026-09-26); https://www.softwarecatalogus.nl/hoe-werkt-de-catalogus: \"kunnen koppelingen tussen applicaties onderling en met Landelijke Voorzieningen vastgelegd worden\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Koppelingen > koppeling toevoegen.",
 				"stackiq": "register.json:3720 connection.nonMunicipalProvision -> element filtered gemmaType 'Buitengemeentenlijke voorziening'; no page for connection",
 				"topdesk": "unknown: the TOPdesk documentation is about service management and does not cover this; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines: 'Modeling External Applications ... applications of business partners, service providers, authorities', linked 'through an interface to analyze dependencies'. Generic external application modeling, no catalogue of national provisions such as basisregistraties (read 2026-09-26). Reached on: Application fact sheet (external) + Interface fact sheet.",
 				"glpi": "source read at 11.0.9: no national provision concept (grep -ril 'basisregistratie' src/ locales/glpi.pot returns nothing); a provision can be held as another Appliance and linked through an impact relation, install/mysql/glpi-empty.sql:1247 glpi_impactrelations (source item, impacted item, name), with Appliance enabled for impact at src/autoload/CFG_GLPI.php:649. Reached on: Appliance > Impact analysis tab, Add relation."
 			}
 		},
@@ -706,7 +717,7 @@
 			"name": "Browse all connections in the catalogue in one list and open each one.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "yes",
-			"sap-leanix": "unknown",
+			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
 			"glpi": "no",
 			"topdesk": "unknown",
@@ -726,7 +737,8 @@
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Alle koppelingen ... staan de koppelingen van alle gemeenten en samenwerkingsverbanden ... Door te klikken op het icoontje rechts van een koppeling, krijg je nog enige detail informatie\" (read 2026-09-26). Reached on: Inlogmenu > Alle koppelingen (logged-in municipal users).",
 				"stackiq": "No manifest page with schema connection (src/manifest.json and src/manifest.d/*.json); the Integrations page (src/manifest.d/connection-registry.json:23) lists integriq app_connection, explicitly not stackiq's connection schema (its _note)",
 				"topdesk": "unknown: relations are shown per asset and in a graphical overview; a list of all relations is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
-				"glpi": "source read at 11.0.9: src/ImpactRelation.php:39 ImpactRelation has only prepareInputForAdd and getIDFromInput (src/ImpactRelation.php:47, :107), no search options and no list page; relations are only seen per item in the Impact analysis tab (src/Impact.php:91)."
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/interface-modeling-guidelines: 'Interfaces are connections between applications that illustrate how data exchange occurs', each a fact sheet listed in the inventory by fact sheet type (read 2026-09-26). Reached on: Inventory > filter fact sheet type Interface.",
+				"glpi": "source read at 11.0.9: src/ImpactRelation.php:39 ImpactRelation has only prepareInputForAdd and getIDFromInput (src/ImpactRelation.php:47, :107), no search options and no list page; relations are only seen per item in the Impact analysis tab (src/Impact.php:91). Driven on the lab at 11.0.9 (2026-09-26): /front/impactrelation.php opens by URL only (no menu entry) as a generic list whose only criterion and column is ID, so relations cannot be browsed by endpoint; rating unchanged."
 			}
 		},
 		{
@@ -735,7 +747,7 @@
 			"name": "See every connection an application has, from that application's own page.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "partial",
-			"sap-leanix": "unknown",
+			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
 			"glpi": "yes",
 			"topdesk": "partial",
@@ -755,7 +767,8 @@
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Mijn pakketoverzicht ... Onder het eerste tabblad zitten de pakketten en onder het tweede tabblad de koppelingen\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/30890: \"Door op een applicatienaam in het Models venster te klikken, zie je in de Visualiser alle koppelingen tussen die applicatie met andere applicaties\" (in Archi after export) (read 2026-09-26). No per-application connection view inside the catalogue is described. Reached on: Mijn softwarecatalogus > Koppelingen.",
 				"stackiq": "src/manifest.json:502 ModuleDetail md-related generic Related panel (OpenRegister /uses + /used merged into an Objects tab); register.json:7064 module.koppelingen is hideOnForm and not in md-data include (:500); lib/Controller/AangebodenGebruikController.php:208 GET /api/koppelingen-gebruik/{uuid} (public) has no caller in src/",
 				"topdesk": "https://docs.topdesk.com/en/linking-assets-to-other-assets.html: \"Links between assets are created and managed via the Relationships widget. For current relationships with other assets, the widget shows the template's icon, the Asset ID\" (read 2026-09-26). Generic asset relations, not interfaces. Reached on: Asset card > Relationships widget.",
-				"glpi": "source read at 11.0.9: src/Impact.php:91 getTabNameForItem adds the 'Impact analysis' tab (src/Impact.php:80) to every impact enabled itemtype, Appliance and Software included (src/autoload/CFG_GLPI.php:649 and :663), with a list view src/Impact.php:270 displayListView of every related item in both directions. Reached on: Management > Appliances > Impact analysis tab."
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/circle-map-report: the Interface Circle Map 'helps you track changes and updates in application dependencies', and https://help.sap.com/docs/leanix/ea/adding-and-editing-data-in-fact-sheets: relations incl. interfaces shown on the fact sheet and in the Relations Explorer (read 2026-09-26). Reached on: Application fact sheet > Relations (Provided and Consumed Interfaces).",
+				"glpi": "source read at 11.0.9: src/Impact.php:91 getTabNameForItem adds the 'Impact analysis' tab (src/Impact.php:80) to every impact enabled itemtype, Appliance and Software included (src/autoload/CFG_GLPI.php:649 and :663), with a list view src/Impact.php:270 displayListView of every related item in both directions. Reached on: Management > Appliances > Impact analysis tab. Driven on the lab at 11.0.9 (2026-09-26): the appliance page carries an Impact analysis tab with Add assets for every impact enabled item type."
 			}
 		},
 		{
@@ -781,9 +794,9 @@
 			"featureConfidence": "low",
 			"note": "No page draws connections. The ArchiMate export can be opened in Archi, but it carries GEMMA views and usages, not the catalogue's connections.",
 			"evidence": {
-				"sap-leanix": "docs, intelligence competitor_features#48869 'Architecture diagrams / free-draw' (2026-07-23): Auto-generated and manual architecture diagrams from the data model. | docs, intelligence competitor_features#27421 'Integration Architecture' (2026-04-12): Visualize data flows and integration patterns between applications",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/data-flow: data flow diagrams help 'understand how applications are connected, identify dependencies, and trace data movement between systems' (read 2026-09-26). Reached on: Diagrams > Data Flow Diagram.",
 				"bluedolphin": "docs, intelligence competitor_features#48968 'Free-form diagramming' (2026-07-23): Freeform diagrams alongside formal models. | docs, intelligence competitor_features#48964 'ArchiMate & BPMN modeling' (2026-07-23): Standards-based enterprise architecture and process modeling.",
-				"glpi": "source read at 11.0.9: src/Impact.php:252 displayGraphView and src/Impact.php:1559 makeDataForCytoscape draw the relation network, with editing tools add asset, add relation, add group at src/Impact.php:1160. Reached on: Appliance > Impact analysis tab, graph view.",
+				"glpi": "source read at 11.0.9: src/Impact.php:252 displayGraphView and src/Impact.php:1559 makeDataForCytoscape draw the relation network, with editing tools add asset, add relation, add group at src/Impact.php:1160. Reached on: Appliance > Impact analysis tab, graph view. Driven on the lab at 11.0.9 (2026-09-26): the Impact analysis tab renders the graph editor with Add assets, Edit group and Edit edge tools.",
 				"stackiq": "No diagram rendering in src/ (no graph library; src/store/modules/view.js GET /api/views has no importer outside itself); lib/Service/ArchiMateExportService.php exports GEMMA views as ArchiMate XML without koppeling objects (no 'koppeling' in lib/Service/ArchiMate*)",
 				"topdesk": "https://docs.topdesk.com/en/linking-assets-to-other-assets.html: \"After you define the relationship between assets, you can use the graphical overview to see a visual representation of their relationship\" (read 2026-09-26). Reached on: Asset card > graphical overview.",
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/30890: \"Tekenen van een view met koppelingen ... Een koppeling is gemodelleerd als een Archimate flow relatie\" (read 2026-09-26). Diagrams are drawn in Archi after an AMEFF export, not in the catalogue."
@@ -795,7 +808,7 @@
 			"name": "Before changing or retiring an application, see what depends on it.",
 			"origin": "competitor",
 			"vng-softwarecatalogus": "partial",
-			"sap-leanix": "unknown",
+			"sap-leanix": "yes",
 			"bluedolphin": "yes",
 			"glpi": "yes",
 			"topdesk": "partial",
@@ -814,7 +827,8 @@
 				"glpi": "source read at 11.0.9: src/Impact.php:49 class Impact 'Impact analysis', src/Impact.php:713 bfs walks the graph by direction and src/Impact.php:612 buildListData lists what is impacted, with ongoing tickets, problems and changes on impacted items (src/Impact.php:313). Reached on: Tools > Impact analysis (src/Html.php:1309) and the item's Impact analysis tab.",
 				"topdesk": "https://docs.topdesk.com/en/managing-disruptions-in-your-asset-management-process.html: \"you want to know how far the reach of the disruption is ... the operational/impacted status for assets ... Status impacts are also only shown in the graphical overview when a link type is used\" (read 2026-09-26). Disruption impact, not a pre-change dependency analysis. Reached on: Asset card > General widget > Determine status automatically.",
 				"stackiq": "src/manifest.json:502 ModuleDetail md-related (library CnRelatedObjectsWidget: /used lists every object that references this module: usages, connections, suites, services, vulnerabilities); no dependency or impact computation in lib/ or src/",
-				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Releasebrief%20GEMMA%20Softwarecatalogus%20versie%204.1: \"Pakketversies die niet meer in gebruik zijn, kunnen verwijderd worden waarbij feedback gegeven wordt over de koppelingen die ook automatisch verwijderd zullen worden\" (read 2026-09-26). Only on delete, no dependency analysis."
+				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Releasebrief%20GEMMA%20Softwarecatalogus%20versie%204.1: \"Pakketversies die niet meer in gebruik zijn, kunnen verwijderd worden waarbij feedback gegeven wordt over de koppelingen die ook automatisch verwijderd zullen worden\" (read 2026-09-26). Only on delete, no dependency analysis.",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/meta-model: 'These relations are the basis for all the reports and allow you to analyze impact of changes, dependencies, risks, redundancies'; https://help.sap.com/docs/leanix/ea/data-flow: 'directional interface mapping, dependency analysis' (read 2026-09-26). Reached on: Reports and Data Flow Diagrams."
 			}
 		},
 		{
@@ -823,7 +837,7 @@
 			"name": "Filter connections by type, such as an API, a file exchange or a message.",
 			"origin": "competitor",
 			"vng-softwarecatalogus": "unknown",
-			"sap-leanix": "unknown",
+			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
 			"glpi": "no",
 			"topdesk": "unknown",
@@ -841,6 +855,7 @@
 				"stackiq": "register.json:3563 connection.type enum (file transfer, digikoppeling, message que, webservices, api, ...) exists, but no connection list page to filter",
 				"topdesk": "unknown: custom link types exist, but filtering relations by type is not described; https://tip.topdesk.com/c/90-graphical-overview-improvements is still under consideration; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "unknown: connections carry a standard and \"het soort overdracht\" (upload naar portaal, webservices), but the docs do not name a type filter on the connection list; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/Opvoeren%20koppeling%20iJw%20en%20iWmo (read 2026-09-26)",
+				"sap-leanix": "https://help.sap.com/docs/leanix/ea/interface-modeling-guidelines: interface subtypes 'Logical interface, API, MCP server' and 'You can capture data flow directions, type of transfer, and frequency with the interface fact sheet'; subtypes and fields are filterable in the inventory (read 2026-09-26). Reached on: Inventory > Interface > filter by subtype or transfer type.",
 				"glpi": "source read at 11.0.9: install/mysql/glpi-empty.sql:1247 glpi_impactrelations has only a free name besides the two endpoints, no connection type (API, file, message), so there is nothing to filter on; the graph settings (src/Impact.php:1167 impact_settings) cover depth and direction."
 			}
 		},
@@ -1672,7 +1687,7 @@
 				"stackiq": "src/manifest.json:386 Organisaties type:index over schema organization with status filter and OrganisatieCard; register :2022 organization.type is facetable (Municipality/Supplier/Collaboration/Community); public read of Active suppliers in organization authorization (:2467)",
 				"topdesk": "unknown: TOPdesk is a single-organisation tool; no market-wide catalogue is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/leveranciers: \"Leveranciers ... Zoek in leveranciers ... 354 resultaten gevonden\", filter \"Met ondertekend addendum\" (read 2026-09-26). Reached on: Wat is er te vinden > Alle leveranciers.",
-				"glpi": "source read at 11.0.9: src/Supplier.php:46 Supplier list under Management (src/Html.php:1298) with search, filters and a supplier type (install/mysql/glpi-empty.sql:7072 suppliertypes_id), but it holds only the suppliers this organisation entered, not all organisations offering to government. Reached on: Management > Suppliers (front/supplier.php)."
+				"glpi": "source read at 11.0.9: src/Supplier.php:46 Supplier list under Management (src/Html.php:1298) with search, filters and a supplier type (install/mysql/glpi-empty.sql:7072 suppliertypes_id), but it holds only the suppliers this organisation entered, not all organisations offering to government. Reached on: Management > Suppliers (front/supplier.php). Driven on the lab at 11.0.9 (2026-09-26): created supplier \"Lab Leverancier BV\" through /front/supplier.form.php; it appears in the Suppliers list."
 			}
 		},
 		{
@@ -2185,7 +2200,7 @@
 			"featureConfidence": "medium",
 			"note": "The application page has no contracts list, and a contract links to a usage and a service rather than the application, so there is no path from an application to its contracts in the UI.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/Appliance.php:99 and src/Software.php:131 add the Contract_Item tab (src/Contract_Item.php:43, install/mysql/glpi-empty.sql:1536 glpi_contracts_items) listing every contract of the application. Reached on: Management > Appliances > Contracts tab.",
+				"glpi": "source read at 11.0.9: src/Appliance.php:99 and src/Software.php:131 add the Contract_Item tab (src/Contract_Item.php:43, install/mysql/glpi-empty.sql:1536 glpi_contracts_items) listing every contract of the application. Reached on: Management > Appliances > Contracts tab. Driven on the lab at 11.0.9 (2026-09-26): after linking the contract, the appliance Contracts tab showed \"Lab contract, 2025-01-01, 12 months -> 2025-12-31\".",
 				"stackiq": "src/manifest.json:491 ModuleDetail widgets: md-data, md-files, md-related, md-compliance, md-versions, ReviewsPanel; no catalogContract list. catalogContract points at service and usage (register :3252), not at module, so the one-hop related panel cannot reach it",
 				"topdesk": "https://docs.topdesk.com/en/linking-assets-to-cards.html: assets link to \"Service cards\" (read 2026-09-26); https://docs.topdesk.com/en/creating-a-contract.html: \"On the Services tab, link the services that apply to this contract\" (read 2026-09-26). Contract to asset runs through the service. Reached on: Contract > Services tab > Service > Links > Assets.",
 				"vng-softwarecatalogus": "unknown: contracts, licences and costs are not described anywhere in the public docs (the 2021 user survey asks which other tool municipalities use for contract management); searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/gebruikersonderzoek%202021 (read 2026-09-26)"
@@ -2354,7 +2369,7 @@
 			"providerHow": "read-from-code",
 			"note": "Contracts carry a cost and a period, but there is no budget to charge them against.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/Budget.php:46 Budget with a period and value (install/mysql/glpi-empty.sql:306 begin_date, :307 end_date, :308 value); contract costs (install/mysql/glpi-empty.sql:1466 budgets_id) and financial records (src/Infocom.php:599 budgets_id check) are charged to it. Reached on: Management > Budgets.",
+				"glpi": "source read at 11.0.9: src/Budget.php:46 Budget with a period and value (install/mysql/glpi-empty.sql:306 begin_date, :307 end_date, :308 value); contract costs (install/mysql/glpi-empty.sql:1466 budgets_id) and financial records (src/Infocom.php:599 budgets_id check) are charged to it. Reached on: Management > Budgets. Driven on the lab at 11.0.9 (2026-09-26): /front/budget.php lists budgets with type, start date, end date and value.",
 				"stackiq": "grep for budget across lib/, src/ and lib/Settings finds no budget schema or field; catalogContract has cost + costPeriod only (register :3363)",
 				"topdesk": "https://docs.topdesk.com/en/creating-a-contract.html: \"Budget holder: Cost-accounting owner of the contract\" and \"Applicable to ... Budget holder\" (read 2026-09-26). No budget with a period is described. Reached on: Contract card > Financial.",
 				"vng-softwarecatalogus": "unknown: contracts, licences and costs are not described anywhere in the public docs (the 2021 user survey asks which other tool municipalities use for contract management); searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/gebruikersonderzoek%202021 (read 2026-09-26)"
@@ -2930,7 +2945,7 @@
 			"providerHow": "read-from-code",
 			"note": "Stackiq has no directory sync for users or groups. Nextcloud's LDAP app could do it platform-wide, outside stackiq.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/AuthLDAP.php:59 LDAP directories with user import and group import (src/AuthLDAP.php:2816 ldapImportGroup), and the CLI src/Glpi/Console/Ldap/SynchronizeUsersCommand.php:79 ldap:synchronize_users (alias ldap:sync at :80). Reached on: Administration > Users > LDAP directory link; Setup > Authentication > LDAP directories.",
+				"glpi": "source read at 11.0.9: src/AuthLDAP.php:59 LDAP directories with user import and group import (src/AuthLDAP.php:2816 ldapImportGroup), and the CLI src/Glpi/Console/Ldap/SynchronizeUsersCommand.php:79 ldap:synchronize_users (alias ldap:sync at :80). Reached on: Administration > Users > LDAP directory link; Setup > Authentication > LDAP directories. Driven on the lab at 11.0.9 (2026-09-26): /front/ldap.php offers \"Bulk import users from a LDAP directory\" and \"Synchronizing already imported users\".",
 				"stackiq": "lib/Service/OrganizationSyncService.php and the 'Organization synchronization' admin section sync catalogue organisations to OpenRegister organisation entities, not users from a directory; no LDAP code in lib/",
 				"topdesk": "https://docs.topdesk.com/en/manual-login-with-ldap.html: \"This is also required if you want to import persons from your AD via Supporting files import\" (read 2026-09-26); https://tip.topdesk.com/c/242-support-scim-when-importing-users-from-entra-id-to-topdesk: roadmap card in column \"Launched\", \"Support SCIM when importing users from Entra ID to TOPdesk\" (read 2026-09-26). Reached on: Settings > Import settings > Supporting Files imports.",
 				"vng-softwarecatalogus": "unknown: no directory sync is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)"
@@ -3158,7 +3173,7 @@
 			"evidence": {
 				"sap-leanix": "docs, intelligence competitor_features#48867 'REST & GraphQL API' (2026-07-23): Programmatic access to the workspace graph.",
 				"bluedolphin": "docs, intelligence competitor_features#48972 'REST API' (2026-07-23): Programmatic integration with other systems.",
-				"glpi": "source read at 11.0.9: legacy REST API src/Glpi/Api/APIRest.php:60 (documented in apirest.md) and the v2 high level API, src/Glpi/Api/HL/Controller/AssetController.php:149 /Assets with GET list (:2825), GET item (:2839) and POST create (:2988), Appliance and Software included (src/Glpi/Api/HL/Controller/AssetController.php:39, :133). Reached on: /apirest.php and /api.php/v2.",
+				"glpi": "source read at 11.0.9: legacy REST API src/Glpi/Api/APIRest.php:60 (documented in apirest.md) and the v2 high level API, src/Glpi/Api/HL/Controller/AssetController.php:149 /Assets with GET list (:2825), GET item (:2839) and POST create (:2988), Appliance and Software included (src/Glpi/Api/HL/Controller/AssetController.php:39, :133). Reached on: /apirest.php and /api.php/v2. Driven on the lab at 11.0.9 (2026-09-26): the legacy API answers \"There isn't an active API client matching your IP address\" until an administrator adds an API client, and the v2 API is off until enabled in Setup > General > API.",
 				"topdesk": "https://docs.topdesk.com/en/required-knowledge.html: \"basic knowledge of REST API requests (see developers.topdesk.com )\" (read 2026-09-26); https://docs.topdesk.com/en/details-about-certain-permissions.html: \"API access > REST API : this permission is necessary for operator cards that are used for accessing the TOPdesk API\" (read 2026-09-26). Reached on: developers.topdesk.com.",
 				"stackiq": "Every catalogue entity is an OpenRegister object (src/manifest.json pages read register @resolve:voorzieningen_register), so OpenRegister's /apps/openregister/api/objects/{register}/{schema} CRUD applies, gated by the schema authorization rules (lib/Settings/softwarecatalogus_register.json:6777 module and others). Stackiq adds its own routed endpoints in appinfo/routes.php (e.g. :202 /api/aanbod, :255-261 /api/aangeboden-gebruik, :298 /api/gebruik, :303 /api/portfolio-report).",
 				"vng-softwarecatalogus": "unknown: https://www.softwarecatalogus.nl/api answers only \"Services Endpoint api has been setup successfully.\" and no API is documented; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/api (read 2026-09-26)"
@@ -3186,7 +3201,7 @@
 			"providerHow": "read-from-code",
 			"note": "The generated OpenAPI file is empty. What exists is hand-written: two JSON doc endpoints and markdown pages. OpenRegister may generate an OAS per register, but stackiq does not surface it.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/Glpi/Api/HL/Controller/CoreController.php:322 route /doc serves a Swagger UI 'GLPI API Documentation' (:329 to :331) over the spec built by src/Glpi/Api/HL/OpenAPIGenerator.php. Reached on: /api.php/doc.",
+				"glpi": "source read at 11.0.9: src/Glpi/Api/HL/Controller/CoreController.php:322 route /doc serves a Swagger UI 'GLPI API Documentation' (:329 to :331) over the spec built by src/Glpi/Api/HL/OpenAPIGenerator.php. Reached on: /api.php/doc. Driven on the lab at 11.0.9 (2026-09-26): on a fresh install /api.php/v2/doc answers 403 \"The High-Level API is disabled\"; after switching on enable_hlapi in Setup > General > API it serves the Swagger UI \"GLPI API Documentation\".",
 				"stackiq": "openapi.json at repo root has an info block and 0 paths. Hand-written JSON docs: lib/Controller/ViewController.php:373 (GET /api/views/docs, routes.php:186) and lib/Controller/AangebodenGebruikController.php:866 (GET /api/aangeboden-gebruik/docs, routes.php:261). The views docs endpoint is login-only; the aangeboden-gebruik docs endpoint is @PublicPage (AangebodenGebruikController.php:860), so anyone can read it (corrected 2026-09-26). Hand-written markdown in docs/API_REFERENCE.md and docs/View_API.md on the docs site. No src/ caller of either docs endpoint.",
 				"topdesk": "https://developers.topdesk.com/: TOPdesk API reference site, linked from the docs as \"TOPdesk API documentation\" (read 2026-09-26); https://docs.topdesk.com/en/generate-a-document.html: \"see FreeMarker and the TOPdesk API documentation\" (read 2026-09-26). Reached on: developers.topdesk.com.",
 				"vng-softwarecatalogus": "unknown: no API documentation for the current catalogue was found; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/api, https://www.softwarecatalogus.nl/Beschikbare%20downloads (read 2026-09-26)"
@@ -3216,7 +3231,7 @@
 			"note": "A full ArchiMate export exists but is only reached from admin settings. The one export on a user page is the portfolio report CSV, and the catalogue list pages offer no export.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Beschikbare%20downloads: \"De publieke informatie is ook beschikbaar als download van exportbestanden ... Mijn pakketten, Mijn koppelingen: Knop [Exporteren]\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Exporteren; Beschikbare downloads.",
-				"glpi": "source read at 11.0.9: every search list exports to CSV, PDF, ODS and XLSX through src/Glpi/Search/Output/Csv.php, Pdf.php, Ods.php and Xlsx.php, plus impact CSV (front/impactcsv.php) and the APIs (src/Glpi/Api/HL/Controller/AssetController.php:2825). Reached on: any list, Export menu.",
+				"glpi": "source read at 11.0.9: every search list exports to CSV, PDF, ODS and XLSX through src/Glpi/Search/Output/Csv.php, Pdf.php, Ods.php and Xlsx.php, plus impact CSV (front/impactcsv.php) and the APIs (src/Glpi/Api/HL/Controller/AssetController.php:2825). Reached on: any list, Export menu. Driven on the lab at 11.0.9 (2026-09-26): the Appliances list exported to CSV (/front/report.dynamic.php display_type 3) with the created record.",
 				"stackiq": "ArchiMate export lib/Controller/SettingsController.php:1615 (POST /api/archimate/export) and :1685 per-organisation export (GET /api/archimate/export/organization/{uuid}), called only from src/views/settings/sections/ArchiMateImportExport.vue (admin settings, StackiqSettings.vue:86). CSV export of the portfolio report: lib/Controller/PortfolioReportController.php:105, button src/views/organisaties/PortfolioReport.vue:567. No index page opts into the library's CSV/Excel export (no allowExport in src/manifest.json).",
 				"topdesk": "https://docs.topdesk.com/en/asset-dashboard.html: tile actions \"Export to .CSV Export to Excel\" (read 2026-09-26); https://docs.topdesk.com/en/create-odata-reports-for-asset-management.html: \"generate reports by using the TOPdesk OData feed ... Microsoft Power BI, or Microsoft Excel\" (read 2026-09-26). Reached on: Asset dashboard; OData feed."
 			}
@@ -3329,7 +3344,7 @@
 			"providerHow": "read-from-code",
 			"note": "A user can save the facet and search selection as a named view and reopen it. Storage is OpenRegister's views API. It covers only those two pages.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/SavedSearch.php:52 SavedSearch, private or shared, listed under Tools > Saved searches (src/Html.php:1309) with optional alerts (front/savedsearch_alert.form.php). Reached on: Tools > Saved searches (front/savedsearch.php).",
+				"glpi": "source read at 11.0.9: src/SavedSearch.php:52 SavedSearch, private or shared, listed under Tools > Saved searches (src/Html.php:1309) with optional alerts (front/savedsearch_alert.form.php). Reached on: Tools > Saved searches (front/savedsearch.php). Driven on the lab at 11.0.9 (2026-09-26): Tools > Saved searches (/front/savedsearch.php) lists saved searches with private or shared scope and a default flag.",
 				"stackiq": "src/views/FacetedCatalogIndexView.vue:68 Saved views menu (save current filters, list, apply); src/store/modules/facets.js:404 saveCurrentAsView POSTs to OpenRegister /apps/openregister/api/views (:61), fetchSavedViews :361 reads them back.",
 				"topdesk": "https://tip.topdesk.com/c/83-share-saved-overviews-with-operators-and-operator-groups: roadmap card in column \"Launched\", \"User is able to share saved overviews with operators and operator groups - Rename the saved overview\" (read 2026-09-26)",
 				"vng-softwarecatalogus": "unknown: only VNG-defined \"Marktscans-voorgedefinieerde filters\" are described; users saving their own view is not; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/Marktscans (read 2026-09-26)"
@@ -3411,7 +3426,7 @@
 			"providerHow": "read-from-code",
 			"note": "The report picker exists and opens a working report. The list holds exactly one report.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/Report.php:52 Report builds a pick list of ready made reports, src/Report.php:77 default, :81 by contract, :85 by year, :87 financial information, :110 status, chosen from 'Select the report you want to generate' (src/Report.php:143). Reached on: Tools > Reports (front/report.php).",
+				"glpi": "source read at 11.0.9: src/Report.php:52 Report builds a pick list of ready made reports, src/Report.php:77 default, :81 by contract, :85 by year, :87 financial information, :110 status, chosen from 'Select the report you want to generate' (src/Report.php:143). Reached on: Tools > Reports (front/report.php). Driven on the lab at 11.0.9 (2026-09-26): /front/report.php offers Default report, By contract, By year, Hardware financial and administrative information, Other financial and administrative information, Network report, Loan and Status.",
 				"stackiq": "src/manifest.json:1021 Reports page (type reports) with one card, Portfolio rationalization, routing to src/manifest.json PortfolioReport /portfolio-report (PortfolioReportView, GET /api/portfolio-report routes.php:303).",
 				"topdesk": "https://docs.topdesk.com/en/reporting.html: \"Introducing the Reporting Hub ... So far, you could find dashboards and reports in different places\" (read 2026-09-26); https://tip.topdesk.com/c/20-reporting-hub: roadmap card in column \"Launched\", \"Reporting Hub\" (read 2026-09-26). Reached on: TOPdesk menu > Reporting Hub.",
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/rapportages: \"Regelmatig worden er rapportages gemaakt over het gebruik van de Softwarecatalogus\" (read 2026-09-26); compliancy monitor and digital accessibility monitor pages. Reached on: Rapportages; Compliancy monitor."
@@ -3470,7 +3485,7 @@
 			"featureConfidence": "low",
 			"note": "One fixed report exports to CSV for a selected organisation. The filtered catalogue lists cannot be exported.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/Glpi/Search/Output/Csv.php, Ods.php, Xlsx.php and Pdf.php export the filtered list; the output format selector is rendered by src/Html.php:4219 Dropdown::showOutputFormat. Reached on: any filtered list, Export.",
+				"glpi": "source read at 11.0.9: src/Glpi/Search/Output/Csv.php, Ods.php, Xlsx.php and Pdf.php export the filtered list; the output format selector is rendered by src/Html.php:4219 Dropdown::showOutputFormat. Reached on: any filtered list, Export. Driven on the lab at 11.0.9 (2026-09-26): the filtered Appliances list exported to CSV with the created record.",
 				"stackiq": "Portfolio report CSV: lib/Controller/PortfolioReportController.php:105 (DataDownloadResponse text/csv), button src/views/organisaties/PortfolioReport.vue:567. No index page sets the library's allowExport (grep allowExport/exportable in src/manifest.json and the register finds nothing), so Applications, Contracts and the other lists have no export.",
 				"topdesk": "https://docs.topdesk.com/en/asset-dashboard.html: \"Export to .CSV Export to Excel\" (read 2026-09-26). Reached on: Asset dashboard tile menu.",
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/pakketversies: \"Export to CSV\" on the filtered package-version list (read 2026-09-26); https://www.softwarecatalogus.nl/Beschikbare%20downloads: \"Ook beschikbaar via knop [Export to csv] op pagina Alle pakketten\" (read 2026-09-26). Reached on: Alle pakketversies > Export to CSV."
@@ -3607,7 +3622,7 @@
 			"providerHow": "read-from-code",
 			"note": "There is no knowledge base. Files can be attached to an application, but that is not searchable articles.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/KnowbaseItem.php:57 knowledge base articles with categories and visibility, linked to items through src/KnowbaseItem_Item.php:45 and shown on the appliance Knowledge base tab (src/Appliance.php:104); menu src/Html.php:1307. Reached on: Tools > Knowledge base (front/knowbaseitem.php).",
+				"glpi": "source read at 11.0.9: src/KnowbaseItem.php:57 knowledge base articles with categories and visibility, linked to items through src/KnowbaseItem_Item.php:45 and shown on the appliance Knowledge base tab (src/Appliance.php:104); menu src/Html.php:1307. Reached on: Tools > Knowledge base (front/knowbaseitem.php). Driven on the lab at 11.0.9 (2026-09-26): /front/knowbaseitem.php opens the knowledge base with Search and Browse.",
 				"topdesk": "https://docs.topdesk.com/en/knowledge-management.html: \"The Knowledge Base is set up and managed by your organization's knowledge managers. Every operator is able to use information from the Knowledge Base\" (read 2026-09-26). Reached on: Modules > Knowledge Management.",
 				"stackiq": "No knowledge-article schema among the register's schemas (sector, suite, catalogService, vulnerability, contactPerson, organization, usage, catalogContract, connection, software-review, element, view, model, property-definition, relation, module, compliancy, bioMeasure, moduleVersion, sbomComponent in lib/Settings/softwarecatalogus_register.json); ModuleDetail only has a Documentation files panel.",
 				"vng-softwarecatalogus": "unknown: the FAQ and manuals are site help, no knowledge base about applications is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)"
@@ -3797,7 +3812,7 @@
 			"providerHow": "read-from-code",
 			"note": "No ticketing.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/autoload/CFG_GLPI.php:301 ticket_types includes Appliance (line 305), so tickets link to an application through src/Item_Ticket.php:41, shown on the appliance Tickets tab (src/Appliance.php:105). Reached on: Assistance > Tickets; Appliance > Tickets tab.",
+				"glpi": "source read at 11.0.9: src/autoload/CFG_GLPI.php:301 ticket_types includes Appliance (line 305), so tickets link to an application through src/Item_Ticket.php:41, shown on the appliance Tickets tab (src/Appliance.php:105). Reached on: Assistance > Tickets; Appliance > Tickets tab. Driven on the lab at 11.0.9 (2026-09-26): the default Super-Admin profile lists Computer, Monitor, NetworkEquipment, Peripheral, Phone, Printer, Software, DCRoom, Rack, Enclosure and Database as associable to tickets, not Appliance, so an appliance shows no Tickets tab until an administrator adds it in the profile; rating kept.",
 				"topdesk": "https://docs.topdesk.com/en/linking-assets-to-cards.html: \"On Call, Change (Activity) ... cards, you can link multiple assets\" (read 2026-09-26). Reached on: Call card > Links > Assets.",
 				"stackiq": "No incident or request schema or endpoint in lib/Settings/softwarecatalogus_register.json or appinfo/routes.php.",
 				"vng-softwarecatalogus": "unknown: operational IT management functions are not described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)"
@@ -3881,7 +3896,7 @@
 				"topdesk": "https://docs.topdesk.com/en/mobile-access-to-the-self-service-portal.html: \"The SSP layout is suited to be displayed in a mobile interface\" (read 2026-09-26); https://tip.topdesk.com/c/86-webshop-is-connected-with-asset-management: roadmap card in column \"Building\", \"End-user can order items which are in Asset Management\" (read 2026-09-26); pricing lists \"Self-Service Portal\" and \"Webshop\". Reached on: Self-Service Portal.",
 				"stackiq": "No software-request flow. The only public intake is organisation self-registration (lib/Controller/IntakeController.php, POST /api/intake/register, routes.php:214), which no src/ page calls.",
 				"vng-softwarecatalogus": "unknown: operational IT management functions are not described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
-				"glpi": "source read at 11.0.9: the 11.0 service catalog src/Glpi/Form/ServiceCatalog/ServiceCatalog.php:45 lists native forms for self service users (menu src/Html.php:1283), and a form question can offer software items to pick, src/Glpi/Form/QuestionType/QuestionTypeItem.php:180 Software::class, creating a ticket from the answer. Reached on: Self service > Service catalog."
+				"glpi": "source read at 11.0.9: the 11.0 service catalog src/Glpi/Form/ServiceCatalog/ServiceCatalog.php:45 lists native forms for self service users (menu src/Html.php:1283), and a form question can offer software items to pick, src/Glpi/Form/QuestionType/QuestionTypeItem.php:180 Software::class, creating a ticket from the answer. Reached on: Self service > Service catalog. Driven on the lab at 11.0.9 (2026-09-26): /ServiceCatalog shows the service catalog with \"Report an issue\" and \"Request a service\"."
 			}
 		},
 		{
@@ -3937,7 +3952,7 @@
 				"stackiq": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674).",
 				"topdesk": "https://docs.topdesk.com/en/events-that-trigger-actions.html: \"when tracking imports/Exchange exports via system events ... on a schedule\" (read 2026-09-26); https://tip.topdesk.com/c/116-support-for-importing-persons-and-operators-directly-from-local-active-directory: roadmap card in column \"Launched\", person import from AD (read 2026-09-26). Reached on: Settings > Import settings.",
 				"vng-softwarecatalogus": "unknown: only \"De kaart wordt dagelijks bijgewerkt\" is stated; no organisation or contact sync is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/node/17042 (read 2026-09-26)",
-				"glpi": "source read at 11.0.9: automatic actions are scheduled and show their last run, src/CronTask.php:59 with install/mysql/glpi-empty.sql:1610 glpi_crontasks.lastrun, but LDAP user and group synchronisation is not one of them (grep -i ldap over the cron seed in install/empty_data.php:438 finds none); it is the CLI src/Glpi/Console/Ldap/SynchronizeUsersCommand.php:79 ldap:synchronize_users, which must be scheduled by the system cron. Organisation (supplier) records have no sync at all. Reached on: Setup > Automatic actions; CLI bin/console ldap:sync."
+				"glpi": "source read at 11.0.9: automatic actions are scheduled and show their last run, src/CronTask.php:59 with install/mysql/glpi-empty.sql:1610 glpi_crontasks.lastrun, but LDAP user and group synchronisation is not one of them (grep -i ldap over the cron seed in install/empty_data.php:438 finds none); it is the CLI src/Glpi/Console/Ldap/SynchronizeUsersCommand.php:79 ldap:synchronize_users, which must be scheduled by the system cron. Organisation (supplier) records have no sync at all. Reached on: Setup > Automatic actions; CLI bin/console ldap:sync. Driven on the lab at 11.0.9 (2026-09-26): /front/crontask.php lists automatic actions with run mode, frequency and last run."
 			}
 		}
 	],
@@ -4568,7 +4583,7 @@
 			"note": "All the fields are on the contract form, but a contract requires a usage (gebruik) record and no stackiq page can create one, so on a fresh install the form cannot be completed without data from elsewhere (demo data, API, external frontend).",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: contracts are not described in the public docs; their absence is not stated either; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/gebruikersonderzoek%202021 (read 2026-09-26)",
-				"glpi": "source read at 11.0.9: install/mysql/glpi-empty.sql:1483 glpi_contracts with name, num (contract number), contracttypes_id, begin_date, duration, notice and renewal, and costs in install/mysql/glpi-empty.sql:1458 glpi_contractcosts. Reached on: Management > Contracts.",
+				"glpi": "source read at 11.0.9: install/mysql/glpi-empty.sql:1483 glpi_contracts with name, num (contract number), contracttypes_id, begin_date, duration, notice and renewal, and costs in install/mysql/glpi-empty.sql:1458 glpi_contractcosts. Reached on: Management > Contracts. Driven on the lab at 11.0.9 (2026-09-26): created \"Lab contract\" with number C-001, start date, 12 month duration and 1 month notice.",
 				"topdesk": "https://docs.topdesk.com/en/creating-a-contract.html: \"Contract Number (mandatory) ... Type ... Start Date (mandatory) ... End Date (mandatory) ... Costs (Services)\" (read 2026-09-26). Reached on: Modules > Contract Management and SLM > New.",
 				"stackiq": "src/manifest.json:527 Contracten type:index over catalogContract (contractNumber, contractType, startDate, endDate, cost, status); register :3252 catalogContract requires service AND usage; no manifest page has schema usage (grep src/manifest.json)"
 			},
@@ -4982,7 +4997,7 @@
 				"stackiq": "Stackiq has no webhook code. The Flows page (src/manifest.json:1057, settings-section menu entry FlowsMenu) authors OpenRegister's native flows scoped to app stackiq; OpenRegister's flow event catalogue has object.created/object.updated (openregister lib/Service/Flow/EventCatalogService.php:53-54), and OpenRegister has its own webhooks admin (openregister appinfo/routes.php:1909).",
 				"topdesk": "https://docs.topdesk.com/en/let-your-topdesk-talk-to-other-applications.html: \"Send a request from TOPdesk to another program ... This way you can create an integration with almost any software that has an API\" (read 2026-09-26) triggered by card events (https://docs.topdesk.com/en/events-that-trigger-actions.html). Reached on: Action Management > action sequences.",
 				"vng-softwarecatalogus": "unknown: notifications go to people by mail and inbox, no system webhooks are described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
-				"glpi": "source read at 11.0.9: src/Webhook.php:64 Webhook sends HTTP calls on new, update and delete events (src/Webhook.php:311 getDefaultEventsList) for management itemtypes including Appliance, Budget, Contact and others (src/Webhook.php:398). Reached on: Setup > Webhooks (src/Html.php:1331)."
+				"glpi": "source read at 11.0.9: src/Webhook.php:64 Webhook sends HTTP calls on new, update and delete events (src/Webhook.php:311 getDefaultEventsList) for management itemtypes including Appliance, Budget, Contact and others (src/Webhook.php:398). Reached on: Setup > Webhooks (src/Html.php:1331). Driven on the lab at 11.0.9 (2026-09-26): Setup > Webhooks (/front/webhook.php) lists webhooks with type, event and category."
 			},
 			"pendingQuestion": "Can a flow created on stackiq's Flows page be triggered by object.updated on a catalogue schema and make an outbound HTTP call to an external system?"
 		},
@@ -5009,7 +5024,7 @@
 			"featureConfidence": "high",
 			"note": "Per-record history is shown on 11 detail pages, backed by OpenRegister's audit trail. There is no catalogue-wide view of who changed what, and the overlay itself lists audit-trail-view as 'soon'.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/Appliance.php:58 dohistory is true and src/Appliance.php:112 adds the Historical tab (src/Log.php:48 Log), recording who changed which field and when. Reached on: Management > Appliances > Historical tab.",
+				"glpi": "source read at 11.0.9: src/Appliance.php:58 dohistory is true and src/Appliance.php:112 adds the Historical tab (src/Log.php:48 Log), recording who changed which field and when. Reached on: Management > Appliances > Historical tab. Driven on the lab at 11.0.9 (2026-09-26): the appliance Historical tab listed two entries, including the contract link made by glpi.",
 				"topdesk": "https://docs.topdesk.com/en/designing-templates-for-assets.html: \"History widget : shows both present and past changes that have been made to an asset\" (read 2026-09-26); https://docs.topdesk.com/en/cards-in-call-management.html: \"Audit trail tab Previous events while processing this call\" (read 2026-09-26). Reached on: Asset card > History widget.",
 				"stackiq": "src/manifest.json:436 (and 10 more detail pages: ContactpersoonDetail, ModuleDetail, ContractDetail, SuiteDetail, StandaardDetail, BioMaatregelDetail, ReviewDetail, KompliantieDetail, ModuleversieDetail, KwetsbaarheidDetail) declare a sidebar tab History with widget type audit, which reads OpenRegister's audit trail for that one object.",
 				"vng-softwarecatalogus": "unknown: only a \"Laatst gewijzigd\" date on supplier pages and a mutation date in exports are shown; who changed what is not described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/Beschrijving%20exportbestanden (read 2026-09-26)"
@@ -5097,7 +5112,7 @@
 			"providerHow": "read-from-code",
 			"note": "The store installs configuration sets and flows, not code plugins, and it depends on a registry being configured.",
 			"evidence": {
-				"glpi": "source read at 11.0.9: src/Glpi/Marketplace/View.php:53 marketplace view at front/marketplace.php (src/Glpi/Marketplace/View.php:103) and src/Glpi/Marketplace/Controller.php:64 download and install of plugins; src/Glpi/Marketplace/View.php:185 notes that a registration, at least a free one, is required. Reached on: Setup > Plugins > Marketplace.",
+				"glpi": "source read at 11.0.9: src/Glpi/Marketplace/View.php:53 marketplace view at front/marketplace.php (src/Glpi/Marketplace/View.php:103) and src/Glpi/Marketplace/Controller.php:64 download and install of plugins; src/Glpi/Marketplace/View.php:185 notes that a registration, at least a free one, is required. Reached on: Setup > Plugins > Marketplace. Driven on the lab at 11.0.9 (2026-09-26): Setup > Plugins > Marketplace, Discover tab: \"A registration, at least a free one, is required to use marketplace\"; plugins can still be installed by hand from their repositories.",
 				"topdesk": "https://marketplace.topdesk.com/: \"Showing all 133 results\" of integrations (read 2026-09-26); https://docs.topdesk.com/en/exporting-and-importing.html: \"import an action sequence example from the TOPdesk Marketplace\" (read 2026-09-26). Integrations and action-sequence templates, not installable plugins. Reached on: TOPdesk Marketplace.",
 				"stackiq": "src/manifest.json:225 Store page (type store, footer menu StoreMenu) over the OpenRegister store plane, with store.types openregister.configset and openregister.flows; its own note says that with no registry configured it shows only the app's built-in items.",
 				"vng-softwarecatalogus": "unknown: no plugins are described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)"
