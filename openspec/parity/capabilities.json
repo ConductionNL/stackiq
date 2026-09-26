@@ -5286,15 +5286,15 @@
 			"sap-leanix": "yes",
 			"evidence": {
 				"sap-leanix": "Announcement of 2026-05-12: 'We have expanded the AI Agent Hub ... New discovery sources: ServiceNow and SAP AI Core ... automatically populate your workspace with AI assets'; AI agent is an application subtype and AI model an IT component subtype (https://help.sap.com/docs/leanix/ea/application-modeling-guidelines) (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
+				"vng-softwarecatalogus": "unknown: AI agents and models are not described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"glpi": "source read at 11.0.9: no AI system itemtype (grep -rli 'artificial intelligence' over src/ locales/glpi.pot returns nothing); an admin can define an 'AI model' custom asset type (src/Html.php:1330 Setup > Asset definitions, src/Glpi/Asset/AssetDefinition.php) and link it to applications as an Appliance item (src/Appliance_Item.php:45) or impact relation (install/mysql/glpi-empty.sql:1247). There is no process model to link to. Reached on: Setup > Asset definitions, then Appliance > Items tab.",
+				"topdesk": "unknown: AI agents and models as registered items are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
 			"note": "Mined from sap-leanix (changelog) on 2026-09-26.",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "partial",
 			"topdesk": "unknown"
 		},
 		{
@@ -5316,15 +5316,15 @@
 			"sap-leanix": "yes",
 			"evidence": {
 				"sap-leanix": "Announcement of 2026-07-13: admins 'add single-select and multi-select dropdown fields to architecture decision templates'; https://help.sap.com/docs/leanix/ea/architecture-decisions: 'Document decisions about enterprise architecture in a structured, template-driven format ... Track decisions through a review process with defined statuses', shown on linked fact sheets (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
+				"vng-softwarecatalogus": "unknown: architecture decisions are not described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"glpi": "source read at 11.0.9: grep -rli 'architecture decision' over src/ locales/glpi.pot returns nothing; the only status and review flow is ITIL approval on changes (src/ChangeValidation.php:39), not a decision record linked to applications.",
+				"topdesk": "unknown: architecture decisions are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
 			"note": "Mined from sap-leanix (changelog) on 2026-09-26.",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown"
 		},
 		{
@@ -5347,15 +5347,15 @@
 			"evidence": {
 				"sap-leanix": "Announcement of 2026-06-23: 'Ask a question in plain language, and the assistant provides a sourced answer from your workspace ... Every answer is attributed to its source'. A premium AI feature needing AI units (read 2026-09-26)",
 				"bluedolphin": "Product news entry of 2026-09-01 'Communicate in natural language to find business information in BlueDolphin'; https://help.bluedolphin.io/en/articles/12528662-ai-capabilities-of-bluedolphin: 'AI Navigator answers questions asked in plain language ... Answers are grounded in your BlueDolphin repository and include direct links to relevant content' (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"vng-softwarecatalogus": "unknown: no plain-language question function is described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
+				"glpi": "source read at 11.0.9: grep -rli 'openai\\|llm\\|artificial intelligence' over src/ returns nothing; search is criteria based only (src/Glpi/Search/Input/QueryBuilder.php:72).",
+				"topdesk": "https://docs.topdesk.com/en/td-robin-for-operators.html: \"Chat: Ask TOPdesk Robin a question. TOPdesk Robin searches your organization's knowledge base for an answer\" (read 2026-09-26); https://docs.topdesk.com/en/ai-answer-assistant.html: \"The Knowledge Base is the only source for the AI\" (read 2026-09-26). Answers cite knowledge items, not asset or landscape entries. Reached on: Call card > TOPdesk Robin panel."
 			},
 			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Also mined from bluedolphin (changelog, https://bluedolphin.io/product-news/).",
 			"bluedolphin": "yes",
 			"vng-softwarecatalogus": "unknown",
-			"glpi": "unknown",
-			"topdesk": "unknown"
+			"glpi": "no",
+			"topdesk": "partial"
 		},
 		{
 			"id": "comp-ai-act-classification",
@@ -5376,15 +5376,15 @@
 			"sap-leanix": "partial",
 			"evidence": {
 				"sap-leanix": "Roadmap card 'Meta model: EU AI Act extension' is In progress (read from the portal data on 2026-09-26); today the legacy AI agent extension already has an 'AI Risk ... according to the EU AI Act' single select (https://help.sap.com/docs/leanix/ea/ai-agent-extension-to-meta-model), so a basic risk field exists but the full extension is not shipped (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
+				"vng-softwarecatalogus": "unknown: the EU AI Act is not described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"glpi": "source read at 11.0.9: grep -rli 'ai act\\|artificial intelligence' over src/ locales/glpi.pot returns nothing; appliances have no risk category field (install/mysql/glpi-empty.sql:8935 glpi_appliances).",
+				"topdesk": "unknown: the AI Act is mentioned only for TOPdesk's own AI features (\"post-market monitoring procedures ... in accordance with the AI Act\"), not for classifying the customer's AI systems; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
 			"note": "Mined from sap-leanix (roadmap) on 2026-09-26.",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown"
 		},
 		{
@@ -5406,15 +5406,15 @@
 			"sap-leanix": "no",
 			"evidence": {
 				"sap-leanix": "Roadmap card 'EA Assistant: Technology Successor Planning' is On roadmap; https://updates.leanix.net/announcements/work-with-complete-technology-version-coverage-without-raising-manual-requests (2026-09-17): 'version concurrency management, which we plan to implement in Q4. You will be able to define version tolerance windows' (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
+				"vng-softwarecatalogus": "unknown: no version tolerance rule is described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"glpi": "source read at 11.0.9: software versions have no order or release date to measure distance from the latest (install/mysql/glpi-empty.sql:6900 glpi_softwareversions: name, states_id, arch, comment); grep -rli 'releases behind' over src/ returns nothing.",
+				"topdesk": "unknown: no version tolerance rule is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
 			"note": "Mined from sap-leanix (roadmap) on 2026-09-26.",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown"
 		},
 		{
@@ -5436,15 +5436,15 @@
 			"sap-leanix": "yes",
 			"evidence": {
 				"sap-leanix": "Announcement of 2025-09-03: 'Selecting Compare Changes ... on a prior diagram version shows color-coded highlighting (green for additions, red for removals, yellow for modifications), a side-by-side view of differences, and an additional text-based summary' (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
+				"vng-softwarecatalogus": "unknown: diagram versions are not described; maps are generated on request; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"glpi": "source read at 11.0.9: impact graphs are not versioned; src/ImpactRelation.php:39, src/ImpactItem.php:42 and src/ImpactContext.php:40 set no dohistory, so no saved diagram versions exist to compare.",
+				"topdesk": "unknown: architecture diagrams are not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
 			"note": "Mined from sap-leanix (changelog) on 2026-09-26.",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown"
 		},
 		{
@@ -5466,16 +5466,16 @@
 			"bluedolphin": "yes",
 			"evidence": {
 				"bluedolphin": "November 2025 update (2025-11-13): 'Conditional Syncing for Integrations and Webhooks' lets teams 'control exactly what data syncs to third-party systems based on lifecycle state' (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
+				"vng-softwarecatalogus": "unknown: no outgoing sync to other systems is described, only CSV and AMEFF exports; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"sap-leanix": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"glpi": "source read at 11.0.9: webhooks carry search criteria filters (src/Webhook.php:64 implements FilterableInterface, src/Glpi/Search/FilterableTrait.php:45) and are only sent when the changed item matches them, src/Webhook.php:1228 itemMatchFilter; filtering on the Status field (src/Appliance.php:350) sends an appliance only once it reaches the chosen state. Reached on: Setup > Webhooks > Filter tab.",
+				"topdesk": "https://docs.topdesk.com/en/creating-events.html: \"Edit card is triggered when a card is modified. Fill in the conditions ... Conditions check the current value of the card\" (read 2026-09-26); https://docs.topdesk.com/en/let-your-topdesk-talk-to-other-applications.html: \"Send a request from TOPdesk to another program\" (read 2026-09-26). The customer builds it as an automated action; no ready-made lifecycle sync. Reached on: Action Management > events and action sequences."
 			},
 			"note": "Mined from bluedolphin (changelog) on 2026-09-26.",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
-			"glpi": "unknown",
-			"topdesk": "unknown"
+			"glpi": "yes",
+			"topdesk": "partial"
 		},
 		{
 			"id": "ins-usage-analytics",
@@ -5496,16 +5496,16 @@
 			"bluedolphin": "yes",
 			"evidence": {
 				"bluedolphin": "February 2026 update (2026-02-10): new reports show 'which guest users have access to BlueDolphin' and 'which views are being used across the platform'; https://help.bluedolphin.io/en/articles/13868249-usage-insights (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
+				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/rapportages: per month \"Aantal actieve gemeenten\", \"Aantal ingelogde gebruikers van gemeenten\", \"Aantal zoekopdrachten door gemeenten\" (read 2026-09-26). Usage totals only; which pages or views are used and guest reach are not shown. Reached on: Rapportages.",
 				"sap-leanix": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"glpi": "source read at 11.0.9: the event log (src/Glpi/Event.php:63) records logins and item actions, not which lists or pages are viewed; grep -rli 'page view' over src/ returns nothing, and there are no guest users apart from the public FAQ (src/KnowbaseItem.php:131).",
+				"topdesk": "https://docs.topdesk.com/en/setting-up-the-self-service-portal.html: \"Only when users click Allow analytics, their page usage is synchronized with your Google Analytics account\" (read 2026-09-26). Self-Service Portal page usage in an outside tool only. Reached on: Self-Service Portal settings > Analytics."
 			},
 			"note": "Mined from bluedolphin (changelog) on 2026-09-26.",
-			"vng-softwarecatalogus": "unknown",
+			"vng-softwarecatalogus": "partial",
 			"sap-leanix": "unknown",
-			"glpi": "unknown",
-			"topdesk": "unknown"
+			"glpi": "no",
+			"topdesk": "partial"
 		},
 		{
 			"id": "land-move-between-workspaces",
@@ -5526,15 +5526,15 @@
 			"bluedolphin": "yes",
 			"evidence": {
 				"bluedolphin": "June 2026 update (2026-06-11): 'You can move one or multiple objects to another workspace directly from the Repository without leaving your current view', skipping objects already in the target (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
+				"vng-softwarecatalogus": "unknown: workspaces are not described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"sap-leanix": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"glpi": "source read at 11.0.9: selected records are moved to another entity with their links by src/Transfer.php:50 Transfer, queued through the massive action add_transfer_list (src/MassiveAction.php:598), for one or many entries at once. Reached on: any list, Actions > Add to transfer list; Administration > Entities > transfer.",
+				"topdesk": "unknown: workspaces are not described; changing an asset's type is still an idea at https://tip.topdesk.com/c/89-changing-the-type-of-an-asset; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
 			"note": "Mined from bluedolphin (changelog) on 2026-09-26.",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
-			"glpi": "unknown",
+			"glpi": "yes",
 			"topdesk": "unknown"
 		},
 		{
@@ -5556,15 +5556,15 @@
 			"bluedolphin": "yes",
 			"evidence": {
 				"bluedolphin": "July 2026 update (2026-07-09): customers can 'define questionnaires directly on BPMN elements such as tasks and events'; https://help.bluedolphin.io/en/articles/15874771-questionnaires-for-bpmn-elements: 'centralize documentation like risk levels, compliance checks, and technical specifications' (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
+				"vng-softwarecatalogus": "unknown: processes are not modelled; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"sap-leanix": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"glpi": "source read at 11.0.9: grep -rli 'business process\\|process step' over src/ locales/glpi.pot returns nothing; 'Processes' in inventory (src/Glpi/Inventory/Asset/Process.php) are operating system processes, not business process steps.",
+				"topdesk": "unknown: process modelling is not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
 			"note": "Mined from bluedolphin (changelog) on 2026-09-26.",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown"
 		},
 		{
@@ -5586,15 +5586,15 @@
 			"bluedolphin": "yes",
 			"evidence": {
 				"bluedolphin": "Product news entry of 2026-09-08 'Bring structure to your Views list with tags' (https://bluedolphin.io/product-news/); the linked article lists view filters 'Owner Contributors Tags Favorited Private Project Status Type' (read 2026-09-26)",
-				"vng-softwarecatalogus": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
+				"vng-softwarecatalogus": "unknown: the GEMMA maps are chosen from a fixed list; tagging views is not described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"sap-leanix": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"glpi": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
-				"topdesk": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet"
+				"glpi": "source read at 11.0.9: saved searches, the only saved views, have type, itemtype, owner and privacy but no tags (install/mysql/glpi-empty.sql:232 glpi_savedsearches, :237 users_id, :238 is_private), and impact graphs are not saved as named views (src/ImpactContext.php:40 holds display settings only). The list can be filtered by owner, not by tag.",
+				"topdesk": "unknown: saved overviews can be renamed and shared, but tagging them is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
 			"note": "Mined from bluedolphin (changelog) on 2026-09-26.",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
-			"glpi": "unknown",
+			"glpi": "no",
 			"topdesk": "unknown"
 		}
 	],
