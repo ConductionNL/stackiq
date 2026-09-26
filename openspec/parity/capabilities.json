@@ -2902,8 +2902,9 @@
 			"stackiq": "partial",
 			"built": {
 				"state": "built",
-				"evidence": "openapi.json at repo root has an info block and 0 paths. Hand-written JSON docs: lib/Controller/ViewController.php:373 (GET /api/views/docs, routes.php:186) and lib/Controller/AangebodenGebruikController.php:866 (GET /api/aangeboden-gebruik/docs, routes.php:261), both login-only. Hand-written markdown in docs/API_REFERENCE.md and docs/View_API.md on the docs site. No src/ caller of either docs endpoint.",
-				"owner": "ConductionNL/stackiq"
+				"evidence": "openapi.json at repo root has an info block and 0 paths. Hand-written JSON docs: lib/Controller/ViewController.php:373 (GET /api/views/docs, routes.php:186) and lib/Controller/AangebodenGebruikController.php:866 (GET /api/aangeboden-gebruik/docs, routes.php:261). The views docs endpoint is login-only; the aangeboden-gebruik docs endpoint is @PublicPage (AangebodenGebruikController.php:860), so anyone can read it (corrected 2026-09-26). Hand-written markdown in docs/API_REFERENCE.md and docs/View_API.md on the docs site. No src/ caller of either docs endpoint.",
+				"owner": "ConductionNL/stackiq",
+				"readOn": "2026-09-26"
 			},
 			"reachedOn": "API only: GET /api/views/docs and /api/aangeboden-gebruik/docs; docs site https://stackiq.conduction.nl (Documentation footer link)",
 			"provider": "stackiq",
@@ -2911,7 +2912,7 @@
 			"note": "The generated OpenAPI file is empty. What exists is hand-written: two JSON doc endpoints and markdown pages. OpenRegister may generate an OAS per register, but stackiq does not surface it.",
 			"evidence": {
 				"glpi": "source read of GLPI by the procest lane on 2026-09-14, intelligence competitor_features#141846 '12.18 OpenAPI documentation': auto-generated from route attributes: `src/Glpi/Api/HL/OpenAPIGenerator.php` with `src/Glpi/Api/HL/Doc/`, versioned per route (`#[RouteVersion]`, router at `src/Glpi/Api/HL/Router.php:98`); the legacy API is documented i | Rated yes because OpenAPI generator, source-read 2026-09-14.",
-				"stackiq": "openapi.json at repo root has an info block and 0 paths. Hand-written JSON docs: lib/Controller/ViewController.php:373 (GET /api/views/docs, routes.php:186) and lib/Controller/AangebodenGebruikController.php:866 (GET /api/aangeboden-gebruik/docs, routes.php:261), both login-only. Hand-written markdown in docs/API_REFERENCE.md and docs/View_API.md on the docs site. No src/ caller of either docs endpoint."
+				"stackiq": "openapi.json at repo root has an info block and 0 paths. Hand-written JSON docs: lib/Controller/ViewController.php:373 (GET /api/views/docs, routes.php:186) and lib/Controller/AangebodenGebruikController.php:866 (GET /api/aangeboden-gebruik/docs, routes.php:261). The views docs endpoint is login-only; the aangeboden-gebruik docs endpoint is @PublicPage (AangebodenGebruikController.php:860), so anyone can read it (corrected 2026-09-26). Hand-written markdown in docs/API_REFERENCE.md and docs/View_API.md on the docs site. No src/ caller of either docs endpoint."
 			}
 		},
 		{
@@ -4042,8 +4043,9 @@
 			"stackiq": "partial",
 			"built": {
 				"state": "built",
-				"evidence": "LICENSE (EUPL-1.2) and appinfo/info.xml: the app is free open source; module/catalogService/organization carry public read rules for published entries; public intake POST /api/intake/register",
-				"owner": "ConductionNL/stackiq"
+				"evidence": "LICENSE (EUPL-1.2) and appinfo/info.xml: the app is free open source; catalogService and organization carry public read rules for published entries; module's public read also admits every object with registeredBy Supplier, a rule with no publication-date or status condition (lib/Settings/softwarecatalogus_register.json:7322-7327, corrected 2026-09-26); public intake POST /api/intake/register",
+				"owner": "ConductionNL/stackiq",
+				"readOn": "2026-09-26"
 			},
 			"reachedOn": "no page: a property of the app and its licence",
 			"provider": "stackiq",
@@ -4053,7 +4055,7 @@
 				"vng-softwarecatalogus": "docs, intelligence competitor_features#48845 'Public open-access catalog' (2026-07-23): Catalog is publicly browsable; free to use for municipalities and suppliers.",
 				"sap-leanix": "docs, intelligence competitor_features#48871 'Cloud-only SaaS, per-application tiered pricing' (2026-07-23): GAP: no self-host; priced per application tier (400/600/1000 apps), considered expensive.",
 				"glpi": "docs, intelligence competitor_features#48912 '100% open source (GPL)' (2026-07-23): Fully GPL; no license fees, broad device coverage.",
-				"stackiq": "LICENSE (EUPL-1.2) and appinfo/info.xml: the app is free open source; module/catalogService/organization carry public read rules for published entries; public intake POST /api/intake/register"
+				"stackiq": "LICENSE (EUPL-1.2) and appinfo/info.xml: the app is free open source; catalogService and organization carry public read rules for published entries; module's public read also admits every object with registeredBy Supplier, a rule with no publication-date or status condition (lib/Settings/softwarecatalogus_register.json:7322-7327, corrected 2026-09-26); public intake POST /api/intake/register"
 			},
 			"pendingQuestion": "Is a hosted, free-of-charge stackiq instance offered to municipalities and suppliers (the competitor offer is a public service, not software)?"
 		},
