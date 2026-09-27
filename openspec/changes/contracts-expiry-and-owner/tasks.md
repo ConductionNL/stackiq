@@ -4,9 +4,9 @@
 
 ### Task 1: Add Expiring, responsibleUser and the English lifecycle to the contract schema
 - **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-002-the-daily-job-shall-expire-an-expiring-contract-after-its-end-date-and-shall-return-it-to-active-when-its-end-date-moves-past-the-window
-- **files**: `lib/Settings/softwarecatalogus_register.json`, `tests/Unit/Settings/ContractLifecycleDeclarationTest.php`
+- **files**: `lib/Settings/softwarecatalogus_register.json`, `lib/Settings/register.d/contracts-expiry-and-owner.json`, `tests/Unit/Settings/ContractLifecycleDeclarationTest.php`
 - **acceptance_criteria**:
-  - GIVEN the register WHEN `catalogContract.status` is read THEN its enum is Active, Expiring, Expired, In negotiation
+  - GIVEN the merged register WHEN `catalogContract.status` is read THEN its enum is Active, Expiring, Expired, In negotiation
   - GIVEN the register WHEN the `catalogContract` lifecycle is read THEN every state is an enum value and approach, extend and expire exist
   - GIVEN the register WHEN `responsibleUser` is read THEN it is a string with `referenceType` `nextcloud-user`
   - GIVEN the register WHEN the versions are read THEN the `catalogContract` version and `info.version` are higher than 0.1.1 and 2.5.0, with a changelog line
@@ -47,9 +47,9 @@
 
 ### Task 5: Add the responsible user to the contract-expiry recipients
 - **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-005-the-contract-expiry-warning-must-include-the-responsible-user-among-its-recipients
-- **files**: `lib/Settings/softwarecatalogus_register.json`, `tests/Unit/Settings/ContractLifecycleDeclarationTest.php`
+- **files**: `lib/Settings/register.d/contracts-expiry-and-owner.json`, `tests/Unit/Settings/ContractLifecycleDeclarationTest.php`
 - **acceptance_criteria**:
-  - GIVEN the `contract-expiry` rule WHEN its recipients are read THEN they include `{"kind": "field", "field": "responsibleUser"}`, the admins group and the manage rights recipient
+  - GIVEN the merged `contract-expiry` rule WHEN its recipients are read THEN they include `{"kind": "field", "field": "responsibleUser"}`, the admins group and the manage rights recipient
 - [ ] Implement
 - [ ] Test (PHPUnit tests/Unit/Settings/ContractLifecycleDeclarationTest.php)
 

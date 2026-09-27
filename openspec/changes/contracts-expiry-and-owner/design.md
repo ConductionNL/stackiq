@@ -6,8 +6,8 @@ Read at development 49e65cb4.
 
 | Part | File and line | What changes |
 |---|---|---|
-| Schema | `lib/Settings/softwarecatalogus_register.json:3250` `catalogContract` | `status` enum (`:3428`) gains `Expiring`; new property `responsibleUser`; lifecycle block (`:3531`) renamed to the English states; schema `version` (`:3270`, now 0.1.1) and register `info.version` (`:6`, now 2.5.0) move up |
-| Notification rule | `lib/Settings/softwarecatalogus_register.json:3253` `contract-expiry` | one recipient added to `recipients` (`:3258`) |
+| Schema | `lib/Settings/softwarecatalogus_register.json:3250` `catalogContract` | lifecycle block (`:3531`) renamed to the English states in the monolith; schema `version` (`:3270`, now 0.1.1) and register `info.version` (`:6`, now 2.5.0) move up |
+| Fragment | new `lib/Settings/register.d/contracts-expiry-and-owner.json` (ADR-037) | `Expiring` appended to the `status` enum (`:3428`), the new property `responsibleUser`, and one recipient appended to the `contract-expiry` rule (`:3258`) |
 | Service | `lib/Service/ContractStatusService.php` | `shouldExpire()` (`:77`) accepts Active and Expiring; new `shouldStartExpiring()` and `shouldReturnToActive()`; `expirePastContracts()` (`:114`) becomes one pass over Active and Expiring contracts |
 | Job | `lib/BackgroundJob/ContractStatusJob.php:78` | unchanged call, it now logs three counts |
 | Setting | `lib/Repair/InitializeSettings.php:103` `contract_expiry_window_days` | read by the service through `IAppConfig` |
@@ -18,6 +18,10 @@ Read at development 49e65cb4.
 No new controller, route or store. The pages keep reading OpenRegister directly (ADR-022).
 
 ## Decisions
+
+### D0. What goes in a fragment and what stays in the monolith
+
+`SettingsService::loadSettings()` deep-merges every `lib/Settings/register.d/*.json` into the register (`lib/Service/SettingsService.php:1653` to `:1680`). `deepMergeConfig()` (`:7338`) appends lists and only replaces the lists under `authorization` (`:7340`, `:7352`). An appended enum value and an appended recipient are what this change wants, so they go in the fragment. The lifecycle rename replaces values inside `final`, `from` and `to` lists, which an append cannot do, so that edit stays in the monolith together with the version bump.
 
 ### D1. Expiring is a stored status, set by the daily job
 
