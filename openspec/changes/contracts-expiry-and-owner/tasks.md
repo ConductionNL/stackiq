@@ -27,13 +27,14 @@
 
 ### Task 3: Split the Contracts quick filter and show the responsible user
 - **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-003-the-contracts-page-must-let-a-user-filter-on-expiring-and-on-expired-contracts-separately
-- **files**: `src/manifest.json`, `l10n/en.json`, `l10n/nl.json`, `tests/e2e/spec-coverage/contract-expiry-and-owner.spec.ts`
+- **files**: `src/manifest.json`, `l10n/en.json`, `l10n/nl.json`, `tests/vitest/manifestFilterEnumParity.spec.js`, `tests/e2e/spec-coverage/contract-expiry-and-owner.spec.ts`
 - **acceptance_criteria**:
   - GIVEN the Contracten page WHEN it renders THEN it offers All, Active, Expiring, Expired and In negotiation quick filters
   - GIVEN the Contracten page WHEN it renders THEN its columns include `responsibleUser`
   - GIVEN a Dutch instance WHEN the page renders THEN the filter and column labels are Dutch
+  - GIVEN a quick filter whose value is not in the schema enum WHEN tests/vitest/manifestFilterEnumParity.spec.js runs THEN it fails, so quick filters get the same guard as \`config.filter\`
 - [ ] Implement
-- [ ] Test (Playwright tests/e2e/spec-coverage/contract-expiry-and-owner.spec.ts, and node tests/validate-manifest.js)
+- [ ] Test (Playwright tests/e2e/spec-coverage/contract-expiry-and-owner.spec.ts, vitest tests/vitest/manifestFilterEnumParity.spec.js, and node tests/validate-manifest.js)
 
 ### Task 4: Pick the responsible user in the contract form
 - **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-004-a-contract-shall-name-one-responsible-nextcloud-user-picked-from-the-users-of-the-instance
