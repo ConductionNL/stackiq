@@ -28,7 +28,7 @@ Rows from the stackiq matrix:
 1. A schema `aiSystem`: name, description, kind (AI agent, AI model, AI feature), the application it runs in or supports, the supplier, the purpose, the EU AI Act risk category (prohibited, high risk, limited risk, minimal risk, not yet assessed), the organisation's role (provider or deployer), a link to the entry in the Dutch algorithm register, the date of the last assessment, and a status.
 2. File tags on `aiSystem` for the documents the act asks of a deployer of a high-risk system: fundamental rights impact assessment, technical documentation from the provider, human oversight procedure, logging arrangement.
 3. An AI systems list with filters on kind and risk category, and an AI systems section on the application page.
-4. A warning badge on a high-risk AI system that has no fundamental rights impact assessment file.
+4. A warning on a high-risk AI system that has no fundamental rights impact assessment, and a quick filter that lists them.
 
 ## Out of scope
 

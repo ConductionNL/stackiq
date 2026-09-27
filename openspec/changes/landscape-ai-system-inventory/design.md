@@ -22,6 +22,7 @@ The catalogue holds applications (`module`, `lib/Settings/softwarecatalogus_regi
 | `aiActRole` | enum `provider`, `deployer` | |
 | `algorithmRegisterUrl` | string, format uri | the entry at algoritmes.overheid.nl |
 | `assessedOn` | date | |
+| `friaDocumentRef` | string | reference to the fundamental rights impact assessment, the same pattern as `module.dpiaDocumentRef` |
 | `status` | enum `in development`, `in use`, `withdrawn`, with an `x-openregister-lifecycle` on those exact values | |
 
 Configuration: `allowFiles: true`, `allowedTags`: `FRIA`, `Technical documentation`, `Human oversight`, `Logging`. Authorization copied from `usage`: the organisation reads and edits its own AI systems (`_organisation` match); suppliers read those whose `provider` is their organisation.
@@ -32,13 +33,15 @@ Rejected: a new value `AI system` in `module.type`. The act's fields (category, 
 
 `src/manifest.d/ai-systems.json`: `AiSystems` (`/ai-systems`, index, columns name, kind, module, aiActRiskCategory, status, `filterMenu: true`, quick filters per risk category) and `AiSystemDetail` (`/ai-systems/:id`: data, files with the four tags, related, history). A menu child "AI systems" under Applications (ADR-097). On `ModuleDetail` (`src/manifest.json:491`) an `object-list` `md-ai-systems` with filter `{ "module": "@objectId" }`.
 
-## D3. The missing assessment badge
+## D3. The missing assessment warning
 
-A computed flag through OpenRegister's calculation dialect if it can test for an attached file with a tag; otherwise the detail page shows a `CnStatusBadge` from a small check in a custom body widget `AiActChecklist` (`src/components/ai/AiActChecklist.vue`) that lists the four tags and marks which have a file. The index quick filter "High risk without FRIA" uses the same rule through the list's filter on a boolean `hasFria` that the widget cannot set; so the design writes `hasFria` from a listener on file add and remove (`lib/Listener/AiSystemFileListener.php`) only if the calculation dialect cannot express it.
+The warning follows the pattern the module schema already uses for its DPIA (`module.dpiaDocumentRef`): the assessment is a reference field, `friaDocumentRef`, filled when the file is attached. The AI systems list gets a quick filter "High risk without FRIA" (`aiActRiskCategory` high risk and `friaDocumentRef` empty) and a warning badge column on the same rule. A body widget `AiActChecklist` (`src/components/ai/AiActChecklist.vue`) on the detail page lists the four evidence tags and marks which have a file, reading the entry's files through the library's files API.
+
+Rejected: a flag written by a file listener. OpenRegister raises no event when a file is added to an object (its `lib/Event` holds copy, lock, move, rename, unlock and version-restore events only), so a listener would miss the case that matters.
 
 ## Declarative versus imperative
 
-The schema, lifecycle, tags and pages are declarative (ADR-031). The file-presence flag is the one piece that may need a listener, decided at build time by what OpenRegister's calculation dialect supports.
+All declarative (ADR-031): the schema, lifecycle, tags, the quick filter and the pages. The checklist widget only reads.
 
 ## Seed data
 

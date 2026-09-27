@@ -35,12 +35,12 @@ An AI system SHALL record its EU AI Act risk category (prohibited, high risk, li
 
 ### Requirement: REQ-AIS-003 A high-risk AI system without a fundamental rights impact assessment is flagged
 
-The detail page of an AI system SHALL show which of the four evidence tags have a file, and a high-risk AI system without a FRIA file SHALL show a warning on its page and in the list.
+The detail page of an AI system SHALL show which of the four evidence tags have a file. A high-risk AI system whose FRIA reference is empty SHALL show a warning in the list, and the list SHALL offer a filter for exactly those systems.
 
 #### Scenario: The missing assessment shows
 @e2e tests/e2e/workflows/ai-systems.spec.ts
 
-- **GIVEN** a high-risk AI system with technical documentation but no FRIA file
-- **WHEN** the privacy officer opens its page
-- **THEN** the evidence checklist marks FRIA as missing
-- **AND** the AI systems list shows a warning on that row
+- **GIVEN** a high-risk AI system with technical documentation but no FRIA
+- **WHEN** the privacy officer filters the AI systems list on High risk without FRIA
+- **THEN** that system is listed with a warning
+- **AND** its page marks FRIA as missing in the evidence checklist

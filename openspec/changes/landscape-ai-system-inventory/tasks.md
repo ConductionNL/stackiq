@@ -21,12 +21,12 @@
 
 ### Task 3: Evidence checklist and missing FRIA flag
 - **spec_ref**: openspec/changes/landscape-ai-system-inventory/specs/ai-system-inventory/spec.md#requirement-req-ais-003-a-high-risk-ai-system-without-a-fundamental-rights-impact-assessment-is-flagged
-- **files**: `src/components/ai/AiActChecklist.vue`, `src/customComponents.js`, `lib/Listener/AiSystemFileListener.php` (only if the calculation dialect cannot express it)
+- **files**: `src/components/ai/AiActChecklist.vue`, `src/customComponents.js`, `src/manifest.d/ai-systems.json` (quick filter and badge column)
 - **acceptance_criteria**:
-  - GIVEN a high-risk AI system without a FRIA file WHEN its page opens THEN the checklist marks FRIA missing and the list shows the warning
-  - GIVEN a FRIA file is attached WHEN the page reloads THEN the warning is gone
+  - GIVEN a high-risk AI system without a FRIA reference WHEN the list is filtered on High risk without FRIA THEN it is listed with a warning
+  - GIVEN its FRIA reference is filled WHEN the list reloads THEN it is no longer listed
 - [ ] Implement
-- [ ] Test (vitest `tests/vitest/aiActChecklist.spec.js`; PHPUnit for the listener if built)
+- [ ] Test (vitest `tests/vitest/aiActChecklist.spec.js`; Playwright case in `tests/e2e/workflows/ai-systems.spec.ts`)
 
 ### Task 4: Documentation
 - **spec_ref**: openspec/changes/landscape-ai-system-inventory/specs/ai-system-inventory/spec.md#requirement-req-ais-001-an-organisation-registers-the-ai-systems-it-uses-next-to-their-applications
