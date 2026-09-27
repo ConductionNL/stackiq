@@ -1271,7 +1271,7 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "appinfo/routes.php:107 POST /api/archimate/test-round-trip -> lib/Controller/SettingsController.php:2886 (@NoAdminRequired, any logged-in user) -> lib/Service/ArchiMateService.php:1496 testRoundTrip: reads $importResult['imported_count'] (:1528), a key no import path sets, and compares it to exportToArchiMate's 'exported_count' which is the literal string 'calculated_in_export_service' (:271), so it can never report success; it also imports a test model into the live register",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -1280,7 +1280,7 @@
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
 			"featureConfidence": "medium",
-			"note": "There is an endpoint, but its comparison is broken (a missing key against a placeholder string) and no page calls it. The compare_archimate.py/.php scripts in the repo root are developer tools, not a user capability.",
+			"note": "There is an endpoint, but its comparison is broken (a missing key against a placeholder string) and no page calls it. The compare_archimate.py/.php scripts in the repo root are developer tools, not a user capability. Specified in openspec/changes/architecture-round-trip-check (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "appinfo/routes.php:107 POST /api/archimate/test-round-trip -> lib/Controller/SettingsController.php:2886 (@NoAdminRequired, any logged-in user) -> lib/Service/ArchiMateService.php:1496 testRoundTrip: reads $importResult['imported_count'] (:1528), a key no import path sets, and compares it to exportToArchiMate's 'exported_count' which is the literal string 'calculated_in_export_service' (:271), so it can never report success; it also imports a test model into the live register",
 				"topdesk": "unknown: ArchiMate is not mentioned anywhere in the documentation (0 hits); searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -1364,7 +1364,7 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "module.referenceComponents / usage.usedForReferenceComponents in lib/Settings/softwarecatalogus_register.json hold the application-to-reference-component mapping; lib/Service/ArchiMateExportService.php:2734 draws it only into exported view copies",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -1373,7 +1373,7 @@
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
 			"featureConfidence": "medium",
-			"note": "The mapping to GEMMA reference components exists, but there is no map view in stackiq; you only see it as a facet list or in Archi after an admin export.",
+			"note": "The mapping to GEMMA reference components exists, but there is no map view in stackiq; you only see it as a facet list or in Archi after an admin export. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/meta-model: 'A business capability is supported by an application'; https://help.sap.com/docs/leanix/ea/application-portfolio-assessment lists a 'Business capability map' (read 2026-09-26). Reached on: Reports > Landscape Report on Business Capabilities.",
 				"bluedolphin": "https://bluedolphin.io/capability-based-planning/: 'Drag and drop multi-layer current and future state capability mapping' and 'Drill down instantly from capability scores to the processes, applications, and technologies'; https://bluedolphin.io/application-portfolio-management-application-rationalization/: 'Connect applications to capabilities' (read 2026-09-26). Reached on: Views > capability map.",
@@ -1395,14 +1395,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "src/manifest.json has no page for the view or element schema beyond Standaarden; no diagram editor in src/views or src/components",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Models are imported and exported as ArchiMate files; nothing lets a user draw or edit a model inside stackiq.",
+			"note": "Models are imported and exported as ArchiMate files; nothing lets a user draw or edit a model inside stackiq. Specified in openspec/changes/architecture-views-editor (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/importing-and-exporting-diagrams and https://help.sap.com/docs/leanix/ea/working-with-fact-sheets-in-diagrams: free draw and data flow diagrams edited in the diagram editor, with an ArchiMate 3.2 shape template (https://help.sap.com/docs/leanix/ea/styles-and-patterns) (read 2026-09-26). Reached on: Diagrams > New Diagram (diagram editor).",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967507-create-an-architecture-view and https://help.bluedolphin.io/en/articles/11967516-add-objects-to-architecture-views: users create and edit ArchiMate architecture views in the view editor (read 2026-09-26). Reached on: Views > Create view.",
@@ -1424,14 +1424,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no process schema in lib/Settings/softwarecatalogus_register.json (20 schemas listed under components.schemas); no process page in src/manifest.json",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Business processes are not modelled; the only link applications have is to GEMMA reference components.",
+			"note": "Business processes are not modelled; the only link applications have is to GEMMA reference components. Specified in openspec/changes/architecture-process-mapping (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967673-process-linked-to-ea-perspectives: 'The Create BPMN diagram button allows you to create a diagram directly from a business process'; https://help.bluedolphin.io/en/articles/11967500-getting-started-with-process-publication-portal: 'For each application, you will find different processes in which the selected application is involved' (read 2026-09-26). Reached on: Processes > Process browser.",
 				"stackiq": "no process schema in lib/Settings/softwarecatalogus_register.json (20 schemas listed under components.schemas); no process page in src/manifest.json",
@@ -1453,14 +1453,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "searched src/manifest.json and the register for scenario/future-state/toekomst: nothing; usage.status 'Planned' and plannedReplacement (register) are per-usage fields, not a comparable landscape",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Planned usage and planned replacements exist per record, but there is no future-state model and no comparison with today.",
+			"note": "Planned usage and planned replacements exist per record, but there is no future-state model and no comparison with today. Specified in openspec/changes/architecture-future-state-scenarios (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/sap-leanix-architecture-and-road-map-planning: 'plan your target architecture and monitor initiative progress', transformation templates and impacts; https://updates.leanix.net/announcements/plan-with-consistent-future-architecture-data-introducing-the-committed-future (2026-09-24): 'Understanding your architecture across the past, present, and future ... introducing the committed future'. In the Architecture and Road Map Planning add on (read 2026-09-26). Reached on: Architecture and Road Map Planning > Transformations, target architecture diagrams.",
 				"stackiq": "searched src/manifest.json and the register for scenario/future-state/toekomst: nothing; usage.status 'Planned' and plannedReplacement (register) are per-usage fields, not a comparable landscape",
@@ -1482,14 +1482,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "grep for uncovered/gap/coverage in lib and src found nothing; lib/Service/FacetService.php counts modules per reference component but never lists components with zero coverage",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "No report or view lists reference components that no application in your landscape covers.",
+			"note": "No report or view lists reference components that no application in your landscape covers. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://bluedolphin.io/capability-based-planning/: 'Run gap analyses to define a clear roadmap' and 'Identify capability gaps'. Gaps are found on the customer's own capability map; no reference architecture such as GEMMA is documented (read 2026-09-26). Reached on: Capability maps.",
 				"stackiq": "grep for uncovered/gap/coverage in lib and src found nothing; lib/Service/FacetService.php counts modules per reference component but never lists components with zero coverage",
@@ -1511,14 +1511,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no diagram generation in lib/Service or src; no AI integration for diagrams",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Nothing drafts diagrams.",
+			"note": "Nothing drafts diagrams. Specified in openspec/changes/architecture-assistant-drafted-views (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/12528662-ai-capabilities-of-bluedolphin: 'Modelling Assistant or BPMN Generator instantly creates BPMN 2.0-compliant process diagrams from a simple prompt or by uploading existing documentation' (read 2026-09-26). Reached on: Processes > Modeling Assistant.",
 				"stackiq": "no diagram generation in lib/Service or src; no AI integration for diagrams",
@@ -1995,7 +1995,7 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "register :7651 moduleVersion with status enum in development/in use/end of support/withdrawn and dateInDevelopment/dateInUse/dateEndSupport, read public; src/manifest.json:915 Moduleversies index + ModuleversieDetail",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -2004,7 +2004,7 @@
 			"providerHow": "read-from-code",
 			"feature": "maintenance-and-supplier-roadmap",
 			"featureConfidence": "medium",
-			"note": "A supplier can register a future version with status 'in development' and planned dates, which reads as a crude release plan. There is no roadmap view or declared roadmap; the overlay marks maintenance-and-supplier-roadmap as 'soon'.",
+			"note": "A supplier can register a future version with status 'in development' and planned dates, which reads as a crude release plan. There is no roadmap view or declared roadmap; the overlay marks maintenance-and-supplier-roadmap as 'soon'. Specified in openspec/changes/lifecycle-maintenance-and-supplier-roadmap (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Alle pakketversies en planningen ... gelijk zichtbaar de planning van de diverse pakketversies\" (read 2026-09-26); https://www.softwarecatalogus.nl/pakketversies: facet \"Status planning ... Filter op in ontwikkeling en zie de distributie planningsdata\" (read 2026-09-26). Reached on: Wat is er te vinden > Alle pakketversies en planningen.",
 				"stackiq": "register :7651 moduleVersion with status enum in development/in use/end of support/withdrawn and dateInDevelopment/dateInUse/dateEndSupport, read public; src/manifest.json:915 Moduleversies index + ModuleversieDetail",
@@ -2208,14 +2208,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "grep for overlap/redundant in lib and src finds only code comments and the Reports card description (src/manifest.json:1031 'Overlapping and ageing software'); lib/Service/PortfolioReportService.php computes TIME quadrants, EOL exposure, cloud share and cost, no grouping by reference component; the /modules facet counts modules per reference component across the whole catalogue, not your landscape",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Nothing finds applications in your landscape that fulfil the same reference component; the Reports card promises 'overlapping' software but the report does not compute it.",
+			"note": "Nothing finds applications in your landscape that fulfil the same reference component; the Reports card promises 'overlapping' software but the report does not compute it. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-rationalization: 'Application rationalization reduces costs, eliminates redundancies', using applications mapped to business capabilities; overlap is found per customer capability, not per reference component (read 2026-09-26). Reached on: Reports > Landscape Report by Business Capability.",
 				"stackiq": "grep for overlap/redundant in lib and src finds only code comments and the Reports card description (src/manifest.json:1031 'Overlapping and ageing software'); lib/Service/PortfolioReportService.php computes TIME quadrants, EOL exposure, cloud share and cost, no grouping by reference component; the /modules facet counts modules per reference component across the whole catalogue, not your landscape",
@@ -2237,14 +2237,14 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "appinfo/routes.php:303 GET /api/portfolio-report -> lib/Controller/PortfolioReportController.php -> lib/Service/PortfolioReportService.php + PortfolioReportDerivation.php; UI src/views/organisaties/PortfolioReport.vue (TIME chart :112, quadrant summary :126 with EOL exposure/cloud/cost, rows :176, CSV export :50)",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "PortfolioReport /portfolio-report, from Reports /reports card 'Portfolio rationalization' (footer menu Reports)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "The report covers ageing software (EOL exposure) with TIME quadrants, cost and a CSV export, but not overlap, even though its card says 'overlapping and ageing'.",
+			"note": "The report covers ageing software (EOL exposure) with TIME quadrants, cost and a CSV export, but not overlap, even though its card says 'overlapping and ageing'. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-rationalization-evaluate-data: 'Leverage automated TIME classification, application portfolio and landscape reports ... to streamline application rationalization' (read 2026-09-26). Reached on: Use case Application Rationalization > reports.",
 				"stackiq": "appinfo/routes.php:303 GET /api/portfolio-report -> lib/Controller/PortfolioReportController.php -> lib/Service/PortfolioReportService.php + PortfolioReportDerivation.php; UI src/views/organisaties/PortfolioReport.vue (TIME chart :112, quadrant summary :126 with EOL exposure/cloud/cost, rows :176, CSV export :50)",
@@ -2395,7 +2395,7 @@
 			"providerHow": "read-from-code",
 			"feature": "maintenance-and-supplier-roadmap",
 			"featureConfidence": "high",
-			"note": "Listed as 'soon' in the feature overlay; nothing is built.",
+			"note": "Listed as 'soon' in the feature overlay; nothing is built. Specified in openspec/changes/lifecycle-maintenance-and-supplier-roadmap (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "openspec/features.overlay.json maintenance-and-supplier-roadmap status 'soon'; no maintenance schema in lib/Settings/softwarecatalogus_register.json and no page in src/manifest.json",
 				"topdesk": "https://docs.topdesk.com/en/operations-management.html: \"In TOPdesk you can easily schedule operational activities in the user-friendly planner. If you wish to schedule a recurring activity, you can use a series\" (read 2026-09-26); https://docs.topdesk.com/en/linking-assets-to-cards.html: assets can be linked to \"Operational Activity\" cards (read 2026-09-26). Reached on: Modules > Operations Management > Planner.",
@@ -4370,7 +4370,7 @@
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/398728",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "lib/Settings/softwarecatalogus_register.json:5038 ggm-guid (and ggm-naam, ggm-definitie) are properties of the element schema (register.json:4130), filled by the AMEF import (lib/Repair/RenameDutchCatalogColumns.php:25-27); the module schema (register.json:6777) has no property that points to a GGM entity, and the only element page, Standaarden, is filtered to gemmaType standaard (src/manifest.json:708)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4379,7 +4379,7 @@
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
 			"featureConfidence": "medium",
-			"note": "Helmond's architecture repository tender (REQ3, REQ61) asks to relate the repository to the GGM. GGM metadata survives an ArchiMate import on architecture elements, but no field or page links an application to a GGM entity.",
+			"note": "Helmond's architecture repository tender (REQ3, REQ61) asks to relate the repository to the GGM. GGM metadata survives an ArchiMate import on architecture elements, but no field or page links an application to a GGM entity. Specified in openspec/changes/architecture-data-model-and-ggm (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: the Gemeentelijk Gegevensmodel is not mentioned; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
@@ -4401,7 +4401,7 @@
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/398728",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "appinfo/routes.php:97-98 the only view exports are ArchiMate exchange files (POST /api/archimate/export, GET /api/archimate/export/organization/{organizationUuid}); no image, docx or pptx export of a view anywhere in lib/ or src/ (the docx/pptx strings in src/modals/object/MergeObject.vue are file-type labels)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4410,7 +4410,7 @@
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
 			"featureConfidence": "medium",
-			"note": "Helmond REQ19 asks for architecture views embedded in office documents. stackiq renders no view at all (see arch-gemma-views) and exports only ArchiMate files.",
+			"note": "Helmond REQ19 asks for architecture views embedded in office documents. stackiq renders no view at all (see arch-gemma-views) and exports only ArchiMate files. Specified in openspec/changes/architecture-views-to-office-documents (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "partial",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Hoe%20print%20ik%20een%20kaart%3F: \"Download de kaart met de knop [download SVG] ... De kaart volledig schaalbaar\" (read 2026-09-26). A map is downloaded as SVG for printing; placing it in Word or PowerPoint is a manual step. Reached on: Mijn softwarecatalogus > Pakketten > Toon kaart > download SVG.",
@@ -4432,7 +4432,7 @@
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/398728",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "src/manifest.json has no page for the element, relation or view schema other than Standaarden (src/manifest.json:708, filtered to standards); no diagram editor under src/views or src/components (same finding as arch-modelling)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4440,7 +4440,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"featureConfidence": "high",
-			"note": "Helmond REQ54 asks for entity relationship or UML data models. stackiq holds imported ArchiMate elements but models nothing itself.",
+			"note": "Helmond REQ54 asks for entity relationship or UML data models. stackiq holds imported ArchiMate elements but models nothing itself. Specified in openspec/changes/architecture-data-model-and-ggm (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: no data modelling is described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
@@ -4554,7 +4554,7 @@
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/398728",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "lib/Settings/softwarecatalogus_register.json:3092 usage.timeClassification holds only the TIME verdict and its rationale; no business value, technical fit or risk score property on module or usage, and PortfolioReport (src/manifest.json:1040) plots the TIME quadrant only",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4563,7 +4563,7 @@
 			"providerHow": "read-from-code",
 			"feature": "portfolio-reporting",
 			"featureConfidence": "medium",
-			"note": "Helmond REQ41 asks for analysis of application use, cost, risk and value. stackiq records a TIME classification (life-time-classification) without the scores that would justify it.",
+			"note": "Helmond REQ41 asks for analysis of application use, cost, risk and value. stackiq records a TIME classification (life-time-classification) without the scores that would justify it. Specified in openspec/changes/lifecycle-application-value-assessment (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: no value, cost or risk scoring is described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
@@ -5305,7 +5305,7 @@
 			"originUrl": "https://updates.leanix.net/announcements/classify-architecture-decisions-with-dropdown-fields",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "the only decisions are contract approval and renewal decisions delegated to decidiq (catalogContract.decisions, lib/Settings/softwarecatalogus_register.json, and lib/Service/ContractApprovalService.php); no architecture decision record",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5321,7 +5321,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'architecture decision' over src/ locales/glpi.pot returns nothing; the only status and review flow is ITIL approval on changes (src/ChangeValidation.php:39), not a decision record linked to applications.",
 				"topdesk": "unknown: architecture decisions are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from sap-leanix (changelog) on 2026-09-26.",
+			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Specified in openspec/changes/architecture-decision-register (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -5425,7 +5425,7 @@
 			"originUrl": "https://updates.leanix.net/announcements/compare-the-content-of-different-diagram-versions",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "stackiq renders no architecture view (see arch-gemma-views), so there is nothing to compare; ArchiMate files are imported and exported whole",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5441,7 +5441,7 @@
 				"glpi": "source read at 11.0.9: impact graphs are not versioned; src/ImpactContext.php:40 stores only positions, zoom and colours (install/mysql/glpi-empty.sql:1293 glpi_impactcontexts) and CommonDBTM defaults dohistory to false (src/CommonDBTM.php:104). Relation adds and removals (src/ImpactRelation.php:39 extends CommonDBRelation) appear in each linked item's history (src/CommonDBRelation.php:844), but there is no saved diagram version and no compare view.",
 				"topdesk": "unknown: architecture diagrams are not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from sap-leanix (changelog) on 2026-09-26.",
+			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Specified in openspec/changes/architecture-views-editor (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -5545,7 +5545,7 @@
 			"originUrl": "https://bluedolphin.io/blog/july-2026-bluedolphin-updates/",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "stackiq models no processes (see arch-process-mapping)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5561,7 +5561,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'business process\\|process step' over src/ locales/glpi.pot returns nothing; 'Processes' in inventory (src/Glpi/Inventory/Asset/Process.php) are operating system processes, not business process steps.",
 				"topdesk": "unknown: process modelling is not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from bluedolphin (changelog) on 2026-09-26.",
+			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Specified in openspec/changes/architecture-process-mapping (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"glpi": "no",
@@ -5575,7 +5575,7 @@
 			"originUrl": "https://help.bluedolphin.io/en/articles/16096602-discover-and-manage-views-in-the-views-list",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no page lists or tags views (src/store/modules/view.js defines a view store nothing imports, see arch-gemma-views)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5591,7 +5591,7 @@
 				"glpi": "source read at 11.0.9: saved searches, the only saved views, have type, itemtype, owner and privacy but no tags (install/mysql/glpi-empty.sql:232 glpi_savedsearches, :237 users_id, :238 is_private), and impact graphs are not saved as named views (src/ImpactContext.php:40 holds display settings only). The list can be filtered by owner, not by tag.",
 				"topdesk": "unknown: saved overviews can be renamed and shared, but tagging them is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from bluedolphin (changelog) on 2026-09-26.",
+			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Specified in openspec/changes/architecture-views-editor (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"glpi": "no",
