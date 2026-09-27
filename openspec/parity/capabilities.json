@@ -581,7 +581,7 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "Looked in src/manifest.json, src/views, lib/Controller: no field-definition or schema-extension UI in stackiq; the data model is fixed in lib/Settings/softwarecatalogus_register.json",
 				"owner": "ConductionNL/openregister",
 				"ownerNote": "reader wrote: ConductionNL/stackiq"
@@ -589,7 +589,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
-			"note": "Stackiq offers no way to add fields. Editing the schema in OpenRegister's own admin UI is possible there, but that is an OpenRegister feature, not a stackiq page.",
+			"note": "Stackiq offers no way to add fields. Editing the schema in OpenRegister's own admin UI is possible there, but that is an OpenRegister feature, not a stackiq page. Specified in ConductionNL/openregister openspec/changes/fields-a-user-adds-and-choices-a-record-narrows (openregister lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/fact-sheet-fields: 'Adding a Custom Field ... To add a custom field, follow these steps'; https://help.sap.com/docs/leanix/ea/tags-and-custom-fields: custom fields as text, dates, numbers, set in the meta model configuration by an admin (read 2026-09-26). Reached on: Administration > Meta Model Configuration > Fact Sheet Fields.",
 				"glpi": "source read at 11.0.9: native custom fields exist only for admin defined custom asset types, src/Glpi/Asset/CustomFieldDefinition.php:52 child of AssetDefinition (install/mysql/glpi-empty.sql:10159 glpi_assets_customfielddefinitions keyed on assets_assetdefinitions_id), set up under Setup > Asset definitions (src/Html.php:1330). The core Appliance and Software types take no custom fields in core; that needs the fields plugin, read at pluginsGLPI/fields tag 1.24.5, inc/container.class.php:91 containers with a list of itemtypes. Reached on: Setup > Asset definitions > Custom fields; or plugin Fields. Driven on the lab at 11.0.9 (2026-09-26): Setup > Asset definitions (/front/asset/assetdefinition.php) is where custom asset types and their fields are defined; appliances themselves take no custom fields in core.",
@@ -1031,14 +1031,14 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "src/manifest.json:502 ModuleDetail md-related (library CnRelatedObjectsWidget: /used lists every object that references this module: usages, connections, suites, services, vulnerabilities); no dependency or impact computation in lib/ or src/",
 				"owner": "ConductionNL/openregister"
 			},
 			"reachedOn": "ModuleDetail /modules/:id, Related panel",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
-			"note": "The only way to see what depends on an application is the generic list of objects that reference it, which OpenRegister's relation index fills. There is no impact view or retirement check.",
+			"note": "The only way to see what depends on an application is the generic list of objects that reference it, which OpenRegister's relation index fills. There is no impact view or retirement check. Specified in ConductionNL/openregister openspec/changes/relations-that-travel-and-what-they-expose (openregister lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967472-welcome-to-bluedolphin: 'overlapping application functions are quickly made visible, and their impact analyses are available in no time'; spider tool shows derived relationships (https://help.bluedolphin.io/en/articles/11967545-spider-tool) (read 2026-09-26). Reached on: Views > spider tool.",
 				"glpi": "source read at 11.0.9: src/Impact.php:49 class Impact 'Impact analysis', src/Impact.php:713 bfs walks the graph by direction and src/Impact.php:612 buildListData lists what is impacted, with ongoing tickets, problems and changes on impacted items (src/Impact.php:313). Reached on: Tools > Impact analysis (src/Html.php:1309) and the item's Impact analysis tab.",
@@ -1149,14 +1149,14 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "src/manifest.d/connection-registry.json:23 Integrations page (register integriq, schema app_connection) with visibleIf appInstalled 'integriq' (:17) and permission admin (:15,:27); Add integration handler leaves for integriq (src/services/connectionRegistry.js:43); rows synced from lib/Settings/connections.json (email, federation, eol-feed); status worked out by integriq",
 				"owner": "ConductionNL/integriq"
 			},
 			"reachedOn": "Integrations /settings/integrations (settings menu, admin, only when app id 'integriq' is installed)",
 			"provider": "integriq",
 			"providerHow": "read-from-code",
-			"note": "With integriq installed, an admin sees stackiq's three integrations and their checked status on one page, and Add integration opens integriq. Without integriq the page is hidden, and the checking is integriq's.",
+			"note": "With integriq installed, an admin sees stackiq's three integrations and their checked status on one page, and Add integration opens integriq. Without integriq the page is hidden, and the checking is integriq's. Building: ConductionNL/integriq openspec/changes/connection-registry, an existing open change, covers it (integriq lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "src/manifest.d/connection-registry.json:23 Integrations page (register integriq, schema app_connection) with visibleIf appInstalled 'integriq' (:17) and permission admin (:15,:27); Add integration handler leaves for integriq (src/services/connectionRegistry.js:43); rows synced from lib/Settings/connections.json (email, federation, eol-feed); status worked out by integriq",
 				"topdesk": "https://docs.topdesk.com/en/connections.html: \"TOPdesk offers a storage space for usernames, passwords, and authentication tokens used in automated actions ... Better overview: Observe when specific credentials are applied\" (read 2026-09-26); https://docs.topdesk.com/en/using-the-automated-actions-overview.html: \"contains all asset actions, webhooks, scheduled actions ... The last execution status\" (read 2026-09-26). Reached on: Settings > Connections; Action Management > Automated Actions.",
@@ -2306,7 +2306,7 @@
 			"providerHow": "read-from-code",
 			"feature": "notifications",
 			"featureConfidence": "medium",
-			"note": "The only rule is a register declaration, and it addresses the version's own managers and catalogue admins, not the organisations that use the application, so even if OpenRegister dispatches it a user of the application is not told.",
+			"note": "The only rule is a register declaration, and it addresses the version's own managers and catalogue admins, not the organisations that use the application, so even if OpenRegister dispatches it a user of the application is not told. Specified in ConductionNL/openregister openspec/changes/notifications-new-notes-and-referrers (openregister lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "lib/Settings/softwarecatalogus_register.json moduleVersion x-openregister-notifications module-version-published (trigger created, recipients object-acl manage + group software-catalog-admins); no notification code in lib (no INotificationManager use)",
 				"topdesk": "unknown: no supplier version feed is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -5245,7 +5245,7 @@
 			"originUrl": "https://github.com/glpi-project/glpi/releases/tag/11.0.0",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "library CnIndexPage mass copy on stackiq index pages: @conduction/nextcloud-vue v2.55.1 src/components/CnIndexPage/CnIndexPage.vue:215 CnMassCopyDialog, showMassCopy default true at :1611 (package.json:45 pins ^2.55.1); whether relations are copied along was not traced",
 				"owner": "ConductionNL/nextcloud-vue"
 			},
@@ -5261,7 +5261,7 @@
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967529-welcome-to-the-objects: on the Object properties tab you can 'create a copy of the object with a different name'; whether relationships are copied is not stated (read 2026-09-26). Reached on: Objects > object > Object properties > copy.",
 				"topdesk": "https://docs.topdesk.com/en/copying-assets.html: \"you can save time by copying an existing asset ... Dataset content will not be copied during this action ... Read permissions for any linked asset type\" (read 2026-09-26). Whether links are copied is implied by the permission note, not stated. Reached on: Asset card > More > Copy."
 			},
-			"note": "Mined from glpi (changelog) on 2026-09-26.",
+			"note": "Mined from glpi (changelog) on 2026-09-26. Specified in ConductionNL/nextcloud-vue openspec/changes/index-copy-with-relations (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "partial",
 			"sap-leanix": "yes",
 			"bluedolphin": "partial",
