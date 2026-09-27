@@ -37,7 +37,7 @@ Declarative: fields, the connection entry, and the flows and mappings as data ru
 
 ## Seed data
 
-None; the configuration set is installed on purpose.
+None; the flows are created on purpose by the set-up action.
 
 ## Risks
 
