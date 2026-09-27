@@ -32,7 +32,7 @@
   - GIVEN the Contracten page WHEN it renders THEN it offers All, Active, Expiring, Expired and In negotiation quick filters
   - GIVEN the Contracten page WHEN it renders THEN its columns include `responsibleUser`
   - GIVEN a Dutch instance WHEN the page renders THEN the filter and column labels are Dutch
-  - GIVEN a quick filter whose value is not in the schema enum WHEN tests/vitest/manifestFilterEnumParity.spec.js runs THEN it fails, so quick filters get the same guard as \`config.filter\`
+  - GIVEN a quick filter whose value is not in the schema enum WHEN tests/vitest/manifestFilterEnumParity.spec.js runs THEN it fails, so quick filters get the same guard as `config.filter`
 - [ ] Implement
 - [ ] Test (Playwright tests/e2e/spec-coverage/contract-expiry-and-owner.spec.ts, vitest tests/vitest/manifestFilterEnumParity.spec.js, and node tests/validate-manifest.js)
 
