@@ -19,7 +19,7 @@ Rejected: calling the merge with a filter. The merge tombstones the source organ
 
 ## D2. Endpoints and authorisation
 
-`POST /api/ownership-transfers/plan` and `POST /api/ownership-transfers/execute` in `appinfo/routes.php`, body `{ objects: [{ schema, id }], targetOrganisation }`, controller `lib/Controller/OwnershipTransferController.php`, `#[NoAdminRequired]` with an explicit guard: the caller is a Nextcloud admin, or is in an organisation admin group (`SettingsService::getOrganizationAdminGroups()`, as `SettingsController::verifyOrgExportPermission()` uses at `lib/Controller/SettingsController.php:1737`) AND is a member of both organisations (the multi-org membership from the archived change `multi-org-membership`). Anything else is a 403 before any read.
+`POST /api/ownership-transfers/plan` and `POST /api/ownership-transfers/execute` in `appinfo/routes.php`, body `{ objects: [{ schema, id }], targetOrganisation }`, controller `lib/Controller/OwnershipTransferController.php`, `#[NoAdminRequired]` with an explicit guard: the caller is a Nextcloud admin, or passes the maintainer rule of `OrganisationMembersController::authorizeMaintainer()` (`lib/Controller/OrganisationMembersController.php:207`: in the `maintainer` group and a member of the organisation, from `OrganisationService::getUserOrganisations()`) for BOTH the source and the target organisation. Anything else is a 403 before any read. `SettingsService::getOrganizationAdminGroups()` is not used: it returns an empty list (`lib/Service/SettingsService.php:2105-2110`), so a guard built on it would admit Nextcloud admins only.
 
 ## D3. The action
 
