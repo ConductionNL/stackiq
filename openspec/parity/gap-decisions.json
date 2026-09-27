@@ -1,10 +1,50 @@
 [
  {
+  "row": "arch-ai-diagram",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (architecture).",
+  "change": "architecture-assistant-drafted-views",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-capability-map",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (architecture). Partial and built: the change builds the missing half, a map view of applications on reference components inside stackiq.",
+  "change": "architecture-reference-component-coverage",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-data-model",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: tender demand (https://www.tenderned.nl/aankondigingen/overzicht/398728); core area (architecture).",
+  "change": "architecture-data-model-and-ggm",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-decision-register",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture).",
+  "change": "architecture-decision-register",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "arch-definitions",
   "matrix": "stackiq",
   "decision": "defer",
   "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
   "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-diagram-version-compare",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture).",
+  "change": "architecture-views-editor",
   "decidedOn": "2026-09-27"
  },
  {
@@ -24,11 +64,83 @@
   "decidedOn": "2026-09-27"
  },
  {
+  "row": "arch-gap-analysis",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture).",
+  "change": "architecture-reference-component-coverage",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-ggm-link",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: tender demand (https://www.tenderned.nl/aankondigingen/overzicht/398728); core area (architecture).",
+  "change": "architecture-data-model-and-ggm",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "arch-import-amef",
   "matrix": "stackiq",
   "decision": "defer",
   "reason": "partial, built, no demand (1 competitor yes, no tender, feature request or roadmap row).",
   "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-modelling",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (architecture).",
+  "change": "architecture-views-editor",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-process-mapping",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (architecture).",
+  "change": "architecture-process-mapping",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-process-step-fields",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture).",
+  "change": "architecture-process-mapping",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-round-trip",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture). Built state but rated no: the code exists and does not work, so the change repairs it.",
+  "change": "architecture-round-trip-check",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-scenarios",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (architecture).",
+  "change": "architecture-future-state-scenarios",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-view-tags",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture).",
+  "change": "architecture-views-editor",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-views-office",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: tender demand (https://www.tenderned.nl/aankondigingen/overzicht/398728); core area (architecture).",
+  "change": "architecture-views-to-office-documents",
   "decidedOn": "2026-09-27"
  },
  {
@@ -416,11 +528,43 @@
   "decidedOn": "2026-09-27"
  },
  {
+  "row": "life-maintenance-window",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Marked specified with no change directory, a claim without a change (addendum), so the change is written; the feature overlay lists maintenance-and-supplier-roadmap as soon. TOPdesk rates yes.",
+  "change": "lifecycle-maintenance-and-supplier-roadmap",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-overlap",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GEMMA Softwarecatalogus, BlueDolphin).",
+  "change": "architecture-reference-component-coverage",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-rationalisation-report",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with life-overlap: its missing half is overlap in the portfolio report, which is the overlap that change computes.",
+  "change": "architecture-reference-component-coverage",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "life-strategy-link",
   "matrix": "stackiq",
   "decision": "defer",
   "reason": "Defer: single competitor, no demand, outside the core areas (lifecycle).",
   "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-value-assessment",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: tender demand (https://www.tenderned.nl/aankondigingen/overzicht/398728); 2 competitors rate yes (SAP LeanIX, BlueDolphin).",
+  "change": "lifecycle-application-value-assessment",
   "decidedOn": "2026-09-27"
  },
  {
@@ -461,6 +605,14 @@
   "decision": "defer",
   "reason": "Defer: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (market).",
   "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "mkt-supplier-roadmap",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with life-maintenance-window: the feature overlay pairs them as maintenance-and-supplier-roadmap, and its missing half is the roadmap view that change adds.",
+  "change": "lifecycle-maintenance-and-supplier-roadmap",
   "decidedOn": "2026-09-27"
  },
  {
