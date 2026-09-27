@@ -45,7 +45,7 @@ Next to `last_sync_time`, `recordSyncTime()` also writes `last_sync_result`: sta
 
 `SyncAccessPolicy` allows a Nextcloud admin or a member of `functioneel-beheerder`, the group `GroupHandler` keeps in step with the contact person role Functioneel-beheerder (`lib/Service/Stackiq/GroupHandler.php:170`). `SyncStatusController` uses it with `#[NoAdminRequired]` and returns 403 otherwise. `getProgress()` keeps its owner check and adds: an admin may read any operation, and the policy may read `organisation_sync` operations. An operation id alone never grants access.
 
-When `organisations-role-mapping-and-access-review` makes the role's group configurable, the policy reads the mapped group; it is the only place that names the group.
+`organisations-role-mapping-and-access-review` keeps that group's name and keeps its members in step with the role, so the policy stays as it is; it is the only place in this change that names the group.
 
 ### D5. The menu shows the entry only to those users
 
