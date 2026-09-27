@@ -110,10 +110,10 @@ The editor SHALL offer Save version, which SHALL write a `view-version` object w
 
 ### Requirement: REQ-AVE-006 Drawn views SHALL stay inside the organisation that drew them
 
-Drawn views, elements and relations SHALL be scoped to the organisation that created them. `GET /api/views` SHALL NOT return a view with `origin` set to `drawn`, because its list is cached for all callers. The full ArchiMate export (`POST /api/archimate/export`) SHALL skip objects with `origin` set to `drawn`. The editor SHALL take OpenRegister's object lock before edit mode and SHALL show who holds the lock when another user has it.
+Drawn views, elements and relations SHALL be scoped to the organisation that created them. `GET /api/views` SHALL return only views whose `origin` is empty or `imported`, because its list is cached for all callers. The full ArchiMate export (`POST /api/archimate/export`) SHALL keep only objects whose `origin` is empty or `imported`. The editor SHALL take OpenRegister's object lock before edit mode and SHALL show who holds the lock when another user has it.
 
 #### Scenario: Another municipality does not see a drawn view
-@e2e exclude The CI instance has one organisation; tests/Unit/Service/ViewServiceDrawnViewTest.php asserts the views query excludes origin drawn, and tests/Unit/Service/ArchiMateExportServiceDrawnFilterTest.php asserts the full export skips drawn objects.
+@e2e exclude The CI instance has one organisation; tests/Unit/Service/ViewServiceDrawnViewTest.php asserts the views query keeps only an empty or imported origin, and tests/Unit/Service/ArchiMateExportServiceDrawnFilterTest.php asserts the full export skips drawn objects.
 
 - **GIVEN** a drawn view of municipality A
 - **WHEN** a user of municipality B calls `GET /api/views` or a Nextcloud admin runs the full ArchiMate export

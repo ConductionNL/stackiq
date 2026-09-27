@@ -77,6 +77,7 @@
 - **acceptance_criteria**:
   - GIVEN a drawn and an imported view WHEN `GET /api/views` runs THEN only the imported view is returned and cached
   - GIVEN drawn objects WHEN the full ArchiMate export runs THEN none of them is in the file
+  - GIVEN a view imported before this change with no origin WHEN either reader runs THEN it is kept as imported
 - [ ] Implement
 - [ ] Test (PHPUnit `ViewServiceDrawnViewTest`, `ArchiMateExportServiceDrawnFilterTest`)
 

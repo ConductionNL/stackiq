@@ -20,7 +20,7 @@ The fragment is merged by `SettingsService::loadSettings` (`lib/Service/Settings
 
 ### D1. A drawn view is a `view` object with `origin: drawn`
 
-A user's view is stored in the same `view` schema as the imported GEMMA views, with `origin` set to `drawn`. Imported views get `origin: imported` as the default.
+A user's view is stored in the same `view` schema as the imported GEMMA views, with `origin` set to `drawn`. The import writes `origin: imported`. A view imported before this change has no `origin` and counts as imported. Every reader that must see only GEMMA content keeps views whose `origin` is empty or `imported`, so a later origin value is left out by default.
 
 Rejected: a new schema in the `stackiq` register. `ViewService` and both ArchiMate exports read only the AMEF `view` schema, so a second store would split the views list and leave drawn views out of any later export.
 
@@ -68,8 +68,8 @@ ADR-097 caps the main menu at six entries, and stackiq has 13 after relocation. 
 
 Drawn views, elements and relations are scoped to the organisation that created them through OpenRegister multitenancy. Two readers bypass that today and each gets a filter:
 
-- `ViewService::getViewsFromRegister` caches one list for all callers (`views_list`, :234, 30 minutes, :74). It adds `origin` not equal to `drawn` to its query, so the cache only ever holds GEMMA views.
-- `ArchiMateExportService::getObjectsFromDatabase` reads with `_rbac: false` and `_multitenancy: false` (:844). The full model export skips objects with `origin: drawn`.
+- `ViewService::getViewsFromRegister` caches one list for all callers (`views_list`, :234, 30 minutes, :74). It keeps only views whose `origin` is empty or `imported`, so the cache only ever holds GEMMA views.
+- `ArchiMateExportService::getObjectsFromDatabase` reads with `_rbac: false` and `_multitenancy: false` (:844). The full model export keeps only objects whose `origin` is empty or `imported`.
 
 The editor and the index read drawn views through OpenRegister's objects API, which applies RBAC and multitenancy.
 
