@@ -366,7 +366,7 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "src/manifest.json:592 Modules page (FacetedCatalogIndexView, schema module) with the library CnIndexPage create form at src/views/FacetedCatalogIndexView.vue:108; lib/Settings/softwarecatalogus_register.json:6777 module schema has name, shortDescription/longDescription and provider (Supplier) but NO status property; status lives on usage (register.json:2654, enum Acquisition..In production) which has no page",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -375,7 +375,7 @@
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "high",
-			"note": "An application with supplier and description can be registered on the Modules page, but the module schema has no status field, and the per-organisation usage that carries a status has no page to create it on. The Modules list also cannot open ModuleDetail: its standalone CnIndexPage (FacetedCatalogIndexView.vue:108-117) binds no @view/@row-click, so the View action is inert.",
+			"note": "An application with supplier and description can be registered on the Modules page, but the module schema has no status field, and the per-organisation usage that carries a status has no page to create it on. The Modules list also cannot open ModuleDetail: its standalone CnIndexPage (FacetedCatalogIndexView.vue:108-117) binds no @view/@row-click, so the View action is inert. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/30355: \"klik dan op de knop + achter de beschrijving van het pakket om het pakket toe te voegen aan je omgeving ... Pakketversie ... Referentiecomponenten ... Vul onder Planning bij Status in gebruik in\" (read 2026-09-26); https://www.softwarecatalogus.nl/hoe-werkt-de-catalogus: \"Wanneer Gemeenten en samenwerkingen hun applicatielandschap hebben ingevoerd, wordt deze automatisch geplot op de GEMMA referentiecomponentenkaart\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Pakketten > Voeg pakket toe.",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines: 'Applications are software systems or programs that process or analyze business data'; application fact sheet with description and lifecycle, supplier via 'provider -> IT component -> application relation' (https://help.sap.com/docs/leanix/ea/provider-modeling-guidelines) (read 2026-09-26). Reached on: Inventory > Application fact sheet.",
@@ -397,7 +397,7 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "register.json:1135 suite schema with applications[] (register.json:1231); src/manifest.json:674 SuiteDetail with suite-related panel; no schema breaks one application into sub-modules (module IS the application, register.json:6777 title 'Application')",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -406,7 +406,7 @@
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "low",
-			"note": "Stackiq's 'module' is the whole application, so there is no breakdown of one application into modules. The nearest thing is a suite (product) listing its applications, which answers 'which module belongs to which product' but not the decomposition.",
+			"note": "Stackiq's 'module' is the whole application, so there is no breakdown of one application into modules. The nearest thing is a suite (product) listing its applications, which answers 'which module belongs to which product' but not the decomposition. Specified in openspec/changes/landscape-application-components (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines: 'Applications often consist of multiple entities or modules within a common ecosystem or platform', modeled as parent/child hierarchy, e.g. Adobe Photoshop as child of Adobe Creative Cloud (read 2026-09-26). Reached on: Application fact sheet > parent/child relations.",
 				"stackiq": "register.json:1135 suite schema with applications[] (register.json:1231); src/manifest.json:674 SuiteDetail with suite-related panel; no schema breaks one application into sub-modules (module IS the application, register.json:6777 title 'Application')",
@@ -521,14 +521,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "specified",
+				"state": "decided-no",
 				"evidence": "register.json:1034 sector schema (name, description only); no schema property references #/components/schemas/sector (grep found none), no manifest page for sector; only the admin schema mapping in src/views/settings/sections/OpenRegisterIntegration.vue:395",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "A sector schema exists, but no application, service or organisation can be tagged with a sector and no page lists sectors.",
+			"note": "A sector schema exists, but no application, service or organisation can be tagged with a sector and no page lists sectors. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: aanvullende-informatie.md:511 lists VNG issue #4 (classify packages on the reference architectures of the relevant sectors, so buyers from several sectors find them) with the analysis \"Classificeren op meerdere sectorale referentiearchitecturen, buiten scope\", and issues/4.md carries the label \"Buiten scope oplevering\" and is closed. Tagging applications with sectors is the entry to that out-of-scope classification. The unused sector schema (lib/Settings/softwarecatalogus_register.json:1036) is what the specified state pointed at; no change directory existed.",
 			"evidence": {
 				"stackiq": "register.json:1034 sector schema (name, description only); no schema property references #/components/schemas/sector (grep found none), no manifest page for sector; only the admin schema mapping in src/views/settings/sections/OpenRegisterIntegration.vue:395",
 				"topdesk": "unknown: the TOPdesk documentation is about service management and does not cover this; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -550,7 +550,7 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "register.json:6856 module.contactPerson is a single related contactPerson; register.json:1786 contactPerson has free-text role (job title) and a roles enum of catalogue roles (Aanbod-beheerder, Gebruik-beheerder, ...), no business/technical owner distinction; shown on ModuleDetail md-data (src/manifest.json:500 lists the stale key 'contactpersoon', not 'contactPerson')",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -559,7 +559,7 @@
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "low",
-			"note": "One contact person per application can be set, but there is no separate business owner and technical owner. ModuleDetail's data widget includes 'contactpersoon', a key the schema no longer has, so the contact may not show there.",
+			"note": "One contact person per application can be set, but there is no separate business owner and technical owner. ModuleDetail's data widget includes 'contactpersoon', a key the schema no longer has, so the contact may not show there. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/subscription-roles: 'Define roles that map to your organization's positions, such as application owner', with subscription types 'Responsible, Accountable, Observer' per fact sheet (read 2026-09-26). Reached on: Fact sheet > Subscriptions; Administration > Subscription Roles.",
 				"stackiq": "register.json:6856 module.contactPerson is a single related contactPerson; register.json:1786 contactPerson has free-text role (job title) and a roles enum of catalogue roles (Aanbod-beheerder, Gebruik-beheerder, ...), no business/technical owner distinction; shown on ModuleDetail md-data (src/manifest.json:500 lists the stale key 'contactpersoon', not 'contactPerson')",
@@ -640,7 +640,7 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "src/manifest.json:491 ModuleDetail: md-versions (:504), md-compliance (:503), md-related generic Related panel (:502); no contract widget (catalogContract links to service/usage, register.json:3250, not to module); md-data include lists stale keys beschrijvingKort/beschrijvingLang/contactpersoon (:500)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -649,7 +649,7 @@
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "medium",
-			"note": "The application page shows versions and compliance claims, and usages only as untyped entries in the generic Related panel. Contracts are not shown. The page cannot be opened from the Applications list itself, and its data widget asks for three field names the schema no longer has, so the descriptions do not render.",
+			"note": "The application page shows versions and compliance claims, and usages only as untyped entries in the generic Related panel. Contracts are not shown. The page cannot be opened from the Applications list itself, and its data widget asks for three field names the schema no longer has, so the descriptions do not render. Specified in openspec/changes/landscape-application-page (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/pakket/archi: package page shows versions with status and start dates, \"Pakket geschikt voor (GEMMA 2) Ingevuld door (28)\", and per version the mandatory and recommended standards with support, compliancy and testrapport (read 2026-09-26). No contracts on the page. Reached on: Alle pakketten > package name.",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines and https://help.sap.com/docs/leanix/ea/adding-and-editing-data-in-fact-sheets: the application fact sheet holds lifecycle, relations to IT components, organizations, interfaces, cost on relations, and a Relations Explorer on one fact sheet (read 2026-09-26). Reached on: Inventory > Application fact sheet.",
@@ -731,14 +731,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "No survey, attestation or owner-confirmation code in lib/ or src/ (searched survey/enquete/confirm entry)",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Nothing asks owners to confirm or correct their entries.",
+			"note": "Nothing asks owners to confirm or correct their entries. Specified in openspec/changes/landscape-owner-attestation (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/reviewing-responses: 'Review and approve survey responses before they are saved to fact sheets'; https://help.sap.com/docs/leanix/ea/application-modernization-collect-data: 'Create a new survey to get key information from application or business owners' (read 2026-09-26). Reached on: Surveys.",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967524-create-a-survey: surveys 'gather input from stakeholders outside your core BlueDolphin users ... allowing external stakeholders to contribute directly to the Enterprise Architecture repository' on an object's questionnaire (read 2026-09-26). Reached on: Object > Questionnaire tab > Create survey.",
@@ -760,14 +760,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "No completeness or data-quality score in lib/ or src/ (searched completeness/volledigheid/score outside reviews)",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "No page scores how complete or current an entry is.",
+			"note": "No page scores how complete or current an entry is. Specified in openspec/changes/landscape-completeness-score (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "No completeness or data-quality score in lib/ or src/ (searched completeness/volledigheid/score outside reviews)",
 				"topdesk": "unknown: the only readiness score described is the AI readiness score for the knowledge base; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -907,7 +907,7 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "register.json:3720 connection.nonMunicipalProvision -> element filtered gemmaType 'Buitengemeentenlijke voorziening'; no page for connection",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -916,7 +916,7 @@
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "low",
-			"note": "The field for a national provision exists on the connection schema, but with no connection page nobody can fill it in stackiq.",
+			"note": "The field for a national provision exists on the connection schema, but with no connection page nobody can fill it in stackiq. Specified in openspec/changes/connections-catalogue-pages (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Opvoeren%20koppeling%20iJw%20en%20iWmo: \"De richting van het berichtenverkeer, de landelijke voorziening waarmee gekoppeld is/wordt, in dit geval GGK\" (read 2026-09-26); https://www.softwarecatalogus.nl/hoe-werkt-de-catalogus: \"kunnen koppelingen tussen applicaties onderling en met Landelijke Voorzieningen vastgelegd worden\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Koppelingen > koppeling toevoegen.",
 				"stackiq": "register.json:3720 connection.nonMunicipalProvision -> element filtered gemmaType 'Buitengemeentenlijke voorziening'; no page for connection",
@@ -947,7 +947,7 @@
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "medium",
-			"note": "There is no list of connections in the catalogue. The Integrations page lists outside integrations, a different thing.",
+			"note": "There is no list of connections in the catalogue. The Integrations page lists outside integrations, a different thing. Specified in openspec/changes/connections-catalogue-pages (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Alle koppelingen ... staan de koppelingen van alle gemeenten en samenwerkingsverbanden ... Door te klikken op het icoontje rechts van een koppeling, krijg je nog enige detail informatie\" (read 2026-09-26). Reached on: Inlogmenu > Alle koppelingen (logged-in municipal users).",
 				"stackiq": "No manifest page with schema connection (src/manifest.json and src/manifest.d/*.json); the Integrations page (src/manifest.d/connection-registry.json:23) lists integriq app_connection, explicitly not stackiq's connection schema (its _note)",
@@ -969,7 +969,7 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "src/manifest.json:502 ModuleDetail md-related generic Related panel (OpenRegister /uses + /used merged into an Objects tab); register.json:7064 module.koppelingen is hideOnForm and not in md-data include (:500); lib/Controller/AangebodenGebruikController.php:208 GET /api/koppelingen-gebruik/{uuid} (public) has no caller in src/",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -978,7 +978,7 @@
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "low",
-			"note": "Connections that reference an application should appear among the untyped related objects on its page, but there is no connections section and nothing to open. The dedicated per-application endpoint is API only.",
+			"note": "Connections that reference an application should appear among the untyped related objects on its page, but there is no connections section and nothing to open. The dedicated per-application endpoint is API only. Specified in openspec/changes/connections-catalogue-pages (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Mijn pakketoverzicht ... Onder het eerste tabblad zitten de pakketten en onder het tweede tabblad de koppelingen\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/30890: \"Door op een applicatienaam in het Models venster te klikken, zie je in de Visualiser alle koppelingen tussen die applicatie met andere applicaties\" (in Archi after export) (read 2026-09-26). No per-application connection view inside the catalogue is described. Reached on: Mijn softwarecatalogus > Koppelingen.",
 				"stackiq": "src/manifest.json:502 ModuleDetail md-related generic Related panel (OpenRegister /uses + /used merged into an Objects tab); register.json:7064 module.koppelingen is hideOnForm and not in md-data include (:500); lib/Controller/AangebodenGebruikController.php:208 GET /api/koppelingen-gebruik/{uuid} (public) has no caller in src/",
@@ -1000,7 +1000,7 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "No diagram rendering in src/ (no graph library; src/store/modules/view.js GET /api/views has no importer outside itself); lib/Service/ArchiMateExportService.php exports GEMMA views as ArchiMate XML without koppeling objects (no 'koppeling' in lib/Service/ArchiMate*)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -1009,7 +1009,7 @@
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
 			"featureConfidence": "low",
-			"note": "No page draws connections. The ArchiMate export can be opened in Archi, but it carries GEMMA views and usages, not the catalogue's connections.",
+			"note": "No page draws connections. The ArchiMate export can be opened in Archi, but it carries GEMMA views and usages, not the catalogue's connections. Specified in openspec/changes/connections-diagram-and-graph-export (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/data-flow: data flow diagrams help 'understand how applications are connected, identify dependencies, and trace data movement between systems' (read 2026-09-26). Reached on: Diagrams > Data Flow Diagram.",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967472-welcome-to-bluedolphin: 'insight into connections between business processes, applications, and their underlying infrastructure. This way, you can visualize chains and information flows'; https://help.bluedolphin.io/en/articles/11967545-spider-tool adds related objects with 'all existing relationships' to a view (read 2026-09-26). Reached on: Views > architecture view.",
@@ -1067,7 +1067,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "The type field exists but there is no connection list to filter.",
+			"note": "The type field exists but there is no connection list to filter. Specified in openspec/changes/connections-catalogue-pages (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "register.json:3563 connection.type enum (file transfer, digikoppeling, message que, webservices, api, ...) exists, but no connection list page to filter",
 				"topdesk": "unknown: custom link types exist, but filtering relations by type is not described; https://tip.topdesk.com/c/90-graphical-overview-improvements is still under consideration; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -1089,14 +1089,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "No API/interface schema in register.json (schemas listed at register.json:1034-7920); connection.type 'api' is only a transport label",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Stackiq has no record for an API an application exposes.",
+			"note": "Stackiq has no record for an API an application exposes. Specified in openspec/changes/connections-api-catalogue (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/interface-modeling-guidelines: interface subtype 'API ... APIs provide functionalities accessible to external applications ... Examples: Metrics API, Import API', related to the providing application (read 2026-09-26). Reached on: Inventory > Interface fact sheet, subtype API.",
 				"stackiq": "No API/interface schema in register.json (schemas listed at register.json:1034-7920); connection.type 'api' is only a transport label",
@@ -1118,7 +1118,7 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "src/views/settings/sections/ArchiMateImportExport.vue:571 org export options are Modules, Deelnames, Gebruik only; lib/Controller/SettingsController.php:1685 exportOrgArchiMate; no koppeling handling in lib/Service/ArchiMate*",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -1127,7 +1127,7 @@
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
 			"featureConfidence": "low",
-			"note": "The organisation ArchiMate export carries modules and usages but not connections, so an application's link graph cannot be exported.",
+			"note": "The organisation ArchiMate export carries modules and usages but not connections, so an application's link graph cannot be exported. Specified in openspec/changes/connections-diagram-and-graph-export (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: front/impactcsv.php streams Glpi\\Csv\\ImpactCsvExport for an item, linked from the impact list view at src/Impact.php:393; the graph Download button src/Impact.php:1165 calls js/impact.js:2528 download, which writes PNG (js/impact.js:2539) or JPEG (js/impact.js:2546). Reached on: Appliance > Impact analysis tab, Download and CSV export.",
 				"stackiq": "src/views/settings/sections/ArchiMateImportExport.vue:571 org export options are Modules, Deelnames, Gebruik only; lib/Controller/SettingsController.php:1685 exportOrgArchiMate; no koppeling handling in lib/Service/ArchiMate*",
@@ -1817,14 +1817,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "grep for completeness/health score/quality score in lib and src: no hits; lib/Command/ReferencesAuditCommand.php:34 (occ stackiq:references:audit) only audits cross-app uuid references, it is not a scored rule set",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "No rule-based score of register correctness or completeness exists on any page.",
+			"note": "No rule-based score of register correctness or completeness exists on any page. Specified in openspec/changes/landscape-completeness-score (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "grep for completeness/health score/quality score in lib and src: no hits; lib/Command/ReferencesAuditCommand.php:34 (occ stackiq:references:audit) only audits cross-app uuid references, it is not a scored rule set",
 				"topdesk": "unknown: standards compliance of applications, BIO and DPIA are not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -2088,14 +2088,14 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "register :6856 module.contactPerson -> contactPerson with x-relation-filter organization = @object.provider; catalogService and suite also carry contactPerson; src/manifest.json:500 ModuleDetail md-data include lists 'contactpersoon', 'beschrijvingKort', 'beschrijvingLang', which are not module properties (renamed to contactPerson/shortDescription/longDescription)",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "Applications /modules create/edit form; not shown on ModuleDetail /modules/:id",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Each product can point at its own contact person of the supplier through the form. The application page's data widget names the old Dutch keys, so the product's contact person (and its descriptions) do not show there; the same stale keys are on SuiteDetail (src/manifest.json:683).",
+			"note": "Each product can point at its own contact person of the supplier through the form. The application page's data widget names the old Dutch keys, so the product's contact person (and its descriptions) do not show there; the same stale keys are on SuiteDetail (src/manifest.json:683). Specified in openspec/changes/landscape-application-page (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "register :6856 module.contactPerson -> contactPerson with x-relation-filter organization = @object.provider; catalogService and suite also carry contactPerson; src/manifest.json:500 ModuleDetail md-data include lists 'contactpersoon', 'beschrijvingKort', 'beschrijvingLang', which are not module properties (renamed to contactPerson/shortDescription/longDescription)",
 				"topdesk": "unknown: supplier contacts are registered per supplier (\"Registering a supplier contact\"); contacts per product are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -2266,7 +2266,7 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Settings/softwarecatalogus_register.json usage.moduleVersion ($ref moduleVersion); read by src/views/LifecycleRoadmapView.vue:397 for EOL state; ModuleversieDetail mv-related shows related usages; no usage create/edit page in src/manifest.json",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -2275,7 +2275,7 @@
 			"providerHow": "read-from-code",
 			"feature": "lifecycle-and-end-of-support",
 			"featureConfidence": "low",
-			"note": "The version an organisation runs is a field on its usage and drives the EOL badges, but no stackiq page lets the organisation set or change it.",
+			"note": "The version an organisation runs is a field on its usage and drives the EOL badges, but no stackiq page lets the organisation set or change it. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "lib/Settings/softwarecatalogus_register.json usage.moduleVersion ($ref moduleVersion); read by src/views/LifecycleRoadmapView.vue:397 for EOL state; ModuleversieDetail mv-related shows related usages; no usage create/edit page in src/manifest.json",
 				"topdesk": "unknown: versions in use are only possible as a self-defined field; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -2480,7 +2480,7 @@
 			"topdesk": "partial",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "src/manifest.json:491 ModuleDetail widgets: md-data, md-files, md-related, md-compliance, md-versions, ReviewsPanel; no catalogContract list. catalogContract points at service and usage (register :3252), not at module, so the one-hop related panel cannot reach it",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -2489,7 +2489,7 @@
 			"providerHow": "read-from-code",
 			"feature": "contract-administration",
 			"featureConfidence": "medium",
-			"note": "The application page has no contracts list, and a contract links to a usage and a service rather than the application, so there is no path from an application to its contracts in the UI.",
+			"note": "The application page has no contracts list, and a contract links to a usage and a service rather than the application, so there is no path from an application to its contracts in the UI. Specified in openspec/changes/landscape-application-page (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Appliance.php:99 and src/Software.php:131 add the Contract_Item tab (src/Contract_Item.php:43, install/mysql/glpi-empty.sql:1536 glpi_contracts_items) listing every contract of the application. Reached on: Management > Appliances > Contracts tab. Driven on the lab at 11.0.9 (2026-09-26): after linking the contract, the appliance Contracts tab showed \"Lab contract, 2025-01-01, 12 months -> 2025-12-31\".",
 				"stackiq": "src/manifest.json:491 ModuleDetail widgets: md-data, md-files, md-related, md-compliance, md-versions, ReviewsPanel; no catalogContract list. catalogContract points at service and usage (register :3252), not at module, so the one-hop related panel cannot reach it",
@@ -3249,14 +3249,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "No OIDC/SAML code in lib/ or src/; stackiq creates local Nextcloud users with a password (lib/Service/Stackiq/ContactPersonHandler.php:292)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "nextcloud/server"
 			},
 			"reachedOn": "nothing reaches it in stackiq; Nextcloud's own user_oidc/user_saml apps would apply platform-wide",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
-			"note": "Stackiq does nothing for single sign-on. A Nextcloud admin can add an identity provider app, but that is the platform, not a stackiq page.",
+			"note": "Stackiq does nothing for single sign-on. A Nextcloud admin can add an identity provider app, but that is the platform, not a stackiq page. Decided no (OpenSpec pass 2026-09-27): Platform capability: Nextcloud signs users in through its identity provider apps (user_oidc, user_saml) for every app, and stackiq users are Nextcloud users. built.owner corrected to nextcloud/server.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Auth.php:106 EXTERNAL (web server provided identity, for example a SAML or OIDC module in front of GLPI), src/Auth.php:107 CAS with phpCAS::client at src/Auth.php:557, and src/Auth.php:108 X509 certificates, next to LDAP at src/Auth.php:105. Reached on: Setup > Authentication > Other authentication methods.",
 				"topdesk": "https://docs.topdesk.com/en/automatic-login-methods.html: \"Single Sign-on via SAML requirements TOPdesk uses OpenSAML 3 for authentication. You can connect all common IdP solutions which support SAML 2.0\" (read 2026-09-26). Reached on: Settings > Login Settings.",
@@ -3278,14 +3278,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "lib/Service/OrganizationSyncService.php and the 'Organization synchronization' admin section sync catalogue organisations to OpenRegister organisation entities, not users from a directory; no LDAP code in lib/",
-				"owner": "ConductionNL/stackiq"
+				"owner": "nextcloud/server"
 			},
 			"reachedOn": "nothing reaches it in stackiq; Nextcloud's user_ldap would apply platform-wide",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
-			"note": "Stackiq has no directory sync for users or groups. Nextcloud's LDAP app could do it platform-wide, outside stackiq.",
+			"note": "Stackiq has no directory sync for users or groups. Nextcloud's LDAP app could do it platform-wide, outside stackiq. Decided no (OpenSpec pass 2026-09-27): Platform capability: Nextcloud user_ldap keeps users and groups in step with a directory for every app, and stackiq users and groups are Nextcloud users and groups. built.owner corrected to nextcloud/server.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/AuthLDAP.php:59 LDAP directories with user import and group import (src/AuthLDAP.php:2816 ldapImportGroup), and the CLI src/Glpi/Console/Ldap/SynchronizeUsersCommand.php:79 ldap:synchronize_users (alias ldap:sync at :80). Reached on: Administration > Users > LDAP directory link; Setup > Authentication > LDAP directories. Driven on the lab at 11.0.9 (2026-09-26): /front/ldap.php offers \"Bulk import users from a LDAP directory\" and \"Synchronizing already imported users\".",
 				"stackiq": "lib/Service/OrganizationSyncService.php and the 'Organization synchronization' admin section sync catalogue organisations to OpenRegister organisation entities, not users from a directory; no LDAP code in lib/",
@@ -3307,14 +3307,14 @@
 			"topdesk": "yes",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "decided-no",
 				"evidence": "src/components/ContactpersonenList.vue:115 'Change Password' opens src/dialogs/ChangePasswordDialog.vue -> POST /api/contactpersonen/change-password -> lib/Controller/ContactpersonenController.php:718, self-reset allowed at :753; GET /api/me (:1578) used only by src/App.vue and OrganisationSwitcher",
-				"owner": "ConductionNL/stackiq"
+				"owner": "nextcloud/server"
 			},
 			"reachedOn": "Organisations /organisaties card -> contact persons view -> Change Password on your own row",
-			"provider": "stackiq",
+			"provider": "nextcloud",
 			"providerHow": "read-from-code",
-			"note": "A user can change their own password from their contact row in the organisation card, which is hard to find. There is no 'my account' page in stackiq; /api/me feeds only the organisation switcher. Nextcloud's personal settings do both natively.",
+			"note": "A user can change their own password from their contact row in the organisation card, which is hard to find. There is no 'my account' page in stackiq; /api/me feeds only the organisation switcher. Nextcloud's personal settings do both natively. Decided no (OpenSpec pass 2026-09-27): Platform capability: Nextcloud personal settings let every user change their password and see their account details. The stackiq half (change password from your own contact row) stays as built evidence. built.owner corrected to nextcloud/server, provider nextcloud.",
 			"evidence": {
 				"stackiq": "src/components/ContactpersonenList.vue:115 'Change Password' opens src/dialogs/ChangePasswordDialog.vue -> POST /api/contactpersonen/change-password -> lib/Controller/ContactpersonenController.php:718, self-reset allowed at :753; GET /api/me (:1578) used only by src/App.vue and OrganisationSwitcher",
 				"topdesk": "https://docs.topdesk.com/en/editing-your-personal-profile.html: \"Click on Personal Profile . In the General and Private section, you can edit your personal information. In the Change password section, you can change your password\" (read 2026-09-26). Reached on: Profile picture > Personal Profile.",
@@ -4024,14 +4024,14 @@
 			"topdesk": "partial",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "No discovery agent or agent-ingest endpoint in lib/ or appinfo/routes.php. The nearest capability is SBOM import per module version (lib/Controller/SbomController.php:129), which records components of a known release, not installed software.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Stackiq is a catalogue, and nothing discovers installed software.",
+			"note": "Stackiq is a catalogue, and nothing discovers installed software. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Agent-based discovery of installed software is a discovery agent.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: native inventory receives glpi-agent submissions at src/Glpi/Controller/InventoryController.php:61 /Inventory (legacy :62 /front/inventory.php), processed by src/Glpi/Inventory/Inventory.php:106 with src/Glpi/Inventory/Asset/Software.php creating software and installations. The agent is the separate glpi-project/glpi-agent repository. Reached on: Administration > Inventory; Assets > Software.",
 				"stackiq": "No discovery agent or agent-ingest endpoint in lib/ or appinfo/routes.php. The nearest capability is SBOM import per module version (lib/Controller/SbomController.php:129), which records components of a known release, not installed software.",
@@ -4053,14 +4053,14 @@
 			"topdesk": "partial",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "No network scanning code in lib/ or routes (appinfo/routes.php).",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "No device discovery.",
+			"note": "No device discovery. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Network device discovery is a discovery agent.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Glpi/Inventory/Request.php:97 NETDISCOVERY_ACTION calls src/Glpi/Inventory/Request.php:237 networkDiscovery, importing devices found by the agent's network discovery; scheduling discovery tasks from the server goes through the HANDLE_NETDISCOVERY_TASK hook (src/Glpi/Inventory/Request.php:448), which the separate glpiinventory plugin implements. Reached on: Administration > Inventory; Assets > Network devices.",
 				"stackiq": "No network scanning code in lib/ or routes (appinfo/routes.php).",
@@ -4082,14 +4082,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "No SaaS or SSO-log discovery code in lib/; lib/Settings/connections.json has no such source.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "No discovery of unregistered SaaS use.",
+			"note": "No discovery of unregistered SaaS use. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Discovering unregistered SaaS use is a discovery agent.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/saas-discovery: 'SaaS discovery identifies your organization's SaaS applications through integrations with third-party systems like Single-Sign-on (SSO) ... Eliminate shadow IT and business-managed IT' (read 2026-09-26). Reached on: Discovery > SaaS discovery inbox.",
 				"stackiq": "No SaaS or SSO-log discovery code in lib/; lib/Settings/connections.json has no such source.",
@@ -4198,14 +4198,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "No incident or request schema or endpoint in lib/Settings/softwarecatalogus_register.json or appinfo/routes.php.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "No ticketing.",
+			"note": "No ticketing. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Logging incidents and requests is a service desk. Exchange with the organisation's service desk is specified under share-itsm-integration.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/autoload/CFG_GLPI.php:301 ticket_types includes Appliance (line 305), so tickets link to an application through src/Item_Ticket.php:41, shown on the appliance Tickets tab (src/Appliance.php:105). Reached on: Assistance > Tickets; Appliance > Tickets tab. Driven on the lab at 11.0.9 (2026-09-26): the default Super-Admin profile lists Computer, Monitor, NetworkEquipment, Peripheral, Phone, Printer, Software, DCRoom, Rack, Enclosure and Database as associable to tickets, not Appliance, so an appliance shows no Tickets tab until an administrator adds it in the profile; rating kept.",
 				"topdesk": "https://docs.topdesk.com/en/linking-assets-to-cards.html: \"On Call, Change (Activity) ... cards, you can link multiple assets\" (read 2026-09-26). Reached on: Call card > Links > Assets.",
@@ -4227,14 +4227,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "No change-request workflow for applications. The only approval flow is for contracts: src/components/contracts/ContractApprovalPanel.vue on ContractDetail via /api/contracts/{uuid}/approval (routes.php:35-37), delegated to decidiq.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Contracts go through an approval, but changes to an application do not.",
+			"note": "Contracts go through an approval, but changes to an application do not. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Change approval workflows are service desk change management.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: changes link to the appliance (src/Appliance.php:107 Change_Item tab) and go through approvals, src/ChangeValidation.php:39 ChangeValidation extends CommonITILValidation. Reached on: Assistance > Changes; Appliance > Changes tab.",
 				"topdesk": "https://docs.topdesk.com/en/requesting-a-change.html: \"A Preliminary Request for Change can only be dealt with as a Request for Change after it is authorized\" (read 2026-09-26). Reached on: Modules > Change Management.",
@@ -4256,14 +4256,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "catalogContract.contractType enum includes 'SLA' (lib/Settings/softwarecatalogus_register.json:3344) as a label only; no service-level target, measurement or breach fields in any schema.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "A contract can be typed as SLA, but no service level targets are recorded or tracked.",
+			"note": "A contract can be typed as SLA, but no service level targets are recorded or tracked. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" The competitor evidence tracks service desk response and resolution targets on calls and tickets.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/SLM.php:42 service level management with src/SLA.php:44 SLA and OLA targets on tickets (install/mysql/glpi-empty.sql:7304 glpi_tickets.slas_id_ttr), assigned by business rules (src/RuleCommonITILObject.php:73) that can key on the linked appliance (src/RuleCommonITILObject.php:305 assign_appliance). Reached on: Setup > Service levels.",
 				"topdesk": "https://docs.topdesk.com/en/track-when-you-respond-to-calls, response-times.html: \"you register and track how quickly your operators need to respond ... you need a Contract Management and SLM license\" (read 2026-09-26). Reached on: Contract Management and SLM.",
@@ -4285,14 +4285,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "No software-request flow. The only public intake is organisation self-registration (lib/Controller/IntakeController.php, POST /api/intake/register, routes.php:214), which no src/ page calls.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "End users cannot request software.",
+			"note": "End users cannot request software. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" A self-service portal where end users request software is a service desk.",
 			"evidence": {
 				"topdesk": "https://docs.topdesk.com/en/mobile-access-to-the-self-service-portal.html: \"The SSP layout is suited to be displayed in a mobile interface\" (read 2026-09-26); https://tip.topdesk.com/c/86-webshop-is-connected-with-asset-management: roadmap card in column \"Building\", \"End-user can order items which are in Asset Management\" (read 2026-09-26); pricing lists \"Self-Service Portal\" and \"Webshop\". Reached on: Self-Service Portal.",
 				"stackiq": "No software-request flow. The only public intake is organisation self-registration (lib/Controller/IntakeController.php, POST /api/intake/register, routes.php:214), which no src/ page calls.",
@@ -4523,7 +4523,7 @@
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/418890",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "decided-no",
 				"evidence": "lib/Settings/softwarecatalogus_register.json:7307 module authorization.read grants group public once publicationDate has passed (same rule as share-public-browse); no stackiq route or page serves it anonymously, the public surface is OpenRegister's objects API and the external VNG frontend",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4532,7 +4532,7 @@
 			"providerHow": "read-from-code",
 			"feature": "offering-and-usage-listings",
 			"featureConfidence": "medium",
-			"note": "Standard municipal tender text (Noordwijk 418890, Reimerswaal 417169, FUMO 415897, HLT Samen 383984): a supplier inside the GEMMA scope can make its product information transparent through the Softwarecatalogus. stackiq publishes the data; the page a buyer opens lives in the external frontend.",
+			"note": "Standard municipal tender text (Noordwijk 418890, Reimerswaal 417169, FUMO 415897, HLT Samen 383984): a supplier inside the GEMMA scope can make its product information transparent through the Softwarecatalogus. stackiq publishes the data; the page a buyer opens lives in the external frontend. Decided no (OpenSpec pass 2026-09-27): Recorded design: README.md:266 says stackiq runs \"with a separate React-based public frontend\", and README.md:273 names it (ConductionNL/tilburg-woo-ui) as the public search and detail pages. The missing half is the public page a buyer opens, which that frontend serves; stackiq publishes the data (module read rule for group public after publicationDate).",
 			"vng-softwarecatalogus": "yes",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier: \"De leveranciersinformatie in de Softwarecatalogus is openbaar\" (read 2026-09-26); https://www.softwarecatalogus.nl/inkoopondersteuning%20standaarden: \"De gegenereerde bestekstekst kunt u gebruiken in uw offerte-uitvraag ... Als informatiebron is de GEMMA softwarecatalogus gebruikt\" (read 2026-09-26). Reached on: Supplier login > Productportfolio; Inkoopondersteuning.",
@@ -4765,12 +4765,12 @@
 			"originUrl": "https://github.com/VNG-Realisatie/Softwarecatalogus/issues/104",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no impersonation in lib/ or src/ (grep impersonat); stackiq relies on Nextcloud users",
-				"owner": "ConductionNL/stackiq"
+				"owner": "nextcloud/server"
 			},
 			"reachedOn": "nothing reaches it",
-			"provider": "stackiq",
+			"provider": "nextcloud",
 			"providerHow": "read-from-code",
 			"featureConfidence": "medium",
 			"vng-softwarecatalogus": "unknown",
@@ -4781,7 +4781,7 @@
 				"glpi": "source read at 11.0.9: src/Session.php:2054 startImpersonating and :2113 stopImpersonating, allowed by src/Session.php:1995 canImpersonate for users with fewer rights and the Impersonate right (src/User.php:6235); the button 'Impersonate' is on the user form (src/User.php:2974). CHANGELOG.md 11.0.0 adds the dedicated right. Reached on: Administration > Users > user form, Impersonate.",
 				"topdesk": "unknown: acting as another user is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26.",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Decided no (OpenSpec pass 2026-09-27): Platform capability: the Nextcloud Impersonate app lets an administrator sign in as another account, and stackiq relies on Nextcloud users. built.owner corrected to nextcloud/server, provider nextcloud.",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "yes",
@@ -4825,7 +4825,7 @@
 			"originUrl": "https://www.softwarecatalogus.nl/gebruikersonderzoek%202021",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "moduleVersion (lib/Settings/softwarecatalogus_register.json) is created on the Moduleversies index form; no copy of a version with its connections and no carry-over logic in lib/Service/ModuleVersionService.php",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4841,7 +4841,7 @@
 				"glpi": "source read at 11.0.9: installations can be moved to another version by the massive action src/Item_SoftwareVersion.php:179 move_version, but impact relations (install/mysql/glpi-empty.sql:1247 glpi_impactrelations) point at the item and are never copied to a replacing version or appliance; grep -n 'Impact' src/SoftwareVersion.php returns nothing.",
 				"topdesk": "unknown: versions of applications are not modelled; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26.",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Specified in openspec/changes/connections-derived-dependencies (OpenSpec pass 2026-09-27).",
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -4883,10 +4883,10 @@
 			"name": "Make the options of one field depend on another, such as model depending on brand.",
 			"origin": "roadmap",
 			"originUrl": "https://tip.topdesk.com/c/87-field-dependencies-brand-type-model-",
-			"stackiq": "no",
+			"stackiq": "partial",
 			"built": {
-				"state": "none",
-				"evidence": "register properties are independent enums; no dependent option lists in lib/Settings/softwarecatalogus_register.json",
+				"state": "specified",
+				"evidence": "Relation pickers already follow another field on the form: module.contactPerson x-relation-filter {organization: @object.provider}, catalogService.modules and contactPerson on @object.provider, usage.moduleVersion on @object.module (lib/Settings/softwarecatalogus_register.json), honoured by the library form (@conduction/nextcloud-vue 2.57.1 src/components/CnFormDialog/CnFormDialog.vue:1183 relationFilterDecls). No enum property declares dependent values (x-openregister-dependent-values, openregister lib/Service/Rules/DependentValueTable.php), and the library form does not read that annotation.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
@@ -4901,7 +4901,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; questionnaire field options depending on another field are not documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: native forms show or hide questions on conditions (src/Glpi/Form/Condition/Engine.php:138, src/Glpi/Form/Condition/VisibilityStrategy.php:39), but options of one field do not filter by another on item forms; the open requests github.com/glpi-project/roadmap/discussions/414 (cascading filters) and /240 (custom field conditions) ask for it. Reached on: Administration > Forms, question conditions."
 			},
-			"note": "Mined from topdesk (roadmap) on 2026-09-26.",
+			"note": "Mined from topdesk (roadmap) on 2026-09-26. Corrected 2026-09-27 (OpenSpec pass): partial, not no. Relation pickers depend on another field (the version picker follows the application, the contact person follows the supplier); enum options do not. Missing half specified in landscape-dependent-field-options. Specified in openspec/changes/landscape-dependent-field-options (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
@@ -4915,7 +4915,7 @@
 			"originUrl": "https://tip.topdesk.com/c/89-changing-the-type-of-an-asset",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "each entry lives in one schema (module, catalogService, suite) and no action moves an object to another schema",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4931,7 +4931,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; changing the type of a BPMN element is documented (https://help.bluedolphin.io/en/articles/11967561-add-an-object), changing the object definition of an existing repository object is not (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: the type of an appliance is an editable dropdown (install/mysql/glpi-empty.sql:8941 appliancetypes_id), changeable in place or by massive update (src/MassiveAction.php:666); changing the itemtype itself (for example a custom asset to another definition) is not possible, since each custom asset class is bound to one definition (src/Glpi/Asset/Asset.php:113), and the open request github.com/glpi-project/roadmap/discussions/232 asks for it. Reached on: Management > Appliances, Type field."
 			},
-			"note": "Mined from topdesk (roadmap) on 2026-09-26.",
+			"note": "Mined from topdesk (roadmap) on 2026-09-26. Specified in openspec/changes/landscape-change-entry-type (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
@@ -4945,7 +4945,7 @@
 			"originUrl": "https://tip.topdesk.com/c/252-audit-logging-for-topdesk-mcp-server",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "stackiq has no AI or MCP integration of its own (see share-ai-assistant); the History tab (widget type audit, src/manifest.json:436) shows every change per object but does not single out actions an assistant took",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4961,7 +4961,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; the MCP server is read only (https://help.bluedolphin.io/en/articles/15602927-add-bluedolphin-mcp-server-to-an-ai-assistant) and AI credit usage is reported, but a log of AI actions on records is not documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: there is no AI assistant in core (grep -rliw 'llm\\|mcp' over src/ returns nothing); the history log (src/Log.php:48) records changes per user or API client, without any AI actor."
 			},
-			"note": "Mined from topdesk (roadmap) on 2026-09-26.",
+			"note": "Mined from topdesk (roadmap) on 2026-09-26. Specified in open change openspec/changes/mcp-full-action-surface (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
@@ -4975,7 +4975,7 @@
 			"originUrl": "https://tip.topdesk.com/c/162-support-multi-factor-authentication-mfa-",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no sign-in code in stackiq; stackiq creates local Nextcloud users (lib/Service/Stackiq/ContactPersonHandler.php:292) and second factors come from Nextcloud two-factor apps platform-wide, as with org-sso",
 				"owner": "nextcloud/server"
 			},
@@ -4991,7 +4991,7 @@
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea for multi factor and two factor, no hits; strong sign in is left to the identity provider through SSO (https://help.sap.com/docs/leanix/ea/managing-users) (read 2026-09-26)",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/ for multi factor and two factor, no hits; strong sign in is left to the SSO identity provider (read 2026-09-26)"
 			},
-			"note": "Mined from topdesk (roadmap) on 2026-09-26. Also mined from glpi (changelog, https://github.com/glpi-project/glpi/releases/tag/11.0.0).",
+			"note": "Mined from topdesk (roadmap) on 2026-09-26. Also mined from glpi (changelog, https://github.com/glpi-project/glpi/releases/tag/11.0.0). Decided no (OpenSpec pass 2026-09-27): Owed to nextcloud/server: Nextcloud two-factor apps require a second factor at sign-in for every app, and stackiq users are Nextcloud users.",
 			"glpi": "yes",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
@@ -5005,7 +5005,7 @@
 			"originUrl": "https://tip.topdesk.com/c/163-enforce-strong-passwords",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "stackiq sets passwords through lib/Controller/ContactpersonenController.php:718 change-password and relies on Nextcloud for rules; a strength policy is the Nextcloud password_policy app, platform-wide",
 				"owner": "nextcloud/server"
 			},
@@ -5021,7 +5021,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; local passwords are managed in 'BlueDolphin's private Active Directory' (https://help.bluedolphin.io/en/articles/11967616-user-management) but no password policy setting is documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: Setup > General > Security enables a password policy (templates/pages/setup/general/security_setup.html.twig:46 use_password_security, :56 password_min_length, :63 password_need_number, :70 password_need_letter), enforced by src/User.php:7187 validatePassword with checks for length, digits, letters, capitals and symbols (src/User.php:7196 onwards), plus expiry settings (install/empty_data.php:380 password_expiration_delay). Reached on: Setup > General > Security."
 			},
-			"note": "Mined from topdesk (roadmap) on 2026-09-26.",
+			"note": "Mined from topdesk (roadmap) on 2026-09-26. Decided no (OpenSpec pass 2026-09-27): Owed to nextcloud/server: the Nextcloud password_policy app enforces password rules for every local account, including the ones stackiq creates.",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
@@ -5035,7 +5035,7 @@
 			"originUrl": "https://tip.topdesk.com/c/241-ai-risk-prediction-",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "stackiq runs no changes and scores no risk (see ops-change)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5051,7 +5051,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; change risk scoring is not documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: changes carry manual urgency, impact and priority (install/mysql/glpi-empty.sql:659 urgency, :660 impact, :661 priority) and a free text impact analysis (:663 impactcontent); no score is computed from past outcomes or dependencies, and grep -rli 'risk' over src/Change.php returns nothing."
 			},
-			"note": "Mined from topdesk (roadmap) on 2026-09-26.",
+			"note": "Mined from topdesk (roadmap) on 2026-09-26. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" A risk score for a planned change belongs to service desk change management, which stackiq does not run.",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
@@ -5065,7 +5065,7 @@
 			"originUrl": "https://github.com/glpi-project/roadmap/discussions/336",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "connections are registered one at a time or arrive through the ArchiMate import (lib/Service/ArchiMateImportService.php); nothing derives dependencies from known relations",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5081,7 +5081,7 @@
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967645-use-datasource-to-create-relationships: 'how to automatically create relationships between objects based on a loaded datasource', for example application component to node (read 2026-09-26). Reached on: Admin > Sources > relationship creation.",
 				"topdesk": "unknown: relations are created by hand in the Relationships widget; automatic filling is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from glpi (featureRequest) on 2026-09-26.",
+			"note": "Mined from glpi (featureRequest) on 2026-09-26. Specified in openspec/changes/connections-derived-dependencies (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "yes",
@@ -5275,7 +5275,7 @@
 			"originUrl": "https://updates.leanix.net/announcements/discover-verify-and-govern-ai-assets-with-sap-ai-agent-hub",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no schema for AI agents or models in lib/Settings/softwarecatalogus_register.json (20 schemas, none for AI systems)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5291,7 +5291,7 @@
 				"glpi": "source read at 11.0.9: no AI system itemtype (grep -rli 'artificial intelligence' over src/ locales/glpi.pot returns nothing); an admin can define an 'AI model' custom asset type (src/Html.php:1330 Setup > Asset definitions, src/Glpi/Asset/AssetDefinition.php) and link it to applications as an Appliance item (src/Appliance_Item.php:45) or impact relation (install/mysql/glpi-empty.sql:1247). There is no process model to link to. Reached on: Setup > Asset definitions, then Appliance > Items tab.",
 				"topdesk": "unknown: AI agents and models as registered items are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from sap-leanix (changelog) on 2026-09-26.",
+			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Specified in openspec/changes/landscape-ai-system-inventory (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
@@ -5335,7 +5335,7 @@
 			"originUrl": "https://updates.leanix.net/announcements/answer-your-questions-in-seconds-with-the-enterprise-architecture-assistant",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no assistant in stackiq lib/ or src/ (see share-ai-assistant, where only OpenRegister's generic MCP endpoint exists outside the app)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5351,7 +5351,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'openai\\|llm\\|artificial intelligence' over src/ returns nothing; search is criteria based only (src/Glpi/Search/Input/QueryBuilder.php:72).",
 				"topdesk": "https://docs.topdesk.com/en/td-robin-for-operators.html: \"Chat: Ask TOPdesk Robin a question. TOPdesk Robin searches your organization's knowledge base for an answer\" (read 2026-09-26); https://docs.topdesk.com/en/ai-answer-assistant.html: \"The Knowledge Base is the only source for the AI\" (read 2026-09-26). Answers cite knowledge items, not asset or landscape entries. Reached on: Call card > TOPdesk Robin panel."
 			},
-			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Also mined from bluedolphin (changelog, https://bluedolphin.io/product-news/).",
+			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Also mined from bluedolphin (changelog, https://bluedolphin.io/product-news/). Specified in open change openspec/changes/stackiq-mcp-adoption (OpenSpec pass 2026-09-27).",
 			"bluedolphin": "yes",
 			"vng-softwarecatalogus": "unknown",
 			"glpi": "no",
@@ -5365,7 +5365,7 @@
 			"originUrl": "https://roadmap.leanix.net/c/812-meta-model-eu-ai-act-extension",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no AI system or AI Act risk property on module or any other schema in lib/Settings/softwarecatalogus_register.json",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5381,7 +5381,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'ai act\\|artificial intelligence' over src/ locales/glpi.pot returns nothing; appliances have no risk category field (install/mysql/glpi-empty.sql:8935 glpi_appliances).",
 				"topdesk": "unknown: the AI Act is mentioned only for TOPdesk's own AI features (\"post-market monitoring procedures ... in accordance with the AI Act\"), not for classifying the customer's AI systems; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from sap-leanix (roadmap) on 2026-09-26.",
+			"note": "Mined from sap-leanix (roadmap) on 2026-09-26. Specified in openspec/changes/landscape-ai-system-inventory (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -5453,11 +5453,11 @@
 			"name": "Send entries to connected outside systems only once they reach a chosen lifecycle state.",
 			"origin": "changelog",
 			"originUrl": "https://bluedolphin.io/blog/november-2025-product-updates-effortless-enterprise-architecture-management/",
-			"stackiq": "unknown",
+			"stackiq": "yes",
 			"built": {
-				"state": "none",
-				"evidence": "stackiq has no sync code of its own; outgoing events go through OpenRegister flows authored on the Flows page (src/manifest.json:1057, see share-webhooks), and whether a flow can gate on a lifecycle status was not traced",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "src/manifest.json:1057 Flows page (entitySource flows, app stackiq) and FlowDetail canvas over OpenRegister's flow store; openregister lib/Service/Flow/Nodes/TriggerObjectNode.php:82 object.updated trigger per register and schema; lib/Service/Flow/Nodes/FilterNode.php:10 and :186 per-item condition (for example the status); integriq lib/Flow/SourceCallNode.php (development) calls the outside source.",
+				"owner": "ConductionNL/openregister"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
@@ -5471,7 +5471,7 @@
 				"glpi": "source read at 11.0.9: webhooks carry search criteria filters (src/Webhook.php:64 implements FilterableInterface, src/Glpi/Search/FilterableTrait.php:45) and are only sent when the changed item matches them, src/Webhook.php:1228 itemMatchFilter; filtering on the Status field (src/Appliance.php:350) sends an appliance only once it reaches the chosen state. Reached on: Setup > Webhooks > Filter tab.",
 				"topdesk": "https://docs.topdesk.com/en/creating-events.html: \"Edit card is triggered when a card is modified. Fill in the conditions ... Conditions check the current value of the card\" (read 2026-09-26); https://docs.topdesk.com/en/let-your-topdesk-talk-to-other-applications.html: \"Send a request from TOPdesk to another program\" (read 2026-09-26). The customer builds it as an automated action; no ready-made lifecycle sync. Reached on: Action Management > events and action sequences."
 			},
-			"note": "Mined from bluedolphin (changelog) on 2026-09-26.",
+			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Matrix corrected (OpenSpec pass 2026-09-27): a flow on the Flows page gates on the lifecycle status before integriq sends the entry; rated yes.",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"glpi": "yes",
@@ -5515,7 +5515,7 @@
 			"originUrl": "https://bluedolphin.io/blog/june-2026-bluedolphin-updates/",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "entries belong to an organisation through OpenRegister multitenancy (see org-data-segregation); no stackiq page or action moves an entry to another organisation or register",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5531,7 +5531,7 @@
 				"glpi": "source read at 11.0.9: selected records are moved to another entity with their links by src/Transfer.php:50 Transfer, queued through the massive action add_transfer_list (src/MassiveAction.php:598), for one or many entries at once. Reached on: any list, Actions > Add to transfer list; Administration > Entities > transfer.",
 				"topdesk": "unknown: workspaces are not described; changing an asset's type is still an idea at https://tip.topdesk.com/c/89-changing-the-type-of-an-asset; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from bluedolphin (changelog) on 2026-09-26.",
+			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Specified in openspec/changes/landscape-move-between-organisations (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"glpi": "yes",
