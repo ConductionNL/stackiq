@@ -78,7 +78,7 @@ The tool runs in the caller's session (ADR-034 Decision 7). `ArchitectureViewDra
 
 ### D6. A draft stays out of shared readers
 
-`architecture-views-editor` makes `GET /api/views` and the full ArchiMate export keep only views whose `origin` is empty or `imported`. `assistant` is neither, so a draft is never cached for all callers and never exported with the GEMMA model. This change adds no filter of its own and adds a test that the existing readers skip `assistant`.
+`architecture-views-editor` makes `GET /api/views`, `GET /api/views/{viewId}` and the full ArchiMate export keep only views whose `origin` is empty or `imported`. `assistant` is neither, so a draft is never cached for all callers and never exported with the GEMMA model. This change adds no filter of its own and adds a test that the existing readers skip `assistant`.
 
 ## Declarative versus imperative
 

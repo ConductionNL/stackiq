@@ -7,7 +7,7 @@ Read at development 49e65cb4. Line numbers below are from that sha.
 | Layer | Touched | Read at |
 |---|---|---|
 | Register | `vng-gemma` register (`lib/Settings/softwarecatalogus_register.json:916`), schemas `view` (:5299), `element` (:4130), `relation` (:6300) | through a new fragment `lib/Settings/register.d/architecture-views.json` |
-| Service | `lib/Service/ViewService.php` `getViewsFromRegister` (:232) | the drawn views filter |
+| Service | `lib/Service/ViewService.php` `getViewsFromRegister` (:232) and `getViewFromRegister` (:307) | the drawn views filter |
 | Service | `lib/Service/ArchiMateExportService.php` `getObjectsFromDatabase` (:808, the read at :844) | the drawn objects filter |
 | Routes | none added. `appinfo/routes.php:185-187` stays as it is | |
 | Pages | new `src/manifest.d/architecture-views.json` with `Views` (index) and `ViewEditor` (custom); `src/menu-layout.json` relocations | |
@@ -66,9 +66,10 @@ ADR-097 caps the main menu at six entries, and stackiq has 13 after relocation. 
 
 ### D9. Drawn objects stay inside the organisation
 
-Drawn views, elements and relations are scoped to the organisation that created them through OpenRegister multitenancy. Two readers bypass that today and each gets a filter:
+Drawn views, elements and relations are scoped to the organisation that created them through OpenRegister multitenancy. Three readers bypass that today and each gets a filter:
 
 - `ViewService::getViewsFromRegister` caches one list for all callers (`views_list`, :234, 30 minutes, :74). It keeps only views whose `origin` is empty or `imported`, so the cache only ever holds GEMMA views.
+- `ViewService::getView` (:166) reads one view through `getViewFromRegister` (:307) with `_rbac: false` and `_multitenancy: false` (:328), so `GET /api/views/{viewId}` returns any view to any signed-in user. It answers a view whose `origin` is not empty or `imported` with a 404, the same answer as a missing view, so a uuid does not reveal that a drawn view exists.
 - `ArchiMateExportService::getObjectsFromDatabase` reads with `_rbac: false` and `_multitenancy: false` (:844). The full model export keeps only objects whose `origin` is empty or `imported`.
 
 The editor and the index read drawn views through OpenRegister's objects API, which applies RBAC and multitenancy.
@@ -81,7 +82,7 @@ The editor takes OpenRegister's object lock through `useObjectLock` (`@conductio
 
 - The view status lifecycle is declared in the fragment as `configuration.x-openregister-lifecycle` on `view`, in the shape `usage` already uses (field `status`, `initial` draft, named transitions): submit (draft to in review), publish (in review to published), rework (in review to draft), retire (published to retired), reopen (retired to draft). The `from` and `to` values are the enum values exactly, because a lifecycle whose values match no row offers no transition and raises no error (register changelog 2.4.4, register.json:7). No PHP.
 - Copy to edit, Save version and relation reuse write through OpenRegister's objects API from `src/store/modules/architectureView.js`. They add no controller and no service (ADR-022, config rule "Uses OpenRegister API directly from frontend").
-- The two backend filters in D9 are changes to existing readers, not new behaviour.
+- The three backend filters in D9 are changes to existing readers, not new behaviour.
 
 ## Seed data
 

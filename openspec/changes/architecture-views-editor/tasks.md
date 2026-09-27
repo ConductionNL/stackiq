@@ -71,11 +71,12 @@
 - [ ] Implement
 - [ ] Test (vitest `viewDiff.spec.js`, Playwright compare scenario)
 
-### Task 8: Keep drawn objects out of the shared list and the full export
+### Task 8: Keep drawn objects out of the shared list, the single view read and the full export
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-006-drawn-views-shall-stay-inside-the-organisation-that-drew-them
 - **files**: `lib/Service/ViewService.php`, `lib/Service/ArchiMateExportService.php`, `tests/Unit/Service/ViewServiceDrawnViewTest.php`, `tests/Unit/Service/ArchiMateExportServiceDrawnFilterTest.php`
 - **acceptance_criteria**:
   - GIVEN a drawn and an imported view WHEN `GET /api/views` runs THEN only the imported view is returned and cached
+  - GIVEN a drawn view WHEN `GET /api/views/{viewId}` is called with its uuid THEN the answer is 404
   - GIVEN drawn objects WHEN the full ArchiMate export runs THEN none of them is in the file
   - GIVEN a view imported before this change with no origin WHEN either reader runs THEN it is kept as imported
 - [ ] Implement

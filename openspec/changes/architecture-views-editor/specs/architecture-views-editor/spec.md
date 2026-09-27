@@ -110,13 +110,13 @@ The editor SHALL offer Save version, which SHALL write a `view-version` object w
 
 ### Requirement: REQ-AVE-006 Drawn views SHALL stay inside the organisation that drew them
 
-Drawn views, elements and relations SHALL be scoped to the organisation that created them. `GET /api/views` SHALL return only views whose `origin` is empty or `imported`, because its list is cached for all callers. The full ArchiMate export (`POST /api/archimate/export`) SHALL keep only objects whose `origin` is empty or `imported`. The editor SHALL take OpenRegister's object lock before edit mode and SHALL show who holds the lock when another user has it.
+Drawn views, elements and relations SHALL be scoped to the organisation that created them. `GET /api/views` SHALL return only views whose `origin` is empty or `imported`, because its list is cached for all callers. `GET /api/views/{viewId}` SHALL answer 404 for a view whose `origin` is neither, because it reads without RBAC. The full ArchiMate export (`POST /api/archimate/export`) SHALL keep only objects whose `origin` is empty or `imported`. The editor SHALL take OpenRegister's object lock before edit mode and SHALL show who holds the lock when another user has it.
 
 #### Scenario: Another municipality does not see a drawn view
-@e2e exclude The CI instance has one organisation; tests/Unit/Service/ViewServiceDrawnViewTest.php asserts the views query keeps only an empty or imported origin, and tests/Unit/Service/ArchiMateExportServiceDrawnFilterTest.php asserts the full export skips drawn objects.
+@e2e exclude The CI instance has one organisation; tests/Unit/Service/ViewServiceDrawnViewTest.php asserts the views query keeps only an empty or imported origin and the single view read answers 404 for a drawn view, and tests/Unit/Service/ArchiMateExportServiceDrawnFilterTest.php asserts the full export skips drawn objects.
 
 - **GIVEN** a drawn view of municipality A
-- **WHEN** a user of municipality B calls `GET /api/views` or a Nextcloud admin runs the full ArchiMate export
+- **WHEN** a user of municipality B calls `GET /api/views` or `GET /api/views/{viewId}` with its uuid, or a Nextcloud admin runs the full ArchiMate export
 - **THEN** the drawn view SHALL NOT be in the response or in the exported file
 
 #### Scenario: A second editor sees the lock

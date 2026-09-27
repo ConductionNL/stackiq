@@ -38,7 +38,7 @@
 - **files**: `lib/Service/ArchitectureViewDraftService.php`, `tests/Unit/Service/ArchitectureViewDraftServiceTest.php`, `tests/Unit/Service/ViewServiceDrawnViewTest.php`, `tests/Unit/Service/ArchiMateExportServiceDrawnFilterTest.php`
 - **acceptance_criteria**:
   - GIVEN OpenRegister refuses the view save WHEN `draftView` runs THEN the result is forbidden and no later save runs
-  - GIVEN a view with `origin` assistant WHEN `GET /api/views` or the full ArchiMate export runs THEN it is left out
+  - GIVEN a view with `origin` assistant WHEN `GET /api/views`, `GET /api/views/{viewId}` or the full ArchiMate export runs THEN it is left out
 - [ ] Implement
 - [ ] Test (PHPUnit `ArchitectureViewDraftServiceTest`, `ViewServiceDrawnViewTest`, `ArchiMateExportServiceDrawnFilterTest`)
 

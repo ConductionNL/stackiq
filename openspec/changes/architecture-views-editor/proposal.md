@@ -36,7 +36,7 @@ The rated rows say stackiq renders no architecture view. The pending row `stacki
 - A canvas editor on `CnGraphCanvas` that places elements, draws connections backed by `relation` objects, and saves in the shape the import already writes.
 - Copy to edit for imported views, which open read-only.
 - Save version and Compare versions, with a diff keyed by node and connection id.
-- Backend guards: drawn views stay out of the shared `/api/views` list and out of the full ArchiMate export.
+- Backend guards: drawn views stay out of the shared `/api/views` list, the single view read `/api/views/{viewId}` and the full ArchiMate export.
 
 ## Out of scope
 
@@ -49,5 +49,5 @@ The rated rows say stackiq renders no architecture view. The pending row `stacki
 
 ## Risks
 
-- A drawn view in the AMEF register sits next to VNG's GEMMA content. The `origin` field and the two backend guards keep them apart. A future import path that forgets the guard would mix them, so the guards get their own tests.
+- A drawn view in the AMEF register sits next to VNG's GEMMA content. The `origin` field and the three backend guards keep them apart. A future import path that forgets the guard would mix them, so the guards get their own tests.
 - Snapshots are copies of the node list. A view with many versions grows the register. Versions are only saved on an explicit action, not on every save.

@@ -85,7 +85,7 @@ The draft tool SHALL write nodes without positions. When the view editor opens a
 
 ### Requirement: REQ-AAV-005 The draft tools SHALL run with the caller's rights and SHALL keep drafts out of shared readers
 
-Both tools SHALL run in the caller's Nextcloud session with no substitute account (ADR-034 Decision 7). A caller without create rights on `view` SHALL get a forbidden result and nothing SHALL be written. A drafted view SHALL belong to the caller's active organisation. `GET /api/views` and the full ArchiMate export SHALL leave out views with `origin` assistant, as they leave out drawn views.
+Both tools SHALL run in the caller's Nextcloud session with no substitute account (ADR-034 Decision 7). A caller without create rights on `view` SHALL get a forbidden result and nothing SHALL be written. A drafted view SHALL belong to the caller's active organisation. `GET /api/views`, `GET /api/views/{viewId}` and the full ArchiMate export SHALL leave out views with `origin` assistant, as they leave out drawn views.
 
 #### Scenario: A caller without create rights gets a forbidden result
 @e2e exclude The CI instance runs as admin; tests/Unit/Service/ArchitectureViewDraftServiceTest.php asserts that a forbidden save from OpenRegister's ObjectService returns a forbidden result and that no later save runs.
