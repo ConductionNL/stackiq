@@ -32,7 +32,7 @@ Rejected: a custom widget that calls `GET /api/koppelingen-gebruik/{uuid}` (`Aan
 
 All in `lib/Settings/softwarecatalogus_register.json`, schema `connection`:
 
-1. **Lifecycle states.** Replace the Dutch states in `x-openregister-lifecycle` (:3926) with the enum values: initial `in development`, final `withdrawn`, transitions release (`in development` to `in use`), sunset (`in use` to `end of support`), withdraw (`in use`, `end of support` to `withdrawn`). The rows already hold the English values (`lib/Repair/RenameDutchCatalogValues.php:87-88`).
+1. **Lifecycle states.** Replace the Dutch states in `x-openregister-lifecycle` (:3926) with the enum values: initial `in development`, final `withdrawn`, transitions release (`in development` to `in use`), sunset (`in use` to `end of support`), withdraw (`in use`, `end of support` to `withdrawn`). The rows already hold the English values (`lib/Repair/RenameDutchCatalogValues.php:87-90`).
 2. **Picker.** Change `objectConfiguration.queryParams` on `nonMunicipalProvision` (:3720) to `gemmaType=Buitengemeentelijke voorziening`, the spelling the GEMMA model uses.
 3. **Name template.** `objectNameField` names `gegevensuitwisselingRichting` and `buitengemeentelijkVoorziening`, keys the schema renamed to `dataExchangeDirection` and `nonMunicipalProvision`, and maps `AnaarB`, `BnaarA`, `bi-directioneel` where the enum holds `AtoB`, `BtoA`, `bi-directional`. Rewrite it on the current keys and values, so a connection reads "Application A to Application B" in lists and pickers.
 4. **Facets.** Set `facetable: true` on `type`, `status` and `dataExchangeDirection`, so the index page can count and filter them.

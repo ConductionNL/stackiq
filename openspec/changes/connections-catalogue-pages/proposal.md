@@ -27,7 +27,7 @@ No tender, feature request or roadmap row names these rows. `conn-list-page` and
 - The application page `ModuleDetail` (`src/manifest.json:491`) shows connections only as untyped entries in the generic related panel `md-related` (:502).
 - `GET /api/koppelingen-gebruik/{uuid}` (`appinfo/routes.php:269`, `lib/Controller/AangebodenGebruikController.php:208`) returns an application's connections and usages. Nothing in `src/` calls it.
 - Two register defects would break the pages even once they exist:
-  - The connection lifecycle (`register.json:3926`) names `in ontwikkeling`, `in gebruik`, `einde ondersteuning` and `teruggetrokken`. The status enum and the migrated rows (`lib/Repair/RenameDutchCatalogValues.php:87-88`) hold `in development`, `in use`, `end of support` and `withdrawn`, so no transition matches any row.
+  - The connection lifecycle (`register.json:3926`) names `in ontwikkeling`, `in gebruik`, `einde ondersteuning` and `teruggetrokken`. The status enum and the migrated rows (`lib/Repair/RenameDutchCatalogValues.php:87-90`) hold `in development`, `in use`, `end of support` and `withdrawn`, so no transition matches any row.
   - The `nonMunicipalProvision` picker filters on `gemmaType=Buitengemeentenlijke voorziening` (`register.json:3720`). The GEMMA model spells it `Buitengemeentelijke voorziening` (59 times in `lib/Settings/GEMMA_release.xml`), so the picker finds nothing.
 
 ## What this change builds
