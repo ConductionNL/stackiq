@@ -320,6 +320,14 @@
   "decidedOn": "2026-09-27"
  },
  {
+  "row": "ctr-contract-owner",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, TOPdesk); featureRequest demand. Partial and built: the change builds the missing half, expiry warnings that reach the named contact person.",
+  "change": "contracts-expiry-and-owner",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "ctr-depreciation",
   "matrix": "stackiq",
   "decision": "defer",
@@ -333,6 +341,14 @@
   "decision": "defer",
   "reason": "Defer: no competitor rates yes, no demand, outside the core areas (contracts).",
   "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-licence-model",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with ctr-seat-count: its missing half is a licence metric such as per user or per seat, which seat counting needs.",
+  "change": "contracts-licence-seats",
   "decidedOn": "2026-09-27"
  },
  {
@@ -360,6 +376,22 @@
   "decidedOn": "2026-09-27"
  },
  {
+  "row": "ctr-seat-count",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GLPI, TOPdesk).",
+  "change": "contracts-licence-seats",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-status",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, TOPdesk). Partial and built: the change builds the missing half, the expiring state between active and expired.",
+  "change": "contracts-expiry-and-owner",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "ins-ai-action-audit",
   "matrix": "stackiq",
   "decision": "existing",
@@ -384,11 +416,51 @@
   "decidedOn": "2026-09-27"
  },
  {
+  "row": "ins-custom-report",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, GLPI).",
+  "change": "insight-exports-and-custom-reports",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-export-list",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (GEMMA Softwarecatalogus, SAP LeanIX, GLPI, TOPdesk). Partial and built: the change builds the missing half, export on the filtered catalogue list pages.",
+  "change": "insight-exports-and-custom-reports",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-faceted-search",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (GEMMA Softwarecatalogus, SAP LeanIX, BlueDolphin, GLPI). Partial and built: the change builds the missing half, supplier as a facet.",
+  "change": "insight-supplier-facet",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-kb",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GLPI, TOPdesk).",
+  "change": "insight-knowledge-base",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "ins-natural-language-query",
   "matrix": "stackiq",
   "decision": "existing",
   "reason": "Open change stackiq-mcp-adoption declares read-only search and get MCP tools on nine catalogue schemas so Hermiq answers questions about the landscape from the entries it read; mcp-full-action-surface design section 6 grounds the chat scenario. The chat, the answer and its citations are Hermiq's (ADR-034).",
   "change": "stackiq-mcp-adoption",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-progress",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, GLPI). Partial and built: the change builds the missing half, a page that shows the progress of a running synchronisation or import.",
+  "change": "operations-sync-status-and-progress",
   "decidedOn": "2026-09-27"
  },
  {
@@ -480,6 +552,14 @@
   "decidedOn": "2026-09-27"
  },
  {
+  "row": "land-duplicate-merge",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with ops-reconciliation: its missing half is merging applications and services, which is the merge that change extends.",
+  "change": "operations-record-reconciliation",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "land-guided-wizard",
   "matrix": "stackiq",
   "decision": "defer",
@@ -557,6 +637,14 @@
   "decision": "defer",
   "reason": "Defer: single competitor, no demand, outside the core areas (lifecycle).",
   "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-tech-obsolescence",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with ops-hardware-assets: its missing half is the relation from an application to the platform it runs on with that platform's lifecycle, which the technology components change records.",
+  "change": "operations-technology-components",
   "decidedOn": "2026-09-27"
  },
  {
@@ -648,6 +736,22 @@
   "decidedOn": "2026-09-27"
  },
  {
+  "row": "ops-ci-relations",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GLPI, TOPdesk). Partial and built: the change builds the missing half, configuration item classes beyond applications, and their relations.",
+  "change": "operations-technology-components",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-hardware-assets",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GLPI, TOPdesk).",
+  "change": "operations-technology-components",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "ops-mobile",
   "matrix": "stackiq",
   "decision": "defer",
@@ -664,11 +768,27 @@
   "decidedOn": "2026-09-27"
  },
  {
+  "row": "ops-reconciliation",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 3 competitors rate yes (SAP LeanIX, BlueDolphin, GLPI). Partial and built: the change builds the missing half, deduplicating applications and reconciling records from several sources.",
+  "change": "operations-record-reconciliation",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "ops-saas-discovery",
   "matrix": "stackiq",
   "decision": "decided-no",
   "reason": "Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Discovering unregistered SaaS use is a discovery agent.",
   "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-scheduled-sync",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin). Partial and built: the change builds the missing half, the sync schedule and last run for the organisation administrator, not only the Nextcloud admin.",
+  "change": "operations-sync-status-and-progress",
   "decidedOn": "2026-09-27"
  },
  {
@@ -693,6 +813,14 @@
   "decision": "decided-no",
   "reason": "Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Logging incidents and requests is a service desk. Exchange with the organisation's service desk is specified under share-itsm-integration.",
   "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "org-access-review",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: tender demand (https://www.tenderned.nl/aankondigingen/overzicht/398728).",
+  "change": "organisations-role-mapping-and-access-review",
   "decidedOn": "2026-09-27"
  },
  {
@@ -744,6 +872,14 @@
   "decidedOn": "2026-09-27"
  },
  {
+  "row": "org-roles",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (SAP LeanIX, BlueDolphin, GLPI, TOPdesk). Partial and built: the change builds the missing half, mapping each catalogue role onto a group the administrator chooses.",
+  "change": "organisations-role-mapping-and-access-review",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "org-sso",
   "matrix": "stackiq",
   "decision": "decided-no",
@@ -757,6 +893,14 @@
   "decision": "defer",
   "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
   "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "sec-baseline-classification",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: featureRequest demand. Partial and built: the change builds the missing half, a classification split into availability, integrity and confidentiality.",
+  "change": "security-baseline-classification",
   "decidedOn": "2026-09-27"
  },
  {
@@ -776,11 +920,43 @@
   "decidedOn": "2026-09-27"
  },
  {
+  "row": "share-api-docs",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (SAP LeanIX, BlueDolphin, GLPI, TOPdesk). Partial and built: the change builds the missing half, a generated OpenAPI description of the catalogue API.",
+  "change": "sharing-generated-api-docs",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "share-compliance-documents",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: featureRequest demand. Partial and built: the change builds the missing half, sharing processing agreements and pentest reports with other organisations.",
+  "change": "sharing-compliance-documents",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "share-export",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 5 competitors rate yes (GEMMA Softwarecatalogus, SAP LeanIX, BlueDolphin, GLPI, TOPdesk). Partial and built: the change builds the missing half, an export of your own data from a user page instead of admin settings.",
+  "change": "insight-exports-and-custom-reports",
+  "decidedOn": "2026-09-27"
+ },
+ {
   "row": "share-federation-peers",
   "matrix": "stackiq",
   "decision": "defer",
   "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
   "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "share-itsm-integration",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (SAP LeanIX, BlueDolphin, GLPI, TOPdesk).",
+  "change": "sharing-itsm-exchange",
   "decidedOn": "2026-09-27"
  },
  {

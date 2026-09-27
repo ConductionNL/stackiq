@@ -702,14 +702,14 @@
 			"topdesk": "no",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "src/components/organisations/OrganisationMergePanel.vue:46 (admin-only controls) mounted as OrganisatieDetail bodyWidget org-merge (src/manifest.json:430); lib/Controller/MergeController.php:106 execute with isAdmin check at :142; generic src/modals/object/MergeObject.vue only mounted for modal 'mergeOrganisatie' which nothing sets",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "OrganisatieDetail /organisaties/:id, Merge panel (admins only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Only organisations can be merged, with a dry run first, and only by a Nextcloud admin. Applications, services and other entries have no merge.",
+			"note": "Only organisations can be merged, with a dry run first, and only by a Nextcloud admin. Applications, services and other entries have no merge. Specified in openspec/changes/operations-record-reconciliation (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "src/components/organisations/OrganisationMergePanel.vue:46 (admin-only controls) mounted as OrganisatieDetail bodyWidget org-merge (src/manifest.json:430); lib/Controller/MergeController.php:106 execute with isAdmin check at :142; generic src/modals/object/MergeObject.vue only mounted for modal 'mergeOrganisatie' which nothing sets",
 				"topdesk": "https://docs.topdesk.com/en/migration-status.html: \"You cannot merge the two cards into one card\" (read 2026-09-26); https://tip.topdesk.com/c/239-ai-cmdb-monitoring-: roadmap card in column \"Under consideration\", \"AI can continuously scan your configuration database for duplicate records ... and surfaces them for review\" (read 2026-09-26)",
@@ -2328,14 +2328,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "lib/Settings/softwarecatalogus_register.json sbomComponent has name/version/purl/licenses/type/hashes/bomRef/vexCveIds, no lifecycle or EOL field; the EOL feed (lib/Service/EolSyncService.php:290) only stamps versions of modules with eolProductSlug; no relation from an application to the platform it runs on",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "You could register a database as its own 'System software' module and feed its EOL, but nothing ties it to the applications that depend on it; SBOM components carry no lifecycle.",
+			"note": "You could register a database as its own 'System software' module and feed its EOL, but nothing ties it to the applications that depend on it; SBOM components carry no lifecycle. Specified in openspec/changes/operations-technology-components (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/obsolescence-risk-management: 'SAP LeanIX helps you gain an overview of your application landscape's obsolescence risk exposure' over the technology layer; lifecycle dates of IT components from the catalog in Technology Risk and Compliance (read 2026-09-26). Reached on: Use case Obsolescence Risk Management; IT Component lifecycle.",
 				"stackiq": "lib/Settings/softwarecatalogus_register.json sbomComponent has name/version/purl/licenses/type/hashes/bomRef/vexCveIds, no lifecycle or EOL field; the EOL feed (lib/Service/EolSyncService.php:290) only stamps versions of modules with eolProductSlug; no relation from an application to the platform it runs on",
@@ -2417,7 +2417,7 @@
 			"topdesk": "yes",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Service/ContractStatusService.php:77 shouldExpire and :114 expirePastContracts set Active -> Expired when endDate < now; lib/BackgroundJob/ContractStatusJob.php:57 daily, registered in appinfo/info.xml:99",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -2426,7 +2426,7 @@
 			"providerHow": "read-from-code",
 			"feature": "contract-administration",
 			"featureConfidence": "high",
-			"note": "A daily job moves Active contracts past their end date to Expired on its own. There is no 'expiring' state in the enum, so the middle step of the row does not exist.",
+			"note": "A daily job moves Active contracts past their end date to Expired on its own. There is no 'expiring' state in the enum, so the middle step of the row does not exist. Specified in openspec/changes/contracts-expiry-and-owner (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "lib/Service/ContractStatusService.php:77 shouldExpire and :114 expirePastContracts set Active -> Expired when endDate < now; lib/BackgroundJob/ContractStatusJob.php:57 daily, registered in appinfo/info.xml:99",
 				"topdesk": "https://docs.topdesk.com/en/creating-a-contract.html: \"Status: Configurable drop-down showing the contract's lifecycle status, e.g. draft, active ... Reminder date\" (read 2026-09-26); https://docs.topdesk.com/en/terminating-a-contract.html: \"The contract will terminate once the end date passes\" (read 2026-09-26). Reached on: Modules > Contract Management and SLM.",
@@ -2542,7 +2542,7 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "register :6937 module.licentietype enum Closed source/Open source and module.licence (five open-source licence names); catalogContract.contractType enum SLA/Licence/Maintenance (:3341)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -2551,7 +2551,7 @@
 			"providerHow": "read-from-code",
 			"feature": "license-and-seat-tracking",
 			"featureConfidence": "medium",
-			"note": "An application records open versus closed source and which open-source licence. There is no licence metric such as per user, per organisation or per seat.",
+			"note": "An application records open versus closed source and which open-source licence. There is no licence metric such as per user, per organisation or per seat. Specified in openspec/changes/contracts-licence-seats (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: each licence has a type, install/mysql/glpi-empty.sql:6775 glpi_softwarelicenses.softwarelicensetypes_id, an admin editable dropdown seeded with types such as OEM (install/empty_data.php:9294). Reached on: Management > Licenses (front/softwarelicense.php), Type field.",
 				"stackiq": "register :6937 module.licentietype enum Closed source/Open source and module.licence (five open-source licence names); catalogContract.contractType enum SLA/Licence/Maintenance (:3341)",
@@ -2602,7 +2602,7 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "grep for seat/licence count across lib/, src/ and the register finds no seat or quantity field on catalogContract (:3252), module or usage",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -2611,7 +2611,7 @@
 			"providerHow": "read-from-code",
 			"feature": "license-and-seat-tracking",
 			"featureConfidence": "high",
-			"note": "No field records licences bought or in use. The overlay lists license-and-seat-tracking as 'soon'.",
+			"note": "No field records licences bought or in use. The overlay lists license-and-seat-tracking as 'soon'. Specified in openspec/changes/contracts-licence-seats (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: install/mysql/glpi-empty.sql:6774 glpi_softwarelicenses.number is the bought quantity; src/SoftwareLicense.php:158 computeValidityIndicator compares it with assigned items (Item_SoftwareLicense::countForLicense) and flags over use in red (src/SoftwareLicense.php:1030), with allow_overquota at install/mysql/glpi-empty.sql:6797. Reached on: Assets > Software > Licenses tab.",
 				"stackiq": "grep for seat/licence count across lib/, src/ and the register finds no seat or quantity field on catalogContract (:3252), module or usage",
@@ -3220,14 +3220,14 @@
 			"topdesk": "yes",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "src/views/settings/StackiqSettings.vue:80 UserGroupsConfiguration -> GET/POST /api/user-groups/config (src/store/modules/settings.js:830); lib/Controller/SettingsController.php:3379; lib/Service/Stackiq/GroupHandler.php:103 generic groups, :167 fixed role groups (aanbod-beheerder, gebruik-beheerder, ...), group choice by organisation type (:471)",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "admin settings section 'User groups'",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "An admin configures which groups count as generic users, organisation admins and super users. The catalogue roles themselves map to fixed, hard-coded group names and by organisation type, so an admin cannot map e.g. 'buyer' onto a group of their choice.",
+			"note": "An admin configures which groups count as generic users, organisation admins and super users. The catalogue roles themselves map to fixed, hard-coded group names and by organisation type, so an admin cannot map e.g. 'buyer' onto a group of their choice. Specified in openspec/changes/organisations-role-mapping-and-access-review (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: roles are profiles with per right settings (src/Profile.php:55), mapped onto groups and directory attributes by authorisation rules, src/RuleRight.php:236 group criterion and src/RuleRight.php:297 profile action. Reached on: Administration > Profiles; Administration > Rules > Authorizations assignment rules.",
 				"stackiq": "src/views/settings/StackiqSettings.vue:80 UserGroupsConfiguration -> GET/POST /api/user-groups/config (src/store/modules/settings.js:830); lib/Controller/SettingsController.php:3379; lib/Service/Stackiq/GroupHandler.php:103 generic groups, :167 fixed role groups (aanbod-beheerder, gebruik-beheerder, ...), group choice by organisation type (:471)",
@@ -3549,7 +3549,7 @@
 			"topdesk": "yes",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "openapi.json at repo root has an info block and 0 paths. Hand-written JSON docs: lib/Controller/ViewController.php:373 (GET /api/views/docs, routes.php:186) and lib/Controller/AangebodenGebruikController.php:866 (GET /api/aangeboden-gebruik/docs, routes.php:261). The views docs endpoint is login-only; the aangeboden-gebruik docs endpoint is @PublicPage (AangebodenGebruikController.php:860), so anyone can read it (corrected 2026-09-26). Hand-written markdown in docs/API_REFERENCE.md and docs/View_API.md on the docs site. No src/ caller of either docs endpoint.",
 				"owner": "ConductionNL/stackiq",
 				"readOn": "2026-09-26"
@@ -3557,7 +3557,7 @@
 			"reachedOn": "API only: GET /api/views/docs and /api/aangeboden-gebruik/docs; docs site https://stackiq.conduction.nl (Documentation footer link)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "The generated OpenAPI file is empty. What exists is hand-written: two JSON doc endpoints and markdown pages. OpenRegister may generate an OAS per register, but stackiq does not surface it.",
+			"note": "The generated OpenAPI file is empty. What exists is hand-written: two JSON doc endpoints and markdown pages. OpenRegister may generate an OAS per register, but stackiq does not surface it. Specified in openspec/changes/sharing-generated-api-docs (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Glpi/Api/HL/Controller/CoreController.php:322 route /doc serves a Swagger UI 'GLPI API Documentation' (:329 to :331) over the spec built by src/Glpi/Api/HL/OpenAPIGenerator.php. Reached on: /api.php/doc. Driven on the lab at 11.0.9 (2026-09-26): on a fresh install /api.php/v2/doc answers 403 \"The High-Level API is disabled\"; after switching on enable_hlapi in Setup > General > API it serves the Swagger UI \"GLPI API Documentation\".",
 				"stackiq": "openapi.json at repo root has an info block and 0 paths. Hand-written JSON docs: lib/Controller/ViewController.php:373 (GET /api/views/docs, routes.php:186) and lib/Controller/AangebodenGebruikController.php:866 (GET /api/aangeboden-gebruik/docs, routes.php:261). The views docs endpoint is login-only; the aangeboden-gebruik docs endpoint is @PublicPage (AangebodenGebruikController.php:860), so anyone can read it (corrected 2026-09-26). Hand-written markdown in docs/API_REFERENCE.md and docs/View_API.md on the docs site. No src/ caller of either docs endpoint.",
@@ -3579,7 +3579,7 @@
 			"topdesk": "yes",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "ArchiMate export lib/Controller/SettingsController.php:1615 (POST /api/archimate/export) and :1685 per-organisation export (GET /api/archimate/export/organization/{uuid}), called only from src/views/settings/sections/ArchiMateImportExport.vue (admin settings, StackiqSettings.vue:86). CSV export of the portfolio report: lib/Controller/PortfolioReportController.php:105, button src/views/organisaties/PortfolioReport.vue:567. No index page opts into the library's CSV/Excel export (no allowExport in src/manifest.json).",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -3588,7 +3588,7 @@
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
 			"featureConfidence": "medium",
-			"note": "A full ArchiMate export exists but is only reached from admin settings. The one export on a user page is the portfolio report CSV, and the catalogue list pages offer no export.",
+			"note": "A full ArchiMate export exists but is only reached from admin settings. The one export on a user page is the portfolio report CSV, and the catalogue list pages offer no export. Specified in openspec/changes/insight-exports-and-custom-reports (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Beschikbare%20downloads: \"De publieke informatie is ook beschikbaar als download van exportbestanden ... Mijn pakketten, Mijn koppelingen: Knop [Exporteren]\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Exporteren; Beschikbare downloads.",
 				"glpi": "source read at 11.0.9: every search list exports to CSV, PDF, ODS and XLSX through src/Glpi/Search/Output/Csv.php, Pdf.php, Ods.php and Xlsx.php, plus impact CSV (front/impactcsv.php) and the APIs (src/Glpi/Api/HL/Controller/AssetController.php:2825). Reached on: any list, Export menu. Driven on the lab at 11.0.9 (2026-09-26): the Appliances list exported to CSV (/front/report.dynamic.php display_type 3) with the created record.",
@@ -3610,14 +3610,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "No ITSM connector: lib/Settings/connections.json lists only email, federation and eol-feed; grep for topdesk/servicenow/itsm in lib/ and src/ finds nothing.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "No integration with a service management tool exists.",
+			"note": "No integration with a service management tool exists. Specified in openspec/changes/sharing-itsm-exchange (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://www.leanix.net/hubfs/Legal/Metrics-and-Feature-List-EAM-SAP-LeanIX-v3.1.pdf: 'ServiceNow integration An integration that connects the subscription services to the customer's ServiceNow subscription to synchronize infrastructure and software asset information'; Jira Service Management integration at https://help.sap.com/docs/leanix/ea/jira-service-management-integration-faqs (read 2026-09-26). Reached on: Administration > Integrations > ServiceNow.",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967779-add-an-integration-in-bluedolphin: 'out-of-the-box integrations with ITSM platforms like TOPdesk, ServiceNow, and JIRA'; https://help.bluedolphin.io/en/articles/11967782-bluedolphin-to-topdesk-integration and https://help.bluedolphin.io/en/articles/12148500-bluedolphin-to-servicenow-integration (read 2026-09-26). Reached on: System settings > Marketplace (paid add on).",
@@ -3668,7 +3668,7 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Service/FacetService.php:109 DIMENSIONS = referenceComponent, standard, applicationService, domain (GET /api/facets/{schema}, routes.php:195); src/views/FacetedCatalogIndexView.vue renders CnFacetSidebar with these plus search, on the Applications and Services pages. Supplier is only a column (src/manifest.json Modules config columns 'provider'), not a facet, although the module schema marks provider facetable.",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -3677,7 +3677,7 @@
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
 			"featureConfidence": "low",
-			"note": "Search plus reference-component, standard, application-service and domain facets work. Supplier is not offered as a facet, which is half of the row's example.",
+			"note": "Search plus reference-component, standard, application-service and domain facets work. Supplier is not offered as a facet, which is half of the row's example. Specified in openspec/changes/insight-supplier-facet (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Aan de linkerkant staan zogenaamde filter mogelijkheden. Deze werken ook in combinatie ... Achter de te zetten filters staat een getal\" (read 2026-09-26); https://www.softwarecatalogus.nl/pakketversies: facets Leverancier, Standaard, Referentiecomponent, Status planning, Domein, Doelgroep, Bedrijfsfunctie (read 2026-09-26). Reached on: Alle pakketten / Alle pakketversies.",
 				"glpi": "source read at 11.0.9: every list has a criteria builder, src/Glpi/Search/Input/QueryBuilder.php:72 showGenericSearch, over all search options, for example manufacturer on appliances (src/Appliance.php:229 region, glpi_manufacturers) and status (src/Appliance.php:350); there are no counted facets and no reference component to filter on. Reached on: Management > Appliances, search criteria.",
@@ -3815,7 +3815,7 @@
 			"topdesk": "partial",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "No report builder in src/ or lib/. The only report is the fixed Gartner TIME portfolio report (lib/Controller/PortfolioReportController.php, CSV at :105). The overlay lists portfolio-reporting as status 'soon'.",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -3824,7 +3824,7 @@
 			"providerHow": "read-from-code",
 			"feature": "portfolio-reporting",
 			"featureConfidence": "high",
-			"note": "Users cannot build their own report. The one fixed portfolio report can be exported as CSV, but it is not configurable.",
+			"note": "Users cannot build their own report. The one fixed portfolio report can be exported as CSV, but it is not configurable. Specified in openspec/changes/insight-exports-and-custom-reports (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/sap-leanix-apis: 'GraphQL is used to create custom reports'; https://help.sap.com/docs/leanix/ea/reporting-framework-and-cli: reporting library with 'Export to PDF and PNG files' (read 2026-09-26). Reached on: Reports > custom reports (reporting framework, Extension Hub).",
 				"glpi": "source read at 11.0.9: any itemtype list takes arbitrary criteria (src/Glpi/Search/Input/QueryBuilder.php:72), selectable columns, and exports to CSV, PDF, ODS or XLSX (src/Glpi/Search/Output/Xlsx.php); the result can be saved (src/SavedSearch.php:52) and charted on a dashboard (src/Glpi/Dashboard/Grid.php:67). Reached on: any list with criteria, column selection and export.",
@@ -3846,7 +3846,7 @@
 			"topdesk": "yes",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "Portfolio report CSV: lib/Controller/PortfolioReportController.php:105 (DataDownloadResponse text/csv), button src/views/organisaties/PortfolioReport.vue:567. No index page sets the library's allowExport (grep allowExport/exportable in src/manifest.json and the register finds nothing), so Applications, Contracts and the other lists have no export.",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -3855,7 +3855,7 @@
 			"providerHow": "read-from-code",
 			"feature": "portfolio-reporting",
 			"featureConfidence": "low",
-			"note": "One fixed report exports to CSV for a selected organisation. The filtered catalogue lists cannot be exported.",
+			"note": "One fixed report exports to CSV for a selected organisation. The filtered catalogue lists cannot be exported. Specified in openspec/changes/insight-exports-and-custom-reports (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Glpi/Search/Output/Csv.php, Ods.php, Xlsx.php and Pdf.php export the filtered list; the output format selector is rendered by src/Html.php:4219 Dropdown::showOutputFormat. Reached on: any filtered list, Export. Driven on the lab at 11.0.9 (2026-09-26): the filtered Appliances list exported to CSV with the created record.",
 				"stackiq": "Portfolio report CSV: lib/Controller/PortfolioReportController.php:105 (DataDownloadResponse text/csv), button src/views/organisaties/PortfolioReport.vue:567. No index page sets the library's allowExport (grep allowExport/exportable in src/manifest.json and the register finds nothing), so Applications, Contracts and the other lists have no export.",
@@ -3966,14 +3966,14 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Controller/SettingsController.php:1289 getProgress and :1360 streamProgress (routes.php:119-120) serve lib/Service/ProgressTracker.php, used only by lib/Service/MergeOrganisatieService.php; no src/ caller of /api/progress. The admin ArchiMate import shows a spinner then the final objects-processed count (src/views/settings/sections/ArchiMateImportExport.vue:103). Organisation sync shows a status block with last sync time and organisations to process (src/views/settings/sections/OrganizationSynchronization.vue:211).",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "admin settings sections Organization Synchronization and ArchiMate Import/Export (status and result only); progress endpoints API only",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "A progress API exists but no page reads it. Admins see a sync status and final import results, not the progress of a running job.",
+			"note": "A progress API exists but no page reads it. Admins see a sync status and final import results, not the progress of a running job. Specified in openspec/changes/operations-sync-status-and-progress (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: massive actions over many records show a progress bar, src/MassiveAction.php:1294 displayProgressBar; the LDAP synchronisation command shows one per user batch, src/Glpi/Console/Ldap/SynchronizeUsersCommand.php:382; long web operations report through src/Glpi/Controller/ProgressController.php:50 /progress/check/{key}. Inventory imports run per agent request without a progress view. Reached on: massive action screen; CLI ldap:sync.",
 				"stackiq": "lib/Controller/SettingsController.php:1289 getProgress and :1360 streamProgress (routes.php:119-120) serve lib/Service/ProgressTracker.php, used only by lib/Service/MergeOrganisatieService.php; no src/ caller of /api/progress. The admin ArchiMate import shows a spinner then the final objects-processed count (src/views/settings/sections/ArchiMateImportExport.vue:103). Organisation sync shows a status block with last sync time and organisations to process (src/views/settings/sections/OrganizationSynchronization.vue:211).",
@@ -3995,14 +3995,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "No knowledge-article schema among the register's schemas (sector, suite, catalogService, vulnerability, contactPerson, organization, usage, catalogContract, connection, software-review, element, view, model, property-definition, relation, module, compliancy, bioMeasure, moduleVersion, sbomComponent in lib/Settings/softwarecatalogus_register.json); ModuleDetail only has a Documentation files panel.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "There is no knowledge base. Files can be attached to an application, but that is not searchable articles.",
+			"note": "There is no knowledge base. Files can be attached to an application, but that is not searchable articles. Specified in openspec/changes/insight-knowledge-base (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/KnowbaseItem.php:57 knowledge base articles with categories and visibility, linked to items through src/KnowbaseItem_Item.php:45 and shown on the appliance Knowledge base tab (src/Appliance.php:104); menu src/Html.php:1307. Reached on: Tools > Knowledge base (front/knowbaseitem.php). Driven on the lab at 11.0.9 (2026-09-26): /front/knowbaseitem.php opens the knowledge base with Search and Browse.",
 				"topdesk": "https://docs.topdesk.com/en/knowledge-management.html: \"The Knowledge Base is set up and managed by your organization's knowledge managers. Every operator is able to use information from the Knowledge Base\" (read 2026-09-26). Reached on: Modules > Knowledge Management.",
@@ -4111,14 +4111,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "No hardware schema in lib/Settings/softwarecatalogus_register.json (schemas are software, organisation, contract and GEMMA model types only).",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Only software is registered, not hardware.",
+			"note": "Only software is registered, not hardware. Specified in openspec/changes/operations-technology-components (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/autoload/CFG_GLPI.php:208 asset_types lists Computer, Monitor, NetworkEquipment and the other hardware types managed next to software, under the Assets menu. Reached on: Assets > Computers, Monitors, Network devices.",
 				"topdesk": "https://docs.topdesk.com/en/linking-assets-to-other-assets.html: \"Think of a router that provides a computer with access to your network, or a printer\" (read 2026-09-26); any asset type via templates. Reached on: Asset Management.",
@@ -4140,14 +4140,14 @@
 			"topdesk": "yes",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "Applications (module lib/Settings/softwarecatalogus_register.json:6777), versions (moduleVersion :7649), suites (suite :1135) and application-to-application connections (connection :3563) with relations; ModuleDetail and SuiteDetail show a Related panel. No manifest page has register+schema 'connection' or 'usage', so connections are not listed or created on their own page.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "Applications /modules/:id and Suites /suites/:id Related panels; no page for connections",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "The landscape and its relations are recorded as catalogue objects, not as a CMDB with CI classes. Connections (koppelingen) have no index or detail page of their own.",
+			"note": "The landscape and its relations are recorded as catalogue objects, not as a CMDB with CI classes. Connections (koppelingen) have no index or detail page of their own. Specified in openspec/changes/operations-technology-components (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/16564: C19: \"Dubbel beheer (én in de Softwarecatalogus én in de CMDB) ... Een CMDB die separaat wordt bijgehouden\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/19703: \"Zolang de CMDB niet gekoppeld is aan de Softwarecatalogus\" (read 2026-09-26). The docs treat the CMDB as a separate tool.",
 				"glpi": "source read at 11.0.9: configuration items are the asset types (src/autoload/CFG_GLPI.php:208) plus appliances, with relations recorded as appliance membership (src/Appliance_Item.php:45), impact relations (install/mysql/glpi-empty.sql:1247 glpi_impactrelations) and network port links. Reached on: Assets menu; item > Impact analysis tab.",
@@ -4169,14 +4169,14 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "Organisation merge: src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail, calling /api/organisaties/{uuid}/merge/dry-run and /merge (src/store/modules/organisatie.js:486/524, lib/Controller/MergeController.php:106, admin-only body guard). Federation mirrors are reconciled per peer by lib/Service/Federation/FederationMerger.php.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "Organisation /organisaties/:id, Merge organisation panel (admin only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "An admin can merge duplicate organisations with a dry run. Nothing deduplicates applications or reconciles records arriving from several sources.",
+			"note": "An admin can merge duplicate organisations with a dry run. Nothing deduplicates applications or reconciles records arriving from several sources. Specified in openspec/changes/operations-record-reconciliation (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "Organisation merge: src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail, calling /api/organisaties/{uuid}/merge/dry-run and /merge (src/store/modules/organisatie.js:486/524, lib/Controller/MergeController.php:106, admin-only body guard). Federation mirrors are reconciled per peer by lib/Service/Federation/FederationMerger.php.",
 				"topdesk": "unknown: deduplication across sources is not described; https://tip.topdesk.com/c/239-ai-cmdb-monitoring- (duplicates) is under consideration; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -4343,7 +4343,7 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674).",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4352,7 +4352,7 @@
 			"providerHow": "read-from-code",
 			"feature": "automatic-user-provisioning",
 			"featureConfidence": "medium",
-			"note": "The sync runs on a schedule and its last run time is shown, but only an admin can see and configure it, which is the rule for partial.",
+			"note": "The sync runs on a schedule and its last run time is shown, but only an admin can see and configure it, which is the rule for partial. Specified in openspec/changes/operations-sync-status-and-progress (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674).",
 				"topdesk": "https://docs.topdesk.com/en/events-that-trigger-actions.html: \"when tracking imports/Exchange exports via system events ... on a schedule\" (read 2026-09-26); https://tip.topdesk.com/c/116-support-for-importing-persons-and-operators-directly-from-local-active-directory: roadmap card in column \"Launched\", person import from AD (read 2026-09-26). Reached on: Settings > Import settings.",
@@ -4462,7 +4462,7 @@
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/398728",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "lib/Service/ContactpersoonService.php:889 returns a user's lastLogin and src/components/ContactpersonenList.vue:482 stores it, but nothing renders it; no review, recertification or expiry of access in lib/ or src/ (grep recertif, accessReview)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4470,7 +4470,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"featureConfidence": "medium",
-			"note": "Helmond REQ78 asks administrators to check periodically that every user still needs access. stackiq fetches the last login of each contact's account and never shows it.",
+			"note": "Helmond REQ78 asks administrators to check periodically that every user still needs access. stackiq fetches the last login of each contact's account and never shows it. Specified in openspec/changes/organisations-role-mapping-and-access-review (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "partial",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/gebruikersbeheer: \"Er opent zich een overzicht met alle geregistreerde gebruikers van uw organisatie ... inclusief wanneer zij voor het laatst hebben ingelogd\" (read 2026-09-26); https://www.softwarecatalogus.nl/: tip \"Controleer of alle gebruikers nog werkzaam zijn bij de gemeente of samenwerking\" (read 2026-09-26). A manual check, no review cycle. Reached on: Menu > Gebruikersbeheer.",
@@ -4675,7 +4675,7 @@
 			"originUrl": "https://github.com/VNG-Realisatie/Softwarecatalogus/issues/41",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "compliance records carry bewijsReferentie and a Documentation files panel (src/manifest.json:885 KompliantieDetail), and module.dpiaDocumentRef (lib/Settings/softwarecatalogus_register.json:7280) links a DPIA; these are published per record under the register read rules, but nothing shares a processing agreement or pentest report between organisations as such",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4691,7 +4691,7 @@
 				"glpi": "source read at 11.0.9: documents (src/Document.php:67) are visible only inside the instance through entities and profiles; anonymous access is limited to FAQ attachments when use_public_faq is on (src/Document.php:717), and there is no sharing with other organisations.",
 				"topdesk": "unknown: assets hold documents in a Documents widget, but sharing them with other organisations is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26.",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Specified in openspec/changes/sharing-compliance-documents (OpenSpec pass 2026-09-27).",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -4705,7 +4705,7 @@
 			"originUrl": "https://github.com/VNG-Realisatie/Softwarecatalogus/issues/46",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Settings/softwarecatalogus_register.json:7225 module.bbnLevel (BBN1 to BBN3), shown in the ModuleDetail data widget (src/manifest.json:500) and filterable on Modules (src/manifest.json:608); one level per application, not per organisation and not split into availability, integrity and confidentiality",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4721,7 +4721,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'confidentialit' over src/ templates/ locales/glpi.pot returns nothing and appliances have no availability, integrity or confidentiality fields (install/mysql/glpi-empty.sql:8935 glpi_appliances); only a repurposed dropdown or a custom asset field could hold it.",
 				"topdesk": "unknown: no availability, integrity and confidentiality classification is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26.",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Specified in openspec/changes/security-baseline-classification (OpenSpec pass 2026-09-27).",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -5125,7 +5125,7 @@
 			"originUrl": "https://github.com/glpi-project/roadmap/discussions/290",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "catalogContract.contactPersonUser (lib/Settings/softwarecatalogus_register.json:3398) names the responsible person on the user side, shown on ContractDetail (src/manifest.json:563); expiry warnings do not reach them because the only expiry notification never matches (see ctr-expiry-alert)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5141,7 +5141,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; a contract owner who receives expiry warnings is not documented (read 2026-09-26)",
 				"topdesk": "https://docs.topdesk.com/en/creating-a-contract.html: \"Operator The TOPdesk operator responsible for managing the contract ... Reminder date Date on which an operator should be reminded about the contract, e.g. ahead of expiry\" (read 2026-09-26); https://docs.topdesk.com/en/events-that-trigger-actions.html: \"notify a manager that a contract will expire in a month\" (read 2026-09-26). Reached on: Contract card > Management > Operator."
 			},
-			"note": "Mined from glpi (featureRequest) on 2026-09-26.",
+			"note": "Mined from glpi (featureRequest) on 2026-09-26. Specified in openspec/changes/contracts-expiry-and-owner (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "unknown",

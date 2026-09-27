@@ -24,7 +24,7 @@ Authorization: an organisation reads its own rounds and requests (`_organisation
 2. For each entry pick owners: `businessOwner` and `technicalOwner` for a usage, `contactPerson` for a module. Resolve each contact person to a Nextcloud uid through `ContactPersonHandler`; entries whose owner has no account are returned as `unassigned`.
 3. Create the round and one request per entry and owner.
 
-Route `POST /api/attestation-rounds` (`#[NoAdminRequired]`), guarded: the caller is an organisation admin of the scope organisation (`SettingsService::getOrganizationAdminGroups()`). The response lists the unassigned entries.
+Route `POST /api/attestation-rounds` (`#[NoAdminRequired]`), guarded: the caller is a Nextcloud admin, or passes the maintainer rule of `OrganisationMembersController::authorizeMaintainer()` (`lib/Controller/OrganisationMembersController.php:207`: in the `maintainer` group and a member of the scope organisation). `SettingsService::getOrganizationAdminGroups()` is not used: it returns an empty list (`lib/Service/SettingsService.php:2105-2110`). The response lists the unassigned entries.
 
 ## D3. Answering
 
