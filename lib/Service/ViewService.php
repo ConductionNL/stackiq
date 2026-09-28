@@ -225,13 +225,14 @@ class ViewService {
 	/**
 	 * Get views from OpenRegister system with response-level caching.
 	 *
-	 * Results are cached for 30 minutes to prevent cold-start delays.
+	 * Results are cached for 30 minutes to prevent cold-start delays, per
+	 * caller (see getViewsCacheKey()).
 	 *
 	 * @return array Array of view objects
 	 */
 	private function getViewsFromRegister(): array {
 		// Check cache first.
-		$cacheKey = 'views_list';
+		$cacheKey = $this->getViewsCacheKey();
 		$cached = $this->viewsCache->get(key: $cacheKey);
 		if ($cached !== null) {
 			$this->logger->debug(
@@ -298,6 +299,30 @@ class ViewService {
 	}//end getViewsFromRegister()
 
 	/**
+	 * Build the views list cache key for the current caller.
+	 *
+	 * The list is read with OpenRegister's RBAC and multitenancy on, so what
+	 * it holds depends on the user and on their active organisation. The key
+	 * carries both: one caller's scoped list is never served to another, and a
+	 * user who switches organisation does not keep the list of the old one.
+	 *
+	 * @return string The cache key.
+	 *
+	 * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-006-drawn-views-shall-stay-inside-the-organisation-that-drew-them
+	 */
+	private function getViewsCacheKey(): string {
+		$userId = '';
+		$user = $this->userSession->getUser();
+		if ($user !== null) {
+			$userId = $user->getUID();
+		}
+
+		$organisation = $this->getCurrentOrganisation() ?? '';
+
+		return 'views_list_'.hash(algo: 'sha256', data: $userId."\n".$organisation);
+	}//end getViewsCacheKey()
+
+	/**
 	 * Get a specific view from OpenRegister system.
 	 *
 	 * @param string $viewId The view identifier.
@@ -320,13 +345,15 @@ class ViewService {
 		}
 
 		try {
-			// Get specific view object by ID.
+			// Get specific view object by ID, with OpenRegister's RBAC and
+			// multitenancy checks on (the defaults), the same checks the list
+			// reads with. A view the caller may not read comes back as null
+			// (or throws), which getView() answers as not found, so a uuid is
+			// no way around the list's scope.
 			$view = $objectService->find(
 				id: $viewId,
 				register: $registerId,
-				schema: $viewSchemaId,
-				_rbac: false,
-				_multitenancy: false
+				schema: $viewSchemaId
 			);
 
 			// Serialise the entity to an array. No `is_array()` / `method_exists()`
