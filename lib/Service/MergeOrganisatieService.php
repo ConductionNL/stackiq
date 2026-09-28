@@ -112,14 +112,25 @@ class MergeOrganisatieService {
 		'usage' => ['field' => 'consumer', 'arrayField' => 'participants'],
 		'contactPerson' => ['field' => 'organization', 'arrayField' => null],
 		'aanbod' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'connection'],
+		// The supplier's own applications and services (`provider`, a Vendor
+		// $ref to organization): after a takeover they belong to the target.
+		'module' => ['field' => 'provider', 'arrayField' => null],
+		'catalogService' => ['field' => 'provider', 'arrayField' => null],
 	];
 
 	/**
-	 * Relation types re-pointed via the OpenRegister system-level `@self.organisation` field.
+	 * Relation types re-pointed via the OpenRegister system-level `@self.organisation` field,
+	 * as count key => schema slug. Modules and services carry a `provider`
+	 * field too, so their ownership counts under its own key.
 	 *
-	 * @var string[]
+	 * @var array<string, string>
 	 */
-	private const SELF_ORGANISATION_RELATION_TYPES = ['catalogContract', 'compliancy'];
+	private const SELF_ORGANISATION_RELATION_TYPES = [
+		'catalogContract' => 'catalogContract',
+		'compliancy' => 'compliancy',
+		'moduleOwnership' => 'module',
+		'catalogServiceOwnership' => 'catalogService',
+	];
 
 	/**
 	 * MergeOrganisatieService constructor.
@@ -261,7 +272,7 @@ class MergeOrganisatieService {
 		$this->progressTracker->completeOperation(finalStatistics: ['counts' => $counts]);
 
 		$relationSum = 0;
-		foreach (array_merge(array_keys(self::FIELD_RELATION_TYPES), self::SELF_ORGANISATION_RELATION_TYPES) as $type) {
+		foreach (array_merge(array_keys(self::FIELD_RELATION_TYPES), array_keys(self::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
 			$relationSum += ($counts[$type] ?? 0);
 		}
 
@@ -324,9 +335,9 @@ class MergeOrganisatieService {
 			$this->reportTypeProgress(type: $type, count: $counts[$type], commit: $commit);
 		}
 
-		foreach (self::SELF_ORGANISATION_RELATION_TYPES as $type) {
+		foreach (self::SELF_ORGANISATION_RELATION_TYPES as $type => $schemaType) {
 			$counts[$type] = $this->repointBySelfOrganisation(
-				objectType: $type,
+				objectType: $schemaType,
 				source: $sourceUuid,
 				target: $targetUuid,
 				commit: $commit
@@ -832,7 +843,7 @@ class MergeOrganisatieService {
 			$counts[$type] = 0;
 		}
 
-		foreach (self::SELF_ORGANISATION_RELATION_TYPES as $type) {
+		foreach (array_keys(self::SELF_ORGANISATION_RELATION_TYPES) as $type) {
 			$counts[$type] = 0;
 		}
 
