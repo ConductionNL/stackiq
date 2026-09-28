@@ -109,6 +109,15 @@ class FacetService {
 	private const DIMENSIONS = ['referenceComponent', 'standard', 'applicationService', 'domain'];
 
 	/**
+	 * The element property the domain dimension reads: the register's
+	 * `element` schema declares it as `domein`, and the GEMMA import stores
+	 * the "Domein" property under that lower-cased name.
+	 *
+	 * @var string
+	 */
+	public const ELEMENT_DOMAIN_PROPERTY = 'domein';
+
+	/**
 	 * Constructor for FacetService.
 	 *
 	 * @param ContainerInterface $container PSR-11 container interface (for lazy ObjectService lookup).
@@ -701,7 +710,7 @@ class FacetService {
 					fallbackIdentifier: $refCompId
 				);
 
-				$domain = $element['domain'] ?? null;
+				$domain = $element[self::ELEMENT_DOMAIN_PROPERTY] ?? null;
 				if (is_string($domain) === true && trim($domain) !== '') {
 					$domeinValues[] = trim($domain);
 				}
