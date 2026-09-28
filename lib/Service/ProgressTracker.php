@@ -19,11 +19,18 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCP\ISession;
+use OCP\ICache;
+use OCP\ICacheFactory;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
  * Service for tracking and reporting progress of long-running operations
+ *
+ * Progress lives in Nextcloud's distributed cache, not in the user's session,
+ * so a background job can write it and any other request (another login, an
+ * admin, the request after a cron run) can read it. Who may read an operation
+ * is decided by SettingsController::getProgress(), not by where it is stored.
  *
  * @category  Service
  * @package   OCA\Stackiq\Service
@@ -74,15 +81,32 @@ class ProgressTracker {
 	];
 
 	/**
+	 * How long a stored snapshot lives after its last write, in seconds.
+	 */
+	private const STORE_TTL = 3600;
+
+	/**
+	 * The shared store for progress snapshots.
+	 *
+	 * @var ICache
+	 */
+	private ICache $store;
+
+	/**
 	 * Constructor for ProgressTracker
 	 *
-	 * @param ISession $session The session service for storing progress
+	 * @param ICacheFactory $cacheFactory Cache factory; progress goes into its distributed cache
+	 * @param IUserSession $userSession The signed-in user, the default owner of a new operation
 	 * @param LoggerInterface $logger The logger interface
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function __construct(
-		private readonly ISession $session,
+		ICacheFactory $cacheFactory,
+		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
+		$this->store = $cacheFactory->createDistributed(prefix: 'stackiq_progress');
 	}//end __construct()
 
 	/**
@@ -90,14 +114,19 @@ class ProgressTracker {
 	 *
 	 * @param string $operationType Type of operation (import, export)
 	 * @param array $options Operation options and metadata
-	 * @param string|null $ownerUid UID of the user who owns this operation
+	 * @param string|null $ownerUid UID of the user who owns this operation; when null, the
+	 *                              signed-in user of this request, or no owner in a background job
 	 *
 	 * @return string Unique operation ID
 	 *
-	 * @spec openspec/specs/progress-tracking/spec.md
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function startOperation(string $operationType, array $options = [], ?string $ownerUid = null): string {
 		$operationId = uniqid(prefix: $operationType . '_', more_entropy: true);
+
+		if ($ownerUid === null) {
+			$ownerUid = $this->userSession->getUser()?->getUID();
+		}
 
 		$this->progress = [
 			'operation_id' => $operationId,
@@ -327,14 +356,13 @@ class ProgressTracker {
 	 *
 	 * @return array|null Progress data or null if not found
 	 *
-	 * @spec openspec/specs/progress-tracking/spec.md
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getProgress(?string $operationId = null): ?array {
 		if ($operationId !== null && $operationId !== $this->progress['operation_id']) {
-			// Load progress from session for different operation.
-			$sessionKey = 'progress_' . $operationId;
-			$storedProgress = $this->session->get($sessionKey);
-			if ($storedProgress !== null && $storedProgress !== false) {
+			// Load an operation another request or a background job wrote.
+			$storedProgress = $this->store->get(key: 'progress_' . $operationId);
+			if (is_array($storedProgress) === true) {
 				return $storedProgress;
 			}
 
@@ -405,19 +433,27 @@ class ProgressTracker {
 	}//end calculateEstimatedCompletion()
 
 	/**
-	 * Save progress to session
+	 * Save progress to the shared store.
+	 *
+	 * Each write renews the entry for STORE_TTL seconds.
 	 *
 	 * @return void
 	 */
 	private function saveProgress(): void {
 		if ($this->progress['operation_id'] !== null) {
-			$sessionKey = 'progress_' . $this->progress['operation_id'];
-			$this->session->set($sessionKey, $this->progress);
+			$this->store->set(
+				key: 'progress_' . $this->progress['operation_id'],
+				value: $this->progress,
+				ttl: self::STORE_TTL
+			);
 		}
 	}//end saveProgress()
 
 	/**
-	 * Clean up old progress entries from session
+	 * Clean up old progress entries.
+	 *
+	 * Nothing to do: every entry in the shared store expires STORE_TTL seconds
+	 * after its last write.
 	 *
 	 * @param int $maxAge Maximum age in seconds (default: 1 hour)
 	 *
@@ -425,8 +461,6 @@ class ProgressTracker {
 	 * @spec   openspec/specs/progress-tracking/spec.md
 	 */
 	public function cleanupOldProgress(int $maxAge = 3600): void {
-		// Note: This would need to iterate through session keys to find and clean old progress entries.
-		// Implementation depends on session storage capabilities.
-		$this->logger->debug('Progress cleanup requested', ['max_age' => $maxAge]);
+		$this->logger->debug('Progress cleanup requested; stored entries expire on their own', ['max_age' => $maxAge]);
 	}//end cleanupOldProgress()
 }//end class
