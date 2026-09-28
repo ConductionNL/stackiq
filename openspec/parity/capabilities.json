@@ -1907,7 +1907,7 @@
 			"stackiq": "yes",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/FacetService.php:109 DIMENSIONS referenceComponent, standard, applicationService, domain for schemas module and catalogService (:102); src/views/FacetedCatalogIndexView.vue:108 CnFacetSidebar narrows CnIndexPage; route GET /api/facets/{schema} called from src/services/facets.js",
+				"evidence": "lib/Service/FacetService.php:109 DIMENSIONS referenceComponent, standard, applicationService, domain for schemas module and catalogService (:102); src/views/FacetedCatalogIndexView.vue:108 CnFacetSidebar narrows CnIndexPage; route GET /api/facets/{schema} called from src/services/facets.js Corrections round 8 (2026-09-28), stackiq#1141: the fourth dimension, domain, is always empty because lib/Service/FacetService.php:704 reads domain while GEMMA elements carry domein (lib/Settings/softwarecatalogus_register.json:4642), at d22033a.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "Applications /modules and Services /diensten, GEMMA facet sidebar",
@@ -1915,7 +1915,7 @@
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
 			"featureConfidence": "medium",
-			"note": "Live facet counts on reference component and standard narrow the module and service lists. Scope is whatever the RBAC read rules let the viewer see (published entries are public).",
+			"note": "Live facet counts on reference component and standard narrow the module and service lists. Scope is whatever the RBAC read rules let the viewer see (published entries are public). Corrections round 8 (2026-09-28): the domain facet on the same sidebar is always empty, stackiq#1141; rating kept because this row filters on reference component and standard, which FacetService fills from other fields.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Ik ben op zoek naar een nieuw pakket voor referentiecomponent voor BAG-administratie\" and standards filters combine (read 2026-09-26); https://www.softwarecatalogus.nl/pakketten: facets Referentiecomponent and Standaard (read 2026-09-26). Reached on: Alle pakketten > filters.",
 				"stackiq": "lib/Service/FacetService.php:109 DIMENSIONS referenceComponent, standard, applicationService, domain for schemas module and catalogService (:102); src/views/FacetedCatalogIndexView.vue:108 CnFacetSidebar narrows CnIndexPage; route GET /api/facets/{schema} called from src/services/facets.js",
@@ -3163,13 +3163,13 @@
 			"stackiq": "partial",
 			"built": {
 				"state": "built",
-				"evidence": "src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail; POST /api/organisaties/{uuid}/merge -> lib/Controller/MergeController.php:142 isAdmin; lib/Service/MergeOrganisatieService.php:111 re-points usage.consumer/participants, contactPerson.organization, connection.provider and @self.organisation of catalogContract/compliancy; module.provider and catalogService.provider are not re-pointed",
+				"evidence": "src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail; POST /api/organisaties/{uuid}/merge -> lib/Controller/MergeController.php:142 isAdmin; lib/Service/MergeOrganisatieService.php:111 re-points usage.consumer/participants, contactPerson.organization, connection.provider and @self.organisation of catalogContract/compliancy; module.provider and catalogService.provider are not re-pointed Corrections round 8 (2026-09-28), stackiq#1086 (comment of 2026-09-27): four more organisation references stay on the source, usage.provider (lib/Settings/softwarecatalogus_register.json:2693), organization.deelnames (:2200), organization.participants (:2236) and model.organizations (:6027), none of which is in lib/Service/MergeOrganisatieService.php:111 or :122, at d22033a.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "OrganisatieDetail /organisaties/:id, merge panel (admin only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "An admin can merge a municipality into another and its usages, contacts and contracts follow. A supplier takeover leaves the source's applications and services pointing at the tombstoned supplier, because module and service provider fields are not in the relation map.",
+			"note": "An admin can merge a municipality into another and its usages, contacts and contracts follow. A supplier takeover leaves the source's applications and services pointing at the tombstoned supplier, because module and service provider fields are not in the relation map. Corrections round 8 (2026-09-28): besides module and service providers, a merge also leaves usage providers, collaboration memberships and GEMMA model organisations on the merged-away organisation, stackiq#1086; rating kept because usages, contacts, connections and contracts are still re-pointed.",
 			"evidence": {
 				"stackiq": "src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail; POST /api/organisaties/{uuid}/merge -> lib/Controller/MergeController.php:142 isAdmin; lib/Service/MergeOrganisatieService.php:111 re-points usage.consumer/participants, contactPerson.organization, connection.provider and @self.organisation of catalogContract/compliancy; module.provider and catalogService.provider are not re-pointed",
 				"topdesk": "unknown: merging organisations is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -3192,13 +3192,13 @@
 			"stackiq": "yes",
 			"built": {
 				"state": "built",
-				"evidence": "src/components/organisations/OrganisationMergePanel.vue:324 organisatieStore.dryRunMerge shows dryRunCounts before execute; POST /api/organisaties/{uuid}/merge/dry-run -> lib/Service/MergeOrganisatieService.php:160 dryRun",
+				"evidence": "src/components/organisations/OrganisationMergePanel.vue:324 organisatieStore.dryRunMerge shows dryRunCounts before execute; POST /api/organisaties/{uuid}/merge/dry-run -> lib/Service/MergeOrganisatieService.php:160 dryRun Corrections round 8 (2026-09-28), stackiq#1086: the dry run walks the same relation lists as the merge (lib/Service/MergeOrganisatieService.php:172 walkRelations with commit false, the merge at :256 with commit true), so the six references the merge leaves behind are not shown either, at d22033a.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "OrganisatieDetail /organisaties/:id, merge panel (admin only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "The merge panel shows per-type counts of what would be re-pointed before the admin confirms. It inherits the merge's blind spot: module and service provider links are not counted because they are not moved.",
+			"note": "The merge panel shows per-type counts of what would be re-pointed before the admin confirms. It inherits the merge's blind spot: module and service provider links are not counted because they are not moved. Corrections round 8 (2026-09-28): the preview omits the six organisation references the merge does not move, stackiq#1086; rating kept because the preview matches exactly what the merge will change.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: with no merge (src/Entity.php:202 forbids merge for Entity) there is nothing to preview; the transfer (src/Transfer.php:50) runs directly without a what would change report.",
 				"stackiq": "src/components/organisations/OrganisationMergePanel.vue:324 organisatieStore.dryRunMerge shows dryRunCounts before execute; POST /api/organisaties/{uuid}/merge/dry-run -> lib/Service/MergeOrganisatieService.php:160 dryRun",
@@ -3221,13 +3221,13 @@
 			"stackiq": "partial",
 			"built": {
 				"state": "specified",
-				"evidence": "src/views/settings/StackiqSettings.vue:80 UserGroupsConfiguration -> GET/POST /api/user-groups/config (src/store/modules/settings.js:830); lib/Controller/SettingsController.php:3379; lib/Service/Stackiq/GroupHandler.php:103 generic groups, :167 fixed role groups (aanbod-beheerder, gebruik-beheerder, ...), group choice by organisation type (:471)",
+				"evidence": "src/views/settings/StackiqSettings.vue:80 UserGroupsConfiguration -> GET/POST /api/user-groups/config (src/store/modules/settings.js:830); lib/Controller/SettingsController.php:3379; lib/Service/Stackiq/GroupHandler.php:103 generic groups, :167 fixed role groups (aanbod-beheerder, gebruik-beheerder, ...), group choice by organisation type (:471) Corrections round 8 (2026-09-28), stackiq#1137: the automatic role group by organisation type fires only for Community, because lib/Service/Stackiq/ContactPersonHandler.php:1625 maps the Dutch keys gemeente, leverancier and samenwerking while organization.type only allows Municipality, Supplier, Collaboration and Community (lib/Settings/softwarecatalogus_register.json:2309), so account creation (:669) and update (:901) assign no role group; lib/Service/Stackiq/GroupHandler.php:286 updateRoleBasedGroups has no caller, at d22033a.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "admin settings section 'User groups'",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "An admin configures which groups count as generic users, organisation admins and super users. The catalogue roles themselves map to fixed, hard-coded group names and by organisation type, so an admin cannot map e.g. 'buyer' onto a group of their choice. Specified in openspec/changes/organisations-role-mapping-and-access-review (OpenSpec pass 2026-09-27).",
+			"note": "An admin configures which groups count as generic users, organisation admins and super users. The catalogue roles themselves map to fixed, hard-coded group names and by organisation type, so an admin cannot map e.g. 'buyer' onto a group of their choice. Specified in openspec/changes/organisations-role-mapping-and-access-review (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): contacts of municipalities, suppliers and collaborations get no role group, only Community contacts do, stackiq#1137; rating kept because generic user groups are still configurable and an admin can still put a user in a catalogue group by hand (src/dialogs/ManageUserGroupsDialog.vue:175).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: roles are profiles with per right settings (src/Profile.php:55), mapped onto groups and directory attributes by authorisation rules, src/RuleRight.php:236 group criterion and src/RuleRight.php:297 profile action. Reached on: Administration > Profiles; Administration > Rules > Authorizations assignment rules.",
 				"stackiq": "src/views/settings/StackiqSettings.vue:80 UserGroupsConfiguration -> GET/POST /api/user-groups/config (src/store/modules/settings.js:830); lib/Controller/SettingsController.php:3379; lib/Service/Stackiq/GroupHandler.php:103 generic groups, :167 fixed role groups (aanbod-beheerder, gebruik-beheerder, ...), group choice by organisation type (:471)",
@@ -3669,7 +3669,7 @@
 			"stackiq": "partial",
 			"built": {
 				"state": "specified",
-				"evidence": "lib/Service/FacetService.php:109 DIMENSIONS = referenceComponent, standard, applicationService, domain (GET /api/facets/{schema}, routes.php:195); src/views/FacetedCatalogIndexView.vue renders CnFacetSidebar with these plus search, on the Applications and Services pages. Supplier is only a column (src/manifest.json Modules config columns 'provider'), not a facet, although the module schema marks provider facetable.",
+				"evidence": "lib/Service/FacetService.php:109 DIMENSIONS = referenceComponent, standard, applicationService, domain (GET /api/facets/{schema}, routes.php:195); src/views/FacetedCatalogIndexView.vue renders CnFacetSidebar with these plus search, on the Applications and Services pages. Supplier is only a column (src/manifest.json Modules config columns 'provider'), not a facet, although the module schema marks provider facetable. Corrections round 8 (2026-09-28), stackiq#1141: the domain facet never offers a value, because lib/Service/FacetService.php:704 reads $element['domain'] while the element schema declares domein (lib/Settings/softwarecatalogus_register.json:4642) and the GEMMA import stores the Domein property as domein (lib/Service/ArchiMateImportService.php:1017, lower-cased by convertToCamelCase :2256), at d22033a.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "Applications /modules and Services /diensten (FacetedCatalogIndexView)",
@@ -3677,7 +3677,7 @@
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
 			"featureConfidence": "low",
-			"note": "Search plus reference-component, standard, application-service and domain facets work. Supplier is not offered as a facet, which is half of the row's example. Specified in openspec/changes/insight-supplier-facet (OpenSpec pass 2026-09-27).",
+			"note": "Search plus reference-component, standard, application-service and domain facets work. Supplier is not offered as a facet, which is half of the row's example. Specified in openspec/changes/insight-supplier-facet (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): the domain facet is always empty, so of the four facets only reference component, standard and application service narrow the list, stackiq#1141; rating kept because search and the reference component facet work and supplier was already missing.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Aan de linkerkant staan zogenaamde filter mogelijkheden. Deze werken ook in combinatie ... Achter de te zetten filters staat een getal\" (read 2026-09-26); https://www.softwarecatalogus.nl/pakketversies: facets Leverancier, Standaard, Referentiecomponent, Status planning, Domein, Doelgroep, Bedrijfsfunctie (read 2026-09-26). Reached on: Alle pakketten / Alle pakketversies.",
 				"glpi": "source read at 11.0.9: every list has a criteria builder, src/Glpi/Search/Input/QueryBuilder.php:72 showGenericSearch, over all search options, for example manufacturer on appliances (src/Appliance.php:229 region, glpi_manufacturers) and status (src/Appliance.php:350); there are no counted facets and no reference component to filter on. Reached on: Management > Appliances, search criteria.",
@@ -3967,13 +3967,13 @@
 			"stackiq": "partial",
 			"built": {
 				"state": "specified",
-				"evidence": "lib/Controller/SettingsController.php:1289 getProgress and :1360 streamProgress (routes.php:119-120) serve lib/Service/ProgressTracker.php, used only by lib/Service/MergeOrganisatieService.php; no src/ caller of /api/progress. The admin ArchiMate import shows a spinner then the final objects-processed count (src/views/settings/sections/ArchiMateImportExport.vue:103). Organisation sync shows a status block with last sync time and organisations to process (src/views/settings/sections/OrganizationSynchronization.vue:211).",
+				"evidence": "lib/Controller/SettingsController.php:1289 getProgress and :1360 streamProgress (routes.php:119-120) serve lib/Service/ProgressTracker.php, used only by lib/Service/MergeOrganisatieService.php; no src/ caller of /api/progress. The admin ArchiMate import shows a spinner then the final objects-processed count (src/views/settings/sections/ArchiMateImportExport.vue:103). Organisation sync shows a status block with last sync time and organisations to process (src/views/settings/sections/OrganizationSynchronization.vue:211). Corrections round 8 (2026-09-28), stackiq#1138: the tracker's only store is the user's session (lib/Service/ProgressTracker.php:83 ISession, :412 saveProgress, :332 getProgress), so /api/progress answers only the browser session that started the work and a cron job cannot report progress at all; the tracker is also written by lib/Service/SbomImportService.php:144, not only by the merge, at d22033a.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "admin settings sections Organization Synchronization and ArchiMate Import/Export (status and result only); progress endpoints API only",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "A progress API exists but no page reads it. Admins see a sync status and final import results, not the progress of a running job. Specified in openspec/changes/operations-sync-status-and-progress (OpenSpec pass 2026-09-27).",
+			"note": "A progress API exists but no page reads it. Admins see a sync status and final import results, not the progress of a running job. Specified in openspec/changes/operations-sync-status-and-progress (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): progress lives in the starting user's PHP session, so no other login or background job can read it, stackiq#1138; rating kept because the partial rests on the sync status block and the final import result, which do not use the tracker.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: massive actions over many records show a progress bar, src/MassiveAction.php:1294 displayProgressBar; the LDAP synchronisation command shows one per user batch, src/Glpi/Console/Ldap/SynchronizeUsersCommand.php:382; long web operations report through src/Glpi/Controller/ProgressController.php:50 /progress/check/{key}. Inventory imports run per agent request without a progress view. Reached on: massive action screen; CLI ldap:sync.",
 				"stackiq": "lib/Controller/SettingsController.php:1289 getProgress and :1360 streamProgress (routes.php:119-120) serve lib/Service/ProgressTracker.php, used only by lib/Service/MergeOrganisatieService.php; no src/ caller of /api/progress. The admin ArchiMate import shows a spinner then the final objects-processed count (src/views/settings/sections/ArchiMateImportExport.vue:103). Organisation sync shows a status block with last sync time and organisations to process (src/views/settings/sections/OrganizationSynchronization.vue:211).",
@@ -4344,7 +4344,7 @@
 			"stackiq": "partial",
 			"built": {
 				"state": "specified",
-				"evidence": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674).",
+				"evidence": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674). Corrections round 8 (2026-09-28), stackiq#1139: the enable switch has no effect, because lib/BackgroundJob/OrganizationContactSyncJob.php:99 run() checks only that OpenRegister is installed before performScheduledSync, and nothing reads the enabled flag that lib/Service/SettingsService.php:6901 updateCronjobConfig stores, at d22033a.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "admin settings sections Cronjob configuration and Organization Synchronization",
@@ -4352,7 +4352,7 @@
 			"providerHow": "read-from-code",
 			"feature": "automatic-user-provisioning",
 			"featureConfidence": "medium",
-			"note": "The sync runs on a schedule and its last run time is shown, but only an admin can see and configure it, which is the rule for partial. Specified in openspec/changes/operations-sync-status-and-progress (OpenSpec pass 2026-09-27).",
+			"note": "The sync runs on a schedule and its last run time is shown, but only an admin can see and configure it, which is the rule for partial. Specified in openspec/changes/operations-sync-status-and-progress (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): switching the job off in the settings does not stop it, stackiq#1139; rating kept because the schedule and the last run time, which this row rates, work.",
 			"evidence": {
 				"stackiq": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674).",
 				"topdesk": "https://docs.topdesk.com/en/events-that-trigger-actions.html: \"when tracking imports/Exchange exports via system events ... on a schedule\" (read 2026-09-26); https://tip.topdesk.com/c/116-support-for-importing-persons-and-operators-directly-from-local-active-directory: roadmap card in column \"Launched\", person import from AD (read 2026-09-26). Reached on: Settings > Import settings.",
