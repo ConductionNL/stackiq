@@ -104,8 +104,6 @@ return [
         ['name' => 'settings#killArchiMateImport', 'url' => '/api/archimate/import/kill', 'verb' => 'POST'], // deprecated
         ['name' => 'settings#clearArchiMateExportStatus', 'url' => '/api/archimate/status/export/clear', 'verb' => 'POST'],
 
-        ['name' => 'settings#testArchiMateRoundTrip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
-
         // User Groups management routes
         ['name' => 'settings#getGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],
         ['name' => 'settings#setGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'POST'],

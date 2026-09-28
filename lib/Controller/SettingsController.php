@@ -2923,64 +2923,6 @@ class SettingsController extends Controller {
 		}//end try
 	}//end clearArchiMateExportStatus()
 
-	// ===.
-	// ARCHIMATE TESTING METHODS.
-	// ===.
-
-	/**
-	 * Test ArchiMate round-trip functionality
-	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 *
-	 * @return JSONResponse Round-trip test result
-	 * @spec   openspec/specs/settings-admin-controller/spec.md
-	 */
-	public function testArchiMateRoundTrip(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$this->logger->info('Stackiq: ArchiMate round-trip test started');
-
-			// Call the ArchiMate service to perform round-trip test.
-			$result = $this->archiMateService->testRoundTrip();
-
-			$this->logger->info(
-				'Stackiq: ArchiMate round-trip test completed',
-				[
-					'success' => $result['success'],
-					'message' => $result['message'] ?? 'no message',
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'success' => $result['success'],
-					'message' => $result['message'],
-					'details' => $result['details'] ?? null,
-					'statistics' => $result['statistics'] ?? null,
-				]
-			);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Stackiq: ArchiMate round-trip test failed',
-				[
-					'exception_class' => get_class($e),
-					'exception_message' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Round-trip test failed: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
-	}//end testArchiMateRoundTrip()
-
 	/**
 	 * Get ArchiMate settings and status (without object counts for performance)
 	 *

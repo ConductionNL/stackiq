@@ -1945,54 +1945,6 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
-		 * Test ArchiMate round-trip functionality
-		 *
-		 * @return {Promise<object>} Test result
-		 * @spec openspec/specs/fe-stores/spec.md
-		 */
-		async testRoundTrip() {
-			try {
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/archimate/test-round-trip',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'X-Requested-With': 'XMLHttpRequest',
-						},
-					},
-				)
-
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-
-				const result = await response.json()
-
-				if (result.success) {
-					showSuccess('Round-trip test completed successfully')
-				} else {
-					showError(
-						'Round-trip test failed: '
-							+ (result.message || 'Unknown error'),
-					)
-				}
-
-				return result
-			} catch (error) {
-				console.error('Round-trip test failed:', error)
-				const errorResult = {
-					success: false,
-					message: 'Round-trip test failed: ' + error.message,
-				}
-				showError(errorResult.message)
-				return errorResult
-			}
-		},
-
-		/**
 		 * Cleanup method to stop polling when store is destroyed
 		 *
 		 * @spec openspec/specs/fe-stores/spec.md
