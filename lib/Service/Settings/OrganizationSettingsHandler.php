@@ -104,9 +104,20 @@ class OrganizationSettingsHandler {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-1
 	 */
 	public function getOrganizationAdminGroups(): array {
-		// DISABLED: No automatic group assignment for organization admins.
-		// Users should be assigned groups explicitly via the admin UI.
-		return [];
+		// The saved list, or none. No default groups: first contacts are not
+		// added to these groups automatically (stackiq#1136).
+		$groupsJson = $this->config->getValueString(self::APP_NAME, 'organization_admin_groups', '');
+
+		if (empty($groupsJson) === true) {
+			return [];
+		}
+
+		$groups = json_decode($groupsJson, true);
+		if (is_array($groups) === false) {
+			return [];
+		}
+
+		return $groups;
 	}//end getOrganizationAdminGroups()
 
 	/**

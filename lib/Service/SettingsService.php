@@ -2099,13 +2099,29 @@ class SettingsService {
 	/**
 	 * Gets the list of organization admin groups from configuration
 	 *
+	 * Returns the list an admin saved under `organization_admin_groups`, or an
+	 * empty list when nothing is saved. There is no default list: commit
+	 * bc4dc9ea dropped the old default (organisaties-beheerder) on purpose,
+	 * and first contacts are not added to these groups automatically (see
+	 * ContactPersonHandler::assignUserGroups()). Until stackiq#1136 this getter
+	 * returned an empty list unconditionally, which discarded the saved
+	 * setting as well.
+	 *
 	 * @return array Array of organization admin groups
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function getOrganizationAdminGroups(): array {
-		// DISABLED: No automatic group assignment for organization admins.
-		// Users should be assigned groups explicitly via the admin UI.
-		// Previously this returned ['organisaties-beheerder', 'organisatie-beheerder'] by default.
+		$groupsJson = $this->config->getValueString($this->appName, 'organization_admin_groups', '');
+
+		if (empty($groupsJson) === true) {
+			return [];
+		}
+
+		$groups = json_decode($groupsJson, true);
+		if (is_array($groups) === true) {
+			return $groups;
+		}
+
 		return [];
 	}//end getOrganizationAdminGroups()
 
