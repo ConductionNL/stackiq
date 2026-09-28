@@ -1285,7 +1285,7 @@ class SettingsController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @spec openspec/specs/method-decomposition/spec.md
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getProgress(string $operationId): JSONResponse {
 		$currentUser = $this->userSession->getUser();
@@ -1296,19 +1296,11 @@ class SettingsController extends Controller {
 		try {
 			$progress = $this->progressTracker->getProgress($operationId);
 
-			if ($progress === null) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'message' => 'Operation not found',
-						'error' => 'OPERATION_NOT_FOUND',
-					],
-					404
-				);
-			}
-
-			// Verify the caller owns this operation.
-			if (isset($progress['owner_uid']) === true && $progress['owner_uid'] !== $currentUser->getUID()) {
+			// An operation the caller may not read answers like an unknown
+			// one, so an operation id alone reveals nothing.
+			if ($progress === null
+				|| $this->mayReadProgress(progress: $progress, uid: $currentUser->getUID()) === false
+			) {
 				return new JSONResponse(
 					[
 						'success' => false,
@@ -1346,6 +1338,30 @@ class SettingsController extends Controller {
 	}//end getProgress()
 
 	/**
+	 * Whether a user may read the progress of an operation.
+	 *
+	 * Progress lives in the distributed cache, so any request can load an
+	 * operation by its id. Its owner and Nextcloud admins may read it. An
+	 * operation without an owner, such as one a background job started, is
+	 * for admins only.
+	 *
+	 * @param array  $progress The stored progress snapshot.
+	 * @param string $uid      The signed-in caller.
+	 *
+	 * @return bool True when the caller may read the operation.
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	private function mayReadProgress(array $progress, string $uid): bool {
+		$ownerUid = $progress['owner_uid'] ?? null;
+		if ($ownerUid !== null && $ownerUid === $uid) {
+			return true;
+		}
+
+		return $this->groupManager->isAdmin($uid) === true;
+	}//end mayReadProgress()
+
+	/**
 	 * Stream progress updates using Server-Sent Events.
 	 *
 	 * @param string $operationId The operation ID to stream progress for.
@@ -1364,9 +1380,12 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		// Verify the caller owns this operation before streaming.
+		// Verify the caller may read this operation before streaming. An
+		// unknown operation streams one error event and closes.
 		$progress = $this->progressTracker->getProgress($operationId);
-		if ($progress !== null && isset($progress['owner_uid']) === true && $progress['owner_uid'] !== $currentUser->getUID()) {
+		if ($progress !== null
+			&& $this->mayReadProgress(progress: $progress, uid: $currentUser->getUID()) === false
+		) {
 			return new JSONResponse(['message' => 'Operation not found', 'error' => 'OPERATION_NOT_FOUND'], 404);
 		}
 
