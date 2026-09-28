@@ -1604,15 +1604,15 @@ class ContactPersonHandler {
 		// Normalize the organization type to lowercase for comparison.
 		$normalizedType = strtolower(trim($organizationType));
 
-		// Define the mapping based on requirements:.
-		// "Municipality" -> "gebruik-beheerder".
-		// "Supplier" -> "aanbod-beheerder".
-		// "Collaboration" -> "gebruik-beheerder".
-		// "Community" -> "aanbod-beheerder".
+		// Keyed on the organization.type enum as stored (Municipality,
+		// Supplier, Collaboration, Community), lower-cased. #520 translated the
+		// enum and migrated the rows, but this map kept the Dutch keys
+		// (gemeente, leverancier, samenwerking), so only Community matched and
+		// municipal and supplier contacts got no role group (stackiq#1137).
 		$typeToRoleMapping = [
-			'gemeente' => 'gebruik-beheerder',
-			'leverancier' => 'aanbod-beheerder',
-			'samenwerking' => 'gebruik-beheerder',
+			'municipality' => 'gebruik-beheerder',
+			'supplier' => 'aanbod-beheerder',
+			'collaboration' => 'gebruik-beheerder',
 			'community' => 'aanbod-beheerder',
 		];
 
