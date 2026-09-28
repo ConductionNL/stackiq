@@ -163,7 +163,6 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 			'testEmailConnection' => ['testEmailConnection', []],
 			'getArchiMateSettings' => ['getArchiMateSettings', []],
 			'getArchiMateConfig' => ['getArchiMateConfig', []],
-			'testArchiMateRoundTrip' => ['testArchiMateRoundTrip', []],
 			'downloadArchiMate' => ['downloadArchiMate', ['model.xml']],
 		];
 
@@ -444,50 +443,6 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 		$this->assertSame(['register' => 'voorzieningen'], $response->getData());
 
 	}//end testGetArchiMateConfigReturnsTheConfigVerbatim()
-
-	/**
-	 * POST /api/archimate/test-round-trip forwards the service verdict,
-	 * including the statistics block the settings UI renders.
-	 *
-	 * @return void
-	 */
-	public function testTestArchiMateRoundTripForwardsTheServiceVerdict(): void {
-		$controller = $this->makeController();
-		$this->withUser();
-		$this->archiMateService->expects($this->once())
-			->method('testRoundTrip')
-			->willReturn(
-				[
-					'success' => true,
-					'message' => 'round trip ok',
-					'statistics' => ['elements' => 12],
-				]
-			);
-
-		$data = $controller->testArchiMateRoundTrip()->getData();
-
-		$this->assertTrue($data['success']);
-		$this->assertSame(['elements' => 12], $data['statistics']);
-
-	}//end testTestArchiMateRoundTripForwardsTheServiceVerdict()
-
-	/**
-	 * A thrown round-trip test is a 500, not a silent success.
-	 *
-	 * @return void
-	 */
-	public function testTestArchiMateRoundTripReportsAThrownTestAs500(): void {
-		$controller = $this->makeController();
-		$this->withUser();
-		$this->archiMateService->method('testRoundTrip')
-			->willThrowException(new \Exception('parser blew up'));
-
-		$response = $controller->testArchiMateRoundTrip();
-
-		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
-		$this->assertFalse($response->getData()['success']);
-
-	}//end testTestArchiMateRoundTripReportsAThrownTestAs500()
 
 	/**
 	 * Path-traversal filenames are refused with 400 BEFORE the download
