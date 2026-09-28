@@ -790,7 +790,11 @@ OC.L10N.register(
         "Simulated": "Gesimuleerd",
         "Not available": "Niet beschikbaar",
         "Error": "Fout",
-        "Settings": "Instellingen"
+        "Settings": "Instellingen",
+        "Applications supplied": "Geleverde applicaties",
+        "Services supplied": "Geleverde diensten",
+        "Applications managed": "Beheerde applicaties",
+        "Services managed": "Beheerde diensten"
     },
     "nplurals=2; plural=(n != 1);"
 )

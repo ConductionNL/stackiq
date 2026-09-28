@@ -717,7 +717,11 @@ OC.L10N.register(
         "Simulated": "Simulated",
         "Not available": "Not available",
         "Error": "Error",
-        "Settings": "Settings"
+        "Settings": "Settings",
+        "Applications supplied": "Applications supplied",
+        "Services supplied": "Services supplied",
+        "Applications managed": "Applications managed",
+        "Services managed": "Services managed"
     },
     "nplurals=2; plural=(n != 1);"
 )
