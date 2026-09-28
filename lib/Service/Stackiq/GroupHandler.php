@@ -297,14 +297,24 @@ class GroupHandler {
 			]
 		);
 
+		// Role names are compared without regard to case: the roles enum is
+		// capitalised (Aanbod-beheerder) while the role groups are lower case
+		// (aanbod-beheerder), stackiq#1137.
+		$userRolesLower = array_map(
+			static function ($role): string {
+				return strtolower(trim((string)$role));
+			},
+			$userRoles
+		);
+
 		// Get the configured generic user groups.
-		$genericGroups = $genericGroups = $this->getGenericUserGroups();
+		$genericGroups = $this->getGenericUserGroups();
 
 		foreach ($genericGroups as $groupName) {
 			$group = $this->createGroupIfNotExists(groupName: $groupName);
 
 			if ($group !== null) {
-				$hasRole = in_array(needle: $groupName, haystack: $userRoles);
+				$hasRole = in_array(needle: strtolower(trim($groupName)), haystack: $userRolesLower, strict: true);
 				$inGroup = $group->inGroup($user);
 
 				if ($hasRole === true && $inGroup === false) {
