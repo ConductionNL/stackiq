@@ -6885,6 +6885,30 @@ class SettingsService {
 	}//end getCronjobConfig()
 
 	/**
+	 * Whether an admin left a cronjob switched on in the cronjob settings.
+	 *
+	 * Reads the `enabled` flag `updateCronjobConfig()` stores under
+	 * `cronjob_config`. A job that was never saved is on, as the settings
+	 * screen shows it (`getCronjobConfig()` defaults `enabled` to true).
+	 *
+	 * @param string $jobId The cronjob identifier, e.g. `organization_contact_sync`.
+	 *
+	 * @return bool False only when the admin switched the job off.
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/tasks.md#task-3
+	 */
+	public function isCronjobEnabled(string $jobId): bool {
+		$config = json_decode($this->config->getValueString($this->appName, 'cronjob_config', '{}'), true);
+		if (is_array($config) === false || is_array($config[$jobId] ?? null) === false) {
+			return true;
+		}
+
+		$enabled = ($config[$jobId]['enabled'] ?? true);
+
+		return in_array($enabled, [false, 0, '0', 'false'], true) === false;
+	}//end isCronjobEnabled()
+
+	/**
 	 * Get list of available cronjobs with their metadata.
 	 *
 	 * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
