@@ -3,8 +3,8 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.5.0",
-    "changelog": "2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
+    "version": "2.5.1",
+    "changelog": "2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
   },
   "x-openregister": {
     "type": "application",
@@ -2656,7 +2656,7 @@
         "slug": "usage",
         "title": "Usage",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.5.0",
+        "version": "1.5.1",
         "omschrijving": "",
         "icon": "Gauge",
         "x-openregister-notifications": {
@@ -3210,37 +3210,37 @@
           "autoPublish": false,
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "Verwerving",
+            "initial": "Acquisition",
             "final": [
-              "Uitgefaseerd"
+              "Phased out"
             ],
             "transitions": {
               "plan": {
                 "from": [
-                  "Verwerving"
+                  "Acquisition"
                 ],
-                "to": "Gepland",
+                "to": "Planned",
                 "description": "Plan the usage."
               },
               "goLive": {
                 "from": [
-                  "Gepland"
+                  "Planned"
                 ],
-                "to": "In productie",
+                "to": "In production",
                 "description": "Go live with the usage."
               },
               "phaseOut": {
                 "from": [
-                  "In productie"
+                  "In production"
                 ],
-                "to": "Uit te faseren",
+                "to": "To be phased out",
                 "description": "Mark the usage to be phased out."
               },
               "retire": {
                 "from": [
-                  "Uit te faseren"
+                  "To be phased out"
                 ],
-                "to": "Uitgefaseerd",
+                "to": "Phased out",
                 "description": "Retire the usage."
               }
             }
@@ -3267,7 +3267,7 @@
         },
         "title": "Contract",
         "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
-        "version": "0.1.1",
+        "version": "0.1.2",
         "omschrijving": "",
         "icon": "FileSign",
         "required": [
@@ -3530,30 +3530,30 @@
           ],
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "In onderhandeling",
+            "initial": "In negotiation",
             "final": [
-              "Verlopen"
+              "Expired"
             ],
             "transitions": {
               "sign": {
                 "from": [
-                  "In onderhandeling"
+                  "In negotiation"
                 ],
-                "to": "Actief",
+                "to": "Active",
                 "description": "Sign and activate the contract."
               },
               "expire": {
                 "from": [
-                  "Actief"
+                  "Active"
                 ],
-                "to": "Verlopen",
+                "to": "Expired",
                 "description": "Mark the contract as expired."
               },
               "renegotiate": {
                 "from": [
-                  "Verlopen"
+                  "Expired"
                 ],
-                "to": "In onderhandeling",
+                "to": "In negotiation",
                 "description": "Re-open negotiation on an expired contract."
               }
             }
@@ -3565,7 +3565,7 @@
         "slug": "connection",
         "title": "Connection",
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
-        "version": "0.3.1",
+        "version": "0.3.2",
         "omschrijving": "",
         "icon": "TransitConnectionVariant",
         "required": [
@@ -3925,31 +3925,31 @@
           "objectDescriptionField": "longDescription",
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "in ontwikkeling",
+            "initial": "in development",
             "final": [
-              "teruggetrokken"
+              "withdrawn"
             ],
             "transitions": {
               "release": {
                 "from": [
-                  "in ontwikkeling"
+                  "in development"
                 ],
-                "to": "in gebruik",
+                "to": "in use",
                 "description": "Release the koppeling."
               },
               "sunset": {
                 "from": [
-                  "in gebruik"
+                  "in use"
                 ],
-                "to": "einde ondersteuning",
+                "to": "end of support",
                 "description": "Mark the koppeling as end-of-support."
               },
               "withdraw": {
                 "from": [
-                  "in gebruik",
-                  "einde ondersteuning"
+                  "in use",
+                  "end of support"
                 ],
-                "to": "teruggetrokken",
+                "to": "withdrawn",
                 "description": "Withdraw the koppeling."
               }
             }
@@ -7679,7 +7679,7 @@
         },
         "title": "Application version",
         "description": "Schema voor applicatieversies",
-        "version": "0.1.4",
+        "version": "0.1.5",
         "omschrijving": "",
         "icon": "ViewModule",
         "required": [],
@@ -7886,31 +7886,31 @@
           "autoPublish": true,
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "in ontwikkeling",
+            "initial": "in development",
             "final": [
-              "teruggetrokken"
+              "withdrawn"
             ],
             "transitions": {
               "release": {
                 "from": [
-                  "in ontwikkeling"
+                  "in development"
                 ],
-                "to": "in gebruik",
+                "to": "in use",
                 "description": "Release the module version."
               },
               "sunset": {
                 "from": [
-                  "in gebruik"
+                  "in use"
                 ],
-                "to": "einde ondersteuning",
+                "to": "end of support",
                 "description": "Mark the module version as end-of-support."
               },
               "withdraw": {
                 "from": [
-                  "in gebruik",
-                  "einde ondersteuning"
+                  "in use",
+                  "end of support"
                 ],
-                "to": "teruggetrokken",
+                "to": "withdrawn",
                 "description": "Withdraw the module version."
               }
             }

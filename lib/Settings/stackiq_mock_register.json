@@ -511,7 +511,7 @@
         "slug": "connection",
         "title": "Connection",
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
-        "version": "0.3.1",
+        "version": "0.3.2",
         "omschrijving": "",
         "icon": "TransitConnectionVariant",
         "required": [
@@ -871,31 +871,31 @@
           "objectDescriptionField": "longDescription",
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "in ontwikkeling",
+            "initial": "in development",
             "final": [
-              "teruggetrokken"
+              "withdrawn"
             ],
             "transitions": {
               "release": {
                 "from": [
-                  "in ontwikkeling"
+                  "in development"
                 ],
-                "to": "in gebruik",
+                "to": "in use",
                 "description": "Release the koppeling."
               },
               "sunset": {
                 "from": [
-                  "in gebruik"
+                  "in use"
                 ],
-                "to": "einde ondersteuning",
+                "to": "end of support",
                 "description": "Mark the koppeling as end-of-support."
               },
               "withdraw": {
                 "from": [
-                  "in gebruik",
-                  "einde ondersteuning"
+                  "in use",
+                  "end of support"
                 ],
-                "to": "teruggetrokken",
+                "to": "withdrawn",
                 "description": "Withdraw the koppeling."
               }
             }
@@ -1387,7 +1387,7 @@
         },
         "title": "Contract",
         "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
-        "version": "0.1.1",
+        "version": "0.1.2",
         "omschrijving": "",
         "icon": "FileSign",
         "archive": [],
@@ -1499,30 +1499,30 @@
           ],
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "In onderhandeling",
+            "initial": "In negotiation",
             "final": [
-              "Verlopen"
+              "Expired"
             ],
             "transitions": {
               "sign": {
                 "from": [
-                  "In onderhandeling"
+                  "In negotiation"
                 ],
-                "to": "Actief",
+                "to": "Active",
                 "description": "Sign and activate the contract."
               },
               "expire": {
                 "from": [
-                  "Actief"
+                  "Active"
                 ],
-                "to": "Verlopen",
+                "to": "Expired",
                 "description": "Mark the contract as expired."
               },
               "renegotiate": {
                 "from": [
-                  "Verlopen"
+                  "Expired"
                 ],
-                "to": "In onderhandeling",
+                "to": "In negotiation",
                 "description": "Re-open negotiation on an expired contract."
               }
             }
@@ -3873,7 +3873,7 @@
         },
         "title": "Application version",
         "description": "Schema voor applicatieversies",
-        "version": "0.1.4",
+        "version": "0.1.5",
         "omschrijving": "",
         "icon": "ViewModule",
         "required": [],
@@ -4084,31 +4084,31 @@
           "autoPublish": true,
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "in ontwikkeling",
+            "initial": "in development",
             "final": [
-              "teruggetrokken"
+              "withdrawn"
             ],
             "transitions": {
               "release": {
                 "from": [
-                  "in ontwikkeling"
+                  "in development"
                 ],
-                "to": "in gebruik",
+                "to": "in use",
                 "description": "Release the module version."
               },
               "sunset": {
                 "from": [
-                  "in gebruik"
+                  "in use"
                 ],
-                "to": "einde ondersteuning",
+                "to": "end of support",
                 "description": "Mark the module version as end-of-support."
               },
               "withdraw": {
                 "from": [
-                  "in gebruik",
-                  "einde ondersteuning"
+                  "in use",
+                  "end of support"
                 ],
-                "to": "teruggetrokken",
+                "to": "withdrawn",
                 "description": "Withdraw the module version."
               }
             }
@@ -6122,7 +6122,7 @@
         "slug": "usage",
         "title": "Usage",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.5.0",
+        "version": "1.5.1",
         "omschrijving": "",
         "icon": "Gauge",
         "x-openregister-notifications": {
@@ -6698,37 +6698,37 @@
           "autoPublish": false,
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "Verwerving",
+            "initial": "Acquisition",
             "final": [
-              "Uitgefaseerd"
+              "Phased out"
             ],
             "transitions": {
               "plan": {
                 "from": [
-                  "Verwerving"
+                  "Acquisition"
                 ],
-                "to": "Gepland",
+                "to": "Planned",
                 "description": "Plan the usage."
               },
               "goLive": {
                 "from": [
-                  "Gepland"
+                  "Planned"
                 ],
-                "to": "In productie",
+                "to": "In production",
                 "description": "Go live with the usage."
               },
               "phaseOut": {
                 "from": [
-                  "In productie"
+                  "In production"
                 ],
-                "to": "Uit te faseren",
+                "to": "To be phased out",
                 "description": "Mark the usage to be phased out."
               },
               "retire": {
                 "from": [
-                  "Uit te faseren"
+                  "To be phased out"
                 ],
-                "to": "Uitgefaseerd",
+                "to": "Phased out",
                 "description": "Retire the usage."
               }
             }
