@@ -1358,7 +1358,7 @@ class SettingsController extends Controller {
 			return true;
 		}
 
-		return $this->groupManager->isAdmin($uid);
+		return $this->groupManager->isAdmin($uid) === true;
 	}//end mayReadProgress()
 
 	/**
