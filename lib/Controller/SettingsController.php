@@ -39,6 +39,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\StreamResponse;
 use OCP\IAppConfig;
+use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -1621,10 +1622,12 @@ class SettingsController extends Controller {
 		// Same guard as the sibling exportOrgArchiMate(), which has carried it
 		// all along. This endpoint exports the WHOLE register while the sibling
 		// exports one organisation, so it was the broader of the two and the
-		// only one unguarded. @NoAdminRequired is kept deliberately: the helper
-		// grants organisation-admins as well as admins, which is the tier the
-		// admin UI relies on and which the annotation's removal would drop.
-		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser);
+		// only one unguarded. It passes no organisation, so only a Nextcloud
+		// admin gets through: a member of an organisation admin group may
+		// export their own organisation only, through the sibling route
+		// (stackiq#1136). The `organization` body value is not a filter the
+		// export applies, so it cannot scope this route.
+		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser, organizationUuid: null);
 		if ($permissionError !== null) {
 			return $permissionError;
 		}
@@ -1688,7 +1691,7 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser);
+		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser, organizationUuid: $organizationUuid);
 		if ($permissionError !== null) {
 			return $permissionError;
 		}
@@ -1726,27 +1729,58 @@ class SettingsController extends Controller {
 	}//end exportOrgArchiMate()
 
 	/**
-	 * Verify that the current user has permission to export organisation ArchiMate files.
+	 * Verify that the current user has permission to export an organisation's ArchiMate file.
+	 *
+	 * A Nextcloud admin may export anything. A member of one of the saved
+	 * organisation admin groups may export only their own active organisation
+	 * (user value `core`/`organisation`, the rule
+	 * PortfolioReportController::isAuthorisedForOrganisation() applies), so a
+	 * call without an organisation is admin-only. Before stackiq#1136 the group
+	 * list always read empty and only admins got through; restoring the read
+	 * without this scope would have let a group member export any
+	 * organisation by uuid.
 	 *
 	 * @param \OCP\IUser $currentUser The currently authenticated user.
+	 * @param string|null $organizationUuid The organisation asked for, or null for the whole register.
 	 *
 	 * @return JSONResponse|null Forbidden response, or null when permitted.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-3
 	 */
-	private function verifyOrgExportPermission(\OCP\IUser $currentUser): ?JSONResponse {
+	private function verifyOrgExportPermission(\OCP\IUser $currentUser, ?string $organizationUuid): ?JSONResponse {
 		if ($this->groupManager->isAdmin($currentUser->getUID()) === true) {
 			return null;
 		}
 
-		$orgAdminGroups = $this->settingsService->getOrganizationAdminGroups();
-		foreach ($orgAdminGroups as $groupName) {
+		$forbidden = new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
+		if ($organizationUuid === null || $organizationUuid === '') {
+			return $forbidden;
+		}
+
+		$isOrgAdmin = false;
+		foreach ($this->settingsService->getOrganizationAdminGroups() as $groupName) {
 			if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
-				return null;
+				$isOrgAdmin = true;
+				break;
 			}
 		}
 
-		return new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
+		if ($isOrgAdmin === false) {
+			return $forbidden;
+		}
+
+		$ownOrganisation = (string)$this->container->get(IConfig::class)->getUserValue(
+			userId: $currentUser->getUID(),
+			appName: 'core',
+			key: 'organisation',
+			default: ''
+		);
+
+		if ($ownOrganisation !== $organizationUuid) {
+			return $forbidden;
+		}
+
+		return null;
 	}//end verifyOrgExportPermission()
 
 	/**
