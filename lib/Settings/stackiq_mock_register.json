@@ -10964,6 +10964,20 @@
       },
       {
         "@self": {
+          "register": "stackiq",
+          "schema": "maintenanceWindow",
+          "slug": "maintenance-storage-move"
+        },
+        "module": {},
+        "title": "Storage move",
+        "description": "Documents move to new storage. Nothing changes for users.",
+        "startsAt": "2026-10-24T22:00:00+02:00",
+        "endsAt": "2026-10-25T02:00:00+02:00",
+        "impact": "no impact",
+        "status": "completed"
+      },
+      {
+        "@self": {
           "register": "vng-gemma",
           "schema": "maintenanceWindow",
           "slug": "maintenance-database-upgrade"
@@ -10989,6 +11003,20 @@
         "endsAt": "2026-10-17T21:00:00+02:00",
         "impact": "degraded",
         "status": "planned"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "maintenanceWindow",
+          "slug": "maintenance-storage-move"
+        },
+        "module": {},
+        "title": "Storage move",
+        "description": "Documents move to new storage. Nothing changes for users.",
+        "startsAt": "2026-10-24T22:00:00+02:00",
+        "endsAt": "2026-10-25T02:00:00+02:00",
+        "impact": "no impact",
+        "status": "completed"
       }
     ]
   }

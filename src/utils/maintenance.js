@@ -16,6 +16,7 @@ const DAY_MS = 24 * 60 * 60 * 1000
  *
  * @param {object|string|null} value A row, a relation object or an id.
  * @return {string|null} The id.
+ * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-002-organisations-that-use-a-product-see-its-planned-maintenance
  */
 export function refId(value) {
 	if (typeof value === 'string') {
