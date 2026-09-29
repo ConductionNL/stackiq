@@ -736,7 +736,19 @@ OC.L10N.register(
         "No contracts found for this application": "No contracts found for this application",
         "The contracts could not be loaded.": "The contracts could not be loaded.",
         "Usages": "Usages",
-        "No organisation registered a usage yet": "No organisation registered a usage yet"
+        "No organisation registered a usage yet": "No organisation registered a usage yet",
+        "Every connection between applications, and from an application to a national provision.": "Every connection between applications, and from an application to a national provision.",
+        "In use": "In use",
+        "In development": "In development",
+        "Applications and standards": "Applications and standards",
+        "Documents": "Documents",
+        "Connections from this application": "Connections from this application",
+        "Connections to this application": "Connections to this application",
+        "To application": "To application",
+        "To national provision": "To national provision",
+        "From application": "From application",
+        "No connections start at this application": "No connections start at this application",
+        "No connections end at this application": "No connections end at this application"
     },
     "nplurals=2; plural=(n != 1);"
 )
