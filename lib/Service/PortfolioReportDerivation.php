@@ -252,4 +252,58 @@ class PortfolioReportDerivation {
 			$results
 		);
 	}//end normalizeResults()
+	/**
+	 * Read a 1 to 5 score, or null when it is absent or out of range.
+	 *
+	 * @param mixed $value The stored value.
+	 *
+	 * @return int|null The score.
+	 *
+	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-001-an-organisation-scores-each-application-it-uses-on-value-fit-and-risk
+	 */
+	public function score(mixed $value): ?int {
+		if (is_numeric($value) === false) {
+			return null;
+		}
+
+		$score = (int)$value;
+		if ($score < 1 || $score > 5) {
+			return null;
+		}
+
+		return $score;
+	}//end score()
+
+	/**
+	 * The TIME class business value and technical fit point to. The same rule as
+	 * the usage schema's `suggestedTimeClassification` calculation
+	 * (`lib/Settings/register.d/value-assessment.json`), used when a usage was
+	 * saved before that calculation existed.
+	 *
+	 * @param int|null $businessValue The business value, 1 to 5.
+	 * @param int|null $technicalFit  The technical fit, 1 to 5.
+	 *
+	 * @return string|null Invest, Migrate, Tolerate or Eliminate; null while a score is missing.
+	 *
+	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-001-an-organisation-scores-each-application-it-uses-on-value-fit-and-risk
+	 */
+	public function suggestTimeClassification(?int $businessValue, ?int $technicalFit): ?string {
+		if ($businessValue === null || $technicalFit === null) {
+			return null;
+		}
+
+		if ($businessValue >= 3) {
+			if ($technicalFit >= 3) {
+				return 'Invest';
+			}
+
+			return 'Migrate';
+		}
+
+		if ($technicalFit >= 3) {
+			return 'Tolerate';
+		}
+
+		return 'Eliminate';
+	}//end suggestTimeClassification()
 }//end class

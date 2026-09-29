@@ -9023,7 +9023,12 @@
         "plannedReplacementDate": "2026-03-01",
         "timeClassification": "Tolerate",
         "timeRationale": "Voorbeeld Timerationale 1",
-        "timeReviewDate": "2026-03-01"
+        "timeReviewDate": "2026-03-01",
+        "businessValue": 1,
+        "technicalFit": 2,
+        "riskScore": 4,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Eliminate"
       },
       {
         "@self": {
@@ -9065,7 +9070,12 @@
         "plannedReplacementDate": "2026-03-02",
         "timeClassification": "Invest",
         "timeRationale": "Voorbeeld Timerationale 2",
-        "timeReviewDate": "2026-03-02"
+        "timeReviewDate": "2026-03-02",
+        "businessValue": 5,
+        "technicalFit": 4,
+        "riskScore": 2,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Invest"
       },
       {
         "@self": {
@@ -9109,7 +9119,12 @@
         "plannedReplacementDate": "2026-03-03",
         "timeClassification": "Migrate",
         "timeRationale": "Voorbeeld Timerationale 3",
-        "timeReviewDate": "2026-03-03"
+        "timeReviewDate": "2026-03-03",
+        "businessValue": 5,
+        "technicalFit": 2,
+        "riskScore": 3,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Migrate"
       },
       {
         "@self": {
@@ -10594,7 +10609,12 @@
         "plannedReplacementDate": "2026-03-01",
         "timeClassification": "Tolerate",
         "timeRationale": "Voorbeeld Timerationale 1",
-        "timeReviewDate": "2026-03-01"
+        "timeReviewDate": "2026-03-01",
+        "businessValue": 2,
+        "technicalFit": 4,
+        "riskScore": 2,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Tolerate"
       },
       {
         "@self": {
@@ -10636,7 +10656,12 @@
         "plannedReplacementDate": "2026-03-02",
         "timeClassification": "Invest",
         "timeRationale": "Voorbeeld Timerationale 2",
-        "timeReviewDate": "2026-03-02"
+        "timeReviewDate": "2026-03-02",
+        "businessValue": 4,
+        "technicalFit": 5,
+        "riskScore": 1,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Invest"
       },
       {
         "@self": {
@@ -10680,7 +10705,12 @@
         "plannedReplacementDate": "2026-03-03",
         "timeClassification": "Migrate",
         "timeRationale": "Voorbeeld Timerationale 3",
-        "timeReviewDate": "2026-03-03"
+        "timeReviewDate": "2026-03-03",
+        "businessValue": 4,
+        "technicalFit": 1,
+        "riskScore": 5,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Migrate"
       },
       {
         "@self": {

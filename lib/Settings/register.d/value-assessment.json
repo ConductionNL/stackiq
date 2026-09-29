@@ -1,0 +1,145 @@
+{
+  "components": {
+    "schemas": {
+      "usage": {
+        "version": "1.5.3",
+        "properties": {
+          "businessValue": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "title": "Business value",
+            "description": "How much the organisation depends on this application, from 1 (little) to 5 (critical).",
+            "visible": true,
+            "facetable": true,
+            "order": 35,
+            "example": "4"
+          },
+          "technicalFit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "title": "Technical fit",
+            "description": "How well the application fits the architecture and the standards the organisation follows, from 1 (poor) to 5 (good).",
+            "visible": true,
+            "facetable": true,
+            "order": 36,
+            "example": "4"
+          },
+          "riskScore": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "title": "Risk",
+            "description": "The risk the organisation sees in running this application, from 1 (low) to 5 (high). The page shows end of support and known vulnerabilities next to it.",
+            "visible": true,
+            "facetable": true,
+            "order": 37,
+            "example": "4"
+          },
+          "scoredOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Scored on",
+            "description": "The date the scores were set.",
+            "visible": true,
+            "facetable": false,
+            "order": 38,
+            "example": "2026-10-01"
+          },
+          "suggestedTimeClassification": {
+            "type": "string",
+            "enum": [
+              "Tolerate",
+              "Invest",
+              "Migrate",
+              "Eliminate"
+            ],
+            "title": "Suggested TIME classification",
+            "description": "The TIME class the business value and technical fit point to. Calculated when the usage is saved; the recorded TIME classification stays the decision.",
+            "visible": true,
+            "facetable": true,
+            "hideOnForm": true,
+            "order": 39
+          }
+        },
+        "configuration": {
+          "x-openregister-calculations": {
+            "suggestedTimeClassification": {
+              "type": "string",
+              "materialise": true,
+              "description": "Invest when business value and technical fit are both 3 or more, Migrate when only value is, Tolerate when only fit is, Eliminate when neither is; empty while either score is missing.",
+              "expression": {
+                "if": [
+                  {
+                    "or": [
+                      {
+                        "eq": [
+                          {
+                            "prop": "businessValue"
+                          },
+                          null
+                        ]
+                      },
+                      {
+                        "eq": [
+                          {
+                            "prop": "technicalFit"
+                          },
+                          null
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "lit": null
+                  },
+                  {
+                    "if": [
+                      {
+                        "gte": [
+                          {
+                            "prop": "businessValue"
+                          },
+                          3
+                        ]
+                      },
+                      {
+                        "if": [
+                          {
+                            "gte": [
+                              {
+                                "prop": "technicalFit"
+                              },
+                              3
+                            ]
+                          },
+                          "Invest",
+                          "Migrate"
+                        ]
+                      },
+                      {
+                        "if": [
+                          {
+                            "gte": [
+                              {
+                                "prop": "technicalFit"
+                              },
+                              3
+                            ]
+                          },
+                          "Tolerate",
+                          "Eliminate"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
