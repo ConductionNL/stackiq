@@ -476,4 +476,116 @@ class PortfolioReportServiceTest extends TestCase {
 		$this->assertSame(5, $report['totalGebruiken']);
 		$this->assertSame(1, $report['includedGebruiken']);
 	}//end testBuildReportDisclosesTruncation()
+	/**
+	 * A service over one page of gebruiken, with no relations to resolve.
+	 *
+	 * @param array<int, array<string, mixed>> $usages The gebruik rows the search returns.
+	 *
+	 * @return PortfolioReportService
+	 */
+	private function serviceOver(array $usages): PortfolioReportService {
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('searchObjectsPaginated')->willReturnCallback(
+			static function (array $query) use ($usages): array {
+				if (($query['@self']['schema'] ?? null) === 20) {
+					return ['results' => $usages, 'total' => count($usages)];
+				}
+				return ['results' => [], 'total' => 0];
+			}
+		);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('getInstalledApps')->willReturn(['openregister']);
+		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService->method('getVoorzieningenConfig')->willReturn(
+			['register' => '1', 'gebruik_schema' => '20', 'contract_schema' => '21', 'module_schema' => '22', 'moduleVersie_schema' => '23']
+		);
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueInt')->willReturn(500);
+
+		$reflection = new ReflectionClass(PortfolioReportService::class);
+		$service    = $reflection->newInstanceWithoutConstructor();
+		foreach (
+			[
+				'settingsService' => $settingsService,
+				'appManager' => $appManager,
+				'container' => $container,
+				'logger' => $this->createMock(LoggerInterface::class),
+				'config' => $config,
+				'derivation' => new PortfolioReportDerivation(),
+			] as $propertyName => $value
+		) {
+			$property = $reflection->getProperty($propertyName);
+			$property->setAccessible(true);
+			$property->setValue($service, $value);
+		}
+
+		return $service;
+	}//end serviceOver()
+
+	/**
+	 * The scored gebruiken of the value assessment.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function scoredUsages(): array {
+		return [
+			['id' => 'g-1', 'consumer' => 'org-a', 'timeClassification' => 'Tolerate', 'businessValue' => 1, 'technicalFit' => 2, 'riskScore' => 4, 'scoredOn' => '2026-09-01', 'suggestedTimeClassification' => 'Eliminate'],
+			['id' => 'g-2', 'consumer' => 'org-a', 'timeClassification' => 'Invest', 'businessValue' => 5, 'technicalFit' => 4, 'riskScore' => 1, 'suggestedTimeClassification' => 'Invest'],
+			['id' => 'g-3', 'consumer' => 'org-a', 'timeClassification' => 'Migrate', 'businessValue' => 5, 'technicalFit' => 2],
+			['id' => 'g-4', 'consumer' => 'org-a', 'timeClassification' => 'Tolerate'],
+		];
+	}//end scoredUsages()
+
+	/**
+	 * Each row carries the scores, the suggested class and whether the recorded class differs from it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+	 */
+	public function testRowsCarryTheScoresAndTheMismatch(): void {
+		$rows = $this->serviceOver($this->scoredUsages())->buildReport('org-a')['rows'];
+
+		$this->assertSame(1, $rows[0]['businessValue']);
+		$this->assertSame(2, $rows[0]['technicalFit']);
+		$this->assertSame(4, $rows[0]['riskScore']);
+		$this->assertSame('2026-09-01', $rows[0]['scoredOn']);
+		$this->assertSame('Eliminate', $rows[0]['suggestedTimeClassification']);
+		$this->assertTrue($rows[0]['timeMismatch']);
+
+		$this->assertFalse($rows[1]['timeMismatch']);
+
+		// No stored suggestion yet (saved before the calculation existed): the report derives it with the same rule.
+		$this->assertSame('Migrate', $rows[2]['suggestedTimeClassification']);
+		$this->assertFalse($rows[2]['timeMismatch']);
+
+		// Not scored: no suggestion and no mismatch.
+		$this->assertNull($rows[3]['businessValue']);
+		$this->assertNull($rows[3]['suggestedTimeClassification']);
+		$this->assertFalse($rows[3]['timeMismatch']);
+	}//end testRowsCarryTheScoresAndTheMismatch()
+
+	/**
+	 * The CSV export writes the score and suggestion columns.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+	 */
+	public function testTheCsvCarriesTheScoreColumns(): void {
+		$lines  = array_map('str_getcsv', explode("\n", trim($this->serviceOver($this->scoredUsages())->buildCsv('org-a'))));
+		$header = $lines[0];
+		foreach (['businessValue', 'technicalFit', 'riskScore', 'scoredOn', 'suggestedTimeClassification', 'timeMismatch'] as $column) {
+			$this->assertContains($column, $header);
+		}
+
+		$first = array_combine($header, $lines[1]);
+		$this->assertSame('1', $first['businessValue']);
+		$this->assertSame('Eliminate', $first['suggestedTimeClassification']);
+		$this->assertSame('yes', $first['timeMismatch']);
+		$this->assertSame('', array_combine($header, $lines[4])['businessValue']);
+	}//end testTheCsvCarriesTheScoreColumns()
 }//end class
