@@ -1,0 +1,78 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "landscape-ai-system-inventory: the aiSystem schema from lib/Settings/register.d/ai-system-inventory.json. A menu child of Applications (ADR-097). The High risk without FRIA quick filter sends friaDocumentRef=IS NULL, which OpenRegister's property filter reads as a null check; the FRIA column uses the app formatter friaStatus (src/utils/aiAct.js), so the list warns on the same rule.",
+	"menu": [
+		{
+			"id": "Modules",
+			"children": [
+				{ "id": "AiSystems", "label": "AI systems", "icon": "RobotOutline", "route": "AiSystems", "order": 11 }
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "AiSystems",
+			"route": "/ai-systems",
+			"type": "index",
+			"title": "AI systems",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "aiSystem",
+				"description": "The AI agents, AI models and AI features your organisation uses, with their EU AI Act risk category.",
+				"columns": [
+					"name",
+					"kind",
+					"module",
+					"aiActRiskCategory",
+					"status",
+					{ "key": "friaDocumentRef", "label": "FRIA", "formatter": "friaStatus", "widget": "badge" }
+				],
+				"filterMenu": true,
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "High risk", "filter": { "aiActRiskCategory": "high risk" }, "icon": "ShieldAlert" },
+					{ "label": "High risk without FRIA", "filter": { "aiActRiskCategory": "high risk", "friaDocumentRef": "IS NULL" }, "icon": "AlertCircle" },
+					{ "label": "Limited risk", "filter": { "aiActRiskCategory": "limited risk" } },
+					{ "label": "Minimal risk", "filter": { "aiActRiskCategory": "minimal risk" } },
+					{ "label": "Not yet assessed", "filter": { "aiActRiskCategory": "not yet assessed" } },
+					{ "label": "Prohibited", "filter": { "aiActRiskCategory": "prohibited" } }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "AiSystemDetail",
+			"route": "/ai-systems/:id",
+			"type": "detail",
+			"title": "AI system",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "aiSystem",
+				"_note": "Data 8 wide with the AI Act fields, documents 4 wide (the four evidence tags), the related panel, then the evidence checklist as a body widget. Status transitions come from the schema's x-openregister-lifecycle (release, withdraw).",
+				"lifecycleActions": { "field": "status" },
+				"widgets": [
+					{ "id": "ai-data", "type": "data", "title": "AI system", "icon": "RobotOutline", "content": { "columns": 2, "include": [ "name", "kind", "module", "provider", "purpose", "status", "aiActRiskCategory", "aiActRole", "assessedOn", "friaDocumentRef", "algorithmRegisterUrl", "description" ] } },
+					{ "id": "ai-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
+					{ "id": "ai-related", "type": "related", "title": "Application and supplier", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "ai-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "2", "widgetId": "ai-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "ai-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 }
+				],
+				"bodyWidgets": [
+					{ "id": "ai-checklist", "component": "AiActChecklist", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		}
+	]
+}

@@ -157,7 +157,15 @@ class AiSystemFragmentTest extends TestCase {
 		$this->assertContains(['group' => 'gebruik-beheerder', 'match' => ['_organisation' => '$organisation']], $read);
 		$this->assertContains(['group' => 'aanbod-beheerder', 'match' => ['provider' => '$organisation']], $read);
 		foreach ($read as $rule) {
-			$this->assertIsArray($rule, 'no read rule may grant a whole group every AI system');
+			if (is_string($rule) === true) {
+				$this->assertSame('software-catalog-admins', $rule, 'only the catalogue admins read every AI system');
+			}
+		}
+
+		foreach ($this->schema()['authorization']['update'] as $rule) {
+			if (is_string($rule) === true) {
+				$this->assertSame('software-catalog-admins', $rule, 'only the catalogue admins edit every AI system');
+			}
 		}
 	}//end testReadsAreScopedToTheOrganisation()
 }//end class
