@@ -730,7 +730,13 @@ OC.L10N.register(
         "Saving objects": "Saving objects",
         "Finishing the import": "Finishing the import",
         "Importing": "Importing",
-        "{processed} of {total} objects saved": "{processed} of {total} objects saved"
+        "{processed} of {total} objects saved": "{processed} of {total} objects saved",
+        "Contract": "Contract",
+        "Loading contracts": "Loading contracts",
+        "No contracts found for this application": "No contracts found for this application",
+        "The contracts could not be loaded.": "The contracts could not be loaded.",
+        "Usages": "Usages",
+        "No organisation registered a usage yet": "No organisation registered a usage yet"
     },
     "nplurals=2; plural=(n != 1);"
 )

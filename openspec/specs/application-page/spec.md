@@ -1,15 +1,9 @@
-# application-page specification
-
-**Status**: proposed
-**Scope**: stackiq
-**OpenSpec changes**:
-- landscape-application-page
+# application-page Specification
 
 ## Purpose
-
 One page per application shows its data, contact person, versions, usages, contracts and compliance, and opens from the Applications list. Matrix rows `stackiq:land-detail-page`, `stackiq:ctr-per-application` and `stackiq:mkt-contacts-per-product`.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: REQ-APG-001 The application page shows every field it lists under the schema's current keys
 
@@ -18,9 +12,10 @@ The application page `ModuleDetail` and the suite page `SuiteDetail` SHALL list 
 #### Scenario: A buyer reads a product's contact person
 @e2e tests/e2e/workflows/application-page.spec.ts
 
-- **GIVEN** a supplier registered product X with a short description and contact person Anna
+- **GIVEN** a supplier registered product X with a short description
 - **WHEN** a municipal buyer opens the page of product X
-- **THEN** the data widget shows the short description and contact person Anna
+- **THEN** the data widget shows the short description
+- **AND** the data widget lists the contact person under the schema key `contactPerson`
 
 #### Scenario: A stale key cannot ship again
 @e2e exclude Build-time guard; tests/vitest/manifestIncludeKeys.spec.js fails when a detail page lists a key its schema lacks.
