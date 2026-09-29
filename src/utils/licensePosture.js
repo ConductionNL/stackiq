@@ -286,3 +286,113 @@ export function perOrganisationPosture(orgId, modules, usages) {
 		closedContributors: [...acc.closedContributors],
 	}
 }
+
+/**
+ * Licence metrics that have no seat to count. A contract on one of these gets
+ * no seat comparison (contracts-licence-seats, design D3).
+ *
+ * @type {ReadonlyArray<string>}
+ */
+export const UNCOUNTED_METRICS = Object.freeze(['Per organisation', 'Other'])
+
+/**
+ * Seat states a counted licence contract can be in.
+ *
+ * @type {{WITHIN: string, OVER: string, UNKNOWN: string, NOT_COUNTED: string}}
+ */
+export const SEAT_STATE = Object.freeze({
+	WITHIN: 'within',
+	OVER: 'over',
+	UNKNOWN: 'unknown',
+	NOT_COUNTED: 'not-counted',
+})
+
+/**
+ * Read a licence count: a whole number of zero or more, or null when empty.
+ *
+ * @param {string|number|null|undefined} value The raw field value.
+ * @return {number|null} The count, or null.
+ */
+function seatCount(value) {
+	if (value === null || value === undefined || value === '') {
+		return null
+	}
+	const n = Number(value)
+	return Number.isInteger(n) && n >= 0 ? n : null
+}
+
+/**
+ * Where one contract stands on its licences: in use against bought.
+ *
+ * @param {object} contract A catalogContract record (envelope or data bag).
+ * @return {{state: string, metric: string, bought: (number|null), inUse: (number|null), over: number}}
+ *   The seat position; `over` is how many licences are in use above what was bought.
+ * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+ */
+export function seatPosition(contract) {
+	const data = dataOf(contract)
+	const metric = typeof data.licenceMetric === 'string' ? data.licenceMetric : ''
+	const bought = seatCount(data.licencesBought)
+	const inUse = seatCount(data.licencesInUse)
+	const position = { state: SEAT_STATE.UNKNOWN, metric, bought, inUse, over: 0 }
+
+	if (UNCOUNTED_METRICS.includes(metric)) {
+		return { ...position, state: SEAT_STATE.NOT_COUNTED }
+	}
+	if (metric === '' || bought === null || inUse === null) {
+		return position
+	}
+	if (inUse > bought) {
+		return { ...position, state: SEAT_STATE.OVER, over: inUse - bought }
+	}
+	return { ...position, state: SEAT_STATE.WITHIN }
+}
+
+/**
+ * One row per counted licence contract for the Seats section of the License
+ * posture page, over-licence rows first (most over first). A contract is left
+ * out when its metric is uncounted or empty, or when `licencesBought` is empty.
+ *
+ * @param {Array<object>} contracts catalogContract records.
+ * @param {Array<object>} usages    Usage records, to find the application and the organisation.
+ * @return {Array<{contractId: string, contractNumber: string, moduleId: string, consumerId: string, metric: string, bought: number, inUse: (number|null), state: string, over: number}>}
+ *   The seat rows.
+ * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-003-the-license-posture-page-shall-list-every-counted-licence-contract-with-its-seat-state-over-use-first
+ */
+export function seatRows(contracts, usages) {
+	const usageIndex = {}
+	for (const u of usages || []) {
+		const id = resolveUuid(u?.id ?? u?.uuid ?? u?.['@self']?.id ?? '')
+		if (id !== '') {
+			usageIndex[id] = dataOf(u)
+		}
+	}
+
+	const rows = []
+	for (const c of contracts || []) {
+		const position = seatPosition(c)
+		if (
+			position.state === SEAT_STATE.NOT_COUNTED
+			|| position.metric === ''
+			|| position.bought === null
+		) {
+			continue
+		}
+		const data = dataOf(c)
+		const usage = usageIndex[resolveUuid(data.usage)] || {}
+		rows.push({
+			contractId: resolveUuid(c?.id ?? c?.uuid ?? c?.['@self']?.id ?? ''),
+			contractNumber: data.contractNumber || '',
+			moduleId: resolveUuid(usage.module),
+			consumerId: resolveUuid(usage.consumer),
+			metric: position.metric,
+			bought: position.bought,
+			inUse: position.inUse,
+			state: position.state,
+			over: position.over,
+		})
+	}
+
+	const rank = (row) => (row.state === SEAT_STATE.OVER ? 0 : 1)
+	return rows.sort((a, b) => rank(a) - rank(b) || b.over - a.over)
+}
