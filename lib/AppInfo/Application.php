@@ -523,7 +523,8 @@ class Application extends App implements IBootstrap {
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					settingsService: $container->get(SettingsService::class),
 					organisationService: $container->get(OpenRegisterOrganisationService::class),
-					dbConnection: $container->get(IDBConnection::class)
+					dbConnection: $container->get(IDBConnection::class),
+					progressTracker: $container->get(ProgressTracker::class)
 				);
 			}
 		);
