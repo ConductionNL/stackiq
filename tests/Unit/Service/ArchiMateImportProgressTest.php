@@ -12,7 +12,7 @@
  *
  * @link https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
+ * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
  */
 
 declare(strict_types=1);

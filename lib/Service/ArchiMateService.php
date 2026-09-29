@@ -191,7 +191,7 @@ class ArchiMateService {
 	 *
 	 * @return array<string, mixed> The cancellation result
 	 *
-	 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
 	public function cancelArchiMateImport(?string $operationId = null): array {
 		if ($operationId !== null && preg_match(ArchiMateImportService::OPERATION_ID_PATTERN, $operationId) !== 1) {

@@ -4,7 +4,7 @@
  * The import is one long request, so the page names the operation up front
  * and reads its progress from a second request while the first is running.
  *
- * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
+ * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
  */
 
 import { t } from '@nextcloud/l10n'
@@ -19,7 +19,7 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
  * Make a fresh operation id for an import.
  *
  * @return {string} The id
- * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
+ * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
  */
 export function makeOperationId() {
 	const bytes = new Uint8Array(24)
@@ -60,7 +60,7 @@ function phaseLabel(phase) {
  *
  * @param {object|null} progress The snapshot from the progress endpoint
  * @return {{label: string, percentage: number, detail: string}|null} The view, or null before any progress
- * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
+ * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
  */
 export function progressView(progress) {
 	if (!progress) {
@@ -94,7 +94,7 @@ export function progressView(progress) {
  * @param {Function} [options.setIntervalFn] Timer, for tests
  * @param {Function} [options.clearIntervalFn] Timer, for tests
  * @return {Function} Stops the polling
- * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
+ * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
  */
 export function startProgressPolling({
 	operationId,
@@ -126,7 +126,7 @@ export function startProgressPolling({
  * @param {string} options.operationId The operation to cancel
  * @param {object} options.http An axios-like client with post
  * @return {Promise<object>} The server's answer
- * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+ * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
  */
 export async function cancelImport({ operationId, http }) {
 	const response = await http.post(

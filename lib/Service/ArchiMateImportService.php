@@ -1449,7 +1449,7 @@ class ArchiMateImportService {
 	 *
 	 * @return array{results: array, stats: array} The saved objects and the aggregated statistics
 	 *
-	 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
 	 */
 	private function saveSchemaGroups(array $schemaGroups, ObjectServiceInterface $objectService, int $registerId): array {
 		$allResults = [];
@@ -1558,7 +1558,7 @@ class ArchiMateImportService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
 	 */
 	public function startTracking(array $options): void {
 		$this->operationId = null;
@@ -1580,7 +1580,7 @@ class ArchiMateImportService {
 	 *
 	 * @return bool True when it was cancelled
 	 *
-	 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
 	public function wasCancelled(): bool {
 		return $this->cancelled;

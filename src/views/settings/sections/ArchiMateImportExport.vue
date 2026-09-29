@@ -761,7 +761,7 @@ export default {
 		 * What the page shows for the running import's progress.
 		 *
 		 * @return {object|null} The view, or null before any progress
-		 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
+		 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
 		 */
 		importProgressView() {
 			return progressView(this.importProgress)
@@ -944,7 +944,7 @@ export default {
 		 * Ask the server to stop the running import before its next save batch.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+		 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 		 */
 		async cancelRunningImport() {
 			if (!this.operationId) {

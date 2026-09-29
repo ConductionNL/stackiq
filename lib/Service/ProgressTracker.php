@@ -122,7 +122,7 @@ class ProgressTracker {
 	 * @return string Unique operation ID
 	 *
 	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
-	 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
 	 */
 	public function startOperation(
 		string $operationType,
@@ -372,7 +372,7 @@ class ProgressTracker {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
 	public function requestCancel(string $operationId): void {
 		$this->store->set(key: 'cancel_' . $operationId, value: true, ttl: self::STORE_TTL);
@@ -385,7 +385,7 @@ class ProgressTracker {
 	 *
 	 * @return bool True when a cancel was requested
 	 *
-	 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
 	public function isCancelRequested(string $operationId): bool {
 		return $this->store->get(key: 'cancel_' . $operationId) === true;
@@ -396,7 +396,7 @@ class ProgressTracker {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
 	public function cancelOperation(): void {
 		$this->progress['phase'] = 'completed';

@@ -12,7 +12,7 @@
  *
  * @link https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+ * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
  */
 
 declare(strict_types=1);

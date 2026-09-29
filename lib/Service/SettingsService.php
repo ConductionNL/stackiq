@@ -5209,7 +5209,7 @@ class SettingsService {
 	 *
 	 * @return array Cancellation result with detailed status
 	 * @spec   openspec/specs/settings-service/spec.md
-	 * @spec   openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 * @spec   openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
 	public function cancelArchiMateImport(?string $operationId = null): array {
 		try {
