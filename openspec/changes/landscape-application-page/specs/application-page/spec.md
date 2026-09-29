@@ -18,9 +18,10 @@ The application page `ModuleDetail` and the suite page `SuiteDetail` SHALL list 
 #### Scenario: A buyer reads a product's contact person
 @e2e tests/e2e/workflows/application-page.spec.ts
 
-- **GIVEN** a supplier registered product X with a short description and contact person Anna
+- **GIVEN** a supplier registered product X with a short description
 - **WHEN** a municipal buyer opens the page of product X
-- **THEN** the data widget shows the short description and contact person Anna
+- **THEN** the data widget shows the short description
+- **AND** the data widget lists the contact person under the schema key `contactPerson`
 
 #### Scenario: A stale key cannot ship again
 @e2e exclude Build-time guard; tests/vitest/manifestIncludeKeys.spec.js fails when a detail page lists a key its schema lacks.

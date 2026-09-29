@@ -24,21 +24,21 @@ A new `object-list` widget `md-usages`: register `@resolve:voorzieningen_registe
 
 `catalogContract` reaches an application in two ways: through `usage` (a usage of the application) or through `service` (a service whose `modules` include the application, `catalogService.modules`). A single `object-list` filter cannot follow a hop (`CnObjectListWidget.vue:503`, one filter object).
 
-A small custom widget `ApplicationContractsWidget` (`src/components/contracts/ApplicationContractsWidget.vue`, registered in `src/customComponents.js`, placed as a grid widget) does it with the object store:
+A small custom panel `ApplicationContractsPanel` (`src/components/contracts/ApplicationContractsPanel.vue`, registered in `src/customComponents.js`) does it with the object store. Built 2026-09-29: the detail grid of `@conduction/nextcloud-vue` 2.57.1 renders only the library's widget types, so the panel is a `bodyWidgets` section (`placement: end`, before the reviews) instead of a grid widget. The two-hop lookup lives in `src/utils/applicationContracts.js`:
 
 1. Fetch the application's usages (`usage`, `module` equals the id) and the services that offer it (`catalogService`, `modules` contains the id).
 2. Fetch `catalogContract` with `usage` in the usage ids, and with `service` in the service ids, and merge by id.
-3. Render the rows with the library's `CnObjectRow`, columns contract number, type, end date and status, each opening `ContractDetail`.
+3. Render a table with contract number, type, end date and status; the number links to `ContractDetail`. It reads with `fetchCollectionForOptions`, so it never overwrites a list the store drives.
 
 Rejected: a denormalised `module` field on `catalogContract`. It would go stale when a usage or service changes its application, and needs a save hook to fill it.
 
 ## D4. Open from the Applications list
 
-`FacetedCatalogIndexView.vue` gains a `detailRoute` prop and binds `@row-click` on its `CnIndexPage` (:108) to `$router.push({ name: detailRoute, params: { id } })`. The `Modules` page config passes `detailRoute: "ModuleDetail"`; the `Diensten` page passes none, and its rows stay as they are. `CnIndexPage` emits `row-click` for register and schema pages (`CnIndexPage.vue:5500` onwards); only a named source routes by itself.
+`FacetedCatalogIndexView.vue` gains a `detailRoute` prop, sets `rowClickToView` when it is given (the list is selectable, so a click would otherwise select), and binds `row-click` and `view` on its `CnIndexPage` (:108) to `$router.push({ name: detailRoute, params: { id } })` through `rowDetailLocation` in `src/utils/applicationContracts.js`. The `Modules` page config passes `detailRoute: "ModuleDetail"`; the `Diensten` page passes none, and its rows stay as they are. `CnIndexPage` emits `row-click` for register and schema pages (`CnIndexPage.vue:5500` onwards); only a named source routes by itself.
 
 ## D5. Layout
 
-The grid becomes: data 8 wide with files and related at the right, then versions and usages side by side, then contracts and compliance side by side. Body widgets (reviews) stay at the end. The layout follows ADR-062 (detail page grid discipline).
+The grid becomes: data 8 wide with files and related at the right, then versions and usages side by side, then compliance full width. Contracts follow the grid as a body section (see D3). Body widgets (reviews) stay at the end. The layout follows ADR-062 (detail page grid discipline).
 
 ## Declarative versus imperative
 
