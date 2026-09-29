@@ -1334,6 +1334,45 @@
             },
             "referenceType": "decision",
             "x-allow-create": true
+          },
+          "licenceMetric": {
+            "type": "string",
+            "enum": [
+              "Per named user",
+              "Per concurrent user",
+              "Per device",
+              "Per inhabitant",
+              "Per organisation",
+              "Other"
+            ],
+            "x-enum-labels": {
+              "Per named user": "Per named user",
+              "Per concurrent user": "Per concurrent user",
+              "Per device": "Per device",
+              "Per inhabitant": "Per inhabitant",
+              "Per organisation": "Per organisation",
+              "Other": "Other"
+            },
+            "title": "Licence metric",
+            "description": "What one licence covers, as the contract with the supplier states it.",
+            "facetable": true,
+            "order": 14
+          },
+          "licencesBought": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Licences bought",
+            "description": "The number of licences this contract buys.",
+            "facetable": false,
+            "order": 15
+          },
+          "licencesInUse": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Licences in use",
+            "description": "The number of licences in use today, as the application owner counted them.",
+            "facetable": false,
+            "order": 16
           }
         },
         "required": [
@@ -1387,7 +1426,7 @@
         },
         "title": "Contract",
         "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
-        "version": "0.1.2",
+        "version": "0.1.3",
         "omschrijving": "",
         "icon": "FileSign",
         "archive": [],
@@ -7664,7 +7703,10 @@
         "opmerkingen": "Voorbeeld Opmerkingen 2",
         "decisions": [
           "00000000-0000-4000-8000-000000000001"
-        ]
+        ],
+        "licenceMetric": "Per named user",
+        "licencesBought": 400,
+        "licencesInUse": 460
       },
       {
         "@self": {
@@ -7696,6 +7738,40 @@
         "decisions": [
           "00000000-0000-4000-8000-000000000002"
         ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "catalogContract",
+          "slug": "contract-seats-5"
+        },
+        "service": {},
+        "usage": {},
+        "startDate": "2026-03-02",
+        "contractNumber": "Voorbeeld Contractnumber 5",
+        "contractType": "Licence",
+        "status": "Active",
+        "approvalDecisionId": "Voorbeeld Approvaldecisionid 2",
+        "approvalState": "none",
+        "endDate": "2026-03-02",
+        "cost": 2.0,
+        "costPeriod": "Annually",
+        "contactPersonProvider": {
+          "name": "Voorbeeld Name 2",
+          "email": "Voorbeeld Email 2"
+        },
+        "contactPersonUser": {
+          "name": "Voorbeeld Name 2",
+          "email": "Voorbeeld Email 2"
+        },
+        "documentReference": "Voorbeeld Documentreference 2",
+        "opmerkingen": "Voorbeeld Opmerkingen 2",
+        "decisions": [
+          "00000000-0000-4000-8000-000000000001"
+        ],
+        "licenceMetric": "Per inhabitant",
+        "licencesBought": 58000,
+        "licencesInUse": 57120
       },
       {
         "@self": {

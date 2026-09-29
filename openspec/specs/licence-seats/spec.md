@@ -1,15 +1,9 @@
-# licence-seats specification
-
-**Status**: proposed
-**Scope**: stackiq
-**OpenSpec changes**:
-- contracts-licence-seats
+# licence-seats Specification
 
 ## Purpose
-
 An application owner records how a licence contract is measured and how many licences were bought and are in use. A municipal information manager sees on the contract and on the License posture page where use runs over what was bought.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: REQ-LSC-001 A contract SHALL record its licence metric and the number of licences bought and in use
 
@@ -43,7 +37,7 @@ An application owner records how a licence contract is measured and how many lic
 - **AND** the bar SHALL use the error variant
 
 #### Scenario: A site licence is not counted
-@e2e exclude Covered by tests/vitest/licensePosture.spec.js, which asserts seatPosition() returns not-counted for Per organisation and Other.
+@e2e exclude Covered by tests/vitest/licenceSeats.spec.js, which asserts seatPosition() returns not-counted for Per organisation and Other.
 
 - **GIVEN** a contract with Per organisation and 1 bought
 - **WHEN** the seats panel renders
@@ -62,7 +56,7 @@ The `LicensePosture` page at `/license-posture` SHALL have a Seats section with 
 - **AND** it SHALL list the other contract as Within licence
 
 #### Scenario: Contracts without counts stay out of the section
-@e2e exclude Covered by tests/vitest/licensePosture.spec.js, which asserts seatRows() skips contracts without licencesBought or with an uncounted metric.
+@e2e exclude Covered by tests/vitest/licenceSeats.spec.js, which asserts seatRows() skips contracts without licencesBought or with an uncounted metric.
 
 - **GIVEN** an SLA contract without any licence fields
 - **WHEN** the Seats section renders

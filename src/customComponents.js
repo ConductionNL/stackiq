@@ -21,6 +21,7 @@ import { generateUrl } from '@nextcloud/router'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
+import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
@@ -85,6 +86,9 @@ export default {
 	ApplicationContractsPanel,
 
 	ContractApprovalPanel,
+
+	// Licences in use against licences bought (contracts-licence-seats).
+	ContractSeatsPanel,
 
 	// --- Admin-triggered organisation-merge (VNG Softwarecatalogus #141). ---
 	// Dry-run preview + confirm dialog + execute for folding a source
