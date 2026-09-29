@@ -516,14 +516,14 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new ArchiMateImportService(
 					config: $container->get(IAppConfig::class),
-					rootFolder: $container->get('OCP\Files\IRootFolder'),
 					userSession: $container->get('OCP\IUserSession'),
 					appManager: $container->get('OCP\App\IAppManager'),
 					container: $container,
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					settingsService: $container->get(SettingsService::class),
 					organisationService: $container->get(OpenRegisterOrganisationService::class),
-					dbConnection: $container->get(IDBConnection::class)
+					dbConnection: $container->get(IDBConnection::class),
+					progressTracker: $container->get(ProgressTracker::class)
 				);
 			}
 		);
@@ -544,14 +544,14 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new ArchiMateService(
 					config: $container->get(IAppConfig::class),
-					rootFolder: $container->get('OCP\Files\IRootFolder'),
 					userSession: $container->get('OCP\IUserSession'),
 					appManager: $container->get('OCP\App\IAppManager'),
 					container: $container,
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					settingsService: $container->get(SettingsService::class),
 					importService: $container->get(ArchiMateImportService::class),
-					exportService: $container->get(ArchiMateExportService::class)
+					exportService: $container->get(ArchiMateExportService::class),
+					progressTracker: $container->get(ProgressTracker::class)
 				);
 			}
 		);

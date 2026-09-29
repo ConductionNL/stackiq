@@ -1300,21 +1300,21 @@
 			"bluedolphin": "unknown",
 			"glpi": "no",
 			"topdesk": "unknown",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "building",
-				"evidence": "appinfo/routes.php:103 POST /api/archimate/import/cancel -> lib/Service/SettingsService.php:5200 calls ArchiMateService::cancelArchiMateImport(), which does not exist in lib/Service/ArchiMateService.php (Error, not caught by catch(\\Exception)); routes.php:119-120 /api/progress/{operationId} read ProgressTracker, but the ArchiMate import never writes to it (only SbomImportService gets it, lib/AppInfo/Application.php:507); ArchiMateImportExport.vue:538 shows only a spinner, no cancel button",
+				"state": "built",
+				"evidence": "lib/Service/ArchiMateImportService.php startTracking() and saveSchemaGroups() record the phase and saved count in ProgressTracker under the page-named operation id and stop before the next schema group on a cancel; lib/Service/ArchiMateService.php cancelArchiMateImport() sets the cancel flag (the method was missing); src/views/settings/sections/ArchiMateImportExport.vue polls /api/progress/{id} every two seconds and shows the phase, a progress bar and a Cancel import button (tests/Unit/Service/ArchiMateImportProgressTest.php, ArchiMateServiceCancelTest.php, src/utils/archiMateImportProgress.spec.js)",
 				"owner": "ConductionNL/stackiq",
-				"change": "architecture-import-progress-and-cancel"
+				"change": "2026-09-29-architecture-import-progress-and-cancel"
 			},
-			"reachedOn": "admin settings section ArchiMate Import/Export shows a spinner during import; nothing shows progress or offers cancel",
+			"reachedOn": "admin settings, ArchiMate import: phase, progress bar and Cancel import while an import runs",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
 			"featureConfidence": "medium",
-			"note": "The import runs as one blocking request with a spinner. The cancel endpoint calls a missing method and import progress is never recorded, so neither following nor cancelling works. The missing half is specified in openspec/changes/architecture-import-progress-and-cancel (build-all lane 2026-09-29).",
+			"note": "The import records its phase and the objects saved so far, the settings page follows it every two seconds, and a cancel stops it before its next save batch, keeping what was already saved. Built by openspec/changes/archive/2026-09-29-architecture-import-progress-and-cancel.",
 			"evidence": {
-				"stackiq": "appinfo/routes.php:103 POST /api/archimate/import/cancel -> lib/Service/SettingsService.php:5200 calls ArchiMateService::cancelArchiMateImport(), which does not exist in lib/Service/ArchiMateService.php (Error, not caught by catch(\\Exception)); routes.php:119-120 /api/progress/{operationId} read ProgressTracker, but the ArchiMate import never writes to it (only SbomImportService gets it, lib/AppInfo/Application.php:507); ArchiMateImportExport.vue:538 shows only a spinner, no cancel button",
+				"stackiq": "lib/Service/ArchiMateImportService.php startTracking() and saveSchemaGroups() record the phase and saved count in ProgressTracker under the page-named operation id and stop before the next schema group on a cancel; lib/Service/ArchiMateService.php cancelArchiMateImport() sets the cancel flag (the method was missing); src/views/settings/sections/ArchiMateImportExport.vue polls /api/progress/{id} every two seconds and shows the phase, a progress bar and a Cancel import button (tests/Unit/Service/ArchiMateImportProgressTest.php, ArchiMateServiceCancelTest.php, src/utils/archiMateImportProgress.spec.js)",
 				"topdesk": "unknown: ArchiMate is not mentioned anywhere in the documentation (0 hits); searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "unknown: no model import is documented; for export only \"Er verschijnt een venster met de melding dat de export gegenereerd wordt\"; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/Handleiding%20koppeling%20architectuurtools (read 2026-09-26)",
 				"bluedolphin": "unknown: https://help.bluedolphin.io/en/articles/11967637-import-ameff-files says only 'When BlueDolphin has completed the action, a checkmark will appear'; progress while running and cancelling are not documented (read 2026-09-26)",

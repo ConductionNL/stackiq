@@ -1,15 +1,9 @@
-# archimate-import-progress specification
-
-**Status**: proposed
-**Scope**: stackiq
-**OpenSpec changes**:
-- architecture-import-progress-and-cancel
+# archimate-import-progress Specification
 
 ## Purpose
-
 A Nextcloud admin who imports an ArchiMate exchange file follows the import while it runs and can cancel it. The import records its phase and the objects saved so far in the shared progress store, and stops before its next save batch when a cancel is requested.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: REQ-AIP-001 A running import SHALL record its phase and the objects saved so far
 
@@ -46,7 +40,7 @@ When the upload carries an operation id matching `^archimate_import_[A-Za-z0-9]{
 While an import runs, the import part of the ArchiMate settings SHALL show the current phase and a progress bar read from the progress endpoint every two seconds, and a Cancel import button. After a cancel the page SHALL say the import was cancelled and how many objects were saved.
 
 #### Scenario: The admin follows and cancels an import
-@e2e exclude A multi-minute import cannot run in the smoke suite; tests/unit/ArchiMateImportProgress.spec.js mounts the section with a mocked progress endpoint and asserts the bar and the cancel post.
+@e2e exclude A multi-minute import cannot run in the smoke suite; src/utils/archiMateImportProgress.spec.js (jest, the suite CI runs) drives the polling and cancel helpers the section calls with a mocked client and asserts the phase label, the percentage and the cancel post.
 
 - **GIVEN** an admin has started an import on the ArchiMate settings page
 - **WHEN** the progress endpoint reports 40 percent in phase processing

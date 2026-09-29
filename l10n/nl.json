@@ -793,6 +793,15 @@
         "Applications supplied": "Geleverde applicaties",
         "Services supplied": "Geleverde diensten",
         "Applications managed": "Beheerde applicaties",
-        "Services managed": "Beheerde diensten"
+        "Services managed": "Beheerde diensten",
+        "Cancel import": "Import annuleren",
+        "Import cancelled. {count} objects were saved before it stopped.": "Import geannuleerd. {count} objecten waren al opgeslagen toen hij stopte.",
+        "Checking the file": "Bestand controleren",
+        "Reading the model": "Model inlezen",
+        "Converting the model": "Model omzetten",
+        "Saving objects": "Objecten opslaan",
+        "Finishing the import": "Import afronden",
+        "Importing": "Importeren",
+        "{processed} of {total} objects saved": "{processed} van {total} objecten opgeslagen"
     }
 }

@@ -527,6 +527,30 @@
 					</div>
 				</div>
 
+				<!-- Progress of a running import -->
+				<div
+					v-if="importing && importProgressView"
+					class="import-progress"
+					aria-live="polite">
+					<p>{{ importProgressView.label }}</p>
+					<NcProgressBar
+						:value="importProgressView.percentage"
+						size="medium" />
+					<p v-if="importProgressView.detail">
+						{{ importProgressView.detail }}
+					</p>
+				</div>
+
+				<NcNoteCard v-if="importCancelled" type="warning">
+					{{
+						t(
+							'stackiq',
+							'Import cancelled. {count} objects were saved before it stopped.',
+							{ count: importCancelled.objects_saved || 0 },
+						)
+					}}
+				</NcNoteCard>
+
 				<!-- Import Button -->
 				<div class="import-button-section">
 					<NcButton
@@ -539,6 +563,17 @@
 							<CloudUpload v-else :size="20" />
 						</template>
 						{{ importing ? 'Importing...' : 'Import' }}
+					</NcButton>
+
+					<NcButton
+						v-if="importing && operationId"
+						variant="secondary"
+						:disabled="cancelling"
+						@click="cancelRunningImport">
+						<template #icon>
+							<Close :size="20" />
+						</template>
+						{{ t('stackiq', 'Cancel import') }}
 					</NcButton>
 
 					<NcButton v-else variant="primary" @click="resetImport">
@@ -645,12 +680,14 @@
  * @version 2.0.0
  */
 
+import axios from '@nextcloud/axios'
 // Nextcloud Vue components
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcLoadingIcon,
 	NcNoteCard,
+	NcProgressBar,
 	NcSelect,
 } from '@nextcloud/vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
@@ -662,6 +699,12 @@ import Refresh from 'vue-material-design-icons/Refresh.vue'
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import { settingsStore } from '../../../store/store.js'
+import {
+	cancelImport,
+	makeOperationId,
+	progressView,
+	startProgressPolling,
+} from '../../../utils/archiMateImportProgress.js'
 import { withHeartbeat } from '../../../utils/heartbeat.js'
 
 export default {
@@ -672,6 +715,7 @@ export default {
 		NcButton,
 		NcNoteCard,
 		NcLoadingIcon,
+		NcProgressBar,
 		NcSelect,
 		NcCheckboxRadioSwitch,
 		CloudUpload,
@@ -693,6 +737,11 @@ export default {
 	data() {
 		return {
 			importing: false,
+			operationId: null,
+			importProgress: null,
+			importCancelled: null,
+			cancelling: false,
+			stopProgressPolling: null,
 			exporting: false,
 			exportingOrg: false,
 			selectedFile: null,
@@ -705,6 +754,18 @@ export default {
 			includeGebruik: false,
 			organizationOptions: [{ label: 'Generic', value: null }],
 		}
+	},
+
+	computed: {
+		/**
+		 * What the page shows for the running import's progress.
+		 *
+		 * @return {object|null} The view, or null before any progress
+		 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
+		 */
+		importProgressView() {
+			return progressView(this.importProgress)
+		},
 	},
 
 	/**
@@ -796,11 +857,22 @@ export default {
 			this.importing = true
 			this.importResult = null
 			this.importError = null
+			this.importCancelled = null
+			this.importProgress = null
+			this.operationId = makeOperationId()
+			this.stopProgressPolling = startProgressPolling({
+				operationId: this.operationId,
+				http: axios,
+				onProgress: (progress) => {
+					this.importProgress = progress
+				},
+			})
 
 			try {
 				// Create FormData for file upload
 				const formData = new FormData()
 				formData.append('archiMateFile', this.selectedFile)
+				formData.append('operationId', this.operationId)
 
 				// Wrap the import operation with heartbeat to prevent 504 timeouts
 				const result = await withHeartbeat(async () => {
@@ -820,6 +892,10 @@ export default {
 
 					const result = await response.json()
 
+					if (result.cancelled) {
+						return result
+					}
+
 					if (!result.success) {
 						throw new Error(
 							result.error || result.message || 'Import failed',
@@ -828,6 +904,11 @@ export default {
 
 					return result
 				}, 30000) // 30-second heartbeat interval
+
+				if (result.cancelled) {
+					this.importCancelled = result
+					return
+				}
 
 				// Handle successful result
 				this.importResult = result
@@ -849,7 +930,32 @@ export default {
 					{ type: 'error' },
 				)
 			} finally {
+				if (this.stopProgressPolling) {
+					this.stopProgressPolling()
+					this.stopProgressPolling = null
+				}
 				this.importing = false
+				this.cancelling = false
+				this.operationId = null
+			}
+		},
+
+		/**
+		 * Ask the server to stop the running import before its next save batch.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+		 */
+		async cancelRunningImport() {
+			if (!this.operationId) {
+				return
+			}
+			this.cancelling = true
+			try {
+				await cancelImport({ operationId: this.operationId, http: axios })
+			} catch {
+				// The import keeps running; the admin can press cancel again.
+				this.cancelling = false
 			}
 		},
 
@@ -1355,6 +1461,11 @@ export default {
 
 .import-button-section {
 	margin-top: 1rem;
+}
+
+.import-progress {
+	margin-block: 1rem;
+	max-width: 480px;
 }
 
 .import-results-section {
