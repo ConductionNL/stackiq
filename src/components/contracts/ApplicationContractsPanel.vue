@@ -97,6 +97,12 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Reload when the page moves to another application.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
+		 */
 		objectId() {
 			this.load()
 		},
@@ -114,6 +120,7 @@ export default {
 		 *
 		 * @param {object} contract The contract
 		 * @return {string} The id
+		 * @spec openspec/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
 		 */
 		contractId(contract) {
 			return contract?.id ?? contract?.['@self']?.id ?? contract?.uuid
@@ -149,6 +156,7 @@ export default {
 		 *
 		 * @param {string} type The schema slug
 		 * @return {void}
+		 * @spec openspec/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
 		 */
 		ensureType(type) {
 			if (
