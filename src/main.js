@@ -30,6 +30,7 @@ import { createApp, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import CatalogPanels from './components/CatalogPanels.vue'
+import UpcomingMaintenanceWidget from './components/maintenance/UpcomingMaintenanceWidget.vue'
 import customComponents from './customComponents.js'
 import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
@@ -70,6 +71,16 @@ registerDashboardWidget('catalog-panels', {
 	defaultContent: {},
 	displayName: 'Catalogue panels',
 	icon: 'DatabaseOutline',
+	card: true,
+})
+// Planned maintenance on the applications the active organisation uses
+// (lifecycle-maintenance-and-supplier-roadmap): it joins the organisation's
+// usages to the maintenance windows of their applications.
+registerDashboardWidget('upcoming-maintenance', {
+	renderer: UpcomingMaintenanceWidget,
+	defaultContent: {},
+	displayName: 'Planned maintenance',
+	icon: 'Calendar',
 	card: true,
 })
 try {

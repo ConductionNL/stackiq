@@ -33,8 +33,9 @@ const merged = buildManifest(
 	menuLayout,
 )
 const page = (id) => merged.pages.find((p) => p.id === id)
-const widget = (pageId, widgetId) =>
-	page(pageId).config.widgets.find((w) => w.id === widgetId)
+function widget(pageId, widgetId) {
+	return page(pageId).config.widgets.find((w) => w.id === widgetId)
+}
 
 const usage = register.components.schemas.usage
 

@@ -38,7 +38,7 @@ The product page SHALL list its maintenance windows, and the dashboard SHALL lis
 When a supplier announces a window, stackiq SHALL notify the business and technical owners of every usage of the product, and SHALL remind them a day before the window starts while it is still planned.
 
 #### Scenario: Owners get the announcement
-@e2e exclude Delivered by OpenRegister's notification engine; tests/Unit/Listener/MaintenanceRecipientsListenerTest.php asserts the resolved owners and tests/Unit/Settings/MaintenanceRoadmapFragmentTest.php the rules.
+@e2e exclude Delivered by OpenRegister's notification engine; tests/Unit/EventListener/MaintenanceRecipientsListenerTest.php asserts the resolved owners and tests/Unit/Settings/MaintenanceRoadmapFragmentTest.php the rules.
 
 - **GIVEN** two municipalities use product X and both usages have a business owner
 - **WHEN** the supplier announces a window on X

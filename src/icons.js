@@ -21,6 +21,7 @@ import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import BriefcaseOutline from 'vue-material-design-icons/BriefcaseOutline.vue'
+import Calendar from 'vue-material-design-icons/Calendar.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import ChartLine from 'vue-material-design-icons/ChartLine.vue'
@@ -81,6 +82,7 @@ export default {
 	BookOpenVariant,
 	BookOpenVariantOutline,
 	BriefcaseOutline,
+	Calendar,
 	ChartBar,
 	ChartBoxOutline,
 	ChartLine,
