@@ -24,7 +24,7 @@ Stackiq SHALL offer a page "Applications in use" at `/gebruik` over the `usage` 
 
 ### Requirement: REQ-UAP-002 An organisation adds an application to its landscape from the application page
 
-The application page SHALL offer "Add to our landscape" to a user who may create a usage. It SHALL open the usage form with the application and the user's active organisation filled in, and the version picker SHALL offer only versions of that application.
+The application page SHALL offer "Add to our landscape" to a user who may create a usage. It SHALL open the usage form with the application filled in, the user SHALL pick the organisation, and the version picker SHALL offer only versions of that application.
 
 #### Scenario: Adding an application with its version
 @e2e tests/e2e/workflows/usages.spec.ts

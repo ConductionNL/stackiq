@@ -7,7 +7,7 @@
  * page and the usage list on the organisation page, and the seeded usages
  * validated against the real usage schema with the owners fragment merged in.
  *
- * @spec openspec/changes/landscape-usage-registration/specs/application-usage-pages/spec.md
+ * @spec openspec/specs/application-usage-pages/spec.md
  */
 
 import addFormats from 'ajv-formats'

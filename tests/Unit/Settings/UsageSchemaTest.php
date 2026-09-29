@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/landscape-usage-registration/specs/application-usage-pages/spec.md
+ * @spec openspec/specs/application-usage-pages/spec.md
  */
 
 declare(strict_types=1);
