@@ -258,10 +258,12 @@ export default {
 	left: 0;
 }
 
-/* WCAG 2.3.3 — the item hover transition and the list leave animation are
-   decorative; a reduced-motion user gets the end state directly. */
+/* WCAG 2.3.3: the item hover transition and the list move, enter and leave
+   animations are decorative; a reduced-motion user gets the end state directly. */
 @media (prefers-reduced-motion: reduce) {
 	.selected-object-item,
+	.list-move,
+	.list-enter-active,
 	.list-leave-active {
 		transition: none;
 	}
