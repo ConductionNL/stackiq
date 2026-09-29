@@ -13,6 +13,7 @@ import type { APIRequestContext } from '@playwright/test'
 import type { VoorzieningenConfig } from './_fixtures.ts'
 
 import { expect, test } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
 import {
 	createObject,
 	deleteObject,
@@ -49,7 +50,7 @@ test.beforeAll(async () => {
 		name: `${RUN_ID} supplier`,
 		type: 'Supplier',
 		status: 'Active',
-		contactsUid: `${RUN_ID}-supplier`,
+		contactsUid: randomUUID(),
 	})
 	ids.x = await seed('module', {
 		name: `${RUN_ID} application X`,
