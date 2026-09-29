@@ -151,7 +151,7 @@
     "title_nl": "Licentie- en seatregistratie",
     "summary": "Track license models and seats next to your contracts.",
     "summary_nl": "Houd licentiemodellen en seats bij naast je contracten.",
-    "status": "soon"
+    "status": "stable"
   },
   {
     "slug": "maintenance-and-supplier-roadmap",

@@ -14,14 +14,14 @@
 
 ### Task 2: Compute the seat position and the seat rows
 - **spec_ref**: openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-003-the-license-posture-page-shall-list-every-counted-licence-contract-with-its-seat-state-over-use-first
-- **files**: `src/utils/licensePosture.js`, `tests/vitest/licensePosture.spec.js`
+- **files**: `src/utils/licensePosture.js`, `tests/vitest/licenceSeats.spec.js`
 - **acceptance_criteria**:
   - GIVEN 400 bought and 460 in use WHEN seatPosition() runs THEN it returns over by 60
   - GIVEN Per organisation or Other WHEN seatPosition() runs THEN it returns not counted
   - GIVEN an empty count WHEN seatPosition() runs THEN it returns unknown
   - GIVEN mixed contracts WHEN seatRows() runs THEN over-licence rows come first, most over first, and uncounted contracts are left out
 - [ ] Implement
-- [ ] Test (vitest tests/vitest/licensePosture.spec.js)
+- [ ] Test (vitest tests/vitest/licenceSeats.spec.js)
 
 ### Task 3: Show the seats panel on the contract detail page
 - **spec_ref**: openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
@@ -47,7 +47,7 @@
 - **files**: `lib/Settings/stackiq_mock_register.json`, `openspec/features.overlay.json`, `docs/features/licence-seats.md`
 - **acceptance_criteria**:
   - GIVEN a fresh demo import WHEN /license-posture opens THEN the Seats section shows one over-licence and one within-licence contract
-  - GIVEN the overlay WHEN `license-and-seat-tracking` is read THEN its status is available
+  - GIVEN the overlay WHEN `license-and-seat-tracking` is read THEN its status is stable (the value the overlay uses for a shipped feature)
   - GIVEN the docs WHEN a reader opens the feature page THEN it shows a screenshot of the seats panel and of the Seats section
 - [ ] Implement
 - [ ] Test (Playwright tests/e2e/spec-coverage/licence-seats.spec.ts against the demo data)
@@ -56,7 +56,7 @@
 
 - `openspec validate contracts-licence-seats --type change --strict`
 - PHPUnit: tests/Unit/Settings/LicenceSeatsDeclarationTest.php
-- vitest: tests/vitest/licensePosture.spec.js
+- vitest: tests/vitest/licenceSeats.spec.js
 - Playwright: tests/e2e/spec-coverage/licence-seats.spec.ts and the existing tests/e2e/spec-coverage/license-posture.spec.ts
 - Docs in docs/features/licence-seats.md with screenshots (ADR-010)
 - English and Dutch strings for the metric values, the panel states and the section title (ADR-005)
