@@ -5283,13 +5283,14 @@
 			"name": "Register the AI agents and AI models the organisation uses and link them to the applications and processes they support.",
 			"origin": "changelog",
 			"originUrl": "https://updates.leanix.net/announcements/discover-verify-and-govern-ai-assets-with-sap-ai-agent-hub",
-			"stackiq": "no",
+			"stackiq": "partial",
 			"built": {
-				"state": "specified",
-				"evidence": "no schema for AI agents or models in lib/Settings/softwarecatalogus_register.json (20 schemas, none for AI systems)",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "lib/Settings/register.d/ai-system-inventory.json schema aiSystem (kind AI agent/AI model/AI feature, module, provider, purpose, status with lifecycle) in the stackiq register; src/manifest.d/ai-systems.json pages AiSystems (/ai-systems) and AiSystemDetail; ModuleDetail widget md-ai-systems; tests/Unit/Settings/AiSystemFragmentTest.php, tests/vitest/aiSystems.spec.js",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-29-landscape-ai-system-inventory"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Applications > AI systems (/ai-systems), AI system page, and the AI systems section on the application page",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"featureConfidence": "medium",
@@ -5299,9 +5300,10 @@
 				"vng-softwarecatalogus": "unknown: AI agents and models are not described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
 				"glpi": "source read at 11.0.9: no AI system itemtype (grep -rli 'artificial intelligence' over src/ locales/glpi.pot returns nothing); an admin can define an 'AI model' custom asset type (src/Html.php:1330 Setup > Asset definitions, src/Glpi/Asset/AssetDefinition.php) and link it to applications as an Appliance item (src/Appliance_Item.php:45) or impact relation (install/mysql/glpi-empty.sql:1247). There is no process model to link to. Reached on: Setup > Asset definitions, then Appliance > Items tab.",
-				"topdesk": "unknown: AI agents and models as registered items are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
+				"topdesk": "unknown: AI agents and models as registered items are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
+				"stackiq": "lib/Settings/register.d/ai-system-inventory.json schema aiSystem (kind AI agent/AI model/AI feature, module, provider, purpose, status with lifecycle) in the stackiq register; src/manifest.d/ai-systems.json pages AiSystems (/ai-systems) and AiSystemDetail; ModuleDetail widget md-ai-systems; tests/Unit/Settings/AiSystemFragmentTest.php, tests/vitest/aiSystems.spec.js"
 			},
-			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Specified in openspec/changes/landscape-ai-system-inventory (OpenSpec pass 2026-09-27).",
+			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Specified in openspec/changes/landscape-ai-system-inventory (OpenSpec pass 2026-09-27). AI systems are registered and linked to the application they run in; linking them to processes waits for architecture-process-mapping (built by openspec/changes/archive/2026-09-29-landscape-ai-system-inventory).",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
@@ -5373,13 +5375,14 @@
 			"name": "Classify the AI systems in the landscape by EU AI Act risk category and keep the evidence the act requires.",
 			"origin": "roadmap",
 			"originUrl": "https://roadmap.leanix.net/c/812-meta-model-eu-ai-act-extension",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "no AI system or AI Act risk property on module or any other schema in lib/Settings/softwarecatalogus_register.json",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "aiSystem.aiActRiskCategory (prohibited, high risk, limited risk, minimal risk, not yet assessed), aiActRole, assessedOn, algorithmRegisterUrl, friaDocumentRef; evidence files tagged FRIA, Technical documentation, Human oversight, Logging; AiActChecklist on AiSystemDetail and the High risk without FRIA quick filter (src/utils/aiAct.js); tests/vitest/aiSystems.spec.js",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-29-landscape-ai-system-inventory"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "Applications > AI systems (/ai-systems), AI system page, and the AI systems section on the application page",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"featureConfidence": "medium",
@@ -5389,9 +5392,10 @@
 				"vng-softwarecatalogus": "unknown: the EU AI Act is not described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "not checked: row added in wave 5 (2026-09-26), no reading of this system for it yet",
 				"glpi": "source read at 11.0.9: grep -rli 'ai act\\|artificial intelligence' over src/ locales/glpi.pot returns nothing; appliances have no risk category field (install/mysql/glpi-empty.sql:8935 glpi_appliances).",
-				"topdesk": "unknown: the AI Act is mentioned only for TOPdesk's own AI features (\"post-market monitoring procedures ... in accordance with the AI Act\"), not for classifying the customer's AI systems; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
+				"topdesk": "unknown: the AI Act is mentioned only for TOPdesk's own AI features (\"post-market monitoring procedures ... in accordance with the AI Act\"), not for classifying the customer's AI systems; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
+				"stackiq": "aiSystem.aiActRiskCategory (prohibited, high risk, limited risk, minimal risk, not yet assessed), aiActRole, assessedOn, algorithmRegisterUrl, friaDocumentRef; evidence files tagged FRIA, Technical documentation, Human oversight, Logging; AiActChecklist on AiSystemDetail and the High risk without FRIA quick filter (src/utils/aiAct.js); tests/vitest/aiSystems.spec.js"
 			},
-			"note": "Mined from sap-leanix (roadmap) on 2026-09-26. Specified in openspec/changes/landscape-ai-system-inventory (OpenSpec pass 2026-09-27).",
+			"note": "Mined from sap-leanix (roadmap) on 2026-09-26. Specified in openspec/changes/landscape-ai-system-inventory (OpenSpec pass 2026-09-27). An AI system records its AI Act risk category, role and evidence, and a high-risk system without a FRIA is flagged (built by openspec/changes/archive/2026-09-29-landscape-ai-system-inventory).",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
