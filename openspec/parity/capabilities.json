@@ -1304,14 +1304,15 @@
 			"built": {
 				"state": "building",
 				"evidence": "appinfo/routes.php:103 POST /api/archimate/import/cancel -> lib/Service/SettingsService.php:5200 calls ArchiMateService::cancelArchiMateImport(), which does not exist in lib/Service/ArchiMateService.php (Error, not caught by catch(\\Exception)); routes.php:119-120 /api/progress/{operationId} read ProgressTracker, but the ArchiMate import never writes to it (only SbomImportService gets it, lib/AppInfo/Application.php:507); ArchiMateImportExport.vue:538 shows only a spinner, no cancel button",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-import-progress-and-cancel"
 			},
 			"reachedOn": "admin settings section ArchiMate Import/Export shows a spinner during import; nothing shows progress or offers cancel",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
 			"featureConfidence": "medium",
-			"note": "The import runs as one blocking request with a spinner. The cancel endpoint calls a missing method and import progress is never recorded, so neither following nor cancelling works.",
+			"note": "The import runs as one blocking request with a spinner. The cancel endpoint calls a missing method and import progress is never recorded, so neither following nor cancelling works. The missing half is specified in openspec/changes/architecture-import-progress-and-cancel (build-all lane 2026-09-29).",
 			"evidence": {
 				"stackiq": "appinfo/routes.php:103 POST /api/archimate/import/cancel -> lib/Service/SettingsService.php:5200 calls ArchiMateService::cancelArchiMateImport(), which does not exist in lib/Service/ArchiMateService.php (Error, not caught by catch(\\Exception)); routes.php:119-120 /api/progress/{operationId} read ProgressTracker, but the ArchiMate import never writes to it (only SbomImportService gets it, lib/AppInfo/Application.php:507); ArchiMateImportExport.vue:538 shows only a spinner, no cancel button",
 				"topdesk": "unknown: ArchiMate is not mentioned anywhere in the documentation (0 hits); searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -1788,14 +1789,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "grep for forum standaardisatie / pas toe of leg uit / comply-or-explain in lib and src: no hits; standards come only from the GEMMA AMEF import (element gemmaType=standaard)",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "There is no list or check for the Forum Standaardisatie comply-or-explain list; only GEMMA standards imported with the model.",
+			"note": "There is no list or check for the Forum Standaardisatie comply-or-explain list; only GEMMA standards imported with the model. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, no demand, outside the core areas (compliance).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/inkoopondersteuning%20standaarden: \"De verplichte standaarden zijn: ... de open standaarden die onder het pas-toe-of-leg-uit regime van de overheid binnen het werkingsgebied vallen\" (read 2026-09-26); https://www.softwarecatalogus.nl/pakket/archi: package version shows \"Verplichte standaarden ... Ondersteuning Compliancy Testrapport\" (read 2026-09-26). Comply-or-explain standards are mixed into the mandatory set, not shown as their own list. Reached on: Package page > Standaarden; Inkoopondersteuning.",
 				"stackiq": "grep for forum standaardisatie / pas toe of leg uit / comply-or-explain in lib and src: no hits; standards come only from the GEMMA AMEF import (element gemmaType=standaard)",
@@ -1846,14 +1847,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "grep for questionnaire/vragenlijst in lib and src: no hits; no questionnaire schema in lib/Settings/softwarecatalogus_register.json",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Nothing sends questionnaires to suppliers or stores their answers.",
+			"note": "Nothing sends questionnaires to suppliers or stores their answers. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (compliance).",
 			"evidence": {
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967524-create-a-survey: surveys 'allowing external stakeholders to contribute directly to the Enterprise Architecture repository', sent 'to multiple recipients simultaneously via email' from an object's questionnaire, answers kept on the object (read 2026-09-26). Reached on: Object > Questionnaire tab > Create survey.",
 				"stackiq": "grep for questionnaire/vragenlijst in lib and src: no hits; no questionnaire schema in lib/Settings/softwarecatalogus_register.json",
@@ -1966,14 +1967,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "Looked in src/components, src/views and lib/Controller for any contact or messaging between organisations sharing a module: none. Usage read rules (register :3137) hide other organisations' usages from municipalities.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Nothing lets an organisation find or contact other organisations using the same product.",
+			"note": "Nothing lets an organisation find or contact other organisations using the same product. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (market).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Alle gemeenten ... inclusief contactgegevens van gemeenten ... U kunt contact onderhouden met deze gemeenten\" (read 2026-09-26). Reached on: Inlogmenu > Alle gemeenten.",
 				"stackiq": "Looked in src/components, src/views and lib/Controller for any contact or messaging between organisations sharing a module: none. Usage read rules (register :3137) hide other organisations' usages from municipalities.",
@@ -2357,14 +2358,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no goal/strategy schema among the 20 in lib/Settings/softwarecatalogus_register.json; grep for strateg/doel in src/manifest.json: none",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Strategic goals are not modelled.",
+			"note": "Strategic goals are not modelled. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (lifecycle).",
 			"evidence": {
 				"bluedolphin": "https://bluedolphin.io/application-portfolio-management-application-rationalization/: 'Applications natively connected to BPMN, ERD, strategy, and initiatives' and 'Align applications with strategic initiatives and roadmaps'; https://bluedolphin.io/capability-based-planning/: 'Connect capabilities directly to business objectives' (read 2026-09-26). Reached on: Objects and relationships to strategy elements.",
 				"stackiq": "no goal/strategy schema among the 20 in lib/Settings/softwarecatalogus_register.json; grep for strateg/doel in src/manifest.json: none",
@@ -2633,14 +2634,14 @@
 			"topdesk": "partial",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "No entitlement or consumption fields exist (see ctr-seat-count); no service computes a licence position in lib/Service/",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Without seat or consumption data there is nothing to compute an effective licence position from.",
+			"note": "Without seat or consumption data there is nothing to compute an effective licence position from. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, no demand, outside the core areas (contracts).",
 			"evidence": {
 				"stackiq": "No entitlement or consumption fields exist (see ctr-seat-count); no service computes a licence position in lib/Service/",
 				"topdesk": "https://docs.topdesk.com/en/managing-licences-in-asset-management.html: \"Knowing which software tools are used by whom ... the legal implications of using a tool without being licensed\" (read 2026-09-26). Entitlement against linked users, no measured consumption. Reached on: Asset Management > licence cards.",
@@ -2662,14 +2663,14 @@
 			"topdesk": "partial",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "grep for budget across lib/, src/ and lib/Settings finds no budget schema or field; catalogContract has cost + costPeriod only (register :3363)",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Contracts carry a cost and a period, but there is no budget to charge them against.",
+			"note": "Contracts carry a cost and a period, but there is no budget to charge them against. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (contracts).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Budget.php:46 Budget with a period and value (install/mysql/glpi-empty.sql:306 begin_date, :307 end_date, :308 value); contract costs (install/mysql/glpi-empty.sql:1466 budgets_id) and financial records (src/Infocom.php:599 budgets_id check) are charged to it. Reached on: Management > Budgets. Driven on the lab at 11.0.9 (2026-09-26): /front/budget.php lists budgets with type, start date, end date and value.",
 				"stackiq": "grep for budget across lib/, src/ and lib/Settings finds no budget schema or field; catalogContract has cost + costPeriod only (register :3363)",
@@ -2691,14 +2692,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "grep for depreciation/afschrijving finds nothing in lib/, src/ or the register",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "No purchase value, useful life or depreciation is recorded or computed.",
+			"note": "No purchase value, useful life or depreciation is recorded or computed. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (contracts).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: the financial record of any item, licences included (src/SoftwareLicense.php:245 Infocom tab), carries depreciation type, duration and coefficient (install/mysql/glpi-empty.sql:3269 sink_time, :3270 sink_type, :3271 sink_coeff); src/Infocom.php:872 Linear and degressive types and src/Infocom.php:1085 linearAmortise compute the table. Reached on: Management > Licenses > Management tab.",
 				"stackiq": "grep for depreciation/afschrijving finds nothing in lib/, src/ or the register",
@@ -2897,14 +2898,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "src/utils/vulnerabilitySeverity.js derives a severity band per vulnerability from CVSS; no per-application risk score in lib/ or src/ (searched risk)",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Only individual vulnerabilities get a severity band. No application gets a combined score from its vulnerabilities and support status.",
+			"note": "Only individual vulnerabilities get a severity band. No application gets a combined score from its vulnerabilities and support status. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, no demand, outside the core areas (security).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/technology-obsolescence-risk-statuses-and-views-in-reports: 'Learn how risk statuses are determined for IT components and applications', e.g. 'Unaddressed Risk ... when the internal end-of-life date or vendor-provided end-of-support date is in the past'. Based on support status, not vulnerabilities (read 2026-09-26). Reached on: Technology Risk and Compliance > obsolescence risk status on applications.",
 				"stackiq": "src/utils/vulnerabilitySeverity.js derives a severity band per vulnerability from CVSS; no per-application risk score in lib/ or src/ (searched risk)",
@@ -2926,14 +2927,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "register.json:1619 vulnerability has no fixed-in version field; src/utils/vulnerabilityExposure.js computeExposure carries the deployed moduleVersion per usage but nothing compares it to a fix",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "The exposure row shows which version is deployed, but no record says which version fixes the vulnerability, so patch status cannot be seen.",
+			"note": "The exposure row shows which version is deployed, but no record says which version fixes the vulnerability, so patch status cannot be seen. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, no demand, outside the core areas (security).",
 			"evidence": {
 				"stackiq": "register.json:1619 vulnerability has no fixed-in version field; src/utils/vulnerabilityExposure.js computeExposure carries the deployed moduleVersion per usage but nothing compares it to a fix",
 				"topdesk": "unknown: vulnerabilities are not mentioned (0 hits for \"vulnerab\"); searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -3044,14 +3045,14 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"evidence": "register organization.status enum Draft/Active/Inactive is visible:false (:2022); src/manifest.json:403 OrganisatieDetail overrides status editable:false; src/modals/object/ChangeOrganisatieStatusDialog.vue:211 is never opened (no setDialog('changeOrganisatieStatus') in src); src/views/widgets/ConceptOrganisatiesWidget.vue:100 filters status 'concept' and :129 writes 'actief', neither an enum value",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it (Organisations /organisaties can only filter by status)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "No working path moves an organisation between Draft, Active and Inactive: the field is hidden on the form and locked on the detail page, the status dialog is orphaned, and the Nextcloud dashboard widget still uses the old Dutch values so it lists nothing and would write an invalid value.",
+			"note": "No working path moves an organisation between Draft, Active and Inactive: the field is hidden on the form and locked on the detail page, the status dialog is orphaned, and the Nextcloud dashboard widget still uses the old Dutch values so it lists nothing and would write an invalid value. Missing half decided no on 2026-09-29 (defer retired 2026-09-28): only GLPI rates partial, no competitor rates yes, no demand, outside the core areas (organisations). The broken half stays: the organisation status field is hidden and locked, the status dialog is never opened, and the concept organisations dashboard widget filters and writes the old Dutch values concept and actief, which are not in the enum.",
 			"evidence": {
 				"stackiq": "register organization.status enum Draft/Active/Inactive is visible:false (:2022); src/manifest.json:403 OrganisatieDetail overrides status editable:false; src/modals/object/ChangeOrganisatieStatusDialog.vue:211 is never opened (no setDialog('changeOrganisatieStatus') in src); src/views/widgets/ConceptOrganisatiesWidget.vue:100 filters status 'concept' and :129 writes 'actief', neither an enum value",
 				"topdesk": "unknown: cards can be archived; concept, active, inactive states for organisations are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -3396,7 +3397,7 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"evidence": "src/utils/openDataProjection.js:36 STRIPPED_FIELDS (PII projection) is imported by nothing in src/ and has no PHP counterpart (grep 'projection' in lib/ finds none). Usage schema read rule lib/Settings/softwarecatalogus_register.json:3150 has no public group; lib/Controller/GebruikController.php:102 returns an empty result to anonymous callers.",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -3405,7 +3406,7 @@
 			"providerHow": "read-from-code",
 			"feature": "open-data-publishing",
 			"featureConfidence": "high",
-			"note": "Usage (gebruik) is not published as open data at all: anonymous callers get an empty envelope and the usage schema has no public read rule. The PII-stripping projection exists only as an unused, unit-tested JS util.",
+			"note": "Usage (gebruik) is not published as open data at all: anonymous callers get an empty envelope and the usage schema has no public read rule. The PII-stripping projection exists only as an unused, unit-tested JS util. Missing half decided no on 2026-09-29 (defer retired 2026-09-28): only the GEMMA Softwarecatalogus rates partial, no competitor rates yes, no demand, outside the core areas (sharing). The unused PII projection util stays unwired.",
 			"evidence": {
 				"stackiq": "src/utils/openDataProjection.js:36 STRIPPED_FIELDS (PII projection) is imported by nothing in src/ and has no PHP counterpart (grep 'projection' in lib/ finds none). Usage schema read rule lib/Settings/softwarecatalogus_register.json:3150 has no public group; lib/Controller/GebruikController.php:102 returns an empty result to anonymous callers.",
 				"topdesk": "unknown: open data publication and catalogue federation are not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -3877,14 +3878,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "No scheduled report or report mail job: lib/BackgroundJob/ holds only ContractStatusJob, EolSyncJob, FederationSyncJob and OrganizationContactSyncJob; grep for report scheduling in lib/ and src/ finds nothing.",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Reports cannot be scheduled or sent to people.",
+			"note": "Reports cannot be scheduled or sent to people. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (insight).",
 			"evidence": {
 				"stackiq": "No scheduled report or report mail job: lib/BackgroundJob/ holds only ContractStatusJob, EolSyncJob, FederationSyncJob and OrganizationContactSyncJob; grep for report scheduling in lib/ and src/ finds nothing.",
 				"topdesk": "https://docs.topdesk.com/en/details-about-certain-permissions.html: \"Reports & Selections > Schedule reports with my own authorizations : the operator can schedule reports to be regularly saved or sent to contact persons\" (read 2026-09-26). Reached on: Reports & Selections.",
@@ -4314,14 +4315,14 @@
 			"topdesk": "yes",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "No mobile app or mobile-specific surface in the repo; the app is the Nextcloud web UI (src/manifest.json).",
 				"owner": "ConductionNL/stackiq"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
-			"note": "There is no native mobile app.",
+			"note": "There is no native mobile app. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (operations).",
 			"evidence": {
 				"topdesk": "https://docs.topdesk.com/en/installing-the-topdesk-mobile-store-application.html: \"Scan the QR code to download the app from the Play store\" (read 2026-09-26). Reached on: TOPdesk Mobile app.",
 				"stackiq": "No mobile app or mobile-specific surface in the repo; the app is the Nextcloud web UI (src/manifest.json).",
@@ -4585,7 +4586,7 @@
 			"originUrl": "https://github.com/VNG-Realisatie/Softwarecatalogus/issues/136",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no approval of an organisation's application list: ContractApprovalService (lib/Service/ContractApprovalService.php) covers contracts only, and no schema or page records a sign-off on the landscape (grep fiat, sign-off, goedkeur in lib/ and src/)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4601,7 +4602,7 @@
 				"glpi": "source read at 11.0.9: approvals exist only on ITIL objects (src/CommonITILValidation.php:49, children TicketValidation and src/ChangeValidation.php:39); there is no sign off of the appliance list itself. A change could be used to carry an approval, which is not a catalogue sign off.",
 				"topdesk": "unknown: a sign-off of the application list is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26.",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -4615,7 +4616,7 @@
 			"originUrl": "https://github.com/VNG-Realisatie/Softwarecatalogus/issues/82",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "lib/Settings/softwarecatalogus_register.json:7287 module.verwerkingsregisterRef only stores a reference, and its description says the register itself is not modelled; no export or report builds one",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4631,7 +4632,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'processing activit\\|gdpr' over src/ returns nothing, so there is no register to generate; the report list (src/Report.php:77 to :111) has no such report.",
 				"topdesk": "unknown: no register of processing activities is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26.",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -4645,7 +4646,7 @@
 			"originUrl": "https://github.com/VNG-Realisatie/Softwarecatalogus/issues/50",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "'Addendum' exists only as a glossary object (lib/Settings/softwarecatalogus_register.json:613, lexicon entry in the objects seed at :27); no schema records which supplier signed which collective agreement",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4661,7 +4662,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'collective agreement\\|raamovereenkomst' over src/ locales/glpi.pot returns nothing; contracts (install/mysql/glpi-empty.sql:1483) belong to the instance's own entities and nothing is shared across organisations.",
 				"topdesk": "unknown: collective agreements across organisations are not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26.",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (contracts).",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -4735,7 +4736,7 @@
 			"originUrl": "https://github.com/VNG-Realisatie/Softwarecatalogus/issues/31",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no compare view in src/views or src/manifest.json pages; the Modules page lists and filters only (src/views/FacetedCatalogIndexView.vue:108)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4751,7 +4752,7 @@
 				"glpi": "source read at 11.0.9: any list can be narrowed to chosen entries with criteria (src/Glpi/Search/Input/QueryBuilder.php:72) and shows the chosen columns in one table, with installation counts per software on the software list; there is no dedicated compare view across products and no market data to compare (src/Glpi/Search/SearchEngine.php:101 searches own records only). Reached on: Assets > Software list with chosen columns.",
 				"topdesk": "unknown: no product comparison table is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26.",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (market).",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
@@ -4795,7 +4796,7 @@
 			"originUrl": "https://github.com/VNG-Realisatie/Softwarecatalogus/issues/147",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "'Common Ground' is only a glossary object (lib/Settings/softwarecatalogus_register.json:543); the module schema has no Common Ground property",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4811,7 +4812,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'common ground' over src/ templates/ locales/glpi.pot returns nothing; software and appliances carry no principle or goal declarations (install/mysql/glpi-empty.sql:6856 glpi_softwares).",
 				"topdesk": "unknown: Common Ground is not mentioned; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26.",
+			"note": "Mined from vng-softwarecatalogus (featureRequest) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -4855,7 +4856,7 @@
 			"originUrl": "https://tip.topdesk.com/c/152-more-control-over-card-file-removal",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no retention or file clean-up job in lib/BackgroundJob or lib/Service for stackiq records (grep retention, bewaartermijn)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -4871,7 +4872,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/ for retention, only questionnaire data retention on BPMN configuration is mentioned (https://help.bluedolphin.io/en/articles/15874771-questionnaires-for-bpmn-elements); timed removal of files is not documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: closed tickets are purged after a per entity delay, src/Ticket.php:5363 cronPurgeTicket using install/mysql/glpi-empty.sql:2777 autopurge_delay, and documents left without any linked item are removed by src/Document.php:1713 cronCleanOrphansDocument (described at src/Document.php:1700); catalogue records such as appliances or contracts have no closed state or retention delay. Reached on: Administration > Entities > Assistance tab (automatic purge); Setup > Automatic actions."
 			},
-			"note": "Mined from topdesk (changelog) on 2026-09-26.",
+			"note": "Mined from topdesk (changelog) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, changelog only, which counts as the competitor it names, outside the core areas (compliance).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
@@ -5095,7 +5096,7 @@
 			"originUrl": "https://github.com/glpi-project/roadmap/discussions/182",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "catalogContract.contract (lib/Settings/softwarecatalogus_register.json:3282) is a plain uuid to shillinq's governing Contract, not shown on ContractDetail (src/manifest.json:563 data fields) and not a link between catalogue contracts",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5111,7 +5112,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; links between contracts such as call offs are not documented (read 2026-09-26)",
 				"topdesk": "https://docs.topdesk.com/en/managing-your-service-and-supplier-contracts.html: \"TOPdesk allows you to link your services to supplier services, so that the duration of your services will always be in line with the duration of supplier services\" (read 2026-09-26). Linking runs through underpinning services, not contract to contract. Reached on: Contract Management and SLM > Service card."
 			},
-			"note": "Mined from glpi (featureRequest) on 2026-09-26.",
+			"note": "Mined from glpi (featureRequest) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (contracts).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
@@ -5155,7 +5156,7 @@
 			"originUrl": "https://github.com/glpi-project/roadmap/discussions/457",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "the lifecycle phase is derived from usage dates (src/utils/lifecyclePhase.js derivePhase) and contract status from the end date (lib/Service/ContractStatusService.php:77), the reverse direction; no date is filled when a status changes",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5171,7 +5172,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; dates filled automatically on a lifecycle state change are not documented (read 2026-09-26)",
 				"topdesk": "unknown: automated actions can update cards, but dates following a lifecycle status are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from glpi (featureRequest) on 2026-09-26.",
+			"note": "Mined from glpi (featureRequest) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (lifecycle).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
@@ -5185,7 +5186,7 @@
 			"originUrl": "https://github.com/glpi-project/glpi/releases/tag/11.0.0",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "read and write rules in the register scope by organisation ({match: {_organisation: $organisation}}, see org-data-segregation), not by the person or group assigned to an entry",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5201,7 +5202,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; permissions are per role and object definition (https://help.bluedolphin.io/en/articles/11967624-manage-roles-and-permissions) and views can be private, but limiting users to entries assigned to them is not documented (read 2026-09-26)",
 				"topdesk": "https://docs.topdesk.com/en/details-about-certain-permissions.html: \"To restrict access to specific data, link the operator to branch, operator, or category filters\" (read 2026-09-26); https://docs.topdesk.com/en/reservations-management-and-other-modules.html: \"Operator filter: operators can see all reservations, but can only edit reservations that are created by them or their operator group\" (read 2026-09-26). Filters by branch, operator or category; not shown for assets assigned to a person. Reached on: Operator card > filters."
 			},
-			"note": "Mined from glpi (changelog) on 2026-09-26.",
+			"note": "Mined from glpi (changelog) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, changelog only, which counts as the competitor it names, outside the core areas (organisations).",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
@@ -5395,7 +5396,7 @@
 			"originUrl": "https://roadmap.leanix.net/c/830-ea-assistant-technology-successor-planning",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "the end-of-life feed only stamps support end dates on module versions (lib/Service/EolSyncService.php:145, EolMatcherService); no rule for how many releases behind a version may run",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5411,7 +5412,7 @@
 				"glpi": "source read at 11.0.9: software versions have no order or release date to measure distance from the latest (install/mysql/glpi-empty.sql:6900 glpi_softwareversions: name, states_id, arch, comment); grep -rli 'releases behind' over src/ returns nothing.",
 				"topdesk": "unknown: no version tolerance rule is described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)"
 			},
-			"note": "Mined from sap-leanix (roadmap) on 2026-09-26.",
+			"note": "Mined from sap-leanix (roadmap) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, roadmap demand without a competitor yes, outside the core areas (lifecycle).",
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
@@ -5485,7 +5486,7 @@
 			"originUrl": "https://bluedolphin.io/blog/february-2026-bluedolphin-updates-more-visibility-better-governance-smarter-insights/",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no page view or usage tracking in lib/ or src/ (grep analytics, pageview)",
 				"owner": "ConductionNL/stackiq"
 			},
@@ -5501,7 +5502,7 @@
 				"glpi": "source read at 11.0.9: the event log (src/Glpi/Event.php:63) records logins and item actions, not which lists or pages are viewed; grep -rli 'page view' over src/ returns nothing, and there are no guest users apart from the public FAQ (src/KnowbaseItem.php:131).",
 				"topdesk": "https://docs.topdesk.com/en/setting-up-the-self-service-portal.html: \"Only when users click Allow analytics, their page usage is synchronized with your Google Analytics account\" (read 2026-09-26). Self-Service Portal page usage in an outside tool only. Reached on: Self-Service Portal settings > Analytics."
 			},
-			"note": "Mined from bluedolphin (changelog) on 2026-09-26.",
+			"note": "Mined from bluedolphin (changelog) on 2026-09-26. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, changelog only, which counts as the competitor it names, outside the core areas (insight).",
 			"vng-softwarecatalogus": "partial",
 			"sap-leanix": "unknown",
 			"glpi": "no",
