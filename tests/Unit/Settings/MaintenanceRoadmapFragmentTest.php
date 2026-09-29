@@ -12,7 +12,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/lifecycle-maintenance-and-supplier-roadmap/specs/maintenance-and-supplier-roadmap/spec.md
+ * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md
  */
 
 declare(strict_types=1);

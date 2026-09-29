@@ -3,8 +3,8 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.5.4",
-    "changelog": "2.5.4: usage (1.5.2) gains businessOwner and technicalOwner, contact persons of the consumer organisation; a usage is named after its application and organisation; status becomes facetable for the Applications in use filters (landscape-usage-registration). 2.5.3: the aiSystem schema (0.1.0) joins the stackiq register, for the AI systems an organisation uses and their EU AI Act classification (landscape-ai-system-inventory). 2.5.2: the connection schema (0.3.3) asked its national provision picker for gemmaType Buitengemeentenlijke voorziening, a spelling the GEMMA model does not use (it says Buitengemeentelijke voorziening), so the picker found nothing; its name template named the keys gegevensuitwisselingRichting and buitengemeentelijkVoorziening and the values AnaarB, BnaarA and bi-directioneel, all renamed since, so a connection had no readable name; and type, status and dataExchangeDirection become facetable for the new Connections page (connections-catalogue-pages). 2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
+    "version": "2.5.5",
+    "changelog": "2.5.5: the maintenanceWindow schema (0.1.0) joins the stackiq register, for maintenance a supplier plans on its products, with the owners of every usage notified (lifecycle-maintenance-and-supplier-roadmap). 2.5.4: usage (1.5.2) gains businessOwner and technicalOwner, contact persons of the consumer organisation; a usage is named after its application and organisation; status becomes facetable for the Applications in use filters (landscape-usage-registration). 2.5.3: the aiSystem schema (0.1.0) joins the stackiq register, for the AI systems an organisation uses and their EU AI Act classification (landscape-ai-system-inventory). 2.5.2: the connection schema (0.3.3) asked its national provision picker for gemmaType Buitengemeentenlijke voorziening, a spelling the GEMMA model does not use (it says Buitengemeentelijke voorziening), so the picker found nothing; its name template named the keys gegevensuitwisselingRichting and buitengemeentelijkVoorziening and the values AnaarB, BnaarA and bi-directioneel, all renamed since, so a connection had no readable name; and type, status and dataExchangeDirection become facetable for the new Connections page (connections-catalogue-pages). 2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
   },
   "x-openregister": {
     "type": "application",
@@ -836,7 +836,8 @@
           "moduleVersion",
           "sbomComponent",
           "bioMeasure",
-          "aiSystem"
+          "aiSystem",
+          "maintenanceWindow"
         ],
         "source": "internal",
         "tablePrefix": "",
@@ -8364,6 +8365,283 @@
             },
             {
               "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ]
+        }
+      },
+      "maintenanceWindow": {
+        "uri": null,
+        "slug": "maintenanceWindow",
+        "title": "Maintenance window",
+        "x-schema-org": "schema:Event",
+        "description": "Maintenance a supplier plans on one of its products, with the time window and the expected impact.",
+        "version": "0.1.0",
+        "icon": "Calendar",
+        "required": [
+          "module",
+          "title",
+          "startsAt",
+          "endsAt"
+        ],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "searchable": true,
+        "maxDepth": 0,
+        "properties": {
+          "module": {
+            "type": "object",
+            "$ref": "#/components/schemas/module",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "title": "Application",
+            "description": "The product the maintenance is on.",
+            "facetable": true,
+            "order": 1,
+            "table": {
+              "default": true
+            }
+          },
+          "moduleVersion": {
+            "type": "object",
+            "$ref": "#/components/schemas/moduleVersion",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "x-relation-filter": {
+              "module": "@object.module"
+            },
+            "title": "Version",
+            "description": "The version the maintenance is on, when it concerns one version.",
+            "facetable": false,
+            "order": 2
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "What the maintenance is, in a few words.",
+            "maxLength": 255,
+            "facetable": false,
+            "order": 3,
+            "table": {
+              "default": true
+            }
+          },
+          "description": {
+            "type": "string",
+            "format": "markdown",
+            "title": "Description",
+            "description": "What changes and what users should do.",
+            "maxLength": 5000,
+            "facetable": false,
+            "order": 4
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts at",
+            "description": "When the maintenance starts.",
+            "facetable": false,
+            "order": 5,
+            "table": {
+              "default": true
+            }
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ends at",
+            "description": "When the maintenance ends.",
+            "facetable": false,
+            "order": 6,
+            "table": {
+              "default": true
+            }
+          },
+          "impact": {
+            "type": "string",
+            "enum": [
+              "no impact",
+              "degraded",
+              "unavailable"
+            ],
+            "x-enum-labels": {
+              "no impact": "No impact",
+              "degraded": "Degraded",
+              "unavailable": "Unavailable"
+            },
+            "default": "degraded",
+            "title": "Impact",
+            "description": "What users notice while the maintenance runs.",
+            "facetable": true,
+            "order": 7,
+            "table": {
+              "default": true
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "in progress",
+              "completed",
+              "cancelled"
+            ],
+            "x-enum-labels": {
+              "planned": "Planned",
+              "in progress": "In progress",
+              "completed": "Completed",
+              "cancelled": "Cancelled"
+            },
+            "default": "planned",
+            "title": "Status",
+            "description": "Where the maintenance stands.",
+            "facetable": true,
+            "order": 8,
+            "table": {
+              "default": true
+            }
+          },
+          "notifyUserIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "hideOnForm": true,
+            "visible": false,
+            "title": "Owners to notify",
+            "description": "The Nextcloud users who own a usage of the product, resolved when the maintenance is announced.",
+            "facetable": false,
+            "order": 9
+          },
+          "recipientsResolvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "hideOnForm": true,
+            "visible": false,
+            "title": "Owners resolved at",
+            "description": "When the owners to notify were resolved.",
+            "facetable": false,
+            "order": 10
+          }
+        },
+        "configuration": {
+          "objectNameField": "title",
+          "objectDescriptionField": "description",
+          "autoPublish": true,
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "planned",
+            "final": [
+              "completed",
+              "cancelled"
+            ],
+            "transitions": {
+              "start": {
+                "from": [
+                  "planned"
+                ],
+                "to": "in progress",
+                "description": "Start the maintenance."
+              },
+              "complete": {
+                "from": [
+                  "in progress"
+                ],
+                "to": "completed",
+                "description": "Complete the maintenance."
+              },
+              "cancel": {
+                "from": [
+                  "planned",
+                  "in progress"
+                ],
+                "to": "cancelled",
+                "description": "Cancel the maintenance."
+              }
+            }
+          }
+        },
+        "x-openregister-notifications": {
+          "maintenance-announced": {
+            "trigger": {
+              "type": "updated",
+              "condition": {
+                "field": "recipientsResolvedAt",
+                "operator": "changed"
+              }
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "relation",
+                "relation": "notifyUserIds"
+              }
+            ],
+            "subject": {
+              "nl": "Gepland onderhoud: {{title}}",
+              "en": "Planned maintenance: {{title}}"
+            }
+          },
+          "maintenance-starts-tomorrow": {
+            "trigger": {
+              "type": "scheduled",
+              "intervalSec": 86400,
+              "filter": {
+                "startsAt": {
+                  "operator": "withinNext",
+                  "value": "P1D"
+                },
+                "status": {
+                  "operator": "equals",
+                  "value": "planned"
+                }
+              }
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "relation",
+                "relation": "notifyUserIds"
+              }
+            ],
+            "subject": {
+              "nl": "Onderhoud begint morgen: {{title}}",
+              "en": "Maintenance starts tomorrow: {{title}}"
+            }
+          }
+        },
+        "authorization": {
+          "create": [
+            "software-catalog-admins",
+            "aanbod-beheerder"
+          ],
+          "read": [
+            "public"
+          ],
+          "update": [
+            "software-catalog-admins",
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "delete": [
+            "software-catalog-admins",
+            {
+              "group": "aanbod-beheerder",
               "match": {
                 "_organisation": "$organisation"
               }

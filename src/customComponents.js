@@ -25,6 +25,7 @@ import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
+import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
@@ -90,6 +91,11 @@ export default {
 
 	// Licences in use against licences bought (contracts-licence-seats).
 	ContractSeatsPanel,
+
+	// The supplier's roadmap statement and the product's versions on a timeline,
+	// a bodyWidgets section on ModuleDetail (lifecycle-maintenance-and-supplier-roadmap):
+	// it reads the module and its versions, which no built-in widget combines.
+	ProductRoadmap,
 
 	// AI Act evidence per tag on the AI system page (landscape-ai-system-inventory):
 	// it reads the object's files and their tags, which no built-in widget lists per tag.

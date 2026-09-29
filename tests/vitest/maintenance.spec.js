@@ -7,7 +7,7 @@
  * merged the way src/main.js merges it), and the seeded maintenance windows
  * validated against the real maintenanceWindow schema in the register.
  *
- * @spec openspec/changes/lifecycle-maintenance-and-supplier-roadmap/specs/maintenance-and-supplier-roadmap/spec.md
+ * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md
  */
 
 import addFormats from 'ajv-formats'
@@ -38,18 +38,56 @@ const merged = buildManifest(
 	menuLayout,
 )
 const page = (id) => merged.pages.find((p) => p.id === id)
-const widget = (pageId, widgetId) =>
-	page(pageId).config.widgets.find((w) => w.id === widgetId)
+function widget(pageId, widgetId) {
+	return page(pageId).config.widgets.find((w) => w.id === widgetId)
+}
 const schema = register.components.schemas.maintenanceWindow
 const now = new Date('2026-10-01T09:00:00Z')
 
 const windows = [
-	{ id: 'w1', module: 'x', status: 'planned', startsAt: '2026-10-03T06:00:00Z', endsAt: '2026-10-03T10:00:00Z', impact: 'unavailable' },
-	{ id: 'w2', module: { id: 'x' }, status: 'planned', startsAt: '2026-10-02T06:00:00Z', endsAt: '2026-10-02T07:00:00Z' },
-	{ id: 'w3', module: 'y', status: 'planned', startsAt: '2026-10-03T06:00:00Z', endsAt: '2026-10-03T07:00:00Z' },
-	{ id: 'w4', module: 'x', status: 'cancelled', startsAt: '2026-10-03T06:00:00Z', endsAt: '2026-10-03T07:00:00Z' },
-	{ id: 'w5', module: 'x', status: 'planned', startsAt: '2026-12-01T06:00:00Z', endsAt: '2026-12-01T07:00:00Z' },
-	{ id: 'w6', module: 'x', status: 'planned', startsAt: '2026-09-01T06:00:00Z', endsAt: '2026-09-01T07:00:00Z' },
+	{
+		id: 'w1',
+		module: 'x',
+		status: 'planned',
+		startsAt: '2026-10-03T06:00:00Z',
+		endsAt: '2026-10-03T10:00:00Z',
+		impact: 'unavailable',
+	},
+	{
+		id: 'w2',
+		module: { id: 'x' },
+		status: 'planned',
+		startsAt: '2026-10-02T06:00:00Z',
+		endsAt: '2026-10-02T07:00:00Z',
+	},
+	{
+		id: 'w3',
+		module: 'y',
+		status: 'planned',
+		startsAt: '2026-10-03T06:00:00Z',
+		endsAt: '2026-10-03T07:00:00Z',
+	},
+	{
+		id: 'w4',
+		module: 'x',
+		status: 'cancelled',
+		startsAt: '2026-10-03T06:00:00Z',
+		endsAt: '2026-10-03T07:00:00Z',
+	},
+	{
+		id: 'w5',
+		module: 'x',
+		status: 'planned',
+		startsAt: '2026-12-01T06:00:00Z',
+		endsAt: '2026-12-01T07:00:00Z',
+	},
+	{
+		id: 'w6',
+		module: 'x',
+		status: 'planned',
+		startsAt: '2026-09-01T06:00:00Z',
+		endsAt: '2026-09-01T07:00:00Z',
+	},
 ]
 
 /**
@@ -74,15 +112,24 @@ function compileWindow() {
 
 describe('upcoming maintenance', () => {
 	it('lists the planned windows of the next 30 days on the products in use, earliest first', () => {
-		expect(upcomingMaintenance(windows, ['x'], now).map((w) => w.id)).toEqual(['w2', 'w1'])
+		expect(upcomingMaintenance(windows, ['x'], now).map((w) => w.id)).toEqual([
+			'w2',
+			'w1',
+		])
 	})
 
 	it('reads the usages of the organisation and then the windows on their products', async () => {
 		const fetchList = vi.fn(async (type) =>
-			type === 'usage' ? [{ module: 'x' }, { module: { id: 'x' } }, { module: null }] : windows,
+			type === 'usage'
+				? [{ module: 'x' }, { module: { id: 'x' } }, { module: null }]
+				: windows,
 		)
 		const result = await loadUpcomingMaintenance('org-1', fetchList, now)
-		expect(fetchList).toHaveBeenNthCalledWith(1, 'usage', expect.objectContaining({ consumer: 'org-1' }))
+		expect(fetchList).toHaveBeenNthCalledWith(
+			1,
+			'usage',
+			expect.objectContaining({ consumer: 'org-1' }),
+		)
 		expect(fetchList).toHaveBeenNthCalledWith(
 			2,
 			'maintenanceWindow',
@@ -102,9 +149,19 @@ describe('upcoming maintenance', () => {
 describe('the roadmap', () => {
 	it('places each version on its go-live date, planned ones marked planned, undated ones left out', () => {
 		const events = roadmapEvents([
-			{ id: 'v3', version: '3.0', status: 'in development', dateInUse: '2027-03-01' },
+			{
+				id: 'v3',
+				version: '3.0',
+				status: 'in development',
+				dateInUse: '2027-03-01',
+			},
 			{ id: 'v2', version: '2.1', status: 'in use', dateInUse: '2026-05-01' },
-			{ id: 'v4', version: '4.0', status: 'in development', dateInDevelopment: '2026-09-01' },
+			{
+				id: 'v4',
+				version: '4.0',
+				status: 'in development',
+				dateInDevelopment: '2026-09-01',
+			},
 			{ id: 'v1', version: '1.0', status: 'withdrawn' },
 		])
 		expect(events.map((e) => [e.title, e.start, e.kind])).toEqual([
@@ -137,13 +194,23 @@ describe('the pages', () => {
 		for (const field of list.content.formIncludeFields) {
 			expect(schema.properties, field).toHaveProperty(field)
 		}
-		expect(page('ModuleDetail').config.layout.map((l) => l.widgetId)).toContain('md-maintenance')
+		expect(page('ModuleDetail').config.layout.map((l) => l.widgetId)).toContain(
+			'md-maintenance',
+		)
 	})
 
 	it('shows the roadmap on the application page', () => {
-		const body = page('ModuleDetail').config.bodyWidgets.find((w) => w.id === 'md-roadmap')
-		expect(body).toMatchObject({ component: 'ProductRoadmap', props: { objectId: '@objectId' } })
-		const registry = fs.readFileSync(path.resolve(__dirname, '../../src/customComponents.js'), 'utf8')
+		const body = page('ModuleDetail').config.bodyWidgets.find(
+			(w) => w.id === 'md-roadmap',
+		)
+		expect(body).toMatchObject({
+			component: 'ProductRoadmap',
+			props: { objectId: '@objectId' },
+		})
+		const registry = fs.readFileSync(
+			path.resolve(__dirname, '../../src/customComponents.js'),
+			'utf8',
+		)
 		expect(registry).toMatch(/\bProductRoadmap,/)
 	})
 
@@ -151,15 +218,26 @@ describe('the pages', () => {
 		const dashboard = page('Dashboard').config
 		const w = dashboard.widgets.find((x) => x.id === 'upcoming-maintenance')
 		expect(w.type).toBe('upcoming-maintenance')
-		expect(dashboard.layout.map((l) => l.widgetId)).toContain('upcoming-maintenance')
-		const main = fs.readFileSync(path.resolve(__dirname, '../../src/main.js'), 'utf8')
-		expect(main).toMatch(/registerDashboardWidget\('upcoming-maintenance',\s*\{\s*renderer: UpcomingMaintenanceWidget/)
+		expect(dashboard.layout.map((l) => l.widgetId)).toContain(
+			'upcoming-maintenance',
+		)
+		const main = fs.readFileSync(
+			path.resolve(__dirname, '../../src/main.js'),
+			'utf8',
+		)
+		expect(main).toMatch(
+			/registerDashboardWidget\('upcoming-maintenance',\s*\{\s*renderer: UpcomingMaintenanceWidget/,
+		)
 	})
 
 	it('filters the module versions on planned releases, a real status value', () => {
 		const index = page('Moduleversies').config
-		const planned = index.quickFilters.find((q) => q.label === 'Planned releases')
-		expect(register.components.schemas.moduleVersion.properties.status.enum).toContain(planned.filter.status)
+		const planned = index.quickFilters.find(
+			(q) => q.label === 'Planned releases',
+		)
+		expect(
+			register.components.schemas.moduleVersion.properties.status.enum,
+		).toContain(planned.filter.status)
 		expect(index.columns).toContain('dateInDevelopment')
 	})
 })
@@ -177,19 +255,29 @@ describe('the maintenanceWindow schema', () => {
 
 	it('notifies the owners it resolved, on a field the schema declares', () => {
 		for (const rule of Object.values(schema['x-openregister-notifications'])) {
-			expect(rule.recipients).toEqual([{ kind: 'relation', relation: 'notifyUserIds' }])
+			expect(rule.recipients).toEqual([
+				{ kind: 'relation', relation: 'notifyUserIds' },
+			])
 		}
 		expect(schema.properties.notifyUserIds.type).toBe('array')
-		const announced = schema['x-openregister-notifications']['maintenance-announced'].trigger
+		const announced =
+			schema['x-openregister-notifications']['maintenance-announced'].trigger
 		expect(schema.properties).toHaveProperty(announced.condition.field)
 	})
 
 	it('has seeded windows in both registers that the schema accepts', () => {
 		const validate = compileWindow()
-		const seeds = mock.components.objects.filter((o) => o['@self']?.schema === 'maintenanceWindow')
-		expect(new Set(seeds.map((s) => s['@self'].register))).toEqual(new Set(['stackiq', 'vng-gemma']))
+		const seeds = mock.components.objects.filter(
+			(o) => o['@self']?.schema === 'maintenanceWindow',
+		)
+		expect(new Set(seeds.map((s) => s['@self'].register))).toEqual(
+			new Set(['stackiq', 'vng-gemma']),
+		)
 		for (const seed of seeds) {
-			expect(validate(seed), `${seed['@self'].slug}: ${JSON.stringify(validate.errors)}`).toBe(true)
+			expect(
+				validate(seed),
+				`${seed['@self'].slug}: ${JSON.stringify(validate.errors)}`,
+			).toBe(true)
 		}
 	})
 })

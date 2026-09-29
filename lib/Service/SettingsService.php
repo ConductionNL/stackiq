@@ -912,6 +912,8 @@ class SettingsService {
 			'suite' => 'suite_schema',
 			'vulnerability' => 'kwetsbaarheid_schema',
 			'sector' => 'sector_schema',
+			// Planned maintenance on a product (lifecycle-maintenance-and-supplier-roadmap).
+			'maintenanceWindow' => 'maintenanceWindow_schema',
 		];
 
 		// Only check voorzieningen config if object type exists in the key map.
@@ -4224,6 +4226,7 @@ class SettingsService {
 				'moduleVersion' => 'moduleVersie_schema',
 				'sector' => 'sector_schema',
 				'sbomComponent' => 'sbomComponent_schema',
+				'maintenanceWindow' => 'maintenanceWindow_schema',
 			];
 
 			$config = [ 'register' => (string)($targetRegister['id'] ?? '') ];
@@ -4657,6 +4660,7 @@ class SettingsService {
 			'moduleVersie_schema',
 			'sector_schema',
 			'sbomComponent_schema',
+			'maintenanceWindow_schema',
 		];
 
 		// Copy any present schema keys; ignore sources/registers.

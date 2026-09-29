@@ -55,3 +55,11 @@ One demo maintenance window next week on a demo product with a usage, and a road
 ## Risks
 
 - The listener runs on create; owners added to a usage later are not notified for an already announced window. The widget still shows it to them.
+
+## Changed at build (29 Sep, development `a4a28c49`)
+
+- D1: `maintenanceWindow` lives in `lib/Settings/softwarecatalogus_register.json` itself (register 2.5.5), not in a `register.d` fragment. This repo's fragments may only overlay a schema the monolith declares, and the relation-dialect gate reads a fragment on its own, so a new schema with relations cannot live in one. `roadmapStatement` does stay in the fragment `register.d/maintenance-and-roadmap.json` (module 0.3.4). The schema also carries `recipientsResolvedAt` (see D3), and its icon is Calendar, the maintenance-like glyph both icon registries hold.
+- D3: the listener does not resolve the owners itself. It queues `MaintenanceRecipientsJob`, and the job calls `MaintenanceRecipientService`, so the usage reads and the write run off the supplier's request (ADR-078, gate 61). Two rule details follow from OpenRegister at `4abd8343`: the `field` recipient kind takes one string, so the rules use `{ kind: relation, relation: notifyUserIds }`, which reads an array of user ids; and an `updated` trigger's `changed` condition compares scalar values only, so `announced` fires on the change of `recipientsResolvedAt`, which the job writes together with `notifyUserIds`. A contact person maps to a Nextcloud user by the system address book UID, else by a unique e-mail match (`IUserManager::getByEmail`). The rules pass OpenRegister's own `NotificationAnnotationValidator`. The app resolves the schema id through `SettingsService` (`maintenanceWindow_schema` in the import map, the lookup map and the stored config's key list; a test proved the third was needed).
+- D4: the roadmap timeline sorts newest first, so planned versions (dated in the future) come first, and groups by month.
+- D5: already done before this change was built, in register 2.5.1 (stackiq#1140, moduleVersion 0.1.5 with the lifecycle on the enum values). Nothing to do.
+- D2: the Planned maintenance list offers "Announce maintenance" (the list's create button); the list filter fills in the product.

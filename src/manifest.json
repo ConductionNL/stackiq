@@ -329,6 +329,12 @@
 						"type": "catalog-panels",
 						"title": "Object statistics",
 						"_note": "The management info-box and the two per-object-type statistics tables, moved out of the former hand-written Dashboard view into src/components/CatalogPanels.vue. Registered as a widget TYPE via registerDashboardWidget() in main.js: CnDashboardPage resolves a widget's type against the LIBRARY catalog, not the app registry, and an unregistered type renders 'Widget not available' silently."
+					},
+					{
+						"id": "upcoming-maintenance",
+						"type": "upcoming-maintenance",
+						"title": "Planned maintenance",
+						"_note": "lifecycle-maintenance-and-supplier-roadmap: planned maintenance in the next 30 days on the applications the active organisation uses. A widget TYPE registered in main.js, like catalog-panels, because it joins the organisation's usages to the maintenance windows of their applications, which no built-in widget does."
 					}
 				],
 				"layout": [
@@ -369,10 +375,18 @@
 						"showTitle": false
 					},
 					{
+						"id": "6",
+						"widgetId": "upcoming-maintenance",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
 						"id": "5",
 						"widgetId": "catalog-panels",
 						"gridX": 0,
-						"gridY": 2,
+						"gridY": 6,
 						"gridWidth": 12,
 						"gridHeight": 8,
 						"showTitle": false,
@@ -507,7 +521,8 @@
 					{ "id": "md-usages", "type": "object-list", "title": "Usages", "icon": "OfficeBuilding", "content": { "register": "@resolve:voorzieningen_register", "schema": "usage", "filter": { "module": "@objectId" }, "columns": [ { "key": "consumer", "label": "Organisation" }, { "key": "moduleVersion", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 50, "rowRoute": "GebruikDetail", "viewAllRoute": "Gebruik", "viewAllQuery": { "module": "@objectId" }, "addLabel": "Add to our landscape", "formIncludeFields": [ "consumer", "moduleVersion", "status", "businessOwner", "technicalOwner" ], "emptyText": "No organisation registered a usage yet" } },
 					{ "id": "md-connections-out", "type": "object-list", "title": "Connections from this application", "icon": "LinkVariant", "content": { "register": "@resolve:voorzieningen_register", "schema": "connection", "filter": { "moduleA": "@objectId" }, "columns": [ { "key": "moduleB", "label": "To application" }, { "key": "nonMunicipalProvision", "label": "To national provision" }, { "key": "type", "label": "Type" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "KoppelingDetail", "viewAllRoute": "Koppelingen", "viewAllQuery": { "moduleA": "@objectId" }, "allowCreate": false, "emptyText": "No connections start at this application" } },
 					{ "id": "md-connections-in", "type": "object-list", "title": "Connections to this application", "icon": "LinkVariant", "content": { "register": "@resolve:voorzieningen_register", "schema": "connection", "filter": { "moduleB": "@objectId" }, "columns": [ { "key": "moduleA", "label": "From application" }, { "key": "type", "label": "Type" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "KoppelingDetail", "viewAllRoute": "Koppelingen", "viewAllQuery": { "moduleB": "@objectId" }, "allowCreate": false, "emptyText": "No connections end at this application" } },
-					{ "id": "md-ai-systems", "type": "object-list", "title": "AI systems", "icon": "RobotOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "aiSystem", "filter": { "module": "@objectId" }, "columns": [ { "key": "kind", "label": "Kind" }, { "key": "aiActRiskCategory", "label": "AI Act risk category" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "AiSystemDetail", "viewAllRoute": "AiSystems", "viewAllQuery": { "module": "@objectId" }, "allowCreate": false, "emptyText": "No AI systems registered for this application" } }
+					{ "id": "md-ai-systems", "type": "object-list", "title": "AI systems", "icon": "RobotOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "aiSystem", "filter": { "module": "@objectId" }, "columns": [ { "key": "kind", "label": "Kind" }, { "key": "aiActRiskCategory", "label": "AI Act risk category" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "AiSystemDetail", "viewAllRoute": "AiSystems", "viewAllQuery": { "module": "@objectId" }, "allowCreate": false, "emptyText": "No AI systems registered for this application" } },
+					{ "id": "md-maintenance", "type": "object-list", "title": "Planned maintenance", "icon": "Calendar", "content": { "register": "@resolve:voorzieningen_register", "schema": "maintenanceWindow", "filter": { "module": "@objectId" }, "sort": { "field": "startsAt", "dir": "asc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "startsAt", "label": "Starts at" }, { "key": "endsAt", "label": "Ends at" }, { "key": "impact", "label": "Impact" }, { "key": "status", "label": "Status" } ], "limit": 25, "addLabel": "Announce maintenance", "formIncludeFields": [ "title", "description", "moduleVersion", "startsAt", "endsAt", "impact" ], "emptyText": "No maintenance planned on this application" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "md-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
@@ -518,9 +533,11 @@
 					{ "id": "6", "widgetId": "md-compliance", "gridX": 0, "gridY": 12, "gridWidth": 12, "gridHeight": 4 },
 					{ "id": "7", "widgetId": "md-connections-out", "gridX": 0, "gridY": 16, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "8", "widgetId": "md-connections-in", "gridX": 6, "gridY": 16, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "9", "widgetId": "md-ai-systems", "gridX": 0, "gridY": 20, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "9", "widgetId": "md-ai-systems", "gridX": 0, "gridY": 20, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "10", "widgetId": "md-maintenance", "gridX": 0, "gridY": 24, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
+					{ "id": "md-roadmap", "component": "ProductRoadmap", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "md-contracts", "component": "ApplicationContractsPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "md-reviews", "component": "ReviewsPanel", "props": { "objectId": "@objectId", "subjectType": "module" }, "placement": "end", "colSpan": 12 }
 				],
@@ -935,8 +952,13 @@
 				"columns": [
 					"version",
 					"module",
+					"dateInDevelopment",
 					"dateInUse",
 					"status"
+				],
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "Planned releases", "filter": { "status": "in development" }, "icon": "MapMarkerPath" }
 				],
 				"sidebar": {
 					"enabled": true,
