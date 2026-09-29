@@ -151,6 +151,58 @@
 					</div>
 				</div>
 			</section>
+
+			<!-- Seats: licences in use against licences bought -->
+			<section class="pv-section" data-testid="posture-seats">
+				<h3 class="pv-sectionTitle">
+					{{ t('stackiq', 'Seats') }}
+				</h3>
+				<NcEmptyContent
+					v-if="seatTableRows.length === 0"
+					:name="t('stackiq', 'No licence contracts with counts')" />
+				<table v-else class="pv-table">
+					<thead>
+						<tr>
+							<th scope="col">{{ t('stackiq', 'Application') }}</th>
+							<th scope="col">{{ t('stackiq', 'Organisation') }}</th>
+							<th scope="col">{{ t('stackiq', 'Licence metric') }}</th>
+							<th scope="col">
+								{{ t('stackiq', 'Licences bought') }}
+							</th>
+							<th scope="col">
+								{{ t('stackiq', 'Licences in use') }}
+							</th>
+							<th scope="col">{{ t('stackiq', 'Status') }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="row in seatTableRows"
+							:key="row.contractId"
+							:class="{ 'pv-row--over': row.isOver }"
+							data-testid="posture-seat-row">
+							<td>
+								<router-link
+									v-if="row.contractId"
+									:to="{
+										name: 'ContractDetail',
+										params: { id: row.contractId },
+									}">
+									{{ row.applicationName }}
+								</router-link>
+								<template v-else>
+									{{ row.applicationName }}
+								</template>
+							</td>
+							<td>{{ row.organisationName }}</td>
+							<td>{{ row.metricLabel }}</td>
+							<td>{{ row.boughtLabel }}</td>
+							<td>{{ row.inUseLabel }}</td>
+							<td>{{ row.stateLabel }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
 		</template>
 	</div>
 </template>
@@ -166,8 +218,11 @@ import {
 	perOrganisationPosture,
 	perVendorRollup,
 	portfolioPosture,
+	SEAT_STATE,
+	seatRows,
 } from '../utils/licensePosture.js'
 import { resolveUuid } from '../utils/lifecyclePhase.js'
+import { licenceMetricLabel, seatStateLabel } from '../utils/seatLabels.js'
 
 /**
  * @class LicensePostureView
@@ -251,6 +306,28 @@ export default {
 		 */
 		contracts() {
 			return objectStore.getCollection('catalogContract')?.results || []
+		},
+
+		/**
+		 * The Seats section rows, names resolved and labels translated.
+		 *
+		 * @return {Array<object>} One row per counted licence contract, over-licence first.
+		 * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-003-the-license-posture-page-shall-list-every-counted-licence-contract-with-its-seat-state-over-use-first
+		 */
+		seatTableRows() {
+			return seatRows(this.contracts, this.usages).map((row) => ({
+				...row,
+				applicationName:
+					this.moduleNameIndex[row.moduleId]
+					|| row.contractNumber
+					|| t('stackiq', 'Contract'),
+				organisationName: this.organisatieIndex[row.consumerId] || '',
+				metricLabel: licenceMetricLabel(row.metric),
+				boughtLabel: row.bought.toLocaleString(),
+				inUseLabel: row.inUse === null ? '' : row.inUse.toLocaleString(),
+				stateLabel: seatStateLabel(row),
+				isOver: row.state === SEAT_STATE.OVER,
+			}))
 		},
 
 		/**
@@ -542,6 +619,10 @@ export default {
 .pv-kpiLabel {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
+}
+
+.pv-row--over td {
+	color: var(--color-error-text);
 }
 
 .pv-table {

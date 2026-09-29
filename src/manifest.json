@@ -583,7 +583,8 @@
 					{ "id": "5", "widgetId": "ct-decisions", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
-					{ "id": "ct-approval", "component": "ContractApprovalPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
+					{ "id": "ct-approval", "component": "ContractApprovalPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
+					{ "id": "ct-seats", "component": "ContractSeatsPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,
