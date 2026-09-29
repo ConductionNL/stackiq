@@ -38,7 +38,7 @@ The connections list SHALL let the user narrow the rows to one or more transport
 @e2e tests/e2e/workflows/connections.spec.ts
 
 - **GIVEN** the connections list shows one `api` and one `file transfer` connection
-- **WHEN** the information manager picks type `api` in the table's filter menu
+- **WHEN** the information manager filters the list on type `api` (the table's filter menu, or `/koppelingen?type=api`)
 - **THEN** only the `api` connection remains in the list
 
 ### Requirement: REQ-CCP-003 The application page lists the connections that start and end there

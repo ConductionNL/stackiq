@@ -92,7 +92,11 @@ describe('detail page keys match their schema', () => {
 		const pages = fs
 			.readdirSync(dir)
 			.filter((f) => f.endsWith('.json'))
-			.flatMap((f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')).pages ?? [])
+			.flatMap(
+				(f) =>
+					JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')).pages
+					?? [],
+			)
 		expect(staleKeys({ pages }, allSchemas())).toEqual([])
 	})
 

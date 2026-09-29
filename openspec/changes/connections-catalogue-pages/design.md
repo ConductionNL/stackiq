@@ -32,11 +32,11 @@ Rejected: a custom widget that calls `GET /api/koppelingen-gebruik/{uuid}` (`Aan
 
 All in `lib/Settings/softwarecatalogus_register.json`, schema `connection`:
 
-1. **Lifecycle states.** Replace the Dutch states in `x-openregister-lifecycle` (:3926) with the enum values: initial `in development`, final `withdrawn`, transitions release (`in development` to `in use`), sunset (`in use` to `end of support`), withdraw (`in use`, `end of support` to `withdrawn`). The rows already hold the English values (`lib/Repair/RenameDutchCatalogValues.php:87-90`).
+1. **Lifecycle states.** (Already landed before this change was built: #1154, register 2.5.1, connection 0.3.2. `tests/Unit/Settings/ConnectionSchemaTest.php` keeps it true.) Replace the Dutch states in `x-openregister-lifecycle` (:3926) with the enum values: initial `in development`, final `withdrawn`, transitions release (`in development` to `in use`), sunset (`in use` to `end of support`), withdraw (`in use`, `end of support` to `withdrawn`). The rows already hold the English values (`lib/Repair/RenameDutchCatalogValues.php:87-90`).
 2. **Picker.** Change `objectConfiguration.queryParams` on `nonMunicipalProvision` (:3720) to `gemmaType=Buitengemeentelijke voorziening`, the spelling the GEMMA model uses.
 3. **Name template.** `objectNameField` names `gegevensuitwisselingRichting` and `buitengemeentelijkVoorziening`, keys the schema renamed to `dataExchangeDirection` and `nonMunicipalProvision`, and maps `AnaarB`, `BnaarA`, `bi-directioneel` where the enum holds `AtoB`, `BtoA`, `bi-directional`. Rewrite it on the current keys and values, so a connection reads "Application A to Application B" in lists and pickers.
 4. **Facets.** Set `facetable: true` on `type`, `status` and `dataExchangeDirection`, so the index page can count and filter them.
-5. **Version.** Bump the `connection` schema version to 0.3.2 and the register version, and add a changelog line. The register changelog entry 2.4.4 (`register.json:7`) records why: OpenRegister skips an import whose deployed version is not lower, and its content check ignores `configuration`.
+5. **Version.** Bump the `connection` schema version (built: 0.3.3, since #1154 had taken 0.3.2) and the register version (built: 2.5.2), and add a changelog line. The register changelog entry 2.4.4 (`register.json:7`) records why: OpenRegister skips an import whose deployed version is not lower, and its content check ignores `configuration`.
 
 ## D4. Menu
 
@@ -50,7 +50,12 @@ Everything here is declarative: manifest pages, `object-list` widgets, the schem
 
 ## Seed data
 
-No new schema. The demo register `lib/Settings/stackiq_mock_register.json` gains three connections (an API between two demo applications, a file transfer, and one to a national provision) so the pages show rows on a fresh install.
+No new schema. As built: the demo register `lib/Settings/stackiq_mock_register.json` already carries six generated connections (types n/a, file transfer and digikoppeling, all three first statuses), so it is left as is.
+
+## As built (2026-09-29)
+
+- Widget icons: `TransitConnectionVariant` is in the app icon registry (menu) but not in nextcloud-vue's widget registry, so the grid widgets use `LinkVariant` (`tests/vitest/manifestWidgetIcons.spec.js`).
+- The type filter is the table's filter menu; the same filter is reachable as a route query (`/koppelingen?type=api`), which is what the View all links of the application page use.
 
 ## Risks
 

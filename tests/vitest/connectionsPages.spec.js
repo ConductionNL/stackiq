@@ -9,14 +9,14 @@
  * @spec openspec/changes/connections-catalogue-pages/specs/catalogue-connection-pages/spec.md#requirement-req-ccp-001-a-user-can-browse-every-connection-they-may-read-in-one-list
  */
 
-import Ajv2020 from 'ajv/dist/2020.js'
 import addFormats from 'ajv-formats'
+import Ajv2020 from 'ajv/dist/2020.js'
 import * as fs from 'fs'
 import * as path from 'path'
 import { describe, expect, it } from 'vitest'
-import { buildManifest } from '../../node_modules/@conduction/nextcloud-vue/src/utils/buildManifest.js'
 import register from '../../lib/Settings/softwarecatalogus_register.json'
 import manifestSchema from '../../node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest-v2.schema.json'
+import { buildManifest } from '../../node_modules/@conduction/nextcloud-vue/src/utils/buildManifest.js'
 import base from '../../src/manifest.json'
 import menuLayout from '../../src/menu-layout.json'
 
@@ -43,7 +43,9 @@ describe('the Connections pages', () => {
 		const index = page('Koppelingen')
 		expect(index.route).toBe('/koppelingen')
 		expect(index.config.schema).toBe('connection')
-		expect(index.config.columns).toEqual(expect.arrayContaining(['type', 'status', 'moduleA', 'moduleB']))
+		expect(index.config.columns).toEqual(
+			expect.arrayContaining(['type', 'status', 'moduleA', 'moduleB']),
+		)
 		expect(index.config.filterMenu).toBe(true)
 		const detail = page('KoppelingDetail')
 		expect(detail.route).toBe('/koppelingen/:id')
@@ -55,8 +57,12 @@ describe('the Connections pages', () => {
 		for (const key of ['type', 'status', 'dataExchangeDirection']) {
 			expect(properties[key].facetable, key).toBe(true)
 		}
-		const quick = page('Koppelingen').config.quickFilters.map((q) => q.filter.status).filter(Boolean)
-		expect(quick.every((value) => properties.status.enum.includes(value))).toBe(true)
+		const quick = page('Koppelingen')
+			.config.quickFilters.map((q) => q.filter.status)
+			.filter(Boolean)
+		expect(quick.every((value) => properties.status.enum.includes(value))).toBe(
+			true,
+		)
 	})
 
 	it('is reachable from the Applications menu, without a new top-level entry', () => {
@@ -75,6 +81,8 @@ describe('the Connections pages', () => {
 			expect(widget.content.rowRoute).toBe('KoppelingDetail')
 		}
 		const layoutIds = page('ModuleDetail').config.layout.map((l) => l.widgetId)
-		expect(layoutIds).toEqual(expect.arrayContaining(['md-connections-out', 'md-connections-in']))
+		expect(layoutIds).toEqual(
+			expect.arrayContaining(['md-connections-out', 'md-connections-in']),
+		)
 	})
 })
