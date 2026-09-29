@@ -807,6 +807,17 @@
         "No contracts found for this application": "Geen contracten gevonden voor deze applicatie",
         "The contracts could not be loaded.": "De contracten konden niet worden geladen.",
         "Usages": "Gebruik",
-        "No organisation registered a usage yet": "Nog geen organisatie heeft gebruik geregistreerd"
+        "No organisation registered a usage yet": "Nog geen organisatie heeft gebruik geregistreerd",
+        "Every connection between applications, and from an application to a national provision.": "Alle koppelingen tussen applicaties, en van een applicatie naar een landelijke voorziening.",
+        "In use": "In gebruik",
+        "In development": "In ontwikkeling",
+        "Applications and standards": "Applicaties en standaarden",
+        "Connections from this application": "Koppelingen vanuit deze applicatie",
+        "Connections to this application": "Koppelingen naar deze applicatie",
+        "To application": "Naar applicatie",
+        "To national provision": "Naar landelijke voorziening",
+        "From application": "Van applicatie",
+        "No connections start at this application": "Er beginnen geen koppelingen bij deze applicatie",
+        "No connections end at this application": "Er eindigen geen koppelingen bij deze applicatie"
     }
 }

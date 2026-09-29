@@ -1,15 +1,9 @@
-# catalogue-connection-pages specification
-
-**Status**: proposed
-**Scope**: stackiq
-**OpenSpec changes**:
-- connections-catalogue-pages
+# catalogue-connection-pages Specification
 
 ## Purpose
-
 A connection records that one application exchanges data with another, or with a national provision. Users browse connections, filter them by transport, open one, and see an application's connections on its own page. Matrix rows `stackiq:conn-list-page`, `stackiq:conn-type-filter`, `stackiq:conn-per-application` and `stackiq:conn-external-provision`.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: REQ-CCP-001 A user can browse every connection they may read in one list
 
@@ -38,7 +32,7 @@ The connections list SHALL let the user narrow the rows to one or more transport
 @e2e tests/e2e/workflows/connections.spec.ts
 
 - **GIVEN** the connections list shows one `api` and one `file transfer` connection
-- **WHEN** the information manager picks type `api` in the table's filter menu
+- **WHEN** the information manager filters the list on type `api` (the table's filter menu, or `/koppelingen?type=api`)
 - **THEN** only the `api` connection remains in the list
 
 ### Requirement: REQ-CCP-003 The application page lists the connections that start and end there

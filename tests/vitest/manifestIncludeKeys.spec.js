@@ -87,6 +87,19 @@ describe('detail page keys match their schema', () => {
 		expect(staleKeys(manifest, allSchemas())).toEqual([])
 	})
 
+	it('holds for the pages the manifest.d fragments add', () => {
+		const dir = path.resolve(__dirname, '../../src/manifest.d')
+		const pages = fs
+			.readdirSync(dir)
+			.filter((f) => f.endsWith('.json'))
+			.flatMap(
+				(f) =>
+					JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')).pages
+					?? [],
+			)
+		expect(staleKeys({ pages }, allSchemas())).toEqual([])
+	})
+
 	it('names the page and the key when one is stale', () => {
 		const man = {
 			pages: [
