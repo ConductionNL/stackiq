@@ -998,5 +998,205 @@
   "reason": "Owned by ConductionNL/integriq. Its open change connection-registry covers the integrations overview; stackiq's half is the open change adopt-connection-registry (19 of 20 tasks). Recorded as instructed by the coordinator; the matrix row is the integriq lane's to set.",
   "change": "connection-registry (ConductionNL/integriq)",
   "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-forum-standaardisatie",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, no demand, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "comp-audit-questionnaire",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "mkt-contact-peers",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (market).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "life-strategy-link",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (lifecycle).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ctr-effective-licence-position",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, no demand, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ctr-budget",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ctr-depreciation",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "sec-risk-score",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, no demand, outside the core areas (security).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "sec-patch-status",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, no demand, outside the core areas (security).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ops-mobile",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (operations).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ins-scheduled-report",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (insight).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "comp-security-officer-signoff",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "comp-processing-register-generate",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ctr-collective-agreements",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "mkt-side-by-side-compare",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (market).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "comp-common-ground-fit",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "comp-retention-cleanup",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, changelog only, which counts as the competitor it names, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ctr-linked-contracts",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "life-dates-follow-status",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (lifecycle).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "org-assigned-only-rights",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, changelog only, which counts as the competitor it names, outside the core areas (organisations).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "life-version-tolerance",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, roadmap demand without a competitor yes, outside the core areas (lifecycle).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ins-usage-analytics",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, changelog only, which counts as the competitor it names, outside the core areas (insight).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "org-status",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Missing half decided no (defer retired 2026-09-28): only GLPI rates partial, no competitor rates yes, no demand, outside the core areas (organisations). The broken half stays: the organisation status field is hidden and locked, the status dialog is never opened, and the concept organisations dashboard widget filters and writes the old Dutch values concept and actief, which are not in the enum.",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "share-open-data-privacy",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Missing half decided no (defer retired 2026-09-28): only the GEMMA Softwarecatalogus rates partial, no competitor rates yes, no demand, outside the core areas (sharing). The unused PII projection util stays unwired.",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "arch-import-progress",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture). Building with no change for its missing half; the cancel endpoint calls a method that does not exist and the import never records progress, so the change repairs and finishes it.",
+  "change": "architecture-import-progress-and-cancel",
+  "decidedOn": "2026-09-28"
  }
 ]
