@@ -39,7 +39,7 @@ Rejected: owner fields on `module`. A module is the supplier's product; the busi
 
 ## D4. Register fixes
 
-Items 1 and 3 landed before this change was built, in register 2.5.1 (stackiq#1140: usage 1.5.1 with the lifecycle on the enum values). The fragment `usage-owners.json` carries item 2 and the owners, and bumps usage to 1.5.2. It also makes `status` facetable for the list's status filters. The seeded usages in the register held `in-gebruik`, a value outside the enum; they now read In production and Planned.
+Items 1 and 3 landed before this change was built, in register 2.5.1 (stackiq#1140: usage 1.5.1 with the lifecycle on the enum values). Item 2 and the owners went into the register itself (2.5.4, usage 1.5.2), not into a `register.d` fragment as D3 says: the relation-dialect gate reads a fragment on its own and cannot see `consumer`, the field the owners' `x-relation-filter` names. It also makes `status` facetable for the list's status filters. The seeded usages in the register held `in-gebruik`, a value outside the enum; they now read In production and Planned.
 
 In `lib/Settings/softwarecatalogus_register.json`, schema `usage`:
 

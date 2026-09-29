@@ -5,7 +5,7 @@
  * Applications in use: the usage pages as the app builds them (manifest.d
  * merged the way src/main.js merges it), the add action on the application
  * page and the usage list on the organisation page, and the seeded usages
- * validated against the real usage schema with the owners fragment merged in.
+ * validated against the real usage schema.
  *
  * @spec openspec/specs/application-usage-pages/spec.md
  */
@@ -33,20 +33,10 @@ const merged = buildManifest(
 	menuLayout,
 )
 const page = (id) => merged.pages.find((p) => p.id === id)
-const widget = (pageId, widgetId) => page(pageId).config.widgets.find((w) => w.id === widgetId)
+const widget = (pageId, widgetId) =>
+	page(pageId).config.widgets.find((w) => w.id === widgetId)
 
-const fragment = JSON.parse(
-	fs.readFileSync(path.resolve(__dirname, '../../lib/Settings/register.d/usage-owners.json'), 'utf8'),
-)
-const baseUsage = register.components.schemas.usage
-const usage = {
-	...baseUsage,
-	...fragment.components.schemas.usage,
-	properties: { ...baseUsage.properties },
-}
-for (const [key, prop] of Object.entries(fragment.components.schemas.usage.properties)) {
-	usage.properties[key] = { ...(baseUsage.properties[key] || {}), ...prop }
-}
+const usage = register.components.schemas.usage
 
 /**
  * A validator built from the real usage properties. A relation is checked as
@@ -79,7 +69,10 @@ describe('the usage pages', () => {
 	it('lists Applications in use under Applications', () => {
 		const modules = merged.menu.find((m) => m.id === 'Modules')
 		const child = modules.children.find((c) => c.id === 'Gebruik')
-		expect(child).toMatchObject({ label: 'Applications in use', route: 'Gebruik' })
+		expect(child).toMatchObject({
+			label: 'Applications in use',
+			route: 'Gebruik',
+		})
 		expect(merged.menu.find((m) => m.id === 'Gebruik')).toBeUndefined()
 	})
 
@@ -88,12 +81,20 @@ describe('the usage pages', () => {
 		expect(index.route).toBe('/gebruik')
 		expect(index.config.schema).toBe('usage')
 		expect(index.config.columns).toEqual(
-			expect.arrayContaining(['module', 'moduleVersion', 'status', 'businessOwner', 'technicalOwner']),
+			expect.arrayContaining([
+				'module',
+				'moduleVersion',
+				'status',
+				'businessOwner',
+				'technicalOwner',
+			]),
 		)
 		for (const column of index.config.columns) {
 			expect(usage.properties, column).toHaveProperty(column)
 		}
-		const statuses = index.config.quickFilters.map((q) => q.filter.status).filter(Boolean)
+		const statuses = index.config.quickFilters
+			.map((q) => q.filter.status)
+			.filter(Boolean)
 		expect(statuses).toEqual(usage.properties.status.enum)
 	})
 
@@ -103,13 +104,21 @@ describe('the usage pages', () => {
 		expect(detail.config.lifecycleActions).toEqual({ field: 'status' })
 		const include = widget('GebruikDetail', 'gb-data').content.include
 		expect(include).toEqual(
-			expect.arrayContaining(['module', 'moduleVersion', 'status', 'businessOwner', 'technicalOwner']),
+			expect.arrayContaining([
+				'module',
+				'moduleVersion',
+				'status',
+				'businessOwner',
+				'technicalOwner',
+			]),
 		)
 		for (const field of include) {
 			expect(usage.properties, field).toHaveProperty(field)
 		}
 		const layoutIds = detail.config.layout.map((l) => l.widgetId)
-		expect(layoutIds.sort()).toEqual(detail.config.widgets.map((w) => w.id).sort())
+		expect(layoutIds.sort()).toEqual(
+			detail.config.widgets.map((w) => w.id).sort(),
+		)
 	})
 })
 
@@ -120,41 +129,61 @@ describe('adding an application to the landscape', () => {
 		expect(list.content.addLabel).toBe('Add to our landscape')
 		expect(list.content.filter).toEqual({ module: '@objectId' })
 		expect(list.content.rowRoute).toBe('GebruikDetail')
-		expect(list.content.formIncludeFields).toEqual(
-			['consumer', 'moduleVersion', 'status', 'businessOwner', 'technicalOwner'],
-		)
+		expect(list.content.formIncludeFields).toEqual([
+			'consumer',
+			'moduleVersion',
+			'status',
+			'businessOwner',
+			'technicalOwner',
+		])
 		for (const field of list.content.formIncludeFields) {
 			expect(usage.properties, field).toHaveProperty(field)
 		}
 	})
 
 	it('offers only versions of the application in the version picker', () => {
-		expect(usage.properties.moduleVersion['x-relation-filter']).toEqual({ module: '@object.module' })
+		expect(usage.properties.moduleVersion['x-relation-filter']).toEqual({
+			module: '@object.module',
+		})
 	})
 
 	it('lists the applications an organisation uses on its page', () => {
 		const list = widget('OrganisatieDetail', 'org-usages')
-		expect(list.content).toMatchObject({ schema: 'usage', filter: { consumer: '@objectId' }, rowRoute: 'GebruikDetail' })
-		expect(page('OrganisatieDetail').config.layout.map((l) => l.widgetId)).toContain('org-usages')
+		expect(list.content).toMatchObject({
+			schema: 'usage',
+			filter: { consumer: '@objectId' },
+			rowRoute: 'GebruikDetail',
+		})
+		expect(
+			page('OrganisatieDetail').config.layout.map((l) => l.widgetId),
+		).toContain('org-usages')
 	})
 })
 
 describe('the seeded usages', () => {
 	const validate = compileUsage()
-	const seeds = [...register.components.objects, ...mock.components.objects].filter(
-		(o) => o['@self'] && o['@self'].schema === 'usage',
-	)
+	const seeds = [
+		...register.components.objects,
+		...mock.components.objects,
+	].filter((o) => o['@self'] && o['@self'].schema === 'usage')
 
-	it('are valid against the usage schema with the owners merged in', () => {
+	it('are valid against the usage schema', () => {
 		expect(seeds.length).toBeGreaterThan(0)
 		for (const seed of seeds) {
-			expect(validate(seed), `${seed['@self'].slug}: ${JSON.stringify(validate.errors)}`).toBe(true)
+			expect(
+				validate(seed),
+				`${seed['@self'].slug}: ${JSON.stringify(validate.errors)}`,
+			).toBe(true)
 		}
 	})
 
 	it('include usages in production with both owners and a planned one', () => {
-		const withOwners = seeds.filter((s) => s.businessOwner !== undefined && s.technicalOwner !== undefined)
+		const withOwners = seeds.filter(
+			(s) => s.businessOwner !== undefined && s.technicalOwner !== undefined,
+		)
 		expect(withOwners.length).toBeGreaterThan(0)
-		expect(seeds.map((s) => s.status)).toEqual(expect.arrayContaining(['In production', 'Planned']))
+		expect(seeds.map((s) => s.status)).toEqual(
+			expect.arrayContaining(['In production', 'Planned']),
+		)
 	})
 })

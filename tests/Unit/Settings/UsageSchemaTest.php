@@ -1,9 +1,7 @@
 <?php
 
 /**
- * The usage schema as the app imports it: the register with the usage-owners
- * fragment merged in through SettingsService::deepMergeConfig, the same merge
- * the import runs.
+ * The usage schema as the app imports it from the register.
  *
  * @category  Tests
  * @package   OCA\Stackiq\Tests\Unit\Settings
@@ -20,9 +18,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Settings;
 
-use OCA\Stackiq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
-use ReflectionMethod;
 
 /**
  * Asserts the owner fields, the lifecycle, the name template and the seeds of
@@ -36,12 +32,7 @@ class UsageSchemaTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private function register(): array {
-		$dir      = __DIR__ . '/../../../lib/Settings';
-		$base     = json_decode((string) file_get_contents($dir . '/softwarecatalogus_register.json'), true);
-		$fragment = json_decode((string) file_get_contents($dir . '/register.d/usage-owners.json'), true);
-
-		$merge = new ReflectionMethod(SettingsService::class, 'deepMergeConfig');
-		return $merge->invoke(null, $base, $fragment);
+		return json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json'), true);
 	}//end register()
 
 	/**
@@ -72,11 +63,11 @@ class UsageSchemaTest extends TestCase {
 	}//end testBothOwnersAreContactPersonsOfTheConsumer()
 
 	/**
-	 * The merge adds the owners and keeps every property the usage had.
+	 * The owners join the usage and every property it had stays.
 	 *
 	 * @return void
 	 */
-	public function testTheMergeKeepsTheExistingProperties(): void {
+	public function testTheExistingPropertiesStay(): void {
 		$props = $this->usage()['properties'];
 		foreach (['consumer', 'module', 'moduleVersion', 'status', 'contactPerson', 'timeClassification'] as $field) {
 			$this->assertArrayHasKey($field, $props, $field);
@@ -84,7 +75,7 @@ class UsageSchemaTest extends TestCase {
 
 		$this->assertSame(['Acquisition', 'Planned', 'In production', 'To be phased out', 'Phased out'], $props['status']['enum']);
 		$this->assertTrue($props['status']['facetable']);
-	}//end testTheMergeKeepsTheExistingProperties()
+	}//end testTheExistingPropertiesStay()
 
 	/**
 	 * Plan, Go live, Phase out and Retire name only states the status enum holds.
@@ -127,7 +118,7 @@ class UsageSchemaTest extends TestCase {
 	}//end testTheNameTemplateReadsExistingKeys()
 
 	/**
-	 * The schema version moves up, or the import skips the fragment.
+	 * The schema version moves up, or the import skips the change.
 	 *
 	 * @return void
 	 */

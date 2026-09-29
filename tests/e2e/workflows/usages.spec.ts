@@ -51,19 +51,37 @@ test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
 	ids.org = await seed('organization', { name: `${RUN_ID} municipality` })
-	ids.anna = await seed('contactPerson', { contactsUid: anna, organization: ids.org })
-	ids.bram = await seed('contactPerson', { contactsUid: bram, organization: ids.org })
+	ids.anna = await seed('contactPerson', {
+		contactsUid: anna,
+		organization: ids.org,
+	})
+	ids.bram = await seed('contactPerson', {
+		contactsUid: bram,
+		organization: ids.org,
+	})
 	ids.x = await seed('module', { name: appX })
 	ids.y = await seed('module', { name: appY })
-	ids.x20 = await seed('moduleVersion', { module: ids.x, version: '2.0', status: 'in use' })
-	ids.x21 = await seed('moduleVersion', { module: ids.x, version: '2.1', status: 'in use' })
+	ids.x20 = await seed('moduleVersion', {
+		module: ids.x,
+		version: '2.0',
+		status: 'in use',
+	})
+	ids.x21 = await seed('moduleVersion', {
+		module: ids.x,
+		version: '2.1',
+		status: 'in use',
+	})
 	ids.usageX = await seed('usage', {
 		consumer: ids.org,
 		module: ids.x,
 		moduleVersion: ids.x21,
 		status: 'In production',
 	})
-	ids.usageY = await seed('usage', { consumer: ids.org, module: ids.y, status: 'Planned' })
+	ids.usageY = await seed('usage', {
+		consumer: ids.org,
+		module: ids.y,
+		status: 'Planned',
+	})
 })
 
 test.afterAll(async () => {
@@ -75,38 +93,60 @@ test.afterAll(async () => {
 })
 
 // @e2e application-usage-pages::an-information-manager-lists-the-organisation-s-applications
-test('Applications in use lists both applications with version and status', async ({ page }) => {
+test('Applications in use lists both applications with version and status', async ({
+	page,
+}) => {
 	await gotoAppRoute(page, '/gebruik')
 	await dismissSupportDialog(page)
 	const rowX = page.getByRole('row').filter({ hasText: appX })
 	await expect(rowX).toContainText('2.1', { timeout: 30000 })
 	await expect(rowX).toContainText('In production')
-	await expect(page.getByRole('row').filter({ hasText: appY })).toContainText('Planned')
+	await expect(page.getByRole('row').filter({ hasText: appY })).toContainText(
+		'Planned',
+	)
 })
 
 // @e2e application-usage-pages::adding-an-application-with-its-version
-test('adding an application from its page creates a usage with the version picked', async ({ page }) => {
+test('adding an application from its page creates a usage with the version picked', async ({
+	page,
+}) => {
 	await gotoAppRoute(page, `/modules/${ids.y}`)
 	await dismissSupportDialog(page)
 	await page.getByRole('button', { name: 'Add to our landscape' }).first().click()
 	const dialog = page.getByRole('dialog')
 	await expect(dialog).toBeVisible({ timeout: 30000 })
-	await dialog.getByRole('button', { name: /save|create/i }).last().click()
+	await dialog
+		.getByRole('button', { name: /save|create/i })
+		.last()
+		.click()
 	await expect(dialog).toBeHidden({ timeout: 30000 })
 	await gotoAppRoute(page, '/gebruik')
 	await expect(page.getByText(appY).first()).toBeVisible({ timeout: 30000 })
 })
 
 // @e2e application-usage-pages::setting-both-owners
-test('the usage page shows the business owner and the technical owner', async ({ page }) => {
+test('the usage page shows the business owner and the technical owner', async ({
+	page,
+}) => {
 	const res = await apiCtx.put(
 		`/index.php/apps/openregister/api/objects/${cfg.register}/usage/${ids.usageX}`,
-		{ data: { consumer: ids.org, module: ids.x, moduleVersion: ids.x21, status: 'In production', businessOwner: ids.anna, technicalOwner: ids.bram } },
+		{
+			data: {
+				consumer: ids.org,
+				module: ids.x,
+				moduleVersion: ids.x21,
+				status: 'In production',
+				businessOwner: ids.anna,
+				technicalOwner: ids.bram,
+			},
+		},
 	)
 	expect(res.ok()).toBe(true)
 	await gotoAppRoute(page, `/gebruik/${ids.usageX}`)
 	await dismissSupportDialog(page)
-	await expect(page.getByText('Business owner').first()).toBeVisible({ timeout: 30000 })
+	await expect(page.getByText('Business owner').first()).toBeVisible({
+		timeout: 30000,
+	})
 	await expect(page.getByText(anna).first()).toBeVisible()
 	await expect(page.getByText(bram).first()).toBeVisible()
 })
@@ -115,6 +155,11 @@ test('the usage page shows the business owner and the technical owner', async ({
 test('Go live moves a planned usage to In production', async ({ page }) => {
 	await gotoAppRoute(page, `/gebruik/${ids.usageY}`)
 	await dismissSupportDialog(page)
-	await page.getByRole('button', { name: /go live/i }).first().click()
-	await expect(page.getByText('In production').first()).toBeVisible({ timeout: 30000 })
+	await page
+		.getByRole('button', { name: /go live/i })
+		.first()
+		.click()
+	await expect(page.getByText('In production').first()).toBeVisible({
+		timeout: 30000,
+	})
 })
