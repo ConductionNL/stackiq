@@ -803,7 +803,12 @@ OC.L10N.register(
         "Saving objects": "Objecten opslaan",
         "Finishing the import": "Import afronden",
         "Importing": "Importeren",
-        "{processed} of {total} objects saved": "{processed} van {total} objecten opgeslagen"
+        "{processed} of {total} objects saved": "{processed} van {total} objecten opgeslagen",
+        "Loading contracts": "Contracten laden",
+        "No contracts found for this application": "Geen contracten gevonden voor deze applicatie",
+        "The contracts could not be loaded.": "De contracten konden niet worden geladen.",
+        "Usages": "Gebruik",
+        "No organisation registered a usage yet": "Nog geen organisatie heeft gebruik geregistreerd"
     },
     "nplurals=2; plural=(n != 1);"
 )

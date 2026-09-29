@@ -19,6 +19,7 @@
 
 import { generateUrl } from '@nextcloud/router'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
+import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
@@ -79,6 +80,10 @@ export default {
 	// integration registry and projected back onto the contract; stackiq
 	// owns no approval workflow. Stays a custom tab component because it surfaces
 	// a cross-app outcome no built-in detail widget expresses.
+	// The contracts behind an application, a bodyWidgets section on ModuleDetail
+	// (landscape-application-page): two hops, so not an object-list widget.
+	ApplicationContractsPanel,
+
 	ContractApprovalPanel,
 
 	// --- Admin-triggered organisation-merge (VNG Softwarecatalogus #141). ---

@@ -114,7 +114,10 @@ generic route-query-to-filter passthrough never sees it (see the
 					:filter="listFilter"
 					:quickFilters="quickFilters"
 					:quickFilterMode="quickFilterMode"
-					:quickFilterMultiple="quickFilterMultiple" />
+					:quickFilterMultiple="quickFilterMultiple"
+					:rowClickToView="Boolean(detailRoute)"
+					@rowClick="openDetail"
+					@view="openDetail" />
 			</div>
 		</div>
 
@@ -143,6 +146,7 @@ import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 import { useFacetStore } from '../store/modules/facets.js'
+import { rowDetailLocation } from '../utils/applicationContracts.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
@@ -175,6 +179,15 @@ export default {
 	},
 
 	props: {
+		/**
+		 * Named route of the page one row opens, for example `ModuleDetail`.
+		 * Empty keeps rows where they are (the Services list has no detail page).
+		 */
+		detailRoute: {
+			type: String,
+			default: '',
+		},
+
 		/** `module` or `dienst` — which GEMMA-faceted listing this page renders. */
 		schema: {
 			type: String,
@@ -349,6 +362,20 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Open the detail page of a clicked row, or of the row whose View action was used.
+		 *
+		 * @param {object} row The row
+		 * @return {void}
+		 * @spec openspec/changes/landscape-application-page/specs/application-page/spec.md#requirement-req-apg-004-the-applications-list-opens-the-application-page
+		 */
+		openDetail(row) {
+			const location = rowDetailLocation(this.detailRoute, row)
+			if (location) {
+				this.$router.push(location)
+			}
+		},
+
 		/**
 		 * Re-fetch this schema's facet counts (search + active filters
 		 * already live in the store).
