@@ -721,7 +721,16 @@ OC.L10N.register(
         "Applications supplied": "Applications supplied",
         "Services supplied": "Services supplied",
         "Applications managed": "Applications managed",
-        "Services managed": "Services managed"
+        "Services managed": "Services managed",
+        "Cancel import": "Cancel import",
+        "Import cancelled. {count} objects were saved before it stopped.": "Import cancelled. {count} objects were saved before it stopped.",
+        "Checking the file": "Checking the file",
+        "Reading the model": "Reading the model",
+        "Converting the model": "Converting the model",
+        "Saving objects": "Saving objects",
+        "Finishing the import": "Finishing the import",
+        "Importing": "Importing",
+        "{processed} of {total} objects saved": "{processed} of {total} objects saved"
     },
     "nplurals=2; plural=(n != 1);"
 )
