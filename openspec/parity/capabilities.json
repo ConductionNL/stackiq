@@ -638,22 +638,23 @@
 			"bluedolphin": "yes",
 			"glpi": "partial",
 			"topdesk": "partial",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "src/manifest.json:491 ModuleDetail: md-versions (:504), md-compliance (:503), md-related generic Related panel (:502); no contract widget (catalogContract links to service/usage, register.json:3250, not to module); md-data include lists stale keys beschrijvingKort/beschrijvingLang/contactpersoon (:500)",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "src/manifest.json ModuleDetail: data widget under the schema keys (shortDescription, longDescription, contactPerson), versions, usages (md-usages), compliance (bioMeasure) and a Contracts body section (src/components/contracts/ApplicationContractsPanel.vue via src/utils/applicationContracts.js); src/views/FacetedCatalogIndexView.vue opens ModuleDetail on row click and View (detailRoute); guarded by tests/vitest/manifestIncludeKeys.spec.js and tests/vitest/applicationContracts.spec.js",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-29-landscape-application-page"
 			},
 			"reachedOn": "ModuleDetail /modules/:id, reached from OrganisatieDetail Applications list (src/manifest.json:417 rowRoute ModuleDetail); NOT from the Modules list (FacetedCatalogIndexView.vue:108 binds no @view/@row-click)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "medium",
-			"note": "The application page shows versions and compliance claims, and usages only as untyped entries in the generic Related panel. Contracts are not shown. The page cannot be opened from the Applications list itself, and its data widget asks for three field names the schema no longer has, so the descriptions do not render. Specified in openspec/changes/landscape-application-page (OpenSpec pass 2026-09-27).",
+			"note": "One page per application shows its data, versions, usages, compliance claims and the contracts behind it, and opens from the Applications list. Built by openspec/changes/archive/2026-09-29-landscape-application-page.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/pakket/archi: package page shows versions with status and start dates, \"Pakket geschikt voor (GEMMA 2) Ingevuld door (28)\", and per version the mandatory and recommended standards with support, compliancy and testrapport (read 2026-09-26). No contracts on the page. Reached on: Alle pakketten > package name.",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines and https://help.sap.com/docs/leanix/ea/adding-and-editing-data-in-fact-sheets: the application fact sheet holds lifecycle, relations to IT components, organizations, interfaces, cost on relations, and a Relations Explorer on one fact sheet (read 2026-09-26). Reached on: Inventory > Application fact sheet.",
-				"stackiq": "src/manifest.json:491 ModuleDetail: md-versions (:504), md-compliance (:503), md-related generic Related panel (:502); no contract widget (catalogContract links to service/usage, register.json:3250, not to module); md-data include lists stale keys beschrijvingKort/beschrijvingLang/contactpersoon (:500)",
+				"stackiq": "src/manifest.json ModuleDetail: data widget under the schema keys (shortDescription, longDescription, contactPerson), versions, usages (md-usages), compliance (bioMeasure) and a Contracts body section (src/components/contracts/ApplicationContractsPanel.vue via src/utils/applicationContracts.js); src/views/FacetedCatalogIndexView.vue opens ModuleDetail on row click and View (detailRoute); guarded by tests/vitest/manifestIncludeKeys.spec.js and tests/vitest/applicationContracts.spec.js",
 				"topdesk": "https://docs.topdesk.com/en/designing-templates-for-assets.html: twelve widgets incl. \"History\", \"Relationships\", \"Relationship grid\", \"Documents\" (read 2026-09-26); https://docs.topdesk.com/en/linking-assets-to-cards.html: assets linked to calls, changes, services (read 2026-09-26). Versions and compliance are not part of it. Reached on: Asset card.",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967521-object-viewer: 'shows all the object properties like title, name, or lifecycle state. Also, you can see the relationships, history, objects being used in other views, or questionnaires' (read 2026-09-26). Reached on: Objects > object properties / Objectviewer.",
 				"glpi": "source read at 11.0.9: src/Appliance.php:98 onwards defineTabs puts Items, Contracts, Documents, Management (Infocom), Certificates, Domains, Knowledge base, Tickets, Problems, Changes and Impact on the one appliance page; versions sit on the separate Software page (src/SoftwareVersion.php:42), and no compliance tab exists (grep -i 'complian' src/Appliance.php returns nothing). Reached on: Management > Appliances > appliance form tabs."
@@ -2089,14 +2090,15 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "specified",
-				"evidence": "register :6856 module.contactPerson -> contactPerson with x-relation-filter organization = @object.provider; catalogService and suite also carry contactPerson; src/manifest.json:500 ModuleDetail md-data include lists 'contactpersoon', 'beschrijvingKort', 'beschrijvingLang', which are not module properties (renamed to contactPerson/shortDescription/longDescription)",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "src/manifest.json ModuleDetail md-data includes contactPerson (was the stale key contactpersoon, which rendered nothing); tests/vitest/manifestIncludeKeys.spec.js keeps detail page keys on their schema",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-29-landscape-application-page"
 			},
 			"reachedOn": "Applications /modules create/edit form; not shown on ModuleDetail /modules/:id",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Each product can point at its own contact person of the supplier through the form. The application page's data widget names the old Dutch keys, so the product's contact person (and its descriptions) do not show there; the same stale keys are on SuiteDetail (src/manifest.json:683). Specified in openspec/changes/landscape-application-page (OpenSpec pass 2026-09-27).",
+			"note": "Each product can point at its own contact person of the supplier through the form. The application page's data widget names the old Dutch keys, so the product's contact person (and its descriptions) do not show there; the same stale keys are on SuiteDetail (src/manifest.json:683). Specified in openspec/changes/landscape-application-page (OpenSpec pass 2026-09-27). The application page now shows the contact person under the current key contactPerson (built by openspec/changes/archive/2026-09-29-landscape-application-page).",
 			"evidence": {
 				"stackiq": "register :6856 module.contactPerson -> contactPerson with x-relation-filter organization = @object.provider; catalogService and suite also carry contactPerson; src/manifest.json:500 ModuleDetail md-data include lists 'contactpersoon', 'beschrijvingKort', 'beschrijvingLang', which are not module properties (renamed to contactPerson/shortDescription/longDescription)",
 				"topdesk": "unknown: supplier contacts are registered per supplier (\"Registering a supplier contact\"); contacts per product are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -2479,21 +2481,22 @@
 			"bluedolphin": "partial",
 			"glpi": "yes",
 			"topdesk": "partial",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "src/manifest.json:491 ModuleDetail widgets: md-data, md-files, md-related, md-compliance, md-versions, ReviewsPanel; no catalogContract list. catalogContract points at service and usage (register :3252), not at module, so the one-hop related panel cannot reach it",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "src/components/contracts/ApplicationContractsPanel.vue on ModuleDetail lists every readable contract on a usage of the application or on a service that offers it, once each, each opening ContractDetail (src/utils/applicationContracts.js, tests/vitest/applicationContracts.spec.js)",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-29-landscape-application-page"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "contract-administration",
 			"featureConfidence": "medium",
-			"note": "The application page has no contracts list, and a contract links to a usage and a service rather than the application, so there is no path from an application to its contracts in the UI. Specified in openspec/changes/landscape-application-page (OpenSpec pass 2026-09-27).",
+			"note": "The application page lists the contracts behind the application, found through its usages and the services that offer it. Built by openspec/changes/archive/2026-09-29-landscape-application-page.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Appliance.php:99 and src/Software.php:131 add the Contract_Item tab (src/Contract_Item.php:43, install/mysql/glpi-empty.sql:1536 glpi_contracts_items) listing every contract of the application. Reached on: Management > Appliances > Contracts tab. Driven on the lab at 11.0.9 (2026-09-26): after linking the contract, the appliance Contracts tab showed \"Lab contract, 2025-01-01, 12 months -> 2025-12-31\".",
-				"stackiq": "src/manifest.json:491 ModuleDetail widgets: md-data, md-files, md-related, md-compliance, md-versions, ReviewsPanel; no catalogContract list. catalogContract points at service and usage (register :3252), not at module, so the one-hop related panel cannot reach it",
+				"stackiq": "src/components/contracts/ApplicationContractsPanel.vue on ModuleDetail lists every readable contract on a usage of the application or on a service that offers it, once each, each opening ContractDetail (src/utils/applicationContracts.js, tests/vitest/applicationContracts.spec.js)",
 				"topdesk": "https://docs.topdesk.com/en/linking-assets-to-cards.html: assets link to \"Service cards\" (read 2026-09-26); https://docs.topdesk.com/en/creating-a-contract.html: \"On the Services tab, link the services that apply to this contract\" (read 2026-09-26). Contract to asset runs through the service. Reached on: Contract > Services tab > Service > Links > Assets.",
 				"vng-softwarecatalogus": "unknown: contracts, licences and costs are not described anywhere in the public docs (the 2021 user survey asks which other tool municipalities use for contract management); searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/gebruikersonderzoek%202021 (read 2026-09-26)",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967596-archimate-annotation-translation-en-nl lists the object definition 'Contract', which can be related to an application and then shows in its Relationships tab (https://help.bluedolphin.io/en/articles/11967550-working-with-object-relationships); https://bluedolphin.io/application-portfolio-management-application-rationalization/: 'Capture lifecycle, technical debt, business value, risk, cost, contracts' (read 2026-09-26). Reached on: Application object > Relationships tab (Contract objects).",

@@ -367,7 +367,7 @@ export default {
 		 *
 		 * @param {object} row The row
 		 * @return {void}
-		 * @spec openspec/changes/landscape-application-page/specs/application-page/spec.md#requirement-req-apg-004-the-applications-list-opens-the-application-page
+		 * @spec openspec/specs/application-page/spec.md#requirement-req-apg-004-the-applications-list-opens-the-application-page
 		 */
 		openDetail(row) {
 			const location = rowDetailLocation(this.detailRoute, row)

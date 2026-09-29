@@ -5,7 +5,7 @@
  * The contracts behind an application: those on a usage of it and those on a
  * service that offers it, each listed once.
  *
- * @spec openspec/changes/landscape-application-page/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
+ * @spec openspec/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
  */
 
 import { describe, expect, it, vi } from 'vitest'

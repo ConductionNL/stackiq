@@ -8,7 +8,7 @@
  * with no error anywhere: the application page showed no descriptions and
  * no contact person for that reason.
  *
- * @spec openspec/changes/landscape-application-page/specs/application-page/spec.md#requirement-req-apg-001-the-application-page-shows-every-field-it-lists-under-the-schemas-current-keys
+ * @spec openspec/specs/application-page/spec.md#requirement-req-apg-001-the-application-page-shows-every-field-it-lists-under-the-schemas-current-keys
  */
 
 import * as fs from 'fs'

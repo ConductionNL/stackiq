@@ -68,7 +68,7 @@ import { loadApplicationContracts } from '../../utils/applicationContracts.js'
  * The contracts behind one application, on its page: contracts on a usage of
  * the application and on a service that offers it. Each row opens the contract.
  *
- * @spec openspec/changes/landscape-application-page/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
+ * @spec openspec/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
  */
 export default {
 	name: 'ApplicationContractsPanel',
@@ -123,7 +123,7 @@ export default {
 		 * Load the contracts through the object store, without touching the store's lists.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/landscape-application-page/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
+		 * @spec openspec/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
 		 */
 		async load() {
 			this.loading = true
