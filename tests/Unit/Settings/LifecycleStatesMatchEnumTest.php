@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/connections-catalogue-pages/specs/catalogue-connection-pages/spec.md#requirement-req-ccp-004-the-connection-schema-offers-transitions-and-a-picker-that-match-its-data
+ * @spec openspec/specs/catalogue-connection-pages/spec.md#requirement-req-ccp-004-the-connection-schema-offers-transitions-and-a-picker-that-match-its-data
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

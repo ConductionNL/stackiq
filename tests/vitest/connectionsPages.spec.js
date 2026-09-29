@@ -6,7 +6,7 @@
  * into the base manifest the way src/main.js does, valid against the v2 schema,
  * reachable from the Applications menu, and linked from the application page.
  *
- * @spec openspec/changes/connections-catalogue-pages/specs/catalogue-connection-pages/spec.md#requirement-req-ccp-001-a-user-can-browse-every-connection-they-may-read-in-one-list
+ * @spec openspec/specs/catalogue-connection-pages/spec.md#requirement-req-ccp-001-a-user-can-browse-every-connection-they-may-read-in-one-list
  */
 
 import addFormats from 'ajv-formats'
