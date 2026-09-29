@@ -4,11 +4,11 @@ Read at development `49e65cb4`.
 
 ## Context
 
-The catalogue holds applications (`module`, `lib/Settings/softwarecatalogus_register.json:6779` schema) and organisations' usages of them (`usage`, `:2656`). An AI system either is a product of its own or runs inside an application; in both cases the organisation needs to see it next to the application and classify it. New schemas go in a fragment (ADR-037) that appends them to the `stackiq` register (`SettingsService::loadSettings()`, `lib/Service/SettingsService.php:1653-1680`).
+The catalogue holds applications (`module`, `lib/Settings/softwarecatalogus_register.json:6779` schema) and organisations' usages of them (`usage`, `:2656`). An AI system either is a product of its own or runs inside an application; in both cases the organisation needs to see it next to the application and classify it. As built, the schema is in the monolith, not in a fragment: in this repo a `register.d` fragment only overlays a schema the monolith declares (`tests/Unit/Service/ReviewModerationOverlayReachesTheSchemaTest.php`), and a page may only read a schema its register attaches in the monolith (`tests/Unit/AppInfo/ManifestRegisterSentinelTest.php`). The register goes to 2.5.3.
 
 ## D1. The aiSystem schema
 
-`lib/Settings/register.d/ai-system-inventory.json`, schema.org type `SoftwareApplication` with `applicationCategory` AI:
+`lib/Settings/softwarecatalogus_register.json` (as built; see below), schema.org type `SoftwareApplication` with `applicationCategory` AI:
 
 | property | type | notes |
 |---|---|---|

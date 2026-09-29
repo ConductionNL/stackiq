@@ -24,7 +24,12 @@
 					v-if="missingFria"
 					type="warning"
 					data-testid="ai-act-fria-warning">
-					{{ t('stackiq', 'This is a high-risk AI system without a fundamental rights impact assessment.') }}
+					{{
+						t(
+							'stackiq',
+							'This is a high-risk AI system without a fundamental rights impact assessment.',
+						)
+					}}
 				</NcNoteCard>
 				<ul class="ai-act-checklist__list">
 					<li
@@ -36,15 +41,30 @@
 						<CnIcon
 							:name="item.present ? 'CheckCircle' : 'AlertCircle'"
 							:size="20"
-							:class="item.present ? 'ai-act-checklist__icon--ok' : 'ai-act-checklist__icon--missing'" />
-						<span class="ai-act-checklist__tag">{{ tagLabel(item.tag) }}</span>
+							:class="
+								item.present
+									? 'ai-act-checklist__icon--ok'
+									: 'ai-act-checklist__icon--missing'
+							" />
+						<span class="ai-act-checklist__tag">{{
+							tagLabel(item.tag)
+						}}</span>
 						<span class="ai-act-checklist__state">
-							{{ item.present ? item.files.join(', ') : t('stackiq', 'Missing') }}
+							{{
+								item.present
+									? item.files.join(', ')
+									: t('stackiq', 'Missing')
+							}}
 						</span>
 					</li>
 				</ul>
 				<p class="ai-act-checklist__hint">
-					{{ t('stackiq', 'Attach a document under Documents and give it the matching tag.') }}
+					{{
+						t(
+							'stackiq',
+							'Attach a document under Documents and give it the matching tag.',
+						)
+					}}
 				</p>
 			</template>
 		</div>
@@ -157,13 +177,23 @@ export default {
 						id: String(this.objectId),
 					}
 					const [object, files] = await Promise.all([
-						axios.get(generateUrl('/apps/openregister/api/objects/{register}/{schema}/{id}', params)),
-						axios.get(generateUrl('/apps/openregister/api/objects/{register}/{schema}/{id}/files', params)),
+						axios.get(
+							generateUrl(
+								'/apps/openregister/api/objects/{register}/{schema}/{id}',
+								params,
+							),
+						),
+						axios.get(
+							generateUrl(
+								'/apps/openregister/api/objects/{register}/{schema}/{id}/files',
+								params,
+							),
+						),
 					])
 					this.system = object.data?.object || object.data || {}
 					this.files = files.data?.results ?? []
 				}
-			} catch (e) {
+			} catch {
 				this.error = true
 			} finally {
 				this.loading = false

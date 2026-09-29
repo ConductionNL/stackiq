@@ -7345,6 +7345,7 @@
         }
       },
       "aiSystem": {
+        "uri": null,
         "slug": "aiSystem",
         "title": "AI system",
         "x-schema-org": "schema:SoftwareApplication",
@@ -10865,6 +10866,21 @@
         "aiActRole": "deployer",
         "assessedOn": "2026-05-15",
         "status": "in development"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "aiSystem",
+          "slug": "ai-system-mail-sorting-agent"
+        },
+        "name": "Mail sorting agent",
+        "kind": "AI agent",
+        "module": {},
+        "provider": {},
+        "purpose": "Sorts incoming mail to the right team.",
+        "aiActRiskCategory": "minimal risk",
+        "aiActRole": "deployer",
+        "status": "in use"
       }
     ]
   }

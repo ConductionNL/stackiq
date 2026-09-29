@@ -4,8 +4,8 @@
  *
  * AI systems: the evidence checklist and the missing-FRIA rule, the pages as
  * the app builds them (manifest.d merged the way src/main.js merges it), and
- * the seeded AI systems validated against the real aiSystem schema from the
- * register.d fragment.
+ * the seeded AI systems validated against the real aiSystem schema in the
+ * register.
  *
  * @spec openspec/specs/ai-system-inventory/spec.md
  */
@@ -15,7 +15,7 @@ import Ajv2020 from 'ajv/dist/2020.js'
 import * as fs from 'fs'
 import * as path from 'path'
 import { describe, expect, it } from 'vitest'
-import fragment from '../../lib/Settings/register.d/ai-system-inventory.json'
+import register from '../../lib/Settings/softwarecatalogus_register.json'
 import mock from '../../lib/Settings/stackiq_mock_register.json'
 import manifestSchema from '../../node_modules/@conduction/nextcloud-vue/src/schemas/app-manifest-v2.schema.json'
 import { buildManifest } from '../../node_modules/@conduction/nextcloud-vue/src/utils/buildManifest.js'
@@ -39,7 +39,7 @@ const merged = buildManifest(
 	menuLayout,
 )
 const page = (id) => merged.pages.find((p) => p.id === id)
-const schema = fragment.components.schemas.aiSystem
+const schema = register.components.schemas.aiSystem
 
 /**
  * A validator built from the real aiSystem properties. A relation is checked
@@ -107,12 +107,12 @@ describe('the evidence checklist', () => {
 		])
 		expect(list.map((r) => r.tag)).toEqual(EVIDENCE_TAGS)
 		expect(list.find((r) => r.tag === 'FRIA').present).toBe(false)
-		expect(
-			list.find((r) => r.tag === 'Technical documentation').present,
-		).toBe(true)
-		expect(list.find((r) => r.tag === 'Technical documentation').files).toEqual(
-			['tech.pdf'],
+		expect(list.find((r) => r.tag === 'Technical documentation').present).toBe(
+			true,
 		)
+		expect(list.find((r) => r.tag === 'Technical documentation').files).toEqual([
+			'tech.pdf',
+		])
 	})
 
 	it('uses the same four tags the schema allows on files', () => {
@@ -183,9 +183,9 @@ describe('the AI systems pages', () => {
 				(w) => w.type === 'integration' && w.integrationId === 'files',
 			),
 		).toBe(true)
-		expect(
-			detail.config.bodyWidgets.map((w) => w.component),
-		).toContain('AiActChecklist')
+		expect(detail.config.bodyWidgets.map((w) => w.component)).toContain(
+			'AiActChecklist',
+		)
 	})
 
 	it('lists the AI systems on the application page', () => {
@@ -219,9 +219,7 @@ describe('the seeded AI systems', () => {
 
 	it('include one high-risk system without a FRIA, so the warning shows', () => {
 		expect(seeded.filter((o) => friaMissing(o))).toHaveLength(1)
-		expect(seeded.some((o) => o.aiActRiskCategory === 'limited risk')).toBe(
-			true,
-		)
+		expect(seeded.some((o) => o.aiActRiskCategory === 'limited risk')).toBe(true)
 	})
 
 	it('carry the schema copy the demo import validates against', () => {

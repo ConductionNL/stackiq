@@ -4,7 +4,7 @@
 
 ### Task 1: The aiSystem schema
 - **spec_ref**: openspec/changes/landscape-ai-system-inventory/specs/ai-system-inventory/spec.md#requirement-req-ais-001-an-organisation-registers-the-ai-systems-it-uses-next-to-their-applications
-- **files**: `lib/Settings/register.d/ai-system-inventory.json`, `lib/Settings/stackiq_mock_register.json`
+- **files**: `lib/Settings/softwarecatalogus_register.json`, `lib/Settings/stackiq_mock_register.json`
 - **acceptance_criteria**:
   - GIVEN the merged register WHEN it is imported THEN the stackiq register lists aiSystem with its lifecycle and file tags
 - [x] Implement
@@ -45,6 +45,8 @@
 ## As built (2026-09-29)
 
 - The schema, pages, checklist rule and seeds are tested in `tests/Unit/Settings/AiSystemFragmentTest.php` and `tests/vitest/aiSystems.spec.js` (the vitest file also covers what `aiActChecklist.spec.js` was to hold).
+- The aiSystem schema lives in `lib/Settings/softwarecatalogus_register.json` (register 2.5.3), not in a fragment: the repo's own tests allow fragments only to overlay existing schemas.
+- The app cell formatters live in `src/formatters.js`; `tests/vitest/connectionRegistry.spec.js` now asserts none shadows a library built-in, instead of asserting App.vue passes none.
 - The High risk without FRIA filter sends `friaDocumentRef=IS NULL`, which OpenRegister's property filter reads as a null check. The warning column uses an app cell formatter `friaStatus` (src/utils/aiAct.js), passed to CnAppRoot as `formatters`.
 - `tests/e2e/workflows/ai-systems.spec.ts` seeds the AI systems through the objects API, the call the Add form makes, rather than typing into the form. It lists but was not run: no local instance has a seeded stackiq register. The docs screenshot waits for that instance; `docs/images/ai-systems.png` is not added.
-- Seeds: a chat assistant (AI feature, limited risk) and a scoring model (AI model, high risk, no FRIA). Like every other demo object they carry no relation, so the chat assistant is not linked to a demo application.
+- Seeds: a chat assistant (AI feature, limited risk), a scoring model (AI model, high risk, no FRIA) and a mail sorting agent (AI agent, minimal risk); gate 101 asks three per schema. Like every other demo object they carry no relation, so the chat assistant is not linked to a demo application.

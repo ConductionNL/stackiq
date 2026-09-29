@@ -1,8 +1,8 @@
 <?php
 
 /**
- * The aiSystem schema as the import sees it: the register.d fragment merged
- * into the monolith with SettingsService's own merge.
+ * The aiSystem schema as the import sees it: the monolith with every register.d
+ * fragment merged in by SettingsService's own merge.
  *
  * @category Tests
  * @package  OCA\Stackiq\Tests\Unit\Settings

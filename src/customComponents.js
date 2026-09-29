@@ -18,8 +18,8 @@
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
 import { generateUrl } from '@nextcloud/router'
-import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import AiActChecklist from './components/ai/AiActChecklist.vue'
+import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'

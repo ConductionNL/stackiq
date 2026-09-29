@@ -76,7 +76,7 @@ import OrganisationSwitcher from './components/organisations/OrganisationSwitche
 import Dialogs from './dialogs/Dialogs.vue'
 import Modals from './modals/Modals.vue'
 import { setActiveOrganisationUuid } from './composables/orClient.js'
-import { friaStatus } from './utils/aiAct.js'
+import appFormatters from './formatters.js'
 import { settingsStore } from './store/store.js'
 
 export default {
@@ -151,7 +151,7 @@ export default {
 	data() {
 		return {
 			// App cell formatters for manifest columns (`columns[].formatter`).
-			formatters: { friaStatus },
+			formatters: appFormatters,
 			objectSidebarState: reactive({
 				active: false,
 				open: true,

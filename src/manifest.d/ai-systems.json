@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
-	"_note": "landscape-ai-system-inventory: the aiSystem schema from lib/Settings/register.d/ai-system-inventory.json. A menu child of Applications (ADR-097). The High risk without FRIA quick filter sends friaDocumentRef=IS NULL, which OpenRegister's property filter reads as a null check; the FRIA column uses the app formatter friaStatus (src/utils/aiAct.js), so the list warns on the same rule.",
+	"_note": "landscape-ai-system-inventory: the aiSystem schema in lib/Settings/softwarecatalogus_register.json. A menu child of Applications (ADR-097). The High risk without FRIA quick filter sends friaDocumentRef=IS NULL, which OpenRegister's property filter reads as a null check; the FRIA column uses the app formatter friaStatus (src/utils/aiAct.js), so the list warns on the same rule.",
 	"menu": [
 		{
 			"id": "Modules",
