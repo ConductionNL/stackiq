@@ -1,7 +1,10 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { objectStore } from '../../store/store.js'
-import { acceptPayload, isConceptOrganisation } from '../../utils/organisationStatus.js'
+import {
+	acceptPayload,
+	isConceptOrganisation,
+} from '../../utils/organisationStatus.js'
 </script>
 
 <template>
@@ -126,7 +129,11 @@ export default {
 		async onAccept(item) {
 			this.processingIds.push(item.id)
 			try {
-				await objectStore.patchObject('organization', item.id, acceptPayload())
+				await objectStore.patchObject(
+					'organization',
+					item.id,
+					acceptPayload(),
+				)
 				await this.fetchData()
 			} catch (error) {
 				console.error('Error accepting organization:', error)

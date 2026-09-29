@@ -29,7 +29,9 @@ function compileStatusPatch() {
 	const ajv = new Ajv2020({ allErrors: true, strict: false })
 	return ajv.compile({
 		type: 'object',
-		properties: { status: { type: statusProperty.type, enum: statusProperty.enum } },
+		properties: {
+			status: { type: statusProperty.type, enum: statusProperty.enum },
+		},
 		required: ['status'],
 		additionalProperties: false,
 	})
@@ -61,9 +63,17 @@ describe('organisation status values of the concept-organisations widget', () =>
 describe('the concept-organisations widget uses these values', () => {
 	it('filters and accepts through the shared status helpers', async () => {
 		const fs = await import('fs')
-		const source = fs.readFileSync(new URL('../../src/views/widgets/ConceptOrganisatiesWidget.vue', import.meta.url), 'utf8')
+		const source = fs.readFileSync(
+			new URL(
+				'../../src/views/widgets/ConceptOrganisatiesWidget.vue',
+				import.meta.url,
+			),
+			'utf8',
+		)
 		expect(source).toContain('.filter(isConceptOrganisation)')
-		expect(source).toContain("patchObject('organization', item.id, acceptPayload())")
+		expect(source).toMatch(
+			/patchObject\(\s*'organization',\s*item\.id,\s*acceptPayload\(\),?\s*\)/,
+		)
 		expect(source).not.toMatch(/'concept'|'actief'/)
 	})
 })

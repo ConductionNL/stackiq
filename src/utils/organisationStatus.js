@@ -21,7 +21,10 @@ export const ACCEPTED_STATUS = 'Active'
  * @spec openspec/specs/fe-organizations/spec.md
  */
 export function isConceptOrganisation(organisation) {
-	return String(organisation?.status ?? '').toLowerCase() === CONCEPT_STATUS.toLowerCase()
+	return (
+		String(organisation?.status ?? '').toLowerCase()
+		=== CONCEPT_STATUS.toLowerCase()
+	)
 }
 
 /**
