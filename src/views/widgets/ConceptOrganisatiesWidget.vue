@@ -1,6 +1,7 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { objectStore } from '../../store/store.js'
+import { acceptPayload, isConceptOrganisation } from '../../utils/organisationStatus.js'
 </script>
 
 <template>
@@ -97,7 +98,7 @@ export default {
 		items() {
 			return objectStore
 				.getCollection('organization')
-				.results.filter((item) => item.status?.toLowerCase() === 'concept')
+				.results.filter(isConceptOrganisation)
 				.map((item) => ({
 					id: item.id,
 					mainText:
@@ -116,7 +117,7 @@ export default {
 
 	methods: {
 		/**
-		 * Handle accepting an organisatie (change status to actief)
+		 * Handle accepting an organisatie (change its status to Active)
 		 *
 		 * @param {object} item - The organisatie item to accept
 		 * @return {void}
@@ -125,9 +126,7 @@ export default {
 		async onAccept(item) {
 			this.processingIds.push(item.id)
 			try {
-				await objectStore.patchObject('organization', item.id, {
-					status: 'actief',
-				})
+				await objectStore.patchObject('organization', item.id, acceptPayload())
 				await this.fetchData()
 			} catch (error) {
 				console.error('Error accepting organization:', error)
