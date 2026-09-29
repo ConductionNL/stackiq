@@ -18,6 +18,7 @@
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
 import { generateUrl } from '@nextcloud/router'
+import AiActChecklist from './components/ai/AiActChecklist.vue'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
@@ -89,6 +90,10 @@ export default {
 
 	// Licences in use against licences bought (contracts-licence-seats).
 	ContractSeatsPanel,
+
+	// AI Act evidence per tag on the AI system page (landscape-ai-system-inventory):
+	// it reads the object's files and their tags, which no built-in widget lists per tag.
+	AiActChecklist,
 
 	// --- Admin-triggered organisation-merge (VNG Softwarecatalogus #141). ---
 	// Dry-run preview + confirm dialog + execute for folding a source
