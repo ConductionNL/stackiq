@@ -57,6 +57,8 @@ spl_autoload_register(function (string $class): void {
 		// OpenRegister stubs — Db entities and Services used by tests.
 		'OCA\\OpenRegister\\Db\\' => __DIR__ . '/Stubs/Db/',
 		'OCA\\OpenRegister\\Service\\' => __DIR__ . '/Stubs/Service/',
+		// A copy of OpenRegister's ObjectCreatedEvent, so listener tests construct the real shape.
+		'OCA\\OpenRegister\\Event\\' => __DIR__ . '/Stubs/Event/',
 	];
 
 	foreach ($prefixMap as $prefix => $dir) {
