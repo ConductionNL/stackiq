@@ -10881,6 +10881,54 @@
         "aiActRiskCategory": "minimal risk",
         "aiActRole": "deployer",
         "status": "in use"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "aiSystem",
+          "slug": "ai-system-chat-assistant-gemma"
+        },
+        "name": "Chat assistant",
+        "kind": "AI feature",
+        "module": {},
+        "provider": {},
+        "purpose": "Answers residents' questions about permits on the website and hands over to an employee.",
+        "aiActRiskCategory": "limited risk",
+        "aiActRole": "deployer",
+        "assessedOn": "2026-06-01",
+        "algorithmRegisterUrl": "https://algoritmes.overheid.nl/",
+        "status": "in use"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "aiSystem",
+          "slug": "ai-system-benefit-scoring-model-gemma"
+        },
+        "name": "Benefit application scoring model",
+        "kind": "AI model",
+        "module": {},
+        "provider": {},
+        "purpose": "Ranks benefit applications for a manual check.",
+        "aiActRiskCategory": "high risk",
+        "aiActRole": "deployer",
+        "assessedOn": "2026-05-15",
+        "status": "in development"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "aiSystem",
+          "slug": "ai-system-mail-sorting-agent-gemma"
+        },
+        "name": "Mail sorting agent",
+        "kind": "AI agent",
+        "module": {},
+        "provider": {},
+        "purpose": "Sorts incoming mail to the right team.",
+        "aiActRiskCategory": "minimal risk",
+        "aiActRole": "deployer",
+        "status": "in use"
       }
     ]
   }
