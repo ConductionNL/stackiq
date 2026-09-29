@@ -8379,7 +8379,7 @@
           "version": "0.0.1"
         },
         "name": "Topdesk bij Servicecenter Rijnland (SSC)",
-        "status": "in-gebruik",
+        "status": "In production",
         "elementRef": "topdesk-ssc-rijnland",
         "consumer": {
           "name": "Servicecenter Rijnland",
@@ -8408,7 +8408,7 @@
           "version": "0.0.1"
         },
         "name": "KEY2 Burgerzaken gedeeld via GBLT",
-        "status": "in-gebruik",
+        "status": "Planned",
         "elementRef": "key2-burgerzaken-gblt",
         "consumer": {
           "name": "Gemeentebelastingen Coevorden Hardenberg (GBLT)",
@@ -8432,7 +8432,7 @@
           "version": "0.0.1"
         },
         "name": "Suite4 Schuldhulpverlening - eigenaar Gemeente Delft",
-        "status": "in-gebruik",
+        "status": "In production",
         "elementRef": "suite4-schuldhulp-delft",
         "consumer": {
           "name": "Gemeente Delft",

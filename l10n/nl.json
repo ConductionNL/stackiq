@@ -887,6 +887,16 @@
         "FRIA": "FRIA",
         "High risk without FRIA": "Hoog risico zonder FRIA",
         "Application and supplier": "Applicatie en leverancier",
-        "No AI systems registered for this application": "Nog geen AI-systemen geregistreerd voor deze applicatie"
+        "No AI systems registered for this application": "Nog geen AI-systemen geregistreerd voor deze applicatie",
+        "Application in use": "Applicatie in gebruik",
+        "To be phased out": "Uit te faseren",
+        "Business owner": "Functioneel eigenaar",
+        "Technical owner": "Technisch eigenaar",
+        "The person in the organisation who is responsible for how the application is used.": "De persoon in de organisatie die verantwoordelijk is voor hoe de applicatie wordt gebruikt.",
+        "The person in the organisation who is responsible for running and maintaining the application.": "De persoon in de organisatie die verantwoordelijk is voor het draaien en onderhouden van de applicatie.",
+        "Add to our landscape": "Toevoegen aan ons landschap",
+        "Connections and services": "Koppelingen en diensten",
+        "The applications your organisation uses, with the version it runs, where it stands and who owns it.": "De applicaties die uw organisatie gebruikt, met de versie die draait, de fase waarin ze staan en wie de eigenaar is.",
+        "No applications in use recorded for this organisation yet": "Nog geen applicaties in gebruik vastgelegd voor deze organisatie"
     }
 }
