@@ -516,7 +516,6 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new ArchiMateImportService(
 					config: $container->get(IAppConfig::class),
-					rootFolder: $container->get('OCP\Files\IRootFolder'),
 					userSession: $container->get('OCP\IUserSession'),
 					appManager: $container->get('OCP\App\IAppManager'),
 					container: $container,
@@ -545,7 +544,6 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new ArchiMateService(
 					config: $container->get(IAppConfig::class),
-					rootFolder: $container->get('OCP\Files\IRootFolder'),
 					userSession: $container->get('OCP\IUserSession'),
 					appManager: $container->get('OCP\App\IAppManager'),
 					container: $container,

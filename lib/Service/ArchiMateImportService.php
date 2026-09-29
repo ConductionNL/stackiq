@@ -25,7 +25,6 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCP\App\IAppManager;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
 use OCP\IUserSession;
@@ -179,7 +178,6 @@ class ArchiMateImportService {
 	 * Constructor for ArchiMateImportService
 	 *
 	 * @param IAppConfig $config Nextcloud app configuration service
-	 * @param IRootFolder $rootFolder Root folder service
 	 * @param IUserSession $userSession User session service
 	 * @param IAppManager $appManager App manager service
 	 * @param ContainerInterface $container PSR-11 container interface
@@ -191,7 +189,6 @@ class ArchiMateImportService {
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
-		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,

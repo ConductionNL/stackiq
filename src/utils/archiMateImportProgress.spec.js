@@ -60,11 +60,9 @@ describe('startProgressPolling', () => {
 			return 7
 		})
 		const clearIntervalFn = jest.fn()
-		const get = jest
-			.fn()
-			.mockResolvedValue({
-				data: { progress: { phase: 'processing_elements', percentage: 40 } },
-			})
+		const get = jest.fn().mockResolvedValue({
+			data: { progress: { phase: 'processing_elements', percentage: 40 } },
+		})
 		const seen = []
 
 		const stop = startProgressPolling({

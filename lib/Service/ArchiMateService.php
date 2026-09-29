@@ -24,7 +24,6 @@ namespace OCA\Stackiq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -157,7 +156,6 @@ class ArchiMateService {
 	 * Constructor for ArchiMateService
 	 *
 	 * @param IAppConfig $config Nextcloud app configuration service
-	 * @param IRootFolder $rootFolder Root folder service
 	 * @param IUserSession $userSession User session service
 	 * @param IAppManager $appManager App manager service
 	 * @param ContainerInterface $container PSR-11 container interface
@@ -169,7 +167,6 @@ class ArchiMateService {
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
-		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
@@ -204,7 +201,7 @@ class ArchiMateService {
 
 		$messages = [];
 		if ($operationId !== null) {
-			$this->progressTracker->requestCancel($operationId);
+			$this->progressTracker->setCancelRequested($operationId);
 			$messages[] = 'The import stops before its next save batch';
 		}
 

@@ -374,9 +374,9 @@ class ProgressTracker {
 	 *
 	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
-	public function requestCancel(string $operationId): void {
+	public function setCancelRequested(string $operationId): void {
 		$this->store->set(key: 'cancel_' . $operationId, value: true, ttl: self::STORE_TTL);
-	}//end requestCancel()
+	}//end setCancelRequested()
 
 	/**
 	 * Whether a cancel was requested for an operation, from any request.

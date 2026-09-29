@@ -103,7 +103,7 @@ class ProgressTrackerCancelTest extends TestCase {
 
 		$this->assertFalse($importRequest->isCancelRequested('archimate_import_abc12345'));
 
-		$this->tracker()->requestCancel('archimate_import_abc12345');
+		$this->tracker()->setCancelRequested('archimate_import_abc12345');
 
 		$this->assertTrue($importRequest->isCancelRequested('archimate_import_abc12345'));
 		$this->assertFalse($importRequest->isCancelRequested('archimate_import_other999'));

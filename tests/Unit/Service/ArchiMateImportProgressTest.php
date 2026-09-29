@@ -152,7 +152,7 @@ class ArchiMateImportProgressTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->expects($this->once())->method('saveObjects')->willReturnCallback(
 			function (array $objects): array {
-				$this->tracker()->requestCancel('archimate_import_abc12345');
+				$this->tracker()->setCancelRequested('archimate_import_abc12345');
 				return ['saved' => $objects, 'updated' => [], 'unchanged' => [], 'invalid' => []];
 			}
 		);
