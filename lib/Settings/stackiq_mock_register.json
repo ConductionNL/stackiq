@@ -9076,6 +9076,8 @@
         "consumer": {},
         "provider": {},
         "contactPerson": {},
+        "businessOwner": {},
+        "technicalOwner": {},
         "participants": [
           {}
         ],
@@ -10645,6 +10647,8 @@
         "consumer": {},
         "provider": {},
         "contactPerson": {},
+        "businessOwner": {},
+        "technicalOwner": {},
         "participants": [
           {}
         ],

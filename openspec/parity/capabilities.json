@@ -364,25 +364,26 @@
 			"bluedolphin": "yes",
 			"glpi": "yes",
 			"topdesk": "partial",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "src/manifest.json:592 Modules page (FacetedCatalogIndexView, schema module) with the library CnIndexPage create form at src/views/FacetedCatalogIndexView.vue:108; lib/Settings/softwarecatalogus_register.json:6777 module schema has name, shortDescription/longDescription and provider (Supplier) but NO status property; status lives on usage (register.json:2654, enum Acquisition..In production) which has no page",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "usage schema (consumer, module, moduleVersion, status with lifecycle plan/goLive/phaseOut/retire) in lib/Settings/softwarecatalogus_register.json; src/manifest.d/usages.json pages Gebruik (/gebruik, Applications in use) and GebruikDetail with lifecycleActions; ModuleDetail md-usages Add to our landscape; OrganisatieDetail org-usages; tests/Unit/Settings/UsageSchemaTest.php, tests/vitest/usages.spec.js",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-29-landscape-usage-registration"
 			},
-			"reachedOn": "Modules /modules (menu Applications), Add button",
+			"reachedOn": "Applications > Applications in use (/gebruik), Add to our landscape on the application page, usage page",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "high",
-			"note": "An application with supplier and description can be registered on the Modules page, but the module schema has no status field, and the per-organisation usage that carries a status has no page to create it on. The Modules list also cannot open ModuleDetail: its standalone CnIndexPage (FacetedCatalogIndexView.vue:108-117) binds no @view/@row-click, so the View action is inert. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27).",
+			"note": "An application with supplier and description can be registered on the Modules page, but the module schema has no status field, and the per-organisation usage that carries a status has no page to create it on. The Modules list also cannot open ModuleDetail: its standalone CnIndexPage (FacetedCatalogIndexView.vue:108-117) binds no @view/@row-click, so the View action is inert. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-29-landscape-usage-registration.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/30355: \"klik dan op de knop + achter de beschrijving van het pakket om het pakket toe te voegen aan je omgeving ... Pakketversie ... Referentiecomponenten ... Vul onder Planning bij Status in gebruik in\" (read 2026-09-26); https://www.softwarecatalogus.nl/hoe-werkt-de-catalogus: \"Wanneer Gemeenten en samenwerkingen hun applicatielandschap hebben ingevoerd, wordt deze automatisch geplot op de GEMMA referentiecomponentenkaart\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Pakketten > Voeg pakket toe.",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines: 'Applications are software systems or programs that process or analyze business data'; application fact sheet with description and lifecycle, supplier via 'provider -> IT component -> application relation' (https://help.sap.com/docs/leanix/ea/provider-modeling-guidelines) (read 2026-09-26). Reached on: Inventory > Application fact sheet.",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967529-welcome-to-the-objects: 'a centralized space for managing architectural objects ... create, edit, delete'; https://help.bluedolphin.io/en/articles/11967745-update-an-object-definition shows an object definition 'New Application' with property 'Supplier'; status as lifecycle state (https://help.bluedolphin.io/en/articles/11967531-object-lifecycle-state) (read 2026-09-26). Reached on: Objects > Application Component object.",
 				"glpi": "source read at 11.0.9: src/Appliance.php:46 class Appliance is GLPI's application itemtype; install/mysql/glpi-empty.sql:8935 glpi_appliances carries name, comment (description), manufacturers_id and states_id (status); src/Appliance.php:350 search option Status; supplier through the Management tab Infocom (install/mysql/glpi-empty.sql:3263 glpi_infocoms.suppliers_id) and Contract_Item (src/Appliance.php:99); menu src/Html.php:1300 lists Appliance under Management, served by src/Glpi/Kernel/Listener/RequestListener/LegacyItemtypeRouteListener.php:100. Reached on: Management > Appliances (front/appliance.php). Driven on the lab at 11.0.9 (2026-09-26): created the appliance \"Zaaksysteem lab\" with a description through /front/appliance.form.php; it appears in the Appliances list and CSV export.",
 				"topdesk": "https://docs.topdesk.com/en/migrating-objects-to-asset-management.html: \"In the new Asset Management you design your own template for each type of asset you have\" (read 2026-09-26); https://docs.topdesk.com/en/managing-licences-in-asset-management.html: \"Create a new template for software cards\" (read 2026-09-26). Applications are a self-designed asset type, no application model ships. Reached on: Modules > Asset Management > Template Designer / Asset overview > New.",
-				"stackiq": "src/manifest.json:592 Modules page (FacetedCatalogIndexView, schema module) with the library CnIndexPage create form at src/views/FacetedCatalogIndexView.vue:108; lib/Settings/softwarecatalogus_register.json:6777 module schema has name, shortDescription/longDescription and provider (Supplier) but NO status property; status lives on usage (register.json:2654, enum Acquisition..In production) which has no page"
+				"stackiq": "usage schema (consumer, module, moduleVersion, status with lifecycle plan/goLive/phaseOut/retire) in lib/Settings/softwarecatalogus_register.json; src/manifest.d/usages.json pages Gebruik (/gebruik, Applications in use) and GebruikDetail with lifecycleActions; ModuleDetail md-usages Add to our landscape; OrganisatieDetail org-usages; tests/Unit/Settings/UsageSchemaTest.php, tests/vitest/usages.spec.js"
 			}
 		},
 		{
@@ -548,21 +549,22 @@
 			"bluedolphin": "partial",
 			"glpi": "yes",
 			"topdesk": "partial",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "register.json:6856 module.contactPerson is a single related contactPerson; register.json:1786 contactPerson has free-text role (job title) and a roles enum of catalogue roles (Aanbod-beheerder, Gebruik-beheerder, ...), no business/technical owner distinction; shown on ModuleDetail md-data (src/manifest.json:500 lists the stale key 'contactpersoon', not 'contactPerson')",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "lib/Settings/register.d/usage-owners.json usage.businessOwner and usage.technicalOwner ($ref contactPerson, x-relation-filter organization @object.consumer); columns on Gebruik and fields on GebruikDetail; tests/Unit/Settings/UsageSchemaTest.php",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-29-landscape-usage-registration"
 			},
-			"reachedOn": "Modules /modules create/edit form (Contact person field)",
+			"reachedOn": "usage page (/gebruik/:id) and the Applications in use list",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "low",
-			"note": "One contact person per application can be set, but there is no separate business owner and technical owner. ModuleDetail's data widget includes 'contactpersoon', a key the schema no longer has, so the contact may not show there. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27).",
+			"note": "One contact person per application can be set, but there is no separate business owner and technical owner. ModuleDetail's data widget includes 'contactpersoon', a key the schema no longer has, so the contact may not show there. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-29-landscape-usage-registration.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/subscription-roles: 'Define roles that map to your organization's positions, such as application owner', with subscription types 'Responsible, Accountable, Observer' per fact sheet (read 2026-09-26). Reached on: Fact sheet > Subscriptions; Administration > Subscription Roles.",
-				"stackiq": "register.json:6856 module.contactPerson is a single related contactPerson; register.json:1786 contactPerson has free-text role (job title) and a roles enum of catalogue roles (Aanbod-beheerder, Gebruik-beheerder, ...), no business/technical owner distinction; shown on ModuleDetail md-data (src/manifest.json:500 lists the stale key 'contactpersoon', not 'contactPerson')",
+				"stackiq": "lib/Settings/register.d/usage-owners.json usage.businessOwner and usage.technicalOwner ($ref contactPerson, x-relation-filter organization @object.consumer); columns on Gebruik and fields on GebruikDetail; tests/Unit/Settings/UsageSchemaTest.php",
 				"topdesk": "https://docs.topdesk.com/en/designing-templates-for-assets.html: \"Assignment widget : assigns locations and persons to the asset\" (read 2026-09-26). No separate business and technical owner roles are described. Reached on: Asset card > Assignment widget.",
 				"vng-softwarecatalogus": "unknown: the landscape entry fields listed (pakketversie, referentiecomponenten, technologie, status) include no business or technical owner; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/node/30355 (read 2026-09-26)",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967633-datacollector-select-tricks: an example import maps '[Application Owner]' into object properties; ownership otherwise is modeled as questionnaire fields or ArchiMate relations. No built in business and technical owner fields are documented (read 2026-09-26). Reached on: Object properties or questionnaire fields.",
@@ -2271,20 +2273,21 @@
 			"bluedolphin": "unknown",
 			"glpi": "yes",
 			"topdesk": "unknown",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Settings/softwarecatalogus_register.json usage.moduleVersion ($ref moduleVersion); read by src/views/LifecycleRoadmapView.vue:397 for EOL state; ModuleversieDetail mv-related shows related usages; no usage create/edit page in src/manifest.json",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "usage.moduleVersion (x-relation-filter module) set on the usage form from Add to our landscape and on GebruikDetail (src/manifest.d/usages.json); shown in the Applications in use list; tests/vitest/usages.spec.js",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-29-landscape-usage-registration"
 			},
-			"reachedOn": "used on LifecycleRoadmap /portfolio-roadmap and ModuleversieDetail /moduleversies/:id; nothing in stackiq records it",
+			"reachedOn": "Applications > Applications in use (/gebruik) and the usage page",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "lifecycle-and-end-of-support",
 			"featureConfidence": "low",
-			"note": "The version an organisation runs is a field on its usage and drives the EOL badges, but no stackiq page lets the organisation set or change it. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27).",
+			"note": "The version an organisation runs is a field on its usage and drives the EOL badges, but no stackiq page lets the organisation set or change it. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-29-landscape-usage-registration.",
 			"evidence": {
-				"stackiq": "lib/Settings/softwarecatalogus_register.json usage.moduleVersion ($ref moduleVersion); read by src/views/LifecycleRoadmapView.vue:397 for EOL state; ModuleversieDetail mv-related shows related usages; no usage create/edit page in src/manifest.json",
+				"stackiq": "usage.moduleVersion (x-relation-filter module) set on the usage form from Add to our landscape and on GebruikDetail (src/manifest.d/usages.json); shown in the Applications in use list; tests/vitest/usages.spec.js",
 				"topdesk": "unknown: versions in use are only possible as a self-defined field; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/30355: \"Pakketversie - selecteer de versie die in gebruik is\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Pakketten > toevoegen.",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; recording the version an organisation runs is not documented beyond configurable fields (read 2026-09-26)",

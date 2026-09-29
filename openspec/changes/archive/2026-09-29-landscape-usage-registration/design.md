@@ -18,7 +18,9 @@ A usage (`gebruik`) is an organisation's use of an application: `consumer` (the 
 
 ## D2. "Add to our landscape"
 
-`ModuleDetail` gets a header action "Add to our landscape" that opens the library's create form for `usage` with `module` set to the page's object and `consumer` set to the active organisation. The action shows only when the user may create a usage. It mirrors the GEMMA Softwarecatalogus "+" behind a package (the row's evidence).
+`ModuleDetail`'s usages list (`md-usages`) offers its create button labelled "Add to our landscape" (`addLabel`). The list is filtered on `module: @objectId`, and the library's `CnObjectListWidget.onCreateConfirm` merges that filter value into the new row, so the usage is created with the application filled in. The form asks consumer, version, status and both owners (`formIncludeFields`). It mirrors the GEMMA Softwarecatalogus "+" behind a package (the row's evidence).
+
+Changed at build (29 Sep, development `f280e807`): the design first said a header action with `consumer` set to the active organisation. No manifest token names the active organisation (`resolveFilterTokens` knows `@objectId`, `@object.*`, `@workspace.*`, `@config.*`, `@me` and dates; `CnFormDialog._autofillTenant` fills only a field called `organisation`), so the user picks the organisation in the form. Filling it needs an `@organisation` token in nextcloud-vue.
 
 Rejected: a wizard. The usage form has five fields a user must decide on; a dialog is enough, and `CnFormDialog` already renders the schema.
 
@@ -36,6 +38,8 @@ The existing hidden `contactPerson` stays as it is. The contact person read rule
 Rejected: owner fields on `module`. A module is the supplier's product; the business owner is a person of the organisation that uses it, and two municipalities using one product have two owners.
 
 ## D4. Register fixes
+
+Items 1 and 3 landed before this change was built, in register 2.5.1 (stackiq#1140: usage 1.5.1 with the lifecycle on the enum values). Item 2 and the owners went into the register itself (2.5.4, usage 1.5.2), not into a `register.d` fragment as D3 says: the relation-dialect gate reads a fragment on its own and cannot see `consumer`, the field the owners' `x-relation-filter` names. It also makes `status` facetable for the list's status filters. The seeded usages in the register held `in-gebruik`, a value outside the enum; they now read In production and Planned.
 
 In `lib/Settings/softwarecatalogus_register.json`, schema `usage`:
 

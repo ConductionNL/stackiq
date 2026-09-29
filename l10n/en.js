@@ -818,7 +818,17 @@ OC.L10N.register(
         "High risk without FRIA": "High risk without FRIA",
         "Application and supplier": "Application and supplier",
         "History": "History",
-        "No AI systems registered for this application": "No AI systems registered for this application"
+        "No AI systems registered for this application": "No AI systems registered for this application",
+        "Application in use": "Application in use",
+        "To be phased out": "To be phased out",
+        "Business owner": "Business owner",
+        "Technical owner": "Technical owner",
+        "The person in the organisation who is responsible for how the application is used.": "The person in the organisation who is responsible for how the application is used.",
+        "The person in the organisation who is responsible for running and maintaining the application.": "The person in the organisation who is responsible for running and maintaining the application.",
+        "Add to our landscape": "Add to our landscape",
+        "Connections and services": "Connections and services",
+        "The applications your organisation uses, with the version it runs, where it stands and who owns it.": "The applications your organisation uses, with the version it runs, where it stands and who owns it.",
+        "No applications in use recorded for this organisation yet": "No applications in use recorded for this organisation yet"
     },
     "nplurals=2; plural=(n != 1);"
 )
