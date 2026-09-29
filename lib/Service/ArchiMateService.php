@@ -165,6 +165,7 @@ class ArchiMateService {
 	 * @param SettingsService $settingsService Settings service for schema and organization configuration
 	 * @param ArchiMateImportService $importService Import service for XML parsing
 	 * @param ArchiMateExportService $exportService Export service for XML generation
+	 * @param ProgressTracker $progressTracker Progress store a running import reads its cancel from
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
@@ -176,8 +177,48 @@ class ArchiMateService {
 		private readonly SettingsService $settingsService,
 		private readonly ArchiMateImportService $importService,
 		private readonly ArchiMateExportService $exportService,
+		private readonly ProgressTracker $progressTracker,
 	) {
 	}//end __construct()
+
+	/**
+	 * Cancel a running ArchiMate import.
+	 *
+	 * The import runs in another request, so this records a cancel that the import
+	 * reads before its next save batch, and clears the stored import status.
+	 *
+	 * @param string|null $operationId The import's operation id, as the page named it
+	 *
+	 * @return array<string, mixed> The cancellation result
+	 *
+	 * @spec openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 */
+	public function cancelArchiMateImport(?string $operationId = null): array {
+		if ($operationId !== null && preg_match(ArchiMateImportService::OPERATION_ID_PATTERN, $operationId) !== 1) {
+			return [
+				'cancelled' => false,
+				'operation_id' => null,
+				'messages' => ['The operation id is not an ArchiMate import id'],
+			];
+		}
+
+		$messages = [];
+		if ($operationId !== null) {
+			$this->progressTracker->requestCancel($operationId);
+			$messages[] = 'The import stops before its next save batch';
+		}
+
+		$this->config->deleteKey('stackiq', 'archimate_import_status');
+		$messages[] = 'Import status cleared';
+
+		return [
+			'cancelled' => true,
+			'operation_id' => $operationId,
+			'status_cleared' => true,
+			'cancellation_time' => date('Y-m-d H:i:s'),
+			'messages' => $messages,
+		];
+	}//end cancelArchiMateImport()
 
 	/**
 	 * OPTIMIZED: Import ArchiMate XML file using OpenRegister-style performance optimization

@@ -5205,15 +5205,18 @@ class SettingsService {
 	 * This method combines force clearing and process killing for a complete
 	 * import cancellation. It delegates to ArchiMateService for the actual work.
 	 *
+	 * @param string|null $operationId The running import's operation id, when the page knows it
+	 *
 	 * @return array Cancellation result with detailed status
 	 * @spec   openspec/specs/settings-service/spec.md
+	 * @spec   openspec/changes/architecture-import-progress-and-cancel/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
-	public function cancelArchiMateImport(): array {
+	public function cancelArchiMateImport(?string $operationId = null): array {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
 			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
-			return $archiMateService->cancelArchiMateImport();
+			return $archiMateService->cancelArchiMateImport(operationId: $operationId);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'SettingsService: Failed to cancel ArchiMate import via ArchiMateService',

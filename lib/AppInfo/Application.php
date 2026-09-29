@@ -552,7 +552,8 @@ class Application extends App implements IBootstrap {
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					settingsService: $container->get(SettingsService::class),
 					importService: $container->get(ArchiMateImportService::class),
-					exportService: $container->get(ArchiMateExportService::class)
+					exportService: $container->get(ArchiMateExportService::class),
+					progressTracker: $container->get(ProgressTracker::class)
 				);
 			}
 		);

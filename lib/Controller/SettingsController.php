@@ -26,6 +26,7 @@ namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ConfigurationService;
+use OCA\Stackiq\Service\ArchiMateImportService;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
@@ -1594,6 +1595,7 @@ class SettingsController extends Controller {
 			'fileName' => $fileData['name'],
 			'fileSize' => $fileData['size'] ?? filesize($fileData['tmp_name']),
 			'mimeType' => $fileData['type'] ?? 'text/xml',
+			'operationId' => $this->request->getParam('operationId'),
 		];
 
 	}//end parseArchiMateFileUpload()
@@ -2852,8 +2854,16 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
 		}
 
+		$operationId = $this->request->getParam('operationId');
+		if ($operationId !== null
+			&& (is_string($operationId) === false
+			|| preg_match(ArchiMateImportService::OPERATION_ID_PATTERN, $operationId) !== 1)
+		) {
+			return new JSONResponse(['success' => false, 'message' => 'Invalid operation id'], Http::STATUS_BAD_REQUEST);
+		}
+
 		try {
-			$result = $this->settingsService->cancelArchiMateImport();
+			$result = $this->settingsService->cancelArchiMateImport(operationId: $operationId);
 			$message = 'ArchiMate import cancellation failed';
 			if ($result['cancelled'] === true) {
 				$message = 'ArchiMate import cancellation succeeded';
