@@ -2,7 +2,7 @@
  * The words of the seats panel and the Seats section, and the wiring that puts
  * the panel on the contract page and the section on the License posture page.
  *
- * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+ * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
  */
 
 import * as fs from 'fs'

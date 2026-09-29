@@ -12,7 +12,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-001-a-contract-shall-record-its-licence-metric-and-the-number-of-licences-bought-and-in-use
+ * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-001-a-contract-shall-record-its-licence-metric-and-the-number-of-licences-bought-and-in-use
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

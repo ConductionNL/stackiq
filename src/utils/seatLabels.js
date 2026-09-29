@@ -5,7 +5,7 @@
  * @module utils/seatLabels
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
- * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+ * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -16,7 +16,7 @@ import { SEAT_STATE } from './licensePosture.js'
  *
  * @param {string} metric A licenceMetric enum value.
  * @return {string} The translated name, or the raw value when unknown.
- * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-001-a-contract-shall-record-its-licence-metric-and-the-number-of-licences-bought-and-in-use
+ * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-001-a-contract-shall-record-its-licence-metric-and-the-number-of-licences-bought-and-in-use
  */
 export function licenceMetricLabel(metric) {
 	const labels = {
@@ -35,7 +35,7 @@ export function licenceMetricLabel(metric) {
  *
  * @param {{state: string, over: number}} position A seatPosition() result.
  * @return {string} Within licence, Over licence by N, Not counted or Unknown.
- * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+ * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
  */
 export function seatStateLabel(position) {
 	switch (position?.state) {

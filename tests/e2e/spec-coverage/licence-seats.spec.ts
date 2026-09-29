@@ -9,7 +9,7 @@
  * contract form makes) and removes them afterwards. The seat maths and the
  * uncounted metrics are covered by tests/vitest/licenceSeats.spec.js.
  *
- * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md
+ * @spec openspec/specs/licence-seats/spec.md
  */
 import type { Page } from '@playwright/test'
 

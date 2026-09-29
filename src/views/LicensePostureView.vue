@@ -312,7 +312,7 @@ export default {
 		 * The Seats section rows, names resolved and labels translated.
 		 *
 		 * @return {Array<object>} One row per counted licence contract, over-licence first.
-		 * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-003-the-license-posture-page-shall-list-every-counted-licence-contract-with-its-seat-state-over-use-first
+		 * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-003-the-license-posture-page-shall-list-every-counted-licence-contract-with-its-seat-state-over-use-first
 		 */
 		seatTableRows() {
 			return seatRows(this.contracts, this.usages).map((row) => ({

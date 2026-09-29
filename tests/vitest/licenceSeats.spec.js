@@ -4,7 +4,7 @@
  * catalogContract schema (the monolith with the register.d fragment merged in,
  * the way SettingsService::loadSettings() merges it).
  *
- * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md
+ * @spec openspec/specs/licence-seats/spec.md
  */
 
 import Ajv2020 from 'ajv/dist/2020.js'

@@ -97,7 +97,7 @@ export default {
 		 * The seat position of the loaded contract.
 		 *
 		 * @return {object} The seatPosition() result.
-		 * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+		 * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
 		 */
 		position() {
 			return seatPosition(this.contract)
@@ -107,7 +107,7 @@ export default {
 		 * The state sentence at the top of the panel.
 		 *
 		 * @return {string} The translated state.
-		 * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+		 * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
 		 */
 		stateLabel() {
 			return seatStateLabel(this.position)
@@ -117,7 +117,7 @@ export default {
 		 * Whether the bar is drawn: only for a counted contract with both numbers.
 		 *
 		 * @return {boolean} True when the bar is shown.
-		 * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+		 * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
 		 */
 		showBar() {
 			return (
@@ -130,7 +130,7 @@ export default {
 		 * One bar: licences in use against licences bought.
 		 *
 		 * @return {Array<object>} The CnProgressBar items.
-		 * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+		 * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
 		 */
 		barItems() {
 			const { bought, inUse, state } = this.position
@@ -154,7 +154,7 @@ export default {
 		 * The date the contract was last changed, in the reader's locale.
 		 *
 		 * @return {string} The date, or an empty string.
-		 * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+		 * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
 		 */
 		updated() {
 			const raw = this.contract?.['@self']?.updated
@@ -178,7 +178,7 @@ export default {
 		 * Read the contract object.
 		 *
 		 * @return {Promise<void>} Resolves once the contract is read.
-		 * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+		 * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
 		 */
 		async load() {
 			this.loading = true
@@ -211,7 +211,7 @@ export default {
 		 *
 		 * @param {number|null} value The count.
 		 * @return {string} The formatted count, or an empty string.
-		 * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+		 * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
 		 */
 		formatCount(value) {
 			return value === null || value === undefined

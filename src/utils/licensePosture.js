@@ -327,7 +327,7 @@ function seatCount(value) {
  * @param {object} contract A catalogContract record (envelope or data bag).
  * @return {{state: string, metric: string, bought: (number|null), inUse: (number|null), over: number}}
  *   The seat position; `over` is how many licences are in use above what was bought.
- * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
+ * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-002-the-contract-detail-page-must-show-licences-in-use-against-licences-bought
  */
 export function seatPosition(contract) {
 	const data = dataOf(contract)
@@ -357,7 +357,7 @@ export function seatPosition(contract) {
  * @param {Array<object>} usages    Usage records, to find the application and the organisation.
  * @return {Array<{contractId: string, contractNumber: string, moduleId: string, consumerId: string, metric: string, bought: number, inUse: (number|null), state: string, over: number}>}
  *   The seat rows.
- * @spec openspec/changes/contracts-licence-seats/specs/licence-seats/spec.md#requirement-req-lsc-003-the-license-posture-page-shall-list-every-counted-licence-contract-with-its-seat-state-over-use-first
+ * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-003-the-license-posture-page-shall-list-every-counted-licence-contract-with-its-seat-state-over-use-first
  */
 export function seatRows(contracts, usages) {
 	const usageIndex = {}
