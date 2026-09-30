@@ -22,20 +22,36 @@
 			<dl v-else class="usage-risk-signals__list">
 				<dt>{{ t('stackiq', 'Risk score') }}</dt>
 				<dd data-testid="usage-risk-score">
-					{{ riskScore === null ? t('stackiq', 'Not scored') : riskScore + ' / 5' }}
+					{{
+						riskScore === null
+							? t('stackiq', 'Not scored')
+							: riskScore + ' / 5'
+					}}
 				</dd>
 				<dt>{{ t('stackiq', 'End of support') }}</dt>
 				<dd data-testid="usage-risk-eol">
 					<span
 						v-if="signals.endOfSupportPassed"
 						class="usage-risk-signals__warning">
-						{{ t('stackiq', 'Passed on {date}', { date: signals.endOfSupportDate }) }}
+						{{
+							t('stackiq', 'Passed on {date}', {
+								date: signals.endOfSupportDate,
+							})
+						}}
 					</span>
 					<span v-else-if="signals.endOfSupportDate">
-						{{ t('stackiq', 'Supported until {date}', { date: signals.endOfSupportDate }) }}
+						{{
+							t('stackiq', 'Supported until {date}', {
+								date: signals.endOfSupportDate,
+							})
+						}}
 					</span>
-					<span v-else>{{ t('stackiq', 'No end of support date known') }}</span>
-					<span v-if="signals.withdrawn" class="usage-risk-signals__warning">
+					<span v-else>{{
+						t('stackiq', 'No end of support date known')
+					}}</span>
+					<span
+						v-if="signals.withdrawn"
+						class="usage-risk-signals__warning">
 						{{ t('stackiq', 'This version was withdrawn') }}
 					</span>
 				</dd>
@@ -43,7 +59,8 @@
 				<dd data-testid="usage-risk-vulnerabilities">
 					<span
 						:class="{
-							'usage-risk-signals__warning': signals.vulnerabilityCount > 0,
+							'usage-risk-signals__warning':
+								signals.vulnerabilityCount > 0,
 						}">
 						{{
 							n(
@@ -129,7 +146,9 @@ export default {
 				this.ensureType('vulnerability')
 				const usage = await objectStore.fetchObject('usage', this.objectId)
 				const data = usage?.object || usage || {}
-				this.riskScore = Number.isInteger(data.riskScore) ? data.riskScore : null
+				this.riskScore = Number.isInteger(data.riskScore)
+					? data.riskScore
+					: null
 				const moduleId = refId(data.module)
 				const versionId = refId(data.moduleVersion)
 				const version = versionId
@@ -137,9 +156,9 @@ export default {
 					: null
 				const vulnerabilities = moduleId
 					? await objectStore.fetchCollectionForOptions('vulnerability', {
-						modules: moduleId,
-						_limit: 200,
-					})
+							modules: moduleId,
+							_limit: 200,
+						})
 					: []
 				this.signals = riskSignals(version, vulnerabilities, moduleId)
 			} catch {
@@ -163,7 +182,7 @@ export default {
 			) {
 				return
 			}
-			let config = null
+			let config
 			try {
 				config = objectStore.getSchemaConfig?.(type)
 			} catch {
@@ -191,7 +210,8 @@ export default {
 .usage-risk-signals__list {
 	display: grid;
 	grid-template-columns: max-content 1fr;
-	gap: calc(var(--default-grid-baseline) * 2) calc(var(--default-grid-baseline) * 4);
+	gap: calc(var(--default-grid-baseline) * 2)
+		calc(var(--default-grid-baseline) * 4);
 	margin: 0;
 }
 

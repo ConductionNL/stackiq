@@ -245,7 +245,11 @@
 									<span
 										v-if="row.suggestedTimeClassification"
 										:class="{ 'pr-mismatch': row.timeMismatch }">
-										{{ quadrantLabel(row.suggestedTimeClassification) }}
+										{{
+											quadrantLabel(
+												row.suggestedTimeClassification,
+											)
+										}}
 									</span>
 									<span v-else>—</span>
 								</td>
@@ -301,9 +305,9 @@ import {
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
+import ValueFitPlot from '../../components/portfolio/ValueFitPlot.vue'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
 import { objectStore } from '../../store/store.js'
-import ValueFitPlot from '../../components/portfolio/ValueFitPlot.vue'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
 import {
 	buildCsvExportUrl,
@@ -646,7 +650,9 @@ export default {
 				return '—'
 			}
 			return scores
-				.map((score) => (score === null || score === undefined ? '-' : score))
+				.map((score) =>
+					score === null || score === undefined ? '-' : score,
+				)
 				.join(' / ')
 		},
 

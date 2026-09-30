@@ -60,10 +60,46 @@ describe('riskSignals', () => {
 })
 
 const rows = [
-	{ uuid: 'a', moduleName: 'A', businessValue: 1, technicalFit: 2, annualisedCost: 1000, timeClassification: 'Tolerate', suggestedTimeClassification: 'Eliminate', timeMismatch: true },
-	{ uuid: 'b', moduleName: 'B', businessValue: 5, technicalFit: 4, annualisedCost: 50000, timeClassification: 'Invest', suggestedTimeClassification: 'Invest', timeMismatch: false },
-	{ uuid: 'c', moduleName: 'C', businessValue: 4, technicalFit: 4, annualisedCost: 0, timeClassification: null, suggestedTimeClassification: 'Invest', timeMismatch: false },
-	{ uuid: 'd', moduleName: 'D', businessValue: null, technicalFit: 3, annualisedCost: 200, timeClassification: 'Tolerate', suggestedTimeClassification: null, timeMismatch: false },
+	{
+		uuid: 'a',
+		moduleName: 'A',
+		businessValue: 1,
+		technicalFit: 2,
+		annualisedCost: 1000,
+		timeClassification: 'Tolerate',
+		suggestedTimeClassification: 'Eliminate',
+		timeMismatch: true,
+	},
+	{
+		uuid: 'b',
+		moduleName: 'B',
+		businessValue: 5,
+		technicalFit: 4,
+		annualisedCost: 50000,
+		timeClassification: 'Invest',
+		suggestedTimeClassification: 'Invest',
+		timeMismatch: false,
+	},
+	{
+		uuid: 'c',
+		moduleName: 'C',
+		businessValue: 4,
+		technicalFit: 4,
+		annualisedCost: 0,
+		timeClassification: null,
+		suggestedTimeClassification: 'Invest',
+		timeMismatch: false,
+	},
+	{
+		uuid: 'd',
+		moduleName: 'D',
+		businessValue: null,
+		technicalFit: 3,
+		annualisedCost: 200,
+		timeClassification: 'Tolerate',
+		suggestedTimeClassification: null,
+		timeMismatch: false,
+	},
 ]
 
 describe('valueFitPoints', () => {
@@ -123,7 +159,9 @@ describe('the usage page', () => {
 				'suggestedTimeClassification',
 			]),
 		)
-		expect(page.config.layout.some((l) => l.widgetId === 'gb-assessment')).toBe(true)
+		expect(page.config.layout.some((l) => l.widgetId === 'gb-assessment')).toBe(
+			true,
+		)
 	})
 
 	it('places the risk signals after the data and registers the component', () => {

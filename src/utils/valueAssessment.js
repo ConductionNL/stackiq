@@ -51,7 +51,9 @@ export function riskSignals(version, vulnerabilities, moduleId, now = new Date()
  * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
  */
 function isScored(row) {
-	return Number.isInteger(row?.businessValue) && Number.isInteger(row?.technicalFit)
+	return (
+		Number.isInteger(row?.businessValue) && Number.isInteger(row?.technicalFit)
+	)
 }
 
 /**
@@ -66,7 +68,10 @@ function isScored(row) {
 export function valueFitPoints(rows) {
 	const list = Array.isArray(rows) ? rows : []
 	const scored = list.filter(isScored)
-	const maxCost = Math.max(0, ...scored.map((row) => Number(row.annualisedCost) || 0))
+	const maxCost = Math.max(
+		0,
+		...scored.map((row) => Number(row.annualisedCost) || 0),
+	)
 	const seen = {}
 	const points = scored.map((row) => {
 		const cost = Math.max(0, Number(row.annualisedCost) || 0)
@@ -82,7 +87,10 @@ export function valueFitPoints(rows) {
 			value: row.businessValue,
 			cost,
 			radius: MIN_RADIUS + share * (MAX_RADIUS - MIN_RADIUS),
-			offset: index === 0 ? [0, 0] : [Math.cos(angle) * SPREAD, Math.sin(angle) * SPREAD],
+			offset:
+				index === 0
+					? [0, 0]
+					: [Math.cos(angle) * SPREAD, Math.sin(angle) * SPREAD],
 			recorded: row.timeClassification || null,
 			suggested: row.suggestedTimeClassification || null,
 		}
@@ -98,5 +106,7 @@ export function valueFitPoints(rows) {
  * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
  */
 export function mismatchRows(rows) {
-	return (Array.isArray(rows) ? rows : []).filter((row) => row?.timeMismatch === true)
+	return (Array.isArray(rows) ? rows : []).filter(
+		(row) => row?.timeMismatch === true,
+	)
 }

@@ -63,7 +63,11 @@
 				:cy="scaleY(point.value + point.offset[1])"
 				:r="point.radius"
 				:fill="quadrantColor(point.suggested || 'Unclassified')"
-				:stroke="point.recorded && point.recorded !== point.suggested ? 'var(--color-main-text)' : 'none'"
+				:stroke="
+					point.recorded && point.recorded !== point.suggested
+						? 'var(--color-main-text)'
+						: 'none'
+				"
 				stroke-width="2"
 				fill-opacity="0.75"
 				data-testid="pr-value-fit-point">
@@ -154,10 +158,34 @@ export default {
 			const middle = this.scaleY(2.5)
 			const bottom = this.scaleY(0.5)
 			return [
-				{ key: 'Migrate', x: left, y: top, width: mid - left, height: middle - top },
-				{ key: 'Invest', x: mid, y: top, width: right - mid, height: middle - top },
-				{ key: 'Eliminate', x: left, y: middle, width: mid - left, height: bottom - middle },
-				{ key: 'Tolerate', x: mid, y: middle, width: right - mid, height: bottom - middle },
+				{
+					key: 'Migrate',
+					x: left,
+					y: top,
+					width: mid - left,
+					height: middle - top,
+				},
+				{
+					key: 'Invest',
+					x: mid,
+					y: top,
+					width: right - mid,
+					height: middle - top,
+				},
+				{
+					key: 'Eliminate',
+					x: left,
+					y: middle,
+					width: mid - left,
+					height: bottom - middle,
+				},
+				{
+					key: 'Tolerate',
+					x: mid,
+					y: middle,
+					width: right - mid,
+					height: bottom - middle,
+				},
 			]
 		},
 
