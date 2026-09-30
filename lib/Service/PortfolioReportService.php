@@ -209,7 +209,7 @@ class PortfolioReportService {
 					(string)($row['riskScore'] ?? ''),
 					$row['scoredOn'] ?? '',
 					$row['suggestedTimeClassification'] ?? '',
-					$this->mismatchLabel(row: $row),
+					$this->derivation->mismatchLabel(row: $row),
 				]
 			);
 		}
@@ -321,7 +321,11 @@ class PortfolioReportService {
 		}
 
 		$classification = $this->normalizeClassification(value: $usage['timeClassification'] ?? null);
-		$scores         = $this->buildScores(usage: $usage, classification: $classification);
+		$scores         = $this->derivation->valueAssessment(
+			usage: $usage,
+			classification: $classification,
+			storedSuggestion: $this->normalizeClassification(value: $usage['suggestedTimeClassification'] ?? null)
+		);
 
 		return $scores + [
 			'uuid' => $gebruikId,
@@ -339,59 +343,6 @@ class PortfolioReportService {
 			'oneOffCost' => $cost['oneOff'],
 		];
 	}//end buildRow()
-
-	/**
-	 * The value assessment of one gebruik: its scores, the suggested TIME class
-	 * (the stored calculation, else the same rule over the scores) and whether
-	 * the recorded class differs from that suggestion.
-	 *
-	 * @param array<string,mixed> $usage          The gebruik data bag.
-	 * @param string|null         $classification The recorded TIME class.
-	 *
-	 * @return array<string,mixed> The score fields of the row.
-	 *
-	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
-	 */
-	private function buildScores(array $usage, ?string $classification): array {
-		$value = $this->derivation->score(value: $usage['businessValue'] ?? null);
-		$fit   = $this->derivation->score(value: $usage['technicalFit'] ?? null);
-
-		$suggested = $this->normalizeClassification(value: $usage['suggestedTimeClassification'] ?? null);
-		if ($suggested === null) {
-			$suggested = $this->derivation->suggestTimeClassification(businessValue: $value, technicalFit: $fit);
-		}
-
-		$scoredOn = null;
-		if (is_string($usage['scoredOn'] ?? null) === true && $usage['scoredOn'] !== '') {
-			$scoredOn = $usage['scoredOn'];
-		}
-
-		return [
-			'businessValue' => $value,
-			'technicalFit' => $fit,
-			'riskScore' => $this->derivation->score(value: $usage['riskScore'] ?? null),
-			'scoredOn' => $scoredOn,
-			'suggestedTimeClassification' => $suggested,
-			'timeMismatch' => $classification !== null && $suggested !== null && $classification !== $suggested,
-		];
-	}//end buildScores()
-
-	/**
-	 * The CSV cell for the mismatch flag.
-	 *
-	 * @param array<string,mixed> $row A report row.
-	 *
-	 * @return string "yes" or "no".
-	 *
-	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
-	 */
-	private function mismatchLabel(array $row): string {
-		if (($row['timeMismatch'] ?? false) === true) {
-			return 'yes';
-		}
-
-		return 'no';
-	}//end mismatchLabel()
 
 	/**
 	 * Sum annualised + one-off cost across a set of contracts.
