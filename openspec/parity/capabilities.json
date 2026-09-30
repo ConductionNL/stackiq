@@ -4567,18 +4567,19 @@
 			"name": "Score each application on business value, cost and risk to decide where to invest.",
 			"origin": "tender",
 			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/398728",
-			"stackiq": "no",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Settings/softwarecatalogus_register.json:3092 usage.timeClassification holds only the TIME verdict and its rationale; no business value, technical fit or risk score property on module or usage, and PortfolioReport (src/manifest.json:1040) plots the TIME quadrant only",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "lib/Settings/register.d/value-assessment.json usage.businessValue, technicalFit, riskScore, scoredOn and the materialised x-openregister-calculations suggestedTimeClassification; usage page Value assessment section and src/components/portfolio/UsageRiskSignals.vue; lib/Service/PortfolioReportService.php row and CSV columns with timeMismatch; src/components/portfolio/ValueFitPlot.vue and the mismatch switch on PortfolioReport; tests/Unit/Settings/ValueAssessmentFragmentTest.php, tests/Unit/Service/PortfolioReportServiceTest.php, tests/vitest/valueAssessment.spec.js",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-30-lifecycle-application-value-assessment"
 			},
-			"reachedOn": "nothing reaches it",
+			"reachedOn": "usage page Value assessment and Risk signals; Reports > Portfolio rationalization value against fit chart and Recorded class differs from scores switch",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "portfolio-reporting",
 			"featureConfidence": "medium",
-			"note": "Helmond REQ41 asks for analysis of application use, cost, risk and value. stackiq records a TIME classification (life-time-classification) without the scores that would justify it. Specified in openspec/changes/lifecycle-application-value-assessment (OpenSpec pass 2026-09-27).",
+			"note": "Helmond REQ41 asks for analysis of application use, cost, risk and value. stackiq records a TIME classification (life-time-classification) without the scores that would justify it. Specified in openspec/changes/lifecycle-application-value-assessment (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-30-lifecycle-application-value-assessment.",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: no value, cost or risk scoring is described; searched the public manuals and FAQ at https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",

@@ -1,15 +1,9 @@
-# application-value-assessment specification
-
-**Status**: proposed
-**Scope**: stackiq
-**OpenSpec changes**:
-- lifecycle-application-value-assessment
+# application-value-assessment Specification
 
 ## Purpose
-
 Each application in use carries scores for business value, technical fit and risk, next to its cost, so a TIME decision has recorded reasons. Matrix row `stackiq:life-value-assessment`.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: REQ-AVA-001 An organisation scores each application it uses on value, fit and risk
 
@@ -28,7 +22,7 @@ A usage SHALL record business value, technical fit and risk, each from 1 to 5, a
 The usage page SHALL show, next to the risk score, the end-of-support state of the version the organisation runs and the number of vulnerabilities linked to the application.
 
 #### Scenario: Signals that back a high risk score
-@e2e exclude Read-only widget; tests/vitest/usageRiskSignals.spec.js covers the EOL state and the vulnerability count.
+@e2e exclude Read-only widget; tests/vitest/valueAssessment.spec.js (riskSignals, the usage page) covers the EOL state and the vulnerability count.
 
 - **GIVEN** a usage whose version passed its end of support and whose application has two linked vulnerabilities
 - **WHEN** the information manager opens the usage page

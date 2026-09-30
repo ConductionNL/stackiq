@@ -121,6 +121,14 @@
 					:height="260" />
 			</section>
 
+			<!-- Business value against technical fit, cost as point size (lifecycle-application-value-assessment) -->
+			<section class="pr-section" data-testid="pr-value-section">
+				<h3 class="pr-sectionTitle">
+					{{ t('stackiq', 'Business value against technical fit') }}
+				</h3>
+				<ValueFitPlot :rows="report.rows || []" />
+			</section>
+
 			<!-- Per-quadrant omschrijving: EOL exposure, cloud-transition share, cost overlay -->
 			<section class="pr-section" data-testid="pr-summary">
 				<h3 class="pr-sectionTitle">
@@ -176,6 +184,13 @@
 				<h3 class="pr-sectionTitle">
 					{{ t('stackiq', 'Applications in use') }}
 				</h3>
+				<NcCheckboxRadioSwitch
+					v-model="onlyMismatch"
+					type="switch"
+					class="pr-mismatchFilter"
+					data-testid="pr-mismatch-filter">
+					{{ t('stackiq', 'Recorded class differs from scores') }}
+				</NcCheckboxRadioSwitch>
 				<div v-for="group in groupedRows" :key="group.key" class="pr-group">
 					<h4 class="pr-groupTitle">
 						<span
@@ -193,6 +208,12 @@
 							<tr>
 								<th scope="col">
 									{{ t('stackiq', 'Application') }}
+								</th>
+								<th scope="col">
+									{{ t('stackiq', 'Suggested by scores') }}
+								</th>
+								<th scope="col">
+									{{ t('stackiq', 'Value / fit / risk') }}
 								</th>
 								<th scope="col">
 									{{ t('stackiq', 'Rationale') }}
@@ -220,6 +241,19 @@
 								:key="row.uuid"
 								data-testid="pr-row">
 								<td>{{ row.moduleName }}</td>
+								<td data-testid="pr-row-suggested">
+									<span
+										v-if="row.suggestedTimeClassification"
+										:class="{ 'pr-mismatch': row.timeMismatch }">
+										{{
+											quadrantLabel(
+												row.suggestedTimeClassification,
+											)
+										}}
+									</span>
+									<span v-else>—</span>
+								</td>
+								<td>{{ scoresLabel(row) }}</td>
 								<td>{{ row.timeRationale || '—' }}</td>
 								<td>{{ row.timeReviewDate || '—' }}</td>
 								<td>{{ row.lifecyclePhase }}</td>
@@ -262,6 +296,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
+	NcCheckboxRadioSwitch,
 	NcEmptyContent,
 	NcLoadingIcon,
 	NcNoteCard,
@@ -270,6 +305,7 @@ import {
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
+import ValueFitPlot from '../../components/portfolio/ValueFitPlot.vue'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
@@ -281,6 +317,7 @@ import {
 	QUADRANT_ORDER,
 	quadrantColor,
 } from '../../utils/portfolioReport.js'
+import { mismatchRows } from '../../utils/valueAssessment.js'
 
 /**
  * @class PortfolioReport
@@ -300,11 +337,13 @@ export default {
 	name: 'PortfolioReport',
 	components: {
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcSelect,
 		NcEmptyContent,
 		NcNoteCard,
 		CnChartWidget,
+		ValueFitPlot,
 		Refresh,
 		Download,
 		ChartBoxOutline,
@@ -330,6 +369,7 @@ export default {
 			error: null,
 			selectedOrg: null,
 			report: null,
+			onlyMismatch: false,
 		}
 	},
 
@@ -434,12 +474,14 @@ export default {
 		 *
 		 * @return {Array<{key: string, rows: Array}>} Grouped rows.
 		 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		groupedRows() {
 			if (!this.report) {
 				return []
 			}
-			return groupRowsByQuadrant(this.report.rows || [])
+			const rows = this.report.rows || []
+			return groupRowsByQuadrant(this.onlyMismatch ? mismatchRows(rows) : rows)
 		},
 	},
 
@@ -595,6 +637,25 @@ export default {
 			return map[key] || key
 		},
 
+		/**
+		 * The three scores of a row as "value / fit / risk", a dash for a missing one.
+		 *
+		 * @param {object} row A report row.
+		 * @return {string} The label.
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 */
+		scoresLabel(row) {
+			const scores = [row.businessValue, row.technicalFit, row.riskScore]
+			if (scores.every((score) => score === null || score === undefined)) {
+				return '—'
+			}
+			return scores
+				.map((score) =>
+					score === null || score === undefined ? '-' : score,
+				)
+				.join(' / ')
+		},
+
 		// Exposed to the template as methods — thin re-exports of the pure
 		// `portfolioReport.js` utils (vitest-covered), since Vue 2 Options
 		// API templates cannot call a bare imported function directly.
@@ -710,6 +771,15 @@ export default {
 
 .pr-eol--ok {
 	color: var(--color-text-maxcontrast);
+}
+
+.pr-mismatchFilter {
+	margin-bottom: 12px;
+}
+
+.pr-mismatch {
+	font-weight: bold;
+	color: var(--color-warning-text);
 }
 
 .pr-loading {

@@ -41,17 +41,22 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "usage",
-				"_note": "A usage is read for what runs where and who owns it: data 8 wide (application, organisation, version, status, owners, phase dates, cloud model, annotation), documents 4 wide at the right (DPIA, contract, processing agreement), then the related panel. Status transitions come from the schema's x-openregister-lifecycle.",
+				"_note": "A usage is read for what runs where and who owns it (lifecycle-application-value-assessment added the value assessment section with the scores and the suggested TIME class, and the risk signals after it): data 8 wide (application, organisation, version, status, owners, phase dates, cloud model, annotation), documents 4 wide at the right (DPIA, contract, processing agreement), then the related panel. Status transitions come from the schema's x-openregister-lifecycle.",
 				"lifecycleActions": { "field": "status" },
 				"widgets": [
-					{ "id": "gb-data", "type": "data", "title": "Application in use", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "module", "consumer", "moduleVersion", "status", "businessOwner", "technicalOwner", "startDateAcquisition", "startDatePlanned", "startDateInProduction", "startDateOutPhasing", "startDateOutPhased", "cloudDienstverleningsmodel", "timeClassification", "interneAnnotation" ] } },
+					{ "id": "gb-data", "type": "data", "title": "Application in use", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "module", "consumer", "moduleVersion", "status", "businessOwner", "technicalOwner", "startDateAcquisition", "startDatePlanned", "startDateInProduction", "startDateOutPhasing", "startDateOutPhased", "cloudDienstverleningsmodel", "interneAnnotation" ] } },
+					{ "id": "gb-assessment", "type": "data", "title": "Value assessment", "icon": "ScaleBalance", "content": { "columns": 2, "include": [ "businessValue", "technicalFit", "riskScore", "scoredOn", "timeClassification", "suggestedTimeClassification", "timeRationale", "timeReviewDate" ] } },
 					{ "id": "gb-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
 					{ "id": "gb-related", "type": "related", "title": "Connections and services", "icon": "LinkVariant" }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "gb-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
 					{ "id": "2", "widgetId": "gb-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "3", "widgetId": "gb-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 }
+					{ "id": "3", "widgetId": "gb-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "4", "widgetId": "gb-assessment", "gridX": 0, "gridY": 8, "gridWidth": 8, "gridHeight": 5 }
+				],
+				"bodyWidgets": [
+					{ "id": "gb-risk-signals", "component": "UsageRiskSignals", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,

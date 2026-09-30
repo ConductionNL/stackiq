@@ -24,6 +24,7 @@ import ApplicationContractsPanel from './components/contracts/ApplicationContrac
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
@@ -96,6 +97,12 @@ export default {
 	// a bodyWidgets section on ModuleDetail (lifecycle-maintenance-and-supplier-roadmap):
 	// it reads the module and its versions, which no built-in widget combines.
 	ProductRoadmap,
+
+	// End of support of the version a usage runs and the vulnerabilities of its
+	// application, next to the risk score on the usage page
+	// (lifecycle-application-value-assessment): it joins the usage, its version
+	// and the vulnerabilities, which no built-in widget does.
+	UsageRiskSignals,
 
 	// AI Act evidence per tag on the AI system page (landscape-ai-system-inventory):
 	// it reads the object's files and their tags, which no built-in widget lists per tag.

@@ -181,6 +181,12 @@ class PortfolioReportService {
 				'hostingModel',
 				'annualisedCost',
 				'oneOffCost',
+				'businessValue',
+				'technicalFit',
+				'riskScore',
+				'scoredOn',
+				'suggestedTimeClassification',
+				'timeMismatch',
 			]
 		);
 
@@ -198,6 +204,12 @@ class PortfolioReportService {
 					implode('|', $row['hostingModel']),
 					(string)$row['annualisedCost'],
 					(string)$row['oneOffCost'],
+					(string)($row['businessValue'] ?? ''),
+					(string)($row['technicalFit'] ?? ''),
+					(string)($row['riskScore'] ?? ''),
+					$row['scoredOn'] ?? '',
+					$row['suggestedTimeClassification'] ?? '',
+					$this->derivation->mismatchLabel(row: $row),
 				]
 			);
 		}
@@ -309,8 +321,13 @@ class PortfolioReportService {
 		}
 
 		$classification = $this->normalizeClassification(value: $usage['timeClassification'] ?? null);
+		$scores         = $this->derivation->valueAssessment(
+			usage: $usage,
+			classification: $classification,
+			storedSuggestion: $this->normalizeClassification(value: $usage['suggestedTimeClassification'] ?? null)
+		);
 
-		return [
+		return $scores + [
 			'uuid' => $gebruikId,
 			'moduleId' => $moduleId,
 			'moduleName' => $module['name'] ?? $module['title'] ?? $moduleId,
