@@ -46,3 +46,10 @@ The demo usages get scores that land in all four suggested classes, one of them 
 ## Risks
 
 - Existing usages have no scores; the chart shows "not scored" as a count instead of a point.
+
+## Changes at build (2026-09-30)
+
+- D3: the scores, the recorded TIME class and the suggestion got their own `data` section on the usage page (`gb-assessment`, "Value assessment"); `UsageRiskSignals` is a body widget placed after the data. `timeClassification` moved from the first data section into that section.
+- D4: the value against fit chart is a small SVG component (`src/components/portfolio/ValueFitPlot.vue`) instead of `CnChartWidget`: the library's chart takes series of numbers, and a bubble per usage with its own colour, ring and tooltip needs per-point styling it does not expose. The mismatch filter is an `NcCheckboxRadioSwitch` over the table.
+- D4: `buildRow()` falls back to the same rule in `PortfolioReportDerivation::suggestTimeClassification()` for a usage saved before the calculation existed (no materialised value yet); a test keeps that rule equal to the declared expression.
+- The fragment moves `usage` to 1.5.3.
