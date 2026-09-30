@@ -263,6 +263,7 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
 	 */
 	public function index(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -277,6 +278,9 @@ class SettingsController extends Controller {
 			$data = $this->settingsService->getAllSettings();
 			$data['openRegisters'] = in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps());
 			$data['isAdmin'] = $isAdmin;
+			// Admins and functional administrators may open OpenRegister's duplicate
+			// candidates from the catalogue pages (operations-record-reconciliation).
+			$data['isFunctionalAdmin'] = ($isAdmin === true || $this->groupManager->isInGroup($user->getUID(), 'functioneel-beheerder') === true);
 
 			return new JSONResponse($data);
 		} catch (\Exception $e) {

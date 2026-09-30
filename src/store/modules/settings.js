@@ -152,6 +152,7 @@ export const useSettingsStore = defineStore('settings', {
 		// OpenRegister dependency check
 		openRegisters: false,
 		isAdmin: false,
+		isFunctionalAdmin: false,
 	}),
 
 	getters: {
@@ -170,6 +171,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * @return {boolean} True if the user is an admin
 		 */
 		getIsAdmin: (state) => state.isAdmin,
+		getIsFunctionalAdmin: (state) => state.isFunctionalAdmin,
 
 		/**
 		 * Get register options for dropdowns
@@ -446,6 +448,7 @@ export const useSettingsStore = defineStore('settings', {
 					// OpenRegister dependency check
 					this.openRegisters = data.openRegisters ?? false
 					this.isAdmin = data.isAdmin ?? false
+					this.isFunctionalAdmin = data.isFunctionalAdmin ?? false
 					// Basic app settings
 					this.settings.availableRegisters = data.availableRegisters || []
 					this.settings.catalogLocation = data.catalogLocation || ''
