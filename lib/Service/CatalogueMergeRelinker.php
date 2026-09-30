@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
  */
 
 declare(strict_types=1);
@@ -71,7 +71,7 @@ class CatalogueMergeRelinker {
 	 *
 	 * @return int The number of references moved.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	public function relink(string $survivorUuid, array $mergedFromUuids, string $operationId): int {
 		$objectService = $this->getObjectService();
@@ -112,7 +112,7 @@ class CatalogueMergeRelinker {
 	 *
 	 * @return string|null module, catalogService, or null for anything else.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	private function mergedType(ObjectServiceInterface $objectService, string $survivorUuid): ?string {
 		$survivor = $this->find(objectService: $objectService, uuid: $survivorUuid);
@@ -141,7 +141,7 @@ class CatalogueMergeRelinker {
 	 *
 	 * @return int The number of references moved.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	private function relinkObject(ObjectServiceInterface $objectService, ObjectEntityInterface $object, string $schema, array $fields, array $context): int {
 		$data  = $object->getObject();
@@ -191,7 +191,7 @@ class CatalogueMergeRelinker {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	private function markMerged(ObjectServiceInterface $objectService, string $mergedUuid, string $survivorUuid): void {
 		$merged = $this->find(objectService: $objectService, uuid: $mergedUuid);
@@ -228,7 +228,7 @@ class CatalogueMergeRelinker {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	private function audit(string $schema, string $field, string $objectUuid, string $from, array $context): void {
 		$entry = [
@@ -257,7 +257,7 @@ class CatalogueMergeRelinker {
 	 *
 	 * @return array<int, ObjectEntityInterface> The objects; empty when the schema is not configured.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	private function objectsOf(ObjectServiceInterface $objectService, string $schema): array {
 		$register = $this->settingsService->getRegisterIdForObjectType($schema);
@@ -286,7 +286,7 @@ class CatalogueMergeRelinker {
 	 *
 	 * @return ObjectEntityInterface|null The object.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	private function find(ObjectServiceInterface $objectService, string $uuid): ?ObjectEntityInterface {
 		try {
@@ -302,7 +302,7 @@ class CatalogueMergeRelinker {
 	 *
 	 * @return ObjectServiceInterface|null The service.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	private function getObjectService(): ?ObjectServiceInterface {
 		try {

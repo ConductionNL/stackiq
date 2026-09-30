@@ -703,16 +703,17 @@
 			"bluedolphin": "unknown",
 			"glpi": "yes",
 			"topdesk": "no",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "src/components/organisations/OrganisationMergePanel.vue:46 (admin-only controls) mounted as OrganisatieDetail bodyWidget org-merge (src/manifest.json:430); lib/Controller/MergeController.php:106 execute with isAdmin check at :142; generic src/modals/object/MergeObject.vue only mounted for modal 'mergeOrganisatie' which nothing sets",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "lib/Settings/register.d/operations-record-reconciliation.json module and catalogService x-openregister-merge (recordStatus Active/Merged, 30-day reversal) and recordStatus/mergedInto; merge itself on OpenRegister's Duplicate candidates page, reached by Find duplicates in src/views/FacetedCatalogIndexView.vue and src/components/organisations/OrganisationMergePanel.vue; lib/Service/CatalogueMergeRelinker.php re-points every reference in lib/Service/CatalogueReferenceMap.php after ObjectsMergedEvent (lib/EventListener/CatalogueMergeListener.php, lib/BackgroundJob/CatalogueMergeRelinkJob.php); src/components/merge/MergedRecordBanner.vue; organisation merge now re-points usage.provider, deelnames, participants and model.organizations (lib/Service/MergeOrganisatieService.php); tests/Unit/EventListener/CatalogueMergeListenerTest.php, tests/Unit/Service/CatalogueReferenceMapTest.php, tests/Unit/Service/MergeOrganisatieServiceTest.php",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-30-operations-record-reconciliation"
 			},
-			"reachedOn": "OrganisatieDetail /organisaties/:id, Merge panel (admins only)",
+			"reachedOn": "Applications and Services toolbar Find duplicates (admins and functional administrators) and the organisation merge panel, to OpenRegister's Duplicate candidates page; merged application page shows Merged into",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "Only organisations can be merged, with a dry run first, and only by a Nextcloud admin. Applications, services and other entries have no merge. Specified in openspec/changes/operations-record-reconciliation (OpenSpec pass 2026-09-27).",
+			"note": "Only organisations can be merged, with a dry run first, and only by a Nextcloud admin. Applications, services and other entries have no merge. Specified in openspec/changes/operations-record-reconciliation (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-30-operations-record-reconciliation.",
 			"evidence": {
 				"stackiq": "src/components/organisations/OrganisationMergePanel.vue:46 (admin-only controls) mounted as OrganisatieDetail bodyWidget org-merge (src/manifest.json:430); lib/Controller/MergeController.php:106 execute with isAdmin check at :142; generic src/modals/object/MergeObject.vue only mounted for modal 'mergeOrganisatie' which nothing sets",
 				"topdesk": "https://docs.topdesk.com/en/migration-status.html: \"You cannot merge the two cards into one card\" (read 2026-09-26); https://tip.topdesk.com/c/239-ai-cmdb-monitoring-: roadmap card in column \"Under consideration\", \"AI can continuously scan your configuration database for duplicate records ... and surfaces them for review\" (read 2026-09-26)",
@@ -4182,16 +4183,17 @@
 			"bluedolphin": "yes",
 			"glpi": "yes",
 			"topdesk": "unknown",
-			"stackiq": "partial",
+			"stackiq": "yes",
 			"built": {
-				"state": "specified",
-				"evidence": "Organisation merge: src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail, calling /api/organisaties/{uuid}/merge/dry-run and /merge (src/store/modules/organisatie.js:486/524, lib/Controller/MergeController.php:106, admin-only body guard). Federation mirrors are reconciled per peer by lib/Service/Federation/FederationMerger.php.",
-				"owner": "ConductionNL/stackiq"
+				"state": "built",
+				"evidence": "x-openregister-dedup on module, catalogService and organization (lib/Settings/softwarecatalogus_register.json, lib/Settings/register.d/operations-record-reconciliation.json) feeds OpenRegister's duplicate candidates; merged records leave the lists and facet counts (lib/Service/FacetService.php, src/utils/recordReconciliation.js activeRecordsFilter) and point to the survivor; lib/Repair/BackfillRecordStatus.php sets Active on existing rows; demo pair in lib/Settings/stackiq_mock_register.json; tests/Unit/Settings/ReconciliationDeclarationTest.php, tests/Unit/Service/FacetServiceTest.php, tests/vitest/recordReconciliation.spec.js",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-09-30-operations-record-reconciliation"
 			},
-			"reachedOn": "Organisation /organisaties/:id, Merge organisation panel (admin only)",
+			"reachedOn": "Find duplicates on Applications, Services and the organisation merge panel, to OpenRegister's Duplicate candidates; merged records leave the lists",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"note": "An admin can merge duplicate organisations with a dry run. Nothing deduplicates applications or reconciles records arriving from several sources. Specified in openspec/changes/operations-record-reconciliation (OpenSpec pass 2026-09-27).",
+			"note": "An admin can merge duplicate organisations with a dry run. Nothing deduplicates applications or reconciles records arriving from several sources. Specified in openspec/changes/operations-record-reconciliation (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-30-operations-record-reconciliation.",
 			"evidence": {
 				"stackiq": "Organisation merge: src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail, calling /api/organisaties/{uuid}/merge/dry-run and /merge (src/store/modules/organisatie.js:486/524, lib/Controller/MergeController.php:106, admin-only body guard). Federation mirrors are reconciled per peer by lib/Service/Federation/FederationMerger.php.",
 				"topdesk": "unknown: deduplication across sources is not described; https://tip.topdesk.com/c/239-ai-cmdb-monitoring- (duplicates) is under consideration; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",

@@ -334,7 +334,7 @@ export default {
 		 *
 		 * @return {object} The `CnIndexPage` `filter` prop value.
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
-		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+		 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
 		 */
 		listFilter() {
 			// Records OpenRegister merged into another one leave the list;
@@ -354,7 +354,7 @@ export default {
 		 * Whether Find duplicates shows: admins and functional administrators.
 		 *
 		 * @return {boolean} True when it shows.
-		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+		 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
 		 */
 		showFindDuplicates() {
 			return canFindDuplicates({
@@ -403,7 +403,7 @@ export default {
 		 * the schema are picked and pairs are merged or dismissed.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+		 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
 		 */
 		openDuplicateCandidates() {
 			window.location.assign(generateUrl(DUPLICATE_CANDIDATES_PATH))

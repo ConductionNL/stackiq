@@ -6,7 +6,7 @@
  * duplicates; stackiq leads admins there, leaves merged records out of its
  * lists and points a merged record's page to the survivor.
  *
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md
+ * @spec openspec/specs/record-reconciliation/spec.md
  */
 import { refId } from './maintenance.js'
 
@@ -19,7 +19,7 @@ export const DUPLICATE_CANDIDATES_PATH = '/apps/openregister/duplicates'
  *
  * @param {{isAdmin: boolean, isFunctionalAdmin: boolean}|null} roles The roles from the settings store.
  * @return {boolean} True when the action shows.
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
  */
 export function canFindDuplicates(roles) {
 	return Boolean(roles?.isAdmin || roles?.isFunctionalAdmin)
@@ -30,7 +30,7 @@ export function canFindDuplicates(roles) {
  *
  * @param {object} filter The filter the page already applies.
  * @return {object} The filter plus recordStatus not Merged.
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
  */
 export function activeRecordsFilter(filter) {
 	return { ...(filter || {}), 'recordStatus[ne]': 'Merged' }
@@ -41,7 +41,7 @@ export function activeRecordsFilter(filter) {
  *
  * @param {object|null} object The record.
  * @return {string|null} The survivor's id, or null when the record is not merged.
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
  */
 export function mergedIntoId(object) {
 	if (object?.recordStatus !== 'Merged') {

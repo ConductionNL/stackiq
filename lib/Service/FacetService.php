@@ -490,7 +490,7 @@ class FacetService {
 	 *
 	 * @return array<int, array<string, mixed>> The objects that are not merged.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
 	 */
 	private static function withoutMerged(array $objects): array {
 		return array_values(

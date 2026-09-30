@@ -247,7 +247,7 @@ export default {
 		 * Open OpenRegister's duplicate candidates page.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+		 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
 		 */
 		openDuplicateCandidates() {
 			window.location.assign(generateUrl(DUPLICATE_CANDIDATES_PATH))

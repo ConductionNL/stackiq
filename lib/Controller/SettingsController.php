@@ -263,7 +263,7 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
 	 */
 	public function index(): JSONResponse {
 		if ($this->userSession->getUser() === null) {

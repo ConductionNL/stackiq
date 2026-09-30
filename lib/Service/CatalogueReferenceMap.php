@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
  */
 
 declare(strict_types=1);
@@ -74,7 +74,7 @@ final class CatalogueReferenceMap {
 	 *
 	 * @return array<string, array<string, bool>> Referencing schema => field => holds a list.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
 	 */
 	public static function referencesTo(string $schema): array {
 		return (self::REFERENCES[$schema] ?? []);
@@ -92,7 +92,7 @@ final class CatalogueReferenceMap {
 	 *
 	 * @return array{0: array<string, mixed>, 1: array<int, string>} The data and the fields that moved.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	public static function rewrite(array $data, array $fields, string $from, string $to): array {
 		$moved = [];
@@ -126,7 +126,7 @@ final class CatalogueReferenceMap {
 	 *
 	 * @return array<int, mixed>|null The new list, or null when the uuid is not in it.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	private static function rewriteList(array $list, string $from, string $to): ?array {
 		$ids = array_map(static fn (mixed $entry): ?string => self::referenceId(value: $entry), $list);
@@ -160,7 +160,7 @@ final class CatalogueReferenceMap {
 	 *
 	 * @return string|null The uuid.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	public static function referenceId(mixed $value): ?string {
 		return MaintenanceRecipientService::referenceId(value: $value);

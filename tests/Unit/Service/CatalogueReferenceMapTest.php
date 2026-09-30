@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+ * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
  */
 
 declare(strict_types=1);
@@ -107,7 +107,7 @@ class CatalogueReferenceMapTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	public function testRewriteMovesScalarArrayAndObjectReferences(): void {
 		[$data, $moved] = CatalogueReferenceMap::rewrite(
@@ -125,7 +125,7 @@ class CatalogueReferenceMapTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
 	 */
 	public function testAnArrayDoesNotGetTheSurvivorTwice(): void {
 		[$data, $moved] = CatalogueReferenceMap::rewrite(

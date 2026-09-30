@@ -6,7 +6,7 @@
  * duplicate candidates, merged records out of the lists, the Merged into
  * banner on the application page, and the removed app-local merge modal.
  *
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md
+ * @spec openspec/specs/record-reconciliation/spec.md
  */
 
 import * as fs from 'fs'

@@ -13,7 +13,7 @@
  * re-pointing runs as a background job, so the instance must run cron; the
  * test nudges it through cron.php and then waits for the result.
  *
- * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md
+ * @spec openspec/specs/record-reconciliation/spec.md
  */
 import type { APIRequestContext } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'

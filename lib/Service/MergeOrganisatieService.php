@@ -361,7 +361,7 @@ class MergeOrganisatieService {
 	 *
 	 * @return array<string, array{schema: string, fields: array<string, bool>}> The relation types.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
 	 */
 	private static function fieldRelationTypes(): array {
 		$types = [];
@@ -384,7 +384,7 @@ class MergeOrganisatieService {
 	 * @return int The number of distinct objects that reference (or referenced) the source.
 	 *
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `commit` is the documented dry-run/execute parity gate.
 	 */
@@ -795,7 +795,7 @@ class MergeOrganisatieService {
 	 *
 	 * @return int|null The register id.
 	 *
-	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
 	 */
 	private function registerIdFor(string $objectType): ?int {
 		if ($objectType === 'model') {
