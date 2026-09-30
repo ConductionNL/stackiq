@@ -537,6 +537,7 @@
 					{ "id": "10", "widgetId": "md-maintenance", "gridX": 0, "gridY": 24, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
+					{ "id": "md-merged-into", "component": "MergedRecordBanner", "props": { "objectId": "@objectId" }, "placement": "before-body", "colSpan": 12 },
 					{ "id": "md-roadmap", "component": "ProductRoadmap", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "md-contracts", "component": "ApplicationContractsPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "md-reviews", "component": "ReviewsPanel", "props": { "objectId": "@objectId", "subjectType": "module" }, "placement": "end", "colSpan": 12 }

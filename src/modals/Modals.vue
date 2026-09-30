@@ -8,7 +8,6 @@
 		<UploadObject v-if="navigationStore.modal === 'uploadOrganisatie'" />
 		<LockObject v-if="navigationStore.modal === 'lockOrganisatie'" />
 		<MigrationObject v-if="navigationStore.modal === 'migrationOrganisatie'" />
-		<MergeObject v-if="navigationStore.modal === 'mergeOrganisatie'" />
 
 		<!-- Generic Object Edit Modal for other object types (contactpersoon, etc.) -->
 		<ObjectModal
@@ -22,7 +21,6 @@
 
 <script>
 import LockObject from './object/LockObject.vue'
-import MergeObject from './object/MergeObject.vue'
 import MigrationObject from './object/MigrationObject.vue'
 import ObjectModal from './object/ObjectModal.vue'
 import UploadObject from './object/UploadObject.vue'
@@ -56,7 +54,6 @@ export default {
 		UploadObject,
 		LockObject,
 		MigrationObject,
-		MergeObject,
 	},
 
 	/**

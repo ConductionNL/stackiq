@@ -92,6 +92,24 @@
 						</template>
 						{{ t('stackiq', 'Preview merge') }}
 					</NcButton>
+
+					<p class="organisation-merge-panel__intro">
+						{{
+							t(
+								'stackiq',
+								'Not sure which organisations are recorded twice? OpenRegister lists likely duplicates of organisations, applications and services.',
+							)
+						}}
+					</p>
+					<NcButton
+						variant="tertiary"
+						data-testid="find-duplicates"
+						@click="openDuplicateCandidates">
+						<template #icon>
+							<ContentDuplicate :size="20" />
+						</template>
+						{{ t('stackiq', 'Find duplicates') }}
+					</NcButton>
 				</template>
 			</template>
 		</div>
@@ -116,9 +134,11 @@ import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
 import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
+import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import MergeOrganisationConfirmDialog from '../../modals/object/MergeOrganisationConfirmDialog.vue'
 import { organisatieStore, settingsStore } from '../../store/store.js'
+import { DUPLICATE_CANDIDATES_PATH } from '../../utils/recordReconciliation.js'
 
 /**
  * @class OrganisationMergePanel
@@ -148,6 +168,7 @@ export default {
 		NcSelect,
 		CnWidgetWrapper,
 		CnIcon,
+		ContentDuplicate,
 		Eye,
 		ArrowRight,
 		MergeOrganisationConfirmDialog,
@@ -221,6 +242,17 @@ export default {
 
 	methods: {
 		t,
+
+		/**
+		 * Open OpenRegister's duplicate candidates page.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+		 */
+		openDuplicateCandidates() {
+			window.location.assign(generateUrl(DUPLICATE_CANDIDATES_PATH))
+		},
+
 		/**
 		 * Load the source organisation's status/mergedInto/name.
 		 *

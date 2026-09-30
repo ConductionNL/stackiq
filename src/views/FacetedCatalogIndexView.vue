@@ -90,6 +90,17 @@ generic route-query-to-filter passthrough never sees it (see the
 					{{ view.name }}
 				</NcActionButton>
 			</NcActions>
+
+			<NcButton
+				v-if="showFindDuplicates"
+				variant="secondary"
+				data-testid="find-duplicates"
+				@click="openDuplicateCandidates">
+				<template #icon>
+					<ContentDuplicate :size="20" />
+				</template>
+				{{ t('stackiq', 'Find duplicates') }}
+			</NcButton>
 		</div>
 
 		<div class="faceted-catalog-index__body">
@@ -133,6 +144,7 @@ generic route-query-to-filter passthrough never sees it (see the
 import { CnFacetSidebar, CnIndexPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcActionButton,
 	NcActionCaption,
@@ -141,13 +153,20 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import CloseIcon from 'vue-material-design-icons/Close.vue'
+import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 import { useFacetStore } from '../store/modules/facets.js'
+import { settingsStore } from '../store/store.js'
 import { rowDetailLocation } from '../utils/applicationContracts.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
+import {
+	activeRecordsFilter,
+	canFindDuplicates,
+	DUPLICATE_CANDIDATES_PATH,
+} from '../utils/recordReconciliation.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
 const DIMENSION_LABELS = {
@@ -173,6 +192,7 @@ export default {
 		CnIndexPage,
 		SaveFacetViewModal,
 		CloseIcon,
+		ContentDuplicate,
 		ContentSaveOutline,
 		FolderOutline,
 		FolderStarOutline,
@@ -314,17 +334,33 @@ export default {
 		 *
 		 * @return {object} The `CnIndexPage` `filter` prop value.
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
+		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
 		 */
 		listFilter() {
+			// Records OpenRegister merged into another one leave the list;
+			// their pages stay reachable (operations-record-reconciliation).
 			if (!this.facetStore.hasActiveFilterOrSearchFor(this.schema)) {
-				return {}
+				return activeRecordsFilter({})
 			}
 
 			const ids = this.facetStore.matchedObjectIdsFor(this.schema)
 			// A real (if unlikely) id can never collide with this sentinel —
 			// forces a correct EMPTY list rather than `CnIndexPage` treating
 			// an empty `id` array as "no filter" (showing everything).
-			return { id: ids.length > 0 ? ids : ['__gemma_facet_no_match__'] }
+			return activeRecordsFilter({ id: ids.length > 0 ? ids : ['__gemma_facet_no_match__'] })
+		},
+
+		/**
+		 * Whether Find duplicates shows: admins and functional administrators.
+		 *
+		 * @return {boolean} True when it shows.
+		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+		 */
+		showFindDuplicates() {
+			return canFindDuplicates({
+				isAdmin: settingsStore.getIsAdmin,
+				isFunctionalAdmin: settingsStore.getIsFunctionalAdmin,
+			})
 		},
 
 		/**
@@ -362,6 +398,17 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Open OpenRegister's duplicate candidates page, where the register and
+		 * the schema are picked and pairs are merged or dismissed.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+		 */
+		openDuplicateCandidates() {
+			window.location.assign(generateUrl(DUPLICATE_CANDIDATES_PATH))
+		},
+
 		/**
 		 * Open the detail page of a clicked row, or of the row whose View action was used.
 		 *

@@ -98,7 +98,7 @@ export function stackiqPlugin() {
 			// App settings from /api/settings
 			settings: null,
 
-			// Legacy single-object focus (used by modals: DeleteObject, LockObject, DownloadObject, MergeObject)
+			// Legacy single-object focus (used by modals: DeleteObject, LockObject, DownloadObject)
 			objectItem: null,
 
 			// Active object per type (for editing/viewing)
@@ -1390,50 +1390,6 @@ export function stackiqPlugin() {
 			// ==========================================
 			// Merge & Migration Operations
 			// ==========================================
-
-			/**
-			 * Merge two objects via the OpenRegister merge API.
-			 *
-			 * @param {object} params Merge parameters
-			 * @param {string} params.register Register ID
-			 * @param {string} params.schema Schema ID
-			 * @param {string} params.sourceObjectId Source object ID
-			 * @param {string} params.target Target object ID
-			 * @param {object} params.object Merged data
-			 * @param {string} params.fileAction What to do with files
-			 * @param {string} params.relationAction What to do with relations
-			 * @return {Promise<object>} Merge result
-			 * @spec openspec/specs/fe-stores/spec.md
-			 */
-			async mergeObjects({
-				register,
-				schema,
-				sourceObjectId,
-				target,
-				object,
-				fileAction,
-				relationAction,
-			}) {
-				const response = await fetch(
-					`/index.php/apps/openregister/api/objects/${register}/${schema}/${sourceObjectId}/merge`,
-					{
-						method: 'POST',
-						headers: buildHeaders(),
-						body: JSON.stringify({
-							target,
-							object,
-							fileAction,
-							relationAction,
-						}),
-					},
-				)
-
-				if (!response.ok)
-					throw new Error(
-						`Failed to merge objects: ${response.statusText}`,
-					)
-				return { data: await response.json() }
-			},
 
 			/**
 			 * Fetch available mappings from the OpenRegister API.

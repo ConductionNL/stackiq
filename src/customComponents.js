@@ -23,6 +23,7 @@ import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import MergedRecordBanner from './components/merge/MergedRecordBanner.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
@@ -97,6 +98,11 @@ export default {
 	// a bodyWidgets section on ModuleDetail (lifecycle-maintenance-and-supplier-roadmap):
 	// it reads the module and its versions, which no built-in widget combines.
 	ProductRoadmap,
+
+	// Merged into, with a link to the survivor, on the page of an application
+	// OpenRegister merged away (operations-record-reconciliation): it shows only
+	// for a Merged record, a condition no built-in widget takes.
+	MergedRecordBanner,
 
 	// End of support of the version a usage runs and the vulnerabilities of its
 	// application, next to the risk score on the usage page
