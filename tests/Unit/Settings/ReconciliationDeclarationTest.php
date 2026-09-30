@@ -156,7 +156,7 @@ class ReconciliationDeclarationTest extends TestCase {
 			$this->assertSame('Active', $object['recordStatus'] ?? null, ($object['@self']['slug'] ?? '?') . ' must be Active');
 			$this->assertTrue($validator->validate('Active', $status)->isValid());
 			if ($schema === 'module') {
-				$byName[mb_strtolower(trim((string) ($object['name'] ?? '')))][] = $object;
+				$byName[($object['@self']['register'] ?? '') . ':' . mb_strtolower(trim((string) ($object['name'] ?? '')))][] = $object;
 			}
 		}
 

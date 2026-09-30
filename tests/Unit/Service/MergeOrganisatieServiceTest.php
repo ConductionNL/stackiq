@@ -846,6 +846,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 
 		$settingsService = $this->createMock(SettingsService::class);
 		$settingsService->method('getVoorzieningenRegisterId')->willReturn(self::REGISTER_ID);
+		$settingsService->method('getRegisterIdForObjectType')->willReturn(self::REGISTER_ID);
 		$settingsService->method('getSchemaIdForObjectType')->willReturnCallback(
 			static function (string $objectType) {
 				return self::SCHEMA_IDS[$objectType] ?? null;

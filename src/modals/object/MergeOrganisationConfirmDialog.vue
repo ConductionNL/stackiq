@@ -122,7 +122,7 @@ export default {
 			default: '',
 		},
 
-		/** Dry-run `counts` object, keyed as MergeOrganisatieService counts: `{usage, contactPerson, aanbod, module, catalogService, catalogContract, compliancy, moduleOwnership, catalogServiceOwnership, groupMembers}`. */
+		/** Dry-run `counts` object, keyed as MergeOrganisatieService counts: `{usage, contactPerson, aanbod, module, catalogService, organization, model, aiSystem, catalogContract, compliancy, moduleOwnership, catalogServiceOwnership, groupMembers}`. */
 		counts: {
 			type: Object,
 			default: () => ({}),
@@ -148,6 +148,7 @@ export default {
 		 *
 		 * @return {Array<{key: string, label: string, value: number}>} The rows to render.
 		 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-system-shall-preview-a-merge-with-per-relation-type-counts-before-any-write
+		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
 		 */
 		countRows() {
 			const labels = {
@@ -157,6 +158,9 @@ export default {
 				aanbod: t('stackiq', 'Offerings'),
 				module: t('stackiq', 'Applications supplied'),
 				catalogService: t('stackiq', 'Services supplied'),
+				organization: t('stackiq', 'Collaborations'),
+				model: t('stackiq', 'Architecture models'),
+				aiSystem: t('stackiq', 'AI systems supplied'),
 				moduleOwnership: t('stackiq', 'Applications managed'),
 				catalogServiceOwnership: t('stackiq', 'Services managed'),
 				compliancy: t('stackiq', 'Compliance records'),

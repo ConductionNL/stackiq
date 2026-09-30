@@ -41,7 +41,11 @@ class CatalogueReferenceMapTest extends TestCase {
 		$found = [];
 		foreach (ReconciliationDeclarationTest::mergedRegister()['components']['schemas'] as $schema => $definition) {
 			foreach (($definition['properties'] ?? []) as $field => $property) {
-				$ref = ($property['$ref'] ?? ($property['items']['$ref'] ?? null));
+				$ref = ($property['$ref'] ?? '');
+				if ($ref === '') {
+					// An array property may carry an empty top-level `$ref` next to its items' one (model.organizations).
+					$ref = ($property['items']['$ref'] ?? null);
+				}
 				if ($ref !== '#/components/schemas/' . $target) {
 					continue;
 				}

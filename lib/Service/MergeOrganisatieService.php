@@ -100,23 +100,13 @@ class MergeOrganisatieService {
 	private const TOMBSTONE_STATUS = 'merged';
 
 	/**
-	 * Relation types re-pointed via a business-level object field (scalar and/or array).
+	 * Count keys that differ from the referencing schema's slug. The
+	 * references themselves come from CatalogueReferenceMap, the one list the
+	 * application and service merge uses too.
 	 *
-	 * The optional `schema` key overrides the OpenRegister schema slug when it
-	 * differs from the relation-type key (`aanbod` lives on the `koppeling`
-	 * schema); `walkRelations()` falls back to the key via `?? $type`.
-	 *
-	 * @var array<string, array{field: string, arrayField: string|null, schema?: string}>
+	 * @var array<string, string>
 	 */
-	private const FIELD_RELATION_TYPES = [
-		'usage' => ['field' => 'consumer', 'arrayField' => 'participants'],
-		'contactPerson' => ['field' => 'organization', 'arrayField' => null],
-		'aanbod' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'connection'],
-		// The supplier's own applications and services (`provider`, a Vendor
-		// $ref to organization): after a takeover they belong to the target.
-		'module' => ['field' => 'provider', 'arrayField' => null],
-		'catalogService' => ['field' => 'provider', 'arrayField' => null],
-	];
+	private const COUNT_KEYS = ['connection' => 'aanbod'];
 
 	/**
 	 * Relation types re-pointed via the OpenRegister system-level `@self.organisation` field,
@@ -253,7 +243,7 @@ class MergeOrganisatieService {
 		$operationId = $this->progressTracker->startOperation(
 			operationType: 'org_merge',
 			options: [
-				'total_items' => count(self::FIELD_RELATION_TYPES) + count(self::SELF_ORGANISATION_RELATION_TYPES),
+				'total_items' => count(self::fieldRelationTypes()) + count(self::SELF_ORGANISATION_RELATION_TYPES),
 				'statistics' => [],
 			],
 			ownerUid: $actorUid
@@ -272,7 +262,7 @@ class MergeOrganisatieService {
 		$this->progressTracker->completeOperation(finalStatistics: ['counts' => $counts]);
 
 		$relationSum = 0;
-		foreach (array_merge(array_keys(self::FIELD_RELATION_TYPES), array_keys(self::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
+		foreach (array_merge(array_keys(self::fieldRelationTypes()), array_keys(self::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
 			$relationSum += ($counts[$type] ?? 0);
 		}
 
@@ -322,12 +312,10 @@ class MergeOrganisatieService {
 	private function walkRelations(string $sourceUuid, string $targetUuid, bool $commit): array {
 		$counts = $this->emptyCounts();
 
-		foreach (self::FIELD_RELATION_TYPES as $type => $mapping) {
-			$schemaType = $mapping['schema'] ?? $type;
+		foreach (self::fieldRelationTypes() as $type => $mapping) {
 			$counts[$type] = $this->repointByField(
-				objectType: $schemaType,
-				field: $mapping['field'],
-				arrayField: $mapping['arrayField'],
+				objectType: $mapping['schema'],
+				fields: $mapping['fields'],
 				source: $sourceUuid,
 				target: $targetUuid,
 				commit: $commit
@@ -368,60 +356,45 @@ class MergeOrganisatieService {
 	}//end reportTypeProgress()
 
 	/**
-	 * Re-point objects of a schema via a business-level scalar field and/or array field.
+	 * The field-level relation types: count key => referencing schema and its
+	 * organisation fields, from CatalogueReferenceMap.
 	 *
-	 * @param string $objectType The OpenRegister object type/schema slug.
-	 * @param string $field The scalar organisation-reference field name.
-	 * @param string|null $arrayField An additional array-of-uuid field name, or null.
-	 * @param string $source The source organisation UUID.
-	 * @param string $target The target organisation UUID.
-	 * @param bool $commit Whether to write (true) or only count (false).
+	 * @return array<string, array{schema: string, fields: array<string, bool>}> The relation types.
+	 *
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 */
+	private static function fieldRelationTypes(): array {
+		$types = [];
+		foreach (CatalogueReferenceMap::referencesTo(schema: 'organization') as $schema => $fields) {
+			$types[(self::COUNT_KEYS[$schema] ?? $schema)] = ['schema' => $schema, 'fields' => $fields];
+		}
+
+		return $types;
+	}//end fieldRelationTypes()
+
+	/**
+	 * Re-point objects of a schema via its organisation fields, scalar or list.
+	 *
+	 * @param string              $objectType The OpenRegister object type/schema slug.
+	 * @param array<string, bool> $fields     The organisation fields, field => holds a list.
+	 * @param string              $source     The source organisation UUID.
+	 * @param string              $target     The target organisation UUID.
+	 * @param bool                $commit     Whether to write (true) or only count (false).
 	 *
 	 * @return int The number of distinct objects that reference (or referenced) the source.
 	 *
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `commit` is the documented dry-run/execute parity gate.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 10, exactly at the threshold. The
-	 * branches are the two reference shapes a schema may use (a scalar organisation field and/or
-	 * an array-of-uuid field, either of which may be absent on a given object), crossed with the
-	 * dry-run/execute gate above. Splitting the scalar and array paths would duplicate the
-	 * count-vs-write logic that must stay identical for dry-run/execute parity to hold.
 	 */
-	private function repointByField(string $objectType, string $field, ?string $arrayField, string $source, string $target, bool $commit): int {
+	private function repointByField(string $objectType, array $fields, string $source, string $target, bool $commit): int {
 		$entities = $this->findAllForType(objectType: $objectType);
 		$count = 0;
 
 		foreach ($entities as $entity) {
-			$data = $entity->getObject();
-			$isMatched = false;
-
-			if (($data[$field] ?? null) === $source) {
-				$isMatched = true;
-				$data[$field] = $target;
-			}
-
-			if ($arrayField !== null && is_array($data[$arrayField] ?? null) === true) {
-				$arrayMatched = false;
-				$newArray = [];
-				foreach ($data[$arrayField] as $entry) {
-					$replacement = $entry;
-					if ($entry === $source) {
-						$arrayMatched = true;
-						$replacement = $target;
-					}
-
-					$newArray[] = $replacement;
-				}
-
-				if ($arrayMatched === true) {
-					$isMatched = true;
-					$data[$arrayField] = $newArray;
-				}
-			}
-
-			if ($isMatched === false) {
+			[$data, $moved] = CatalogueReferenceMap::rewrite(data: $entity->getObject(), fields: $fields, from: $source, to: $target);
+			if ($moved === []) {
 				continue;
 			}
 
@@ -430,7 +403,7 @@ class MergeOrganisatieService {
 			if ($commit === true) {
 				$this->saveFull(entity: $entity, data: $data, objectType: $objectType);
 			}
-		}//end foreach
+		}
 
 		return $count;
 	}//end repointByField()
@@ -546,7 +519,7 @@ class MergeOrganisatieService {
 	 */
 	private function saveFull(object $entity, array $data, string $objectType): void {
 		$objectService = $this->getObjectService();
-		$registerId = $this->settingsService->getVoorzieningenRegisterId();
+		$registerId = $this->registerIdFor(objectType: $objectType);
 		$schemaId = $this->settingsService->getSchemaIdForObjectType(objectType: $objectType);
 
 		if ($objectService === null || $registerId === null || $schemaId === null) {
@@ -798,7 +771,7 @@ class MergeOrganisatieService {
 	 */
 	private function findAllForType(string $objectType): array {
 		$objectService = $this->getObjectService();
-		$registerId = $this->settingsService->getVoorzieningenRegisterId();
+		$registerId = $this->registerIdFor(objectType: $objectType);
 		$schemaId = $this->settingsService->getSchemaIdForObjectType(objectType: $objectType);
 
 		if ($objectService === null || $registerId === null || $schemaId === null) {
@@ -813,6 +786,24 @@ class MergeOrganisatieService {
 			]
 		);
 	}//end findAllForType()
+
+	/**
+	 * The register an object type lives in: the catalogue register, except the
+	 * architecture models, which live in the ArchiMate register.
+	 *
+	 * @param string $objectType The object type/schema slug.
+	 *
+	 * @return int|null The register id.
+	 *
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 */
+	private function registerIdFor(string $objectType): ?int {
+		if ($objectType === 'model') {
+			return $this->settingsService->getRegisterIdForObjectType('model');
+		}
+
+		return $this->settingsService->getVoorzieningenRegisterId();
+	}//end registerIdFor()
 
 	/**
 	 * Gets the OpenRegister ObjectService if available.
@@ -839,7 +830,7 @@ class MergeOrganisatieService {
 	 */
 	private function emptyCounts(): array {
 		$counts = ['groupMembers' => 0];
-		foreach (array_keys(self::FIELD_RELATION_TYPES) as $type) {
+		foreach (array_keys(self::fieldRelationTypes()) as $type) {
 			$counts[$type] = 0;
 		}
 

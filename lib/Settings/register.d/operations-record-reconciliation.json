@@ -1,0 +1,106 @@
+{
+  "components": {
+    "schemas": {
+      "module": {
+        "version": "0.3.5",
+        "properties": {
+          "recordStatus": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Merged"
+            ],
+            "default": "Active",
+            "title": "Record status",
+            "description": "Active for a record in use. Merged once OpenRegister merged it into another record; it then leaves the lists and its page points to that record.",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true,
+            "order": 90
+          },
+          "mergedInto": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Merged into",
+            "description": "The record this one was merged into.",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true,
+            "order": 91
+          }
+        },
+        "configuration": {
+          "x-openregister-merge": {
+            "statusField": "recordStatus",
+            "survivorStatus": "Active",
+            "mergedStatus": "Merged",
+            "reversalWindowDays": 30
+          }
+        }
+      },
+      "catalogService": {
+        "version": "0.2.2",
+        "properties": {
+          "recordStatus": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Merged"
+            ],
+            "default": "Active",
+            "title": "Record status",
+            "description": "Active for a record in use. Merged once OpenRegister merged it into another record; it then leaves the lists and its page points to that record.",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true,
+            "order": 90
+          },
+          "mergedInto": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Merged into",
+            "description": "The record this one was merged into.",
+            "visible": true,
+            "facetable": false,
+            "hideOnForm": true,
+            "order": 91
+          }
+        },
+        "configuration": {
+          "x-openregister-merge": {
+            "statusField": "recordStatus",
+            "survivorStatus": "Active",
+            "mergedStatus": "Merged",
+            "reversalWindowDays": 30
+          },
+          "x-openregister-dedup": {
+            "blockingKeys": [],
+            "matchRules": [
+              {
+                "field": "name",
+                "method": "normalized",
+                "weight": 0.4
+              },
+              {
+                "field": "name",
+                "method": "levenshtein",
+                "weight": 0.2
+              },
+              {
+                "field": "provider",
+                "method": "exact",
+                "weight": 0.3
+              },
+              {
+                "field": "website",
+                "method": "normalized",
+                "weight": 0.1
+              }
+            ],
+            "threshold": 0.7
+          }
+        }
+      }
+    }
+  }
+}
