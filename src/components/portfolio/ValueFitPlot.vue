@@ -118,7 +118,7 @@ export default {
 	computed: {
 		/**
 		 * @return {{points: Array<object>, notScored: number}} The plotted points.
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		plotted() {
 			return valueFitPoints(this.rows)
@@ -126,7 +126,7 @@ export default {
 
 		/**
 		 * @return {number} The plot width inside the padding.
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		plotWidth() {
 			return this.width - this.pad.left - this.pad.right
@@ -134,7 +134,7 @@ export default {
 
 		/**
 		 * @return {number} The plot height inside the padding.
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		plotHeight() {
 			return this.height - this.pad.top - this.pad.bottom
@@ -144,7 +144,7 @@ export default {
 		 * The four TIME areas, split between score 2 and 3.
 		 *
 		 * @return {Array<object>} The areas.
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		quadrants() {
 			const left = this.scaleX(0.5)
@@ -163,7 +163,7 @@ export default {
 
 		/**
 		 * @return {string} A text alternative for the plot.
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		ariaLabel() {
 			return n(
@@ -183,7 +183,7 @@ export default {
 		/**
 		 * @param {number} fit A technical fit value.
 		 * @return {number} The x coordinate.
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		scaleX(fit) {
 			return this.pad.left + ((fit - 0.5) / 5) * this.plotWidth
@@ -192,7 +192,7 @@ export default {
 		/**
 		 * @param {number} value A business value.
 		 * @return {number} The y coordinate.
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		scaleY(value) {
 			return this.pad.top + ((5.5 - value) / 5) * this.plotHeight
@@ -201,7 +201,7 @@ export default {
 		/**
 		 * @param {string} key A TIME class.
 		 * @return {string} Its label.
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		quadrantLabel(key) {
 			const map = {
@@ -216,7 +216,7 @@ export default {
 		/**
 		 * @param {object} point A plotted point.
 		 * @return {string} The tooltip.
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		pointTitle(point) {
 			return t(

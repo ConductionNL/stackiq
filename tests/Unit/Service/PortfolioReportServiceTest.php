@@ -544,7 +544,7 @@ class PortfolioReportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 	 */
 	public function testRowsCarryTheScoresAndTheMismatch(): void {
 		$rows = $this->serviceOver($this->scoredUsages())->buildReport('org-a')['rows'];
@@ -573,7 +573,7 @@ class PortfolioReportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 	 */
 	public function testTheCsvCarriesTheScoreColumns(): void {
 		$lines  = array_map('str_getcsv', explode("\n", trim($this->serviceOver($this->scoredUsages())->buildCsv('org-a'))));

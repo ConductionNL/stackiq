@@ -350,7 +350,7 @@ class PortfolioReportService {
 	 *
 	 * @return array<string,mixed> The score fields of the row.
 	 *
-	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 	 */
 	private function buildScores(array $usage, ?string $classification): array {
 		$value = $this->derivation->score(value: $usage['businessValue'] ?? null);
@@ -383,7 +383,7 @@ class PortfolioReportService {
 	 *
 	 * @return string "yes" or "no".
 	 *
-	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 	 */
 	private function mismatchLabel(array $row): string {
 		if (($row['timeMismatch'] ?? false) === true) {

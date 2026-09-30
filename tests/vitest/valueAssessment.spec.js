@@ -6,7 +6,7 @@
  * support and the application's vulnerabilities), the value against fit plot
  * and the mismatch filter of the portfolio report, and the page wiring.
  *
- * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md
+ * @spec openspec/specs/application-value-assessment/spec.md
  */
 import * as fs from 'fs'
 import * as path from 'path'

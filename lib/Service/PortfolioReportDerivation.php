@@ -259,7 +259,7 @@ class PortfolioReportDerivation {
 	 *
 	 * @return int|null The score.
 	 *
-	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-001-an-organisation-scores-each-application-it-uses-on-value-fit-and-risk
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-001-an-organisation-scores-each-application-it-uses-on-value-fit-and-risk
 	 */
 	public function score(mixed $value): ?int {
 		if (is_numeric($value) === false) {
@@ -285,7 +285,7 @@ class PortfolioReportDerivation {
 	 *
 	 * @return string|null Invest, Migrate, Tolerate or Eliminate; null while a score is missing.
 	 *
-	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-001-an-organisation-scores-each-application-it-uses-on-value-fit-and-risk
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-001-an-organisation-scores-each-application-it-uses-on-value-fit-and-risk
 	 */
 	public function suggestTimeClassification(?int $businessValue, ?int $technicalFit): ?string {
 		if ($businessValue === null || $technicalFit === null) {

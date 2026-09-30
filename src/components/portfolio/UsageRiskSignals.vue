@@ -96,7 +96,7 @@ export default {
 
 	watch: {
 		/**
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
 		 */
 		objectId() {
 			this.load()
@@ -104,7 +104,7 @@ export default {
 	},
 
 	/**
-	 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
 	 */
 	mounted() {
 		this.load()
@@ -118,7 +118,7 @@ export default {
 		 * Load the usage, the version it runs and the vulnerabilities of its application.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
 		 */
 		async load() {
 			this.loading = true
@@ -154,7 +154,7 @@ export default {
 		 *
 		 * @param {string} type The schema slug.
 		 * @return {void}
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
 		 */
 		ensureType(type) {
 			if (

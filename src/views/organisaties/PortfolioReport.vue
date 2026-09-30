@@ -470,7 +470,7 @@ export default {
 		 *
 		 * @return {Array<{key: string, rows: Array}>} Grouped rows.
 		 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		groupedRows() {
 			if (!this.report) {
@@ -638,7 +638,7 @@ export default {
 		 *
 		 * @param {object} row A report row.
 		 * @return {string} The label.
-		 * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
 		 */
 		scoresLabel(row) {
 			const scores = [row.businessValue, row.technicalFit, row.riskScore]

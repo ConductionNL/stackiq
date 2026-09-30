@@ -6,7 +6,7 @@
  * signals next to the risk score, and the value against fit plot and the
  * mismatch filter of the portfolio report.
  *
- * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md
+ * @spec openspec/specs/application-value-assessment/spec.md
  */
 import { endOfSupportState } from './lifecyclePhase.js'
 import { refId } from './maintenance.js'
@@ -24,7 +24,7 @@ const SPREAD = 0.18
  * @param {string} moduleId The application of the usage.
  * @param {Date} [now] The current moment.
  * @return {{endOfSupportPassed: boolean, endOfSupportDate: (string|null), withdrawn: boolean, vulnerabilityCount: number}} The signals.
- * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
+ * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
  */
 export function riskSignals(version, vulnerabilities, moduleId, now = new Date()) {
 	const eol = endOfSupportState(version || {}, now)
@@ -48,7 +48,7 @@ export function riskSignals(version, vulnerabilities, moduleId, now = new Date()
  *
  * @param {object} row A portfolio report row.
  * @return {boolean} True when value and fit are set.
- * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+ * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
  */
 function isScored(row) {
 	return Number.isInteger(row?.businessValue) && Number.isInteger(row?.technicalFit)
@@ -61,7 +61,7 @@ function isScored(row) {
  *
  * @param {Array<object>|null} rows Portfolio report rows.
  * @return {{points: Array<object>, notScored: number}} The points and the count of usages without both scores.
- * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+ * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
  */
 export function valueFitPoints(rows) {
 	const list = Array.isArray(rows) ? rows : []
@@ -95,7 +95,7 @@ export function valueFitPoints(rows) {
  *
  * @param {Array<object>|null} rows Portfolio report rows.
  * @return {Array<object>} The mismatching rows.
- * @spec openspec/changes/lifecycle-application-value-assessment/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+ * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
  */
 export function mismatchRows(rows) {
 	return (Array.isArray(rows) ? rows : []).filter((row) => row?.timeMismatch === true)
