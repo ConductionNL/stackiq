@@ -224,6 +224,9 @@ Vrij en open source onder de EUPL-licentie.
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
+			<!-- After the register import that adds recordStatus (operations-record-reconciliation):
+			     the lists filter Merged out, and that filter also drops a row with no status. -->
+			<step>OCA\Stackiq\Repair\BackfillRecordStatus</step>
 			<!--
 				Must run AFTER the register sync that adds the English columns, so it
 				can tell the rename case from the back-fill case. Scoped by SCHEMA,
@@ -314,6 +317,7 @@ Vrij en open source onder de EUPL-licentie.
 			     exact stored value so an admin's own register is never touched. -->
 			<step>OCA\Stackiq\Repair\RepointEolSyncConfig</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
+			<step>OCA\Stackiq\Repair\BackfillRecordStatus</step>
 		</install>
 	</repair-steps>
 

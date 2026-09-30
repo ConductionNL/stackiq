@@ -22,6 +22,7 @@ namespace OCA\Stackiq\AppInfo;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationService;
@@ -32,6 +33,7 @@ use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
 use OCA\Stackiq\Controller\ContactpersonenController;
 use OCA\Stackiq\Dashboard\ConceptOrganisatiesWidget;
 use OCA\Stackiq\EventListener\DecisionConcludedListener;
+use OCA\Stackiq\EventListener\CatalogueMergeListener;
 use OCA\Stackiq\EventListener\MaintenanceRecipientsListener;
 use OCA\Stackiq\EventListener\ModuleComplianceSubscriber;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
@@ -810,6 +812,9 @@ class Application extends App implements IBootstrap {
 
 		// Queue the owner resolution when a supplier announces maintenance (lifecycle-maintenance-and-supplier-roadmap).
 		$context->registerEventListener(ObjectCreatedEvent::class, MaintenanceRecipientsListener::class);
+
+		// Re-point catalogue references after OpenRegister merges two applications or services (operations-record-reconciliation).
+		$context->registerEventListener(ObjectsMergedEvent::class, CatalogueMergeListener::class);
 
 		// Sync user profile updates into the contactpersoon mirror.
 		$context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);

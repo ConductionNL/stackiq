@@ -478,8 +478,28 @@ class FacetService {
 			);
 		}
 
-		return $allObjects;
+		return self::withoutMerged(objects: $allObjects);
 	}//end fetchBaseObjects()
+
+	/**
+	 * Leave out records OpenRegister merged into another one: they keep their
+	 * page, but no longer count in the lists and facets. A record without a
+	 * status (saved before the status existed) stays in.
+	 *
+	 * @param array<int, array<string, mixed>> $objects The normalized objects.
+	 *
+	 * @return array<int, array<string, mixed>> The objects that are not merged.
+	 *
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+	 */
+	private static function withoutMerged(array $objects): array {
+		return array_values(
+			array_filter(
+				$objects,
+				static fn (array $object): bool => ($object['recordStatus'] ?? null) !== 'Merged'
+			)
+		);
+	}//end withoutMerged()
 
 	/**
 	 * Normalize a single OpenRegister search result into a plain data-bag
