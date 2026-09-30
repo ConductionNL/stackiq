@@ -61,6 +61,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 		'compliancy' => 6,
 		'module' => 7,
 		'catalogService' => 8,
+		'model' => 9,
+		'aiSystem' => 10,
 	];
 
 	/**
@@ -107,6 +109,9 @@ class MergeOrganisatieServiceTest extends TestCase {
 				'aanbod' => 1,
 				'module' => 0,
 				'catalogService' => 0,
+				'organization' => 0,
+				'model' => 0,
+				'aiSystem' => 0,
 				'catalogContract' => 1,
 				'compliancy' => 1,
 				'moduleOwnership' => 0,
@@ -662,6 +667,56 @@ class MergeOrganisatieServiceTest extends TestCase {
 		$this->assertSame('org-b', $this->findSave(schemaId: self::SCHEMA_IDS['module'], uuid: 'm2')['object']['@self']['organisation'] ?? null);
 		$this->assertSame('org-b', $this->findSave(schemaId: self::SCHEMA_IDS['catalogService'], uuid: 's2')['object']['@self']['organisation'] ?? null);
 	}//end testTheSuppliersApplicationsAndServicesMoveToTheTarget()
+
+	/**
+	 * The references the merge used to miss: a usage's provider, the
+	 * collaborations an organisation takes part in or has as participants,
+	 * and the architecture models it owns.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 */
+	public function testEveryOrganisationReferenceIsRepointed(): void {
+		$organisations = [
+			'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active', 'group' => 'group-a']),
+			'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active', 'group' => 'group-b']),
+		];
+		$fixtures = [
+			'usage' => [
+				$this->entity(['id' => 'g1', 'consumer' => 'org-x', 'provider' => 'org-a', 'participants' => []], uuid: 'g1'),
+			],
+			'organization' => [
+				$this->entity(['id' => 'sv', 'name' => 'Samenwerking', 'deelnames' => ['org-a', 'org-c'], 'participants' => ['org-b', 'org-a']], uuid: 'sv'),
+				$this->entity(['id' => 'o2', 'name' => 'Other', 'deelnames' => ['org-c']], uuid: 'o2'),
+			],
+			'model' => [
+				$this->entity(['id' => 'md', 'name' => 'GEMMA', 'organizations' => ['org-a']], uuid: 'md'),
+			],
+			'aiSystem' => [
+				$this->entity(['id' => 'ai', 'name' => 'Chatbot', 'provider' => 'org-a'], uuid: 'ai'),
+			],
+		];
+
+		$dryRun = $this->makeService(organisations: $organisations, typedFixtures: $fixtures, groupMembers: [])
+			->dryRun(sourceUuid: 'org-a', targetUuid: 'org-b');
+		$this->assertSame(1, $dryRun['counts']['usage']);
+		$this->assertSame(1, $dryRun['counts']['organization']);
+		$this->assertSame(1, $dryRun['counts']['model']);
+		$this->assertSame(1, $dryRun['counts']['aiSystem']);
+		$this->assertSame([], $this->savedCalls);
+
+		$this->makeService(organisations: $organisations, typedFixtures: $fixtures, groupMembers: [])
+			->execute(sourceUuid: 'org-a', targetUuid: 'org-b', actorUid: 'admin1');
+
+		$this->assertSame('org-b', $this->findSave(schemaId: self::SCHEMA_IDS['usage'], uuid: 'g1')['object']['provider'] ?? null);
+		$collaboration = $this->findSave(schemaId: self::SCHEMA_IDS['organization'], uuid: 'sv')['object'] ?? [];
+		$this->assertSame(['org-b', 'org-c'], $collaboration['deelnames'] ?? null);
+		$this->assertSame(['org-b'], $collaboration['participants'] ?? null, 'the target once, not twice');
+		$this->assertNull($this->findSave(schemaId: self::SCHEMA_IDS['organization'], uuid: 'o2'));
+		$this->assertSame(['org-b'], $this->findSave(schemaId: self::SCHEMA_IDS['model'], uuid: 'md')['object']['organizations'] ?? null);
+		$this->assertSame('org-b', $this->findSave(schemaId: self::SCHEMA_IDS['aiSystem'], uuid: 'ai')['object']['provider'] ?? null);
+	}//end testEveryOrganisationReferenceIsRepointed()
 
 	/**
 	 * Build the full 5-type + group-member fixture set used by the parity tests.

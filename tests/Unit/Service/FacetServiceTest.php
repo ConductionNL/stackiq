@@ -312,6 +312,35 @@ class FacetServiceTest extends TestCase {
 	}//end testGetFacetsAggregatesDirectModuleFields()
 
 	/**
+	 * A merged application is left out of the facet counts and the matched set.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+	 */
+	public function testGetFacetsLeavesOutMergedRecords(): void {
+		$modules = [
+			['id' => 'orig', 'recordStatus' => 'Active', 'referenceComponents' => ['rc-1'], 'standardVersions' => []],
+			['id' => 'dup', 'recordStatus' => 'Merged', 'mergedInto' => 'orig', 'referenceComponents' => ['rc-1'], 'standardVersions' => []],
+			['id' => 'legacy', 'referenceComponents' => ['rc-1'], 'standardVersions' => []],
+		];
+
+		$captured      = [];
+		$objectService = $this->makePaginatedObjectService(results: $modules, capturedRef: $captured);
+
+		$archiMateService = $this->createMock(ArchiMateService::class);
+		$archiMateService->method('getElementObjects')->willReturn(
+			[['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domein' => 'Bedrijfsvoering']]
+		);
+		$archiMateService->method('getRelationshipObjects')->willReturn([]);
+
+		$result = $this->makeService(objectService: $objectService, archiMateService: $archiMateService)->getFacets(schema: 'module');
+
+		$this->assertSame(2, $result['_meta']['totalMatched'], 'the merged duplicate is not counted; a row without a status is');
+		$this->assertSame(2, array_column($result['referenceComponent'], 'count', 'value')['Zaakregistratiecomponent']);
+	}//end testGetFacetsLeavesOutMergedRecords()
+
+	/**
 	 * REGRESSION: the SAME assertions as
 	 * `testGetFacetsAggregatesDirectModuleFields()`, but `searchObjectsPaginated()`
 	 * returns `FakeObjectEntity` instances (mirroring the real OpenRegister
