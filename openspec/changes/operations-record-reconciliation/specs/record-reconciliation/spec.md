@@ -31,7 +31,7 @@ A functional administrator finds applications, services and organisations that w
 
 ### Requirement: REQ-RRC-002 The catalogue pages SHALL lead an administrator to OpenRegister's duplicate candidates
 
-`/modules`, `/diensten` and `/organisaties` SHALL offer Find duplicates to Nextcloud admins and functional administrators, opening OpenRegister's Duplicate candidates page. Other users SHALL NOT see the action.
+`/modules` and `/diensten` SHALL offer Find duplicates to Nextcloud admins and functional administrators, and the merge panel on an organisation's page SHALL offer it to Nextcloud admins (the only users who merge organisations), opening OpenRegister's Duplicate candidates page. Other users SHALL NOT see the action.
 
 #### Scenario: A functional administrator goes to the candidates
 @e2e tests/e2e/spec-coverage/record-reconciliation.spec.ts
@@ -60,7 +60,7 @@ On `ObjectsMergedEvent` for `module` or `catalogService`, stackiq SHALL replace 
 - **AND** the original's detail page SHALL list them
 
 #### Scenario: An array does not get the survivor twice
-@e2e exclude A data edge; tests/Unit/EventListener/CatalogueMergeRelinkerTest.php asserts a service that listed both applications lists the survivor once after the merge.
+@e2e exclude A data edge; tests/Unit/EventListener/CatalogueMergeListenerTest.php asserts a service that listed both applications lists the survivor once after the merge.
 
 - **GIVEN** a service whose `modules` lists both the original and the duplicate
 - **WHEN** the duplicate is merged into the original

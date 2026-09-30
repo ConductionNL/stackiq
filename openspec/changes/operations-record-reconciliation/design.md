@@ -30,7 +30,7 @@ Rejected: mounting the dead `MergeObject.vue` for applications. It is exactly th
 
 ### D2. The catalogue links to OpenRegister's page instead of hosting one
 
-The steward opens Find duplicates on `/modules`, `/diensten` or `/organisaties` and lands on OpenRegister's `/duplicates` page (`src/manifest.json:415` in OpenRegister), which lists pairs and runs the merge wizard. The action shows for Nextcloud admins and functional administrators. On the two faceted pages it is an entry in the toolbar's `NcActions` next to Saved views (`src/views/FacetedCatalogIndexView.vue:68`); on `Organisaties` it is a `headerActions` entry with a handler, the pattern the Integrations page uses (`src/manifest.d/connection-registry.json:37` to `:43`), because a manifest `navigate` only pushes a route inside stackiq.
+The steward opens Find duplicates on `/modules`, `/diensten` or an organisation's page and lands on OpenRegister's `/duplicates` page (`src/manifest.json:415` in OpenRegister), which lists pairs and runs the merge wizard. The action shows for Nextcloud admins and functional administrators. On the two faceted pages it is a button in the toolbar next to Saved views (`src/views/FacetedCatalogIndexView.vue:68`); for organisations it is a button in the admin merge panel on the organisation's page (`src/components/organisations/OrganisationMergePanel.vue`), next to Preview merge, where the admin who merges organisations already works. Changed during the build (30 Sep): the `Organisaties` index page is a manifest `index` page with no gated header slot, and the merge panel is where organisation merging lives.
 
 ### D3. Stackiq re-points catalogue references after OpenRegister merges
 
