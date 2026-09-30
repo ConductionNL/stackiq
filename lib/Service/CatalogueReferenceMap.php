@@ -161,6 +161,7 @@ final class CatalogueReferenceMap {
 	 * @return string|null The uuid.
 	 *
 	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @SuppressWarnings(PHPMD.StaticAccess) stateless pure helpers of the register's reference map
 	 */
 	public static function referenceId(mixed $value): ?string {
 		return MaintenanceRecipientService::referenceId(value: $value);

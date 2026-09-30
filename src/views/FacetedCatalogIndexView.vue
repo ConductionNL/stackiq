@@ -347,7 +347,9 @@ export default {
 			// A real (if unlikely) id can never collide with this sentinel —
 			// forces a correct EMPTY list rather than `CnIndexPage` treating
 			// an empty `id` array as "no filter" (showing everything).
-			return activeRecordsFilter({ id: ids.length > 0 ? ids : ['__gemma_facet_no_match__'] })
+			return activeRecordsFilter({
+				id: ids.length > 0 ? ids : ['__gemma_facet_no_match__'],
+			})
 		},
 
 		/**

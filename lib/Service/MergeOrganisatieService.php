@@ -362,6 +362,7 @@ class MergeOrganisatieService {
 	 * @return array<string, array{schema: string, fields: array<string, bool>}> The relation types.
 	 *
 	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 * @SuppressWarnings(PHPMD.StaticAccess) stateless pure helpers of the register's reference map
 	 */
 	private static function fieldRelationTypes(): array {
 		$types = [];
@@ -387,6 +388,7 @@ class MergeOrganisatieService {
 	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `commit` is the documented dry-run/execute parity gate.
+	 * @SuppressWarnings(PHPMD.StaticAccess) stateless pure helpers of the register's reference map
 	 */
 	private function repointByField(string $objectType, array $fields, string $source, string $target, bool $commit): int {
 		$entities = $this->findAllForType(objectType: $objectType);

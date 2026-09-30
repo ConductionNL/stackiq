@@ -3,10 +3,7 @@
   - SPDX-License-Identifier: EUPL-1.2
   -->
 <template>
-	<NcNoteCard
-		v-if="survivorId"
-		type="warning"
-		data-testid="merged-record-banner">
+	<NcNoteCard v-if="survivorId" type="warning" data-testid="merged-record-banner">
 		<p>
 			{{
 				t(
@@ -18,7 +15,11 @@
 		<router-link
 			:to="{ name: 'ModuleDetail', params: { id: survivorId } }"
 			data-testid="merged-record-link">
-			{{ survivorName ? t('stackiq', 'Merged into {name}', { name: survivorName }) : t('stackiq', 'Open the application it was merged into') }}
+			{{
+				survivorName
+					? t('stackiq', 'Merged into {name}', { name: survivorName })
+					: t('stackiq', 'Open the application it was merged into')
+			}}
 		</router-link>
 	</NcNoteCard>
 </template>

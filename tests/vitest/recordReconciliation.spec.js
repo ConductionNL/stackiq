@@ -38,9 +38,15 @@ const page = (id) => merged.pages.find((p) => p.id === id)
 
 describe('Find duplicates', () => {
 	it('is offered to admins and functional administrators only', () => {
-		expect(canFindDuplicates({ isAdmin: true, isFunctionalAdmin: false })).toBe(true)
-		expect(canFindDuplicates({ isAdmin: false, isFunctionalAdmin: true })).toBe(true)
-		expect(canFindDuplicates({ isAdmin: false, isFunctionalAdmin: false })).toBe(false)
+		expect(canFindDuplicates({ isAdmin: true, isFunctionalAdmin: false })).toBe(
+			true,
+		)
+		expect(canFindDuplicates({ isAdmin: false, isFunctionalAdmin: true })).toBe(
+			true,
+		)
+		expect(canFindDuplicates({ isAdmin: false, isFunctionalAdmin: false })).toBe(
+			false,
+		)
 		expect(canFindDuplicates(null)).toBe(false)
 	})
 
@@ -66,19 +72,30 @@ describe('Find duplicates', () => {
 describe('merged records', () => {
 	it('are filtered out of the list while other filters stay', () => {
 		expect(activeRecordsFilter({})).toEqual({ 'recordStatus[ne]': 'Merged' })
-		expect(activeRecordsFilter({ id: ['a', 'b'] })).toEqual({ id: ['a', 'b'], 'recordStatus[ne]': 'Merged' })
+		expect(activeRecordsFilter({ id: ['a', 'b'] })).toEqual({
+			id: ['a', 'b'],
+			'recordStatus[ne]': 'Merged',
+		})
 	})
 
 	it('point to the record they were merged into', () => {
-		expect(mergedIntoId({ recordStatus: 'Merged', mergedInto: 'orig' })).toBe('orig')
-		expect(mergedIntoId({ recordStatus: 'Merged', mergedInto: { id: 'orig' } })).toBe('orig')
-		expect(mergedIntoId({ recordStatus: 'Active', mergedInto: 'orig' })).toBe(null)
+		expect(mergedIntoId({ recordStatus: 'Merged', mergedInto: 'orig' })).toBe(
+			'orig',
+		)
+		expect(
+			mergedIntoId({ recordStatus: 'Merged', mergedInto: { id: 'orig' } }),
+		).toBe('orig')
+		expect(mergedIntoId({ recordStatus: 'Active', mergedInto: 'orig' })).toBe(
+			null,
+		)
 		expect(mergedIntoId({ recordStatus: 'Merged' })).toBe(null)
 		expect(mergedIntoId(null)).toBe(null)
 	})
 
 	it('show the Merged into banner first on the application page', () => {
-		const banner = (page('ModuleDetail').config.bodyWidgets || []).find((w) => w.component === 'MergedRecordBanner')
+		const banner = (page('ModuleDetail').config.bodyWidgets || []).find(
+			(w) => w.component === 'MergedRecordBanner',
+		)
 		expect(banner).toBeTruthy()
 		expect(banner.props.objectId).toBe('@objectId')
 		expect(read('src/customComponents.js')).toMatch(/^\s*MergedRecordBanner,$/m)
@@ -87,8 +104,12 @@ describe('merged records', () => {
 
 describe('the app-local merge modal', () => {
 	it('is gone, with its modal branch and store action', () => {
-		expect(fs.existsSync(path.join(root, 'src/modals/object/MergeObject.vue'))).toBe(false)
+		expect(
+			fs.existsSync(path.join(root, 'src/modals/object/MergeObject.vue')),
+		).toBe(false)
 		expect(read('src/modals/Modals.vue')).not.toContain('mergeOrganisatie')
-		expect(read('src/store/plugins/stackiqPlugin.js')).not.toMatch(/mergeObjects\s*\(/)
+		expect(read('src/store/plugins/stackiqPlugin.js')).not.toMatch(
+			/mergeObjects\s*\(/,
+		)
 	})
 })

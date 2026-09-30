@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -88,47 +89,64 @@ class BackfillRecordStatus implements IRepairStep {
 
 		$filled = 0;
 		foreach (self::SCHEMAS as $type) {
-			$register = $this->settingsService->getRegisterIdForObjectType($type);
-			$schema   = $this->settingsService->getSchemaIdForObjectType($type);
-			if ($register === null || $schema === null) {
-				continue;
-			}
-
-			try {
-				$rows = (array) $objectService->searchObjects(
-					query: ['register' => $register, 'schema' => $schema, '_limit' => self::LIMIT],
-					_rbac: false,
-					_multitenancy: false
-				);
-			} catch (\Throwable $e) {
-				$this->logger->error('[BackfillRecordStatus] could not read ' . $type, ['error' => $e->getMessage()]);
-				continue;
-			}
-
-			foreach ($rows as $row) {
-				$data = $row->getObject();
-				if (trim((string) ($data['recordStatus'] ?? '')) !== '') {
-					continue;
-				}
-
-				$data['recordStatus'] = 'Active';
-				try {
-					$objectService->saveObject(
-						object: $data,
-						extend: [],
-						register: $row->getRegister(),
-						schema: $row->getSchema(),
-						uuid: $row->getUuid(),
-						_rbac: false,
-						_multitenancy: false
-					);
-					$filled++;
-				} catch (\Throwable $e) {
-					$this->logger->error('[BackfillRecordStatus] could not save', ['uuid' => $row->getUuid(), 'error' => $e->getMessage()]);
-				}
-			}//end foreach
-		}//end foreach
+			$filled += $this->backfillType(objectService: $objectService, type: $type);
+		}
 
 		$output->info(sprintf('Record status backfill: %d row(s) set to Active', $filled));
 	}//end run()
+
+	/**
+	 * Set recordStatus Active on the rows of one object type that have none.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param string $type          The object type.
+	 *
+	 * @return int The number of rows set.
+	 *
+	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+	 */
+	private function backfillType(ObjectServiceInterface $objectService, string $type): int {
+		$filled = 0;
+		$register = $this->settingsService->getRegisterIdForObjectType($type);
+		$schema   = $this->settingsService->getSchemaIdForObjectType($type);
+		if ($register === null || $schema === null) {
+			return 0;
+		}
+
+		try {
+			$rows = (array) $objectService->searchObjects(
+				query: ['register' => $register, 'schema' => $schema, '_limit' => self::LIMIT],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error('[BackfillRecordStatus] could not read ' . $type, ['error' => $e->getMessage()]);
+			return 0;
+		}
+
+		foreach ($rows as $row) {
+			$data = $row->getObject();
+			if (trim((string) ($data['recordStatus'] ?? '')) !== '') {
+				continue;
+			}
+
+			$data['recordStatus'] = 'Active';
+			try {
+				$objectService->saveObject(
+					object: $data,
+					extend: [],
+					register: $row->getRegister(),
+					schema: $row->getSchema(),
+					uuid: $row->getUuid(),
+					_rbac: false,
+					_multitenancy: false
+				);
+				$filled++;
+			} catch (\Throwable $e) {
+				$this->logger->error('[BackfillRecordStatus] could not save', ['uuid' => $row->getUuid(), 'error' => $e->getMessage()]);
+			}
+		}//end foreach
+
+		return $filled;
+	}//end backfillType()
 }//end class

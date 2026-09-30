@@ -71,7 +71,7 @@ async function read(schema: string, id: string): Promise<Record<string, unknown>
  */
 function refId(ref: unknown): string {
 	if (typeof ref === 'string') return ref
-	const o = ref as { id?: string, uuid?: string } | null
+	const o = ref as { id?: string; uuid?: string } | null
 	return String(o?.id ?? o?.uuid ?? '')
 }
 
@@ -80,11 +80,28 @@ test.describe.configure({ mode: 'serial' })
 test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
-	ids.original = await seed('module', { name: original, website: `https://${RUN_ID}.example.org` })
-	ids.duplicate = await seed('module', { name: duplicate, website: `https://${RUN_ID}.example.org` })
-	ids.org = await seed('organization', { name: `${RUN_ID} municipality`, type: 'Municipality', status: 'Active' })
-	ids.usage = await seed('usage', { consumer: ids.org, module: ids.duplicate, status: 'In production' })
-	ids.connection = await seed('connection', { name: `${RUN_ID} connection`, moduleA: ids.duplicate })
+	ids.original = await seed('module', {
+		name: original,
+		website: `https://${RUN_ID}.example.org`,
+	})
+	ids.duplicate = await seed('module', {
+		name: duplicate,
+		website: `https://${RUN_ID}.example.org`,
+	})
+	ids.org = await seed('organization', {
+		name: `${RUN_ID} municipality`,
+		type: 'Municipality',
+		status: 'Active',
+	})
+	ids.usage = await seed('usage', {
+		consumer: ids.org,
+		module: ids.duplicate,
+		status: 'In production',
+	})
+	ids.connection = await seed('connection', {
+		name: `${RUN_ID} connection`,
+		moduleA: ids.duplicate,
+	})
 })
 
 test.afterAll(async () => {
@@ -104,32 +121,48 @@ test('the demo duplicate pair is listed as a duplicate candidate for application
 })
 
 // @e2e record-reconciliation::a-functional-administrator-goes-to-the-candidates
-test('Find duplicates on the Applications page opens the duplicate candidates', async ({ page }) => {
+test('Find duplicates on the Applications page opens the duplicate candidates', async ({
+	page,
+}) => {
 	await gotoAppRoute(page, '/modules')
 	await dismissSupportDialog(page)
 	const action = page.getByTestId('find-duplicates')
 	await expect(action).toBeVisible({ timeout: 30000 })
 	await action.click()
-	await expect(page).toHaveURL(/\/apps\/openregister\/duplicates/, { timeout: 30000 })
+	await expect(page).toHaveURL(/\/apps\/openregister\/duplicates/, {
+		timeout: 30000,
+	})
 })
 
 // @e2e record-reconciliation::a-regular-user-does-not-see-the-action
-test('a user who is neither admin nor functional administrator does not see Find duplicates', async ({ page }) => {
+test('a user who is neither admin nor functional administrator does not see Find duplicates', async ({
+	page,
+}) => {
 	// The roles come from the settings endpoint; answering it as a regular
 	// user shows what that user gets without a second account.
 	await page.route('**/apps/stackiq/api/settings', async (route) => {
 		const response = await route.fetch()
 		const body = await response.json()
-		await route.fulfill({ response, json: { ...body, isAdmin: false, isFunctionalAdmin: false } })
+		await route.fulfill({
+			response,
+			json: { ...body, isAdmin: false, isFunctionalAdmin: false },
+		})
 	})
 	await gotoAppRoute(page, '/modules')
 	await dismissSupportDialog(page)
-	await expect(page.getByRole('table').or(page.getByText(/no .*found/i)).first()).toBeVisible({ timeout: 30000 })
+	await expect(
+		page
+			.getByRole('table')
+			.or(page.getByText(/no .*found/i))
+			.first(),
+	).toBeVisible({ timeout: 30000 })
 	await expect(page.getByTestId('find-duplicates')).toHaveCount(0)
 })
 
 // @e2e record-reconciliation::usages-and-connections-follow-the-survivor
-test('after a merge the usage and the connection point at the original', async ({ page }) => {
+test('after a merge the usage and the connection point at the original', async ({
+	page,
+}) => {
 	test.setTimeout(240000)
 	const res = await apiCtx.post(`${OR_API}/merge/execute`, {
 		data: { from: ids.duplicate, into: ids.original, reason: `${RUN_ID} e2e` },
@@ -137,24 +170,39 @@ test('after a merge the usage and the connection point at the original', async (
 	expect(res.ok(), await res.text()).toBe(true)
 	await apiCtx.get('/cron.php').catch(() => {})
 	await expect
-		.poll(async () => refId((await read('usage', ids.usage)).module), { timeout: 180000, intervals: [5000] })
+		.poll(async () => refId((await read('usage', ids.usage)).module), {
+			timeout: 180000,
+			intervals: [5000],
+		})
 		.toBe(ids.original)
-	expect(refId((await read('connection', ids.connection)).moduleA)).toBe(ids.original)
+	expect(refId((await read('connection', ids.connection)).moduleA)).toBe(
+		ids.original,
+	)
 	await gotoAppRoute(page, `/modules/${ids.original}`)
 	await dismissSupportDialog(page)
-	await expect(page.getByText(`${RUN_ID} connection`).first()).toBeVisible({ timeout: 30000 })
+	await expect(page.getByText(`${RUN_ID} connection`).first()).toBeVisible({
+		timeout: 30000,
+	})
 })
 
 // @e2e record-reconciliation::a-reader-opens-an-old-link-to-a-merged-application
-test('the merged duplicate points to the original and leaves the list', async ({ page }) => {
+test('the merged duplicate points to the original and leaves the list', async ({
+	page,
+}) => {
 	await expect
-		.poll(async () => (await read('module', ids.duplicate)).recordStatus, { timeout: 60000 })
+		.poll(async () => (await read('module', ids.duplicate)).recordStatus, {
+			timeout: 60000,
+		})
 		.toBe('Merged')
 	await gotoAppRoute(page, `/modules/${ids.duplicate}`)
 	await dismissSupportDialog(page)
-	await expect(page.getByTestId('merged-record-banner')).toBeVisible({ timeout: 30000 })
+	await expect(page.getByTestId('merged-record-banner')).toBeVisible({
+		timeout: 30000,
+	})
 	await page.getByTestId('merged-record-link').click()
-	await expect(page).toHaveURL(new RegExp(`/modules/${ids.original}`), { timeout: 30000 })
+	await expect(page).toHaveURL(new RegExp(`/modules/${ids.original}`), {
+		timeout: 30000,
+	})
 	await gotoAppRoute(page, '/modules')
 	await dismissSupportDialog(page)
 	await expect(page.getByText(original).first()).toBeVisible({ timeout: 30000 })

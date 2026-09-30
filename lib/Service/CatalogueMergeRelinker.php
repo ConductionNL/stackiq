@@ -72,6 +72,7 @@ class CatalogueMergeRelinker {
 	 * @return int The number of references moved.
 	 *
 	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @SuppressWarnings(PHPMD.StaticAccess) stateless pure helpers of the register's reference map
 	 */
 	public function relink(string $survivorUuid, array $mergedFromUuids, string $operationId): int {
 		$objectService = $this->getObjectService();
@@ -142,8 +143,15 @@ class CatalogueMergeRelinker {
 	 * @return int The number of references moved.
 	 *
 	 * @spec openspec/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
+	 * @SuppressWarnings(PHPMD.StaticAccess) stateless pure helpers of the register's reference map
 	 */
-	private function relinkObject(ObjectServiceInterface $objectService, ObjectEntityInterface $object, string $schema, array $fields, array $context): int {
+	private function relinkObject(
+		ObjectServiceInterface $objectService,
+		ObjectEntityInterface $object,
+		string $schema,
+		array $fields,
+		array $context
+	): int {
 		$data  = $object->getObject();
 		$moves = [];
 		foreach ($context['mergedFrom'] as $mergedUuid) {
