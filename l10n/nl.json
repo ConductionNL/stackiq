@@ -970,6 +970,18 @@
         "Scored on": "Gescoord op",
         "The date the scores were set.": "De datum waarop de scores zijn vastgesteld.",
         "Suggested TIME classification": "Voorgestelde TIME-classificatie",
-        "The TIME class the business value and technical fit point to. Calculated when the usage is saved; the recorded TIME classification stays the decision.": "De TIME-klasse waar de bedrijfswaarde en de technische geschiktheid op wijzen. Berekend bij het opslaan van het gebruik; de vastgelegde TIME-classificatie blijft het besluit."
+        "The TIME class the business value and technical fit point to. Calculated when the usage is saved; the recorded TIME classification stays the decision.": "De TIME-klasse waar de bedrijfswaarde en de technische geschiktheid op wijzen. Berekend bij het opslaan van het gebruik; de vastgelegde TIME-classificatie blijft het besluit.",
+        "AI systems supplied": "Geleverde AI-systemen",
+        "Architecture models": "Architectuurmodellen",
+        "Collaborations": "Samenwerkingen",
+        "Find duplicates": "Dubbele records zoeken",
+        "Merged into {name}": "Samengevoegd met {name}",
+        "Not sure which organisations are recorded twice? OpenRegister lists likely duplicates of organisations, applications and services.": "Weet u niet welke organisaties dubbel zijn vastgelegd? OpenRegister toont mogelijke dubbele organisaties, applicaties en diensten.",
+        "Open the application it was merged into": "Open de applicatie waarmee deze is samengevoegd",
+        "This application was merged into another one and no longer appears in the lists.": "Deze applicatie is samengevoegd met een andere en staat niet meer in de lijsten.",
+        "Record status": "Recordstatus",
+        "Active for a record in use. Merged once OpenRegister merged it into another record; it then leaves the lists and its page points to that record.": "Active voor een record dat in gebruik is. Merged zodra OpenRegister het met een ander record heeft samengevoegd; het verdwijnt dan uit de lijsten en de pagina verwijst naar dat record.",
+        "Merged into": "Samengevoegd met",
+        "The record this one was merged into.": "Het record waarmee dit record is samengevoegd."
     }
 }

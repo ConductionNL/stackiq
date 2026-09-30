@@ -901,7 +901,19 @@ OC.L10N.register(
         "Scored on": "Scored on",
         "The date the scores were set.": "The date the scores were set.",
         "Suggested TIME classification": "Suggested TIME classification",
-        "The TIME class the business value and technical fit point to. Calculated when the usage is saved; the recorded TIME classification stays the decision.": "The TIME class the business value and technical fit point to. Calculated when the usage is saved; the recorded TIME classification stays the decision."
+        "The TIME class the business value and technical fit point to. Calculated when the usage is saved; the recorded TIME classification stays the decision.": "The TIME class the business value and technical fit point to. Calculated when the usage is saved; the recorded TIME classification stays the decision.",
+        "AI systems supplied": "AI systems supplied",
+        "Architecture models": "Architecture models",
+        "Collaborations": "Collaborations",
+        "Find duplicates": "Find duplicates",
+        "Merged into {name}": "Merged into {name}",
+        "Not sure which organisations are recorded twice? OpenRegister lists likely duplicates of organisations, applications and services.": "Not sure which organisations are recorded twice? OpenRegister lists likely duplicates of organisations, applications and services.",
+        "Open the application it was merged into": "Open the application it was merged into",
+        "This application was merged into another one and no longer appears in the lists.": "This application was merged into another one and no longer appears in the lists.",
+        "Record status": "Record status",
+        "Active for a record in use. Merged once OpenRegister merged it into another record; it then leaves the lists and its page points to that record.": "Active for a record in use. Merged once OpenRegister merged it into another record; it then leaves the lists and its page points to that record.",
+        "Merged into": "Merged into",
+        "The record this one was merged into.": "The record this one was merged into."
     },
     "nplurals=2; plural=(n != 1);"
 )
