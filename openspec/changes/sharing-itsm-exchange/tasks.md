@@ -9,8 +9,8 @@
   - GIVEN the merged register WHEN it is read THEN usage, connection and catalogContract carry the service desk reference, usage carries installedVersion and publicationDate, catalogContract carries vendorReference, currency and supplier, and each schema's version is higher than on development
   - GIVEN a licence contract payload without a service WHEN it is validated against the merged catalogContract schema THEN it is valid
   - GIVEN integriq installed WHEN the Integrations page opens THEN it lists Service desk
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/ItsmExchangeFragmentTest.php`; `ConnectionsDeclarationTest.php` covers the itsm entry)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/ItsmExchangeFragmentTest.php`; `ConnectionsDeclarationTest.php` covers the itsm entry)
 
 ### Task 2: Flow templates
 - **spec_ref**: openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-002-the-import-creates-and-updates-stackiq-records-and-never-duplicates-them
@@ -18,8 +18,8 @@
 - **acceptance_criteria**:
   - GIVEN each template filled with a source, synchronizations and presets WHEN it is checked THEN every node type is one OpenRegister or integriq registers, no edge carries a step, there is one trigger and one end, and no placeholder is left
   - GIVEN the outbound template WHEN its hash input is read THEN it holds only stackiq-owned fields, and the inbound hash input is the ownership-filtered mapping
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/ItsmFlowTemplatesTest.php`; preflight on the live instance in Task 3)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/ItsmFlowTemplatesTest.php`; preflight on the live instance in Task 3)
 
 ### Task 3: Set-up action
 - **spec_ref**: openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
@@ -28,8 +28,8 @@
   - GIVEN a TOPdesk source WHEN the admin sets up THEN the synchronizations and flows are created, every flow validated before any is saved, then published and enabled
   - GIVEN preflight answers blocking for one flow WHEN the admin sets up THEN nothing is created and the answer names the node and reason
   - GIVEN the set-up ran before WHEN it runs again THEN the stored flows are updated, not duplicated
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/ItsmExchangeServiceTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Service/ItsmExchangeServiceTest.php`)
 
 ### Task 4: File import
 - **spec_ref**: openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-006-a-file-feeds-the-same-import
@@ -37,8 +37,8 @@
 - **acceptance_criteria**:
   - GIVEN a CSV or XLSX with stackiq column names WHEN it is imported THEN the file flow runs once with the rows as payload
   - GIVEN a row without recordId WHEN it is imported THEN nothing runs and the answer names the row
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/ItsmFileImportServiceTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Service/ItsmFileImportServiceTest.php`)
 
 ### Task 5: CMDB page, admin section and the service desk column
 - **spec_ref**: openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-007-the-cmdb-page-says-what-stackiq-is
@@ -46,7 +46,7 @@
 - **acceptance_criteria**:
   - GIVEN a signed-in admin WHEN the CMDB page opens THEN it names what stackiq records and what it does not, links to each list, and shows the exchange status
   - GIVEN a usage with a service desk reference WHEN Applications in use opens THEN the Service desk column links to the record
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright `tests/e2e/workflows/itsm-exchange.spec.ts`)
 
 ### Task 6: Live run against the mocks
@@ -54,8 +54,8 @@
 - **files**: `tests/live/itsm-exchange-live.sh`
 - **acceptance_criteria**:
   - GIVEN lane iq's TOPdesk and ServiceNow mocks WHEN the script runs THEN the first import creates, the second updates, an outbound change reaches the mock once, a conflict keeps each owner's field, and no echo call follows
-- [ ] Run against the TOPdesk mock
-- [ ] Run against the ServiceNow mock
+- [x] Run against the TOPdesk mock
+- [x] Run against the ServiceNow mock
 - [ ] Run against Ruben's ServiceNow developer instance (comes from Ruben later)
 
 ### Task 7: Documentation
@@ -63,7 +63,7 @@
 - **files**: `docs/features/service-desk-exchange.md`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Service desk exchange THEN setting up the integriq source, the ownership rule, the file import and what to do with duplicate candidates are explained
-- [ ] Implement
+- [x] Implement
 
 ## Dependencies
 

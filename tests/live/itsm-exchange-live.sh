@@ -47,6 +47,8 @@ log=json.load(sys.stdin)
 print(sum(1 for r in log if r.get('method') in ('POST','PATCH','PUT') and '/__' not in r.get('path','')))"; }
 run_flow() { api -X POST "$OR/flows/$1/run?sync=true" -d '{}' | python3 -c 'import sys,json;d=json.load(sys.stdin);print(d.get("status"), (d.get("error") or "")[:300])'; }
 
+# TEMPLATE_ID: the TOPdesk asset template for applications; the mock's is fixed.
+TEMPLATE_ID="${TEMPLATE_ID:-a72b24c1-0553-4f88-9add-5b5bb85c7d4e}"
 if [ "$DESK" = topdesk ]; then LOCATION="$MOCK/tas/api"; CRED=topdesk-application-password; else LOCATION="$MOCK"; CRED=servicenow-integration-password; fi
 
 say "reset the mock"
@@ -71,7 +73,7 @@ api -X PATCH "$OR/objects/integriq/source/$SRC" -d "$CONF" >/dev/null && ok "sou
 
 say "set up the exchange"
 ORG=$(api "$OR/objects/stackiq/organization?type=Municipality&_limit=1" | python3 -c 'import sys,json;print(json.load(sys.stdin)["results"][0]["@self"]["id"])')
-SETUP=$(api -X POST "$SQ/itsm/setup" -d "{\"desk\":\"$DESK\",\"organisation\":\"$ORG\",\"templateId\":\"tpl-application\"}")
+SETUP=$(api -X POST "$SQ/itsm/setup" -d "{\"desk\":\"$DESK\",\"organisation\":\"$ORG\",\"templateId\":\"$TEMPLATE_ID\"}")
 echo "$SETUP" | python3 -c 'import sys,json;d=json.load(sys.stdin);print("   created:",d.get("created"),d.get("message",""));[print("  ",k,v) for k,v in (d.get("blocking") or {}).items()]'
 echo "$SETUP" | grep -q '"created":true' || { bad "set-up refused"; exit 1; }
 flow() { echo "$SETUP" | python3 -c "import sys,json;print(json.load(sys.stdin)['flows']['$1'])"; }
@@ -112,12 +114,14 @@ print(len(hits))")
 say "a stackiq-owned change reaches the desk once"
 USAGE=$(api "$OR/objects/stackiq/usage?serviceDeskSystem=$DESK&_limit=1" | python3 -c 'import sys,json;r=json.load(sys.stdin)["results"][0];print(r["@self"]["id"]+" "+r["serviceDeskRecordId"])')
 UID_=${USAGE% *}; RID=${USAGE#* }
+# A value that differs from what the usage holds now, or the change is no change.
+NEW_TC=$(api "$OR/objects/stackiq/usage/$UID_" | python3 -c 'import sys,json;print("Tolerate" if json.load(sys.stdin).get("timeClassification")=="Invest" else "Invest")')
 BEFORE=$(mock_calls)
-api -X PATCH "$OR/objects/stackiq/usage/$UID_" -d '{"timeClassification":"Invest"}' >/dev/null
+api -X PATCH "$OR/objects/stackiq/usage/$UID_" -d "{\"timeClassification\":\"$NEW_TC\"}" >/dev/null
 drain
 DELTA=$(( $(mock_calls) - BEFORE ))
 [ "$DELTA" = 1 ] && ok "1 write for record $RID" || bad "$DELTA writes for one change"
-mock "$MOCK/__requests" | grep -q '"Invest"' && ok "it carries the new TIME class" || bad "the new TIME class never reached the desk"
+mock "$MOCK/__requests" | grep -q "\"$NEW_TC\"" && ok "it carries the new TIME class $NEW_TC" || bad "the new TIME class never reached the desk"
 
 say "the import after the export writes nothing back and calls nothing"
 AFTER_EXPORT=$(mock_calls)
@@ -127,7 +131,8 @@ drain
 
 say "conflict: each owner keeps its field"
 if [ "$DESK" = topdesk ]; then mock -X POST "$MOCK/__set/$RID" -d '{"name":"Renamed in the desk"}' >/dev/null; else mock -X POST "$MOCK/__set/cmdb_ci_appl/$RID" -d '{"name":"Renamed in the desk"}' >/dev/null; fi
-api -X PATCH "$OR/objects/stackiq/usage/$UID_" -d '{"timeClassification":"Migrate"}' >/dev/null
+CONFLICT_TC=$(api "$OR/objects/stackiq/usage/$UID_" | python3 -c 'import sys,json;print("Eliminate" if json.load(sys.stdin).get("timeClassification")=="Migrate" else "Migrate")')
+api -X PATCH "$OR/objects/stackiq/usage/$UID_" -d "{\"timeClassification\":\"$CONFLICT_TC\"}" >/dev/null
 drain
 run_flow "$(flow applications)" >/dev/null
 drain
@@ -136,8 +141,21 @@ MOD=$(echo "$AFTER" | python3 -c 'import sys,json;print(json.load(sys.stdin).get
 NAME=$(api "$OR/objects/stackiq/module/$MOD" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("name"))')
 TC=$(echo "$AFTER" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("timeClassification"))')
 [ "$NAME" = "Renamed in the desk" ] && ok "stackiq shows the desk's name: $NAME" || bad "name is $NAME"
-[ "$TC" = Migrate ] && ok "stackiq keeps its TIME class: $TC" || bad "TIME class is $TC"
-mock "$MOCK/__requests" | grep -q '"Migrate"' && ok "the desk got stackiq's TIME class" || bad "the desk never got Migrate"
+[ "$TC" = "$CONFLICT_TC" ] && ok "stackiq keeps its TIME class: $TC" || bad "TIME class is $TC, expected $CONFLICT_TC"
+mock "$MOCK/__requests" | grep -q "\"$CONFLICT_TC\"" && ok "the desk got stackiq's TIME class $CONFLICT_TC" || bad "the desk never got $CONFLICT_TC"
+
+say "an application first recorded in stackiq is created in the desk, and its id comes back"
+STAMP=$(date +%s)
+SUP=$(api -X POST "$OR/objects/stackiq/organization" -d "{\"name\":\"Live supplier $STAMP\",\"type\":\"Supplier\"}" | python3 -c 'import sys,json;print(json.load(sys.stdin)["@self"]["id"])')
+MODN="Live application $STAMP"
+MODID=$(api -X POST "$OR/objects/stackiq/module" -d "{\"name\":\"$MODN\",\"provider\":\"$SUP\"}" | python3 -c 'import sys,json;print(json.load(sys.stdin)["@self"]["id"])')
+NEWU=$(api -X POST "$OR/objects/stackiq/usage" -d "{\"module\":\"$MODID\",\"consumer\":\"$ORG\",\"status\":\"Planned\",\"timeClassification\":\"Invest\"}" | python3 -c 'import sys,json;print(json.load(sys.stdin)["@self"]["id"])')
+drain; drain
+NEWRID=$(api "$OR/objects/stackiq/usage/$NEWU" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("serviceDeskRecordId") or "")')
+[ -n "$NEWRID" ] && ok "the usage now carries desk record $NEWRID" || bad "no desk record id came back"
+mock "$MOCK/__requests" | grep -q "$MODN" && ok "the desk received the create with the application name" || bad "the desk never received $MODN"
+BEFORE_ECHO=$(mock_calls); drain
+[ "$(mock_calls)" = "$BEFORE_ECHO" ] && ok "writing the id back made no second call" || bad "the id write-back made another call"
 
 say "result"
 [ $FAIL = 0 ] && echo "   ALL PASSED ($DESK)" || echo "   FAILURES ($DESK)"
