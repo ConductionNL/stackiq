@@ -8649,33 +8649,78 @@
       {
         "@self": {
           "register": "stackiq",
+          "schema": "organization",
+          "slug": "servicecenter-rijnland",
+          "version": "0.0.1"
+        },
+        "name": "Servicecenter Rijnland",
+        "oin": "00000001001234567890",
+        "type": "Collaboration",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "organization",
+          "slug": "gemeente-leiden",
+          "version": "0.0.1"
+        },
+        "name": "Gemeente Leiden",
+        "oin": "00000001001234567891",
+        "type": "Municipality",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "organization",
+          "slug": "gemeente-leiderdorp",
+          "version": "0.0.1"
+        },
+        "name": "Gemeente Leiderdorp",
+        "oin": "00000001001234567892",
+        "type": "Municipality",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "organization",
+          "slug": "gblt",
+          "version": "0.0.1"
+        },
+        "name": "Gemeentebelastingen Coevorden Hardenberg (GBLT)",
+        "oin": "00000001001234567893",
+        "type": "Collaboration",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "organization",
+          "slug": "gemeente-delft",
+          "version": "0.0.1"
+        },
+        "name": "Gemeente Delft",
+        "oin": "00000001001234567894",
+        "type": "Municipality",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-topdesk-gem-leiden-deelnemers",
-          "version": "0.0.2"
+          "version": "0.0.3"
         },
         "name": "Topdesk bij Servicecenter Rijnland (SSC)",
         "status": "In production",
         "elementRef": "topdesk-ssc-rijnland",
-        "consumer": {
-          "name": "Servicecenter Rijnland",
-          "oin": "00000001001234567890",
-          "slug": "servicecenter-rijnland",
-          "type": "Collaboration"
-        },
+        "consumer": "@ref:organization:servicecenter-rijnland",
         "module": "topdesk-itsm",
         "participants": [
-          {
-            "name": "Gemeente Leiden",
-            "oin": "00000001001234567891",
-            "slug": "gemeente-leiden",
-            "type": "Municipality"
-          },
-          {
-            "name": "Gemeente Leiderdorp",
-            "oin": "00000001001234567892",
-            "slug": "gemeente-leiderdorp",
-            "type": "Municipality"
-          }
+          "@ref:organization:gemeente-leiden",
+          "@ref:organization:gemeente-leiderdorp"
         ]
       },
       {
@@ -8683,25 +8728,15 @@
           "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-key2-gem-leiden-deelnemer",
-          "version": "0.0.2"
+          "version": "0.0.3"
         },
         "name": "KEY2 Burgerzaken gedeeld via GBLT",
         "status": "Planned",
         "elementRef": "key2-burgerzaken-gblt",
-        "consumer": {
-          "name": "Gemeentebelastingen Coevorden Hardenberg (GBLT)",
-          "oin": "00000001001234567893",
-          "slug": "gblt",
-          "type": "Collaboration"
-        },
+        "consumer": "@ref:organization:gblt",
         "module": "key2-burgerzaken",
         "participants": [
-          {
-            "name": "Gemeente Leiden",
-            "oin": "00000001001234567891",
-            "slug": "gemeente-leiden",
-            "type": "Municipality"
-          }
+          "@ref:organization:gemeente-leiden"
         ]
       },
       {
@@ -8709,17 +8744,12 @@
           "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-suite4-gem-delft-eigenaar",
-          "version": "0.0.2"
+          "version": "0.0.3"
         },
         "name": "Suite4 Schuldhulpverlening - eigenaar Gemeente Delft",
         "status": "In production",
         "elementRef": "suite4-schuldhulp-delft",
-        "consumer": {
-          "name": "Gemeente Delft",
-          "oin": "00000001001234567894",
-          "slug": "gemeente-delft",
-          "type": "Municipality"
-        },
+        "consumer": "@ref:organization:gemeente-delft",
         "module": "suite4-schuldhulpverlening",
         "participants": []
       }
