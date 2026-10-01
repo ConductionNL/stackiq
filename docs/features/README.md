@@ -17,6 +17,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Federated Synchronisation](#federated-synchronisation) | Sync catalogue data across organisations and sources |
 | [Automatic User Provisioning](#automatic-user-provisioning) | Create Nextcloud users from catalogue contacts |
 | [ArchiMate Import/Export](#archimate-importexport) | Exchange software landscape data in ArchiMate format |
+| [CMDB Import](#cmdb-import) | Import a municipality's TOPdesk CMDB export (xlsx) as applications, suppliers, usages and owners |
 | [Open Data Publishing](#open-data-publishing) | Expose the catalogue as a public open-data API |
 | [GEMMA Compliance](#gemma-compliance) | Built around VNG GEMMA Softwarecatalogus reference |
 
@@ -154,6 +155,16 @@ The ArchiMate integration maps GEMMA Softwarecatalogus objects to ArchiMate appl
 | Organisatie | BusinessActor |
 
 **Key services:** `lib/Service/ArchiMateService.php`, `lib/Service/ArchiMateImportService.php`, `lib/Service/ArchiMateExportService.php`
+
+## CMDB Import
+
+Import a TOPdesk CMDB export (`.xlsx`) for one municipality from the **CMDB import** section of the admin settings. Every application row of the two CMDB sheets ("Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB") becomes or updates a module, its vendor as a Supplier organisation, a usage that links it to the municipality and records whether maintenance is arranged, and a contact person for its owner (identity in Nextcloud Contacts, never public). A repeat import matches on APPID per municipality, so it updates instead of duplicating, and leaves applications missing from the newer export as they are. The column mapping is declarative JSON executed by OpenRegister's mapping engine.
+
+See [CMDB import](cmdb-import.md) for the steps, the expected file structure, the error codes and how to adjust the mapping.
+
+**Key services:** `lib/Service/CmdbExportImportService.php`, `lib/Service/Cmdb/`
+**Controller:** `lib/Controller/CmdbImportController.php`
+**Endpoint:** `POST /apps/stackiq/api/cmdb-import`
 
 ## Open Data Publishing
 
