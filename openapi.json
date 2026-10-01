@@ -7,5 +7,390 @@
         "license": {
             "name": "agpl"
         }
+    },
+    "paths": {
+        "/index.php/apps/stackiq/api/cmdb-import": {
+            "post": {
+                "operationId": "cmdbImport-import",
+                "summary": "Import a TOPdesk CMDB export (xlsx) for one municipality",
+                "description": "Admin-only, CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/cmdb-export-import/contract.md.",
+                "tags": [
+                    "cmdb-import"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "cmdbFile"
+                                ],
+                                "properties": {
+                                    "cmdbFile": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The TOPdesk export, .xlsx, at most 10 MB"
+                                    },
+                                    "municipalityUuid": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "An existing organization of type Municipality; wins over municipalityName"
+                                    },
+                                    "municipalityName": {
+                                        "type": "string",
+                                        "description": "Name of a Municipality to reuse (same normalised name) or create"
+                                    },
+                                    "updateExisting": {
+                                        "type": "string",
+                                        "enum": [
+                                            "true",
+                                            "false"
+                                        ],
+                                        "default": "true",
+                                        "description": "false reports matched rows as skipped (exists)"
+                                    },
+                                    "missingRecords": {
+                                        "type": "string",
+                                        "enum": [
+                                            "keep"
+                                        ],
+                                        "default": "keep",
+                                        "description": "Only keep is accepted; mark and remove are reserved"
+                                    },
+                                    "operationId": {
+                                        "type": "string",
+                                        "pattern": "^cmdb-[A-Za-z0-9-]{8,64}$",
+                                        "description": "Progress operation id, readable through GET /api/progress/{operationId}"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The import report",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportReport"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "NO_FILE_UPLOADED or NOT_XLSX",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Not signed in"
+                    },
+                    "403": {
+                        "description": "Not a Nextcloud admin"
+                    },
+                    "412": {
+                        "description": "Missing or invalid CSRF token"
+                    },
+                    "413": {
+                        "description": "FILE_TOO_LARGE",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "MISSING_RECORDS_UNSUPPORTED, MUNICIPALITY_REQUIRED, MUNICIPALITY_INVALID, NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "IMPORT_FAILED",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "MAPPING_UNAVAILABLE, READER_UNAVAILABLE or NOT_CONFIGURED",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/index.php/apps/stackiq/api/cmdb-import/{operationId}/cancel": {
+            "post": {
+                "operationId": "cmdbImport-cancel",
+                "summary": "Ask a running CMDB import to stop between rows",
+                "description": "Admin-only, CSRF-protected. No body.",
+                "tags": [
+                    "cmdb-import"
+                ],
+                "parameters": [
+                    {
+                        "name": "operationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cancel requested",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "success",
+                                        "cancelRequested"
+                                    ],
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "cancelRequested": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Not a Nextcloud admin"
+                    },
+                    "404": {
+                        "description": "OPERATION_NOT_FOUND",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "412": {
+                        "description": "Missing or invalid CSRF token"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CmdbImportReport": {
+                "type": "object",
+                "required": [
+                    "success",
+                    "operationId",
+                    "cancelled",
+                    "municipality",
+                    "summary",
+                    "importWarnings",
+                    "rows"
+                ],
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "operationId": {
+                        "type": "string"
+                    },
+                    "cancelled": {
+                        "type": "boolean"
+                    },
+                    "municipality": {
+                        "type": "object",
+                        "required": [
+                            "uuid",
+                            "name",
+                            "created"
+                        ],
+                        "properties": {
+                            "uuid": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "created": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "summary": {
+                        "type": "object",
+                        "required": [
+                            "rowsRead",
+                            "processed",
+                            "created",
+                            "updated",
+                            "unchanged",
+                            "skipped",
+                            "failed",
+                            "warnings"
+                        ],
+                        "properties": {
+                            "rowsRead": {
+                                "type": "integer"
+                            },
+                            "processed": {
+                                "type": "integer"
+                            },
+                            "created": {
+                                "type": "integer"
+                            },
+                            "updated": {
+                                "type": "integer"
+                            },
+                            "unchanged": {
+                                "type": "integer"
+                            },
+                            "skipped": {
+                                "type": "integer"
+                            },
+                            "failed": {
+                                "type": "integer"
+                            },
+                            "warnings": {
+                                "type": "integer"
+                            }
+                        }
+                    },
+                    "importWarnings": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "sheet",
+                                "message"
+                            ],
+                            "properties": {
+                                "sheet": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "rows": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "sheet",
+                                "row",
+                                "appId",
+                                "name",
+                                "outcome",
+                                "reasons",
+                                "warnings",
+                                "moduleUuid",
+                                "usageUuid"
+                            ],
+                            "properties": {
+                                "sheet": {
+                                    "type": "string"
+                                },
+                                "row": {
+                                    "type": "integer"
+                                },
+                                "appId": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "outcome": {
+                                    "type": "string",
+                                    "enum": [
+                                        "created",
+                                        "updated",
+                                        "unchanged",
+                                        "skipped",
+                                        "failed"
+                                    ]
+                                },
+                                "reasons": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "warnings": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "moduleUuid": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "usageUuid": {
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "CmdbImportError": {
+                "type": "object",
+                "required": [
+                    "success",
+                    "error",
+                    "message",
+                    "details"
+                ],
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "enum": [
+                            false
+                        ]
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "details": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                }
+            }
+        }
     }
 }
