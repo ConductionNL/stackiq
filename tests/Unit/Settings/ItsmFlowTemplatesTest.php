@@ -93,7 +93,7 @@ class ItsmFlowTemplatesTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class)
 		);
 
-		return $service->buildFlows(desk: $desk, organisation: '0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f', runAs: 'admin', location: 'https://desk.example.nl/');
+		return $service->buildFlows(desk: $desk, organisation: '0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f', runAs: 'admin', location: 'https://desk.example.nl/tas/api', templateId: 'tpl-application');
 	}//end flows()
 
 	/**
@@ -262,6 +262,13 @@ class ItsmFlowTemplatesTest extends TestCase {
 		$this->assertSame('/api/now/table/cmdb_ci_appl', $nodes['call-create']['config']['endpoint']);
 		$this->assertSame('{{ response.body.result.sys_id }}', $nodes['link-back']['config']['fields']['serviceDeskRecordId']);
 		$this->assertStringStartsWith('https://desk.example.nl/nav_to.do', $nodes['link-back']['config']['fields']['serviceDeskUrl']);
+		$this->assertSame(['sysparm_input_display_value' => 'true'], $nodes['call-create']['config']['query'], 'a list placeholder is filled with the list');
+		$this->assertSame('send', $nodes['call-create']['config']['bodyFrom']);
+
+		$topdesk = $this->nodes(flow: $this->flows(desk: 'topdesk')['outbound']);
+		$this->assertSame('tpl-application', $topdesk['build']['config']['set']['usage._desk.templateId']);
+		$this->assertSame('POST', $topdesk['call-update']['config']['method'], 'TOPdesk updates an asset with POST');
+		$this->assertSame('{{ response.body.data.id }}', $topdesk['link-back']['config']['fields']['serviceDeskRecordId']);
 	}//end testTheExportHashesOnlyStackiqOwnedFields()
 
 	/**
@@ -277,7 +284,17 @@ class ItsmFlowTemplatesTest extends TestCase {
 			$start = $this->nodes(flow: $flows[$key])['start'];
 			$this->assertSame('openregister.trigger-schedule', $start['type']);
 			$this->assertSame('admin', $start['config']['runAs']);
-			$this->assertSame('itsm-topdesk-' . $key, $this->nodes(flow: $flows[$key])['pages']['config']['synchronization']);
+			$this->assertSame('itsm-topdesk-' . $key, $this->nodes(flow: $flows[$key])['decide']['config']['synchronization']);
+		}
+
+		$relations = $this->nodes(flow: $flows['relations']);
+		$this->assertArrayNotHasKey('pages', $relations, 'TOPdesk has no list of all links, so relations are read per application');
+		$this->assertSame('/assetmgmt/assetLinks', $relations['links']['config']['endpoint']);
+		$this->assertSame(['sourceId' => '{{ serviceDeskRecordId }}'], $relations['links']['config']['query']);
+		$this->assertSame(['serviceDeskSystem' => 'topdesk'], $relations['usages']['config']['filters']);
+		$this->assertSame('itsm-servicenow-relations', $this->nodes(flow: $this->flows(desk: 'servicenow')['relations'])['pages']['config']['synchronization']);
+		foreach (['applications', 'licences', 'contracts', 'file'] as $key) {
+			$this->assertSame('https://desk.example.nl', $this->nodes(flow: $flows[$key])['desk']['config']['set']['source._desk.baseUrl'], $key . ' hands the preset the tenant base');
 		}
 
 		$this->assertSame('Licence', $this->nodes(flow: $flows['licences'])['flags']['config']['compute']['contractType']['or'][1]);

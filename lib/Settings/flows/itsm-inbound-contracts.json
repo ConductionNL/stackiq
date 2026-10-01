@@ -34,6 +34,15 @@
       }
     },
     {
+      "id": "desk",
+      "type": "openregister.set-fields",
+      "config": {
+        "set": {
+          "source._desk.baseUrl": "%DESK_BASE%"
+        }
+      }
+    },
+    {
       "id": "map-all",
       "type": "openconnector.apply-mapping",
       "config": {
@@ -291,8 +300,13 @@
       "to": "each"
     },
     {
-      "id": "e-each-map-all",
+      "id": "e-each-desk",
       "from": "each",
+      "to": "desk"
+    },
+    {
+      "id": "e-desk-map-all",
+      "from": "desk",
       "to": "map-all"
     },
     {

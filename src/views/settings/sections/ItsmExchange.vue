@@ -58,6 +58,16 @@
 				:placeholder="
 					t('stackiq', 'The organisation whose applications are exchanged')
 				" />
+			<NcTextField
+				v-if="desk && desk.id === 'topdesk'"
+				v-model="templateId"
+				:label="t('stackiq', 'TOPdesk asset template id')"
+				:helperText="
+					t(
+						'stackiq',
+						'TOPdesk needs a template to create an asset. Copy the id of your Application template from TOPdesk.',
+					)
+				" />
 			<p class="help-text">
 				{{
 					t(
@@ -91,7 +101,13 @@
 <script>
 import { showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
 import { defineComponent } from 'vue'
 import SwapHorizontal from 'vue-material-design-icons/SwapHorizontal.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
@@ -110,6 +126,7 @@ export default defineComponent({
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
+		NcTextField,
 		SwapHorizontal,
 	},
 
@@ -123,6 +140,7 @@ export default defineComponent({
 			desk: null,
 			organisation: null,
 			refusal: '',
+			templateId: '',
 		}
 	},
 
@@ -224,7 +242,11 @@ export default defineComponent({
 			try {
 				const result = await apiRequest('itsm/setup', {
 					method: 'POST',
-					body: { desk: this.desk.id, organisation: this.organisation.id },
+					body: {
+						desk: this.desk.id,
+						organisation: this.organisation.id,
+						templateId: this.templateId,
+					},
 				})
 				showSuccess(
 					t(

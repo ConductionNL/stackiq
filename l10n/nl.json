@@ -1022,6 +1022,8 @@
         "The supplier's own number for this contract or licence agreement.": "Het eigen nummer van de leverancier voor dit contract of deze licentieovereenkomst.",
         "Currency": "Valuta",
         "The currency of the costs, as a three-letter ISO 4217 code.": "De valuta van de kosten, als ISO 4217-code van drie letters.",
-        "The organisation this contract or licence was bought from.": "De organisatie waarvan dit contract of deze licentie is gekocht."
+        "The organisation this contract or licence was bought from.": "De organisatie waarvan dit contract of deze licentie is gekocht.",
+        "TOPdesk asset template id": "Id van het TOPdesk-assetsjabloon",
+        "TOPdesk needs a template to create an asset. Copy the id of your Application template from TOPdesk.": "TOPdesk heeft een sjabloon nodig om een asset aan te maken. Kopieer het id van je sjabloon Applicatie uit TOPdesk."
     }
 }

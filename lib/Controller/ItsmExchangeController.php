@@ -105,19 +105,20 @@ class ItsmExchangeController extends Controller {
 	 *
 	 * @param string $desk         The desk key.
 	 * @param string $organisation The organisation uuid.
+	 * @param string $templateId   The desk's asset template for new records (TOPdesk), or empty.
 	 *
 	 * @return JSONResponse The outcome; 422 when nothing was created.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
 	 */
 	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
-	public function setUp(string $desk = '', string $organisation = ''): JSONResponse {
+	public function setUp(string $desk = '', string $organisation = '', string $templateId = ''): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['created' => false, 'message' => 'Sign in first.'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$result = $this->exchange->setUp(desk: $desk, organisation: $organisation, runAs: $user->getUID());
+		$result = $this->exchange->setUp(desk: $desk, organisation: $organisation, runAs: $user->getUID(), templateId: trim($templateId));
 		if ($result['created'] !== true) {
 			return new JSONResponse($result, Http::STATUS_UNPROCESSABLE_ENTITY);
 		}

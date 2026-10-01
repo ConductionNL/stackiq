@@ -135,7 +135,9 @@
           "usage.licencesInUse": "{{ contractRead.0.licencesInUse }}",
           "usage.licenceMetric": "{{ contractRead.0.licenceMetric }}",
           "usage.contractNumber": "{{ contractRead.0.contractNumber }}",
-          "usage.contractEndDate": "{{ contractRead.0.endDate }}"
+          "usage.contractEndDate": "{{ contractRead.0.endDate }}",
+          "usage._desk.baseUrl": "%DESK_BASE%",
+          "usage._desk.templateId": "%TEMPLATE_ID%"
         }
       }
     },
@@ -280,7 +282,8 @@
         "endpoint": "%CREATE_ENDPOINT%",
         "method": "%CREATE_METHOD%",
         "bodyFrom": "send",
-        "output": "response"
+        "output": "response",
+        "query": "%CALL_QUERY%"
       }
     },
     {
@@ -328,7 +331,8 @@
         "endpoint": "%UPDATE_ENDPOINT%",
         "method": "%UPDATE_METHOD%",
         "bodyFrom": "send",
-        "output": "response"
+        "output": "response",
+        "query": "%CALL_QUERY%"
       }
     },
     {

@@ -67,6 +67,10 @@ Relations read the desk's relation records, look up both ends by `serviceDeskRec
 
 Licences and contracts look up the usage by `applicationRecordId`, upsert `catalogContract` (match `serviceDeskRecordId`) with every field on create and only the service desk reference on update, and link `usage` and `supplier`.
 
+**Desk context.** A mapping only sees its input, so each import puts `_desk.baseUrl` (the tenant's scheme and host, from the source's location) on the record before mapping, and the outbound flow puts `_desk.baseUrl` and `_desk.templateId` (TOPdesk needs an asset template to create an asset; the admin gives its id at set-up) on `usage`. That is integriq's convention in `connectors-service-desk-templates`.
+
+**TOPdesk relations.** TOPdesk has no list of all asset links, only the links of one asset (`GET /assetmgmt/assetLinks?sourceId=`). Its relations flow (`itsm-inbound-relations-per-application.json`) reads the usages that came from TOPdesk, asks for each one's links, and then runs the same mapping, contract and write as ServiceNow's, whose `cmdb_rel_ci` table is read page by page.
+
 ## D4. Outbound flow: only what stackiq owns
 
 `lib/Settings/flows/itsm-outbound-applications.json`:
@@ -77,7 +81,7 @@ Licences and contracts look up the usage by `applicationRecordId`, upsert `catal
 4. `apply-mapping` with the outbound preset, `ownership: outbound`, `exists: usage.recordId`, output `send`. A usage the desk does not know yet sends every field; a known one sends only stackiq-owned fields.
 5. `set-fields` builds `stackiqOwned`: only the stackiq-owned source fields of `usage` (owners, BBN level, TIME class, licence and contract fields).
 6. `contract` on the outbound synchronization with `idPosition: usage.uuid` and `hashPosition: stackiqOwned`. Unchanged stackiq-owned fields give `skip`, and nothing is sent.
-7. `switch` on `usage.recordId`: empty means `source-call` POST to the desk's create endpoint, then `object-write` on the usage with the returned record id and link. Set means `source-call` PATCH or PUT to the record.
+7. An exit on `usage.recordId`: empty means `source-call` POST to the desk's create endpoint with `bodyFrom: send`, then `object-write` on the usage with the returned record id (TOPdesk `data.id`, ServiceNow `result.sys_id`) and link. Set means `source-call` to the record (TOPdesk updates with POST, ServiceNow with PATCH).
 8. `contract-commit`.
 
 ## D5. Why there is no ping-pong

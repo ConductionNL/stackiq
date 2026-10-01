@@ -1,7 +1,7 @@
 {
   "name": "Service desk import: relations (%DESK_LABEL%)",
   "app": "stackiq",
-  "description": "Reads the relations between application records from the service desk and records them as connections between the applications. A relation whose ends are not imported yet waits for the next run.",
+  "description": "TOPdesk lists the links of one asset at a time, so this import asks for the links of every application in use that came from TOPdesk, and records each as a connection between the applications. A link whose other end is not imported yet waits for the next run.",
   "trigger": "schedule",
   "cron": "%CRON%",
   "executionMode": "async",
@@ -18,19 +18,37 @@
       }
     },
     {
-      "id": "pages",
-      "type": "openconnector.source-paginate",
+      "id": "usages",
+      "type": "openregister.object-read",
       "config": {
-        "synchronization": "%SYNC%",
-        "output": "page"
+        "register": "%REGISTER%",
+        "schema": "usage",
+        "filters": {
+          "serviceDeskSystem": "%DESK%"
+        },
+        "limit": 1000,
+        "fanOut": true
+      }
+    },
+    {
+      "id": "links",
+      "type": "openconnector.source-call",
+      "config": {
+        "source": "%SOURCE%",
+        "endpoint": "/assetmgmt/assetLinks",
+        "method": "GET",
+        "query": {
+          "sourceId": "{{ serviceDeskRecordId }}"
+        },
+        "output": "links"
       }
     },
     {
       "id": "each",
       "type": "openregister.explode",
       "config": {
-        "path": "page.results",
-        "as": "source"
+        "path": "links.body",
+        "as": "link"
       }
     },
     {
@@ -38,6 +56,8 @@
       "type": "openregister.set-fields",
       "config": {
         "set": {
+          "source.applicationRecordId": "{{ serviceDeskRecordId }}",
+          "source.link": "{{ link }}",
           "source._desk.baseUrl": "%DESK_BASE%"
         }
       }
@@ -244,13 +264,18 @@
   ],
   "edges": [
     {
-      "id": "e-start-pages",
+      "id": "e-start-usages",
       "from": "start",
-      "to": "pages"
+      "to": "usages"
     },
     {
-      "id": "e-pages-each",
-      "from": "pages",
+      "id": "e-usages-links",
+      "from": "usages",
+      "to": "links"
+    },
+    {
+      "id": "e-links-each",
+      "from": "links",
       "to": "each"
     },
     {

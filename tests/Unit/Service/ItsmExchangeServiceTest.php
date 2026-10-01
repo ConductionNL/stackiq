@@ -108,7 +108,7 @@ class ItsmExchangeServiceTest extends TestCase {
 				}
 
 				if ($register === 'integriq' && $schema === 'source' && $id === 'topdesk') {
-					return ['uuid' => 'src-1', 'slug' => 'topdesk', 'location' => 'https://rotterdam.topdesk.net'];
+					return ['uuid' => 'src-1', 'slug' => 'topdesk', 'location' => 'https://rotterdam.topdesk.net/tas/api'];
 				}
 
 				return null;

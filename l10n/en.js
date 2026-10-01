@@ -953,7 +953,9 @@ OC.L10N.register(
         "The supplier's own number for this contract or licence agreement.": "The supplier's own number for this contract or licence agreement.",
         "Currency": "Currency",
         "The currency of the costs, as a three-letter ISO 4217 code.": "The currency of the costs, as a three-letter ISO 4217 code.",
-        "The organisation this contract or licence was bought from.": "The organisation this contract or licence was bought from."
+        "The organisation this contract or licence was bought from.": "The organisation this contract or licence was bought from.",
+        "TOPdesk asset template id": "TOPdesk asset template id",
+        "TOPdesk needs a template to create an asset. Copy the id of your Application template from TOPdesk.": "TOPdesk needs a template to create an asset. Copy the id of your Application template from TOPdesk."
     },
     "nplurals=2; plural=(n != 1);"
 )

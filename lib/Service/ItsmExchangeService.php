@@ -72,32 +72,38 @@ class ItsmExchangeService {
 	/**
 	 * One profile per service desk: integriq's slugs and the outbound endpoints.
 	 *
-	 * The slugs are the ones integriq's change connectors-service-desk-templates
-	 * ships. The endpoints are what the outbound source call uses; `%LOCATION%`
-	 * becomes the source's base address.
+	 * The slugs, endpoints and answer paths are the ones integriq's change
+	 * connectors-service-desk-templates ships and its mocks answer. Endpoints
+	 * are relative to the source's location; `%BASE%` becomes the tenant's
+	 * scheme and host, for record links. TOPdesk lists asset links one asset
+	 * at a time, so its relations use the per-application template.
 	 *
 	 * @var array<string, array<string, mixed>>
 	 */
 	public const DESKS = [
 		'topdesk'    => [
-			'label'          => 'TOPdesk',
-			'source'         => 'topdesk',
-			'createEndpoint' => '/tas/api/assetmgmt/assets',
-			'createMethod'   => 'POST',
-			'updateEndpoint' => '/tas/api/assetmgmt/assets/{{ usage.recordId }}',
-			'updateMethod'   => 'PATCH',
-			'responseId'     => 'id',
-			'recordUrl'      => '%LOCATION%/tas/secure/assetmgmt/card.html?unid={{ response.body.id }}',
+			'label'             => 'TOPdesk',
+			'source'            => 'topdesk',
+			'relationsTemplate' => 'itsm-inbound-relations-per-application.json',
+			'createEndpoint'    => '/assetmgmt/assets',
+			'createMethod'      => 'POST',
+			'updateEndpoint'    => '/assetmgmt/assets/{{ usage.recordId }}',
+			'updateMethod'      => 'POST',
+			'callQuery'         => [],
+			'responseId'        => 'data.id',
+			'recordUrl'         => '%BASE%/tas/secure/assetmgmt/card.html?unid={{ response.body.data.id }}',
 		],
 		'servicenow' => [
-			'label'          => 'ServiceNow',
-			'source'         => 'servicenow',
-			'createEndpoint' => '/api/now/table/cmdb_ci_appl',
-			'createMethod'   => 'POST',
-			'updateEndpoint' => '/api/now/table/cmdb_ci_appl/{{ usage.recordId }}',
-			'updateMethod'   => 'PATCH',
-			'responseId'     => 'result.sys_id',
-			'recordUrl'      => '%LOCATION%/nav_to.do?uri=cmdb_ci_appl.do?sys_id={{ response.body.result.sys_id }}',
+			'label'             => 'ServiceNow',
+			'source'            => 'servicenow',
+			'relationsTemplate' => 'itsm-inbound-relations.json',
+			'createEndpoint'    => '/api/now/table/cmdb_ci_appl',
+			'createMethod'      => 'POST',
+			'updateEndpoint'    => '/api/now/table/cmdb_ci_appl/{{ usage.recordId }}',
+			'updateMethod'      => 'PATCH',
+			'callQuery'         => ['sysparm_input_display_value' => 'true'],
+			'responseId'        => 'result.sys_id',
+			'recordUrl'         => '%BASE%/nav_to.do?uri=cmdb_ci_appl.do?sys_id={{ response.body.result.sys_id }}',
 		],
 	];
 
@@ -166,7 +172,8 @@ class ItsmExchangeService {
 	 * @param string $desk         The desk key (topdesk, servicenow).
 	 * @param string $organisation The uuid of the organisation whose applications are exchanged.
 	 * @param string $runAs        The user the scheduled imports run as.
-	 * @param string $location     The desk source's base address, for record links.
+	 * @param string $location     The desk source's location; its scheme and host make the record links.
+	 * @param string $templateId   The desk's asset template for a new record (TOPdesk needs one), or empty.
 	 *
 	 * @return array<string, array<string, mixed>> The filled flow documents, by flow key.
 	 *
@@ -174,13 +181,14 @@ class ItsmExchangeService {
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
 	 */
-	public function buildFlows(string $desk, string $organisation, string $runAs, string $location): array {
+	public function buildFlows(string $desk, string $organisation, string $runAs, string $location, string $templateId = ''): array {
 		if (isset(self::DESKS[$desk]) === false) {
 			throw new InvalidArgumentException('Unknown service desk "' . $desk . '". Choose one of: ' . implode(', ', array_keys(self::DESKS)) . '.');
 		}
 
 		$profile = self::DESKS[$desk];
 		$appUrl  = rtrim($this->urlGenerator->getAbsoluteURL('/index.php/apps/' . Application::APP_ID), '/');
+		$base    = self::baseOf(location: $location);
 		$flows   = [];
 		foreach (self::FLOWS as $key => $flow) {
 			$deskKey = $desk;
@@ -206,14 +214,22 @@ class ItsmExchangeService {
 				'UPDATE_ENDPOINT' => $profile['updateEndpoint'],
 				'UPDATE_METHOD'   => $profile['updateMethod'],
 				'RESPONSE_ID'     => $profile['responseId'],
-				'RECORD_URL'      => str_replace('%LOCATION%', rtrim($location, '/'), $profile['recordUrl']),
+				'RECORD_URL'      => str_replace('%BASE%', $base, $profile['recordUrl']),
+				'DESK_BASE'       => $base,
+				'TEMPLATE_ID'     => $templateId,
+				'CALL_QUERY'      => $profile['callQuery'],
 			];
 			if ($key === 'file') {
 				$values['SYNC']   = 'itsm-file-applications';
 				$values['PRESET'] = 'itsm-file-application-inbound';
 			}
 
-			$flows[$key] = self::fill(value: $this->template(file: $flow['template']), values: $values);
+			$template = $flow['template'];
+			if ($key === 'relations') {
+				$template = $profile['relationsTemplate'];
+			}
+
+			$flows[$key] = self::fill(value: $this->template(file: $template), values: $values);
 		}//end foreach
 
 		return $flows;
@@ -228,12 +244,13 @@ class ItsmExchangeService {
 	 * @param string $desk         The desk key.
 	 * @param string $organisation The uuid of the organisation whose applications are exchanged.
 	 * @param string $runAs        The user the scheduled imports run as.
+	 * @param string $templateId   The desk's asset template for new records, when the desk needs one.
 	 *
 	 * @return array<string, mixed> `created`, and either `flows` or `blocking` per flow key.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
 	 */
-	public function setUp(string $desk, string $organisation, string $runAs): array {
+	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = ''): array {
 		if ($this->gateway->available() === false) {
 			return $this->refuse(message: 'OpenRegister\'s flow engine is not available, so no exchange can be set up.');
 		}
@@ -251,7 +268,7 @@ class ItsmExchangeService {
 			return $this->refuse(message: 'Integriq has no source "' . self::DESKS[$desk]['source'] . '". Add the ' . self::DESKS[$desk]['label'] . ' source in integriq first.');
 		}
 
-		$flows    = $this->buildFlows(desk: $desk, organisation: $organisation, runAs: $runAs, location: (string) ($source['location'] ?? ''));
+		$flows    = $this->buildFlows(desk: $desk, organisation: $organisation, runAs: $runAs, location: (string) ($source['location'] ?? ''), templateId: $templateId);
 		$blocking = [];
 		foreach ($flows as $key => $flow) {
 			$findings = $this->gateway->inspect(flow: $flow);
@@ -293,8 +310,11 @@ class ItsmExchangeService {
 	/**
 	 * Replace every `%KEY%` placeholder in the strings of a value.
 	 *
-	 * @param mixed                 $value  The template, or a part of it.
-	 * @param array<string, string> $values The placeholder values, by key without the percent signs.
+	 * A string that is exactly one placeholder takes the value as it is, so a
+	 * list or an object can be filled in; any other string gets text.
+	 *
+	 * @param mixed                $value  The template, or a part of it.
+	 * @param array<string, mixed> $values The placeholder values, by key without the percent signs.
 	 *
 	 * @return mixed The filled value.
 	 *
@@ -314,15 +334,44 @@ class ItsmExchangeService {
 			return $value;
 		}
 
+		if (preg_match('/^%([A-Z_]+)%$/', $value, $whole) === 1 && array_key_exists($whole[1], $values) === true) {
+			return $values[$whole[1]];
+		}
+
 		$search  = [];
 		$replace = [];
 		foreach ($values as $key => $text) {
+			if (is_array($text) === true) {
+				continue;
+			}
+
 			$search[]  = '%' . $key . '%';
-			$replace[] = $text;
+			$replace[] = (string) $text;
 		}
 
 		return str_replace($search, $replace, $value);
 	}//end fill()
+
+	/**
+	 * The scheme, host and port of a location, without its path.
+	 *
+	 * @param string $location The source's location.
+	 *
+	 * @return string The base, or an empty string when the location has no host.
+	 */
+	public static function baseOf(string $location): string {
+		$parts = parse_url(trim($location));
+		if (is_array($parts) === false || isset($parts['host']) === false) {
+			return '';
+		}
+
+		$base = ($parts['scheme'] ?? 'https') . '://' . $parts['host'];
+		if (isset($parts['port']) === true) {
+			$base .= ':' . $parts['port'];
+		}
+
+		return $base;
+	}//end baseOf()
 
 	/**
 	 * Read one template.
