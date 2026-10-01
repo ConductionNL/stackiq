@@ -8711,7 +8711,7 @@
           "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-topdesk-gem-leiden-deelnemers",
-          "version": "0.0.3"
+          "version": "1.0.0"
         },
         "name": "Topdesk bij Servicecenter Rijnland (SSC)",
         "status": "In production",
@@ -8728,7 +8728,7 @@
           "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-key2-gem-leiden-deelnemer",
-          "version": "0.0.3"
+          "version": "1.0.0"
         },
         "name": "KEY2 Burgerzaken gedeeld via GBLT",
         "status": "Planned",
@@ -8744,7 +8744,7 @@
           "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-suite4-gem-delft-eigenaar",
-          "version": "0.0.3"
+          "version": "1.0.0"
         },
         "name": "Suite4 Schuldhulpverlening - eigenaar Gemeente Delft",
         "status": "In production",
