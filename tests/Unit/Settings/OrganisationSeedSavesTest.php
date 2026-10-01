@@ -27,8 +27,8 @@ namespace OCA\Stackiq\Tests\Unit\Settings;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Asserts that the contacts link is optional and that every organisation a
- * seed object creates carries the organisation schema's required fields.
+ * Asserts that the contacts link is optional and that the seeds create each
+ * organisation once, with the organisation schema's required fields.
  */
 class OrganisationSeedSavesTest extends TestCase {
 
@@ -63,18 +63,39 @@ class OrganisationSeedSavesTest extends TestCase {
 	}//end testTheContactsLinkIsNeverRequired()
 
 	/**
-	 * Every organisation nested in a seed object carries all required organisation fields.
+	 * Seeds name an organisation by reference, never inline, and each one is seeded exactly once with the required fields.
+	 *
+	 * OpenRegister creates a NEW object for every inline occurrence of a related
+	 * object (SaveObject::cascadeSingleObject), so an organisation nested in two
+	 * seed usages became two rows on every import. A `@ref:organization:<slug>`
+	 * token resolves to the one seeded organisation (ImportHandler
+	 * resolveSeedReferenceTokens), and a re-import reuses its uuid.
 	 *
 	 * @return void
 	 */
-	public function testEverySeededOrganisationCarriesTheRequiredFields(): void {
+	public function testSeedsReferenceEachOrganisationOnce(): void {
 		$register = $this->register();
 		$schemas  = $register['components']['schemas'];
 		$required = $schemas['organization']['required'];
 		$typeEnum = $schemas['organization']['properties']['type']['enum'];
-		$this->assertNotEmpty($required);
 
-		$organisations = [];
+		$seeded = [];
+		foreach ($register['components']['objects'] as $object) {
+			if ($object['@self']['schema'] !== 'organization') {
+				continue;
+			}
+
+			$slug = $object['@self']['slug'];
+			$this->assertArrayNotHasKey($slug, $seeded, $slug . ' is seeded once');
+			foreach ($required as $field) {
+				$this->assertArrayHasKey($field, $object, $slug);
+			}
+
+			$this->assertContains($object['type'], $typeEnum, $slug);
+			$seeded[$slug] = true;
+		}
+
+		$references = 0;
 		foreach ($register['components']['objects'] as $object) {
 			$schema = $schemas[$object['@self']['schema']];
 			foreach ($schema['properties'] as $name => $property) {
@@ -84,23 +105,20 @@ class OrganisationSeedSavesTest extends TestCase {
 				}
 
 				$values = $object[$name];
-				if (isset($values['slug']) === true) {
+				if (is_array($values) === false || array_is_list($values) === false) {
 					$values = [$values];
 				}
 
-				foreach ($values as $organisation) {
-					$organisations[] = $organisation;
+				foreach ($values as $value) {
+					$this->assertIsString($value, $object['@self']['slug'] . '.' . $name . ' names an organisation by reference, not inline');
+					$this->assertStringStartsWith('@ref:organization:', $value);
+					$this->assertArrayHasKey(substr($value, strlen('@ref:organization:')), $seeded, $value . ' is a seeded organisation');
+					$references++;
 				}
 			}
 		}
 
-		$this->assertGreaterThanOrEqual(5, count($organisations));
-		foreach ($organisations as $organisation) {
-			foreach ($required as $field) {
-				$this->assertArrayHasKey($field, $organisation, $organisation['slug']);
-			}
-
-			$this->assertContains($organisation['type'], $typeEnum, $organisation['slug']);
-		}
-	}//end testEverySeededOrganisationCarriesTheRequiredFields()
+		$this->assertGreaterThanOrEqual(5, $references);
+		$this->assertCount(5, $seeded);
+	}//end testSeedsReferenceEachOrganisationOnce()
 }//end class
