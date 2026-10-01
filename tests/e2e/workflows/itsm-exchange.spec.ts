@@ -78,7 +78,7 @@ test.afterAll(async () => {
 })
 
 // @e2e itsm-exchange::an-information-manager-opens-the-cmdb-page
-test('the CMDB page names what stackiq records and what it does not', async ({
+test('the CMDB page (CmdbOverview) names what stackiq records and what it does not', async ({
 	page,
 }) => {
 	await gotoAppRoute(page, '/cmdb')
