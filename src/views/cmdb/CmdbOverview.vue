@@ -222,6 +222,12 @@ export default defineComponent({
 		},
 	},
 
+	/**
+	 * Read whether the exchange runs, for the exchange section.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-007-the-cmdb-page-says-what-stackiq-is
+	 */
 	async mounted() {
 		try {
 			const response = await fetch(
