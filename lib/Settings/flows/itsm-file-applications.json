@@ -1,0 +1,318 @@
+{
+  "name": "File import: applications",
+  "app": "stackiq",
+  "description": "Imports applications from an uploaded CSV or XLSX file through the same mapping and matching as the service desk import. Importing the same file again updates rather than duplicates.",
+  "executionMode": "async",
+  "limits": {
+    "maxTransitions": 5000
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "type": "openregister.trigger-manual",
+      "config": {}
+    },
+    {
+      "id": "each",
+      "type": "openregister.explode",
+      "config": {
+        "path": "rows",
+        "as": "source"
+      }
+    },
+    {
+      "id": "desk",
+      "type": "openregister.set-fields",
+      "config": {
+        "set": {
+          "source._desk.baseUrl": "%DESK_BASE%"
+        }
+      }
+    },
+    {
+      "id": "map-all",
+      "type": "openconnector.apply-mapping",
+      "config": {
+        "mapping": "%PRESET%",
+        "input": "source",
+        "output": "record"
+      }
+    },
+    {
+      "id": "map-owned",
+      "type": "openconnector.apply-mapping",
+      "config": {
+        "mapping": "%PRESET%",
+        "input": "source",
+        "output": "owned",
+        "ownership": "inbound",
+        "exists": "record.recordId"
+      }
+    },
+    {
+      "id": "complete",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "and": [
+            {
+              "!!": {
+                "var": "json.record.recordId"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.record.name"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.record.supplierName"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "decide",
+      "type": "openconnector.contract",
+      "config": {
+        "synchronization": "%SYNC%",
+        "idPosition": "owned.recordId",
+        "hashPosition": "owned",
+        "output": "contract"
+      }
+    },
+    {
+      "id": "changed",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "in": [
+            {
+              "var": "json.contract.outcome"
+            },
+            [
+              "create",
+              "update"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "flags",
+      "type": "openregister.set-fields",
+      "config": {
+        "compute": {
+          "isCreate": {
+            "!": {
+              "var": "json.contract.targetId"
+            }
+          },
+          "isUpdate": {
+            "!!": {
+              "var": "json.contract.targetId"
+            }
+          },
+          "syncedAt": {
+            "now": []
+          }
+        }
+      }
+    },
+    {
+      "id": "supplier",
+      "type": "openregister.object-write",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "organization",
+        "operation": "upsert",
+        "match": [
+          {
+            "property": "name",
+            "value": "{{ record.supplierName }}"
+          },
+          {
+            "property": "type",
+            "value": "Supplier"
+          }
+        ],
+        "fields": {
+          "name": "{{ record.supplierName }}",
+          "type": "Supplier"
+        },
+        "output": "supplier"
+      }
+    },
+    {
+      "id": "module",
+      "type": "openregister.object-write",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "module",
+        "operation": "upsert",
+        "match": [
+          {
+            "property": "name",
+            "value": "{{ record.name }}"
+          },
+          {
+            "property": "provider",
+            "value": "{{ supplier.uuid }}"
+          }
+        ],
+        "fields": {
+          "name": "{{ record.name }}",
+          "provider": "{{ supplier.uuid }}"
+        },
+        "output": "module"
+      }
+    },
+    {
+      "id": "usage-create",
+      "type": "openregister.object-write",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "usage",
+        "operation": "upsert",
+        "skipWhen": "isUpdate",
+        "match": [
+          {
+            "property": "module",
+            "value": "{{ module.uuid }}"
+          },
+          {
+            "property": "consumer",
+            "value": "%CONSUMER%"
+          }
+        ],
+        "fields": {
+          "module": "{{ module.uuid }}",
+          "consumer": "%CONSUMER%",
+          "status": "{{ record.status }}",
+          "installedVersion": "{{ record.installedVersion }}",
+          "serviceDeskSystem": "%DESK%",
+          "serviceDeskRecordId": "{{ record.recordId }}",
+          "serviceDeskUrl": "{{ record.recordUrl }}",
+          "serviceDeskSyncedAt": "{{ syncedAt }}"
+        },
+        "output": "usageWritten"
+      }
+    },
+    {
+      "id": "usage-update",
+      "type": "openregister.object-write",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "usage",
+        "operation": "update",
+        "skipWhen": "isCreate",
+        "match": [
+          {
+            "property": "@self.uuid",
+            "value": "{{ contract.targetId }}"
+          }
+        ],
+        "fields": {
+          "module": "{{ module.uuid }}",
+          "status": "{{ owned.status }}",
+          "installedVersion": "{{ owned.installedVersion }}",
+          "serviceDeskSystem": "%DESK%",
+          "serviceDeskRecordId": "{{ owned.recordId }}",
+          "serviceDeskUrl": "{{ owned.recordUrl }}",
+          "serviceDeskSyncedAt": "{{ syncedAt }}"
+        },
+        "output": "usageWritten"
+      }
+    },
+    {
+      "id": "commit",
+      "type": "openconnector.contract-commit",
+      "config": {
+        "synchronization": "%SYNC%",
+        "contractPosition": "contract",
+        "targetIdPosition": "usageWritten.uuid",
+        "targetHashPosition": "owned"
+      }
+    },
+    {
+      "id": "end",
+      "type": "openregister.end",
+      "config": {}
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-start-each",
+      "from": "start",
+      "to": "each"
+    },
+    {
+      "id": "e-each-desk",
+      "from": "each",
+      "to": "desk"
+    },
+    {
+      "id": "e-desk-map-all",
+      "from": "desk",
+      "to": "map-all"
+    },
+    {
+      "id": "e-map-all-map-owned",
+      "from": "map-all",
+      "to": "map-owned"
+    },
+    {
+      "id": "e-map-owned-complete",
+      "from": "map-owned",
+      "to": "complete"
+    },
+    {
+      "id": "e-complete-decide",
+      "from": "complete",
+      "to": "decide"
+    },
+    {
+      "id": "e-decide-changed",
+      "from": "decide",
+      "to": "changed"
+    },
+    {
+      "id": "e-changed-flags",
+      "from": "changed",
+      "to": "flags"
+    },
+    {
+      "id": "e-flags-supplier",
+      "from": "flags",
+      "to": "supplier"
+    },
+    {
+      "id": "e-supplier-module",
+      "from": "supplier",
+      "to": "module"
+    },
+    {
+      "id": "e-module-usage-create",
+      "from": "module",
+      "to": "usage-create"
+    },
+    {
+      "id": "e-usage-create-usage-update",
+      "from": "usage-create",
+      "to": "usage-update"
+    },
+    {
+      "id": "e-usage-update-commit",
+      "from": "usage-update",
+      "to": "commit"
+    },
+    {
+      "id": "e-commit-end",
+      "from": "commit",
+      "to": "end"
+    }
+  ]
+}

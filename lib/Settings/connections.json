@@ -41,6 +41,19 @@
             "disabledMessage": "End-of-life sync is switched off. Switch it on in the End-of-life feed sync section.",
             "sourceTemplate": "endoflife-date",
             "unconfiguredMessage": "Not checked yet. Choose Sync now in the End-of-life feed sync section."
+        },
+        {
+            "key": "itsm",
+            "title": "Service desk",
+            "description": "Keeps applications, connections, licences and contracts in step with TOPdesk or ServiceNow, through integriq flows. The service desk owns its fields, stackiq owns its own.",
+            "order": 40,
+            "settingsUrl": "/settings/admin/stackiq#section-itsm",
+            "reportedOnly": true,
+            "switch": {
+                "configKey": "itsm_exchange_enabled"
+            },
+            "disabledMessage": "The service desk exchange is not set up. Set it up in the Service desk exchange section.",
+            "unconfiguredMessage": "Not checked yet. The first import run reports here."
         }
     ]
 }

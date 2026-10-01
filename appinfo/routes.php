@@ -298,6 +298,14 @@ return [
         ['name' => 'settings#triggerEolSync', 'url' => '/api/eol-sync/trigger', 'verb' => 'POST'],
         ['name' => 'settings#getEolSyncStatus', 'url' => '/api/eol-sync/status', 'verb' => 'GET'],
 
+        // SERVICE DESK EXCHANGE (sharing-itsm-exchange): status for the CMDB
+        // page, set-up and file import for admins. The flows themselves run
+        // in OpenRegister and integriq; these only create and start them.
+        ['name' => 'itsmExchange#status', 'url' => '/api/itsm/status', 'verb' => 'GET'],
+        ['name' => 'itsmExchange#config', 'url' => '/api/itsm/config', 'verb' => 'GET'],
+        ['name' => 'itsmExchange#setUp', 'url' => '/api/itsm/setup', 'verb' => 'POST'],
+        ['name' => 'itsmExchange#import', 'url' => '/api/itsm/import', 'verb' => 'POST'],
+
         // Gebruik by group
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],
         ['name' => 'gebruik#getGebruikenForDeelnemer', 'url' => '/api/gebruik/deelnemer', 'verb' => 'GET'],

@@ -1,0 +1,168 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "sharing-itsm-exchange: the CMDB page says what stackiq records (applications in use, applications and their components, connections, licences and contracts) and what it does not (hardware, network discovery, tickets), shows the service desk exchange and takes a file import. A child of Applications (ADR-097: no new top-level entry). A type:dashboard page: four stat tiles counted by OpenRegister, and the cmdb-overview widget registered in main.js.",
+	"menu": [
+		{
+			"id": "Modules",
+			"children": [
+				{
+					"id": "Cmdb",
+					"label": "CMDB",
+					"icon": "Sitemap",
+					"route": "Cmdb",
+					"order": 1
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Cmdb",
+			"route": "/cmdb",
+			"type": "dashboard",
+			"title": "CMDB",
+			"config": {
+				"widgets": [
+					{
+						"id": "cmdb-usages",
+						"type": "stat",
+						"title": "Applications in use",
+						"content": {
+							"label": "Applications in use",
+							"icon": "OfficeBuilding",
+							"route": {
+								"name": "Gebruik"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "@resolve:voorzieningen_register",
+								"schema": "usage",
+								"metric": "count"
+							}
+						}
+					},
+					{
+						"id": "cmdb-modules",
+						"type": "stat",
+						"title": "Applications",
+						"content": {
+							"label": "Applications",
+							"icon": "Package",
+							"route": {
+								"name": "Modules"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "@resolve:voorzieningen_register",
+								"schema": "module",
+								"metric": "count"
+							}
+						}
+					},
+					{
+						"id": "cmdb-connections",
+						"type": "stat",
+						"title": "Connections",
+						"content": {
+							"label": "Connections",
+							"icon": "LinkVariant",
+							"route": {
+								"name": "Koppelingen"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "@resolve:voorzieningen_register",
+								"schema": "connection",
+								"metric": "count"
+							}
+						}
+					},
+					{
+						"id": "cmdb-contracts",
+						"type": "stat",
+						"title": "Licences and contracts",
+						"content": {
+							"label": "Licences and contracts",
+							"icon": "FileSign",
+							"route": {
+								"name": "Contracten"
+							},
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "@resolve:voorzieningen_register",
+								"schema": "catalogContract",
+								"metric": "count"
+							}
+						}
+					},
+					{
+						"id": "cmdb-overview",
+						"type": "cmdb-overview",
+						"title": "CMDB",
+						"_note": "sharing-itsm-exchange: what stackiq records and does not, the service desk exchange status (GET /api/itsm/status) and the admin file import (POST /api/itsm/import). A widget TYPE registered in main.js, like catalog-panels, because it combines prose, a status and an upload form, which no built-in widget does."
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "cmdb-usages",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "2",
+						"widgetId": "cmdb-modules",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "3",
+						"widgetId": "cmdb-connections",
+						"gridX": 6,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "4",
+						"widgetId": "cmdb-contracts",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "5",
+						"widgetId": "cmdb-overview",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 10,
+						"showTitle": false
+					}
+				]
+			},
+			"_note": "The CMDB entry point: four stat tiles for the lists that hold the CMDB, and the cmdb-overview widget with what stackiq records and does not, the exchange status and the file import."
+		}
+	]
+}
