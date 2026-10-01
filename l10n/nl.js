@@ -1139,7 +1139,11 @@ OC.L10N.register(
         "Created in source": "Aangemaakt in de bron",
         "The date the application was registered in the source system.": "De datum waarop de applicatie in het bronsysteem is geregistreerd.",
         "Changed in source": "Gewijzigd in de bron",
-        "The date the application was last changed in the source system.": "De datum waarop de applicatie in het bronsysteem het laatst is gewijzigd."
+        "The date the application was last changed in the source system.": "De datum waarop de applicatie in het bronsysteem het laatst is gewijzigd.",
+        "Application published": "Applicatie gepubliceerd",
+        "The publication date of the application this version belongs to, copied from it. A version is public only while its application is.": "De publicatiedatum van de applicatie waar deze versie bij hoort, daarvan overgenomen. Een versie is alleen openbaar zolang haar applicatie dat is.",
+        "Application registered by": "Applicatie geregistreerd door",
+        "Who registered the application this version belongs to, copied from it. A supplier's application is public, and so are its versions.": "Wie de applicatie registreerde waar deze versie bij hoort, daarvan overgenomen. De applicatie van een leverancier is openbaar, en haar versies ook."
     },
     "nplurals=2; plural=(n != 1);"
 )

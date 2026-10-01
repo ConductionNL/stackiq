@@ -1069,7 +1069,11 @@ OC.L10N.register(
         "Created in source": "Created in source",
         "The date the application was registered in the source system.": "The date the application was registered in the source system.",
         "Changed in source": "Changed in source",
-        "The date the application was last changed in the source system.": "The date the application was last changed in the source system."
+        "The date the application was last changed in the source system.": "The date the application was last changed in the source system.",
+        "Application published": "Application published",
+        "The publication date of the application this version belongs to, copied from it. A version is public only while its application is.": "The publication date of the application this version belongs to, copied from it. A version is public only while its application is.",
+        "Application registered by": "Application registered by",
+        "Who registered the application this version belongs to, copied from it. A supplier's application is public, and so are its versions.": "Who registered the application this version belongs to, copied from it. A supplier's application is public, and so are its versions."
     },
     "nplurals=2; plural=(n != 1);"
 )
