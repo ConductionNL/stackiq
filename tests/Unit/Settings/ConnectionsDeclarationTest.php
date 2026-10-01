@@ -97,7 +97,7 @@ class ConnectionsDeclarationTest extends TestCase {
 	 *
 	 * @var array<int, string>
 	 */
-	private const KEYS = ['email', 'federation', 'eol-feed'];
+	private const KEYS = ['email', 'federation', 'eol-feed', 'itsm'];
 
 	/**
 	 * The repository root.
@@ -182,7 +182,7 @@ class ConnectionsDeclarationTest extends TestCase {
 		$this->assertSame(expected: self::KEYS, actual: $keys);
 		$this->assertSame(
 			expected: self::KEYS,
-			actual: [ConnectionReportService::KEY_EMAIL, ConnectionReportService::KEY_FEDERATION, ConnectionReportService::KEY_EOL]
+			actual: [ConnectionReportService::KEY_EMAIL, ConnectionReportService::KEY_FEDERATION, ConnectionReportService::KEY_EOL, ConnectionReportService::KEY_ITSM]
 		);
 	}//end testTheKeysAreUniqueAndTheReportedOnes()
 
