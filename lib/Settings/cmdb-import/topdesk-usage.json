@@ -1,0 +1,39 @@
+{
+  "id": "stackiq-topdesk-usage",
+  "name": "TOPdesk CMDB export to stackiq usage",
+  "description": "The usage that links the application to the municipality. The Status lookup is provisional until the municipality confirms its values; an unknown value drops the field with a warning.",
+  "sourceFormat": "excel",
+  "version": "1.0.0",
+  "fieldMappings": [
+    {
+      "source": "Status",
+      "target": "status",
+      "transform": {
+        "type": "lookup",
+        "map": {
+          "In productie": "In production",
+          "In voorraad": "Planned",
+          "In ontwikkeling": "Acquisition",
+          "Uit te faseren": "To be phased out",
+          "Uitgefaseerd": "Phased out"
+        }
+      }
+    },
+    {
+      "source": "ICT TIME Classificatie",
+      "target": "timeClassification",
+      "transform": {
+        "type": "lookup",
+        "map": {
+          "Tolerate": "Tolerate", "Tolereren": "Tolerate",
+          "Invest": "Invest", "Investeren": "Invest",
+          "Migrate": "Migrate", "Migreren": "Migrate",
+          "Eliminate": "Eliminate", "Elimineren": "Eliminate"
+        }
+      }
+    },
+    { "source": "End of Life Business", "target": "startDateOutPhased", "transform": { "type": "date", "sourceFormat": "!Y-m-d", "targetFormat": "Y-m-d" } },
+    { "source": "Eigenaar afdeling", "target": "interneAnnotation", "transform": { "type": "concat", "fields": ["Eigenaar cluster"], "separator": " / " } }
+  ],
+  "idStrategy": { "type": "generate" }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "stackiq-topdesk-module",
+  "name": "TOPdesk CMDB export to stackiq module",
+  "description": "One application row of a TOPdesk CMDB export becomes a stackiq module. A mapping marked required that fails skips the row; any other failing mapping drops that field with a warning.",
+  "sourceFormat": "excel",
+  "version": "1.0.0",
+  "fieldMappings": [
+    { "source": "Naam", "target": "name", "required": true, "transform": { "type": "trim" } },
+    { "source": "Middel-ID", "target": "externalId", "required": true, "transform": { "type": "trim" } },
+    { "source": "ICT Applicatienummer", "target": "externalNumber", "transform": { "type": "trim" } },
+    { "source": "Functionele omschrijving", "target": "longDescription", "transform": { "type": "trim" } },
+    {
+      "source": "ICT BBN Classificatie",
+      "target": "bbnLevel",
+      "transform": {
+        "type": "lookup",
+        "map": {
+          "BBN1": "BBN1", "BBN 1": "BBN1", "bbn1": "BBN1", "bbn 1": "BBN1",
+          "BBN2": "BBN2", "BBN 2": "BBN2", "bbn2": "BBN2", "bbn 2": "BBN2",
+          "BBN3": "BBN3", "BBN 3": "BBN3", "bbn3": "BBN3", "bbn 3": "BBN3"
+        }
+      }
+    },
+    { "source": "Aanmaakdatum", "target": "externalCreatedAt", "transform": { "type": "date", "sourceFormat": "!Y-m-d", "targetFormat": "Y-m-d" } },
+    { "source": "Wijzigingsdatum", "target": "externalModifiedAt", "transform": { "type": "date", "sourceFormat": "!Y-m-d", "targetFormat": "Y-m-d" } }
+  ],
+  "idStrategy": { "type": "generate" }
+}

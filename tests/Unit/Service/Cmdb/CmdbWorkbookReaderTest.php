@@ -1,0 +1,308 @@
+<?php
+
+/**
+ * Tests for the CMDB workbook reader, on the sanitised xlsx fixtures.
+ *
+ * @category  Test
+ * @package   OCA\Stackiq\Tests\Unit\Service\Cmdb
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://github.com/ConductionNL/stackiq
+ *
+ * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Stackiq\Tests\Unit\Service\Cmdb;
+
+require_once __DIR__ . '/../../Support/CmdbTestSupport.php';
+
+use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
+use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
+use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
+use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+
+/**
+ * Reads the fixtures through PhpSpreadsheet as OpenRegister ships it.
+ */
+class CmdbWorkbookReaderTest extends TestCase {
+	/**
+	 * The shipped profile, validated with OpenRegister's validator.
+	 *
+	 * @param string|null $directory A profile directory other than the shipped one.
+	 *
+	 * @return CmdbImportProfile
+	 */
+	private function profile(?string $directory = null): CmdbImportProfile {
+		CmdbTestSupport::loadMigrationPack();
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('has')->willReturn(false);
+
+		$profile = new CmdbImportProfile(container: $container, directory: $directory);
+		$profile->load();
+		return $profile;
+	}//end profile()
+
+	/**
+	 * Skip unless PhpSpreadsheet can be loaded from an OpenRegister checkout.
+	 *
+	 * @return void
+	 */
+	private function requireSpreadsheet(): void {
+		if (CmdbTestSupport::loadPhpSpreadsheet() === false) {
+			$this->markTestSkipped('PhpSpreadsheet not found: set OPENREGISTER_DIR to an OpenRegister app with its vendor/ installed.');
+		}
+	}//end requireSpreadsheet()
+
+	/**
+	 * Read a fixture.
+	 *
+	 * @param string $name The fixture file.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function read(string $name): array {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::fixtures() . '/' . $name;
+		$reader = new CmdbWorkbookReader();
+		$reader->assertXlsx(path: $path, fileName: $name);
+		return $reader->read(path: $path, profile: $this->profile());
+	}//end read()
+
+	/**
+	 * One data row per source sheet; the formatted empty rows are dropped; only allowlisted columns.
+	 *
+	 * @return void
+	 */
+	public function testTheSanitisedExportYieldsOneRowPerSheet(): void {
+		$result = $this->read(name: 'topdesk-export-anonymised.xlsx');
+		$rows = $result['rows'];
+
+		$this->assertCount(2, $rows);
+		$this->assertSame(['Invoer AIA data', 2], [$rows[0]['sheet'], $rows[0]['row']]);
+		$this->assertSame(['Invoer APP data', 2], [$rows[1]['sheet'], $rows[1]['row']]);
+		$this->assertSame('AIA-AangetekendMailen', $rows[0]['cells']['Middel-ID']);
+		$this->assertSame('Aangetekend Mailen', $rows[0]['cells']['Naam']);
+		$this->assertSame('naamtest123', $rows[1]['cells']['Naam']);
+		$this->assertSame(53359, (int)$rows[1]['cells']['End of Life Business']);
+
+		$allowed = $this->profile()->referencedColumns();
+		foreach ($rows as $row) {
+			foreach (array_keys($row['cells']) as $column) {
+				$this->assertContains($column, $allowed);
+			}
+
+			foreach (['Personeelsnummer', 'Eigenaar mobiel nummer', 'Groepseigenaar mail', 'Groepsmail', 'Opmerkingen', 'FB contactpersoon 2'] as $never) {
+				$this->assertArrayNotHasKey($never, $row['cells']);
+			}
+		}
+
+		$this->assertFalse($result['date1904']);
+		$this->assertContains(
+			['sheet' => 'Invoer AIA data', 'column' => 'ICT TIME Classificatie', 'message' => 'Optional column "ICT TIME Classificatie" not found'],
+			$result['importWarnings']
+		);
+	}//end testTheSanitisedExportYieldsOneRowPerSheet()
+
+	/**
+	 * A formula cell yields the value Excel cached, not its result, and the connection is never contacted.
+	 *
+	 * @return void
+	 */
+	public function testAFormulaYieldsItsCachedValue(): void {
+		$rows = $this->read(name: 'topdesk-formula-and-connection.xlsx')['rows'];
+
+		// The formula evaluates to "Evaluated"; the cached value is "Rekenmodel".
+		$this->assertSame('Rekenmodel', $rows[1]['cells']['Naam']);
+		$this->assertSame('APP-test123', $rows[1]['cells']['Middel-ID']);
+	}//end testAFormulaYieldsItsCachedValue()
+
+	/**
+	 * The reader source never calls the calculation engine nor an HTTP client.
+	 *
+	 * @return void
+	 */
+	public function testTheReaderNeverEvaluatesOrFetches(): void {
+		$source = (string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Service/Cmdb/CmdbWorkbookReader.php');
+		$code = (string)preg_replace('#/\*.*?\*/|//[^\n]*#s', '', $source);
+
+		$this->assertStringNotContainsString('getCalculatedValue', $code);
+		$this->assertStringNotContainsString('toArray', $code);
+		$this->assertStringNotContainsString('Calculation', $code);
+		$this->assertDoesNotMatchRegularExpression('/Http|Guzzle|curl_|file_get_contents\(\s*\$url/i', $code);
+		$this->assertStringContainsString('getOldCalculatedValue', $code);
+		$this->assertStringContainsString('setReadDataOnly(true)', $code);
+	}//end testTheReaderNeverEvaluatesOrFetches()
+
+	/**
+	 * Shuffled columns and decorated headers map to the same rows.
+	 *
+	 * @return void
+	 */
+	public function testShuffledColumnsMapTheSame(): void {
+		$original = $this->read(name: 'topdesk-export-anonymised.xlsx')['rows'];
+		$shuffled = $this->read(name: 'topdesk-shuffled-columns.xlsx')['rows'];
+
+		$this->assertCount(count($original), $shuffled);
+		foreach ($original as $index => $row) {
+			$expected = $row['cells'];
+			$actual = $shuffled[$index]['cells'];
+			ksort($expected);
+			ksort($actual);
+			$this->assertSame($expected, $actual);
+		}
+	}//end testShuffledColumnsMapTheSame()
+
+	/**
+	 * A source sheet without Middel-ID stops the import, naming column and sheet.
+	 *
+	 * @return void
+	 */
+	public function testAMissingRequiredColumnIsNamed(): void {
+		try {
+			$this->read(name: 'topdesk-missing-middel-id.xlsx');
+			$this->fail('MISSING_COLUMN expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MISSING_COLUMN', $e->getErrorCode());
+			$this->assertSame(422, $e->getHttpStatus());
+			$this->assertSame(['sheet' => 'Invoer APP data', 'column' => 'Middel-ID'], $e->getDetails());
+		}
+	}//end testAMissingRequiredColumnIsNamed()
+
+	/**
+	 * A workbook with only "Blad1" names both expected sheets.
+	 *
+	 * @return void
+	 */
+	public function testAWorkbookWithoutSourceSheetsIsRefused(): void {
+		try {
+			$this->read(name: 'topdesk-no-source-sheet.xlsx');
+			$this->fail('NO_SOURCE_SHEET expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('NO_SOURCE_SHEET', $e->getErrorCode());
+			$this->assertSame(['expected' => ['Invoer AIA data', 'Invoer APP data']], $e->getDetails());
+		}
+	}//end testAWorkbookWithoutSourceSheetsIsRefused()
+
+	/**
+	 * More non-empty rows than the profile allows stops the import.
+	 *
+	 * @return void
+	 */
+	public function testTooManyRowsIsRefused(): void {
+		$this->requireSpreadsheet();
+		$directory = sys_get_temp_dir() . '/stackiq-cmdb-profile-' . bin2hex(random_bytes(4));
+		mkdir($directory);
+		$shipped = CmdbTestSupport::appRoot() . '/lib/Settings/cmdb-import';
+		foreach (glob($shipped . '/*.json') as $file) {
+			copy($file, $directory . '/' . basename($file));
+		}
+
+		$profile = json_decode((string)file_get_contents($directory . '/topdesk-profile.json'), true);
+		$profile['maxRowsPerSheet'] = 0;
+		file_put_contents($directory . '/topdesk-profile.json', json_encode($profile));
+
+		try {
+			(new CmdbWorkbookReader())->read(path: CmdbTestSupport::fixtures() . '/topdesk-export-anonymised.xlsx', profile: $this->profile(directory: $directory));
+			$this->fail('TOO_MANY_ROWS expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('TOO_MANY_ROWS', $e->getErrorCode());
+			$this->assertSame(422, $e->getHttpStatus());
+		} finally {
+			array_map('unlink', glob($directory . '/*.json'));
+			rmdir($directory);
+		}
+	}//end testTooManyRowsIsRefused()
+
+	/**
+	 * A text file named .xlsx, a .xlsm and a CSV are refused before PhpSpreadsheet is touched.
+	 *
+	 * @return void
+	 */
+	public function testNonXlsxIsRefusedBeforeParsing(): void {
+		$reader = new CmdbWorkbookReader();
+		$text = tempnam(sys_get_temp_dir(), 'cmdb');
+		file_put_contents($text, "Naam;Middel-ID\nVoorbeeld;APP-1\n");
+		$cases = [
+			[$text, 'export.xlsx'],
+			[CmdbTestSupport::fixtures() . '/topdesk-export-anonymised.xlsx', 'export.xlsm'],
+			[$text, 'applications.csv'],
+			[CmdbTestSupport::fixtures() . '/topdesk-export-anonymised.xlsx', 'export.xls'],
+		];
+
+		try {
+			foreach ($cases as [$path, $name]) {
+				try {
+					$reader->assertXlsx(path: $path, fileName: $name);
+					$this->fail('NOT_XLSX expected for ' . $name);
+				} catch (CmdbImportException $e) {
+					$this->assertSame('NOT_XLSX', $e->getErrorCode(), $name);
+					$this->assertSame(400, $e->getHttpStatus(), $name);
+				}
+			}
+
+			// A ZIP without xl/workbook.xml.
+			$zipPath = tempnam(sys_get_temp_dir(), 'cmdb') . '.xlsx';
+			$zip = new \ZipArchive();
+			$zip->open($zipPath, \ZipArchive::CREATE);
+			$zip->addFromString('word/document.xml', '<x/>');
+			$zip->close();
+			try {
+				$reader->assertXlsx(path: $zipPath, fileName: 'export.xlsx');
+				$this->fail('NOT_XLSX expected for a zip without a workbook');
+			} catch (CmdbImportException $e) {
+				$this->assertSame('NOT_XLSX', $e->getErrorCode());
+			} finally {
+				unlink($zipPath);
+			}
+		} finally {
+			unlink($text);
+		}
+
+		$this->assertTrue(true);
+	}//end testNonXlsxIsRefusedBeforeParsing()
+
+	/**
+	 * Without PhpSpreadsheet the reader answers READER_UNAVAILABLE.
+	 *
+	 * @return void
+	 */
+	public function testAMissingReaderIsReported(): void {
+		$reader = new class extends CmdbWorkbookReader {
+			/**
+			 * PhpSpreadsheet is absent.
+			 *
+			 * @return bool
+			 */
+			public function isAvailable(): bool {
+				return false;
+			}//end isAvailable()
+		};
+
+		try {
+			$reader->read(path: CmdbTestSupport::fixtures() . '/topdesk-export-anonymised.xlsx', profile: $this->profile());
+			$this->fail('READER_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('READER_UNAVAILABLE', $e->getErrorCode());
+			$this->assertSame(503, $e->getHttpStatus());
+		}
+	}//end testAMissingReaderIsReported()
+
+	/**
+	 * Headers match after trimming, collapsing whitespace, dropping a trailing ":" or "⚡" and lower-casing.
+	 *
+	 * @return void
+	 */
+	public function testHeadersAreNormalised(): void {
+		$this->assertSame('groepseigenaar mail', CmdbWorkbookReader::normaliseHeader(header: 'Groepseigenaar mail⚡'));
+		$this->assertSame('ib bewaartermijn', CmdbWorkbookReader::normaliseHeader(header: ' IB  Bewaartermijn: '));
+		$this->assertSame('middel-id', CmdbWorkbookReader::normaliseHeader(header: 'MIDDEL-ID'));
+	}//end testHeadersAreNormalised()
+}//end class

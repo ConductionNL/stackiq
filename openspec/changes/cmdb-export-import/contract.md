@@ -21,7 +21,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 | `municipalityName` | string | one of the two | | name of a Municipality to reuse (same normalised name) or create |
 | `updateExisting` | `true`/`false` | no | `true` | `false` reports matched rows as skipped (`exists`) |
 | `missingRecords` | string | no | `keep` | only `keep` is accepted; `mark` and `remove` are reserved |
-| `operationId` | string | no | generated | progress operation id, readable through `GET /api/progress/{operationId}` |
+| `operationId` | string | no | generated | progress operation id, readable through `GET /api/progress/{operationId}`; `cmdb-` followed by 8 to 64 letters, digits or hyphens (for example `cmdb-` plus a uuid v4). Any other value is replaced by a generated id, returned as `operationId` |
 
 **Response (200):**
 ```json
@@ -30,7 +30,7 @@ Paths are relative to `/index.php/apps/stackiq`.
   "operationId": "cmdb-00000000-0000-0000-0000-000000000000",
   "cancelled": false,
   "municipality": { "uuid": "00000000-0000-0000-0000-000000000001", "name": "Gemeente Voorbeeldstad", "created": false },
-  "summary": { "rowsRead": 2, "created": 2, "updated": 0, "unchanged": 0, "skipped": 0, "failed": 0, "warnings": 0 },
+  "summary": { "rowsRead": 2, "processed": 2, "created": 2, "updated": 0, "unchanged": 0, "skipped": 0, "failed": 0, "warnings": 0 },
   "importWarnings": [
     { "sheet": "Invoer AIA data", "message": "Optional column \"ICT TIME Classificatie\" not found" }
   ],
@@ -50,7 +50,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 }
 ```
 
-`outcome` is one of `created`, `updated`, `unchanged`, `skipped`, `failed`. `reasons` and `warnings` are strings that name columns and values. They never contain owner names, e-mail addresses or other person data.
+`outcome` is one of `created`, `updated`, `unchanged`, `skipped`, `failed`. `reasons` and `warnings` are translated strings that name columns and values. They never contain owner names, e-mail addresses or other person data. `summary.rowsRead` counts the non-empty rows in the workbook; `summary.processed` counts the rows in `rows`, which is lower than `rowsRead` only after a cancel. `summary.warnings` counts row warnings; `importWarnings` are not included.
 
 **Errors:**
 | Code | Condition |
@@ -62,9 +62,9 @@ Paths are relative to `/index.php/apps/stackiq`.
 | 413  | `FILE_TOO_LARGE` |
 | 422  | `MISSING_RECORDS_UNSUPPORTED`, `MUNICIPALITY_REQUIRED`, `MUNICIPALITY_INVALID`, `NO_SOURCE_SHEET`, `MISSING_COLUMN`, `TOO_MANY_ROWS` |
 | 500  | `IMPORT_FAILED` (unexpected; generic message, details only in the log) |
-| 503  | `MAPPING_UNAVAILABLE`, `READER_UNAVAILABLE` |
+| 503  | `MAPPING_UNAVAILABLE`, `READER_UNAVAILABLE`, `NOT_CONFIGURED` |
 
-Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Invoer AIA data", "Invoer APP data"]}`.
+Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Invoer AIA data", "Invoer APP data"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`.
 
 ### `POST /api/cmdb-import/{operationId}/cancel`
 **Auth**: Nextcloud admin session plus CSRF token.
@@ -84,7 +84,7 @@ Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>
 | 412  | missing or invalid CSRF token |
 
 ### `GET /api/progress/{operationId}` (existing, unchanged)
-Returns the `ProgressTracker` snapshot for the `cmdb_import` operation. After completion, `progress.statistics.report` holds the report from the 200 response above, for as long as the tracker keeps the entry (one hour).
+Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progress.total_items` is the number of non-empty rows read and `progress.processed_items` the rows done so far, updated after every row. `progress.status` is `running`, `completed` or `cancelled`. After completion, `progress.statistics.report` holds the report from the 200 response above, for as long as the tracker keeps the entry (one hour).
 
 ## Error Codes
 
@@ -101,6 +101,7 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation. After co
 | `TOO_MANY_ROWS` | file too large to process | a source sheet has more non-empty rows than `maxRowsPerSheet` (10,000) |
 | `MAPPING_UNAVAILABLE` | mapping cannot run | OpenRegister's `MappingEngine`/`PackDefinitionValidator` missing, or a shipped pack is invalid |
 | `READER_UNAVAILABLE` | xlsx reader missing | PhpSpreadsheet's Xlsx reader cannot be loaded |
+| `NOT_CONFIGURED` | stackiq not configured (503) | OpenRegister's object service, the stackiq register, or the `module`, `organization`, `usage` or `contactPerson` schema cannot be resolved; checked before the file is read |
 | `OPERATION_NOT_FOUND` | unknown operation | cancel for an id without a `cmdb_import` operation |
 | `IMPORT_FAILED` | unexpected error | anything not listed above |
 

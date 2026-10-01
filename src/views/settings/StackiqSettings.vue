@@ -85,6 +85,9 @@
 		<!-- ArchiMate Import/Export Section -->
 		<ArchiMateImportExport />
 
+		<!-- CMDB (TOPdesk export) Import Section -->
+		<CmdbImport />
+
 		<!-- Email Configuration Section -->
 		<EmailConfiguration />
 
@@ -131,6 +134,7 @@ import { defineComponent } from 'vue'
 import Web from 'vue-material-design-icons/Web.vue'
 import AlwaysVisibleSection from '../../components/AlwaysVisibleSection.vue'
 import ArchiMateImportExport from './sections/ArchiMateImportExport.vue'
+import CmdbImport from './sections/CmdbImport.vue'
 import CronjobConfiguration from './sections/CronjobConfiguration.vue'
 import EmailConfiguration from './sections/EmailConfiguration.vue'
 import EolSyncSettings from './sections/EolSyncSettings.vue'
@@ -160,6 +164,7 @@ export default defineComponent({
 		UserGroupsConfiguration,
 		OrganizationSynchronization,
 		ArchiMateImportExport,
+		CmdbImport,
 		EmailConfiguration,
 		CronjobConfiguration,
 		ModerationQueue,

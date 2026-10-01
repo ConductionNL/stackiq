@@ -1,0 +1,12 @@
+{
+  "id": "stackiq-topdesk-manufacturer",
+  "name": "TOPdesk CMDB export to stackiq supplier organisation",
+  "description": "The Fabrikant column becomes one organisation of type Supplier per distinct name. An empty Fabrikant means the row has no provider.",
+  "sourceFormat": "excel",
+  "version": "1.0.0",
+  "fieldMappings": [
+    { "source": "Fabrikant", "target": "name", "required": true, "transform": { "type": "trim" } }
+  ],
+  "defaults": { "type": "Supplier", "status": "Active" },
+  "idStrategy": { "type": "generate" }
+}
