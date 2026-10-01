@@ -33,6 +33,7 @@ use OCA\Stackiq\Controller\ContactpersonenController;
 use OCA\Stackiq\Dashboard\ConceptOrganisatiesWidget;
 use OCA\Stackiq\EventListener\DecisionConcludedListener;
 use OCA\Stackiq\EventListener\MaintenanceRecipientsListener;
+use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\EventListener\ModuleComplianceSubscriber;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\TestEventListener;
@@ -810,6 +811,10 @@ class Application extends App implements IBootstrap {
 
 		// Queue the owner resolution when a supplier announces maintenance (lifecycle-maintenance-and-supplier-roadmap).
 		$context->registerEventListener(ObjectCreatedEvent::class, MaintenanceRecipientsListener::class);
+
+		// A module version is public only while its application is (publication-field-rules).
+		$context->registerEventListener(ObjectCreatedEvent::class, ModuleVersionPublicationListener::class);
+		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class);
 
 		// Sync user profile updates into the contactpersoon mirror.
 		$context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);

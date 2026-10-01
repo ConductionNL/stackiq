@@ -1677,7 +1677,10 @@ class SettingsService {
 								continue;
 							}
 
-							$softwareCatalogSettings = self::deepMergeConfig(base: $softwareCatalogSettings, overlay: $fragmentData);
+							$softwareCatalogSettings = self::keepHighestSchemaVersions(
+								before: $softwareCatalogSettings,
+								after: self::deepMergeConfig(base: $softwareCatalogSettings, overlay: $fragmentData)
+							);
 							$fragmentSig .= basename($fragmentFile) . ':' . md5($fragmentContent) . ';';
 						}
 					}//end if
@@ -7344,6 +7347,35 @@ class SettingsService {
 	public function setEolSyncStatus(array $status): void {
 		$this->config->setValueString($this->appName, self::EOL_SYNC_STATUS_KEY, json_encode($status));
 	}//end setEolSyncStatus()
+
+	/**
+	 * After a fragment merge, give every schema the highest version any file declared.
+	 *
+	 * A fragment's scalar `version` overwrites the one before it, so with plain
+	 * merging the fragment that sorts LAST decides a schema's version. A later
+	 * fragment that raised a version lost it to an earlier-named one that set a
+	 * lower number, and OpenRegister skips a schema whose version did not go up,
+	 * so the later fragment's properties never deployed. The highest number wins
+	 * instead, whatever the file names.
+	 *
+	 * @param array<string, mixed> $before The register before this fragment.
+	 * @param array<string, mixed> $after  The register after merging it.
+	 *
+	 * @return array<string, mixed> The merged register with the highest version per schema.
+	 *
+	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-003-a-fragment-never-lowers-a-schema-version
+	 */
+	private static function keepHighestSchemaVersions(array $before, array $after): array {
+		foreach (($after['components']['schemas'] ?? []) as $key => $schema) {
+			$previous = (string) ($before['components']['schemas'][$key]['version'] ?? '');
+			$current  = (string) ($schema['version'] ?? '');
+			if ($previous !== '' && ($current === '' || version_compare($previous, $current, '>') === true)) {
+				$after['components']['schemas'][$key]['version'] = $previous;
+			}
+		}
+
+		return $after;
+	}//end keepHighestSchemaVersions()
 
 	/**
 	 * Deep-merge a register fragment onto the base config (ADR-037).

@@ -1,0 +1,486 @@
+{
+  "$comment": "publication-field-rules: what of stackiq stays private when lane oc-pub publishes the landscape through OpenCatalogi. Property read rules keep contacts, owners, costs, service desk references and internal assessments for signed-in users; anonymous readers never get them. usage becomes public only from its publicationDate. moduleVersion follows its application's publication through two mirrored fields. A fragment REPLACES an authorization list, so usage carries all its existing read rules plus the public one; usage.interneAnnotation and organization.contactpersonen keep the rules they already have.",
+  "components": {
+    "schemas": {
+      "module": {
+        "version": "0.3.5",
+        "properties": {
+          "contactPerson": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "usages": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "dpiaDocumentRef": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "verwerkingsregisterRef": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          }
+        }
+      },
+      "moduleVersion": {
+        "version": "0.1.6",
+        "properties": {
+          "usages": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "modulePublicationDate": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Application published",
+            "description": "The publication date of the application this version belongs to, copied from it. A version is public only while its application is.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 90
+          },
+          "moduleRegisteredBy": {
+            "type": "string",
+            "enum": [
+              "Municipality",
+              "Application",
+              "Collaboration",
+              "Supplier"
+            ],
+            "title": "Application registered by",
+            "description": "Who registered the application this version belongs to, copied from it. A supplier's application is public, and so are its versions.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 91
+          }
+        },
+        "authorization": {
+          "read": [
+            "authenticated",
+            {
+              "group": "public",
+              "match": {
+                "modulePublicationDate": {
+                  "$lte": "$now"
+                }
+              }
+            },
+            {
+              "group": "public",
+              "match": {
+                "moduleRegisteredBy": "Supplier"
+              }
+            }
+          ]
+        }
+      },
+      "suite": {
+        "version": "0.1.5",
+        "properties": {
+          "contactPerson": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          }
+        }
+      },
+      "catalogService": {
+        "version": "0.2.2",
+        "properties": {
+          "contactPerson": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          }
+        }
+      },
+      "connection": {
+        "version": "0.3.5",
+        "properties": {
+          "longDescription": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "dateInDevelopment": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "dateInUse": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "dateEndSupport": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "dateWithdrawn": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "nonMunicipalProvision": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "realisedWithIntermediaryModule": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "provider": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "service": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "registeredBy": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "serviceDeskSystem": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "serviceDeskRecordId": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "serviceDeskUrl": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "serviceDeskSyncedAt": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          }
+        }
+      },
+      "usage": {
+        "version": "1.5.5",
+        "properties": {
+          "provider": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "contactPerson": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "businessOwner": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "technicalOwner": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "participants": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "startDateAcquisition": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "startDatePlanned": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "startDateOutPhasing": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "startDateOutPhased": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "amefElements": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "elementRef": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "plannedReplacement": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "plannedReplacementDate": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "timeClassification": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "timeRationale": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "timeReviewDate": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "installedVersion": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "serviceDeskSystem": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "serviceDeskRecordId": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "serviceDeskUrl": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "serviceDeskSyncedAt": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "businessValue": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "technicalFit": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "riskScore": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "scoredOn": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "suggestedTimeClassification": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          }
+        },
+        "authorization": {
+          "read": [
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "consumer": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "provider": "$organisation"
+              }
+            },
+            {
+              "group": "public",
+              "match": {
+                "publicationDate": {
+                  "$lte": "$now"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "organization": {
+        "version": "0.5.3",
+        "properties": {
+          "contactsUid": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "xml": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "pki": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "registrationStatus": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "mergedInto": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
