@@ -326,6 +326,31 @@ class ConnectionsDeclarationTest extends TestCase {
 	}//end testFederationAndTheFeedAreReportedOnly()
 
 	/**
+	 * The service desk exchange is reported only, and its switch is the setting the set-up writes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-007-the-cmdb-page-says-what-stackiq-is
+	 */
+	public function testTheServiceDeskExchangeIsReportedAndSwitchedByTheSetUp(): void {
+		$itsm = $this->connectionsByKey()['itsm'];
+
+		$this->assertTrue(condition: $itsm['reportedOnly']);
+		$this->assertSame(expected: ['configKey' => 'itsm_exchange_enabled'], actual: $itsm['switch']);
+		$this->assertSame(expected: '/settings/admin/stackiq#section-itsm', actual: $itsm['settingsUrl']);
+		$this->assertArrayNotHasKey(key: 'sourceTemplate', array: $itsm, message: 'the admin picks the desk, so no single template fits');
+		$this->assertSame(expected: ConnectionReportService::KEY_ITSM, actual: $itsm['key']);
+
+		$service = (string) file_get_contents($this->root() . '/lib/Service/ItsmExchangeService.php');
+		$this->assertStringContainsString(needle: "ENABLED_KEY = 'itsm_exchange_enabled'", haystack: $service);
+		$this->assertStringContainsString(needle: 'setValueBool(Application::APP_ID, self::ENABLED_KEY, true)', haystack: $service);
+		$this->assertStringContainsString(needle: 'connectionReports?->itsmSetUp(', haystack: $service);
+
+		$section = (string) file_get_contents($this->root() . '/src/views/settings/sections/ItsmExchange.vue');
+		$this->assertStringContainsString(needle: 'id="section-itsm"', haystack: $section);
+	}//end testTheServiceDeskExchangeIsReportedAndSwitchedByTheSetUp()
+
+	/**
 	 * Federation and the end-of-life sync are switched off through the settings stackiq reads.
 	 *
 	 * Neither switch lists `offValues`, so integriq reads it as off when the

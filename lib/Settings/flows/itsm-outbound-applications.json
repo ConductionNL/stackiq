@@ -1,0 +1,454 @@
+{
+  "name": "Service desk export: applications in use (%DESK_LABEL%)",
+  "app": "stackiq",
+  "description": "Sends an application in use to the service desk when stackiq-owned fields change: licences, contract, BBN level, TIME class and publication. A record the service desk does not know yet is created there with every field, and its record id comes back. A change the import wrote is not sent back.",
+  "trigger": "object.updated",
+  "triggerRegister": "%REGISTER%",
+  "triggerSchema": "usage",
+  "executionMode": "async",
+  "limits": {
+    "maxTransitions": 5000
+  },
+  "nodes": [
+    {
+      "id": "on-created",
+      "type": "openregister.trigger-object",
+      "config": {
+        "event": "object.created",
+        "register": "%REGISTER%",
+        "schema": "usage"
+      }
+    },
+    {
+      "id": "on-updated",
+      "type": "openregister.trigger-object",
+      "config": {
+        "event": "object.updated",
+        "register": "%REGISTER%",
+        "schema": "usage"
+      }
+    },
+    {
+      "id": "ours",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "and": [
+            {
+              "==": [
+                {
+                  "var": "json.consumer"
+                },
+                "%CONSUMER%"
+              ]
+            },
+            {
+              "!!": {
+                "var": "json.module"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "read-module",
+      "type": "openregister.object-read",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "module",
+        "filters": {
+          "@self": {
+            "uuid": "{{ module }}"
+          }
+        },
+        "limit": 1,
+        "fanOut": false,
+        "output": "moduleRead"
+      }
+    },
+    {
+      "id": "ids",
+      "type": "openregister.set-fields",
+      "config": {
+        "compute": {
+          "providerId": {
+            "or": [
+              {
+                "var": "json.moduleRead.0.provider"
+              },
+              "00000000-0000-0000-0000-000000000000"
+            ]
+          },
+          "usageId": {
+            "var": "json.@self.id"
+          }
+        }
+      }
+    },
+    {
+      "id": "read-supplier",
+      "type": "openregister.object-read",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "organization",
+        "filters": {
+          "@self": {
+            "uuid": "{{ providerId }}"
+          }
+        },
+        "limit": 1,
+        "fanOut": false,
+        "output": "supplierRead"
+      }
+    },
+    {
+      "id": "read-contract",
+      "type": "openregister.object-read",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "catalogContract",
+        "filters": {
+          "usage": "{{ usageId }}"
+        },
+        "limit": 1,
+        "fanOut": false,
+        "output": "contractRead"
+      }
+    },
+    {
+      "id": "build",
+      "type": "openregister.set-fields",
+      "config": {
+        "set": {
+          "usage.uuid": "{{ @self.id }}",
+          "usage.catalogueUrl": "%APP_URL%/gebruik/{{ @self.id }}",
+          "usage.recordId": "{{ serviceDeskRecordId }}",
+          "usage.name": "{{ moduleRead.0.name }}",
+          "usage.supplierName": "{{ supplierRead.0.name }}",
+          "usage.installedVersion": "{{ installedVersion }}",
+          "usage.status": "{{ status }}",
+          "usage.bbnLevel": "{{ moduleRead.0.bbnLevel }}",
+          "usage.timeClassification": "{{ timeClassification }}",
+          "usage.publicationDate": "{{ publicationDate }}",
+          "usage.licencesBought": "{{ contractRead.0.licencesBought }}",
+          "usage.licencesInUse": "{{ contractRead.0.licencesInUse }}",
+          "usage.licenceMetric": "{{ contractRead.0.licenceMetric }}",
+          "usage.contractNumber": "{{ contractRead.0.contractNumber }}",
+          "usage.contractEndDate": "{{ contractRead.0.endDate }}"
+        }
+      }
+    },
+    {
+      "id": "owned",
+      "type": "openregister.set-fields",
+      "config": {
+        "set": {
+          "stackiqOwned.bbnLevel": "{{ usage.bbnLevel }}",
+          "stackiqOwned.timeClassification": "{{ usage.timeClassification }}",
+          "stackiqOwned.publicationDate": "{{ usage.publicationDate }}",
+          "stackiqOwned.licencesBought": "{{ usage.licencesBought }}",
+          "stackiqOwned.licencesInUse": "{{ usage.licencesInUse }}",
+          "stackiqOwned.licenceMetric": "{{ usage.licenceMetric }}",
+          "stackiqOwned.contractNumber": "{{ usage.contractNumber }}",
+          "stackiqOwned.contractEndDate": "{{ usage.contractEndDate }}"
+        }
+      }
+    },
+    {
+      "id": "worth-sending",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "or": [
+            {
+              "!": {
+                "var": "json.usage.recordId"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.stackiqOwned.bbnLevel"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.stackiqOwned.timeClassification"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.stackiqOwned.publicationDate"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.stackiqOwned.licencesBought"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.stackiqOwned.licencesInUse"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.stackiqOwned.licenceMetric"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.stackiqOwned.contractNumber"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.stackiqOwned.contractEndDate"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "map",
+      "type": "openconnector.apply-mapping",
+      "config": {
+        "mapping": "%PRESET%",
+        "input": "usage",
+        "output": "send",
+        "ownership": "outbound",
+        "exists": "usage.recordId"
+      }
+    },
+    {
+      "id": "decide",
+      "type": "openconnector.contract",
+      "config": {
+        "synchronization": "%SYNC%",
+        "idPosition": "usage.uuid",
+        "hashPosition": "stackiqOwned",
+        "output": "contract"
+      }
+    },
+    {
+      "id": "changed",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "in": [
+            {
+              "var": "json.contract.outcome"
+            },
+            [
+              "create",
+              "update"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "known",
+      "type": "openregister.set-fields",
+      "config": {
+        "compute": {
+          "syncedAt": {
+            "now": []
+          }
+        }
+      },
+      "exits": [
+        {
+          "id": "create",
+          "condition": {
+            "!": {
+              "var": "json.usage.recordId"
+            }
+          }
+        },
+        {
+          "id": "update"
+        }
+      ]
+    },
+    {
+      "id": "call-create",
+      "type": "openconnector.source-call",
+      "config": {
+        "source": "%SOURCE%",
+        "endpoint": "%CREATE_ENDPOINT%",
+        "method": "%CREATE_METHOD%",
+        "bodyFrom": "send",
+        "output": "response"
+      }
+    },
+    {
+      "id": "link-back",
+      "type": "openregister.object-write",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "usage",
+        "operation": "update",
+        "match": [
+          {
+            "property": "@self.uuid",
+            "value": "{{ usage.uuid }}"
+          }
+        ],
+        "fields": {
+          "serviceDeskSystem": "%DESK%",
+          "serviceDeskRecordId": "{{ response.body.%RESPONSE_ID% }}",
+          "serviceDeskUrl": "%RECORD_URL%",
+          "serviceDeskSyncedAt": "{{ syncedAt }}"
+        },
+        "output": "linked"
+      }
+    },
+    {
+      "id": "commit-create",
+      "type": "openconnector.contract-commit",
+      "config": {
+        "synchronization": "%SYNC%",
+        "contractPosition": "contract",
+        "targetIdPosition": "response.body.%RESPONSE_ID%",
+        "targetHashPosition": "send"
+      }
+    },
+    {
+      "id": "end-create",
+      "type": "openregister.end",
+      "config": {}
+    },
+    {
+      "id": "call-update",
+      "type": "openconnector.source-call",
+      "config": {
+        "source": "%SOURCE%",
+        "endpoint": "%UPDATE_ENDPOINT%",
+        "method": "%UPDATE_METHOD%",
+        "bodyFrom": "send",
+        "output": "response"
+      }
+    },
+    {
+      "id": "commit-update",
+      "type": "openconnector.contract-commit",
+      "config": {
+        "synchronization": "%SYNC%",
+        "contractPosition": "contract",
+        "targetIdPosition": "usage.recordId",
+        "targetHashPosition": "send"
+      }
+    },
+    {
+      "id": "end-update",
+      "type": "openregister.end",
+      "config": {}
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-on-created-ours",
+      "from": "on-created",
+      "to": "ours"
+    },
+    {
+      "id": "e-on-updated-ours",
+      "from": "on-updated",
+      "to": "ours"
+    },
+    {
+      "id": "e-ours-read-module",
+      "from": "ours",
+      "to": "read-module"
+    },
+    {
+      "id": "e-read-module-ids",
+      "from": "read-module",
+      "to": "ids"
+    },
+    {
+      "id": "e-ids-read-supplier",
+      "from": "ids",
+      "to": "read-supplier"
+    },
+    {
+      "id": "e-read-supplier-read-contract",
+      "from": "read-supplier",
+      "to": "read-contract"
+    },
+    {
+      "id": "e-read-contract-build",
+      "from": "read-contract",
+      "to": "build"
+    },
+    {
+      "id": "e-build-owned",
+      "from": "build",
+      "to": "owned"
+    },
+    {
+      "id": "e-owned-worth-sending",
+      "from": "owned",
+      "to": "worth-sending"
+    },
+    {
+      "id": "e-worth-sending-map",
+      "from": "worth-sending",
+      "to": "map"
+    },
+    {
+      "id": "e-map-decide",
+      "from": "map",
+      "to": "decide"
+    },
+    {
+      "id": "e-decide-changed",
+      "from": "decide",
+      "to": "changed"
+    },
+    {
+      "id": "e-changed-known",
+      "from": "changed",
+      "to": "known"
+    },
+    {
+      "id": "e-known-create",
+      "from": "known",
+      "to": "call-create",
+      "fromExit": "create"
+    },
+    {
+      "id": "e-known-update",
+      "from": "known",
+      "to": "call-update",
+      "fromExit": "update"
+    },
+    {
+      "id": "e-call-create-link-back",
+      "from": "call-create",
+      "to": "link-back"
+    },
+    {
+      "id": "e-link-back-commit-create",
+      "from": "link-back",
+      "to": "commit-create"
+    },
+    {
+      "id": "e-commit-create-end-create",
+      "from": "commit-create",
+      "to": "end-create"
+    },
+    {
+      "id": "e-call-update-commit-update",
+      "from": "call-update",
+      "to": "commit-update"
+    },
+    {
+      "id": "e-commit-update-end-update",
+      "from": "commit-update",
+      "to": "end-update"
+    }
+  ]
+}

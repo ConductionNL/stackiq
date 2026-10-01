@@ -84,6 +84,13 @@ class ConnectionReportService {
 	public const KEY_EOL = 'eol-feed';
 
 	/**
+	 * The service desk exchange connection key in lib/Settings/connections.json.
+	 *
+	 * @var string
+	 */
+	public const KEY_ITSM = 'itsm';
+
+	/**
 	 * The pull reason FederationService records for switched-off federation, which is never reported.
 	 *
 	 * The `federation` switch in lib/Settings/connections.json reads
@@ -383,6 +390,25 @@ class ConnectionReportService {
 
 		return (self::EOL_REASONS[$reason] ?? ['error', 'The last end-of-life sync stopped: ' . $this->shorten(text: $reason)]);
 	}//end describeEolRun()
+
+	/**
+	 * After the service desk exchange was set up: report what the set-up met.
+	 *
+	 * @param bool   $created Whether every flow was created.
+	 * @param string $message What the set-up found.
+	 *
+	 * @return bool True when a report was sent.
+	 *
+	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-007-the-cmdb-page-says-what-stackiq-is
+	 */
+	public function itsmSetUp(bool $created, string $message): bool {
+		$status = 'error';
+		if ($created === true) {
+			$status = 'configured';
+		}
+
+		return $this->report(key: self::KEY_ITSM, status: $status, message: $this->shorten(text: $message));
+	}//end itsmSetUp()
 
 	/**
 	 * Ask integriq to resolve one connection again.

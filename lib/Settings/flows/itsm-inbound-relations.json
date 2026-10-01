@@ -1,0 +1,308 @@
+{
+  "name": "Service desk import: relations (%DESK_LABEL%)",
+  "app": "stackiq",
+  "description": "Reads the relations between application records from the service desk and records them as connections between the applications. A relation whose ends are not imported yet waits for the next run.",
+  "trigger": "schedule",
+  "cron": "%CRON%",
+  "executionMode": "async",
+  "limits": {
+    "maxTransitions": 5000
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "type": "openregister.trigger-schedule",
+      "config": {
+        "cron": "%CRON%",
+        "runAs": "%RUN_AS%"
+      }
+    },
+    {
+      "id": "pages",
+      "type": "openconnector.source-paginate",
+      "config": {
+        "synchronization": "%SYNC%",
+        "output": "page"
+      }
+    },
+    {
+      "id": "each",
+      "type": "openregister.explode",
+      "config": {
+        "path": "page.results",
+        "as": "source"
+      }
+    },
+    {
+      "id": "map-all",
+      "type": "openconnector.apply-mapping",
+      "config": {
+        "mapping": "%PRESET%",
+        "input": "source",
+        "output": "record"
+      }
+    },
+    {
+      "id": "map-owned",
+      "type": "openconnector.apply-mapping",
+      "config": {
+        "mapping": "%PRESET%",
+        "input": "source",
+        "output": "owned",
+        "ownership": "inbound",
+        "exists": "record.recordId"
+      }
+    },
+    {
+      "id": "complete",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "and": [
+            {
+              "!!": {
+                "var": "json.record.recordId"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.record.fromRecordId"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.record.toRecordId"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "decide",
+      "type": "openconnector.contract",
+      "config": {
+        "synchronization": "%SYNC%",
+        "idPosition": "owned.recordId",
+        "hashPosition": "owned",
+        "output": "contract"
+      }
+    },
+    {
+      "id": "changed",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "in": [
+            {
+              "var": "json.contract.outcome"
+            },
+            [
+              "create",
+              "update"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "from",
+      "type": "openregister.object-read",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "usage",
+        "filters": {
+          "serviceDeskRecordId": "{{ record.fromRecordId }}"
+        },
+        "limit": 1,
+        "fanOut": false,
+        "output": "fromUsage"
+      }
+    },
+    {
+      "id": "to",
+      "type": "openregister.object-read",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "usage",
+        "filters": {
+          "serviceDeskRecordId": "{{ record.toRecordId }}"
+        },
+        "limit": 1,
+        "fanOut": false,
+        "output": "toUsage"
+      }
+    },
+    {
+      "id": "both-ends",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "and": [
+            {
+              "!!": {
+                "var": "json.fromUsage.0.module"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.toUsage.0.module"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "flags",
+      "type": "openregister.set-fields",
+      "config": {
+        "compute": {
+          "syncedAt": {
+            "now": []
+          },
+          "connectionName": {
+            "or": [
+              {
+                "var": "json.record.name"
+              },
+              {
+                "cat": [
+                  {
+                    "var": "json.record.fromRecordId"
+                  },
+                  " - ",
+                  {
+                    "var": "json.record.toRecordId"
+                  }
+                ]
+              }
+            ]
+          },
+          "connectionType": {
+            "or": [
+              {
+                "var": "json.record.type"
+              },
+              "n/a"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "connection",
+      "type": "openregister.object-write",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "connection",
+        "operation": "upsert",
+        "match": [
+          {
+            "property": "serviceDeskRecordId",
+            "value": "{{ owned.recordId }}"
+          }
+        ],
+        "fields": {
+          "name": "{{ connectionName }}",
+          "type": "{{ connectionType }}",
+          "dataExchangeDirection": "{{ owned.direction }}",
+          "moduleA": "{{ fromUsage.0.module }}",
+          "moduleB": "{{ toUsage.0.module }}",
+          "serviceDeskSystem": "%DESK%",
+          "serviceDeskRecordId": "{{ owned.recordId }}",
+          "serviceDeskUrl": "{{ owned.recordUrl }}",
+          "serviceDeskSyncedAt": "{{ syncedAt }}"
+        },
+        "output": "connectionWritten"
+      }
+    },
+    {
+      "id": "commit",
+      "type": "openconnector.contract-commit",
+      "config": {
+        "synchronization": "%SYNC%",
+        "contractPosition": "contract",
+        "targetIdPosition": "connectionWritten.uuid",
+        "targetHashPosition": "owned"
+      }
+    },
+    {
+      "id": "end",
+      "type": "openregister.end",
+      "config": {}
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-start-pages",
+      "from": "start",
+      "to": "pages"
+    },
+    {
+      "id": "e-pages-each",
+      "from": "pages",
+      "to": "each"
+    },
+    {
+      "id": "e-each-map-all",
+      "from": "each",
+      "to": "map-all"
+    },
+    {
+      "id": "e-map-all-map-owned",
+      "from": "map-all",
+      "to": "map-owned"
+    },
+    {
+      "id": "e-map-owned-complete",
+      "from": "map-owned",
+      "to": "complete"
+    },
+    {
+      "id": "e-complete-decide",
+      "from": "complete",
+      "to": "decide"
+    },
+    {
+      "id": "e-decide-changed",
+      "from": "decide",
+      "to": "changed"
+    },
+    {
+      "id": "e-changed-from",
+      "from": "changed",
+      "to": "from"
+    },
+    {
+      "id": "e-from-to",
+      "from": "from",
+      "to": "to"
+    },
+    {
+      "id": "e-to-both-ends",
+      "from": "to",
+      "to": "both-ends"
+    },
+    {
+      "id": "e-both-ends-flags",
+      "from": "both-ends",
+      "to": "flags"
+    },
+    {
+      "id": "e-flags-connection",
+      "from": "flags",
+      "to": "connection"
+    },
+    {
+      "id": "e-connection-commit",
+      "from": "connection",
+      "to": "commit"
+    },
+    {
+      "id": "e-commit-end",
+      "from": "commit",
+      "to": "end"
+    }
+  ]
+}

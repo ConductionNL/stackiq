@@ -1,0 +1,359 @@
+{
+  "name": "Service desk import: %FEED_LABEL% (%DESK_LABEL%)",
+  "app": "stackiq",
+  "description": "Reads licences or contracts from the service desk and records them on the application in use they belong to. A new one is created with every field; after that stackiq owns its licence and contract fields, and the import only refreshes the service desk reference.",
+  "trigger": "schedule",
+  "cron": "%CRON%",
+  "executionMode": "async",
+  "limits": {
+    "maxTransitions": 5000
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "type": "openregister.trigger-schedule",
+      "config": {
+        "cron": "%CRON%",
+        "runAs": "%RUN_AS%"
+      }
+    },
+    {
+      "id": "pages",
+      "type": "openconnector.source-paginate",
+      "config": {
+        "synchronization": "%SYNC%",
+        "output": "page"
+      }
+    },
+    {
+      "id": "each",
+      "type": "openregister.explode",
+      "config": {
+        "path": "page.results",
+        "as": "source"
+      }
+    },
+    {
+      "id": "map-all",
+      "type": "openconnector.apply-mapping",
+      "config": {
+        "mapping": "%PRESET%",
+        "input": "source",
+        "output": "record"
+      }
+    },
+    {
+      "id": "map-owned",
+      "type": "openconnector.apply-mapping",
+      "config": {
+        "mapping": "%PRESET%",
+        "input": "source",
+        "output": "owned",
+        "ownership": "inbound",
+        "exists": "record.recordId"
+      }
+    },
+    {
+      "id": "complete",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "and": [
+            {
+              "!!": {
+                "var": "json.record.recordId"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.record.applicationRecordId"
+              }
+            },
+            {
+              "!!": {
+                "var": "json.record.startDate"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "decide",
+      "type": "openconnector.contract",
+      "config": {
+        "synchronization": "%SYNC%",
+        "idPosition": "owned.recordId",
+        "hashPosition": "owned",
+        "output": "contract"
+      }
+    },
+    {
+      "id": "changed",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "in": [
+            {
+              "var": "json.contract.outcome"
+            },
+            [
+              "create",
+              "update"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "application",
+      "type": "openregister.object-read",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "usage",
+        "filters": {
+          "serviceDeskRecordId": "{{ record.applicationRecordId }}"
+        },
+        "limit": 1,
+        "fanOut": false,
+        "output": "usage"
+      }
+    },
+    {
+      "id": "has-application",
+      "type": "openregister.filter",
+      "config": {
+        "condition": {
+          "!!": {
+            "var": "json.usage.0.uuid"
+          }
+        }
+      }
+    },
+    {
+      "id": "flags",
+      "type": "openregister.set-fields",
+      "config": {
+        "compute": {
+          "isCreate": {
+            "!": {
+              "var": "json.contract.targetId"
+            }
+          },
+          "isUpdate": {
+            "!!": {
+              "var": "json.contract.targetId"
+            }
+          },
+          "noSupplier": {
+            "!": {
+              "var": "json.record.supplierName"
+            }
+          },
+          "syncedAt": {
+            "now": []
+          },
+          "contractNumber": {
+            "or": [
+              {
+                "var": "json.record.contractNumber"
+              },
+              {
+                "var": "json.record.vendorReference"
+              },
+              {
+                "var": "json.record.recordId"
+              }
+            ]
+          },
+          "contractType": {
+            "or": [
+              {
+                "var": "json.record.contractType"
+              },
+              "%CONTRACT_TYPE%"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "supplier",
+      "type": "openregister.object-write",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "organization",
+        "operation": "upsert",
+        "skipWhen": "noSupplier",
+        "match": [
+          {
+            "property": "name",
+            "value": "{{ record.supplierName }}"
+          },
+          {
+            "property": "type",
+            "value": "Supplier"
+          }
+        ],
+        "fields": {
+          "name": "{{ record.supplierName }}",
+          "type": "Supplier"
+        },
+        "output": "supplier"
+      }
+    },
+    {
+      "id": "contract-create",
+      "type": "openregister.object-write",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "catalogContract",
+        "operation": "upsert",
+        "skipWhen": "isUpdate",
+        "match": [
+          {
+            "property": "serviceDeskRecordId",
+            "value": "{{ record.recordId }}"
+          }
+        ],
+        "fields": {
+          "usage": "{{ usage.0.uuid }}",
+          "supplier": "{{ supplier.uuid }}",
+          "contractNumber": "{{ contractNumber }}",
+          "vendorReference": "{{ record.vendorReference }}",
+          "contractType": "{{ contractType }}",
+          "status": "Active",
+          "startDate": "{{ record.startDate }}",
+          "endDate": "{{ record.endDate }}",
+          "cost": "{{ record.cost }}",
+          "costPeriod": "{{ record.costPeriod }}",
+          "currency": "{{ record.currency }}",
+          "licenceMetric": "{{ record.licenceMetric }}",
+          "licencesBought": "{{ record.licencesBought }}",
+          "serviceDeskSystem": "%DESK%",
+          "serviceDeskRecordId": "{{ record.recordId }}",
+          "serviceDeskUrl": "{{ record.recordUrl }}",
+          "serviceDeskSyncedAt": "{{ syncedAt }}"
+        },
+        "output": "contractWritten"
+      }
+    },
+    {
+      "id": "contract-update",
+      "type": "openregister.object-write",
+      "config": {
+        "register": "%REGISTER%",
+        "schema": "catalogContract",
+        "operation": "update",
+        "skipWhen": "isCreate",
+        "match": [
+          {
+            "property": "@self.uuid",
+            "value": "{{ contract.targetId }}"
+          }
+        ],
+        "fields": {
+          "usage": "{{ usage.0.uuid }}",
+          "supplier": "{{ supplier.uuid }}",
+          "serviceDeskSystem": "%DESK%",
+          "serviceDeskRecordId": "{{ owned.recordId }}",
+          "serviceDeskUrl": "{{ owned.recordUrl }}",
+          "serviceDeskSyncedAt": "{{ syncedAt }}"
+        },
+        "output": "contractWritten"
+      }
+    },
+    {
+      "id": "commit",
+      "type": "openconnector.contract-commit",
+      "config": {
+        "synchronization": "%SYNC%",
+        "contractPosition": "contract",
+        "targetIdPosition": "contractWritten.uuid",
+        "targetHashPosition": "owned"
+      }
+    },
+    {
+      "id": "end",
+      "type": "openregister.end",
+      "config": {}
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-start-pages",
+      "from": "start",
+      "to": "pages"
+    },
+    {
+      "id": "e-pages-each",
+      "from": "pages",
+      "to": "each"
+    },
+    {
+      "id": "e-each-map-all",
+      "from": "each",
+      "to": "map-all"
+    },
+    {
+      "id": "e-map-all-map-owned",
+      "from": "map-all",
+      "to": "map-owned"
+    },
+    {
+      "id": "e-map-owned-complete",
+      "from": "map-owned",
+      "to": "complete"
+    },
+    {
+      "id": "e-complete-decide",
+      "from": "complete",
+      "to": "decide"
+    },
+    {
+      "id": "e-decide-changed",
+      "from": "decide",
+      "to": "changed"
+    },
+    {
+      "id": "e-changed-application",
+      "from": "changed",
+      "to": "application"
+    },
+    {
+      "id": "e-application-has-application",
+      "from": "application",
+      "to": "has-application"
+    },
+    {
+      "id": "e-has-application-flags",
+      "from": "has-application",
+      "to": "flags"
+    },
+    {
+      "id": "e-flags-supplier",
+      "from": "flags",
+      "to": "supplier"
+    },
+    {
+      "id": "e-supplier-contract-create",
+      "from": "supplier",
+      "to": "contract-create"
+    },
+    {
+      "id": "e-contract-create-contract-update",
+      "from": "contract-create",
+      "to": "contract-update"
+    },
+    {
+      "id": "e-contract-update-commit",
+      "from": "contract-update",
+      "to": "commit"
+    },
+    {
+      "id": "e-commit-end",
+      "from": "commit",
+      "to": "end"
+    }
+  ]
+}
