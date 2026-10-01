@@ -118,6 +118,15 @@ class ItsmFlowGateway {
 			$uuid = null;
 		}
 
+		// A published version is immutable: open a draft first, so a second
+		// set-up edits the flow instead of being refused.
+		if ($uuid !== null) {
+			$existing = $flows->find($uuid);
+			if ((string) $existing->getLifecycleStatus() !== 'draft') {
+				$this->service(class: self::VERSIONS)->createDraft($existing);
+			}
+		}
+
 		$saved = $flows->save($flow, $uuid);
 		$this->service(class: self::VERSIONS)->publish($saved);
 
