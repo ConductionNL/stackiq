@@ -29,6 +29,7 @@ import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
+import CmdbOverview from './views/cmdb/CmdbOverview.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
@@ -139,6 +140,13 @@ export default {
 	// aggregation dashboard no built-in index/detail type expresses; stays custom
 	// until the lib grows a declarative aggregation/rollup widget.
 	LicensePostureView,
+
+	// --- CMDB overview (sharing-itsm-exchange). ---
+	// Says what stackiq records as a CMDB and what it does not, links to the
+	// four lists, shows the service desk exchange from GET /api/itsm/status and
+	// takes a file import (POST /api/itsm/import, admin only). A mixed page of
+	// prose, a status and an upload form; no built-in page type holds that.
+	CmdbOverview,
 
 	// --- Lib gap: live GEMMA-dimension facet counts on the module/dienst index pages. ---
 	// CnIndexPage's own embedded `sidebar.enabled` facet machinery treats every

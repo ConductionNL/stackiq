@@ -106,7 +106,7 @@ An administrator SHALL be able to import applications from a CSV or XLSX file wh
 
 ### Requirement: REQ-ITX-007 The CMDB page says what stackiq is
 
-Stackiq SHALL have a CMDB page that names what it records (applications, components, connections, licences and contracts) and what it does not (hardware, network discovery, tickets), links to each list, shows the service desk exchange and the outcome of its last run, and offers the file import to admins. A usage SHALL show its service desk link, and Applications in use SHALL have a Service desk column. The Integrations page SHALL list the service desk exchange.
+Stackiq SHALL have a CMDB page that names what it records (applications, components, connections, licences and contracts) and what it does not (hardware, network discovery, tickets), links to each list, shows the service desk exchange and the outcome of its last run, and offers the file import to admins. A usage SHALL show its service desk reference and link on its page, and Applications in use SHALL have a Service desk column. The Integrations page SHALL list the service desk exchange.
 
 #### Scenario: An information manager opens the CMDB page
 @e2e tests/e2e/workflows/itsm-exchange.spec.ts
@@ -121,4 +121,5 @@ Stackiq SHALL have a CMDB page that names what it records (applications, compone
 
 - **GIVEN** a usage linked to service desk record A-123
 - **WHEN** the information manager opens Applications in use
-- **THEN** the Service desk column shows A-123 and opens the record in the service desk
+- **THEN** the Service desk column shows A-123
+- **AND** the usage page shows the link that opens the record in the service desk

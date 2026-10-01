@@ -1,0 +1,21 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "sharing-itsm-exchange: the CMDB page says what stackiq records (applications in use, applications and their components, connections, licences and contracts) and what it does not (hardware, network discovery, tickets), shows the service desk exchange and takes a file import. A child of Applications (ADR-097: no new top-level entry). Custom because it mixes prose, a status and an upload form; see customComponents.js.",
+	"menu": [
+		{
+			"id": "Modules",
+			"children": [
+				{ "id": "Cmdb", "label": "CMDB", "icon": "Sitemap", "route": "Cmdb", "order": 1 }
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Cmdb",
+			"route": "/cmdb",
+			"type": "custom",
+			"title": "CMDB",
+			"component": "CmdbOverview"
+		}
+	]
+}

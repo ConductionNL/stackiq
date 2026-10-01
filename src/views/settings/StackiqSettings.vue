@@ -116,6 +116,9 @@
 		<!-- End-of-life Feed Sync Section -->
 		<EolSyncSettings />
 
+		<!-- Service desk exchange (sharing-itsm-exchange) -->
+		<ItsmExchange />
+
 		<!-- Background Jobs Configuration Section -->
 		<CronjobConfiguration />
 	</CnAdminSettingsShell>
@@ -135,6 +138,7 @@ import CronjobConfiguration from './sections/CronjobConfiguration.vue'
 import EmailConfiguration from './sections/EmailConfiguration.vue'
 import EolSyncSettings from './sections/EolSyncSettings.vue'
 import FederationSettings from './sections/FederationSettings.vue'
+import ItsmExchange from './sections/ItsmExchange.vue'
 import ModerationQueue from './sections/ModerationQueue.vue'
 import OpenRegisterIntegration from './sections/OpenRegisterIntegration.vue'
 import OrganizationSynchronization from './sections/OrganizationSynchronization.vue'
@@ -165,6 +169,7 @@ export default defineComponent({
 		ModerationQueue,
 		FederationSettings,
 		EolSyncSettings,
+		ItsmExchange,
 		AlwaysVisibleSection,
 		Web,
 	},
