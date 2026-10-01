@@ -1074,6 +1074,16 @@
         "step \"%1$s\" failed: %2$s": "stap \"%1$s\" mislukt: %2$s",
         "step \"%s\" failed": "stap \"%s\" mislukt",
         "Column \"%s\": formula without a cached value, read as empty": "Kolom \"%s\": formule zonder opgeslagen waarde, gelezen als leeg",
-        "Formula cells are read as the value Excel saved with the workbook; formulas are never calculated. Save the workbook in Excel before importing it.": "Formulecellen worden gelezen als de waarde die Excel bij de werkmap heeft opgeslagen; formules worden nooit berekend. Sla de werkmap op in Excel voordat u hem importeert."
+        "Formula cells are read as the value Excel saved with the workbook; formulas are never calculated. Save the workbook in Excel before importing it.": "Formulecellen worden gelezen als de waarde die Excel bij de werkmap heeft opgeslagen; formules worden nooit berekend. Sla de werkmap op in Excel voordat u hem importeert.",
+        "Source id": "Bron-id",
+        "The code of the application in the source system it was imported from, such as the TOPdesk Applicatie Code (the Middel-ID). Shown for reference; it can change in the source, so it is not used to match records.": "De code van de applicatie in het bronsysteem waaruit ze is geïmporteerd, zoals de TOPdesk Applicatie Code (het Middel-ID). Ter informatie; ze kan in de bron veranderen, dus records worden er niet op gekoppeld.",
+        "Source number": "Bronnummer",
+        "The application number in the source system, such as TOPdesk's APPID (ICT Applicatienummer). A repeated CMDB import matches on it, through the import key.": "Het applicatienummer in het bronsysteem, zoals het APPID van TOPdesk (ICT Applicatienummer). Een herhaalde CMDB-import koppelt erop, via de importsleutel.",
+        "Import key": "Importsleutel",
+        "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; do not edit.": "De sleutel waarop een herhaalde import deze applicatie koppelt: topdesk:<uuid van de gemeente>:<APPID>. Gezet door de CMDB-import; niet aanpassen.",
+        "Created in source": "Aangemaakt in de bron",
+        "The date the application was registered in the source system.": "De datum waarop de applicatie in het bronsysteem is geregistreerd.",
+        "Changed in source": "Gewijzigd in de bron",
+        "The date the application was last changed in the source system.": "De datum waarop de applicatie in het bronsysteem het laatst is gewijzigd."
     }
 }

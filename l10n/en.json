@@ -1004,6 +1004,16 @@
         "step \"%1$s\" failed: %2$s": "step \"%1$s\" failed: %2$s",
         "step \"%s\" failed": "step \"%s\" failed",
         "Column \"%s\": formula without a cached value, read as empty": "Column \"%s\": formula without a cached value, read as empty",
-        "Formula cells are read as the value Excel saved with the workbook; formulas are never calculated. Save the workbook in Excel before importing it.": "Formula cells are read as the value Excel saved with the workbook; formulas are never calculated. Save the workbook in Excel before importing it."
+        "Formula cells are read as the value Excel saved with the workbook; formulas are never calculated. Save the workbook in Excel before importing it.": "Formula cells are read as the value Excel saved with the workbook; formulas are never calculated. Save the workbook in Excel before importing it.",
+        "Source id": "Source id",
+        "The code of the application in the source system it was imported from, such as the TOPdesk Applicatie Code (the Middel-ID). Shown for reference; it can change in the source, so it is not used to match records.": "The code of the application in the source system it was imported from, such as the TOPdesk Applicatie Code (the Middel-ID). Shown for reference; it can change in the source, so it is not used to match records.",
+        "Source number": "Source number",
+        "The application number in the source system, such as TOPdesk's APPID (ICT Applicatienummer). A repeated CMDB import matches on it, through the import key.": "The application number in the source system, such as TOPdesk's APPID (ICT Applicatienummer). A repeated CMDB import matches on it, through the import key.",
+        "Import key": "Import key",
+        "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; do not edit.": "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; do not edit.",
+        "Created in source": "Created in source",
+        "The date the application was registered in the source system.": "The date the application was registered in the source system.",
+        "Changed in source": "Changed in source",
+        "The date the application was last changed in the source system.": "The date the application was last changed in the source system."
     }
 }

@@ -26,7 +26,7 @@
  *
  * @link https://OpenRegister.app
  *
- * @spec openspec/specs/migration-mapping-packs/spec.md
+ * @spec exclude test copy of an OpenRegister class; its spec is migration-mapping-packs in the openregister repository
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use InvalidArgumentException;
 /**
  * Structural + business-rule validator for a migration-pack JSON document.
  *
- * @spec openspec/specs/migration-mapping-packs/spec.md
+ * @spec exclude test copy of an OpenRegister class; its spec is migration-mapping-packs in the openregister repository
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) One small, independently-testable validate*() method
  *     per pack-document field keeps each check simple; the class total sums them, not any single method.
@@ -81,7 +81,7 @@ class PackDefinitionValidator {
 	 *
 	 * @return string[] List of validation error messages. Empty when valid.
 	 *
-	 * @spec openspec/specs/migration-mapping-packs/spec.md#the-system-must-validate-migration-pack-definitions-structurally-before-storing-them
+	 * @spec exclude test copy of an OpenRegister class; its spec is migration-mapping-packs in the openregister repository
 	 */
 	public function validate(array $definition): array {
 		$errors = [];
@@ -107,7 +107,7 @@ class PackDefinitionValidator {
 	 *
 	 * @throws InvalidArgumentException When the definition is invalid. The message joins every error found.
 	 *
-	 * @spec openspec/specs/migration-mapping-packs/spec.md#the-system-must-validate-migration-pack-definitions-structurally-before-storing-them
+	 * @spec exclude test copy of an OpenRegister class; its spec is migration-mapping-packs in the openregister repository
 	 */
 	public function assertValid(array $definition): void {
 		$errors = $this->validate(definition: $definition);

@@ -32,7 +32,7 @@
  *
  * @link https://OpenRegister.app
  *
- * @spec openspec/specs/migration-mapping-packs/spec.md
+ * @spec exclude test copy of an OpenRegister class; its spec is migration-mapping-packs in the openregister repository
  */
 
 declare(strict_types=1);
@@ -54,7 +54,7 @@ use DateTime;
  * Maps one source row (CSV row / Excel row / decoded JSON object) onto a set
  * of target schema-property values, per a migration-pack definition.
  *
- * @spec openspec/specs/migration-mapping-packs/spec.md
+ * @spec exclude test copy of an OpenRegister class; its spec is migration-mapping-packs in the openregister repository
  */
 class MappingEngine {
 	/**
@@ -66,7 +66,7 @@ class MappingEngine {
 	 *
 	 * @return array{data: array<string, mixed>, errors: list<array{row: int, source: string, target: ?string, transform: ?string, message: string}>}
 	 *
-	 * @spec openspec/specs/migration-mapping-packs/spec.md#the-mapping-engine-must-apply-pack-transforms-per-row-and-never-leak-unresolved-references
+	 * @spec exclude test copy of an OpenRegister class; its spec is migration-mapping-packs in the openregister repository
 	 */
 	public function mapRow(array $pack, array $sourceRow, int $rowNumber): array {
 		$data = $pack['defaults'] ?? [];
@@ -140,7 +140,7 @@ class MappingEngine {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/specs/migration-mapping-packs/spec.md
+	 * @spec exclude test copy of an OpenRegister class; its spec is migration-mapping-packs in the openregister repository
 	 */
 	public function isRowSkipped(array $pack, int $rowNumber): bool {
 		$skipRows = $pack['skipRows'] ?? [];

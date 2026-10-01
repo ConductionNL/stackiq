@@ -83,6 +83,8 @@ class CmdbImportController extends Controller {
 	 *
 	 * @return JSONResponse The report (200), or an error envelope with the contract code.
 	 *
+	 * @auth admin-only importing a CMDB export rewrites the catalogue of a whole municipality, so only a Nextcloud admin runs it.
+	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
 	 */
 	public function import(): JSONResponse {
@@ -161,6 +163,8 @@ class CmdbImportController extends Controller {
 	 * @param string $operationId The operation id.
 	 *
 	 * @return JSONResponse `{success, cancelRequested}`, or 404 OPERATION_NOT_FOUND.
+	 *
+	 * @auth admin-only cancelling an import is part of running it, so only a Nextcloud admin may do it (no NoAdminRequired, CSRF checked).
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */

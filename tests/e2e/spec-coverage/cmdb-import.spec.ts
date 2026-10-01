@@ -45,10 +45,7 @@ import {
 
 const FIXTURES_DIR = path.resolve(__dirname, '../../fixtures/cmdb')
 const EXPORT_FIXTURE = path.join(FIXTURES_DIR, 'topdesk-export-anonymised.xlsx')
-const MISSING_COLUMN_FIXTURE = path.join(
-	FIXTURES_DIR,
-	'topdesk-missing-appid.xlsx',
-)
+const MISSING_COLUMN_FIXTURE = path.join(FIXTURES_DIR, 'topdesk-missing-appid.xlsx')
 // The owner values the anonymised export holds (tests/fixtures/cmdb/README.md).
 const OWNER_VALUES = ['Achternaam', 'Voornaam', 'Teamleider Applicatiebeheer']
 
@@ -505,9 +502,12 @@ test.describe.serial('CMDB import section', () => {
 		})
 		try {
 			// Prove the context is anonymous before trusting an empty answer.
-			const whoami = await anonymous.get('/ocs/v2.php/cloud/user?format=json', {
-				headers: { 'OCS-APIRequest': 'true' },
-			})
+			const whoami = await anonymous.get(
+				'/ocs/v2.php/cloud/user?format=json',
+				{
+					headers: { 'OCS-APIRequest': 'true' },
+				},
+			)
 			expect(whoami.status(), 'the context must not be signed in').toBe(401)
 
 			// OpenRegister: no contact person and no usage for an anonymous caller.
@@ -520,7 +520,10 @@ test.describe.serial('CMDB import section', () => {
 				)
 				if (res.ok()) {
 					const body = await res.json()
-					expect(body.total ?? (body.results ?? []).length, `schema ${schema}`).toBe(0)
+					expect(
+						body.total ?? (body.results ?? []).length,
+						`schema ${schema}`,
+					).toBe(0)
 				} else {
 					expect([401, 403], `schema ${schema}`).toContain(res.status())
 				}
@@ -548,7 +551,9 @@ test.describe.serial('CMDB import section', () => {
 					const ids = Array.isArray(value) ? value : [value]
 					for (const id of ids) {
 						expect(
-							id === null || id === undefined || typeof id === 'string',
+							id === null
+								|| id === undefined
+								|| typeof id === 'string',
 							`${field} of search hit ${String(hit.id)} is an id or empty`,
 						).toBe(true)
 					}
