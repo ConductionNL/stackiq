@@ -3,8 +3,8 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.5.5",
-    "changelog": "2.5.5: the maintenanceWindow schema (0.1.0) joins the stackiq register, for maintenance a supplier plans on its products, with the owners of every usage notified (lifecycle-maintenance-and-supplier-roadmap). 2.5.4: usage (1.5.2) gains businessOwner and technicalOwner, contact persons of the consumer organisation; a usage is named after its application and organisation; status becomes facetable for the Applications in use filters (landscape-usage-registration). 2.5.3: the aiSystem schema (0.1.0) joins the stackiq register, for the AI systems an organisation uses and their EU AI Act classification (landscape-ai-system-inventory). 2.5.2: the connection schema (0.3.3) asked its national provision picker for gemmaType Buitengemeentenlijke voorziening, a spelling the GEMMA model does not use (it says Buitengemeentelijke voorziening), so the picker found nothing; its name template named the keys gegevensuitwisselingRichting and buitengemeentelijkVoorziening and the values AnaarB, BnaarA and bi-directioneel, all renamed since, so a connection had no readable name; and type, status and dataExchangeDirection become facetable for the new Connections page (connections-catalogue-pages). 2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
+    "version": "2.5.6",
+    "changelog": "2.5.6: contactsUid is no longer required on organization (0.5.2) and contactPerson (0.0.28). It is a link to the Nextcloud addressbook that the contacts sync fills in after the record exists (MigrateContactsToNc, OrganizationContactSyncJob), so a required column made OpenRegister create it NOT NULL and every seed organisation failed to save on a fresh install (the organization table stayed empty). OpenRegister drops the NOT NULL on the existing column when the schema syncs. 2.5.5: the maintenanceWindow schema (0.1.0) joins the stackiq register, for maintenance a supplier plans on its products, with the owners of every usage notified (lifecycle-maintenance-and-supplier-roadmap). 2.5.4: usage (1.5.2) gains businessOwner and technicalOwner, contact persons of the consumer organisation; a usage is named after its application and organisation; status becomes facetable for the Applications in use filters (landscape-usage-registration). 2.5.3: the aiSystem schema (0.1.0) joins the stackiq register, for the AI systems an organisation uses and their EU AI Act classification (landscape-ai-system-inventory). 2.5.2: the connection schema (0.3.3) asked its national provision picker for gemmaType Buitengemeentenlijke voorziening, a spelling the GEMMA model does not use (it says Buitengemeentelijke voorziening), so the picker found nothing; its name template named the keys gegevensuitwisselingRichting and buitengemeentelijkVoorziening and the values AnaarB, BnaarA and bi-directioneel, all renamed since, so a connection had no readable name; and type, status and dataExchangeDirection become facetable for the new Connections page (connections-catalogue-pages). 2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
   },
   "x-openregister": {
     "type": "application",
@@ -1791,17 +1791,14 @@
         "x-schema-org": "schema:Person",
         "title": "Contact person",
         "description": "Contactgegevens van een persoon",
-        "version": "0.0.27",
+        "version": "0.0.28",
         "omschrijving": "",
         "icon": "AccountMultiple",
-        "required": [
-          "contactsUid"
-        ],
+        "required": [],
         "properties": {
           "contactsUid": {
             "type": "string",
             "description": "Verwijzing (UID) naar de Nextcloud-contactpersoon in het adresboek (OCP\\Contacts\\IManager). Identiteit (naam, e-mail, telefoon) leeft in Nextcloud Contacts; dit record bewaart alleen de catalogus-specifieke rol/relatie.",
-            "required": true,
             "visible": true,
             "facetable": false,
             "title": "Contact-UID",
@@ -2025,11 +2022,10 @@
         "x-schema-org": "schema:Organization",
         "title": "Organization",
         "description": "An organisation that offers provisions. Absorbs the former ArchiMate `organization` schema: its identity and statutory identifiers (name, summary, description, oin, tooi, rsin, pki, image) and its ArchiMate round-trip `xml` are declared here, so there is one organisation schema rather than two that shared no property.",
-        "version": "0.5.1",
+        "version": "0.5.2",
         "omschrijving": "",
         "icon": "OfficeBuildingOutline",
         "required": [
-          "contactsUid",
           "type"
         ],
         "properties": {
@@ -2148,7 +2144,6 @@
           "contactsUid": {
             "description": "Verwijzing (UID) naar de Nextcloud-contactpersoon van het type organisatie in het adresboek (OCP\\Contacts\\IManager). Identiteit (naam, e-mail, website, logo, CBS/KvK-code) leeft in Nextcloud Contacts; dit record bewaart alleen de catalogus-specifieke relatie/rol.",
             "type": "string",
-            "required": true,
             "visible": true,
             "order": 0,
             "maxLength": 255,
@@ -8656,7 +8651,7 @@
           "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-topdesk-gem-leiden-deelnemers",
-          "version": "0.0.1"
+          "version": "0.0.2"
         },
         "name": "Topdesk bij Servicecenter Rijnland (SSC)",
         "status": "In production",
@@ -8664,19 +8659,22 @@
         "consumer": {
           "name": "Servicecenter Rijnland",
           "oin": "00000001001234567890",
-          "slug": "servicecenter-rijnland"
+          "slug": "servicecenter-rijnland",
+          "type": "Collaboration"
         },
         "module": "topdesk-itsm",
         "participants": [
           {
             "name": "Gemeente Leiden",
             "oin": "00000001001234567891",
-            "slug": "gemeente-leiden"
+            "slug": "gemeente-leiden",
+            "type": "Municipality"
           },
           {
             "name": "Gemeente Leiderdorp",
             "oin": "00000001001234567892",
-            "slug": "gemeente-leiderdorp"
+            "slug": "gemeente-leiderdorp",
+            "type": "Municipality"
           }
         ]
       },
@@ -8685,7 +8683,7 @@
           "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-key2-gem-leiden-deelnemer",
-          "version": "0.0.1"
+          "version": "0.0.2"
         },
         "name": "KEY2 Burgerzaken gedeeld via GBLT",
         "status": "Planned",
@@ -8693,14 +8691,16 @@
         "consumer": {
           "name": "Gemeentebelastingen Coevorden Hardenberg (GBLT)",
           "oin": "00000001001234567893",
-          "slug": "gblt"
+          "slug": "gblt",
+          "type": "Collaboration"
         },
         "module": "key2-burgerzaken",
         "participants": [
           {
             "name": "Gemeente Leiden",
             "oin": "00000001001234567891",
-            "slug": "gemeente-leiden"
+            "slug": "gemeente-leiden",
+            "type": "Municipality"
           }
         ]
       },
@@ -8709,7 +8709,7 @@
           "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-suite4-gem-delft-eigenaar",
-          "version": "0.0.1"
+          "version": "0.0.2"
         },
         "name": "Suite4 Schuldhulpverlening - eigenaar Gemeente Delft",
         "status": "In production",
@@ -8717,7 +8717,8 @@
         "consumer": {
           "name": "Gemeente Delft",
           "oin": "00000001001234567894",
-          "slug": "gemeente-delft"
+          "slug": "gemeente-delft",
+          "type": "Municipality"
         },
         "module": "suite4-schuldhulpverlening",
         "participants": []
