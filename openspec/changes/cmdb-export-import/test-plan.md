@@ -10,11 +10,11 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **persona**: Noor Yilmaz (Municipal CISO / Functional Admin)
 - **preconditions**: Nextcloud admin; "Gemeente Voorbeeldstad" exists as type Municipality; no imported modules
 - **steps**: open stackiq admin settings, section "CMDB import", choose the municipality, choose the fixture, press Import
-- **expected result**: progress bar during the run; summary 2 read / 2 created; report rows `Invoer AIA data` row 2 `AIA-AangetekendMailen` and `Invoer APP data` row 2 `APP-test123`, each `created` and linking to its module; no empty rows listed
+- **expected result**: progress bar during the run; summary 2 read / 2 created; report rows `Onbeh Applicaties CMDB` row 2 APPID `1234` and `Beheerde Applicaties CMDB` row 2 APPID `2`, each `created` and linking to its module; no empty rows listed
 - **test command**: Playwright `tests/e2e/spec-coverage/cmdb-import.spec.ts`, `/test-functional`, `/test-persona-noor`
 
 ### TC-2: Re-import creates no duplicates
-- **spec_ref**: `spec.md#requirement-req-cmdb-006-a-module-shall-be-matched-on-its-topdesk-middel-id-so-a-re-import-updates-instead-of-duplicating`, `#requirement-req-cmdb-009-each-imported-application-shall-have-one-usage-that-links-it-to-the-municipality`
+- **spec_ref**: `spec.md#requirement-req-cmdb-006-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating`, `#requirement-req-cmdb-009-each-imported-application-shall-have-one-usage-that-links-it-to-the-municipality`
 - **type**: functional
 - **persona**: Noor Yilmaz
 - **preconditions**: TC-1 done; object counts of module, organization, usage, contactPerson recorded
@@ -25,16 +25,16 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 ### TC-3: Changed fields update, publicationDate and unmapped fields are kept
 - **spec_ref**: `spec.md#requirement-req-cmdb-006-…`, `#requirement-req-cmdb-007-a-newly-created-module-shall-get-a-publicationdate-and-an-existing-one-shall-keep-its-own`
 - **type**: api
-- **preconditions**: modules imported; an admin set `website` on `APP-test123` and depublished it
-- **steps**: import rows where "Naam" of `APP-test123` is `naamtest124`
-- **expected result**: same uuid, name `naamtest124`, `website` unchanged, `depublicationDate` unchanged, no new `publicationDate`; `AIA-AangetekendMailen` keeps its original `publicationDate`
+- **preconditions**: modules imported; an admin set `website` on APPID `2` and depublished it
+- **steps**: import rows where "Applicatie Naam" of APPID `2` is `naamtest124`, and where the "Applicatie Code" of APPID `42` changed
+- **expected result**: same uuid, name `naamtest124`, `website` unchanged, `depublicationDate` unchanged, no new `publicationDate`; APPID `1234` keeps its original `publicationDate`; APPID `42` is the same module with the new `externalId`
 - **test command**: PHPUnit `tests/Unit/Service/CmdbExportImportServiceTest.php`
 
 ### TC-4: Manufacturer dedup
 - **spec_ref**: `spec.md#requirement-req-cmdb-008-a-manufacturer-shall-become-one-supplier-organisation-however-many-rows-name-it`
 - **type**: api
 - **preconditions**: an existing Supplier `Aangetekend B.V.`
-- **steps**: import rows with "Fabrikant" `Fabfrikant`, `Fabfrikant `, `FABFRIKANT`, and the AIA row
+- **steps**: import rows with "Vendor" `Fabfrikant`, `Fabfrikant `, `FABFRIKANT`, and the "Onbeh" row
 - **expected result**: one new Supplier `Fabfrikant`; `Aangetekend B.V.` reused; module and usage `provider` set accordingly
 - **test command**: PHPUnit `CmdbExportImportServiceTest`
 
@@ -42,8 +42,8 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **spec_ref**: `spec.md#requirement-req-cmdb-001-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin`, `#requirement-req-cmdb-003-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422`, `#requirement-req-cmdb-012-records-missing-from-a-newer-export-shall-be-left-untouched`
 - **type**: api
 - **preconditions**: admin session
-- **steps**: post `applications.csv`; a text file named `.xlsx`; a 10 MB + 1 byte file; `topdesk-missing-middel-id.xlsx`; a workbook with only "Blad1"; the fixture with `missingRecords=remove`; the fixture without a municipality
-- **expected result**: 400 `NOT_XLSX` (twice), 413 `FILE_TOO_LARGE`, 422 `MISSING_COLUMN` naming `Middel-ID` and `Invoer APP data`, 422 `NO_SOURCE_SHEET`, 422 `MISSING_RECORDS_UNSUPPORTED`, 422 `MUNICIPALITY_REQUIRED`; no object written in any case
+- **steps**: post `applications.csv`; a text file named `.xlsx`; a 10 MB + 1 byte file; `topdesk-missing-appid.xlsx`; a workbook with only "Blad1"; the fixture with `missingRecords=remove`; the fixture without a municipality
+- **expected result**: 400 `NOT_XLSX` (twice), 413 `FILE_TOO_LARGE`, 422 `MISSING_COLUMN` naming `APPID` and `Beheerde Applicaties CMDB`, 422 `NO_SOURCE_SHEET`, 422 `MISSING_RECORDS_UNSUPPORTED`, 422 `MUNICIPALITY_REQUIRED`; no object written in any case
 - **test command**: PHPUnit `CmdbImportControllerTest`, Newman (Postman collection), `/test-api`; the missing-column UI message also in Playwright
 
 ### TC-6: Authorisation and CSRF
@@ -79,12 +79,12 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `CmdbExportImportServiceTest`
 
 ### TC-10: Owners as contact persons, no user accounts
-- **spec_ref**: `spec.md#requirement-req-cmdb-010-owners-shall-become-contact-persons-of-the-municipality-through-nextcloud-contacts-never-user-accounts`
+- **spec_ref**: `spec.md#requirement-req-cmdb-010-the-owner-shall-become-a-contact-person-of-the-municipality-through-nextcloud-contacts-never-a-user-account-and-shall-never-be-publicly-readable`
 - **type**: security
 - **preconditions**: Contacts enabled (test double); separately disabled
-- **steps**: import the AIA row twice and a second row with the same owner e-mail; run `performUserSync` selection on the result
-- **expected result**: one contactPerson with `role` `Afdelingshoofd` and `organization` = municipality, set as `businessOwner` on both usages; no Nextcloud user created and the contactPerson not selected by the user sync; with Contacts disabled: no owners, a warning, modules and usages saved; report and log contain no owner name or e-mail
-- **test command**: PHPUnit `CmdbExportImportServiceTest`, `/test-security`
+- **steps**: import a row twice and a second row with the same "Applicatie Eigenaar (Persoon)"; import the fixture, whose "Beheerde" owner is a function; run `performUserSync` selection on the result; then, not signed in, list contact persons and usages through OpenRegister and search OpenCatalogi for `naamtest123`
+- **expected result**: one contactPerson per owner with the function as `role` and `organization` = municipality, set as `businessOwner`; no `technicalOwner`; no Nextcloud user created and the contactPerson not selected by the user sync; with Contacts disabled: no owners, a warning, modules and usages saved; report and log contain no owner name; anonymously: no contact person or usage from OpenRegister, and the OpenCatalogi hit holds no owner name and only ids in `contactPerson` / `usages`
+- **test command**: PHPUnit `CmdbExportImportServiceTest`, `CmdbPersonDataVisibilityTest`, Playwright `cmdb-import.spec.ts` (anonymous test), `/test-security`
 
 ### TC-11: OpenCatalogi finds an imported application
 - **spec_ref**: `spec.md#requirement-req-cmdb-007-…`
@@ -129,11 +129,11 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 | REQ-CMDB-003 header-name columns, 422 | TC-5, TC-7 |
 | REQ-CMDB-004 one municipality | TC-1, TC-5, PHPUnit (created once) |
 | REQ-CMDB-005 declarative mapping, dates | TC-8 |
-| REQ-CMDB-006 upsert on Middel-ID | TC-2, TC-3, TC-14 |
+| REQ-CMDB-006 upsert on APPID | TC-2, TC-3, TC-14 |
 | REQ-CMDB-007 publicationDate rule | TC-3, TC-11 |
 | REQ-CMDB-008 manufacturer dedup | TC-4 |
 | REQ-CMDB-009 usage per municipality | TC-2, TC-12 |
-| REQ-CMDB-010 owners via Contacts | TC-10 |
+| REQ-CMDB-010 owner via Contacts, never public | TC-10 |
 | REQ-CMDB-011 per-row isolation and report | TC-1, TC-9 |
 | REQ-CMDB-012 missing records kept | TC-5, PHPUnit (dropped row stays) |
 | REQ-CMDB-013 progress and cancel | TC-6, TC-9 |

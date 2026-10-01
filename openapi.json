@@ -13,7 +13,7 @@
             "post": {
                 "operationId": "cmdbImport-import",
                 "summary": "Import a TOPdesk CMDB export (xlsx) for one municipality",
-                "description": "Admin-only, CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<Middel-ID>. See openspec/changes/cmdb-export-import/contract.md.",
+                "description": "Admin-only, CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/cmdb-export-import/contract.md.",
                 "tags": [
                     "cmdb-import"
                 ],
@@ -308,7 +308,7 @@
                             "required": [
                                 "sheet",
                                 "row",
-                                "middelId",
+                                "appId",
                                 "name",
                                 "outcome",
                                 "reasons",
@@ -323,7 +323,7 @@
                                 "row": {
                                     "type": "integer"
                                 },
-                                "middelId": {
+                                "appId": {
                                     "type": "string"
                                 },
                                 "name": {

@@ -58,11 +58,12 @@ class CmdbFixtureHygieneTest extends TestCase {
 
 	/**
 	 * The only values a person-name column may hold, besides a placeholder e-mail address
-	 * (TOPdesk puts the address of the configuration coordinator in that column).
+	 * (TOPdesk puts the address of the configuration coordinator in that column), and
+	 * the placeholder function a CMDB sheet shows as owner when no person is set.
 	 *
 	 * @var array<int, string>
 	 */
-	private const PLACEHOLDER_NAMES = ['', 'Achternaam, Voornaam', 'Achternaam, voornaam'];
+	private const PLACEHOLDER_NAMES = ['', 'Achternaam, Voornaam', 'Achternaam, voornaam', 'Teamleider Applicatiebeheer'];
 
 	/**
 	 * Columns that hold a person's name.
@@ -127,7 +128,7 @@ class CmdbFixtureHygieneTest extends TestCase {
 	 */
 	public function testTheFixturesExist(): void {
 		$names = array_keys(self::fixtures());
-		foreach (['topdesk-export-anonymised.xlsx', 'topdesk-missing-middel-id.xlsx', 'topdesk-shuffled-columns.xlsx', 'topdesk-formula-and-connection.xlsx'] as $expected) {
+		foreach (['topdesk-export-anonymised.xlsx', 'topdesk-missing-appid.xlsx', 'topdesk-shuffled-columns.xlsx', 'topdesk-formula-and-connection.xlsx'] as $expected) {
 			$this->assertContains($expected, $names);
 		}
 	}//end testTheFixturesExist()
@@ -211,7 +212,7 @@ class CmdbFixtureHygieneTest extends TestCase {
 	}//end testOnlyPlaceholderContactData()
 
 	/**
-	 * Every person-name cell of the source sheets holds a placeholder.
+	 * Every person-name cell of the raw TOPdesk sheets and the CMDB sheets holds a placeholder.
 	 *
 	 * @param string $path The fixture.
 	 *
@@ -239,9 +240,10 @@ class CmdbFixtureHygieneTest extends TestCase {
 						continue;
 					}
 
-					// Only the raw TOPdesk sheets have their headers in row 1; the
-					// derived sheets are covered by the e-mail and number scan.
-					if (in_array('Middel-ID', $headers, true) === false) {
+					// The raw TOPdesk sheets (Middel-ID) and the CMDB sheets (APPID)
+					// have their headers in row 1; the other sheets are covered by
+					// the e-mail and number scan.
+					if (in_array('Middel-ID', $headers, true) === false && in_array('APPID', $headers, true) === false) {
 						break 2;
 					}
 

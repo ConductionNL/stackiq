@@ -3,7 +3,7 @@
 /**
  * CMDB workbook reader.
  *
- * Reads the source sheets of a TOPdesk CMDB export (design D3):
+ * Reads the CMDB sheets of a TOPdesk CMDB export (design D3):
  *
  * 1. Before PhpSpreadsheet is touched: the name ends in `.xlsx`, the file
  *    starts with the ZIP signature and the package holds `xl/workbook.xml`.
@@ -20,7 +20,10 @@
  * 4. A cell yields its stored value; a formula cell yields the value Excel
  *    cached (`getOldCalculatedValue()`). Formulas are never evaluated, and no
  *    HTTP client is involved, so external connections, Power Query packages
- *    and hyperlinks stay inert.
+ *    and hyperlinks stay inert. A formula without a cached value yields an
+ *    empty cell and its column is listed in the row's `uncached`, so the
+ *    import can warn; a cached number 0 is what Excel stores for a reference
+ *    to an empty cell, so it yields an empty cell too.
  * 5. Rows whose kept cells are all empty are dropped; more non-empty rows than
  *    the profile allows stops the import with `TOO_MANY_ROWS` (422).
  *
@@ -120,7 +123,7 @@ class CmdbWorkbookReader {
 	 * @param string $path The xlsx file, already checked by assertXlsx().
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
-	 * @return array<string, mixed> `rows` (list of {sheet, row, cells}), `importWarnings`
+	 * @return array<string, mixed> `rows` (list of {sheet, row, cells, uncached}), `importWarnings`
 	 *                              (list of {sheet, message}) and `date1904` (bool).
 	 *
 	 * @throws CmdbImportException READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS.
@@ -204,7 +207,7 @@ class CmdbWorkbookReader {
 	 * @param array<int, string> $sheetNames The present source sheets, in profile order.
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
-	 * @return array<string, mixed> `rows` (list of {sheet, row, cells}), `importWarnings`
+	 * @return array<string, mixed> `rows` (list of {sheet, row, cells, uncached}), `importWarnings`
 	 *                              (list of {sheet, message}) and `date1904` (bool).
 	 *
 	 * @throws CmdbImportException MISSING_COLUMN or TOO_MANY_ROWS.
@@ -232,12 +235,8 @@ class CmdbWorkbookReader {
 				}
 			}
 
-			foreach ($mapped as $column) {
-				if (in_array($column, $columns, true) === false && in_array($column, $required, true) === false) {
-					$warnings[] = ['sheet' => $sheetName, 'column' => $column, 'message' => sprintf('Optional column "%s" not found', $column)];
-				}
-			}
-
+			$skip = array_merge($required, $profile->absentColumns(sheetName: $sheetName));
+			array_push($warnings, ...self::missingOptionalColumns(sheetName: $sheetName, mapped: $mapped, columns: $columns, skip: $skip));
 			$columnsPerSheet[$sheetName] = $columns;
 		}
 
@@ -303,7 +302,7 @@ class CmdbWorkbookReader {
 	 * @param string $sheetName The sheet name.
 	 * @param int $limit The maximum number of non-empty rows.
 	 *
-	 * @return array<int, array{sheet: string, row: int, cells: array<string, mixed>}>
+	 * @return array<int, array{sheet: string, row: int, cells: array<string, mixed>, uncached: array<int, string>}>
 	 *
 	 * @throws CmdbImportException TOO_MANY_ROWS.
 	 */
@@ -311,21 +310,11 @@ class CmdbWorkbookReader {
 		$rows = [];
 		$lastRow = (int)$worksheet->getHighestDataRow();
 		for ($rowNumber = 2; $rowNumber <= $lastRow; $rowNumber++) {
-			$cells = [];
-			$empty = true;
-			foreach ($columns as $letters => $name) {
-				$value = null;
-				$coordinate = $letters . $rowNumber;
-				if ($worksheet->cellExists($coordinate) === true) {
-					$value = $this->cellValue(cell: $worksheet->getCell($coordinate));
-				}
-
-				$cells[$name] = $value;
-				if ($value !== null && (is_string($value) === false || trim($value) !== '')) {
-					$empty = false;
-				}
-			}
-
+			['cells' => $cells, 'uncached' => $uncached, 'empty' => $empty] = $this->readRow(
+				worksheet: $worksheet,
+				columns: $columns,
+				rowNumber: $rowNumber
+			);
 			if ($empty === true) {
 				continue;
 			}
@@ -338,14 +327,84 @@ class CmdbWorkbookReader {
 				);
 			}
 
-			$rows[] = ['sheet' => $sheetName, 'row' => $rowNumber, 'cells' => $cells];
+			$rows[] = ['sheet' => $sheetName, 'row' => $rowNumber, 'cells' => $cells, 'uncached' => $uncached];
 		}//end for
 
 		return $rows;
 	}//end readRows()
 
 	/**
+	 * The kept cells of one row, the columns whose formula has no cached value,
+	 * and whether every kept cell is empty.
+	 *
+	 * @param object $worksheet The worksheet.
+	 * @param array<string, string> $columns Column letter => column name.
+	 * @param int $rowNumber The 1-based row number.
+	 *
+	 * @return array{cells: array<string, mixed>, uncached: array<int, string>, empty: bool}
+	 */
+	private function readRow(object $worksheet, array $columns, int $rowNumber): array {
+		$cells = [];
+		$uncached = [];
+		$empty = true;
+		foreach ($columns as $letters => $name) {
+			$value = null;
+			$coordinate = $letters . $rowNumber;
+			if ($worksheet->cellExists($coordinate) === true) {
+				$cell = $worksheet->getCell($coordinate);
+				$value = $this->cellValue(cell: $cell);
+				if (self::isUncachedFormula(cell: $cell) === true) {
+					$uncached[] = $name;
+				}
+			}
+
+			$cells[$name] = $value;
+			if ($value !== null && (is_string($value) === false || trim($value) !== '')) {
+				$empty = false;
+			}
+		}
+
+		return ['cells' => $cells, 'uncached' => $uncached, 'empty' => $empty];
+	}//end readRow()
+
+	/**
+	 * One import warning per pack column a sheet lacks, except the ones to skip.
+	 *
+	 * @param string $sheetName The sheet name.
+	 * @param array<int, string> $mapped The sheet-mapped pack sources.
+	 * @param array<string, string> $columns The sheet's resolved columns.
+	 * @param array<int, string> $skip Required columns and the columns the sheet is known to lack.
+	 *
+	 * @return array<int, array{sheet: string, column: string, message: string}>
+	 */
+	private static function missingOptionalColumns(string $sheetName, array $mapped, array $columns, array $skip): array {
+		$warnings = [];
+		foreach ($mapped as $column) {
+			if (in_array($column, $columns, true) === false && in_array($column, $skip, true) === false) {
+				$warnings[] = ['sheet' => $sheetName, 'column' => $column, 'message' => sprintf('Optional column "%s" not found', $column)];
+			}
+		}
+
+		return $warnings;
+	}//end missingOptionalColumns()
+
+	/**
+	 * Whether a cell holds a formula without a cached value.
+	 *
+	 * @param object $cell The PhpSpreadsheet cell.
+	 *
+	 * @return bool
+	 */
+	private static function isUncachedFormula(object $cell): bool {
+		return $cell->getDataType() === 'f' && $cell->getOldCalculatedValue() === null;
+	}//end isUncachedFormula()
+
+	/**
 	 * The stored value of a cell; for a formula, the value Excel cached.
+	 *
+	 * A formula without a cached value, and a formula whose cached value is
+	 * the number 0 (Excel's result for a reference to an empty cell), yield
+	 * null.
 	 *
 	 * @param object $cell The PhpSpreadsheet cell.
 	 *
@@ -356,6 +415,9 @@ class CmdbWorkbookReader {
 		if ($cell->getDataType() === 'f') {
 			// The value Excel cached; the formula itself is never evaluated.
 			$value = $cell->getOldCalculatedValue();
+			if ((is_int($value) === true || is_float($value) === true) && (float)$value === 0.0) {
+				return null;
+			}
 		}
 
 		if (is_object($value) === true && method_exists($value, 'getPlainText') === true) {
@@ -377,6 +439,7 @@ class CmdbWorkbookReader {
 	 * @return array<int, string>
 	 */
 	private function packSources(CmdbImportProfile $profile): array {
+		$constants = $profile->constantColumns();
 		$sources = [];
 		foreach (CmdbImportProfile::TARGETS as $target) {
 			if ($target === 'municipality') {
@@ -388,7 +451,14 @@ class CmdbWorkbookReader {
 			}
 		}
 
-		return array_values(array_unique(array_filter($sources, fn (string $source): bool => $source !== '')));
+		return array_values(
+			array_unique(
+				array_filter(
+					$sources,
+					fn (string $source): bool => $source !== '' && in_array($source, $constants, true) === false
+				)
+			)
+		);
 	}//end packSources()
 
 	/**

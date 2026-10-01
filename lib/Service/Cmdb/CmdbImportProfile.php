@@ -3,12 +3,13 @@
 /**
  * CMDB import profile.
  *
- * Loads `lib/Settings/cmdb-import/topdesk-profile.json` and the six
+ * Loads `lib/Settings/cmdb-import/topdesk-profile.json` and the five
  * migration packs it names, validates every pack with OpenRegister's
  * `MigrationPack\PackDefinitionValidator`, and answers the questions the
  * reader, the normaliser and the import service ask about the export: which
- * sheets, which columns are required, which are dates or ids, and which
- * columns may be read at all (the allowlist, design D3).
+ * sheets, which columns are required, which are dates or ids, which values
+ * mean empty, which constants a sheet adds to its rows, and which columns
+ * may be read at all (the allowlist, design D3).
  *
  * `PackDefinitionValidator` is not part of OpenRegister's `Contract`
  * namespace, so it is resolved defensively. When it is missing, or a shipped
@@ -43,6 +44,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) One small accessor per profile setting, so
  * callers never read the raw JSON.
+ * @SuppressWarnings(PHPMD.TooManyMethods) The same accessors, plus the loader's small private helpers.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The accessors each guard against a
  * malformed profile value; the sum passes the threshold, no single method is complex.
  */
@@ -57,7 +59,7 @@ class CmdbImportProfile {
 	 *
 	 * @var array<int, string>
 	 */
-	public const TARGETS = ['module', 'manufacturer', 'municipality', 'usage', 'businessOwner', 'technicalOwner'];
+	public const TARGETS = ['module', 'manufacturer', 'municipality', 'usage', 'businessOwner'];
 
 	/**
 	 * Default upload limit when the profile file cannot be read (10 MB).
@@ -186,9 +188,10 @@ class CmdbImportProfile {
 	}//end maxRowsPerSheet()
 
 	/**
-	 * The source sheets with the Soort values each accepts.
+	 * The source sheets, each with the constants it adds to its rows and the
+	 * pack columns it is known not to have.
 	 *
-	 * @return array<int, array{name: string, acceptedKinds: array<int, string>}>
+	 * @return array<int, array{name: string, constants: array<string, string>, absentColumns: array<int, string>}>
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
@@ -199,11 +202,22 @@ class CmdbImportProfile {
 				continue;
 			}
 
-			$sheets[] = [
-				'name' => $sheet['name'],
-				'acceptedKinds' => array_values(array_map('strval', ($sheet['acceptedKinds'] ?? []))),
-			];
-		}
+			$constants = [];
+			if (is_array($sheet['constants'] ?? null) === true) {
+				foreach ($sheet['constants'] as $column => $value) {
+					if (is_scalar($value) === true) {
+						$constants[(string)$column] = (string)$value;
+					}
+				}
+			}
+
+			$absent = [];
+			if (is_array($sheet['absentColumns'] ?? null) === true) {
+				$absent = array_values(array_map('strval', $sheet['absentColumns']));
+			}
+
+			$sheets[] = ['name' => $sheet['name'], 'constants' => $constants, 'absentColumns' => $absent];
+		}//end foreach
 
 		return $sheets;
 	}//end sheets()
@@ -220,56 +234,107 @@ class CmdbImportProfile {
 	}//end sheetNames()
 
 	/**
-	 * The Soort values a sheet accepts.
+	 * The constants a sheet adds to each of its rows, as column => value.
+	 *
+	 * A constant is mapped like a column (the usage pack reads "Beheer"), but
+	 * it is never looked up in the sheet.
+	 *
+	 * @param string $sheetName The sheet name.
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 */
+	public function sheetConstants(string $sheetName): array {
+		foreach ($this->sheets() as $sheet) {
+			if ($sheet['name'] === $sheetName) {
+				return $sheet['constants'];
+			}
+		}
+
+		return [];
+	}//end sheetConstants()
+
+	/**
+	 * The pack columns a sheet is known not to have; their absence is no warning.
 	 *
 	 * @param string $sheetName The sheet name.
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
-	public function acceptedKinds(string $sheetName): array {
+	public function absentColumns(string $sheetName): array {
 		foreach ($this->sheets() as $sheet) {
 			if ($sheet['name'] === $sheetName) {
-				return $sheet['acceptedKinds'];
+				return $sheet['absentColumns'];
 			}
 		}
 
 		return [];
-	}//end acceptedKinds()
+	}//end absentColumns()
 
 	/**
-	 * The match key column ("Middel-ID").
+	 * The names of every sheet constant; these are never read from a sheet.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function constantColumns(): array {
+		$columns = [];
+		foreach ($this->sheets() as $sheet) {
+			$columns = array_merge($columns, array_keys($sheet['constants']));
+		}
+
+		return array_values(array_unique(array_map('strval', $columns)));
+	}//end constantColumns()
+
+	/**
+	 * Values that mean "empty" per column, such as the "NB" a CMDB sheet
+	 * writes for an unknown BNN classification.
+	 *
+	 * @return array<string, array<int, string>>
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function emptyValues(): array {
+		$value = $this->profile()['emptyValues'] ?? [];
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		$empty = [];
+		foreach ($value as $column => $values) {
+			if (is_array($values) === true) {
+				$empty[(string)$column] = array_values(array_map('strval', $values));
+			}
+		}
+
+		return $empty;
+	}//end emptyValues()
+
+	/**
+	 * The match key column ("APPID").
 	 *
 	 * @return string
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
 	public function keyColumn(): string {
-		return (string)($this->profile()['keyColumn'] ?? 'Middel-ID');
+		return (string)($this->profile()['keyColumn'] ?? 'APPID');
 	}//end keyColumn()
 
 	/**
-	 * The application name column ("Naam").
+	 * The application name column ("Applicatie Naam").
 	 *
 	 * @return string
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
 	public function nameColumn(): string {
-		return (string)($this->profile()['nameColumn'] ?? 'Naam');
+		return (string)($this->profile()['nameColumn'] ?? 'Applicatie Naam');
 	}//end nameColumn()
-
-	/**
-	 * The row-kind column ("Soort").
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
-	 */
-	public function kindColumn(): string {
-		return (string)($this->profile()['kindColumn'] ?? 'Soort');
-	}//end kindColumn()
 
 	/**
 	 * Columns whose absence stops the import with MISSING_COLUMN.
@@ -406,8 +471,8 @@ class CmdbImportProfile {
 	/**
 	 * Every column the profile or a pack references: the read allowlist.
 	 *
-	 * The municipality pack maps the request options, not a sheet, so its
-	 * sources are left out.
+	 * The municipality pack maps the request options, not a sheet, and the
+	 * sheet constants are added by the import, so both are left out.
 	 *
 	 * @return array<int, string>
 	 *
@@ -415,7 +480,7 @@ class CmdbImportProfile {
 	 */
 	public function referencedColumns(): array {
 		$columns = array_merge(
-			[$this->keyColumn(), $this->nameColumn(), $this->kindColumn()],
+			[$this->keyColumn(), $this->nameColumn()],
 			$this->requiredColumns(),
 			$this->dateColumns(),
 			$this->idColumns()
@@ -430,9 +495,10 @@ class CmdbImportProfile {
 			}
 		}
 
+		$excluded = array_merge(self::OPTION_SOURCES, $this->constantColumns());
 		$columns = array_filter(
 			$columns,
-			fn (string $column): bool => $column !== '' && $column[0] !== '/' && in_array($column, self::OPTION_SOURCES, true) === false
+			fn (string $column): bool => $column !== '' && $column[0] !== '/' && in_array($column, $excluded, true) === false
 		);
 
 		return array_values(array_unique($columns));

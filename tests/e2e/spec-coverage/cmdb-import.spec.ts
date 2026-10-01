@@ -21,15 +21,20 @@
  *
  * Owner contacts the import creates in the admin's Nextcloud address book
  * are not removed by the cleanup below; the OpenRegister objects are.
+ *
+ * The last test checks, without signing in, that the imported owners are
+ * not readable anonymously: neither through OpenRegister's objects API nor
+ * in an OpenCatalogi search hit (skipped when OpenCatalogi is not installed).
  */
 
 import type { APIRequestContext, Locator, Page, Response } from '@playwright/test'
 import type { VoorzieningenConfig } from '../workflows/_fixtures.ts'
 
-import { expect, test } from '@playwright/test'
+import { expect, request as playwrightRequest, test } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
 import {
+	BASE_URL,
 	createObject,
 	deleteObject,
 	findAll,
@@ -42,8 +47,10 @@ const FIXTURES_DIR = path.resolve(__dirname, '../../fixtures/cmdb')
 const EXPORT_FIXTURE = path.join(FIXTURES_DIR, 'topdesk-export-anonymised.xlsx')
 const MISSING_COLUMN_FIXTURE = path.join(
 	FIXTURES_DIR,
-	'topdesk-missing-middel-id.xlsx',
+	'topdesk-missing-appid.xlsx',
 )
+// The owner values the anonymised export holds (tests/fixtures/cmdb/README.md).
+const OWNER_VALUES = ['Achternaam', 'Voornaam', 'Teamleider Applicatiebeheer']
 
 type UploadFile = Parameters<Locator['setInputFiles']>[0]
 
@@ -326,14 +333,15 @@ test.describe.serial('CMDB import section', () => {
 		// formatted but empty rows below them, each created with a module link.
 		const rows = reportRows(page)
 		await expect(rows).toHaveCount(2)
-		for (const [sheet, middelId] of [
-			['Invoer AIA data', 'AIA-AangetekendMailen'],
-			['Invoer APP data', 'APP-test123'],
+		for (const [sheet, appId, name] of [
+			['Onbeh Applicaties CMDB', '1234', 'Aangetekend Mailen'],
+			['Beheerde Applicaties CMDB', '2', 'naamtest123'],
 		]) {
-			const row = rows.filter({ hasText: middelId })
+			const row = rows.filter({ hasText: name })
 			await expect(row).toHaveCount(1)
 			await expect(row).toContainText(sheet)
 			await expect(row.locator('td').nth(1)).toHaveText('2')
+			await expect(row.locator('td').nth(2)).toHaveText(appId)
 			await expect(row.locator('[data-outcome="created"]')).toBeVisible()
 			await expect(
 				row.locator('[data-testid="cmdb-import-module-link"]'),
@@ -410,14 +418,14 @@ test.describe.serial('CMDB import section', () => {
 		const body = await response.json()
 		expect(body.error).toBe('MISSING_COLUMN')
 		expect(body.details).toEqual({
-			sheet: 'Invoer APP data',
-			column: 'Middel-ID',
+			sheet: 'Beheerde Applicaties CMDB',
+			column: 'APPID',
 		})
 
 		const error = section.locator('[data-testid="cmdb-import-error"]')
 		await expect(error).toBeVisible()
-		await expect(error).toContainText('"Invoer APP data"')
-		await expect(error).toContainText('"Middel-ID"')
+		await expect(error).toContainText('"Beheerde Applicaties CMDB"')
+		await expect(error).toContainText('"APPID"')
 		await expect(error).toContainText('MISSING_COLUMN')
 		await expect(
 			section.locator('[data-testid="cmdb-import-report"]'),
@@ -436,13 +444,13 @@ test.describe.serial('CMDB import section', () => {
 		const csv = {
 			name: 'applications.csv',
 			mimeType: 'text/csv',
-			buffer: Buffer.from('Middel-ID;Naam\nAPP-test123;naamtest123\n'),
+			buffer: Buffer.from('APPID;Applicatie Naam\n2;naamtest123\n'),
 		}
 		const textAsXlsx = {
 			name: 'export.xlsx',
 			mimeType:
 				'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-			buffer: Buffer.from('Middel-ID;Naam\nAPP-test123;naamtest123\n'),
+			buffer: Buffer.from('APPID;Applicatie Naam\n2;naamtest123\n'),
 		}
 
 		// The endpoint answers 400 NOT_XLSX for both.
@@ -476,5 +484,78 @@ test.describe.serial('CMDB import section', () => {
 		// No module, usage, contact person or municipality was written.
 		expect(await countWritten(ctx)).toEqual(before)
 		await ctx.dispose()
+	})
+
+	// @e2e cmdb-export-import::imported-owners-are-never-readable-anonymously
+	test('the imported owners are not readable without signing in', async () => {
+		requireFixture(EXPORT_FIXTURE)
+		const ctx = await newApiContext()
+		const written = await countWritten(ctx)
+		await ctx.dispose()
+		test.skip(
+			written.contactPersons === 0,
+			'The first import (first test) wrote no owner for this municipality, so there is nothing to look for.',
+		)
+
+		// Inside the test runner a new request context inherits the project's
+		// `use` options, including the admin storageState; clear it explicitly.
+		const anonymous = await playwrightRequest.newContext({
+			baseURL: BASE_URL,
+			storageState: { cookies: [], origins: [] },
+		})
+		try {
+			// Prove the context is anonymous before trusting an empty answer.
+			const whoami = await anonymous.get('/ocs/v2.php/cloud/user?format=json', {
+				headers: { 'OCS-APIRequest': 'true' },
+			})
+			expect(whoami.status(), 'the context must not be signed in').toBe(401)
+
+			// OpenRegister: no contact person and no usage for an anonymous caller.
+			for (const schema of [
+				config.contactpersoon_schema,
+				config.gebruik_schema,
+			]) {
+				const res = await anonymous.get(
+					`/index.php/apps/openregister/api/objects/${config.register}/${schema}?_limit=200`,
+				)
+				if (res.ok()) {
+					const body = await res.json()
+					expect(body.total ?? (body.results ?? []).length, `schema ${schema}`).toBe(0)
+				} else {
+					expect([401, 403], `schema ${schema}`).toContain(res.status())
+				}
+			}
+
+			// OpenCatalogi: a search hit for an imported module names nobody.
+			const search = await anonymous.get(
+				'/index.php/apps/opencatalogi/api/search?_search=naamtest123&_limit=50',
+			)
+			test.skip(
+				search.status() === 404,
+				'OpenCatalogi is not installed on this instance.',
+			)
+			expect(search.ok()).toBe(true)
+			const hits = ((await search.json()).results ?? []) as Array<
+				Record<string, unknown>
+			>
+			for (const hit of hits) {
+				const text = JSON.stringify(hit)
+				for (const value of OWNER_VALUES) {
+					expect(text, `search hit ${String(hit.id)}`).not.toContain(value)
+				}
+				for (const field of ['contactPerson', 'usages']) {
+					const value = hit[field]
+					const ids = Array.isArray(value) ? value : [value]
+					for (const id of ids) {
+						expect(
+							id === null || id === undefined || typeof id === 'string',
+							`${field} of search hit ${String(hit.id)} is an id or empty`,
+						).toBe(true)
+					}
+				}
+			}
+		} finally {
+			await anonymous.dispose()
+		}
 	})
 })

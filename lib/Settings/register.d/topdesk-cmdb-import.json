@@ -7,7 +7,7 @@
           "externalId": {
             "type": "string",
             "title": "Source id",
-            "description": "The identifier of the application in the source system it was imported from, such as the TOPdesk Middel-ID.",
+            "description": "The code of the application in the source system it was imported from, such as the TOPdesk Applicatie Code (the Middel-ID). Shown for reference; it can change in the source, so it is not used to match records.",
             "maxLength": 100,
             "visible": true,
             "facetable": false,
@@ -16,7 +16,7 @@
           "externalNumber": {
             "type": "string",
             "title": "Source number",
-            "description": "The application number in the source system, such as TOPdesk's ICT Applicatienummer. Shown for reference; not used to match records.",
+            "description": "The application number in the source system, such as TOPdesk's APPID (ICT Applicatienummer). A repeated CMDB import matches on it, through the import key.",
             "maxLength": 50,
             "visible": true,
             "facetable": false,
@@ -25,7 +25,7 @@
           "externalKey": {
             "type": "string",
             "title": "Import key",
-            "description": "The key a repeated import matches this application on: topdesk:<municipality uuid>:<Middel-ID>. Set by the CMDB import; do not edit.",
+            "description": "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; do not edit.",
             "maxLength": 200,
             "visible": true,
             "facetable": false,

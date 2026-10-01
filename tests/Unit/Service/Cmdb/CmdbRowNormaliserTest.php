@@ -35,31 +35,48 @@ class CmdbRowNormaliserTest extends TestCase {
 	public function testSerialDatesAndIdsAreNormalised(): void {
 		$row = (new CmdbRowNormaliser())->normalise(
 			cells: [
-				'Aanmaakdatum' => 45111.380322627316,
-				'Wijzigingsdatum' => 46232.552113113423,
-				'End of Life Business' => 53359,
-				'ICT Applicatienummer' => 1234.0,
-				'Middel-ID' => ' APP-test123 ',
-				'Naam' => '  naamtest123 ',
-				'Fabrikant' => null,
+				'Datum' => 45111.380322627316,
+				'Referentie datum wijziging' => 46232.552113113423,
+				'End-of-Life Functioneel' => 53359,
+				'APPID' => 1234.0,
+				'Applicatie Code' => ' APP-test123 ',
+				'Applicatie Naam' => '  naamtest123 ',
+				'Vendor' => null,
 			],
-			dateColumns: ['Aanmaakdatum', 'Wijzigingsdatum', 'End of Life Business'],
-			idColumns: ['Middel-ID', 'ICT Applicatienummer']
+			dateColumns: ['Datum', 'Referentie datum wijziging', 'End-of-Life Functioneel'],
+			idColumns: ['APPID']
 		);
 
 		$this->assertSame(
 			[
-				'Aanmaakdatum' => '2023-07-04',
-				'Wijzigingsdatum' => '2026-07-29',
-				'End of Life Business' => '2046-02-01',
-				'ICT Applicatienummer' => '1234',
-				'Middel-ID' => 'APP-test123',
-				'Naam' => 'naamtest123',
-				'Fabrikant' => '',
+				'Datum' => '2023-07-04',
+				'Referentie datum wijziging' => '2026-07-29',
+				'End-of-Life Functioneel' => '2046-02-01',
+				'APPID' => '1234',
+				'Applicatie Code' => 'APP-test123',
+				'Applicatie Naam' => 'naamtest123',
+				'Vendor' => '',
 			],
 			$row
 		);
 	}//end testSerialDatesAndIdsAreNormalised()
+
+	/**
+	 * A value the profile lists as empty for its column becomes '', case-insensitively and before
+	 * the date conversion; the same value in another column stays.
+	 *
+	 * @return void
+	 */
+	public function testEmptyValuesBecomeEmpty(): void {
+		$row = (new CmdbRowNormaliser())->normalise(
+			cells: ['BNN Classificatie' => 'nb', 'End-of-Life Functioneel' => 49675, 'Roepnaam' => 'NB', 'Datum' => 49675],
+			dateColumns: ['End-of-Life Functioneel', 'Datum'],
+			idColumns: [],
+			emptyValues: ['BNN Classificatie' => ['NB'], 'End-of-Life Functioneel' => ['49675']]
+		);
+
+		$this->assertSame(['BNN Classificatie' => '', 'End-of-Life Functioneel' => '', 'Roepnaam' => 'NB', 'Datum' => '2036-01-01'], $row);
+	}//end testEmptyValuesBecomeEmpty()
 
 	/**
 	 * The string forms of serials and ids convert the same way.

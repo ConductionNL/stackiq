@@ -77,7 +77,8 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end read()
 
 	/**
-	 * One data row per source sheet; the formatted empty rows are dropped; only allowlisted columns.
+	 * One data row per CMDB sheet, read from the cached formula values; the formatted
+	 * empty rows and the rows whose formulas cached 0 are dropped; only allowlisted columns.
 	 *
 	 * @return void
 	 */
@@ -86,12 +87,25 @@ class CmdbWorkbookReaderTest extends TestCase {
 		$rows = $result['rows'];
 
 		$this->assertCount(2, $rows);
-		$this->assertSame(['Invoer AIA data', 2], [$rows[0]['sheet'], $rows[0]['row']]);
-		$this->assertSame(['Invoer APP data', 2], [$rows[1]['sheet'], $rows[1]['row']]);
-		$this->assertSame('AIA-AangetekendMailen', $rows[0]['cells']['Middel-ID']);
-		$this->assertSame('Aangetekend Mailen', $rows[0]['cells']['Naam']);
-		$this->assertSame('naamtest123', $rows[1]['cells']['Naam']);
-		$this->assertSame(53359, (int)$rows[1]['cells']['End of Life Business']);
+		$this->assertSame(['Onbeh Applicaties CMDB', 2], [$rows[0]['sheet'], $rows[0]['row']]);
+		$this->assertSame(['Beheerde Applicaties CMDB', 2], [$rows[1]['sheet'], $rows[1]['row']]);
+		$this->assertSame(1234, (int)$rows[0]['cells']['APPID']);
+		$this->assertSame('AIA-AangetekendMailen', $rows[0]['cells']['Applicatie Code']);
+		$this->assertSame('Aangetekend Mailen', $rows[0]['cells']['Applicatie Naam']);
+		$this->assertSame('Mailen', $rows[0]['cells']['Roepnaam']);
+		$this->assertSame('Webapplicatie', $rows[0]['cells']['Applicatiesoort']);
+		$this->assertSame('Achternaam, Voornaam', $rows[0]['cells']['Applicatie Eigenaar (Persoon)']);
+		$this->assertArrayNotHasKey('Nickname', $rows[0]['cells'], 'Onbeh has no Nickname column');
+		$this->assertSame('naamtest123', $rows[1]['cells']['Applicatie Naam']);
+		$this->assertSame(2, (int)$rows[1]['cells']['APPID']);
+		$this->assertSame(53359, (int)$rows[1]['cells']['End-of-Life Functioneel']);
+		$this->assertSame('Saas', $rows[1]['cells']['Applicatiesoort']);
+		$this->assertSame('BBN2', $rows[1]['cells']['BNN Classificatie']);
+		$this->assertSame('Tolereren', $rows[1]['cells']['Classificatie']);
+		$this->assertSame('NT123', $rows[1]['cells']['Nickname']);
+		$this->assertSame('Teamleider Applicatiebeheer', $rows[1]['cells']['Applicatie Eigenaar (Persoon)']);
+		$this->assertSame([], $rows[0]['uncached']);
+		$this->assertSame([], $rows[1]['uncached']);
 
 		$allowed = $this->profile()->referencedColumns();
 		foreach ($rows as $row) {
@@ -99,20 +113,18 @@ class CmdbWorkbookReaderTest extends TestCase {
 				$this->assertContains($column, $allowed);
 			}
 
-			foreach (['Personeelsnummer', 'Eigenaar mobiel nummer', 'Groepseigenaar mail', 'Groepsmail', 'Opmerkingen', 'FB contactpersoon 2'] as $never) {
+			foreach (['Beschikbaarheid', 'Behandelgroep', 'Hostingpartij', 'Rappelreden', 'Locatie BIOToets', 'Beheer'] as $never) {
 				$this->assertArrayNotHasKey($never, $row['cells']);
 			}
 		}
 
 		$this->assertFalse($result['date1904']);
-		$this->assertContains(
-			['sheet' => 'Invoer AIA data', 'column' => 'ICT TIME Classificatie', 'message' => 'Optional column "ICT TIME Classificatie" not found'],
-			$result['importWarnings']
-		);
+		$this->assertSame([], $result['importWarnings'], 'Nickname is listed as absent on Onbeh, so its absence is no warning');
 	}//end testTheSanitisedExportYieldsOneRowPerSheet()
 
 	/**
-	 * A formula cell yields the value Excel cached, not its result, and the connection is never contacted.
+	 * A formula cell yields the value Excel cached, not its result; a formula without
+	 * a cached value yields an empty cell and is listed; the connection is never contacted.
 	 *
 	 * @return void
 	 */
@@ -120,8 +132,11 @@ class CmdbWorkbookReaderTest extends TestCase {
 		$rows = $this->read(name: 'topdesk-formula-and-connection.xlsx')['rows'];
 
 		// The formula evaluates to "Evaluated"; the cached value is "Rekenmodel".
-		$this->assertSame('Rekenmodel', $rows[1]['cells']['Naam']);
-		$this->assertSame('APP-test123', $rows[1]['cells']['Middel-ID']);
+		$this->assertSame('Rekenmodel', $rows[1]['cells']['Applicatie Naam']);
+		$this->assertSame('APP-test123', $rows[1]['cells']['Applicatie Code']);
+		$this->assertNull($rows[1]['cells']['Roepnaam'], 'no cached value: empty, never evaluated');
+		$this->assertSame(['Roepnaam'], $rows[1]['uncached']);
+		$this->assertSame([], $rows[0]['uncached']);
 	}//end testAFormulaYieldsItsCachedValue()
 
 	/**
@@ -161,18 +176,18 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testShuffledColumnsMapTheSame()
 
 	/**
-	 * A source sheet without Middel-ID stops the import, naming column and sheet.
+	 * A CMDB sheet without APPID stops the import, naming column and sheet.
 	 *
 	 * @return void
 	 */
 	public function testAMissingRequiredColumnIsNamed(): void {
 		try {
-			$this->read(name: 'topdesk-missing-middel-id.xlsx');
+			$this->read(name: 'topdesk-missing-appid.xlsx');
 			$this->fail('MISSING_COLUMN expected');
 		} catch (CmdbImportException $e) {
 			$this->assertSame('MISSING_COLUMN', $e->getErrorCode());
 			$this->assertSame(422, $e->getHttpStatus());
-			$this->assertSame(['sheet' => 'Invoer APP data', 'column' => 'Middel-ID'], $e->getDetails());
+			$this->assertSame(['sheet' => 'Beheerde Applicaties CMDB', 'column' => 'APPID'], $e->getDetails());
 		}
 	}//end testAMissingRequiredColumnIsNamed()
 
@@ -187,7 +202,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 			$this->fail('NO_SOURCE_SHEET expected');
 		} catch (CmdbImportException $e) {
 			$this->assertSame('NO_SOURCE_SHEET', $e->getErrorCode());
-			$this->assertSame(['expected' => ['Invoer AIA data', 'Invoer APP data']], $e->getDetails());
+			$this->assertSame(['expected' => ['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']], $e->getDetails());
 		}
 	}//end testAWorkbookWithoutSourceSheetsIsRefused()
 
@@ -229,7 +244,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	public function testNonXlsxIsRefusedBeforeParsing(): void {
 		$reader = new CmdbWorkbookReader();
 		$text = tempnam(sys_get_temp_dir(), 'cmdb');
-		file_put_contents($text, "Naam;Middel-ID\nVoorbeeld;APP-1\n");
+		file_put_contents($text, "Applicatie Naam;APPID\nVoorbeeld;1\n");
 		$cases = [
 			[$text, 'export.xlsx'],
 			[CmdbTestSupport::fixtures() . '/topdesk-export-anonymised.xlsx', 'export.xlsm'],
@@ -301,8 +316,8 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 * @return void
 	 */
 	public function testHeadersAreNormalised(): void {
-		$this->assertSame('groepseigenaar mail', CmdbWorkbookReader::normaliseHeader(header: 'Groepseigenaar mail⚡'));
-		$this->assertSame('ib bewaartermijn', CmdbWorkbookReader::normaliseHeader(header: ' IB  Bewaartermijn: '));
-		$this->assertSame('middel-id', CmdbWorkbookReader::normaliseHeader(header: 'MIDDEL-ID'));
+		$this->assertSame('vendor', CmdbWorkbookReader::normaliseHeader(header: 'Vendor⚡'));
+		$this->assertSame('applicatie eigenaar (persoon)', CmdbWorkbookReader::normaliseHeader(header: ' Applicatie  Eigenaar (Persoon): '));
+		$this->assertSame('appid', CmdbWorkbookReader::normaliseHeader(header: 'APPID'));
 	}//end testHeadersAreNormalised()
 }//end class

@@ -457,23 +457,25 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end fixture()
 
 	/**
-	 * A synthetic application row.
+	 * A synthetic application row of a CMDB sheet.
 	 *
-	 * @param string $middelId The Middel-ID.
+	 * @param string $appId The APPID.
 	 * @param array<string, mixed> $cells Overrides.
 	 * @param int $row The row number.
 	 * @param string $sheet The sheet.
+	 * @param array<int, string> $uncached Columns whose formula has no cached value.
 	 *
-	 * @return array{sheet: string, row: int, cells: array<string, mixed>}
+	 * @return array{sheet: string, row: int, cells: array<string, mixed>, uncached: array<int, string>}
 	 */
-	private function row(string $middelId, array $cells = [], int $row = 2, string $sheet = 'Invoer APP data'): array {
+	private function row(string $appId, array $cells = [], int $row = 2, string $sheet = 'Beheerde Applicaties CMDB', array $uncached = []): array {
 		return [
 			'sheet' => $sheet,
 			'row' => $row,
 			'cells' => array_merge(
-				['Soort' => 'Applicatie', 'Middel-ID' => $middelId, 'Naam' => 'Applicatie ' . $middelId, 'Fabrikant' => 'Fabfrikant', 'Status' => 'In productie'],
+				['APPID' => $appId, 'Applicatie Code' => 'APP-' . $appId, 'Applicatie Naam' => 'Applicatie ' . $appId, 'Vendor' => 'Fabfrikant', 'Applicatie Status' => 'In productie'],
 				$cells
 			),
+			'uncached' => $uncached,
 		];
 	}//end row()
 
@@ -518,10 +520,12 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertTrue($report['success']);
 		$this->assertFalse($report['cancelled']);
 		$this->assertSame('cmdb-test-0001', $report['operationId']);
-		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 0], $report['summary']);
+		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 1], $report['summary']);
 		$this->assertSame('Gemeente Voorbeeldstad', $report['municipality']['name']);
 		$this->assertTrue($report['municipality']['created']);
-		$this->assertContains(['sheet' => 'Invoer AIA data', 'message' => 'Optional column "ICT TIME Classificatie" not found'], $report['importWarnings']);
+		$this->assertSame([], $report['importWarnings']);
+		// "Webapplicatie" is an application kind, not a hosting model: the field is dropped with a warning.
+		$this->assertSame(['Column "Applicatiesoort": Value "Webapplicatie" has no mapping and no default is configured'], $report['rows'][0]['warnings']);
 
 		$municipality = $report['municipality']['uuid'];
 		$this->assertSame('Municipality', $this->store[self::ORGANIZATION][$municipality]['type']);
@@ -532,43 +536,63 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$modules = [];
 		foreach ($this->objects(self::MODULE) as $module) {
-			$modules[$module['externalId']] = $module;
+			$modules[$module['externalNumber']] = $module;
 		}
 
-		$this->assertSame(['AIA-AangetekendMailen', 'APP-test123'], array_keys($modules));
-		$aia = $modules['AIA-AangetekendMailen'];
-		$this->assertSame('topdesk:' . $municipality . ':AIA-AangetekendMailen', $aia['externalKey']);
-		$this->assertSame('Aangetekend Mailen', $aia['name']);
-		$this->assertSame('Application', $aia['type']);
-		$this->assertSame('1234', $aia['externalNumber']);
-		$this->assertSame('2023-07-04', $aia['externalCreatedAt']);
-		$this->assertSame('2026-07-29', $aia['externalModifiedAt']);
-		$this->assertSame('Functionele omschrijving test123', $aia['longDescription']);
-		$publication = new \DateTimeImmutable($aia['publicationDate']);
+		$this->assertSame(['1234', '2'], array_map('strval', array_keys($modules)));
+		$onbeh = $modules[1234];
+		$this->assertSame('topdesk:' . $municipality . ':1234', $onbeh['externalKey']);
+		$this->assertSame('AIA-AangetekendMailen', $onbeh['externalId']);
+		$this->assertSame('Aangetekend Mailen', $onbeh['name']);
+		$this->assertSame('Mailen', $onbeh['shortDescription']);
+		$this->assertSame('Application', $onbeh['type']);
+		$this->assertSame('2023-07-04', $onbeh['externalCreatedAt']);
+		$this->assertSame('2026-07-29', $onbeh['externalModifiedAt']);
+		$this->assertSame('Functionele omschrijving test123', $onbeh['longDescription']);
+		$this->assertArrayNotHasKey('bbnLevel', $onbeh, '"NB" means unknown');
+		$this->assertArrayNotHasKey('cloudDienstverleningsmodel', $onbeh);
+		$publication = new \DateTimeImmutable($onbeh['publicationDate']);
 		$this->assertGreaterThanOrEqual($before, $publication);
 		$this->assertLessThanOrEqual(new \DateTimeImmutable('now'), $publication);
-		$this->assertSame($aia['publicationDate'], $modules['APP-test123']['publicationDate'], 'one start time for the whole import');
-		$this->assertSame('2', $modules['APP-test123']['externalNumber']);
+
+		$beheerd = $modules[2];
+		$this->assertSame($onbeh['publicationDate'], $beheerd['publicationDate'], 'one start time for the whole import');
+		$this->assertSame('topdesk:' . $municipality . ':2', $beheerd['externalKey']);
+		$this->assertSame('APP-test123', $beheerd['externalId']);
+		$this->assertSame('naamtest123', $beheerd['name']);
+		$this->assertSame('Naamtest', $beheerd['shortDescription'], 'Roepnaam wins over Nickname');
+		$this->assertSame('Accomodatieplanning.', $beheerd['longDescription']);
+		$this->assertSame(['SaaS'], $beheerd['cloudDienstverleningsmodel']);
+		$this->assertSame('BBN2', $beheerd['bbnLevel']);
 
 		$supplierByName = array_column($suppliers, 'id', 'name');
-		$this->assertSame($supplierByName['Aangetekend B.V.'], $aia['provider']);
-		$this->assertSame($supplierByName['Fabfrikant'], $modules['APP-test123']['provider']);
+		$this->assertSame($supplierByName['Aangetekend B.V.'], $onbeh['provider']);
+		$this->assertSame($supplierByName['Fabfrikant'], $beheerd['provider']);
 
 		$usages = $this->objects(self::USAGE);
 		$this->assertCount(2, $usages);
 		$usageByModule = array_column($usages, null, 'module');
-		$this->assertSame($municipality, $usageByModule[$aia['id']]['consumer']);
-		$this->assertSame('Planned', $usageByModule[$aia['id']]['status']);
-		$this->assertSame('H10 Accounting / H10 Bestuurs- en Concernondersteuning', $usageByModule[$aia['id']]['interneAnnotation']);
-		$this->assertSame($supplierByName['Aangetekend B.V.'], $usageByModule[$aia['id']]['provider']);
-		$app = $usageByModule[$modules['APP-test123']['id']];
+		$aia = $usageByModule[$onbeh['id']];
+		$this->assertSame($municipality, $aia['consumer']);
+		$this->assertSame('Planned', $aia['status']);
+		$this->assertSame('Beheer geregeld: nee / H10 / H10 Accounting', $aia['interneAnnotation']);
+		$this->assertArrayNotHasKey('startDateOutPhased', $aia, 'the CMDB placeholder 2036-01-01 means no date');
+		$this->assertArrayNotHasKey('timeClassification', $aia);
+		$this->assertSame($supplierByName['Aangetekend B.V.'], $aia['provider']);
+		$app = $usageByModule[$beheerd['id']];
 		$this->assertSame('In production', $app['status']);
+		$this->assertSame('Tolerate', $app['timeClassification']);
 		$this->assertSame('2046-02-01', $app['startDateOutPhased']);
-		$this->assertArrayNotHasKey('businessOwner', $app, 'the APP row names no owner');
+		$this->assertSame('Beheer geregeld: ja / B10 / B10 Maatschappelijke Ontwikkeling', $app['interneAnnotation']);
+		$this->assertArrayNotHasKey('technicalOwner', $app);
 
-		$this->assertSame($aia['id'], $report['rows'][0]['moduleUuid']);
-		$this->assertSame($usageByModule[$aia['id']]['id'], $report['rows'][0]['usageUuid']);
-		$this->assertSame(['Invoer AIA data', 2, 'AIA-AangetekendMailen', 'Aangetekend Mailen', 'created'], [$report['rows'][0]['sheet'], $report['rows'][0]['row'], $report['rows'][0]['middelId'], $report['rows'][0]['name'], $report['rows'][0]['outcome']]);
+		$this->assertSame($onbeh['id'], $report['rows'][0]['moduleUuid']);
+		$this->assertSame($aia['id'], $report['rows'][0]['usageUuid']);
+		$this->assertSame(
+			['Onbeh Applicaties CMDB', 2, '1234', 'Aangetekend Mailen', 'created'],
+			[$report['rows'][0]['sheet'], $report['rows'][0]['row'], $report['rows'][0]['appId'], $report['rows'][0]['name'], $report['rows'][0]['outcome']]
+		);
+		$this->assertSame('Beheerde Applicaties CMDB', $report['rows'][1]['sheet']);
 	}//end testTheFixtureCreatesModulesUsagesAndSuppliers()
 
 	/**
@@ -595,13 +619,34 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testReimportingTheSameExportChangesNothing()
 
 	/**
-	 * A changed Naam updates the module; website, publicationDate and depublicationDate stay.
+	 * The match key is the APPID: a changed Applicatie Code updates the same module.
+	 *
+	 * @return void
+	 */
+	public function testTheKeyIsTheAppIdNotTheCode(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '42', cells: ['Applicatie Code' => 'APP-Oud'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$uuid = array_key_first($this->store[self::MODULE]);
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '42', cells: ['Applicatie Code' => 'App-Nieuw'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('updated', $report['rows'][0]['outcome']);
+		$this->assertCount(1, $this->store[self::MODULE]);
+		$this->assertSame('App-Nieuw', $this->store[self::MODULE][$uuid]['externalId']);
+		$this->assertSame('topdesk:muni-1:42', $this->store[self::MODULE][$uuid]['externalKey']);
+		$this->assertSame('42', $this->store[self::MODULE][$uuid]['externalNumber']);
+	}//end testTheKeyIsTheAppIdNotTheCode()
+
+	/**
+	 * A changed Applicatie Naam updates the module; website, publicationDate and depublicationDate stay.
 	 *
 	 * @return void
 	 */
 	public function testAChangedNameUpdatesOnlyTheMappedFields(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
-		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-test123', cells: ['Naam' => 'naamtest123'])]));
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '2', cells: ['Applicatie Naam' => 'naamtest123'])]));
 		$service->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
 		$uuid = array_key_first($this->store[self::MODULE]);
@@ -609,7 +654,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->store[self::MODULE][$uuid]['depublicationDate'] = '2026-10-02T00:00:00+00:00';
 		$published = $this->store[self::MODULE][$uuid]['publicationDate'];
 
-		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-test123', cells: ['Naam' => 'naamtest124'])]));
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '2', cells: ['Applicatie Naam' => 'naamtest124'])]));
 		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
 		$this->assertSame('updated', $report['rows'][0]['outcome']);
@@ -629,14 +674,14 @@ class CmdbExportImportServiceTest extends TestCase {
 	 */
 	public function testAnUpdateNeverWritesPublicationDate(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
-		$this->store[self::MODULE]['mod-1'] = ['id' => 'mod-1', 'name' => 'Oud', 'externalKey' => 'topdesk:muni-1:APP-1'];
+		$this->store[self::MODULE]['mod-1'] = ['id' => 'mod-1', 'name' => 'Oud', 'externalKey' => 'topdesk:muni-1:1'];
 
-		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
 		$this->assertSame('updated', $report['rows'][0]['outcome']);
 		$this->assertArrayNotHasKey('publicationDate', $this->store[self::MODULE]['mod-1']);
 		$this->assertArrayNotHasKey('type', $this->store[self::MODULE]['mod-1'], 'type is create-only');
-		$this->assertSame('Applicatie APP-1', $this->store[self::MODULE]['mod-1']['name']);
+		$this->assertSame('Applicatie 1', $this->store[self::MODULE]['mod-1']['name']);
 	}//end testAnUpdateNeverWritesPublicationDate()
 
 	/**
@@ -648,7 +693,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->seedOrganisation(uuid: 'supplier-1', name: 'Voorbeeld Software B.V.', type: 'Supplier');
 		foreach ([['municipalityUuid' => 'supplier-1'], ['municipalityUuid' => 'unknown-uuid']] as $options) {
 			try {
-				$this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1')]))->import(path: '', options: $options);
+				$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: $options);
 				$this->fail('MUNICIPALITY_INVALID expected');
 			} catch (CmdbImportException $e) {
 				$this->assertSame('MUNICIPALITY_INVALID', $e->getErrorCode());
@@ -657,7 +702,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		}
 
 		try {
-			$this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1')]))->import(path: '', options: ['municipalityName' => '  ']);
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityName' => '  ']);
 			$this->fail('MUNICIPALITY_REQUIRED expected');
 		} catch (CmdbImportException $e) {
 			$this->assertSame('MUNICIPALITY_REQUIRED', $e->getErrorCode());
@@ -671,15 +716,15 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testAManufacturerIsOneSupplier(): void {
+	public function testAVendorIsOneSupplier(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		$this->seedOrganisation(uuid: 'aangetekend', name: 'Aangetekend B.V.', type: 'Supplier');
 		$rows = [
-			$this->row(middelId: 'APP-1', cells: ['Fabrikant' => 'Fabfrikant'], row: 2),
-			$this->row(middelId: 'APP-2', cells: ['Fabrikant' => 'Fabfrikant '], row: 3),
-			$this->row(middelId: 'APP-3', cells: ['Fabrikant' => 'FABFRIKANT'], row: 4),
-			$this->row(middelId: 'APP-4', cells: ['Fabrikant' => 'aangetekend  b.v.'], row: 5),
-			$this->row(middelId: 'APP-5', cells: ['Fabrikant' => ''], row: 6),
+			$this->row(appId: '1', cells: ['Vendor' => 'Fabfrikant'], row: 2),
+			$this->row(appId: '2', cells: ['Vendor' => 'Fabfrikant '], row: 3),
+			$this->row(appId: '3', cells: ['Vendor' => 'FABFRIKANT'], row: 4),
+			$this->row(appId: '4', cells: ['Vendor' => 'aangetekend  b.v.'], row: 5),
+			$this->row(appId: '5', cells: ['Vendor' => ''], row: 6),
 		];
 
 		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
@@ -688,9 +733,9 @@ class CmdbExportImportServiceTest extends TestCase {
 		$suppliers = array_filter($this->objects(self::ORGANIZATION), fn (array $o): bool => $o['type'] === 'Supplier');
 		$this->assertCount(2, $suppliers);
 		$fabfrikant = array_values(array_filter($suppliers, fn (array $o): bool => $o['name'] === 'Fabfrikant'))[0]['id'];
-		$providers = array_column($this->objects(self::MODULE), 'provider', 'externalId');
-		$this->assertSame(['APP-1' => $fabfrikant, 'APP-2' => $fabfrikant, 'APP-3' => $fabfrikant, 'APP-4' => 'aangetekend'], $providers);
-	}//end testAManufacturerIsOneSupplier()
+		$providers = array_column($this->objects(self::MODULE), 'provider', 'externalNumber');
+		$this->assertSame([1 => $fabfrikant, 2 => $fabfrikant, 3 => $fabfrikant, 4 => 'aangetekend'], $providers);
+	}//end testAVendorIsOneSupplier()
 
 	/**
 	 * updateExisting=false reports a match as skipped "exists" and writes nothing.
@@ -699,10 +744,10 @@ class CmdbExportImportServiceTest extends TestCase {
 	 */
 	public function testUpdateExistingFalseSkipsMatches(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
-		$this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 		$saves = count($this->saves);
 
-		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1', cells: ['Naam' => 'Anders'])]))
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Naam' => 'Anders'])]))
 			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'updateExisting' => false]);
 
 		$this->assertSame('skipped', $report['rows'][0]['outcome']);
@@ -717,16 +762,16 @@ class CmdbExportImportServiceTest extends TestCase {
 	 */
 	public function testRecordsMissingFromTheExportStay(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
-		$this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1', row: 2), $this->row(middelId: 'AIA-1', row: 3)]))
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2), $this->row(appId: '7', row: 3, sheet: 'Onbeh Applicaties CMDB')]))
 			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 		$modules = $this->store[self::MODULE];
 		$usages = $this->store[self::USAGE];
 
-		$this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1', cells: ['Naam' => 'Nieuw'])]))
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Naam' => 'Nieuw'])]))
 			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
 		foreach ($modules as $uuid => $module) {
-			if ($module['externalId'] === 'AIA-1') {
+			if ($module['externalNumber'] === '7') {
 				$this->assertSame($module, $this->store[self::MODULE][$uuid]);
 			}
 		}
@@ -736,18 +781,18 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testRecordsMissingFromTheExportStay()
 
 	/**
-	 * An unknown Status drops only that field and warns with column and value.
+	 * An unknown Applicatie Status drops only that field and warns with column and value.
 	 *
 	 * @return void
 	 */
 	public function testAnUnknownStatusDropsOnlyThatField(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
-		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1', cells: ['Status' => 'Onbekende status'])]))
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Status' => 'Onbekende status'])]))
 			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
 		$this->assertSame('created', $report['rows'][0]['outcome']);
 		$this->assertCount(1, $report['rows'][0]['warnings']);
-		$this->assertStringContainsString('"Status"', $report['rows'][0]['warnings'][0]);
+		$this->assertStringContainsString('"Applicatie Status"', $report['rows'][0]['warnings'][0]);
 		$this->assertStringContainsString('Onbekende status', $report['rows'][0]['warnings'][0]);
 		$this->assertSame(1, $report['summary']['warnings']);
 		$usage = $this->objects(self::USAGE)[0];
@@ -756,7 +801,66 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAnUnknownStatusDropsOnlyThatField()
 
 	/**
-	 * A test-only module pack that maps Roepnaam to shortDescription changes the import without code.
+	 * The sheet a row comes from records whether maintenance is arranged, in the usage's internal note;
+	 * empty Cluster or Afdeling leave no empty part behind.
+	 *
+	 * @return void
+	 */
+	public function testTheSheetRecordsWhetherMaintenanceIsArranged(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [
+			$this->row(appId: '1', cells: ['Cluster' => 'H10', 'Applicatie Eigenaar (Afdeling)' => 'H10 Accounting'], sheet: 'Onbeh Applicaties CMDB'),
+			$this->row(appId: '2', cells: ['Cluster' => '', 'Applicatie Eigenaar (Afdeling)' => 'B10 Ontwikkeling'], row: 3),
+			$this->row(appId: '3', cells: ['Cluster' => '', 'Applicatie Eigenaar (Afdeling)' => ''], row: 4),
+		];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$notes = array_column($this->objects(self::USAGE), 'interneAnnotation');
+		$this->assertSame(['Beheer geregeld: nee / H10 / H10 Accounting', 'Beheer geregeld: ja / B10 Ontwikkeling', 'Beheer geregeld: ja'], $notes);
+	}//end testTheSheetRecordsWhetherMaintenanceIsArranged()
+
+	/**
+	 * "NB" in BNN Classificatie and the CMDB end-of-life placeholder (serial 49675) mean empty: no field, no warning.
+	 *
+	 * @return void
+	 */
+	public function testTheCmdbPlaceholdersMeanEmpty(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [
+			$this->row(appId: '1', cells: ['BNN Classificatie' => 'NB', 'End-of-Life Functioneel' => 49675]),
+			$this->row(appId: '2', cells: ['BNN Classificatie' => 'BBN 3', 'End-of-Life Functioneel' => 53359, 'Classificatie' => 'Migreren'], row: 3),
+		];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(0, $report['summary']['warnings']);
+		$modules = array_column($this->objects(self::MODULE), null, 'externalNumber');
+		$this->assertArrayNotHasKey('bbnLevel', $modules[1]);
+		$this->assertSame('BBN3', $modules[2]['bbnLevel']);
+		$usages = array_column($this->objects(self::USAGE), null, 'module');
+		$this->assertArrayNotHasKey('startDateOutPhased', $usages[$modules[1]['id']]);
+		$this->assertSame('2046-02-01', $usages[$modules[2]['id']]['startDateOutPhased']);
+		$this->assertSame('Migrate', $usages[$modules[2]['id']]['timeClassification']);
+	}//end testTheCmdbPlaceholdersMeanEmpty()
+
+	/**
+	 * A formula without a cached value reads as empty and warns on its row; the row is still imported.
+	 *
+	 * @return void
+	 */
+	public function testAFormulaWithoutACachedValueWarns(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Roepnaam' => null], uncached: ['Roepnaam'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('created', $report['rows'][0]['outcome']);
+		$this->assertSame(['Column "Roepnaam": formula without a cached value, read as empty'], $report['rows'][0]['warnings']);
+		$this->assertArrayNotHasKey('shortDescription', $this->objects(self::MODULE)[0]);
+	}//end testAFormulaWithoutACachedValueWarns()
+
+	/**
+	 * A test-only module pack that maps one more column changes the import without code.
 	 *
 	 * @return void
 	 */
@@ -768,27 +872,28 @@ class CmdbExportImportServiceTest extends TestCase {
 		}
 
 		$pack = json_decode((string)file_get_contents($directory . '/topdesk-module.json'), true);
-		$pack['fieldMappings'][] = ['source' => 'Roepnaam', 'target' => 'shortDescription', 'transform' => ['type' => 'trim']];
+		$pack['fieldMappings'][] = ['source' => 'Software Suite', 'target' => 'licentietype', 'transform' => ['type' => 'trim']];
 		file_put_contents($directory . '/topdesk-module.json', json_encode($pack));
 
 		try {
 			$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
-			$this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'AIA-AangetekendMailen', cells: ['Roepnaam' => 'Mailen'])]), profileDir: $directory)
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Software Suite' => 'Suite'])]), profileDir: $directory)
 				->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 		} finally {
 			array_map('unlink', glob($directory . '/*.json'));
 			rmdir($directory);
 		}
 
-		$this->assertSame('Mailen', $this->objects(self::MODULE)[0]['shortDescription']);
+		$this->assertSame('Suite', $this->objects(self::MODULE)[0]['licentietype']);
 	}//end testAPackChangeChangesTheMapping()
 
 	// ------------------------------------------------------------------
-	// Task 6: owners as contact persons
+	// Task 6: the owner as contact person
 	// ------------------------------------------------------------------
 
 	/**
-	 * The AIA owner becomes the usage's business owner: one contact person of the municipality, role Afdelingshoofd.
+	 * Each row's Applicatie Eigenaar (Persoon) becomes the usage's business owner, by display name; a
+	 * function in that column is used as the display name too; the function becomes the role.
 	 *
 	 * @return void
 	 */
@@ -797,17 +902,22 @@ class CmdbExportImportServiceTest extends TestCase {
 		$report = $this->service()->import(path: $path, options: ['municipalityName' => 'Gemeente Voorbeeldstad']);
 		$municipality = $report['municipality']['uuid'];
 
-		$this->assertCount(1, $this->contacts);
-		$contactsUid = array_key_first($this->contacts);
-		$this->assertSame('letter.achternaam@gemeente.nl', $this->contacts[$contactsUid]['email']);
-		$this->assertSame('Voornaam Achternaam', $this->contacts[$contactsUid]['name']);
+		$this->assertEqualsCanonicalizing(['Voornaam Achternaam', 'Teamleider Applicatiebeheer'], array_column($this->contacts, 'name'));
+		$this->assertSame(['', ''], array_column($this->contacts, 'email'), 'the CMDB sheets carry no e-mail address');
 
 		$people = $this->objects(self::CONTACT_PERSON);
-		$this->assertCount(1, $people);
-		$this->assertSame(['contactsUid' => $contactsUid, 'organization' => $municipality, 'role' => 'Afdelingshoofd'], array_diff_key($people[0], ['id' => true]));
+		$this->assertCount(2, $people);
+		$uidByName = array_flip(array_map(fn (array $c): string => $c['name'], $this->contacts));
+		$byUid = array_column($people, null, 'contactsUid');
+		$this->assertSame(
+			['contactsUid' => $uidByName['Voornaam Achternaam'], 'organization' => $municipality, 'role' => 'Afdelingshoofd'],
+			array_diff_key($byUid[$uidByName['Voornaam Achternaam']], ['id' => true])
+		);
+		$this->assertSame('Teamleider Applicatiebeheer', $byUid[$uidByName['Teamleider Applicatiebeheer']]['role']);
 
-		$usage = array_column($this->objects(self::USAGE), null, 'module')[$report['rows'][0]['moduleUuid']];
-		$this->assertSame($people[0]['id'], $usage['businessOwner']);
+		$usages = array_column($this->objects(self::USAGE), null, 'module');
+		$this->assertSame($byUid[$uidByName['Voornaam Achternaam']]['id'], $usages[$report['rows'][0]['moduleUuid']]['businessOwner']);
+		$this->assertSame($byUid[$uidByName['Teamleider Applicatiebeheer']]['id'], $usages[$report['rows'][1]['moduleUuid']]['businessOwner']);
 	}//end testTheOwnerBecomesTheBusinessOwner()
 
 	/**
@@ -817,8 +927,8 @@ class CmdbExportImportServiceTest extends TestCase {
 	 */
 	public function testTheSameOwnerOnTwoRowsIsOneContactPerson(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
-		$owner = ['Eigenaar' => 'Achternaam, Voornaam', 'Eigenaar e-mail' => 'letter.achternaam@gemeente.nl', 'Eigenaar functie' => 'Afdelingshoofd'];
-		$this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1', cells: $owner, row: 2), $this->row(middelId: 'APP-2', cells: $owner, row: 3)]))
+		$owner = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (Functie)' => 'Afdelingshoofd'];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $owner, row: 2), $this->row(appId: '2', cells: $owner, row: 3)]))
 			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
 		$this->assertCount(1, $this->objects(self::CONTACT_PERSON));
@@ -827,15 +937,15 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testTheSameOwnerOnTwoRowsIsOneContactPerson()
 
 	/**
-	 * A technical owner without an e-mail, imported twice, is one contact and one contact person.
+	 * An owner imported twice is one contact and one contact person; a near-namesake is not reused.
 	 *
 	 * @return void
 	 */
-	public function testATechnicalOwnerByNameIsMatchedExactly(): void {
+	public function testAnOwnerByNameIsMatchedExactly(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		// A contact whose name merely contains the owner's name must not match.
 		$this->contacts['contact-other'] = ['name' => 'Voornaam Achternaam-Anders', 'email' => ''];
-		$rows = [$this->row(middelId: 'APP-1', cells: ['FB contactpersoon 1' => 'Achternaam, Voornaam'])];
+		$rows = [$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam'])];
 
 		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
@@ -845,11 +955,27 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertCount(1, $people);
 		$this->assertNotSame('contact-other', $people[0]['contactsUid']);
 		$this->assertArrayNotHasKey('role', $people[0]);
-		$this->assertSame($people[0]['id'], $this->objects(self::USAGE)[0]['technicalOwner']);
-	}//end testATechnicalOwnerByNameIsMatchedExactly()
+		$this->assertSame($people[0]['id'], $this->objects(self::USAGE)[0]['businessOwner']);
+	}//end testAnOwnerByNameIsMatchedExactly()
 
 	/**
-	 * With Contacts disabled the modules and usages are saved without owners, with a warning on the row that has owners.
+	 * No technical owner is written, whatever the row holds.
+	 *
+	 * @return void
+	 */
+	public function testNoTechnicalOwnerIsWritten(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['FB contactpersoon 1' => 'Achternaam, Voornaam'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertArrayNotHasKey('technicalOwner', $this->objects(self::USAGE)[0]);
+		$this->assertArrayNotHasKey('businessOwner', $this->objects(self::USAGE)[0]);
+		$this->assertSame([], $this->objects(self::CONTACT_PERSON));
+		$this->assertSame([], $this->contacts);
+	}//end testNoTechnicalOwnerIsWritten()
+
+	/**
+	 * With Contacts disabled the modules and usages are saved without owners, with a warning on each row that has an owner.
 	 *
 	 * @return void
 	 */
@@ -861,8 +987,8 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame(2, $report['summary']['created']);
 		$this->assertCount(2, $this->objects(self::USAGE));
 		$this->assertSame([], $this->objects(self::CONTACT_PERSON));
-		$this->assertSame(['Owners skipped: Nextcloud Contacts is unavailable'], $report['rows'][0]['warnings']);
-		$this->assertSame([], $report['rows'][1]['warnings'], 'the APP row names no owner');
+		$this->assertContains('Owners skipped: Nextcloud Contacts is unavailable', $report['rows'][0]['warnings']);
+		$this->assertSame(['Owners skipped: Nextcloud Contacts is unavailable'], $report['rows'][1]['warnings']);
 	}//end testContactsDisabledDoesNotBlockTheImport()
 
 	/**
@@ -872,7 +998,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 */
 	public function testAnImportedContactPersonIsNeverAUser(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
-		$this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1', cells: ['Eigenaar' => 'Achternaam, Voornaam', 'Eigenaar e-mail' => 'letter.achternaam@gemeente.nl', 'FB contactpersoon 1' => 'Achternaam, Voornaam'])]))
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (Functie)' => 'Afdelingshoofd'])]))
 			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
 		$people = $this->objects(self::CONTACT_PERSON);
@@ -890,23 +1016,23 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAnImportedContactPersonIsNeverAUser()
 
 	/**
-	 * Neither the report nor any log line names an owner or an e-mail address.
+	 * Neither the report nor any log line names an owner.
 	 *
 	 * @return void
 	 */
 	public function testNoPersonDataInReportOrLog(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
-		$owner = ['Eigenaar' => 'Achternaam, Voornaam', 'Eigenaar e-mail' => 'letter.achternaam@gemeente.nl', 'FB contactpersoon 1' => 'Achternaam, Voornaam'];
+		$owner = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (Functie)' => 'Afdelingshoofd'];
 		$this->beforeSave = function (int $schema, array $data): void {
 			if ($schema === self::USAGE && ($data['module'] ?? '') !== '' && count($this->objects(self::USAGE)) === 1) {
 				throw new RuntimeException('usage refused');
 			}
 		};
-		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1', cells: $owner, row: 2), $this->row(middelId: 'APP-2', cells: $owner, row: 3)]))
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $owner, row: 2), $this->row(appId: '2', cells: $owner, row: 3)]))
 			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
 		$text = json_encode($report, JSON_UNESCAPED_UNICODE) . "\n" . implode("\n", $this->logLines);
-		foreach (['Achternaam', 'Voornaam', 'letter.achternaam', '@gemeente.nl'] as $personData) {
+		foreach (['Achternaam', 'Voornaam'] as $personData) {
 			$this->assertStringNotContainsString($personData, $text);
 		}
 
@@ -925,11 +1051,11 @@ class CmdbExportImportServiceTest extends TestCase {
 	public function testOneBadRowDoesNotStopTheOthers(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		$this->beforeSave = function (int $schema, array $data): void {
-			if ($schema === self::MODULE && ($data['externalId'] ?? '') === 'APP-2') {
+			if ($schema === self::MODULE && ($data['externalNumber'] ?? '') === '2') {
 				throw new RuntimeException('Validation failed for name');
 			}
 		};
-		$rows = [$this->row(middelId: 'APP-1', row: 2), $this->row(middelId: 'APP-2', row: 3), $this->row(middelId: 'APP-3', row: 4)];
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3), $this->row(appId: '3', row: 4)];
 
 		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
@@ -940,19 +1066,18 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testOneBadRowDoesNotStopTheOthers()
 
 	/**
-	 * Duplicate Middel-IDs, a missing Middel-ID, a missing Naam and another Soort are skipped with their reasons.
+	 * A duplicate APPID (also across the two sheets), a missing APPID and a missing Applicatie Naam are skipped with their reasons.
 	 *
 	 * @return void
 	 */
 	public function testRowsAreSkippedWithTheirReasons(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		$rows = [
-			$this->row(middelId: 'APP-test123', row: 2),
-			$this->row(middelId: 'APP-test123', row: 7),
-			$this->row(middelId: '', row: 8),
-			$this->row(middelId: 'HW-1', cells: ['Soort' => 'Hardware'], row: 9),
-			$this->row(middelId: 'APP-9', cells: ['Naam' => ' '], row: 10),
-			$this->row(middelId: 'APP-test123', cells: ['Soort' => 'Application Inventory'], row: 2, sheet: 'Invoer AIA data'),
+			$this->row(appId: '2', row: 2),
+			$this->row(appId: '2', row: 7),
+			$this->row(appId: '', row: 8),
+			$this->row(appId: '9', cells: ['Applicatie Naam' => ' '], row: 10),
+			$this->row(appId: '2', row: 2, sheet: 'Onbeh Applicaties CMDB'),
 		];
 
 		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
@@ -960,11 +1085,10 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame(
 			[
 				['created', []],
-				['skipped', ['duplicate Middel-ID in file']],
-				['skipped', ['missing Middel-ID']],
-				['skipped', ['unsupported Soort "Hardware"']],
-				['skipped', ['missing Naam']],
-				['skipped', ['duplicate Middel-ID in file']],
+				['skipped', ['duplicate APPID in file']],
+				['skipped', ['missing APPID']],
+				['skipped', ['missing Applicatie Naam']],
+				['skipped', ['duplicate APPID in file']],
 			],
 			array_map(fn (array $row): array => [$row['outcome'], $row['reasons']], $report['rows'])
 		);
@@ -984,7 +1108,7 @@ class CmdbExportImportServiceTest extends TestCase {
 				$seen[] = $this->tracker->getProgress(operationId: 'cmdb-progress-1')['processed_items'];
 			}
 		};
-		$rows = [$this->row(middelId: 'APP-1', row: 2), $this->row(middelId: 'APP-2', row: 3)];
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3)];
 
 		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-progress-1']);
 
@@ -1008,7 +1132,7 @@ class CmdbExportImportServiceTest extends TestCase {
 				$this->assertTrue($service->requestCancel(operationId: 'cmdb-cancel-01'));
 			}
 		};
-		$rows = [$this->row(middelId: 'APP-1', row: 2), $this->row(middelId: 'APP-2', row: 3), $this->row(middelId: 'APP-3', row: 4)];
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3), $this->row(appId: '3', row: 4)];
 		$service = $this->service(reader: $this->rowsReader(rows: $rows));
 
 		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-cancel-01']);
@@ -1043,14 +1167,14 @@ class CmdbExportImportServiceTest extends TestCase {
 	 */
 	public function testMissingEngineOrConfigurationStopsBeforeReading(): void {
 		try {
-			$this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1')]), config: [])->import(path: '', options: ['municipalityName' => 'Gemeente Voorbeeldstad']);
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]), config: [])->import(path: '', options: ['municipalityName' => 'Gemeente Voorbeeldstad']);
 			$this->fail('NOT_CONFIGURED expected');
 		} catch (CmdbImportException $e) {
 			$this->assertSame('NOT_CONFIGURED', $e->getErrorCode());
 			$this->assertSame(503, $e->getHttpStatus());
 		}
 
-		$base = $this->service(reader: $this->rowsReader(rows: [$this->row(middelId: 'APP-1')]));
+		$base = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]));
 		$reflection = new \ReflectionClass($base);
 		$args = [];
 		foreach ($reflection->getConstructor()->getParameters() as $parameter) {

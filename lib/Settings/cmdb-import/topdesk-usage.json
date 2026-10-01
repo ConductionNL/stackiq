@@ -1,12 +1,12 @@
 {
   "id": "stackiq-topdesk-usage",
   "name": "TOPdesk CMDB export to stackiq usage",
-  "description": "The usage that links the application to the municipality. The Status lookup is provisional until the municipality confirms its values; an unknown value drops the field with a warning.",
+  "description": "The usage that links the application to the municipality. The internal note records whether maintenance is arranged (the sheet the row came from), the cluster and the owner's department. An unknown status or TIME value drops the field with a warning.",
   "sourceFormat": "excel",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "fieldMappings": [
     {
-      "source": "Status",
+      "source": "Applicatie Status",
       "target": "status",
       "transform": {
         "type": "lookup",
@@ -20,7 +20,7 @@
       }
     },
     {
-      "source": "ICT TIME Classificatie",
+      "source": "Classificatie",
       "target": "timeClassification",
       "transform": {
         "type": "lookup",
@@ -32,8 +32,8 @@
         }
       }
     },
-    { "source": "End of Life Business", "target": "startDateOutPhased", "transform": { "type": "date", "sourceFormat": "!Y-m-d", "targetFormat": "Y-m-d" } },
-    { "source": "Eigenaar afdeling", "target": "interneAnnotation", "transform": { "type": "concat", "fields": ["Eigenaar cluster"], "separator": " / " } }
+    { "source": "End-of-Life Functioneel", "target": "startDateOutPhased", "transform": { "type": "date", "sourceFormat": "!Y-m-d", "targetFormat": "Y-m-d" } },
+    { "source": "Beheer", "target": "interneAnnotation", "transform": { "type": "concat", "fields": ["Cluster", "Applicatie Eigenaar (Afdeling)"], "separator": " / " } }
   ],
   "idStrategy": { "type": "generate" }
 }

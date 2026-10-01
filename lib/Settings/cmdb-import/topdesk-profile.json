@@ -1,28 +1,37 @@
 {
   "id": "topdesk-cmdb",
   "name": "TOPdesk CMDB export",
-  "version": "1.0.0",
-  "description": "How stackiq reads a TOPdesk CMDB export (xlsx). Sheets, key and required columns, date and id columns, the pack per target and the limits. Columns that neither this profile nor a pack names are never read.",
+  "version": "2.0.0",
+  "description": "How stackiq reads a TOPdesk CMDB export (xlsx): the two CMDB sheets, the key and required columns, date and id columns, values that mean empty, the pack per target and the limits. Columns that neither this profile nor a pack names are never read.",
   "maxFileBytes": 10485760,
   "maxRowsPerSheet": 10000,
   "sheets": [
-    { "name": "Invoer AIA data", "acceptedKinds": ["Application Inventory"] },
-    { "name": "Invoer APP data", "acceptedKinds": ["Applicatie"] }
+    {
+      "name": "Onbeh Applicaties CMDB",
+      "constants": { "Beheer": "Beheer geregeld: nee" },
+      "absentColumns": ["Nickname"]
+    },
+    {
+      "name": "Beheerde Applicaties CMDB",
+      "constants": { "Beheer": "Beheer geregeld: ja" }
+    }
   ],
-  "keyColumn": "Middel-ID",
-  "nameColumn": "Naam",
-  "kindColumn": "Soort",
-  "requiredColumns": ["Middel-ID", "Naam"],
-  "dateColumns": ["Aanmaakdatum", "Wijzigingsdatum", "End of Life Business", "Einddatum"],
-  "idColumns": ["Middel-ID", "ICT Applicatienummer"],
+  "keyColumn": "APPID",
+  "nameColumn": "Applicatie Naam",
+  "requiredColumns": ["APPID", "Applicatie Naam"],
+  "dateColumns": ["Datum", "Referentie datum wijziging", "End-of-Life Functioneel"],
+  "idColumns": ["APPID"],
+  "emptyValues": {
+    "BNN Classificatie": ["NB"],
+    "End-of-Life Functioneel": ["49675"]
+  },
   "externalKeyPrefix": "topdesk",
   "packs": {
     "module": "topdesk-module.json",
     "manufacturer": "topdesk-manufacturer.json",
     "municipality": "topdesk-municipality.json",
     "usage": "topdesk-usage.json",
-    "businessOwner": "topdesk-business-owner.json",
-    "technicalOwner": "topdesk-technical-owner.json"
+    "businessOwner": "topdesk-business-owner.json"
   },
   "createOnly": {
     "module": { "type": "Application" },

@@ -10,9 +10,9 @@ The `module` schema is at version `0.3.5` with five extra optional properties, a
 
 | Property | Type | Notes |
 |---|---|---|
-| `externalId` | string, maxLength 100 | TOPdesk Middel-ID, shown as "Source id" |
-| `externalNumber` | string, maxLength 50 | TOPdesk "ICT Applicatienummer" |
-| `externalKey` | string, maxLength 200, `table.default: false` | `topdesk:<municipality uuid>:<Middel-ID>`, the import's match key |
+| `externalId` | string, maxLength 100 | TOPdesk Applicatie Code (the Middel-ID), shown as "Source id"; reference only |
+| `externalNumber` | string, maxLength 50 | TOPdesk APPID ("ICT Applicatienummer") |
+| `externalKey` | string, maxLength 200, `table.default: false` | `topdesk:<municipality uuid>:<APPID>`, the import's match key |
 | `externalCreatedAt` | string, format date | creation date in the source system |
 | `externalModifiedAt` | string, format date | last change in the source system |
 

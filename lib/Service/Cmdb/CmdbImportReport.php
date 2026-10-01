@@ -84,7 +84,7 @@ class CmdbImportReport {
 	 *
 	 * @param string $sheet The sheet name.
 	 * @param int $row The 1-based sheet row number.
-	 * @param string $middelId The Middel-ID ('' when missing).
+	 * @param string $appId The APPID ('' when missing).
 	 * @param string $name The application name ('' when missing).
 	 * @param string $outcome One of the outcome constants.
 	 * @param array<int, string> $reasons Why the row was skipped or failed.
@@ -99,7 +99,7 @@ class CmdbImportReport {
 	public function addRow(
 		string $sheet,
 		int $row,
-		string $middelId,
+		string $appId,
 		string $name,
 		string $outcome,
 		array $reasons = [],
@@ -110,7 +110,7 @@ class CmdbImportReport {
 		$this->rows[] = [
 			'sheet' => $sheet,
 			'row' => $row,
-			'middelId' => $middelId,
+			'appId' => $appId,
 			'name' => $name,
 			'outcome' => $outcome,
 			'reasons' => array_values($reasons),

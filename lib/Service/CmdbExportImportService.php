@@ -5,12 +5,12 @@
  *
  * Turns a TOPdesk CMDB export (xlsx) into stackiq objects for one
  * municipality (openspec/changes/cmdb-export-import). Every application row
- * becomes, or updates, a `module` with its manufacturer `organization`
- * (type Supplier), a `usage` that links it to the municipality, and
- * `contactPerson` objects for its owners, resolved through Nextcloud
- * Contacts. Rows are matched on `externalKey` =
- * `topdesk:<municipality uuid>:<Middel-ID>`, so a second import of a newer
- * export updates the same records.
+ * of the CMDB sheets ("Onbeh Applicaties CMDB", "Beheerde Applicaties
+ * CMDB") becomes, or updates, a `module` with its vendor `organization`
+ * (type Supplier), a `usage` that links it to the municipality, and a
+ * `contactPerson` for its owner, resolved through Nextcloud Contacts. Rows
+ * are matched on `externalKey` = `topdesk:<municipality uuid>:<APPID>`, so a
+ * second import of a newer export updates the same records.
  *
  * What each column becomes is declarative: the migration packs under
  * `lib/Settings/cmdb-import/`, executed by OpenRegister's
@@ -124,7 +124,7 @@ class CmdbExportImportService {
 	private ?array $suppliers = null;
 
 	/**
-	 * Middel-IDs seen in this upload.
+	 * APPIDs seen in this upload.
 	 *
 	 * @var array<string, true>
 	 */
@@ -313,7 +313,7 @@ class CmdbExportImportService {
 	/**
 	 * Process one row in its own error boundary and add its outcome.
 	 *
-	 * @param array{sheet: string, row: int, cells: array<string, mixed>} $row The reader row.
+	 * @param array{sheet: string, row: int, cells: array<string, mixed>, uncached?: array<int, string>} $row The reader row.
 	 * @param string $municipalityUuid The consumer.
 	 * @param bool $updateExisting Whether matched rows are updated.
 	 * @param string $startedAt ISO start time of the import.
@@ -332,29 +332,34 @@ class CmdbExportImportService {
 		bool $date1904,
 		CmdbImportReport $report,
 	): void {
+		$sheet = $row['sheet'];
 		$values = $this->normaliser->normalise(
-			cells: $row['cells'],
+			cells: array_merge($row['cells'], $this->profile->sheetConstants(sheetName: $sheet)),
 			dateColumns: $this->profile->dateColumns(),
 			idColumns: $this->profile->idColumns(),
-			date1904: $date1904
+			date1904: $date1904,
+			emptyValues: $this->profile->emptyValues()
 		);
-		$sheet = $row['sheet'];
 		$rowNumber = $row['row'];
-		$middelId = ($values[$this->profile->keyColumn()] ?? '');
+		$appId = ($values[$this->profile->keyColumn()] ?? '');
 		$name = ($values[$this->profile->nameColumn()] ?? '');
 
-		$entry = ['sheet' => $sheet, 'row' => $rowNumber, 'middelId' => $middelId, 'name' => $name];
+		$entry = ['sheet' => $sheet, 'row' => $rowNumber, 'appId' => $appId, 'name' => $name];
 
-		$skipReason = $this->skipReason(sheet: $sheet, values: $values, middelId: $middelId);
+		$warnings = [];
+		foreach (($row['uncached'] ?? []) as $column) {
+			$warnings[] = $this->l10n->t('Column "%s": formula without a cached value, read as empty', [(string)$column]);
+		}
+
+		$skipReason = $this->skipReason(appId: $appId);
 		if ($skipReason !== null) {
-			$this->addRow(report: $report, entry: $entry, outcome: CmdbImportReport::SKIPPED, reasons: [$skipReason]);
+			$this->addRow(report: $report, entry: $entry, outcome: CmdbImportReport::SKIPPED, reasons: [$skipReason], warnings: $warnings);
 			return;
 		}
 
 		$step = 'mapping';
 		$moduleUuid = null;
 		$usageUuid = null;
-		$warnings = [];
 
 		try {
 			$module = $this->map(target: 'module', values: $values, rowNumber: $rowNumber, warnings: $warnings);
@@ -368,7 +373,7 @@ class CmdbExportImportService {
 			$providerUuid = $this->resolveManufacturer(values: $values, rowNumber: $rowNumber);
 
 			$step = 'module';
-			$externalKey = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $middelId;
+			$externalKey = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $appId;
 			$moduleResult = $this->upsertModule(
 				data: $module['data'],
 				externalKey: $externalKey,
@@ -415,7 +420,7 @@ class CmdbExportImportService {
 	 * Report a row as failed at a step, and log it without person data.
 	 *
 	 * @param CmdbImportReport $report The report.
-	 * @param array{sheet: string, row: int, middelId: string, name: string} $entry Where the row is.
+	 * @param array{sheet: string, row: int, appId: string, name: string} $entry Where the row is.
 	 * @param string $step The step that failed.
 	 * @param Throwable $e The cause.
 	 * @param array<int, string> $warnings Row warnings so far.
@@ -430,7 +435,7 @@ class CmdbExportImportService {
 		$this->logger->warning(
 			'CmdbExportImportService: row failed',
 			array_merge(
-				['sheet' => $entry['sheet'], 'row' => $entry['row'], 'middelId' => $entry['middelId']],
+				['sheet' => $entry['sheet'], 'row' => $entry['row'], 'appId' => $entry['appId']],
 				['step' => $step, 'exception' => get_class($e), 'error' => $detail]
 			)
 		);
@@ -519,7 +524,7 @@ class CmdbExportImportService {
 	 * Add a row outcome to the report.
 	 *
 	 * @param CmdbImportReport $report The report.
-	 * @param array{sheet: string, row: int, middelId: string, name: string} $entry Where the row is.
+	 * @param array{sheet: string, row: int, appId: string, name: string} $entry Where the row is.
 	 * @param string $outcome The outcome.
 	 * @param array<int, string> $reasons Reasons.
 	 * @param array<int, string> $warnings Warnings.
@@ -542,7 +547,7 @@ class CmdbExportImportService {
 		$report->addRow(
 			sheet: $entry['sheet'],
 			row: $entry['row'],
-			middelId: $entry['middelId'],
+			appId: $entry['appId'],
 			name: $entry['name'],
 			outcome: $outcome,
 			reasons: $reasons,
@@ -555,32 +560,24 @@ class CmdbExportImportService {
 	/**
 	 * Why a row is skipped before mapping, or null when it is imported.
 	 *
-	 * @param string $sheet The sheet name.
-	 * @param array<string, string> $values The normalised row.
-	 * @param string $middelId The Middel-ID.
+	 * An APPID seen earlier in the same upload, on either sheet, is a duplicate.
+	 *
+	 * @param string $appId The APPID.
 	 *
 	 * @return string|null
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
-	private function skipReason(string $sheet, array $values, string $middelId): ?string {
-		if ($middelId === '') {
+	private function skipReason(string $appId): ?string {
+		if ($appId === '') {
 			return $this->l10n->t('missing %s', [$this->profile->keyColumn()]);
 		}
 
-		if (isset($this->seenKeys[$middelId]) === true) {
+		if (isset($this->seenKeys[$appId]) === true) {
 			return $this->l10n->t('duplicate %s in file', [$this->profile->keyColumn()]);
 		}
 
-		$this->seenKeys[$middelId] = true;
-
-		$kindColumn = $this->profile->kindColumn();
-		$accepted = $this->profile->acceptedKinds(sheetName: $sheet);
-		if ($accepted !== [] && array_key_exists($kindColumn, $values) === true
-			&& in_array($values[$kindColumn], $accepted, true) === false
-		) {
-			return $this->l10n->t('unsupported %1$s "%2$s"', [$kindColumn, $values[$kindColumn]]);
-		}
+		$this->seenKeys[$appId] = true;
 
 		return null;
 	}//end skipReason()
@@ -613,7 +610,7 @@ class CmdbExportImportService {
 			}
 		}
 
-		$silent = in_array($target, ['manufacturer', 'businessOwner', 'technicalOwner', 'municipality'], true);
+		$silent = in_array($target, ['manufacturer', 'businessOwner', 'municipality'], true);
 		$missing = [];
 		foreach (($result['errors'] ?? []) as $error) {
 			$source = (string)($error['source'] ?? '');
@@ -712,7 +709,7 @@ class CmdbExportImportService {
 	 * @param string $municipalityUuid The consumer.
 	 * @param string $moduleUuid The module.
 	 * @param string|null $providerUuid The supplier, when there is one.
-	 * @param array{businessOwner: string|null, technicalOwner: string|null} $owners The owner contact persons.
+	 * @param array{businessOwner: string|null} $owners The owner contact person.
 	 *
 	 * @return array{uuid: string, outcome: string}
 	 *
@@ -720,12 +717,12 @@ class CmdbExportImportService {
 	 */
 	private function upsertUsage(array $data, string $municipalityUuid, string $moduleUuid, ?string $providerUuid, array $owners): array {
 		if (isset($data['interneAnnotation']) === true && is_string($data['interneAnnotation']) === true) {
-			$note = $data['interneAnnotation'];
-			if (str_ends_with($note, self::NOTE_SEPARATOR) === true) {
-				$note = substr($note, 0, -strlen(self::NOTE_SEPARATOR));
-			}
-
-			$data['interneAnnotation'] = trim($note);
+			// The concat mapping leaves an empty part for every empty column; drop those.
+			$parts = array_filter(
+				array_map('trim', explode(self::NOTE_SEPARATOR, $data['interneAnnotation'])),
+				fn (string $part): bool => $part !== ''
+			);
+			$data['interneAnnotation'] = implode(self::NOTE_SEPARATOR, $parts);
 		}
 
 		$data['consumer'] = $municipalityUuid;
@@ -803,19 +800,22 @@ class CmdbExportImportService {
 	}//end merge()
 
 	/**
-	 * Resolve the business and technical owner of a row as contact persons.
+	 * Resolve the owner of a row (Applicatie Eigenaar) as the usage's business owner.
+	 *
+	 * No technical owner is read: the functional administrator columns are
+	 * not part of the mapping.
 	 *
 	 * @param array<string, string> $values The normalised row.
 	 * @param int $rowNumber The sheet row number.
-	 * @param string $municipalityUuid The municipality the contact persons belong to.
+	 * @param string $municipalityUuid The municipality the contact person belongs to.
 	 * @param array<int, string> $warnings Row warnings, appended to.
 	 *
-	 * @return array{businessOwner: string|null, technicalOwner: string|null}
+	 * @return array{businessOwner: string|null}
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-6
 	 */
 	private function resolveOwners(array $values, int $rowNumber, string $municipalityUuid, array &$warnings): array {
-		$owners = ['businessOwner' => null, 'technicalOwner' => null];
+		$owners = ['businessOwner' => null];
 		$identities = [];
 		foreach (array_keys($owners) as $target) {
 			$silent = [];
@@ -1296,7 +1296,7 @@ class CmdbExportImportService {
 	/**
 	 * The source column of an owner target, for warnings.
 	 *
-	 * @param string $target businessOwner or technicalOwner.
+	 * @param string $target businessOwner.
 	 *
 	 * @return string
 	 */

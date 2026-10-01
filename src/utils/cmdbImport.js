@@ -19,7 +19,7 @@ import { generateUrl } from '@nextcloud/router'
 export const MAX_FILE_BYTES = 10 * 1024 * 1024
 
 /** The two sheets the import reads (contract: NO_SOURCE_SHEET details). */
-export const SOURCE_SHEETS = ['Invoer AIA data', 'Invoer APP data']
+export const SOURCE_SHEETS = ['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']
 
 /** Every row outcome the report can carry, in display order. */
 export const OUTCOMES = ['created', 'updated', 'unchanged', 'skipped', 'failed']
@@ -348,7 +348,7 @@ export function errorText(error) {
 				),
 				hint: t(
 					'stackiq',
-					'The columns "Middel-ID" and "Naam" are required on every source sheet. Add the column to the export and try again. Nothing was imported.',
+					'The columns "APPID" and "Applicatie Naam" are required on every source sheet. Add the column to the export and try again. Nothing was imported.',
 				),
 			}
 		case 'TOO_MANY_ROWS':
@@ -480,7 +480,7 @@ export function reportRows(rows) {
 		key: `${row.sheet ?? ''}:${row.row ?? index}:${index}`,
 		sheet: String(row.sheet ?? ''),
 		row: row.row ?? '',
-		middelId: String(row.middelId ?? ''),
+		appId: String(row.appId ?? ''),
 		name: String(row.name ?? ''),
 		outcome: String(row.outcome ?? ''),
 		notes: [

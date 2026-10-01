@@ -193,7 +193,7 @@ class CmdbImportControllerTest extends TestCase {
 		$service->method('assertXlsx')->willThrowException(new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'no'));
 		$service->expects($this->never())->method('import');
 
-		$response = $this->controller(file: $this->file(path: $this->upload(content: 'Naam;Middel-ID'), name: 'applications.csv'), params: ['missingRecords' => 'remove'], service: $service)->import();
+		$response = $this->controller(file: $this->file(path: $this->upload(content: 'Applicatie Naam;APPID'), name: 'applications.csv'), params: ['missingRecords' => 'remove'], service: $service)->import();
 
 		$this->assertSame(400, $response->getStatus());
 		$this->assertSame('NOT_XLSX', $response->getData()['error']);
@@ -239,9 +239,9 @@ class CmdbImportControllerTest extends TestCase {
 			'mapping' => [CmdbImportException::MAPPING_UNAVAILABLE, 503, []],
 			'reader' => [CmdbImportException::READER_UNAVAILABLE, 503, []],
 			'config' => [CmdbImportException::NOT_CONFIGURED, 503, []],
-			'no sheet' => [CmdbImportException::NO_SOURCE_SHEET, 422, ['expected' => ['Invoer AIA data', 'Invoer APP data']]],
-			'column' => [CmdbImportException::MISSING_COLUMN, 422, ['sheet' => 'Invoer APP data', 'column' => 'Middel-ID']],
-			'rows' => [CmdbImportException::TOO_MANY_ROWS, 422, ['sheet' => 'Invoer APP data', 'limit' => 10000]],
+			'no sheet' => [CmdbImportException::NO_SOURCE_SHEET, 422, ['expected' => ['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']]],
+			'column' => [CmdbImportException::MISSING_COLUMN, 422, ['sheet' => 'Beheerde Applicaties CMDB', 'column' => 'APPID']],
+			'rows' => [CmdbImportException::TOO_MANY_ROWS, 422, ['sheet' => 'Beheerde Applicaties CMDB', 'limit' => 10000]],
 			'municipality' => [CmdbImportException::MUNICIPALITY_INVALID, 422, []],
 			'corrupt' => [CmdbImportException::NOT_XLSX, 400, []],
 		];
@@ -268,8 +268,8 @@ class CmdbImportControllerTest extends TestCase {
 		$this->assertEquals((object)$details, $response->getData()['details']);
 		$this->assertStringNotContainsString('internal', $response->getData()['message']);
 		if ($code === CmdbImportException::MISSING_COLUMN) {
-			$this->assertStringContainsString('Invoer APP data', $response->getData()['message']);
-			$this->assertStringContainsString('Middel-ID', $response->getData()['message']);
+			$this->assertStringContainsString('Beheerde Applicaties CMDB', $response->getData()['message']);
+			$this->assertStringContainsString('APPID', $response->getData()['message']);
 		}
 	}//end testServiceErrorsAreTranslated()
 

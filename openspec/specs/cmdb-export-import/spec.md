@@ -9,7 +9,7 @@ built_by: openspec/changes/cmdb-export-import
 **Status**: in-progress
 **Scope**: stackiq
 **OpenSpec changes**:
-- [cmdb-export-import](../../changes/cmdb-export-import/) _(active)_ — admin uploads a TOPdesk CMDB export (xlsx); stackiq upserts modules, manufacturer organisations, usages and owner contact persons for one municipality, matched on Middel-ID, mapped by OpenRegister migration packs (kind: code)
+- [cmdb-export-import](../../changes/cmdb-export-import/) _(active)_ — admin uploads a TOPdesk CMDB export (xlsx); stackiq upserts modules, vendor organisations, usages and owner contact persons for one municipality from the two CMDB sheets, matched on APPID, mapped by OpenRegister migration packs (kind: code)
 
 ## Purpose
 
@@ -34,7 +34,7 @@ umbrella requirement below anchors the capability until then.
 Stackiq MUST offer Nextcloud admins one import path for a TOPdesk CMDB export
 (xlsx) that writes only OpenRegister objects in the `stackiq` register
 (`module`, `organization`, `usage`, `contactPerson`), with no app-local table,
-and that matches rows on the TOPdesk Middel-ID so that a repeated import
+and that matches rows on the TOPdesk APPID so that a repeated import
 creates no duplicates.
 
 #### Scenario: A repeated import adds no objects

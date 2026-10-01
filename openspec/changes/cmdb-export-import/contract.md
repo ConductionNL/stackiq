@@ -3,7 +3,7 @@
 ## Consumers
 
 - `stackiq` frontend: the "CMDB import" admin-settings section (`src/views/settings/sections/CmdbImport.vue`) is the only caller of the two new endpoints.
-- `opencatalogi` and `portaliq` call no new endpoint. They read the objects the import writes through their existing OpenRegister paths. Their interface is the data shape below: `module.publicationDate` for OpenCatalogi, and `usage.consumer` / `usage.module` for Portaliq.
+- `opencatalogi` and `portaliq` call no new endpoint. They read the objects the import writes through their existing OpenRegister paths. Their interface is the data shape below: `module.publicationDate` for OpenCatalogi, and `usage.consumer` / `usage.module` for Portaliq. Neither gets owner data anonymously: `usage` and `contactPerson` have no public read rule, and a public `module` refers to them by id only.
 
 Paths are relative to `/index.php/apps/stackiq`.
 
@@ -30,19 +30,17 @@ Paths are relative to `/index.php/apps/stackiq`.
   "operationId": "cmdb-00000000-0000-0000-0000-000000000000",
   "cancelled": false,
   "municipality": { "uuid": "00000000-0000-0000-0000-000000000001", "name": "Gemeente Voorbeeldstad", "created": false },
-  "summary": { "rowsRead": 2, "processed": 2, "created": 2, "updated": 0, "unchanged": 0, "skipped": 0, "failed": 0, "warnings": 0 },
-  "importWarnings": [
-    { "sheet": "Invoer AIA data", "message": "Optional column \"ICT TIME Classificatie\" not found" }
-  ],
+  "summary": { "rowsRead": 2, "processed": 2, "created": 2, "updated": 0, "unchanged": 0, "skipped": 0, "failed": 0, "warnings": 1 },
+  "importWarnings": [],
   "rows": [
     {
-      "sheet": "Invoer AIA data",
+      "sheet": "Onbeh Applicaties CMDB",
       "row": 2,
-      "middelId": "AIA-AangetekendMailen",
+      "appId": "1234",
       "name": "Aangetekend Mailen",
       "outcome": "created",
       "reasons": [],
-      "warnings": [],
+      "warnings": ["Column \"Applicatiesoort\": Value \"Webapplicatie\" has no mapping and no default is configured"],
       "moduleUuid": "00000000-0000-0000-0000-000000000004",
       "usageUuid": "00000000-0000-0000-0000-000000000005"
     }
@@ -50,7 +48,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 }
 ```
 
-`outcome` is one of `created`, `updated`, `unchanged`, `skipped`, `failed`. `reasons` and `warnings` are translated strings that name columns and values. They never contain owner names, e-mail addresses or other person data. `summary.rowsRead` counts the non-empty rows in the workbook; `summary.processed` counts the rows in `rows`, which is lower than `rowsRead` only after a cancel. `summary.warnings` counts row warnings; `importWarnings` are not included.
+`appId` is the row's APPID, the match key (`''` when the row has none). `outcome` is one of `created`, `updated`, `unchanged`, `skipped`, `failed`. `reasons` and `warnings` are translated strings that name columns and values; a formula cell without a cached value gives the warning `Column "<column>": formula without a cached value, read as empty`. They never contain owner names, e-mail addresses or other person data. `summary.rowsRead` counts the non-empty rows in the workbook; `summary.processed` counts the rows in `rows`, which is lower than `rowsRead` only after a cancel. `summary.warnings` counts row warnings; `importWarnings` are not included.
 
 **Errors:**
 | Code | Condition |
@@ -64,7 +62,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 | 500  | `IMPORT_FAILED` (unexpected; generic message, details only in the log) |
 | 503  | `MAPPING_UNAVAILABLE`, `READER_UNAVAILABLE`, `NOT_CONFIGURED` |
 
-Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Invoer AIA data", "Invoer APP data"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`.
+Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`.
 
 ### `POST /api/cmdb-import/{operationId}/cancel`
 **Auth**: Nextcloud admin session plus CSRF token.
@@ -96,8 +94,8 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progres
 | `MISSING_RECORDS_UNSUPPORTED` | option not supported | `missingRecords` is not `keep` |
 | `MUNICIPALITY_REQUIRED` | no consumer | neither `municipalityUuid` nor `municipalityName` given |
 | `MUNICIPALITY_INVALID` | wrong consumer | uuid unknown, or the organisation is not of type Municipality |
-| `NO_SOURCE_SHEET` | nothing to read | neither "Invoer AIA data" nor "Invoer APP data" present |
-| `MISSING_COLUMN` | required column absent | a present source sheet lacks "Middel-ID" or "Naam" |
+| `NO_SOURCE_SHEET` | nothing to read | neither "Onbeh Applicaties CMDB" nor "Beheerde Applicaties CMDB" present |
+| `MISSING_COLUMN` | required column absent | a present source sheet lacks "APPID" or "Applicatie Naam" |
 | `TOO_MANY_ROWS` | file too large to process | a source sheet has more non-empty rows than `maxRowsPerSheet` (10,000) |
 | `MAPPING_UNAVAILABLE` | mapping cannot run | OpenRegister's `MappingEngine`/`PackDefinitionValidator` missing, or a shipped pack is invalid |
 | `READER_UNAVAILABLE` | xlsx reader missing | PhpSpreadsheet's Xlsx reader cannot be loaded |
@@ -107,7 +105,7 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progres
 
 ## Versioning
 
-Internal app API, unversioned like the other stackiq settings endpoints. The report fields above are additive-only: new fields MAY be added, and existing fields keep their meaning. The `module` properties `externalId`, `externalNumber`, `externalKey`, `externalCreatedAt` and `externalModifiedAt` are part of the register schema and follow the register's versioning (`module` 0.3.5).
+Internal app API, unversioned like the other stackiq settings endpoints. The report fields above are additive-only: new fields MAY be added, and existing fields keep their meaning. (Before the first release the row field `middelId` was renamed to `appId`, together with the switch of the match key to the APPID.) The `module` properties `externalId`, `externalNumber`, `externalKey`, `externalCreatedAt` and `externalModifiedAt` are part of the register schema and follow the register's versioning (`module` 0.3.5).
 
 ## Breaking Change Policy
 

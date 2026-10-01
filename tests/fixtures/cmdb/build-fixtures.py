@@ -13,10 +13,20 @@ Usage:
     python3 build-fixtures.py --source <anonymised export.xlsx>
         Sanitise an already anonymised export into topdesk-export-anonymised.xlsx
         (strip document metadata, custom properties, customXml, the workbook's
-        absolute path and xl/connections.xml), then derive the variants.
+        absolute path and xl/connections.xml), write the placeholder cached
+        values into the CMDB sheets, then derive the variants.
 
     python3 build-fixtures.py
-        Derive the variants from the committed topdesk-export-anonymised.xlsx.
+        Write the placeholder cached values into the committed
+        topdesk-export-anonymised.xlsx (idempotent) and derive the variants.
+
+The import reads the two CMDB sheets ("Onbeh Applicaties CMDB",
+"Beheerde Applicaties CMDB"). Their cells are formulas that read the "Invoer"
+sheets; the import reads the value Excel cached for each formula and never
+evaluates one. The anonymised export had empty cached values for several
+mapped columns, so CACHED_VALUES below writes a placeholder cached value into
+those formula cells (the formula itself is kept). The "Invoer" sheets are not
+read and are left as they are.
 
 Never run this on a municipality's original export: the source must already
 carry placeholder values only. tests/Unit/Fixtures/CmdbFixtureHygieneTest.php
@@ -36,8 +46,31 @@ SANITISED = os.path.join(HERE, 'topdesk-export-anonymised.xlsx')
 DROP_PARTS = ('docProps/custom.xml', 'xl/connections.xml')
 DROP_PREFIXES = ('customXml/',)
 
-AIA_SHEET = 'xl/worksheets/sheet1.xml'
-APP_SHEET = 'xl/worksheets/sheet3.xml'
+ONBEH_SHEET = 'xl/worksheets/sheet2.xml'     # "Onbeh Applicaties CMDB" (from AIA)
+BEHEERDE_SHEET = 'xl/worksheets/sheet4.xml'  # "Beheerde Applicaties CMDB" (from APP)
+
+# Placeholder cached values for formula cells of the CMDB sheets, per sheet and
+# cell. A cell that does not exist yet is appended to its row (columns are in
+# order: every cell named here lies right of the row's last cell).
+CACHED_VALUES = {
+    ONBEH_SHEET: {
+        'E2': 'Mailen',                 # Roepnaam
+        'AE2': 'Herbeoordeling',        # Rappelreden
+        'AH2': 'Ja',                    # Locatie BIOToets
+        'AI2': 'Geen',                  # Software Suite
+    },
+    BEHEERDE_SHEET: {
+        'E2': 'Naamtest',               # Roepnaam
+        'I2': 'Saas',                   # Applicatiesoort
+        'AB2': 'Ja',                    # Cloud (IF(Applicatiesoort="Saas","Ja","Nee"))
+        'L2': 'Teamleider Applicatiebeheer',  # Applicatie Eigenaar (Functie)
+        'M2': 'Teamleider Applicatiebeheer',  # Applicatie Eigenaar (Persoon): no Eigenaar, so the function
+        'AF2': 'Herbeoordeling',        # Rappelreden
+        'AH2': 'BBN2',                  # BNN Classificatie
+        'AI2': 'Ja',                    # Locatie BIOToets
+        'AM2': 'NT123',                 # Nickname (no cell in the export; appended)
+    },
+}
 
 
 def read_package(path):
@@ -97,20 +130,59 @@ def replace_part(parts, name, transform):
     return [(n, transform(d) if n == name else d) for n, d in parts]
 
 
-def missing_middel_id(parts):
-    """'Invoer APP data' loses its Middel-ID header (the column gets another name)."""
+def xml_escape(value):
+    return value.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+
+def set_cached_value(xml, ref, value):
+    """Give the formula cell `ref` the cached string `value`; append a plain string cell when it is missing."""
+    cell = re.search(r'<c r="%s"([^>]*?)(?:/>|>(.*?)</c>)' % ref, xml, flags=re.S)
+    cached = '<v>%s</v>' % xml_escape(value)
+    if cell is None:
+        row = re.match(r'[A-Z]+(\d+)$', ref).group(1)
+        row_match = re.search(r'(<row r="%s"[^>]*>.*?)(</row>)' % row, xml, flags=re.S)
+        if row_match is None:
+            sys.exit('cached values: row %s not found' % row)
+        new_cell = '<c r="%s" t="inlineStr"><is><t>%s</t></is></c>' % (ref, xml_escape(value))
+        return xml[:row_match.end(1)] + new_cell + xml[row_match.end(1):]
+    attrs, body = cell.group(1), cell.group(2) or ''
+    formula = re.search(r'<f[^>]*>.*?</f>|<f[^>]*/>', body, flags=re.S)
+    if formula is None:
+        # Not a formula (an earlier run may have written it): only the value changes.
+        if ' t="inlineStr"' in attrs:
+            return xml[:cell.start()] + '<c r="%s"%s><is><t>%s</t></is></c>' % (ref, attrs, xml_escape(value)) + xml[cell.end():]
+        sys.exit('cached values: %s holds no formula' % ref)
+    attrs = re.sub(r' t="\w+"', '', attrs) + ' t="str"'
+    return xml[:cell.start()] + '<c r="%s"%s>%s%s</c>' % (ref, attrs, formula.group(0), cached) + xml[cell.end():]
+
+
+def cache_values(parts):
+    """Write CACHED_VALUES into the CMDB sheets; running it twice changes nothing."""
+    for sheet, cells in CACHED_VALUES.items():
+        def transform(data, cells=cells):
+            xml = text(data)
+            for ref, value in cells.items():
+                xml = set_cached_value(xml, ref, value)
+            return xml.encode('utf-8')
+        parts = replace_part(parts, sheet, transform)
+    # Excel recalculates from calcChain on open; the cached values are what matter here.
+    return parts
+
+
+def missing_appid(parts):
+    """'Beheerde Applicaties CMDB' loses its APPID header (the column gets another name)."""
     def transform(data):
         xml = text(data)
         new, count = re.subn(
             r'<c r="B1"([^>]*?) t="s"([^>]*)><v>\d+</v></c>',
-            r'<c r="B1"\1 t="inlineStr"\2><is><t>Middelnummer</t></is></c>',
+            r'<c r="B1"\1 t="inlineStr"\2><is><t>Applicatienummer</t></is></c>',
             xml,
             count=1,
         )
         if count != 1:
-            sys.exit('missing-middel-id: header cell B1 not found on Invoer APP data')
+            sys.exit('missing-appid: header cell B1 not found on Beheerde Applicaties CMDB')
         return new.encode('utf-8')
-    return replace_part(parts, APP_SHEET, transform)
+    return replace_part(parts, BEHEERDE_SHEET, transform)
 
 
 def col_to_index(col):
@@ -154,16 +226,16 @@ def reverse_columns(xml):
 
 
 def shuffled_columns(parts):
-    """Both source sheets with their columns reversed ("Naam" before "Middel-ID")."""
-    parts = replace_part(parts, AIA_SHEET, lambda d: reverse_columns(text(d)).encode('utf-8'))
-    parts = replace_part(parts, APP_SHEET, lambda d: reverse_columns(text(d)).encode('utf-8'))
+    """Both CMDB sheets with their columns reversed ("Applicatie Naam" before "APPID")."""
+    parts = replace_part(parts, ONBEH_SHEET, lambda d: reverse_columns(text(d)).encode('utf-8'))
+    parts = replace_part(parts, BEHEERDE_SHEET, lambda d: reverse_columns(text(d)).encode('utf-8'))
 
     # A referenced header with the decoration TOPdesk adds to computed fields.
     def decorate(data):
         xml = text(data)
-        xml, count = re.subn(r'<si><t>Eigenaar e-mail</t></si>', '<si><t>Eigenaar e-mail⚡</t></si>', xml, count=1)
+        xml, count = re.subn(r'<si><t>Vendor</t></si>', '<si><t>Vendor⚡</t></si>', xml, count=1)
         if count != 1:
-            sys.exit('shuffled-columns: shared string "Eigenaar e-mail" not found')
+            sys.exit('shuffled-columns: shared string "Vendor" not found')
         return xml.encode('utf-8')
     return replace_part(parts, 'xl/sharedStrings.xml', decorate)
 
@@ -178,20 +250,30 @@ SYNTHETIC_CONNECTION = (
 
 
 def formula_and_connection(parts):
-    """A formula in "Naam" whose cached value differs from its result, plus an external connection."""
+    """On "Beheerde Applicaties CMDB": a formula in "Applicatie Naam" whose cached value
+    differs from its result, a "Roepnaam" formula without any cached value, plus an
+    external connection."""
     def formula(data):
         xml = text(data)
         new, count = re.subn(
-            r'<c r="BB2"([^>]*?) t="s"([^>]*)><v>\d+</v></c>',
-            r'<c r="BB2"\1 t="str"\2><f>"Evaluated"</f><v>Rekenmodel</v></c>',
+            r'<c r="D2"([^>]*?) t="str"([^>]*)><f>[^<]*</f><v>[^<]*</v></c>',
+            r'<c r="D2"\1 t="str"\2><f>"Evaluated"</f><v>Rekenmodel</v></c>',
             xml,
             count=1,
         )
         if count != 1:
-            sys.exit('formula-and-connection: cell BB2 not found on Invoer APP data')
+            sys.exit('formula-and-connection: formula cell D2 not found on Beheerde Applicaties CMDB')
+        new, count = re.subn(
+            r'<c r="E2"([^>]*?)><f>([^<]*)</f><v>[^<]*</v></c>',
+            r'<c r="E2"\1><f>\2</f></c>',
+            new,
+            count=1,
+        )
+        if count != 1:
+            sys.exit('formula-and-connection: formula cell E2 not found on Beheerde Applicaties CMDB')
         return new.encode('utf-8')
 
-    parts = replace_part(parts, APP_SHEET, formula)
+    parts = replace_part(parts, BEHEERDE_SHEET, formula)
     parts = replace_part(
         parts,
         '[Content_Types].xml',
@@ -212,7 +294,7 @@ def formula_and_connection(parts):
 
 
 def no_source_sheet():
-    """A minimal workbook with one sheet "Blad1" and neither source sheet."""
+    """A minimal workbook with one sheet "Blad1" and neither CMDB sheet."""
     main = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
     rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
     pkg = 'http://schemas.openxmlformats.org/package/2006/relationships'
@@ -250,13 +332,16 @@ def main():
     parser.add_argument('--source', help='anonymised export to sanitise into topdesk-export-anonymised.xlsx')
     args = parser.parse_args()
 
+    source = args.source or SANITISED
+    parts = read_package(source)
     if args.source:
-        write_package(SANITISED, sanitise(read_package(args.source)))
-        print('wrote', os.path.relpath(SANITISED, HERE))
+        parts = sanitise(parts)
+    write_package(SANITISED, cache_values(parts))
+    print('wrote', os.path.relpath(SANITISED, HERE))
 
     base = read_package(SANITISED)
     variants = {
-        'topdesk-missing-middel-id.xlsx': missing_middel_id(base),
+        'topdesk-missing-appid.xlsx': missing_appid(base),
         'topdesk-shuffled-columns.xlsx': shuffled_columns(base),
         'topdesk-formula-and-connection.xlsx': formula_and_connection(base),
         'topdesk-no-source-sheet.xlsx': no_source_sheet(),

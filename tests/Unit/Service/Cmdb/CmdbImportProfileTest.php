@@ -112,32 +112,41 @@ class CmdbImportProfileTest extends TestCase {
 
 		$this->assertSame(
 			[
-				'Naam' => 'name',
-				'Middel-ID' => 'externalId',
-				'ICT Applicatienummer' => 'externalNumber',
-				'Functionele omschrijving' => 'longDescription',
-				'ICT BBN Classificatie' => 'bbnLevel',
-				'Aanmaakdatum' => 'externalCreatedAt',
-				'Wijzigingsdatum' => 'externalModifiedAt',
+				'Applicatie Naam' => 'name',
+				'APPID' => 'externalNumber',
+				'Applicatie Code' => 'externalId',
+				'Nickname' => 'shortDescription',
+				'Roepnaam' => 'shortDescription',
+				'Functionele Omschrijving' => 'longDescription',
+				'Applicatiesoort' => 'cloudDienstverleningsmodel',
+				'BNN Classificatie' => 'bbnLevel',
+				'Datum' => 'externalCreatedAt',
+				'Referentie datum wijziging' => 'externalModifiedAt',
 			],
 			$targets('module')
 		);
-		$this->assertSame(['Fabrikant' => 'name'], $targets('manufacturer'));
+		$this->assertSame(['Vendor' => 'name'], $targets('manufacturer'));
 		$this->assertSame(['municipalityName' => 'name'], $targets('municipality'));
 		$this->assertSame(
-			['Status' => 'status', 'ICT TIME Classificatie' => 'timeClassification', 'End of Life Business' => 'startDateOutPhased', 'Eigenaar afdeling' => 'interneAnnotation'],
+			['Applicatie Status' => 'status', 'Classificatie' => 'timeClassification', 'End-of-Life Functioneel' => 'startDateOutPhased', 'Beheer' => 'interneAnnotation'],
 			$targets('usage')
 		);
-		$this->assertSame(['Eigenaar' => 'name', 'Eigenaar e-mail' => 'email', 'Eigenaar functie' => 'role'], $targets('businessOwner'));
-		$this->assertSame(['FB contactpersoon 1' => 'name'], $targets('technicalOwner'));
+		$this->assertSame(['Applicatie Eigenaar (Persoon)' => 'name', 'Applicatie Eigenaar (Functie)' => 'role'], $targets('businessOwner'));
+		$this->assertSame(['module', 'manufacturer', 'municipality', 'usage', 'businessOwner'], CmdbImportProfile::TARGETS, 'no technical owner');
 
 		$this->assertSame(['type' => 'Supplier', 'status' => 'Active'], $profile->pack(target: 'manufacturer')['defaults']);
 		$this->assertSame(['type' => 'Municipality', 'status' => 'Active'], $profile->pack(target: 'municipality')['defaults']);
 		$this->assertSame(['type' => 'Application'], $profile->createOnlyDefaults(target: 'module'));
 		$this->assertSame(['interneAnnotation'], $profile->createOnlyFields(target: 'usage'));
 		$this->assertSame(['publicationDate', 'depublicationDate'], $profile->neverWrittenOnUpdate(target: 'module'));
-		$this->assertSame(['Middel-ID', 'Naam'], $profile->requiredColumns());
-		$this->assertSame(['Invoer AIA data', 'Invoer APP data'], $profile->sheetNames());
+		$this->assertSame(['APPID', 'Applicatie Naam'], $profile->requiredColumns());
+		$this->assertSame('APPID', $profile->keyColumn());
+		$this->assertSame(['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB'], $profile->sheetNames());
+		$this->assertSame(['Beheer' => 'Beheer geregeld: nee'], $profile->sheetConstants(sheetName: 'Onbeh Applicaties CMDB'));
+		$this->assertSame(['Beheer' => 'Beheer geregeld: ja'], $profile->sheetConstants(sheetName: 'Beheerde Applicaties CMDB'));
+		$this->assertSame(['Nickname'], $profile->absentColumns(sheetName: 'Onbeh Applicaties CMDB'));
+		$this->assertSame([], $profile->absentColumns(sheetName: 'Beheerde Applicaties CMDB'));
+		$this->assertSame(['BNN Classificatie' => ['NB'], 'End-of-Life Functioneel' => ['49675']], $profile->emptyValues());
 		$this->assertSame(10485760, $profile->maxFileBytes());
 		$this->assertSame(10000, $profile->maxRowsPerSheet());
 	}//end testThePacksImplementTheColumnTable()
@@ -155,26 +164,47 @@ class CmdbImportProfileTest extends TestCase {
 
 		$usage = $engine->mapRow(
 			$profile->pack(target: 'usage'),
-			['Status' => 'In voorraad', 'ICT TIME Classificatie' => 'Tolereren', 'End of Life Business' => '2046-02-01', 'Eigenaar afdeling' => 'H10 Accounting', 'Eigenaar cluster' => 'H10 Bestuur'],
+			[
+				'Applicatie Status' => 'In voorraad',
+				'Classificatie' => 'Tolereren',
+				'End-of-Life Functioneel' => '2046-02-01',
+				'Beheer' => 'Beheer geregeld: ja',
+				'Cluster' => 'H10',
+				'Applicatie Eigenaar (Afdeling)' => 'H10 Accounting',
+			],
 			2
 		);
 		$this->assertSame([], $usage['errors']);
 		$this->assertSame(
-			['status' => 'Planned', 'timeClassification' => 'Tolerate', 'startDateOutPhased' => '2046-02-01', 'interneAnnotation' => 'H10 Accounting / H10 Bestuur'],
+			['status' => 'Planned', 'timeClassification' => 'Tolerate', 'startDateOutPhased' => '2046-02-01', 'interneAnnotation' => 'Beheer geregeld: ja / H10 / H10 Accounting'],
 			$usage['data']
 		);
 
-		$module = $engine->mapRow($profile->pack(target: 'module'), ['Naam' => 'X', 'Middel-ID' => 'APP-1', 'ICT BBN Classificatie' => 'BBN 2'], 2);
+		$module = $engine->mapRow(
+			$profile->pack(target: 'module'),
+			['Applicatie Naam' => 'X', 'APPID' => '1', 'BNN Classificatie' => 'BBN 2', 'Applicatiesoort' => 'Saas', 'Nickname' => 'Bijnaam', 'Roepnaam' => 'Roep'],
+			2
+		);
+		$this->assertSame([], $module['errors']);
 		$this->assertSame('BBN2', $module['data']['bbnLevel']);
+		$this->assertSame(['SaaS'], $module['data']['cloudDienstverleningsmodel']);
+		$this->assertSame('Roep', $module['data']['shortDescription'], 'Roepnaam wins over Nickname');
+		$nickname = $engine->mapRow($profile->pack(target: 'module'), ['Applicatie Naam' => 'X', 'APPID' => '1', 'Nickname' => 'Bijnaam', 'Roepnaam' => ''], 2);
+		$this->assertSame('Bijnaam', $nickname['data']['shortDescription'], 'Nickname when Roepnaam is empty');
 
-		$unknown = $engine->mapRow($profile->pack(target: 'usage'), ['Status' => 'Onbekende status'], 3);
+		$unknown = $engine->mapRow($profile->pack(target: 'usage'), ['Applicatie Status' => 'Onbekende status'], 3);
 		$this->assertArrayNotHasKey('status', $unknown['data']);
-		$this->assertSame('Status', $unknown['errors'][0]['source']);
+		$this->assertSame('Applicatie Status', $unknown['errors'][0]['source']);
 		$this->assertStringContainsString('Onbekende status', $unknown['errors'][0]['message']);
+
+		$soort = $engine->mapRow($profile->pack(target: 'module'), ['Applicatie Naam' => 'X', 'APPID' => '1', 'Applicatiesoort' => 'Webapplicatie'], 3);
+		$this->assertArrayNotHasKey('cloudDienstverleningsmodel', $soort['data'], 'an application kind is not a hosting model');
+		$this->assertSame('Applicatiesoort', $soort['errors'][0]['source']);
 	}//end testTheLookupsMapThroughTheEngine()
 
 	/**
-	 * The read allowlist leaves out personnel numbers, phones, group owners and group mailboxes.
+	 * The read allowlist holds the owner columns but no other person or group column, nor
+	 * the unmapped columns of the CMDB sheets.
 	 *
 	 * @return void
 	 */
@@ -185,22 +215,27 @@ class CmdbImportProfileTest extends TestCase {
 
 		foreach ([
 			'Personeelsnummer',
-			'Eigenaar mobiel nummer',
-			'Groepseigenaar mail⚡',
-			'Groepseigenaar naam⚡',
-			'Groepseigenaar telefoon⚡',
-			'Groepsmail⚡',
-			'Groepsnummer⚡',
-			'Configuratie coördinator⚡',
+			'Eigenaar',
+			'Eigenaar e-mail',
+			'FB contactpersoon 1',
 			'FB contactpersoon 2',
+			'Groepseigenaar mail⚡',
+			'Behandelgroep',
+			'Hostingpartij',
+			'Leverancier',
+			'Beschikbaarheid',
+			'Rappelreden',
 			'Opmerkingen',
 			'municipalityName',
+			'Beheer',
 		] as $never) {
 			$this->assertNotContains($never, $columns);
 		}
 
-		$this->assertContains('Eigenaar e-mail', $columns);
-		$this->assertContains('Eigenaar cluster', $columns, 'the concat field is read too');
+		$this->assertContains('Applicatie Eigenaar (Persoon)', $columns);
+		$this->assertContains('Applicatie Eigenaar (Functie)', $columns);
+		$this->assertContains('Applicatie Eigenaar (Afdeling)', $columns, 'the concat field is read too');
+		$this->assertContains('Cluster', $columns);
 	}//end testPersonColumnsAreNeverReferenced()
 
 	/**

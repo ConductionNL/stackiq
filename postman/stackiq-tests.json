@@ -22976,7 +22976,8 @@
 									"    pm.expect(json.summary.rowsRead).to.eql(2);",
 									"    pm.expect(json.summary.created + json.summary.unchanged + json.summary.updated).to.eql(2);",
 									"    pm.expect(json.summary.failed).to.eql(0);",
-									"    pm.expect(json.rows.map(function (r) { return r.middelId; })).to.eql([\"AIA-AangetekendMailen\", \"APP-test123\"]);",
+									"    pm.expect(json.rows.map(function (r) { return r.appId; })).to.eql([\"1234\", \"2\"]);",
+									"    pm.expect(json.rows.map(function (r) { return r.sheet; })).to.eql([\"Onbeh Applicaties CMDB\", \"Beheerde Applicaties CMDB\"]);",
 									"    pm.environment.set(\"cmdb_operation_id\", json.operationId);",
 									"});"
 								],

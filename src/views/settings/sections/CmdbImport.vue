@@ -86,7 +86,7 @@
 					{{
 						t(
 							'stackiq',
-							'Excel workbook (.xlsx), at most 10 MB, with the sheet "Invoer AIA data" or "Invoer APP data".',
+							'Excel workbook (.xlsx), at most 10 MB, with the sheet "Onbeh Applicaties CMDB" or "Beheerde Applicaties CMDB".',
 						)
 					}}
 				</p>
@@ -255,7 +255,7 @@
 							:href="moduleUrl(row.moduleUuid)"
 							class="cmdb-import__module-link"
 							data-testid="cmdb-import-module-link">
-							{{ row.name || row.middelId }}
+							{{ row.name || row.appId }}
 						</a>
 						<span v-else>{{ row.name || '—' }}</span>
 					</template>
@@ -281,7 +281,7 @@
 					{{
 						t(
 							'stackiq',
-							'Each application row of the export becomes or updates an application, its manufacturer, and a usage that links it to the chosen municipality. Owners become contact persons of the municipality in Nextcloud Contacts.',
+							'Each application row of the export becomes or updates an application, its vendor, and a usage that links it to the chosen municipality. The application owner becomes a contact person of the municipality in Nextcloud Contacts; owners are never shown to the public.',
 						)
 					}}
 				</p>
@@ -291,7 +291,7 @@
 						{{
 							t(
 								'stackiq',
-								'The sheets "Invoer AIA data" and "Invoer APP data" are read; other sheets are ignored.',
+								'The sheets "Onbeh Applicaties CMDB" (applications without arranged maintenance) and "Beheerde Applicaties CMDB" (with arranged maintenance) are read; other sheets, including the "Invoer" sheets, are ignored.',
 							)
 						}}
 					</li>
@@ -299,7 +299,7 @@
 						{{
 							t(
 								'stackiq',
-								'Row 1 holds the column names. "Middel-ID" and "Naam" are required; column order does not matter.',
+								'Row 1 holds the column names. "APPID" and "Applicatie Naam" are required; column order does not matter.',
 							)
 						}}
 					</li>
@@ -307,7 +307,15 @@
 						{{
 							t(
 								'stackiq',
-								'Importing a newer export again updates the same applications, matched on Middel-ID per municipality. Applications missing from it are left as they are.',
+								'Formula cells are read as the value Excel saved with the workbook; formulas are never calculated. Save the workbook in Excel before importing it.',
+							)
+						}}
+					</li>
+					<li>
+						{{
+							t(
+								'stackiq',
+								'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are left as they are.',
 							)
 						}}
 					</li>
@@ -565,8 +573,8 @@ export default {
 				{ key: 'sheet', label: t('stackiq', 'Sheet'), sortable: true },
 				{ key: 'row', label: t('stackiq', 'Row'), sortable: true },
 				{
-					key: 'middelId',
-					label: t('stackiq', 'Middel-ID'),
+					key: 'appId',
+					label: t('stackiq', 'APPID'),
 					sortable: true,
 				},
 				{ key: 'name', label: t('stackiq', 'Application'), sortable: true },
