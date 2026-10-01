@@ -40,6 +40,8 @@ use OCP\IUserSession;
 
 /**
  * Admin set-up and import, and a public-to-users status, for the service desk exchange.
+ *
+ * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
  */
 class ItsmExchangeController extends Controller {
 
@@ -57,7 +59,7 @@ class ItsmExchangeController extends Controller {
 		private readonly ItsmFileImportService $fileImport,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(Application::APP_ID, $request);
+		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
@@ -101,11 +103,11 @@ class ItsmExchangeController extends Controller {
 	/**
 	 * Set up, or set up again, the exchange.
 	 *
-	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
-	 *
 	 * @param string $desk         The desk key.
 	 * @param string $organisation The organisation uuid.
 	 * @param string $templateId   The desk's asset template for new records (TOPdesk), or empty.
+	 *
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 *
 	 * @return JSONResponse The outcome; 422 when nothing was created.
 	 *

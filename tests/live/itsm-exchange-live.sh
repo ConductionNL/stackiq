@@ -75,10 +75,17 @@ SETUP=$(api -X POST "$SQ/itsm/setup" -d "{\"desk\":\"$DESK\",\"organisation\":\"
 echo "$SETUP" | python3 -c 'import sys,json;d=json.load(sys.stdin);print("   created:",d.get("created"),d.get("message",""));[print("  ",k,v) for k,v in (d.get("blocking") or {}).items()]'
 echo "$SETUP" | grep -q '"created":true' || { bad "set-up refused"; exit 1; }
 flow() { echo "$SETUP" | python3 -c "import sys,json;print(json.load(sys.stdin)['flows']['$1'])"; }
+# The export runs async: OpenRegister's FlowRunWorker takes queued runs at most
+# once a minute. Run cron until no run of the export is queued or running.
+pending() { api "$OR/flow-runs?_limit=200" | python3 -c "
+import sys,json
+d=json.load(sys.stdin);rows=d if isinstance(d,list) else d.get('results',[])
+print(sum(1 for r in rows if r.get('flowId')=='$(flow outbound)' and r.get('status') in ('queued','running')))"; }
+drain() { local i; for i in $(seq 1 16); do cron; [ "$(pending)" = 0 ] && return 0; sleep 15; done; bad "export runs still queued after 4 minutes"; }
 
 say "first import"
 for f in applications relations licences contracts; do echo "   $f: $(run_flow "$(flow $f)")"; done
-cron; cron
+drain
 U1=$(count usage); C1=$(count connection); K1=$(count catalogContract)
 [ "$U1" -gt 0 ] && ok "usages created: $U1" || bad "no usages created"
 [ "$C1" -gt 0 ] && ok "connections created: $C1" || bad "no connections created"
@@ -88,7 +95,7 @@ echo "   writes on the desk after the first import: $CALLS_A (stackiq-owned lice
 
 say "second import updates, never duplicates, and calls nothing"
 for f in applications relations licences contracts; do echo "   $f: $(run_flow "$(flow $f)")"; done
-cron; cron
+drain
 [ "$(count usage)" = "$U1" ] && ok "usages still $U1" || bad "usages now $(count usage)"
 [ "$(count connection)" = "$C1" ] && ok "connections still $C1" || bad "connections now $(count connection)"
 [ "$(count catalogContract)" = "$K1" ] && ok "contracts still $K1" || bad "contracts now $(count catalogContract)"
@@ -107,7 +114,7 @@ USAGE=$(api "$OR/objects/stackiq/usage?serviceDeskSystem=$DESK&_limit=1" | pytho
 UID_=${USAGE% *}; RID=${USAGE#* }
 BEFORE=$(mock_calls)
 api -X PATCH "$OR/objects/stackiq/usage/$UID_" -d '{"timeClassification":"Invest"}' >/dev/null
-cron; cron
+drain
 DELTA=$(( $(mock_calls) - BEFORE ))
 [ "$DELTA" = 1 ] && ok "1 write for record $RID" || bad "$DELTA writes for one change"
 mock "$MOCK/__requests" | grep -q '"Invest"' && ok "it carries the new TIME class" || bad "the new TIME class never reached the desk"
@@ -115,15 +122,15 @@ mock "$MOCK/__requests" | grep -q '"Invest"' && ok "it carries the new TIME clas
 say "the import after the export writes nothing back and calls nothing"
 AFTER_EXPORT=$(mock_calls)
 run_flow "$(flow applications)" >/dev/null
-cron; cron
+drain
 [ "$(mock_calls)" = "$AFTER_EXPORT" ] && ok "still $AFTER_EXPORT writes: no ping-pong" || bad "$(mock_calls) writes: ping-pong"
 
 say "conflict: each owner keeps its field"
 if [ "$DESK" = topdesk ]; then mock -X POST "$MOCK/__set/$RID" -d '{"name":"Renamed in the desk"}' >/dev/null; else mock -X POST "$MOCK/__set/cmdb_ci_appl/$RID" -d '{"name":"Renamed in the desk"}' >/dev/null; fi
 api -X PATCH "$OR/objects/stackiq/usage/$UID_" -d '{"timeClassification":"Migrate"}' >/dev/null
-cron; cron
+drain
 run_flow "$(flow applications)" >/dev/null
-cron; cron
+drain
 AFTER=$(api "$OR/objects/stackiq/usage/$UID_")
 MOD=$(echo "$AFTER" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("module"))')
 NAME=$(api "$OR/objects/stackiq/module/$MOD" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("name"))')

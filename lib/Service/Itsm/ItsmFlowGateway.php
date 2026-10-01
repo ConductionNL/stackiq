@@ -32,6 +32,8 @@ use Throwable;
 
 /**
  * Validates, saves, publishes and runs flows through OpenRegister.
+ *
+ * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
  */
 class ItsmFlowGateway {
 

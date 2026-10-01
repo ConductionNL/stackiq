@@ -38,6 +38,8 @@ use Throwable;
 
 /**
  * Fills, checks and creates the service desk exchange flows.
+ *
+ * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
  */
 class ItsmExchangeService {
 
@@ -115,8 +117,20 @@ class ItsmExchangeService {
 	public const FLOWS = [
 		'applications' => ['template' => 'itsm-inbound-applications.json', 'feed' => 'applications', 'preset' => 'application-inbound'],
 		'relations'    => ['template' => 'itsm-inbound-relations.json', 'feed' => 'relations', 'preset' => 'relation-inbound'],
-		'licences'     => ['template' => 'itsm-inbound-contracts.json', 'feed' => 'licences', 'preset' => 'licence-inbound', 'contractType' => 'Licence', 'feedLabel' => 'licences'],
-		'contracts'    => ['template' => 'itsm-inbound-contracts.json', 'feed' => 'contracts', 'preset' => 'contract-inbound', 'contractType' => 'SLA', 'feedLabel' => 'contracts'],
+		'licences'     => [
+			'template'     => 'itsm-inbound-contracts.json',
+			'feed'         => 'licences',
+			'preset'       => 'licence-inbound',
+			'contractType' => 'Licence',
+			'feedLabel'    => 'licences',
+		],
+		'contracts'    => [
+			'template'     => 'itsm-inbound-contracts.json',
+			'feed'         => 'contracts',
+			'preset'       => 'contract-inbound',
+			'contractType' => 'SLA',
+			'feedLabel'    => 'contracts',
+		],
 		'outbound'     => ['template' => 'itsm-outbound-applications.json', 'feed' => 'outbound', 'preset' => 'application-outbound'],
 		'file'         => ['template' => 'itsm-file-applications.json', 'feed' => 'file', 'preset' => 'file'],
 	];
@@ -251,32 +265,20 @@ class ItsmExchangeService {
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
 	 */
 	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = ''): array {
-		if ($this->gateway->available() === false) {
-			return $this->refuse(message: 'OpenRegister\'s flow engine is not available, so no exchange can be set up.');
+		$source = $this->preconditions(desk: $desk, organisation: $organisation);
+		if (is_string($source) === true) {
+			return $this->refuse(message: $source);
 		}
 
-		if (isset(self::DESKS[$desk]) === false) {
-			return $this->refuse(message: 'Unknown service desk "' . $desk . '".');
-		}
+		$flows = $this->buildFlows(
+			desk: $desk,
+			organisation: $organisation,
+			runAs: $runAs,
+			location: (string) ($source['location'] ?? ''),
+			templateId: $templateId
+		);
 
-		if ($this->gateway->findObject(register: self::REGISTER, schema: 'organization', id: $organisation) === null) {
-			return $this->refuse(message: 'The organisation ' . $organisation . ' does not exist in stackiq.');
-		}
-
-		$source = $this->gateway->findObject(register: 'integriq', schema: 'source', id: self::DESKS[$desk]['source']);
-		if ($source === null) {
-			return $this->refuse(message: 'Integriq has no source "' . self::DESKS[$desk]['source'] . '". Add the ' . self::DESKS[$desk]['label'] . ' source in integriq first.');
-		}
-
-		$flows    = $this->buildFlows(desk: $desk, organisation: $organisation, runAs: $runAs, location: (string) ($source['location'] ?? ''), templateId: $templateId);
-		$blocking = [];
-		foreach ($flows as $key => $flow) {
-			$findings = $this->gateway->inspect(flow: $flow);
-			if ($findings['blocking'] !== []) {
-				$blocking[$key] = $findings['blocking'];
-			}
-		}
-
+		$blocking = $this->blockingFindings(flows: $flows);
 		if ($blocking !== []) {
 			$first = (array) reset($blocking);
 			$entry = (array) ($first[0] ?? []);
@@ -291,8 +293,7 @@ class ItsmExchangeService {
 		$saved  = [];
 		try {
 			foreach ($flows as $key => $flow) {
-				$previous    = $stored[$key] ?? null;
-				$saved[$key] = $this->gateway->saveAndPublish(flow: $flow, uuid: is_string($previous) === true ? $previous : null);
+				$saved[$key] = $this->gateway->saveAndPublish(flow: $flow, uuid: $this->storedUuid(stored: $stored, key: $key));
 			}
 		} catch (Throwable $e) {
 			$this->logger->error('[ItsmExchangeService] Saving the exchange flows failed', ['exception' => $e]);
@@ -302,10 +303,79 @@ class ItsmExchangeService {
 
 		$this->storeConfig(desk: $desk, organisation: $organisation, flows: $saved);
 		$this->appConfig->setValueBool(Application::APP_ID, self::ENABLED_KEY, true);
-		$this->connectionReports?->itsmSetUp(created: true, message: count($saved) . ' flows set up for ' . self::DESKS[$desk]['label'] . '. The first import runs tonight.');
+		$this->connectionReports?->itsmSetUp(
+			created: true,
+			message: count($saved) . ' flows set up for ' . self::DESKS[$desk]['label'] . '. The first import runs tonight.'
+		);
 
 		return ['created' => true, 'desk' => $desk, 'flows' => $saved];
 	}//end setUp()
+
+	/**
+	 * What must be there before any flow is built: the engine, the desk, the organisation and integriq's source.
+	 *
+	 * @param string $desk         The desk key.
+	 * @param string $organisation The organisation uuid.
+	 *
+	 * @return array<string, mixed>|string The integriq source, or why the set-up cannot start.
+	 */
+	private function preconditions(string $desk, string $organisation): array|string {
+		if ($this->gateway->available() === false) {
+			return 'OpenRegister\'s flow engine is not available, so no exchange can be set up.';
+		}
+
+		if (isset(self::DESKS[$desk]) === false) {
+			return 'Unknown service desk "' . $desk . '".';
+		}
+
+		if ($this->gateway->findObject(register: self::REGISTER, schema: 'organization', id: $organisation) === null) {
+			return 'The organisation ' . $organisation . ' does not exist in stackiq.';
+		}
+
+		$profile = self::DESKS[$desk];
+		$source  = $this->gateway->findObject(register: 'integriq', schema: 'source', id: $profile['source']);
+		if ($source === null) {
+			return 'Integriq has no source "' . $profile['source'] . '". Add the ' . $profile['label'] . ' source in integriq first.';
+		}
+
+		return $source;
+	}//end preconditions()
+
+	/**
+	 * Preflight every flow and keep the blocking findings.
+	 *
+	 * @param array<string, array<string, mixed>> $flows The filled flows by key.
+	 *
+	 * @return array<string, list<array<string, mixed>>> The blocking findings by flow key; empty when all pass.
+	 */
+	private function blockingFindings(array $flows): array {
+		$blocking = [];
+		foreach ($flows as $key => $flow) {
+			$findings = $this->gateway->inspect(flow: $flow);
+			if ($findings['blocking'] !== []) {
+				$blocking[$key] = $findings['blocking'];
+			}
+		}
+
+		return $blocking;
+	}//end blockingFindings()
+
+	/**
+	 * The uuid a flow was stored under by an earlier set-up, or null.
+	 *
+	 * @param array<string, mixed> $stored The stored flow uuids.
+	 * @param string               $key    The flow key.
+	 *
+	 * @return string|null The uuid, or null when there is none.
+	 */
+	private function storedUuid(array $stored, string $key): ?string {
+		$previous = ($stored[$key] ?? null);
+		if (is_string($previous) === false || $previous === '') {
+			return null;
+		}
+
+		return $previous;
+	}//end storedUuid()
 
 	/**
 	 * Replace every `%KEY%` placeholder in the strings of a value.
@@ -358,6 +428,8 @@ class ItsmExchangeService {
 	 * @param string $location The source's location.
 	 *
 	 * @return string The base, or an empty string when the location has no host.
+	 *
+	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
 	 */
 	public static function baseOf(string $location): string {
 		$parts = parse_url(trim($location));
@@ -383,9 +455,13 @@ class ItsmExchangeService {
 	 * @throws InvalidArgumentException When it is missing or not JSON.
 	 */
 	private function template(string $file): array {
-		$dir     = ($this->templateDir ?? __DIR__ . '/../Settings/flows');
-		$content = @file_get_contents($dir . '/' . $file);
-		$decoded = json_decode((string) $content, true);
+		$path    = ($this->templateDir ?? __DIR__ . '/../Settings/flows') . '/' . $file;
+		$content = '';
+		if (is_file($path) === true) {
+			$content = (string) file_get_contents($path);
+		}
+
+		$decoded = json_decode($content, true);
 		if (is_array($decoded) === false) {
 			throw new InvalidArgumentException('The flow template ' . $file . ' is missing or not JSON.');
 		}

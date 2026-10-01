@@ -29,10 +29,13 @@ namespace OCA\Stackiq\Service;
 use OCA\Stackiq\AppInfo\Application;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCP\IAppConfig;
+use RuntimeException;
 use Throwable;
 
 /**
  * Reads a spreadsheet and starts the file import flow with its rows.
+ *
+ * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
  */
 class ItsmFileImportService {
 
@@ -74,7 +77,10 @@ class ItsmFileImportService {
 	 */
 	public function import(string $path, string $name): array {
 		$config = json_decode($this->appConfig->getValueString(Application::APP_ID, ItsmExchangeService::CONFIG_KEY, '{}'), true);
-		$flow   = (is_array($config) === true) ? ($config['flows']['file'] ?? null) : null;
+		$flow   = null;
+		if (is_array($config) === true) {
+			$flow = ($config['flows']['file'] ?? null);
+		}
 		if (is_string($flow) === false || $flow === '') {
 			return ['started' => false, 'message' => 'Set up the exchange first. The file import uses the flow the set-up creates.'];
 		}
@@ -103,19 +109,12 @@ class ItsmFileImportService {
 	 *
 	 * @return list<array<string, string>> The rows, empty cells left out.
 	 *
-	 * @throws \RuntimeException When the type is not CSV or XLSX, or XLSX cannot be read here.
+	 * @throws RuntimeException When the type is not CSV or XLSX, or XLSX cannot be read here.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-006-a-file-feeds-the-same-import
 	 */
 	public function readRows(string $path, string $name): array {
-		$extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-		if ($extension === 'csv') {
-			$table = $this->readCsv(path: $path);
-		} else if ($extension === 'xlsx') {
-			$table = $this->readXlsx(path: $path);
-		} else {
-			throw new \RuntimeException('only .csv and .xlsx files can be imported, not .' . $extension);
-		}
+		$table = $this->readTable(path: $path, name: $name);
 
 		$header = array_map(static fn ($cell): string => trim((string) $cell), (array) array_shift($table));
 		$rows   = [];
@@ -135,6 +134,29 @@ class ItsmFileImportService {
 
 		return $rows;
 	}//end readRows()
+
+	/**
+	 * Read a file into rows of cells, by its extension.
+	 *
+	 * @param string $path The file.
+	 * @param string $name Its name.
+	 *
+	 * @return list<list<string>> The cells.
+	 *
+	 * @throws RuntimeException When the type is not CSV or XLSX.
+	 */
+	private function readTable(string $path, string $name): array {
+		$extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+		if ($extension === 'csv') {
+			return $this->readCsv(path: $path);
+		}
+
+		if ($extension === 'xlsx') {
+			return $this->readXlsx(path: $path);
+		}
+
+		throw new RuntimeException('only .csv and .xlsx files can be imported, not .' . $extension);
+	}//end readTable()
 
 	/**
 	 * Why the rows cannot be imported, or null when they can.
@@ -173,7 +195,7 @@ class ItsmFileImportService {
 	private function readCsv(string $path): array {
 		$handle = fopen($path, 'r');
 		if ($handle === false) {
-			throw new \RuntimeException('cannot open the uploaded file');
+			throw new RuntimeException('cannot open the uploaded file');
 		}
 
 		$first     = (string) fgets($handle);
@@ -206,7 +228,7 @@ class ItsmFileImportService {
 	private function readXlsx(string $path): array {
 		$factory = '\PhpOffice\PhpSpreadsheet\IOFactory';
 		if (class_exists($factory) === false) {
-			throw new \RuntimeException('reading .xlsx needs PhpSpreadsheet, which OpenRegister provides; save the sheet as .csv instead');
+			throw new RuntimeException('reading .xlsx needs PhpSpreadsheet, which OpenRegister provides; save the sheet as .csv instead');
 		}
 
 		$sheet = $factory::load($path)->getActiveSheet()->toArray(null, true, false, false);
