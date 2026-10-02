@@ -51,7 +51,15 @@
 			<h3>{{ t('stackiq', 'Service desk exchange') }}</h3>
 			<NcLoadingIcon v-if="loading" :size="28" />
 			<template v-else>
-				<NcNoteCard v-if="status.enabled" type="success">
+				<NcNoteCard v-if="statusFailed" type="warning">
+					{{
+						t(
+							'stackiq',
+							'Whether a service desk is connected could not be loaded. Reload the page to try again.',
+						)
+					}}
+				</NcNoteCard>
+				<NcNoteCard v-else-if="status.enabled" type="success">
 					{{
 						t(
 							'stackiq',
@@ -145,6 +153,7 @@ export default defineComponent({
 		return {
 			loading: true,
 			status: {},
+			statusFailed: false,
 			chosen: false,
 			importing: false,
 			importMessage: '',
@@ -239,7 +248,12 @@ export default defineComponent({
 					},
 				},
 			)
-			this.status = response.ok ? await response.json() : {}
+			if (!response.ok) {
+				throw new Error('HTTP ' + response.status)
+			}
+			this.status = await response.json()
+		} catch {
+			this.statusFailed = true
 		} finally {
 			this.loading = false
 		}
@@ -273,7 +287,8 @@ export default defineComponent({
 						body: form,
 					},
 				)
-				const body = await response.json()
+				// A proxy or server error page is not JSON; it still gets an answer below.
+				const body = await response.json().catch(() => ({}))
 				this.importOk = response.ok && body.started === true
 				this.importMessage = this.importOk
 					? t(
@@ -282,6 +297,12 @@ export default defineComponent({
 							{ rows: body.rows },
 						)
 					: body.message || t('stackiq', 'The import did not start.')
+			} catch {
+				this.importOk = false
+				this.importMessage = t(
+					'stackiq',
+					'The file could not be sent. Check your connection and try again.',
+				)
 			} finally {
 				this.importing = false
 			}

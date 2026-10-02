@@ -58,6 +58,9 @@
 				:placeholder="
 					t('stackiq', 'The organisation whose applications are exchanged')
 				" />
+			<NcNoteCard v-if="organisationLoadError" type="warning">
+				{{ organisationLoadError }}
+			</NcNoteCard>
 			<NcTextField
 				v-if="desk && desk.id === 'topdesk'"
 				v-model="templateId"
@@ -99,8 +102,10 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
 import { showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcLoadingIcon,
@@ -137,6 +142,7 @@ export default defineComponent({
 			loadingOrganisations: false,
 			status: { desks: [] },
 			organisations: [],
+			organisationLoadError: '',
 			desk: null,
 			organisation: null,
 			refusal: '',
@@ -208,23 +214,41 @@ export default defineComponent({
 		 */
 		async loadOrganisations() {
 			this.loadingOrganisations = true
+			this.organisationLoadError = ''
 			try {
-				const response = await fetch(
-					'/index.php/apps/openregister/api/objects/stackiq/organization?_limit=500',
-					{
-						headers: {
-							Accept: 'application/json',
-							'OCS-APIRequest': 'true',
-						},
-					},
+				const configResponse = await axios.get(
+					generateUrl('/apps/stackiq/api/voorzieningen/config'),
 				)
-				const body = response.ok ? await response.json() : { results: [] }
-				this.organisations = (body.results || [])
+				const register = configResponse?.data?.config?.register
+				const schema = configResponse?.data?.config?.organisatie_schema
+				if (!register || !schema) {
+					this.organisationLoadError = t(
+						'stackiq',
+						'The organisation register is not configured, so there are no organisations to choose from.',
+					)
+					return
+				}
+				const response = await axios.get(
+					generateUrl(
+						'/apps/openregister/api/objects/{register}/{schema}',
+						{
+							register,
+							schema,
+						},
+					),
+					{ params: { _limit: 500 } },
+				)
+				this.organisations = (response?.data?.results || [])
 					.filter((org) => org.type !== 'Supplier')
 					.map((org) => ({
 						id: org['@self']?.id || org.id,
 						name: org.name || org['@self']?.name || org.id,
 					}))
+			} catch {
+				this.organisationLoadError = t(
+					'stackiq',
+					'The organisations could not be loaded. Reload the page to try again.',
+				)
 			} finally {
 				this.loadingOrganisations = false
 			}
