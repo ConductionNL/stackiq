@@ -634,7 +634,10 @@ class CmdbExportImportService {
 			}
 		}
 
-		$data = ($result['data'] ?? []);
+		// A lookup whose default is null maps a known "no value" (an Applicatiesoort
+		// that is not a hosting model) to null; that field is left out, as an empty
+		// cell is, so an update never blanks what the field already holds.
+		$data = array_filter(($result['data'] ?? []), static fn ($value): bool => $value !== null);
 		unset($data['id']);
 
 		return ['data' => $data, 'missing' => array_values(array_unique($missing))];

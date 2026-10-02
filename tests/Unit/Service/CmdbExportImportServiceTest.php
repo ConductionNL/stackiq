@@ -534,12 +534,12 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertTrue($report['success']);
 		$this->assertFalse($report['cancelled']);
 		$this->assertSame('cmdb-test-0001', $report['operationId']);
-		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 1], $report['summary']);
+		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 0], $report['summary']);
 		$this->assertSame('Gemeente Voorbeeldstad', $report['municipality']['name']);
 		$this->assertTrue($report['municipality']['created']);
 		$this->assertSame([], $report['importWarnings']);
-		// "Webapplicatie" is an application kind, not a hosting model: the field is dropped with a warning.
-		$this->assertSame(['Column "Applicatiesoort": Value "Webapplicatie" has no mapping and no default is configured'], $report['rows'][0]['warnings']);
+		// "Webapplicatie" is an application kind, not a hosting model: kept as the kind, no hosting model, no warning.
+		$this->assertSame([], $report['rows'][0]['warnings']);
 
 		$municipality = $report['municipality']['uuid'];
 		$this->assertSame('Municipality', $this->store[self::ORGANIZATION][$municipality]['type']);
@@ -565,6 +565,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame('Functionele omschrijving test123', $onbeh['longDescription']);
 		$this->assertArrayNotHasKey('bbnLevel', $onbeh, '"NB" means unknown');
 		$this->assertArrayNotHasKey('cloudDienstverleningsmodel', $onbeh);
+		$this->assertSame('Webapplicatie', $onbeh['applicationType']);
 		$publication = new \DateTimeImmutable($onbeh['publicationDate']);
 		$this->assertGreaterThanOrEqual($before, $publication);
 		$this->assertLessThanOrEqual(new \DateTimeImmutable('now'), $publication);
@@ -577,6 +578,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame('Naamtest', $beheerd['shortDescription'], 'Roepnaam wins over Nickname');
 		$this->assertSame('Accomodatieplanning.', $beheerd['longDescription']);
 		$this->assertSame(['SaaS'], $beheerd['cloudDienstverleningsmodel']);
+		$this->assertSame('Saas', $beheerd['applicationType']);
 		$this->assertSame('BBN2', $beheerd['bbnLevel']);
 
 		$supplierByName = array_column($suppliers, 'id', 'name');
@@ -590,7 +592,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame($municipality, $aia['consumer']);
 		$this->assertSame('Planned', $aia['status']);
 		$this->assertSame('Beheer geregeld: nee / H10 / H10 Accounting', $aia['interneAnnotation']);
-		$this->assertArrayNotHasKey('startDateOutPhased', $aia, 'the CMDB placeholder 2036-01-01 means no date');
+		$this->assertSame('2036-01-01', $aia['startDateOutPhased'], 'the end-of-life date is stored as the file has it');
 		$this->assertArrayNotHasKey('timeClassification', $aia);
 		$this->assertSame($supplierByName['Aangetekend B.V.'], $aia['provider']);
 		$app = $usageByModule[$beheerd['id']];
@@ -835,11 +837,11 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testTheSheetRecordsWhetherMaintenanceIsArranged()
 
 	/**
-	 * "NB" in BNN Classificatie and the CMDB end-of-life placeholder (serial 49675) mean empty: no field, no warning.
+	 * "NB" in BNN Classificatie means empty (no field, no warning); an end-of-life date is stored as the file has it, 2036-01-01 included.
 	 *
 	 * @return void
 	 */
-	public function testTheCmdbPlaceholdersMeanEmpty(): void {
+	public function testNbMeansEmptyAndEndOfLifeIsStoredAsIs(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		$rows = [
 			$this->row(appId: '1', cells: ['BNN Classificatie' => 'NB', 'End-of-Life Functioneel' => 49675]),
@@ -853,10 +855,40 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('bbnLevel', $modules[1]);
 		$this->assertSame('BBN3', $modules[2]['bbnLevel']);
 		$usages = array_column($this->objects(self::USAGE), null, 'module');
-		$this->assertArrayNotHasKey('startDateOutPhased', $usages[$modules[1]['id']]);
+		$this->assertSame('2036-01-01', $usages[$modules[1]['id']]['startDateOutPhased']);
 		$this->assertSame('2046-02-01', $usages[$modules[2]['id']]['startDateOutPhased']);
 		$this->assertSame('Migrate', $usages[$modules[2]['id']]['timeClassification']);
-	}//end testTheCmdbPlaceholdersMeanEmpty()
+	}//end testNbMeansEmptyAndEndOfLifeIsStoredAsIs()
+
+	/**
+	 * The values the municipality's real export holds map without a warning: BNN 1/2/2+, the extra
+	 * statuses, the numbered TIME class, and application kinds that are not a hosting model.
+	 *
+	 * @return void
+	 */
+	public function testTheValuesOfTheRealExportMapWithoutWarnings(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [
+			$this->row(appId: '1', cells: ['BNN Classificatie' => '1', 'Applicatiesoort' => 'Client/server', 'Applicatie Status' => 'Moet verwijderd worden', 'Classificatie' => '1. Tolereren (wordt ingelezen)']),
+			$this->row(appId: '2', cells: ['BNN Classificatie' => '2', 'Applicatiesoort' => 'Saas', 'Applicatie Status' => 'Wordt getest'], row: 3),
+			$this->row(appId: '3', cells: ['BNN Classificatie' => '2+', 'Applicatiesoort' => 'Beheertool', 'Applicatie Status' => 'Stand-by voor continuïteit'], row: 4),
+			$this->row(appId: '4', cells: ['Applicatie Status' => 'Besteld'], row: 5),
+			$this->row(appId: '5', cells: ['Applicatie Status' => 'Verwijderd'], row: 6),
+		];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(0, $report['summary']['warnings']);
+		$modules = array_column($this->objects(self::MODULE), null, 'externalNumber');
+		$this->assertSame(['BBN1', 'BBN2', 'BBN2+'], [$modules[1]['bbnLevel'], $modules[2]['bbnLevel'], $modules[3]['bbnLevel']]);
+		$this->assertSame(['Client/server', 'Saas', 'Beheertool'], [$modules[1]['applicationType'], $modules[2]['applicationType'], $modules[3]['applicationType']]);
+		$this->assertArrayNotHasKey('cloudDienstverleningsmodel', $modules[1], 'Client/server is no hosting model');
+		$this->assertSame(['SaaS'], $modules[2]['cloudDienstverleningsmodel']);
+		$usages = array_column($this->objects(self::USAGE), null, 'module');
+		$status = array_map(fn (int $appId): string => $usages[$modules[$appId]['id']]['status'], [1, 2, 3, 4, 5]);
+		$this->assertSame(['To be phased out', 'Acquisition', 'In production', 'Acquisition', 'Phased out'], $status);
+		$this->assertSame('Tolerate', $usages[$modules[1]['id']]['timeClassification']);
+	}//end testTheValuesOfTheRealExportMapWithoutWarnings()
 
 	/**
 	 * A formula without a cached value reads as empty and warns on its row; the row is still imported.

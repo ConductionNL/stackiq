@@ -2,7 +2,7 @@
   "components": {
     "schemas": {
       "module": {
-        "version": "0.3.5",
+        "version": "0.3.7",
         "properties": {
           "externalId": {
             "type": "string",
@@ -51,6 +51,18 @@
             "visible": true,
             "facetable": false,
             "order": 64
+          },
+          "applicationType": {
+            "type": "string",
+            "title": "Application type",
+            "description": "The kind of application as the source system records it, such as the TOPdesk Applicatiesoort (Webapplicatie, Client/server, Saas). Kept as the source has it.",
+            "maxLength": 100,
+            "visible": true,
+            "facetable": true,
+            "order": 65
+          },
+          "bbnLevel": {
+            "enum": ["BBN2+"]
           }
         }
       }
