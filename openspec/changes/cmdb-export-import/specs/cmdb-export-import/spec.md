@@ -166,9 +166,10 @@ The service SHALL map each normalised row with OpenRegister's `MigrationPack\Map
 
 - **GIVEN** the "Beheerde" row of the anonymised export with "Applicatiesoort" `Saas`, "BNN Classificatie" `BBN2`, "Classificatie" `Tolereren` and "End-of-Life Functioneel" `53359`
 - **WHEN** it is imported
-- **THEN** the module SHALL have `cloudDienstverleningsmodel` = `["SaaS"]` and `bbnLevel` = `BBN2`
+- **THEN** the module SHALL have `applicationType` = `Saas`, `cloudDienstverleningsmodel` = `["SaaS"]` and `bbnLevel` = `BBN2`
 - **AND** the usage SHALL have `timeClassification` = `Tolerate` and `startDateOutPhased` = `2046-02-01`
-- **AND** the "Onbeh" row's "Applicatiesoort" `Webapplicatie`, which is not a hosting model, SHALL be dropped with a warning
+- **AND** the "Onbeh" row's "Applicatiesoort" `Webapplicatie`, which is not a hosting model, SHALL be stored as `applicationType` and SHALL leave `cloudDienstverleningsmodel` empty without a warning
+- **AND** "BNN Classificatie" `1`, `2`, `2+` SHALL be `BBN1`, `BBN2`, `BBN2+`
 
 ### Requirement: REQ-CMDB-006 A module SHALL be matched on its TOPdesk APPID, so a re-import updates instead of duplicating
 

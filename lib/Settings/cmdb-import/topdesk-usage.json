@@ -15,7 +15,12 @@
           "In voorraad": "Planned",
           "In ontwikkeling": "Acquisition",
           "Uit te faseren": "To be phased out",
-          "Uitgefaseerd": "Phased out"
+          "Uitgefaseerd": "Phased out",
+          "Moet verwijderd worden": "To be phased out",
+          "Verwijderd": "Phased out",
+          "Besteld": "Acquisition",
+          "Wordt getest": "Acquisition",
+          "Stand-by voor continuïteit": "In production"
         }
       }
     },
@@ -28,7 +33,8 @@
           "Tolerate": "Tolerate", "Tolereren": "Tolerate",
           "Invest": "Invest", "Investeren": "Invest",
           "Migrate": "Migrate", "Migreren": "Migrate",
-          "Eliminate": "Eliminate", "Elimineren": "Eliminate"
+          "Eliminate": "Eliminate", "Elimineren": "Eliminate",
+          "1. Tolereren (wordt ingelezen)": "Tolerate"
         }
       }
     },

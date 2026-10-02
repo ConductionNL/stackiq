@@ -206,13 +206,13 @@ Source columns of "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB" and w
 | Roepnaam | both | module.shortDescription | trim; wins over Nickname |
 | Nickname | Beheerde | module.shortDescription | trim; used when Roepnaam is empty; listed as absent on Onbeh |
 | Functionele Omschrijving | both | module.longDescription | trim |
-| Applicatiesoort | both | module.cloudDienstverleningsmodel | lookup: `Saas`/`SaaS` → `["SaaS"]`, `PaaS` → `["PaaS"]`, `IaaS` → `["IaaS"]`, `On-premise(s)` → `["On-premises (self-managed)"]`; another value (such as `Webapplicatie`): warning, field dropped |
-| BNN Classificatie | both | module.bbnLevel | `NB` is empty; lookup "BBN1"/"BBN 1"/"BNN1" etc. to `BBN1`/`BBN2`/`BBN3`; unknown value: warning |
+| Applicatiesoort | both | module.applicationType and module.cloudDienstverleningsmodel | applicationType: as is; hosting model lookup: `Saas`/`SaaS` → `["SaaS"]`, `PaaS` → `["PaaS"]`, `IaaS` → `["IaaS"]`, `On-premise(s)` → `["On-premises (self-managed)"]`; any other kind (`Webapplicatie`, `Client/server`, …) has default `null`: no hosting model, no warning |
+| BNN Classificatie | both | module.bbnLevel | `NB` is empty; lookup `1`/`2`/`2+`/`3` and "BBN1"/"BBN 1"/"BNN1" etc. to `BBN1`/`BBN2`/`BBN2+`/`BBN3` (the fragment adds `BBN2+` to the enum); unknown value: warning |
 | Datum | both | module.externalCreatedAt | Excel serial to date |
 | Referentie datum wijziging | both | module.externalModifiedAt | Excel serial to date |
 | Vendor | both | organization (Supplier) via module.provider and usage.provider | dedup on normalised name (D7) |
-| Applicatie Status | both | usage.status | lookup: In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren → To be phased out, Uitgefaseerd → Phased out; unknown value: warning |
-| Classificatie | both | usage.timeClassification | lookup Tolereren/Tolerate, Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
+| Applicatie Status | both | usage.status | lookup: In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren and Moet verwijderd worden → To be phased out, Uitgefaseerd and Verwijderd → Phased out, Besteld and Wordt getest → Acquisition, Stand-by voor continuïteit → In production; unknown value: warning |
+| Classificatie | both | usage.timeClassification | lookup Tolereren/Tolerate (also `1. Tolereren (wordt ingelezen)`), Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
 | End-of-Life Functioneel | both | usage.startDateOutPhased | Excel serial to date, stored as is (2036-01-01 included) |
 | (sheet constant `Beheer`), Cluster, Applicatie Eigenaar (Afdeling) | both | usage.interneAnnotation | concat with " / ", empty parts dropped, create-only; `Beheer geregeld: nee` (Onbeh) or `ja` (Beheerde) |
 | Applicatie Eigenaar (Persoon), Applicatie Eigenaar (Functie) | both | usage.businessOwner (contactPerson + Nextcloud contact; role = Functie) | D8; the person column may hold a function |
@@ -414,7 +414,7 @@ The seeds show the new properties in a fresh install. They carry no `publication
 - [Owner contacts land in the importing admin's address book] → `StackiqContactSyncService` writes to the first writable address book of the acting user, the same as every other stackiq contact path. The docs say so. A dedicated system address book is a follow-up.
 - [Long synchronous request] → Per-row progress, cancel, and "unchanged" rows skip the save. About 1,100 rows is expected to fit. A background job is a follow-up if it does not.
 - [OpenRegister internals (`MappingEngine`, `PackDefinitionValidator`, PhpSpreadsheet) change shape] → Guarded resolution with 503, and a contract test that maps the fixture through the real engine in the dev environment.
-- [Provisional lookups for Applicatiesoort and BNN Classificatie] → The values of the first real import were not kept (the report lives in the progress cache for an hour). The maps hold the values the anonymised export and the CMDB formulas show (`Saas`, `Webapplicatie`, `NB`) plus the usual spellings. An unknown value is a warning, never a wrong value; once the municipality lists its values, the maps in the JSON are extended, with no code change.
+- [Lookups from the real export] → The maps hold the values the municipality's export of 2026-09-22 contains (2026-10-02 import report): "Applicatiesoort" is an application kind, kept as is in `applicationType`; "BNN Classificatie" holds `NB`, `1`, `2` and `2+`; "Applicatie Status" adds five Dutch statuses; "Classificatie" one numbered form. A new value is a warning, never a wrong value, and is added to the JSON map with no code change. A lookup `default` of `null` means "known, no value": the service leaves the field out.
 - [CMDB placeholders] → "BNN Classificatie" `NB` is read as empty. "End-of-Life Functioneel" and "Classificatie" are stored as the file has them: the sheet's 2036-01-01 (written for an empty date) is imported as that date, and the `Tolereren` the "Beheerde" formula writes when TOPdesk has none is imported as Tolerate.
 - [An application moves between the sheets] → Same APPID, so the same module and usage; the usage note (create-only) keeps its old `Beheer geregeld` line when it is not empty.
 - [An unknown status on create falls back to the usage schema's default "In production"] → Accepted. The warning in the report makes it visible.
@@ -426,6 +426,5 @@ No data migration. The register fragment deploys with the existing repair-step r
 
 ## Open Questions
 
-- Which "Applicatiesoort" and "BNN Classificatie" values occur in the municipality's real export, and which hosting model does each mean (lookup maps)?
 - Should the maintenance status update the usage note on re-import (it is create-only today), or get a field of its own?
 - Should OpenRegister promote `MigrationPack\MappingEngine` to its `Contract` namespace?

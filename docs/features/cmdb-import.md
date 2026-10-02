@@ -131,13 +131,13 @@ as 2036-01-01.
 | Applicatie Code | module external id | reference only; it can change in TOPdesk, so it is not the match key |
 | Roepnaam, Nickname | module short description | Roepnaam when filled, otherwise Nickname (only on `Beheerde Applicaties CMDB`) |
 | Functionele Omschrijving | module long description | |
-| Applicatiesoort | module hosting model (`cloudDienstverleningsmodel`) | `Saas` → SaaS, `PaaS` → PaaS, `IaaS` → IaaS, `On-premise(s)` → On-premises (self-managed); another value is dropped with a warning |
-| BNN Classificatie | module BBN level | `BBN1`/`BBN 1`/`BNN1` etc. become `BBN1`, `BBN2`, `BBN3`; `NB` is empty; another value is dropped with a warning |
+| Applicatiesoort | module application type (`applicationType`) and hosting model (`cloudDienstverleningsmodel`) | stored as is as the application type (Webapplicatie, Client/server, Saas, …); `Saas` → SaaS, `PaaS` → PaaS, `IaaS` → IaaS, `On-premise(s)` → On-premises (self-managed) also set the hosting model, any other kind leaves it empty |
+| BNN Classificatie | module BBN level | `1`, `2`, `2+`, `3` (and `BBN1`/`BBN 1`/`BNN1` etc.) become `BBN1`, `BBN2`, `BBN2+`, `BBN3`; `NB` is empty; another value is dropped with a warning |
 | Datum | module external creation date | Excel date |
 | Referentie datum wijziging | module external modification date | Excel date |
 | Vendor | Supplier organisation, set as provider on the module and the usage | one organisation per name, see below |
-| Applicatie Status | usage status | In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren → To be phased out, Uitgefaseerd → Phased out; another value is dropped with a warning |
-| Classificatie | usage TIME classification | Tolereren/Tolerate, Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
+| Applicatie Status | usage status | In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren and Moet verwijderd worden → To be phased out, Uitgefaseerd and Verwijderd → Phased out, Besteld and Wordt getest → Acquisition, Stand-by voor continuïteit → In production; another value is dropped with a warning |
+| Classificatie | usage TIME classification | Tolereren/Tolerate (also `1. Tolereren (wordt ingelezen)`), Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
 | End-of-Life Functioneel | usage phase-out date | Excel date, stored as is |
 | (the sheet), Cluster, Applicatie Eigenaar (Afdeling) | usage internal annotation | `Beheer geregeld: ja` or `nee`, the cluster and the department, joined with ` / `; written only when the usage is new or the note is empty |
 | Applicatie Eigenaar (Persoon), Applicatie Eigenaar (Functie) | usage business owner (contact person) | see [Owners](#owners) |

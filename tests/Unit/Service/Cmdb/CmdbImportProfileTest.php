@@ -198,8 +198,9 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertStringContainsString('Onbekende status', $unknown['errors'][0]['message']);
 
 		$soort = $engine->mapRow($profile->pack(target: 'module'), ['Applicatie Naam' => 'X', 'APPID' => '1', 'Applicatiesoort' => 'Webapplicatie'], 3);
-		$this->assertArrayNotHasKey('cloudDienstverleningsmodel', $soort['data'], 'an application kind is not a hosting model');
-		$this->assertSame('Applicatiesoort', $soort['errors'][0]['source']);
+		$this->assertNull($soort['data']['cloudDienstverleningsmodel'], 'an application kind is not a hosting model; the service leaves the null out');
+		$this->assertSame('Webapplicatie', $soort['data']['applicationType']);
+		$this->assertSame([], $soort['errors']);
 	}//end testTheLookupsMapThroughTheEngine()
 
 	/**
