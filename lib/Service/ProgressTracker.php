@@ -32,6 +32,11 @@ use Psr\Log\LoggerInterface;
  * admin, the request after a cron run) can read it. Who may read an operation
  * is decided by SettingsController::getProgress(), not by where it is stored.
  *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) Each public method is one step of an
+ * operation's life (start, phase, progress, warning, error, statistics, complete, fail,
+ * cancel) that an import calls on the same snapshot; splitting them would hand that
+ * snapshot from class to class.
+ *
  * @category  Service
  * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>

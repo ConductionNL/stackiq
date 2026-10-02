@@ -102,8 +102,7 @@ class ItsmFileImportService {
 			return ['started' => false, 'message' => 'Set up the exchange first. The file import uses the flow the set-up creates.'];
 		}
 
-		$size = @filesize($path);
-		if ($size === false || $size > self::MAX_FILE_BYTES) {
+		if (is_file($path) === true && filesize($path) > self::MAX_FILE_BYTES) {
 			return ['started' => false, 'message' => 'The file is larger than ' . (self::MAX_FILE_BYTES / 1048576) . ' MB; one import takes at most that.'];
 		}
 

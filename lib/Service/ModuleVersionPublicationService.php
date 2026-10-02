@@ -209,26 +209,45 @@ class ModuleVersionPublicationService {
 				return $result;
 			}
 
-			foreach ($versions as $version) {
-				if (($version instanceof ObjectEntityInterface) === false) {
-					continue;
-				}
+			$page = $this->writeVersions(objects: $objects, versions: $versions, mirror: $mirror);
+			$result['written'] += $page['written'];
+			$result['failed']  += $page['failed'];
 
-				$outcome = $this->write(objects: $objects, version: $version, mirror: $mirror);
-				if ($outcome === true) {
-					$result['written']++;
-				}
-
-				if ($outcome === null) {
-					$result['failed']++;
-				}
-			}
-
-			$offset += self::VERSION_LIMIT;
-		} while (count($versions) === self::VERSION_LIMIT);
+			$offset   += self::VERSION_LIMIT;
+			$pageSize  = count($versions);
+		} while ($pageSize === self::VERSION_LIMIT);
 
 		return $result;
 	}//end copyOntoVersions()
+
+	/**
+	 * Write a mirror onto each version of one page.
+	 *
+	 * @param ObjectServiceInterface                                                    $objects  The object service.
+	 * @param array<int, mixed>                                                         $versions The page.
+	 * @param array{modulePublicationDate: string|null, moduleRegisteredBy: string|null} $mirror   The values to hold.
+	 *
+	 * @return array{written: int, failed: int} The versions written and the writes that failed.
+	 */
+	private function writeVersions(ObjectServiceInterface $objects, array $versions, array $mirror): array {
+		$result = ['written' => 0, 'failed' => 0];
+		foreach ($versions as $version) {
+			if (($version instanceof ObjectEntityInterface) === false) {
+				continue;
+			}
+
+			$outcome = $this->write(objects: $objects, version: $version, mirror: $mirror);
+			if ($outcome === true) {
+				$result['written']++;
+			}
+
+			if ($outcome === null) {
+				$result['failed']++;
+			}
+		}
+
+		return $result;
+	}//end writeVersions()
 
 	/**
 	 * Whether a version holding this mirror is public now, by the moduleVersion read rule.

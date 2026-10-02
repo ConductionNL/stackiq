@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\AppInfo\Application;
 use OCA\Stackiq\Service\ModuleVersionPublicationService;
 use OCA\Stackiq\Service\SettingsService;
@@ -111,38 +112,55 @@ class BackfillModuleVersionPublication implements IRepairStep {
 			return;
 		}
 
-		$written = 0;
-		$failed  = 0;
-		$offset  = 0;
-		do {
-			try {
-				$modules = (array) $objects->setRegister($register)->setSchema($schema)->findAll(
-					['limit' => self::PAGE_SIZE, 'offset' => $offset],
-					false,
-					false
-				);
-			} catch (Throwable $e) {
-				$output->warning('Could not read the applications: ' . $e->getMessage());
-				return;
-			}
+		try {
+			$result = $this->backfillAll(objects: $objects, register: $register, schema: $schema);
+		} catch (Throwable $e) {
+			$output->warning('Could not read the applications: ' . $e->getMessage());
+			return;
+		}
 
-			foreach ($modules as $module) {
-				if (($module instanceof ObjectEntityInterface) === true) {
-					$result   = $this->publication->backfillModule(module: $module);
-					$written += $result['written'];
-					$failed  += $result['failed'];
-				}
-			}
-
-			$offset += self::PAGE_SIZE;
-		} while (count($modules) === self::PAGE_SIZE);
-
-		$output->info($written . ' versions now follow their application\'s publication.');
-		if ($failed > 0) {
-			$output->warning($failed . ' versions or searches failed; the next upgrade tries again.');
+		$output->info($result['written'] . ' versions now follow their application\'s publication.');
+		if ($result['failed'] > 0) {
+			$output->warning($result['failed'] . ' versions or searches failed; the next upgrade tries again.');
 			return;
 		}
 
 		$this->appConfig->setValueBool(Application::APP_ID, self::DONE_CONFIG_KEY, true);
 	}//end run()
+
+	/**
+	 * Backfill every module, page by page.
+	 *
+	 * @param ObjectServiceInterface $objects  The object service.
+	 * @param int|string             $register The module register.
+	 * @param int|string             $schema   The module schema.
+	 *
+	 * @return array{written: int, failed: int} The versions written, and the versions or searches that failed.
+	 *
+	 * @throws Throwable When a page of modules cannot be read.
+	 */
+	private function backfillAll(ObjectServiceInterface $objects, int|string $register, int|string $schema): array {
+		$total  = ['written' => 0, 'failed' => 0];
+		$offset = 0;
+		do {
+			$modules = (array) $objects->setRegister($register)->setSchema($schema)->findAll(
+				['limit' => self::PAGE_SIZE, 'offset' => $offset],
+				false,
+				false
+			);
+
+			foreach ($modules as $module) {
+				if (($module instanceof ObjectEntityInterface) === true) {
+					$result            = $this->publication->backfillModule(module: $module);
+					$total['written'] += $result['written'];
+					$total['failed']  += $result['failed'];
+				}
+			}
+
+			$offset  += self::PAGE_SIZE;
+			$pageSize = count($modules);
+		} while ($pageSize === self::PAGE_SIZE);
+
+		return $total;
+	}//end backfillAll()
 }//end class
