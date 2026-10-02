@@ -29,6 +29,7 @@ namespace OCA\Stackiq\Service;
 use OCA\Stackiq\AppInfo\Application;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCP\IAppConfig;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
@@ -47,6 +48,20 @@ class ItsmFileImportService {
 	public const MAX_ROWS = 5000;
 
 	/**
+	 * The largest file one import reads, in bytes (10 MiB, as the CMDB import).
+	 *
+	 * @var integer
+	 */
+	public const MAX_FILE_BYTES = 10485760;
+
+	/**
+	 * PhpSpreadsheet's XLSX reader, as OpenRegister ships it.
+	 *
+	 * @var string
+	 */
+	public const XLSX_READER = '\PhpOffice\PhpSpreadsheet\Reader\Xlsx';
+
+	/**
 	 * The column every row must fill.
 	 *
 	 * @var string
@@ -58,10 +73,12 @@ class ItsmFileImportService {
 	 *
 	 * @param ItsmFlowGateway $gateway   OpenRegister's flow store.
 	 * @param IAppConfig      $appConfig The app settings.
+	 * @param LoggerInterface $logger    Logs a flow that could not be started.
 	 */
 	public function __construct(
 		private readonly ItsmFlowGateway $gateway,
 		private readonly IAppConfig $appConfig,
+		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
 
@@ -85,6 +102,11 @@ class ItsmFileImportService {
 			return ['started' => false, 'message' => 'Set up the exchange first. The file import uses the flow the set-up creates.'];
 		}
 
+		$size = @filesize($path);
+		if ($size === false || $size > self::MAX_FILE_BYTES) {
+			return ['started' => false, 'message' => 'The file is larger than ' . (self::MAX_FILE_BYTES / 1048576) . ' MB; one import takes at most that.'];
+		}
+
 		try {
 			$rows = $this->readRows(path: $path, name: $name);
 		} catch (Throwable $e) {
@@ -96,7 +118,12 @@ class ItsmFileImportService {
 			return ['started' => false, 'message' => $problem];
 		}
 
-		$run = $this->gateway->run(uuid: $flow, payload: ['rows' => $rows]);
+		try {
+			$run = $this->gateway->run(uuid: $flow, payload: ['rows' => $rows]);
+		} catch (Throwable $e) {
+			$this->logger->error('[ItsmFileImportService] Starting the file import flow failed', ['exception' => $e]);
+			return ['started' => false, 'message' => 'The file import flow could not be started: ' . $e->getMessage()];
+		}
 
 		return ['started' => true, 'run' => $run, 'rows' => count($rows)];
 	}//end import()
@@ -107,6 +134,9 @@ class ItsmFileImportService {
 	 * @param string $path The file.
 	 * @param string $name Its name.
 	 *
+	 * Reading stops one row past MAX_ROWS, so an oversized file is refused
+	 * without reading the rest of it.
+	 *
 	 * @return list<array<string, string>> The rows, empty cells left out.
 	 *
 	 * @throws RuntimeException When the type is not CSV or XLSX, or XLSX cannot be read here.
@@ -114,11 +144,18 @@ class ItsmFileImportService {
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-006-a-file-feeds-the-same-import
 	 */
 	public function readRows(string $path, string $name): array {
-		$table = $this->readTable(path: $path, name: $name);
-
-		$header = array_map(static fn ($cell): string => trim((string) $cell), (array) array_shift($table));
+		$header = null;
 		$rows   = [];
-		foreach ($table as $cells) {
+		foreach ($this->readTable(path: $path, name: $name) as $cells) {
+			if ($header === null) {
+				$header = array_map(static fn ($cell): string => trim((string) $cell), $cells);
+				continue;
+			}
+
+			if (count($rows) > self::MAX_ROWS) {
+				break;
+			}
+
 			$row = [];
 			foreach ($header as $index => $column) {
 				$cell = trim((string) ($cells[$index] ?? ''));
@@ -141,11 +178,11 @@ class ItsmFileImportService {
 	 * @param string $path The file.
 	 * @param string $name Its name.
 	 *
-	 * @return list<list<string>> The cells.
+	 * @return iterable<list<string>> The cells, row by row.
 	 *
 	 * @throws RuntimeException When the type is not CSV or XLSX.
 	 */
-	private function readTable(string $path, string $name): array {
+	private function readTable(string $path, string $name): iterable {
 		$extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
 		if ($extension === 'csv') {
 			return $this->readCsv(path: $path);
@@ -173,7 +210,7 @@ class ItsmFileImportService {
 		}
 
 		if (count($rows) > self::MAX_ROWS) {
-			return 'The file holds ' . count($rows) . ' rows; one import takes at most ' . self::MAX_ROWS . '.';
+			return 'The file holds more than ' . self::MAX_ROWS . ' rows; one import takes at most ' . self::MAX_ROWS . '.';
 		}
 
 		foreach ($rows as $index => $row) {
@@ -190,49 +227,93 @@ class ItsmFileImportService {
 	 *
 	 * @param string $path The file.
 	 *
-	 * @return list<list<string>> The cells.
+	 * @return \Generator<int, list<string>> The cells, row by row; the file closes when reading stops.
 	 */
-	private function readCsv(string $path): array {
+	private function readCsv(string $path): \Generator {
 		$handle = fopen($path, 'r');
 		if ($handle === false) {
 			throw new RuntimeException('cannot open the uploaded file');
 		}
 
-		$first     = (string) fgets($handle);
-		$delimiter = ',';
-		if (substr_count($first, ';') > substr_count($first, ',')) {
-			$delimiter = ';';
-		}
+		try {
+			$first     = (string) fgets($handle);
+			$delimiter = ',';
+			if (substr_count($first, ';') > substr_count($first, ',')) {
+				$delimiter = ';';
+			}
 
-		rewind($handle);
-		$table = [];
-		while (($cells = fgetcsv($handle, null, $delimiter, '"', '\\')) !== false) {
-			$table[] = array_map(static fn ($cell): string => (string) $cell, $cells);
-		}
+			rewind($handle);
+			$isFirst = true;
+			while (($cells = fgetcsv($handle, null, $delimiter, '"', '\\')) !== false) {
+				$cells = array_map(static fn ($cell): string => (string) $cell, $cells);
+				if ($isFirst === true && isset($cells[0]) === true) {
+					$cells[0] = (string) preg_replace('/^\xEF\xBB\xBF/', '', $cells[0]);
+				}
 
-		fclose($handle);
-		if (isset($table[0][0]) === true) {
-			$table[0][0] = preg_replace('/^\xEF\xBB\xBF/', '', $table[0][0]);
+				$isFirst = false;
+				yield $cells;
+			}
+		} finally {
+			fclose($handle);
 		}
-
-		return $table;
 	}//end readCsv()
 
 	/**
 	 * Read the first sheet of an XLSX file into rows of cells, with PhpSpreadsheet as OpenRegister ships it.
 	 *
+	 * Always the XLSX reader, whatever the content looks like, with data only.
+	 * A formula gives the value Excel cached; it is never calculated here.
+	 *
 	 * @param string $path The file.
 	 *
-	 * @return list<list<string>> The cells.
+	 * @return \Generator<int, list<string>> The cells, row by row; the workbook is released when reading stops.
 	 */
-	private function readXlsx(string $path): array {
-		$factory = '\PhpOffice\PhpSpreadsheet\IOFactory';
-		if (class_exists($factory) === false) {
+	private function readXlsx(string $path): \Generator {
+		$readerClass = self::XLSX_READER;
+		if (class_exists($readerClass) === false) {
 			throw new RuntimeException('reading .xlsx needs PhpSpreadsheet, which OpenRegister provides; save the sheet as .csv instead');
 		}
 
-		$sheet = $factory::load($path)->getActiveSheet()->toArray(null, true, false, false);
+		$reader = new $readerClass();
+		$reader->setReadDataOnly(true);
+		$spreadsheet = $reader->load($path);
+		try {
+			foreach ($spreadsheet->getActiveSheet()->getRowIterator() as $row) {
+				$iterator = $row->getCellIterator();
+				$iterator->setIterateOnlyExistingCells(false);
+				$cells = [];
+				foreach ($iterator as $cell) {
+					$cells[] = self::cellText(cell: $cell);
+				}
 
-		return array_map(static fn ($cells): array => array_map(static fn ($cell): string => (string) $cell, (array) $cells), (array) $sheet);
+				yield $cells;
+			}
+		} finally {
+			$spreadsheet->disconnectWorksheets();
+		}
 	}//end readXlsx()
+
+	/**
+	 * The text of one XLSX cell; for a formula, the value Excel cached.
+	 *
+	 * @param object $cell The PhpSpreadsheet cell.
+	 *
+	 * @return string The text, or an empty string for a value that is not text or a number.
+	 */
+	private static function cellText(object $cell): string {
+		$value = $cell->getValue();
+		if ($cell->getDataType() === 'f') {
+			$value = $cell->getOldCalculatedValue();
+		}
+
+		if (is_object($value) === true && method_exists($value, 'getPlainText') === true) {
+			return (string) $value->getPlainText();
+		}
+
+		if (is_scalar($value) === false) {
+			return '';
+		}
+
+		return (string) $value;
+	}//end cellText()
 }//end class
