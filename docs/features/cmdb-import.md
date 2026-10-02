@@ -122,9 +122,10 @@ with `NB` ("niet bekend"); that is read as empty. Dates are stored as the
 file has them: the CMDB's 2036-01-01 in `End-of-Life Functioneel` is imported
 as 2036-01-01. The CMDB writes that date when TOPdesk has no end-of-life date,
 so it is a stand-in for "no date". It is stored as the phase-out date of the
-usage and shown like any real one, and an application reads as "Phased out"
+usage and shown like any real one, and the usage reads as "Phased out"
 once that date is reached. A re-import with **Update existing records** on
-fills the date where it was left empty before.
+fills the date where it was left empty before. It also replaces a different
+date stored there, including one set by hand.
 
 ### Columns and where they go
 
