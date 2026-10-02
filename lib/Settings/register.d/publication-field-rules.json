@@ -3,7 +3,7 @@
   "components": {
     "schemas": {
       "module": {
-        "version": "0.3.6",
+        "version": "0.3.7",
         "properties": {
           "contactPerson": {
             "authorization": {
@@ -27,6 +27,41 @@
             }
           },
           "verwerkingsregisterRef": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "externalId": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "externalNumber": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "externalKey": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "externalCreatedAt": {
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
+          "externalModifiedAt": {
             "authorization": {
               "read": [
                 "authenticated"
