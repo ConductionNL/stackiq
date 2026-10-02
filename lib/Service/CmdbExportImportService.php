@@ -217,7 +217,7 @@ class CmdbExportImportService {
 	 *
 	 * @param string $operationId The operation id.
 	 *
-	 * @return bool False when no `cmdb_import` operation has this id.
+	 * @return bool False when no running `cmdb_import` operation has this id.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
@@ -227,7 +227,10 @@ class CmdbExportImportService {
 		}
 
 		$progress = $this->progressTracker->getProgress(operationId: $operationId);
-		if (is_array($progress) === false || ($progress['operation_type'] ?? null) !== self::OPERATION_TYPE) {
+		if (is_array($progress) === false
+			|| ($progress['operation_type'] ?? null) !== self::OPERATION_TYPE
+			|| ($progress['status'] ?? null) !== 'running'
+		) {
 			return false;
 		}
 
@@ -282,25 +285,32 @@ class CmdbExportImportService {
 		$this->progressTracker->setPhase(phase: 'processing_elements', data: ['total_items' => count($rows)]);
 
 		$updateExisting = (($options['updateExisting'] ?? true) !== false);
-		foreach ($rows as $index => $row) {
-			if ($this->progressTracker->isCancelRequested(operationId: $operationId) === true) {
-				$report->markCancelled();
-				break;
+		try {
+			foreach ($rows as $index => $row) {
+				if ($this->progressTracker->isCancelRequested(operationId: $operationId) === true) {
+					$report->markCancelled();
+					break;
+				}
+
+				$this->processRow(
+					row: $row,
+					municipalityUuid: $municipality['uuid'],
+					updateExisting: $updateExisting,
+					startedAt: $startedAt,
+					date1904: $workbook['date1904'],
+					report: $report
+				);
+				$this->progressTracker->updateProgress(processedItems: ($index + 1));
 			}
 
-			$this->processRow(
-				row: $row,
-				municipalityUuid: $municipality['uuid'],
-				updateExisting: $updateExisting,
-				startedAt: $startedAt,
-				date1904: $workbook['date1904'],
-				report: $report
-			);
-			$this->progressTracker->updateProgress(processedItems: ($index + 1));
-		}
-
-		$result = $report->toArray();
-		$this->finishOperation(report: $result);
+			$result = $report->toArray();
+			$this->finishOperation(report: $result);
+		} catch (Throwable $e) {
+			// Rows catch their own errors; this is the run itself failing, so the
+			// operation stops as failed instead of staying running until it expires.
+			$this->progressTracker->failOperation(message: $e->getMessage());
+			throw $e;
+		}//end try
 
 		$this->logger->info(
 			'CmdbExportImportService: import finished',

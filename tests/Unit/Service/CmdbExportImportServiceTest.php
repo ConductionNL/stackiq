@@ -106,6 +106,13 @@ class CmdbExportImportServiceTest extends TestCase {
 	private array $cache = [];
 
 	/**
+	 * Thrown by the next write to the cache, once.
+	 *
+	 * @var \Throwable|null
+	 */
+	private ?\Throwable $cacheFailure = null;
+
+	/**
 	 * Every log line, message plus encoded context.
 	 *
 	 * @var array<int, string>
@@ -132,6 +139,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->contacts = [];
 		$this->contactsEnabled = true;
 		$this->cache = [];
+		$this->cacheFailure = null;
 		$this->logLines = [];
 	}//end setUp()
 
@@ -298,6 +306,12 @@ class CmdbExportImportServiceTest extends TestCase {
 		$cache->method('get')->willReturnCallback(fn ($key) => ($this->cache[$key] ?? null));
 		$cache->method('set')->willReturnCallback(
 			function ($key, $value): bool {
+				if ($this->cacheFailure !== null) {
+					$failure = $this->cacheFailure;
+					$this->cacheFailure = null;
+					throw $failure;
+				}
+
 				$this->cache[$key] = $value;
 				return true;
 			}
@@ -1159,6 +1173,48 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertFalse($service->requestCancel(operationId: 'archimate_import_abcdefgh'));
 		$this->assertFalse($service->requestCancel(operationId: 'cmdb-not-mine-1'));
 	}//end testCancelNeedsACmdbOperation()
+
+	/**
+	 * Cancel answers false for an import that already finished, and leaves no cancel flag behind.
+	 *
+	 * @return void
+	 */
+	public function testCancelNeedsARunningImport(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2)]));
+		$service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-finished-1']);
+
+		$this->assertFalse($service->requestCancel(operationId: 'cmdb-finished-1'));
+		$this->assertArrayNotHasKey('cancel_cmdb-finished-1', $this->cache);
+	}//end testCancelNeedsARunningImport()
+
+	/**
+	 * A failure outside a row stops the operation as failed instead of leaving it running.
+	 *
+	 * @return void
+	 */
+	public function testAFailureOutsideARowMarksTheOperationFailed(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3)];
+		$service = $this->service(reader: $this->rowsReader(rows: $rows));
+		$this->beforeSave = function (int $schema): void {
+			if ($schema === self::USAGE) {
+				// The progress write after this row fails, outside every row boundary.
+				$this->cacheFailure = new \Error('cache went away');
+			}
+		};
+
+		try {
+			$service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-failing-1']);
+			$this->fail('the import should have thrown');
+		} catch (\Error $e) {
+			$this->assertSame('cache went away', $e->getMessage());
+		}
+
+		$stored = $this->cache['progress_cmdb-failing-1'];
+		$this->assertSame('failed', $stored['status']);
+		$this->assertSame('cache went away', $stored['errors'][0]['message']);
+	}//end testAFailureOutsideARowMarksTheOperationFailed()
 
 	/**
 	 * Without a mapping engine, or without configuration, nothing is read or written.

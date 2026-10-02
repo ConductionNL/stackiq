@@ -290,6 +290,21 @@ class CmdbImportControllerTest extends TestCase {
 	}//end testAnUnexpectedErrorIsAGeneric500()
 
 	/**
+	 * A PHP Error (not an Exception) from the import is the same generic 500, not a bare one.
+	 *
+	 * @return void
+	 */
+	public function testAnUnexpectedPhpErrorIsAGeneric500(): void {
+		$service = $this->service();
+		$service->method('import')->willThrowException(new \TypeError('internal detail'));
+
+		$response = $this->controller(file: $this->file(path: $this->upload()), params: ['municipalityName' => 'Gemeente Voorbeeldstad'], service: $service)->import();
+
+		$this->assertSame(500, $response->getStatus());
+		$this->assertSame('IMPORT_FAILED', $response->getData()['error']);
+	}//end testAnUnexpectedPhpErrorIsAGeneric500()
+
+	/**
 	 * A valid upload passes the options through and answers 200 with the report.
 	 *
 	 * @return void

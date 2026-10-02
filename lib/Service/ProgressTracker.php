@@ -362,6 +362,42 @@ class ProgressTracker {
 	}//end completeOperation()
 
 	/**
+	 * Mark the current operation as failed, keeping the percentage it reached.
+	 *
+	 * A page following the operation then sees it stop as failed rather than
+	 * as running until the snapshot expires, or as completed at 100%.
+	 *
+	 * @param string $message Why the operation failed
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/progress-tracking/spec.md
+	 */
+	public function failOperation(string $message): void {
+		$this->progress['errors'][] = [
+			'message' => $message,
+			'context' => [],
+			'timestamp' => time(),
+		];
+		$this->progress['phase_description'] = 'Failed';
+		$this->progress['status'] = 'failed';
+		$this->progress['estimated_completion'] = time();
+		$this->saveProgress();
+
+		if ($this->progress['operation_id'] !== null) {
+			$this->store->remove(key: 'cancel_' . $this->progress['operation_id']);
+		}
+
+		$this->logger->error(
+			'Operation failed',
+			[
+				'operation_id' => $this->progress['operation_id'],
+				'message' => $message,
+			]
+		);
+	}//end failOperation()
+
+	/**
 	 * Ask a running operation to stop.
 	 *
 	 * The operation runs in another request, which PHP cannot interrupt, so the
