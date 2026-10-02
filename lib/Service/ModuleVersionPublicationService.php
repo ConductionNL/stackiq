@@ -42,7 +42,7 @@ use Throwable;
 class ModuleVersionPublicationService {
 
 	/**
-	 * The most versions one module save updates.
+	 * How many versions one search reads; a module with more is read page by page.
 	 *
 	 * @var integer
 	 */
@@ -96,15 +96,25 @@ class ModuleVersionPublicationService {
 	/**
 	 * React to a saved object: a module updates its versions, a version reads its module.
 	 *
-	 * @param ObjectEntityInterface $object The saved object.
+	 * A module update that leaves its publication date and registrant as they
+	 * were has nothing to copy, so its versions are not searched.
+	 *
+	 * @param ObjectEntityInterface      $object   The saved object.
+	 * @param ObjectEntityInterface|null $previous The object before an update, or null for a new one.
 	 *
 	 * @return integer The number of versions written.
 	 *
 	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
-	public function objectSaved(ObjectEntityInterface $object): int {
+	public function objectSaved(ObjectEntityInterface $object, ?ObjectEntityInterface $previous = null): int {
 		$schema = (string) $object->getSchema();
 		if ($schema === (string) $this->settingsService->getSchemaIdForObjectType('module')) {
+			if ($previous !== null
+				&& self::mirrorOf(module: (array) $previous->getObject()) === self::mirrorOf(module: (array) $object->getObject())
+			) {
+				return 0;
+			}
+
 			return $this->moduleSaved(module: $object);
 		}
 
@@ -116,6 +126,23 @@ class ModuleVersionPublicationService {
 	}//end objectSaved()
 
 	/**
+	 * React to a deleted object: the versions of a deleted module stop following a publication.
+	 *
+	 * @param ObjectEntityInterface $object The deleted object.
+	 *
+	 * @return integer The number of versions written.
+	 *
+	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
+	 */
+	public function objectDeleted(ObjectEntityInterface $object): int {
+		if ((string) $object->getSchema() !== (string) $this->settingsService->getSchemaIdForObjectType('module')) {
+			return 0;
+		}
+
+		return $this->copyOntoVersions(moduleUuid: (string) $object->getUuid(), mirror: self::mirrorOf(module: []))['written'];
+	}//end objectDeleted()
+
+	/**
 	 * Copy a module's publication onto every version of it that differs.
 	 *
 	 * @param ObjectEntityInterface $module The saved module.
@@ -125,34 +152,123 @@ class ModuleVersionPublicationService {
 	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	public function moduleSaved(ObjectEntityInterface $module): int {
+		return $this->backfillModule(module: $module)['written'];
+	}//end moduleSaved()
+
+	/**
+	 * Copy a module's publication onto its versions and say what could not be copied.
+	 *
+	 * @param ObjectEntityInterface $module The module.
+	 *
+	 * @return array{written: int, failed: int} The versions written, and the versions or searches that failed.
+	 *
+	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
+	 */
+	public function backfillModule(ObjectEntityInterface $module): array {
+		return $this->copyOntoVersions(moduleUuid: (string) $module->getUuid(), mirror: self::mirrorOf(module: (array) $module->getObject()));
+	}//end backfillModule()
+
+	/**
+	 * Copy a mirror onto every version of a module that differs, page by page.
+	 *
+	 * @param string                                                                    $moduleUuid The module.
+	 * @param array{modulePublicationDate: string|null, moduleRegisteredBy: string|null} $mirror     The values to hold.
+	 *
+	 * @return array{written: int, failed: int} The versions written, and the versions or searches that failed.
+	 */
+	private function copyOntoVersions(string $moduleUuid, array $mirror): array {
 		$objects  = $this->objectService();
 		$register = $this->settingsService->getRegisterIdForObjectType('moduleVersion');
 		$schema   = $this->settingsService->getSchemaIdForObjectType('moduleVersion');
+		$result   = ['written' => 0, 'failed' => 0];
 		if ($objects === null || $register === null || $schema === null) {
-			return 0;
+			return $result;
 		}
 
-		try {
-			$versions = $objects->searchObjects(
-				query: ['register' => $register, 'schema' => $schema, 'module' => $module->getUuid(), '_limit' => self::VERSION_LIMIT],
-				_rbac: false,
-				_multitenancy: false
-			);
-		} catch (Throwable $e) {
-			$this->logger->error('ModuleVersionPublicationService: could not read the versions', ['error' => $e->getMessage()]);
-			return 0;
-		}
-
-		$mirror  = self::mirrorOf(module: (array) $module->getObject());
-		$written = 0;
-		foreach ((array) $versions as $version) {
-			if (($version instanceof ObjectEntityInterface) === true && $this->write(objects: $objects, version: $version, mirror: $mirror) === true) {
-				$written++;
+		$offset = 0;
+		do {
+			try {
+				$versions = (array) $objects->searchObjects(
+					query: [
+						'register' => $register,
+						'schema'   => $schema,
+						'module'   => $moduleUuid,
+						'_limit'   => self::VERSION_LIMIT,
+						'_offset'  => $offset,
+					],
+					_rbac: false,
+					_multitenancy: false
+				);
+			} catch (Throwable $e) {
+				$this->logFailure(
+					message: 'ModuleVersionPublicationService: could not read the versions',
+					context: ['module' => $moduleUuid, 'error' => $e->getMessage()],
+					depublishes: (self::isPublicNow(mirror: $mirror) === false)
+				);
+				$result['failed']++;
+				return $result;
 			}
+
+			foreach ($versions as $version) {
+				if (($version instanceof ObjectEntityInterface) === false) {
+					continue;
+				}
+
+				$outcome = $this->write(objects: $objects, version: $version, mirror: $mirror);
+				if ($outcome === true) {
+					$result['written']++;
+				}
+
+				if ($outcome === null) {
+					$result['failed']++;
+				}
+			}
+
+			$offset += self::VERSION_LIMIT;
+		} while (count($versions) === self::VERSION_LIMIT);
+
+		return $result;
+	}//end copyOntoVersions()
+
+	/**
+	 * Whether a version holding this mirror is public now, by the moduleVersion read rule.
+	 *
+	 * @param array<string, mixed> $mirror The mirrored fields.
+	 *
+	 * @return boolean True when an anonymous reader may read it.
+	 */
+	private static function isPublicNow(array $mirror): bool {
+		if (($mirror['moduleRegisteredBy'] ?? null) === 'Supplier') {
+			return true;
 		}
 
-		return $written;
-	}//end moduleSaved()
+		$date = ($mirror['modulePublicationDate'] ?? null);
+		if (is_string($date) === false || $date === '') {
+			return false;
+		}
+
+		$time = strtotime($date);
+
+		return $time !== false && $time <= time();
+	}//end isPublicNow()
+
+	/**
+	 * Log a mirror that could not be written: critical when it leaves a version public that should not be.
+	 *
+	 * @param string               $message     The message.
+	 * @param array<string, mixed> $context     The context.
+	 * @param boolean              $depublishes Whether the write would have taken a version out of public view.
+	 *
+	 * @return void
+	 */
+	private function logFailure(string $message, array $context, bool $depublishes): void {
+		if ($depublishes === true) {
+			$this->logger->critical($message . '; the version stays public until it is saved again or the backfill runs', $context);
+			return;
+		}
+
+		$this->logger->error($message, $context);
+	}//end logFailure()
 
 	/**
 	 * Copy the module's publication onto a saved version, when it differs.
@@ -216,9 +332,13 @@ class ModuleVersionPublicationService {
 	 * @param ObjectEntityInterface                                                    $version The version.
 	 * @param array{modulePublicationDate: string|null, moduleRegisteredBy: string|null} $mirror  The values to hold.
 	 *
-	 * @return boolean True when it was written.
+	 * The version is saved without validation: only the two mirrored fields
+	 * change, and a version holding older data the schema no longer accepts
+	 * must still follow its module.
+	 *
+	 * @return boolean|null True when it was written, false when it was in step, null when the write failed.
 	 */
-	private function write(ObjectServiceInterface $objects, ObjectEntityInterface $version, array $mirror): bool {
+	private function write(ObjectServiceInterface $objects, ObjectEntityInterface $version, array $mirror): ?bool {
 		$data = (array) $version->getObject();
 		if (($data['modulePublicationDate'] ?? null) === $mirror['modulePublicationDate']
 			&& ($data['moduleRegisteredBy'] ?? null) === $mirror['moduleRegisteredBy']
@@ -234,14 +354,16 @@ class ModuleVersionPublicationService {
 				schema: $version->getSchema(),
 				uuid: $version->getUuid(),
 				_rbac: false,
-				_multitenancy: false
+				_multitenancy: false,
+				_validation: false
 			);
 		} catch (Throwable $e) {
-			$this->logger->error(
-				'ModuleVersionPublicationService: could not copy the publication onto a version',
-				['uuid' => $version->getUuid(), 'error' => $e->getMessage()]
+			$this->logFailure(
+				message: 'ModuleVersionPublicationService: could not copy the publication onto a version',
+				context: ['uuid' => $version->getUuid(), 'error' => $e->getMessage()],
+				depublishes: (self::isPublicNow(mirror: $data) === true && self::isPublicNow(mirror: $mirror) === false)
 			);
-			return false;
+			return null;
 		}
 
 		return true;
