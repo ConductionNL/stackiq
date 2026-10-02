@@ -42,7 +42,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
   - GIVEN the formula/connection fixture WHEN it is read THEN "Applicatie Naam" is `Rekenmodel`, "Roepnaam" is empty and listed in the row's `uncached`, `getCalculatedValue()` is never called, and no HTTP client is involved
   - GIVEN the shuffled fixture WHEN it is read THEN rows equal those of the original; GIVEN the missing-column fixture THEN `MISSING_COLUMN` names `APPID` and `Beheerde Applicaties CMDB`; GIVEN only "Blad1" THEN `NO_SOURCE_SHEET`; GIVEN more than `maxRowsPerSheet` rows THEN `TOO_MANY_ROWS`
   - GIVEN a text file named `.xlsx`, or a `.xlsm` WHEN checked THEN `NOT_XLSX` before PhpSpreadsheet is touched; GIVEN PhpSpreadsheet absent THEN `READER_UNAVAILABLE`
-  - GIVEN serials `45111.380322627316`, `46232.552113113423`, `53359` and id `1234.0` WHEN normalised THEN `2023-07-04`, `2026-07-29`, `2046-02-01` and `"1234"`; GIVEN "BNN Classificatie" `NB` and "End-of-Life Functioneel" `49675` THEN both are empty
+  - GIVEN serials `45111.380322627316`, `46232.552113113423`, `53359` and id `1234.0` WHEN normalised THEN `2023-07-04`, `2026-07-29`, `2046-02-01` and `"1234"`; GIVEN "BNN Classificatie" `NB` THEN it is empty; GIVEN "End-of-Life Functioneel" `49675` THEN it is `2036-01-01`
 - [x] Implement
 - [x] Test
 

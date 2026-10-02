@@ -146,7 +146,7 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame(['Beheer' => 'Beheer geregeld: ja'], $profile->sheetConstants(sheetName: 'Beheerde Applicaties CMDB'));
 		$this->assertSame(['Nickname'], $profile->absentColumns(sheetName: 'Onbeh Applicaties CMDB'));
 		$this->assertSame([], $profile->absentColumns(sheetName: 'Beheerde Applicaties CMDB'));
-		$this->assertSame(['BNN Classificatie' => ['NB'], 'End-of-Life Functioneel' => ['49675']], $profile->emptyValues());
+		$this->assertSame(['BNN Classificatie' => ['NB']], $profile->emptyValues());
 		$this->assertSame(10485760, $profile->maxFileBytes());
 		$this->assertSame(10000, $profile->maxRowsPerSheet());
 	}//end testThePacksImplementTheColumnTable()

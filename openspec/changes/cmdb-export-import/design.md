@@ -107,7 +107,7 @@ External connections, the Power Query package and hyperlinks are never resolved:
 
 `CmdbRowNormaliser` turns reader output into the flat `column => string` row the engine expects:
 
-- Values listed in the profile's `emptyValues` for their column become empty, compared case-insensitively before any conversion: `NB` in "BNN Classificatie" (the CMDB sheet's "niet bekend") and `49675` (2036-01-01) in "End-of-Life Functioneel" (the CMDB sheet's placeholder for "no end-of-life date"; its formula turns an empty date, or TOPdesk's 2099-12-31, into 49675).
+- Values listed in the profile's `emptyValues` for their column become empty, compared case-insensitively before any conversion: `NB` in "BNN Classificatie" (the CMDB sheet's "niet bekend"). Dates are stored as the file has them: "End-of-Life Functioneel" `49675` (2036-01-01) is imported as that date, even though the CMDB sheet's formula writes it for an empty date or TOPdesk's 2099-12-31; the municipality decided to keep the file's value (2026-10-02).
 - Columns listed in the profile's `dateColumns` ("Datum", "Referentie datum wijziging", "End-of-Life Functioneel"): a numeric value is converted with `PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject()` in UTC and written as `Y-m-d`. For example, `45111.38…` becomes `2023-07-04` and `53359` becomes `2046-02-01`. A non-numeric value stays as it is, so the pack's `date` transform (`sourceFormat: Y-m-d`) either accepts it or reports a warning.
 - Columns listed in `idColumns` ("APPID"): a whole number becomes a string without a decimal part (`1234.0` becomes `"1234"`).
 - The constants of the row's sheet are added before mapping (`Beheer` = `Beheer geregeld: nee` on "Onbeh", `ja` on "Beheerde"), so the usage pack can map the sheet like a column.
@@ -213,7 +213,7 @@ Source columns of "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB" and w
 | Vendor | both | organization (Supplier) via module.provider and usage.provider | dedup on normalised name (D7) |
 | Applicatie Status | both | usage.status | lookup: In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren → To be phased out, Uitgefaseerd → Phased out; unknown value: warning |
 | Classificatie | both | usage.timeClassification | lookup Tolereren/Tolerate, Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
-| End-of-Life Functioneel | both | usage.startDateOutPhased | `49675` (2036-01-01) is empty; Excel serial to date |
+| End-of-Life Functioneel | both | usage.startDateOutPhased | Excel serial to date, stored as is (2036-01-01 included) |
 | (sheet constant `Beheer`), Cluster, Applicatie Eigenaar (Afdeling) | both | usage.interneAnnotation | concat with " / ", empty parts dropped, create-only; `Beheer geregeld: nee` (Onbeh) or `ja` (Beheerde) |
 | Applicatie Eigenaar (Persoon), Applicatie Eigenaar (Functie) | both | usage.businessOwner (contactPerson + Nextcloud contact; role = Functie) | D8; the person column may hold a function |
 | Hostingpartij | both | not mapped | follow-up; "Leverancier" (where the municipality buys the software) is not on the CMDB sheets |
@@ -415,7 +415,7 @@ The seeds show the new properties in a fresh install. They carry no `publication
 - [Long synchronous request] → Per-row progress, cancel, and "unchanged" rows skip the save. About 1,100 rows is expected to fit. A background job is a follow-up if it does not.
 - [OpenRegister internals (`MappingEngine`, `PackDefinitionValidator`, PhpSpreadsheet) change shape] → Guarded resolution with 503, and a contract test that maps the fixture through the real engine in the dev environment.
 - [Provisional lookups for Applicatiesoort and BNN Classificatie] → The values of the first real import were not kept (the report lives in the progress cache for an hour). The maps hold the values the anonymised export and the CMDB formulas show (`Saas`, `Webapplicatie`, `NB`) plus the usual spellings. An unknown value is a warning, never a wrong value; once the municipality lists its values, the maps in the JSON are extended, with no code change.
-- [CMDB placeholders] → "End-of-Life Functioneel" `2036-01-01` and "BNN Classificatie" `NB` are read as empty. A real end-of-life date of exactly 2036-01-01 would be lost; the municipality confirms. "Classificatie" defaults to `Tolereren` on "Beheerde" when TOPdesk has none; that cannot be told apart from a real `Tolereren` and is imported as Tolerate.
+- [CMDB placeholders] → "BNN Classificatie" `NB` is read as empty. "End-of-Life Functioneel" and "Classificatie" are stored as the file has them: the sheet's 2036-01-01 (written for an empty date) is imported as that date, and the `Tolereren` the "Beheerde" formula writes when TOPdesk has none is imported as Tolerate.
 - [An application moves between the sheets] → Same APPID, so the same module and usage; the usage note (create-only) keeps its old `Beheer geregeld` line when it is not empty.
 - [An unknown status on create falls back to the usage schema's default "In production"] → Accepted. The warning in the report makes it visible.
 - [The fragment version is overwritten by merge order] → Filename ordering plus a unit test on the merged version (Mixed-spec rationale).
@@ -427,6 +427,5 @@ No data migration. The register fragment deploys with the existing repair-step r
 ## Open Questions
 
 - Which "Applicatiesoort" and "BNN Classificatie" values occur in the municipality's real export, and which hosting model does each mean (lookup maps)?
-- Is 2036-01-01 in "End-of-Life Functioneel" always the placeholder, and should a "Beheerde" row without a TIME class really be Tolerate?
 - Should the maintenance status update the usage note on re-import (it is create-only today), or get a field of its own?
 - Should OpenRegister promote `MigrationPack\MappingEngine` to its `Contract` namespace?

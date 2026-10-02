@@ -22,8 +22,7 @@
   "dateColumns": ["Datum", "Referentie datum wijziging", "End-of-Life Functioneel"],
   "idColumns": ["APPID"],
   "emptyValues": {
-    "BNN Classificatie": ["NB"],
-    "End-of-Life Functioneel": ["49675"]
+    "BNN Classificatie": ["NB"]
   },
   "externalKeyPrefix": "topdesk",
   "packs": {

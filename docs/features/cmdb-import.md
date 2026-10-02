@@ -117,9 +117,10 @@ External data connections, Power Query queries and links in the workbook are
 never opened. Macro-enabled workbooks (`.xlsm`), old Excel files (`.xls`) and
 CSV files are not accepted.
 
-**Placeholder values.** The CMDB sheets fill some empty cells with a
-placeholder. These are read as empty: `NB` in `BNN Classificatie`, and the
-date 2036-01-01 (Excel serial 49675) in `End-of-Life Functioneel`.
+**Placeholder values.** The CMDB sheets fill an empty `BNN Classificatie`
+with `NB` ("niet bekend"); that is read as empty. Dates are stored as the
+file has them: the CMDB's 2036-01-01 in `End-of-Life Functioneel` is imported
+as 2036-01-01.
 
 ### Columns and where they go
 
@@ -137,7 +138,7 @@ date 2036-01-01 (Excel serial 49675) in `End-of-Life Functioneel`.
 | Vendor | Supplier organisation, set as provider on the module and the usage | one organisation per name, see below |
 | Applicatie Status | usage status | In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren → To be phased out, Uitgefaseerd → Phased out; another value is dropped with a warning |
 | Classificatie | usage TIME classification | Tolereren/Tolerate, Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
-| End-of-Life Functioneel | usage phase-out date | Excel date; 2036-01-01 is empty |
+| End-of-Life Functioneel | usage phase-out date | Excel date, stored as is |
 | (the sheet), Cluster, Applicatie Eigenaar (Afdeling) | usage internal annotation | `Beheer geregeld: ja` or `nee`, the cluster and the department, joined with ` / `; written only when the usage is new or the note is empty |
 | Applicatie Eigenaar (Persoon), Applicatie Eigenaar (Functie) | usage business owner (contact person) | see [Owners](#owners) |
 

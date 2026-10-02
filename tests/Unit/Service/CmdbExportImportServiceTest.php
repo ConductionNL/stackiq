@@ -576,7 +576,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame($municipality, $aia['consumer']);
 		$this->assertSame('Planned', $aia['status']);
 		$this->assertSame('Beheer geregeld: nee / H10 / H10 Accounting', $aia['interneAnnotation']);
-		$this->assertArrayNotHasKey('startDateOutPhased', $aia, 'the CMDB placeholder 2036-01-01 means no date');
+		$this->assertSame('2036-01-01', $aia['startDateOutPhased'], 'the end-of-life date is stored as the file has it');
 		$this->assertArrayNotHasKey('timeClassification', $aia);
 		$this->assertSame($supplierByName['Aangetekend B.V.'], $aia['provider']);
 		$app = $usageByModule[$beheerd['id']];
@@ -821,11 +821,11 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testTheSheetRecordsWhetherMaintenanceIsArranged()
 
 	/**
-	 * "NB" in BNN Classificatie and the CMDB end-of-life placeholder (serial 49675) mean empty: no field, no warning.
+	 * "NB" in BNN Classificatie means empty (no field, no warning); an end-of-life date is stored as the file has it, 2036-01-01 included.
 	 *
 	 * @return void
 	 */
-	public function testTheCmdbPlaceholdersMeanEmpty(): void {
+	public function testNbMeansEmptyAndEndOfLifeIsStoredAsIs(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		$rows = [
 			$this->row(appId: '1', cells: ['BNN Classificatie' => 'NB', 'End-of-Life Functioneel' => 49675]),
@@ -839,10 +839,10 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('bbnLevel', $modules[1]);
 		$this->assertSame('BBN3', $modules[2]['bbnLevel']);
 		$usages = array_column($this->objects(self::USAGE), null, 'module');
-		$this->assertArrayNotHasKey('startDateOutPhased', $usages[$modules[1]['id']]);
+		$this->assertSame('2036-01-01', $usages[$modules[1]['id']]['startDateOutPhased']);
 		$this->assertSame('2046-02-01', $usages[$modules[2]['id']]['startDateOutPhased']);
 		$this->assertSame('Migrate', $usages[$modules[2]['id']]['timeClassification']);
-	}//end testTheCmdbPlaceholdersMeanEmpty()
+	}//end testNbMeansEmptyAndEndOfLifeIsStoredAsIs()
 
 	/**
 	 * A formula without a cached value reads as empty and warns on its row; the row is still imported.
