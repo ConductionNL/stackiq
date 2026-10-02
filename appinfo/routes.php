@@ -104,7 +104,11 @@ return [
         ['name' => 'settings#killArchiMateImport', 'url' => '/api/archimate/import/kill', 'verb' => 'POST'], // deprecated
         ['name' => 'settings#clearArchiMateExportStatus', 'url' => '/api/archimate/status/export/clear', 'verb' => 'POST'],
 
-        ['name' => 'settings#testArchiMateRoundTrip', 'url' => '/api/archimate/test-round-trip', 'verb' => 'POST'],
+        // CMDB export import (TOPdesk xlsx) — admin-only, CSRF-protected.
+        // Progress is read through the existing /api/progress/{operationId}.
+        // @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+        ['name' => 'cmdbImport#import', 'url' => '/api/cmdb-import', 'verb' => 'POST'],
+        ['name' => 'cmdbImport#cancel', 'url' => '/api/cmdb-import/{operationId}/cancel', 'verb' => 'POST'],
 
         // User Groups management routes
         ['name' => 'settings#getGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],
@@ -126,7 +130,12 @@ return [
         // ArchiMate focused endpoints
         ['name' => 'settings#getArchiMateConfig', 'url' => '/api/archimate/config', 'verb' => 'GET'],
         ['name' => 'settings#updateArchiMateConfig', 'url' => '/api/archimate/config', 'verb' => 'POST'],
-        ['name' => 'settings#getArchiMateConfig', 'url' => '/api/archimate/status', 'verb' => 'GET'],
+        // A route name carries no URL, so without a 'postfix' this entry and the
+        // GET '/api/archimate/config' one above register under the same name and
+        // only the last declared survives. This one won on line order, which left
+        // the config read a 404 and made the store's polling endpoint depend on
+        // nothing but the order of these two lines.
+        ['name' => 'settings#getArchiMateConfig', 'url' => '/api/archimate/status', 'verb' => 'GET', 'postfix' => 'Status'],
 
         // Email focused endpoints
         ['name' => 'settings#getEmailConfig', 'url' => '/api/email/config', 'verb' => 'GET'],
@@ -288,6 +297,14 @@ return [
         ['name' => 'settings#updateEolSyncConfig', 'url' => '/api/eol-sync/config', 'verb' => 'POST'],
         ['name' => 'settings#triggerEolSync', 'url' => '/api/eol-sync/trigger', 'verb' => 'POST'],
         ['name' => 'settings#getEolSyncStatus', 'url' => '/api/eol-sync/status', 'verb' => 'GET'],
+
+        // SERVICE DESK EXCHANGE (sharing-itsm-exchange): status for the CMDB
+        // page, set-up and file import for admins. The flows themselves run
+        // in OpenRegister and integriq; these only create and start them.
+        ['name' => 'itsmExchange#status', 'url' => '/api/itsm/status', 'verb' => 'GET'],
+        ['name' => 'itsmExchange#config', 'url' => '/api/itsm/config', 'verb' => 'GET'],
+        ['name' => 'itsmExchange#setUp', 'url' => '/api/itsm/setup', 'verb' => 'POST'],
+        ['name' => 'itsmExchange#import', 'url' => '/api/itsm/import', 'verb' => 'POST'],
 
         // Gebruik by group
         ['name' => 'gebruik#getGebruiken', 'url' => '/api/gebruik', 'verb' => 'GET'],

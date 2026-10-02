@@ -59,6 +59,8 @@ class MergeOrganisatieServiceTest extends TestCase {
 		'contactPerson' => 4,
 		'connection' => 5,
 		'compliancy' => 6,
+		'module' => 7,
+		'catalogService' => 8,
 	];
 
 	/**
@@ -103,8 +105,12 @@ class MergeOrganisatieServiceTest extends TestCase {
 				'usage' => 2,
 				'contactPerson' => 1,
 				'aanbod' => 1,
+				'module' => 0,
+				'catalogService' => 0,
 				'catalogContract' => 1,
 				'compliancy' => 1,
+				'moduleOwnership' => 0,
+				'catalogServiceOwnership' => 0,
 			],
 			$result['counts']
 		);
@@ -600,6 +606,62 @@ class MergeOrganisatieServiceTest extends TestCase {
 		$this->assertSame('source-already-merged', $result['blockers'][0]['type']);
 		$this->assertSame([], $this->savedCalls);
 	}//end testReMergingAnAlreadyTombstonedSourceIntoADifferentTargetIsRejected()
+
+	/**
+	 * #1086: a merged-away supplier's applications and services move to the
+	 * target, both their `provider` (the Vendor $ref the register declares)
+	 * and their own `@self.organisation`, and the dry run counts them first.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
+	 */
+	public function testTheSuppliersApplicationsAndServicesMoveToTheTarget(): void {
+		$register = json_decode(json: (string) file_get_contents(filename: __DIR__ . '/../../../lib/Settings/softwarecatalogus_register.json'), associative: true);
+		foreach (['module', 'catalogService'] as $schema) {
+			$this->assertSame(
+				'#/components/schemas/organization',
+				$register['components']['schemas'][$schema]['properties']['provider']['$ref'] ?? null,
+				$schema . '.provider must be the organisation reference this test re-points'
+			);
+		}
+
+		$organisations = [
+			'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active', 'group' => 'group-a']),
+			'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active', 'group' => 'group-b']),
+		];
+		$fixtures = [
+			'module' => [
+				$this->entity(['id' => 'm1', 'name' => 'Zaaksysteem', 'provider' => 'org-a'], uuid: 'm1', organisation: 'org-x'),
+				$this->entity(['id' => 'm2', 'name' => 'Other', 'provider' => 'org-x'], uuid: 'm2', organisation: 'org-a'),
+			],
+			'catalogService' => [
+				$this->entity(['id' => 's1', 'name' => 'Hosting', 'provider' => 'org-a'], uuid: 's1', organisation: 'org-x'),
+				$this->entity(['id' => 's2', 'name' => 'Beheer', 'provider' => 'org-x'], uuid: 's2', organisation: 'org-a'),
+			],
+		];
+
+		$dryRun = $this->makeService(organisations: $organisations, typedFixtures: $fixtures, groupMembers: [])
+			->dryRun(sourceUuid: 'org-a', targetUuid: 'org-b');
+		$this->assertSame(1, $dryRun['counts']['module'] ?? null);
+		$this->assertSame(1, $dryRun['counts']['catalogService'] ?? null);
+		$this->assertSame(1, $dryRun['counts']['moduleOwnership'] ?? null);
+		$this->assertSame(1, $dryRun['counts']['catalogServiceOwnership'] ?? null);
+
+		$this->savedCalls = [];
+		$this->makeService(organisations: $organisations, typedFixtures: $fixtures, groupMembers: [])
+			->execute(sourceUuid: 'org-a', targetUuid: 'org-b', actorUid: 'admin1');
+
+		$module = $this->findSave(schemaId: self::SCHEMA_IDS['module'], uuid: 'm1');
+		$this->assertNotNull($module, 'the supplier\'s module is re-pointed');
+		$this->assertSame('org-b', $module['object']['provider']);
+		$this->assertSame('Zaaksysteem', $module['object']['name']);
+		$service = $this->findSave(schemaId: self::SCHEMA_IDS['catalogService'], uuid: 's1');
+		$this->assertNotNull($service, 'the supplier\'s service is re-pointed');
+		$this->assertSame('org-b', $service['object']['provider']);
+		$this->assertSame('org-b', $this->findSave(schemaId: self::SCHEMA_IDS['module'], uuid: 'm2')['object']['@self']['organisation'] ?? null);
+		$this->assertSame('org-b', $this->findSave(schemaId: self::SCHEMA_IDS['catalogService'], uuid: 's2')['object']['@self']['organisation'] ?? null);
+	}//end testTheSuppliersApplicationsAndServicesMoveToTheTarget()
 
 	/**
 	 * Build the full 5-type + group-member fixture set used by the parity tests.

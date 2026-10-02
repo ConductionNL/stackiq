@@ -252,4 +252,112 @@ class PortfolioReportDerivation {
 			$results
 		);
 	}//end normalizeResults()
+	/**
+	 * Read a 1 to 5 score, or null when it is absent or out of range.
+	 *
+	 * @param mixed $value The stored value.
+	 *
+	 * @return int|null The score.
+	 *
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-001-an-organisation-scores-each-application-it-uses-on-value-fit-and-risk
+	 */
+	private function score(mixed $value): ?int {
+		if (is_numeric($value) === false) {
+			return null;
+		}
+
+		$score = (int)$value;
+		if ($score < 1 || $score > 5) {
+			return null;
+		}
+
+		return $score;
+	}//end score()
+
+	/**
+	 * The TIME class business value and technical fit point to. The same rule as
+	 * the usage schema's `suggestedTimeClassification` calculation
+	 * (`lib/Settings/register.d/value-assessment.json`), used when a usage was
+	 * saved before that calculation existed.
+	 *
+	 * @param int|null $businessValue The business value, 1 to 5.
+	 * @param int|null $technicalFit  The technical fit, 1 to 5.
+	 *
+	 * @return string|null Invest, Migrate, Tolerate or Eliminate; null while a score is missing.
+	 *
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-001-an-organisation-scores-each-application-it-uses-on-value-fit-and-risk
+	 */
+	public function suggestTimeClassification(?int $businessValue, ?int $technicalFit): ?string {
+		if ($businessValue === null || $technicalFit === null) {
+			return null;
+		}
+
+		if ($businessValue >= 3) {
+			if ($technicalFit >= 3) {
+				return 'Invest';
+			}
+
+			return 'Migrate';
+		}
+
+		if ($technicalFit >= 3) {
+			return 'Tolerate';
+		}
+
+		return 'Eliminate';
+	}//end suggestTimeClassification()
+
+	/**
+	 * The value assessment of one gebruik: its scores, the suggested TIME class
+	 * (the stored calculation, else the same rule over the scores) and whether
+	 * the recorded class differs from that suggestion.
+	 *
+	 * @param array<string,mixed> $usage            The gebruik data bag.
+	 * @param string|null         $classification   The recorded TIME class.
+	 * @param string|null         $storedSuggestion The materialised suggestion, normalised.
+	 *
+	 * @return array<string,mixed> The score fields of the row.
+	 *
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+	 */
+	public function valueAssessment(array $usage, ?string $classification, ?string $storedSuggestion): array {
+		$value = $this->score(value: $usage['businessValue'] ?? null);
+		$fit   = $this->score(value: $usage['technicalFit'] ?? null);
+
+		$suggested = $storedSuggestion;
+		if ($suggested === null) {
+			$suggested = $this->suggestTimeClassification(businessValue: $value, technicalFit: $fit);
+		}
+
+		$scoredOn = null;
+		if (is_string($usage['scoredOn'] ?? null) === true && $usage['scoredOn'] !== '') {
+			$scoredOn = $usage['scoredOn'];
+		}
+
+		return [
+			'businessValue' => $value,
+			'technicalFit' => $fit,
+			'riskScore' => $this->score(value: $usage['riskScore'] ?? null),
+			'scoredOn' => $scoredOn,
+			'suggestedTimeClassification' => $suggested,
+			'timeMismatch' => $classification !== null && $suggested !== null && $classification !== $suggested,
+		];
+	}//end valueAssessment()
+
+	/**
+	 * The CSV cell for the mismatch flag.
+	 *
+	 * @param array<string,mixed> $row A report row.
+	 *
+	 * @return string "yes" or "no".
+	 *
+	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-003-the-portfolio-report-plots-value-against-fit-and-flags-classes-the-scores-contradict
+	 */
+	public function mismatchLabel(array $row): string {
+		if (($row['timeMismatch'] ?? false) === true) {
+			return 'yes';
+		}
+
+		return 'no';
+	}//end mismatchLabel()
 }//end class

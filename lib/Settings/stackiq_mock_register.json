@@ -511,7 +511,7 @@
         "slug": "connection",
         "title": "Connection",
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
-        "version": "0.3.1",
+        "version": "0.3.2",
         "omschrijving": "",
         "icon": "TransitConnectionVariant",
         "required": [
@@ -871,31 +871,31 @@
           "objectDescriptionField": "longDescription",
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "in ontwikkeling",
+            "initial": "in development",
             "final": [
-              "teruggetrokken"
+              "withdrawn"
             ],
             "transitions": {
               "release": {
                 "from": [
-                  "in ontwikkeling"
+                  "in development"
                 ],
-                "to": "in gebruik",
+                "to": "in use",
                 "description": "Release the koppeling."
               },
               "sunset": {
                 "from": [
-                  "in gebruik"
+                  "in use"
                 ],
-                "to": "einde ondersteuning",
+                "to": "end of support",
                 "description": "Mark the koppeling as end-of-support."
               },
               "withdraw": {
                 "from": [
-                  "in gebruik",
-                  "einde ondersteuning"
+                  "in use",
+                  "end of support"
                 ],
-                "to": "teruggetrokken",
+                "to": "withdrawn",
                 "description": "Withdraw the koppeling."
               }
             }
@@ -1334,6 +1334,45 @@
             },
             "referenceType": "decision",
             "x-allow-create": true
+          },
+          "licenceMetric": {
+            "type": "string",
+            "enum": [
+              "Per named user",
+              "Per concurrent user",
+              "Per device",
+              "Per inhabitant",
+              "Per organisation",
+              "Other"
+            ],
+            "x-enum-labels": {
+              "Per named user": "Per named user",
+              "Per concurrent user": "Per concurrent user",
+              "Per device": "Per device",
+              "Per inhabitant": "Per inhabitant",
+              "Per organisation": "Per organisation",
+              "Other": "Other"
+            },
+            "title": "Licence metric",
+            "description": "What one licence covers, as the contract with the supplier states it.",
+            "facetable": true,
+            "order": 14
+          },
+          "licencesBought": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Licences bought",
+            "description": "The number of licences this contract buys.",
+            "facetable": false,
+            "order": 15
+          },
+          "licencesInUse": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Licences in use",
+            "description": "The number of licences in use today, as the application owner counted them.",
+            "facetable": false,
+            "order": 16
           }
         },
         "required": [
@@ -1387,7 +1426,7 @@
         },
         "title": "Contract",
         "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
-        "version": "0.1.1",
+        "version": "0.1.3",
         "omschrijving": "",
         "icon": "FileSign",
         "archive": [],
@@ -1499,30 +1538,30 @@
           ],
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "In onderhandeling",
+            "initial": "In negotiation",
             "final": [
-              "Verlopen"
+              "Expired"
             ],
             "transitions": {
               "sign": {
                 "from": [
-                  "In onderhandeling"
+                  "In negotiation"
                 ],
-                "to": "Actief",
+                "to": "Active",
                 "description": "Sign and activate the contract."
               },
               "expire": {
                 "from": [
-                  "Actief"
+                  "Active"
                 ],
-                "to": "Verlopen",
+                "to": "Expired",
                 "description": "Mark the contract as expired."
               },
               "renegotiate": {
                 "from": [
-                  "Verlopen"
+                  "Expired"
                 ],
-                "to": "In onderhandeling",
+                "to": "In negotiation",
                 "description": "Re-open negotiation on an expired contract."
               }
             }
@@ -3388,7 +3427,6 @@
               "BSD License (Berkeley Software Distribution)",
               "European Union Public Licence (EUPL), version 1.2"
             ],
-            "licence": "License",
             "title": "License"
           },
           "referenceComponents": {
@@ -3874,7 +3912,7 @@
         },
         "title": "Application version",
         "description": "Schema voor applicatieversies",
-        "version": "0.1.4",
+        "version": "0.1.5",
         "omschrijving": "",
         "icon": "ViewModule",
         "required": [],
@@ -4085,31 +4123,31 @@
           "autoPublish": true,
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "in ontwikkeling",
+            "initial": "in development",
             "final": [
-              "teruggetrokken"
+              "withdrawn"
             ],
             "transitions": {
               "release": {
                 "from": [
-                  "in ontwikkeling"
+                  "in development"
                 ],
-                "to": "in gebruik",
+                "to": "in use",
                 "description": "Release the module version."
               },
               "sunset": {
                 "from": [
-                  "in gebruik"
+                  "in use"
                 ],
-                "to": "einde ondersteuning",
+                "to": "end of support",
                 "description": "Mark the module version as end-of-support."
               },
               "withdraw": {
                 "from": [
-                  "in gebruik",
-                  "einde ondersteuning"
+                  "in use",
+                  "end of support"
                 ],
-                "to": "teruggetrokken",
+                "to": "withdrawn",
                 "description": "Withdraw the module version."
               }
             }
@@ -6123,7 +6161,7 @@
         "slug": "usage",
         "title": "Usage",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.5.0",
+        "version": "1.5.1",
         "omschrijving": "",
         "icon": "Gauge",
         "x-openregister-notifications": {
@@ -6699,37 +6737,37 @@
           "autoPublish": false,
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "Verwerving",
+            "initial": "Acquisition",
             "final": [
-              "Uitgefaseerd"
+              "Phased out"
             ],
             "transitions": {
               "plan": {
                 "from": [
-                  "Verwerving"
+                  "Acquisition"
                 ],
-                "to": "Gepland",
+                "to": "Planned",
                 "description": "Plan the usage."
               },
               "goLive": {
                 "from": [
-                  "Gepland"
+                  "Planned"
                 ],
-                "to": "In productie",
+                "to": "In production",
                 "description": "Go live with the usage."
               },
               "phaseOut": {
                 "from": [
-                  "In productie"
+                  "In production"
                 ],
-                "to": "Uit te faseren",
+                "to": "To be phased out",
                 "description": "Mark the usage to be phased out."
               },
               "retire": {
                 "from": [
-                  "Uit te faseren"
+                  "To be phased out"
                 ],
-                "to": "Uitgefaseerd",
+                "to": "Phased out",
                 "description": "Retire the usage."
               }
             }
@@ -7305,6 +7343,319 @@
           "objectDescriptionField": "longDescription",
           "autoPublish": false
         }
+      },
+      "aiSystem": {
+        "uri": null,
+        "slug": "aiSystem",
+        "title": "AI system",
+        "x-schema-org": "schema:SoftwareApplication",
+        "description": "An AI agent, AI model or AI feature the organisation uses, with its EU AI Act classification.",
+        "version": "0.1.0",
+        "icon": "RobotOutline",
+        "required": [
+          "name"
+        ],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "searchable": true,
+        "maxDepth": 0,
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The name the organisation uses for this AI system.",
+            "facetable": false,
+            "order": 1,
+            "table": {
+              "default": true
+            }
+          },
+          "description": {
+            "type": "string",
+            "format": "markdown",
+            "title": "Description",
+            "description": "What the AI system is and how it is used.",
+            "facetable": false,
+            "order": 2
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "AI agent",
+              "AI model",
+              "AI feature"
+            ],
+            "x-enum-labels": {
+              "AI agent": "AI agent",
+              "AI model": "AI model",
+              "AI feature": "AI feature"
+            },
+            "title": "Kind",
+            "description": "An AI agent acts on its own, an AI model is a trained model, an AI feature is part of an application.",
+            "facetable": true,
+            "order": 3,
+            "table": {
+              "default": true
+            }
+          },
+          "module": {
+            "type": "object",
+            "$ref": "#/components/schemas/module",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "inversedBy": "aiSystems",
+            "title": "Application",
+            "description": "The application this AI system runs in or supports.",
+            "facetable": true,
+            "order": 4,
+            "table": {
+              "default": true
+            }
+          },
+          "provider": {
+            "type": "object",
+            "$ref": "#/components/schemas/organization",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "title": "Supplier",
+            "description": "The organisation that supplies the AI system.",
+            "facetable": true,
+            "order": 5
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "description": "What the AI system decides, recommends or produces.",
+            "facetable": false,
+            "order": 6
+          },
+          "aiActRiskCategory": {
+            "type": "string",
+            "enum": [
+              "prohibited",
+              "high risk",
+              "limited risk",
+              "minimal risk",
+              "not yet assessed"
+            ],
+            "x-enum-labels": {
+              "prohibited": "Prohibited",
+              "high risk": "High risk",
+              "limited risk": "Limited risk",
+              "minimal risk": "Minimal risk",
+              "not yet assessed": "Not yet assessed"
+            },
+            "default": "not yet assessed",
+            "title": "AI Act risk category",
+            "description": "The risk category under the EU AI Act, as the organisation classified it.",
+            "facetable": true,
+            "order": 7,
+            "table": {
+              "default": true
+            }
+          },
+          "aiActRole": {
+            "type": "string",
+            "enum": [
+              "provider",
+              "deployer"
+            ],
+            "x-enum-labels": {
+              "provider": "Provider",
+              "deployer": "Deployer"
+            },
+            "title": "Role under the AI Act",
+            "description": "Whether the organisation provides the AI system or deploys it.",
+            "facetable": true,
+            "order": 8
+          },
+          "algorithmRegisterUrl": {
+            "type": "string",
+            "format": "uri",
+            "title": "Algorithm register entry",
+            "description": "The link to this system in the Dutch algorithm register.",
+            "facetable": false,
+            "order": 9
+          },
+          "assessedOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Last assessed on",
+            "description": "The date the classification was last assessed.",
+            "facetable": false,
+            "order": 10
+          },
+          "friaDocumentRef": {
+            "type": "string",
+            "title": "Fundamental rights impact assessment",
+            "description": "A reference to the fundamental rights impact assessment (FRIA). A high-risk system without one is flagged.",
+            "facetable": false,
+            "order": 11
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "in development",
+              "in use",
+              "withdrawn"
+            ],
+            "x-enum-labels": {
+              "in development": "In development",
+              "in use": "In use",
+              "withdrawn": "Withdrawn"
+            },
+            "default": "in use",
+            "title": "Status",
+            "description": "Where the AI system stands in its lifecycle.",
+            "facetable": true,
+            "order": 12,
+            "table": {
+              "default": true
+            }
+          }
+        },
+        "configuration": {
+          "objectNameField": "name",
+          "objectDescriptionField": "purpose",
+          "allowFiles": true,
+          "allowedTags": [
+            "FRIA",
+            "Technical documentation",
+            "Human oversight",
+            "Logging"
+          ],
+          "autoPublish": false,
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "in development",
+            "final": [
+              "withdrawn"
+            ],
+            "transitions": {
+              "release": {
+                "from": [
+                  "in development"
+                ],
+                "to": "in use",
+                "description": "Take the AI system into use."
+              },
+              "withdraw": {
+                "from": [
+                  "in development",
+                  "in use"
+                ],
+                "to": "withdrawn",
+                "description": "Withdraw the AI system."
+              }
+            }
+          }
+        },
+        "authorization": {
+          "create": [
+            "software-catalog-admins",
+            "organisatie-beheerder",
+            "organisaties-beheerder",
+            "functioneel-beheerder",
+            "gebruik-beheerder",
+            "aanbod-beheerder"
+          ],
+          "read": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "provider": "$organisation"
+              }
+            }
+          ],
+          "update": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "delete": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ]
+        }
       }
     },
     "objects": [
@@ -7665,7 +8016,10 @@
         "opmerkingen": "Voorbeeld Opmerkingen 2",
         "decisions": [
           "00000000-0000-4000-8000-000000000001"
-        ]
+        ],
+        "licenceMetric": "Per named user",
+        "licencesBought": 400,
+        "licencesInUse": 460
       },
       {
         "@self": {
@@ -7697,6 +8051,40 @@
         "decisions": [
           "00000000-0000-4000-8000-000000000002"
         ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "catalogContract",
+          "slug": "contract-seats-5"
+        },
+        "service": {},
+        "usage": {},
+        "startDate": "2026-03-02",
+        "contractNumber": "Voorbeeld Contractnumber 5",
+        "contractType": "Licence",
+        "status": "Active",
+        "approvalDecisionId": "Voorbeeld Approvaldecisionid 2",
+        "approvalState": "none",
+        "endDate": "2026-03-02",
+        "cost": 2.0,
+        "costPeriod": "Annually",
+        "contactPersonProvider": {
+          "name": "Voorbeeld Name 2",
+          "email": "Voorbeeld Email 2"
+        },
+        "contactPersonUser": {
+          "name": "Voorbeeld Name 2",
+          "email": "Voorbeeld Email 2"
+        },
+        "documentReference": "Voorbeeld Documentreference 2",
+        "opmerkingen": "Voorbeeld Opmerkingen 2",
+        "decisions": [
+          "00000000-0000-4000-8000-000000000001"
+        ],
+        "licenceMetric": "Per inhabitant",
+        "licencesBought": 58000,
+        "licencesInUse": 57120
       },
       {
         "@self": {
@@ -8635,7 +9023,12 @@
         "plannedReplacementDate": "2026-03-01",
         "timeClassification": "Tolerate",
         "timeRationale": "Voorbeeld Timerationale 1",
-        "timeReviewDate": "2026-03-01"
+        "timeReviewDate": "2026-03-01",
+        "businessValue": 1,
+        "technicalFit": 2,
+        "riskScore": 4,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Eliminate"
       },
       {
         "@self": {
@@ -8677,7 +9070,12 @@
         "plannedReplacementDate": "2026-03-02",
         "timeClassification": "Invest",
         "timeRationale": "Voorbeeld Timerationale 2",
-        "timeReviewDate": "2026-03-02"
+        "timeReviewDate": "2026-03-02",
+        "businessValue": 5,
+        "technicalFit": 4,
+        "riskScore": 2,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Invest"
       },
       {
         "@self": {
@@ -8688,6 +9086,8 @@
         "consumer": {},
         "provider": {},
         "contactPerson": {},
+        "businessOwner": {},
+        "technicalOwner": {},
         "participants": [
           {}
         ],
@@ -8719,7 +9119,12 @@
         "plannedReplacementDate": "2026-03-03",
         "timeClassification": "Migrate",
         "timeRationale": "Voorbeeld Timerationale 3",
-        "timeReviewDate": "2026-03-03"
+        "timeReviewDate": "2026-03-03",
+        "businessValue": 5,
+        "technicalFit": 2,
+        "riskScore": 3,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Migrate"
       },
       {
         "@self": {
@@ -10204,7 +10609,12 @@
         "plannedReplacementDate": "2026-03-01",
         "timeClassification": "Tolerate",
         "timeRationale": "Voorbeeld Timerationale 1",
-        "timeReviewDate": "2026-03-01"
+        "timeReviewDate": "2026-03-01",
+        "businessValue": 2,
+        "technicalFit": 4,
+        "riskScore": 2,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Tolerate"
       },
       {
         "@self": {
@@ -10246,7 +10656,12 @@
         "plannedReplacementDate": "2026-03-02",
         "timeClassification": "Invest",
         "timeRationale": "Voorbeeld Timerationale 2",
-        "timeReviewDate": "2026-03-02"
+        "timeReviewDate": "2026-03-02",
+        "businessValue": 4,
+        "technicalFit": 5,
+        "riskScore": 1,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Invest"
       },
       {
         "@self": {
@@ -10257,6 +10672,8 @@
         "consumer": {},
         "provider": {},
         "contactPerson": {},
+        "businessOwner": {},
+        "technicalOwner": {},
         "participants": [
           {}
         ],
@@ -10288,7 +10705,12 @@
         "plannedReplacementDate": "2026-03-03",
         "timeClassification": "Migrate",
         "timeRationale": "Voorbeeld Timerationale 3",
-        "timeReviewDate": "2026-03-03"
+        "timeReviewDate": "2026-03-03",
+        "businessValue": 4,
+        "technicalFit": 1,
+        "riskScore": 5,
+        "scoredOn": "2026-09-01",
+        "suggestedTimeClassification": "Migrate"
       },
       {
         "@self": {
@@ -10445,6 +10867,186 @@
         "longDescription": "Voorbeeld markdown 2",
         "cveCode": "CVE-2345-2345",
         "cvssScore": 2.0
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "aiSystem",
+          "slug": "ai-system-chat-assistant"
+        },
+        "name": "Chat assistant",
+        "kind": "AI feature",
+        "module": {},
+        "provider": {},
+        "purpose": "Answers residents' questions about permits on the website and hands over to an employee.",
+        "aiActRiskCategory": "limited risk",
+        "aiActRole": "deployer",
+        "assessedOn": "2026-06-01",
+        "algorithmRegisterUrl": "https://algoritmes.overheid.nl/",
+        "status": "in use"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "aiSystem",
+          "slug": "ai-system-benefit-scoring-model"
+        },
+        "name": "Benefit application scoring model",
+        "kind": "AI model",
+        "module": {},
+        "provider": {},
+        "purpose": "Ranks benefit applications for a manual check.",
+        "aiActRiskCategory": "high risk",
+        "aiActRole": "deployer",
+        "assessedOn": "2026-05-15",
+        "status": "in development"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "aiSystem",
+          "slug": "ai-system-mail-sorting-agent"
+        },
+        "name": "Mail sorting agent",
+        "kind": "AI agent",
+        "module": {},
+        "provider": {},
+        "purpose": "Sorts incoming mail to the right team.",
+        "aiActRiskCategory": "minimal risk",
+        "aiActRole": "deployer",
+        "status": "in use"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "aiSystem",
+          "slug": "ai-system-chat-assistant-gemma"
+        },
+        "name": "Chat assistant",
+        "kind": "AI feature",
+        "module": {},
+        "provider": {},
+        "purpose": "Answers residents' questions about permits on the website and hands over to an employee.",
+        "aiActRiskCategory": "limited risk",
+        "aiActRole": "deployer",
+        "assessedOn": "2026-06-01",
+        "algorithmRegisterUrl": "https://algoritmes.overheid.nl/",
+        "status": "in use"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "aiSystem",
+          "slug": "ai-system-benefit-scoring-model-gemma"
+        },
+        "name": "Benefit application scoring model",
+        "kind": "AI model",
+        "module": {},
+        "provider": {},
+        "purpose": "Ranks benefit applications for a manual check.",
+        "aiActRiskCategory": "high risk",
+        "aiActRole": "deployer",
+        "assessedOn": "2026-05-15",
+        "status": "in development"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "aiSystem",
+          "slug": "ai-system-mail-sorting-agent-gemma"
+        },
+        "name": "Mail sorting agent",
+        "kind": "AI agent",
+        "module": {},
+        "provider": {},
+        "purpose": "Sorts incoming mail to the right team.",
+        "aiActRiskCategory": "minimal risk",
+        "aiActRole": "deployer",
+        "status": "in use"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "maintenanceWindow",
+          "slug": "maintenance-database-upgrade"
+        },
+        "module": {},
+        "title": "Database upgrade",
+        "description": "The supplier moves the application to a new database version. Log out before the window starts.",
+        "startsAt": "2026-10-10T06:00:00+02:00",
+        "endsAt": "2026-10-10T10:00:00+02:00",
+        "impact": "unavailable",
+        "status": "planned"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "maintenanceWindow",
+          "slug": "maintenance-security-patch"
+        },
+        "module": {},
+        "title": "Security patch",
+        "description": "A security patch is installed; the application stays available but may respond slowly.",
+        "startsAt": "2026-10-17T20:00:00+02:00",
+        "endsAt": "2026-10-17T21:00:00+02:00",
+        "impact": "degraded",
+        "status": "planned"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "maintenanceWindow",
+          "slug": "maintenance-storage-move"
+        },
+        "module": {},
+        "title": "Storage move",
+        "description": "Documents move to new storage. Nothing changes for users.",
+        "startsAt": "2026-10-24T22:00:00+02:00",
+        "endsAt": "2026-10-25T02:00:00+02:00",
+        "impact": "no impact",
+        "status": "completed"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "maintenanceWindow",
+          "slug": "maintenance-database-upgrade"
+        },
+        "module": {},
+        "title": "Database upgrade",
+        "description": "The supplier moves the application to a new database version. Log out before the window starts.",
+        "startsAt": "2026-10-10T06:00:00+02:00",
+        "endsAt": "2026-10-10T10:00:00+02:00",
+        "impact": "unavailable",
+        "status": "planned"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "maintenanceWindow",
+          "slug": "maintenance-security-patch"
+        },
+        "module": {},
+        "title": "Security patch",
+        "description": "A security patch is installed; the application stays available but may respond slowly.",
+        "startsAt": "2026-10-17T20:00:00+02:00",
+        "endsAt": "2026-10-17T21:00:00+02:00",
+        "impact": "degraded",
+        "status": "planned"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "maintenanceWindow",
+          "slug": "maintenance-storage-move"
+        },
+        "module": {},
+        "title": "Storage move",
+        "description": "Documents move to new storage. Nothing changes for users.",
+        "startsAt": "2026-10-24T22:00:00+02:00",
+        "endsAt": "2026-10-25T02:00:00+02:00",
+        "impact": "no impact",
+        "status": "completed"
       }
     ]
   }

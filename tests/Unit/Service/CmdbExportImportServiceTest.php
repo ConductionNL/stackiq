@@ -1,0 +1,1265 @@
+<?php
+
+/**
+ * Tests for the CMDB export import service.
+ *
+ * OpenRegister is an in-memory double of `ObjectServiceInterface` that
+ * applies the search filters the service sends; the mapping runs through
+ * OpenRegister's real `MappingEngine` (or its verbatim test copy), progress
+ * through the real `ProgressTracker` on an in-memory cache. The fixture
+ * tests read the sanitised export through PhpSpreadsheet and are skipped
+ * when no OpenRegister vendor directory is available; the other tests feed
+ * rows directly.
+ *
+ * @category  Test
+ * @package   OCA\Stackiq\Tests\Unit\Service
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://github.com/ConductionNL/stackiq
+ *
+ * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Stackiq\Tests\Unit\Service;
+
+require_once __DIR__ . '/../Support/CmdbTestSupport.php';
+
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
+use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
+use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
+use OCA\Stackiq\Service\CmdbExportImportService;
+use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
+use OCP\ICache;
+use OCP\ICacheFactory;
+use OCP\IL10N;
+use OCP\IUserSession;
+use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use Psr\Log\AbstractLogger;
+use RuntimeException;
+
+/**
+ * The import, row by row, against an in-memory OpenRegister.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ */
+class CmdbExportImportServiceTest extends TestCase {
+	private const REGISTER = 20;
+	private const MODULE = 43;
+	private const ORGANIZATION = 33;
+	private const USAGE = 34;
+	private const CONTACT_PERSON = 32;
+
+	/**
+	 * Objects per schema id, by uuid.
+	 *
+	 * @var array<int, array<string, array<string, mixed>>>
+	 */
+	private array $store = [];
+
+	/**
+	 * Every saveObject() call: schema, uuid, data, create.
+	 *
+	 * @var array<int, array{schema: int, uuid: string, data: array<string, mixed>, create: bool}>
+	 */
+	private array $saves = [];
+
+	/**
+	 * Called before every save; may throw.
+	 *
+	 * @var callable|null
+	 */
+	private $beforeSave = null;
+
+	/**
+	 * Contacts in the fake address book: uid => name, email.
+	 *
+	 * @var array<string, array{name: string, email: string}>
+	 */
+	private array $contacts = [];
+
+	/**
+	 * Whether Contacts is enabled.
+	 *
+	 * @var bool
+	 */
+	private bool $contactsEnabled = true;
+
+	/**
+	 * The in-memory distributed cache behind the ProgressTracker.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $cache = [];
+
+	/**
+	 * Thrown by the next write to the cache, once.
+	 *
+	 * @var \Throwable|null
+	 */
+	private ?\Throwable $cacheFailure = null;
+
+	/**
+	 * Every log line, message plus encoded context.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $logLines = [];
+
+	/**
+	 * The ProgressTracker of the current service.
+	 *
+	 * @var ProgressTracker|null
+	 */
+	private ?ProgressTracker $tracker = null;
+
+	/**
+	 * Reset the doubles.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$this->store = [self::MODULE => [], self::ORGANIZATION => [], self::USAGE => [], self::CONTACT_PERSON => []];
+		$this->saves = [];
+		$this->beforeSave = null;
+		$this->contacts = [];
+		$this->contactsEnabled = true;
+		$this->cache = [];
+		$this->cacheFailure = null;
+		$this->logLines = [];
+	}//end setUp()
+
+	// ------------------------------------------------------------------
+	// Doubles
+	// ------------------------------------------------------------------
+
+	/**
+	 * An entity as OpenRegister returns it.
+	 *
+	 * @param string $uuid The uuid.
+	 * @param array<string, mixed> $data The object data.
+	 *
+	 * @return ObjectEntityInterface
+	 */
+	private function entity(string $uuid, array $data): ObjectEntityInterface {
+		return new class($uuid, $data) implements ObjectEntityInterface {
+			/**
+			 * Constructor.
+			 *
+			 * @param string $uuid The uuid.
+			 * @param array<string, mixed> $data The data.
+			 */
+			public function __construct(
+				private string $uuid,
+				private array $data,
+			) {
+			}
+
+			public function getUuid(): ?string {
+				return $this->uuid;
+			}
+
+			public function getObject(): array {
+				return $this->data;
+			}
+
+			public function getRegister(): ?string {
+				return '20';
+			}
+
+			public function getSchema(): ?string {
+				return null;
+			}
+
+			public function getOrganisation(): ?string {
+				return null;
+			}
+
+			public function getOwner(): ?string {
+				return null;
+			}
+
+			public function jsonSerialize(): array {
+				return $this->data;
+			}
+		};
+	}//end entity()
+
+	/**
+	 * The in-memory OpenRegister.
+	 *
+	 * @return ObjectServiceInterface
+	 */
+	private function objectService(): ObjectServiceInterface {
+		$service = $this->createMock(ObjectServiceInterface::class);
+		$service->method('saveObject')->willReturnCallback(
+			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntityInterface {
+				$schema = (int)$schema;
+				if ($this->beforeSave !== null) {
+					($this->beforeSave)($schema, $object);
+				}
+
+				$create = ($uuid === null);
+				if ($create === true) {
+					$uuid = sprintf('00000000-0000-4000-8000-%012d', count($this->saves) + 1);
+				}
+
+				$object['id'] = $uuid;
+				$this->store[$schema][$uuid] = $object;
+				$this->saves[] = ['schema' => $schema, 'uuid' => $uuid, 'data' => $object, 'create' => $create];
+				return $this->entity(uuid: $uuid, data: $object);
+			}
+		);
+		$service->method('searchObjects')->willReturnCallback(
+			function (array $query = []): array {
+				$schema = (int)($query['@self']['schema'] ?? 0);
+				$limit = (int)($query['_limit'] ?? 30);
+				$offset = (int)($query['_offset'] ?? 0);
+				$filters = array_filter($query, fn ($key): bool => $key !== '@self' && str_starts_with((string)$key, '_') === false, ARRAY_FILTER_USE_KEY);
+				$found = [];
+				foreach (($this->store[$schema] ?? []) as $uuid => $data) {
+					foreach ($filters as $field => $value) {
+						if ((string)($data[$field] ?? '') !== (string)$value) {
+							continue 2;
+						}
+					}
+
+					$found[] = $this->entity(uuid: $uuid, data: $data);
+				}
+
+				return array_slice($found, $offset, $limit);
+			}
+		);
+		$service->method('find')->willReturnCallback(
+			function ($id, ?array $_extend = [], bool $files = false, $register = null, $schema = null): ?ObjectEntityInterface {
+				$data = ($this->store[(int)$schema][(string)$id] ?? null);
+				if ($data === null) {
+					return null;
+				}
+
+				return $this->entity(uuid: (string)$id, data: $data);
+			}
+		);
+
+		return $service;
+	}//end objectService()
+
+	/**
+	 * The Contacts bridge over a fake address book.
+	 *
+	 * @return StackiqContactSyncService
+	 */
+	private function contactSync(): StackiqContactSyncService {
+		$sync = $this->createMock(StackiqContactSyncService::class);
+		$sync->method('isAvailable')->willReturnCallback(fn (): bool => $this->contactsEnabled);
+		$sync->method('searchContacts')->willReturnCallback(
+			function (string $query): array {
+				$found = [];
+				foreach ($this->contacts as $uid => $contact) {
+					if (str_contains(mb_strtolower($contact['name']), mb_strtolower($query)) === true) {
+						$found[] = ['uid' => $uid, 'name' => $contact['name'], 'email' => $contact['email']];
+					}
+				}
+
+				return $found;
+			}
+		);
+		$sync->method('syncToContacts')->willReturnCallback(
+			function (string $objectType, array $record): ?string {
+				$email = (string)($record['email'] ?? '');
+				foreach ($this->contacts as $uid => $contact) {
+					if ($email !== '' && strcasecmp($contact['email'], $email) === 0) {
+						return $uid;
+					}
+				}
+
+				$uid = 'contact-' . (count($this->contacts) + 1);
+				$this->contacts[$uid] = ['name' => trim(($record['voornaam'] ?? '') . ' ' . ($record['achternaam'] ?? '')), 'email' => $email];
+				return $uid;
+			}
+		);
+
+		return $sync;
+	}//end contactSync()
+
+	/**
+	 * A ProgressTracker on an in-memory distributed cache.
+	 *
+	 * @return ProgressTracker
+	 */
+	private function progressTracker(): ProgressTracker {
+		$cache = $this->createMock(ICache::class);
+		$cache->method('get')->willReturnCallback(fn ($key) => ($this->cache[$key] ?? null));
+		$cache->method('set')->willReturnCallback(
+			function ($key, $value): bool {
+				if ($this->cacheFailure !== null) {
+					$failure = $this->cacheFailure;
+					$this->cacheFailure = null;
+					throw $failure;
+				}
+
+				$this->cache[$key] = $value;
+				return true;
+			}
+		);
+		$cache->method('remove')->willReturnCallback(
+			function ($key): bool {
+				unset($this->cache[$key]);
+				return true;
+			}
+		);
+		$factory = $this->createMock(ICacheFactory::class);
+		$factory->method('createDistributed')->willReturn($cache);
+
+		return new ProgressTracker(cacheFactory: $factory, userSession: $this->createMock(IUserSession::class), logger: $this->logger());
+	}//end progressTracker()
+
+	/**
+	 * An IL10N that returns the English source with its parameters filled in.
+	 *
+	 * @return IL10N
+	 */
+	private function l10n(): IL10N {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(fn (string $text, $parameters = []): string => vsprintf($text, (array)$parameters));
+		return $l10n;
+	}//end l10n()
+
+	/**
+	 * A logger that keeps every line.
+	 *
+	 * @return AbstractLogger
+	 */
+	private function logger(): AbstractLogger {
+		$lines = &$this->logLines;
+		return new class($lines) extends AbstractLogger {
+			/**
+			 * Constructor.
+			 *
+			 * @param array<int, string> $lines The collected lines.
+			 */
+			public function __construct(
+				private array &$lines,
+			) {
+			}
+
+			/**
+			 * Keep a line.
+			 *
+			 * @param mixed $level The level.
+			 * @param string|\Stringable $message The message.
+			 * @param array<mixed> $context The context.
+			 *
+			 * @return void
+			 */
+			public function log($level, string|\Stringable $message, array $context = []): void {
+				array_walk_recursive(
+					$context,
+					function (&$value): void {
+						if (is_object($value) === true) {
+							$value = get_class($value) . ($value instanceof \Throwable ? ': ' . $value->getMessage() : '');
+						}
+					}
+				);
+				$this->lines[] = $message . ' ' . json_encode($context, JSON_UNESCAPED_UNICODE);
+			}
+		};
+	}//end logger()
+
+	/**
+	 * A reader that hands out given rows, for tests that do not need the fixture.
+	 *
+	 * @param array<int, array{sheet: string, row: int, cells: array<string, mixed>}> $rows The rows.
+	 *
+	 * @return CmdbWorkbookReader
+	 */
+	private function rowsReader(array $rows): CmdbWorkbookReader {
+		return new class($rows) extends CmdbWorkbookReader {
+			/**
+			 * Constructor.
+			 *
+			 * @param array<int, array<string, mixed>> $rows The rows.
+			 */
+			public function __construct(
+				private array $rows,
+			) {
+			}
+
+			/**
+			 * The given rows.
+			 *
+			 * @param string $path Ignored.
+			 * @param CmdbImportProfile $profile Ignored.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function read(string $path, CmdbImportProfile $profile): array {
+				return ['rows' => $this->rows, 'importWarnings' => [], 'date1904' => false];
+			}
+		};
+	}//end rowsReader()
+
+	/**
+	 * The service under test.
+	 *
+	 * @param CmdbWorkbookReader|null $reader The reader; null is the real one.
+	 * @param string|null $profileDir A profile directory other than the shipped one.
+	 * @param array<string, mixed> $config The voorzieningen config.
+	 *
+	 * @return CmdbExportImportService
+	 */
+	private function service(?CmdbWorkbookReader $reader = null, ?string $profileDir = null, array $config = ['register' => '20']): CmdbExportImportService {
+		$objectService = $this->objectService();
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('has')->willReturn(false);
+		$container->method('get')->willReturnCallback(
+			function (string $id) use ($objectService) {
+				if ($id === ObjectServiceInterface::class) {
+					return $objectService;
+				}
+
+				throw new RuntimeException('not in this container: ' . $id);
+			}
+		);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getVoorzieningenConfig')->willReturn($config);
+		$settings->method('getSchemaIdForObjectType')->willReturnCallback(
+			fn (string $type): ?int => ['module' => self::MODULE, 'organization' => self::ORGANIZATION, 'usage' => self::USAGE, 'contactPerson' => self::CONTACT_PERSON][$type] ?? null
+		);
+
+		$this->tracker = $this->progressTracker();
+
+		return new CmdbExportImportService(
+			container: $container,
+			settingsService: $settings,
+			contactSync: $this->contactSync(),
+			progressTracker: $this->tracker,
+			profile: new CmdbImportProfile(container: $container, directory: $profileDir),
+			reader: ($reader ?? new CmdbWorkbookReader()),
+			normaliser: new CmdbRowNormaliser(),
+			l10n: $this->l10n(),
+			logger: $this->logger()
+		);
+	}//end service()
+
+	/**
+	 * Skip unless the fixture can be read.
+	 *
+	 * @return string The fixture path.
+	 */
+	private function fixture(): string {
+		if (CmdbTestSupport::loadPhpSpreadsheet() === false) {
+			$this->markTestSkipped('PhpSpreadsheet not found: set OPENREGISTER_DIR to an OpenRegister app with its vendor/ installed.');
+		}
+
+		return CmdbTestSupport::fixtures() . '/topdesk-export-anonymised.xlsx';
+	}//end fixture()
+
+	/**
+	 * A synthetic application row of a CMDB sheet.
+	 *
+	 * @param string $appId The APPID.
+	 * @param array<string, mixed> $cells Overrides.
+	 * @param int $row The row number.
+	 * @param string $sheet The sheet.
+	 * @param array<int, string> $uncached Columns whose formula has no cached value.
+	 *
+	 * @return array{sheet: string, row: int, cells: array<string, mixed>, uncached: array<int, string>}
+	 */
+	private function row(string $appId, array $cells = [], int $row = 2, string $sheet = 'Beheerde Applicaties CMDB', array $uncached = []): array {
+		return [
+			'sheet' => $sheet,
+			'row' => $row,
+			'cells' => array_merge(
+				['APPID' => $appId, 'Applicatie Code' => 'APP-' . $appId, 'Applicatie Naam' => 'Applicatie ' . $appId, 'Vendor' => 'Fabfrikant', 'Applicatie Status' => 'In productie'],
+				$cells
+			),
+			'uncached' => $uncached,
+		];
+	}//end row()
+
+	/**
+	 * The stored objects of a schema.
+	 *
+	 * @param int $schema The schema id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function objects(int $schema): array {
+		return array_values($this->store[$schema]);
+	}//end objects()
+
+	/**
+	 * Seed an organisation.
+	 *
+	 * @param string $uuid The uuid.
+	 * @param string $name The name.
+	 * @param string $type The type.
+	 *
+	 * @return void
+	 */
+	private function seedOrganisation(string $uuid, string $name, string $type): void {
+		$this->store[self::ORGANIZATION][$uuid] = ['id' => $uuid, 'name' => $name, 'type' => $type, 'status' => 'Active'];
+	}//end seedOrganisation()
+
+	// ------------------------------------------------------------------
+	// Task 5: municipality, manufacturer, module upsert, usage
+	// ------------------------------------------------------------------
+
+	/**
+	 * The sanitised export creates two modules, two suppliers, two usages and the municipality.
+	 *
+	 * @return void
+	 */
+	public function testTheFixtureCreatesModulesUsagesAndSuppliers(): void {
+		$path = $this->fixture();
+		$before = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->modify('-1 second');
+		$report = $this->service()->import(path: $path, options: ['municipalityName' => 'Gemeente Voorbeeldstad', 'operationId' => 'cmdb-test-0001']);
+
+		$this->assertTrue($report['success']);
+		$this->assertFalse($report['cancelled']);
+		$this->assertSame('cmdb-test-0001', $report['operationId']);
+		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 1], $report['summary']);
+		$this->assertSame('Gemeente Voorbeeldstad', $report['municipality']['name']);
+		$this->assertTrue($report['municipality']['created']);
+		$this->assertSame([], $report['importWarnings']);
+		// "Webapplicatie" is an application kind, not a hosting model: the field is dropped with a warning.
+		$this->assertSame(['Column "Applicatiesoort": Value "Webapplicatie" has no mapping and no default is configured'], $report['rows'][0]['warnings']);
+
+		$municipality = $report['municipality']['uuid'];
+		$this->assertSame('Municipality', $this->store[self::ORGANIZATION][$municipality]['type']);
+		$this->assertSame('Active', $this->store[self::ORGANIZATION][$municipality]['status']);
+
+		$suppliers = array_filter($this->objects(self::ORGANIZATION), fn (array $o): bool => $o['type'] === 'Supplier');
+		$this->assertEqualsCanonicalizing(['Aangetekend B.V.', 'Fabfrikant'], array_column($suppliers, 'name'));
+
+		$modules = [];
+		foreach ($this->objects(self::MODULE) as $module) {
+			$modules[$module['externalNumber']] = $module;
+		}
+
+		$this->assertSame(['1234', '2'], array_map('strval', array_keys($modules)));
+		$onbeh = $modules[1234];
+		$this->assertSame('topdesk:' . $municipality . ':1234', $onbeh['externalKey']);
+		$this->assertSame('AIA-AangetekendMailen', $onbeh['externalId']);
+		$this->assertSame('Aangetekend Mailen', $onbeh['name']);
+		$this->assertSame('Mailen', $onbeh['shortDescription']);
+		$this->assertSame('Application', $onbeh['type']);
+		$this->assertSame('2023-07-04', $onbeh['externalCreatedAt']);
+		$this->assertSame('2026-07-29', $onbeh['externalModifiedAt']);
+		$this->assertSame('Functionele omschrijving test123', $onbeh['longDescription']);
+		$this->assertArrayNotHasKey('bbnLevel', $onbeh, '"NB" means unknown');
+		$this->assertArrayNotHasKey('cloudDienstverleningsmodel', $onbeh);
+		$publication = new \DateTimeImmutable($onbeh['publicationDate']);
+		$this->assertGreaterThanOrEqual($before, $publication);
+		$this->assertLessThanOrEqual(new \DateTimeImmutable('now'), $publication);
+
+		$beheerd = $modules[2];
+		$this->assertSame($onbeh['publicationDate'], $beheerd['publicationDate'], 'one start time for the whole import');
+		$this->assertSame('topdesk:' . $municipality . ':2', $beheerd['externalKey']);
+		$this->assertSame('APP-test123', $beheerd['externalId']);
+		$this->assertSame('naamtest123', $beheerd['name']);
+		$this->assertSame('Naamtest', $beheerd['shortDescription'], 'Roepnaam wins over Nickname');
+		$this->assertSame('Accomodatieplanning.', $beheerd['longDescription']);
+		$this->assertSame(['SaaS'], $beheerd['cloudDienstverleningsmodel']);
+		$this->assertSame('BBN2', $beheerd['bbnLevel']);
+
+		$supplierByName = array_column($suppliers, 'id', 'name');
+		$this->assertSame($supplierByName['Aangetekend B.V.'], $onbeh['provider']);
+		$this->assertSame($supplierByName['Fabfrikant'], $beheerd['provider']);
+
+		$usages = $this->objects(self::USAGE);
+		$this->assertCount(2, $usages);
+		$usageByModule = array_column($usages, null, 'module');
+		$aia = $usageByModule[$onbeh['id']];
+		$this->assertSame($municipality, $aia['consumer']);
+		$this->assertSame('Planned', $aia['status']);
+		$this->assertSame('Beheer geregeld: nee / H10 / H10 Accounting', $aia['interneAnnotation']);
+		$this->assertArrayNotHasKey('startDateOutPhased', $aia, 'the CMDB placeholder 2036-01-01 means no date');
+		$this->assertArrayNotHasKey('timeClassification', $aia);
+		$this->assertSame($supplierByName['Aangetekend B.V.'], $aia['provider']);
+		$app = $usageByModule[$beheerd['id']];
+		$this->assertSame('In production', $app['status']);
+		$this->assertSame('Tolerate', $app['timeClassification']);
+		$this->assertSame('2046-02-01', $app['startDateOutPhased']);
+		$this->assertSame('Beheer geregeld: ja / B10 / B10 Maatschappelijke Ontwikkeling', $app['interneAnnotation']);
+		$this->assertArrayNotHasKey('technicalOwner', $app);
+
+		$this->assertSame($onbeh['id'], $report['rows'][0]['moduleUuid']);
+		$this->assertSame($aia['id'], $report['rows'][0]['usageUuid']);
+		$this->assertSame(
+			['Onbeh Applicaties CMDB', 2, '1234', 'Aangetekend Mailen', 'created'],
+			[$report['rows'][0]['sheet'], $report['rows'][0]['row'], $report['rows'][0]['appId'], $report['rows'][0]['name'], $report['rows'][0]['outcome']]
+		);
+		$this->assertSame('Beheerde Applicaties CMDB', $report['rows'][1]['sheet']);
+	}//end testTheFixtureCreatesModulesUsagesAndSuppliers()
+
+	/**
+	 * The same export again: 0 created, 2 unchanged, no save at all, one municipality.
+	 *
+	 * @return void
+	 */
+	public function testReimportingTheSameExportChangesNothing(): void {
+		$path = $this->fixture();
+		$service = $this->service();
+		$service->import(path: $path, options: ['municipalityName' => 'Gemeente Voorbeeldstad']);
+		$counts = array_map('count', $this->store);
+		$savesAfterFirst = count($this->saves);
+
+		$report = $service->import(path: $path, options: ['municipalityName' => '  gemeente   VOORBEELDSTAD ']);
+
+		$this->assertSame(0, $report['summary']['created']);
+		$this->assertSame(2, $report['summary']['unchanged']);
+		$this->assertFalse($report['municipality']['created']);
+		$this->assertSame($savesAfterFirst, count($this->saves), 'no saveObject() call for unchanged objects');
+		$this->assertSame($counts, array_map('count', $this->store));
+		$municipalities = array_filter($this->objects(self::ORGANIZATION), fn (array $o): bool => $o['type'] === 'Municipality');
+		$this->assertCount(1, $municipalities);
+	}//end testReimportingTheSameExportChangesNothing()
+
+	/**
+	 * The match key is the APPID: a changed Applicatie Code updates the same module.
+	 *
+	 * @return void
+	 */
+	public function testTheKeyIsTheAppIdNotTheCode(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '42', cells: ['Applicatie Code' => 'APP-Oud'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$uuid = array_key_first($this->store[self::MODULE]);
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '42', cells: ['Applicatie Code' => 'App-Nieuw'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('updated', $report['rows'][0]['outcome']);
+		$this->assertCount(1, $this->store[self::MODULE]);
+		$this->assertSame('App-Nieuw', $this->store[self::MODULE][$uuid]['externalId']);
+		$this->assertSame('topdesk:muni-1:42', $this->store[self::MODULE][$uuid]['externalKey']);
+		$this->assertSame('42', $this->store[self::MODULE][$uuid]['externalNumber']);
+	}//end testTheKeyIsTheAppIdNotTheCode()
+
+	/**
+	 * A changed Applicatie Naam updates the module; website, publicationDate and depublicationDate stay.
+	 *
+	 * @return void
+	 */
+	public function testAChangedNameUpdatesOnlyTheMappedFields(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '2', cells: ['Applicatie Naam' => 'naamtest123'])]));
+		$service->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$uuid = array_key_first($this->store[self::MODULE]);
+		$this->store[self::MODULE][$uuid]['website'] = 'https://voorbeeld.example';
+		$this->store[self::MODULE][$uuid]['depublicationDate'] = '2026-10-02T00:00:00+00:00';
+		$published = $this->store[self::MODULE][$uuid]['publicationDate'];
+
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '2', cells: ['Applicatie Naam' => 'naamtest124'])]));
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('updated', $report['rows'][0]['outcome']);
+		$this->assertCount(1, $this->store[self::MODULE]);
+		$module = $this->store[self::MODULE][$uuid];
+		$this->assertSame('naamtest124', $module['name']);
+		$this->assertSame('https://voorbeeld.example', $module['website']);
+		$this->assertSame($published, $module['publicationDate']);
+		$this->assertSame('2026-10-02T00:00:00+00:00', $module['depublicationDate']);
+		$this->assertCount(1, $this->store[self::USAGE], 'still one usage');
+	}//end testAChangedNameUpdatesOnlyTheMappedFields()
+
+	/**
+	 * An existing module without publicationDate does not get one on update.
+	 *
+	 * @return void
+	 */
+	public function testAnUpdateNeverWritesPublicationDate(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->store[self::MODULE]['mod-1'] = ['id' => 'mod-1', 'name' => 'Oud', 'externalKey' => 'topdesk:muni-1:1'];
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('updated', $report['rows'][0]['outcome']);
+		$this->assertArrayNotHasKey('publicationDate', $this->store[self::MODULE]['mod-1']);
+		$this->assertArrayNotHasKey('type', $this->store[self::MODULE]['mod-1'], 'type is create-only');
+		$this->assertSame('Applicatie 1', $this->store[self::MODULE]['mod-1']['name']);
+	}//end testAnUpdateNeverWritesPublicationDate()
+
+	/**
+	 * A municipality uuid must be an organisation of type Municipality.
+	 *
+	 * @return void
+	 */
+	public function testTheMunicipalityMustBeAMunicipality(): void {
+		$this->seedOrganisation(uuid: 'supplier-1', name: 'Voorbeeld Software B.V.', type: 'Supplier');
+		foreach ([['municipalityUuid' => 'supplier-1'], ['municipalityUuid' => 'unknown-uuid']] as $options) {
+			try {
+				$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: $options);
+				$this->fail('MUNICIPALITY_INVALID expected');
+			} catch (CmdbImportException $e) {
+				$this->assertSame('MUNICIPALITY_INVALID', $e->getErrorCode());
+				$this->assertSame(422, $e->getHttpStatus());
+			}
+		}
+
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityName' => '  ']);
+			$this->fail('MUNICIPALITY_REQUIRED expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MUNICIPALITY_REQUIRED', $e->getErrorCode());
+		}
+
+		$this->assertSame([], $this->saves, 'nothing is written');
+	}//end testTheMunicipalityMustBeAMunicipality()
+
+	/**
+	 * "Fabfrikant", "Fabfrikant " and "FABFRIKANT" are one supplier; an existing supplier is reused.
+	 *
+	 * @return void
+	 */
+	public function testAVendorIsOneSupplier(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->seedOrganisation(uuid: 'aangetekend', name: 'Aangetekend B.V.', type: 'Supplier');
+		$rows = [
+			$this->row(appId: '1', cells: ['Vendor' => 'Fabfrikant'], row: 2),
+			$this->row(appId: '2', cells: ['Vendor' => 'Fabfrikant '], row: 3),
+			$this->row(appId: '3', cells: ['Vendor' => 'FABFRIKANT'], row: 4),
+			$this->row(appId: '4', cells: ['Vendor' => 'aangetekend  b.v.'], row: 5),
+			$this->row(appId: '5', cells: ['Vendor' => ''], row: 6),
+		];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(5, $report['summary']['created']);
+		$suppliers = array_filter($this->objects(self::ORGANIZATION), fn (array $o): bool => $o['type'] === 'Supplier');
+		$this->assertCount(2, $suppliers);
+		$fabfrikant = array_values(array_filter($suppliers, fn (array $o): bool => $o['name'] === 'Fabfrikant'))[0]['id'];
+		$providers = array_column($this->objects(self::MODULE), 'provider', 'externalNumber');
+		$this->assertSame([1 => $fabfrikant, 2 => $fabfrikant, 3 => $fabfrikant, 4 => 'aangetekend'], $providers);
+	}//end testAVendorIsOneSupplier()
+
+	/**
+	 * updateExisting=false reports a match as skipped "exists" and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testUpdateExistingFalseSkipsMatches(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$saves = count($this->saves);
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Naam' => 'Anders'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'updateExisting' => false]);
+
+		$this->assertSame('skipped', $report['rows'][0]['outcome']);
+		$this->assertSame(['exists'], $report['rows'][0]['reasons']);
+		$this->assertSame($saves, count($this->saves));
+	}//end testUpdateExistingFalseSkipsMatches()
+
+	/**
+	 * A module missing from a newer export, and its usage, are left as they are.
+	 *
+	 * @return void
+	 */
+	public function testRecordsMissingFromTheExportStay(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2), $this->row(appId: '7', row: 3, sheet: 'Onbeh Applicaties CMDB')]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$modules = $this->store[self::MODULE];
+		$usages = $this->store[self::USAGE];
+
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Naam' => 'Nieuw'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		foreach ($modules as $uuid => $module) {
+			if ($module['externalNumber'] === '7') {
+				$this->assertSame($module, $this->store[self::MODULE][$uuid]);
+			}
+		}
+
+		$this->assertSame($usages, $this->store[self::USAGE]);
+		$this->assertCount(2, $this->store[self::MODULE]);
+	}//end testRecordsMissingFromTheExportStay()
+
+	/**
+	 * An unknown Applicatie Status drops only that field and warns with column and value.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownStatusDropsOnlyThatField(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Status' => 'Onbekende status'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('created', $report['rows'][0]['outcome']);
+		$this->assertCount(1, $report['rows'][0]['warnings']);
+		$this->assertStringContainsString('"Applicatie Status"', $report['rows'][0]['warnings'][0]);
+		$this->assertStringContainsString('Onbekende status', $report['rows'][0]['warnings'][0]);
+		$this->assertSame(1, $report['summary']['warnings']);
+		$usage = $this->objects(self::USAGE)[0];
+		$this->assertArrayNotHasKey('status', $usage);
+		$this->assertCount(1, $this->store[self::MODULE]);
+	}//end testAnUnknownStatusDropsOnlyThatField()
+
+	/**
+	 * The sheet a row comes from records whether maintenance is arranged, in the usage's internal note;
+	 * empty Cluster or Afdeling leave no empty part behind.
+	 *
+	 * @return void
+	 */
+	public function testTheSheetRecordsWhetherMaintenanceIsArranged(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [
+			$this->row(appId: '1', cells: ['Cluster' => 'H10', 'Applicatie Eigenaar (Afdeling)' => 'H10 Accounting'], sheet: 'Onbeh Applicaties CMDB'),
+			$this->row(appId: '2', cells: ['Cluster' => '', 'Applicatie Eigenaar (Afdeling)' => 'B10 Ontwikkeling'], row: 3),
+			$this->row(appId: '3', cells: ['Cluster' => '', 'Applicatie Eigenaar (Afdeling)' => ''], row: 4),
+		];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$notes = array_column($this->objects(self::USAGE), 'interneAnnotation');
+		$this->assertSame(['Beheer geregeld: nee / H10 / H10 Accounting', 'Beheer geregeld: ja / B10 Ontwikkeling', 'Beheer geregeld: ja'], $notes);
+	}//end testTheSheetRecordsWhetherMaintenanceIsArranged()
+
+	/**
+	 * "NB" in BNN Classificatie and the CMDB end-of-life placeholder (serial 49675) mean empty: no field, no warning.
+	 *
+	 * @return void
+	 */
+	public function testTheCmdbPlaceholdersMeanEmpty(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [
+			$this->row(appId: '1', cells: ['BNN Classificatie' => 'NB', 'End-of-Life Functioneel' => 49675]),
+			$this->row(appId: '2', cells: ['BNN Classificatie' => 'BBN 3', 'End-of-Life Functioneel' => 53359, 'Classificatie' => 'Migreren'], row: 3),
+		];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(0, $report['summary']['warnings']);
+		$modules = array_column($this->objects(self::MODULE), null, 'externalNumber');
+		$this->assertArrayNotHasKey('bbnLevel', $modules[1]);
+		$this->assertSame('BBN3', $modules[2]['bbnLevel']);
+		$usages = array_column($this->objects(self::USAGE), null, 'module');
+		$this->assertArrayNotHasKey('startDateOutPhased', $usages[$modules[1]['id']]);
+		$this->assertSame('2046-02-01', $usages[$modules[2]['id']]['startDateOutPhased']);
+		$this->assertSame('Migrate', $usages[$modules[2]['id']]['timeClassification']);
+	}//end testTheCmdbPlaceholdersMeanEmpty()
+
+	/**
+	 * A formula without a cached value reads as empty and warns on its row; the row is still imported.
+	 *
+	 * @return void
+	 */
+	public function testAFormulaWithoutACachedValueWarns(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Roepnaam' => null], uncached: ['Roepnaam'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('created', $report['rows'][0]['outcome']);
+		$this->assertSame(['Column "Roepnaam": formula without a cached value, read as empty'], $report['rows'][0]['warnings']);
+		$this->assertArrayNotHasKey('shortDescription', $this->objects(self::MODULE)[0]);
+	}//end testAFormulaWithoutACachedValueWarns()
+
+	/**
+	 * A test-only module pack that maps one more column changes the import without code.
+	 *
+	 * @return void
+	 */
+	public function testAPackChangeChangesTheMapping(): void {
+		$directory = sys_get_temp_dir() . '/stackiq-cmdb-pack-' . bin2hex(random_bytes(4));
+		mkdir($directory);
+		foreach (glob(CmdbTestSupport::appRoot() . '/lib/Settings/cmdb-import/*.json') as $file) {
+			copy($file, $directory . '/' . basename($file));
+		}
+
+		$pack = json_decode((string)file_get_contents($directory . '/topdesk-module.json'), true);
+		$pack['fieldMappings'][] = ['source' => 'Software Suite', 'target' => 'licentietype', 'transform' => ['type' => 'trim']];
+		file_put_contents($directory . '/topdesk-module.json', json_encode($pack));
+
+		try {
+			$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Software Suite' => 'Suite'])]), profileDir: $directory)
+				->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		} finally {
+			array_map('unlink', glob($directory . '/*.json'));
+			rmdir($directory);
+		}
+
+		$this->assertSame('Suite', $this->objects(self::MODULE)[0]['licentietype']);
+	}//end testAPackChangeChangesTheMapping()
+
+	// ------------------------------------------------------------------
+	// Task 6: the owner as contact person
+	// ------------------------------------------------------------------
+
+	/**
+	 * Each row's Applicatie Eigenaar (Persoon) becomes the usage's business owner, by display name; a
+	 * function in that column is used as the display name too; the function becomes the role.
+	 *
+	 * @return void
+	 */
+	public function testTheOwnerBecomesTheBusinessOwner(): void {
+		$path = $this->fixture();
+		$report = $this->service()->import(path: $path, options: ['municipalityName' => 'Gemeente Voorbeeldstad']);
+		$municipality = $report['municipality']['uuid'];
+
+		$this->assertEqualsCanonicalizing(['Voornaam Achternaam', 'Teamleider Applicatiebeheer'], array_column($this->contacts, 'name'));
+		$this->assertSame(['', ''], array_column($this->contacts, 'email'), 'the CMDB sheets carry no e-mail address');
+
+		$people = $this->objects(self::CONTACT_PERSON);
+		$this->assertCount(2, $people);
+		$uidByName = array_flip(array_map(fn (array $c): string => $c['name'], $this->contacts));
+		$byUid = array_column($people, null, 'contactsUid');
+		$this->assertSame(
+			['contactsUid' => $uidByName['Voornaam Achternaam'], 'organization' => $municipality, 'role' => 'Afdelingshoofd'],
+			array_diff_key($byUid[$uidByName['Voornaam Achternaam']], ['id' => true])
+		);
+		$this->assertSame('Teamleider Applicatiebeheer', $byUid[$uidByName['Teamleider Applicatiebeheer']]['role']);
+
+		$usages = array_column($this->objects(self::USAGE), null, 'module');
+		$this->assertSame($byUid[$uidByName['Voornaam Achternaam']]['id'], $usages[$report['rows'][0]['moduleUuid']]['businessOwner']);
+		$this->assertSame($byUid[$uidByName['Teamleider Applicatiebeheer']]['id'], $usages[$report['rows'][1]['moduleUuid']]['businessOwner']);
+	}//end testTheOwnerBecomesTheBusinessOwner()
+
+	/**
+	 * The same owner on two rows is one contact person, referenced by both usages.
+	 *
+	 * @return void
+	 */
+	public function testTheSameOwnerOnTwoRowsIsOneContactPerson(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$owner = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (Functie)' => 'Afdelingshoofd'];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $owner, row: 2), $this->row(appId: '2', cells: $owner, row: 3)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertCount(1, $this->objects(self::CONTACT_PERSON));
+		$owners = array_unique(array_column($this->objects(self::USAGE), 'businessOwner'));
+		$this->assertSame([$this->objects(self::CONTACT_PERSON)[0]['id']], array_values($owners));
+	}//end testTheSameOwnerOnTwoRowsIsOneContactPerson()
+
+	/**
+	 * An owner imported twice is one contact and one contact person; a near-namesake is not reused.
+	 *
+	 * @return void
+	 */
+	public function testAnOwnerByNameIsMatchedExactly(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		// A contact whose name merely contains the owner's name must not match.
+		$this->contacts['contact-other'] = ['name' => 'Voornaam Achternaam-Anders', 'email' => ''];
+		$rows = [$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam'])];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertCount(2, $this->contacts, 'one new contact next to the near-namesake');
+		$people = $this->objects(self::CONTACT_PERSON);
+		$this->assertCount(1, $people);
+		$this->assertNotSame('contact-other', $people[0]['contactsUid']);
+		$this->assertArrayNotHasKey('role', $people[0]);
+		$this->assertSame($people[0]['id'], $this->objects(self::USAGE)[0]['businessOwner']);
+	}//end testAnOwnerByNameIsMatchedExactly()
+
+	/**
+	 * No technical owner is written, whatever the row holds.
+	 *
+	 * @return void
+	 */
+	public function testNoTechnicalOwnerIsWritten(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['FB contactpersoon 1' => 'Achternaam, Voornaam'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertArrayNotHasKey('technicalOwner', $this->objects(self::USAGE)[0]);
+		$this->assertArrayNotHasKey('businessOwner', $this->objects(self::USAGE)[0]);
+		$this->assertSame([], $this->objects(self::CONTACT_PERSON));
+		$this->assertSame([], $this->contacts);
+	}//end testNoTechnicalOwnerIsWritten()
+
+	/**
+	 * With Contacts disabled the modules and usages are saved without owners, with a warning on each row that has an owner.
+	 *
+	 * @return void
+	 */
+	public function testContactsDisabledDoesNotBlockTheImport(): void {
+		$path = $this->fixture();
+		$this->contactsEnabled = false;
+		$report = $this->service()->import(path: $path, options: ['municipalityName' => 'Gemeente Voorbeeldstad']);
+
+		$this->assertSame(2, $report['summary']['created']);
+		$this->assertCount(2, $this->objects(self::USAGE));
+		$this->assertSame([], $this->objects(self::CONTACT_PERSON));
+		$this->assertContains('Owners skipped: Nextcloud Contacts is unavailable', $report['rows'][0]['warnings']);
+		$this->assertSame(['Owners skipped: Nextcloud Contacts is unavailable'], $report['rows'][1]['warnings']);
+	}//end testContactsDisabledDoesNotBlockTheImport()
+
+	/**
+	 * An imported contact person has no e-mail and no username, so neither user-provisioning path picks it up.
+	 *
+	 * @return void
+	 */
+	public function testAnImportedContactPersonIsNeverAUser(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (Functie)' => 'Afdelingshoofd'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$people = $this->objects(self::CONTACT_PERSON);
+		$this->assertNotEmpty($people);
+		foreach ($people as $person) {
+			$this->assertSame([], array_diff(array_keys($person), ['id', 'contactsUid', 'organization', 'role']));
+		}
+
+		// OrganizationSyncService::performUserSync() selects contact persons with a username.
+		$sync = (string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Service/OrganizationSyncService.php');
+		$this->assertStringContainsString('o.username IS NOT NULL', $sync, 'the selection changed: re-check that imported contact persons stay out of it');
+		// ContactpersoonService::processContactpersoon() provisions only from an e-mail on the object.
+		$listener = (string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Service/ContactpersoonService.php');
+		$this->assertStringContainsString("\$email = (\$contactData['email'] ?? \$contactData['e-mailadres'] ?? '');", $listener);
+	}//end testAnImportedContactPersonIsNeverAUser()
+
+	/**
+	 * Neither the report nor any log line names an owner.
+	 *
+	 * @return void
+	 */
+	public function testNoPersonDataInReportOrLog(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$owner = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (Functie)' => 'Afdelingshoofd'];
+		$this->beforeSave = function (int $schema, array $data): void {
+			if ($schema === self::USAGE && ($data['module'] ?? '') !== '' && count($this->objects(self::USAGE)) === 1) {
+				throw new RuntimeException('usage refused');
+			}
+		};
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $owner, row: 2), $this->row(appId: '2', cells: $owner, row: 3)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$text = json_encode($report, JSON_UNESCAPED_UNICODE) . "\n" . implode("\n", $this->logLines);
+		foreach (['Achternaam', 'Voornaam'] as $personData) {
+			$this->assertStringNotContainsString($personData, $text);
+		}
+
+		$this->assertSame('failed', $report['rows'][1]['outcome'], 'the injected failure ran');
+	}//end testNoPersonDataInReportOrLog()
+
+	// ------------------------------------------------------------------
+	// Task 7: row isolation, report, progress and cancel
+	// ------------------------------------------------------------------
+
+	/**
+	 * A failing module save fails only its row, naming the step.
+	 *
+	 * @return void
+	 */
+	public function testOneBadRowDoesNotStopTheOthers(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->beforeSave = function (int $schema, array $data): void {
+			if ($schema === self::MODULE && ($data['externalNumber'] ?? '') === '2') {
+				throw new RuntimeException('Validation failed for name');
+			}
+		};
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3), $this->row(appId: '3', row: 4)];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['created', 'failed', 'created'], array_column($report['rows'], 'outcome'));
+		$this->assertStringStartsWith('step "module" failed', $report['rows'][1]['reasons'][0]);
+		$this->assertSame(['rowsRead' => 3, 'processed' => 3, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 1, 'warnings' => 0], $report['summary']);
+		$this->assertCount(2, $this->store[self::MODULE]);
+	}//end testOneBadRowDoesNotStopTheOthers()
+
+	/**
+	 * A duplicate APPID (also across the two sheets), a missing APPID and a missing Applicatie Naam are skipped with their reasons.
+	 *
+	 * @return void
+	 */
+	public function testRowsAreSkippedWithTheirReasons(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [
+			$this->row(appId: '2', row: 2),
+			$this->row(appId: '2', row: 7),
+			$this->row(appId: '', row: 8),
+			$this->row(appId: '9', cells: ['Applicatie Naam' => ' '], row: 10),
+			$this->row(appId: '2', row: 2, sheet: 'Onbeh Applicaties CMDB'),
+		];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(
+			[
+				['created', []],
+				['skipped', ['duplicate APPID in file']],
+				['skipped', ['missing APPID']],
+				['skipped', ['missing Applicatie Naam']],
+				['skipped', ['duplicate APPID in file']],
+			],
+			array_map(fn (array $row): array => [$row['outcome'], $row['reasons']], $report['rows'])
+		);
+		$this->assertCount(1, $this->store[self::MODULE]);
+	}//end testRowsAreSkippedWithTheirReasons()
+
+	/**
+	 * The import runs as a cmdb_import operation with per-row progress; afterwards its statistics hold the report.
+	 *
+	 * @return void
+	 */
+	public function testProgressIsRecordedAndHoldsTheReport(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$seen = [];
+		$this->beforeSave = function (int $schema) use (&$seen): void {
+			if ($schema === self::MODULE) {
+				$seen[] = $this->tracker->getProgress(operationId: 'cmdb-progress-1')['processed_items'];
+			}
+		};
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3)];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-progress-1']);
+
+		$this->assertSame([0, 1], $seen, 'progress advances after every row');
+		$stored = $this->cache['progress_cmdb-progress-1'];
+		$this->assertSame('cmdb_import', $stored['operation_type']);
+		$this->assertSame('completed', $stored['status']);
+		$this->assertSame($report, $stored['statistics']['report']);
+	}//end testProgressIsRecordedAndHoldsTheReport()
+
+	/**
+	 * A cancel after row 1 of 3 keeps row 1 and reports cancelled with one processed row.
+	 *
+	 * @return void
+	 */
+	public function testACancelStopsBetweenRows(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$service = null;
+		$this->beforeSave = function (int $schema) use (&$service): void {
+			if ($schema === self::USAGE) {
+				$this->assertTrue($service->requestCancel(operationId: 'cmdb-cancel-01'));
+			}
+		};
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3), $this->row(appId: '3', row: 4)];
+		$service = $this->service(reader: $this->rowsReader(rows: $rows));
+
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-cancel-01']);
+
+		$this->assertTrue($report['cancelled']);
+		$this->assertSame(1, $report['summary']['processed']);
+		$this->assertSame(3, $report['summary']['rowsRead']);
+		$this->assertCount(1, $report['rows']);
+		$this->assertCount(1, $this->store[self::MODULE], 'row 1 stays');
+		$this->assertSame('cancelled', $this->cache['progress_cmdb-cancel-01']['status']);
+		$this->assertSame($report, $this->cache['progress_cmdb-cancel-01']['statistics']['report']);
+	}//end testACancelStopsBetweenRows()
+
+	/**
+	 * Cancel answers false for an unknown id, a malformed id or another operation type.
+	 *
+	 * @return void
+	 */
+	public function testCancelNeedsACmdbOperation(): void {
+		$service = $this->service(reader: $this->rowsReader(rows: []));
+		$this->tracker->startOperation(operationType: 'archimate_import', operationId: 'cmdb-not-mine-1');
+
+		$this->assertFalse($service->requestCancel(operationId: 'cmdb-unknown-1'));
+		$this->assertFalse($service->requestCancel(operationId: 'archimate_import_abcdefgh'));
+		$this->assertFalse($service->requestCancel(operationId: 'cmdb-not-mine-1'));
+	}//end testCancelNeedsACmdbOperation()
+
+	/**
+	 * Cancel answers false for an import that already finished, and leaves no cancel flag behind.
+	 *
+	 * @return void
+	 */
+	public function testCancelNeedsARunningImport(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2)]));
+		$service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-finished-1']);
+
+		$this->assertFalse($service->requestCancel(operationId: 'cmdb-finished-1'));
+		$this->assertArrayNotHasKey('cancel_cmdb-finished-1', $this->cache);
+	}//end testCancelNeedsARunningImport()
+
+	/**
+	 * A failure outside a row stops the operation as failed instead of leaving it running.
+	 *
+	 * @return void
+	 */
+	public function testAFailureOutsideARowMarksTheOperationFailed(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3)];
+		$service = $this->service(reader: $this->rowsReader(rows: $rows));
+		$this->beforeSave = function (int $schema): void {
+			if ($schema === self::USAGE) {
+				// The progress write after this row fails, outside every row boundary.
+				$this->cacheFailure = new \Error('cache went away');
+			}
+		};
+
+		try {
+			$service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-failing-1']);
+			$this->fail('the import should have thrown');
+		} catch (\Error $e) {
+			$this->assertSame('cache went away', $e->getMessage());
+		}
+
+		$stored = $this->cache['progress_cmdb-failing-1'];
+		$this->assertSame('failed', $stored['status']);
+		$this->assertSame('cache went away', $stored['errors'][0]['message']);
+	}//end testAFailureOutsideARowMarksTheOperationFailed()
+
+	/**
+	 * Without a mapping engine, or without configuration, nothing is read or written.
+	 *
+	 * @return void
+	 */
+	public function testMissingEngineOrConfigurationStopsBeforeReading(): void {
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]), config: [])->import(path: '', options: ['municipalityName' => 'Gemeente Voorbeeldstad']);
+			$this->fail('NOT_CONFIGURED expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('NOT_CONFIGURED', $e->getErrorCode());
+			$this->assertSame(503, $e->getHttpStatus());
+		}
+
+		$base = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]));
+		$reflection = new \ReflectionClass($base);
+		$args = [];
+		foreach ($reflection->getConstructor()->getParameters() as $parameter) {
+			$property = $reflection->getProperty($parameter->getName());
+			$args[$parameter->getName()] = $property->getValue($base);
+		}
+
+		$withoutEngine = new class(...$args) extends CmdbExportImportService {
+			public const ENGINE_CLASS = 'OCA\OpenRegister\Service\MigrationPack\NoSuchEngine';
+		};
+
+		try {
+			$withoutEngine->import(path: '', options: ['municipalityName' => 'Gemeente Voorbeeldstad']);
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+			$this->assertSame(503, $e->getHttpStatus());
+		}
+
+		$this->assertSame([], $this->saves);
+	}//end testMissingEngineOrConfigurationStopsBeforeReading()
+
+	/**
+	 * Person names split as TOPdesk writes them ("Achternaam, Voornaam").
+	 *
+	 * @return void
+	 */
+	public function testPersonNamesSplit(): void {
+		$this->assertSame(['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam'], CmdbExportImportService::splitPersonName(name: 'Achternaam,  Voornaam '));
+		$this->assertSame(['voornaam' => '', 'achternaam' => 'Functioneel Beheer'], CmdbExportImportService::splitPersonName(name: 'Functioneel  Beheer'));
+	}//end testPersonNamesSplit()
+}//end class

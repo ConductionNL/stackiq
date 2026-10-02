@@ -329,6 +329,12 @@
 						"type": "catalog-panels",
 						"title": "Object statistics",
 						"_note": "The management info-box and the two per-object-type statistics tables, moved out of the former hand-written Dashboard view into src/components/CatalogPanels.vue. Registered as a widget TYPE via registerDashboardWidget() in main.js: CnDashboardPage resolves a widget's type against the LIBRARY catalog, not the app registry, and an unregistered type renders 'Widget not available' silently."
+					},
+					{
+						"id": "upcoming-maintenance",
+						"type": "upcoming-maintenance",
+						"title": "Planned maintenance",
+						"_note": "lifecycle-maintenance-and-supplier-roadmap: planned maintenance in the next 30 days on the applications the active organisation uses. A widget TYPE registered in main.js, like catalog-panels, because it joins the organisation's usages to the maintenance windows of their applications, which no built-in widget does."
 					}
 				],
 				"layout": [
@@ -369,10 +375,18 @@
 						"showTitle": false
 					},
 					{
+						"id": "6",
+						"widgetId": "upcoming-maintenance",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 4
+					},
+					{
 						"id": "5",
 						"widgetId": "catalog-panels",
 						"gridX": 0,
-						"gridY": 2,
+						"gridY": 6,
 						"gridWidth": 12,
 						"gridHeight": 8,
 						"showTitle": false,
@@ -415,6 +429,7 @@
 					{ "id": "org-stats-contact-persons", "type": "stats-block", "title": "Contact persons", "icon": "ChartBar", "content": { "entries": [ { "title": "Contact persons", "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "metric": "count", "filter": { "organization": "@objectId" } } ] } },
 					{ "id": "org-diensten", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "catalogService", "filter": { "provider": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
 					{ "id": "org-modules", "type": "object-list", "title": "Applications", "icon": "Package", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "provider": "@objectId" }, "columns": [ { "key": "licentietype", "label": "License type" }, { "key": "bbnLevel", "label": "BBN level" } ], "limit": 25, "rowRoute": "ModuleDetail", "emptyText": "No applications registered for this organisation yet" } },
+					{ "id": "org-usages", "type": "object-list", "title": "Applications in use", "icon": "OfficeBuilding", "content": { "register": "@resolve:voorzieningen_register", "schema": "usage", "filter": { "consumer": "@objectId" }, "columns": [ { "key": "module", "label": "Application" }, { "key": "moduleVersion", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "GebruikDetail", "viewAllRoute": "Gebruik", "viewAllQuery": { "consumer": "@objectId" }, "allowCreate": false, "emptyText": "No applications in use recorded for this organisation yet" } },
 					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "filter": { "organization": "@objectId" }, "columns": [ { "key": "role", "label": "Function" }, { "key": "roles", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
 				],
 				"layout": [
@@ -424,7 +439,8 @@
 					{ "id": "8", "widgetId": "org-stats-contact-persons", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 2 },
 					{ "id": "3", "widgetId": "org-diensten", "gridX": 0, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "4", "widgetId": "org-modules", "gridX": 6, "gridY": 6, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "5", "widgetId": "org-contactpersonen", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "5", "widgetId": "org-contactpersonen", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "9", "widgetId": "org-usages", "gridX": 0, "gridY": 14, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
 					{ "id": "org-merge", "component": "OrganisationMergePanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
@@ -497,20 +513,32 @@
 				"schema": "module",
 				"_note": "bio-compliance-assessment: catalog archetype (an offered application). Body: application data 8-wide top-left (naam, descriptions, website, contactpersoon, hosting/licence fields, then the new BBN level and DPIA status/dates/document-reference/verwerkingsregister fields) with a Documentation files panel 4-wide top-right. Below, a Related panel surfaces the vendor (aanbieder) and linked services/couplings, then two object-lists: compliance claims (compliancy records — both GEMMA standards and, since this change, BIO measures — filtered by module=@objectId) and application versions (moduleVersie filtered by module=@objectId). An application does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
-					{ "id": "md-data", "type": "data", "title": "Application", "icon": "Package", "content": { "columns": 2, "include": [ "name", "beschrijvingKort", "beschrijvingLang", "website", "provider", "contactpersoon", "cloudDienstverleningsmodel", "hostingJurisdiction", "hostingLocation", "licentietype", "licence", "bbnLevel", "dpiaStatus", "dpiaDate", "dpiaNextAssessment", "dpiaDocumentRef", "verwerkingsregisterRef" ] } },
+					{ "id": "md-data", "type": "data", "title": "Application", "icon": "Package", "content": { "columns": 2, "include": [ "name", "shortDescription", "longDescription", "website", "provider", "contactPerson", "cloudDienstverleningsmodel", "hostingJurisdiction", "hostingLocation", "licentietype", "licence", "bbnLevel", "dpiaStatus", "dpiaDate", "dpiaNextAssessment", "dpiaDocumentRef", "verwerkingsregisterRef" ] } },
 					{ "id": "md-files", "type": "integration", "integrationId": "files", "title": "Documentation", "icon": "BookOpenVariant" },
 					{ "id": "md-related", "type": "related", "title": "Vendor & services", "icon": "LinkVariant" },
-					{ "id": "md-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@objectId" }, "columns": [ { "key": "standardVersion", "label": "Standard" }, { "key": "bioMaatregel", "label": "BIO measure" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
-					{ "id": "md-versions", "type": "object-list", "title": "Application versions", "icon": "SourceBranch", "content": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersion", "filter": { "module": "@objectId" }, "columns": [ { "key": "version", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ModuleversieDetail", "allowCreate": false, "emptyText": "No versions registered yet" } }
+					{ "id": "md-compliance", "type": "object-list", "title": "Compliance claims", "icon": "ClipboardCheckOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "compliancy", "filter": { "module": "@objectId" }, "columns": [ { "key": "standardVersion", "label": "Standard" }, { "key": "bioMeasure", "label": "BIO measure" }, { "key": "url", "label": "Evidence" } ], "limit": 50, "rowRoute": "KompliantieDetail", "allowCreate": false, "emptyText": "No compliance claims yet" } },
+					{ "id": "md-versions", "type": "object-list", "title": "Application versions", "icon": "SourceBranch", "content": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersion", "filter": { "module": "@objectId" }, "columns": [ { "key": "version", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "ModuleversieDetail", "allowCreate": false, "emptyText": "No versions registered yet" } },
+					{ "id": "md-usages", "type": "object-list", "title": "Usages", "icon": "OfficeBuilding", "content": { "register": "@resolve:voorzieningen_register", "schema": "usage", "filter": { "module": "@objectId" }, "columns": [ { "key": "consumer", "label": "Organisation" }, { "key": "moduleVersion", "label": "Version" }, { "key": "status", "label": "Status" } ], "limit": 50, "rowRoute": "GebruikDetail", "viewAllRoute": "Gebruik", "viewAllQuery": { "module": "@objectId" }, "addLabel": "Add to our landscape", "formIncludeFields": [ "consumer", "moduleVersion", "status", "businessOwner", "technicalOwner" ], "emptyText": "No organisation registered a usage yet" } },
+					{ "id": "md-connections-out", "type": "object-list", "title": "Connections from this application", "icon": "LinkVariant", "content": { "register": "@resolve:voorzieningen_register", "schema": "connection", "filter": { "moduleA": "@objectId" }, "columns": [ { "key": "moduleB", "label": "To application" }, { "key": "nonMunicipalProvision", "label": "To national provision" }, { "key": "type", "label": "Type" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "KoppelingDetail", "viewAllRoute": "Koppelingen", "viewAllQuery": { "moduleA": "@objectId" }, "allowCreate": false, "emptyText": "No connections start at this application" } },
+					{ "id": "md-connections-in", "type": "object-list", "title": "Connections to this application", "icon": "LinkVariant", "content": { "register": "@resolve:voorzieningen_register", "schema": "connection", "filter": { "moduleB": "@objectId" }, "columns": [ { "key": "moduleA", "label": "From application" }, { "key": "type", "label": "Type" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "KoppelingDetail", "viewAllRoute": "Koppelingen", "viewAllQuery": { "moduleB": "@objectId" }, "allowCreate": false, "emptyText": "No connections end at this application" } },
+					{ "id": "md-ai-systems", "type": "object-list", "title": "AI systems", "icon": "RobotOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "aiSystem", "filter": { "module": "@objectId" }, "columns": [ { "key": "kind", "label": "Kind" }, { "key": "aiActRiskCategory", "label": "AI Act risk category" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "AiSystemDetail", "viewAllRoute": "AiSystems", "viewAllQuery": { "module": "@objectId" }, "allowCreate": false, "emptyText": "No AI systems registered for this application" } },
+					{ "id": "md-maintenance", "type": "object-list", "title": "Planned maintenance", "icon": "Calendar", "content": { "register": "@resolve:voorzieningen_register", "schema": "maintenanceWindow", "filter": { "module": "@objectId" }, "sort": { "field": "startsAt", "dir": "asc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "startsAt", "label": "Starts at" }, { "key": "endsAt", "label": "Ends at" }, { "key": "impact", "label": "Impact" }, { "key": "status", "label": "Status" } ], "limit": 25, "addLabel": "Announce maintenance", "formIncludeFields": [ "title", "description", "moduleVersion", "startsAt", "endsAt", "impact" ], "emptyText": "No maintenance planned on this application" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "md-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
 					{ "id": "2", "widgetId": "md-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
 					{ "id": "3", "widgetId": "md-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "4", "widgetId": "md-compliance", "gridX": 0, "gridY": 8, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "5", "widgetId": "md-versions", "gridX": 6, "gridY": 8, "gridWidth": 6, "gridHeight": 4 }
+					{ "id": "4", "widgetId": "md-versions", "gridX": 0, "gridY": 8, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "5", "widgetId": "md-usages", "gridX": 6, "gridY": 8, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "6", "widgetId": "md-compliance", "gridX": 0, "gridY": 12, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "7", "widgetId": "md-connections-out", "gridX": 0, "gridY": 16, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "8", "widgetId": "md-connections-in", "gridX": 6, "gridY": 16, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "9", "widgetId": "md-ai-systems", "gridX": 0, "gridY": 20, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "10", "widgetId": "md-maintenance", "gridX": 0, "gridY": 24, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
+					{ "id": "md-roadmap", "component": "ProductRoadmap", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
+					{ "id": "md-contracts", "component": "ApplicationContractsPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "md-reviews", "component": "ReviewsPanel", "props": { "objectId": "@objectId", "subjectType": "module" }, "placement": "end", "colSpan": 12 }
 				],
 				"sidebar": {
@@ -576,7 +604,8 @@
 					{ "id": "5", "widgetId": "ct-decisions", "gridX": 0, "gridY": 10, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
-					{ "id": "ct-approval", "component": "ContractApprovalPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
+					{ "id": "ct-approval", "component": "ContractApprovalPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
+					{ "id": "ct-seats", "component": "ContractSeatsPanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -598,6 +627,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "module",
+				"detailRoute": "ModuleDetail",
 				"description": "Browse the application (module) catalogue, filtered by GEMMA architecture dimension.",
 				"columns": [
 					"name",
@@ -680,7 +710,7 @@
 				"schema": "suite",
 				"_note": "suite-wizard: catalog archetype (a bundled product made up of one or more existing applications). Body: suite data 8-wide (naam, beschrijvingKort, beschrijvingLang, website, logo, contactpersoon) with a Related panel 4-wide surfacing both the contact person and the attached applications (`applicaties`) — the latter via the platform's generic bidirectional relation index (the same `/uses`+`/used` mechanism `md-related` on ModuleDetail already relies on, which is also how a module's own detail page surfaces which suite(s) include it, with no ModuleDetail change needed). A suite does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
 				"widgets": [
-					{ "id": "suite-data", "type": "data", "title": "Suite", "icon": "Package", "content": { "columns": 2, "include": [ "name", "beschrijvingKort", "beschrijvingLang", "website", "logo", "contactpersoon" ] } },
+					{ "id": "suite-data", "type": "data", "title": "Suite", "icon": "Package", "content": { "columns": 2, "include": [ "name", "shortDescription", "longDescription", "website", "logo", "contactPerson" ] } },
 					{ "id": "suite-related", "type": "related", "title": "Applications & contact", "icon": "LinkVariant" }
 				],
 				"layout": [
@@ -922,8 +952,13 @@
 				"columns": [
 					"version",
 					"module",
+					"dateInDevelopment",
 					"dateInUse",
 					"status"
+				],
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "Planned releases", "filter": { "status": "in development" }, "icon": "MapMarkerPath" }
 				],
 				"sidebar": {
 					"enabled": true,

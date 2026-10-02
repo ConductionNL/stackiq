@@ -1,0 +1,218 @@
+{
+  "components": {
+    "schemas": {
+      "usage": {
+        "version": "1.5.4",
+        "properties": {
+          "serviceDeskSystem": {
+            "type": "string",
+            "enum": [
+              "topdesk",
+              "servicenow",
+              "file"
+            ],
+            "x-enum-labels": {
+              "topdesk": "TOPdesk",
+              "servicenow": "ServiceNow",
+              "file": "File import"
+            },
+            "title": "Service desk",
+            "description": "The service desk this record is kept in step with.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": true,
+            "order": 60
+          },
+          "serviceDeskRecordId": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Service desk record",
+            "description": "The record id in the service desk. The import matches on it first.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 61
+          },
+          "serviceDeskUrl": {
+            "type": "string",
+            "format": "uri",
+            "title": "Service desk link",
+            "description": "Opens the record in the service desk.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 62
+          },
+          "serviceDeskSyncedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last synchronised",
+            "description": "When the service desk exchange last wrote this record.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 63
+          },
+          "installedVersion": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Installed version",
+            "description": "The version the service desk records as installed. The service desk owns it.",
+            "visible": true,
+            "facetable": false,
+            "order": 64
+          },
+          "publicationDate": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Publication date",
+            "description": "Publish this application in use in the public catalogue from this date. Leave empty to keep it internal.",
+            "visible": true,
+            "facetable": false,
+            "order": 65
+          }
+        }
+      },
+      "connection": {
+        "version": "0.3.4",
+        "properties": {
+          "serviceDeskSystem": {
+            "type": "string",
+            "enum": [
+              "topdesk",
+              "servicenow",
+              "file"
+            ],
+            "x-enum-labels": {
+              "topdesk": "TOPdesk",
+              "servicenow": "ServiceNow",
+              "file": "File import"
+            },
+            "title": "Service desk",
+            "description": "The service desk this record is kept in step with.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": true,
+            "order": 60
+          },
+          "serviceDeskRecordId": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Service desk record",
+            "description": "The record id in the service desk. The import matches on it first.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 61
+          },
+          "serviceDeskUrl": {
+            "type": "string",
+            "format": "uri",
+            "title": "Service desk link",
+            "description": "Opens the record in the service desk.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 62
+          },
+          "serviceDeskSyncedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last synchronised",
+            "description": "When the service desk exchange last wrote this record.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 63
+          }
+        }
+      },
+      "catalogContract": {
+        "version": "0.1.4",
+        "properties": {
+          "serviceDeskSystem": {
+            "type": "string",
+            "enum": [
+              "topdesk",
+              "servicenow",
+              "file"
+            ],
+            "x-enum-labels": {
+              "topdesk": "TOPdesk",
+              "servicenow": "ServiceNow",
+              "file": "File import"
+            },
+            "title": "Service desk",
+            "description": "The service desk this record is kept in step with.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": true,
+            "order": 60
+          },
+          "serviceDeskRecordId": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Service desk record",
+            "description": "The record id in the service desk. The import matches on it first.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 61
+          },
+          "serviceDeskUrl": {
+            "type": "string",
+            "format": "uri",
+            "title": "Service desk link",
+            "description": "Opens the record in the service desk.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 62
+          },
+          "serviceDeskSyncedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last synchronised",
+            "description": "When the service desk exchange last wrote this record.",
+            "visible": true,
+            "hideOnForm": true,
+            "facetable": false,
+            "order": 63
+          },
+          "vendorReference": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Supplier reference",
+            "description": "The supplier's own number for this contract or licence agreement.",
+            "visible": true,
+            "facetable": false,
+            "order": 17
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "default": "EUR",
+            "title": "Currency",
+            "description": "The currency of the costs, as a three-letter ISO 4217 code.",
+            "visible": true,
+            "facetable": false,
+            "order": 18,
+            "example": "EUR"
+          },
+          "supplier": {
+            "type": "object",
+            "$ref": "#/components/schemas/organization",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "title": "Supplier",
+            "description": "The organisation this contract or licence was bought from.",
+            "visible": true,
+            "facetable": false,
+            "order": 19
+          }
+        }
+      }
+    }
+  }
+}

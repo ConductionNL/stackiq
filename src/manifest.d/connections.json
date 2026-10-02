@@ -1,0 +1,66 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "connections-catalogue-pages: stackiq's own softwarecatalogus `connection` schema (koppelingen between applications, or to a national provision), which no page showed before. Not integriq's `app_connection`, which the Integrations page lists. The menu entry is a child of Applications (ADR-097: no new top-level entry). Status and type are enums and facetable, so filterMenu offers them as column filters; the status quick filters follow Contracten.",
+	"menu": [
+		{
+			"id": "Modules",
+			"children": [
+				{ "id": "Koppelingen", "label": "Connections", "icon": "TransitConnectionVariant", "route": "Koppelingen", "order": 10 }
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Koppelingen",
+			"route": "/koppelingen",
+			"type": "index",
+			"title": "Connections",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "connection",
+				"description": "Every connection between applications, and from an application to a national provision.",
+				"columns": ["name", "type", "status", "moduleA", "moduleB", "nonMunicipalProvision", "dataExchangeDirection"],
+				"filterMenu": true,
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "In use", "filter": { "status": "in use" }, "icon": "CheckCircle" },
+					{ "label": "In development", "filter": { "status": "in development" } },
+					{ "label": "End of support", "filter": { "status": "end of support" }, "icon": "AlertCircle" },
+					{ "label": "Withdrawn", "filter": { "status": "withdrawn" } }
+				],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "KoppelingDetail",
+			"route": "/koppelingen/:id",
+			"type": "detail",
+			"title": "Connection",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "connection",
+				"_note": "A connection is read for what it links and how: data 8 wide (name, type, status, direction, both applications, the national provision, the intermediary, the lifecycle dates), documents 4 wide at the right, then the related panel with the standards. Status transitions come from the schema's x-openregister-lifecycle (release, sunset, withdraw).",
+				"lifecycleActions": { "field": "status" },
+				"widgets": [
+					{ "id": "kp-data", "type": "data", "title": "Connection", "icon": "LinkVariant", "content": { "columns": 2, "include": [ "name", "type", "status", "dataExchangeDirection", "moduleA", "moduleB", "nonMunicipalProvision", "realisedWithIntermediaryModule", "shortDescription", "longDescription", "dateInDevelopment", "dateInUse", "dateEndSupport", "dateWithdrawn" ] } },
+					{ "id": "kp-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
+					{ "id": "kp-related", "type": "related", "title": "Applications and standards", "icon": "LinkVariant" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "kp-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
+					{ "id": "2", "widgetId": "kp-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "kp-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 }
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		}
+	]
+}

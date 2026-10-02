@@ -639,25 +639,13 @@ class ContactPersonHandler {
 				$roles = [$roles];
 			}
 
-			// Get the settings service to access group configurations.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
-
-			// Add user to organization admin groups if this is the first contact.
-			if ($isFirstContact === true) {
-				$organizationAdminGroups = $settingsService->getOrganizationAdminGroups();
-				foreach ($organizationAdminGroups as $groupName) {
-					$this->addUserToGroupWithCheck(user: $user, groupName: $groupName, type: 'organization-admin');
-				}
-
-				$this->_logger->info(
-					'Assigned organization admin groups to first contact',
-					[
-						'username' => $user->getUID(),
-						'organizationId' => $organizationId,
-						'adminGroups' => $organizationAdminGroups,
-					]
-				);
-			}
+			// A first contact is NOT added to the organisation admin groups.
+			// That automatic assignment was switched off on purpose in commit
+			// bc4dc9ea ("users should be assigned groups explicitly via the
+			// admin UI"), by making SettingsService::getOrganizationAdminGroups()
+			// return an empty list. stackiq#1136 made that getter read the saved
+			// list again for the settings page and the export permission, so
+			// the assignment is left out here instead of being revived.
 
 			// Assign role based on organization type.
 			if (empty($organizationId) === false) {
@@ -1616,15 +1604,15 @@ class ContactPersonHandler {
 		// Normalize the organization type to lowercase for comparison.
 		$normalizedType = strtolower(trim($organizationType));
 
-		// Define the mapping based on requirements:.
-		// "Municipality" -> "gebruik-beheerder".
-		// "Supplier" -> "aanbod-beheerder".
-		// "Collaboration" -> "gebruik-beheerder".
-		// "Community" -> "aanbod-beheerder".
+		// Keyed on the organization.type enum as stored (Municipality,
+		// Supplier, Collaboration, Community), lower-cased. #520 translated the
+		// enum and migrated the rows, but this map kept the Dutch keys
+		// (gemeente, leverancier, samenwerking), so only Community matched and
+		// municipal and supplier contacts got no role group (stackiq#1137).
 		$typeToRoleMapping = [
-			'gemeente' => 'gebruik-beheerder',
-			'leverancier' => 'aanbod-beheerder',
-			'samenwerking' => 'gebruik-beheerder',
+			'municipality' => 'gebruik-beheerder',
+			'supplier' => 'aanbod-beheerder',
+			'collaboration' => 'gebruik-beheerder',
 			'community' => 'aanbod-beheerder',
 		];
 

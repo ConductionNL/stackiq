@@ -24,7 +24,6 @@ namespace OCA\Stackiq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -157,7 +156,6 @@ class ArchiMateService {
 	 * Constructor for ArchiMateService
 	 *
 	 * @param IAppConfig $config Nextcloud app configuration service
-	 * @param IRootFolder $rootFolder Root folder service
 	 * @param IUserSession $userSession User session service
 	 * @param IAppManager $appManager App manager service
 	 * @param ContainerInterface $container PSR-11 container interface
@@ -165,10 +163,10 @@ class ArchiMateService {
 	 * @param SettingsService $settingsService Settings service for schema and organization configuration
 	 * @param ArchiMateImportService $importService Import service for XML parsing
 	 * @param ArchiMateExportService $exportService Export service for XML generation
+	 * @param ProgressTracker $progressTracker Progress store a running import reads its cancel from
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
-		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
@@ -176,8 +174,48 @@ class ArchiMateService {
 		private readonly SettingsService $settingsService,
 		private readonly ArchiMateImportService $importService,
 		private readonly ArchiMateExportService $exportService,
+		private readonly ProgressTracker $progressTracker,
 	) {
 	}//end __construct()
+
+	/**
+	 * Cancel a running ArchiMate import.
+	 *
+	 * The import runs in another request, so this records a cancel that the import
+	 * reads before its next save batch, and clears the stored import status.
+	 *
+	 * @param string|null $operationId The import's operation id, as the page named it
+	 *
+	 * @return array<string, mixed> The cancellation result
+	 *
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 */
+	public function cancelArchiMateImport(?string $operationId = null): array {
+		if ($operationId !== null && preg_match(ArchiMateImportService::OPERATION_ID_PATTERN, $operationId) !== 1) {
+			return [
+				'cancelled' => false,
+				'operation_id' => null,
+				'messages' => ['The operation id is not an ArchiMate import id'],
+			];
+		}
+
+		$messages = [];
+		if ($operationId !== null) {
+			$this->progressTracker->setCancelRequested($operationId);
+			$messages[] = 'The import stops before its next save batch';
+		}
+
+		$this->config->deleteKey('stackiq', 'archimate_import_status');
+		$messages[] = 'Import status cleared';
+
+		return [
+			'cancelled' => true,
+			'operation_id' => $operationId,
+			'status_cleared' => true,
+			'cancellation_time' => date('Y-m-d H:i:s'),
+			'messages' => $messages,
+		];
+	}//end cancelArchiMateImport()
 
 	/**
 	 * OPTIMIZED: Import ArchiMate XML file using OpenRegister-style performance optimization
@@ -1486,107 +1524,6 @@ class ArchiMateService {
 
 		return $schemaId;
 	}//end getSchemaIdForSection()
-
-	/**
-	 * Test round-trip functionality
-	 *
-	 * @return array Test results
-	 * @spec   openspec/specs/archimate-import/spec.md
-	 */
-	public function testRoundTrip(): array {
-		$this->logger->info('Testing ArchiMate round-trip functionality');
-
-		try {
-			// Create test XML.
-			$testXml = $this->createTestArchiMateXml();
-
-			// Import.
-			$importResult = $this->importArchiMateFileFromPath(
-				options: [
-					'file_path' => $this->createTempFile(content: $testXml),
-				]
-			);
-
-			if ($importResult['success'] === false) {
-				return [
-					'success' => false,
-					'error' => 'Import failed: ' . $importResult['error'],
-				];
-			}
-
-			// Export.
-			$exportResult = $this->exportToArchiMate();
-
-			if ($exportResult['success'] === false) {
-				return [
-					'success' => false,
-					'error' => 'Export failed: ' . $exportResult['error'],
-				];
-			}
-
-			// Compare (simplified comparison).
-			$importedCount = $importResult['imported_count'];
-			$exportedCount = $exportResult['exported_count'];
-
-			$success = $importedCount === $exportedCount;
-
-			return [
-				'success' => $success,
-				'imported_count' => $importedCount,
-				'exported_count' => $exportedCount,
-				'round_trip_successful' => $success,
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Round-trip test failed',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-
-			return [
-				'success' => false,
-				'error' => $e->getMessage(),
-			];
-		}//end try
-	}//end testRoundTrip()
-
-	/**
-	 * Create test ArchiMate XML
-	 *
-	 * @return string Test XML content
-	 */
-	private function createTestArchiMateXml(): string {
-		return '<?xml version="1.0" encoding="UTF-8"?>
-<archimate:model xmlns:archimate="http://www.archimatetool.com/archimate" identifier="test-model">
-  <name>Test Model</name>
-  <documentation>Test model for round-trip verification</documentation>
-  <elements>
-    <element identifier="test-element-1" xsi:type="archimate:BusinessActor">
-      <name>Test Actor</name>
-    </element>
-  </elements>
-  <relationships>
-    <relationship identifier="test-rel-1" xsi:type="archimate:AssociationRelationship">
-      <source>test-element-1</source>
-      <target>test-element-2</target>
-    </relationship>
-  </relationships>
-</archimate:model>';
-	}//end createTestArchiMateXml()
-
-	/**
-	 * Create temporary file with content
-	 *
-	 * @param string $content File content
-	 *
-	 * @return string Temporary file path
-	 */
-	private function createTempFile(string $content): string {
-		$tempFile = tempnam(sys_get_temp_dir(), 'archimate_test_');
-		file_put_contents($tempFile, $content);
-		return $tempFile;
-	}//end createTempFile()
 
 	/**
 	 * Read a configured id, failing closed on the empty default.

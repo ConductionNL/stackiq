@@ -47,6 +47,13 @@ use Psr\Log\LoggerInterface;
 class OrganizationContactSyncJob extends TimedJob {
 
 	/**
+	 * The id this job's switch is stored under in `cronjob_config`.
+	 *
+	 * @var string
+	 */
+	public const JOB_ID = 'organization_contact_sync';
+
+	/**
 	 * Organization synchronization service
 	 *
 	 * @var OrganizationSyncService The service handling sync operations
@@ -99,6 +106,13 @@ class OrganizationContactSyncJob extends TimedJob {
 	protected function run($argument): void {
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
 			$this->logger->info('[OrganizationContactSyncJob] OpenRegister not installed, skipping sync');
+			return;
+		}
+
+		// An admin can switch the job off in the cronjob settings (for example
+		// during a migration); then neither the sync nor the link refresh runs.
+		if ($this->settingsService->isCronjobEnabled(jobId: self::JOB_ID) === false) {
+			$this->logger->info('[OrganizationContactSyncJob] Switched off in the cronjob settings, skipping sync');
 			return;
 		}
 

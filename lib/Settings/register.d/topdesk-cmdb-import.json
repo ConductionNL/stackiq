@@ -1,0 +1,109 @@
+{
+  "components": {
+    "schemas": {
+      "module": {
+        "version": "0.3.5",
+        "properties": {
+          "externalId": {
+            "type": "string",
+            "title": "Source id",
+            "description": "The code of the application in the source system it was imported from, such as the TOPdesk Applicatie Code (the Middel-ID). Shown for reference; it can change in the source, so it is not used to match records.",
+            "maxLength": 100,
+            "visible": true,
+            "facetable": false,
+            "order": 60
+          },
+          "externalNumber": {
+            "type": "string",
+            "title": "Source number",
+            "description": "The application number in the source system, such as TOPdesk's APPID (ICT Applicatienummer). A repeated CMDB import matches on it, through the import key.",
+            "maxLength": 50,
+            "visible": true,
+            "facetable": false,
+            "order": 61
+          },
+          "externalKey": {
+            "type": "string",
+            "title": "Import key",
+            "description": "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; do not edit.",
+            "maxLength": 200,
+            "visible": true,
+            "facetable": false,
+            "table": {
+              "default": false
+            },
+            "order": 62
+          },
+          "externalCreatedAt": {
+            "type": "string",
+            "format": "date",
+            "title": "Created in source",
+            "description": "The date the application was registered in the source system.",
+            "visible": true,
+            "facetable": false,
+            "order": 63
+          },
+          "externalModifiedAt": {
+            "type": "string",
+            "format": "date",
+            "title": "Changed in source",
+            "description": "The date the application was last changed in the source system.",
+            "visible": true,
+            "facetable": false,
+            "order": 64
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "voorbeeld-zaaksysteem",
+          "version": "0.0.1"
+        },
+        "name": "Voorbeeld Zaaksysteem",
+        "type": "Application",
+        "longDescription": "Registreert en volgt zaken van intake tot archivering.",
+        "externalId": "APP-00001",
+        "externalNumber": "101",
+        "externalCreatedAt": "2023-07-04",
+        "externalModifiedAt": "2026-07-29",
+        "bbnLevel": "BBN2"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "voorbeeld-afsprakenplanner",
+          "version": "0.0.1"
+        },
+        "name": "Voorbeeld Afsprakenplanner",
+        "type": "Application",
+        "longDescription": "Laat inwoners online een afspraak maken bij de balie.",
+        "externalId": "APP-00002",
+        "externalNumber": "102",
+        "externalCreatedAt": "2022-03-16",
+        "externalModifiedAt": "2026-09-01",
+        "bbnLevel": "BBN1"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "module",
+          "slug": "voorbeeld-belastingapplicatie",
+          "version": "0.0.1"
+        },
+        "name": "Voorbeeld Belastingapplicatie",
+        "type": "Application",
+        "longDescription": "Berekent en verstuurt gemeentelijke belastingaanslagen.",
+        "externalId": "AIA-00003",
+        "externalNumber": "103",
+        "externalCreatedAt": "2024-01-15",
+        "externalModifiedAt": "2026-05-20",
+        "bbnLevel": "BBN2"
+      }
+    ]
+  }
+}

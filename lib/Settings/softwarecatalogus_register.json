@@ -3,8 +3,8 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.5.0",
-    "changelog": "2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
+    "version": "2.5.7",
+    "changelog": "2.5.7: a contract no longer requires a catalogue service, because a licence bought for an application in use has none; the service desk exchange imports such licences (sharing-itsm-exchange). The fragment sharing-itsm-exchange.json adds the service desk reference to usage (1.5.4), connection (0.3.4) and catalogContract (0.1.4), and the licence fields vendorReference, currency and supplier to catalogContract. 2.5.6: contactsUid is no longer required on organization (0.5.2) and contactPerson (0.0.28). It is a link to the Nextcloud addressbook that the contacts sync fills in after the record exists (MigrateContactsToNc, OrganizationContactSyncJob), so a required column made OpenRegister create it NOT NULL and every seed organisation failed to save on a fresh install (the organization table stayed empty). OpenRegister drops the NOT NULL on the existing column when the schema syncs. 2.5.5: the maintenanceWindow schema (0.1.0) joins the stackiq register, for maintenance a supplier plans on its products, with the owners of every usage notified (lifecycle-maintenance-and-supplier-roadmap). 2.5.4: usage (1.5.2) gains businessOwner and technicalOwner, contact persons of the consumer organisation; a usage is named after its application and organisation; status becomes facetable for the Applications in use filters (landscape-usage-registration). 2.5.3: the aiSystem schema (0.1.0) joins the stackiq register, for the AI systems an organisation uses and their EU AI Act classification (landscape-ai-system-inventory). 2.5.2: the connection schema (0.3.3) asked its national provision picker for gemmaType Buitengemeentenlijke voorziening, a spelling the GEMMA model does not use (it says Buitengemeentelijke voorziening), so the picker found nothing; its name template named the keys gegevensuitwisselingRichting and buitengemeentelijkVoorziening and the values AnaarB, BnaarA and bi-directioneel, all renamed since, so a connection had no readable name; and type, status and dataExchangeDirection become facetable for the new Connections page (connections-catalogue-pages). 2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
   },
   "x-openregister": {
     "type": "application",
@@ -835,7 +835,9 @@
           "compliancy",
           "moduleVersion",
           "sbomComponent",
-          "bioMeasure"
+          "bioMeasure",
+          "aiSystem",
+          "maintenanceWindow"
         ],
         "source": "internal",
         "tablePrefix": "",
@@ -1789,17 +1791,14 @@
         "x-schema-org": "schema:Person",
         "title": "Contact person",
         "description": "Contactgegevens van een persoon",
-        "version": "0.0.27",
+        "version": "0.0.28",
         "omschrijving": "",
         "icon": "AccountMultiple",
-        "required": [
-          "contactsUid"
-        ],
+        "required": [],
         "properties": {
           "contactsUid": {
             "type": "string",
             "description": "Verwijzing (UID) naar de Nextcloud-contactpersoon in het adresboek (OCP\\Contacts\\IManager). Identiteit (naam, e-mail, telefoon) leeft in Nextcloud Contacts; dit record bewaart alleen de catalogus-specifieke rol/relatie.",
-            "required": true,
             "visible": true,
             "facetable": false,
             "title": "Contact-UID",
@@ -2023,11 +2022,10 @@
         "x-schema-org": "schema:Organization",
         "title": "Organization",
         "description": "An organisation that offers provisions. Absorbs the former ArchiMate `organization` schema: its identity and statutory identifiers (name, summary, description, oin, tooi, rsin, pki, image) and its ArchiMate round-trip `xml` are declared here, so there is one organisation schema rather than two that shared no property.",
-        "version": "0.5.1",
+        "version": "0.5.2",
         "omschrijving": "",
         "icon": "OfficeBuildingOutline",
         "required": [
-          "contactsUid",
           "type"
         ],
         "properties": {
@@ -2146,7 +2144,6 @@
           "contactsUid": {
             "description": "Verwijzing (UID) naar de Nextcloud-contactpersoon van het type organisatie in het adresboek (OCP\\Contacts\\IManager). Identiteit (naam, e-mail, website, logo, CBS/KvK-code) leeft in Nextcloud Contacts; dit record bewaart alleen de catalogus-specifieke relatie/rol.",
             "type": "string",
-            "required": true,
             "visible": true,
             "order": 0,
             "maxLength": 255,
@@ -2656,7 +2653,7 @@
         "slug": "usage",
         "title": "Usage",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.5.0",
+        "version": "1.5.2",
         "omschrijving": "",
         "icon": "Gauge",
         "x-openregister-notifications": {
@@ -2715,6 +2712,8 @@
             "title": "Contact person",
             "order": 3
           },
+          "businessOwner": {"type": "object", "title": "Business owner", "description": "The person in the organisation who is responsible for how the application is used.", "facetable": false, "objectConfiguration": {"handling": "related-object"}, "$ref": "#/components/schemas/contactPerson", "x-relation-filter": {"organization": "@object.consumer"}, "order": 18},
+          "technicalOwner": {"type": "object", "title": "Technical owner", "description": "The person in the organisation who is responsible for running and maintaining the application.", "facetable": false, "objectConfiguration": {"handling": "related-object"}, "$ref": "#/components/schemas/contactPerson", "x-relation-filter": {"organization": "@object.consumer"}, "order": 19},
           "participants": {
             "description": "De organisaties die deelnemen aan dit gebruik (voor samenwerkingen)",
             "type": "array",
@@ -2894,7 +2893,7 @@
               "To be phased out",
               "Phased out"
             ],
-            "facetable": false,
+            "facetable": true,
             "title": "Status",
             "example": "Bijvoorbeeld: Gepland"
           },
@@ -3199,7 +3198,7 @@
           ]
         },
         "configuration": {
-          "objectNameField": "consumer",
+          "objectNameField": "{{ module }} ({{ consumer }})",
           "objectDescriptionField": "module",
           "allowFiles": true,
           "allowedTags": [
@@ -3210,37 +3209,37 @@
           "autoPublish": false,
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "Verwerving",
+            "initial": "Acquisition",
             "final": [
-              "Uitgefaseerd"
+              "Phased out"
             ],
             "transitions": {
               "plan": {
                 "from": [
-                  "Verwerving"
+                  "Acquisition"
                 ],
-                "to": "Gepland",
+                "to": "Planned",
                 "description": "Plan the usage."
               },
               "goLive": {
                 "from": [
-                  "Gepland"
+                  "Planned"
                 ],
-                "to": "In productie",
+                "to": "In production",
                 "description": "Go live with the usage."
               },
               "phaseOut": {
                 "from": [
-                  "In productie"
+                  "In production"
                 ],
-                "to": "Uit te faseren",
+                "to": "To be phased out",
                 "description": "Mark the usage to be phased out."
               },
               "retire": {
                 "from": [
-                  "Uit te faseren"
+                  "To be phased out"
                 ],
-                "to": "Uitgefaseerd",
+                "to": "Phased out",
                 "description": "Retire the usage."
               }
             }
@@ -3267,11 +3266,10 @@
         },
         "title": "Contract",
         "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
-        "version": "0.1.1",
+        "version": "0.1.2",
         "omschrijving": "",
         "icon": "FileSign",
         "required": [
-          "service",
           "usage",
           "startDate",
           "contractNumber",
@@ -3290,7 +3288,6 @@
             "description": "De dienst waarop dit contract betrekking heeft",
             "type": "object",
             "facetable": false,
-            "required": true,
             "title": "Service",
             "order": 12,
             "objectConfiguration": {
@@ -3530,30 +3527,30 @@
           ],
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "In onderhandeling",
+            "initial": "In negotiation",
             "final": [
-              "Verlopen"
+              "Expired"
             ],
             "transitions": {
               "sign": {
                 "from": [
-                  "In onderhandeling"
+                  "In negotiation"
                 ],
-                "to": "Actief",
+                "to": "Active",
                 "description": "Sign and activate the contract."
               },
               "expire": {
                 "from": [
-                  "Actief"
+                  "Active"
                 ],
-                "to": "Verlopen",
+                "to": "Expired",
                 "description": "Mark the contract as expired."
               },
               "renegotiate": {
                 "from": [
-                  "Verlopen"
+                  "Expired"
                 ],
-                "to": "In onderhandeling",
+                "to": "In negotiation",
                 "description": "Re-open negotiation on an expired contract."
               }
             }
@@ -3565,7 +3562,7 @@
         "slug": "connection",
         "title": "Connection",
         "description": "Schema voor koppelingen tussen applicaties en systemen. ApplicatieB is voor koppelingen met andere applicaties. BuitengemeentelijkVoorziening is voor koppelingen met externe voorzieningen.",
-        "version": "0.3.1",
+        "version": "0.3.3",
         "omschrijving": "",
         "icon": "TransitConnectionVariant",
         "required": [
@@ -3579,7 +3576,7 @@
             "required": true,
             "facetable": false,
             "title": "Name",
-            "default": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB | buitengemeentelijkVoorziening }}",
+            "default": "{{ moduleA }} {{ dataExchangeDirection | map: AtoB=→, BtoA=←, bi-directional=↔ }} {{ moduleB | nonMunicipalProvision }}",
             "defaultBehavior": "falsy",
             "table": {
               "default": true
@@ -3610,7 +3607,7 @@
             "description": "kies de techniek van de koppeling",
             "type": "string",
             "order": 1,
-            "facetable": false,
+            "facetable": true,
             "title": "Transport protocol",
             "enum": [
               "n/a",
@@ -3627,7 +3624,7 @@
             "description": "Geef de status van de koppeling aan, default 'in gebruik'",
             "type": "string",
             "order": 3,
-            "facetable": false,
+            "facetable": true,
             "title": "Status",
             "default": "in use",
             "table": {
@@ -3678,7 +3675,7 @@
             "type": "string",
             "order": 8,
             "title": "Data exchange direction",
-            "facetable": false,
+            "facetable": true,
             "required": true,
             "enum": [
               "AtoB",
@@ -3728,7 +3725,7 @@
             "title": "Inter-municipal facility",
             "objectConfiguration": {
               "handling": "related-object",
-              "queryParams": "gemmaType=Buitengemeentenlijke voorziening"
+              "queryParams": "gemmaType=Buitengemeentelijke voorziening"
             },
             "$ref": "#/components/schemas/element"
           },
@@ -3920,36 +3917,36 @@
         },
         "configuration": {
           "autoPublish": false,
-          "objectNameField": "{{ moduleA }} {{ gegevensuitwisselingRichting | map: AnaarB=→, BnaarA=←, bi-directioneel=↔ }} {{ moduleB | buitengemeentelijkVoorziening }}",
+          "objectNameField": "{{ moduleA }} {{ dataExchangeDirection | map: AtoB=→, BtoA=←, bi-directional=↔ }} {{ moduleB | nonMunicipalProvision }}",
           "objectSummaryField": "shortDescription",
           "objectDescriptionField": "longDescription",
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "in ontwikkeling",
+            "initial": "in development",
             "final": [
-              "teruggetrokken"
+              "withdrawn"
             ],
             "transitions": {
               "release": {
                 "from": [
-                  "in ontwikkeling"
+                  "in development"
                 ],
-                "to": "in gebruik",
+                "to": "in use",
                 "description": "Release the koppeling."
               },
               "sunset": {
                 "from": [
-                  "in gebruik"
+                  "in use"
                 ],
-                "to": "einde ondersteuning",
+                "to": "end of support",
                 "description": "Mark the koppeling as end-of-support."
               },
               "withdraw": {
                 "from": [
-                  "in gebruik",
-                  "einde ondersteuning"
+                  "in use",
+                  "end of support"
                 ],
-                "to": "teruggetrokken",
+                "to": "withdrawn",
                 "description": "Withdraw the koppeling."
               }
             }
@@ -6987,7 +6984,6 @@
               "BSD License (Berkeley Software Distribution)",
               "European Union Public Licence (EUPL), version 1.2"
             ],
-            "licence": "License",
             "title": "License"
           },
           "referenceComponents": {
@@ -7680,7 +7676,7 @@
         },
         "title": "Application version",
         "description": "Schema voor applicatieversies",
-        "version": "0.1.4",
+        "version": "0.1.5",
         "omschrijving": "",
         "icon": "ViewModule",
         "required": [],
@@ -7887,31 +7883,31 @@
           "autoPublish": true,
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "in ontwikkeling",
+            "initial": "in development",
             "final": [
-              "teruggetrokken"
+              "withdrawn"
             ],
             "transitions": {
               "release": {
                 "from": [
-                  "in ontwikkeling"
+                  "in development"
                 ],
-                "to": "in gebruik",
+                "to": "in use",
                 "description": "Release the module version."
               },
               "sunset": {
                 "from": [
-                  "in gebruik"
+                  "in use"
                 ],
-                "to": "einde ondersteuning",
+                "to": "end of support",
                 "description": "Mark the module version as end-of-support."
               },
               "withdraw": {
                 "from": [
-                  "in gebruik",
-                  "einde ondersteuning"
+                  "in use",
+                  "end of support"
                 ],
-                "to": "teruggetrokken",
+                "to": "withdrawn",
                 "description": "Withdraw the module version."
               }
             }
@@ -8055,36 +8051,674 @@
           "objectDescriptionField": "purl",
           "autoPublish": true
         }
+      },
+      "aiSystem": {
+        "uri": null,
+        "slug": "aiSystem",
+        "title": "AI system",
+        "x-schema-org": "schema:SoftwareApplication",
+        "description": "An AI agent, AI model or AI feature the organisation uses, with its EU AI Act classification.",
+        "version": "0.1.0",
+        "icon": "RobotOutline",
+        "required": [
+          "name"
+        ],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "searchable": true,
+        "maxDepth": 0,
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The name the organisation uses for this AI system.",
+            "facetable": false,
+            "order": 1,
+            "table": {
+              "default": true
+            }
+          },
+          "description": {
+            "type": "string",
+            "format": "markdown",
+            "title": "Description",
+            "description": "What the AI system is and how it is used.",
+            "facetable": false,
+            "order": 2
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "AI agent",
+              "AI model",
+              "AI feature"
+            ],
+            "x-enum-labels": {
+              "AI agent": "AI agent",
+              "AI model": "AI model",
+              "AI feature": "AI feature"
+            },
+            "title": "Kind",
+            "description": "An AI agent acts on its own, an AI model is a trained model, an AI feature is part of an application.",
+            "facetable": true,
+            "order": 3,
+            "table": {
+              "default": true
+            }
+          },
+          "module": {
+            "type": "object",
+            "$ref": "#/components/schemas/module",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "inversedBy": "aiSystems",
+            "title": "Application",
+            "description": "The application this AI system runs in or supports.",
+            "facetable": true,
+            "order": 4,
+            "table": {
+              "default": true
+            }
+          },
+          "provider": {
+            "type": "object",
+            "$ref": "#/components/schemas/organization",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "title": "Supplier",
+            "description": "The organisation that supplies the AI system.",
+            "facetable": true,
+            "order": 5
+          },
+          "purpose": {
+            "type": "string",
+            "title": "Purpose",
+            "description": "What the AI system decides, recommends or produces.",
+            "facetable": false,
+            "order": 6
+          },
+          "aiActRiskCategory": {
+            "type": "string",
+            "enum": [
+              "prohibited",
+              "high risk",
+              "limited risk",
+              "minimal risk",
+              "not yet assessed"
+            ],
+            "x-enum-labels": {
+              "prohibited": "Prohibited",
+              "high risk": "High risk",
+              "limited risk": "Limited risk",
+              "minimal risk": "Minimal risk",
+              "not yet assessed": "Not yet assessed"
+            },
+            "default": "not yet assessed",
+            "title": "AI Act risk category",
+            "description": "The risk category under the EU AI Act, as the organisation classified it.",
+            "facetable": true,
+            "order": 7,
+            "table": {
+              "default": true
+            }
+          },
+          "aiActRole": {
+            "type": "string",
+            "enum": [
+              "provider",
+              "deployer"
+            ],
+            "x-enum-labels": {
+              "provider": "Provider",
+              "deployer": "Deployer"
+            },
+            "title": "Role under the AI Act",
+            "description": "Whether the organisation provides the AI system or deploys it.",
+            "facetable": true,
+            "order": 8
+          },
+          "algorithmRegisterUrl": {
+            "type": "string",
+            "format": "uri",
+            "title": "Algorithm register entry",
+            "description": "The link to this system in the Dutch algorithm register.",
+            "facetable": false,
+            "order": 9
+          },
+          "assessedOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Last assessed on",
+            "description": "The date the classification was last assessed.",
+            "facetable": false,
+            "order": 10
+          },
+          "friaDocumentRef": {
+            "type": "string",
+            "title": "Fundamental rights impact assessment",
+            "description": "A reference to the fundamental rights impact assessment (FRIA). A high-risk system without one is flagged.",
+            "facetable": false,
+            "order": 11
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "in development",
+              "in use",
+              "withdrawn"
+            ],
+            "x-enum-labels": {
+              "in development": "In development",
+              "in use": "In use",
+              "withdrawn": "Withdrawn"
+            },
+            "default": "in use",
+            "title": "Status",
+            "description": "Where the AI system stands in its lifecycle.",
+            "facetable": true,
+            "order": 12,
+            "table": {
+              "default": true
+            }
+          }
+        },
+        "configuration": {
+          "objectNameField": "name",
+          "objectDescriptionField": "purpose",
+          "allowFiles": true,
+          "allowedTags": [
+            "FRIA",
+            "Technical documentation",
+            "Human oversight",
+            "Logging"
+          ],
+          "autoPublish": false,
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "in development",
+            "final": [
+              "withdrawn"
+            ],
+            "transitions": {
+              "release": {
+                "from": [
+                  "in development"
+                ],
+                "to": "in use",
+                "description": "Take the AI system into use."
+              },
+              "withdraw": {
+                "from": [
+                  "in development",
+                  "in use"
+                ],
+                "to": "withdrawn",
+                "description": "Withdraw the AI system."
+              }
+            }
+          }
+        },
+        "authorization": {
+          "create": [
+            "software-catalog-admins",
+            "organisatie-beheerder",
+            "organisaties-beheerder",
+            "functioneel-beheerder",
+            "gebruik-beheerder",
+            "aanbod-beheerder"
+          ],
+          "read": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "provider": "$organisation"
+              }
+            }
+          ],
+          "update": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "delete": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ]
+        }
+      },
+      "maintenanceWindow": {
+        "uri": null,
+        "slug": "maintenanceWindow",
+        "title": "Maintenance window",
+        "x-schema-org": "schema:Event",
+        "description": "Maintenance a supplier plans on one of its products, with the time window and the expected impact.",
+        "version": "0.1.0",
+        "icon": "Calendar",
+        "required": [
+          "module",
+          "title",
+          "startsAt",
+          "endsAt"
+        ],
+        "source": "internal",
+        "hardValidation": false,
+        "immutable": false,
+        "searchable": true,
+        "maxDepth": 0,
+        "properties": {
+          "module": {
+            "type": "object",
+            "$ref": "#/components/schemas/module",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "title": "Application",
+            "description": "The product the maintenance is on.",
+            "facetable": true,
+            "order": 1,
+            "table": {
+              "default": true
+            }
+          },
+          "moduleVersion": {
+            "type": "object",
+            "$ref": "#/components/schemas/moduleVersion",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "x-relation-filter": {
+              "module": "@object.module"
+            },
+            "title": "Version",
+            "description": "The version the maintenance is on, when it concerns one version.",
+            "facetable": false,
+            "order": 2
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "What the maintenance is, in a few words.",
+            "maxLength": 255,
+            "facetable": false,
+            "order": 3,
+            "table": {
+              "default": true
+            }
+          },
+          "description": {
+            "type": "string",
+            "format": "markdown",
+            "title": "Description",
+            "description": "What changes and what users should do.",
+            "maxLength": 5000,
+            "facetable": false,
+            "order": 4
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts at",
+            "description": "When the maintenance starts.",
+            "facetable": false,
+            "order": 5,
+            "table": {
+              "default": true
+            }
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ends at",
+            "description": "When the maintenance ends.",
+            "facetable": false,
+            "order": 6,
+            "table": {
+              "default": true
+            }
+          },
+          "impact": {
+            "type": "string",
+            "enum": [
+              "no impact",
+              "degraded",
+              "unavailable"
+            ],
+            "x-enum-labels": {
+              "no impact": "No impact",
+              "degraded": "Degraded",
+              "unavailable": "Unavailable"
+            },
+            "default": "degraded",
+            "title": "Impact",
+            "description": "What users notice while the maintenance runs.",
+            "facetable": true,
+            "order": 7,
+            "table": {
+              "default": true
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "in progress",
+              "completed",
+              "cancelled"
+            ],
+            "x-enum-labels": {
+              "planned": "Planned",
+              "in progress": "In progress",
+              "completed": "Completed",
+              "cancelled": "Cancelled"
+            },
+            "default": "planned",
+            "title": "Status",
+            "description": "Where the maintenance stands.",
+            "facetable": true,
+            "order": 8,
+            "table": {
+              "default": true
+            }
+          },
+          "notifyUserIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "hideOnForm": true,
+            "visible": false,
+            "title": "Owners to notify",
+            "description": "The Nextcloud users who own a usage of the product, resolved when the maintenance is announced.",
+            "facetable": false,
+            "order": 9
+          },
+          "recipientsResolvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "hideOnForm": true,
+            "visible": false,
+            "title": "Owners resolved at",
+            "description": "When the owners to notify were resolved.",
+            "facetable": false,
+            "order": 10
+          }
+        },
+        "configuration": {
+          "objectNameField": "title",
+          "objectDescriptionField": "description",
+          "autoPublish": true,
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "planned",
+            "final": [
+              "completed",
+              "cancelled"
+            ],
+            "transitions": {
+              "start": {
+                "from": [
+                  "planned"
+                ],
+                "to": "in progress",
+                "description": "Start the maintenance."
+              },
+              "complete": {
+                "from": [
+                  "in progress"
+                ],
+                "to": "completed",
+                "description": "Complete the maintenance."
+              },
+              "cancel": {
+                "from": [
+                  "planned",
+                  "in progress"
+                ],
+                "to": "cancelled",
+                "description": "Cancel the maintenance."
+              }
+            }
+          }
+        },
+        "x-openregister-notifications": {
+          "maintenance-announced": {
+            "trigger": {
+              "type": "updated",
+              "condition": {
+                "field": "recipientsResolvedAt",
+                "operator": "changed"
+              }
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "relation",
+                "relation": "notifyUserIds"
+              }
+            ],
+            "subject": {
+              "nl": "Gepland onderhoud: {{title}}",
+              "en": "Planned maintenance: {{title}}"
+            }
+          },
+          "maintenance-starts-tomorrow": {
+            "trigger": {
+              "type": "scheduled",
+              "intervalSec": 86400,
+              "filter": {
+                "startsAt": {
+                  "operator": "withinNext",
+                  "value": "P1D"
+                },
+                "status": {
+                  "operator": "equals",
+                  "value": "planned"
+                }
+              }
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "relation",
+                "relation": "notifyUserIds"
+              }
+            ],
+            "subject": {
+              "nl": "Onderhoud begint morgen: {{title}}",
+              "en": "Maintenance starts tomorrow: {{title}}"
+            }
+          }
+        },
+        "authorization": {
+          "create": [
+            "software-catalog-admins",
+            "aanbod-beheerder"
+          ],
+          "read": [
+            "public"
+          ],
+          "update": [
+            "software-catalog-admins",
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "delete": [
+            "software-catalog-admins",
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ]
+        }
       }
     },
     "objects": [
       {
         "@self": {
           "register": "stackiq",
-          "schema": "usage",
-          "slug": "gebruik-topdesk-gem-leiden-deelnemers",
+          "schema": "organization",
+          "slug": "servicecenter-rijnland",
           "version": "0.0.1"
         },
-        "name": "Topdesk bij Servicecenter Rijnland (SSC)",
-        "status": "in-gebruik",
-        "elementRef": "topdesk-ssc-rijnland",
-        "consumer": {
-          "name": "Servicecenter Rijnland",
-          "oin": "00000001001234567890",
-          "slug": "servicecenter-rijnland"
+        "name": "Servicecenter Rijnland",
+        "oin": "00000001001234567890",
+        "type": "Collaboration",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "organization",
+          "slug": "gemeente-leiden",
+          "version": "0.0.1"
         },
+        "name": "Gemeente Leiden",
+        "oin": "00000001001234567891",
+        "type": "Municipality",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "organization",
+          "slug": "gemeente-leiderdorp",
+          "version": "0.0.1"
+        },
+        "name": "Gemeente Leiderdorp",
+        "oin": "00000001001234567892",
+        "type": "Municipality",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "organization",
+          "slug": "gblt",
+          "version": "0.0.1"
+        },
+        "name": "Gemeentebelastingen Coevorden Hardenberg (GBLT)",
+        "oin": "00000001001234567893",
+        "type": "Collaboration",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "organization",
+          "slug": "gemeente-delft",
+          "version": "0.0.1"
+        },
+        "name": "Gemeente Delft",
+        "oin": "00000001001234567894",
+        "type": "Municipality",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "usage",
+          "slug": "gebruik-topdesk-gem-leiden-deelnemers",
+          "version": "1.0.0"
+        },
+        "name": "Topdesk bij Servicecenter Rijnland (SSC)",
+        "status": "In production",
+        "elementRef": "topdesk-ssc-rijnland",
+        "consumer": "@ref:organization:servicecenter-rijnland",
         "module": "topdesk-itsm",
         "participants": [
-          {
-            "name": "Gemeente Leiden",
-            "oin": "00000001001234567891",
-            "slug": "gemeente-leiden"
-          },
-          {
-            "name": "Gemeente Leiderdorp",
-            "oin": "00000001001234567892",
-            "slug": "gemeente-leiderdorp"
-          }
+          "@ref:organization:gemeente-leiden",
+          "@ref:organization:gemeente-leiderdorp"
         ]
       },
       {
@@ -8092,23 +8726,15 @@
           "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-key2-gem-leiden-deelnemer",
-          "version": "0.0.1"
+          "version": "1.0.0"
         },
         "name": "KEY2 Burgerzaken gedeeld via GBLT",
-        "status": "in-gebruik",
+        "status": "Planned",
         "elementRef": "key2-burgerzaken-gblt",
-        "consumer": {
-          "name": "Gemeentebelastingen Coevorden Hardenberg (GBLT)",
-          "oin": "00000001001234567893",
-          "slug": "gblt"
-        },
+        "consumer": "@ref:organization:gblt",
         "module": "key2-burgerzaken",
         "participants": [
-          {
-            "name": "Gemeente Leiden",
-            "oin": "00000001001234567891",
-            "slug": "gemeente-leiden"
-          }
+          "@ref:organization:gemeente-leiden"
         ]
       },
       {
@@ -8116,16 +8742,12 @@
           "register": "stackiq",
           "schema": "usage",
           "slug": "gebruik-suite4-gem-delft-eigenaar",
-          "version": "0.0.1"
+          "version": "1.0.0"
         },
         "name": "Suite4 Schuldhulpverlening - eigenaar Gemeente Delft",
-        "status": "in-gebruik",
+        "status": "In production",
         "elementRef": "suite4-schuldhulp-delft",
-        "consumer": {
-          "name": "Gemeente Delft",
-          "oin": "00000001001234567894",
-          "slug": "gemeente-delft"
-        },
+        "consumer": "@ref:organization:gemeente-delft",
         "module": "suite4-schuldhulpverlening",
         "participants": []
       }

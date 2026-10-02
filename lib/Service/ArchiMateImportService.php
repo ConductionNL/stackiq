@@ -23,8 +23,8 @@ namespace OCA\Stackiq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
+use OCA\Stackiq\Service\ProgressTracker;
 use OCP\App\IAppManager;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
 use OCP\IUserSession;
@@ -149,6 +149,25 @@ class ArchiMateImportService {
 	private ?array $lastSaveResult = null;
 
 	/**
+	 * Operation ids a page may name for an import it follows.
+	 */
+	public const OPERATION_ID_PATTERN = '/^archimate_import_[A-Za-z0-9]{8,64}$/';
+
+	/**
+	 * The progress operation of the running import, or null when it is not tracked.
+	 *
+	 * @var string|null
+	 */
+	private ?string $operationId = null;
+
+	/**
+	 * Whether the running import stopped on a cancel.
+	 *
+	 * @var boolean
+	 */
+	private bool $cancelled = false;
+
+	/**
 	 * Cached configuration values for performance optimization.
 	 *
 	 * @var array|null
@@ -159,7 +178,6 @@ class ArchiMateImportService {
 	 * Constructor for ArchiMateImportService
 	 *
 	 * @param IAppConfig $config Nextcloud app configuration service
-	 * @param IRootFolder $rootFolder Root folder service
 	 * @param IUserSession $userSession User session service
 	 * @param IAppManager $appManager App manager service
 	 * @param ContainerInterface $container PSR-11 container interface
@@ -167,10 +185,10 @@ class ArchiMateImportService {
 	 * @param SettingsService $settingsService Settings service for AMEF configuration.
 	 * @param OrganisationService $organisationService Organisation service.
 	 * @param IDBConnection $dbConnection Database connection interface.
+	 * @param ProgressTracker $progressTracker Progress store the page follows and cancels the import through.
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
-		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
@@ -178,6 +196,7 @@ class ArchiMateImportService {
 		private readonly SettingsService $settingsService,
 		private readonly OrganisationService $organisationService,
 		private readonly IDBConnection $dbConnection,
+		private readonly ProgressTracker $progressTracker,
 	) {
 	}//end __construct()
 
@@ -352,6 +371,8 @@ class ArchiMateImportService {
 		$this->logger->info('GEMMA IMPORT DEBUG: Starting optimized import', $options);
 
 		// Starting OPTIMIZED ArchiMate XML import.
+		$this->startTracking(options: $options);
+
 		try {
 			// OPTIMIZATION: Cache all configuration once at start.
 			$cacheStartTime = microtime(true);
@@ -360,11 +381,18 @@ class ArchiMateImportService {
 
 			// Cache initialization completed.
 			// STEP 1: Parse XML to array (same as before).
+			$this->trackPhase(phase: 'validating');
 			$filePath = $this->validateArchiMateFile(options: $options);
 
+			$this->trackPhase(phase: 'parsing');
 			$parseStartTime = microtime(true);
 			$xmlData = $this->parseArchiMateXml(filePath: $filePath);
 			$parseTime = microtime(true) - $parseStartTime;
+
+			if ($this->cancelRequested() === true) {
+				$this->progressTracker->cancelOperation();
+				return $this->cancelledResult();
+			}
 
 			// PERFORMANCE OPTIMIZATION: Clean up memory after XML parsing.
 			$memoryCleanupTime = 0;
@@ -380,12 +408,18 @@ class ArchiMateImportService {
 			$modelIdentifierTime = microtime(true) - $modelIdStartTime;
 
 			// STEP 3: Parse ALL objects in one go (like CSV import).
+			$this->trackPhase(phase: 'analyzing');
 			$transformStartTime = microtime(true);
 			$allObjects = $this->transformArchiMateXmlToObjectsBatch(
 				xmlData: $xmlData,
 				modelIdentifier: $modelIdentifier
 			);
 			$transformTime = microtime(true) - $transformStartTime;
+
+			if ($this->cancelRequested() === true) {
+				$this->progressTracker->cancelOperation();
+				return $this->cancelledResult();
+			}
 
 			// Parsed and transformed all objects.
 			// STEP 4: Single saveObjects() call (like CSV import).
@@ -399,6 +433,12 @@ class ArchiMateImportService {
 			$savedObjects = $this->saveObjectsToDatabase(objects: $allObjects);
 			$saveTime = microtime(true) - $saveStartTime;
 
+			if ($this->cancelled === true) {
+				return $this->cancelledResult();
+			}
+
+			$this->trackPhase(phase: 'finalizing');
+
 			// Capture detailed save timing from internal tracking.
 			$saveBreakdown = $this->lastSaveTiming;
 
@@ -409,6 +449,10 @@ class ArchiMateImportService {
 			// No need for custom calculation since ObjectService already provides accurate stats.
 			$statistics = $this->buildStatisticsFromSaveResult();
 			$detailedErrors = $this->extractDetailedErrors(statistics: $statistics);
+
+			if ($this->operationId !== null) {
+				$this->progressTracker->completeOperation();
+			}
 
 			// OPTIMIZED import completed successfully.
 			return [
@@ -452,6 +496,10 @@ class ArchiMateImportService {
 					'file_path' => $options['file_path'] ?? 'unknown',
 				]
 			);
+
+			if ($this->operationId !== null) {
+				$this->progressTracker->failOperation(message: $e->getMessage());
+			}
 
 			return [
 				'success' => false,
@@ -1343,7 +1391,63 @@ class ArchiMateImportService {
 			]
 		);
 
-		// Process each schema group.
+		$groupResult = $this->saveSchemaGroups(schemaGroups: $schemaGroups, objectService: $objectService, registerId: $registerId);
+		$allResults = $groupResult['results'];
+		$aggregatedStats = $groupResult['stats'];
+		$countsBySchema = $aggregatedStats['countsBySchema'];
+		unset($aggregatedStats['countsBySchema']);
+
+		// Store aggregated result for statistics, including per-schema counts.
+		$aggregatedStats['countsBySchema'] = $countsBySchema;
+		$this->lastSaveResult = $aggregatedStats;
+		$result = $allResults;
+
+		$batchProcessingTime = microtime(true) - $batchStartTime;
+
+		// POST-PROCESSING: Fix StandaardVersie standaard field UUIDs.
+		// The standaard field was set with ArchiMate identifiers, but we need database UUIDs.
+		// for the inversedBy lookup to work correctly.
+		$this->fixStandaardVersieUuids(registerId: $registerId);
+
+		$totalSaveTime = microtime(true) - $saveStartTime;
+
+		// Database save completed.
+		// Store timing breakdown for performance metrics.
+		// FIX: Use aggregatedStats counts instead of $result which may be empty from bulk operations.
+		$savedCount = count($aggregatedStats['saved'] ?? []);
+		$updatedCount = count($aggregatedStats['updated'] ?? []);
+		$unchangedCount = count($aggregatedStats['unchanged'] ?? []);
+		$totalSavedCount = $savedCount + $updatedCount + $unchangedCount;
+		if ($totalSavedCount > 0) {
+			$objectsSavedValue = $totalSavedCount;
+		} else {
+			$objectsSavedValue = count($objects);
+		}
+
+		$this->lastSaveTiming = [
+			'total_save_seconds' => round($totalSaveTime, 3),
+			'service_init_seconds' => round($serviceInitTime, 3),
+			'gemma_processing_seconds' => round($gemmaProcessingTime, 3),
+			'batch_processing_seconds' => round($batchProcessingTime, 3),
+			'objects_saved' => $objectsSavedValue,
+			'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1),
+		];
+
+		return $result;
+	}//end saveObjectsToDatabase()
+
+	/**
+	 * Save the objects one schema group at a time, recording progress and honouring a cancel.
+	 *
+	 * @param array<int|string, array<int, array<string, mixed>>> $schemaGroups  Objects keyed by schema id
+	 * @param ObjectServiceInterface                              $objectService OpenRegister's object service
+	 * @param int                                                 $registerId    The AMEF register id
+	 *
+	 * @return array{results: array, stats: array} The saved objects and the aggregated statistics
+	 *
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
+	 */
+	private function saveSchemaGroups(array $schemaGroups, ObjectServiceInterface $objectService, int $registerId): array {
 		$allResults = [];
 		$aggregatedStats = [
 			'saved' => [],
@@ -1354,8 +1458,20 @@ class ArchiMateImportService {
 		// Track counts per schema for accurate statistics (serialized objects lose the 'section' field).
 		$countsBySchema = [];
 
+		$processed = 0;
+		$this->trackPhase(
+			phase: 'processing_elements',
+			data: ['total_items' => array_sum(array_map('count', $schemaGroups)), 'reset_progress' => true]
+		);
+
 		foreach ($schemaGroups as $schemaId => $schemaObjects) {
 			$schemaObjectCount = count($schemaObjects);
+
+			// A cancel stops the import before its next batch; what is saved stays saved.
+			if ($this->cancelRequested() === true) {
+				$this->progressTracker->cancelOperation();
+				break;
+			}
 
 			try {
 				// Save this schema group with the specific schema ID.
@@ -1416,46 +1532,105 @@ class ArchiMateImportService {
 					]
 				);
 			}//end try
+
+			$processed += $schemaObjectCount;
+			if ($this->operationId !== null) {
+				$this->progressTracker->updateProgress(processedItems: $processed, itemType: (string) $schemaId);
+			}
 		}//end foreach
 
-		// Store aggregated result for statistics, including per-schema counts.
 		$aggregatedStats['countsBySchema'] = $countsBySchema;
-		$this->lastSaveResult = $aggregatedStats;
-		$result = $allResults;
 
-		$batchProcessingTime = microtime(true) - $batchStartTime;
+		return ['results' => $allResults, 'stats' => $aggregatedStats];
+	}//end saveSchemaGroups()
 
-		// POST-PROCESSING: Fix StandaardVersie standaard field UUIDs.
-		// The standaard field was set with ArchiMate identifiers, but we need database UUIDs.
-		// for the inversedBy lookup to work correctly.
-		$this->fixStandaardVersieUuids(registerId: $registerId);
+	/**
+	 * Start recording progress when the upload names a well-formed operation id.
+	 *
+	 * An id outside the pattern is ignored, so a caller cannot write into another
+	 * operation's keys; the import then runs without progress.
+	 *
+	 * @param array<string, mixed> $options Import options, optionally with operationId
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-001-a-running-import-shall-record-its-phase-and-the-objects-saved-so-far
+	 */
+	public function startTracking(array $options): void {
+		$this->operationId = null;
+		$this->cancelled   = false;
 
-		$totalSaveTime = microtime(true) - $saveStartTime;
-
-		// Database save completed.
-		// Store timing breakdown for performance metrics.
-		// FIX: Use aggregatedStats counts instead of $result which may be empty from bulk operations.
-		$savedCount = count($aggregatedStats['saved'] ?? []);
-		$updatedCount = count($aggregatedStats['updated'] ?? []);
-		$unchangedCount = count($aggregatedStats['unchanged'] ?? []);
-		$totalSavedCount = $savedCount + $updatedCount + $unchangedCount;
-		if ($totalSavedCount > 0) {
-			$objectsSavedValue = $totalSavedCount;
-		} else {
-			$objectsSavedValue = count($objects);
+		$operationId = $options['operationId'] ?? null;
+		if (is_string($operationId) === false || preg_match(self::OPERATION_ID_PATTERN, $operationId) !== 1) {
+			return;
 		}
 
-		$this->lastSaveTiming = [
-			'total_save_seconds' => round($totalSaveTime, 3),
-			'service_init_seconds' => round($serviceInitTime, 3),
-			'gemma_processing_seconds' => round($gemmaProcessingTime, 3),
-			'batch_processing_seconds' => round($batchProcessingTime, 3),
-			'objects_saved' => $objectsSavedValue,
-			'save_rate_objects_per_second' => round(count($objects) / max($totalSaveTime, 0.001), 1),
+		$this->operationId = $this->progressTracker->startOperation(
+			operationType: 'archimate_import',
+			operationId: $operationId
+		);
+	}//end startTracking()
+
+	/**
+	 * Whether the last import stopped on a cancel.
+	 *
+	 * @return bool True when it was cancelled
+	 *
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+	 */
+	public function wasCancelled(): bool {
+		return $this->cancelled;
+	}//end wasCancelled()
+
+	/**
+	 * Record the phase the import is in, when it is tracked.
+	 *
+	 * @param string               $phase The ProgressTracker phase
+	 * @param array<string, mixed> $data  Phase data such as total_items
+	 *
+	 * @return void
+	 */
+	private function trackPhase(string $phase, array $data = []): void {
+		if ($this->operationId !== null) {
+			$this->progressTracker->setPhase(phase: $phase, data: $data);
+		}
+	}//end trackPhase()
+
+	/**
+	 * Whether a cancel was requested for the tracked import; remembers a yes.
+	 *
+	 * @return bool True when the import must stop
+	 */
+	private function cancelRequested(): bool {
+		if ($this->operationId !== null && $this->progressTracker->isCancelRequested($this->operationId) === true) {
+			$this->cancelled = true;
+		}
+
+		return $this->cancelled;
+	}//end cancelRequested()
+
+	/**
+	 * The result of an import that stopped on a cancel, with what it had saved.
+	 *
+	 * @return array<string, mixed> The cancelled result
+	 */
+	private function cancelledResult(): array {
+		$stats  = $this->lastSaveResult ?? [];
+		$counts = [
+			'saved'     => count($stats['saved'] ?? []),
+			'updated'   => count($stats['updated'] ?? []),
+			'unchanged' => count($stats['unchanged'] ?? []),
+			'invalid'   => count($stats['invalid'] ?? []),
 		];
 
-		return $result;
-	}//end saveObjectsToDatabase()
+		return [
+			'success'       => false,
+			'cancelled'     => true,
+			'message'       => 'Import cancelled',
+			'counts'        => $counts,
+			'objects_saved' => $counts['saved'] + $counts['updated'] + $counts['unchanged'],
+		];
+	}//end cancelledResult()
 
 	/**
 	 * Fix StandaardVersie standaard field UUIDs after import
