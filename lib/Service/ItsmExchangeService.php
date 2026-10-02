@@ -265,20 +265,29 @@ class ItsmExchangeService {
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
 	 */
 	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = ''): array {
-		$source = $this->preconditions(desk: $desk, organisation: $organisation);
-		if (is_string($source) === true) {
-			return $this->refuse(message: $source);
+		$found = $this->preconditions(desk: $desk, organisation: $organisation);
+		if (is_string($found) === true) {
+			return $this->refuse(message: $found);
 		}
 
-		$flows = $this->buildFlows(
-			desk: $desk,
-			organisation: $organisation,
-			runAs: $runAs,
-			location: (string) ($source['location'] ?? ''),
-			templateId: $templateId
-		);
+		// The flows compare this with a usage's consumer uuid, so store the uuid
+		// even when the admin gave an id or a slug.
+		$organisation = $found['organisation'];
+		try {
+			$flows = $this->buildFlows(
+				desk: $desk,
+				organisation: $organisation,
+				runAs: $runAs,
+				location: (string) ($found['source']['location'] ?? ''),
+				templateId: $templateId
+			);
 
-		$blocking = $this->blockingFindings(flows: $flows);
+			$blocking = $this->blockingFindings(flows: $flows);
+		} catch (Throwable $e) {
+			$this->logger->error('[ItsmExchangeService] Checking the exchange flows failed', ['exception' => $e]);
+			return $this->refuse(message: 'Nothing was created. The flows could not be checked: ' . $e->getMessage());
+		}
+
 		if ($blocking !== []) {
 			$first = (array) reset($blocking);
 			$entry = (array) ($first[0] ?? []);
@@ -317,7 +326,9 @@ class ItsmExchangeService {
 	 * @param string $desk         The desk key.
 	 * @param string $organisation The organisation uuid.
 	 *
-	 * @return array<string, mixed>|string The integriq source, or why the set-up cannot start.
+	 * @return array{source: array<string, mixed>, organisation: string}|string The integriq source and the
+	 *                                                                          organisation's uuid, or why the
+	 *                                                                          set-up cannot start.
 	 */
 	private function preconditions(string $desk, string $organisation): array|string {
 		if ($this->gateway->available() === false) {
@@ -328,7 +339,8 @@ class ItsmExchangeService {
 			return 'Unknown service desk "' . $desk . '".';
 		}
 
-		if ($this->gateway->findObject(register: self::REGISTER, schema: 'organization', id: $organisation) === null) {
+		$found = $this->gateway->findObject(register: self::REGISTER, schema: 'organization', id: $organisation);
+		if ($found === null || (string) ($found['uuid'] ?? '') === '') {
 			return 'The organisation ' . $organisation . ' does not exist in stackiq.';
 		}
 
@@ -338,7 +350,7 @@ class ItsmExchangeService {
 			return 'Integriq has no source "' . $profile['source'] . '". Add the ' . $profile['label'] . ' source in integriq first.';
 		}
 
-		return $source;
+		return ['source' => $source, 'organisation' => (string) $found['uuid']];
 	}//end preconditions()
 
 	/**

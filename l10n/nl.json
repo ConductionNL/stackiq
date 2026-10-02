@@ -1142,6 +1142,10 @@
         "Application published": "Applicatie gepubliceerd",
         "The publication date of the application this version belongs to, copied from it. A version is public only while its application is.": "De publicatiedatum van de applicatie waar deze versie bij hoort, daarvan overgenomen. Een versie is alleen openbaar zolang haar applicatie dat is.",
         "Application registered by": "Applicatie geregistreerd door",
-        "Who registered the application this version belongs to, copied from it. A supplier's application is public, and so are its versions.": "Wie de applicatie registreerde waar deze versie bij hoort, daarvan overgenomen. De applicatie van een leverancier is openbaar, en haar versies ook."
+        "Who registered the application this version belongs to, copied from it. A supplier's application is public, and so are its versions.": "Wie de applicatie registreerde waar deze versie bij hoort, daarvan overgenomen. De applicatie van een leverancier is openbaar, en haar versies ook.",
+        "The file could not be sent. Check your connection and try again.": "Het bestand kon niet worden verstuurd. Controleer uw verbinding en probeer het opnieuw.",
+        "The organisation register is not configured, so there are no organisations to choose from.": "Het organisatieregister is niet ingesteld, dus er zijn geen organisaties om uit te kiezen.",
+        "The organisations could not be loaded. Reload the page to try again.": "De organisaties konden niet worden geladen. Herlaad de pagina om het opnieuw te proberen.",
+        "Whether a service desk is connected could not be loaded. Reload the page to try again.": "Kon niet worden geladen of er een servicedesk is gekoppeld. Herlaad de pagina om het opnieuw te proberen."
     }
 }

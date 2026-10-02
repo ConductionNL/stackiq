@@ -75,7 +75,17 @@ class PublicationFieldRulesTest extends TestCase {
 	public function testPrivateFieldsReadForSignedInUsersOnly(): void {
 		$schemas = $this->register()['components']['schemas'];
 		$private = [
-			'module'         => ['contactPerson', 'usages', 'dpiaDocumentRef', 'verwerkingsregisterRef'],
+			'module'         => [
+				'contactPerson',
+				'usages',
+				'dpiaDocumentRef',
+				'verwerkingsregisterRef',
+				'externalId',
+				'externalNumber',
+				'externalKey',
+				'externalCreatedAt',
+				'externalModifiedAt',
+			],
 			'moduleVersion'  => ['usages'],
 			'catalogService' => ['contactPerson'],
 			'connection'     => ['provider', 'serviceDeskRecordId', 'serviceDeskUrl', 'longDescription'],

@@ -101,6 +101,36 @@ describe('startProgressPolling', () => {
 		await tick()
 		expect(seen).toEqual([])
 	})
+
+	it('sends no new request while the previous one is still waiting', async () => {
+		let tick = null
+		let answer = null
+		const get = jest.fn(
+			() =>
+				new Promise((resolve) => {
+					answer = resolve
+				}),
+		)
+		startProgressPolling({
+			operationId: 'archimate_import_abc12345',
+			http: { get },
+			onProgress: () => {},
+			setIntervalFn: (fn) => {
+				tick = fn
+				return 1
+			},
+			clearIntervalFn: () => {},
+		})
+
+		const first = tick()
+		await tick()
+		expect(get).toHaveBeenCalledTimes(1)
+
+		answer({ data: { progress: { percentage: 10 } } })
+		await first
+		tick()
+		expect(get).toHaveBeenCalledTimes(2)
+	})
 })
 
 describe('cancelImport', () => {

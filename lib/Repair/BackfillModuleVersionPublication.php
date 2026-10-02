@@ -7,7 +7,9 @@
  * so for anonymous readers they read as unpublished until their module is
  * saved again. That is the safe direction; this step makes the published ones
  * public again without waiting for an edit. It is idempotent: a version that
- * already holds its module's values is not written.
+ * already holds its module's values is not written. It reads the modules page
+ * by page, and after a pass in which nothing failed it records that in the app
+ * config, so later upgrades skip it.
  *
  * @category  Repair
  * @package   OCA\Stackiq\Repair
@@ -27,9 +29,12 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\AppInfo\Application;
 use OCA\Stackiq\Service\ModuleVersionPublicationService;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Throwable;
@@ -42,16 +47,32 @@ use Throwable;
 class BackfillModuleVersionPublication implements IRepairStep {
 
 	/**
+	 * App-config key set after a pass in which every module and version was handled.
+	 *
+	 * @var string
+	 */
+	public const DONE_CONFIG_KEY = 'module_version_publication_backfilled';
+
+	/**
+	 * How many modules one read returns.
+	 *
+	 * @var integer
+	 */
+	public const PAGE_SIZE = 200;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppManager                     $appManager      Tells whether OpenRegister is installed.
 	 * @param SettingsService                 $settingsService Resolves the module schema and the object service.
 	 * @param ModuleVersionPublicationService $publication     The mirror.
+	 * @param IAppConfig                      $appConfig       Holds the done marker.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly SettingsService $settingsService,
 		private readonly ModuleVersionPublicationService $publication,
+		private readonly IAppConfig $appConfig,
 	) {
 	}//end __construct()
 
@@ -74,6 +95,10 @@ class BackfillModuleVersionPublication implements IRepairStep {
 	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	public function run(IOutput $output): void {
+		if ($this->appConfig->getValueBool(Application::APP_ID, self::DONE_CONFIG_KEY, false) === true) {
+			return;
+		}
+
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
 			$output->info('OpenRegister not installed, so there are no versions to update.');
 			return;
@@ -88,19 +113,54 @@ class BackfillModuleVersionPublication implements IRepairStep {
 		}
 
 		try {
-			$modules = $objects->setRegister($register)->setSchema($schema)->findAll([], false, false);
+			$result = $this->backfillAll(objects: $objects, register: $register, schema: $schema);
 		} catch (Throwable $e) {
 			$output->warning('Could not read the applications: ' . $e->getMessage());
 			return;
 		}
 
-		$written = 0;
-		foreach ((array) $modules as $module) {
-			if (($module instanceof ObjectEntityInterface) === true) {
-				$written += $this->publication->moduleSaved(module: $module);
-			}
+		$output->info($result['written'] . ' versions now follow their application\'s publication.');
+		if ($result['failed'] > 0) {
+			$output->warning($result['failed'] . ' versions or searches failed; the next upgrade tries again.');
+			return;
 		}
 
-		$output->info($written . ' versions now follow their application\'s publication.');
+		$this->appConfig->setValueBool(Application::APP_ID, self::DONE_CONFIG_KEY, true);
 	}//end run()
+
+	/**
+	 * Backfill every module, page by page.
+	 *
+	 * @param ObjectServiceInterface $objects  The object service.
+	 * @param int|string             $register The module register.
+	 * @param int|string             $schema   The module schema.
+	 *
+	 * @return array{written: int, failed: int} The versions written, and the versions or searches that failed.
+	 *
+	 * @throws Throwable When a page of modules cannot be read.
+	 */
+	private function backfillAll(ObjectServiceInterface $objects, int|string $register, int|string $schema): array {
+		$total  = ['written' => 0, 'failed' => 0];
+		$offset = 0;
+		do {
+			$modules = (array) $objects->setRegister($register)->setSchema($schema)->findAll(
+				['limit' => self::PAGE_SIZE, 'offset' => $offset],
+				false,
+				false
+			);
+
+			foreach ($modules as $module) {
+				if (($module instanceof ObjectEntityInterface) === true) {
+					$result            = $this->publication->backfillModule(module: $module);
+					$total['written'] += $result['written'];
+					$total['failed']  += $result['failed'];
+				}
+			}
+
+			$offset  += self::PAGE_SIZE;
+			$pageSize = count($modules);
+		} while ($pageSize === self::PAGE_SIZE);
+
+		return $total;
+	}//end backfillAll()
 }//end class

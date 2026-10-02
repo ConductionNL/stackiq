@@ -103,7 +103,7 @@ class ItsmExchangeServiceTest extends TestCase {
 		$this->gateway->method('available')->willReturn(true);
 		$this->gateway->method('findObject')->willReturnCallback(
 			static function (string $register, string $schema, string $id): ?array {
-				if ($register === 'stackiq' && $schema === 'organization' && $id === self::ORG) {
+				if ($register === 'stackiq' && $schema === 'organization' && in_array($id, [self::ORG, 'gemeente-rotterdam'], true) === true) {
 					return ['uuid' => self::ORG, 'name' => 'Gemeente Rotterdam'];
 				}
 
@@ -214,4 +214,42 @@ class ItsmExchangeServiceTest extends TestCase {
 		$this->assertStringContainsString('does not exist', $service->setUp(desk: 'topdesk', organisation: 'nope', runAs: 'admin')['message']);
 		$this->assertStringContainsString('no source "servicenow"', $service->setUp(desk: 'servicenow', organisation: self::ORG, runAs: 'admin')['message']);
 	}//end testWhatIsMissingIsNamed()
+
+	/**
+	 * An organisation given by slug is stored, and written into the flows, as its uuid.
+	 *
+	 * @return void
+	 */
+	public function testAnOrganisationGivenBySlugIsStoredAsItsUuid(): void {
+		$this->gateway->method('inspect')->willReturn(['blocking' => [], 'warnings' => []]);
+		$saved = [];
+		$this->gateway->method('saveAndPublish')->willReturnCallback(
+			static function (array $flow) use (&$saved): string {
+				$saved[] = $flow;
+				return 'flow-' . count($saved);
+			}
+		);
+
+		$this->service()->setUp(desk: 'topdesk', organisation: 'gemeente-rotterdam', runAs: 'admin');
+
+		$this->assertSame(self::ORG, json_decode((string) $this->settings['itsm_exchange'], true)['organisation']);
+		$this->assertStringContainsString(self::ORG, (string) json_encode($saved[0]));
+		$this->assertStringNotContainsString('gemeente-rotterdam', (string) json_encode($saved));
+	}//end testAnOrganisationGivenBySlugIsStoredAsItsUuid()
+
+	/**
+	 * A preflight that throws is a refusal the page can show, reported to integriq, not an error.
+	 *
+	 * @return void
+	 */
+	public function testAPreflightThatThrowsIsARefusal(): void {
+		$this->gateway->method('inspect')->willThrowException(new \RuntimeException('preflight unresolvable'));
+		$this->gateway->expects($this->never())->method('saveAndPublish');
+		$this->reports->expects($this->once())->method('itsmSetUp')->with(false, $this->stringContains('preflight unresolvable'));
+
+		$result = $this->service()->setUp(desk: 'topdesk', organisation: self::ORG, runAs: 'admin');
+
+		$this->assertFalse($result['created']);
+		$this->assertStringContainsString('Nothing was created', $result['message']);
+	}//end testAPreflightThatThrowsIsARefusal()
 }//end class

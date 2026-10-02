@@ -101,7 +101,7 @@ class CmdbImportController extends Controller {
 				['error' => $e->getErrorCode(), 'details' => $e->getDetails(), 'reason' => $e->getMessage()]
 			);
 			return $this->fromException(e: $e);
-		} catch (\Exception $e) {
+		} catch (\Throwable $e) {
 			$this->logger->error('CmdbImportController: import failed', ['exception' => $e]);
 			return $this->error(code: 'IMPORT_FAILED', status: Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
