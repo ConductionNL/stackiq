@@ -53,6 +53,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ *
+ * @spec openspec/specs/archimate-export/spec.md
  */
 class ArchiMateExportService {
 	/**
@@ -2142,11 +2144,6 @@ XML;
 	 */
 	private function runQualityAssuranceChecks(string $xmlString): void {
 		$this->logger->info('Running Quality Assurance checks on exported XML');
-
-		// DEBUG: Save XML to file for inspection.
-		$debugPath = '/tmp/debug_export.xml';
-		file_put_contents($debugPath, $xmlString);
-		$this->logger->info('DEBUG: Raw XML saved to ' . $debugPath . ' (size: ' . strlen($xmlString) . ' bytes)');
 
 		try {
 			$xml = new \SimpleXMLElement($xmlString);
