@@ -189,3 +189,17 @@ foreach (['ConnectionStatusReportedEvent', 'ConnectionRefreshRequestedEvent'] as
 }
 
 unset($integriqStubEvent);
+
+// OpenRegister's ObjectCreatedEvent, deferred for the same reason. It extends
+// OCP\EventDispatcher\Event, and nextcloud/ocp ships no autoload section, so
+// OCP only becomes resolvable once lib/base.php has run above. Loading it in
+// the early tests/Stubs glob killed every CI PHPUnit leg in this bootstrap
+// with `Class "OCP\EventDispatcher\Event" not found` before a single test ran.
+// It sits two directories deep so that glob cannot reach it. When the real
+// OpenRegister is enabled, class_exists() loads the real event and the stub
+// stays out of the way.
+if (class_exists('\\OCP\\EventDispatcher\\Event') === true
+	&& class_exists('\\OCA\\OpenRegister\\Event\\ObjectCreatedEvent') === false
+) {
+	require_once __DIR__ . '/Stubs/OpenRegister/Event/ObjectCreatedEvent.php';
+}

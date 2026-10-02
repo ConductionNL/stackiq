@@ -6,10 +6,11 @@
  * The import links the application owner as a `contactPerson` through
  * `usage.businessOwner`. Anonymous visitors (OpenCatalogi search, Portaliq,
  * the OpenRegister objects API) must not see that person. This test pins the
- * register configuration that guarantees it: neither `usage` nor
- * `contactPerson` has a public read rule in the merged register (base plus
- * every register.d fragment), and a published `module` only refers to them
- * by relation, so a public search hit carries at most ids. The rig check of
+ * register configuration that guarantees it, in the merged register (base plus
+ * every register.d fragment): `contactPerson` has no public read rule, a
+ * `usage` is public only once its publicationDate has passed and its person
+ * properties never are, and a published `module` only refers to them by
+ * relation, so a public search hit carries at most ids. The rig check of
  * the running stack is the API test in
  * tests/e2e/spec-coverage/cmdb-import.spec.ts.
  *
@@ -73,22 +74,52 @@ class CmdbPersonDataVisibilityTest extends TestCase {
 	}//end isPublic()
 
 	/**
-	 * Neither usage nor contactPerson can be read anonymously.
+	 * A contactPerson can never be read anonymously.
 	 *
 	 * @return void
 	 */
-	public function testUsageAndContactPersonHaveNoPublicReadRule(): void {
-		$schemas = $this->mergedRegister()['components']['schemas'];
+	public function testContactPersonHasNoPublicReadRule(): void {
+		$read = ($this->mergedRegister()['components']['schemas']['contactPerson']['authorization']['read'] ?? null);
+		$this->assertIsArray($read, 'contactPerson must have an explicit read rule; without one OpenRegister does not restrict reads');
+		$this->assertNotEmpty($read, 'contactPerson');
+		foreach ($read as $rule) {
+			$this->assertFalse(self::isPublic(rule: $rule), 'contactPerson has a public read rule: imported owners would be readable anonymously');
+		}
+	}//end testContactPersonHasNoPublicReadRule()
 
-		foreach (['usage', 'contactPerson'] as $schema) {
-			$read = ($schemas[$schema]['authorization']['read'] ?? null);
-			$this->assertIsArray($read, $schema . ' must have an explicit read rule; without one OpenRegister does not restrict reads');
-			$this->assertNotEmpty($read, $schema);
-			foreach ($read as $rule) {
-				$this->assertFalse(self::isPublic(rule: $rule), $schema . ' has a public read rule: imported owners would be readable anonymously');
+	/**
+	 * A usage is public only once published, and never with its owners.
+	 *
+	 * Publication-field-rules (stackiq #1206) makes a usage readable to the public
+	 * group once its publicationDate has passed, so OpenCatalogi can show which
+	 * applications an organisation uses. The import never sets a usage's
+	 * publicationDate, and the properties that name a person carry their own read
+	 * rule without the public group, which OpenRegister enforces on the body,
+	 * relations, `@self` and facets alike.
+	 *
+	 * @return void
+	 */
+	public function testAUsageIsPublicOnlyWhenPublishedAndNeverWithItsOwners(): void {
+		$usage = $this->mergedRegister()['components']['schemas']['usage'];
+		$read = ($usage['authorization']['read'] ?? null);
+		$this->assertIsArray($read, 'usage must have an explicit read rule; without one OpenRegister does not restrict reads');
+		$this->assertNotEmpty($read, 'usage');
+		foreach ($read as $rule) {
+			if (self::isPublic(rule: $rule) === true) {
+				$this->assertIsArray($rule, 'a bare public read rule on usage would publish every usage');
+				$this->assertArrayHasKey('publicationDate', ($rule['match'] ?? []), 'the public read rule on usage must be conditional on publicationDate');
 			}
 		}
-	}//end testUsageAndContactPersonHaveNoPublicReadRule()
+
+		foreach (['businessOwner', 'technicalOwner', 'contactPerson'] as $property) {
+			$propertyRead = ($usage['properties'][$property]['authorization']['read'] ?? null);
+			$this->assertIsArray($propertyRead, 'usage.' . $property . ' names a person and needs its own read rule');
+			$this->assertNotEmpty($propertyRead, 'usage.' . $property);
+			foreach ($propertyRead as $rule) {
+				$this->assertFalse(self::isPublic(rule: $rule), 'usage.' . $property . ' is publicly readable: imported owners would be visible anonymously');
+			}
+		}
+	}//end testAUsageIsPublicOnlyWhenPublishedAndNeverWithItsOwners()
 
 	/**
 	 * A published module refers to its contact person and usages by relation only, and holds no person field.
