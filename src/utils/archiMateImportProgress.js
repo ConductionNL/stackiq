@@ -85,7 +85,9 @@ export function progressView(progress) {
  * Read the progress of an operation every two seconds until stopped.
  *
  * An operation that is not readable yet (the import has not started it) is
- * skipped quietly; the next tick tries again.
+ * skipped quietly; the next tick tries again. A tick that comes while the
+ * previous request is still waiting sends nothing, so a slow server never
+ * collects concurrent progress requests.
  *
  * @param {object} options The options
  * @param {string} options.operationId The operation to follow
@@ -106,7 +108,12 @@ export function startProgressPolling({
 	const url = generateUrl('/apps/stackiq/api/progress/{operationId}', {
 		operationId,
 	})
+	let inFlight = false
 	const handle = setIntervalFn(async () => {
+		if (inFlight) {
+			return
+		}
+		inFlight = true
 		try {
 			const response = await http.get(url)
 			if (response?.data?.progress) {
@@ -114,6 +121,8 @@ export function startProgressPolling({
 			}
 		} catch {
 			// Not readable yet or briefly unavailable: try again on the next tick.
+		} finally {
+			inFlight = false
 		}
 	}, 2000)
 	return () => clearIntervalFn(handle)
