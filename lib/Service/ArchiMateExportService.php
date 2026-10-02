@@ -53,6 +53,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ *
+ * @spec openspec/specs/archimate-export/spec.md
  */
 class ArchiMateExportService {
 	/**

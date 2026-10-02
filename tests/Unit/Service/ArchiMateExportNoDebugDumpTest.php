@@ -20,11 +20,22 @@ use PHPUnit\Framework\TestCase;
  */
 class ArchiMateExportNoDebugDumpTest extends TestCase {
 
+	/**
+	 * The service source holds no file write and no debug dump path.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/archimate-export/spec.md
+	 */
 	public function testTheExportServiceWritesNoFile(): void {
-		$code = (string)file_get_contents(dirname(__DIR__, 3) . '/lib/Service/ArchiMateExportService.php');
-		$code = (string)preg_replace('#/\*.*?\*/|//[^\n]*#s', '', $code);
+		$code = (string)file_get_contents(filename: dirname(path: __DIR__, levels: 3) . '/lib/Service/ArchiMateExportService.php');
+		$code = (string)preg_replace(pattern: '#/\*.*?\*/|//[^\n]*#s', replacement: '', subject: $code);
 
-		$this->assertStringNotContainsString('debug_export', $code);
-		$this->assertSame(0, preg_match('/\bfile_put_contents\s*\(|\bfopen\s*\(/', $code), 'the export returns its XML and writes no file');
+		$this->assertStringNotContainsString(needle: 'debug_export', haystack: $code);
+		$this->assertSame(
+			expected: 0,
+			actual: preg_match(pattern: '/\bfile_put_contents\s*\(|\bfopen\s*\(/', subject: $code),
+			message: 'the export returns its XML and writes no file'
+		);
 	}
 }
