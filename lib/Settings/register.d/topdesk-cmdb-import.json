@@ -62,6 +62,8 @@
             "order": 65
           },
           "bbnLevel": {
+            "title": "BBN level",
+            "description": "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.",
             "enum": ["BBN2+"]
           }
         }

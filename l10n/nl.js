@@ -1147,7 +1147,10 @@ OC.L10N.register(
         "The file could not be sent. Check your connection and try again.": "Het bestand kon niet worden verstuurd. Controleer uw verbinding en probeer het opnieuw.",
         "The organisation register is not configured, so there are no organisations to choose from.": "Het organisatieregister is niet ingesteld, dus er zijn geen organisaties om uit te kiezen.",
         "The organisations could not be loaded. Reload the page to try again.": "De organisaties konden niet worden geladen. Herlaad de pagina om het opnieuw te proberen.",
-        "Whether a service desk is connected could not be loaded. Reload the page to try again.": "Kon niet worden geladen of er een servicedesk is gekoppeld. Herlaad de pagina om het opnieuw te proberen."
+        "Whether a service desk is connected could not be loaded. Reload the page to try again.": "Kon niet worden geladen of er een servicedesk is gekoppeld. Herlaad de pagina om het opnieuw te proberen.",
+        "Application type": "Applicatiesoort",
+        "The kind of application as the source system records it, such as the TOPdesk Applicatiesoort (Webapplicatie, Client/server, Saas). Kept as the source has it.": "Het soort applicatie zoals het bronsysteem het vastlegt, zoals de TOPdesk-Applicatiesoort (Webapplicatie, Client/server, Saas). Overgenomen zoals de bron het heeft.",
+        "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.": "Het BBN-niveau (Baseline Informatiebeveiliging Overheid) waarop deze applicatie is geclassificeerd. BBN2+ is een niveau dat de TOPdesk-CMDB-export gebruikt."
     },
     "nplurals=2; plural=(n != 1);"
 )
