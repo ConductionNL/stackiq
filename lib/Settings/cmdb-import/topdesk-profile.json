@@ -36,7 +36,7 @@
   },
   "createOnly": {
     "module": { "type": "Application" },
-    "usage": ["interneAnnotation"]
+    "usage": ["interneAnnotation", "timeClassification"]
   },
   "neverWritten": {
     "module": ["publicationDate", "depublicationDate"]

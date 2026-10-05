@@ -58,14 +58,14 @@ class TopdeskCmdbFragmentTest extends TestCase {
 	}//end mergedRegister()
 
 	/**
-	 * The merged module is 0.3.7, carries the six optional, titled properties and allows BBN2+.
+	 * The merged module is 0.3.8, carries the six optional, titled properties and allows BBN2+.
 	 *
 	 * @return void
 	 */
-	public function testTheMergedModuleIsVersion037WithTheExternalIds(): void {
+	public function testTheMergedModuleIsVersion038WithTheExternalIds(): void {
 		$module = $this->mergedRegister()['components']['schemas']['module'];
 
-		$this->assertSame('0.3.7', $module['version'], 'a fragment sorting after topdesk-cmdb-import.json overwrote the bump');
+		$this->assertSame('0.3.8', $module['version'], 'a fragment sorting after topdesk-cmdb-import.json overwrote the bump');
 		foreach (self::PROPERTIES as $property) {
 			$this->assertArrayHasKey($property, $module['properties']);
 			$this->assertNotEmpty($module['properties'][$property]['title'] ?? '', $property);
@@ -79,13 +79,19 @@ class TopdeskCmdbFragmentTest extends TestCase {
 		$this->assertSame(50, $module['properties']['externalNumber']['maxLength']);
 		$this->assertSame(200, $module['properties']['externalKey']['maxLength']);
 		$this->assertSame(['default' => false], $module['properties']['externalKey']['table']);
+		$this->assertSame(
+			['read' => ['authenticated'], 'update' => ['admin']],
+			$module['properties']['externalKey']['authorization'],
+			'only an admin writes the import key, and the read rule of publication-field-rules.json still applies'
+		);
+		$this->assertSame(['read' => ['authenticated']], $module['properties']['externalNumber']['authorization'], 'the APPID itself is not a match key');
 		$this->assertSame('date', $module['properties']['externalCreatedAt']['format']);
 		$this->assertSame('date', $module['properties']['externalModifiedAt']['format']);
 		$this->assertSame(100, $module['properties']['applicationType']['maxLength']);
 		$this->assertSame(['BBN1', 'BBN2', 'BBN3', 'BBN2+'], $module['properties']['bbnLevel']['enum'], 'the fragment adds BBN2+ to the BIO levels');
 		$this->assertArrayHasKey('roadmapStatement', $module['properties'], 'the 0.3.4 fragment still applies');
 		$this->assertSame(['name'], $module['required']);
-	}//end testTheMergedModuleIsVersion037WithTheExternalIds()
+	}//end testTheMergedModuleIsVersion038WithTheExternalIds()
 
 	/**
 	 * A CMDB import sets the usage status TOPdesk records from any state; only an administrator may.

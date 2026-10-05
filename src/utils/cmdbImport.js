@@ -140,14 +140,17 @@ export function checkFile(file) {
  * @param {File} options.file The export
  * @param {{uuid: string|null, name: string}} options.municipality The chosen municipality: an existing one has a uuid, a new one only a name
  * @param {boolean} options.updateExisting Whether matched rows are updated
+ * @param {boolean} [options.publish] Whether the modules the import creates are published; true when left out
  * @param {string} options.operationId The progress operation id
  * @return {FormData} The body
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-newly-created-module-shall-get-a-publicationdate-when-the-admin-publishes-and-an-existing-one-shall-keep-its-own-req-cmdb-007
  */
 export function buildImportForm({
 	file,
 	municipality,
 	updateExisting,
+	publish = true,
 	operationId,
 }) {
 	const form = new FormData()
@@ -158,6 +161,7 @@ export function buildImportForm({
 		form.append('municipalityName', municipality.name)
 	}
 	form.append('updateExisting', updateExisting ? 'true' : 'false')
+	form.append('publish', publish ? 'true' : 'false')
 	form.append('missingRecords', 'keep')
 	form.append('operationId', operationId)
 	return form
@@ -376,6 +380,10 @@ const KNOWN_ERRORS = new Set([
 	'MAPPING_UNAVAILABLE',
 	'READER_UNAVAILABLE',
 	'NOT_CONFIGURED',
+	'WORKBOOK_TOO_LARGE',
+	'SCHEMA_OUTDATED',
+	'IMPORT_IN_PROGRESS',
+	'MUNICIPALITY_AMBIGUOUS',
 	'OPERATION_NOT_FOUND',
 	'IMPORT_INTERRUPTED',
 	'NOT_SIGNED_IN',
@@ -582,6 +590,64 @@ export function errorText(error) {
 				hint: t(
 					'stackiq',
 					'The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.',
+				),
+			}
+		case 'WORKBOOK_TOO_LARGE':
+			return {
+				title:
+					Number(details.maxUncompressedBytes) > 0
+						? t(
+								'stackiq',
+								'Unpacked, the workbook is larger than {size}, the most the import reads.',
+								{ size: formatMegabytes(details.maxUncompressedBytes) },
+								AS_TEXT,
+							)
+						: t(
+								'stackiq',
+								'The workbook is too large to read once unpacked.',
+							),
+				hint: t(
+					'stackiq',
+					'Remove sheets the import does not read, such as the archive sheet, or split the export, and try again. Nothing was imported.',
+				),
+			}
+		case 'SCHEMA_OUTDATED':
+			return {
+				title: details.schema
+					? t(
+							'stackiq',
+							'The "{schema}" schema of the stackiq register is out of date.',
+							{ schema: String(details.schema) },
+							AS_TEXT,
+						)
+					: t('stackiq', 'The stackiq register is out of date.'),
+				hint: t(
+					'stackiq',
+					'It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.',
+				),
+			}
+		case 'IMPORT_IN_PROGRESS':
+			return {
+				title: t('stackiq', 'Another CMDB import is running.'),
+				hint: t(
+					'stackiq',
+					'Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.',
+				),
+			}
+		case 'MUNICIPALITY_AMBIGUOUS':
+			return {
+				title:
+					Array.isArray(details.matches) && details.matches.length > 1
+						? t(
+								'stackiq',
+								'{count} municipalities have this name.',
+								{ count: String(details.matches.length) },
+								AS_TEXT,
+							)
+						: t('stackiq', 'Several municipalities have this name.'),
+				hint: t(
+					'stackiq',
+					'Choose the municipality from the list instead of typing its name. Nothing was imported.',
 				),
 			}
 		case 'OPERATION_NOT_FOUND':

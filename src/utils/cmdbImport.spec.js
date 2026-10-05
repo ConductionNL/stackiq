@@ -52,6 +52,10 @@ const SERVER_CODES = [
 	'MAPPING_UNAVAILABLE',
 	'READER_UNAVAILABLE',
 	'NOT_CONFIGURED',
+	'WORKBOOK_TOO_LARGE',
+	'SCHEMA_OUTDATED',
+	'IMPORT_IN_PROGRESS',
+	'MUNICIPALITY_AMBIGUOUS',
 	'OPERATION_NOT_FOUND',
 	'IMPORT_INTERRUPTED',
 	'NOT_SIGNED_IN',
@@ -131,6 +135,22 @@ describe('buildImportForm', () => {
 		expect(form.has('municipalityUuid')).toBe(false)
 		expect(form.get('municipalityName')).toBe('Berkel & Rodenrijs')
 		expect(form.get('updateExisting')).toBe('false')
+	})
+
+	it('publishes what the import creates unless told not to', () => {
+		const options = {
+			file,
+			municipality: { uuid: 'uuid-1', name: 'Tilburg' },
+			updateExisting: true,
+			operationId: 'cmdb-abcdefgh',
+		}
+		expect(buildImportForm(options).get('publish')).toBe('true')
+		expect(buildImportForm({ ...options, publish: true }).get('publish')).toBe(
+			'true',
+		)
+		expect(buildImportForm({ ...options, publish: false }).get('publish')).toBe(
+			'false',
+		)
 	})
 })
 
@@ -270,6 +290,50 @@ describe('errorText', () => {
 		expect(errorText({ error: 'NO_SOURCE_SHEET', details: {} }).hint).toContain(
 			PROFILE_DEFAULTS.sheets[1],
 		)
+	})
+
+	it('names the unpacked size limit the server applied', () => {
+		expect(
+			errorText({
+				error: 'WORKBOOK_TOO_LARGE',
+				details: { maxUncompressedBytes: 100 * 1024 * 1024 },
+			}).title,
+		).toContain('100 MB')
+		expect(errorText({ error: 'WORKBOOK_TOO_LARGE', details: {} }).title).toBe(
+			'The workbook is too large to read once unpacked.',
+		)
+	})
+
+	it('names the outdated schema and points to Force Update', () => {
+		const words = errorText({
+			error: 'SCHEMA_OUTDATED',
+			details: { schema: 'module', missing: ['externalKey'] },
+		})
+		expect(words.title).toBe(
+			'The "module" schema of the stackiq register is out of date.',
+		)
+		expect(words.hint).toContain('Force Update')
+		expect(errorText({ error: 'SCHEMA_OUTDATED', details: {} }).title).toBe(
+			'The stackiq register is out of date.',
+		)
+	})
+
+	it('asks to wait for the import that is running', () => {
+		expect(errorText({ error: 'IMPORT_IN_PROGRESS', details: {} }).hint).toContain(
+			'Only one import runs at a time.',
+		)
+	})
+
+	it('counts the municipalities with the typed name and asks to pick one', () => {
+		const words = errorText({
+			error: 'MUNICIPALITY_AMBIGUOUS',
+			details: { matches: ['uuid-1', 'uuid-2', 'uuid-3'] },
+		})
+		expect(words.title).toBe('3 municipalities have this name.')
+		expect(words.hint).toContain('from the list')
+		expect(
+			errorText({ error: 'MUNICIPALITY_AMBIGUOUS', details: {} }).title,
+		).toBe('Several municipalities have this name.')
 	})
 
 	it('puts names from the details in as they are, for Vue to escape once', () => {

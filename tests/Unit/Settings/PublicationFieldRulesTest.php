@@ -95,7 +95,8 @@ class PublicationFieldRulesTest extends TestCase {
 		foreach ($private as $schema => $fields) {
 			foreach ($fields as $field) {
 				$this->assertArrayHasKey($field, $schemas[$schema]['properties'], $schema . '.' . $field . ' exists');
-				$this->assertSame(['read' => ['authenticated']], $schemas[$schema]['properties'][$field]['authorization'] ?? null, $schema . '.' . $field);
+				// Other fragments may add write rules (module.externalKey: update by admin only); the read rule is this one.
+				$this->assertSame(['authenticated'], $schemas[$schema]['properties'][$field]['authorization']['read'] ?? null, $schema . '.' . $field);
 				$this->assertArrayHasKey('type', $schemas[$schema]['properties'][$field], $schema . '.' . $field . ' is a real property, not a rule on nothing');
 			}
 		}

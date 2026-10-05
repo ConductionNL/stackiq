@@ -399,8 +399,44 @@ class CmdbImportControllerTest extends TestCase {
 			'rows' => [CmdbImportException::TOO_MANY_ROWS, 422, ['sheet' => 'Beheerde Applicaties CMDB', 'limit' => 10000]],
 			'municipality' => [CmdbImportException::MUNICIPALITY_INVALID, 422, []],
 			'corrupt' => [CmdbImportException::NOT_XLSX, 400, []],
+			'unpacked size' => [CmdbImportException::WORKBOOK_TOO_LARGE, 413, ['maxUncompressedBytes' => 104857600]],
+			'schema' => [CmdbImportException::SCHEMA_OUTDATED, 503, ['schema' => 'module', 'missing' => ['externalKey']]],
+			'running' => [CmdbImportException::IMPORT_IN_PROGRESS, 409, []],
+			'ambiguous' => [CmdbImportException::MUNICIPALITY_AMBIGUOUS, 422, ['matches' => ['00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002']]],
 		];
 	}//end serviceErrors()
+
+	/**
+	 * The engine codes added for the workbook, register, lock and municipality checks, with their words.
+	 *
+	 * @return array<string, array{string, string}>
+	 */
+	public static function engineMessages(): array {
+		return [
+			'unpacked size' => [CmdbImportException::WORKBOOK_TOO_LARGE, 'The workbook is too large to read once unpacked.'],
+			'schema' => [CmdbImportException::SCHEMA_OUTDATED, 'The stackiq register is out of date; import its configuration again.'],
+			'running' => [CmdbImportException::IMPORT_IN_PROGRESS, 'Another CMDB import is running; try again when it has finished.'],
+			'ambiguous' => [CmdbImportException::MUNICIPALITY_AMBIGUOUS, 'Several municipalities have this name; choose one from the list.'],
+		];
+	}//end engineMessages()
+
+	/**
+	 * Each of these codes has its own translated message, not the generic one.
+	 *
+	 * @param string $code The error code.
+	 * @param string $message The expected message.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('engineMessages')]
+	public function testEngineCodesHaveTheirOwnMessage(string $code, string $message): void {
+		$service = $this->service();
+		$service->method('import')->willThrowException(new CmdbImportException(errorCode: $code, message: 'internal'));
+
+		$response = $this->controller(file: $this->file(path: $this->upload()), params: ['municipalityName' => 'Gemeente Voorbeeldstad'], service: $service)->import();
+
+		$this->assertSame($message, $response->getData()['message']);
+	}//end testEngineCodesHaveTheirOwnMessage()
 
 	/**
 	 * A service exception becomes its contract response.
@@ -492,7 +528,9 @@ class CmdbImportControllerTest extends TestCase {
 					'municipalityUuid' => '',
 					'municipalityName' => 'Gemeente Voorbeeldstad',
 					'updateExisting' => false,
+					'publish' => true,
 					'operationId' => 'cmdb-00000000-0000-0000-0000-000000000000',
+					'fileName' => 'export.xlsx',
 				]
 			)
 			->willReturn(['success' => true, 'summary' => ['created' => 2]]);
@@ -524,7 +562,9 @@ class CmdbImportControllerTest extends TestCase {
 					'municipalityUuid' => '00000000-0000-0000-0000-000000000001',
 					'municipalityName' => 'Gemeente Voorbeeldstad',
 					'updateExisting' => true,
+					'publish' => true,
 					'operationId' => 'not-a-cmdb-id',
+					'fileName' => 'export.xlsx',
 				]
 			)
 			->willReturn(['success' => true]);
@@ -563,6 +603,23 @@ class CmdbImportControllerTest extends TestCase {
 
 		$this->controller(file: $this->file(path: $this->upload()), params: ['municipalityName' => 'X'], service: $service, logger: $logger)->import();
 	}//end testRefusalsAndFailuresAreLogged()
+
+	/**
+	 * The upload's base name reaches the service as fileName, without any directory part the client sent.
+	 *
+	 * @return void
+	 */
+	public function testTheUploadsBaseNameReachesTheService(): void {
+		$service = $this->service();
+		$service->expects($this->once())->method('import')
+			->with($this->anything(), $this->callback(fn (array $options): bool => $options['fileName'] === 'CMDB export.xlsx'))
+			->willReturn(['success' => true]);
+
+		$file = $this->file(path: $this->upload(), name: 'C:\\Users\\beheer\\CMDB export.xlsx');
+		$response = $this->controller(file: $file, params: ['municipalityName' => 'Gemeente Voorbeeldstad'], service: $service)->import();
+
+		$this->assertSame(200, $response->getStatus());
+	}//end testTheUploadsBaseNameReachesTheService()
 
 	/**
 	 * The spellings of updateExisting and what each one means; null is refused.
@@ -625,6 +682,45 @@ class CmdbImportControllerTest extends TestCase {
 
 		$this->assertSame(200, $response->getStatus());
 	}//end testUpdateExistingAcceptsOnlyExplicitValues()
+
+	/**
+	 * Only true/false and 1/0 decide whether created modules are published; anything else is 400 FIELD_INVALID.
+	 *
+	 * The spellings are those of updateExisting: a typo never publishes what the admin chose to keep unpublished.
+	 *
+	 * @param mixed $value The form value, or null for an absent field.
+	 * @param bool|null $expected The value passed to the import, or null for a refusal.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('updateExistingValues')]
+	public function testPublishAcceptsOnlyExplicitValues(mixed $value, ?bool $expected): void {
+		$service = $this->service();
+		$params = ['municipalityName' => 'Gemeente Voorbeeldstad'];
+		if ($value !== null) {
+			$params['publish'] = $value;
+		}
+
+		if ($expected === null) {
+			$service->expects($this->never())->method('import');
+		} else {
+			$service->expects($this->once())->method('import')
+				->with($this->anything(), $this->callback(fn (array $options): bool => $options['publish'] === $expected))
+				->willReturn(['success' => true]);
+		}
+
+		$response = $this->controller(file: $this->file(path: $this->upload()), params: $params, service: $service)->import();
+
+		if ($expected === null) {
+			$this->assertSame(400, $response->getStatus());
+			$this->assertSame('FIELD_INVALID', $response->getData()['error']);
+			$this->assertEquals((object)['field' => 'publish', 'accepted' => ['true', 'false']], $response->getData()['details']);
+			$this->assertSame('Field "publish" must be one of: true, false.', $response->getData()['message']);
+			return;
+		}
+
+		$this->assertSame(200, $response->getStatus());
+	}//end testPublishAcceptsOnlyExplicitValues()
 
 	/**
 	 * A text field sent as an array is 400 FIELD_INVALID naming it, not the string "Array".

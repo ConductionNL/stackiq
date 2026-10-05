@@ -92,7 +92,9 @@ class CmdbExportImportServiceTest extends TestCase {
 	/**
 	 * Contacts in the fake address book: uid => name, email.
 	 *
-	 * @var array<string, array{name: string, email: string}>
+	 * `book` is the address book's URI; a contact without one is in the admin's personal address book.
+	 *
+	 * @var array<string, array{name: string, email: string, book?: string}>
 	 */
 	private array $contacts = [];
 
@@ -514,11 +516,14 @@ class CmdbExportImportServiceTest extends TestCase {
 	private function contactSync(): StackiqContactSyncService {
 		$sync = $this->createMock(StackiqContactSyncService::class);
 		$sync->method('isAvailable')->willReturnCallback(fn (): bool => $this->contactsEnabled);
-		$sync->method('searchContacts')->willReturnCallback(
-			function (string $query): array {
+		$sync->method('searchContacts')->willThrowException(new \LogicException('owners are only searched in the named address book'));
+		$sync->method('searchNamedAddressBook')->willReturnCallback(
+			function (string $query, string $addressBookUri): array {
 				$found = [];
 				foreach ($this->contacts as $uid => $contact) {
-					if (str_contains(mb_strtolower($contact['name']), mb_strtolower($query)) === true) {
+					if (($contact['book'] ?? 'personal') === $addressBookUri
+						&& str_contains(mb_strtolower($contact['name']), mb_strtolower($query)) === true
+					) {
 						$found[] = ['uid' => $uid, 'name' => $contact['name'], 'email' => $contact['email']];
 					}
 				}
@@ -532,13 +537,17 @@ class CmdbExportImportServiceTest extends TestCase {
 				$this->addressBooks[$addressBookUri] = $displayName;
 				$email = (string)($record['email'] ?? '');
 				foreach ($this->contacts as $uid => $contact) {
-					if ($email !== '' && strcasecmp($contact['email'], $email) === 0) {
+					if ($email !== '' && ($contact['book'] ?? 'personal') === $addressBookUri && strcasecmp($contact['email'], $email) === 0) {
 						return $uid;
 					}
 				}
 
 				$uid = 'contact-' . (count($this->contacts) + 1);
-				$this->contacts[$uid] = ['name' => trim(($record['voornaam'] ?? '') . ' ' . ($record['achternaam'] ?? '')), 'email' => $email];
+				$this->contacts[$uid] = [
+					'name' => trim(($record['voornaam'] ?? '') . ' ' . ($record['achternaam'] ?? '')),
+					'email' => $email,
+					'book' => $addressBookUri,
+				];
 				return $uid;
 			}
 		);
@@ -805,7 +814,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertTrue($report['success']);
 		$this->assertFalse($report['cancelled']);
 		$this->assertSame('cmdb-test-0001', $report['operationId']);
-		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 0], $report['summary']);
+		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 0, 'unpublished' => 0], $report['summary']);
 		$this->assertSame('Gemeente Voorbeeldstad', $report['municipality']['name']);
 		$this->assertTrue($report['municipality']['created']);
 		$this->assertSame(['No municipality named "Gemeente Voorbeeldstad" was found, so it was created. Check the name if you meant an existing one.'], array_column($report['importWarnings'], 'message'), 'only the warning that the municipality was created');
@@ -1155,6 +1164,131 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAnUpdateNeverWritesPublicationDate()
 
 	/**
+	 * With publish false a created module gets no publicationDate and is counted; with true it gets the start time.
+	 *
+	 * An update leaves publicationDate as it was either way.
+	 *
+	 * @return void
+	 */
+	public function testPublishDecidesThePublicationDateOfCreatedModulesOnly(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->store[self::MODULE]['mod-old'] = [
+			'id' => 'mod-old',
+			'name' => 'Oud',
+			'externalKey' => 'topdesk:muni-1:1',
+			'publicationDate' => '2026-01-01T00:00:00+00:00',
+		];
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3), $this->row(appId: '3', row: 4)];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'publish' => false]);
+
+		$this->assertSame(['updated', 'created', 'created'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(2, $report['summary']['unpublished']);
+		$this->assertSame('2026-01-01T00:00:00+00:00', $this->store[self::MODULE]['mod-old']['publicationDate'], 'an update keeps it');
+		foreach ([$report['rows'][1]['moduleUuid'], $report['rows'][2]['moduleUuid']] as $uuid) {
+			$this->assertArrayNotHasKey('publicationDate', $this->store[self::MODULE][$uuid]);
+		}
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '4', row: 2)]))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'publish' => true]);
+
+		$this->assertSame(0, $report['summary']['unpublished']);
+		$published = $this->store[self::MODULE][$report['rows'][0]['moduleUuid']]['publicationDate'];
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00$/', $published);
+		$this->assertSame('2026-01-01T00:00:00+00:00', $this->store[self::MODULE]['mod-old']['publicationDate']);
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '5', row: 2)]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertArrayHasKey('publicationDate', $this->store[self::MODULE][$report['rows'][0]['moduleUuid']], 'publish defaults to true');
+	}//end testPublishDecidesThePublicationDateOfCreatedModulesOnly()
+
+	/**
+	 * A module whose import key was set to this municipality's but that only another organisation uses is not taken over.
+	 *
+	 * The row is skipped as a conflict, the module and its usage stay as they are, and no second module or usage is created.
+	 *
+	 * @return void
+	 */
+	public function testAnImportKeyOnAnotherOrganisationsModuleIsAConflict(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->seedOrganisation(uuid: 'muni-2', name: 'Gemeente Anderstad', type: 'Municipality');
+		$foreign = ['id' => 'mod-foreign', 'name' => 'Van Anderstad', 'externalKey' => 'topdesk:muni-1:1', 'website' => 'https://anderstad.example'];
+		$this->store[self::MODULE]['mod-foreign'] = $foreign;
+		$this->store[self::USAGE]['usage-foreign'] = ['id' => 'usage-foreign', 'consumer' => 'muni-2', 'module' => 'mod-foreign'];
+		$before = [count($this->store[self::MODULE]), count($this->store[self::USAGE])];
+
+		foreach ([true, false] as $updateExisting) {
+			$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(
+				path: '',
+				options: ['municipalityUuid' => 'muni-1', 'updateExisting' => $updateExisting]
+			);
+
+			$this->assertSame('skipped', $report['rows'][0]['outcome']);
+			$this->assertSame(['conflict: the application with this import key is used by another organisation, so it is not changed'], $report['rows'][0]['reasons']);
+			$this->assertNull($report['rows'][0]['moduleUuid']);
+			$this->assertNull($report['rows'][0]['usageUuid']);
+		}
+
+		$this->assertSame($foreign, $this->store[self::MODULE]['mod-foreign'], 'the other organisation\'s module is unchanged');
+		$this->assertSame($before, [count($this->store[self::MODULE]), count($this->store[self::USAGE])], 'no module and no usage is created');
+		$conflicts = array_filter($this->logLines, static fn (string $line): bool => str_contains($line, 'another organisation uses'));
+		$this->assertCount(2, $conflicts);
+	}//end testAnImportKeyOnAnotherOrganisationsModuleIsAConflict()
+
+	/**
+	 * A module found by its import key is updated when this municipality uses it, also when others use it too, or when nobody does yet.
+	 *
+	 * @return void
+	 */
+	public function testAModuleThisMunicipalityUsesOrNobodyUsesIsUpdated(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->seedOrganisation(uuid: 'muni-2', name: 'Gemeente Anderstad', type: 'Municipality');
+		$this->store[self::MODULE]['mod-shared'] = ['id' => 'mod-shared', 'name' => 'Oud', 'externalKey' => 'topdesk:muni-1:1'];
+		$this->store[self::USAGE]['usage-other'] = ['id' => 'usage-other', 'consumer' => 'muni-2', 'module' => 'mod-shared'];
+		$this->store[self::USAGE]['usage-own'] = ['id' => 'usage-own', 'consumer' => 'muni-1', 'module' => 'mod-shared'];
+		$this->store[self::MODULE]['mod-new'] = ['id' => 'mod-new', 'name' => 'Nog niet gebruikt', 'externalKey' => 'topdesk:muni-1:2'];
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['updated', 'updated'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(['mod-shared', 'mod-new'], array_column($report['rows'], 'moduleUuid'));
+		$this->assertSame('Applicatie 1', $this->store[self::MODULE]['mod-shared']['name']);
+		$this->assertSame('Applicatie 2', $this->store[self::MODULE]['mod-new']['name']);
+		$this->assertCount(2, $this->objects(self::MODULE));
+	}//end testAModuleThisMunicipalityUsesOrNobodyUsesIsUpdated()
+
+	/**
+	 * A re-import follows TOPdesk's status, and sets the TIME classification only when the usage is new or the field is empty.
+	 *
+	 * An administrator's edit of the TIME classification stays; the status and the phase-out date follow the export.
+	 *
+	 * @return void
+	 */
+	public function testAReimportFollowsTheStatusAndKeepsTheTimeClassificationOfAUsage(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->store[self::MODULE]['mod-1'] = ['id' => 'mod-1', 'name' => 'Applicatie 1', 'externalKey' => 'topdesk:muni-1:1'];
+		$this->store[self::MODULE]['mod-2'] = ['id' => 'mod-2', 'name' => 'Applicatie 2', 'externalKey' => 'topdesk:muni-1:2'];
+		$this->store[self::USAGE]['usage-1'] = [
+			'id' => 'usage-1',
+			'consumer' => 'muni-1',
+			'module' => 'mod-1',
+			'status' => 'To be phased out',
+			'timeClassification' => 'Migrate',
+			'startDateOutPhased' => '2030-01-01',
+		];
+		$this->store[self::USAGE]['usage-2'] = ['id' => 'usage-2', 'consumer' => 'muni-1', 'module' => 'mod-2'];
+		$cells = ['Applicatie Status' => 'In productie', 'Classificatie' => 'Tolereren', 'End-of-Life Functioneel' => 53359];
+		$rows = [$this->row(appId: '1', cells: $cells, row: 2), $this->row(appId: '2', cells: $cells, row: 3)];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('In production', $this->store[self::USAGE]['usage-1']['status'], 'the status follows TOPdesk');
+		$this->assertSame('Migrate', $this->store[self::USAGE]['usage-1']['timeClassification'], 'an edited TIME classification stays');
+		$this->assertSame('2046-02-01', $this->store[self::USAGE]['usage-1']['startDateOutPhased'], 'the phase-out date follows the export');
+		$this->assertSame('In production', $this->store[self::USAGE]['usage-2']['status'], 'an empty status is filled');
+		$this->assertSame('Tolerate', $this->store[self::USAGE]['usage-2']['timeClassification'], 'an empty TIME classification is filled');
+	}//end testAReimportFollowsTheStatusAndKeepsTheTimeClassificationOfAUsage()
+
+	/**
 	 * A municipality uuid must be an organisation of type Municipality.
 	 *
 	 * @return void
@@ -1464,7 +1598,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	public function testAnOwnerByNameIsMatchedExactly(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		// A contact whose name merely contains the owner's name must not match.
-		$this->contacts['contact-other'] = ['name' => 'Voornaam Achternaam-Anders', 'email' => ''];
+		$this->contacts['contact-other'] = ['name' => 'Voornaam Achternaam-Anders', 'email' => '', 'book' => 'stackiq-cmdb-owners'];
 		$rows = [$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam'])];
 
 		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
@@ -1477,6 +1611,30 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('role', $people[0]);
 		$this->assertSame($people[0]['id'], $this->objects(self::USAGE)[0]['businessOwner']);
 	}//end testAnOwnerByNameIsMatchedExactly()
+
+	/**
+	 * A namesake in the admin's personal address book is never linked; a contact in the owners' address book is reused.
+	 *
+	 * @return void
+	 */
+	public function testOwnersAreMatchedOnlyInTheOwnersAddressBook(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->contacts['contact-personal'] = ['name' => 'Voornaam Achternaam', 'email' => ''];
+		$this->contacts['contact-owner'] = ['name' => 'Teamleider Applicatiebeheer', 'email' => '', 'book' => 'stackiq-cmdb-owners'];
+		$rows = [
+			$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam'], row: 2),
+			$this->row(appId: '2', cells: ['Applicatie Eigenaar (Persoon)' => 'Teamleider Applicatiebeheer'], row: 3),
+		];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$uids = array_column($this->objects(self::CONTACT_PERSON), 'contactsUid');
+		$this->assertNotContains('contact-personal', $uids, 'a personal contact with the same name is not linked');
+		$this->assertContains('contact-owner', $uids, 'the contact in the owners\' address book is reused');
+		$this->assertCount(3, $this->contacts, 'one new contact, in the owners\' address book');
+		$created = array_diff_key($this->contacts, ['contact-personal' => true, 'contact-owner' => true]);
+		$this->assertSame(['stackiq-cmdb-owners'], array_values(array_unique(array_column($created, 'book'))));
+	}//end testOwnersAreMatchedOnlyInTheOwnersAddressBook()
 
 	/**
 	 * No technical owner is written, whatever the row holds.
@@ -1568,7 +1726,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAnImportedContactPersonIsNeverAUser()
 
 	/**
-	 * An import logs who ran it, on which file and municipality, with which updateExisting, and the counts.
+	 * An import logs who ran it, on which file and municipality, with which updateExisting and publish, and the counts.
 	 *
 	 * @return void
 	 */
@@ -1576,10 +1734,10 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(
 			path: '',
-			options: ['municipalityUuid' => 'muni-1', 'updateExisting' => false, 'operationId' => 'cmdb-audit-01', 'fileName' => 'C:\\Users\\beheer\\export.xlsx']
+			options: ['municipalityUuid' => 'muni-1', 'updateExisting' => false, 'publish' => false, 'operationId' => 'cmdb-audit-01', 'fileName' => 'C:\\Users\\beheer\\export.xlsx']
 		);
 
-		$audit = '"operationId":"cmdb-audit-01","uid":"admin","fileName":"export.xlsx","municipality":"muni-1","municipalityCreated":false,"updateExisting":false';
+		$audit = '"operationId":"cmdb-audit-01","uid":"admin","fileName":"export.xlsx","municipality":"muni-1","municipalityCreated":false,"updateExisting":false,"publish":false';
 		$started = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: import started')));
 		$finished = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: import finished')));
 		$this->assertCount(1, $started);
@@ -1652,7 +1810,7 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->assertSame(['created', 'failed', 'created'], array_column($report['rows'], 'outcome'));
 		$this->assertStringStartsWith('step "module" failed', $report['rows'][1]['reasons'][0]);
-		$this->assertSame(['rowsRead' => 3, 'processed' => 3, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 1, 'warnings' => 0], $report['summary']);
+		$this->assertSame(['rowsRead' => 3, 'processed' => 3, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 1, 'warnings' => 0, 'unpublished' => 0], $report['summary']);
 		$this->assertCount(2, $this->store[self::MODULE]);
 	}//end testOneBadRowDoesNotStopTheOthers()
 
@@ -2013,7 +2171,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->beforeSave = function (int $schema): void {
 			if ($schema === self::USAGE) {
 				// The progress write after this row fails, outside every row boundary.
-				$this->cacheFailure = new \Error('cache went away');
+				$this->cacheFailure = new \Error("cache went away writing Applicatie 2 for owner jan.jansen@example.org\nsecond line");
 			}
 		};
 
@@ -2021,12 +2179,20 @@ class CmdbExportImportServiceTest extends TestCase {
 			$service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-failing-1']);
 			$this->fail('the import should have thrown');
 		} catch (\Error $e) {
-			$this->assertSame('cache went away', $e->getMessage());
+			$this->assertStringStartsWith('cache went away', $e->getMessage());
 		}
 
 		$stored = $this->cache['progress_cmdb-failing-1'];
 		$this->assertSame('failed', $stored['status']);
-		$this->assertSame('cache went away', $stored['errors'][0]['message']);
+		$this->assertSame(CmdbExportImportService::FAILED_RUN_MESSAGE, $stored['errors'][0]['message'], 'a code and a generic message, never the exception text');
+		$this->assertStringNotContainsString('jan.jansen', json_encode($stored));
+
+		$failed = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: import failed')));
+		$this->assertCount(1, $failed);
+		$this->assertStringContainsString('"exception":"Error"', $failed[0]);
+		$this->assertStringContainsString('<e-mail>', $failed[0]);
+		$this->assertStringNotContainsString('jan.jansen', $failed[0]);
+		$this->assertStringNotContainsString('second line', $failed[0]);
 	}//end testAFailureOutsideARowMarksTheOperationFailed()
 
 	/**

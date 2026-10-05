@@ -21,13 +21,15 @@
  * OpenRegister's `ObjectServiceInterface` (ADR-022).
  *
  * Rules stated once and enforced here:
- * - A module matches on `externalKey`; a usage on (consumer, module); a
+ * - A module matches on `externalKey`, but only when the municipality
+ *   uses it or no organisation does yet; a usage on (consumer, module); a
  *   manufacturer on its normalised name, a Municipality of that name before
  *   a Supplier, so a municipality that builds its own applications stays one
  *   organisation; a contact person on (contactsUid, organization). An organisation that was merged away
  *   (status `merged`) or is `Inactive` is never matched by name.
- * - `publicationDate` is set to the import's start on create and never
- *   written on update; neither is `depublicationDate`.
+ * - `publicationDate` is set to the import's start on create, unless the
+ *   admin chose not to publish (`publish` false), and never written on
+ *   update; neither is `depublicationDate`.
  * - Records missing from a newer export are left untouched.
  * - Owners become contact persons, never Nextcloud user accounts, and no
  *   report entry or log line carries an owner name or e-mail address.
@@ -134,6 +136,19 @@ class CmdbExportImportService {
 	 * The most report rows stored with the operation in the distributed cache; the counts are always kept.
 	 */
 	public const STORED_REPORT_ROWS = 500;
+
+	/**
+	 * The upsert outcome of a module whose import key matches but that another organisation uses.
+	 */
+	private const MODULE_CONFLICT = 'conflict';
+
+	/**
+	 * What the progress entry of a failed run says: a code and a generic message.
+	 *
+	 * The entry is readable by everyone who may follow the operation, and an
+	 * exception message can quote cell values or person data, so it is never stored.
+	 */
+	public const FAILED_RUN_MESSAGE = 'IMPORT_FAILED: The import stopped unexpectedly. The details are in the Nextcloud log.';
 
 	/**
 	 * The URI of the importing admin's address book that new owner contacts go into.
@@ -323,8 +338,8 @@ class CmdbExportImportService {
 	 * before the file is read until it returns or throws.
 	 *
 	 * @param string $path The xlsx file, already checked by assertXlsx().
-	 * @param array<string, mixed> $options municipalityUuid, municipalityName, updateExisting, operationId,
-	 *                                      and fileName (the upload's name, for the audit log line).
+	 * @param array<string, mixed> $options municipalityUuid, municipalityName, updateExisting, publish,
+	 *                                      operationId, and fileName (the upload's name, for the audit log line).
 	 *
 	 * @return array<string, mixed> The report (contract.md).
 	 *
@@ -450,6 +465,11 @@ class CmdbExportImportService {
 
 		$this->winningSheets = $this->winningSheets(rows: $rows);
 		$updateExisting = (($options['updateExisting'] ?? true) !== false);
+		$publish = (($options['publish'] ?? true) !== false);
+		$publicationDate = null;
+		if ($publish === true) {
+			$publicationDate = $startedAt;
+		}
 		$audit = [
 			'operationId' => $operationId,
 			'uid' => $this->userSession->getUser()?->getUID(),
@@ -457,6 +477,7 @@ class CmdbExportImportService {
 			'municipality' => $municipality['uuid'],
 			'municipalityCreated' => $municipality['created'],
 			'updateExisting' => $updateExisting,
+			'publish' => $publish,
 		];
 		$this->logger->info('CmdbExportImportService: import started', array_merge($audit, ['rows' => count($rows)]));
 		try {
@@ -469,8 +490,7 @@ class CmdbExportImportService {
 				$this->processRow(
 					row: $row,
 					municipalityUuid: $municipality['uuid'],
-					updateExisting: $updateExisting,
-					startedAt: $startedAt,
+					options: ['updateExisting' => $updateExisting, 'publicationDate' => $publicationDate],
 					date1904: $workbook['date1904'],
 					report: $report
 				);
@@ -482,7 +502,11 @@ class CmdbExportImportService {
 		} catch (Throwable $e) {
 			// Rows catch their own errors; this is the run itself failing, so the
 			// operation stops as failed instead of staying running until it expires.
-			$this->progressTracker->failOperation(message: $e->getMessage());
+			$this->logger->error(
+				'CmdbExportImportService: import failed',
+				['operationId' => $operationId, 'exception' => get_class($e), 'error' => self::logSafeMessage(step: 'import', e: $e, values: [])]
+			);
+			$this->progressTracker->failOperation(message: self::FAILED_RUN_MESSAGE);
 			throw $e;
 		}//end try
 
@@ -499,8 +523,8 @@ class CmdbExportImportService {
 	 *
 	 * @param array{sheet: string, row: int, cells: array<string, mixed>, uncached?: array<int, string>} $row The reader row.
 	 * @param string $municipalityUuid The consumer.
-	 * @param bool $updateExisting Whether matched rows are updated.
-	 * @param string $startedAt ISO start time of the import.
+	 * @param array{updateExisting: bool, publicationDate: string|null} $options Whether matched rows are updated, and the
+	 *                                                                         publicationDate of a created module (null: unpublished).
 	 * @param bool $date1904 The workbook's date system.
 	 * @param CmdbImportReport $report The report.
 	 *
@@ -511,8 +535,7 @@ class CmdbExportImportService {
 	private function processRow(
 		array $row,
 		string $municipalityUuid,
-		bool $updateExisting,
-		string $startedAt,
+		array $options,
 		bool $date1904,
 		CmdbImportReport $report,
 	): void {
@@ -530,10 +553,7 @@ class CmdbExportImportService {
 
 		$entry = ['sheet' => $sheet, 'row' => $rowNumber, 'appId' => $appId, 'name' => $name];
 
-		$warnings = [];
-		foreach (($row['uncached'] ?? []) as $column) {
-			$warnings[] = $this->l10n->t('Column "%s": formula without a cached value, read as empty', [(string)$column]);
-		}
+		$warnings = $this->uncachedWarnings(row: $row);
 
 		$matchKey = self::matchKey(appId: $appId);
 		if ($this->skipForWinningSheet(report: $report, entry: $entry, matchKey: $matchKey, warnings: $warnings) === true) {
@@ -565,21 +585,21 @@ class CmdbExportImportService {
 			$providerUuid = $this->resolveManufacturer(values: $values, rowNumber: $rowNumber);
 
 			$step = 'module';
-			$externalKey = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $matchKey;
-			$moduleResult = $this->upsertModule(
+			$moduleResult = $this->importModule(
 				data: $module['data'],
-				externalKey: $externalKey,
+				municipalityUuid: $municipalityUuid,
+				matchKey: $matchKey,
 				providerUuid: $providerUuid,
-				startedAt: $startedAt,
-				updateExisting: $updateExisting
+				options: $options,
+				report: $report
 			);
 			$moduleUuid = $moduleResult['uuid'];
-			if ($moduleResult['outcome'] === 'exists') {
+			if ($moduleResult['skipReason'] !== null) {
 				$this->addRow(
 					report: $report,
 					entry: $entry,
 					outcome: CmdbImportReport::SKIPPED,
-					reasons: [$this->l10n->t('exists')],
+					reasons: [$moduleResult['skipReason']],
 					warnings: $warnings,
 					moduleUuid: $moduleUuid
 				);
@@ -607,6 +627,24 @@ class CmdbExportImportService {
 		$outcome = self::rowOutcome(module: $moduleResult['outcome'], usage: $usageResult['outcome']);
 		$this->addRow(report: $report, entry: $entry, outcome: $outcome, warnings: $warnings, moduleUuid: $moduleUuid, usageUuid: $usageUuid);
 	}//end processRow()
+
+	/**
+	 * The warning for each formula cell of a row that had no cached value.
+	 *
+	 * @param array{uncached?: array<int, string>} $row The reader row.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	private function uncachedWarnings(array $row): array {
+		$warnings = [];
+		foreach (($row['uncached'] ?? []) as $column) {
+			$warnings[] = $this->l10n->t('Column "%s": formula without a cached value, read as empty', [(string)$column]);
+		}
+
+		return $warnings;
+	}//end uncachedWarnings()
 
 	/**
 	 * Report a row as failed at a step, and log it without person data.
@@ -946,19 +984,108 @@ class CmdbExportImportService {
 	}//end resolveManufacturer()
 
 	/**
+	 * Upsert the row's module, and count it when it was created unpublished.
+	 *
+	 * A module found by its import key that another organisation uses is a
+	 * conflict: it is neither changed nor duplicated, and the row is skipped.
+	 * The log line names the module and the APPID's match key, nothing else.
+	 *
+	 * @param array<string, mixed> $data The mapped module fields.
+	 * @param string $municipalityUuid The consumer.
+	 * @param string $matchKey The APPID's match key.
+	 * @param string|null $providerUuid The supplier, when there is one.
+	 * @param array{updateExisting: bool, publicationDate: string|null} $options The run's choices.
+	 * @param CmdbImportReport $report The report.
+	 *
+	 * @return array{uuid: string|null, outcome: string, skipReason: string|null} The module, the outcome of
+	 *                                                                         upsertModule(), and why the row is skipped.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 */
+	private function importModule(
+		array $data,
+		string $municipalityUuid,
+		string $matchKey,
+		?string $providerUuid,
+		array $options,
+		CmdbImportReport $report,
+	): array {
+		$result = $this->upsertModule(
+			data: $data,
+			externalKey: $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $matchKey,
+			municipalityUuid: $municipalityUuid,
+			providerUuid: $providerUuid,
+			publicationDate: $options['publicationDate'],
+			updateExisting: $options['updateExisting']
+		);
+
+		if ($result['outcome'] === self::MODULE_CONFLICT) {
+			$this->logger->warning(
+				'CmdbExportImportService: import key belongs to a module another organisation uses; row not imported',
+				['module' => $result['uuid'], 'municipality' => $municipalityUuid, 'appId' => $matchKey]
+			);
+			$reason = $this->l10n->t('conflict: the application with this import key is used by another organisation, so it is not changed');
+			return ['uuid' => null, 'outcome' => $result['outcome'], 'skipReason' => $reason];
+		}
+
+		if ($result['outcome'] === 'exists') {
+			return ['uuid' => $result['uuid'], 'outcome' => $result['outcome'], 'skipReason' => $this->l10n->t('exists')];
+		}
+
+		if ($result['outcome'] === CmdbImportReport::CREATED && $options['publicationDate'] === null) {
+			$report->countUnpublished();
+		}
+
+		return ['uuid' => $result['uuid'], 'outcome' => $result['outcome'], 'skipReason' => null];
+	}//end importModule()
+
+	/**
+	 * Whether a module found by its import key may be updated for this municipality.
+	 *
+	 * The import key is a property of the module, so it is only trusted
+	 * together with the usages: the module must already have a usage whose
+	 * consumer is this municipality, or, before the first import, no usage
+	 * at all. A module only another organisation uses is never taken over.
+	 *
+	 * @param string $moduleUuid The module found by its import key.
+	 * @param string $municipalityUuid The consumer of this import.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 */
+	private function moduleBelongsTo(string $moduleUuid, string $municipalityUuid): bool {
+		if ($this->findOne(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid]) !== null) {
+			return true;
+		}
+
+		return $this->findOne(schemaKey: 'usage', filters: ['module' => $moduleUuid]) === null;
+	}//end moduleBelongsTo()
+
+	/**
 	 * Create, update, or leave the module matched on its external key.
 	 *
 	 * @param array<string, mixed> $data The mapped module fields.
 	 * @param string $externalKey The match key.
+	 * @param string $municipalityUuid The consumer, whose usage a matched module must have.
 	 * @param string|null $providerUuid The supplier, when there is one.
-	 * @param string $startedAt ISO start time of the import.
+	 * @param string|null $publicationDate ISO start time of the import for a module that is published
+	 *                                     when created, or null to create it unpublished.
 	 * @param bool $updateExisting Whether a match is updated.
 	 *
-	 * @return array{uuid: string, outcome: string} Outcome created, updated, unchanged or exists.
+	 * @return array{uuid: string, outcome: string} Outcome created, updated, unchanged, exists, or conflict
+	 *                                              (MODULE_CONFLICT) for a module another organisation uses.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
-	private function upsertModule(array $data, string $externalKey, ?string $providerUuid, string $startedAt, bool $updateExisting): array {
+	private function upsertModule(
+		array $data,
+		string $externalKey,
+		string $municipalityUuid,
+		?string $providerUuid,
+		?string $publicationDate,
+		bool $updateExisting,
+	): array {
 		$data['externalKey'] = $externalKey;
 		if ($providerUuid !== null) {
 			$data['provider'] = $providerUuid;
@@ -967,11 +1094,19 @@ class CmdbExportImportService {
 		$existing = $this->findOne(schemaKey: 'module', filters: ['externalKey' => $externalKey]);
 		if ($existing === null) {
 			$create = array_merge($this->profile->createOnlyDefaults(target: 'module'), $data);
-			$create['publicationDate'] = $startedAt;
+			unset($create['publicationDate']);
+			if ($publicationDate !== null) {
+				$create['publicationDate'] = $publicationDate;
+			}
+
 			return ['uuid' => $this->save(schemaKey: 'module', data: $create, uuid: null), 'outcome' => CmdbImportReport::CREATED];
 		}
 
 		$uuid = (string)$existing->getUuid();
+		if ($this->moduleBelongsTo(moduleUuid: $uuid, municipalityUuid: $municipalityUuid) === false) {
+			return ['uuid' => $uuid, 'outcome' => self::MODULE_CONFLICT];
+		}
+
 		if ($updateExisting === false) {
 			return ['uuid' => $uuid, 'outcome' => 'exists'];
 		}
@@ -1147,12 +1282,13 @@ class CmdbExportImportService {
 	/**
 	 * Resolve the Nextcloud contact of an owner identity.
 	 *
-	 * With an e-mail address, StackiqContactSyncService matches on it or
-	 * creates the contact. A new contact goes into the importing admin's
-	 * dedicated "Stackiq CMDB owners" address book, never into the admin's
-	 * own address book. Without one, only a contact whose display name is
-	 * exactly the owner's name (case-insensitive) is reused, so an owner
-	 * known by name alone is not created again on every import.
+	 * Contacts are matched, and created, only in the importing admin's
+	 * dedicated "Stackiq CMDB owners" address book, never in the admin's
+	 * other address books. With an e-mail address, StackiqContactSyncService
+	 * matches on it there or creates the contact. Without one, only a contact
+	 * there whose display name is exactly the owner's name (case-insensitive)
+	 * is reused, so an owner known by name alone is not created again on
+	 * every import.
 	 *
 	 * @param array<string, mixed> $identity name, email and role from the owner pack.
 	 *
@@ -1206,7 +1342,11 @@ class CmdbExportImportService {
 	}//end resolveContactUid()
 
 	/**
-	 * The contact whose display name is exactly this one, case-insensitive.
+	 * The contact in the owners' address book whose display name is exactly this one, case-insensitive.
+	 *
+	 * Only the dedicated "Stackiq CMDB owners" address book is searched: a
+	 * namesake in another address book of the admin, such as a personal
+	 * contact, is never linked to an imported owner.
 	 *
 	 * @param string $displayName The display name.
 	 *
@@ -1216,7 +1356,8 @@ class CmdbExportImportService {
 	 */
 	private function contactByDisplayName(string $displayName): ?string {
 		$needle = mb_strtolower($displayName);
-		foreach ($this->contactSync->searchContacts(query: $displayName) as $contact) {
+		$contacts = $this->contactSync->searchNamedAddressBook(query: $displayName, addressBookUri: self::OWNER_ADDRESS_BOOK_URI, properties: ['FN']);
+		foreach ($contacts as $contact) {
 			if (mb_strtolower(trim((string)($contact['name'] ?? ''))) === $needle) {
 				return (string)$contact['uid'];
 			}

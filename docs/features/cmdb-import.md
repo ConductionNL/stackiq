@@ -40,7 +40,8 @@ catalogue that includes the register `stackiq` and the schema `module`. In
 OpenCatalogi, open the catalogue that should show the municipality's
 applications and add that register and schema. A newly imported module gets
 a publication date (the moment the import started), so it is listed from then
-on.
+on, unless you turn off **Publish the applications this import creates**
+(see the steps below).
 
 **Portaliq ("Software we use").** Portaliq shows an application to a
 municipality through a usage whose consumer is that municipality. The portal
@@ -56,23 +57,38 @@ page in stackiq.
    the list, or type the name of a new one and press Enter. A typed name that
    matches an existing municipality (ignoring case and extra spaces) uses that
    municipality; otherwise a new organisation of type Municipality with
-   status Active is created during the import.
+   status Active is created during the import, and the result warns about
+   it. When more than one municipality has the typed name, the import is
+   refused (`MUNICIPALITY_AMBIGUOUS`): pick the right one from the list.
 3. **File.** Choose the TOPdesk export (`.xlsx`, at most 10 MB by default; see
    [Limits](#limits)).
 4. **Update existing records.** On by default. Turn it off to import only
    applications that are new for this municipality; rows that match an
    existing application are then reported as *skipped* with reason `exists`
    and nothing about them changes.
-5. Press **Import**. A progress bar shows how many rows have been processed.
+5. **Publish the applications this import creates.** On by default. A
+   published application is visible to anyone, including anonymous visitors
+   of OpenCatalogi. Turn it off to create the new applications without a
+   publication date; they stay unpublished until you publish them by hand,
+   and the summary counts them as *created unpublished*. Applications that
+   were imported before keep their publication as it is, whichever you
+   choose.
+6. Press **Import**. A progress bar shows how many rows have been processed.
    **Cancel import** stops the import before the next row; rows that were
    already processed stay imported. The section says whether the server
    accepted the cancel; one pressed before the server has started on the
    rows cannot take effect yet, and the section says so.
 
+One import runs at a time. While an import is running, a second one, from
+another administrator or another browser tab, is refused with
+`IMPORT_IN_PROGRESS` and reads nothing; start it again when the first has
+finished.
+
 When the import finishes, the section shows:
 
 - the **summary**: rows read, created, updated, unchanged, skipped, failed
-  and warnings;
+  and warnings, and, when publishing was off, how many applications were
+  created unpublished;
 - **warnings for the whole file**, for example an optional column that is
   missing;
 - the **rows** table: sheet, row number, APPID, application, outcome,
@@ -142,8 +158,8 @@ date stored there, including one set by hand.
 | Datum | module external creation date | Excel date |
 | Referentie datum wijziging | module external modification date | Excel date |
 | Vendor | Supplier organisation, set as provider on the module and the usage | one organisation per name, see below |
-| Applicatie Status | usage status | In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren and Moet verwijderd worden → To be phased out, Uitgefaseerd and Verwijderd → Phased out, Besteld and Wordt getest → Acquisition, Stand-by voor continuïteit → In production; another value is dropped with a warning |
-| Classificatie | usage TIME classification | Tolereren/Tolerate (also `1. Tolereren (wordt ingelezen)`), Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
+| Applicatie Status | usage status | follows the export on every import (see [Repeat imports](#repeat-imports)); In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren and Moet verwijderd worden → To be phased out, Uitgefaseerd and Verwijderd → Phased out, Besteld and Wordt getest → Acquisition, Stand-by voor continuïteit → In production; another value is dropped with a warning |
+| Classificatie | usage TIME classification | set only when the usage is new or its TIME classification is empty; Tolereren/Tolerate (also `1. Tolereren (wordt ingelezen)`), Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
 | End-of-Life Functioneel | usage phase-out date | Excel date, stored as is |
 | (the sheet), Cluster, Applicatie Eigenaar (Afdeling) | usage internal annotation | `Beheer geregeld: ja` or `nee`, the cluster and the department, joined with ` / `; written only when the usage is new or the note is empty |
 | Applicatie Eigenaar (Persoon), Applicatie Eigenaar (Functie) | usage business owner (contact person) | see [Owners](#owners) |
@@ -170,10 +186,17 @@ Applicatienummer) stays the same when TOPdesk changes the Applicatie Code
 (Middel-ID). Two municipalities can each have an APPID `101` without
 colliding.
 
-- **New APPID**: a module and a usage are created. The module gets a
-  publication date (the moment the import started), so OpenCatalogi lists it.
+- **New APPID**: a module and a usage are created. With **Publish the
+  applications this import creates** on, the module gets a publication date
+  (the moment the import started), so OpenCatalogi lists it; with it off,
+  the module has no publication date and is not public.
 - **Known APPID, values changed**: only the fields in the column table
-  are updated. Everything else on the module stays as it is, for example a
+  are updated, and of those, the usage's TIME classification and internal
+  note only when they are empty: a classification set in stackiq stays,
+  whatever the export says. A re-import does overwrite the application's
+  name, descriptions, application type, hosting model, BBN level, source
+  fields and supplier, and the usage's status, phase-out date and business
+  owner. Everything else on the module stays as it is, for example a
   website an administrator added. The publication date and the depublication
   date are never changed: a module an administrator depublished stays
   depublished. The row is reported as *updated*.
@@ -191,6 +214,14 @@ colliding.
   its contact persons are left as they are. They are not changed, depublished
   or deleted.
 - Each application keeps exactly one usage for the municipality.
+- **Known APPID, but the application belongs to another organisation**: an
+  application found by its match key is only updated when the municipality
+  already uses it, or when no organisation uses it yet. When only other
+  organisations use it, the row is *skipped* with reason `conflict: the
+  application with this import key is used by another organisation, so it
+  is not changed`; nothing is changed and no second application is created.
+  Check the application's import key in stackiq. Only a Nextcloud
+  administrator can change an import key.
 
 Rows are **skipped** when the APPID is empty (`missing APPID`), when the
 Applicatie Naam is empty (`missing Applicatie Naam`), when an APPID appears a
@@ -220,10 +251,14 @@ owner's function in the person column; the import then uses that function as
 the contact's name. No technical owner is imported: the functional
 administrator (FB contactpersoon) is not read.
 
-The identity is kept in **Nextcloud Contacts**, in the first writable
-address book of the administrator who runs the import, the same as every
-other stackiq contact. The CMDB sheets have no e-mail address, so a contact
-is found by an exact match on the name, and created when there is none. The
+The identity is kept in **Nextcloud Contacts**, in a dedicated address book,
+**Stackiq CMDB owners**, of the administrator who runs the import; the import
+creates that address book the first time it needs it. The import looks for
+an existing contact only in that address book, never in the administrator's
+own address books: a personal contact who happens to have the owner's name
+is not linked to the application. The CMDB sheets have no e-mail address, so
+a contact is found by an exact match on the name in **Stackiq CMDB owners**,
+and created there when there is none. The
 stackiq contact person object only holds the link to that contact, the role
 and the municipality. The same owner on several rows is one contact person.
 
@@ -250,12 +285,16 @@ and the section shows the reason and the error code.
 | `NO_SOURCE_SHEET` | Neither `Onbeh Applicaties CMDB` nor `Beheerde Applicaties CMDB` is in the workbook. | Check the sheet names; they must match exactly. |
 | `MISSING_COLUMN` | A present CMDB sheet has no `APPID` or `Applicatie Naam` column. The message names the sheet and the column. | Add the column to that sheet. |
 | `TOO_MANY_ROWS` | A CMDB sheet has more rows with data than the row limit (10,000 by default). The message names the sheet and the limit. | Split the export and import the parts one after the other. |
-| `FIELD_INVALID` | A form field of the request has a value the import does not accept, for example an `updateExisting` that is neither `true` nor `false`. The message names the field. | Not reachable from the section; reported for API callers. |
+| `WORKBOOK_TOO_LARGE` | Unpacked, the workbook is larger than the import reads (50 MB by default). An `.xlsx` is a compressed package, so a small file can unpack to far more. The message names the limit. | Remove sheets the import does not read, such as the archive sheet, or split the export. |
+| `MUNICIPALITY_AMBIGUOUS` | More than one municipality has the typed name. The import does not guess which one. | Pick the municipality from the list instead of typing its name. |
+| `IMPORT_IN_PROGRESS` | Another CMDB import is running. Only one import runs at a time. | Wait until it has finished and try again. |
+| `FIELD_INVALID` | A form field of the request has a value the import does not accept, for example an `updateExisting` or `publish` that is neither `true` nor `false`. The message names the field. | Not reachable from the section; reported for API callers. |
 | `UPLOAD_FAILED` | The file reached the server but could not be stored there. | Try again; the Nextcloud log has the details. |
 | `MISSING_RECORDS_UNSUPPORTED` | The request asked to mark or remove records missing from the export. Only keeping them is supported. | Not reachable from the section; reported for API callers. |
 | `MAPPING_UNAVAILABLE` | OpenRegister's mapping engine is missing, or one of the mapping files is invalid. | Update OpenRegister. If you changed a mapping file, check it against the Nextcloud log. |
 | `READER_UNAVAILABLE` | The Excel reader that ships with OpenRegister cannot be loaded. | Make sure OpenRegister is installed and enabled. |
 | `NOT_CONFIGURED` | The stackiq register or its schemas cannot be found. | Run **Auto Configure** at the top of the stackiq admin settings. |
+| `SCHEMA_OUTDATED` | A stackiq schema lacks a property the import recognises records by, for example `externalKey` on the module schema. Importing anyway would create every application again. The message names the schema. | Press **Force Update** at the top of the stackiq admin settings to import the register configuration again. |
 | `IMPORT_FAILED` | Something unexpected went wrong. | The Nextcloud log has the details. |
 
 **The connection was cut off.** The import runs in one request. When that
@@ -274,13 +313,14 @@ page.
 
 ## Limits
 
-Two limits are read from `lib/Settings/cmdb-import/topdesk-profile.json` on
+Three limits are read from `lib/Settings/cmdb-import/topdesk-profile.json` on
 every import:
 
 | Setting | Default | What it limits |
 |---|---|---|
 | `maxFileBytes` | `10485760` (10 MB) | the size of the uploaded file |
 | `maxRowsPerSheet` | `10000` | the rows with data on one CMDB sheet |
+| `maxUncompressedBytes` | `52428800` (50 MB) | the size of the workbook once unpacked, checked before a sheet is parsed |
 
 The section's help text shows the defaults; when the server refuses a file,
 the message shows the limit the server applied. A larger file also has to

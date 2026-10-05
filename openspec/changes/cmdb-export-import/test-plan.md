@@ -23,7 +23,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: Playwright `cmdb-import.spec.ts`; PHPUnit `CmdbExportImportServiceTest`
 
 ### TC-3: Changed fields update, publicationDate and unmapped fields are kept
-- **spec_ref**: `spec.md#requirement-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating-req-cmdb-006`, `#requirement-a-newly-created-module-shall-get-a-publicationdate-and-an-existing-one-shall-keep-its-own-req-cmdb-007`
+- **spec_ref**: `spec.md#requirement-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating-req-cmdb-006`, `#requirement-a-newly-created-module-shall-get-a-publicationdate-when-the-admin-publishes-and-an-existing-one-shall-keep-its-own-req-cmdb-007`
 - **type**: api
 - **preconditions**: modules imported; an admin set `website` on APPID `2` and depublished it
 - **steps**: import rows where "Applicatie Naam" of APPID `2` is `naamtest124`, and where the "Applicatie Code" of APPID `42` changed
@@ -87,7 +87,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `CmdbExportImportServiceTest`, `CmdbPersonDataVisibilityTest`, Playwright `cmdb-import.spec.ts` (anonymous test), `/test-security`
 
 ### TC-11: OpenCatalogi finds an imported application
-- **spec_ref**: `spec.md#requirement-a-newly-created-module-shall-get-a-publicationdate-and-an-existing-one-shall-keep-its-own-req-cmdb-007`
+- **spec_ref**: `spec.md#requirement-a-newly-created-module-shall-get-a-publicationdate-when-the-admin-publishes-and-an-existing-one-shall-keep-its-own-req-cmdb-007`
 - **type**: functional
 - **persona**: Sem de Jong (Young Digital Native; anonymous search)
 - **preconditions**: OpenCatalogi catalogue with registers `[stackiq]`, schemas `[module]`, listed and published (docs, prerequisites); TC-1 done

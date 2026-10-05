@@ -87,7 +87,7 @@ class CmdbImportController extends Controller {
 	 * Import a TOPdesk CMDB export for one municipality.
 	 *
 	 * Multipart fields: `cmdbFile`, `municipalityUuid` or `municipalityName`,
-	 * `updateExisting` (default true), `missingRecords` (only `keep`) and
+	 * `updateExisting` (default true), `publish` (default true), `missingRecords` (only `keep`) and
 	 * `operationId` (pattern `cmdb-` plus 8 to 64 letters, digits or hyphens).
 	 *
 	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
@@ -161,7 +161,7 @@ class CmdbImportController extends Controller {
 			return $this->fromException(e: $e);
 		}
 
-		return $this->readOptions(path: $upload['tmpName']);
+		return $this->readOptions(path: $upload['tmpName'], fileName: $upload['name']);
 	}//end validateRequest()
 
 	/**
@@ -219,12 +219,13 @@ class CmdbImportController extends Controller {
 	 * being cast to the string "Array".
 	 *
 	 * @param string $path The checked upload.
+	 * @param string $fileName The upload's name as the client sent it; its base name is passed on for the audit log.
 	 *
 	 * @return array{path: string, options: array<string, mixed>}|JSONResponse The import input, or the first error.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
 	 */
-	private function readOptions(string $path): array|JSONResponse {
+	private function readOptions(string $path, string $fileName): array|JSONResponse {
 		$missingRecords = $this->stringParam(name: 'missingRecords', default: 'keep');
 		if ($missingRecords === null) {
 			return $this->invalidField(field: 'missingRecords');
@@ -238,6 +239,12 @@ class CmdbImportController extends Controller {
 		$updateExisting = $this->booleanParam(name: 'updateExisting', default: true);
 		if ($updateExisting === null) {
 			return $this->invalidField(field: 'updateExisting', accepted: ['true', 'false']);
+		}
+
+		// Read like updateExisting: a typo must not publish what the admin chose to keep unpublished.
+		$publish = $this->booleanParam(name: 'publish', default: true);
+		if ($publish === null) {
+			return $this->invalidField(field: 'publish', accepted: ['true', 'false']);
 		}
 
 		$municipalityUuid = $this->stringParam(name: 'municipalityUuid', default: '');
@@ -262,7 +269,9 @@ class CmdbImportController extends Controller {
 				'municipalityUuid' => $municipalityUuid,
 				'municipalityName' => $municipalityName,
 				'updateExisting' => $updateExisting,
+				'publish' => $publish,
 				'operationId' => $this->request->getParam('operationId'),
+				'fileName' => basename(str_replace('\\', '/', $fileName)),
 			],
 		];
 	}//end readOptions()
@@ -370,6 +379,10 @@ class CmdbImportController extends Controller {
 			'NOT_CONFIGURED' => $this->l10n->t('Stackiq is not configured: the register or its schemas cannot be found.'),
 			'OPERATION_NOT_FOUND' => $this->l10n->t('No running CMDB import has this id.'),
 			'UPLOAD_FAILED' => $this->l10n->t('The server could not store the uploaded file. The details are in the Nextcloud log.'),
+			'WORKBOOK_TOO_LARGE' => $this->l10n->t('The workbook is too large to read once unpacked.'),
+			'SCHEMA_OUTDATED' => $this->l10n->t('The stackiq register is out of date; import its configuration again.'),
+			'IMPORT_IN_PROGRESS' => $this->l10n->t('Another CMDB import is running; try again when it has finished.'),
+			'MUNICIPALITY_AMBIGUOUS' => $this->l10n->t('Several municipalities have this name; choose one from the list.'),
 			default => $this->l10n->t('The import failed. The details are in the Nextcloud log.'),
 		};
 	}//end message()

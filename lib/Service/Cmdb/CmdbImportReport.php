@@ -66,6 +66,13 @@ class CmdbImportReport {
 	private ?array $municipality = null;
 
 	/**
+	 * Modules this run created without a publication date.
+	 *
+	 * @var int
+	 */
+	private int $unpublished = 0;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $operationId The progress operation id.
@@ -151,6 +158,17 @@ class CmdbImportReport {
 	}//end setMunicipality()
 
 	/**
+	 * Count a module this run created without publishing it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	public function countUnpublished(): void {
+		$this->unpublished++;
+	}//end countUnpublished()
+
+	/**
 	 * Mark the run as stopped on a cancel.
 	 *
 	 * @return void
@@ -175,7 +193,11 @@ class CmdbImportReport {
 	/**
 	 * The summary counts.
 	 *
-	 * @return array{rowsRead: int, processed: int, created: int, updated: int, unchanged: int, skipped: int, failed: int, warnings: int}
+	 * `unpublished` counts the modules created without a publication date;
+	 * a row whose module was created but whose usage then failed counts too.
+	 *
+	 * @return array{rowsRead: int, processed: int, created: int, updated: int, unchanged: int, skipped: int, failed: int,
+	 *     warnings: int, unpublished: int}
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
@@ -189,6 +211,7 @@ class CmdbImportReport {
 			self::SKIPPED => 0,
 			self::FAILED => 0,
 			'warnings' => 0,
+			'unpublished' => $this->unpublished,
 		];
 
 		foreach ($this->rows as $row) {
