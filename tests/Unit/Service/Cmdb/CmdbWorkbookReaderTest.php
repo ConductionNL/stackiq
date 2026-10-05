@@ -452,20 +452,83 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testASharedStringsTableUnderAnotherRootIsCounted()
 
 	/**
+	 * The runs of a rich-text entry count against maxSharedStrings, also when no cell references it.
+	 *
+	 * PhpSpreadsheet keeps every run of every rich-text entry as objects for the whole load, so one entry
+	 * of many runs is as costly as as many entries. A table of exactly the limit, runs included, is read.
+	 * The runs of a cell's own rich text (an inline string) count the same way, in any part.
+	 *
+	 * @return void
+	 */
+	public function testTheRunsOfARichTextEntryCountAsEntries(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxSharedStrings' => 1000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		// The table holds the two headers, the name the cell references, and one entry of n runs: 4 + n entries.
+		$atLimit = self::sharedStringWorkbook(entry: '<si><t>Een</t></si><si>' . str_repeat('<r><t>a</t></r>', 996) . '</si>', cells: 1);
+		$overLimit = self::sharedStringWorkbook(entry: '<si><t>Een</t></si><si>' . str_repeat('<r><t>a</t></r>', 997) . '</si>', cells: 1, part: 'strings.bin');
+		$inline = CmdbTestSupport::buildWorkbook(
+			sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam']]],
+			extraParts: [
+				'xl/worksheets/notes.bin' => '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'
+					. '<row r="2"><c r="A2"><v>1</v></c><c r="B2" t="inlineStr"><is>' . str_repeat('<r><rPr/></r>', 1001) . '</is></c></row></sheetData></worksheet>',
+			]
+		);
+		try {
+			RecordingXlsxReader::$loads = 0;
+			try {
+				$reader->read(path: $inline, profile: $this->profile(directory: $directory));
+				$this->fail('WORKBOOK_TOO_LARGE expected for the inline runs');
+			} catch (CmdbImportException $e) {
+				$this->assertSame(['maxSharedStrings' => 1000], $e->getDetails(), 'the inline runs count');
+				$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded for the inline runs');
+			}
+
+			$this->assertCount(1, $reader->read(path: $atLimit, profile: $this->profile(directory: $directory))['rows'], 'a table of exactly the limit is read');
+
+			RecordingXlsxReader::$loads = 0;
+			$reader->read(path: $overLimit, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(['maxSharedStrings' => 1000], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($atLimit);
+			unlink($overLimit);
+			unlink($inline);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testTheRunsOfARichTextEntryCountAsEntries()
+
+	/**
 	 * One shared string referenced by many cells is refused before loading, as rich text or as plain text.
 	 *
 	 * PhpSpreadsheet gives every referencing cell its own copy, cloning each run of a rich-text string first,
-	 * so a small file holds the string once but would make PhpSpreadsheet build it once per cell. Both
-	 * packages pass every other limit.
+	 * so a small file holds the string once but would make PhpSpreadsheet build it once per cell. Every
+	 * package passes every other limit. The last three are shaped so that a check reading the package
+	 * differently from PhpSpreadsheet charges the light entry: an entry of another namespace before the
+	 * headers (PhpSpreadsheet numbers only its own), a decoy `<v>` of another namespace before the real one
+	 * (PhpSpreadsheet reads only its own), a table whose part name does not end in `.xml`, and a `<v>` whose
+	 * own text differs from all the text inside it (PhpSpreadsheet reads its own text).
 	 *
 	 * @return void
 	 */
 	public function testOneSharedStringReferencedByManyCellsIsRefusedBeforeLoading(): void {
 		$this->requireSpreadsheet();
 		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$rich = '<si>' . str_repeat('<r><rPr><b/></rPr><t>ab</t></r>', 500) . '</si>';
 		$packages = [
-			'rich text' => self::sharedStringWorkbook(entry: '<si>' . str_repeat('<r><rPr><b/></rPr><t>ab</t></r>', 500) . '</si>', cells: 50),
+			'rich text' => self::sharedStringWorkbook(entry: $rich, cells: 50),
 			'plain text' => self::sharedStringWorkbook(entry: '<si><t>' . str_repeat('x', 20000) . '</t></si>', cells: 50),
+			'an entry of another namespace first' => self::sharedStringWorkbook(entry: $rich, cells: 50, before: '<o:si xmlns:o="urn:x"><o:t>z</o:t></o:si>'),
+			'a decoy value of another namespace' => self::sharedStringWorkbook(entry: $rich, cells: 50, value: '<o:v xmlns:o="urn:x">99</o:v><v>2</v>'),
+			'a table not named .xml' => self::sharedStringWorkbook(entry: $rich, cells: 50, part: 'sharedStrings.bin'),
+			'a value with a child element' => self::sharedStringWorkbook(entry: $rich, cells: 50, value: '<v><o:x xmlns:o="urn:x">9</o:x>2</v>'),
 		];
 		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxReferencedStringBytes' => 400000]);
 		$reader = new class extends CmdbWorkbookReader {
@@ -517,25 +580,28 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 *
 	 * @param string $entry The `<si>` element every name references.
 	 * @param int $cells The number of rows that reference it.
+	 * @param string $before Elements placed in the table before the two headers.
+	 * @param string $value What each name cell holds: the `<v>` that points at the entry.
+	 * @param string $part The name of the shared-strings part under `xl/`.
 	 *
 	 * @return string The path of the workbook.
 	 */
-	private static function sharedStringWorkbook(string $entry, int $cells): string {
+	private static function sharedStringWorkbook(string $entry, int $cells, string $before = '', string $value = '<v>2</v>', string $part = 'sharedStrings.xml'): string {
 		$main = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 		$rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 		$rows = '<row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c></row>';
 		for ($row = 2; $row <= $cells + 1; $row++) {
-			$rows .= '<row r="' . $row . '"><c r="A' . $row . '"><v>' . ($row - 1) . '</v></c><c r="B' . $row . '" t="s"><v>2</v></c></row>';
+			$rows .= '<row r="' . $row . '"><c r="A' . $row . '"><v>' . ($row - 1) . '</v></c><c r="B' . $row . '" t="s">' . $value . '</c></row>';
 		}
 
 		return CmdbTestSupport::buildWorkbook(
 			sheets: ['Beheerde Applicaties CMDB' => []],
 			extraParts: [
 				'xl/worksheets/sheet1.xml' => '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="' . $main . '"><sheetData>' . $rows . '</sheetData></worksheet>',
-				'xl/sharedStrings.xml' => '<?xml version="1.0" encoding="UTF-8"?><sst xmlns="' . $main . '"><si><t>APPID</t></si><si><t>Applicatie Naam</t></si>' . $entry . '</sst>',
+				'xl/' . $part => '<?xml version="1.0" encoding="UTF-8"?><sst xmlns="' . $main . '">' . $before . '<si><t>APPID</t></si><si><t>Applicatie Naam</t></si>' . $entry . '</sst>',
 				'xl/_rels/workbook.xml.rels' => '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
 					. '<Relationship Id="rId1" Type="' . $rel . '/worksheet" Target="worksheets/sheet1.xml"/>'
-					. '<Relationship Id="rId2" Type="' . $rel . '/sharedStrings" Target="sharedStrings.xml"/></Relationships>',
+					. '<Relationship Id="rId2" Type="' . $rel . '/sharedStrings" Target="' . $part . '"/></Relationships>',
 			]
 		);
 	}//end sharedStringWorkbook()
