@@ -448,7 +448,7 @@ class ProgressTracker {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
 	public function clearCancelRequested(string $operationId): void {
-		$this->store->remove(key: 'cancel_' . $operationId);
+		$this->store->clearCancel(operationId: $operationId);
 	}//end clearCancelRequested()
 
 	/**
