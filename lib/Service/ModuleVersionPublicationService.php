@@ -309,7 +309,7 @@ class ModuleVersionPublicationService {
 	 */
 	private function logFailure(string $message, array $context, bool $depublishes): void {
 		if ($depublishes === true) {
-			$this->logger->critical($message . '; the version stays public until it is saved again or the backfill runs', $context);
+			$this->logger->critical($message . '; the version stays public until a later copy onto it succeeds', $context);
 			return;
 		}
 

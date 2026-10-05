@@ -27,6 +27,7 @@ use OCA\Stackiq\BackgroundJob\ModuleVersionPublicationJob;
 use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\Service\ModuleVersionPublicationService;
 use OCA\Stackiq\Service\SettingsService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -59,6 +60,20 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 * @var array<int, array{0: string, 1: mixed}>
 	 */
 	private array $queued = [];
+
+	/**
+	 * The retries the job scheduled: argument and run-after time.
+	 *
+	 * @var array<int, array{0: mixed, 1: int}>
+	 */
+	private array $retries = [];
+
+	/**
+	 * The job list double, shared by the service and the job.
+	 *
+	 * @var IJobList&MockObject
+	 */
+	private IJobList&MockObject $jobList;
 
 	/**
 	 * The service of the current test.
@@ -179,6 +194,13 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 				$this->queued[] = [$job, $argument];
 			}
 		);
+		$jobList->method('scheduleAfter')->willReturnCallback(
+			function (string $job, int $runAfter, mixed $argument): void {
+				$this->assertSame(ModuleVersionPublicationJob::class, $job);
+				$this->retries[] = [$argument, $runAfter];
+			}
+		);
+		$this->jobList = $jobList;
 
 		$this->settings    = $settings;
 		$this->container   = $container;
@@ -194,7 +216,9 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	private function runQueuedJobs(): void {
 		foreach ($this->queued as [$class, $argument]) {
 			$this->assertSame(ModuleVersionPublicationJob::class, $class);
-			$job = new ModuleVersionPublicationJob($this->createMock(ITimeFactory::class), $this->publication, $this->settings, $this->container, $this->logger);
+			$time = $this->createMock(ITimeFactory::class);
+			$time->method('getTime')->willReturn(1000);
+			$job = new ModuleVersionPublicationJob($time, $this->publication, $this->settings, $this->container, $this->logger, $this->jobList);
 			$run = new \ReflectionMethod($job, 'run');
 			$run->invoke($job, $argument);
 		}
@@ -342,7 +366,8 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	 */
 	public function testAModuleGoneByTheTimeTheJobRunsClearsItsVersions(): void {
 		$service = $this->service();
-		$this->objects->method('find')->willReturn(null);
+		// OpenRegister's find() throws for a missing object; it does not return null.
+		$this->objects->method('find')->willThrowException(new DoesNotExistException('gone'));
 		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1', 'moduleRegisteredBy' => 'Supplier'])]);
 		$this->objects->expects($this->once())->method('saveObject')->with(
 			$this->callback(static fn (array $data): bool => $data['modulePublicationDate'] === null && $data['moduleRegisteredBy'] === null)
@@ -350,24 +375,52 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 
 		$service->objectSaved(object: self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
 		$this->runQueuedJobs();
+
+		$this->assertSame([], $this->retries, 'a module that is gone is not a failure');
 	}//end testAModuleGoneByTheTimeTheJobRunsClearsItsVersions()
 
 	/**
-	 * A module that cannot be read leaves its versions as they are, and says so.
+	 * A module that cannot be read is tried again a few minutes later, and given up after the last try.
 	 *
 	 * @return void
 	 */
-	public function testAModuleThatCannotBeReadLeavesItsVersions(): void {
+	public function testAModuleThatCannotBeReadIsTriedAgain(): void {
 		$service = $this->service();
 		$this->objects->method('find')->willThrowException(new \RuntimeException('database went away'));
 		$this->objects->expects($this->never())->method('searchObjects');
-		$this->logger->expects($this->once())->method('error')->with($this->stringContains('left as they are'));
-
 		$this->objects->expects($this->never())->method('saveObject');
+		$this->logger->expects($this->exactly(ModuleVersionPublicationJob::MAX_ATTEMPTS))->method('error')->with($this->stringContains('tried again later'));
+		$this->logger->expects($this->once())->method('critical')->with($this->stringContains('gave up'));
 
 		$service->objectSaved(object: self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
 		$this->runQueuedJobs();
-	}//end testAModuleThatCannotBeReadLeavesItsVersions()
+
+		$this->assertSame([[['module' => 'm-1', 'deleted' => false, 'attempt' => 2], 1000 + ModuleVersionPublicationJob::RETRY_DELAY]], $this->retries);
+
+		for ($attempt = 2; $attempt <= ModuleVersionPublicationJob::MAX_ATTEMPTS; $attempt++) {
+			$this->queued  = [[ModuleVersionPublicationJob::class, $this->retries[array_key_last($this->retries)][0]]];
+			$this->runQueuedJobs();
+		}
+
+		$this->assertCount(ModuleVersionPublicationJob::MAX_ATTEMPTS - 1, $this->retries, 'no retry after the last try');
+	}//end testAModuleThatCannotBeReadIsTriedAgain()
+
+	/**
+	 * A version that cannot be written during the job's copy is tried again.
+	 *
+	 * @return void
+	 */
+	public function testAFailedVersionWriteInTheJobIsTriedAgain(): void {
+		$service = $this->service();
+		$this->objects->method('find')->willReturn(self::entity('m-1', '43', ['registeredBy' => 'Municipality']));
+		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1', 'moduleRegisteredBy' => 'Supplier'])]);
+		$this->objects->method('saveObject')->willThrowException(new \RuntimeException('lock wait timeout'));
+
+		$service->objectDeleted(object: self::entity('m-1', '43', []));
+		$this->runQueuedJobs();
+
+		$this->assertSame([['module' => 'm-1', 'deleted' => true, 'attempt' => 2]], array_column($this->retries, 0));
+	}//end testAFailedVersionWriteInTheJobIsTriedAgain()
 
 	/**
 	 * A depublication that cannot be written is logged as critical: the version stays public.
