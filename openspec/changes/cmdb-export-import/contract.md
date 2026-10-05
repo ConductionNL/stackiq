@@ -62,7 +62,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 | 500  | `IMPORT_FAILED` (unexpected; generic message, details only in the log) |
 | 503  | `MAPPING_UNAVAILABLE`, `READER_UNAVAILABLE`, `NOT_CONFIGURED` |
 
-Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`. For `FIELD_INVALID`, it is `{"field": "updateExisting", "accepted": ["true", "false"]}`.
+Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`. For `FIELD_INVALID`, it names the field, plus the accepted values when the field has a fixed set: `{"field": "updateExisting", "accepted": ["true", "false"]}`, or `{"field": "municipalityName"}`.
 
 ### `POST /api/cmdb-import/{operationId}/cancel`
 **Auth**: the same as the import: a Nextcloud admin or delegated stackiq admin session, plus CSRF token.
@@ -92,7 +92,7 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progres
 | `NOT_XLSX` | not an xlsx workbook | extension is not `.xlsx`, no ZIP signature, or no `xl/workbook.xml` |
 | `FILE_TOO_LARGE` | too large | larger than the profile's `maxFileBytes` (10 MB) |
 | `MISSING_RECORDS_UNSUPPORTED` | option not supported | `missingRecords` is not `keep` |
-| `FIELD_INVALID` | malformed field (400) | `updateExisting` is not `true`, `false`, `1` or `0` |
+| `FIELD_INVALID` | malformed field (400) | `updateExisting` is not `true`, `false`, `1` or `0`, or `missingRecords`, `municipalityUuid` or `municipalityName` is sent as an array (`name[]=…`) |
 | `MUNICIPALITY_REQUIRED` | no consumer | neither `municipalityUuid` nor `municipalityName` given |
 | `MUNICIPALITY_INVALID` | wrong consumer | uuid unknown, or the organisation is not of type Municipality |
 | `NO_SOURCE_SHEET` | nothing to read | neither "Onbeh Applicaties CMDB" nor "Beheerde Applicaties CMDB" present |

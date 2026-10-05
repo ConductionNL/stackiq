@@ -145,7 +145,27 @@ class CmdbImportController extends Controller {
 			return $this->fromException(e: $e);
 		}
 
-		$missingRecords = (string)$this->request->getParam('missingRecords', 'keep');
+		return $this->readOptions(path: $upload['tmpName']);
+	}//end validateRequest()
+
+	/**
+	 * Read and check the form fields, after the upload itself was checked.
+	 *
+	 * A field sent as an array (`municipalityName[]=x`) is refused instead of
+	 * being cast to the string "Array".
+	 *
+	 * @param string $path The checked upload.
+	 *
+	 * @return array{path: string, options: array<string, mixed>}|JSONResponse The import input, or the first error.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 */
+	private function readOptions(string $path): array|JSONResponse {
+		$missingRecords = $this->stringParam(name: 'missingRecords', default: 'keep');
+		if ($missingRecords === null) {
+			return $this->invalidField(field: 'missingRecords');
+		}
+
 		if ($this->importService->supportsMissingRecords(mode: $missingRecords) === false) {
 			return $this->error(code: 'MISSING_RECORDS_UNSUPPORTED', status: Http::STATUS_UNPROCESSABLE_ENTITY, details: ['accepted' => ['keep']]);
 		}
@@ -153,21 +173,27 @@ class CmdbImportController extends Controller {
 		// An unrecognised value is refused rather than read as true: true is the mode that overwrites.
 		$updateExisting = $this->booleanParam(name: 'updateExisting', default: true);
 		if ($updateExisting === null) {
-			return $this->error(
-				code: 'FIELD_INVALID',
-				status: Http::STATUS_BAD_REQUEST,
-				details: ['field' => 'updateExisting', 'accepted' => ['true', 'false']]
-			);
+			return $this->invalidField(field: 'updateExisting', accepted: ['true', 'false']);
 		}
 
-		$municipalityUuid = trim((string)$this->request->getParam('municipalityUuid', ''));
-		$municipalityName = trim((string)$this->request->getParam('municipalityName', ''));
+		$municipalityUuid = $this->stringParam(name: 'municipalityUuid', default: '');
+		$municipalityName = $this->stringParam(name: 'municipalityName', default: '');
+		if ($municipalityUuid === null) {
+			return $this->invalidField(field: 'municipalityUuid');
+		}
+
+		if ($municipalityName === null) {
+			return $this->invalidField(field: 'municipalityName');
+		}
+
+		$municipalityUuid = trim($municipalityUuid);
+		$municipalityName = trim($municipalityName);
 		if ($municipalityUuid === '' && $municipalityName === '') {
 			return $this->error(code: CmdbImportException::MUNICIPALITY_REQUIRED, status: Http::STATUS_UNPROCESSABLE_ENTITY);
 		}
 
 		return [
-			'path' => $upload['tmpName'],
+			'path' => $path,
 			'options' => [
 				'municipalityUuid' => $municipalityUuid,
 				'municipalityName' => $municipalityName,
@@ -175,7 +201,8 @@ class CmdbImportController extends Controller {
 				'operationId' => $this->request->getParam('operationId'),
 			],
 		];
-	}//end validateRequest()
+	}//end readOptions()
+
 
 	/**
 	 * Ask a running CMDB import to stop between rows.
@@ -198,6 +225,23 @@ class CmdbImportController extends Controller {
 
 		return new JSONResponse(data: ['success' => true, 'cancelRequested' => true], statusCode: Http::STATUS_OK);
 	}//end cancel()
+
+	/**
+	 * The 400 FIELD_INVALID response for a malformed form field.
+	 *
+	 * @param string $field The field.
+	 * @param array<int, string> $accepted The values the field accepts, when it has a fixed set.
+	 *
+	 * @return JSONResponse
+	 */
+	private function invalidField(string $field, array $accepted = []): JSONResponse {
+		$details = ['field' => $field];
+		if ($accepted !== []) {
+			$details['accepted'] = $accepted;
+		}
+
+		return $this->error(code: 'FIELD_INVALID', status: Http::STATUS_BAD_REQUEST, details: $details);
+	}//end invalidField()
 
 	/**
 	 * Translate a CmdbImportException into its contract response.
@@ -251,7 +295,7 @@ class CmdbImportController extends Controller {
 			'NOT_XLSX' => $this->l10n->t('The file is not an Excel workbook (.xlsx).'),
 			'FILE_TOO_LARGE' => $this->l10n->t('The file is larger than the maximum of %s MB.', [$megabytes]),
 			'MISSING_RECORDS_UNSUPPORTED' => $this->l10n->t('Only keeping records that are missing from the export is supported.'),
-			'FIELD_INVALID' => $this->l10n->t('Field "%1$s" must be one of: %2$s.', [(string)($details['field'] ?? ''), $accepted]),
+			'FIELD_INVALID' => $this->fieldMessage(field: (string)($details['field'] ?? ''), accepted: $accepted),
 			'MUNICIPALITY_REQUIRED' => $this->l10n->t('Choose a municipality or enter the name of a new one.'),
 			'MUNICIPALITY_INVALID' => $this->l10n->t('The chosen organisation is not a municipality.'),
 			'NO_SOURCE_SHEET' => $this->l10n->t('The workbook has neither of the sheets %s.', [$expected]),
@@ -264,6 +308,22 @@ class CmdbImportController extends Controller {
 			default => $this->l10n->t('The import failed. The details are in the Nextcloud log.'),
 		};
 	}//end message()
+
+	/**
+	 * The message of FIELD_INVALID, naming the accepted values when the field has a fixed set.
+	 *
+	 * @param string $field The field.
+	 * @param string $accepted The accepted values, comma-separated, or ''.
+	 *
+	 * @return string
+	 */
+	private function fieldMessage(string $field, string $accepted): string {
+		if ($accepted === '') {
+			return $this->l10n->t('Field "%s" has an invalid value.', [$field]);
+		}
+
+		return $this->l10n->t('Field "%1$s" must be one of: %2$s.', [$field, $accepted]);
+	}//end fieldMessage()
 
 	/**
 	 * A boolean form field: `true`/`false` or `1`/`0`, trimmed and in any case.
@@ -295,6 +355,27 @@ class CmdbImportController extends Controller {
 	}//end booleanParam()
 
 	/**
+	 * A text form field.
+	 *
+	 * @param string $name The field.
+	 * @param string $default The value when absent.
+	 *
+	 * @return string|null Null when the field is not a single value, such as `name[]=x`.
+	 */
+	private function stringParam(string $name, string $default): ?string {
+		$value = $this->request->getParam($name, $default);
+		if (is_string($value) === true) {
+			return $value;
+		}
+
+		if (is_int($value) === true || is_float($value) === true) {
+			return (string)$value;
+		}
+
+		return null;
+	}//end stringParam()
+
+	/**
 	 * The uploaded export, or null when none was sent.
 	 *
 	 * @return array{tmpName: string, name: string, size: int, tooLarge: bool}|null
@@ -305,13 +386,18 @@ class CmdbImportController extends Controller {
 			return null;
 		}
 
-		$error = (int)($file['error'] ?? UPLOAD_ERR_OK);
+		// `cmdbFile[]` gives arrays for every key; that is no usable upload.
+		$error = $file['error'] ?? UPLOAD_ERR_OK;
+		if (is_int($error) === false) {
+			return null;
+		}
+
 		if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
 			return ['tmpName' => '', 'name' => (string)($file['name'] ?? ''), 'size' => 0, 'tooLarge' => true];
 		}
 
-		$tmpName = (string)($file['tmp_name'] ?? '');
-		if ($error !== UPLOAD_ERR_OK || $tmpName === '') {
+		$tmpName = $file['tmp_name'] ?? '';
+		if ($error !== UPLOAD_ERR_OK || is_string($tmpName) === false || $tmpName === '') {
 			return null;
 		}
 
@@ -320,6 +406,11 @@ class CmdbImportController extends Controller {
 			$size = (int)filesize($tmpName);
 		}
 
-		return ['tmpName' => $tmpName, 'name' => (string)($file['name'] ?? ''), 'size' => $size, 'tooLarge' => false];
+		$name = $file['name'] ?? '';
+		if (is_string($name) === false) {
+			$name = '';
+		}
+
+		return ['tmpName' => $tmpName, 'name' => $name, 'size' => $size, 'tooLarge' => false];
 	}//end uploadedFile()
 }//end class

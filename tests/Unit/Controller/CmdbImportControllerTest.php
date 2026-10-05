@@ -457,6 +457,56 @@ class CmdbImportControllerTest extends TestCase {
 	}//end testUpdateExistingAcceptsOnlyExplicitValues()
 
 	/**
+	 * A text field sent as an array is 400 FIELD_INVALID naming it, not the string "Array".
+	 *
+	 * @return array<string, array{string}>
+	 */
+	public static function textFields(): array {
+		return [
+			'missingRecords' => ['missingRecords'],
+			'municipalityUuid' => ['municipalityUuid'],
+			'municipalityName' => ['municipalityName'],
+		];
+	}//end textFields()
+
+	/**
+	 * An array-valued text field is refused and nothing is imported.
+	 *
+	 * @param string $field The field sent as an array.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('textFields')]
+	public function testAnArrayValuedFieldIsRefused(string $field): void {
+		$service = $this->service();
+		$service->expects($this->never())->method('import');
+		$params = ['municipalityName' => 'Gemeente Voorbeeldstad', $field => ['x']];
+
+		$response = $this->controller(file: $this->file(path: $this->upload()), params: $params, service: $service)->import();
+
+		$this->assertSame(400, $response->getStatus());
+		$this->assertSame('FIELD_INVALID', $response->getData()['error']);
+		$this->assertEquals((object)['field' => $field], $response->getData()['details']);
+		$this->assertSame('Field "' . $field . '" has an invalid value.', $response->getData()['message']);
+	}//end testAnArrayValuedFieldIsRefused()
+
+	/**
+	 * An upload field sent as `cmdbFile[]` is no upload: 400 NO_FILE_UPLOADED, and the ZIP check never runs.
+	 *
+	 * @return void
+	 */
+	public function testAnArrayValuedUploadIsNoUpload(): void {
+		$service = $this->service();
+		$service->expects($this->never())->method('assertXlsx');
+		$file = ['tmp_name' => [$this->upload()], 'name' => ['export.xlsx'], 'size' => [4], 'error' => [UPLOAD_ERR_OK]];
+
+		$response = $this->controller(file: $file, params: ['municipalityName' => 'Gemeente Voorbeeldstad'], service: $service)->import();
+
+		$this->assertSame(400, $response->getStatus());
+		$this->assertSame('NO_FILE_UPLOADED', $response->getData()['error']);
+	}//end testAnArrayValuedUploadIsNoUpload()
+
+	/**
 	 * Cancel answers 200 for a running import and 404 OPERATION_NOT_FOUND otherwise.
 	 *
 	 * @return void
