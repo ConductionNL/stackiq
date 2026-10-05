@@ -366,6 +366,7 @@ const KNOWN_ERRORS = new Set([
 	'NOT_XLSX',
 	'FILE_TOO_LARGE',
 	'MISSING_RECORDS_UNSUPPORTED',
+	'UPDATE_EXISTING_INVALID',
 	'MUNICIPALITY_REQUIRED',
 	'MUNICIPALITY_INVALID',
 	'NO_SOURCE_SHEET',
@@ -445,6 +446,17 @@ export function errorText(error) {
 					'Records missing from the export can only be kept.',
 				),
 				hint: '',
+			}
+		case 'UPDATE_EXISTING_INVALID':
+			return {
+				title: t(
+					'stackiq',
+					'The choice for "Update existing records" was not understood.',
+				),
+				hint: t(
+					'stackiq',
+					'It must be true or false. Reload the page and try again.',
+				),
 			}
 		case 'MUNICIPALITY_REQUIRED':
 			return {
