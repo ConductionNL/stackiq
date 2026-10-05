@@ -177,6 +177,13 @@ colliding.
   website an administrator added. The publication date and the depublication
   date are never changed: a module an administrator depublished stays
   depublished. The row is reported as *updated*.
+- **Known APPID, status changed in TOPdesk**: the usage gets the new status,
+  also where the regular steps of the usage lifecycle (Acquisition →
+  Planned → In production → To be phased out → Phased out) do not lead
+  there. The usage schema allows this jump to administrators only, so the
+  import must be run by a Nextcloud administrator; a delegated stackiq
+  admin who is not one gets the row reported as *failed*. Other users
+  still follow the regular steps.
 - **Known APPID, nothing changed**: nothing is saved; the row is reported
   as *unchanged*. Importing the same export twice creates nothing the second
   time.
