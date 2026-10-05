@@ -34,7 +34,7 @@ Nextcloud OCP interfaces used: `OCP\IRequest` (multipart upload), `OCP\IUserSess
 - **AND** the workbook reader SHALL NOT be invoked
 
 #### Scenario: A user without the stackiq admin settings cannot import
-@e2e exclude Authorisation rule enforced by Nextcloud's middleware; tests/Unit/Controller/CmdbImportControllerTest.php (testBothRoutesRequireTheStackiqAdminSetting, testNeitherRouteDeclaresAnExemption) asserts both routes require the StackiqAdmin setting and declare no exemption, and the Newman collection asserts 403 for a user who is not an admin and for a software-catalog-admins member.
+@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts asserts 403 on both routes for a signed-in user without the setting. tests/Unit/Controller/CmdbImportControllerTest.php (testBothRoutesRequireTheStackiqAdminSetting, testNeitherRouteDeclaresAnExemption) asserts both routes require the StackiqAdmin setting and declare no exemption, and the Newman collection asserts 403 for a software-catalog-admins member.
 
 - **GIVEN** a signed-in user who is neither a Nextcloud admin nor a member of a group delegated stackiq's admin settings, for example a member of `software-catalog-admins` only
 - **WHEN** they post an export to `POST /api/cmdb-import`
@@ -117,7 +117,7 @@ The request SHALL carry either `municipalityUuid`, the uuid of an existing stack
 - **AND** no new organisation of type `Municipality` SHALL be created
 
 #### Scenario: A new municipality is created once from a typed name
-@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php imports twice with municipalityName "Gemeente Voorbeeldstad" and asserts one organisation of type Municipality.
+@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
 
 - **GIVEN** no organisation named "Gemeente Voorbeeldstad"
 - **WHEN** a Nextcloud admin imports with `municipalityName` "Gemeente Voorbeeldstad", and later imports again with the same name
@@ -220,7 +220,7 @@ When the service creates a `module` it SHALL set `publicationDate` to the time t
 - **AND** a search in OpenCatalogi for `Aangetekend Mailen` SHALL find the module
 
 #### Scenario: Re-import preserves publicationDate
-@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php asserts both cases.
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testTheFixtureCreatesModulesUsagesAndSuppliers asserts publicationDate on created modules, and testAnUpdateNeverWritesPublicationDate asserts an update leaves it as it was.
 
 - **GIVEN** the module with APPID `1234` was imported with `publicationDate` 2026-10-01T09:00:00+00:00, and the module with APPID `2` was later depublished by an admin
 - **WHEN** a newer export is imported that changes both modules' names
@@ -240,7 +240,7 @@ The service SHALL map "Vendor" (the maker of the software) through the manufactu
 - **AND** all three modules SHALL have `provider` = its uuid
 
 #### Scenario: An existing supplier is reused
-@e2e exclude Covered by the service test.
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testAVendorIsOneSupplier seeds the Supplier "Aangetekend B.V." and asserts that the module of its row gets it as provider and no second supplier is created.
 
 - **GIVEN** an existing organisation `Aangetekend B.V.` of type `Supplier`
 - **WHEN** the "Onbeh" row with "Vendor" `Aangetekend B.V.` is imported
@@ -268,7 +268,7 @@ For each imported module the service SHALL keep exactly one `usage` with `consum
 - **AND** that account SHALL see `Aangetekend Mailen` and `naamtest123` under "Software we use"
 
 #### Scenario: A re-import does not add a second usage
-@e2e exclude Covered by the re-import scenario of REQ-CMDB-006 and the service test.
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testReimportingTheSameExportChangesNothing imports twice and asserts unchanged object counts, usages included.
 
 - **GIVEN** the module with APPID `2` already has a usage for "Gemeente Voorbeeldstad"
 - **WHEN** a newer export is imported for the same municipality
@@ -296,7 +296,7 @@ The business owner pack SHALL map "Applicatie Eigenaar (Persoon)" (the display n
 - **AND** the OpenCatalogi search hit SHALL carry no owner name, and its `contactPerson` and `usages` SHALL be empty or ids only
 
 #### Scenario: The same owner on two rows is one contact person
-@e2e exclude Covered by the service test.
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testTheSameOwnerOnTwoRowsIsOneContactPerson.
 
 - **GIVEN** two rows with the same "Applicatie Eigenaar (Persoon)"
 - **WHEN** they are imported
@@ -333,7 +333,7 @@ The service SHALL process every non-empty row in its own error boundary. An exce
 - **AND** the response SHALL be 200 with that summary
 
 #### Scenario: A row without a name is skipped with its reason
-@e2e exclude Covered by the service test.
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testRowsAreSkippedWithTheirReasons asserts the row is skipped with `missing Applicatie Naam`.
 
 - **GIVEN** a row on "Beheerde Applicaties CMDB" with an APPID but an empty "Applicatie Naam"
 - **WHEN** it is imported
@@ -351,7 +351,7 @@ The import SHALL accept `missingRecords` with the value `keep`, which is also th
 - **THEN** the module with APPID `7` and its usage SHALL be unchanged
 
 #### Scenario: A reserved value is refused
-@e2e exclude Validation; tests/Unit/Controller/CmdbImportControllerTest.php.
+@e2e exclude Validation; tests/Unit/Controller/CmdbImportControllerTest.php testAReservedMissingRecordsValueIsRefused.
 
 - **GIVEN** a valid export
 - **WHEN** a Nextcloud admin posts it with `missingRecords=remove`
@@ -363,7 +363,7 @@ The import SHALL accept `missingRecords` with the value `keep`, which is also th
 The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` under the `operationId` the client sends, and SHALL update the processed row count after every row, readable through the existing `GET /api/progress/{operationId}`. `POST /api/cmdb-import/{operationId}/cancel`, open to the same users as the import and CSRF-protected, SHALL request cancellation. The service SHALL check for cancellation between rows, SHALL keep the rows already processed, and SHALL return the report with `cancelled: true`. The final report SHALL also be stored with the operation, so it can be read again within the tracker's lifetime.
 
 #### Scenario: The admin follows and cancels a running import
-@e2e exclude Timing-dependent with a two-row fixture; tests/Unit/Service/CmdbExportImportServiceTest.php requests cancellation after row 1 of three and asserts one processed row and cancelled true.
+@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts covers the section: the progress, the cancel request for the page's operation and the cancelled report. A two-row import finishes before a cancel can land between rows, so the server's stop before the next row is asserted by tests/Unit/Service/CmdbExportImportServiceTest.php testACancelStopsBetweenRows (cancel after row 1 of three: one processed row, cancelled true).
 
 - **GIVEN** an import of three rows that is running
 - **WHEN** the admin presses Cancel after the first row is done

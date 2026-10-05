@@ -267,6 +267,14 @@
 					:emptyText="t('stackiq', 'No rows with this outcome')"
 					data-testid="cmdb-import-rows"
 					@sort="onSort">
+					<template #column-row="{ row }">
+						<span data-testid="cmdb-import-row-number">{{
+							row.row
+						}}</span>
+					</template>
+					<template #column-appId="{ row }">
+						<span data-testid="cmdb-import-app-id">{{ row.appId }}</span>
+					</template>
 					<template #column-name="{ row }">
 						<a
 							v-if="row.moduleUuid"
