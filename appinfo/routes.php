@@ -104,7 +104,7 @@ return [
         ['name' => 'settings#killArchiMateImport', 'url' => '/api/archimate/import/kill', 'verb' => 'POST'], // deprecated
         ['name' => 'settings#clearArchiMateExportStatus', 'url' => '/api/archimate/status/export/clear', 'verb' => 'POST'],
 
-        // CMDB export import (TOPdesk xlsx) — admin-only, CSRF-protected.
+        // CMDB export import (TOPdesk xlsx) — Nextcloud admins only (no delegated groups), CSRF-protected.
         // Progress is read through the existing /api/progress/{operationId}.
         // @spec openspec/changes/cmdb-export-import/tasks.md#task-8
         ['name' => 'cmdbImport#import', 'url' => '/api/cmdb-import', 'verb' => 'POST'],

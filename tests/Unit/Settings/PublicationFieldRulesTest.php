@@ -95,7 +95,8 @@ class PublicationFieldRulesTest extends TestCase {
 		foreach ($private as $schema => $fields) {
 			foreach ($fields as $field) {
 				$this->assertArrayHasKey($field, $schemas[$schema]['properties'], $schema . '.' . $field . ' exists');
-				$this->assertSame(['read' => ['authenticated']], $schemas[$schema]['properties'][$field]['authorization'] ?? null, $schema . '.' . $field);
+				// Other fragments may add write rules (module.externalKey: update by admin only); the read rule is this one.
+				$this->assertSame(['authenticated'], $schemas[$schema]['properties'][$field]['authorization']['read'] ?? null, $schema . '.' . $field);
 				$this->assertArrayHasKey('type', $schemas[$schema]['properties'][$field], $schema . '.' . $field . ' is a real property, not a rule on nothing');
 			}
 		}
@@ -172,7 +173,7 @@ class PublicationFieldRulesTest extends TestCase {
 		$this->assertSame('1.5.5', $merged['components']['schemas']['usage']['version']);
 
 		$schemas = $this->register()['components']['schemas'];
-		$this->assertSame('1.5.5', $schemas['usage']['version'], 'publication-field-rules.json sorts before sharing-itsm-exchange.json and value-assessment.json');
+		$this->assertSame('1.5.6', $schemas['usage']['version'], 'topdesk-cmdb-import.json bumps it past publication-field-rules.json; value-assessment.json, sorting last, does not lower it');
 		$this->assertSame('0.3.5', $schemas['connection']['version']);
 		$this->assertSame('0.1.6', $schemas['moduleVersion']['version']);
 	}//end testAFragmentNeverLowersAVersion()

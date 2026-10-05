@@ -37,7 +37,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) Each public method is one step of an
  * operation's life (start, phase, progress, warning, error, statistics, complete, fail,
- * cancel) that an import calls on the same snapshot; splitting them would hand that
+ * cancel, clear a cancel) that an import calls on the same snapshot; splitting them would hand that
  * snapshot from class to class.
  *
  * @category  Service
@@ -434,6 +434,22 @@ class ProgressTracker {
 	public function isCancelRequested(string $operationId): bool {
 		return $this->store->isCancelRequested(operationId: $operationId);
 	}//end isCancelRequested()
+
+	/**
+	 * Drop a cancel request for an operation, from any request.
+	 *
+	 * For a caller that reuses an id: a cancel that arrived after the previous
+	 * run's last check would otherwise stop the next run before its first item.
+	 *
+	 * @param string $operationId The operation whose cancel request goes
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	public function clearCancelRequested(string $operationId): void {
+		$this->store->clearCancel(operationId: $operationId);
+	}//end clearCancelRequested()
 
 	/**
 	 * Mark the current operation as stopped on a cancel, keeping the counts it reached.

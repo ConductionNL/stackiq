@@ -26,6 +26,20 @@
  *    to an empty cell, so it yields an empty cell too.
  * 5. Rows whose kept cells are all empty are dropped; more non-empty rows than
  *    the profile allows stops the import with `TOO_MANY_ROWS` (422).
+ * 6. What PhpSpreadsheet can be made to hold is bounded before it parses
+ *    anything. PhpSpreadsheet builds the whole shared-strings table, and the
+ *    whole XML tree of every sheet it loads, before a read filter runs, so
+ *    the filter alone does not bound memory. The reader therefore refuses
+ *    with `WORKBOOK_TOO_LARGE` (413) a package that unpacks to more than the
+ *    profile's `maxUncompressedBytes`, a single part that unpacks to more
+ *    than `maxPartBytes`, a shared-strings table with more entries than
+ *    `maxSharedStrings` (each rich-text run counted as an entry, also in a
+ *    cell's inline string), and cells that reference more shared-string
+ *    text than `maxReferencedStringBytes` (CmdbWorkbookBounds, streamed
+ *    without building the table). A source sheet whose last used row lies
+ *    beyond twice the row limit is `TOO_MANY_ROWS`. A read filter then materialises only the
+ *    header row and the resolved columns of the rows up to that bound
+ *    (CmdbReadFilter), which bounds the cell objects, not the parse.
  *
  * @category  Service
  * @package   OCA\Stackiq\Service\Cmdb
@@ -120,17 +134,30 @@ class CmdbWorkbookReader {
 	/**
 	 * Read the source sheets of an xlsx workbook.
 	 *
+	 * What the workbook can make PhpSpreadsheet hold is bounded before any
+	 * part is parsed: the unpacked size of the package (the profile's
+	 * `maxUncompressedBytes`) and of each part (`maxPartBytes`), the number of
+	 * shared strings (`maxSharedStrings`), the shared-string text the cells
+	 * reference (`maxReferencedStringBytes`), then the last used row of every
+	 * source sheet.
+	 * The sheets are then read twice through a read filter: once for the
+	 * header row, once for the resolved columns of the data rows, so no other
+	 * cell is ever materialised.
+	 *
 	 * @param string $path The xlsx file, already checked by assertXlsx().
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
 	 * @return array<string, mixed> `rows` (list of {sheet, row, cells, uncached}), `importWarnings`
 	 *                              (list of {sheet, message}) and `date1904` (bool).
 	 *
-	 * @throws CmdbImportException READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS.
+	 * @throws CmdbImportException WORKBOOK_TOO_LARGE, READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET,
+	 *                             MISSING_COLUMN or TOO_MANY_ROWS.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
 	public function read(string $path, CmdbImportProfile $profile): array {
+		$this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes(), partLimit: $profile->maxPartBytes());
+
 		if ($this->isAvailable() === false) {
 			throw new CmdbImportException(
 				errorCode: CmdbImportException::READER_UNAVAILABLE,
@@ -138,9 +165,17 @@ class CmdbWorkbookReader {
 			);
 		}
 
-		$readerClass = static::READER_CLASS;
-		$reader = new $readerClass();
+		$scanner = $this->newReader(sheetNames: null)->getSecurityScannerOrThrow();
+		$bounds = new CmdbWorkbookBounds();
+		$bounds->assertSharedStringCount(path: $path, limit: $profile->maxSharedStrings(), scanner: $scanner);
+		$bounds->assertReferencedStringBytes(
+			path: $path,
+			limit: $profile->maxReferencedStringBytes(),
+			sheetCount: count($profile->sheetNames()),
+			scanner: $scanner
+		);
 
+		$reader = $this->newReader(sheetNames: null);
 		try {
 			$available = $reader->listWorksheetNames($path);
 		} catch (Throwable $e) {
@@ -161,12 +196,189 @@ class CmdbWorkbookReader {
 			);
 		}
 
+		$limit = $profile->maxRowsPerSheet();
+		$lastRow = self::lastReadableRow(limit: $limit);
+		$this->assertRowSpan(path: $path, sheetNames: $present, lastRow: $lastRow, limit: $limit);
+
+		$headers = $this->load(path: $path, sheetNames: $present, filter: new CmdbReadFilter(lastRow: 1));
+		try {
+			$resolved = $this->resolveSheets(spreadsheet: $headers, sheetNames: $present, profile: $profile);
+		} finally {
+			$headers->disconnectWorksheets();
+		}
+
+		$letters = array_map(static fn (array $columns): array => array_keys($columns), $resolved['columns']);
+		$spreadsheet = $this->load(path: $path, sheetNames: $present, filter: new CmdbReadFilter(lastRow: $lastRow, columns: $letters));
+		try {
+			$rows = [];
+			foreach ($present as $sheetName) {
+				$sheetRows = $this->readRows(
+					worksheet: $spreadsheet->getSheetByName($sheetName),
+					columns: $resolved['columns'][$sheetName],
+					sheetName: $sheetName,
+					limit: $limit
+				);
+				array_push($rows, ...$sheetRows);
+			}
+
+			$date1904 = false;
+			if (method_exists($spreadsheet, 'getExcelCalendar') === true) {
+				$date1904 = ((int)$spreadsheet->getExcelCalendar() === 1904);
+			}
+		} finally {
+			$spreadsheet->disconnectWorksheets();
+		}
+
+		return ['rows' => $rows, 'importWarnings' => $resolved['warnings'], 'date1904' => $date1904];
+	}//end read()
+
+	/**
+	 * The last row number the data pass reads.
+	 *
+	 * Twice the row limit plus the header row: a sheet may carry empty rows
+	 * between its data rows (formatted rows, formulas whose cached value is 0),
+	 * but not more of them than it has room for data rows.
+	 *
+	 * @param int $limit The profile's maximum number of non-empty rows.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public static function lastReadableRow(int $limit): int {
+		return ((2 * max(0, $limit)) + 1);
+	}//end lastReadableRow()
+
+	/**
+	 * Refuse a package whose parts, or one of them, unpack to more than the limits, before any part is parsed.
+	 *
+	 * The sizes are the uncompressed sizes the ZIP directory declares; libzip
+	 * never inflates a part beyond its declared size.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param int $limit The maximum number of unpacked bytes of all parts together.
+	 * @param int $partLimit The maximum number of unpacked bytes of one part.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException NOT_XLSX when the package cannot be opened, WORKBOOK_TOO_LARGE above a limit.
+	 */
+	private function assertUncompressedSize(string $path, int $limit, int $partLimit): void {
+		$zip = new ZipArchive();
+		if ($zip->open($path, ZipArchive::RDONLY) !== true) {
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The ZIP package cannot be opened');
+		}
+
+		$total = 0;
+		$readable = true;
+		for ($index = 0; $index < $zip->numFiles && $total <= $limit; $index++) {
+			$stat = $zip->statIndex($index);
+			if ($stat === false) {
+				$readable = false;
+				break;
+			}
+
+			if ((int)$stat['size'] > $partLimit) {
+				$zip->close();
+				throw new CmdbImportException(
+					errorCode: CmdbImportException::WORKBOOK_TOO_LARGE,
+					message: 'A part of the workbook unpacks to more bytes than the profile allows',
+					details: ['maxPartBytes' => $partLimit, 'part' => (string)$stat['name']]
+				);
+			}
+
+			$total += (int)$stat['size'];
+		}
+
+		$zip->close();
+
+		if ($readable === false) {
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'A part of the ZIP package cannot be read');
+		}
+
+		if ($total > $limit) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::WORKBOOK_TOO_LARGE,
+				message: 'The workbook unpacks to more bytes than the profile allows',
+				details: ['maxUncompressedBytes' => $limit]
+			);
+		}
+	}//end assertUncompressedSize()
+
+	/**
+	 * Refuse a source sheet whose last used row lies beyond the rows that are read.
+	 *
+	 * PhpSpreadsheet's worksheet info streams the sheet and counts no cell
+	 * objects, so this runs before a sheet is loaded.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param array<int, string> $sheetNames The present source sheets.
+	 * @param int $lastRow The last row number that is read.
+	 * @param int $limit The profile's maximum number of non-empty rows, for the details.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException NOT_XLSX when the sheets cannot be listed, TOO_MANY_ROWS beyond the last row.
+	 */
+	private function assertRowSpan(string $path, array $sheetNames, int $lastRow, int $limit): void {
+		try {
+			$info = $this->newReader(sheetNames: null)->listWorksheetInfo($path);
+		} catch (Throwable $e) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::NOT_XLSX,
+				message: 'The workbook cannot be read: ' . get_class($e),
+				previous: $e
+			);
+		}
+
+		foreach ($info as $sheet) {
+			$name = (string)($sheet['worksheetName'] ?? '');
+			if (in_array($name, $sheetNames, true) === true && (int)($sheet['totalRows'] ?? 0) > $lastRow) {
+				throw new CmdbImportException(
+					errorCode: CmdbImportException::TOO_MANY_ROWS,
+					message: 'A source sheet has more rows than the profile allows',
+					details: ['sheet' => $name, 'limit' => $limit]
+				);
+			}
+		}
+	}//end assertRowSpan()
+
+	/**
+	 * A PhpSpreadsheet Xlsx reader in read-data-only mode.
+	 *
+	 * @param array<int, string>|null $sheetNames The sheets to load, or null for none set.
+	 *
+	 * @return object
+	 */
+	private function newReader(?array $sheetNames): object {
+		$readerClass = static::READER_CLASS;
+		$reader = new $readerClass();
 		$reader->setReadDataOnly(true);
 		$reader->setReadEmptyCells(false);
-		$reader->setLoadSheetsOnly($present);
+		if ($sheetNames !== null) {
+			$reader->setLoadSheetsOnly($sheetNames);
+		}
+
+		return $reader;
+	}//end newReader()
+
+	/**
+	 * Load the source sheets through a read filter.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param array<int, string> $sheetNames The present source sheets.
+	 * @param CmdbReadFilter $filter Which cells are read.
+	 *
+	 * @return object The PhpSpreadsheet workbook.
+	 *
+	 * @throws CmdbImportException NOT_XLSX when the workbook cannot be loaded.
+	 */
+	private function load(string $path, array $sheetNames, CmdbReadFilter $filter): object {
+		$reader = $this->newReader(sheetNames: $sheetNames);
+		$reader->setReadFilter($filter);
 
 		try {
-			$spreadsheet = $reader->load($path);
+			return $reader->load($path);
 		} catch (Throwable $e) {
 			throw new CmdbImportException(
 				errorCode: CmdbImportException::NOT_XLSX,
@@ -174,15 +386,7 @@ class CmdbWorkbookReader {
 				previous: $e
 			);
 		}
-
-		try {
-			$result = $this->readSheets(spreadsheet: $spreadsheet, sheetNames: $present, profile: $profile);
-		} finally {
-			$spreadsheet->disconnectWorksheets();
-		}
-
-		return $result;
-	}//end read()
+	}//end load()
 
 	/**
 	 * Normalise a header or column name for matching.
@@ -201,24 +405,25 @@ class CmdbWorkbookReader {
 	}//end normaliseHeader()
 
 	/**
-	 * Read every present source sheet.
+	 * Resolve the columns of every present source sheet from its header row.
 	 *
-	 * @param object $spreadsheet The loaded PhpSpreadsheet workbook.
+	 * Every sheet is resolved before a single data row is read, so a missing
+	 * required column stops the import first.
+	 *
+	 * @param object $spreadsheet The workbook, loaded with the header row only.
 	 * @param array<int, string> $sheetNames The present source sheets, in profile order.
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
-	 * @return array<string, mixed> `rows` (list of {sheet, row, cells, uncached}), `importWarnings`
-	 *                              (list of {sheet, message}) and `date1904` (bool).
+	 * @return array{columns: array<string, array<string, string>>, warnings: array<int, array{sheet: string, column: string, message: string}>}
+	 *         Per sheet, column letter => referenced column name; and the import warnings.
 	 *
-	 * @throws CmdbImportException MISSING_COLUMN or TOO_MANY_ROWS.
+	 * @throws CmdbImportException MISSING_COLUMN.
 	 */
-	private function readSheets(object $spreadsheet, array $sheetNames, CmdbImportProfile $profile): array {
+	private function resolveSheets(object $spreadsheet, array $sheetNames, CmdbImportProfile $profile): array {
 		$referenced = $profile->referencedColumns();
 		$mapped = $this->packSources(profile: $profile);
 		$required = $profile->requiredColumns();
 
-		// Resolve every sheet's columns first, so a missing required column
-		// stops the import before a single row is read.
 		$columnsPerSheet = [];
 		$warnings = [];
 		foreach ($sheetNames as $sheetName) {
@@ -240,21 +445,8 @@ class CmdbWorkbookReader {
 			$columnsPerSheet[$sheetName] = $columns;
 		}
 
-		$rows = [];
-		$limit = $profile->maxRowsPerSheet();
-		foreach ($sheetNames as $sheetName) {
-			$worksheet = $spreadsheet->getSheetByName($sheetName);
-			$sheetRows = $this->readRows(worksheet: $worksheet, columns: $columnsPerSheet[$sheetName], sheetName: $sheetName, limit: $limit);
-			array_push($rows, ...$sheetRows);
-		}
-
-		$date1904 = false;
-		if (method_exists($spreadsheet, 'getExcelCalendar') === true) {
-			$date1904 = ((int)$spreadsheet->getExcelCalendar() === 1904);
-		}
-
-		return ['rows' => $rows, 'importWarnings' => $warnings, 'date1904' => $date1904];
-	}//end readSheets()
+		return ['columns' => $columnsPerSheet, 'warnings' => $warnings];
+	}//end resolveSheets()
 
 	/**
 	 * Map the header row to the referenced column names.

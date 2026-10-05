@@ -31,7 +31,8 @@ umbrella requirement below anchors the capability until then.
 
 ### Requirement: Stackiq imports a TOPdesk CMDB export into OpenRegister objects (REQ-CMDB-000)
 
-Stackiq MUST offer Nextcloud admins one import path for a TOPdesk CMDB export
+Stackiq MUST offer Nextcloud admins, and not the groups delegated stackiq's
+admin settings, one import path for a TOPdesk CMDB export
 (xlsx) that writes only OpenRegister objects in the `stackiq` register
 (`module`, `organization`, `usage`, `contactPerson`), with no app-local table,
 and that matches rows on the TOPdesk APPID so that a repeated import

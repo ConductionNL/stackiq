@@ -39,7 +39,7 @@ None. The `module` schema gains five optional properties through a register frag
 
 ### In Scope
 
-- Upload endpoint for `.xlsx` files only, with a size limit, admin-only and CSRF-protected.
+- Upload endpoint for `.xlsx` files only, with a size limit, for Nextcloud admins only (not for groups delegated stackiq's admin settings) and CSRF-protected.
 - Reading the two CMDB sheets the municipality uses as its CMDB (decided with the municipality on 2026-10-01): "Onbeh Applicaties CMDB" (from the AIA export: applications without arranged maintenance) and "Beheerde Applicaties CMDB" (from the APP export: with arranged maintenance). The raw "Invoer" sheets are not read. Columns are found by header name per sheet, not position. The CMDB sheets are formulas: the value Excel cached is read; formulas are never evaluated, and a formula without a cached value is an empty cell with a row warning.
 - One municipality per import, chosen by the admin from existing stackiq organisations of type Municipality, or created from a name the admin types.
 - Per row: upsert the `module` on APPID, find or create the vendor `organization` from the "Vendor" column (one organisation per distinct vendor), upsert the `usage` (consumer = municipality, module = the application, maintenance arranged yes/no in its note), and find or create the `contactPerson` for "Applicatie Eigenaar (Persoon)" (business owner) through Nextcloud Contacts. Contact persons and usages stay out of every public read.

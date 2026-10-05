@@ -66,6 +66,13 @@ class CmdbImportReport {
 	private ?array $municipality = null;
 
 	/**
+	 * Modules this run created without a publication date.
+	 *
+	 * @var int
+	 */
+	private int $unpublished = 0;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $operationId The progress operation id.
@@ -151,6 +158,17 @@ class CmdbImportReport {
 	}//end setMunicipality()
 
 	/**
+	 * Count a module this run created without publishing it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	public function countUnpublished(): void {
+		$this->unpublished++;
+	}//end countUnpublished()
+
+	/**
 	 * Mark the run as stopped on a cancel.
 	 *
 	 * @return void
@@ -175,7 +193,11 @@ class CmdbImportReport {
 	/**
 	 * The summary counts.
 	 *
-	 * @return array{rowsRead: int, processed: int, created: int, updated: int, unchanged: int, skipped: int, failed: int, warnings: int}
+	 * `unpublished` counts the modules created without a publication date;
+	 * a row whose module was created but whose usage then failed counts too.
+	 *
+	 * @return array{rowsRead: int, processed: int, created: int, updated: int, unchanged: int, skipped: int, failed: int,
+	 *     warnings: int, unpublished: int}
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
@@ -189,6 +211,7 @@ class CmdbImportReport {
 			self::SKIPPED => 0,
 			self::FAILED => 0,
 			'warnings' => 0,
+			'unpublished' => $this->unpublished,
 		];
 
 		foreach ($this->rows as $row) {
@@ -217,4 +240,60 @@ class CmdbImportReport {
 			'rows' => $this->rows,
 		];
 	}//end toArray()
+
+	/**
+	 * The report as it is stored with the operation: the counts, and at most
+	 * $maxRows rows.
+	 *
+	 * The progress entry lives in the distributed cache, where a value of a
+	 * few megabytes is refused without an error (memcached's default item
+	 * limit is 1 MB). The stored copy keeps every count. Within the limit it
+	 * keeps every row; over it, the rows that need attention: failed, then
+	 * skipped, then rows with a warning, then the rest, each in processing
+	 * order. `rowsStored` and `rowsTruncated` say how much it holds.
+	 *
+	 * @param int $maxRows The most rows to keep.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	public function toStoredArray(int $maxRows): array {
+		$stored = $this->toArray();
+		$stored['rowsStored'] = count($this->rows);
+		$stored['rowsTruncated'] = false;
+		if (count($this->rows) <= $maxRows) {
+			return $stored;
+		}
+
+		$rank = static function (array $row): int {
+			if ($row['outcome'] === self::FAILED) {
+				return 0;
+			}
+
+			if ($row['outcome'] === self::SKIPPED) {
+				return 1;
+			}
+
+			if ($row['warnings'] !== []) {
+				return 2;
+			}
+
+			return 3;
+		};
+
+		$ordered = [];
+		foreach ($this->rows as $index => $row) {
+			$ordered[] = [$rank($row), $index, $row];
+		}
+
+		usort($ordered, static fn (array $left, array $right): int => [$left[0], $left[1]] <=> [$right[0], $right[1]]);
+		$kept = array_column(array_slice($ordered, 0, max(0, $maxRows)), 2);
+
+		$stored['rows'] = $kept;
+		$stored['rowsStored'] = count($kept);
+		$stored['rowsTruncated'] = true;
+
+		return $stored;
+	}//end toStoredArray()
 }//end class

@@ -134,10 +134,10 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame(['Applicatie Eigenaar (Persoon)' => 'name', 'Applicatie Eigenaar (Functie)' => 'role'], $targets('businessOwner'));
 		$this->assertSame(['module', 'manufacturer', 'municipality', 'usage', 'businessOwner'], CmdbImportProfile::TARGETS, 'no technical owner');
 
-		$this->assertSame(['type' => 'Supplier', 'status' => 'Active'], $profile->pack(target: 'manufacturer')['defaults']);
+		$this->assertSame(['type' => 'Supplier', 'status' => 'Active', 'registeredBy' => 'Supplier'], $profile->pack(target: 'manufacturer')['defaults']);
 		$this->assertSame(['type' => 'Municipality', 'status' => 'Active'], $profile->pack(target: 'municipality')['defaults']);
 		$this->assertSame(['type' => 'Application'], $profile->createOnlyDefaults(target: 'module'));
-		$this->assertSame(['interneAnnotation'], $profile->createOnlyFields(target: 'usage'));
+		$this->assertSame(['interneAnnotation', 'timeClassification'], $profile->createOnlyFields(target: 'usage'), 'status follows TOPdesk on every import');
 		$this->assertSame(['publicationDate', 'depublicationDate'], $profile->neverWrittenOnUpdate(target: 'module'));
 		$this->assertSame(['APPID', 'Applicatie Naam'], $profile->requiredColumns());
 		$this->assertSame('APPID', $profile->keyColumn());
@@ -146,9 +146,12 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame(['Beheer' => 'Beheer geregeld: ja'], $profile->sheetConstants(sheetName: 'Beheerde Applicaties CMDB'));
 		$this->assertSame(['Nickname'], $profile->absentColumns(sheetName: 'Onbeh Applicaties CMDB'));
 		$this->assertSame([], $profile->absentColumns(sheetName: 'Beheerde Applicaties CMDB'));
-		$this->assertSame(['BNN Classificatie' => ['NB'], 'End-of-Life Functioneel' => ['49675']], $profile->emptyValues());
+		$this->assertSame(['BNN Classificatie' => ['NB']], $profile->emptyValues());
 		$this->assertSame(10485760, $profile->maxFileBytes());
 		$this->assertSame(10000, $profile->maxRowsPerSheet());
+		$this->assertSame(10485760, $profile->maxPartBytes());
+		$this->assertSame(200000, $profile->maxSharedStrings());
+		$this->assertSame(67108864, $profile->maxReferencedStringBytes());
 	}//end testThePacksImplementTheColumnTable()
 
 	/**
@@ -198,8 +201,9 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertStringContainsString('Onbekende status', $unknown['errors'][0]['message']);
 
 		$soort = $engine->mapRow($profile->pack(target: 'module'), ['Applicatie Naam' => 'X', 'APPID' => '1', 'Applicatiesoort' => 'Webapplicatie'], 3);
-		$this->assertArrayNotHasKey('cloudDienstverleningsmodel', $soort['data'], 'an application kind is not a hosting model');
-		$this->assertSame('Applicatiesoort', $soort['errors'][0]['source']);
+		$this->assertNull($soort['data']['cloudDienstverleningsmodel'], 'an application kind is not a hosting model; the service leaves the null out');
+		$this->assertSame('Webapplicatie', $soort['data']['applicationType']);
+		$this->assertSame([], $soort['errors']);
 	}//end testTheLookupsMapThroughTheEngine()
 
 	/**

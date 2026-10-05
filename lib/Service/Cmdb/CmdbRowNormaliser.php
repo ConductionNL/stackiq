@@ -179,6 +179,9 @@ class CmdbRowNormaliser {
 	/**
 	 * Any scalar as trimmed text; null as the empty string.
 	 *
+	 * Trimming removes Unicode whitespace too: a non-breaking space, a
+	 * zero-width space or a byte-order mark around a value is not part of it.
+	 *
 	 * @param mixed $value The raw value.
 	 *
 	 * @return string
@@ -204,6 +207,13 @@ class CmdbRowNormaliser {
 			return '';
 		}
 
-		return trim((string)$value);
+		$text = (string)$value;
+		$trimmed = preg_replace('/^[\s\x{00A0}\x{200B}\x{FEFF}]+|[\s\x{00A0}\x{200B}\x{FEFF}]+$/u', '', $text);
+		if ($trimmed === null) {
+			// Not valid UTF-8: trim the ASCII whitespace only.
+			return trim($text);
+		}
+
+		return $trimmed;
 	}//end toText()
 }//end class

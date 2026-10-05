@@ -15,9 +15,12 @@
  * would make the first import of a second run report `unchanged`, not
  * `created`.
  *
- * The anonymised fixtures come from the backend task
- * (tests/fixtures/cmdb/, see its README). When one is absent the test that
- * needs it is skipped with a message naming the missing file.
+ * A second municipality is typed in as a new name (`Gemeente Nieuwstad
+ * <RUN_ID>`), so the import creates it; the cleanup removes it too.
+ *
+ * The anonymised fixtures are committed under tests/fixtures/cmdb/ (see its
+ * README). A missing fixture fails the test that needs it: a skip would read
+ * as no evidence, not as a pass.
  *
  * Owner contacts the import creates in the admin's Nextcloud address book
  * are not removed by the cleanup below; the OpenRegister objects are.
@@ -52,10 +55,13 @@ const OWNER_VALUES = ['Achternaam', 'Voornaam', 'Teamleider Applicatiebeheer']
 type UploadFile = Parameters<Locator['setInputFiles']>[0]
 
 const MUNICIPALITY_NAME = `Gemeente Voorbeeldstad ${RUN_ID}`
+const NEW_MUNICIPALITY_NAME = `Gemeente Nieuwstad ${RUN_ID}`
 const IMPORT_PATH = '/index.php/apps/stackiq/api/cmdb-import'
 // The page builds its URL with generateUrl(), which drops `/index.php` on an
 // instance with pretty URLs, so the browser-side matchers use the path tail.
 const IMPORT_ROUTE = '**/apps/stackiq/api/cmdb-import'
+const CANCEL_ROUTE = '**/apps/stackiq/api/cmdb-import/*/cancel'
+const PROGRESS_ROUTE = '**/apps/stackiq/api/progress/cmdb-*'
 
 /**
  * Whether a response is the answer to the import upload.
@@ -69,34 +75,66 @@ function isImportAnswer(response: Response): boolean {
 	)
 }
 
+/**
+ * Whether a request is the page's cancel request.
+ *
+ * @param url The request URL
+ * @param method The request method
+ */
+function isCancelRequest(url: string, method: string): boolean {
+	return (
+		/\/apps\/stackiq\/api\/cmdb-import\/[^/]+\/cancel$/.test(
+			new URL(url).pathname,
+		) && method === 'POST'
+	)
+}
+
 let config: VoorzieningenConfig
 let municipalityUuid = ''
+let newMunicipalityUuid = ''
 
 /**
- * Skip the calling test when a fixture is not there yet.
+ * Fail the calling test when a committed fixture is missing.
  *
  * @param file The fixture path
  */
 function requireFixture(file: string): void {
-	test.skip(
-		!fs.existsSync(file),
-		`Fixture ${path.relative(process.cwd(), file)} is missing; it is produced by Task 1 of openspec/changes/cmdb-export-import (tests/fixtures/cmdb/build-fixtures.py).`,
-	)
+	expect(
+		fs.existsSync(file),
+		`Fixture ${path.relative(process.cwd(), file)} is missing; it is committed under tests/fixtures/cmdb/ and rebuilt with build-fixtures.py.`,
+	).toBe(true)
 }
 
 /**
- * All objects of a schema whose data mentions the run's municipality: its
- * usages (consumer), modules (externalKey) and contact persons (organization).
+ * All objects of a schema whose data mentions a municipality: its usages
+ * (consumer), modules (externalKey) and contact persons (organization).
  *
  * @param ctx The API context
  * @param schema The schema id
+ * @param uuid The municipality, by default the run's chosen one
  */
 async function objectsOfMunicipality(
 	ctx: APIRequestContext,
 	schema: string,
+	uuid: string = municipalityUuid,
 ): Promise<Array<Record<string, unknown>>> {
 	const rows = await findAll(ctx, config.register, schema)
-	return rows.filter((row) => JSON.stringify(row).includes(municipalityUuid))
+	return rows.filter((row) => JSON.stringify(row).includes(uuid))
+}
+
+/**
+ * The organisations of type Municipality with exactly this name.
+ *
+ * @param ctx The API context
+ * @param name The name
+ */
+async function municipalitiesNamed(
+	ctx: APIRequestContext,
+	name: string,
+): Promise<Array<Record<string, unknown>>> {
+	return (await findAll(ctx, config.register, config.organisatie_schema)).filter(
+		(org) => org.type === 'Municipality' && org.name === name,
+	)
 }
 
 /**
@@ -190,9 +228,24 @@ async function chooseMunicipality(page: Page): Promise<void> {
 		.filter({ hasText: MUNICIPALITY_NAME })
 		.first()
 		.click()
-	await expect(
-		page.locator('[data-testid="cmdb-import-municipality"] .vs__selected'),
-	).toContainText(MUNICIPALITY_NAME)
+	await expect(page.getByTestId('cmdb-import-municipality')).toContainText(
+		MUNICIPALITY_NAME,
+	)
+}
+
+/**
+ * Type the name of a new municipality in the chooser and press Enter, the
+ * way an admin adds one that is not in the list.
+ *
+ * @param page The page
+ * @param name The name
+ */
+async function typeMunicipality(page: Page, name: string): Promise<void> {
+	const input = page.locator('#cmdb-import-municipality')
+	await input.click()
+	await input.fill(name)
+	await input.press('Enter')
+	await expect(page.getByTestId('cmdb-import-municipality')).toContainText(name)
 }
 
 /**
@@ -248,33 +301,39 @@ test.describe.serial('CMDB import section', () => {
 	})
 
 	test.afterAll(async () => {
-		if (!municipalityUuid) {
-			return
-		}
 		const ctx = await newApiContext()
 		try {
-			for (const schema of [
-				config.gebruik_schema,
-				config.contactpersoon_schema,
-				config.module_schema,
-			]) {
-				for (const row of await objectsOfMunicipality(ctx, schema)) {
-					const id = String(
-						row.id
-							?? (row['@self'] as { id?: string } | undefined)?.id
-							?? '',
-					)
-					if (id !== '') {
-						await deleteObject(ctx, config.register, schema, id)
+			for (const uuid of [municipalityUuid, newMunicipalityUuid]) {
+				if (!uuid) {
+					continue
+				}
+				for (const schema of [
+					config.gebruik_schema,
+					config.contactpersoon_schema,
+					config.module_schema,
+				]) {
+					for (const row of await objectsOfMunicipality(
+						ctx,
+						schema,
+						uuid,
+					)) {
+						const id = String(
+							row.id
+								?? (row['@self'] as { id?: string } | undefined)?.id
+								?? '',
+						)
+						if (id !== '') {
+							await deleteObject(ctx, config.register, schema, id)
+						}
 					}
 				}
+				await deleteObject(
+					ctx,
+					config.register,
+					config.organisatie_schema,
+					uuid,
+				)
 			}
-			await deleteObject(
-				ctx,
-				config.register,
-				config.organisatie_schema,
-				municipalityUuid,
-			)
 		} finally {
 			await ctx.dispose()
 		}
@@ -337,8 +396,8 @@ test.describe.serial('CMDB import section', () => {
 			const row = rows.filter({ hasText: name })
 			await expect(row).toHaveCount(1)
 			await expect(row).toContainText(sheet)
-			await expect(row.locator('td').nth(1)).toHaveText('2')
-			await expect(row.locator('td').nth(2)).toHaveText(appId)
+			await expect(row.getByTestId('cmdb-import-row-number')).toHaveText('2')
+			await expect(row.getByTestId('cmdb-import-app-id')).toHaveText(appId)
 			await expect(row.locator('[data-outcome="created"]')).toBeVisible()
 			await expect(
 				row.locator('[data-testid="cmdb-import-module-link"]'),
@@ -374,10 +433,10 @@ test.describe.serial('CMDB import section', () => {
 		requireFixture(EXPORT_FIXTURE)
 		const ctx = await newApiContext()
 		const before = await countWritten(ctx)
-		test.skip(
-			before.modules === 0,
-			'The first import (previous test) wrote nothing for this municipality, so there is nothing to re-import.',
-		)
+		expect(
+			before.modules,
+			'the first import (previous test) must have written the modules this test imports again',
+		).toBeGreaterThan(0)
 
 		const section = await gotoCmdbSection(page)
 		await chooseMunicipality(page)
@@ -432,6 +491,201 @@ test.describe.serial('CMDB import section', () => {
 		await ctx.dispose()
 	})
 
+	// @e2e cmdb-export-import::a-new-municipality-is-created-once-from-a-typed-name
+	test('a typed municipality name creates one municipality, also when imported again', async ({
+		page,
+	}) => {
+		requireFixture(EXPORT_FIXTURE)
+		const ctx = await newApiContext()
+		try {
+			expect(
+				await municipalitiesNamed(ctx, NEW_MUNICIPALITY_NAME),
+			).toHaveLength(0)
+
+			const section = await gotoCmdbSection(page)
+			await typeMunicipality(page, NEW_MUNICIPALITY_NAME)
+			await expect(
+				section.getByTestId('cmdb-import-new-municipality'),
+			).toContainText(NEW_MUNICIPALITY_NAME)
+
+			const first = await runImport(page, EXPORT_FIXTURE)
+			expect(first.status()).toBe(200)
+			const report = await first.json()
+			expect(report.municipality.created).toBe(true)
+			newMunicipalityUuid = String(report.municipality.uuid)
+			await expect(section.getByTestId('cmdb-import-finished')).toContainText(
+				NEW_MUNICIPALITY_NAME,
+			)
+
+			const created = await municipalitiesNamed(ctx, NEW_MUNICIPALITY_NAME)
+			expect(created).toHaveLength(1)
+			expect(created[0].status).toBe('Active')
+
+			// Later, on a freshly loaded page, the same name is typed again.
+			await gotoCmdbSection(page)
+			await typeMunicipality(page, NEW_MUNICIPALITY_NAME)
+			const second = await runImport(page, EXPORT_FIXTURE)
+			expect(second.status()).toBe(200)
+			expect((await second.json()).municipality).toMatchObject({
+				uuid: newMunicipalityUuid,
+				created: false,
+			})
+			expect(
+				await municipalitiesNamed(ctx, NEW_MUNICIPALITY_NAME),
+			).toHaveLength(1)
+		} finally {
+			await ctx.dispose()
+		}
+	})
+
+	test('a Cancel the server cannot match to a running import says so, and the import finishes', async ({
+		page,
+	}) => {
+		requireFixture(EXPORT_FIXTURE)
+		const section = await gotoCmdbSection(page)
+		await chooseMunicipality(page)
+
+		// Hold the upload until the cancel has been answered: the server has
+		// no operation to cancel yet, so it answers 404 OPERATION_NOT_FOUND.
+		let release: () => void = () => {}
+		const held = new Promise<void>((resolve) => {
+			release = resolve
+		})
+		await page.route(IMPORT_ROUTE, async (route) => {
+			await held
+			await route.continue()
+		})
+		await page.getByTestId('cmdb-import-file').setInputFiles(EXPORT_FIXTURE)
+		const answer = page.waitForResponse(isImportAnswer, { timeout: 120000 })
+		await page.getByTestId('cmdb-import-start').click()
+
+		const cancelAnswer = page.waitForResponse((response) =>
+			isCancelRequest(response.url(), response.request().method()),
+		)
+		await section.getByTestId('cmdb-import-cancel').click()
+		const cancel = await cancelAnswer
+		expect(cancel.status()).toBe(404)
+		expect((await cancel.json()).error).toBe('OPERATION_NOT_FOUND')
+
+		// The page says the cancel did not take, in the live region, and the
+		// button can be pressed again.
+		const status = section.getByTestId('cmdb-import-cancel-status')
+		await expect(status).toBeVisible()
+		await expect(status).not.toBeEmpty()
+		await expect(section.getByTestId('cmdb-import-cancel')).toBeEnabled()
+
+		release()
+		expect((await answer).status()).toBe(200)
+		await page.unroute(IMPORT_ROUTE)
+		await expect(summaryValue(page, 'rowsRead')).toHaveText('2')
+		await expect(section.getByTestId('cmdb-import-cancelled')).toHaveCount(0)
+	})
+
+	// @e2e cmdb-export-import::the-admin-follows-and-cancels-a-running-import
+	test('the admin follows a running import and cancels it', async ({ page }) => {
+		// The anonymised export has two data rows, so a real import finishes
+		// before a cancel can land between two rows. The server half (stop
+		// before the next row, keep the processed rows, report cancelled) is
+		// pinned by CmdbExportImportServiceTest::testACancelStopsBetweenRows.
+		// Here the server's answers are stubbed with what it sends for a
+		// three-row import cancelled after row 1, and the test proves the
+		// section's half: the progress, the cancel request for the page's own
+		// operation, the "cancelling" status and the cancelled report.
+		const section = await gotoCmdbSection(page)
+		await chooseMunicipality(page)
+
+		let operationId = ''
+		let release: () => void = () => {}
+		const held = new Promise<void>((resolve) => {
+			release = resolve
+		})
+		await page.route(PROGRESS_ROUTE, (route) =>
+			route.fulfill({
+				json: {
+					success: true,
+					progress: {
+						status: 'running',
+						processed_items: 1,
+						total_items: 3,
+						percentage: 33,
+					},
+				},
+			}),
+		)
+		await page.route(CANCEL_ROUTE, (route) =>
+			route.fulfill({ json: { success: true, cancelRequested: true } }),
+		)
+		await page.route(IMPORT_ROUTE, async (route) => {
+			const body = route.request().postDataBuffer()?.toString('latin1') ?? ''
+			operationId =
+				/name="operationId"\r\n\r\n([^\r\n]+)/.exec(body)?.[1] ?? ''
+			await held
+			await route.fulfill({
+				json: {
+					operationId,
+					municipality: {
+						uuid: municipalityUuid,
+						name: MUNICIPALITY_NAME,
+						created: false,
+					},
+					summary: {
+						rowsRead: 3,
+						created: 0,
+						updated: 0,
+						unchanged: 1,
+						skipped: 0,
+						failed: 0,
+						warnings: 0,
+					},
+					importWarnings: [],
+					rows: [
+						{
+							sheet: 'Onbeh Applicaties CMDB',
+							row: 2,
+							appId: '1234',
+							name: 'Aangetekend Mailen',
+							outcome: 'unchanged',
+							reasons: [],
+							warnings: [],
+						},
+					],
+					cancelled: true,
+				},
+			})
+		})
+
+		await page.getByTestId('cmdb-import-file').setInputFiles(EXPORT_FIXTURE)
+		await page.getByTestId('cmdb-import-start').click()
+
+		// The progress the server reports is shown while the import runs.
+		const progress = section.getByTestId('cmdb-import-progress')
+		await expect(progress.getByRole('progressbar')).toBeVisible()
+		await expect(progress).toContainText(/1\D+3/, { timeout: 10000 })
+
+		const cancelRequest = page.waitForRequest((request) =>
+			isCancelRequest(request.url(), request.method()),
+		)
+		await section.getByTestId('cmdb-import-cancel').click()
+		const cancel = await cancelRequest
+		expect(operationId).toMatch(/^cmdb-[A-Za-z0-9-]{8,64}$/)
+		expect(new URL(cancel.url()).pathname).toContain(
+			`/apps/stackiq/api/cmdb-import/${operationId}/cancel`,
+		)
+		await expect(section.getByTestId('cmdb-import-cancel-status')).toBeVisible()
+		await expect(section.getByTestId('cmdb-import-cancel')).toBeDisabled()
+
+		release()
+		await expect(section.getByTestId('cmdb-import-cancelled')).toBeVisible()
+		await expect(section.getByTestId('cmdb-import-finished')).toContainText(
+			MUNICIPALITY_NAME,
+		)
+		await expect(reportRows(page)).toHaveCount(1)
+		await expect(section.getByTestId('cmdb-import-progress')).toHaveCount(0)
+		await page.unroute(IMPORT_ROUTE)
+		await page.unroute(CANCEL_ROUTE)
+		await page.unroute(PROGRESS_ROUTE)
+	})
+
 	// @e2e cmdb-export-import::a-file-that-is-not-xlsx-is-rejected
 	test('a CSV, or a text file named .xlsx, is rejected as not xlsx', async ({
 		page,
@@ -483,16 +737,60 @@ test.describe.serial('CMDB import section', () => {
 		await ctx.dispose()
 	})
 
+	// @e2e cmdb-export-import::a-user-who-is-not-a-nextcloud-admin-cannot-import
+	test('a signed-in user who is not a Nextcloud admin is refused', async () => {
+		const ctx = await newApiContext()
+		const userId = `cmdb-${RUN_ID}`
+		const password = `Cmdb-${RUN_ID}-Pw!9`
+		const created = await ctx.post('/ocs/v2.php/cloud/users?format=json', {
+			form: { userid: userId, password },
+		})
+		expect(created.ok(), await created.text()).toBe(true)
+		const user = await playwrightRequest.newContext({
+			baseURL: BASE_URL,
+			storageState: { cookies: [], origins: [] },
+			httpCredentials: { username: userId, password, send: 'always' },
+			extraHTTPHeaders: { 'OCS-APIREQUEST': 'true' },
+		})
+		try {
+			// Prove the context is that user, so a 403 is the rule and not a failed login.
+			const whoami = await user.get('/ocs/v2.php/cloud/user?format=json')
+			expect(whoami.status()).toBe(200)
+			expect((await whoami.json()).ocs.data.id).toBe(userId)
+
+			const before = await countWritten(ctx)
+			const res = await user.post(IMPORT_PATH, {
+				multipart: {
+					cmdbFile: {
+						name: 'topdesk-export-anonymised.xlsx',
+						mimeType:
+							'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+						buffer: fs.readFileSync(EXPORT_FIXTURE),
+					},
+					municipalityUuid,
+				},
+			})
+			expect(res.status()).toBe(403)
+			const cancel = await user.post(`${IMPORT_PATH}/cmdb-abcdefgh/cancel`)
+			expect(cancel.status()).toBe(403)
+			expect(await countWritten(ctx)).toEqual(before)
+		} finally {
+			await user.dispose()
+			await ctx.delete(`/ocs/v2.php/cloud/users/${userId}?format=json`)
+			await ctx.dispose()
+		}
+	})
+
 	// @e2e cmdb-export-import::imported-owners-are-never-readable-anonymously
 	test('the imported owners are not readable without signing in', async () => {
 		requireFixture(EXPORT_FIXTURE)
 		const ctx = await newApiContext()
 		const written = await countWritten(ctx)
 		await ctx.dispose()
-		test.skip(
-			written.contactPersons === 0,
-			'The first import (first test) wrote no owner for this municipality, so there is nothing to look for.',
-		)
+		expect(
+			written.contactPersons,
+			'the first import (first test) must have written the owners this test looks for',
+		).toBeGreaterThan(0)
 
 		// Inside the test runner a new request context inherits the project's
 		// `use` options, including the admin storageState; clear it explicitly.

@@ -36,7 +36,7 @@ Admin settings, "CMDB import" section (CmdbImport.vue)
   │  multipart: cmdbFile, municipalityUuid | municipalityName,
   │             updateExisting, missingRecords, operationId   (+ requesttoken)
   ▼
-CmdbImportController::import()              admin-only, CSRF, size/type checks
+CmdbImportController::import()              Nextcloud admins only, CSRF, size/type checks
   ▼
 CmdbExportImportService::import()
   ├─ CmdbImportProfile        lib/Settings/cmdb-import/topdesk-profile.json + 5 packs
@@ -61,7 +61,7 @@ OpenRegister, register `stackiq`: module, organization, usage, contactPerson
 
 ### D1. A stackiq service, not OpenRegister's import endpoint
 
-The import is a stackiq service plus controller (route A in the WOO-586 plan).
+The import is a stackiq service plus controller.
 
 - **Alternative: OpenRegister `/api/registers/{id}/import` with a migration pack.** Rejected. It does not accept a pack on xlsx, maps one sheet to one schema, and cannot link the objects it creates (usage.module, usage.consumer, module.provider).
 - **Alternative: stackiq splits the file into one CSV per schema and runs four OpenRegister imports.** Rejected. Stackiq still has to split and link the rows, so the four pack runs add moving parts without taking work away.
@@ -94,7 +94,7 @@ Stackiq-specific settings live in the profile, not in the packs, so every pack s
 
 `CmdbWorkbookReader` checks the upload, then reads it:
 
-1. Before PhpSpreadsheet: the name ends in `.xlsx`, the first bytes are the ZIP signature `PK\x03\x04`, and `ZipArchive` lists `xl/workbook.xml`. Otherwise 400 `NOT_XLSX`.
+1. Before PhpSpreadsheet: the name ends in `.xlsx`, the first bytes are the ZIP signature `PK\x03\x04`, and `ZipArchive` lists `xl/workbook.xml`. Otherwise 400 `NOT_XLSX`. Then, still before PhpSpreadsheet parses anything: the parts may unpack to at most `maxUncompressedBytes` together and `maxPartBytes` each, the shared-strings table, counted with a streaming XMLReader, may hold at most `maxSharedStrings` entries (each rich-text run, also in a cell's inline string, counts as one), and the shared-string text the cells reference, counted once per cell, may weigh at most `maxReferencedStringBytes`. Otherwise 413 `WORKBOOK_TOO_LARGE`.
 2. `new \PhpOffice\PhpSpreadsheet\Reader\Xlsx()`, then `setReadDataOnly(true)` and `setLoadSheetsOnly([...profile sheet names that exist])`. The sheet names come from `listWorksheetNames()`. The class comes from OpenRegister's vendor directory, which is loaded whenever OpenRegister is enabled. It is checked with `class_exists`; if absent, 503 `READER_UNAVAILABLE`.
 3. Row 1 holds the headers. Each header is normalised (trim, collapse whitespace, drop a trailing `:` or `⚡`, lower case) and matched to the column names the profile and the packs reference. Only those columns are kept. Every other cell, such as Personeelsnummer, phone numbers and group mailboxes, is never copied out of the reader.
 4. For each cell the reader takes `getValue()`. For a formula cell (data type `f`) it takes `getOldCalculatedValue()`, the value Excel cached. It never calls `getCalculatedValue()` or `toArray()` with formula calculation. Every cell of the CMDB sheets is a formula, so this is the normal path. A formula without a cached value (no `<v>` in the file, for example a workbook written by a tool that does not calculate) is read as empty and its column is listed in the row's `uncached`; the service turns that into the row warning `Column "…": formula without a cached value, read as empty`. It never fails the row. A cached number `0` is what Excel stores for a reference to an empty cell, and is read as empty.
@@ -107,7 +107,7 @@ External connections, the Power Query package and hyperlinks are never resolved:
 
 `CmdbRowNormaliser` turns reader output into the flat `column => string` row the engine expects:
 
-- Values listed in the profile's `emptyValues` for their column become empty, compared case-insensitively before any conversion: `NB` in "BNN Classificatie" (the CMDB sheet's "niet bekend") and `49675` (2036-01-01) in "End-of-Life Functioneel" (the CMDB sheet's placeholder for "no end-of-life date"; its formula turns an empty date, or TOPdesk's 2099-12-31, into 49675).
+- Values listed in the profile's `emptyValues` for their column become empty, compared case-insensitively before any conversion: `NB` in "BNN Classificatie" (the CMDB sheet's "niet bekend"). Dates are stored as the file has them: "End-of-Life Functioneel" `49675` (2036-01-01) is imported as that date, even though the CMDB sheet's formula writes it for an empty date or TOPdesk's 2099-12-31; the municipality decided to keep the file's value (2026-10-02).
 - Columns listed in the profile's `dateColumns` ("Datum", "Referentie datum wijziging", "End-of-Life Functioneel"): a numeric value is converted with `PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject()` in UTC and written as `Y-m-d`. For example, `45111.38…` becomes `2023-07-04` and `53359` becomes `2046-02-01`. A non-numeric value stays as it is, so the pack's `date` transform (`sourceFormat: Y-m-d`) either accepts it or reports a warning.
 - Columns listed in `idColumns` ("APPID"): a whole number becomes a string without a decimal part (`1234.0` becomes `"1234"`).
 - The constants of the row's sheet are added before mapping (`Beheer` = `Beheer geregeld: nee` on "Onbeh", `ja` on "Beheerde"), so the usage pack can map the sheet like a column.
@@ -121,21 +121,22 @@ The key is the TOPdesk APPID (the ICT Applicatienummer), scoped to the municipal
 
 Per row:
 
-1. A row without an APPID is skipped (`missing APPID`). An APPID already seen in this upload, on either sheet, is skipped (`duplicate APPID in file`). The CMDB sheets have no "Soort" column, so there is no row-kind filter.
-2. Look up the module with `searchObjects` on the configured register and module schema, filtered on `externalKey`, with `_rbac: false` and `_multitenancy: false` (as `SbomImportService` does; the caller is an admin). The result is cached for the run.
+1. A row without an APPID is skipped (`missing APPID`). An APPID already seen on the same sheet is skipped (`duplicate APPID in file`). An APPID on both sheets is imported from the sheet the profile's `sheetPrecedence` ranks first ("Beheerde Applicaties CMDB"), whichever sheet the export lists first; the other row is skipped with that reason and a warning naming the APPID and the winning sheet. The CMDB sheets have no "Soort" column, so there is no row-kind filter.
+2. Look up the module with `searchObjects` on the configured register and module schema, filtered on `externalKey`, with `_rbac: false` and `_multitenancy: false` (as `SbomImportService` does; the caller is a Nextcloud admin, and the route does not admit the groups delegated stackiq's admin settings, because these reads and writes cross tenants). The result is cached for the run.
 3. No match: create the module from the mapped data, plus `externalKey`, the create-only defaults (`type: Application`), and `publicationDate` (D6).
+   A module found by `externalKey` counts as a match only when it has a usage whose consumer is this municipality, or no usage at all. `externalKey` is a module property, so on its own it is not proof of ownership: a module only another organisation uses is a conflict, reported as `skipped` and neither changed nor duplicated. The property also carries a write rule (`update: admin`), so only a Nextcloud admin can set it outside the import.
 4. Match and `updateExisting=false`: skip with reason `exists`.
-5. Match: merge the mapped fields onto the stored object. Every field the pack does not map stays as it is. Create-only fields stay as they are, unless the stored value is empty. If the merged object equals the stored one, do not save, and report `unchanged`. Otherwise save, and report `updated`.
+5. Match: merge the mapped fields onto the stored object. Every field the pack does not map stays as it is. Create-only fields (`module.type`; `usage.interneAnnotation` and `usage.timeClassification`) stay as they are, unless the stored value is empty, so a classification set in stackiq survives a re-import. `usage.status` follows TOPdesk on every import (decided 2026-10-05); the usage lifecycle lets an administrator, and so the import, move it to any state. If the merged object equals the stored one, do not save, and report `unchanged`. Otherwise save, and report `updated`.
 
 The APPID is also stored as `externalNumber`, so it is visible on the module.
 
 - **Alternative: the Middel-ID ("Applicatie Code") as the key**, as in the first version of this change. Rejected on 2026-10-01: it can change in the source.
 - **Alternative: OpenRegister's `idStrategy: sourceField` (APPID as the object id).** Rejected. Object ids are global uuids, and the APPID is neither a uuid nor unique across municipalities.
-- **Alternative: put the key on `usage` (per municipality by nature).** Rejected for this change: the key on `module` was decided in the plan (Q3), and the usage is found from the module anyway (D7).
+- **Alternative: put the key on `usage` (per municipality by nature).** Rejected for this change: the key was decided to live on `module`, and the usage is found from the module anyway (D7).
 
 ### D6. publicationDate
 
-- New module: `publicationDate` = the import's start time (ISO 8601 with offset). This makes it visible to OpenCatalogi, given a catalogue that covers the stackiq `module` schema.
+- New module: with `publish` on (the default, "Publish the applications this import creates"), `publicationDate` = the import's start time (ISO 8601 with offset). This makes it visible to OpenCatalogi, given a catalogue that covers the stackiq `module` schema. With `publish` off, the module is created without `publicationDate` and is not public; the report counts these modules as created unpublished.
 - Existing module: `publicationDate` and `depublicationDate` are never written, also when they are empty. An admin who depublished an imported module keeps it depublished.
 
 ### D7. Related objects and their order
@@ -143,12 +144,13 @@ The APPID is also stored as `externalNumber`, so it is visible on the module.
 Per row, in this order:
 
 1. **Municipality** (once per import): `municipalityUuid` must resolve to an `organization` of type `Municipality`. Otherwise 422 `MUNICIPALITY_INVALID`. With `municipalityName`, the service reuses an existing Municipality with the same normalised name, or creates one through the municipality pack.
-2. **Manufacturer**: map "Vendor" (the maker of the software) through the manufacturer pack. "Leverancier" (where the municipality buys it) and "Hostingpartij" are not read (follow-up). The normalised name (trim, collapse whitespace, lower case) is looked up in the run cache, then among `organization` objects of type `Supplier`. A new one is created only when neither matches. The first real import (1,137 rows, 479 suppliers) showed no two names that differ only in case, spacing or a legal-form suffix (`B.V.`, `BV`, `Inc.` …), so the normalisation is not widened.
-3. **Module** (D5), with `provider` = the manufacturer when there is one.
-4. **Owners** (D8).
-5. **Usage**: `searchObjects` on `consumer` = municipality and `module` = module uuid. Create or merge the usage pack's fields, plus `consumer`, `module`, `provider` = the manufacturer, and `businessOwner`. `interneAnnotation` ("Beheer geregeld: ja|nee / Cluster / Applicatie Eigenaar (Afdeling)", empty parts left out) is create-only, because it is a free-text note an admin may edit.
+2. **Module match** (D5): find the module by `externalKey`. A conflict, or a match while `updateExisting=false`, skips the row here, before anything is written, so a skipped row creates no supplier.
+3. **Manufacturer**: map "Vendor" (the maker of the software) through the manufacturer pack. "Leverancier" (where the municipality buys it) and "Hostingpartij" are not read (follow-up). The normalised name (trim, collapse whitespace, lower case) is looked up in the run cache, then among `organization` objects of type `Supplier`. A new one is created only when neither matches. The first real import (1,137 rows, 479 suppliers) showed no two names that differ only in case, spacing or a legal-form suffix (`B.V.`, `BV`, `Inc.` …), so the normalisation is not widened.
+4. **Module** (D5): create it, or merge onto the match, with `provider` = the manufacturer when there is one.
+5. **Owners** (D8).
+6. **Usage**: `searchObjects` on `consumer` = municipality and `module` = module uuid. Create or merge the usage pack's fields, plus `consumer`, `module`, `provider` = the manufacturer, and `businessOwner`. `interneAnnotation` ("Beheer geregeld: ja|nee / Cluster / Applicatie Eigenaar (Afdeling)", empty parts left out) is create-only, because it is a free-text note an admin may edit.
 
-When step 3 succeeds and step 5 fails, the row is `failed` with the step named. The next import completes it, because every step is find-or-create.
+When step 4 succeeds and step 6 fails, the row is `failed` with the step named. The next import completes it, because every step is find-or-create.
 
 ### D8. The owner as contact person
 
@@ -206,14 +208,14 @@ Source columns of "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB" and w
 | Roepnaam | both | module.shortDescription | trim; wins over Nickname |
 | Nickname | Beheerde | module.shortDescription | trim; used when Roepnaam is empty; listed as absent on Onbeh |
 | Functionele Omschrijving | both | module.longDescription | trim |
-| Applicatiesoort | both | module.cloudDienstverleningsmodel | lookup: `Saas`/`SaaS` → `["SaaS"]`, `PaaS` → `["PaaS"]`, `IaaS` → `["IaaS"]`, `On-premise(s)` → `["On-premises (self-managed)"]`; another value (such as `Webapplicatie`): warning, field dropped |
-| BNN Classificatie | both | module.bbnLevel | `NB` is empty; lookup "BBN1"/"BBN 1"/"BNN1" etc. to `BBN1`/`BBN2`/`BBN3`; unknown value: warning |
+| Applicatiesoort | both | module.applicationType and module.cloudDienstverleningsmodel | applicationType: as is; hosting model lookup: `Saas`/`SaaS` → `["SaaS"]`, `PaaS` → `["PaaS"]`, `IaaS` → `["IaaS"]`, `On-premise(s)` → `["On-premises (self-managed)"]`; any other kind (`Webapplicatie`, `Client/server`, …) has default `null`: no hosting model, no warning |
+| BNN Classificatie | both | module.bbnLevel | `NB` is empty; lookup `1`/`2`/`2+`/`3` and "BBN1"/"BBN 1"/"BNN1" etc. to `BBN1`/`BBN2`/`BBN2+`/`BBN3` (the fragment adds `BBN2+` to the enum); unknown value: warning |
 | Datum | both | module.externalCreatedAt | Excel serial to date |
 | Referentie datum wijziging | both | module.externalModifiedAt | Excel serial to date |
 | Vendor | both | organization (Supplier) via module.provider and usage.provider | dedup on normalised name (D7) |
-| Applicatie Status | both | usage.status | lookup: In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren → To be phased out, Uitgefaseerd → Phased out; unknown value: warning |
-| Classificatie | both | usage.timeClassification | lookup Tolereren/Tolerate, Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
-| End-of-Life Functioneel | both | usage.startDateOutPhased | `49675` (2036-01-01) is empty; Excel serial to date |
+| Applicatie Status | both | usage.status | lookup: In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren and Moet verwijderd worden → To be phased out, Uitgefaseerd and Verwijderd → Phased out, Besteld and Wordt getest → Acquisition, Stand-by voor continuïteit → In production; unknown value: warning |
+| Classificatie | both | usage.timeClassification | lookup Tolereren/Tolerate (also `1. Tolereren (wordt ingelezen)`), Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
+| End-of-Life Functioneel | both | usage.startDateOutPhased | Excel serial to date, stored as is (2036-01-01 included) |
 | (sheet constant `Beheer`), Cluster, Applicatie Eigenaar (Afdeling) | both | usage.interneAnnotation | concat with " / ", empty parts dropped, create-only; `Beheer geregeld: nee` (Onbeh) or `ja` (Beheerde) |
 | Applicatie Eigenaar (Persoon), Applicatie Eigenaar (Functie) | both | usage.businessOwner (contactPerson + Nextcloud contact; role = Functie) | D8; the person column may hold a function |
 | Hostingpartij | both | not mapped | follow-up; "Leverancier" (where the municipality buys the software) is not on the CMDB sheets |
@@ -227,8 +229,8 @@ Source columns of "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB" and w
 
 The authoritative interface is in `contract.md`. In short:
 
-- `POST /api/cmdb-import`: multipart `cmdbFile`, plus `municipalityUuid` or `municipalityName`, `updateExisting` (default `true`), `missingRecords` (default `keep`) and `operationId`. Admin, CSRF. Answers 200 with the report, or one of the errors in D10.
-- `POST /api/cmdb-import/{operationId}/cancel`: admin, CSRF. Answers 200 `{cancelRequested: true}`.
+- `POST /api/cmdb-import`: multipart `cmdbFile`, plus `municipalityUuid` or `municipalityName`, `updateExisting` (default `true`), `publish` (default `true`, D6), `missingRecords` (default `keep`) and `operationId`. Nextcloud admins only, not delegated groups; CSRF. Answers 200 with the report, or one of the errors in D10.
+- `POST /api/cmdb-import/{operationId}/cancel`: Nextcloud admins only, not delegated groups; CSRF. Answers 200 `{success: true, cancelRequested: true}`.
 - `GET /api/progress/{operationId}`: the existing route, unchanged.
 
 ## Database Changes
@@ -243,19 +245,19 @@ The change is `kind: code`. Its weight is the import service, controller, reader
 2. It follows the app's fragment convention (ADR-037), so it touches no other change's file.
 3. It is deployed by the existing register import in the repair step, without a migration class.
 
-The fragment bumps `module` to `0.3.5`. Fragments are merged in filename order and a scalar `version` is overwritten by the last fragment that sets it. `maintenance-and-roadmap.json` sets `module` to `0.3.4`, so a fragment that sorts before it would have its bump overwritten, and the new properties would never deploy. The file is therefore named `topdesk-cmdb-import.json`, which sorts after it, and a unit test asserts that the merged register declares `module` version `0.3.5` with the five properties.
+The fragment bumps `module` to `0.3.8` (it shipped as `0.3.5` in the first version of this change). Fragments are merged in filename order and a scalar `version` is overwritten by the last fragment that sets it. `maintenance-and-roadmap.json` sets `module` to `0.3.4`, so a fragment that sorts before it would have its bump overwritten, and the new properties would never deploy. The file is therefore named `topdesk-cmdb-import.json`, which sorts after it, and a unit test asserts that the merged register declares `module` version `0.3.8` with the six properties (`externalId`, `externalNumber`, `externalKey`, `externalCreatedAt`, `externalModifiedAt`, `applicationType`), `BBN2+` in the `bbnLevel` enum and the admin-only write rule on `externalKey`.
 
 ## Declarative-vs-imperative decision (ADR-031)
 
 - **Imperative, because it is an external integration:** reading an uploaded third-party file, splitting a row into four linked objects, resolving contacts in Nextcloud Contacts, progress and cancel. These are not object lifecycle, aggregation, notification or relation rules that an `x-openregister-*` block can express. This is the external-integration exception: the service is imperative glue around the file.
 - **Declarative:** what each column becomes (target property, transform, lookup, required) is JSON in OpenRegister's migration-pack format, executed by OpenRegister's `MappingEngine`. Changing the mapping changes no PHP.
-- **Matching rule (stated once, enforced in code):** a module matches when its `externalKey` equals `topdesk:<municipality uuid>:<APPID>`. A usage matches on (`consumer`, `module`). A supplier matches on its normalised name and type `Supplier`. A contact person matches on (`contactsUid`, `organization`).
+- **Matching rule (stated once, enforced in code):** a module matches when its `externalKey` equals `topdesk:<municipality uuid>:<APPID>` and it has a usage of that municipality or no usage at all. A usage matches on (`consumer`, `module`). A manufacturer matches on its normalised name, a `Municipality` before a `Supplier`. A contact person matches on (`contactsUid`, `organization`).
 - **publicationDate rule (stated once, enforced in code):** set to the import's start time on create; never written on update.
 - No `x-openregister-*` block is added or changed. The usage name keeps coming from the schema's existing name template.
 
 ## Nextcloud Integration
 
-- Controllers: `CmdbImportController` (`import`, `cancel`), admin-only with CSRF, no `NoAdminRequired` / `NoCSRFRequired`.
+- Controllers: `CmdbImportController` (`import`, `cancel`), for Nextcloud admins only with CSRF: no `AuthorizedAdminSetting` (it would admit delegated groups), no `NoAdminRequired` / `NoCSRFRequired`.
 - Services: `CmdbExportImportService` (orchestration), `Cmdb\CmdbWorkbookReader`, `Cmdb\CmdbRowNormaliser`, `Cmdb\CmdbImportProfile` (loads and validates the profile and packs). They reuse `ProgressTracker`, `SettingsService` (register and schema ids) and `StackiqContactSyncService`.
 - OCP: `IRequest::getUploadedFile()`, `IUserSession`, `IL10N`, `OCP\Contacts\IManager` (through `StackiqContactSyncService`), `ICacheFactory` (through `ProgressTracker`).
 - OpenRegister: `ObjectServiceInterface::searchObjects()` / `saveObject()` (contract), `MigrationPack\MappingEngine` and `PackDefinitionValidator` (container, guarded), PhpSpreadsheet (guarded).
@@ -264,10 +266,10 @@ The fragment bumps `module` to `0.3.5`. Fragments are merged in filename order a
 
 ## Security Considerations
 
-- **Auth and CSRF:** both routes are admin-only through Nextcloud's middleware, with CSRF required. This is stricter than `SbomController` and `importArchiMate`, which carry `NoCSRFRequired`. The admin check happens before the body is read.
+- **Auth and CSRF:** both routes are for Nextcloud admins only through Nextcloud's middleware, with CSRF required. They carry no `AuthorizedAdminSetting`, so a group an admin delegated stackiq's admin settings to is refused: the import writes with RBAC and multitenancy off, across tenants. This is stricter than `SbomController` and `importArchiMate`, which carry `NoCSRFRequired`. The admin check happens before the body is read.
 - **File checks before parsing:** size limit (10 MB, profile), `.xlsx` extension, ZIP signature and `xl/workbook.xml`. `.xlsm` and `.xls` are rejected. The upload is read from PHP's temporary upload file and never written into Nextcloud Files.
 - **No evaluation, no fetching:** read-data-only, profile sheets only, cached values for formula cells, no `getCalculatedValue()`, no HTTP client in the reader. External connections, Power Query packages and hyperlinks are inert.
-- **Resource bounds:** row cap per sheet, and only allowlisted columns are kept. Memory is bounded by loading only the two CMDB sheets.
+- **Resource bounds:** before PhpSpreadsheet parses anything, the reader caps the unpacked size of the package (`maxUncompressedBytes`) and of each part (`maxPartBytes`), counts the shared-strings entries with a streaming XMLReader (`maxSharedStrings`), and adds up the shared-string text the cells reference (`maxReferencedStringBytes`), because PhpSpreadsheet gives every referencing cell its own copy of a shared string (cloning each run of a rich-text one first) and builds the shared-strings table and each loaded sheet's XML tree whole, outside the read filter's reach. Then a row cap per sheet, only the two CMDB sheets loaded, and a read filter that keeps only allowlisted columns as cell objects.
 - **Injection:** every value is a string that goes through OpenRegister's schema validation on save, and is never used in SQL, file paths or templates. The UI renders values as text only.
 - **Isolation:** every row runs in its own try/catch. Errors are reported per row, and the import continues.
 - **Privacy:** the column allowlist keeps every person column except the owner out of memory; the "Invoer" sheets, which hold personnel numbers, phones and group mailboxes, are not read at all. Owner identity goes only to Nextcloud Contacts, and `contactPerson` and `usage` are never publicly readable (D8). Reports and logs carry no person data.
@@ -303,7 +305,7 @@ lib/
       topdesk-usage.json
       topdesk-business-owner.json
     register.d/
-      topdesk-cmdb-import.json                (module 0.3.5: five properties + seed modules)
+      topdesk-cmdb-import.json                (module 0.3.8: six properties, BBN2+, externalKey write rule + seed modules)
 src/views/settings/
   StackiqSettings.vue                         (registers the section)
   sections/CmdbImport.vue
@@ -411,11 +413,11 @@ The seeds show the new properties in a fresh install. They carry no `publication
 ## Risks / Trade-offs
 
 - [The user sync might provision accounts for imported contact persons] → The import writes contact persons without e-mail or user fields on the OpenRegister object. A unit test runs `performUserSync`'s selection against an imported `contactPerson`. If the selection would pick it up, the implementation adds an explicit marker that excludes it before shipping, and does not ship otherwise.
-- [Owner contacts land in the importing admin's address book] → `StackiqContactSyncService` writes to the first writable address book of the acting user, the same as every other stackiq contact path. The docs say so. A dedicated system address book is a follow-up.
+- [Owner contacts land in the importing admin's address book] → A contact the import creates goes into a dedicated address book, "Stackiq CMDB owners" (URI stable across languages), of the acting user, created on first use (`StackiqContactSyncService::syncToNamedAddressBook()`), never into the user's own first writable address book. An existing contact is matched, by name or e-mail address, only in that address book, so a personal contact of the admin is never linked to an imported owner. A system address book shared by every admin is a follow-up.
 - [Long synchronous request] → Per-row progress, cancel, and "unchanged" rows skip the save. About 1,100 rows is expected to fit. A background job is a follow-up if it does not.
 - [OpenRegister internals (`MappingEngine`, `PackDefinitionValidator`, PhpSpreadsheet) change shape] → Guarded resolution with 503, and a contract test that maps the fixture through the real engine in the dev environment.
-- [Provisional lookups for Applicatiesoort and BNN Classificatie] → The values of the first real import were not kept (the report lives in the progress cache for an hour). The maps hold the values the anonymised export and the CMDB formulas show (`Saas`, `Webapplicatie`, `NB`) plus the usual spellings. An unknown value is a warning, never a wrong value; once the municipality lists its values, the maps in the JSON are extended, with no code change.
-- [CMDB placeholders] → "End-of-Life Functioneel" `2036-01-01` and "BNN Classificatie" `NB` are read as empty. A real end-of-life date of exactly 2036-01-01 would be lost; the municipality confirms. "Classificatie" defaults to `Tolereren` on "Beheerde" when TOPdesk has none; that cannot be told apart from a real `Tolereren` and is imported as Tolerate.
+- [Lookups from the real export] → The maps hold the values the municipality's export of 2026-09-22 contains (2026-10-02 import report): "Applicatiesoort" is an application kind, kept as is in `applicationType`; "BNN Classificatie" holds `NB`, `1`, `2` and `2+`; "Applicatie Status" adds five Dutch statuses; "Classificatie" one numbered form. A new value is a warning, never a wrong value, and is added to the JSON map with no code change. A lookup `default` of `null` means "known, no value": the service leaves the field out.
+- [CMDB placeholders] → "BNN Classificatie" `NB` is read as empty. "End-of-Life Functioneel" and "Classificatie" are stored as the file has them: the sheet's 2036-01-01 (written for an empty date) is imported as that date, and the `Tolereren` the "Beheerde" formula writes when TOPdesk has none is imported as Tolerate.
 - [An application moves between the sheets] → Same APPID, so the same module and usage; the usage note (create-only) keeps its old `Beheer geregeld` line when it is not empty.
 - [An unknown status on create falls back to the usage schema's default "In production"] → Accepted. The warning in the report makes it visible.
 - [The fragment version is overwritten by merge order] → Filename ordering plus a unit test on the merged version (Mixed-spec rationale).
@@ -426,7 +428,5 @@ No data migration. The register fragment deploys with the existing repair-step r
 
 ## Open Questions
 
-- Which "Applicatiesoort" and "BNN Classificatie" values occur in the municipality's real export, and which hosting model does each mean (lookup maps)?
-- Is 2036-01-01 in "End-of-Life Functioneel" always the placeholder, and should a "Beheerde" row without a TIME class really be Tolerate?
 - Should the maintenance status update the usage note on re-import (it is create-only today), or get a field of its own?
 - Should OpenRegister promote `MigrationPack\MappingEngine` to its `Contract` namespace?

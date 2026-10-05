@@ -39,6 +39,7 @@
 							'stackiq',
 							'A new municipality "{name}" is created, unless one with this name already exists.',
 							{ name: municipality.label },
+							asText,
 						)
 					}}
 				</p>
@@ -72,7 +73,7 @@
 					for="cmdb-import-file"
 					class="cmdb-import__file-label"
 					:class="{ 'cmdb-import__file-label--disabled': importing }">
-					<TrayArrowUp :size="24" />
+					<TrayArrowUp :size="20" />
 					<span class="cmdb-import__file-label-text">{{
 						selectedFile
 							? selectedFile.name
@@ -86,7 +87,13 @@
 					{{
 						t(
 							'stackiq',
-							'Excel workbook (.xlsx), at most 10 MB, with the sheet "Onbeh Applicaties CMDB" or "Beheerde Applicaties CMDB".',
+							'Excel workbook (.xlsx) with the sheet "{first}" or "{second}". By default the file may be at most {size}.',
+							{
+								first: profileDefaults.sheets[0],
+								second: profileDefaults.sheets[1],
+								size: formatMegabytes(profileDefaults.maxFileBytes),
+							},
+							asText,
 						)
 					}}
 				</p>
@@ -105,6 +112,33 @@
 						t(
 							'stackiq',
 							'When off, applications imported before are left as they are and reported as skipped.',
+						)
+					}}
+				</p>
+				<p class="cmdb-import__help" data-testid="cmdb-import-update-fields">
+					{{
+						t(
+							'stackiq',
+							"When on, a re-import overwrites the application's name, descriptions, application type, hosting model, BBN level, source fields and supplier, and the usage's status, phase-out date and business owner, with the values from the export. The usage's TIME classification and internal note are only set when the usage is created or the field is empty, so changes made in stackiq stay.",
+						)
+					}}
+				</p>
+			</div>
+			<div class="cmdb-import__field">
+				<NcCheckboxRadioSwitch
+					v-model="publish"
+					:disabled="importing"
+					aria-describedby="cmdb-import-publish-help"
+					data-testid="cmdb-import-publish">
+					{{
+						t('stackiq', 'Publish the applications this import creates')
+					}}
+				</NcCheckboxRadioSwitch>
+				<p id="cmdb-import-publish-help" class="cmdb-import__help">
+					{{
+						t(
+							'stackiq',
+							'A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.',
 						)
 					}}
 				</p>
@@ -155,6 +189,9 @@
 					<p v-if="progressView && progressView.detail">
 						{{ progressView.detail }}
 					</p>
+					<p v-if="cancelStatus" data-testid="cmdb-import-cancel-status">
+						{{ cancelStatus }}
+					</p>
 				</div>
 
 				<p
@@ -179,7 +216,12 @@
 				</p>
 				<p class="cmdb-import__code">
 					{{
-						t('stackiq', 'Error code: {code}', { code: errorView.code })
+						t(
+							'stackiq',
+							'Error code: {code}',
+							{ code: errorView.code },
+							asText,
+						)
 					}}
 				</p>
 			</NcNoteCard>
@@ -201,9 +243,9 @@
 					}}
 				</NcNoteCard>
 
-				<h4 class="cmdb-import__heading">
+				<h3 class="cmdb-import__heading">
 					{{ t('stackiq', 'Summary') }}
-				</h4>
+				</h3>
 				<ul class="cmdb-import__summary" data-testid="cmdb-import-summary">
 					<li
 						v-for="tile in summaryTiles"
@@ -228,9 +270,9 @@
 					</ul>
 				</NcNoteCard>
 
-				<h4 class="cmdb-import__heading">
+				<h3 class="cmdb-import__heading">
 					{{ t('stackiq', 'Rows') }}
-				</h4>
+				</h3>
 				<div class="cmdb-import__filter">
 					<NcSelect
 						v-model="outcomeFilter"
@@ -244,11 +286,22 @@
 						data-testid="cmdb-import-outcome-filter" />
 				</div>
 				<CnDataTable
-					:rows="filteredRows"
+					:rows="visibleRows"
 					:columns="columns"
 					rowKey="key"
+					:sortKey="sortKey"
+					:sortOrder="sortOrder"
 					:emptyText="t('stackiq', 'No rows with this outcome')"
-					data-testid="cmdb-import-rows">
+					data-testid="cmdb-import-rows"
+					@sort="onSort">
+					<template #column-row="{ row }">
+						<span data-testid="cmdb-import-row-number">{{
+							row.row
+						}}</span>
+					</template>
+					<template #column-appId="{ row }">
+						<span data-testid="cmdb-import-app-id">{{ row.appId }}</span>
+					</template>
 					<template #column-name="{ row }">
 						<a
 							v-if="row.moduleUuid"
@@ -271,6 +324,42 @@
 						<span>{{ row.notes || '—' }}</span>
 					</template>
 				</CnDataTable>
+				<div
+					v-if="sortedRows.length > visibleRows.length"
+					class="cmdb-import__more"
+					data-testid="cmdb-import-more">
+					<p class="cmdb-import__help">
+						{{
+							t(
+								'stackiq',
+								'Showing {shown} of {total} rows.',
+								{
+									shown: visibleRows.length,
+									total: sortedRows.length,
+								},
+								asText,
+							)
+						}}
+					</p>
+					<NcButton
+						variant="secondary"
+						data-testid="cmdb-import-show-more"
+						@click="showMoreRows">
+						{{
+							t(
+								'stackiq',
+								'Show {count} more rows',
+								{
+									count: Math.min(
+										reportPageSize,
+										sortedRows.length - visibleRows.length,
+									),
+								},
+								asText,
+							)
+						}}
+					</NcButton>
+				</div>
 			</div>
 		</div>
 
@@ -291,7 +380,12 @@
 						{{
 							t(
 								'stackiq',
-								'The sheets "Onbeh Applicaties CMDB" (applications without arranged maintenance) and "Beheerde Applicaties CMDB" (with arranged maintenance) are read; other sheets, including the "Invoer" sheets, are ignored.',
+								'The sheets "{first}" (applications without arranged maintenance) and "{second}" (with arranged maintenance) are read; other sheets, including the "Invoer" sheets, are ignored.',
+								{
+									first: profileDefaults.sheets[0],
+									second: profileDefaults.sheets[1],
+								},
+								asText,
 							)
 						}}
 					</li>
@@ -344,28 +438,40 @@ import TrayArrowUp from 'vue-material-design-icons/TrayArrowUp.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import { startProgressPolling } from '../../../utils/archiMateImportProgress.js'
 import {
+	AS_TEXT,
 	buildImportForm,
 	cancelCmdbImport,
+	cancelFailureText,
 	checkFile,
 	cmdbProgressView,
 	errorText,
+	followInterruptedImport,
+	formatMegabytes,
 	importUrl,
+	interruptedImportError,
 	isKnownError,
 	makeCmdbOperationId,
 	moduleUrl,
+	municipalityOptions,
 	normaliseError,
 	outcomeLabel,
 	OUTCOMES,
+	PROFILE_DEFAULTS,
+	REPORT_PAGE_SIZE,
 	reportRows,
+	sortReportRows,
+	typedMunicipalityOption,
 } from '../../../utils/cmdbImport.js'
 
 /**
  * The "CMDB import" section of stackiq's admin settings.
  *
  * Rendered by the settings page (src/settings.js), never by the app's router.
- * Every value from the report is rendered as text.
+ * Every value from the report is rendered as text. Translations with
+ * placeholders are built with AS_TEXT (no HTML escaping), because Vue escapes
+ * the text it renders; none of them may go into v-html.
  *
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export default {
 	name: 'CmdbImport',
@@ -393,14 +499,23 @@ export default {
 			municipalityLoadError: '',
 			selectedFile: null,
 			updateExisting: true,
+			publish: true,
 			importing: false,
 			cancelling: false,
+			cancelStatus: '',
 			operationId: null,
 			progress: null,
 			stopProgressPolling: null,
+			unmounted: false,
 			report: null,
 			error: null,
 			outcomeFilter: null,
+			sortKey: null,
+			sortOrder: null,
+			reportPageSize: REPORT_PAGE_SIZE,
+			visibleRowCount: REPORT_PAGE_SIZE,
+			profileDefaults: PROFILE_DEFAULTS,
+			asText: AS_TEXT,
 			outcomeColors: {
 				created: 'success',
 				updated: 'info',
@@ -416,7 +531,7 @@ export default {
 		 * Whether everything the import needs has been chosen.
 		 *
 		 * @return {boolean} True when the Import button may be pressed
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		canImport() {
 			return (
@@ -432,7 +547,7 @@ export default {
 		 * The progress bar's view of the running import.
 		 *
 		 * @return {object|null} The view
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
 		 */
 		progressView() {
 			return cmdbProgressView(this.progress)
@@ -442,7 +557,7 @@ export default {
 		 * The words for the current error, if any.
 		 *
 		 * @return {object|null} Title, hint, code and the server's message for an unknown code
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-003-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003
 		 */
 		errorView() {
 			if (!this.error) {
@@ -462,26 +577,38 @@ export default {
 		 * The summary counts, in the order the contract lists them.
 		 *
 		 * @return {Array<object>} One tile per count
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
 		 */
 		summaryTiles() {
 			const summary = this.report?.summary || {}
-			return [
-				{ key: 'rowsRead', label: t('stackiq', 'Rows read') },
-				{ key: 'created', label: t('stackiq', 'Created') },
-				{ key: 'updated', label: t('stackiq', 'Updated') },
-				{ key: 'unchanged', label: t('stackiq', 'Unchanged') },
-				{ key: 'skipped', label: t('stackiq', 'Skipped') },
-				{ key: 'failed', label: t('stackiq', 'Failed') },
-				{ key: 'warnings', label: t('stackiq', 'Warnings') },
-			].map((tile) => ({ ...tile, value: Number(summary[tile.key]) || 0 }))
+			return (
+				[
+					{ key: 'rowsRead', label: t('stackiq', 'Rows read') },
+					{ key: 'created', label: t('stackiq', 'Created') },
+					{ key: 'updated', label: t('stackiq', 'Updated') },
+					{ key: 'unchanged', label: t('stackiq', 'Unchanged') },
+					{ key: 'skipped', label: t('stackiq', 'Skipped') },
+					{ key: 'failed', label: t('stackiq', 'Failed') },
+					{ key: 'warnings', label: t('stackiq', 'Warnings') },
+					{
+						key: 'unpublished',
+						label: t('stackiq', 'Created unpublished'),
+					},
+				]
+					.map((tile) => ({
+						...tile,
+						value: Number(summary[tile.key]) || 0,
+					}))
+					// Only an import run with publishing off leaves modules unpublished.
+					.filter((tile) => tile.key !== 'unpublished' || tile.value > 0)
+			)
 		},
 
 		/**
 		 * The sentence that says the import finished, and for whom.
 		 *
 		 * @return {string} The sentence
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		finishedText() {
 			const summary = this.report?.summary || {}
@@ -497,6 +624,7 @@ export default {
 					'stackiq',
 					'Import for {name} cancelled after {read} rows.',
 					counts,
+					AS_TEXT,
 				)
 			}
 			if (this.report?.municipality?.created) {
@@ -504,12 +632,14 @@ export default {
 					'stackiq',
 					'Import finished. The municipality {name} was created. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
 					counts,
+					AS_TEXT,
 				)
 			}
 			return t(
 				'stackiq',
 				'Import for {name} finished. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
 				counts,
+				AS_TEXT,
 			)
 		},
 
@@ -517,7 +647,7 @@ export default {
 		 * Import-level warnings, such as a missing optional column.
 		 *
 		 * @return {Array<string>} One line per warning
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-003-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003
 		 */
 		importWarnings() {
 			const warnings = this.report?.importWarnings
@@ -535,7 +665,7 @@ export default {
 		 * The choices of the outcome filter: all rows, or one outcome.
 		 *
 		 * @return {Array<object>} The options
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		outcomeFilterOptions() {
 			return [
@@ -551,7 +681,7 @@ export default {
 		 * The table rows that match the outcome filter.
 		 *
 		 * @return {Array<object>} The rows
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		filteredRows() {
 			const rows = reportRows(this.report?.rows)
@@ -563,10 +693,30 @@ export default {
 		},
 
 		/**
+		 * The filtered rows in the order of the column the admin sorted on.
+		 *
+		 * @return {Array<object>} The rows
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		sortedRows() {
+			return sortReportRows(this.filteredRows, this.sortKey, this.sortOrder)
+		},
+
+		/**
+		 * The rows the table renders: the first visibleRowCount sorted rows.
+		 *
+		 * @return {Array<object>} The rows
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		visibleRows() {
+			return this.sortedRows.slice(0, this.visibleRowCount)
+		},
+
+		/**
 		 * The report table's columns.
 		 *
 		 * @return {Array<object>} The columns
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
 		 */
 		columns() {
 			return [
@@ -584,10 +734,21 @@ export default {
 		},
 	},
 
+	watch: {
+		/**
+		 * Another outcome filter starts at the first page again.
+		 *
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		outcomeFilter() {
+			this.visibleRowCount = REPORT_PAGE_SIZE
+		},
+	},
+
 	/**
 	 * Load the municipalities for the chooser.
 	 *
-	 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-004-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin
+	 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
 	 */
 	created() {
 		this.outcomeFilter = this.outcomeFilterOptions[0]
@@ -597,14 +758,16 @@ export default {
 	/**
 	 * Stop polling when the page is left mid-import.
 	 *
-	 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+	 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
 	 */
 	beforeUnmount() {
+		this.unmounted = true
 		this.stopPolling()
 	},
 
 	methods: {
 		t,
+		formatMegabytes,
 		moduleUrl,
 		outcomeLabel,
 
@@ -612,7 +775,7 @@ export default {
 		 * Read the organisations of type Municipality from OpenRegister.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-004-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
 		 */
 		async loadMunicipalities() {
 			this.loadingMunicipalities = true
@@ -640,16 +803,9 @@ export default {
 					),
 					{ params: { type: 'Municipality', _limit: 1000 } },
 				)
-				const objects = response?.data?.results || []
-				this.municipalityOptions = objects
-					.filter((org) => (org.type ?? 'Municipality') === 'Municipality')
-					.map((org) => ({
-						id: org.id || org['@self']?.id || '',
-						label: String(org.name || org['@self']?.name || ''),
-						isNew: false,
-					}))
-					.filter((option) => option.id !== '' && option.label !== '')
-					.sort((a, b) => a.label.localeCompare(b.label))
+				this.municipalityOptions = municipalityOptions(
+					response?.data?.results || [],
+				)
 			} catch {
 				this.municipalityLoadError = t(
 					'stackiq',
@@ -661,24 +817,18 @@ export default {
 		},
 
 		/**
-		 * Turn a typed name into the chooser's "new municipality" option.
+		 * Turn a typed name into the chooser's option for that name.
 		 *
-		 * A name that matches an existing municipality selects that one.
+		 * The page does not match the name to a listed municipality: it sends
+		 * the name, and the server reuses, creates or refuses (see
+		 * typedMunicipalityOption()).
 		 *
 		 * @param {string|object} typed What the admin typed
 		 * @return {object} The option
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-004-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
 		 */
 		createMunicipalityOption(typed) {
-			const label = String(
-				typeof typed === 'object' && typed !== null ? typed.label : typed,
-			)
-				.trim()
-				.replace(/\s+/g, ' ')
-			const existing = this.municipalityOptions.find(
-				(option) => option.label.toLowerCase() === label.toLowerCase(),
-			)
-			return existing || { id: null, label, isNew: true }
+			return typedMunicipalityOption(typed)
 		},
 
 		/**
@@ -686,7 +836,7 @@ export default {
 		 *
 		 * @param {Event} event The change event of the file input
 		 * @return {void}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		handleFileSelect(event) {
 			const file = event?.target?.files?.[0] || null
@@ -706,24 +856,34 @@ export default {
 		 *
 		 * @param {number} bytes The size
 		 * @return {string} The size with its unit
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		formatFileSize(bytes) {
 			if (bytes < 1024 * 1024) {
-				return t('stackiq', '{size} KB', {
-					size: Math.max(1, Math.round((bytes || 0) / 1024)),
-				})
+				return t(
+					'stackiq',
+					'{size} KB',
+					{
+						size: Math.max(1, Math.round((bytes || 0) / 1024)),
+					},
+					AS_TEXT,
+				)
 			}
-			return t('stackiq', '{size} MB', {
-				size: (bytes / (1024 * 1024)).toFixed(1),
-			})
+			return t(
+				'stackiq',
+				'{size} MB',
+				{
+					size: (bytes / (1024 * 1024)).toFixed(1),
+				},
+				AS_TEXT,
+			)
 		},
 
 		/**
 		 * Upload the export and show its report.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		async startImport() {
 			if (!this.canImport) {
@@ -738,6 +898,7 @@ export default {
 
 			this.importing = true
 			this.cancelling = false
+			this.cancelStatus = ''
 			this.error = null
 			this.report = null
 			this.progress = null
@@ -755,66 +916,148 @@ export default {
 					file: this.selectedFile,
 					municipality: {
 						uuid: this.municipality.isNew ? null : this.municipality.id,
-						name: this.municipality.label,
+						name: this.municipality.name || this.municipality.label,
 					},
 					updateExisting: this.updateExisting,
+					publish: this.publish,
 					operationId: this.operationId,
 				})
 				const response = await axios.post(importUrl(), form)
-				this.report = response.data
-				this.outcomeFilter = this.outcomeFilterOptions[0]
-				// A created municipality is an existing one from now on: select it,
-				// so a second import goes to the same organisation (WCAG 3.3.7).
-				const imported = response.data?.municipality
-				if (imported?.uuid && this.municipality.isNew) {
-					const option = {
-						id: imported.uuid,
-						label: String(imported.name || this.municipality.label),
-						isNew: false,
-					}
-					this.municipalityOptions = [
-						...this.municipalityOptions,
-						option,
-					].sort((a, b) => a.label.localeCompare(b.label))
-					this.municipality = option
-				}
+				this.showReport(response.data)
 			} catch (error) {
-				this.error = normaliseError(error)
+				const normalised = normaliseError(error)
+				if (normalised.interrupted) {
+					await this.recoverInterruptedImport(normalised)
+				} else {
+					this.error = normalised
+				}
 			} finally {
 				this.stopPolling()
 				this.importing = false
 				this.cancelling = false
+				this.cancelStatus = ''
 				this.operationId = null
 			}
+		},
+
+		/**
+		 * Show a finished import's report.
+		 *
+		 * @param {object} report The report
+		 * @return {void}
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
+		 */
+		showReport(report) {
+			this.report = report
+			this.outcomeFilter = this.outcomeFilterOptions[0]
+			this.visibleRowCount = REPORT_PAGE_SIZE
+			// A created municipality is an existing one from now on: select it,
+			// so a second import goes to the same organisation (WCAG 3.3.7).
+			const imported = report?.municipality
+			if (imported?.uuid && this.municipality?.isNew) {
+				const listed = this.municipalityOptions.find(
+					(option) => option.id === imported.uuid,
+				)
+				if (listed) {
+					this.municipality = listed
+					return
+				}
+				const name = String(imported.name || this.municipality.name)
+				const option = {
+					id: imported.uuid,
+					label: name,
+					name,
+					isNew: false,
+				}
+				this.municipalityOptions = [
+					...this.municipalityOptions,
+					option,
+				].sort((a, b) => a.label.localeCompare(b.label))
+				this.municipality = option
+			}
+		},
+
+		/**
+		 * The request was cut off (no answer, or a gateway error) while the
+		 * import may still be running: follow the operation on the server and
+		 * show its report when it has one, or say that the outcome is unknown.
+		 *
+		 * @param {object} normalised The normalised error of the request
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
+		 */
+		async recoverInterruptedImport(normalised) {
+			this.stopPolling()
+			const outcome = await followInterruptedImport({
+				operationId: this.operationId,
+				http: axios,
+				onProgress: (progress) => {
+					this.progress = progress
+				},
+				shouldStop: () => this.unmounted,
+			})
+			if (outcome.state === 'finished') {
+				this.showReport(outcome.report)
+				return
+			}
+			this.error = interruptedImportError(outcome, normalised)
 		},
 
 		/**
 		 * Ask the server to stop the running import before its next row.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
 		 */
 		async cancelImport() {
 			if (!this.operationId) {
 				return
 			}
 			this.cancelling = true
+			this.cancelStatus = ''
 			try {
 				await cancelCmdbImport({
 					operationId: this.operationId,
 					http: axios,
 				})
-			} catch {
-				// The import keeps running; the admin can press Cancel again.
+				this.cancelStatus = t(
+					'stackiq',
+					'Cancelling the import. It stops before the next row; the rows already processed stay imported.',
+				)
+			} catch (error) {
+				// The import keeps running; say why, and let the admin press Cancel again.
 				this.cancelling = false
+				this.cancelStatus = cancelFailureText(normaliseError(error))
 			}
+		},
+
+		/**
+		 * Keep the sort the admin chose on a column header.
+		 *
+		 * @param {{key: string|null, order: string|null}} sort The table's sort event
+		 * @return {void}
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		onSort({ key, order }) {
+			this.sortKey = key
+			this.sortOrder = order
+		},
+
+		/**
+		 * Show the next page of report rows below the ones already shown.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		showMoreRows() {
+			this.visibleRowCount += REPORT_PAGE_SIZE
 		},
 
 		/**
 		 * Stop following the progress of the import.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
 		 */
 		stopPolling() {
 			if (this.stopProgressPolling) {
@@ -853,7 +1096,8 @@ export default {
 }
 
 /* The native input stays in the DOM, keyboard-focusable and labelled; the
-   label is styled as the visible control. */
+   label is styled as the visible control: a plain button-like control, not a
+   drop zone, because the input takes no dropped files. */
 .cmdb-import__file-input {
 	position: absolute;
 	width: 1px;
@@ -867,18 +1111,16 @@ export default {
 }
 
 .cmdb-import__file-label {
-	display: flex;
-	flex-direction: column;
+	display: inline-flex;
+	flex-wrap: wrap;
 	align-items: center;
-	justify-content: center;
 	gap: 0.5rem;
-	min-height: 96px;
-	padding: 1.5rem;
-	border: 2px dashed var(--color-border-dark);
-	border-radius: var(--border-radius-large);
-	background: var(--color-background-hover);
+	min-height: var(--default-clickable-area, 44px);
+	padding: 0.5rem 1rem;
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius-element, var(--border-radius-large));
+	background: var(--color-main-background);
 	cursor: pointer;
-	text-align: center;
 }
 
 .cmdb-import__file-input:focus-visible + .cmdb-import__file-label {
@@ -982,6 +1224,14 @@ export default {
 .cmdb-import__filter {
 	max-width: 300px;
 	margin-bottom: 0.5rem;
+}
+
+.cmdb-import__more {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 1rem;
+	margin-top: 0.5rem;
 }
 
 .cmdb-import__module-link {

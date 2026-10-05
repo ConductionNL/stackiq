@@ -46,6 +46,10 @@ class CmdbImportException extends RuntimeException {
 	public const MAPPING_UNAVAILABLE = 'MAPPING_UNAVAILABLE';
 	public const READER_UNAVAILABLE = 'READER_UNAVAILABLE';
 	public const NOT_CONFIGURED = 'NOT_CONFIGURED';
+	public const WORKBOOK_TOO_LARGE = 'WORKBOOK_TOO_LARGE';
+	public const SCHEMA_OUTDATED = 'SCHEMA_OUTDATED';
+	public const IMPORT_IN_PROGRESS = 'IMPORT_IN_PROGRESS';
+	public const MUNICIPALITY_AMBIGUOUS = 'MUNICIPALITY_AMBIGUOUS';
 
 	/**
 	 * HTTP status per error code.
@@ -62,6 +66,10 @@ class CmdbImportException extends RuntimeException {
 		self::MAPPING_UNAVAILABLE => 503,
 		self::READER_UNAVAILABLE => 503,
 		self::NOT_CONFIGURED => 503,
+		self::WORKBOOK_TOO_LARGE => 413,
+		self::SCHEMA_OUTDATED => 503,
+		self::IMPORT_IN_PROGRESS => 409,
+		self::MUNICIPALITY_AMBIGUOUS => 422,
 	];
 
 	/**

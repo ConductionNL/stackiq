@@ -26,6 +26,7 @@ use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
 use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
+use OCA\Stackiq\Tests\Unit\Support\RecordingXlsxReader;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 
@@ -140,21 +141,62 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testAFormulaYieldsItsCachedValue()
 
 	/**
-	 * The reader source never calls the calculation engine nor an HTTP client.
+	 * A formula that would fetch a URL yields its cached value, and nothing connects to that URL.
+	 *
+	 * A local listener stands in for the remote host: had the reader evaluated
+	 * WEBSERVICE(), the listener would hold a pending connection.
 	 *
 	 * @return void
 	 */
 	public function testTheReaderNeverEvaluatesOrFetches(): void {
-		$source = (string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Service/Cmdb/CmdbWorkbookReader.php');
-		$code = (string)preg_replace('#/\*.*?\*/|//[^\n]*#s', '', $source);
+		$this->requireSpreadsheet();
+		$server = stream_socket_server('tcp://127.0.0.1:0', $errorCode, $errorMessage);
+		$this->assertNotFalse($server, 'a local listener: ' . $errorMessage);
+		$address = (string)stream_socket_get_name($server, false);
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [
+					['APPID', 'Applicatie Naam', 'Roepnaam'],
+					[1, ['f' => 'WEBSERVICE("http://' . $address . '/naam")', 'v' => 'Gecachte naam'], ['f' => '1+1', 'v' => 'Niet berekend']],
+				],
+			]
+		);
 
-		$this->assertStringNotContainsString('getCalculatedValue', $code);
-		$this->assertStringNotContainsString('toArray', $code);
-		$this->assertStringNotContainsString('Calculation', $code);
-		$this->assertDoesNotMatchRegularExpression('/Http|Guzzle|curl_|file_get_contents\(\s*\$url/i', $code);
-		$this->assertStringContainsString('getOldCalculatedValue', $code);
-		$this->assertStringContainsString('setReadDataOnly(true)', $code);
+		try {
+			$rows = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile())['rows'];
+			$this->assertSame('Gecachte naam', $rows[0]['cells']['Applicatie Naam']);
+			$this->assertSame('Niet berekend', $rows[0]['cells']['Roepnaam'], 'the cached value, not 2');
+
+			stream_set_blocking($server, false);
+			$this->assertFalse(@stream_socket_accept($server, 0), 'nothing connected to the formula\'s URL');
+		} finally {
+			fclose($server);
+			unlink($path);
+		}
 	}//end testTheReaderNeverEvaluatesOrFetches()
+
+	/**
+	 * A sheet with a DOCTYPE (the shape of an entity-expansion or XXE attack) is refused as NOT_XLSX.
+	 *
+	 * @return void
+	 */
+	public function testADoctypeIsRefused(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]],
+			prologue: '<!DOCTYPE worksheet [<!ENTITY lol "lol"><!ENTITY lol2 "&lol;&lol;&lol;&lol;">]>'
+		);
+
+		try {
+			(new CmdbWorkbookReader())->read(path: $path, profile: $this->profile());
+			$this->fail('NOT_XLSX expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('NOT_XLSX', $e->getErrorCode());
+			$this->assertSame(400, $e->getHttpStatus());
+		} finally {
+			unlink($path);
+		}
+	}//end testADoctypeIsRefused()
 
 	/**
 	 * Shuffled columns and decorated headers map to the same rows.
@@ -235,6 +277,447 @@ class CmdbWorkbookReaderTest extends TestCase {
 			rmdir($directory);
 		}
 	}//end testTooManyRowsIsRefused()
+
+	/**
+	 * A package that unpacks to more than maxUncompressedBytes is refused before PhpSpreadsheet is touched.
+	 *
+	 * The reader below has no PhpSpreadsheet at all: reaching it would answer READER_UNAVAILABLE.
+	 *
+	 * @return void
+	 */
+	public function testAWorkbookThatUnpacksBeyondTheLimitIsRefusedBeforeParsing(): void {
+		$rows = [['APPID', 'Applicatie Naam']];
+		for ($index = 1; $index <= 3000; $index++) {
+			$rows[] = [1, 'Applicatie'];
+		}
+
+		$path = CmdbTestSupport::buildWorkbook(sheets: ['Beheerde Applicaties CMDB' => $rows]);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxUncompressedBytes' => 100000]);
+		$reader = new class extends CmdbWorkbookReader {
+			/**
+			 * PhpSpreadsheet is absent.
+			 *
+			 * @return bool
+			 */
+			public function isAvailable(): bool {
+				return false;
+			}//end isAvailable()
+		};
+
+		try {
+			$this->assertLessThan(100000, filesize($path), 'the package itself is under the limit; only its contents are not');
+			$reader->read(path: $path, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(413, $e->getHttpStatus());
+			$this->assertSame(['maxUncompressedBytes' => 100000], $e->getDetails());
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testAWorkbookThatUnpacksBeyondTheLimitIsRefusedBeforeParsing()
+
+	/**
+	 * A source sheet whose last used row lies beyond twice the row limit stops before any sheet is loaded.
+	 *
+	 * @return void
+	 */
+	public function testARowSpanBeyondTheLimitStopsBeforeLoading(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		RecordingXlsxReader::$loads = 0;
+
+		// maxRowsPerSheet 1 reads up to row 3; the third data row sits on row 4.
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een'], [2, 'Twee'], [3, 'Drie']]]
+		);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxRowsPerSheet' => 1]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		try {
+			$reader->read(path: $path, profile: $this->profile(directory: $directory));
+			$this->fail('TOO_MANY_ROWS expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('TOO_MANY_ROWS', $e->getErrorCode());
+			$this->assertSame(['sheet' => 'Beheerde Applicaties CMDB', 'limit' => 1], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testARowSpanBeyondTheLimitStopsBeforeLoading()
+
+	/**
+	 * A shared-strings table with more entries than maxSharedStrings is refused before any sheet is loaded.
+	 *
+	 * The table declares a `uniqueCount` of 1, so only counting its `<si>` elements catches it. A table of
+	 * exactly the limit is read normally.
+	 *
+	 * @return void
+	 */
+	public function testASharedStringsTableBeyondTheLimitIsRefusedBeforeLoading(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$sheets = ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxSharedStrings' => 1000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		$atLimit = CmdbTestSupport::buildWorkbook(sheets: $sheets, extraParts: ['xl/sharedStrings.xml' => self::sharedStrings(count: 1000)]);
+		$overLimit = CmdbTestSupport::buildWorkbook(sheets: $sheets, extraParts: ['xl/sharedStrings.xml' => self::sharedStrings(count: 1001)]);
+		try {
+			$this->assertCount(1, $reader->read(path: $atLimit, profile: $this->profile(directory: $directory))['rows'], 'a table of exactly the limit is read');
+
+			RecordingXlsxReader::$loads = 0;
+			$reader->read(path: $overLimit, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(['maxSharedStrings' => 1000], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($atLimit);
+			unlink($overLimit);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testASharedStringsTableBeyondTheLimitIsRefusedBeforeLoading()
+
+	/**
+	 * A shared-strings table under another part name is counted too.
+	 *
+	 * The workbook's relationships can point the table at any part, and PhpSpreadsheet follows them, so the
+	 * count recognises the table by its `sst` root element rather than by the name `xl/sharedStrings.xml`.
+	 *
+	 * @return void
+	 */
+	public function testASharedStringsTableUnderAnotherNameIsCounted(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$sheets = ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxSharedStrings' => 1000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		$renamed = CmdbTestSupport::buildWorkbook(sheets: $sheets, extraParts: ['xl/strs.xml' => self::sharedStrings(count: 1001)]);
+		try {
+			RecordingXlsxReader::$loads = 0;
+			$reader->read(path: $renamed, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(['maxSharedStrings' => 1000], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($renamed);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testASharedStringsTableUnderAnotherNameIsCounted()
+
+	/**
+	 * A shared-strings table whose root element is not `sst` is counted too.
+	 *
+	 * PhpSpreadsheet reads the `<si>` children of the part the relationships name without checking the
+	 * root element, so the count does not check it either.
+	 *
+	 * @return void
+	 */
+	public function testASharedStringsTableUnderAnotherRootIsCounted(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$sheets = ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxSharedStrings' => 1000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		$table = str_replace(['<sst ', '</sst>'], ['<strings ', '</strings>'], self::sharedStrings(count: 1001));
+		$renamed = CmdbTestSupport::buildWorkbook(sheets: $sheets, extraParts: ['xl/sharedStrings.xml' => $table]);
+		try {
+			RecordingXlsxReader::$loads = 0;
+			$reader->read(path: $renamed, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(['maxSharedStrings' => 1000], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($renamed);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testASharedStringsTableUnderAnotherRootIsCounted()
+
+	/**
+	 * The runs of a rich-text entry count against maxSharedStrings, also when no cell references it.
+	 *
+	 * PhpSpreadsheet keeps every run of every rich-text entry as objects for the whole load, so one entry
+	 * of many runs is as costly as as many entries. A table of exactly the limit, runs included, is read.
+	 * The runs of a cell's own rich text (an inline string) count the same way, in any part.
+	 *
+	 * @return void
+	 */
+	public function testTheRunsOfARichTextEntryCountAsEntries(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxSharedStrings' => 1000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		// The table holds the two headers, the name the cell references, and one entry of n runs: 4 + n entries.
+		$atLimit = self::sharedStringWorkbook(entry: '<si><t>Een</t></si><si>' . str_repeat('<r><t>a</t></r>', 996) . '</si>', cells: 1);
+		$overLimit = self::sharedStringWorkbook(entry: '<si><t>Een</t></si><si>' . str_repeat('<r><t>a</t></r>', 997) . '</si>', cells: 1, part: 'strings.bin');
+		$inline = CmdbTestSupport::buildWorkbook(
+			sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam']]],
+			extraParts: [
+				'xl/worksheets/notes.bin' => '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'
+					. '<row r="2"><c r="A2"><v>1</v></c><c r="B2" t="inlineStr"><is>' . str_repeat('<r><rPr/></r>', 1001) . '</is></c></row></sheetData></worksheet>',
+			]
+		);
+		try {
+			RecordingXlsxReader::$loads = 0;
+			try {
+				$reader->read(path: $inline, profile: $this->profile(directory: $directory));
+				$this->fail('WORKBOOK_TOO_LARGE expected for the inline runs');
+			} catch (CmdbImportException $e) {
+				$this->assertSame(['maxSharedStrings' => 1000], $e->getDetails(), 'the inline runs count');
+				$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded for the inline runs');
+			}
+
+			$this->assertCount(1, $reader->read(path: $atLimit, profile: $this->profile(directory: $directory))['rows'], 'a table of exactly the limit is read');
+
+			RecordingXlsxReader::$loads = 0;
+			$reader->read(path: $overLimit, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(['maxSharedStrings' => 1000], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($atLimit);
+			unlink($overLimit);
+			unlink($inline);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testTheRunsOfARichTextEntryCountAsEntries()
+
+	/**
+	 * One shared string referenced by many cells is refused before loading, as rich text or as plain text.
+	 *
+	 * PhpSpreadsheet gives every referencing cell its own copy, cloning each run of a rich-text string first,
+	 * so a small file holds the string once but would make PhpSpreadsheet build it once per cell. Every
+	 * package passes every other limit. The last three are shaped so that a check reading the package
+	 * differently from PhpSpreadsheet charges the light entry: an entry of another namespace before the
+	 * headers (PhpSpreadsheet numbers only its own), a decoy `<v>` of another namespace before the real one
+	 * (PhpSpreadsheet reads only its own), a table whose part name does not end in `.xml`, and a `<v>` whose
+	 * own text differs from all the text inside it (PhpSpreadsheet reads its own text).
+	 *
+	 * @return void
+	 */
+	public function testOneSharedStringReferencedByManyCellsIsRefusedBeforeLoading(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$rich = '<si>' . str_repeat('<r><rPr><b/></rPr><t>ab</t></r>', 500) . '</si>';
+		$packages = [
+			'rich text' => self::sharedStringWorkbook(entry: $rich, cells: 50),
+			'plain text' => self::sharedStringWorkbook(entry: '<si><t>' . str_repeat('x', 20000) . '</t></si>', cells: 50),
+			'an entry of another namespace first' => self::sharedStringWorkbook(entry: $rich, cells: 50, before: '<o:si xmlns:o="urn:x"><o:t>z</o:t></o:si>'),
+			'a decoy value of another namespace' => self::sharedStringWorkbook(entry: $rich, cells: 50, value: '<o:v xmlns:o="urn:x">99</o:v><v>2</v>'),
+			'a table not named .xml' => self::sharedStringWorkbook(entry: $rich, cells: 50, part: 'sharedStrings.bin'),
+			'a value with a child element' => self::sharedStringWorkbook(entry: $rich, cells: 50, value: '<v><o:x xmlns:o="urn:x">9</o:x>2</v>'),
+		];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxReferencedStringBytes' => 400000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		try {
+			foreach ($packages as $kind => $path) {
+				RecordingXlsxReader::$loads = 0;
+				try {
+					$reader->read(path: $path, profile: $this->profile(directory: $directory));
+					$this->fail('WORKBOOK_TOO_LARGE expected for ' . $kind);
+				} catch (CmdbImportException $e) {
+					$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode(), $kind);
+					$this->assertSame(['maxReferencedStringBytes' => 400000], $e->getDetails(), $kind);
+					$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded for ' . $kind);
+				}
+			}
+		} finally {
+			array_map('unlink', $packages);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testOneSharedStringReferencedByManyCellsIsRefusedBeforeLoading()
+
+	/**
+	 * Shared strings referenced within the limit are read as their text, rich text as plain text.
+	 *
+	 * @return void
+	 */
+	public function testSharedStringsWithinTheReferenceLimitAreRead(): void {
+		$this->requireSpreadsheet();
+		$path = self::sharedStringWorkbook(entry: '<si><r><rPr><b/></rPr><t>Ee</t></r><r><t>n</t></r></si>', cells: 1);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxReferencedStringBytes' => 400000]);
+
+		try {
+			$rows = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile(directory: $directory))['rows'];
+			$this->assertCount(1, $rows);
+			$this->assertSame('Een', $rows[0]['cells']['Applicatie Naam']);
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testSharedStringsWithinTheReferenceLimitAreRead()
+
+	/**
+	 * A workbook whose CMDB sheet holds an APPID and an application name per row, the name a reference to one shared string.
+	 *
+	 * The shared strings are the two headers and the given entry, linked from the workbook's relationships.
+	 *
+	 * @param string $entry The `<si>` element every name references.
+	 * @param int $cells The number of rows that reference it.
+	 * @param string $before Elements placed in the table before the two headers.
+	 * @param string $value What each name cell holds: the `<v>` that points at the entry.
+	 * @param string $part The name of the shared-strings part under `xl/`.
+	 *
+	 * @return string The path of the workbook.
+	 */
+	private static function sharedStringWorkbook(string $entry, int $cells, string $before = '', string $value = '<v>2</v>', string $part = 'sharedStrings.xml'): string {
+		$main = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+		$rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+		$rows = '<row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c></row>';
+		for ($row = 2; $row <= $cells + 1; $row++) {
+			$rows .= '<row r="' . $row . '"><c r="A' . $row . '"><v>' . ($row - 1) . '</v></c><c r="B' . $row . '" t="s">' . $value . '</c></row>';
+		}
+
+		return CmdbTestSupport::buildWorkbook(
+			sheets: ['Beheerde Applicaties CMDB' => []],
+			extraParts: [
+				'xl/worksheets/sheet1.xml' => '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="' . $main . '"><sheetData>' . $rows . '</sheetData></worksheet>',
+				'xl/' . $part => '<?xml version="1.0" encoding="UTF-8"?><sst xmlns="' . $main . '">' . $before . '<si><t>APPID</t></si><si><t>Applicatie Naam</t></si>' . $entry . '</sst>',
+				'xl/_rels/workbook.xml.rels' => '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+					. '<Relationship Id="rId1" Type="' . $rel . '/worksheet" Target="worksheets/sheet1.xml"/>'
+					. '<Relationship Id="rId2" Type="' . $rel . '/sharedStrings" Target="' . $part . '"/></Relationships>',
+			]
+		);
+	}//end sharedStringWorkbook()
+
+	/**
+	 * A shared-strings part or a sheet part that unpacks beyond maxPartBytes is refused before any sheet is loaded.
+	 *
+	 * Both packages stay under maxUncompressedBytes; only the one part is too large.
+	 *
+	 * @return void
+	 */
+	public function testAPartBeyondThePartLimitIsRefusedBeforeLoading(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$rows = [['APPID', 'Applicatie Naam']];
+		for ($index = 1; $index <= 3000; $index++) {
+			$rows[] = [$index, 'Applicatie'];
+		}
+
+		$packages = [
+			'xl/sharedStrings.xml' => CmdbTestSupport::buildWorkbook(
+				sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]],
+				extraParts: ['xl/sharedStrings.xml' => self::sharedStrings(count: 10, length: 10000)]
+			),
+			'xl/worksheets/sheet1.xml' => CmdbTestSupport::buildWorkbook(sheets: ['Beheerde Applicaties CMDB' => $rows]),
+		];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxPartBytes' => 50000, 'maxSharedStrings' => 1000000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		try {
+			foreach ($packages as $part => $path) {
+				RecordingXlsxReader::$loads = 0;
+				try {
+					$reader->read(path: $path, profile: $this->profile(directory: $directory));
+					$this->fail('WORKBOOK_TOO_LARGE expected for ' . $part);
+				} catch (CmdbImportException $e) {
+					$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode(), $part);
+					$this->assertSame(['maxPartBytes' => 50000, 'part' => $part], $e->getDetails(), $part);
+					$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded for ' . $part);
+				}
+			}
+		} finally {
+			array_map('unlink', $packages);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testAPartBeyondThePartLimitIsRefusedBeforeLoading()
+
+	/**
+	 * A shared-strings part with the given number of entries, each the given number of characters long.
+	 *
+	 * Its `count` and `uniqueCount` attributes claim a single entry.
+	 *
+	 * @param int $count The number of `<si>` entries.
+	 * @param int $length The length of every string.
+	 *
+	 * @return string
+	 */
+	private static function sharedStrings(int $count, int $length = 1): string {
+		return '<?xml version="1.0" encoding="UTF-8"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1">'
+			. str_repeat('<si><t>' . str_repeat('x', $length) . '</t></si>', $count) . '</sst>';
+	}//end sharedStrings()
+
+	/**
+	 * The data pass holds only the resolved columns, and drops an empty row between data rows.
+	 *
+	 * @return void
+	 */
+	public function testTheDataPassHoldsOnlyResolvedColumns(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [
+					['APPID', 'Personeelsnummer', 'Applicatie Naam'],
+					[1, 'P-0001', 'Een'],
+					[],
+					[2, 'P-0002', 'Twee'],
+				],
+			]
+		);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxRowsPerSheet' => 2]);
+
+		try {
+			$rows = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile(directory: $directory))['rows'];
+			$this->assertSame([2, 4], array_column($rows, 'row'));
+			$this->assertSame(['APPID', 'Applicatie Naam'], array_keys(array_filter($rows[1]['cells'], static fn ($value): bool => $value !== null)));
+			$this->assertStringNotContainsString('P-000', (string)json_encode($rows));
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testTheDataPassHoldsOnlyResolvedColumns()
+
+	/**
+	 * A sheet within the row span still stops at the limit on non-empty rows.
+	 *
+	 * @return void
+	 */
+	public function testOneRowOverTheLimitWithinTheSpanIsRefused(): void {
+		$this->requireSpreadsheet();
+		// maxRowsPerSheet 1 reads up to row 3, so both data rows are read, and the second is one too many.
+		$path = CmdbTestSupport::buildWorkbook(sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een'], [2, 'Twee']]]);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxRowsPerSheet' => 1]);
+
+		try {
+			(new CmdbWorkbookReader())->read(path: $path, profile: $this->profile(directory: $directory));
+			$this->fail('TOO_MANY_ROWS expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('TOO_MANY_ROWS', $e->getErrorCode());
+			$this->assertSame(['sheet' => 'Beheerde Applicaties CMDB', 'limit' => 1], $e->getDetails());
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testOneRowOverTheLimitWithinTheSpanIsRefused()
 
 	/**
 	 * A text file named .xlsx, a .xlsm and a CSV are refused before PhpSpreadsheet is touched.

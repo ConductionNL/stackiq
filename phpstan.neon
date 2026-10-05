@@ -26,6 +26,10 @@ parameters:
         # spellings are in the field, and without this one the analyser proves
         # the newer half of the inbound guard dead.
         - tests/analysis-stubs/decidiq-events.stub.php
+        # PhpSpreadsheet's IReadFilter, which CmdbReadFilter implements.
+        # OpenRegister ships PhpSpreadsheet, so it is absent from the
+        # analysis path; the stub mirrors the real 5.x signature.
+        - tests/analysis-stubs/phpspreadsheet-read-filter.stub.php
         # Integriq's connection-registry events (adopt-connection-registry).
         # ConnectionReportService names them by string behind class_exists.
         - tests/Stubs/Integriq/Event/ConnectionStatusReportedEvent.php

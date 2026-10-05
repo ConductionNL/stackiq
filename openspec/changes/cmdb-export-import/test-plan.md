@@ -5,7 +5,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 ## Test Cases
 
 ### TC-1: Admin imports the export and sees a per-row report
-- **spec_ref**: `spec.md#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome`, `#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section`, `#requirement-req-cmdb-004-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin`
+- **spec_ref**: `spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011`, `#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014`, `#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004`
 - **type**: functional
 - **persona**: Noor Yilmaz (Municipal CISO / Functional Admin)
 - **preconditions**: Nextcloud admin; "Gemeente Voorbeeldstad" exists as type Municipality; no imported modules
@@ -14,7 +14,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: Playwright `tests/e2e/spec-coverage/cmdb-import.spec.ts`, `/test-functional`, `/test-persona-noor`
 
 ### TC-2: Re-import creates no duplicates
-- **spec_ref**: `spec.md#requirement-req-cmdb-006-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating`, `#requirement-req-cmdb-009-each-imported-application-shall-have-one-usage-that-links-it-to-the-municipality`
+- **spec_ref**: `spec.md#requirement-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating-req-cmdb-006`, `#requirement-each-imported-application-shall-have-one-usage-that-links-it-to-the-municipality-req-cmdb-009`
 - **type**: functional
 - **persona**: Noor Yilmaz
 - **preconditions**: TC-1 done; object counts of module, organization, usage, contactPerson recorded
@@ -23,7 +23,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: Playwright `cmdb-import.spec.ts`; PHPUnit `CmdbExportImportServiceTest`
 
 ### TC-3: Changed fields update, publicationDate and unmapped fields are kept
-- **spec_ref**: `spec.md#requirement-req-cmdb-006-…`, `#requirement-req-cmdb-007-a-newly-created-module-shall-get-a-publicationdate-and-an-existing-one-shall-keep-its-own`
+- **spec_ref**: `spec.md#requirement-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating-req-cmdb-006`, `#requirement-a-newly-created-module-shall-get-a-publicationdate-when-the-admin-publishes-and-an-existing-one-shall-keep-its-own-req-cmdb-007`
 - **type**: api
 - **preconditions**: modules imported; an admin set `website` on APPID `2` and depublished it
 - **steps**: import rows where "Applicatie Naam" of APPID `2` is `naamtest124`, and where the "Applicatie Code" of APPID `42` changed
@@ -31,7 +31,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `tests/Unit/Service/CmdbExportImportServiceTest.php`
 
 ### TC-4: Manufacturer dedup
-- **spec_ref**: `spec.md#requirement-req-cmdb-008-a-manufacturer-shall-become-one-supplier-organisation-however-many-rows-name-it`
+- **spec_ref**: `spec.md#requirement-a-manufacturer-shall-become-one-supplier-organisation-however-many-rows-name-it-req-cmdb-008`
 - **type**: api
 - **preconditions**: an existing Supplier `Aangetekend B.V.`
 - **steps**: import rows with "Vendor" `Fabfrikant`, `Fabfrikant `, `FABFRIKANT`, and the "Onbeh" row
@@ -39,7 +39,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `CmdbExportImportServiceTest`
 
 ### TC-5: Upload validation (type, size, columns, sheets, options)
-- **spec_ref**: `spec.md#requirement-req-cmdb-001-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin`, `#requirement-req-cmdb-003-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422`, `#requirement-req-cmdb-012-records-missing-from-a-newer-export-shall-be-left-untouched`
+- **spec_ref**: `spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin-req-cmdb-001`, `#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003`, `#requirement-records-missing-from-a-newer-export-shall-be-left-untouched-req-cmdb-012`
 - **type**: api
 - **preconditions**: admin session
 - **steps**: post `applications.csv`; a text file named `.xlsx`; a 10 MB + 1 byte file; `topdesk-missing-appid.xlsx`; a workbook with only "Blad1"; the fixture with `missingRecords=remove`; the fixture without a municipality
@@ -47,7 +47,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `CmdbImportControllerTest`, Newman (Postman collection), `/test-api`; the missing-column UI message also in Playwright
 
 ### TC-6: Authorisation and CSRF
-- **spec_ref**: `spec.md#requirement-req-cmdb-001-…`, `#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled`
+- **spec_ref**: `spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin-req-cmdb-001`, `#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013`
 - **type**: security
 - **preconditions**: a non-admin user, also one in `software-catalog-admins`
 - **steps**: post the fixture and the cancel route as that user; post as admin without `requesttoken`
@@ -55,7 +55,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: Newman, `/test-security`
 
 ### TC-7: Safe reading (formulas, external connection, column order)
-- **spec_ref**: `spec.md#requirement-req-cmdb-002-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links`, `#requirement-req-cmdb-003-…`
+- **spec_ref**: `spec.md#requirement-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links-req-cmdb-002`, `#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003`
 - **type**: security
 - **preconditions**: fixtures `topdesk-formula-and-connection.xlsx`, `topdesk-shuffled-columns.xlsx`
 - **steps**: read both through `CmdbWorkbookReader`
@@ -63,7 +63,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `tests/Unit/Service/Cmdb/CmdbWorkbookReaderTest.php`
 
 ### TC-8: Normalisation and declarative mapping
-- **spec_ref**: `spec.md#requirement-req-cmdb-005-field-mapping-shall-be-declarative-and-executed-by-openregisters-mapping-engine`
+- **spec_ref**: `spec.md#requirement-field-mapping-shall-be-declarative-and-executed-by-openregisters-mapping-engine-req-cmdb-005`
 - **type**: api
 - **preconditions**: fixture rows; an alternate module pack mapping "Roepnaam" to `shortDescription`
 - **steps**: normalise and map the rows through the real `MappingEngine`
@@ -71,7 +71,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `CmdbRowNormaliserTest`, `CmdbImportProfileTest`, `CmdbExportImportServiceTest`
 
 ### TC-9: Per-row isolation and cancel
-- **spec_ref**: `spec.md#requirement-req-cmdb-011-…`, `#requirement-req-cmdb-013-…`
+- **spec_ref**: `spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011`, `#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013`
 - **type**: regression
 - **preconditions**: three rows; `saveObject()` throws for the second module; separately, cancel requested after row 1
 - **steps**: run the import twice
@@ -79,7 +79,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `CmdbExportImportServiceTest`
 
 ### TC-10: Owners as contact persons, no user accounts
-- **spec_ref**: `spec.md#requirement-req-cmdb-010-the-owner-shall-become-a-contact-person-of-the-municipality-through-nextcloud-contacts-never-a-user-account-and-shall-never-be-publicly-readable`
+- **spec_ref**: `spec.md#requirement-the-owner-shall-become-a-contact-person-of-the-municipality-through-nextcloud-contacts-never-a-user-account-and-shall-never-be-publicly-readable-req-cmdb-010`
 - **type**: security
 - **preconditions**: Contacts enabled (test double); separately disabled
 - **steps**: import a row twice and a second row with the same "Applicatie Eigenaar (Persoon)"; import the fixture, whose "Beheerde" owner is a function; run `performUserSync` selection on the result; then, not signed in, list contact persons and usages through OpenRegister and search OpenCatalogi for `naamtest123`
@@ -87,16 +87,16 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `CmdbExportImportServiceTest`, `CmdbPersonDataVisibilityTest`, Playwright `cmdb-import.spec.ts` (anonymous test), `/test-security`
 
 ### TC-11: OpenCatalogi finds an imported application
-- **spec_ref**: `spec.md#requirement-req-cmdb-007-…`
+- **spec_ref**: `spec.md#requirement-a-newly-created-module-shall-get-a-publicationdate-when-the-admin-publishes-and-an-existing-one-shall-keep-its-own-req-cmdb-007`
 - **type**: functional
 - **persona**: Sem de Jong (Young Digital Native; anonymous search)
 - **preconditions**: OpenCatalogi catalogue with registers `[stackiq]`, schemas `[module]`, listed and published (docs, prerequisites); TC-1 done
 - **steps**: anonymous `GET /apps/opencatalogi/api/search?_search=Aangetekend`
 - **expected result**: one hit `Aangetekend Mailen`
-- **test command**: manual on the rig (USER MANUAL TEST, WOO-586 Stap 6b), `/test-functional`
+- **test command**: manual on a test instance with OpenCatalogi configured, `/test-functional`
 
 ### TC-12: Portaliq shows the applications to the municipality
-- **spec_ref**: `spec.md#requirement-req-cmdb-009-…`
+- **spec_ref**: `spec.md#requirement-each-imported-application-shall-have-one-usage-that-links-it-to-the-municipality-req-cmdb-009`
 - **type**: persona
 - **persona**: Noor Yilmaz (Municipal CISO / Functional Admin)
 - **preconditions**: Portaliq account with claim `stackiq.organisationId` = uuid of "Gemeente Voorbeeldstad", audience participant-org; TC-1 done
@@ -105,7 +105,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: manual on the rig, `/test-persona-noor`
 
 ### TC-13: Accessibility of the section
-- **spec_ref**: `spec.md#requirement-req-cmdb-014-…`
+- **spec_ref**: `spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014`
 - **type**: accessibility
 - **preconditions**: section rendered with a finished report
 - **steps**: keyboard-only run of TC-1; axe scan; screen-reader check of progress and summary
@@ -113,11 +113,11 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: `/test-accessibility`, hydra gates `form-label-association`, `nc-input-labels`, `button-name`, `table-headers`, `axe`
 
 ### TC-14: Register fragment deploys the module properties
-- **spec_ref**: `spec.md#requirement-req-cmdb-006-…` (stored key), design.md Mixed-spec rationale
+- **spec_ref**: `spec.md#requirement-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating-req-cmdb-006` (stored key), design.md Mixed-spec rationale
 - **type**: regression
 - **preconditions**: all `register.d` fragments present
 - **steps**: merge the register as `SettingsService` does; run the repair step on the rig
-- **expected result**: merged `module.version` is `0.3.5` with the five optional properties; existing modules still load and save; seed module `voorbeeld-zaaksysteem` present without `publicationDate`
+- **expected result**: merged `module.version` is `0.3.8` with the six optional properties, `BBN2+` in the `bbnLevel` enum and the admin-only write rule on `externalKey`; existing modules still load and save; seed module `voorbeeld-zaaksysteem` present without `publicationDate`
 - **test command**: PHPUnit `tests/Unit/Settings/TopdeskCmdbFragmentTest.php`, `/test-regression`
 
 ## Coverage Summary

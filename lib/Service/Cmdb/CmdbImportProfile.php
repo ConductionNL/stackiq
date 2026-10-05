@@ -67,6 +67,26 @@ class CmdbImportProfile {
 	public const DEFAULT_MAX_FILE_BYTES = 10485760;
 
 	/**
+	 * Default limit on the unpacked size of a workbook (50 MB).
+	 */
+	public const DEFAULT_MAX_UNCOMPRESSED_BYTES = 52428800;
+
+	/**
+	 * Default limit on the unpacked size of any one part of a workbook (10 MB).
+	 */
+	public const DEFAULT_MAX_PART_BYTES = 10485760;
+
+	/**
+	 * Default limit on the number of entries in a workbook's shared-strings table.
+	 */
+	public const DEFAULT_MAX_SHARED_STRINGS = 200000;
+
+	/**
+	 * Default limit on the shared-string text a workbook's cells reference together (64 MB).
+	 */
+	public const DEFAULT_MAX_REFERENCED_STRING_BYTES = 67108864;
+
+	/**
 	 * Sources of the municipality pack that come from the request, not from a sheet.
 	 *
 	 * @var array<int, string>
@@ -172,6 +192,85 @@ class CmdbImportProfile {
 	}//end maxFileBytes()
 
 	/**
+	 * The limit on the unpacked size of a workbook, in bytes.
+	 *
+	 * The upload limit is on the compressed file; a sheet of identical rows
+	 * compresses a hundredfold, so the unpacked size is bounded too.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function maxUncompressedBytes(): int {
+		$limit = $this->profile()['maxUncompressedBytes'] ?? null;
+		if (is_int($limit) === true && $limit > 0) {
+			return $limit;
+		}
+
+		return self::DEFAULT_MAX_UNCOMPRESSED_BYTES;
+	}//end maxUncompressedBytes()
+
+	/**
+	 * The limit on the unpacked size of any one part of a workbook, in bytes.
+	 *
+	 * PhpSpreadsheet parses the shared-strings part and every loaded sheet part
+	 * whole, into structures many times the part's size, so the parts are
+	 * bounded one by one, not only their total.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function maxPartBytes(): int {
+		$limit = $this->profile()['maxPartBytes'] ?? null;
+		if (is_int($limit) === true && $limit > 0) {
+			return $limit;
+		}
+
+		return self::DEFAULT_MAX_PART_BYTES;
+	}//end maxPartBytes()
+
+	/**
+	 * The limit on the number of entries in a workbook's shared-strings table.
+	 *
+	 * PhpSpreadsheet builds the whole table before it reads a sheet, and many
+	 * short strings cost far more memory than their bytes.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function maxSharedStrings(): int {
+		$limit = $this->profile()['maxSharedStrings'] ?? null;
+		if (is_int($limit) === true && $limit > 0) {
+			return $limit;
+		}
+
+		return self::DEFAULT_MAX_SHARED_STRINGS;
+	}//end maxSharedStrings()
+
+	/**
+	 * The limit on the shared-string text a workbook's cells reference together, in bytes.
+	 *
+	 * PhpSpreadsheet gives every cell that references a shared string its own
+	 * copy of the text, so one long string referenced by many cells costs far
+	 * more memory than the file's size; the reader adds up what the cells
+	 * reference before it parses a sheet.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function maxReferencedStringBytes(): int {
+		$limit = $this->profile()['maxReferencedStringBytes'] ?? null;
+		if (is_int($limit) === true && $limit > 0) {
+			return $limit;
+		}
+
+		return self::DEFAULT_MAX_REFERENCED_STRING_BYTES;
+	}//end maxReferencedStringBytes()
+
+	/**
 	 * The maximum number of non-empty rows per source sheet.
 	 *
 	 * @return int
@@ -232,6 +331,28 @@ class CmdbImportProfile {
 	public function sheetNames(): array {
 		return array_column($this->sheets(), 'name');
 	}//end sheetNames()
+
+	/**
+	 * The rank of a sheet when an APPID is on more than one: lower wins.
+	 *
+	 * The profile's `sheetPrecedence` lists the sheets, the winner first; a
+	 * sheet it does not list ranks after every listed one, in profile order.
+	 *
+	 * @param string $sheetName The sheet name.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 */
+	public function sheetRank(string $sheetName): int {
+		$order = array_values(array_unique(array_merge($this->stringList(key: 'sheetPrecedence'), $this->sheetNames())));
+		$rank = array_search($sheetName, $order, true);
+		if ($rank === false) {
+			return count($order);
+		}
+
+		return (int)$rank;
+	}//end sheetRank()
 
 	/**
 	 * The constants a sheet adds to each of its rows, as column => value.

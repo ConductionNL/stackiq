@@ -13,7 +13,7 @@
             "post": {
                 "operationId": "cmdbImport-import",
                 "summary": "Import a TOPdesk CMDB export (xlsx) for one municipality",
-                "description": "Admin-only, CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/cmdb-export-import/contract.md.",
+                "description": "Nextcloud admins only (not the groups delegated the stackiq admin settings), CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/cmdb-export-import/contract.md.",
                 "tags": [
                     "cmdb-import"
                 ],
@@ -48,7 +48,16 @@
                                             "false"
                                         ],
                                         "default": "true",
-                                        "description": "false reports matched rows as skipped (exists)"
+                                        "description": "false reports matched rows as skipped (exists). 1 and 0 are accepted too, trimmed and in any case; any other value is refused with 400 FIELD_INVALID"
+                                    },
+                                    "publish": {
+                                        "type": "string",
+                                        "enum": [
+                                            "true",
+                                            "false"
+                                        ],
+                                        "default": "true",
+                                        "description": "true gives every module the import creates a publicationDate (the import's start), so it is public, also to anonymous visitors; false creates them without one, for publication by hand. An update never changes publicationDate either way. 1 and 0 are accepted too, trimmed and in any case; any other value is refused with 400 FIELD_INVALID"
                                     },
                                     "missingRecords": {
                                         "type": "string",
@@ -61,7 +70,7 @@
                                     "operationId": {
                                         "type": "string",
                                         "pattern": "^cmdb-[A-Za-z0-9-]{8,64}$",
-                                        "description": "Progress operation id, readable through GET /api/progress/{operationId}"
+                                        "description": "Progress operation id, readable through GET /api/progress/{operationId}. A value that does not match the pattern, or the id of a CMDB import that is still running, is replaced by a generated id; the response's operationId is the id the import used"
                                     }
                                 }
                             }
@@ -80,7 +89,7 @@
                         }
                     },
                     "400": {
-                        "description": "NO_FILE_UPLOADED or NOT_XLSX",
+                        "description": "NO_FILE_UPLOADED, NOT_XLSX, or FIELD_INVALID (updateExisting or publish not true/false/1/0, or a text field sent as an array; details.field names it)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -93,13 +102,23 @@
                         "description": "Not signed in"
                     },
                     "403": {
-                        "description": "Not a Nextcloud admin"
+                        "description": "Not a Nextcloud admin (delegated stackiq admin settings are not enough)"
+                    },
+                    "409": {
+                        "description": "IMPORT_IN_PROGRESS: another CMDB import holds the register's lock; nothing is read or written",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
                     },
                     "412": {
                         "description": "Missing or invalid CSRF token"
                     },
                     "413": {
-                        "description": "FILE_TOO_LARGE",
+                        "description": "FILE_TOO_LARGE; details.maxBytes is the limit that fired: the profile's maximum, or PHP's upload_max_filesize or post_max_size when lower. WORKBOOK_TOO_LARGE; over a profile limit checked before parsing: the unpacked size of all parts (details.maxUncompressedBytes), of one part (details.maxPartBytes and details.part), the number of shared strings (details.maxSharedStrings), or the shared-string text the cells reference together (details.maxReferencedStringBytes)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -109,7 +128,7 @@
                         }
                     },
                     "422": {
-                        "description": "MISSING_RECORDS_UNSUPPORTED, MUNICIPALITY_REQUIRED, MUNICIPALITY_INVALID, NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS",
+                        "description": "MISSING_RECORDS_UNSUPPORTED, MUNICIPALITY_REQUIRED, MUNICIPALITY_INVALID, MUNICIPALITY_AMBIGUOUS (more than one live Municipality has the typed name; details.matches lists their uuids), NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -119,7 +138,7 @@
                         }
                     },
                     "500": {
-                        "description": "IMPORT_FAILED",
+                        "description": "UPLOAD_FAILED (PHP could not store the upload) or IMPORT_FAILED (unexpected; the detail is in the log)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -129,7 +148,7 @@
                         }
                     },
                     "503": {
-                        "description": "MAPPING_UNAVAILABLE, READER_UNAVAILABLE or NOT_CONFIGURED",
+                        "description": "MAPPING_UNAVAILABLE, READER_UNAVAILABLE, NOT_CONFIGURED, or SCHEMA_OUTDATED (a stackiq schema lacks a property the import matches on, or the module schema predates 0.3.8; details.schema names it and details.missing lists the properties, and externalKey.authorization.update for a missing admin-only write rule)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -145,7 +164,7 @@
             "post": {
                 "operationId": "cmdbImport-cancel",
                 "summary": "Ask a running CMDB import to stop between rows",
-                "description": "Admin-only, CSRF-protected. No body.",
+                "description": "Nextcloud admins only (not the groups delegated the stackiq admin settings), CSRF-protected (requesttoken header or OCS-APIRequest: true). No body.",
                 "tags": [
                     "cmdb-import"
                 ],
@@ -155,8 +174,10 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
+                            "type": "string",
+                            "pattern": "^cmdb-[A-Za-z0-9-]{8,64}$"
+                        },
+                        "description": "The operationId of the import; any other value answers 404 OPERATION_NOT_FOUND"
                     }
                 ],
                 "responses": {
@@ -182,11 +203,14 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "Not signed in"
+                    },
                     "403": {
-                        "description": "Not a Nextcloud admin"
+                        "description": "Not a Nextcloud admin (delegated stackiq admin settings are not enough)"
                     },
                     "404": {
-                        "description": "OPERATION_NOT_FOUND",
+                        "description": "OPERATION_NOT_FOUND: no CMDB import with this id is running",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -197,6 +221,16 @@
                     },
                     "412": {
                         "description": "Missing or invalid CSRF token"
+                    },
+                    "500": {
+                        "description": "IMPORT_FAILED (unexpected; the exception class and its sanitised first line are in the log)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -465,7 +499,8 @@
                             "unchanged",
                             "skipped",
                             "failed",
-                            "warnings"
+                            "warnings",
+                            "unpublished"
                         ],
                         "properties": {
                             "rowsRead": {
@@ -491,6 +526,10 @@
                             },
                             "warnings": {
                                 "type": "integer"
+                            },
+                            "unpublished": {
+                                "type": "integer",
+                                "description": "Modules this import created without a publicationDate (publish=false); 0 when publish is true"
                             }
                         }
                     },

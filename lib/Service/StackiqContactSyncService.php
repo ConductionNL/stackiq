@@ -29,7 +29,10 @@ namespace OCA\Stackiq\Service;
 
 use OCP\Constants;
 use OCP\Contacts\IManager as IContactsManager;
+use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Search, import and create Nextcloud contacts for stackiq
@@ -51,14 +54,25 @@ use Psr\Log\LoggerInterface;
  */
 class StackiqContactSyncService {
 	/**
+	 * Nextcloud's CardDAV backend, which creates an address book (not part of OCP).
+	 */
+	public const CARDDAV_BACKEND_CLASS = 'OCA\DAV\CardDAV\CardDavBackend';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IContactsManager $contactsManager The Nextcloud contacts manager.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ContainerInterface|null $container Resolves the CardDAV backend, for a named address book.
+	 * @param IUserSession|null $userSession The user whose named address book is written.
+	 *
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 */
 	public function __construct(
 		private readonly IContactsManager $contactsManager,
 		private readonly LoggerInterface $logger,
+		private readonly ?ContainerInterface $container = null,
+		private readonly ?IUserSession $userSession = null,
 	) {
 	}//end __construct()
 
@@ -161,6 +175,276 @@ class StackiqContactSyncService {
 		// Create a fresh Contact from the identity fields.
 		return $this->createContactForRecord(objectType: $objectType, record: $record);
 	}//end syncToContacts()
+
+	/**
+	 * Resolve the contact of a record, creating it in a dedicated address book of the signed-in user.
+	 *
+	 * A contact the record already links (`contactsUid`) is kept. Otherwise
+	 * a contact with the record's e-mail address is reused only when it is
+	 * in the address book with this URI: a contact in another address book
+	 * of the user is never matched, so the user's own contacts are never
+	 * linked to imported records. A new contact goes into that address book,
+	 * which is created with the display name when the user has none, and
+	 * never into the user's own first writable address book.
+	 *
+	 * @param string $objectType The relationship type ('contactPerson'|'organization').
+	 * @param array<string, mixed> $record The relationship record.
+	 * @param string $addressBookUri The address book's URI, stable across languages.
+	 * @param string $displayName The display name for a new address book.
+	 *
+	 * @return ?string The contacts UID, or null when it could not be resolved or created.
+	 *
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 */
+	public function syncToNamedAddressBook(string $objectType, array $record, string $addressBookUri, string $displayName): ?string {
+		if ($this->isAvailable() === false) {
+			return null;
+		}
+
+		$existingUid = (string)($record['contactsUid'] ?? '');
+		if ($existingUid !== '' && $this->findContactByUid(uid: $existingUid) !== null) {
+			return $existingUid;
+		}
+
+		$matched = $this->namedAddressBookContactByEmail(record: $record, addressBookUri: $addressBookUri);
+		if ($matched !== null) {
+			return $matched;
+		}
+
+		$properties = $this->recordToVCard(objectType: $objectType, record: $record);
+		if (($properties['FN'] ?? '') === '') {
+			$this->logger->warning('[StackiqContactSync] Record has no identity to create a contact from', ['objectType' => $objectType]);
+			return null;
+		}
+
+		try {
+			$backend = $this->container?->get(static::CARDDAV_BACKEND_CLASS);
+			$uid = $this->userSession?->getUser()?->getUID();
+			if (is_object($backend) === false || $uid === null) {
+				$this->logger->warning('[StackiqContactSync] No CardDAV backend or no user; cannot create the contact', ['objectType' => $objectType]);
+				return null;
+			}
+
+			$addressBookId = $this->namedAddressBookId(
+				backend: $backend,
+				principal: 'principals/users/' . $uid,
+				uri: $addressBookUri,
+				displayName: $displayName
+			);
+			$contactUid = self::newUid();
+			$backend->createCard($addressBookId, $contactUid . '.vcf', self::serialiseVCard(uid: $contactUid, properties: $properties));
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'[StackiqContactSync] The contact could not be created in the named address book',
+				['objectType' => $objectType, 'exception' => get_class($e)]
+			);
+			return null;
+		}
+
+		return $contactUid;
+	}//end syncToNamedAddressBook()
+
+	/**
+	 * Search the signed-in user's address book with this URI, and no other.
+	 *
+	 * @param string $query The search query.
+	 * @param string $addressBookUri The address book's URI.
+	 * @param array<int, string> $properties The vCard properties to search, such as FN or EMAIL.
+	 *
+	 * @return array<int, array<string, mixed>> The matching contacts, as searchContacts() returns them;
+	 *                                          none when the user has no such address book.
+	 *
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 */
+	public function searchNamedAddressBook(string $query, string $addressBookUri, array $properties): array {
+		$contacts = [];
+		foreach ($this->namedAddressBookResults(query: $query, addressBookUri: $addressBookUri, properties: $properties) as $result) {
+			$contacts[] = [
+				'uid' => (string)$result['UID'],
+				'name' => $this->firstValue(value: ($result['FN'] ?? '')),
+				'email' => $this->firstValue(value: ($result['EMAIL'] ?? '')),
+				'addressBookKey' => (string)($result['addressbook-key'] ?? ''),
+			];
+		}
+
+		return $contacts;
+	}//end searchNamedAddressBook()
+
+	/**
+	 * The contact in the named address book with the record's e-mail address, or null.
+	 *
+	 * @param array<string, mixed> $record The relationship record.
+	 * @param string $addressBookUri The address book's URI.
+	 *
+	 * @return string|null The contact UID.
+	 */
+	private function namedAddressBookContactByEmail(array $record, string $addressBookUri): ?string {
+		$email = trim((string)($record['e-mailadres'] ?? $record['email'] ?? ''));
+		foreach ($this->namedAddressBookResults(query: $email, addressBookUri: $addressBookUri, properties: ['EMAIL']) as $result) {
+			if ($this->valueMatches(value: ($result['EMAIL'] ?? ''), needle: $email) === true) {
+				return (string)$result['UID'];
+			}
+		}
+
+		return null;
+	}//end namedAddressBookContactByEmail()
+
+	/**
+	 * The raw search results that lie in the user's address book with this URI.
+	 *
+	 * The contacts manager searches every address book of the user and tags
+	 * each result with its address book's key, the CardDAV address book id;
+	 * only results with the named address book's id are kept.
+	 *
+	 * @param string $query The search query.
+	 * @param string $addressBookUri The address book's URI.
+	 * @param array<int, string> $properties The vCard properties to search.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function namedAddressBookResults(string $query, string $addressBookUri, array $properties): array {
+		if ($this->isAvailable() === false || trim($query) === '') {
+			return [];
+		}
+
+		$key = $this->existingNamedAddressBookKey(addressBookUri: $addressBookUri);
+		if ($key === null) {
+			return [];
+		}
+
+		$found = [];
+		foreach ($this->contactsManager->search($query, $properties, ['limit' => 50]) as $result) {
+			if (isset($result['UID']) === true && (string)($result['addressbook-key'] ?? '') === $key) {
+				$found[] = $result;
+			}
+		}
+
+		return $found;
+	}//end namedAddressBookResults()
+
+	/**
+	 * The key of the signed-in user's address book with this URI, without creating it.
+	 *
+	 * @param string $addressBookUri The address book's URI.
+	 *
+	 * @return string|null The CardDAV address book id as a string, or null when there is none.
+	 */
+	private function existingNamedAddressBookKey(string $addressBookUri): ?string {
+		try {
+			$backend = $this->container?->get(static::CARDDAV_BACKEND_CLASS);
+			$uid = $this->userSession?->getUser()?->getUID();
+			if (is_object($backend) === false || $uid === null) {
+				return null;
+			}
+
+			$book = $backend->getAddressBooksByUri('principals/users/' . $uid, $addressBookUri);
+		} catch (Throwable $e) {
+			$this->logger->warning('[StackiqContactSync] The named address book could not be read', ['exception' => get_class($e)]);
+			return null;
+		}
+
+		if (is_array($book) === false || isset($book['id']) === false) {
+			return null;
+		}
+
+		return (string)$book['id'];
+	}//end existingNamedAddressBookKey()
+
+	/**
+	 * The id of a principal's address book with this URI, created when absent.
+	 *
+	 * @param object $backend The CardDAV backend.
+	 * @param string $principal The principal URI.
+	 * @param string $uri The address book URI.
+	 * @param string $displayName The display name for a new address book.
+	 *
+	 * @return int
+	 */
+	private function namedAddressBookId(object $backend, string $principal, string $uri, string $displayName): int {
+		$book = $backend->getAddressBooksByUri($principal, $uri);
+		if (is_array($book) === true && isset($book['id']) === true) {
+			return (int)$book['id'];
+		}
+
+		return (int)$backend->createAddressBook($principal, $uri, ['{DAV:}displayname' => $displayName]);
+	}//end namedAddressBookId()
+
+	/**
+	 * A vCard 3.0 for a new contact, from the property set recordToVCard() builds.
+	 *
+	 * Text values are escaped as RFC 6350 requires; `N` is structured, so only
+	 * its components are escaped. Lines are folded at 75 octets.
+	 *
+	 * @param string $uid The contact UID.
+	 * @param array<string, mixed> $properties The vCard property set.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 */
+	public static function serialiseVCard(string $uid, array $properties): string {
+		$lines = ['BEGIN:VCARD', 'VERSION:3.0', 'UID:' . self::escapeVCardText(text: $uid)];
+		foreach ($properties as $name => $value) {
+			if (is_scalar($value) === false || (string)$value === '' || in_array($name, ['UID', 'VERSION'], true) === true) {
+				continue;
+			}
+
+			$text = self::escapeVCardText(text: (string)$value);
+			if ($name === 'N') {
+				$text = implode(';', array_map(static fn (string $part): string => self::escapeVCardText(text: $part), explode(';', (string)$value)));
+			}
+
+			$lines[] = self::foldVCardLine(line: strtoupper((string)$name) . ':' . $text);
+		}
+
+		$lines[] = 'END:VCARD';
+
+		return implode("\r\n", $lines) . "\r\n";
+	}//end serialiseVCard()
+
+	/**
+	 * Escape a vCard text value: backslash, comma, semicolon and line breaks.
+	 *
+	 * @param string $text The value.
+	 *
+	 * @return string
+	 */
+	private static function escapeVCardText(string $text): string {
+		return str_replace(["\\", ',', ';', "\r\n", "\n", "\r"], ["\\\\", '\\,', '\\;', '\\n', '\\n', '\\n'], $text);
+	}//end escapeVCardText()
+
+	/**
+	 * Fold a vCard content line at 75 octets, never inside a UTF-8 character.
+	 *
+	 * @param string $line The unfolded line.
+	 *
+	 * @return string
+	 */
+	private static function foldVCardLine(string $line): string {
+		$folded = [];
+		while (strlen($line) > 75) {
+			$cut = mb_strcut($line, 0, 75, 'UTF-8');
+			$folded[] = $cut;
+			$line = ' ' . substr($line, strlen($cut));
+		}
+
+		$folded[] = $line;
+
+		return implode("\r\n", $folded);
+	}//end foldVCardLine()
+
+	/**
+	 * A random UUID v4 for a new contact.
+	 *
+	 * @return string
+	 */
+	private static function newUid(): string {
+		$bytes = random_bytes(16);
+		$bytes[6] = chr((ord($bytes[6]) & 0x0F) | 0x40);
+		$bytes[8] = chr((ord($bytes[8]) & 0x3F) | 0x80);
+
+		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+	}//end newUid()
 
 	/**
 	 * Find a Nextcloud contact by its exact UID.

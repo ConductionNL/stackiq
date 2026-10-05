@@ -2,7 +2,7 @@
   "components": {
     "schemas": {
       "module": {
-        "version": "0.3.5",
+        "version": "0.3.8",
         "properties": {
           "externalId": {
             "type": "string",
@@ -25,8 +25,11 @@
           "externalKey": {
             "type": "string",
             "title": "Import key",
-            "description": "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; do not edit.",
+            "description": "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; only a Nextcloud admin can change it.",
             "maxLength": 200,
+            "authorization": {
+              "update": ["admin"]
+            },
             "visible": true,
             "facetable": false,
             "table": {
@@ -51,6 +54,94 @@
             "visible": true,
             "facetable": false,
             "order": 64
+          },
+          "applicationType": {
+            "type": "string",
+            "title": "Application type",
+            "description": "The kind of application as the source system records it, such as the TOPdesk Applicatiesoort (Webapplicatie, Client/server, Saas). Kept as the source has it.",
+            "maxLength": 100,
+            "visible": true,
+            "facetable": true,
+            "order": 65
+          },
+          "bbnLevel": {
+            "title": "BBN level",
+            "description": "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.",
+            "enum": ["BBN2+"]
+          }
+        }
+      },
+      "usage": {
+        "version": "1.5.6",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "transitions": {
+              "importAcquisition": {
+                "from": [
+                  "Planned",
+                  "In production",
+                  "To be phased out",
+                  "Phased out"
+                ],
+                "to": "Acquisition",
+                "authorization": [
+                  "admin"
+                ],
+                "description": "Set the usage to \"Acquisition\" as the service desk (TOPdesk CMDB import) records it, whatever the current state. Only administrators: the import follows the source, other users follow the transitions above."
+              },
+              "importPlanned": {
+                "from": [
+                  "Acquisition",
+                  "In production",
+                  "To be phased out",
+                  "Phased out"
+                ],
+                "to": "Planned",
+                "authorization": [
+                  "admin"
+                ],
+                "description": "Set the usage to \"Planned\" as the service desk (TOPdesk CMDB import) records it, whatever the current state. Only administrators: the import follows the source, other users follow the transitions above."
+              },
+              "importInProduction": {
+                "from": [
+                  "Acquisition",
+                  "Planned",
+                  "To be phased out",
+                  "Phased out"
+                ],
+                "to": "In production",
+                "authorization": [
+                  "admin"
+                ],
+                "description": "Set the usage to \"In production\" as the service desk (TOPdesk CMDB import) records it, whatever the current state. Only administrators: the import follows the source, other users follow the transitions above."
+              },
+              "importToBePhasedOut": {
+                "from": [
+                  "Acquisition",
+                  "Planned",
+                  "In production",
+                  "Phased out"
+                ],
+                "to": "To be phased out",
+                "authorization": [
+                  "admin"
+                ],
+                "description": "Set the usage to \"To be phased out\" as the service desk (TOPdesk CMDB import) records it, whatever the current state. Only administrators: the import follows the source, other users follow the transitions above."
+              },
+              "importPhasedOut": {
+                "from": [
+                  "Acquisition",
+                  "Planned",
+                  "In production",
+                  "To be phased out"
+                ],
+                "to": "Phased out",
+                "authorization": [
+                  "admin"
+                ],
+                "description": "Set the usage to \"Phased out\" as the service desk (TOPdesk CMDB import) records it, whatever the current state. Only administrators: the import follows the source, other users follow the transitions above."
+              }
+            }
           }
         }
       }

@@ -368,7 +368,9 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new StackiqContactSyncService(
 					contactsManager: $container->get('OCP\Contacts\IManager'),
-					logger: $container->get('Psr\Log\LoggerInterface')
+					logger: $container->get('Psr\Log\LoggerInterface'),
+					container: $container,
+					userSession: $container->get('OCP\IUserSession')
 				);
 			}
 		);
