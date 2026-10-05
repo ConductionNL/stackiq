@@ -1171,6 +1171,10 @@
         "The server could not store the uploaded file.": "De server kon het geüploade bestand niet opslaan.",
         "Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.": "Probeer het opnieuw. Blijft het mislukken, dan staan de details in het Nextcloud-logboek; controleer de vrije ruimte en de uploadinstellingen van de server.",
         "You may not use stackiq's admin settings, so you cannot import a CMDB export.": "U mag de beheerinstellingen van stackiq niet gebruiken, dus u kunt geen CMDB-export importeren.",
-        "Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group.": "Vraag een Nextcloud-beheerder om de import uit te voeren, of om de beheerinstellingen van stackiq aan uw groep te delegeren."
+        "Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group.": "Vraag een Nextcloud-beheerder om de import uit te voeren, of om de beheerinstellingen van stackiq aan uw groep te delegeren.",
+        "No municipality named \"%s\" was found, so it was created. Check the name if you meant an existing one.": "Er is geen gemeente met de naam \"%s\" gevonden, dus die is aangemaakt. Controleer de naam als u een bestaande gemeente bedoelde.",
+        "APPID %1$s is also on sheet \"%2$s\", which wins; this row is not imported": "APPID %1$s staat ook op het tabblad \"%2$s\", dat voorgaat; deze rij wordt niet geïmporteerd",
+        "Stackiq CMDB owners": "Stackiq CMDB-eigenaren",
+        "step \"%1$s\" failed (%2$s)": "stap \"%1$s\" mislukt (%2$s)"
     }
 }

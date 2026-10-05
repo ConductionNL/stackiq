@@ -1102,7 +1102,11 @@ OC.L10N.register(
         "The server could not store the uploaded file.": "The server could not store the uploaded file.",
         "Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.": "Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.",
         "You may not use stackiq's admin settings, so you cannot import a CMDB export.": "You may not use stackiq's admin settings, so you cannot import a CMDB export.",
-        "Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group.": "Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group."
+        "Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group.": "Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group.",
+        "No municipality named \"%s\" was found, so it was created. Check the name if you meant an existing one.": "No municipality named \"%s\" was found, so it was created. Check the name if you meant an existing one.",
+        "APPID %1$s is also on sheet \"%2$s\", which wins; this row is not imported": "APPID %1$s is also on sheet \"%2$s\", which wins; this row is not imported",
+        "Stackiq CMDB owners": "Stackiq CMDB owners",
+        "step \"%1$s\" failed (%2$s)": "step \"%1$s\" failed (%2$s)"
     },
     "nplurals=2; plural=(n != 1);"
 )
