@@ -745,11 +745,12 @@ class CmdbExportImportServiceTest extends TestCase {
 	 * @param string $uuid The uuid.
 	 * @param string $name The name.
 	 * @param string $type The type.
+	 * @param string $status The status.
 	 *
 	 * @return void
 	 */
-	private function seedOrganisation(string $uuid, string $name, string $type): void {
-		$this->store[self::ORGANIZATION][$uuid] = ['id' => $uuid, 'name' => $name, 'type' => $type, 'status' => 'Active'];
+	private function seedOrganisation(string $uuid, string $name, string $type, string $status = 'Active'): void {
+		$this->store[self::ORGANIZATION][$uuid] = ['id' => $uuid, 'name' => $name, 'type' => $type, 'status' => $status];
 	}//end seedOrganisation()
 
 	// ------------------------------------------------------------------
@@ -868,6 +869,52 @@ class CmdbExportImportServiceTest extends TestCase {
 		$municipalities = array_filter($this->objects(self::ORGANIZATION), fn (array $o): bool => $o['type'] === 'Municipality');
 		$this->assertCount(1, $municipalities);
 	}//end testReimportingTheSameExportChangesNothing()
+
+	/**
+	 * A municipality or supplier name never matches a merge tombstone or an inactive organisation.
+	 *
+	 * @return void
+	 */
+	public function testTombstonedAndInactiveOrganisationsAreNotMatched(): void {
+		$this->seedOrganisation(uuid: 'muni-merged', name: 'Gemeente Voorbeeldstad', type: 'Municipality', status: 'merged');
+		$this->seedOrganisation(uuid: 'muni-live', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->seedOrganisation(uuid: 'sup-merged', name: 'Fabfrikant', type: 'Supplier', status: 'merged');
+		$this->seedOrganisation(uuid: 'sup-inactive', name: 'Fabfrikant', type: 'Supplier', status: 'Inactive');
+		$this->seedOrganisation(uuid: 'sup-live', name: 'Fabfrikant', type: 'Supplier');
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityName' => 'Gemeente Voorbeeldstad']);
+
+		$this->assertSame('muni-live', $report['municipality']['uuid']);
+		$this->assertFalse($report['municipality']['created']);
+		$module = $this->objects(self::MODULE)[0];
+		$this->assertSame('sup-live', $module['provider']);
+		$this->assertSame('muni-live', $this->objects(self::USAGE)[0]['consumer']);
+	}//end testTombstonedAndInactiveOrganisationsAreNotMatched()
+
+	/**
+	 * A supplier known only as inactive is created anew, and a merged municipality uuid is refused.
+	 *
+	 * @return void
+	 */
+	public function testOnlyRetiredMatchesMeanANewSupplierAndAMergedUuidIsRefused(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->seedOrganisation(uuid: 'sup-inactive', name: 'Fabfrikant', type: 'Supplier', status: 'Inactive');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$provider = $this->objects(self::MODULE)[0]['provider'];
+		$this->assertNotSame('sup-inactive', $provider);
+		$this->assertSame('Active', $this->store[self::ORGANIZATION][$provider]['status']);
+
+		$this->seedOrganisation(uuid: 'muni-merged', name: 'Gemeente Oud', type: 'Municipality', status: 'merged');
+		$saves = count($this->saves);
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '2')]))->import(path: '', options: ['municipalityUuid' => 'muni-merged']);
+			$this->fail('MUNICIPALITY_INVALID expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MUNICIPALITY_INVALID', $e->getErrorCode());
+		}
+
+		$this->assertCount($saves, $this->saves);
+	}//end testOnlyRetiredMatchesMeanANewSupplierAndAMergedUuidIsRefused()
 
 	/**
 	 * A module schema without externalKey stops the import before reading: no duplicates of every record.

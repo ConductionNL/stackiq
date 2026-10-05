@@ -22,7 +22,8 @@
  * Rules stated once and enforced here:
  * - A module matches on `externalKey`; a usage on (consumer, module); a
  *   supplier on its normalised name and type Supplier; a contact person on
- *   (contactsUid, organization).
+ *   (contactsUid, organization). An organisation that was merged away
+ *   (status `merged`) or is `Inactive` is never matched by name.
  * - `publicationDate` is set to the import's start on create and never
  *   written on update; neither is `depublicationDate`.
  * - Records missing from a newer export are left untouched.
@@ -124,6 +125,13 @@ class CmdbExportImportService {
 	 * The lock an import holds for its register, so imports never interleave.
 	 */
 	private const LOCK_PREFIX = 'stackiq/cmdb-import/register-';
+
+	/**
+	 * Organisation statuses a name never matches: a merge tombstone, and a retired organisation.
+	 *
+	 * @var array<int, string>
+	 */
+	private const UNMATCHED_STATUSES = ['merged', 'Inactive'];
 
 	/**
 	 * Page size for loading the organisations a name may match.
@@ -1112,7 +1120,7 @@ class CmdbExportImportService {
 	}//end resolveMunicipality()
 
 	/**
-	 * Resolve a municipality uuid, which must be an organisation of type Municipality.
+	 * Resolve a municipality uuid, which must be an organisation of type Municipality that was not merged away.
 	 *
 	 * @param string $uuid The organisation uuid.
 	 *
@@ -1150,6 +1158,14 @@ class CmdbExportImportService {
 			);
 		}
 
+		// A merge tombstone points at the organisation that replaced it; data never goes to the tombstone.
+		if (($data['status'] ?? null) === 'merged') {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::MUNICIPALITY_INVALID,
+				message: 'The municipality uuid is an organisation that was merged into another'
+			);
+		}
+
 		return ['uuid' => (string)$organisation->getUuid(), 'name' => (string)($data['name'] ?? ''), 'created' => false];
 	}//end municipalityByUuid()
 
@@ -1175,7 +1191,10 @@ class CmdbExportImportService {
 	}//end suppliers()
 
 	/**
-	 * Every organisation of a type, as uuid and name.
+	 * Every organisation of a type that a name may match, as uuid and name.
+	 *
+	 * Merge tombstones and inactive organisations are left out: new data
+	 * linked to them would never show where the live organisation is used.
 	 *
 	 * @param string $type Municipality or Supplier.
 	 *
@@ -1205,7 +1224,10 @@ class CmdbExportImportService {
 			foreach ($page as $entity) {
 				$data = $entity->getObject();
 				// The filter is checked again: a filter OpenRegister cannot apply must not widen the match.
-				if (($data['type'] ?? null) === $type && $entity->getUuid() !== null) {
+				if (($data['type'] ?? null) === $type
+					&& $entity->getUuid() !== null
+					&& in_array(($data['status'] ?? null), self::UNMATCHED_STATUSES, true) === false
+				) {
 					$found[] = ['uuid' => (string)$entity->getUuid(), 'name' => ($data['name'] ?? '')];
 				}
 			}
