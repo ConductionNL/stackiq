@@ -148,6 +148,20 @@ class CmdbExportImportServiceTest extends TestCase {
 	private static ?array $declared = null;
 
 	/**
+	 * Property definitions per schema id, as the merged register ships them.
+	 *
+	 * @var array<int, array<string, array<string, mixed>>>|null
+	 */
+	private static ?array $definitions = null;
+
+	/**
+	 * Property definitions replaced for one test, per schema id and property.
+	 *
+	 * @var array<int, array<string, array<string, mixed>>>
+	 */
+	private array $redefined = [];
+
+	/**
 	 * Properties taken out of a schema for one test, per schema id.
 	 *
 	 * @var array<int, array<int, string>>
@@ -206,6 +220,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->cacheFailure = null;
 		$this->logLines = [];
 		$this->undeclared = [];
+		$this->redefined = [];
 		$this->ignoredFilters = [];
 		$this->scopedCalls = [];
 		$this->searches = [];
@@ -290,8 +305,10 @@ class CmdbExportImportServiceTest extends TestCase {
 
 			$ids = ['module' => self::MODULE, 'organization' => self::ORGANIZATION, 'usage' => self::USAGE, 'contactPerson' => self::CONTACT_PERSON];
 			self::$declared = [];
+			self::$definitions = [];
 			foreach ($ids as $slug => $id) {
 				self::$declared[$id] = array_keys($register['components']['schemas'][$slug]['properties']);
+				self::$definitions[$id] = $register['components']['schemas'][$slug]['properties'];
 			}
 		}
 
@@ -469,7 +486,7 @@ class CmdbExportImportServiceTest extends TestCase {
 			 * @return object
 			 */
 			public function find(int|string $id, ?array $_extend = [], bool $_rbac = true, bool $_multitenancy = true): object {
-				$properties = array_fill_keys($this->test->schemaProperties(schema: (int)$id, rbac: $_rbac, multitenancy: $_multitenancy), ['type' => 'string']);
+				$properties = $this->test->schemaProperties(schema: (int)$id, rbac: $_rbac, multitenancy: $_multitenancy);
 				return new class($properties) {
 					/**
 					 * Constructor.
@@ -495,17 +512,22 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end schemaMapper()
 
 	/**
-	 * The declared properties of a schema, for the schema mapper double.
+	 * The declared property definitions of a schema, for the schema mapper double.
 	 *
 	 * @param int $schema The schema id.
 	 * @param bool $rbac The `_rbac` argument.
 	 * @param bool $multitenancy The `_multitenancy` argument.
 	 *
-	 * @return array<int, string>
+	 * @return array<string, array<string, mixed>>
 	 */
 	public function schemaProperties(int $schema, bool $rbac, bool $multitenancy): array {
 		$this->noteScope(method: 'SchemaMapper::find', rbac: $rbac, multitenancy: $multitenancy);
-		return $this->declaredProperties(schema: $schema);
+		$definitions = [];
+		foreach ($this->declaredProperties(schema: $schema) as $name) {
+			$definitions[$name] = ($this->redefined[$schema][$name] ?? self::$definitions[$schema][$name] ?? ['type' => 'string']);
+		}
+
+		return $definitions;
 	}//end schemaProperties()
 
 	/**
@@ -1022,6 +1044,39 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame([], $this->saves);
 		$this->assertSame([], $this->searches, 'refused before any search');
 	}//end testAModuleSchemaWithoutTheMatchPropertiesStopsTheImport()
+
+	/**
+	 * A module schema from before 0.3.8 stops the import: it has the match properties, but no applicationType and
+	 * no admin-only update rule on externalKey.
+	 *
+	 * @return void
+	 */
+	public function testAModuleSchemaFromBefore038StopsTheImport(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->undeclared[self::MODULE] = ['applicationType'];
+		$this->redefined[self::MODULE]['externalKey'] = ['type' => 'string', 'maxLength' => 200];
+
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+			$this->fail('SCHEMA_OUTDATED expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('SCHEMA_OUTDATED', $e->getErrorCode());
+			$this->assertSame(['schema' => 'module', 'missing' => ['applicationType', 'externalKey.authorization.update']], $e->getDetails());
+		}
+
+		$this->assertSame([], $this->saves);
+
+		// The rule alone is missing, as on a 0.3.7 module that has applicationType from elsewhere.
+		$this->undeclared = [];
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+			$this->fail('SCHEMA_OUTDATED expected for the missing rule alone');
+		} catch (CmdbImportException $e) {
+			$this->assertSame(['schema' => 'module', 'missing' => ['externalKey.authorization.update']], $e->getDetails());
+		}
+
+		$this->assertSame([], $this->saves);
+	}//end testAModuleSchemaFromBefore038StopsTheImport()
 
 	/**
 	 * A search on a property the schema does not declare yields nothing, as in OpenRegister.

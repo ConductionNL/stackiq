@@ -286,7 +286,7 @@ and the section shows the reason and the error code.
 | `MAPPING_UNAVAILABLE` | OpenRegister's mapping engine is missing, or one of the mapping files is invalid. | Update OpenRegister. If you changed a mapping file, check it against the Nextcloud log. |
 | `READER_UNAVAILABLE` | The Excel reader that ships with OpenRegister cannot be loaded. | Make sure OpenRegister is installed and enabled. |
 | `NOT_CONFIGURED` | The stackiq register or its schemas cannot be found. | Run **Auto Configure** at the top of the stackiq admin settings. |
-| `SCHEMA_OUTDATED` | A stackiq schema lacks a property the import recognises records by, for example `externalKey` on the module schema. Importing anyway would create every application again. The message names the schema. | Press **Force Update** at the top of the stackiq admin settings to import the register configuration again. |
+| `SCHEMA_OUTDATED` | A stackiq schema lacks a property the import recognises records by, for example `externalKey` on the module schema, or the module schema is older than version 0.3.8: it has no `applicationType`, or `externalKey` lacks the rule that only an administrator may change it. Importing anyway would create every application again, or leave the import key open to every editor. The message names the schema. | Press **Force Update** at the top of the stackiq admin settings to import the register configuration again. |
 | `IMPORT_FAILED` | Something unexpected went wrong. | The Nextcloud log has the details. |
 
 **The connection was cut off.** The import runs in one request. When that

@@ -148,7 +148,7 @@
                         }
                     },
                     "503": {
-                        "description": "MAPPING_UNAVAILABLE, READER_UNAVAILABLE, NOT_CONFIGURED, or SCHEMA_OUTDATED (a stackiq schema lacks a property the import matches on; details.schema names it and details.missing lists the properties)",
+                        "description": "MAPPING_UNAVAILABLE, READER_UNAVAILABLE, NOT_CONFIGURED, or SCHEMA_OUTDATED (a stackiq schema lacks a property the import matches on, or the module schema predates 0.3.8; details.schema names it and details.missing lists the properties, and externalKey.authorization.update for a missing admin-only write rule)",
                         "content": {
                             "application/json": {
                                 "schema": {

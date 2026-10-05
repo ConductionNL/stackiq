@@ -115,12 +115,14 @@ class CmdbExportImportService {
 	 *
 	 * OpenRegister answers a filter on a property its schema does not declare
 	 * with no rows, not an error; without these the import would create a
-	 * duplicate of every record instead of matching it.
+	 * duplicate of every record instead of matching it. `applicationType` is
+	 * not matched on, but it arrives with the same module version (0.3.8) as
+	 * the write rule below, so its absence marks an outdated module schema.
 	 *
 	 * @var array<string, array<int, string>>
 	 */
 	private const MATCH_PROPERTIES = [
-		'module' => ['externalKey', 'externalId', 'externalNumber'],
+		'module' => ['externalKey', 'externalId', 'externalNumber', 'applicationType'],
 		'organization' => ['name', 'type'],
 		'usage' => ['consumer', 'module'],
 		'contactPerson' => ['contactsUid', 'organization'],
@@ -130,6 +132,19 @@ class CmdbExportImportService {
 	 * Wall-clock seconds an import may run, below the default 3600 s lifetime of a Nextcloud lock.
 	 */
 	public const TIME_LIMIT_SECONDS = 3000;
+
+	/**
+	 * The update rule a property must carry, per schema: property => the group that alone may change it.
+	 *
+	 * Only an admin may change `module.externalKey` outside the import; the
+	 * conflict and ownership model relies on that, so a module schema without
+	 * the rule (before 0.3.8) is outdated.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private const REQUIRED_UPDATE_RULES = [
+		'module' => ['externalKey' => 'admin'],
+	];
 
 	/**
 	 * The most report rows stored with the operation in the distributed cache; the counts are always kept.
@@ -1735,11 +1750,12 @@ class CmdbExportImportService {
 	}//end resolveCoordinates()
 
 	/**
-	 * Refuse the import when a schema does not declare the properties the matching relies on.
+	 * Refuse the import when a schema does not declare the properties and write rules the import relies on.
 	 *
-	 * The module properties arrive with the register fragment (module 0.3.5 and
-	 * later), which an installation gets only after its register configuration
-	 * is imported again.
+	 * The module properties, and the admin-only update rule on `externalKey`,
+	 * arrive with the register fragment (module 0.3.8 and later), which an
+	 * installation gets only after its register configuration is imported
+	 * again. A missing rule is reported as `<property>.authorization.update`.
 	 *
 	 * @param array<string, int> $schemas Schema key => schema id.
 	 *
@@ -1772,7 +1788,9 @@ class CmdbExportImportService {
 				);
 			}
 
-			$missing = array_values(array_diff($required, array_keys((array)$properties)));
+			$properties = (array)$properties;
+			$missing = array_values(array_diff($required, array_keys($properties)));
+			array_push($missing, ...self::missingUpdateRules(type: $type, properties: $properties));
 			if ($missing !== []) {
 				throw new CmdbImportException(
 					errorCode: CmdbImportException::SCHEMA_OUTDATED,
@@ -1782,6 +1800,46 @@ class CmdbExportImportService {
 			}
 		}
 	}//end assertMatchProperties()
+
+	/**
+	 * The declared properties of a schema that lack the update rule the import relies on.
+	 *
+	 * A property that is not declared at all is already reported as missing.
+	 *
+	 * @param string $type The schema key.
+	 * @param array<string, mixed> $properties The schema's property definitions.
+	 *
+	 * @return array<int, string> `<property>.authorization.update` per property without the rule.
+	 */
+	private static function missingUpdateRules(string $type, array $properties): array {
+		$missing = [];
+		foreach ((self::REQUIRED_UPDATE_RULES[$type] ?? []) as $property => $group) {
+			if (array_key_exists($property, $properties) === false) {
+				continue;
+			}
+
+			$definition = json_decode((string)json_encode($properties[$property]), true);
+			$update = ($definition['authorization']['update'] ?? null);
+			if (is_array($update) === false) {
+				$update = [];
+			}
+
+			$groups = [];
+			foreach ($update as $rule) {
+				if (is_array($rule) === true) {
+					$rule = ($rule['group'] ?? null);
+				}
+
+				$groups[] = $rule;
+			}
+
+			if (in_array($group, $groups, true) === false) {
+				$missing[] = $property . '.authorization.update';
+			}
+		}
+
+		return $missing;
+	}//end missingUpdateRules()
 
 	/**
 	 * The coordinates of the current run.

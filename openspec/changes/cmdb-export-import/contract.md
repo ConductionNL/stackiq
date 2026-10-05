@@ -108,7 +108,7 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progres
 | `MAPPING_UNAVAILABLE` | mapping cannot run | OpenRegister's `MappingEngine`/`PackDefinitionValidator` missing, or a shipped pack is invalid |
 | `READER_UNAVAILABLE` | xlsx reader missing | PhpSpreadsheet's Xlsx reader cannot be loaded |
 | `NOT_CONFIGURED` | stackiq not configured (503) | OpenRegister's object service, the stackiq register, or the `module`, `organization`, `usage` or `contactPerson` schema cannot be resolved; checked before the file is read |
-| `SCHEMA_OUTDATED` | register out of date (503) | the `module`, `organization`, `usage` or `contactPerson` schema lacks a property the import matches on (for example `module.externalKey`); importing the register configuration again adds it. Checked before the file is read |
+| `SCHEMA_OUTDATED` | register out of date (503) | the `module`, `organization`, `usage` or `contactPerson` schema lacks a property the import matches on (for example `module.externalKey`), or the `module` schema predates 0.3.8: no `applicationType`, or no admin-only `authorization.update` rule on `externalKey` (reported in `details.missing` as `externalKey.authorization.update`); importing the register configuration again adds them. Checked before the file is read |
 | `IMPORT_IN_PROGRESS` | another import runs (409) | another CMDB import holds the register's lock; only one import runs per register at a time |
 | `OPERATION_NOT_FOUND` | unknown operation | cancel for an id without a running `cmdb_import` operation |
 | `IMPORT_FAILED` | unexpected error | anything not listed above |
