@@ -319,13 +319,7 @@ class CmdbWorkbookReader {
 					continue;
 				}
 
-				$count = 0;
-				while ($count <= $limit && $xml->read() === true) {
-					if ($xml->nodeType === XMLReader::ELEMENT && $xml->depth === 1 && $xml->localName === 'si') {
-						$count++;
-					}
-				}
-
+				$count = self::countSharedStrings(xml: $xml, limit: $limit);
 				$xml->close();
 			} finally {
 				libxml_clear_errors();
@@ -343,7 +337,60 @@ class CmdbWorkbookReader {
 	}//end assertSharedStringCount()
 
 	/**
-	 * The shared-strings parts of a package: `xl/sharedStrings.xml`, or a numbered variant.
+	 * Count the `<si>` entries of a shared-strings part, stopping one past the limit.
+	 *
+	 * A part whose root element is not `sst` counts as 0.
+	 *
+	 * @param XMLReader $xml The reader, opened on one part.
+	 * @param int $limit The maximum number of shared strings.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	private static function countSharedStrings(XMLReader $xml, int $limit): int {
+		if (self::rootIsSharedStrings(xml: $xml) === false) {
+			return 0;
+		}
+
+		$count = 0;
+		while ($count <= $limit && $xml->read() === true) {
+			if ($xml->nodeType === XMLReader::ELEMENT && $xml->depth === 1 && $xml->localName === 'si') {
+				$count++;
+			}
+		}
+
+		return $count;
+	}//end countSharedStrings()
+
+	/**
+	 * Whether the part an XMLReader just opened is a shared-strings table (root element `sst`).
+	 *
+	 * Advances the reader to the root element.
+	 *
+	 * @param XMLReader $xml The reader, opened on one part.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	private static function rootIsSharedStrings(XMLReader $xml): bool {
+		while ($xml->read() === true) {
+			if ($xml->nodeType === XMLReader::ELEMENT) {
+				return $xml->localName === 'sst';
+			}
+		}
+
+		return false;
+	}//end rootIsSharedStrings()
+
+	/**
+	 * The XML parts of a package that may hold a shared-strings table.
+	 *
+	 * The workbook's relationships may point the table at any part name, and
+	 * PhpSpreadsheet follows them, so every `.xml` part is a candidate; the
+	 * caller keeps the ones whose root element is `sst`. The package's total
+	 * unpacked size is already bounded, so streaming each part stays cheap.
 	 *
 	 * @param string $path The xlsx file.
 	 *
@@ -358,7 +405,7 @@ class CmdbWorkbookReader {
 		$parts = [];
 		for ($index = 0; $index < $zip->numFiles; $index++) {
 			$name = (string)$zip->getNameIndex($index);
-			if (preg_match('#^xl/sharedStrings\d*\.xml$#i', $name) === 1) {
+			if (preg_match('#\.xml$#i', $name) === 1) {
 				$parts[] = $name;
 			}
 		}

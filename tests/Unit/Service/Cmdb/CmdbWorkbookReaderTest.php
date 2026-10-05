@@ -387,6 +387,38 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testASharedStringsTableBeyondTheLimitIsRefusedBeforeLoading()
 
 	/**
+	 * A shared-strings table under another part name is counted too.
+	 *
+	 * The workbook's relationships can point the table at any part, and PhpSpreadsheet follows them, so the
+	 * count recognises the table by its `sst` root element rather than by the name `xl/sharedStrings.xml`.
+	 *
+	 * @return void
+	 */
+	public function testASharedStringsTableUnderAnotherNameIsCounted(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$sheets = ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxSharedStrings' => 1000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		$renamed = CmdbTestSupport::buildWorkbook(sheets: $sheets, extraParts: ['xl/strs.xml' => self::sharedStrings(count: 1001)]);
+		try {
+			RecordingXlsxReader::$loads = 0;
+			$reader->read(path: $renamed, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(['maxSharedStrings' => 1000], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($renamed);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testASharedStringsTableUnderAnotherNameIsCounted()
+
+	/**
 	 * A shared-strings part or a sheet part that unpacks beyond maxPartBytes is refused before any sheet is loaded.
 	 *
 	 * Both packages stay under maxUncompressedBytes; only the one part is too large.
