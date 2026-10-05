@@ -22550,7 +22550,7 @@
 		},
 		{
 			"name": "12 - CMDB import",
-			"description": "openspec/changes/cmdb-export-import (contract.md). Run newman from the app root so the fixture path tests/fixtures/cmdb/ resolves.",
+			"description": "openspec/changes/archive/2026-10-05-cmdb-export-import (contract.md). Run newman from the app root so the fixture path tests/fixtures/cmdb/ resolves.",
 			"item": [
 				{
 					"name": "CMDB import: 401 when not signed in",
