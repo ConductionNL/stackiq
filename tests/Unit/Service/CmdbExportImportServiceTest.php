@@ -1229,6 +1229,7 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->assertSame($foreign, $this->store[self::MODULE]['mod-foreign'], 'the other organisation\'s module is unchanged');
 		$this->assertSame($before, [count($this->store[self::MODULE]), count($this->store[self::USAGE])], 'no module and no usage is created');
+		$this->assertSame(['muni-1', 'muni-2'], array_keys($this->store[self::ORGANIZATION]), 'the row\'s vendor creates no supplier');
 		$conflicts = array_filter($this->logLines, static fn (string $line): bool => str_contains($line, 'another organisation uses'));
 		$this->assertCount(2, $conflicts);
 	}//end testAnImportKeyOnAnotherOrganisationsModuleIsAConflict()
@@ -1342,7 +1343,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAVendorIsOneSupplier()
 
 	/**
-	 * updateExisting=false reports a match as skipped "exists" and writes nothing.
+	 * updateExisting=false reports a match as skipped "exists" and writes nothing, not even a new vendor.
 	 *
 	 * @return void
 	 */
@@ -1350,13 +1351,16 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 		$saves = count($this->saves);
+		$organisations = array_keys($this->store[self::ORGANIZATION]);
 
-		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Naam' => 'Anders'])]))
+		$cells = ['Applicatie Naam' => 'Anders', 'Vendor' => 'Nieuwe Leverancier'];
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $cells)]))
 			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'updateExisting' => false]);
 
 		$this->assertSame('skipped', $report['rows'][0]['outcome']);
 		$this->assertSame(['exists'], $report['rows'][0]['reasons']);
 		$this->assertSame($saves, count($this->saves));
+		$this->assertSame($organisations, array_keys($this->store[self::ORGANIZATION]), 'the unknown vendor creates no supplier');
 	}//end testUpdateExistingFalseSkipsMatches()
 
 	/**

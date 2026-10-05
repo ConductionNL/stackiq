@@ -305,7 +305,7 @@ The request SHALL carry `publish`, `true` by default, parsed like `updateExistin
 
 ### Requirement: A manufacturer SHALL become one supplier organisation, however many rows name it (REQ-CMDB-008)
 
-The service SHALL map "Vendor" (the maker of the software) through the manufacturer pack to an `organization` of type `Supplier`. It SHALL match names after trimming, collapsing whitespace and ignoring case, first against the organisations it has already resolved during this import, then against existing organisations of type `Supplier`, and SHALL create one only when neither matches. The imported module's `provider` and the usage's `provider` SHALL reference that organisation. A row with an empty "Vendor" SHALL be imported without a provider. "Leverancier" and "Hostingpartij" SHALL NOT be read.
+The service SHALL map "Vendor" (the maker of the software) through the manufacturer pack to an `organization` of type `Supplier`. It SHALL match names after trimming, collapsing whitespace and ignoring case, first against the organisations it has already resolved during this import, then against existing organisations of type `Supplier`, and SHALL create one only when neither matches. It SHALL resolve the manufacturer only after the module match has decided the row is created or updated, so a row skipped as a conflict or as `exists` creates no organisation. The imported module's `provider` and the usage's `provider` SHALL reference that organisation. A row with an empty "Vendor" SHALL be imported without a provider. "Leverancier" and "Hostingpartij" SHALL NOT be read.
 
 #### Scenario: Rows with the same manufacturer share one organisation
 @e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php feeds three rows with "Fabfrikant", "Fabfrikant " and "FABFRIKANT".
@@ -314,6 +314,14 @@ The service SHALL map "Vendor" (the maker of the software) through the manufactu
 - **WHEN** they are imported
 - **THEN** exactly one organisation `Fabfrikant` of type `Supplier` SHALL exist
 - **AND** all three modules SHALL have `provider` = its uuid
+
+#### Scenario: A skipped row creates no supplier
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testAnImportKeyOnAnotherOrganisationsModuleIsAConflict and testUpdateExistingFalseSkipsMatches assert the organisation store is unchanged after a conflict row and after an `exists` row with a vendor not seen before.
+
+- **GIVEN** a row whose module is a conflict, or exists while "Update existing records" is off, and whose "Vendor" names no known organisation
+- **WHEN** it is imported
+- **THEN** the row SHALL be reported as skipped
+- **AND** no organisation SHALL be created
 
 #### Scenario: An existing supplier is reused
 @e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testAVendorIsOneSupplier seeds the Supplier "Aangetekend B.V." and asserts that the module of its row gets it as provider and no second supplier is created.

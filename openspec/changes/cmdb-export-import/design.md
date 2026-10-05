@@ -144,12 +144,13 @@ The APPID is also stored as `externalNumber`, so it is visible on the module.
 Per row, in this order:
 
 1. **Municipality** (once per import): `municipalityUuid` must resolve to an `organization` of type `Municipality`. Otherwise 422 `MUNICIPALITY_INVALID`. With `municipalityName`, the service reuses an existing Municipality with the same normalised name, or creates one through the municipality pack.
-2. **Manufacturer**: map "Vendor" (the maker of the software) through the manufacturer pack. "Leverancier" (where the municipality buys it) and "Hostingpartij" are not read (follow-up). The normalised name (trim, collapse whitespace, lower case) is looked up in the run cache, then among `organization` objects of type `Supplier`. A new one is created only when neither matches. The first real import (1,137 rows, 479 suppliers) showed no two names that differ only in case, spacing or a legal-form suffix (`B.V.`, `BV`, `Inc.` …), so the normalisation is not widened.
-3. **Module** (D5), with `provider` = the manufacturer when there is one.
-4. **Owners** (D8).
-5. **Usage**: `searchObjects` on `consumer` = municipality and `module` = module uuid. Create or merge the usage pack's fields, plus `consumer`, `module`, `provider` = the manufacturer, and `businessOwner`. `interneAnnotation` ("Beheer geregeld: ja|nee / Cluster / Applicatie Eigenaar (Afdeling)", empty parts left out) is create-only, because it is a free-text note an admin may edit.
+2. **Module match** (D5): find the module by `externalKey`. A conflict, or a match while `updateExisting=false`, skips the row here, before anything is written, so a skipped row creates no supplier.
+3. **Manufacturer**: map "Vendor" (the maker of the software) through the manufacturer pack. "Leverancier" (where the municipality buys it) and "Hostingpartij" are not read (follow-up). The normalised name (trim, collapse whitespace, lower case) is looked up in the run cache, then among `organization` objects of type `Supplier`. A new one is created only when neither matches. The first real import (1,137 rows, 479 suppliers) showed no two names that differ only in case, spacing or a legal-form suffix (`B.V.`, `BV`, `Inc.` …), so the normalisation is not widened.
+4. **Module** (D5): create it, or merge onto the match, with `provider` = the manufacturer when there is one.
+5. **Owners** (D8).
+6. **Usage**: `searchObjects` on `consumer` = municipality and `module` = module uuid. Create or merge the usage pack's fields, plus `consumer`, `module`, `provider` = the manufacturer, and `businessOwner`. `interneAnnotation` ("Beheer geregeld: ja|nee / Cluster / Applicatie Eigenaar (Afdeling)", empty parts left out) is create-only, because it is a free-text note an admin may edit.
 
-When step 3 succeeds and step 5 fails, the row is `failed` with the step named. The next import completes it, because every step is find-or-create.
+When step 4 succeeds and step 6 fails, the row is `failed` with the step named. The next import completes it, because every step is find-or-create.
 
 ### D8. The owner as contact person
 
