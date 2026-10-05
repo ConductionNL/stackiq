@@ -160,6 +160,9 @@
 					<p v-if="progressView && progressView.detail">
 						{{ progressView.detail }}
 					</p>
+					<p v-if="cancelStatus" data-testid="cmdb-import-cancel-status">
+						{{ cancelStatus }}
+					</p>
 				</div>
 
 				<p
@@ -355,6 +358,7 @@ import { startProgressPolling } from '../../../utils/archiMateImportProgress.js'
 import {
 	buildImportForm,
 	cancelCmdbImport,
+	cancelFailureText,
 	checkFile,
 	cmdbProgressView,
 	errorText,
@@ -408,6 +412,7 @@ export default {
 			updateExisting: true,
 			importing: false,
 			cancelling: false,
+			cancelStatus: '',
 			operationId: null,
 			progress: null,
 			stopProgressPolling: null,
@@ -755,6 +760,7 @@ export default {
 
 			this.importing = true
 			this.cancelling = false
+			this.cancelStatus = ''
 			this.error = null
 			this.report = null
 			this.progress = null
@@ -790,6 +796,7 @@ export default {
 				this.stopPolling()
 				this.importing = false
 				this.cancelling = false
+				this.cancelStatus = ''
 				this.operationId = null
 			}
 		},
@@ -858,14 +865,20 @@ export default {
 				return
 			}
 			this.cancelling = true
+			this.cancelStatus = ''
 			try {
 				await cancelCmdbImport({
 					operationId: this.operationId,
 					http: axios,
 				})
-			} catch {
-				// The import keeps running; the admin can press Cancel again.
+				this.cancelStatus = t(
+					'stackiq',
+					'Cancelling the import. It stops before the next row; the rows already processed stay imported.',
+				)
+			} catch (error) {
+				// The import keeps running; say why, and let the admin press Cancel again.
 				this.cancelling = false
+				this.cancelStatus = cancelFailureText(normaliseError(error))
 			}
 		},
 

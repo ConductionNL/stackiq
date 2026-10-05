@@ -586,6 +586,25 @@ export function errorText(error) {
 }
 
 /**
+ * What the page says when its request to cancel the import was refused.
+ *
+ * @param {{error: string, details?: object}} error The normalised error of the cancel request
+ * @return {string} The sentence
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+ */
+export function cancelFailureText(error) {
+	if (error?.error === 'OPERATION_NOT_FOUND') {
+		return t(
+			'stackiq',
+			'The import cannot be cancelled now: the server has not started its rows yet, or has already finished them. If the import keeps running, press Cancel import again in a moment.',
+		)
+	}
+	return t('stackiq', 'The import could not be cancelled: {reason}', {
+		reason: errorText(error).title,
+	})
+}
+
+/**
  * What the page shows for a progress snapshot of the running import.
  *
  * The percentage comes from the processed and total row counts when the
