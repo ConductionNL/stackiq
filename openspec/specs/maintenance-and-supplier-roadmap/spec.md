@@ -29,7 +29,7 @@ The product page SHALL list its maintenance windows, and the dashboard SHALL lis
 
 ### Requirement: REQ-MSR-003 The owners of every usage are notified
 
-When a supplier announces a window, stackiq SHALL notify the business and technical owners of every usage of the product, and SHALL remind them a day before the window starts while it is still planned.
+When a supplier announces a window, stackiq SHALL notify the business and technical owners of every usage of the product, and SHALL remind them a day before the window starts while it is still planned. Only the product's own supplier or a catalogue administrator SHALL reach those owners.
 
 #### Scenario: Owners get the announcement
 @e2e exclude Delivered by OpenRegister's notification engine; tests/Unit/EventListener/MaintenanceRecipientsListenerTest.php asserts the resolved owners and tests/Unit/Settings/MaintenanceRoadmapFragmentTest.php the rules.
@@ -37,6 +37,13 @@ When a supplier announces a window, stackiq SHALL notify the business and techni
 - **GIVEN** two municipalities use product X and both usages have a business owner
 - **WHEN** the supplier announces a window on X
 - **THEN** both business owners receive a Nextcloud notification naming X and the window
+
+#### Scenario: Another supplier cannot reach the owners
+@e2e exclude Authorisation in the background job and the register; tests/Unit/EventListener/MaintenanceRecipientsListenerTest.php asserts the refusal and tests/Unit/Settings/MaintenanceRecipientRulesTest.php the field rules.
+
+- **GIVEN** product X supplied by organisation A, and a supplier of organisation B
+- **WHEN** the supplier of B announces a window on X, or writes the owners to notify on a window itself
+- **THEN** no owner of a usage of X receives a notification
 
 ### Requirement: REQ-MSR-004 A product page shows the supplier's roadmap
 

@@ -26,12 +26,14 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\Stackiq\BackgroundJob\MaintenanceRecipientsJob;
 use OCA\Stackiq\EventListener\MaintenanceRecipientsListener;
+use OCA\Stackiq\Service\MaintenanceAnnouncerCheck;
 use OCA\Stackiq\Service\MaintenanceRecipientService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
 use OCP\EventDispatcher\Event;
+use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
@@ -45,7 +47,26 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 
 	private const REGISTER = 7;
 
-	private const SCHEMAS = ['maintenanceWindow' => 40, 'usage' => 41, 'contactPerson' => 42];
+	private const SCHEMAS = ['maintenanceWindow' => 40, 'usage' => 41, 'contactPerson' => 42, 'module' => 43];
+
+	/**
+	 * The organisation that supplies product X.
+	 */
+	private const SUPPLIER = 'org-supplier';
+
+	/**
+	 * The users in the catalogue's administrator group.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $catalogAdmins = ['beheer'];
+
+	/**
+	 * The warnings the service logged.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $warnings = [];
 
 	/**
 	 * The object service double, with every save it received.
@@ -92,18 +113,22 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	/**
 	 * An object entity double.
 	 *
-	 * @param string               $uuid   The id.
-	 * @param int                  $schema The schema id.
-	 * @param array<string, mixed> $data   The object data.
+	 * @param string               $uuid         The id.
+	 * @param int                  $schema       The schema id.
+	 * @param array<string, mixed> $data         The object data.
+	 * @param string|null          $organisation The organisation that owns it.
+	 * @param string|null          $owner        The user who created it.
 	 *
 	 * @return ObjectEntity The double.
 	 */
-	private function entity(string $uuid, int $schema, array $data): ObjectEntity {
+	private function entity(string $uuid, int $schema, array $data, ?string $organisation = null, ?string $owner = null): ObjectEntity {
 		$entity = $this->createMock(ObjectEntity::class);
 		$entity->method('getUuid')->willReturn($uuid);
 		$entity->method('getSchema')->willReturn((string) $schema);
 		$entity->method('getRegister')->willReturn((string) self::REGISTER);
 		$entity->method('getObject')->willReturn($data);
+		$entity->method('getOrganisation')->willReturn($organisation);
+		$entity->method('getOwner')->willReturn($owner);
 		return $entity;
 	}//end entity()
 
@@ -173,6 +198,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 			}
 		);
 
+		$this->windows['x'] = $this->entity('x', self::SCHEMAS['module'], ['name' => 'Product X', 'provider' => ['id' => self::SUPPLIER]]);
 		$this->objectService->method('find')->willReturnCallback(fn (int|string $id): ?ObjectEntity => $this->windows[$id] ?? null);
 
 		$this->jobList = $this->createMock(IJobList::class);
@@ -182,8 +208,18 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 			}
 		);
 
-		$logger        = $this->createMock(LoggerInterface::class);
-		$this->service = new MaintenanceRecipientService($settings, $contacts, $users, $container, $logger);
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isInGroup')->willReturnCallback(
+			fn (string $uid, string $group): bool => $group === 'software-catalog-admins' && in_array($uid, $this->catalogAdmins, true)
+		);
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->method('warning')->willReturnCallback(
+			function (string $message): void {
+				$this->warnings[] = $message;
+			}
+		);
+		$this->service = new MaintenanceRecipientService($settings, $contacts, $users, $container, $logger, new MaintenanceAnnouncerCheck($settings, $groups, $logger));
 		return new MaintenanceRecipientsListener($this->service, $this->jobList, $logger);
 	}//end listener()
 
@@ -208,7 +244,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	 */
 	public function testTheOwnersOfEveryUsageAreRecorded(): void {
 		$listener = $this->listener();
-		$window   = $this->entity('w1', self::SCHEMAS['maintenanceWindow'], ['module' => ['id' => 'x'], 'title' => 'Database upgrade', 'status' => 'planned']);
+		$window   = $this->entity('w1', self::SCHEMAS['maintenanceWindow'], ['module' => ['id' => 'x'], 'title' => 'Database upgrade', 'status' => 'planned'], self::SUPPLIER, 'jan');
 
 		$this->windows['w1'] = $window;
 
@@ -224,6 +260,77 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 		$this->assertNotFalse(DateTimeImmutable::createFromFormat(DATE_ATOM, $this->saved[0]['recipientsResolvedAt']));
 		$this->assertSame('Database upgrade', $this->saved[0]['title']);
 	}//end testTheOwnersOfEveryUsageAreRecorded()
+
+	/**
+	 * A supplier announcing maintenance on another supplier's product reaches nobody.
+	 *
+	 * @return void
+	 */
+	public function testAnotherSuppliersWindowNotifiesNobody(): void {
+		$listener = $this->listener();
+		$window   = $this->entity('w3', self::SCHEMAS['maintenanceWindow'], ['module' => 'x', 'title' => 'Click here', 'notifyUserIds' => ['victim']], 'org-competitor', 'mallory');
+
+		$this->windows['w3'] = $window;
+
+		$listener->handle(new ObjectCreatedEvent($window));
+		$this->runQueuedJobs();
+
+		$this->assertSame([], $this->saved, 'neither the owners nor a resolved time are written');
+		$this->assertCount(1, $this->warnings);
+	}//end testAnotherSuppliersWindowNotifiesNobody()
+
+	/**
+	 * A window without an organisation is refused unless an administrator created it.
+	 *
+	 * @return void
+	 */
+	public function testAWindowWithoutAnOrganisationIsRefused(): void {
+		$listener = $this->listener();
+		$window   = $this->entity('w4', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], null, 'mallory');
+
+		$this->windows['w4'] = $window;
+
+		$listener->handle(new ObjectCreatedEvent($window));
+		$this->runQueuedJobs();
+
+		$this->assertSame([], $this->saved);
+	}//end testAWindowWithoutAnOrganisationIsRefused()
+
+	/**
+	 * A catalogue administrator may announce maintenance on any product.
+	 *
+	 * @return void
+	 */
+	public function testACatalogAdministratorMayAnnounceForAnyProduct(): void {
+		$listener = $this->listener();
+		$window   = $this->entity('w5', self::SCHEMAS['maintenanceWindow'], ['module' => 'x', 'title' => 'Platform move'], 'org-beheer', 'beheer');
+
+		$this->windows['w5'] = $window;
+
+		$listener->handle(new ObjectCreatedEvent($window));
+		$this->runQueuedJobs();
+
+		$this->assertCount(1, $this->saved);
+		$this->assertSame(['anna.nc', 'bram.nc', 'carla.nc'], $this->saved[0]['notifyUserIds']);
+	}//end testACatalogAdministratorMayAnnounceForAnyProduct()
+
+	/**
+	 * An organisation that owns the product, but is not named as its supplier, may announce too.
+	 *
+	 * @return void
+	 */
+	public function testTheOrganisationThatOwnsTheProductMayAnnounce(): void {
+		$listener = $this->listener();
+		$this->windows['x'] = $this->entity('x', self::SCHEMAS['module'], ['name' => 'Product X'], 'org-owner');
+		$window = $this->entity('w6', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], 'org-owner', 'jan');
+
+		$this->windows['w6'] = $window;
+
+		$listener->handle(new ObjectCreatedEvent($window));
+		$this->runQueuedJobs();
+
+		$this->assertCount(1, $this->saved);
+	}//end testTheOrganisationThatOwnsTheProductMayAnnounce()
 
 	/**
 	 * An object of another schema is left alone.

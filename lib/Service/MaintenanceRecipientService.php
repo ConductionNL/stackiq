@@ -59,6 +59,7 @@ class MaintenanceRecipientService {
 	 * @param IUserManager              $userManager     The Nextcloud user manager.
 	 * @param ContainerInterface        $container       The DI container, for OpenRegister's ObjectService.
 	 * @param LoggerInterface           $logger          The logger.
+	 * @param MaintenanceAnnouncerCheck $announcers      Who may have a product's owners notified.
 	 */
 	public function __construct(
 		private readonly SettingsService $settingsService,
@@ -66,6 +67,7 @@ class MaintenanceRecipientService {
 		private readonly IUserManager $userManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly MaintenanceAnnouncerCheck $announcers,
 	) {
 	}//end __construct()
 
@@ -125,6 +127,10 @@ class MaintenanceRecipientService {
 	 * already carries a resolved time is left alone, so the write this method
 	 * makes cannot start it again.
 	 *
+	 * Only the supplier of the product, or a catalogue administrator, may have
+	 * its owners notified: a window from any other organisation is refused and
+	 * nothing is written, so a supplier cannot reach a competitor's customers.
+	 *
 	 * @param ObjectEntityInterface  $window The maintenance window.
 	 * @param DateTimeImmutable|null $now    The moment of resolution (defaults to now).
 	 *
@@ -141,6 +147,14 @@ class MaintenanceRecipientService {
 		$moduleId = self::referenceId(value: ($data['module'] ?? null));
 		$objectService = $this->getObjectService();
 		if ($moduleId === null || $objectService === null) {
+			return null;
+		}
+
+		if ($this->announcers->mayAnnounce(objectService: $objectService, window: $window, moduleId: $moduleId) === false) {
+			$this->logger->warning(
+				'MaintenanceRecipientService: the window is not from the supplier of the product; no owners are notified',
+				['uuid' => $window->getUuid(), 'module' => $moduleId, 'organisation' => $window->getOrganisation()]
+			);
 			return null;
 		}
 
