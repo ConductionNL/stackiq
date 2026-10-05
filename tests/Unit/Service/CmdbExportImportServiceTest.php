@@ -1257,13 +1257,13 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAModuleThisMunicipalityUsesOrNobodyUsesIsUpdated()
 
 	/**
-	 * A re-import sets usage status and TIME classification only when the usage is new or the field is empty.
+	 * A re-import follows TOPdesk's status, and sets the TIME classification only when the usage is new or the field is empty.
 	 *
-	 * An administrator's edit of either stays; the phase-out date is still updated from the export.
+	 * An administrator's edit of the TIME classification stays; the status and the phase-out date follow the export.
 	 *
 	 * @return void
 	 */
-	public function testAReimportKeepsTheStatusAndTimeClassificationOfAUsage(): void {
+	public function testAReimportFollowsTheStatusAndKeepsTheTimeClassificationOfAUsage(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		$this->store[self::MODULE]['mod-1'] = ['id' => 'mod-1', 'name' => 'Applicatie 1', 'externalKey' => 'topdesk:muni-1:1'];
 		$this->store[self::MODULE]['mod-2'] = ['id' => 'mod-2', 'name' => 'Applicatie 2', 'externalKey' => 'topdesk:muni-1:2'];
@@ -1281,12 +1281,12 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
-		$this->assertSame('To be phased out', $this->store[self::USAGE]['usage-1']['status'], 'an edited status stays');
+		$this->assertSame('In production', $this->store[self::USAGE]['usage-1']['status'], 'the status follows TOPdesk');
 		$this->assertSame('Migrate', $this->store[self::USAGE]['usage-1']['timeClassification'], 'an edited TIME classification stays');
 		$this->assertSame('2046-02-01', $this->store[self::USAGE]['usage-1']['startDateOutPhased'], 'the phase-out date follows the export');
 		$this->assertSame('In production', $this->store[self::USAGE]['usage-2']['status'], 'an empty status is filled');
 		$this->assertSame('Tolerate', $this->store[self::USAGE]['usage-2']['timeClassification'], 'an empty TIME classification is filled');
-	}//end testAReimportKeepsTheStatusAndTimeClassificationOfAUsage()
+	}//end testAReimportFollowsTheStatusAndKeepsTheTimeClassificationOfAUsage()
 
 	/**
 	 * A municipality uuid must be an organisation of type Municipality.
@@ -1340,6 +1340,25 @@ class CmdbExportImportServiceTest extends TestCase {
 		$providers = array_column($this->objects(self::MODULE), 'provider', 'externalNumber');
 		$this->assertSame([1 => $fabfrikant, 2 => $fabfrikant, 3 => $fabfrikant, 4 => 'aangetekend'], $providers);
 	}//end testAVendorIsOneSupplier()
+
+	/**
+	 * A Vendor that is the municipality's own name is the municipality, also where a Supplier of that name exists.
+	 *
+	 * @return void
+	 */
+	public function testAVendorNamedAsTheMunicipalityIsTheMunicipality(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->seedOrganisation(uuid: 'supplier-twin', name: 'Gemeente Voorbeeldstad', type: 'Supplier');
+		$rows = [
+			$this->row(appId: '1', cells: ['Vendor' => 'Gemeente Voorbeeldstad'], row: 2),
+			$this->row(appId: '2', cells: ['Vendor' => 'gemeente  voorbeeldstad'], row: 3),
+		];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([1 => 'muni-1', 2 => 'muni-1'], array_column($this->objects(self::MODULE), 'provider', 'externalNumber'));
+		$this->assertCount(2, $this->objects(self::ORGANIZATION), 'no organisation is created');
+	}//end testAVendorNamedAsTheMunicipalityIsTheMunicipality()
 
 	/**
 	 * updateExisting=false reports a match as skipped "exists" and writes nothing.

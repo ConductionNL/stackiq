@@ -23,8 +23,9 @@
  * Rules stated once and enforced here:
  * - A module matches on `externalKey`, but only when the municipality
  *   uses it or no organisation does yet; a usage on (consumer, module); a
- *   supplier on its normalised name and type Supplier; a contact person on
- *   (contactsUid, organization). An organisation that was merged away
+ *   manufacturer on its normalised name, a Municipality of that name before
+ *   a Supplier, so a municipality that builds its own applications stays one
+ *   organisation; a contact person on (contactsUid, organization). An organisation that was merged away
  *   (status `merged`) or is `Inactive` is never matched by name.
  * - `publicationDate` is set to the import's start on create, unless the
  *   admin chose not to publish (`publish` false), and never written on
@@ -191,7 +192,7 @@ class CmdbExportImportService {
 	private ?array $coordinates = null;
 
 	/**
-	 * Suppliers by normalised name, loaded once per run.
+	 * Manufacturer organisations by normalised name, loaded once per run.
 	 *
 	 * @var array<string, string>|null
 	 */
@@ -947,12 +948,16 @@ class CmdbExportImportService {
 	}//end map()
 
 	/**
-	 * Find or create the Supplier organisation for the row's manufacturer.
+	 * Find or create the organisation of the row's manufacturer.
+	 *
+	 * A name matches one live organisation: a Municipality of that name (the
+	 * municipality builds its own applications, and its Vendor is then its
+	 * own name), else a Supplier. Only no match creates a Supplier.
 	 *
 	 * @param array<string, string> $values The normalised row.
 	 * @param int $rowNumber The sheet row number.
 	 *
-	 * @return string|null The supplier uuid, or null when the row names no manufacturer.
+	 * @return string|null The organisation uuid, or null when the row names no manufacturer.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
@@ -1510,7 +1515,10 @@ class CmdbExportImportService {
 	}//end municipalityByUuid()
 
 	/**
-	 * Suppliers by normalised name, loaded once per run.
+	 * The organisations a manufacturer name matches, by normalised name, loaded once per run.
+	 *
+	 * Municipalities are loaded first, so a name both a Municipality and a
+	 * Supplier carry is the Municipality.
 	 *
 	 * @return array<string, string>
 	 *
@@ -1519,7 +1527,8 @@ class CmdbExportImportService {
 	private function suppliers(): array {
 		if ($this->suppliers === null) {
 			$this->suppliers = [];
-			foreach ($this->organisationsOfType(type: 'Supplier') as $organisation) {
+			$organisations = array_merge($this->organisationsOfType(type: 'Municipality'), $this->organisationsOfType(type: 'Supplier'));
+			foreach ($organisations as $organisation) {
 				$key = self::normaliseName(name: (string)($organisation['name'] ?? ''));
 				if ($key !== '' && isset($this->suppliers[$key]) === false) {
 					$this->suppliers[$key] = $organisation['uuid'];

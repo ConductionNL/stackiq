@@ -297,7 +297,7 @@ The request SHALL carry `publish`, `true` by default, parsed like `updateExistin
 
 ### Requirement: A manufacturer SHALL become one supplier organisation, however many rows name it (REQ-CMDB-008)
 
-The service SHALL map "Vendor" (the maker of the software) through the manufacturer pack to an `organization` of type `Supplier`. It SHALL match names after trimming, collapsing whitespace and ignoring case, first against the organisations it has already resolved during this import, then against existing organisations of type `Supplier`, and SHALL create one only when neither matches. The imported module's `provider` and the usage's `provider` SHALL reference that organisation. A row with an empty "Vendor" SHALL be imported without a provider. "Leverancier" and "Hostingpartij" SHALL NOT be read.
+The service SHALL map "Vendor" (the maker of the software) through the manufacturer pack to an `organization`. It SHALL match names after trimming, collapsing whitespace and ignoring case, first against the organisations it has already resolved during this import, then against existing organisations of type `Municipality`, then of type `Supplier`, and SHALL create one of type `Supplier` only when none matches. A Vendor that is the municipality's own name SHALL therefore reference the municipality, so one municipality is never also a second, Supplier organisation. The imported module's `provider` and the usage's `provider` SHALL reference that organisation. A row with an empty "Vendor" SHALL be imported without a provider. "Leverancier" and "Hostingpartij" SHALL NOT be read.
 
 #### Scenario: Rows with the same manufacturer share one organisation
 @e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php feeds three rows with "Fabfrikant", "Fabfrikant " and "FABFRIKANT".
@@ -315,9 +315,17 @@ The service SHALL map "Vendor" (the maker of the software) through the manufactu
 - **THEN** no new organisation SHALL be created
 - **AND** the module with APPID `1234` SHALL have `provider` = the existing organisation's uuid
 
+#### Scenario: A municipality that builds its own applications stays one organisation
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testAVendorNamedAsTheMunicipalityIsTheMunicipality seeds a Municipality and a Supplier of the same name and asserts both rows get the Municipality as provider and no organisation is created.
+
+- **GIVEN** the municipality `Gemeente Voorbeeldstad` and rows whose "Vendor" is `Gemeente Voorbeeldstad`
+- **WHEN** they are imported
+- **THEN** their modules SHALL have `provider` = the municipality's uuid
+- **AND** no organisation of type `Supplier` named `Gemeente Voorbeeldstad` SHALL be created
+
 ### Requirement: Each imported application SHALL have one usage that links it to the municipality (REQ-CMDB-009)
 
-For each imported module the service SHALL keep exactly one `usage` with `consumer` = the municipality and `module` = the module, found by those two references and created when missing. The usage pack SHALL map "Applicatie Status" to `status` and "Classificatie" to `timeClassification` through lookups, "End-of-Life Functioneel" to `startDateOutPhased`, and the sheet's `Beheer` constant, "Cluster" and "Applicatie Eigenaar (Afdeling)" to `interneAnnotation`, so the note records whether maintenance is arranged (`Beheer geregeld: nee` for "Onbeh Applicaties CMDB", `ja` for "Beheerde Applicaties CMDB"). Empty parts SHALL be left out of the note. `interneAnnotation`, `status` and `timeClassification` SHALL be written only when the usage is created or the field is empty, so a note, status or TIME classification an admin set in stackiq is never overwritten by a re-import; `startDateOutPhased`, `provider` and `businessOwner` follow the export on every update. The section's help text for "Update existing records" SHALL say which fields a re-import overwrites and which it only sets on create.
+For each imported module the service SHALL keep exactly one `usage` with `consumer` = the municipality and `module` = the module, found by those two references and created when missing. The usage pack SHALL map "Applicatie Status" to `status` and "Classificatie" to `timeClassification` through lookups, "End-of-Life Functioneel" to `startDateOutPhased`, and the sheet's `Beheer` constant, "Cluster" and "Applicatie Eigenaar (Afdeling)" to `interneAnnotation`, so the note records whether maintenance is arranged (`Beheer geregeld: nee` for "Onbeh Applicaties CMDB", `ja` for "Beheerde Applicaties CMDB"). Empty parts SHALL be left out of the note. `interneAnnotation` and `timeClassification` SHALL be written only when the usage is created or the field is empty, so a note or TIME classification an admin set in stackiq is never overwritten by a re-import; `status`, `startDateOutPhased`, `provider` and `businessOwner` follow the export on every update. A status that changed in the source SHALL reach the usage: the usage lifecycle SHALL declare, per state, a transition to it from every other state with `authorization` `["admin"]` (fragment `topdesk-cmdb-import.json`, usage 1.5.6), so the import follows TOPdesk while every other user keeps the regular transitions. The section's help text for "Update existing records" SHALL say which fields a re-import overwrites and which it only sets on create.
 
 #### Scenario: The usage records whether maintenance is arranged
 @e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php imports a row from each sheet.
@@ -335,12 +343,12 @@ For each imported module the service SHALL keep exactly one `usage` with `consum
 - **THEN** a usage SHALL exist for each imported module with `consumer` = that uuid and `module` = the module's uuid
 - **AND** that account SHALL see `Aangetekend Mailen` and `naamtest123` under "Software we use"
 
-#### Scenario: A re-import keeps the status and TIME classification set in stackiq
-@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testAReimportKeepsTheStatusAndTimeClassificationOfAUsage re-imports two rows and asserts an edited status and TIME classification stay, empty ones are filled, and the phase-out date follows the export, and tests/Unit/Service/Cmdb/CmdbImportProfileTest.php asserts the three create-only usage fields.
+#### Scenario: A re-import follows TOPdesk's status and keeps the TIME classification set in stackiq
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testAReimportFollowsTheStatusAndKeepsTheTimeClassificationOfAUsage re-imports two rows and asserts the status follows the export, an edited TIME classification stays, empty ones are filled, and the phase-out date follows the export, and tests/Unit/Service/Cmdb/CmdbImportProfileTest.php asserts the two create-only usage fields.
 
 - **GIVEN** the usage of APPID `1` for "Gemeente Voorbeeldstad" whose status an admin set to `To be phased out` and whose TIME classification to `Migrate`, and the usage of APPID `2` with neither
 - **WHEN** a newer export with "Applicatie Status" `In productie`, "Classificatie" `Tolereren` and "End-of-Life Functioneel" `53359` for both is imported
-- **THEN** the usage of APPID `1` SHALL keep `To be phased out` and `Migrate`, and SHALL get `startDateOutPhased` = `2046-02-01`
+- **THEN** the usage of APPID `1` SHALL get `In production`, SHALL keep `Migrate`, and SHALL get `startDateOutPhased` = `2046-02-01`
 - **AND** the usage of APPID `2` SHALL get `In production` and `Tolerate`
 
 #### Scenario: A re-import does not add a second usage
