@@ -552,10 +552,7 @@ class CmdbExportImportService {
 
 		$entry = ['sheet' => $sheet, 'row' => $rowNumber, 'appId' => $appId, 'name' => $name];
 
-		$warnings = [];
-		foreach (($row['uncached'] ?? []) as $column) {
-			$warnings[] = $this->l10n->t('Column "%s": formula without a cached value, read as empty', [(string)$column]);
-		}
+		$warnings = $this->uncachedWarnings(row: $row);
 
 		$matchKey = self::matchKey(appId: $appId);
 		if ($this->skipForWinningSheet(report: $report, entry: $entry, matchKey: $matchKey, warnings: $warnings) === true) {
@@ -629,6 +626,24 @@ class CmdbExportImportService {
 		$outcome = self::rowOutcome(module: $moduleResult['outcome'], usage: $usageResult['outcome']);
 		$this->addRow(report: $report, entry: $entry, outcome: $outcome, warnings: $warnings, moduleUuid: $moduleUuid, usageUuid: $usageUuid);
 	}//end processRow()
+
+	/**
+	 * The warning for each formula cell of a row that had no cached value.
+	 *
+	 * @param array{uncached?: array<int, string>} $row The reader row.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	private function uncachedWarnings(array $row): array {
+		$warnings = [];
+		foreach (($row['uncached'] ?? []) as $column) {
+			$warnings[] = $this->l10n->t('Column "%s": formula without a cached value, read as empty', [(string)$column]);
+		}
+
+		return $warnings;
+	}//end uncachedWarnings()
 
 	/**
 	 * Report a row as failed at a step, and log it without person data.
