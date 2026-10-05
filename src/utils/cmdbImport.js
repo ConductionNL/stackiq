@@ -498,10 +498,13 @@ function workbookTooLarge(details) {
 		'stackiq',
 		'An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.',
 	)
-	const split = compressed + ' ' + t(
-		'stackiq',
-		'Split the rows over two copies of the export and import them one after the other.',
-	)
+	const split =
+		compressed
+		+ ' '
+		+ t(
+			'stackiq',
+			'Split the rows over two copies of the export and import them one after the other.',
+		)
 	if (Number(details.maxPartBytes) > 0) {
 		const sizes = {
 			size: formatMegabytes(details.size),
@@ -524,6 +527,18 @@ function workbookTooLarge(details) {
 			hint: split,
 		}
 	}
+	const unread =
+		compressed
+		+ ' '
+		+ t(
+			'stackiq',
+			'Delete the sheets the import does not read from a copy of the export (it reads only "{first}" and "{second}"), and import that copy.',
+			{
+				first: PROFILE_DEFAULTS.sheets[0],
+				second: PROFILE_DEFAULTS.sheets[1],
+			},
+			AS_TEXT,
+		)
 	if (Number(details.maxSharedStrings) > 0) {
 		return {
 			title: t(
@@ -532,7 +547,7 @@ function workbookTooLarge(details) {
 				{ count: String(details.maxSharedStrings) },
 				AS_TEXT,
 			),
-			hint: split,
+			hint: unread,
 		}
 	}
 	if (Number(details.maxReferencedStringBytes) > 0) {
@@ -543,15 +558,9 @@ function workbookTooLarge(details) {
 				{ size: formatMegabytes(details.maxReferencedStringBytes) },
 				AS_TEXT,
 			),
-			hint: split,
+			hint: unread,
 		}
 	}
-	const unread = compressed + ' ' + t(
-		'stackiq',
-		'Delete the sheets the import does not read from a copy of the export (it reads only "{first}" and "{second}"), and import that copy.',
-		{ first: PROFILE_DEFAULTS.sheets[0], second: PROFILE_DEFAULTS.sheets[1] },
-		AS_TEXT,
-	)
 	if (Number(details.maxUncompressedBytes) > 0) {
 		return {
 			title: t(

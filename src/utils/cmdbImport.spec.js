@@ -399,13 +399,18 @@ describe('errorText', () => {
 		)
 	})
 
-	it('tells to delete the unread sheets when the whole workbook is too large', () => {
-		expect(
-			errorText({
-				error: 'WORKBOOK_TOO_LARGE',
-				details: { maxUncompressedBytes: 50 * 1024 * 1024 },
-			}).hint,
-		).toContain('(it reads only "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB")')
+	it('tells to delete the unread sheets when the workbook or its texts are too large in all', () => {
+		for (const details of [
+			{ maxUncompressedBytes: 50 * 1024 * 1024 },
+			{ maxSharedStrings: 200000 },
+			{ maxReferencedStringBytes: 64 * 1024 * 1024 },
+		]) {
+			expect(
+				errorText({ error: 'WORKBOOK_TOO_LARGE', details }).hint,
+			).toContain(
+				'(it reads only "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB")',
+			)
+		}
 	})
 
 	it('names the part limit and the part, the shared-strings limit or the referenced-text limit the server applied', () => {
