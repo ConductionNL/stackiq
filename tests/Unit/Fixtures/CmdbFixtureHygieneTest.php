@@ -4,11 +4,13 @@
  * Hygiene of the CMDB import fixtures.
  *
  * The fixtures are derived from an anonymised TOPdesk export. This test fails
- * when one carries document metadata (author, custom properties such as a
- * sensitivity label, customXml with a Power Query package, the absolute path
- * of the last save) or any person data that is not one of the known
- * placeholders. Plain zip and XML parsing only, so it needs no spreadsheet
- * library and always runs.
+ * when one carries a package part outside the list a plain workbook needs
+ * (printer settings, embeddings, comments, customXml, custom properties, ...),
+ * document metadata (author, company, title and the other document properties,
+ * a creation or modification date other than the fixed one, the absolute path
+ * of the last save, revision GUIDs, the filter ranges of the original data) or
+ * any person data that is not one of the known placeholders. Plain zip and XML
+ * parsing only, so it needs no spreadsheet library and always runs.
  *
  * @category  Test
  * @package   OCA\Stackiq\Tests\Unit\Fixtures
@@ -81,6 +83,49 @@ class CmdbFixtureHygieneTest extends TestCase {
 	];
 
 	/**
+	 * The only parts a fixture package may hold (xl/connections.xml only in the
+	 * fixture that tests the synthetic connection). Anything else, such as
+	 * xl/printerSettings/*.bin, embeddings, comments or customXml, fails.
+	 *
+	 * @var array<int, string>
+	 */
+	private const ALLOWED_PARTS = [
+		'#^\[Content_Types\]\.xml$#',
+		'#^_rels/\.rels$#',
+		'#^docProps/(core|app)\.xml$#',
+		'#^xl/workbook\.xml$#',
+		'#^xl/_rels/workbook\.xml\.rels$#',
+		'#^xl/worksheets/sheet\d+\.xml$#',
+		'#^xl/worksheets/_rels/sheet\d+\.xml\.rels$#',
+		'#^xl/theme/theme\d+\.xml$#',
+		'#^xl/(styles|sharedStrings|calcChain|metadata)\.xml$#',
+	];
+
+	/**
+	 * The creation and modification date of every fixture (build-fixtures.py FIXED_DATE).
+	 *
+	 * @var string
+	 */
+	private const FIXED_DATE = '2026-01-01T00:00:00Z';
+
+	/**
+	 * Document properties that must be empty, per part.
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	private const EMPTY_PROPERTIES = [
+		'docProps/core.xml' => ['dc:title', 'dc:subject', 'dc:creator', 'cp:keywords', 'dc:description', 'cp:lastModifiedBy', 'cp:revision', 'cp:category', 'cp:contentStatus'],
+		'docProps/app.xml'  => ['Manager', 'Company', 'HyperlinkBase'],
+	];
+
+	/**
+	 * The placeholder person names; a column that holds one is a name column.
+	 *
+	 * @var array<int, string>
+	 */
+	private const PLACEHOLDER_PERSONS = ['Achternaam, Voornaam', 'Achternaam, voornaam'];
+
+	/**
 	 * Hosts of XML namespaces and schemas, which are not content.
 	 *
 	 * @var array<int, string>
@@ -134,7 +179,8 @@ class CmdbFixtureHygieneTest extends TestCase {
 	}//end testTheFixturesExist()
 
 	/**
-	 * No author, no custom properties, no customXml, no absolute save path; connections only the synthetic one.
+	 * Only the parts a plain workbook needs, no document metadata, no revision ids;
+	 * connections only the synthetic one.
 	 *
 	 * @param string $path The fixture.
 	 *
@@ -145,21 +191,27 @@ class CmdbFixtureHygieneTest extends TestCase {
 		$parts = $this->parts(path: $path);
 		$name = basename($path);
 
-		$this->assertArrayNotHasKey('docProps/custom.xml', $parts, $name);
 		foreach (array_keys($parts) as $part) {
-			$this->assertStringStartsNotWith('customXml/', $part, $name);
+			if ($part === 'xl/connections.xml' && $name === 'topdesk-formula-and-connection.xlsx') {
+				continue;
+			}
+
+			$this->assertTrue($this->isAllowedPart(part: $part), $name . ': unexpected package part ' . $part);
 		}
 
-		if (isset($parts['docProps/core.xml']) === true) {
-			$core = $parts['docProps/core.xml'];
-			$this->assertDoesNotMatchRegularExpression('#<dc:creator>[^<]+</dc:creator>#', $core, $name);
-			$this->assertDoesNotMatchRegularExpression('#<cp:lastModifiedBy>[^<]+</cp:lastModifiedBy>#', $core, $name);
-		}
+		$this->assertDocumentProperties(parts: $parts, name: $name);
 
 		$this->assertStringNotContainsString('absPath', ($parts['xl/workbook.xml'] ?? ''), $name);
-		foreach (['[Content_Types].xml', '_rels/.rels', 'xl/_rels/workbook.xml.rels'] as $index) {
-			$this->assertStringNotContainsString('custom.xml', ($parts[$index] ?? ''), $name . ' ' . $index);
-			$this->assertStringNotContainsString('customXml', ($parts[$index] ?? ''), $name . ' ' . $index);
+		$this->assertStringNotContainsString('revisionPtr', ($parts['xl/workbook.xml'] ?? ''), $name);
+		$this->assertStringNotContainsString('_xlnm._FilterDatabase', ($parts['xl/workbook.xml'] ?? ''), $name);
+		foreach ($parts as $part => $content) {
+			$this->assertDoesNotMatchRegularExpression('/ xr\d*:uid(LastSave)?="/', $content, $name . ' ' . $part . ': revision GUID');
+			$this->assertStringNotContainsString('<sortState', $content, $name . ' ' . $part . ': saved sort range');
+			if ($part === '[Content_Types].xml' || str_ends_with($part, '.rels') === true) {
+				$this->assertStringNotContainsString('printerSettings', $content, $name . ' ' . $part);
+				$this->assertStringNotContainsString('custom.xml', $content, $name . ' ' . $part);
+				$this->assertStringNotContainsString('customXml', $content, $name . ' ' . $part);
+			}
 		}
 
 		if ($name === 'topdesk-formula-and-connection.xlsx') {
@@ -173,6 +225,50 @@ class CmdbFixtureHygieneTest extends TestCase {
 	}//end testNoDocumentMetadata()
 
 	/**
+	 * Whether a part is on the allow-list.
+	 *
+	 * @param string $part The part name.
+	 *
+	 * @return bool
+	 */
+	private function isAllowedPart(string $part): bool {
+		foreach (self::ALLOWED_PARTS as $pattern) {
+			if (preg_match($pattern, $part) === 1) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end isAllowedPart()
+
+	/**
+	 * The document properties are empty and both dates are the fixed date.
+	 *
+	 * @param array<string, string> $parts The package parts.
+	 * @param string                $name  The fixture name.
+	 *
+	 * @return void
+	 */
+	private function assertDocumentProperties(array $parts, string $name): void {
+		foreach (self::EMPTY_PROPERTIES as $part => $elements) {
+			if (isset($parts[$part]) === false) {
+				continue;
+			}
+
+			foreach ($elements as $element) {
+				$this->assertDoesNotMatchRegularExpression('#<' . preg_quote($element, '#') . '(?: [^>]*)?>[^<]+</#', $parts[$part], $name . ' ' . $part . ' ' . $element);
+			}
+		}
+
+		if (isset($parts['docProps/core.xml']) === true) {
+			preg_match_all('#<dcterms:(created|modified)[^>]*>([^<]*)</#', $parts['docProps/core.xml'], $dates, PREG_SET_ORDER);
+			foreach ($dates as $date) {
+				$this->assertSame(self::FIXED_DATE, $date[2], $name . ' dcterms:' . $date[1]);
+			}
+		}
+	}//end assertDocumentProperties()
+
+	/**
 	 * Every e-mail address, linked host and long digit run is a known placeholder.
 	 *
 	 * @param string $path The fixture.
@@ -182,11 +278,8 @@ class CmdbFixtureHygieneTest extends TestCase {
 	#[DataProvider('fixtures')]
 	public function testOnlyPlaceholderContactData(string $path): void {
 		$name = basename($path);
+		// Every part: the allow-list of testNoDocumentMetadata keeps binary parts out.
 		foreach ($this->parts(path: $path) as $part => $content) {
-			if (preg_match('/\.(xml|rels)$/', $part) !== 1) {
-				continue;
-			}
-
 			preg_match_all('/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/', $content, $emails);
 			foreach (array_unique($emails[0]) as $email) {
 				$this->assertContains(strtolower($email), self::PLACEHOLDER_EMAILS, $name . ' ' . $part);
