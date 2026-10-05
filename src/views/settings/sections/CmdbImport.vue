@@ -72,7 +72,7 @@
 					for="cmdb-import-file"
 					class="cmdb-import__file-label"
 					:class="{ 'cmdb-import__file-label--disabled': importing }">
-					<TrayArrowUp :size="24" />
+					<TrayArrowUp :size="20" />
 					<span class="cmdb-import__file-label-text">{{
 						selectedFile
 							? selectedFile.name
@@ -209,9 +209,9 @@
 					}}
 				</NcNoteCard>
 
-				<h4 class="cmdb-import__heading">
+				<h3 class="cmdb-import__heading">
 					{{ t('stackiq', 'Summary') }}
-				</h4>
+				</h3>
 				<ul class="cmdb-import__summary" data-testid="cmdb-import-summary">
 					<li
 						v-for="tile in summaryTiles"
@@ -236,9 +236,9 @@
 					</ul>
 				</NcNoteCard>
 
-				<h4 class="cmdb-import__heading">
+				<h3 class="cmdb-import__heading">
 					{{ t('stackiq', 'Rows') }}
-				</h4>
+				</h3>
 				<div class="cmdb-import__filter">
 					<NcSelect
 						v-model="outcomeFilter"
@@ -1014,7 +1014,8 @@ export default {
 }
 
 /* The native input stays in the DOM, keyboard-focusable and labelled; the
-   label is styled as the visible control. */
+   label is styled as the visible control: a plain button-like control, not a
+   drop zone, because the input takes no dropped files. */
 .cmdb-import__file-input {
 	position: absolute;
 	width: 1px;
@@ -1028,18 +1029,16 @@ export default {
 }
 
 .cmdb-import__file-label {
-	display: flex;
-	flex-direction: column;
+	display: inline-flex;
+	flex-wrap: wrap;
 	align-items: center;
-	justify-content: center;
 	gap: 0.5rem;
-	min-height: 96px;
-	padding: 1.5rem;
-	border: 2px dashed var(--color-border-dark);
-	border-radius: var(--border-radius-large);
-	background: var(--color-background-hover);
+	min-height: var(--default-clickable-area, 44px);
+	padding: 0.5rem 1rem;
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius-element, var(--border-radius-large));
+	background: var(--color-main-background);
 	cursor: pointer;
-	text-align: center;
 }
 
 .cmdb-import__file-input:focus-visible + .cmdb-import__file-label {
