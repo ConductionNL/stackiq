@@ -4,7 +4,10 @@
  * Tests for the CMDB export import service.
  *
  * OpenRegister is an in-memory double of `ObjectServiceInterface` that
- * applies the search filters the service sends; the mapping runs through
+ * applies the search filters the service sends the way OpenRegister does: a
+ * filter on a property the schema (register plus fragments) does not declare
+ * matches nothing. Every call must pass `_rbac: false` and
+ * `_multitenancy: false`, checked after every test; the mapping runs through
  * OpenRegister's real `MappingEngine` (or its verbatim test copy), progress
  * through the real `ProgressTracker` on an in-memory cache. The fixture
  * tests read the sanitised export through PhpSpreadsheet and are skipped
@@ -127,6 +130,41 @@ class CmdbExportImportServiceTest extends TestCase {
 	private ?ProgressTracker $tracker = null;
 
 	/**
+	 * Declared properties per schema id, as the merged register ships them.
+	 *
+	 * @var array<int, array<int, string>>|null
+	 */
+	private static ?array $declared = null;
+
+	/**
+	 * Properties taken out of a schema for one test, per schema id.
+	 *
+	 * @var array<int, array<int, string>>
+	 */
+	private array $undeclared = [];
+
+	/**
+	 * Filter keys the search double ignores, as OpenRegister does with a filter it cannot apply.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $ignoredFilters = [];
+
+	/**
+	 * Every OpenRegister call that did not pass `_rbac: false` and `_multitenancy: false`.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $scopedCalls = [];
+
+	/**
+	 * Every searchObjects() query, in order.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $searches = [];
+
+	/**
 	 * Reset the doubles.
 	 *
 	 * @return void
@@ -141,7 +179,63 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->cache = [];
 		$this->cacheFailure = null;
 		$this->logLines = [];
+		$this->undeclared = [];
+		$this->ignoredFilters = [];
+		$this->scopedCalls = [];
+		$this->searches = [];
 	}//end setUp()
+
+	/**
+	 * Every OpenRegister call of every test reads and writes unscoped, as the import must.
+	 *
+	 * @return void
+	 */
+	protected function assertPostConditions(): void {
+		$this->assertSame([], $this->scopedCalls, 'every OpenRegister call passes _rbac: false and _multitenancy: false');
+	}//end assertPostConditions()
+
+	/**
+	 * The properties a schema declares, from the register and every register fragment.
+	 *
+	 * @param int $schema The schema id.
+	 *
+	 * @return array<int, string>
+	 */
+	private function declaredProperties(int $schema): array {
+		if (self::$declared === null) {
+			$dir = CmdbTestSupport::appRoot() . '/lib/Settings';
+			$register = json_decode((string)file_get_contents($dir . '/softwarecatalogus_register.json'), true);
+			$merge = new \ReflectionMethod(SettingsService::class, 'deepMergeConfig');
+			$files = glob($dir . '/register.d/*.json');
+			sort($files);
+			foreach ($files as $file) {
+				$register = $merge->invoke(null, $register, json_decode((string)file_get_contents($file), true));
+			}
+
+			$ids = ['module' => self::MODULE, 'organization' => self::ORGANIZATION, 'usage' => self::USAGE, 'contactPerson' => self::CONTACT_PERSON];
+			self::$declared = [];
+			foreach ($ids as $slug => $id) {
+				self::$declared[$id] = array_keys($register['components']['schemas'][$slug]['properties']);
+			}
+		}
+
+		return array_values(array_diff((self::$declared[$schema] ?? []), ($this->undeclared[$schema] ?? [])));
+	}//end declaredProperties()
+
+	/**
+	 * Note an OpenRegister call that would be scoped by RBAC or multitenancy.
+	 *
+	 * @param string $method The method.
+	 * @param bool $rbac The `_rbac` argument.
+	 * @param bool $multitenancy The `_multitenancy` argument.
+	 *
+	 * @return void
+	 */
+	private function noteScope(string $method, bool $rbac, bool $multitenancy): void {
+		if ($rbac !== false || $multitenancy !== false) {
+			$this->scopedCalls[] = $method;
+		}
+	}//end noteScope()
 
 	// ------------------------------------------------------------------
 	// Doubles
@@ -207,7 +301,8 @@ class CmdbExportImportServiceTest extends TestCase {
 	private function objectService(): ObjectServiceInterface {
 		$service = $this->createMock(ObjectServiceInterface::class);
 		$service->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntityInterface {
+			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+				$this->noteScope(method: 'saveObject', rbac: $_rbac, multitenancy: $_multitenancy);
 				$schema = (int)$schema;
 				if ($this->beforeSave !== null) {
 					($this->beforeSave)($schema, $object);
@@ -225,15 +320,22 @@ class CmdbExportImportServiceTest extends TestCase {
 			}
 		);
 		$service->method('searchObjects')->willReturnCallback(
-			function (array $query = []): array {
+			function (array $query = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->noteScope(method: 'searchObjects', rbac: $_rbac, multitenancy: $_multitenancy);
+				$this->searches[] = $query;
 				$schema = (int)($query['@self']['schema'] ?? 0);
 				$limit = (int)($query['_limit'] ?? 30);
 				$offset = (int)($query['_offset'] ?? 0);
 				$filters = array_filter($query, fn ($key): bool => $key !== '@self' && str_starts_with((string)$key, '_') === false, ARRAY_FILTER_USE_KEY);
+				// OpenRegister turns a filter on a property the schema does not declare into `1 = 0`.
+				if (array_diff(array_keys($filters), $this->declaredProperties(schema: $schema)) !== []) {
+					return [];
+				}
+
 				$found = [];
 				foreach (($this->store[$schema] ?? []) as $uuid => $data) {
 					foreach ($filters as $field => $value) {
-						if ((string)($data[$field] ?? '') !== (string)$value) {
+						if (in_array($field, $this->ignoredFilters, true) === false && (string)($data[$field] ?? '') !== (string)$value) {
 							continue 2;
 						}
 					}
@@ -245,7 +347,8 @@ class CmdbExportImportServiceTest extends TestCase {
 			}
 		);
 		$service->method('find')->willReturnCallback(
-			function ($id, ?array $_extend = [], bool $files = false, $register = null, $schema = null): ?ObjectEntityInterface {
+			function ($id, ?array $_extend = [], bool $files = false, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
+				$this->noteScope(method: 'find', rbac: $_rbac, multitenancy: $_multitenancy);
 				$data = ($this->store[(int)$schema][(string)$id] ?? null);
 				if ($data === null) {
 					return null;
@@ -633,6 +736,80 @@ class CmdbExportImportServiceTest extends TestCase {
 		$municipalities = array_filter($this->objects(self::ORGANIZATION), fn (array $o): bool => $o['type'] === 'Municipality');
 		$this->assertCount(1, $municipalities);
 	}//end testReimportingTheSameExportChangesNothing()
+
+	/**
+	 * A search on a property the schema does not declare yields nothing, as in OpenRegister.
+	 *
+	 * Guards the double itself: without this, a test could pass on a filter OpenRegister would never apply.
+	 *
+	 * @return void
+	 */
+	public function testSearchWithUndeclaredPropertyYieldsNothing(): void {
+		$this->store[self::MODULE]['mod-1'] = ['id' => 'mod-1', 'name' => 'Een', 'externalKey' => 'k'];
+		$objectService = $this->objectService();
+
+		$this->assertCount(1, $objectService->searchObjects(query: ['@self' => ['schema' => self::MODULE], 'externalKey' => 'k'], _rbac: false, _multitenancy: false));
+		$this->undeclared[self::MODULE] = ['externalKey'];
+		$this->assertSame([], $objectService->searchObjects(query: ['@self' => ['schema' => self::MODULE], 'externalKey' => 'k'], _rbac: false, _multitenancy: false));
+	}//end testSearchWithUndeclaredPropertyYieldsNothing()
+
+	/**
+	 * A re-import matches every module of a catalogue larger than one search page.
+	 *
+	 * @return void
+	 */
+	public function testAReimportMatchesBeyondTheFirstSearchPage(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [];
+		for ($index = 1; $index <= 11; $index++) {
+			$rows[] = $this->row(appId: (string)$index, row: ($index + 1));
+		}
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(11, $report['summary']['unchanged']);
+		$this->assertCount(11, $this->store[self::MODULE]);
+		$this->assertCount(11, $this->store[self::USAGE]);
+	}//end testAReimportMatchesBeyondTheFirstSearchPage()
+
+	/**
+	 * A filter OpenRegister does not apply never widens a match: the import checks every candidate itself.
+	 *
+	 * @return void
+	 */
+	public function testAnUnappliedFilterDoesNotWidenTheMatch(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3), $this->row(appId: '3', row: 4)];
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->ignoredFilters = ['externalKey', 'module'];
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['unchanged', 'unchanged', 'unchanged'], array_column($report['rows'], 'outcome'));
+		$this->assertCount(3, $this->store[self::MODULE]);
+	}//end testAnUnappliedFilterDoesNotWidenTheMatch()
+
+	/**
+	 * Every match search names the register and the schema, and filters on the match fields.
+	 *
+	 * @return void
+	 */
+	public function testTheMatchSearchesNameTheirScopeAndFilters(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '7')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$filtersBySchema = [];
+		foreach ($this->searches as $query) {
+			$this->assertSame(self::REGISTER, $query['@self']['register']);
+			$filters = array_filter($query, fn ($key): bool => $key !== '@self' && str_starts_with((string)$key, '_') === false, ARRAY_FILTER_USE_KEY);
+			$filtersBySchema[$query['@self']['schema']][] = $filters;
+		}
+
+		$this->assertContains(['externalKey' => 'topdesk:muni-1:7'], $filtersBySchema[self::MODULE]);
+		$this->assertContains(['consumer' => 'muni-1', 'module' => array_key_first($this->store[self::MODULE])], $filtersBySchema[self::USAGE]);
+		$this->assertContains(['type' => 'Supplier'], $filtersBySchema[self::ORGANIZATION]);
+	}//end testTheMatchSearchesNameTheirScopeAndFilters()
 
 	/**
 	 * The match key is the APPID: a changed Applicatie Code updates the same module.
