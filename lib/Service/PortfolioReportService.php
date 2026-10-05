@@ -152,6 +152,30 @@ class PortfolioReportService {
 	}//end buildReport()
 
 	/**
+	 * A cell a spreadsheet opens as text, never as a formula.
+	 *
+	 * Text that starts with `=`, `+`, `-`, `@`, a tab or a carriage return is
+	 * run as a formula by Excel and LibreOffice when the CSV is opened. Such a
+	 * cell gets a leading apostrophe, so it shows as the text it is. A plain
+	 * number (a negative cost) is left as it is. Module names and rationales
+	 * can come from an imported third-party file, so every cell goes through
+	 * this.
+	 *
+	 * @param string $value The cell.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-csv-export-of-the-portfolio-report
+	 */
+	public static function csvSafeCell(string $value): string {
+		if ($value === '' || is_numeric($value) === true || in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true) === false) {
+			return $value;
+		}
+
+		return "'" . $value;
+	}//end csvSafeCell()
+
+	/**
 	 * Build the CSV export of the same bounded, organisation-scoped row set
 	 * the JSON report uses — never a separate unbounded/unscoped data path.
 	 *
@@ -193,24 +217,27 @@ class PortfolioReportService {
 		foreach ($built['rows'] as $row) {
 			fputcsv(
 				$handle,
-				[
-					$organisationUuid,
-					$row['moduleName'],
-					$row['timeClassification'] ?? '',
-					$row['timeRationale'] ?? '',
-					$row['timeReviewDate'] ?? '',
-					$row['lifecyclePhase'],
-					$this->derivation->eolStatusLabel(row: $row),
-					implode('|', $row['hostingModel']),
-					(string)$row['annualisedCost'],
-					(string)$row['oneOffCost'],
-					(string)($row['businessValue'] ?? ''),
-					(string)($row['technicalFit'] ?? ''),
-					(string)($row['riskScore'] ?? ''),
-					$row['scoredOn'] ?? '',
-					$row['suggestedTimeClassification'] ?? '',
-					$this->derivation->mismatchLabel(row: $row),
-				]
+				array_map(
+					static fn ($cell): string => self::csvSafeCell(value: (string)$cell),
+					[
+						$organisationUuid,
+						$row['moduleName'],
+						$row['timeClassification'] ?? '',
+						$row['timeRationale'] ?? '',
+						$row['timeReviewDate'] ?? '',
+						$row['lifecyclePhase'],
+						$this->derivation->eolStatusLabel(row: $row),
+						implode('|', $row['hostingModel']),
+						(string)$row['annualisedCost'],
+						(string)$row['oneOffCost'],
+						(string)($row['businessValue'] ?? ''),
+						(string)($row['technicalFit'] ?? ''),
+						(string)($row['riskScore'] ?? ''),
+						$row['scoredOn'] ?? '',
+						$row['suggestedTimeClassification'] ?? '',
+						$this->derivation->mismatchLabel(row: $row),
+					]
+				)
 			);
 		}
 
