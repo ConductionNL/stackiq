@@ -304,6 +304,25 @@ describe('errorText', () => {
 		)
 	})
 
+	it('names the part limit and the part, or the shared-strings limit, the server applied', () => {
+		expect(
+			errorText({
+				error: 'WORKBOOK_TOO_LARGE',
+				details: { maxPartBytes: 10 * 1024 * 1024, part: 'xl/sharedStrings.xml' },
+			}).title,
+		).toBe(
+			'Unpacked, the part xl/sharedStrings.xml of the workbook is larger than 10 MB, the most the import reads of one part.',
+		)
+		expect(
+			errorText({
+				error: 'WORKBOOK_TOO_LARGE',
+				details: { maxSharedStrings: 200000 },
+			}).title,
+		).toBe(
+			'The workbook holds more than 200000 different texts, the most the import reads.',
+		)
+	})
+
 	it('names the outdated schema and points to Force Update', () => {
 		const words = errorText({
 			error: 'SCHEMA_OUTDATED',

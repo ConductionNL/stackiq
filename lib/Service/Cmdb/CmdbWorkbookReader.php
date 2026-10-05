@@ -26,12 +26,18 @@
  *    to an empty cell, so it yields an empty cell too.
  * 5. Rows whose kept cells are all empty are dropped; more non-empty rows than
  *    the profile allows stops the import with `TOO_MANY_ROWS` (422).
- * 6. Memory is bounded before PhpSpreadsheet parses a sheet: a package that
- *    unpacks to more than the profile's `maxUncompressedBytes` is
- *    `WORKBOOK_TOO_LARGE` (413), and a source sheet whose last used row lies
- *    beyond twice the row limit is `TOO_MANY_ROWS`. A read filter then
- *    materialises only the header row and the resolved columns of the rows
- *    up to that bound (CmdbReadFilter).
+ * 6. What PhpSpreadsheet can be made to hold is bounded before it parses
+ *    anything. PhpSpreadsheet builds the whole shared-strings table, and the
+ *    whole XML tree of every sheet it loads, before a read filter runs, so
+ *    the filter alone does not bound memory. The reader therefore refuses
+ *    with `WORKBOOK_TOO_LARGE` (413) a package that unpacks to more than the
+ *    profile's `maxUncompressedBytes`, a single part that unpacks to more
+ *    than `maxPartBytes`, and a shared-strings table with more entries than
+ *    `maxSharedStrings` (counted with a streaming XMLReader, without building
+ *    the table). A source sheet whose last used row lies beyond twice the row
+ *    limit is `TOO_MANY_ROWS`. A read filter then materialises only the
+ *    header row and the resolved columns of the rows up to that bound
+ *    (CmdbReadFilter), which bounds the cell objects, not the parse.
  *
  * @category  Service
  * @package   OCA\Stackiq\Service\Cmdb
@@ -52,6 +58,7 @@ namespace OCA\Stackiq\Service\Cmdb;
 
 use OCA\Stackiq\Exception\CmdbImportException;
 use Throwable;
+use XMLReader;
 use ZipArchive;
 
 /**
@@ -127,8 +134,10 @@ class CmdbWorkbookReader {
 	 * Read the source sheets of an xlsx workbook.
 	 *
 	 * What the workbook can make PhpSpreadsheet hold is bounded before any
-	 * sheet is parsed: the unpacked size of the package (the profile's
-	 * `maxUncompressedBytes`), then the last used row of every source sheet.
+	 * part is parsed: the unpacked size of the package (the profile's
+	 * `maxUncompressedBytes`) and of each part (`maxPartBytes`), the number of
+	 * shared strings (`maxSharedStrings`), then the last used row of every
+	 * source sheet.
 	 * The sheets are then read twice through a read filter: once for the
 	 * header row, once for the resolved columns of the data rows, so no other
 	 * cell is ever materialised.
@@ -145,7 +154,8 @@ class CmdbWorkbookReader {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
 	public function read(string $path, CmdbImportProfile $profile): array {
-		$this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes());
+		$this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes(), partLimit: $profile->maxPartBytes());
+		$this->assertSharedStringCount(path: $path, limit: $profile->maxSharedStrings());
 
 		if ($this->isAvailable() === false) {
 			throw new CmdbImportException(
@@ -229,19 +239,20 @@ class CmdbWorkbookReader {
 	}//end lastReadableRow()
 
 	/**
-	 * Refuse a package whose parts unpack to more than the limit, before any part is parsed.
+	 * Refuse a package whose parts, or one of them, unpack to more than the limits, before any part is parsed.
 	 *
 	 * The sizes are the uncompressed sizes the ZIP directory declares; libzip
 	 * never inflates a part beyond its declared size.
 	 *
 	 * @param string $path The xlsx file.
-	 * @param int $limit The maximum number of unpacked bytes.
+	 * @param int $limit The maximum number of unpacked bytes of all parts together.
+	 * @param int $partLimit The maximum number of unpacked bytes of one part.
 	 *
 	 * @return void
 	 *
-	 * @throws CmdbImportException NOT_XLSX when the package cannot be opened, WORKBOOK_TOO_LARGE above the limit.
+	 * @throws CmdbImportException NOT_XLSX when the package cannot be opened, WORKBOOK_TOO_LARGE above a limit.
 	 */
-	private function assertUncompressedSize(string $path, int $limit): void {
+	private function assertUncompressedSize(string $path, int $limit, int $partLimit): void {
 		$zip = new ZipArchive();
 		if ($zip->open($path, ZipArchive::RDONLY) !== true) {
 			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The ZIP package cannot be opened');
@@ -254,6 +265,15 @@ class CmdbWorkbookReader {
 			if ($stat === false) {
 				$readable = false;
 				break;
+			}
+
+			if ((int)$stat['size'] > $partLimit) {
+				$zip->close();
+				throw new CmdbImportException(
+					errorCode: CmdbImportException::WORKBOOK_TOO_LARGE,
+					message: 'A part of the workbook unpacks to more bytes than the profile allows',
+					details: ['maxPartBytes' => $partLimit, 'part' => (string)$stat['name']]
+				);
 			}
 
 			$total += (int)$stat['size'];
@@ -273,6 +293,80 @@ class CmdbWorkbookReader {
 			);
 		}
 	}//end assertUncompressedSize()
+
+	/**
+	 * Refuse a shared-strings table with more entries than the limit, without building it.
+	 *
+	 * The table's `count` and `uniqueCount` attributes are written by the
+	 * producer and can be wrong, so the `<si>` elements are counted, streamed
+	 * with XMLReader straight from the ZIP part. Network access and entity
+	 * substitution stay off. A part that does not parse is left to
+	 * PhpSpreadsheet, which refuses it as NOT_XLSX.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param int $limit The maximum number of shared strings.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException WORKBOOK_TOO_LARGE above the limit.
+	 */
+	private function assertSharedStringCount(string $path, int $limit): void {
+		foreach (self::sharedStringParts(path: $path) as $part) {
+			$xml = new XMLReader();
+			$previous = libxml_use_internal_errors(true);
+			try {
+				if ($xml->open('zip://' . $path . '#' . $part, null, LIBXML_NONET) === false) {
+					continue;
+				}
+
+				$count = 0;
+				while ($count <= $limit && $xml->read() === true) {
+					if ($xml->nodeType === XMLReader::ELEMENT && $xml->depth === 1 && $xml->localName === 'si') {
+						$count++;
+					}
+				}
+
+				$xml->close();
+			} finally {
+				libxml_clear_errors();
+				libxml_use_internal_errors($previous);
+			}
+
+			if ($count > $limit) {
+				throw new CmdbImportException(
+					errorCode: CmdbImportException::WORKBOOK_TOO_LARGE,
+					message: 'The shared-strings table holds more entries than the profile allows',
+					details: ['maxSharedStrings' => $limit]
+				);
+			}
+		}//end foreach
+	}//end assertSharedStringCount()
+
+	/**
+	 * The shared-strings parts of a package: `xl/sharedStrings.xml`, or a numbered variant.
+	 *
+	 * @param string $path The xlsx file.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function sharedStringParts(string $path): array {
+		$zip = new ZipArchive();
+		if ($zip->open($path, ZipArchive::RDONLY) !== true) {
+			return [];
+		}
+
+		$parts = [];
+		for ($index = 0; $index < $zip->numFiles; $index++) {
+			$name = (string)$zip->getNameIndex($index);
+			if (preg_match('#^xl/sharedStrings\d*\.xml$#i', $name) === 1) {
+				$parts[] = $name;
+			}
+		}
+
+		$zip->close();
+
+		return $parts;
+	}//end sharedStringParts()
 
 	/**
 	 * Refuse a source sheet whose last used row lies beyond the rows that are read.

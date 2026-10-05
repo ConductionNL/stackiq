@@ -72,6 +72,16 @@ class CmdbImportProfile {
 	public const DEFAULT_MAX_UNCOMPRESSED_BYTES = 52428800;
 
 	/**
+	 * Default limit on the unpacked size of any one part of a workbook (10 MB).
+	 */
+	public const DEFAULT_MAX_PART_BYTES = 10485760;
+
+	/**
+	 * Default limit on the number of entries in a workbook's shared-strings table.
+	 */
+	public const DEFAULT_MAX_SHARED_STRINGS = 200000;
+
+	/**
 	 * Sources of the municipality pack that come from the request, not from a sheet.
 	 *
 	 * @var array<int, string>
@@ -194,6 +204,45 @@ class CmdbImportProfile {
 
 		return self::DEFAULT_MAX_UNCOMPRESSED_BYTES;
 	}//end maxUncompressedBytes()
+
+	/**
+	 * The limit on the unpacked size of any one part of a workbook, in bytes.
+	 *
+	 * PhpSpreadsheet parses the shared-strings part and every loaded sheet part
+	 * whole, into structures many times the part's size, so the parts are
+	 * bounded one by one, not only their total.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function maxPartBytes(): int {
+		$limit = $this->profile()['maxPartBytes'] ?? null;
+		if (is_int($limit) === true && $limit > 0) {
+			return $limit;
+		}
+
+		return self::DEFAULT_MAX_PART_BYTES;
+	}//end maxPartBytes()
+
+	/**
+	 * The limit on the number of entries in a workbook's shared-strings table.
+	 *
+	 * PhpSpreadsheet builds the whole table before it reads a sheet, and many
+	 * short strings cost far more memory than their bytes.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function maxSharedStrings(): int {
+		$limit = $this->profile()['maxSharedStrings'] ?? null;
+		if (is_int($limit) === true && $limit > 0) {
+			return $limit;
+		}
+
+		return self::DEFAULT_MAX_SHARED_STRINGS;
+	}//end maxSharedStrings()
 
 	/**
 	 * The maximum number of non-empty rows per source sheet.

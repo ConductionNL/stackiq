@@ -51,7 +51,7 @@ Nextcloud OCP interfaces used: `OCP\IRequest` (multipart upload), `OCP\IUserSess
 
 ### Requirement: The workbook SHALL be read as stored data, without evaluating formulas or following links (REQ-CMDB-002)
 
-The reader SHALL open the workbook with PhpSpreadsheet's Xlsx reader in read-data-only mode, SHALL load only the sheets named in the import profile, and SHALL read each cell's stored value. For a formula cell it SHALL use the value cached in the file and SHALL NOT evaluate the formula. It SHALL NOT contact external data connections, linked workbooks or URLs found in the file. A formula cell without a cached value SHALL be read as empty and SHALL add a row warning naming the column; it SHALL NOT fail the row or the import. A formula whose cached value is the number 0 (Excel's result for a reference to an empty cell) SHALL be read as empty. It SHALL stop with 422 `TOO_MANY_ROWS` when a source sheet holds more data rows than the profile's limit (default 10,000). Before PhpSpreadsheet parses any sheet, the reader SHALL add up the unpacked sizes of the package's parts and SHALL stop with 413 `WORKBOOK_TOO_LARGE`, with `details.maxUncompressedBytes`, when they exceed the profile's `maxUncompressedBytes` (default 50 MB), so a small file that unpacks to far more cannot exhaust the server's memory.
+The reader SHALL open the workbook with PhpSpreadsheet's Xlsx reader in read-data-only mode, SHALL load only the sheets named in the import profile, and SHALL read each cell's stored value. For a formula cell it SHALL use the value cached in the file and SHALL NOT evaluate the formula. It SHALL NOT contact external data connections, linked workbooks or URLs found in the file. A formula cell without a cached value SHALL be read as empty and SHALL add a row warning naming the column; it SHALL NOT fail the row or the import. A formula whose cached value is the number 0 (Excel's result for a reference to an empty cell) SHALL be read as empty. It SHALL stop with 422 `TOO_MANY_ROWS` when a source sheet holds more data rows than the profile's limit (default 10,000). Before PhpSpreadsheet parses any part, the reader SHALL stop with 413 `WORKBOOK_TOO_LARGE` when the unpacked sizes of the package's parts add up to more than the profile's `maxUncompressedBytes` (default 50 MB, `details.maxUncompressedBytes`), when one part unpacks to more than `maxPartBytes` (default 10 MB, `details.maxPartBytes` and `details.part`), or when the shared-strings table holds more `<si>` entries than `maxSharedStrings` (default 200,000, `details.maxSharedStrings`), counted with a streaming reader without building the table and whatever its `count` attributes claim. PhpSpreadsheet builds the shared-strings table and each loaded sheet's XML tree whole before a read filter applies, so these bounds, not the read filter, keep a small file that unpacks to far more from exhausting the server's memory.
 
 #### Scenario: A formula cell yields its cached value and is not evaluated
 @e2e exclude Reader behaviour; tests/Unit/Service/Cmdb/CmdbWorkbookReaderTest.php reads a fixture whose source sheet has a formula cell and asserts the cached value is returned and the calculation engine is never invoked.
@@ -84,6 +84,14 @@ The reader SHALL open the workbook with PhpSpreadsheet's Xlsx reader in read-dat
 - **WHEN** a Nextcloud admin uploads it
 - **THEN** the endpoint SHALL answer 413 with error `WORKBOOK_TOO_LARGE` and `details.maxUncompressedBytes` set to the limit
 - **AND** no sheet SHALL be parsed and no object SHALL be written
+
+#### Scenario: A workbook with an oversized part or shared-strings table is refused before it is parsed
+@e2e exclude A browser upload adds nothing over the reader test; tests/Unit/Service/Cmdb/CmdbWorkbookReaderTest.php testAPartBeyondThePartLimitIsRefusedBeforeLoading builds a package under `maxUncompressedBytes` whose shared-strings part, and one whose sheet part, unpacks beyond `maxPartBytes`, and testASharedStringsTableBeyondTheLimitIsRefusedBeforeLoading builds one with more `<si>` entries than `maxSharedStrings` while its `uniqueCount` claims 1; both assert WORKBOOK_TOO_LARGE with the limit and that PhpSpreadsheet loaded nothing.
+
+- **GIVEN** an xlsx package under `maxUncompressedBytes` whose `xl/sharedStrings.xml` unpacks to more than `maxPartBytes`, or holds more entries than `maxSharedStrings`
+- **WHEN** a Nextcloud admin uploads it
+- **THEN** the endpoint SHALL answer 413 with error `WORKBOOK_TOO_LARGE`, and `details` SHALL name the limit (and for a part, the part)
+- **AND** no sheet SHALL be loaded and no object SHALL be written
 
 ### Requirement: Columns SHALL be resolved by header name, and a missing required column SHALL stop the import with 422 (REQ-CMDB-003)
 

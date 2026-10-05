@@ -405,6 +405,41 @@ export function isKnownError(code) {
 }
 
 /**
+ * The title of WORKBOOK_TOO_LARGE, naming the limit the server applied.
+ *
+ * @param {object} details The error details: `maxPartBytes` and `part`, `maxSharedStrings`, or `maxUncompressedBytes`
+ * @return {string} The title
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links-req-cmdb-002
+ */
+function workbookTooLargeTitle(details) {
+	if (Number(details.maxPartBytes) > 0) {
+		return t(
+			'stackiq',
+			'Unpacked, the part {part} of the workbook is larger than {size}, the most the import reads of one part.',
+			{ part: String(details.part ?? ''), size: formatMegabytes(details.maxPartBytes) },
+			AS_TEXT,
+		)
+	}
+	if (Number(details.maxSharedStrings) > 0) {
+		return t(
+			'stackiq',
+			'The workbook holds more than {count} different texts, the most the import reads.',
+			{ count: String(details.maxSharedStrings) },
+			AS_TEXT,
+		)
+	}
+	if (Number(details.maxUncompressedBytes) > 0) {
+		return t(
+			'stackiq',
+			'Unpacked, the workbook is larger than {size}, the most the import reads.',
+			{ size: formatMegabytes(details.maxUncompressedBytes) },
+			AS_TEXT,
+		)
+	}
+	return t('stackiq', 'The workbook is too large to read once unpacked.')
+}
+
+/**
  * What the page says for an error: a title and, where the code has one, a
  * hint on what to do. The text is the page's own, so it is translated even
  * when the server's message is not.
@@ -594,18 +629,7 @@ export function errorText(error) {
 			}
 		case 'WORKBOOK_TOO_LARGE':
 			return {
-				title:
-					Number(details.maxUncompressedBytes) > 0
-						? t(
-								'stackiq',
-								'Unpacked, the workbook is larger than {size}, the most the import reads.',
-								{ size: formatMegabytes(details.maxUncompressedBytes) },
-								AS_TEXT,
-							)
-						: t(
-								'stackiq',
-								'The workbook is too large to read once unpacked.',
-							),
+				title: workbookTooLargeTitle(details),
 				hint: t(
 					'stackiq',
 					'Remove sheets the import does not read, such as the archive sheet, or split the export, and try again. Nothing was imported.',

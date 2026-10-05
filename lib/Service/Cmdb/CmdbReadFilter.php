@@ -4,11 +4,13 @@
  * CMDB read filter.
  *
  * Tells PhpSpreadsheet which cells of a CMDB export to materialise, so the
- * memory a workbook takes is bounded by the profile, not by the file (design
- * D3). The header pass admits row 1 only; the data pass admits the rows up to
- * a last row and, per sheet, only the columns the header resolved to an
- * allowlisted name. Every other cell is skipped while the sheet is parsed and
- * never becomes a cell object.
+ * cell objects a workbook yields are bounded by the profile (design D3). The
+ * header pass admits row 1 only; the data pass admits the rows up to a last
+ * row and, per sheet, only the columns the header resolved to an allowlisted
+ * name. Every other cell is skipped and never becomes a cell object. The
+ * filter does not bound the parse itself: PhpSpreadsheet still builds the
+ * shared-strings table and each loaded sheet's XML tree whole, which is why
+ * CmdbWorkbookReader caps the parts and the shared strings before loading.
  *
  * The class implements PhpSpreadsheet's `IReadFilter`, which OpenRegister
  * ships. It is only instantiated after `CmdbWorkbookReader::isAvailable()`.

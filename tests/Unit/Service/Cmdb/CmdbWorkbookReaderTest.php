@@ -351,6 +351,102 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testARowSpanBeyondTheLimitStopsBeforeLoading()
 
 	/**
+	 * A shared-strings table with more entries than maxSharedStrings is refused before any sheet is loaded.
+	 *
+	 * The table declares a `uniqueCount` of 1, so only counting its `<si>` elements catches it. A table of
+	 * exactly the limit is read normally.
+	 *
+	 * @return void
+	 */
+	public function testASharedStringsTableBeyondTheLimitIsRefusedBeforeLoading(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$sheets = ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxSharedStrings' => 1000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		$atLimit = CmdbTestSupport::buildWorkbook(sheets: $sheets, extraParts: ['xl/sharedStrings.xml' => self::sharedStrings(count: 1000)]);
+		$overLimit = CmdbTestSupport::buildWorkbook(sheets: $sheets, extraParts: ['xl/sharedStrings.xml' => self::sharedStrings(count: 1001)]);
+		try {
+			$this->assertCount(1, $reader->read(path: $atLimit, profile: $this->profile(directory: $directory))['rows'], 'a table of exactly the limit is read');
+
+			RecordingXlsxReader::$loads = 0;
+			$reader->read(path: $overLimit, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(['maxSharedStrings' => 1000], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($atLimit);
+			unlink($overLimit);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testASharedStringsTableBeyondTheLimitIsRefusedBeforeLoading()
+
+	/**
+	 * A shared-strings part or a sheet part that unpacks beyond maxPartBytes is refused before any sheet is loaded.
+	 *
+	 * Both packages stay under maxUncompressedBytes; only the one part is too large.
+	 *
+	 * @return void
+	 */
+	public function testAPartBeyondThePartLimitIsRefusedBeforeLoading(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$rows = [['APPID', 'Applicatie Naam']];
+		for ($index = 1; $index <= 3000; $index++) {
+			$rows[] = [$index, 'Applicatie'];
+		}
+
+		$packages = [
+			'xl/sharedStrings.xml' => CmdbTestSupport::buildWorkbook(
+				sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]],
+				extraParts: ['xl/sharedStrings.xml' => self::sharedStrings(count: 10, length: 10000)]
+			),
+			'xl/worksheets/sheet1.xml' => CmdbTestSupport::buildWorkbook(sheets: ['Beheerde Applicaties CMDB' => $rows]),
+		];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxPartBytes' => 50000, 'maxSharedStrings' => 1000000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		try {
+			foreach ($packages as $part => $path) {
+				RecordingXlsxReader::$loads = 0;
+				try {
+					$reader->read(path: $path, profile: $this->profile(directory: $directory));
+					$this->fail('WORKBOOK_TOO_LARGE expected for ' . $part);
+				} catch (CmdbImportException $e) {
+					$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode(), $part);
+					$this->assertSame(['maxPartBytes' => 50000, 'part' => $part], $e->getDetails(), $part);
+					$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded for ' . $part);
+				}
+			}
+		} finally {
+			array_map('unlink', $packages);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testAPartBeyondThePartLimitIsRefusedBeforeLoading()
+
+	/**
+	 * A shared-strings part with the given number of entries, each the given number of characters long.
+	 *
+	 * Its `count` and `uniqueCount` attributes claim a single entry.
+	 *
+	 * @param int $count The number of `<si>` entries.
+	 * @param int $length The length of every string.
+	 *
+	 * @return string
+	 */
+	private static function sharedStrings(int $count, int $length = 1): string {
+		return '<?xml version="1.0" encoding="UTF-8"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1">'
+			. str_repeat('<si><t>' . str_repeat('x', $length) . '</t></si>', $count) . '</sst>';
+	}//end sharedStrings()
+
+	/**
 	 * The data pass holds only the resolved columns, and drops an empty row between data rows.
 	 *
 	 * @return void

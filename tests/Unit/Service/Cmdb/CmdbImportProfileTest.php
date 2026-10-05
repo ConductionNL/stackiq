@@ -149,6 +149,8 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame(['BNN Classificatie' => ['NB']], $profile->emptyValues());
 		$this->assertSame(10485760, $profile->maxFileBytes());
 		$this->assertSame(10000, $profile->maxRowsPerSheet());
+		$this->assertSame(10485760, $profile->maxPartBytes());
+		$this->assertSame(200000, $profile->maxSharedStrings());
 	}//end testThePacksImplementTheColumnTable()
 
 	/**
