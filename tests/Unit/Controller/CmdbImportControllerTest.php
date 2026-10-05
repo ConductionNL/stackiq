@@ -88,13 +88,24 @@ class CmdbImportControllerTest extends TestCase {
 	 * @param array<string, mixed>|null $file The uploaded file entry, or null.
 	 * @param array<string, mixed> $params Form fields.
 	 * @param CmdbExportImportService|MockObject|null $service The service.
+	 * @param LoggerInterface|MockObject|null $logger The logger.
+	 * @param array<string, string> $headers Request headers.
+	 * @param array<string, int|null>|null $ini PHP size settings in bytes, standing in for php.ini; null reads php.ini.
 	 *
 	 * @return CmdbImportController
 	 */
-	private function controller(?array $file, array $params, CmdbExportImportService|MockObject|null $service = null): CmdbImportController {
+	private function controller(
+		?array $file,
+		array $params,
+		CmdbExportImportService|MockObject|null $service = null,
+		LoggerInterface|MockObject|null $logger = null,
+		array $headers = [],
+		?array $ini = null,
+	): CmdbImportController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getUploadedFile')->willReturnCallback(fn (string $key) => $key === 'cmdbFile' ? $file : null);
 		$request->method('getParam')->willReturnCallback(fn (string $key, $default = null) => ($params[$key] ?? $default));
+		$request->method('getHeader')->willReturnCallback(fn (string $name): string => ($headers[$name] ?? ''));
 
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(fn (string $text, $parameters = []): string => vsprintf($text, (array)$parameters));
@@ -105,7 +116,36 @@ class CmdbImportControllerTest extends TestCase {
 			$service->method('supportsMissingRecords')->willReturnCallback(fn (string $mode): bool => $mode === 'keep');
 		}
 
-		return new CmdbImportController(request: $request, importService: $service, l10n: $l10n, logger: $this->createMock(LoggerInterface::class));
+		$logger = ($logger ?? $this->createMock(LoggerInterface::class));
+		if ($ini === null) {
+			return new CmdbImportController(request: $request, importService: $service, l10n: $l10n, logger: $logger);
+		}
+
+		return new class($request, $service, $l10n, $logger, $ini) extends CmdbImportController {
+			/**
+			 * Constructor.
+			 *
+			 * @param IRequest $request The request.
+			 * @param CmdbExportImportService $service The service.
+			 * @param IL10N $l10n Translations.
+			 * @param LoggerInterface $logger Logger.
+			 * @param array<string, int|null> $ini The size settings.
+			 */
+			public function __construct(IRequest $request, CmdbExportImportService $service, IL10N $l10n, LoggerInterface $logger, private array $ini) {
+				parent::__construct(request: $request, importService: $service, l10n: $l10n, logger: $logger);
+			}
+
+			/**
+			 * The stand-in setting.
+			 *
+			 * @param string $name The ini setting.
+			 *
+			 * @return int|null
+			 */
+			protected function iniBytes(string $name): ?int {
+				return ($this->ini[$name] ?? null);
+			}
+		};
 	}//end controller()
 
 	/**
@@ -224,6 +264,77 @@ class CmdbImportControllerTest extends TestCase {
 		$tooBig = ['tmp_name' => '', 'name' => 'export.xlsx', 'size' => 0, 'error' => UPLOAD_ERR_INI_SIZE];
 		$this->assertSame(413, $this->controller(file: $tooBig, params: [], service: $service)->import()->getStatus());
 	}//end testAnOversizedFileIsRefusedBeforeReading()
+
+	/**
+	 * An upload stopped by upload_max_filesize reports that limit when it is lower than the profile's.
+	 *
+	 * @return void
+	 */
+	public function testAnUploadOverPhpsLimitReportsThatLimit(): void {
+		$service = $this->service();
+		$service->expects($this->never())->method('import');
+		$tooBig = ['tmp_name' => '', 'name' => 'export.xlsx', 'size' => 0, 'error' => UPLOAD_ERR_INI_SIZE];
+
+		$response = $this->controller(file: $tooBig, params: [], service: $service, ini: ['upload_max_filesize' => 2097152])->import();
+
+		$this->assertSame(413, $response->getStatus());
+		$this->assertEquals((object)['maxBytes' => 2097152], $response->getData()['details']);
+		$this->assertSame('The file is larger than the maximum of 2 MB.', $response->getData()['message']);
+
+		$higher = $this->controller(file: $tooBig, params: [], service: $service, ini: ['upload_max_filesize' => 52428800])->import();
+		$this->assertEquals((object)['maxBytes' => 10485760], $higher->getData()['details']);
+	}//end testAnUploadOverPhpsLimitReportsThatLimit()
+
+	/**
+	 * A body over post_max_size arrives without files or fields; it is 413, not "no file".
+	 *
+	 * @return void
+	 */
+	public function testABodyOverPostMaxSizeIsTooLarge(): void {
+		$ini = ['post_max_size' => 8388608];
+
+		$over = $this->controller(file: null, params: [], headers: ['Content-Length' => '9000000'], ini: $ini)->import();
+		$this->assertSame(413, $over->getStatus());
+		$this->assertSame('FILE_TOO_LARGE', $over->getData()['error']);
+		$this->assertEquals((object)['maxBytes' => 8388608], $over->getData()['details']);
+
+		$under = $this->controller(file: null, params: [], headers: ['Content-Length' => '1000'], ini: $ini)->import();
+		$this->assertSame('NO_FILE_UPLOADED', $under->getData()['error']);
+	}//end testABodyOverPostMaxSizeIsTooLarge()
+
+	/**
+	 * A server-side upload failure is 500 UPLOAD_FAILED and logged, not "no file was uploaded".
+	 *
+	 * @return array<string, array{int}>
+	 */
+	public static function serverUploadErrors(): array {
+		return [
+			'no tmp dir' => [UPLOAD_ERR_NO_TMP_DIR],
+			'cannot write' => [UPLOAD_ERR_CANT_WRITE],
+			'extension' => [UPLOAD_ERR_EXTENSION],
+		];
+	}//end serverUploadErrors()
+
+	/**
+	 * A server-side upload error answers 500 UPLOAD_FAILED and logs the PHP error.
+	 *
+	 * @param int $error The PHP upload error.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('serverUploadErrors')]
+	public function testAServerSideUploadErrorIsUploadFailed(int $error): void {
+		$service = $this->service();
+		$service->expects($this->never())->method('assertXlsx');
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')->with($this->anything(), ['uploadError' => $error]);
+		$file = ['tmp_name' => '', 'name' => 'export.xlsx', 'size' => 0, 'error' => $error];
+
+		$response = $this->controller(file: $file, params: ['municipalityName' => 'Gemeente Voorbeeldstad'], service: $service, logger: $logger)->import();
+
+		$this->assertSame(500, $response->getStatus());
+		$this->assertSame('UPLOAD_FAILED', $response->getData()['error']);
+	}//end testAServerSideUploadErrorIsUploadFailed()
 
 	/**
 	 * A file that is not xlsx is 400 NOT_XLSX, checked before missingRecords and the municipality.

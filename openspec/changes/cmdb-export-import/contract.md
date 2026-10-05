@@ -59,10 +59,10 @@ Paths are relative to `/index.php/apps/stackiq`.
 | 412  | missing or invalid CSRF token (Nextcloud) |
 | 413  | `FILE_TOO_LARGE` |
 | 422  | `MISSING_RECORDS_UNSUPPORTED`, `MUNICIPALITY_REQUIRED`, `MUNICIPALITY_INVALID`, `NO_SOURCE_SHEET`, `MISSING_COLUMN`, `TOO_MANY_ROWS` |
-| 500  | `IMPORT_FAILED` (unexpected; generic message, details only in the log) |
+| 500  | `UPLOAD_FAILED` (PHP could not store the upload), `IMPORT_FAILED` (unexpected; generic message, details only in the log) |
 | 503  | `MAPPING_UNAVAILABLE`, `READER_UNAVAILABLE`, `NOT_CONFIGURED` |
 
-Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`. For `FIELD_INVALID`, it names the field, plus the accepted values when the field has a fixed set: `{"field": "updateExisting", "accepted": ["true", "false"]}`, or `{"field": "municipalityName"}`.
+Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`: the profile's maximum, or PHP's `upload_max_filesize` / `post_max_size` when that is the lower limit that stopped the upload. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`. For `FIELD_INVALID`, it names the field, plus the accepted values when the field has a fixed set: `{"field": "updateExisting", "accepted": ["true", "false"]}`, or `{"field": "municipalityName"}`.
 
 ### `POST /api/cmdb-import/{operationId}/cancel`
 **Auth**: the same as the import: a Nextcloud admin or delegated stackiq admin session, plus CSRF token.
@@ -90,7 +90,8 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progres
 |------|---------|-----------|
 | `NO_FILE_UPLOADED` | no file | `cmdbFile` missing |
 | `NOT_XLSX` | not an xlsx workbook | extension is not `.xlsx`, no ZIP signature, or no `xl/workbook.xml` |
-| `FILE_TOO_LARGE` | too large | larger than the profile's `maxFileBytes` (10 MB) |
+| `FILE_TOO_LARGE` | too large | larger than the profile's `maxFileBytes` (10 MB), or stopped by PHP's `upload_max_filesize` or `post_max_size` |
+| `UPLOAD_FAILED` | upload not stored (500) | PHP reported `UPLOAD_ERR_NO_TMP_DIR`, `UPLOAD_ERR_CANT_WRITE` or `UPLOAD_ERR_EXTENSION`; logged |
 | `MISSING_RECORDS_UNSUPPORTED` | option not supported | `missingRecords` is not `keep` |
 | `FIELD_INVALID` | malformed field (400) | `updateExisting` is not `true`, `false`, `1` or `0`, or `missingRecords`, `municipalityUuid` or `municipalityName` is sent as an array (`name[]=…`) |
 | `MUNICIPALITY_REQUIRED` | no consumer | neither `municipalityUuid` nor `municipalityName` given |

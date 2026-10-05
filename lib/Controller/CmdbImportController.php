@@ -129,13 +129,25 @@ class CmdbImportController extends Controller {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
 	 */
 	private function validateRequest(): array|JSONResponse {
+		$maxBytes = $this->importService->maxFileBytes();
 		$upload = $this->uploadedFile();
 		if ($upload === null) {
-			return $this->error(code: 'NO_FILE_UPLOADED', status: Http::STATUS_BAD_REQUEST);
+			return $this->missingUpload(maxBytes: $maxBytes);
 		}
 
-		$maxBytes = $this->importService->maxFileBytes();
-		if ($upload['tooLarge'] === true || $upload['size'] > $maxBytes) {
+		if ($upload['serverError'] !== null) {
+			// The upload reached PHP but could not be stored: a server problem, not the admin's.
+			$this->logger->error('CmdbImportController: the upload could not be stored', ['uploadError' => $upload['serverError']]);
+			return $this->error(code: 'UPLOAD_FAILED', status: Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		if ($upload['tooLarge'] === true) {
+			// PHP's upload_max_filesize fired; it can be lower than the profile's maximum.
+			$limit = min($maxBytes, ($this->iniBytes(name: 'upload_max_filesize') ?? $maxBytes));
+			return $this->error(code: 'FILE_TOO_LARGE', status: Http::STATUS_REQUEST_ENTITY_TOO_LARGE, details: ['maxBytes' => $limit]);
+		}
+
+		if ($upload['size'] > $maxBytes) {
 			return $this->error(code: 'FILE_TOO_LARGE', status: Http::STATUS_REQUEST_ENTITY_TOO_LARGE, details: ['maxBytes' => $maxBytes]);
 		}
 
@@ -147,6 +159,52 @@ class CmdbImportController extends Controller {
 
 		return $this->readOptions(path: $upload['tmpName']);
 	}//end validateRequest()
+
+	/**
+	 * The answer when no upload arrived: 413 when the body was over post_max_size, else 400.
+	 *
+	 * PHP drops the whole body, files and fields alike, when it is larger than
+	 * post_max_size, so such a request looks like one without a file.
+	 *
+	 * @param int $maxBytes The profile's maximum.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 */
+	private function missingUpload(int $maxBytes): JSONResponse {
+		$postLimit = $this->iniBytes(name: 'post_max_size');
+		$length = (int)$this->request->getHeader('Content-Length');
+		if ($postLimit !== null && $postLimit > 0 && $length > $postLimit) {
+			return $this->error(
+				code: 'FILE_TOO_LARGE',
+				status: Http::STATUS_REQUEST_ENTITY_TOO_LARGE,
+				details: ['maxBytes' => min($maxBytes, $postLimit)]
+			);
+		}
+
+		return $this->error(code: 'NO_FILE_UPLOADED', status: Http::STATUS_BAD_REQUEST);
+	}//end missingUpload()
+
+	/**
+	 * A PHP size setting such as `10M`, in bytes.
+	 *
+	 * @param string $name The ini setting.
+	 *
+	 * Protected so a test can stand in for php.ini, whose size settings cannot
+	 * be changed at run time.
+	 *
+	 * @return int|null Null when it is unset or not a size; 0 means no limit.
+	 */
+	protected function iniBytes(string $name): ?int {
+		$value = trim((string)ini_get($name));
+		if (preg_match('/^(\d+)\s*([KMG]?)$/i', $value, $matches) !== 1) {
+			return null;
+		}
+
+		$exponent = ['' => 0, 'K' => 1, 'M' => 2, 'G' => 3][strtoupper($matches[2])];
+		return ((int)$matches[1] * (1024 ** $exponent));
+	}//end iniBytes()
 
 	/**
 	 * Read and check the form fields, after the upload itself was checked.
@@ -286,7 +344,7 @@ class CmdbImportController extends Controller {
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) One branch per contract error code.
 	 */
 	private function message(string $code, array $details): string {
-		$megabytes = (string)intdiv($this->importService->maxFileBytes(), 1048576);
+		$megabytes = (string)round((int)($details['maxBytes'] ?? $this->importService->maxFileBytes()) / 1048576, 1);
 		$expected = implode(', ', array_map('strval', ($details['expected'] ?? [])));
 		$accepted = implode(', ', array_map('strval', ($details['accepted'] ?? [])));
 
@@ -305,6 +363,7 @@ class CmdbImportController extends Controller {
 			'READER_UNAVAILABLE' => $this->l10n->t('The Excel reader is not available: OpenRegister is missing or incomplete.'),
 			'NOT_CONFIGURED' => $this->l10n->t('Stackiq is not configured: the register or its schemas cannot be found.'),
 			'OPERATION_NOT_FOUND' => $this->l10n->t('No running CMDB import has this id.'),
+			'UPLOAD_FAILED' => $this->l10n->t('The server could not store the uploaded file. The details are in the Nextcloud log.'),
 			default => $this->l10n->t('The import failed. The details are in the Nextcloud log.'),
 		};
 	}//end message()
@@ -378,7 +437,10 @@ class CmdbImportController extends Controller {
 	/**
 	 * The uploaded export, or null when none was sent.
 	 *
-	 * @return array{tmpName: string, name: string, size: int, tooLarge: bool}|null
+	 * `serverError` is the PHP upload error when the file reached the server
+	 * but could not be stored (no tmp dir, disk full, an extension stopped it).
+	 *
+	 * @return array{tmpName: string, name: string, size: int, tooLarge: bool, serverError: int|null}|null
 	 */
 	private function uploadedFile(): ?array {
 		$file = $this->request->getUploadedFile(self::FILE_FIELD);
@@ -393,7 +455,11 @@ class CmdbImportController extends Controller {
 		}
 
 		if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
-			return ['tmpName' => '', 'name' => (string)($file['name'] ?? ''), 'size' => 0, 'tooLarge' => true];
+			return ['tmpName' => '', 'name' => '', 'size' => 0, 'tooLarge' => true, 'serverError' => null];
+		}
+
+		if (in_array($error, [UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE, UPLOAD_ERR_EXTENSION], true) === true) {
+			return ['tmpName' => '', 'name' => '', 'size' => 0, 'tooLarge' => false, 'serverError' => $error];
 		}
 
 		$tmpName = $file['tmp_name'] ?? '';
@@ -411,6 +477,6 @@ class CmdbImportController extends Controller {
 			$name = '';
 		}
 
-		return ['tmpName' => $tmpName, 'name' => $name, 'size' => $size, 'tooLarge' => false];
+		return ['tmpName' => $tmpName, 'name' => $name, 'size' => $size, 'tooLarge' => false, 'serverError' => null];
 	}//end uploadedFile()
 }//end class
