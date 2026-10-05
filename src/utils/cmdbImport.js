@@ -15,11 +15,22 @@
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 
-/** Largest upload the import accepts (contract: profile `maxFileBytes`). */
-export const MAX_FILE_BYTES = 10 * 1024 * 1024
-
-/** The two sheets the import reads (contract: NO_SOURCE_SHEET details). */
-export const SOURCE_SHEETS = ['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']
+/**
+ * The limits and sheet names the import profile ships with
+ * (lib/Settings/cmdb-import/topdesk-profile.json: `maxFileBytes`,
+ * `maxRowsPerSheet` and `sheets`).
+ *
+ * These are defaults, used only where the page has no answer from the server
+ * yet (the help text). The server reads the profile itself, and when it
+ * refuses a file its error `details` (`maxBytes`, `limit`, `expected`) carry
+ * the values in force, which the error texts show instead. The page makes no
+ * size check of its own, so a changed limit needs no change here.
+ */
+export const PROFILE_DEFAULTS = Object.freeze({
+	maxFileBytes: 10 * 1024 * 1024,
+	maxRowsPerSheet: 10000,
+	sheets: Object.freeze(['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']),
+})
 
 /** Every row outcome the report can carry, in display order. */
 export const OUTCOMES = ['created', 'updated', 'unchanged', 'skipped', 'failed']
@@ -80,10 +91,23 @@ export function makeCmdbOperationId() {
 }
 
 /**
+ * A size in bytes as megabytes, for the texts ("10 MB", "12.5 MB").
+ *
+ * @param {number} bytes The size
+ * @return {string} The size with its unit
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-001-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin
+ */
+export function formatMegabytes(bytes) {
+	const megabytes = Math.round((Number(bytes) / (1024 * 1024)) * 10) / 10
+	return t('stackiq', '{size} MB', { size: String(megabytes) })
+}
+
+/**
  * The check the page makes on a chosen file before it uploads it.
  *
- * Only the name and size are checked here; the content check (ZIP signature,
- * `xl/workbook.xml`) is the server's.
+ * Only the name is checked here. The size limit is the server's (it can be
+ * changed in the import profile), and so is the content check (ZIP
+ * signature, `xl/workbook.xml`).
  *
  * @param {File|null} file The chosen file
  * @return {{error: string, details: object}|null} An error in the server's shape, or null when the file may be sent
@@ -95,9 +119,6 @@ export function checkFile(file) {
 	}
 	if (!/\.xlsx$/i.test(file.name || '')) {
 		return { error: 'NOT_XLSX', details: {} }
-	}
-	if (file.size > MAX_FILE_BYTES) {
-		return { error: 'FILE_TOO_LARGE', details: {} }
 	}
 	return null
 }
@@ -283,7 +304,17 @@ export function errorText(error) {
 			}
 		case 'FILE_TOO_LARGE':
 			return {
-				title: t('stackiq', 'The file is larger than 10 MB.'),
+				title:
+					Number(details.maxBytes) > 0
+						? t(
+								'stackiq',
+								'The file is larger than {size}, the most the import accepts.',
+								{ size: formatMegabytes(details.maxBytes) },
+							)
+						: t(
+								'stackiq',
+								'The file is larger than the server accepts.',
+							),
 				hint: t(
 					'stackiq',
 					'Remove sheets the import does not read, or split the export, and try again.',
@@ -320,7 +351,7 @@ export function errorText(error) {
 			const expected =
 				Array.isArray(details.expected) && details.expected.length > 0
 					? details.expected
-					: SOURCE_SHEETS
+					: PROFILE_DEFAULTS.sheets
 			return {
 				title: t(
 					'stackiq',
@@ -330,8 +361,8 @@ export function errorText(error) {
 					'stackiq',
 					'Expected a sheet named "{first}" or "{second}". Sheet names must match exactly.',
 					{
-						first: String(expected[0] ?? SOURCE_SHEETS[0]),
-						second: String(expected[1] ?? SOURCE_SHEETS[1]),
+						first: String(expected[0] ?? PROFILE_DEFAULTS.sheets[0]),
+						second: String(expected[1] ?? PROFILE_DEFAULTS.sheets[1]),
 					},
 				),
 			}
@@ -363,10 +394,17 @@ export function errorText(error) {
 							'stackiq',
 							'A sheet has more rows than the import can process.',
 						),
-				hint: t(
-					'stackiq',
-					'A source sheet may hold at most 10,000 rows. Split the export and import the parts one after the other.',
-				),
+				hint:
+					Number(details.limit) > 0
+						? t(
+								'stackiq',
+								'A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.',
+								{ limit: Number(details.limit).toLocaleString() },
+							)
+						: t(
+								'stackiq',
+								'Split the export and import the parts one after the other.',
+							),
 			}
 		case 'MAPPING_UNAVAILABLE':
 			return {

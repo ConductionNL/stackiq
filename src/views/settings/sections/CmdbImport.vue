@@ -86,7 +86,12 @@
 					{{
 						t(
 							'stackiq',
-							'Excel workbook (.xlsx), at most 10 MB, with the sheet "Onbeh Applicaties CMDB" or "Beheerde Applicaties CMDB".',
+							'Excel workbook (.xlsx) with the sheet "{first}" or "{second}". By default the file may be at most {size}.',
+							{
+								first: profileDefaults.sheets[0],
+								second: profileDefaults.sheets[1],
+								size: formatMegabytes(profileDefaults.maxFileBytes),
+							},
 						)
 					}}
 				</p>
@@ -291,7 +296,11 @@
 						{{
 							t(
 								'stackiq',
-								'The sheets "Onbeh Applicaties CMDB" (applications without arranged maintenance) and "Beheerde Applicaties CMDB" (with arranged maintenance) are read; other sheets, including the "Invoer" sheets, are ignored.',
+								'The sheets "{first}" (applications without arranged maintenance) and "{second}" (with arranged maintenance) are read; other sheets, including the "Invoer" sheets, are ignored.',
+								{
+									first: profileDefaults.sheets[0],
+									second: profileDefaults.sheets[1],
+								},
 							)
 						}}
 					</li>
@@ -349,6 +358,7 @@ import {
 	checkFile,
 	cmdbProgressView,
 	errorText,
+	formatMegabytes,
 	importUrl,
 	isKnownError,
 	makeCmdbOperationId,
@@ -356,6 +366,7 @@ import {
 	normaliseError,
 	outcomeLabel,
 	OUTCOMES,
+	PROFILE_DEFAULTS,
 	reportRows,
 } from '../../../utils/cmdbImport.js'
 
@@ -401,6 +412,7 @@ export default {
 			report: null,
 			error: null,
 			outcomeFilter: null,
+			profileDefaults: PROFILE_DEFAULTS,
 			outcomeColors: {
 				created: 'success',
 				updated: 'info',
@@ -605,6 +617,7 @@ export default {
 
 	methods: {
 		t,
+		formatMegabytes,
 		moduleUrl,
 		outcomeLabel,
 

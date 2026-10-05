@@ -58,7 +58,8 @@ page in stackiq.
    matches an existing municipality (ignoring case and extra spaces) uses that
    municipality; otherwise a new organisation of type Municipality with
    status Active is created during the import.
-3. **File.** Choose the TOPdesk export (`.xlsx`, at most 10 MB).
+3. **File.** Choose the TOPdesk export (`.xlsx`, at most 10 MB by default; see
+   [Limits](#limits)).
 4. **Update existing records.** On by default. Turn it off to import only
    applications that are new for this municipality; rows that match an
    existing application are then reported as *skipped* with reason `exists`
@@ -100,7 +101,8 @@ surrounding spaces and a trailing `:` or `⚡` do not matter, and the order of
 the columns does not matter. A column that one sheet has and the other has
 not (such as `Nickname`, only on `Beheerde Applicaties CMDB`) is optional on
 the sheet that lacks it. Empty rows, including formatted rows below the data,
-are ignored and not counted. A sheet may hold at most 10,000 rows with data.
+are ignored and not counted. A sheet may hold at most 10,000 rows with data
+by default (see [Limits](#limits)).
 
 Two columns are **required** on every CMDB sheet that is present: `APPID`
 and `Applicatie Naam`. Every other column is optional; when one is missing,
@@ -230,13 +232,13 @@ and the section shows the reason and the error code.
 | Error code | What it means | What to do |
 |---|---|---|
 | `NOT_XLSX` | The file is not an Excel workbook: wrong extension, or the content is not an `.xlsx` package. | Save the export as Excel workbook (`.xlsx`). |
-| `FILE_TOO_LARGE` | The file is larger than 10 MB. | Remove sheets the import does not read, or split the export. |
+| `FILE_TOO_LARGE` | The file is larger than the upload limit (10 MB by default). The message names the limit in force. | Remove sheets the import does not read, or split the export. |
 | `NO_FILE_UPLOADED` | No file arrived. | Choose the file again. |
 | `MUNICIPALITY_REQUIRED` | No municipality was chosen. | Pick or type a municipality. |
 | `MUNICIPALITY_INVALID` | The chosen organisation does not exist or is not of type Municipality. | Pick an organisation of type Municipality, or type a new name. |
 | `NO_SOURCE_SHEET` | Neither `Onbeh Applicaties CMDB` nor `Beheerde Applicaties CMDB` is in the workbook. | Check the sheet names; they must match exactly. |
 | `MISSING_COLUMN` | A present CMDB sheet has no `APPID` or `Applicatie Naam` column. The message names the sheet and the column. | Add the column to that sheet. |
-| `TOO_MANY_ROWS` | A CMDB sheet has more than 10,000 rows with data. | Split the export and import the parts one after the other. |
+| `TOO_MANY_ROWS` | A CMDB sheet has more rows with data than the row limit (10,000 by default). The message names the sheet and the limit. | Split the export and import the parts one after the other. |
 | `MISSING_RECORDS_UNSUPPORTED` | The request asked to mark or remove records missing from the export. Only keeping them is supported. | Not reachable from the section; reported for API callers. |
 | `MAPPING_UNAVAILABLE` | OpenRegister's mapping engine is missing, or one of the mapping files is invalid. | Update OpenRegister. If you changed a mapping file, check it against the Nextcloud log. |
 | `READER_UNAVAILABLE` | The Excel reader that ships with OpenRegister cannot be loaded. | Make sure OpenRegister is installed and enabled. |
@@ -246,6 +248,22 @@ and the section shows the reason and the error code.
 A message that you are not signed in, not an administrator, or that your
 session expired comes from Nextcloud itself: sign in again, use an
 administrator account, or reload the page.
+
+## Limits
+
+Two limits are read from `lib/Settings/cmdb-import/topdesk-profile.json` on
+every import:
+
+| Setting | Default | What it limits |
+|---|---|---|
+| `maxFileBytes` | `10485760` (10 MB) | the size of the uploaded file |
+| `maxRowsPerSheet` | `10000` | the rows with data on one CMDB sheet |
+
+The section's help text shows the defaults; when the server refuses a file,
+the message shows the limit the server applied. A larger file also has to
+pass PHP's `upload_max_filesize` and `post_max_size` and the web server's
+request size limit. Like the mapping files, the profile is part of the app:
+a change made on the server is overwritten by the next app update.
 
 ## Adjusting the mapping
 
