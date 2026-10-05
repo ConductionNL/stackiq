@@ -731,6 +731,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 				} catch (CmdbImportException $e) {
 					$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode(), $case);
 					$this->assertSame('xl/worksheets/sheet1.xml', $e->getDetails()['part'] ?? null, $case);
+					$this->assertSame(['source sheet' => 'Beheerde Applicaties CMDB'][$case] ?? null, $e->getDetails()['sheet'] ?? null, 'the refusal names the sheet that keeps the limit, if any: ' . $case);
 					$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded for ' . $case);
 				} finally {
 					unlink($path);
@@ -740,6 +741,77 @@ class CmdbWorkbookReaderTest extends TestCase {
 			CmdbTestSupport::removeDirectory(directory: $directory);
 		}
 	}//end testAnUnreadSheetPartThatMayBeParsedKeepsThePartLimit()
+
+	/**
+	 * A crafted package never gets PhpSpreadsheet to read a blanked part, however its targets resolve.
+	 *
+	 * Each package has a part beyond maxPartBytes that only an unread sheet
+	 * seems to name, while PhpSpreadsheet would resolve a source sheet (or the
+	 * package relationships) to it: a target ending in `/x/..`, a root-relative
+	 * target PhpSpreadsheet shortens, a foreign `id` after `r:id`, the workbook
+	 * relationships found only through the Apache POI retry, and a padded
+	 * `_rels/.rels`. The source sheet then reads the blanked, empty part, or the
+	 * package is refused; the text of the large part is never read.
+	 *
+	 * @return void
+	 */
+	public function testACraftedPackageNeverReadsABlankedPart(): void {
+		$this->requireSpreadsheet();
+		$main = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+		$rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+		$pkg = 'http://schemas.openxmlformats.org/package/2006/relationships';
+		$pad = '<p:pad xmlns:p="urn:p">' . str_repeat('<p:a/>', 12000) . '</p:pad>';
+		$small = '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="' . $main . '"><sheetData>'
+			. '<row r="1"><c r="A1" t="inlineStr"><is><t>APPID</t></is></c><c r="B1" t="inlineStr"><is><t>Applicatie Naam</t></is></c></row>'
+			. '<row r="2"><c r="A2"><v>1</v></c><c r="B2" t="inlineStr"><is><t>Een</t></is></c></row></sheetData>';
+		$big = str_replace('<t>Een</t>', '<t>FROM-BIG-PART</t>', $small) . $pad . '</worksheet>';
+		$workbookRels = static fn (string $first, string $second): string => '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="' . $pkg . '">'
+			. '<Relationship Id="rId1" Type="' . $rel . '/worksheet" Target="' . $first . '"/>'
+			. '<Relationship Id="rId2" Type="' . $rel . '/worksheet" Target="' . $second . '"/></Relationships>';
+		$workbook = static fn (string $sheets, string $namespaces = ''): string => '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="' . $main . '" xmlns:r="' . $rel . '"' . $namespaces . '><sheets>' . $sheets . '</sheets></workbook>';
+		$cases = [
+			'dot-dot target' => [['xl/worksheets/sheet1.xml' => $big, 'xl/_rels/workbook.xml.rels' => $workbookRels('worksheets/sheet1.xml', 'worksheets/sheet1.xml/x/..')], false],
+			'root-relative target' => [['xl/sheet1.xml' => $big, 'abcsheet1.xml' => $small . '</worksheet>', 'xl/_rels/workbook.xml.rels' => $workbookRels('sheet1.xml', '/abcsheet1.xml')], false],
+			'padded package relationships' => [[
+				'_rels/.rels' => '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="' . $pkg . '"><Relationship Id="rId1" Type="' . $rel . '/officeDocument" Target="xl/workbook.xml"/>' . $pad . '</Relationships>',
+				'xl/_rels/workbook.xml.rels' => $workbookRels('../_rels/.rels', 'worksheets/sheet2.xml'),
+			], false],
+			'foreign id' => [['xl/worksheets/sheet1.xml' => $big, 'xl/workbook.xml' => $workbook('<sheet name="Relatie APP oplosgroepen" sheetId="1" r:id="rId1"/><sheet name="Beheerde Applicaties CMDB" sheetId="2" r:id="rId1" x:id="rId2"/>', ' xmlns:x="urn:x"')], false],
+			'Apache POI workbook relationships' => [[
+				'xl/worksheets/sheet1.xml' => $big,
+				'xl/workbook.xml' => $workbook('<sheet name="Beheerde Applicaties CMDB" sheetId="1" r:id="rId1"/>'),
+				'l/workbook.xml' => $workbook('<sheet name="Relatie APP oplosgroepen" sheetId="1" r:id="rId1"/>'),
+				'xl/_rels/workbook.xml.rels' => $workbookRels('worksheets/sheet1.xml', 'worksheets/sheet2.xml'),
+			], true],
+		];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxPartBytes' => 50000, 'maxSharedStrings' => 1000000]);
+
+		try {
+			foreach ($cases as $case => [$extraParts, $poiRename]) {
+				$path = CmdbTestSupport::buildWorkbook(
+					sheets: ['Relatie APP oplosgroepen' => [['x']], 'Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]],
+					extraParts: $extraParts
+				);
+				if ($poiRename === true) {
+					$zip = new \ZipArchive();
+					$zip->open($path);
+					$zip->renameName('xl/_rels/workbook.xml.rels', 'l/_rels/workbook.xml.rels');
+					$zip->close();
+				}
+
+				try {
+					$result = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile(directory: $directory));
+					$this->assertStringNotContainsString('FROM-BIG-PART', json_encode($result['rows']), $case);
+				} catch (CmdbImportException $e) {
+					$this->assertContains($e->getErrorCode(), ['MISSING_COLUMN', 'WORKBOOK_TOO_LARGE', 'NOT_XLSX', 'NO_SOURCE_SHEET'], $case);
+				} finally {
+					unlink($path);
+				}
+			}
+		} finally {
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testACraftedPackageNeverReadsABlankedPart()
 
 	/**
 	 * A header row and the given number of data rows.

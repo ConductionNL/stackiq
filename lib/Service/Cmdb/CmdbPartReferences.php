@@ -5,18 +5,22 @@
  *
  * PhpSpreadsheet builds the whole XML tree of every part it parses, so a part
  * that unpacks to more than the profile's `maxPartBytes` is refused before
- * anything is parsed. It parses only the sheets the import loads, though:
- * an export carries sheets the import never reads (an archive, a list of
- * resolver groups, the original data), and one of those may unpack to more
- * than the bound without costing the import anything. Such a part is let
- * through when every relationship in the package that may name it is the
- * worksheet relationship of a sheet that is not a source sheet. Any doubt
- * keeps the bound: a part that some other relationship may name, a
- * worksheet relationship no sheet refers to, or a sheet whose name matches
- * a source sheet, whatever its case. "May name" compares the last path
- * segment, case-insensitively and also without its first character, so it
- * covers every name PhpSpreadsheet tries for a target (root-relative,
- * `./`, case-insensitive, the Apache POI fallback, backslashes).
+ * anything is parsed. An export carries sheets the import never reads (an
+ * archive, a list of resolver groups, the original data), and one of those
+ * may unpack to more than the bound. Such a part is not refused but blanked:
+ * the reader reads a copy of the package in which it is an empty worksheet
+ * (CmdbWorkbookReader). The verdict here only decides between refusing and
+ * blanking, so a wrong verdict on a crafted package costs an empty sheet,
+ * never a large tree: PhpSpreadsheet resolves targets in more ways than can
+ * be mirrored (`..`, root-relative paths, the Apache POI retry).
+ *
+ * A part is blanked when every relationship in the package that may name it
+ * is the worksheet relationship of a sheet that is not a source sheet. Any
+ * doubt refuses it with a message that names it: a part that some other
+ * relationship may name, a worksheet relationship no sheet refers to, a
+ * sheet whose name matches a source sheet whatever its case, and any
+ * relationships part or `[Content_Types].xml`. "May name" compares the last
+ * path segment, case-insensitively and also without its first character.
  *
  * @category  Service
  * @package   OCA\Stackiq\Service\Cmdb
@@ -39,13 +43,13 @@ use OCA\Stackiq\Exception\CmdbImportException;
 use XMLReader;
 
 /**
- * Refuses a part beyond the per-part bound unless only unread sheets refer to it.
+ * Refuses a part beyond the per-part bound, or lists it for blanking when only unread sheets refer to it.
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
  */
 class CmdbPartReferences {
 	/**
-	 * Refuse the first part beyond the limit that the import may parse.
+	 * Refuse the first part beyond the limit that the import may parse, and list the ones to blank.
 	 *
 	 * @param string $path The xlsx file.
 	 * @param array<string, int> $oversized Part name => unpacked size, for the parts beyond the limit.
@@ -53,22 +57,24 @@ class CmdbPartReferences {
 	 * @param int $limit The profile's `maxPartBytes`.
 	 * @param object $scanner PhpSpreadsheet's XmlScanner, which every part passes before it is read.
 	 *
-	 * @return void
+	 * @return array<int, string> The names of the parts beyond the limit that only unread sheets refer to.
 	 *
 	 * @throws CmdbImportException WORKBOOK_TOO_LARGE for a part the import may parse, with `maxPartBytes`,
 	 *                             `part`, `size` and, for a sheet, `sheet`.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
-	public function assertPartSizes(string $path, array $oversized, array $sourceSheets, int $limit, object $scanner): void {
+	public function assertPartSizes(string $path, array $oversized, array $sourceSheets, int $limit, object $scanner): array {
 		if ($oversized === []) {
-			return;
+			return [];
 		}
 
 		$references = self::references(path: $path, scanner: $scanner, sourceSheets: $sourceSheets);
+		$blank = [];
 		foreach ($oversized as $part => $size) {
-			$verdict = self::verdict(part: $part, references: $references);
+			$verdict = self::verdict(part: (string)$part, references: $references);
 			if ($verdict['unread'] === true) {
+				$blank[] = (string)$part;
 				continue;
 			}
 
@@ -83,10 +89,15 @@ class CmdbPartReferences {
 				details: $details
 			);
 		}
+
+		return $blank;
 	}//end assertPartSizes()
 
 	/**
-	 * Whether only unread sheets may name a part, and the sheet that names it.
+	 * Whether only unread sheets may name a part, and the sheet the refusal names.
+	 *
+	 * The refusal names the sheet of the relationship that keeps the limit,
+	 * which is null when that relationship is not a sheet's.
 	 *
 	 * @param string $part The part's name in the package.
 	 * @param array<int, array{keys: array<int, string>, sheet: ?string, unread: bool}> $references Every relationship.
@@ -95,22 +106,24 @@ class CmdbPartReferences {
 	 */
 	private static function verdict(string $part, array $references): array {
 		$key = self::lastSegment(path: $part);
+		if (str_ends_with($key, '.rels') === true || $key === '[content_types].xml') {
+			return ['unread' => false, 'sheet' => null];
+		}
+
 		$unread = false;
-		$sheet = null;
 		foreach ($references as $reference) {
 			if (in_array($key, $reference['keys'], true) === false) {
 				continue;
 			}
 
-			$sheet ??= $reference['sheet'];
 			if ($reference['unread'] === false) {
-				return ['unread' => false, 'sheet' => $sheet];
+				return ['unread' => false, 'sheet' => $reference['sheet']];
 			}
 
 			$unread = true;
 		}
 
-		return ['unread' => $unread, 'sheet' => $sheet];
+		return ['unread' => $unread, 'sheet' => null];
 	}//end verdict()
 
 	/**
