@@ -1192,6 +1192,62 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testPublishDecidesThePublicationDateOfCreatedModulesOnly()
 
 	/**
+	 * A module whose import key was set to this municipality's but that only another organisation uses is not taken over.
+	 *
+	 * The row is skipped as a conflict, the module and its usage stay as they are, and no second module or usage is created.
+	 *
+	 * @return void
+	 */
+	public function testAnImportKeyOnAnotherOrganisationsModuleIsAConflict(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->seedOrganisation(uuid: 'muni-2', name: 'Gemeente Anderstad', type: 'Municipality');
+		$foreign = ['id' => 'mod-foreign', 'name' => 'Van Anderstad', 'externalKey' => 'topdesk:muni-1:1', 'website' => 'https://anderstad.example'];
+		$this->store[self::MODULE]['mod-foreign'] = $foreign;
+		$this->store[self::USAGE]['usage-foreign'] = ['id' => 'usage-foreign', 'consumer' => 'muni-2', 'module' => 'mod-foreign'];
+		$before = [count($this->store[self::MODULE]), count($this->store[self::USAGE])];
+
+		foreach ([true, false] as $updateExisting) {
+			$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(
+				path: '',
+				options: ['municipalityUuid' => 'muni-1', 'updateExisting' => $updateExisting]
+			);
+
+			$this->assertSame('skipped', $report['rows'][0]['outcome']);
+			$this->assertSame(['conflict: the application with this import key is used by another organisation, so it is not changed'], $report['rows'][0]['reasons']);
+			$this->assertNull($report['rows'][0]['moduleUuid']);
+			$this->assertNull($report['rows'][0]['usageUuid']);
+		}
+
+		$this->assertSame($foreign, $this->store[self::MODULE]['mod-foreign'], 'the other organisation\'s module is unchanged');
+		$this->assertSame($before, [count($this->store[self::MODULE]), count($this->store[self::USAGE])], 'no module and no usage is created');
+		$conflicts = array_filter($this->logLines, static fn (string $line): bool => str_contains($line, 'another organisation uses'));
+		$this->assertCount(2, $conflicts);
+	}//end testAnImportKeyOnAnotherOrganisationsModuleIsAConflict()
+
+	/**
+	 * A module found by its import key is updated when this municipality uses it, also when others use it too, or when nobody does yet.
+	 *
+	 * @return void
+	 */
+	public function testAModuleThisMunicipalityUsesOrNobodyUsesIsUpdated(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->seedOrganisation(uuid: 'muni-2', name: 'Gemeente Anderstad', type: 'Municipality');
+		$this->store[self::MODULE]['mod-shared'] = ['id' => 'mod-shared', 'name' => 'Oud', 'externalKey' => 'topdesk:muni-1:1'];
+		$this->store[self::USAGE]['usage-other'] = ['id' => 'usage-other', 'consumer' => 'muni-2', 'module' => 'mod-shared'];
+		$this->store[self::USAGE]['usage-own'] = ['id' => 'usage-own', 'consumer' => 'muni-1', 'module' => 'mod-shared'];
+		$this->store[self::MODULE]['mod-new'] = ['id' => 'mod-new', 'name' => 'Nog niet gebruikt', 'externalKey' => 'topdesk:muni-1:2'];
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['updated', 'updated'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(['mod-shared', 'mod-new'], array_column($report['rows'], 'moduleUuid'));
+		$this->assertSame('Applicatie 1', $this->store[self::MODULE]['mod-shared']['name']);
+		$this->assertSame('Applicatie 2', $this->store[self::MODULE]['mod-new']['name']);
+		$this->assertCount(2, $this->objects(self::MODULE));
+	}//end testAModuleThisMunicipalityUsesOrNobodyUsesIsUpdated()
+
+	/**
 	 * A municipality uuid must be an organisation of type Municipality.
 	 *
 	 * @return void

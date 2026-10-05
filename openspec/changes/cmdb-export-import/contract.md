@@ -49,7 +49,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 }
 ```
 
-`appId` is the row's APPID, the match key (`''` when the row has none). `outcome` is one of `created`, `updated`, `unchanged`, `skipped`, `failed`. `reasons` and `warnings` are translated strings that name columns and values; a formula cell without a cached value gives the warning `Column "<column>": formula without a cached value, read as empty`. They never contain owner names, e-mail addresses or other person data. `summary.rowsRead` counts the non-empty rows in the workbook; `summary.processed` counts the rows in `rows`, which is lower than `rowsRead` only after a cancel. `summary.warnings` counts row warnings; `importWarnings` are not included. `summary.unpublished` counts the modules this import created without a `publicationDate` (`publish=false`), including one whose row then failed at the usage step; it is 0 with `publish=true`.
+`appId` is the row's APPID, the match key (`''` when the row has none). `outcome` is one of `created`, `updated`, `unchanged`, `skipped`, `failed`. `reasons` and `warnings` are translated strings that name columns and values; a formula cell without a cached value gives the warning `Column "<column>": formula without a cached value, read as empty`. A row whose import key belongs to a module that only other organisations use is `skipped` with reason `conflict: the application with this import key is used by another organisation, so it is not changed`, and `moduleUuid` `null`. They never contain owner names, e-mail addresses or other person data. `summary.rowsRead` counts the non-empty rows in the workbook; `summary.processed` counts the rows in `rows`, which is lower than `rowsRead` only after a cancel. `summary.warnings` counts row warnings; `importWarnings` are not included. `summary.unpublished` counts the modules this import created without a `publicationDate` (`publish=false`), including one whose row then failed at the usage step; it is 0 with `publish=true`.
 
 **Errors:**
 | Code | Condition |
@@ -114,7 +114,7 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progres
 
 ## Versioning
 
-Internal app API, unversioned like the other stackiq settings endpoints. The report fields above are additive-only: new fields MAY be added, and existing fields keep their meaning. (Before the first release the row field `middelId` was renamed to `appId`, together with the switch of the match key to the APPID.) The `module` properties `externalId`, `externalNumber`, `externalKey`, `externalCreatedAt` and `externalModifiedAt` are part of the register schema and follow the register's versioning (`module` 0.3.5).
+Internal app API, unversioned like the other stackiq settings endpoints. The report fields above are additive-only: new fields MAY be added, and existing fields keep their meaning. (Before the first release the row field `middelId` was renamed to `appId`, together with the switch of the match key to the APPID.) The `module` properties `externalId`, `externalNumber`, `externalKey`, `externalCreatedAt` and `externalModifiedAt` are part of the register schema and follow the register's versioning (`module` 0.3.8). Only a Nextcloud admin can create or change `externalKey` through OpenRegister (property-level `update` rule `admin`); the import writes it with RBAC off.
 
 ## Breaking Change Policy
 

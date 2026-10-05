@@ -199,6 +199,14 @@ colliding.
   its contact persons are left as they are. They are not changed, depublished
   or deleted.
 - Each application keeps exactly one usage for the municipality.
+- **Known APPID, but the application belongs to another organisation**: an
+  application found by its match key is only updated when the municipality
+  already uses it, or when no organisation uses it yet. When only other
+  organisations use it, the row is *skipped* with reason `conflict: the
+  application with this import key is used by another organisation, so it
+  is not changed`; nothing is changed and no second application is created.
+  Check the application's import key in stackiq. Only a Nextcloud
+  administrator can change an import key.
 
 Rows are **skipped** when the APPID is empty (`missing APPID`), when the
 Applicatie Naam is empty (`missing Applicatie Naam`), when an APPID appears a

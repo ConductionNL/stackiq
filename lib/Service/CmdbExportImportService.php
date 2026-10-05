@@ -21,7 +21,8 @@
  * OpenRegister's `ObjectServiceInterface` (ADR-022).
  *
  * Rules stated once and enforced here:
- * - A module matches on `externalKey`; a usage on (consumer, module); a
+ * - A module matches on `externalKey`, but only when the municipality
+ *   uses it or no organisation does yet; a usage on (consumer, module); a
  *   supplier on its normalised name and type Supplier; a contact person on
  *   (contactsUid, organization). An organisation that was merged away
  *   (status `merged`) or is `Inactive` is never matched by name.
@@ -134,6 +135,11 @@ class CmdbExportImportService {
 	 * The most report rows stored with the operation in the distributed cache; the counts are always kept.
 	 */
 	public const STORED_REPORT_ROWS = 500;
+
+	/**
+	 * The upsert outcome of a module whose import key matches but that another organisation uses.
+	 */
+	private const MODULE_CONFLICT = 'conflict';
 
 	/**
 	 * What the progress entry of a failed run says: a code and a generic message.
@@ -583,18 +589,19 @@ class CmdbExportImportService {
 			$step = 'module';
 			$moduleResult = $this->importModule(
 				data: $module['data'],
-				externalKey: $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $matchKey,
+				municipalityUuid: $municipalityUuid,
+				matchKey: $matchKey,
 				providerUuid: $providerUuid,
 				options: $options,
 				report: $report
 			);
 			$moduleUuid = $moduleResult['uuid'];
-			if ($moduleResult['outcome'] === 'exists') {
+			if ($moduleResult['skipReason'] !== null) {
 				$this->addRow(
 					report: $report,
 					entry: $entry,
 					outcome: CmdbImportReport::SKIPPED,
-					reasons: [$this->l10n->t('exists')],
+					reasons: [$moduleResult['skipReason']],
 					warnings: $warnings,
 					moduleUuid: $moduleUuid
 				);
@@ -959,47 +966,106 @@ class CmdbExportImportService {
 	/**
 	 * Upsert the row's module, and count it when it was created unpublished.
 	 *
+	 * A module found by its import key that another organisation uses is a
+	 * conflict: it is neither changed nor duplicated, and the row is skipped.
+	 * The log line names the module and the APPID's match key, nothing else.
+	 *
 	 * @param array<string, mixed> $data The mapped module fields.
-	 * @param string $externalKey The match key.
+	 * @param string $municipalityUuid The consumer.
+	 * @param string $matchKey The APPID's match key.
 	 * @param string|null $providerUuid The supplier, when there is one.
 	 * @param array{updateExisting: bool, publicationDate: string|null} $options The run's choices.
 	 * @param CmdbImportReport $report The report.
 	 *
-	 * @return array{uuid: string, outcome: string} The outcome of upsertModule().
+	 * @return array{uuid: string|null, outcome: string, skipReason: string|null} The module, the outcome of
+	 *                                                                         upsertModule(), and why the row is skipped.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
-	private function importModule(array $data, string $externalKey, ?string $providerUuid, array $options, CmdbImportReport $report): array {
+	private function importModule(
+		array $data,
+		string $municipalityUuid,
+		string $matchKey,
+		?string $providerUuid,
+		array $options,
+		CmdbImportReport $report,
+	): array {
 		$result = $this->upsertModule(
 			data: $data,
-			externalKey: $externalKey,
+			externalKey: $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $matchKey,
+			municipalityUuid: $municipalityUuid,
 			providerUuid: $providerUuid,
 			publicationDate: $options['publicationDate'],
 			updateExisting: $options['updateExisting']
 		);
 
+		if ($result['outcome'] === self::MODULE_CONFLICT) {
+			$this->logger->warning(
+				'CmdbExportImportService: import key belongs to a module another organisation uses; row not imported',
+				['module' => $result['uuid'], 'municipality' => $municipalityUuid, 'appId' => $matchKey]
+			);
+			$reason = $this->l10n->t('conflict: the application with this import key is used by another organisation, so it is not changed');
+			return ['uuid' => null, 'outcome' => $result['outcome'], 'skipReason' => $reason];
+		}
+
+		if ($result['outcome'] === 'exists') {
+			return ['uuid' => $result['uuid'], 'outcome' => $result['outcome'], 'skipReason' => $this->l10n->t('exists')];
+		}
+
 		if ($result['outcome'] === CmdbImportReport::CREATED && $options['publicationDate'] === null) {
 			$report->countUnpublished();
 		}
 
-		return $result;
+		return ['uuid' => $result['uuid'], 'outcome' => $result['outcome'], 'skipReason' => null];
 	}//end importModule()
+
+	/**
+	 * Whether a module found by its import key may be updated for this municipality.
+	 *
+	 * The import key is a property of the module, so it is only trusted
+	 * together with the usages: the module must already have a usage whose
+	 * consumer is this municipality, or, before the first import, no usage
+	 * at all. A module only another organisation uses is never taken over.
+	 *
+	 * @param string $moduleUuid The module found by its import key.
+	 * @param string $municipalityUuid The consumer of this import.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 */
+	private function moduleBelongsTo(string $moduleUuid, string $municipalityUuid): bool {
+		if ($this->findOne(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid]) !== null) {
+			return true;
+		}
+
+		return $this->findOne(schemaKey: 'usage', filters: ['module' => $moduleUuid]) === null;
+	}//end moduleBelongsTo()
 
 	/**
 	 * Create, update, or leave the module matched on its external key.
 	 *
 	 * @param array<string, mixed> $data The mapped module fields.
 	 * @param string $externalKey The match key.
+	 * @param string $municipalityUuid The consumer, whose usage a matched module must have.
 	 * @param string|null $providerUuid The supplier, when there is one.
 	 * @param string|null $publicationDate ISO start time of the import for a module that is published
 	 *                                     when created, or null to create it unpublished.
 	 * @param bool $updateExisting Whether a match is updated.
 	 *
-	 * @return array{uuid: string, outcome: string} Outcome created, updated, unchanged or exists.
+	 * @return array{uuid: string, outcome: string} Outcome created, updated, unchanged, exists, or conflict
+	 *                                              (MODULE_CONFLICT) for a module another organisation uses.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
-	private function upsertModule(array $data, string $externalKey, ?string $providerUuid, ?string $publicationDate, bool $updateExisting): array {
+	private function upsertModule(
+		array $data,
+		string $externalKey,
+		string $municipalityUuid,
+		?string $providerUuid,
+		?string $publicationDate,
+		bool $updateExisting,
+	): array {
 		$data['externalKey'] = $externalKey;
 		if ($providerUuid !== null) {
 			$data['provider'] = $providerUuid;
@@ -1017,6 +1083,10 @@ class CmdbExportImportService {
 		}
 
 		$uuid = (string)$existing->getUuid();
+		if ($this->moduleBelongsTo(moduleUuid: $uuid, municipalityUuid: $municipalityUuid) === false) {
+			return ['uuid' => $uuid, 'outcome' => self::MODULE_CONFLICT];
+		}
+
 		if ($updateExisting === false) {
 			return ['uuid' => $uuid, 'outcome' => 'exists'];
 		}

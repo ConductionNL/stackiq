@@ -1123,7 +1123,9 @@ OC.L10N.register(
         "Choose the municipality from the list instead of typing its name. Nothing was imported.": "Choose the municipality from the list instead of typing its name. Nothing was imported.",
         "Publish the applications this import creates": "Publish the applications this import creates",
         "A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.": "A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.",
-        "Created unpublished": "Created unpublished"
+        "Created unpublished": "Created unpublished",
+        "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; only a Nextcloud admin can change it.": "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; only a Nextcloud admin can change it.",
+        "conflict: the application with this import key is used by another organisation, so it is not changed": "conflict: the application with this import key is used by another organisation, so it is not changed"
     },
     "nplurals=2; plural=(n != 1);"
 )

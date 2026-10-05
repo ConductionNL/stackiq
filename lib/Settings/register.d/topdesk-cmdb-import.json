@@ -2,7 +2,7 @@
   "components": {
     "schemas": {
       "module": {
-        "version": "0.3.7",
+        "version": "0.3.8",
         "properties": {
           "externalId": {
             "type": "string",
@@ -25,8 +25,11 @@
           "externalKey": {
             "type": "string",
             "title": "Import key",
-            "description": "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; do not edit.",
+            "description": "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; only a Nextcloud admin can change it.",
             "maxLength": 200,
+            "authorization": {
+              "update": ["admin"]
+            },
             "visible": true,
             "facetable": false,
             "table": {

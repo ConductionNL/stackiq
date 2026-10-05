@@ -1192,6 +1192,8 @@
         "Choose the municipality from the list instead of typing its name. Nothing was imported.": "Kies de gemeente uit de lijst in plaats van de naam te typen. Er is niets geïmporteerd.",
         "Publish the applications this import creates": "De applicaties die deze import aanmaakt publiceren",
         "A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.": "Een gepubliceerde applicatie is voor iedereen zichtbaar, ook voor anonieme bezoekers van OpenCatalogi. Staat dit uit, dan blijven de applicaties die deze import aanmaakt ongepubliceerd tot u ze zelf publiceert. Eerder geïmporteerde applicaties houden hun publicatie zoals die is.",
-        "Created unpublished": "Ongepubliceerd aangemaakt"
+        "Created unpublished": "Ongepubliceerd aangemaakt",
+        "The key a repeated import matches this application on: topdesk:<municipality uuid>:<APPID>. Set by the CMDB import; only a Nextcloud admin can change it.": "De sleutel waarop een herhaalde import deze applicatie koppelt: topdesk:<uuid van de gemeente>:<APPID>. Gezet door de CMDB-import; alleen een Nextcloud-beheerder kan deze wijzigen.",
+        "conflict: the application with this import key is used by another organisation, so it is not changed": "conflict: de applicatie met deze importsleutel wordt door een andere organisatie gebruikt en wordt daarom niet gewijzigd"
     }
 }

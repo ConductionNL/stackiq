@@ -124,6 +124,7 @@ Per row:
 1. A row without an APPID is skipped (`missing APPID`). An APPID already seen on the same sheet is skipped (`duplicate APPID in file`). An APPID on both sheets is imported from the sheet the profile's `sheetPrecedence` ranks first ("Beheerde Applicaties CMDB"), whichever sheet the export lists first; the other row is skipped with that reason and a warning naming the APPID and the winning sheet. The CMDB sheets have no "Soort" column, so there is no row-kind filter.
 2. Look up the module with `searchObjects` on the configured register and module schema, filtered on `externalKey`, with `_rbac: false` and `_multitenancy: false` (as `SbomImportService` does; the caller is an admin). The result is cached for the run.
 3. No match: create the module from the mapped data, plus `externalKey`, the create-only defaults (`type: Application`), and `publicationDate` (D6).
+   A module found by `externalKey` counts as a match only when it has a usage whose consumer is this municipality, or no usage at all. `externalKey` is a module property, so on its own it is not proof of ownership: a module only another organisation uses is a conflict, reported as `skipped` and neither changed nor duplicated. The property also carries a write rule (`update: admin`), so only a Nextcloud admin can set it outside the import.
 4. Match and `updateExisting=false`: skip with reason `exists`.
 5. Match: merge the mapped fields onto the stored object. Every field the pack does not map stays as it is. Create-only fields stay as they are, unless the stored value is empty. If the merged object equals the stored one, do not save, and report `unchanged`. Otherwise save, and report `updated`.
 
@@ -249,7 +250,7 @@ The fragment bumps `module` to `0.3.5`. Fragments are merged in filename order a
 
 - **Imperative, because it is an external integration:** reading an uploaded third-party file, splitting a row into four linked objects, resolving contacts in Nextcloud Contacts, progress and cancel. These are not object lifecycle, aggregation, notification or relation rules that an `x-openregister-*` block can express. This is the external-integration exception: the service is imperative glue around the file.
 - **Declarative:** what each column becomes (target property, transform, lookup, required) is JSON in OpenRegister's migration-pack format, executed by OpenRegister's `MappingEngine`. Changing the mapping changes no PHP.
-- **Matching rule (stated once, enforced in code):** a module matches when its `externalKey` equals `topdesk:<municipality uuid>:<APPID>`. A usage matches on (`consumer`, `module`). A supplier matches on its normalised name and type `Supplier`. A contact person matches on (`contactsUid`, `organization`).
+- **Matching rule (stated once, enforced in code):** a module matches when its `externalKey` equals `topdesk:<municipality uuid>:<APPID>` and it has a usage of that municipality or no usage at all. A usage matches on (`consumer`, `module`). A supplier matches on its normalised name and type `Supplier`. A contact person matches on (`contactsUid`, `organization`).
 - **publicationDate rule (stated once, enforced in code):** set to the import's start time on create; never written on update.
 - No `x-openregister-*` block is added or changed. The usage name keeps coming from the schema's existing name template.
 
