@@ -65,7 +65,9 @@ page in stackiq.
    and nothing about them changes.
 5. Press **Import**. A progress bar shows how many rows have been processed.
    **Cancel import** stops the import before the next row; rows that were
-   already processed stay imported.
+   already processed stay imported. The section says whether the server
+   accepted the cancel; one pressed before the server has started on the
+   rows cannot take effect yet, and the section says so.
 
 When the import finishes, the section shows:
 
@@ -75,7 +77,9 @@ When the import finishes, the section shows:
   missing;
 - the **rows** table: sheet, row number, APPID, application, outcome,
   and the reasons and warnings for that row. Filter it with **Show rows with
-  outcome**. The application name links to the module in stackiq.
+  outcome**, and sort it by clicking a column header. It shows 100 rows at a
+  time; **Show 100 more rows** adds the next ones. The application name links
+  to the module in stackiq.
 
 The municipality stays selected after an import, so a second import goes to
 the same organisation.
