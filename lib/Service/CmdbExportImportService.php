@@ -58,6 +58,7 @@ use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IL10N;
 use OCP\IUserSession;
 use OCP\Lock\ILockingProvider;
@@ -1314,7 +1315,8 @@ class CmdbExportImportService {
 	 *
 	 * @return array{uuid: string, name: string, created: bool}
 	 *
-	 * @throws CmdbImportException MUNICIPALITY_INVALID.
+	 * @throws CmdbImportException MUNICIPALITY_INVALID when the uuid is unknown or not a live municipality.
+	 * @throws Throwable           When OpenRegister fails to look it up for another reason.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
@@ -1329,9 +1331,13 @@ class CmdbExportImportService {
 				_rbac: false,
 				_multitenancy: false
 			);
-		} catch (Throwable $e) {
+		} catch (DoesNotExistException $e) {
 			// OpenRegister throws DoesNotExistException for an unknown uuid.
 			$organisation = null;
+		} catch (Throwable $e) {
+			// Anything else is OpenRegister or the database failing, not a wrong uuid: no 422 for it.
+			$this->logger->error('CmdbExportImportService: the municipality could not be looked up', ['exception' => get_class($e)]);
+			throw $e;
 		}
 
 		$data = [];

@@ -174,6 +174,13 @@ class CmdbExportImportServiceTest extends TestCase {
 	private array $searches = [];
 
 	/**
+	 * Thrown by every find(), when set.
+	 *
+	 * @var \Throwable|null
+	 */
+	private ?\Throwable $findFailure = null;
+
+	/**
 	 * The locking provider every service of a test shares, as the instance does.
 	 *
 	 * @var ILockingProvider|null
@@ -200,6 +207,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->ignoredFilters = [];
 		$this->scopedCalls = [];
 		$this->searches = [];
+		$this->findFailure = null;
 		$this->locks = $this->lockingProvider();
 	}//end setUp()
 
@@ -415,6 +423,9 @@ class CmdbExportImportServiceTest extends TestCase {
 		$service->method('find')->willReturnCallback(
 			function ($id, ?array $_extend = [], bool $files = false, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface {
 				$this->noteScope(method: 'find', rbac: $_rbac, multitenancy: $_multitenancy);
+				if ($this->findFailure !== null) {
+					throw $this->findFailure;
+				}
 				$data = ($this->store[(int)$schema][(string)$id] ?? null);
 				if ($data === null) {
 					return null;
@@ -1718,6 +1729,34 @@ class CmdbExportImportServiceTest extends TestCase {
 			ignore_user_abort((bool)$previous);
 		}
 	}//end testAnImportKeepsRunningWhenTheClientGoesAway()
+
+	/**
+	 * An unknown municipality uuid is MUNICIPALITY_INVALID; OpenRegister failing to look it up is not.
+	 *
+	 * @return void
+	 */
+	public function testAFailingMunicipalityLookupIsNotAnInvalidMunicipality(): void {
+		$this->findFailure = new \OCP\AppFramework\Db\DoesNotExistException('no such object');
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-unknown']);
+			$this->fail('MUNICIPALITY_INVALID expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MUNICIPALITY_INVALID', $e->getErrorCode());
+		}
+
+		$this->findFailure = new RuntimeException('database went away');
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+			$this->fail('the infrastructure error should propagate');
+		} catch (CmdbImportException $e) {
+			$this->fail('an infrastructure error is not ' . $e->getErrorCode());
+		} catch (RuntimeException $e) {
+			$this->assertSame('database went away', $e->getMessage());
+		}
+
+		$this->assertStringContainsString('the municipality could not be looked up {"exception":"RuntimeException"}', implode("\n", $this->logLines));
+		$this->assertSame([], $this->saves);
+	}//end testAFailingMunicipalityLookupIsNotAnInvalidMunicipality()
 
 	/**
 	 * A second import of the same register while the first runs is refused with IMPORT_IN_PROGRESS and writes nothing.
