@@ -773,7 +773,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 0], $report['summary']);
 		$this->assertSame('Gemeente Voorbeeldstad', $report['municipality']['name']);
 		$this->assertTrue($report['municipality']['created']);
-		$this->assertSame([], $report['importWarnings']);
+		$this->assertSame(['No municipality named "Gemeente Voorbeeldstad" was found, so it was created. Check the name if you meant an existing one.'], array_column($report['importWarnings'], 'message'), 'only the warning that the municipality was created');
 		// "Webapplicatie" is an application kind, not a hosting model: kept as the kind, no hosting model, no warning.
 		$this->assertSame([], $report['rows'][0]['warnings']);
 
@@ -869,6 +869,44 @@ class CmdbExportImportServiceTest extends TestCase {
 		$municipalities = array_filter($this->objects(self::ORGANIZATION), fn (array $o): bool => $o['type'] === 'Municipality');
 		$this->assertCount(1, $municipalities);
 	}//end testReimportingTheSameExportChangesNothing()
+
+	/**
+	 * Two municipalities with the same name are refused as ambiguous, naming both, and nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testAnAmbiguousMunicipalityNameIsRefused(): void {
+		$this->seedOrganisation(uuid: 'muni-bergen-nh', name: 'Gemeente Bergen', type: 'Municipality');
+		$this->seedOrganisation(uuid: 'muni-bergen-l', name: 'gemeente  bergen', type: 'Municipality');
+
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityName' => 'Gemeente Bergen']);
+			$this->fail('MUNICIPALITY_AMBIGUOUS expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MUNICIPALITY_AMBIGUOUS', $e->getErrorCode());
+			$this->assertSame(422, $e->getHttpStatus());
+			$this->assertSame(['matches' => ['muni-bergen-nh', 'muni-bergen-l']], $e->getDetails());
+		}
+
+		$this->assertSame([], $this->saves);
+	}//end testAnAmbiguousMunicipalityNameIsRefused()
+
+	/**
+	 * A name that matches no municipality creates it, and the report warns about that.
+	 *
+	 * @return void
+	 */
+	public function testANewMunicipalityIsCreatedWithAWarning(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Rotterdam', type: 'Municipality');
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityName' => 'Gemeente Rotterdm']);
+
+		$this->assertTrue($report['municipality']['created']);
+		$this->assertSame(
+			[['sheet' => '', 'message' => 'No municipality named "Gemeente Rotterdm" was found, so it was created. Check the name if you meant an existing one.']],
+			$report['importWarnings']
+		);
+	}//end testANewMunicipalityIsCreatedWithAWarning()
 
 	/**
 	 * A municipality or supplier name never matches a merge tombstone or an inactive organisation.

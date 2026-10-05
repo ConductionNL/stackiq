@@ -301,7 +301,8 @@ class CmdbExportImportService {
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE, NOT_CONFIGURED, SCHEMA_OUTDATED, IMPORT_IN_PROGRESS,
 	 *                             WORKBOOK_TOO_LARGE, READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET,
-	 *                             MISSING_COLUMN, TOO_MANY_ROWS, MUNICIPALITY_REQUIRED or MUNICIPALITY_INVALID.
+	 *                             MISSING_COLUMN, TOO_MANY_ROWS, MUNICIPALITY_REQUIRED,
+	 *                             MUNICIPALITY_INVALID or MUNICIPALITY_AMBIGUOUS.
 	 * @throws \Exception         An unexpected OpenRegister error outside a row, such as
 	 *                             creating the municipality; rows catch their own.
 	 *
@@ -370,6 +371,19 @@ class CmdbExportImportService {
 		$report = new CmdbImportReport(operationId: $operationId, rowsRead: count($rows));
 		$report->setMunicipality(uuid: $municipality['uuid'], name: $municipality['name'], created: $municipality['created']);
 		$report->addImportWarnings(warnings: $this->translateImportWarnings(warnings: $workbook['importWarnings']));
+		if ($municipality['created'] === true) {
+			$report->addImportWarnings(
+				warnings: [
+					[
+						'sheet' => '',
+						'message' => $this->l10n->t(
+							'No municipality named "%s" was found, so it was created. Check the name if you meant an existing one.',
+							[$municipality['name']]
+						),
+					],
+				]
+			);
+		}
 
 		$this->progressTracker->startOperation(
 			operationType: self::OPERATION_TYPE,
@@ -1083,11 +1097,16 @@ class CmdbExportImportService {
 	/**
 	 * Resolve the consuming municipality from the options.
 	 *
+	 * A name matches the one live Municipality with that normalised name.
+	 * Several matches are refused rather than guessed: the uuid embedded in
+	 * every external key would bind the whole catalogue to the guess. No
+	 * match creates the municipality, which the report then warns about.
+	 *
 	 * @param array<string, mixed> $options municipalityUuid or municipalityName.
 	 *
 	 * @return array{uuid: string, name: string, created: bool}
 	 *
-	 * @throws CmdbImportException MUNICIPALITY_REQUIRED or MUNICIPALITY_INVALID.
+	 * @throws CmdbImportException MUNICIPALITY_REQUIRED, MUNICIPALITY_INVALID or MUNICIPALITY_AMBIGUOUS.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
@@ -1106,10 +1125,23 @@ class CmdbExportImportService {
 		}
 
 		$key = self::normaliseName(name: $name);
-		foreach ($this->organisationsOfType(type: 'Municipality') as $organisation) {
-			if (self::normaliseName(name: (string)($organisation['name'] ?? '')) === $key) {
-				return ['uuid' => $organisation['uuid'], 'name' => (string)$organisation['name'], 'created' => false];
-			}
+		$matches = array_values(
+			array_filter(
+				$this->organisationsOfType(type: 'Municipality'),
+				static fn (array $organisation): bool => self::normaliseName(name: (string)($organisation['name'] ?? '')) === $key
+			)
+		);
+
+		if (count($matches) > 1) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::MUNICIPALITY_AMBIGUOUS,
+				message: 'Several municipalities have this name',
+				details: ['matches' => array_column($matches, 'uuid')]
+			);
+		}
+
+		if ($matches !== []) {
+			return ['uuid' => $matches[0]['uuid'], 'name' => (string)$matches[0]['name'], 'created' => false];
 		}
 
 		$data = $mapped['data'];
