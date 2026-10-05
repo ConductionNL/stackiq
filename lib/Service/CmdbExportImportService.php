@@ -1939,6 +1939,8 @@ class CmdbExportImportService {
 	 * @param array<string, string> $values The normalised row.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
 	public static function logSafeMessage(string $step, Throwable $e, array $values): string {
 		if ($step === 'owners') {
