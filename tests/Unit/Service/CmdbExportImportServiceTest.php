@@ -818,6 +818,9 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$suppliers = array_filter($this->objects(self::ORGANIZATION), fn (array $o): bool => $o['type'] === 'Supplier');
 		$this->assertEqualsCanonicalizing(['Aangetekend B.V.', 'Fabfrikant'], array_column($suppliers, 'name'));
+		// The organisation read rule shows a supplier publicly only with registeredBy Supplier and status Active.
+		$this->assertSame(['Supplier', 'Supplier'], array_column($suppliers, 'registeredBy'));
+		$this->assertSame(['Active', 'Active'], array_values(array_column($suppliers, 'status')));
 
 		$modules = [];
 		foreach ($this->objects(self::MODULE) as $module) {

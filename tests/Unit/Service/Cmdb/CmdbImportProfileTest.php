@@ -134,7 +134,7 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame(['Applicatie Eigenaar (Persoon)' => 'name', 'Applicatie Eigenaar (Functie)' => 'role'], $targets('businessOwner'));
 		$this->assertSame(['module', 'manufacturer', 'municipality', 'usage', 'businessOwner'], CmdbImportProfile::TARGETS, 'no technical owner');
 
-		$this->assertSame(['type' => 'Supplier', 'status' => 'Active'], $profile->pack(target: 'manufacturer')['defaults']);
+		$this->assertSame(['type' => 'Supplier', 'status' => 'Active', 'registeredBy' => 'Supplier'], $profile->pack(target: 'manufacturer')['defaults']);
 		$this->assertSame(['type' => 'Municipality', 'status' => 'Active'], $profile->pack(target: 'municipality')['defaults']);
 		$this->assertSame(['type' => 'Application'], $profile->createOnlyDefaults(target: 'module'));
 		$this->assertSame(['interneAnnotation'], $profile->createOnlyFields(target: 'usage'));
